@@ -1,0 +1,17 @@
+name: CI
+on:
+  push:
+  pull_request:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Go build IA
+        run: |
+          cd server/ia && go build ./...
+      - name: Go build PO
+        run: |
+          cd server/po && go build ./...
+      - name: Web lint (placeholder)
+        run: echo "ok"
