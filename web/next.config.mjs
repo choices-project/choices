@@ -1,3 +1,20 @@
 /** @type {import('next').NextConfig} */
-const nextConfig = { experimental: { serverActions: true } };
-export default nextConfig;
+const nextConfig = {
+  async rewrites() {
+    return [
+      {
+        source: '/api/ia/:path*',
+        destination: 'http://localhost:8081/api/:path*',
+      },
+      {
+        source: '/api/po/:path*',
+        destination: 'http://localhost:8082/api/:path*',
+      },
+    ]
+  },
+  experimental: {
+    appDir: true,
+  },
+}
+
+export default nextConfig

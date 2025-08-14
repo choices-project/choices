@@ -7,6 +7,7 @@ import (
 
 	"choice/ia/internal/api"
 	"choice/ia/internal/database"
+	"choice/ia/internal/webauthn"
 )
 
 func main() {
@@ -27,6 +28,12 @@ func main() {
 		log.Fatalf("Failed to create token service: %v", err)
 	}
 
+	// Create WebAuthn service
+	webAuthnService, err := webauthn.NewWebAuthnService(userRepo)
+	if err != nil {
+		log.Fatalf("Failed to create WebAuthn service: %v", err)
+	}
+
 	// Health check endpoint
 	http.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(w, "ok")
@@ -38,11 +45,21 @@ func main() {
 	// Public key endpoint
 	http.HandleFunc("/api/v1/public-key", tokenService.HandlePublicKey)
 
+	// WebAuthn endpoints
+	http.HandleFunc("/api/v1/webauthn/register/begin", webAuthnService.HandleBeginRegistration)
+	http.HandleFunc("/api/v1/webauthn/register/finish", webAuthnService.HandleFinishRegistration)
+	http.HandleFunc("/api/v1/webauthn/login/begin", webAuthnService.HandleBeginLogin)
+	http.HandleFunc("/api/v1/webauthn/login/finish", webAuthnService.HandleFinishLogin)
+
 	log.Println("IA listening on :8081")
 	log.Println("Available endpoints:")
 	log.Println("  GET  /healthz")
 	log.Println("  POST /api/v1/tokens")
 	log.Println("  GET  /api/v1/public-key")
+	log.Println("  POST /api/v1/webauthn/register/begin")
+	log.Println("  POST /api/v1/webauthn/register/finish")
+	log.Println("  POST /api/v1/webauthn/login/begin")
+	log.Println("  POST /api/v1/webauthn/login/finish")
 	
 	log.Fatal(http.ListenAndServe(":8081", nil))
 }
