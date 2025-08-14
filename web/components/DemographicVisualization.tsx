@@ -113,26 +113,26 @@ export function DemographicVisualization({
     return data.ageDistribution.reduce((sum, item) => sum + item.count, 0)
   }
 
-                    const getInsightMessage = () => {
-                    switch (activeTab) {
-                      case 'interests':
-                        return "Data shows consistent patterns across demographic groups."
-                      case 'values':
-                        return "Participation patterns reveal shared priorities."
-                      case 'age':
-                        return "Every age group shows active participation in democratic processes."
-                      case 'location':
-                        return "Geographic distribution shows broad national engagement."
-                      case 'education':
-                        return "Education levels show varied but consistent participation patterns."
-                      case 'income':
-                        return "Economic diversity is reflected in participation data."
-                      case 'urban':
-                        return "Urban, suburban, and rural areas all show active engagement."
-                      default:
-                        return "Data-driven insights from real participation patterns."
-                    }
-                  }
+                                         const getInsightMessage = () => {
+                     switch (activeTab) {
+                       case 'interests':
+                         return "Participation data shows demographic distribution patterns."
+                       case 'values':
+                         return "Voting patterns reflect diverse demographic representation."
+                       case 'age':
+                         return "Age distribution shows participation across all demographic groups."
+                       case 'location':
+                         return "Geographic data shows national participation distribution."
+                       case 'education':
+                         return "Education levels show varied participation patterns."
+                       case 'income':
+                         return "Income distribution reflects economic diversity in participation."
+                       case 'urban':
+                         return "Urban, suburban, and rural areas show different participation rates."
+                       default:
+                         return "Data analysis reveals participation patterns across demographics."
+                     }
+                   }
 
   if (loading && useRealData && !useMockData) {
     return (
