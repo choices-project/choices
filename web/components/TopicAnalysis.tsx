@@ -18,11 +18,11 @@ interface TopicData {
     votes: number
   }
   breakdowns: {
-    age: { range: string; option: string; percentage: number }[]
-    location: { state: string; option: string; percentage: number }[]
-    education: { level: string; option: string; percentage: number }[]
-    income: { bracket: string; option: string; percentage: number }[]
-    urbanRural: { type: string; option: string; percentage: number }[]
+    age: { range: string; yes: number; no: number }[]
+    location: { state: string; yes: number; no: number }[]
+    education: { level: string; yes: number; no: number }[]
+    income: { bracket: string; yes: number; no: number }[]
+    urbanRural: { type: string; yes: number; no: number }[]
   }
   insights: string[]
 }
@@ -37,45 +37,53 @@ const sampleTopicData: TopicData = {
   },
   breakdowns: {
     age: [
-      { range: "18-24", option: "Yes", percentage: 82 },
-      { range: "25-34", option: "Yes", percentage: 75 },
-      { range: "35-44", option: "Yes", percentage: 65 },
-      { range: "45-54", option: "Yes", percentage: 58 },
-      { range: "55-64", option: "Yes", percentage: 45 },
-      { range: "65+", option: "Yes", percentage: 38 }
+      { range: "18-24", yes: 82, no: 18 },
+      { range: "25-34", yes: 75, no: 25 },
+      { range: "35-44", yes: 65, no: 35 },
+      { range: "45-54", yes: 58, no: 42 },
+      { range: "55-64", yes: 45, no: 55 },
+      { range: "65+", yes: 38, no: 62 }
     ],
     location: [
-      { state: "California", option: "Yes", percentage: 78 },
-      { state: "Texas", option: "Yes", percentage: 52 },
-      { state: "New York", option: "Yes", percentage: 75 },
-      { state: "Florida", option: "Yes", percentage: 48 },
-      { state: "Illinois", option: "Yes", percentage: 72 }
+      { state: "California", yes: 78, no: 22 },
+      { state: "Texas", yes: 52, no: 48 },
+      { state: "New York", yes: 75, no: 25 },
+      { state: "Florida", yes: 48, no: 52 },
+      { state: "Illinois", yes: 72, no: 28 }
     ],
     education: [
-      { level: "High School", option: "Yes", percentage: 72 },
-      { level: "Some College", option: "Yes", percentage: 70 },
-      { level: "Bachelor's", option: "Yes", percentage: 65 },
-      { level: "Graduate", option: "Yes", percentage: 58 }
+      { level: "High School", yes: 72, no: 28 },
+      { level: "Some College", yes: 70, no: 30 },
+      { level: "Bachelor's", yes: 65, no: 35 },
+      { level: "Graduate", yes: 58, no: 42 }
     ],
     income: [
-      { bracket: "Under $30k", option: "Yes", percentage: 85 },
-      { bracket: "$30k-$50k", option: "Yes", percentage: 78 },
-      { bracket: "$50k-$75k", option: "Yes", percentage: 65 },
-      { bracket: "$75k-$100k", option: "Yes", percentage: 52 },
-      { bracket: "$100k+", option: "Yes", percentage: 38 }
+      { bracket: "Under $30k", yes: 85, no: 15 },
+      { bracket: "$30k-$50k", yes: 78, no: 22 },
+      { bracket: "$50k-$75k", yes: 65, no: 35 },
+      { bracket: "$75k-$100k", yes: 52, no: 48 },
+      { bracket: "$100k+", yes: 38, no: 62 }
     ],
     urbanRural: [
-      { type: "Urban", option: "Yes", percentage: 75 },
-      { type: "Suburban", option: "Yes", percentage: 62 },
-      { type: "Rural", option: "Yes", percentage: 48 }
+      { type: "Urban", yes: 75, no: 25 },
+      { type: "Suburban", yes: 62, no: 38 },
+      { type: "Rural", yes: 48, no: 52 }
     ]
   },
-  insights: [
-    "Younger voters strongly support UBI (82% of 18-24 year olds)",
-    "Support decreases with age and income level",
-    "Urban areas show higher support than rural areas",
-    "Education level has minimal impact on support"
-  ]
+  insights: {
+    yes: [
+      "Younger voters strongly support UBI (82% of 18-24 year olds)",
+      "Support decreases with age and income level",
+      "Urban areas show higher support than rural areas",
+      "Education level has minimal impact on support"
+    ],
+    no: [
+      "Older voters strongly oppose UBI (62% of 65+ year olds)",
+      "Opposition increases with age and income level",
+      "Rural areas show higher opposition than urban areas",
+      "Higher education correlates with increased opposition"
+    ]
+  }
 }
 
 interface TopicAnalysisProps {
@@ -91,6 +99,7 @@ export function TopicAnalysis({
 }: TopicAnalysisProps) {
   const [activeBreakdown, setActiveBreakdown] = useState('age')
   const [showInsights, setShowInsights] = useState(false)
+  const [showYes, setShowYes] = useState(true)
 
   const breakdownOptions = [
     { id: 'age', label: 'Age Groups', icon: Users, color: '#3b82f6' },
@@ -104,11 +113,18 @@ export function TopicAnalysis({
     const colors = ['#3b82f6', '#10b981', '#8b5cf6', '#f59e0b', '#ef4444', '#06b6d4', '#84cc16']
     const breakdown = data.breakdowns[activeBreakdown as keyof typeof data.breakdowns]
     
-    return breakdown.map((item, index) => ({
-      name: item[Object.keys(item)[0] as keyof typeof item] as string,
-      value: item.percentage,
-      color: colors[index % colors.length]
-    }))
+    return breakdown.map((item, index) => {
+      const key = Object.keys(item)[0] as keyof typeof item
+      const name = item[key] as string
+      const value = showYes ? item.yes : item.no
+      const color = showYes ? colors[index % colors.length] : '#ef4444' // Red for No
+      
+      return {
+        name,
+        value,
+        color
+      }
+    })
   }
 
   const getBreakdownLabel = () => {
@@ -194,6 +210,38 @@ export function TopicAnalysis({
         ))}
       </div>
 
+      {/* Yes/No Toggle */}
+      <div className="flex justify-center mb-6">
+        <div className="flex bg-gray-100 rounded-lg p-1">
+          <motion.button
+            onClick={() => setShowYes(true)}
+            className={`flex items-center gap-2 px-4 py-2 rounded-md font-medium transition-all duration-200 ${
+              showYes
+                ? 'bg-green-500 text-white shadow-md'
+                : 'text-gray-600 hover:text-gray-800'
+            }`}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <TrendingUp className="h-4 w-4" />
+            Support (Yes)
+          </motion.button>
+          <motion.button
+            onClick={() => setShowYes(false)}
+            className={`flex items-center gap-2 px-4 py-2 rounded-md font-medium transition-all duration-200 ${
+              !showYes
+                ? 'bg-red-500 text-white shadow-md'
+                : 'text-gray-600 hover:text-gray-800'
+            }`}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <TrendingDown className="h-4 w-4" />
+            Oppose (No)
+          </motion.button>
+        </div>
+      </div>
+
       {/* Chart Display */}
       <motion.div
         key={activeBreakdown}
@@ -204,7 +252,7 @@ export function TopicAnalysis({
       >
         <div className="text-center mb-4">
           <h3 className="text-xl font-semibold text-gray-900">
-            Support by {getBreakdownLabel()}
+            {showYes ? 'Support' : 'Opposition'} by {getBreakdownLabel()}
           </h3>
         </div>
         <div className="flex justify-center">
@@ -245,15 +293,23 @@ export function TopicAnalysis({
             Key Insights from {getBreakdownLabel()} Analysis
           </h3>
           <div className="grid gap-3">
-            {data.insights.map((insight, index) => (
+            {data.insights[showYes ? 'yes' : 'no'].map((insight, index) => (
               <motion.div
                 key={index}
-                className="flex items-start gap-3 p-3 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-200"
+                className={`flex items-start gap-3 p-3 rounded-lg border ${
+                  showYes 
+                    ? 'bg-gradient-to-r from-green-50 to-blue-50 border-green-200' 
+                    : 'bg-gradient-to-r from-red-50 to-orange-50 border-red-200'
+                }`}
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: index * 0.1 }}
               >
-                <TrendingUp className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
+                {showYes ? (
+                  <TrendingUp className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
+                ) : (
+                  <TrendingDown className="h-5 w-5 text-red-600 mt-0.5 flex-shrink-0" />
+                )}
                 <span className="text-sm text-gray-700">{insight}</span>
               </motion.div>
             ))}
