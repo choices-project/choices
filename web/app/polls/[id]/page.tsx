@@ -99,37 +99,26 @@ export default function PollDetailPage() {
   const router = useRouter()
   const pollId = params.id as string
   
-  const [poll, setPoll] = useState<Poll | null>(null)
+  // Get poll data immediately from mock data
+  const pollData = mockPolls[pollId] || mockPolls['climate-action']
+  
+  const [poll, setPoll] = useState<Poll | null>(pollData)
   const [voteResults, setVoteResults] = useState<VoteResult[]>([])
   const [demographics, setDemographics] = useState<DemographicData | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
   const [userVote, setUserVote] = useState<number | null>(null)
   const [voting, setVoting] = useState(false)
   const [activeTab, setActiveTab] = useState('results')
 
   useEffect(() => {
-    fetchPollData()
-  }, [pollId])
-
-  const fetchPollData = async () => {
-    try {
-      setLoading(true)
-      
-      // Use mock data for now since API isn't working
-      const pollData = mockPolls[pollId] || mockPolls['climate-action']
-      setPoll(pollData)
-      
+    if (pollData) {
       // Generate realistic vote results that tell a story
       generateVoteResults(pollData)
       
       // Generate demographic data
       generateDemographics()
-    } catch (error) {
-      console.error('Failed to fetch poll data:', error)
-    } finally {
-      setLoading(false)
     }
-  }
+  }, [pollId])
 
   const generateVoteResults = (pollData: Poll) => {
     const totalVotes = pollData.total_votes || 2500
