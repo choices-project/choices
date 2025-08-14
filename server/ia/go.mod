@@ -3,13 +3,13 @@ module choice/ia
 go 1.23.0
 
 require (
-	github.com/go-webauthn/webauthn v0.13.4
-	github.com/mattn/go-sqlite3 v1.14.31
+	github.com/lib/pq v1.10.9
 	golang.org/x/crypto v0.41.0
 )
 
 require (
 	github.com/fxamacker/cbor/v2 v2.9.0 // indirect
+	github.com/go-webauthn/webauthn v0.13.4 // indirect
 	github.com/go-webauthn/x v0.1.23 // indirect
 	github.com/golang-jwt/jwt/v5 v5.2.3 // indirect
 	github.com/google/go-tpm v0.9.5 // indirect

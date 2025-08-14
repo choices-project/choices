@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"path/filepath"
+	"time"
 
-	_ "github.com/mattn/go-sqlite3"
+	_ "github.com/lib/pq"
 )
 
 // Database represents the IA service database
@@ -16,27 +16,29 @@ type Database struct {
 }
 
 // NewDatabase creates a new database connection
-func NewDatabase(dbPath string) (*Database, error) {
-	// Ensure the directory exists
-	dir := filepath.Dir(dbPath)
-	if err := os.MkdirAll(dir, 0755); err != nil {
-		return nil, fmt.Errorf("failed to create database directory: %w", err)
+func NewDatabase(dbURL string) (*Database, error) {
+	// Use environment variable if dbURL is empty
+	if dbURL == "" {
+		dbURL = os.Getenv("DATABASE_URL")
+		if dbURL == "" {
+			dbURL = "postgres://choices_user:choices_password@localhost:5432/choices?sslmode=disable"
+		}
 	}
 
 	// Open database connection
-	db, err := sql.Open("sqlite3", dbPath)
+	db, err := sql.Open("postgres", dbURL)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open database: %w", err)
 	}
 
+	// Configure connection pool
+	db.SetMaxOpenConns(25)
+	db.SetMaxIdleConns(5)
+	db.SetConnMaxLifetime(5 * time.Minute)
+
 	// Test the connection
 	if err := db.Ping(); err != nil {
 		return nil, fmt.Errorf("failed to ping database: %w", err)
-	}
-
-	// Enable foreign keys
-	if _, err := db.Exec("PRAGMA foreign_keys = ON;"); err != nil {
-		return nil, fmt.Errorf("failed to enable foreign keys: %w", err)
 	}
 
 	// Initialize the database schema
@@ -59,64 +61,87 @@ func (d *Database) GetDB() *sql.DB {
 
 // initializeSchema initializes the database schema
 func initializeSchema(db *sql.DB) error {
+	// Check if tables already exist
+	var tableCount int
+	err := db.QueryRow(`
+		SELECT COUNT(*) 
+		FROM information_schema.tables 
+		WHERE table_schema = 'public' 
+		AND table_name LIKE 'ia_%'
+	`).Scan(&tableCount)
+	
+	if err != nil {
+		return fmt.Errorf("failed to check existing tables: %w", err)
+	}
+
+	// If tables exist, assume schema is already initialized
+	if tableCount > 0 {
+		log.Println("Database schema already initialized")
+		return nil
+	}
+
+	log.Println("Initializing database schema...")
+
 	// Define schema inline since file reading is problematic
 	schema := `
 	-- IA Service Database Schema
 
 	-- Users table for storing user information
-	CREATE TABLE IF NOT EXISTS users (
-		id INTEGER PRIMARY KEY AUTOINCREMENT,
+	CREATE TABLE IF NOT EXISTS ia_users (
+		id SERIAL PRIMARY KEY,
 		stable_id TEXT UNIQUE NOT NULL,
 		email TEXT,
-		created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-		updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+		created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+		updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
 		verification_tier TEXT DEFAULT 'T0',
-		is_active BOOLEAN DEFAULT 1
+		is_active BOOLEAN DEFAULT TRUE
 	);
 
 	-- Tokens table for storing issued tokens
-	CREATE TABLE IF NOT EXISTS tokens (
-		id INTEGER PRIMARY KEY AUTOINCREMENT,
+	CREATE TABLE IF NOT EXISTS ia_tokens (
+		id SERIAL PRIMARY KEY,
 		user_stable_id TEXT NOT NULL,
 		poll_id TEXT NOT NULL,
 		token_hash TEXT NOT NULL,
 		tag TEXT NOT NULL,
 		tier TEXT NOT NULL,
 		scope TEXT NOT NULL,
-		issued_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-		expires_at DATETIME NOT NULL,
-		is_revoked BOOLEAN DEFAULT 0
+		issued_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+		expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
+		is_revoked BOOLEAN DEFAULT FALSE
 	);
 
 	-- Verification sessions for WebAuthn
-	CREATE TABLE IF NOT EXISTS verification_sessions (
-		id INTEGER PRIMARY KEY AUTOINCREMENT,
+	CREATE TABLE IF NOT EXISTS ia_verification_sessions (
+		id SERIAL PRIMARY KEY,
 		user_stable_id TEXT NOT NULL,
 		session_id TEXT UNIQUE NOT NULL,
 		challenge TEXT NOT NULL,
-		created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-		expires_at DATETIME NOT NULL,
-		is_used BOOLEAN DEFAULT 0
+		created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+		expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
+		is_used BOOLEAN DEFAULT FALSE
 	);
 
 	-- WebAuthn credentials
-	CREATE TABLE IF NOT EXISTS webauthn_credentials (
-		id INTEGER PRIMARY KEY AUTOINCREMENT,
+	CREATE TABLE IF NOT EXISTS ia_webauthn_credentials (
+		id SERIAL PRIMARY KEY,
 		user_stable_id TEXT NOT NULL,
 		credential_id TEXT UNIQUE NOT NULL,
 		public_key TEXT NOT NULL,
 		sign_count INTEGER DEFAULT 0,
-		created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-		last_used_at DATETIME,
-		is_active BOOLEAN DEFAULT 1
+		created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+		last_used_at TIMESTAMP WITH TIME ZONE,
+		is_active BOOLEAN DEFAULT TRUE
 	);
 
 	-- Create indexes for better performance
-	CREATE INDEX IF NOT EXISTS idx_tokens_user_poll ON tokens(user_stable_id, poll_id);
-	CREATE INDEX IF NOT EXISTS idx_tokens_hash ON tokens(token_hash);
-	CREATE INDEX IF NOT EXISTS idx_tokens_expires ON tokens(expires_at);
-	CREATE INDEX IF NOT EXISTS idx_verification_sessions_user ON verification_sessions(user_stable_id);
-	CREATE INDEX IF NOT EXISTS idx_webauthn_credentials_user ON webauthn_credentials(user_stable_id);
+	CREATE INDEX IF NOT EXISTS idx_ia_tokens_user_poll ON ia_tokens(user_stable_id, poll_id);
+	CREATE INDEX IF NOT EXISTS idx_ia_tokens_hash ON ia_tokens(token_hash);
+	CREATE INDEX IF NOT EXISTS idx_ia_tokens_expires ON ia_tokens(expires_at);
+	CREATE INDEX IF NOT EXISTS idx_ia_verification_sessions_user ON ia_verification_sessions(user_stable_id);
+	CREATE INDEX IF NOT EXISTS idx_ia_webauthn_credentials_user ON ia_webauthn_credentials(user_stable_id);
+	CREATE INDEX IF NOT EXISTS idx_ia_users_stable_id ON ia_users(stable_id);
+	CREATE INDEX IF NOT EXISTS idx_ia_users_email ON ia_users(email);
 	`
 
 	// Execute the schema
