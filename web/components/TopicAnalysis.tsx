@@ -24,7 +24,10 @@ interface TopicData {
     income: { bracket: string; yes: number; no: number }[]
     urbanRural: { type: string; yes: number; no: number }[]
   }
-  insights: string[]
+  insights: {
+    yes: string[]
+    no: string[]
+  }
 }
 
 const sampleTopicData: TopicData = {
