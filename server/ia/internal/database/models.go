@@ -78,11 +78,8 @@ func (r *UserRepository) CreateUser(user *User) error {
 		email = user.Email
 	}
 	
-	log.Printf("Creating user with stable_id: %s, email: %v, tier: %s", user.StableID, email, user.VerificationTier)
-	
 	result, err := r.db.Exec(query, user.StableID, email, user.VerificationTier, user.IsActive)
 	if err != nil {
-		log.Printf("Database error: %v", err)
 		return err
 	}
 
