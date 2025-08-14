@@ -7,6 +7,7 @@ import (
 
 	"choice/po/internal/api"
 	"choice/po/internal/database"
+	"choice/po/internal/middleware"
 )
 
 func main() {
@@ -32,25 +33,37 @@ func main() {
 		log.Fatalf("Failed to create poll service: %v", err)
 	}
 
+	// Create middleware chain
+	mux := http.NewServeMux()
+
 	// Health check endpoint
-	http.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(w, "ok")
 	})
 
 	// Poll management endpoints
-	http.HandleFunc("/api/v1/polls", pollService.HandleCreatePoll)
-	http.HandleFunc("/api/v1/polls/list", pollService.HandleListPolls)
-	http.HandleFunc("/api/v1/polls/get", pollService.HandleGetPoll)
-	http.HandleFunc("/api/v1/polls/activate", pollService.HandleActivatePoll)
-	http.HandleFunc("/api/v1/polls/close", pollService.HandleClosePoll)
+	mux.HandleFunc("/api/v1/polls", pollService.HandleCreatePoll)
+	mux.HandleFunc("/api/v1/polls/list", pollService.HandleListPolls)
+	mux.HandleFunc("/api/v1/polls/get", pollService.HandleGetPoll)
+	mux.HandleFunc("/api/v1/polls/activate", pollService.HandleActivatePoll)
+	mux.HandleFunc("/api/v1/polls/close", pollService.HandleClosePoll)
 
-	// Voting endpoints
-	http.HandleFunc("/api/v1/votes", pollService.HandleSubmitVote)
-	http.HandleFunc("/api/v1/tally", pollService.HandleGetTally)
+	// Voting endpoints with rate limiting
+	mux.HandleFunc("/api/v1/votes", pollService.HandleSubmitVote)
+	mux.HandleFunc("/api/v1/tally", pollService.HandleGetTally)
 
 	// Commitment and audit endpoints
-	http.HandleFunc("/api/v1/commitment", pollService.HandleGetCommitmentLog)
-	http.HandleFunc("/api/v1/verify", pollService.HandleVerifyProof)
+	mux.HandleFunc("/api/v1/commitment", pollService.HandleGetCommitmentLog)
+	mux.HandleFunc("/api/v1/verify", pollService.HandleVerifyProof)
+
+	// Apply middleware chain
+	handler := middleware.CORSMiddleware()(
+		middleware.LoggingMiddleware()(
+			middleware.VoteRateLimitMiddleware()(
+				mux,
+			),
+		),
+	)
 
 	log.Println("PO listening on :8082")
 	log.Println("Available endpoints:")
@@ -65,5 +78,5 @@ func main() {
 	log.Println("  GET  /api/v1/commitment?poll_id=<poll_id>")
 	log.Println("  POST /api/v1/verify?poll_id=<poll_id>")
 	
-	log.Fatal(http.ListenAndServe(":8082", nil))
+	log.Fatal(http.ListenAndServe(":8082", handler))
 }

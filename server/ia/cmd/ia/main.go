@@ -7,6 +7,7 @@ import (
 
 	"choice/ia/internal/api"
 	"choice/ia/internal/database"
+	"choice/ia/internal/middleware"
 	"choice/ia/internal/webauthn"
 )
 
@@ -34,22 +35,34 @@ func main() {
 		log.Fatalf("Failed to create WebAuthn service: %v", err)
 	}
 
+	// Create middleware chain
+	mux := http.NewServeMux()
+
 	// Health check endpoint
-	http.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(w, "ok")
 	})
 
-	// Token issuance endpoint
-	http.HandleFunc("/api/v1/tokens", tokenService.HandleTokenIssuance)
+	// Token issuance endpoint with rate limiting
+	mux.HandleFunc("/api/v1/tokens", tokenService.HandleTokenIssuance)
 
 	// Public key endpoint
-	http.HandleFunc("/api/v1/public-key", tokenService.HandlePublicKey)
+	mux.HandleFunc("/api/v1/public-key", tokenService.HandlePublicKey)
 
-	// WebAuthn endpoints
-	http.HandleFunc("/api/v1/webauthn/register/begin", webAuthnService.HandleBeginRegistration)
-	http.HandleFunc("/api/v1/webauthn/register/finish", webAuthnService.HandleFinishRegistration)
-	http.HandleFunc("/api/v1/webauthn/login/begin", webAuthnService.HandleBeginLogin)
-	http.HandleFunc("/api/v1/webauthn/login/finish", webAuthnService.HandleFinishLogin)
+	// WebAuthn endpoints with rate limiting
+	mux.HandleFunc("/api/v1/webauthn/register/begin", webAuthnService.HandleBeginRegistration)
+	mux.HandleFunc("/api/v1/webauthn/register/finish", webAuthnService.HandleFinishRegistration)
+	mux.HandleFunc("/api/v1/webauthn/login/begin", webAuthnService.HandleBeginLogin)
+	mux.HandleFunc("/api/v1/webauthn/login/finish", webAuthnService.HandleFinishLogin)
+
+	// Apply middleware chain
+	handler := middleware.CORSMiddleware()(
+		middleware.LoggingMiddleware()(
+			middleware.TokenRateLimitMiddleware()(
+				mux,
+			),
+		),
+	)
 
 	log.Println("IA listening on :8081")
 	log.Println("Available endpoints:")
@@ -61,5 +74,5 @@ func main() {
 	log.Println("  POST /api/v1/webauthn/login/begin")
 	log.Println("  POST /api/v1/webauthn/login/finish")
 	
-	log.Fatal(http.ListenAndServe(":8081", nil))
+	log.Fatal(http.ListenAndServe(":8081", handler))
 }
