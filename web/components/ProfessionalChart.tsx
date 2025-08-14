@@ -1,55 +1,58 @@
-'use client';
+'use client'
 
-import React, { useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import * as Tooltip from '@radix-ui/react-tooltip';
-import * as Progress from '@radix-ui/react-progress';
-import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { useState, useEffect } from 'react'
+import { motion, Variants } from 'framer-motion'
+import { TrendingUp, TrendingDown, Minus, BarChart3, PieChart, Activity } from 'lucide-react'
+import * as Tooltip from '@radix-ui/react-tooltip'
 
-interface ChartDataPoint {
-  name: string;
-  value: number;
-  color: string;
-  trend: string;
-  confidence: number;
-  previousValue?: number;
+interface ChartData {
+  name: string
+  value: number
+  color: string
+  confidence?: number
+  previousValue?: number
 }
 
 interface ProfessionalChartProps {
-  data: ChartDataPoint[];
-  title: string;
-  subtitle?: string;
-  type: 'bar' | 'progress' | 'trend';
-  height?: number;
-  showTrends?: boolean;
-  showConfidence?: boolean;
+  data: ChartData[]
+  title?: string
+  subtitle?: string
+  type?: 'bar' | 'progress'
+  showTrends?: boolean
+  showConfidence?: boolean
+  maxValue?: number
 }
 
 export function ProfessionalChart({
   data,
   title,
   subtitle,
-  type,
-  height = 300,
-  showTrends = true,
-  showConfidence = true
+  type = 'bar',
+  showTrends = false,
+  showConfidence = false,
+  maxValue
 }: ProfessionalChartProps) {
-  const maxValue = useMemo(() => Math.max(...data.map(d => d.value)), [data]);
-  const sortedData = useMemo(() => [...data].sort((a, b) => b.value - a.value), [data]);
+  const [isVisible, setIsVisible] = useState(false)
 
-  const containerVariants = {
-    hidden: { opacity: 0, y: 20 },
+  useEffect(() => {
+    setIsVisible(true)
+  }, [])
+
+  const sortedData = [...data].sort((a, b) => b.value - a.value)
+  const calculatedMaxValue = maxValue || Math.max(...data.map(item => item.value))
+
+  const containerVariants: Variants = {
+    hidden: { opacity: 0 },
     visible: {
       opacity: 1,
-      y: 0,
       transition: {
-        duration: 0.6,
+        duration: 0.5,
         staggerChildren: 0.1
       }
     }
-  };
+  }
 
-  const itemVariants = {
+  const itemVariants: Variants = {
     hidden: { opacity: 0, x: -20 },
     visible: {
       opacity: 1,
@@ -59,12 +62,12 @@ export function ProfessionalChart({
         ease: "easeOut"
       }
     }
-  };
+  }
 
   const renderBarChart = () => (
     <div className="space-y-4">
       {sortedData.map((item, index) => {
-        const percentage = (item.value / maxValue) * 100;
+        const percentage = (item.value / calculatedMaxValue) * 100;
         const trendChange = item.previousValue ? item.value - item.previousValue : 0;
         const trendPercentage = item.previousValue ? (trendChange / item.previousValue) * 100 : 0;
 
@@ -172,107 +175,52 @@ export function ProfessionalChart({
             <span className="text-sm font-medium text-gray-700">{item.name}</span>
             <span className="text-sm font-bold text-gray-900">{item.value}%</span>
           </div>
-          <Progress.Root className="relative overflow-hidden bg-gray-100 rounded-full h-2">
-            <motion.div
-              initial={{ width: 0 }}
-              animate={{ width: `${item.value}%` }}
-              transition={{ 
-                duration: 1.5, 
-                delay: index * 0.2,
-                ease: "easeOut"
-              }}
-            >
-              <Progress.Indicator 
-                className="h-full transition-all duration-300 ease-out"
+          <div className="relative">
+            <div className="h-4 bg-gray-100 rounded-full overflow-hidden">
+              <motion.div
+                className="h-full rounded-full relative"
                 style={{ backgroundColor: item.color }}
-              />
-            </motion.div>
-          </Progress.Root>
+                initial={{ width: 0 }}
+                animate={{ width: `${item.value}%` }}
+                transition={{ 
+                  duration: 1.2, 
+                  delay: index * 0.1,
+                  ease: "easeOut"
+                }}
+                whileHover={{ 
+                  scale: 1.02,
+                  transition: { duration: 0.2 }
+                }}
+              >
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+              </motion.div>
+            </div>
+          </div>
         </motion.div>
       ))}
     </div>
   );
 
-  const renderTrendChart = () => (
-    <div className="space-y-4">
-      {sortedData.map((item, index) => {
-        const trendChange = item.previousValue ? item.value - item.previousValue : 0;
-        
-        return (
-          <motion.div
-            key={item.name}
-            variants={itemVariants}
-            className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm hover:shadow-md transition-shadow"
-          >
-            <div className="flex items-center justify-between mb-3">
-              <span className="font-medium text-gray-900">{item.name}</span>
-              <div className="flex items-center gap-2">
-                <span className="text-2xl font-bold" style={{ color: item.color }}>
-                  {item.value}%
-                </span>
-                {showTrends && (
-                  <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
-                    trendChange > 0 ? 'bg-green-100 text-green-700' :
-                    trendChange < 0 ? 'bg-red-100 text-red-700' :
-                    'bg-gray-100 text-gray-700'
-                  }`}>
-                    {trendChange > 0 && <TrendingUp className="h-3 w-3" />}
-                    {trendChange < 0 && <TrendingDown className="h-3 w-3" />}
-                    {trendChange === 0 && <Minus className="h-3 w-3" />}
-                    {trendChange > 0 ? '+' : ''}{trendChange.toFixed(1)}%
-                  </div>
-                )}
-              </div>
-            </div>
-            
-            <div className="flex items-center gap-4">
-              <div className="flex-1">
-                <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                  <motion.div
-                    className="h-full rounded-full"
-                    style={{ backgroundColor: item.color }}
-                    initial={{ width: 0 }}
-                    animate={{ width: `${item.value}%` }}
-                    transition={{ 
-                      duration: 1.2, 
-                      delay: index * 0.1 + 0.5,
-                      ease: "easeOut"
-                    }}
-                  />
-                </div>
-              </div>
-              {showConfidence && (
-                <span className="text-xs text-gray-500 whitespace-nowrap">
-                  ±{item.confidence}
-                </span>
-              )}
-            </div>
-          </motion.div>
-        );
-      })}
-    </div>
-  );
-
   return (
-    <motion.div
-      variants={containerVariants}
-      initial="hidden"
-      animate="visible"
-      className="bg-white rounded-xl p-6 shadow-sm border border-gray-200"
-      style={{ height }}
-    >
-      <div className="mb-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-1">{title}</h3>
-        {subtitle && (
-          <p className="text-sm text-gray-600">{subtitle}</p>
-        )}
-      </div>
+    <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100">
+      {(title || subtitle) && (
+        <div className="mb-6">
+          {title && (
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">{title}</h3>
+          )}
+          {subtitle && (
+            <p className="text-sm text-gray-600">{subtitle}</p>
+          )}
+        </div>
+      )}
 
-      <div className="h-full">
-        {type === 'bar' && renderBarChart()}
-        {type === 'progress' && renderProgressChart()}
-        {type === 'trend' && renderTrendChart()}
-      </div>
-    </motion.div>
+      <motion.div
+        variants={containerVariants}
+        initial="hidden"
+        animate={isVisible ? "visible" : "hidden"}
+      >
+        {type === 'bar' ? renderBarChart() : renderProgressChart()}
+      </motion.div>
+    </div>
   );
 }
