@@ -3,122 +3,59 @@
 import Link from 'next/link';
 import { Vote, Shield, Users, BarChart3 } from 'lucide-react';
 
-export default function Home() {
+export default function HomePage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Choices</h1>
-              <p className="text-gray-600 mt-1">
-                Privacy-preserving real-time polling network
-              </p>
-            </div>
-            <nav className="flex space-x-8">
-              <Link href="/" className="text-gray-900 hover:text-blue-600 transition-colors">
-                Home
-              </Link>
-              <Link href="/polls" className="text-gray-600 hover:text-blue-600 transition-colors">
-                Polls
-              </Link>
-              <Link href="/dashboard" className="text-gray-600 hover:text-blue-600 transition-colors">
-                Dashboard
-              </Link>
-              <Link href="/about" className="text-gray-600 hover:text-blue-600 transition-colors">
-                About
-              </Link>
-            </nav>
-          </div>
-        </div>
-      </header>
-
-      {/* Hero Section */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl font-bold text-gray-900 mb-4">
-            Secure, Private, and Auditable Voting
-          </h2>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Participate in polls with complete privacy while maintaining full transparency and auditability. 
-            Your voice matters, and your privacy is protected.
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="text-center">
+          <h1 className="text-4xl font-bold text-gray-900 mb-6">
+            Welcome to Choices
+          </h1>
+          <p className="text-xl text-gray-600 mb-8">
+            A neutral, privacy-preserving real-time polling network
           </p>
-        </div>
-
-        {/* Features Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
-          <div className="bg-white rounded-xl shadow-sm border p-6 text-center">
-            <div className="bg-blue-100 p-3 rounded-lg w-fit mx-auto mb-4">
-              <Vote className="h-8 w-8 text-blue-600" />
-            </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Privacy-First Voting</h3>
-            <p className="text-gray-600">
-              Vote with complete anonymity using advanced cryptographic techniques
-            </p>
-          </div>
-
-          <div className="bg-white rounded-xl shadow-sm border p-6 text-center">
-            <div className="bg-green-100 p-3 rounded-lg w-fit mx-auto mb-4">
-              <Shield className="h-8 w-8 text-green-600" />
-            </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Verifiable Results</h3>
-            <p className="text-gray-600">
-              All votes are publicly verifiable while maintaining individual privacy
-            </p>
-          </div>
-
-          <div className="bg-white rounded-xl shadow-sm border p-6 text-center">
-            <div className="bg-purple-100 p-3 rounded-lg w-fit mx-auto mb-4">
-              <Users className="h-8 w-8 text-purple-600" />
-            </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Real-Time Results</h3>
-            <p className="text-gray-600">
-              See live results and participate in ongoing polls instantly
-            </p>
-          </div>
-
-          <div className="bg-white rounded-xl shadow-sm border p-6 text-center">
-            <div className="bg-orange-100 p-3 rounded-lg w-fit mx-auto mb-4">
-              <BarChart3 className="h-8 w-8 text-orange-600" />
-            </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Analytics & Insights</h3>
-            <p className="text-gray-600">
-              Comprehensive analytics with demographic breakdowns and trends
-            </p>
-          </div>
-        </div>
-
-        {/* CTA Section */}
-        <div className="bg-white rounded-xl shadow-sm border p-8 text-center">
-          <h3 className="text-2xl font-bold text-gray-900 mb-4">
-            Ready to Start Voting?
-          </h3>
-          <p className="text-gray-600 mb-6">
-            Join thousands of users who trust Choices for secure and private polling
-          </p>
-          <div className="flex justify-center space-x-4">
-            <Link
-              href="/polls"
-              className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium"
-            >
-              View Active Polls
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+            <Link href="/dashboard">
+              <div className="bg-white rounded-lg shadow-sm p-8 hover:shadow-md transition-shadow cursor-pointer">
+                <div className="text-3xl mb-4">📊</div>
+                <h2 className="text-2xl font-semibold text-gray-900 mb-2">Dashboard</h2>
+                <p className="text-gray-600">
+                  View real-time analytics, metrics, and insights from our polling system.
+                </p>
+              </div>
             </Link>
-            <Link
-              href="/dashboard"
-              className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors font-medium"
-            >
-              Live Dashboard
-            </Link>
-            <Link
-              href="/about"
-              className="bg-gray-100 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-200 transition-colors font-medium"
-            >
-              Learn More
+            
+            <Link href="/polls">
+              <div className="bg-white rounded-lg shadow-sm p-8 hover:shadow-md transition-shadow cursor-pointer">
+                <div className="text-3xl mb-4">🗳️</div>
+                <h2 className="text-2xl font-semibold text-gray-900 mb-2">All Polls</h2>
+                <p className="text-gray-600">
+                  Browse and participate in active polls. See poll details and voting options.
+                </p>
+              </div>
             </Link>
           </div>
+          
+          <div className="mt-12 text-center">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">System Status</h3>
+            <div className="flex justify-center space-x-8">
+              <div className="text-center">
+                <div className="w-3 h-3 bg-green-500 rounded-full mx-auto mb-2"></div>
+                <p className="text-sm text-gray-600">PO Service</p>
+              </div>
+              <div className="text-center">
+                <div className="w-3 h-3 bg-green-500 rounded-full mx-auto mb-2"></div>
+                <p className="text-sm text-gray-600">IA Service</p>
+              </div>
+              <div className="text-center">
+                <div className="w-3 h-3 bg-green-500 rounded-full mx-auto mb-2"></div>
+                <p className="text-sm text-gray-600">Web Interface</p>
+              </div>
+            </div>
+          </div>
         </div>
-      </main>
+      </div>
     </div>
   );
 }
