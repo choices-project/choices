@@ -170,10 +170,10 @@ export default function PollDetailPage() {
         'Asia': 18,
         'Other': 7
       },
-      participation_trends: Array.from({ length: 7 }, (_, i) => ({
-        date: new Date(Date.now() - (6 - i) * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', { weekday: 'short' }),
-        votes: Math.floor(Math.random() * 200) + 100
-      }))
+             participation_trends: Array.from({ length: 7 }, (_, i) => ({
+         date: new Date(Date.now() - (6 - i) * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', { weekday: 'short' }),
+         votes: Math.floor((pollData.id.charCodeAt(0) + i * 20) % 200) + 100
+       }))
     })
   }
 
@@ -284,10 +284,10 @@ export default function PollDetailPage() {
                   {getStatusIcon(poll.status)}
                   {poll.status.charAt(0).toUpperCase() + poll.status.slice(1)}
                 </span>
-                <div className="flex items-center gap-2 text-gray-500">
-                  <Eye className="h-4 w-4" />
-                  <span className="text-sm">{Math.floor(Math.random() * 10000) + 1000} views</span>
-                </div>
+                                 <div className="flex items-center gap-2 text-gray-500">
+                   <Eye className="h-4 w-4" />
+                   <span className="text-sm">{Math.floor((poll.id.charCodeAt(0) + poll.id.length) * 100) + 1000} views</span>
+                 </div>
               </div>
               
               <h2 className="text-3xl font-bold text-gray-900 mb-4">{poll.title}</h2>
