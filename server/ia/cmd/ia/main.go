@@ -6,11 +6,23 @@ import (
 	"net/http"
 
 	"choice/ia/internal/api"
+	"choice/ia/internal/database"
 )
 
 func main() {
+	// Initialize database
+	db, err := database.NewDatabase("data/ia.db")
+	if err != nil {
+		log.Fatalf("Failed to initialize database: %v", err)
+	}
+	defer db.Close()
+
+	// Create repositories
+	userRepo := database.NewUserRepository(db)
+	tokenRepo := database.NewTokenRepository(db)
+
 	// Create token service
-	tokenService, err := api.NewTokenService()
+	tokenService, err := api.NewTokenService(userRepo, tokenRepo)
 	if err != nil {
 		log.Fatalf("Failed to create token service: %v", err)
 	}
