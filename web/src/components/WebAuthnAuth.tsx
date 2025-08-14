@@ -146,7 +146,7 @@ export default function WebAuthnAuth({ onAuthenticated }: WebAuthnAuthProps) {
               clientDataJSON: Array.from(new Uint8Array((assertion.response as AuthenticatorAssertionResponse).clientDataJSON)),
               authenticatorData: Array.from(new Uint8Array((assertion.response as AuthenticatorAssertionResponse).authenticatorData)),
               signature: Array.from(new Uint8Array((assertion.response as AuthenticatorAssertionResponse).signature)),
-              userHandle: assertion.response.userHandle ? Array.from(new Uint8Array(assertion.response.userHandle)) : undefined,
+              userHandle: (assertion.response as AuthenticatorAssertionResponse).userHandle ? Array.from(new Uint8Array((assertion.response as AuthenticatorAssertionResponse).userHandle!)) : undefined,
             },
           },
         }),
