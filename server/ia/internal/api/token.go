@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"time"
 
+	"choice/ia/internal/audit"
 	"choice/ia/internal/database"
 	"choice/ia/internal/voprf"
 )
@@ -37,19 +38,21 @@ type TokenService struct {
 	voprf           *voprf.VOPRF
 	userRepo        *database.UserRepository
 	tokenRepo       *database.TokenRepository
+	auditLogger     *audit.AuditLogger
 }
 
 // NewTokenService creates a new token service
-func NewTokenService(userRepo *database.UserRepository, tokenRepo *database.TokenRepository) (*TokenService, error) {
+func NewTokenService(userRepo *database.UserRepository, tokenRepo *database.TokenRepository, auditLogger *audit.AuditLogger) (*TokenService, error) {
 	voprfInstance, err := voprf.NewVOPRF()
 	if err != nil {
 		return nil, fmt.Errorf("failed to create VOPRF instance: %w", err)
 	}
 
 	return &TokenService{
-		voprf:     voprfInstance,
-		userRepo:  userRepo,
-		tokenRepo: tokenRepo,
+		voprf:       voprfInstance,
+		userRepo:    userRepo,
+		tokenRepo:   tokenRepo,
+		auditLogger: auditLogger,
 	}, nil
 }
 
@@ -60,9 +63,22 @@ func (ts *TokenService) HandleTokenIssuance(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
+	// Get client information for audit logging
+	clientIP := r.RemoteAddr
+	if forwardedFor := r.Header.Get("X-Forwarded-For"); forwardedFor != "" {
+		clientIP = forwardedFor
+	}
+	userAgent := r.Header.Get("User-Agent")
+	userID := r.Header.Get("X-User-ID")
+	userTier := r.Header.Get("X-User-Tier")
+
 	// Parse request
 	var req TokenIssuanceRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		// Log failed request
+		if ts.auditLogger != nil {
+			ts.auditLogger.LogTokenIssuance(userID, userTier, req.PollID, clientIP, userAgent, false, "Invalid request body")
+		}
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
@@ -141,6 +157,11 @@ func (ts *TokenService) HandleTokenIssuance(w http.ResponseWriter, r *http.Reque
 		Tier:      req.Tier,
 		Scope:     req.Scope,
 		PublicKey: fmt.Sprintf("%x", ts.voprf.GetPublicKey()),
+	}
+
+	// Log successful token issuance
+	if ts.auditLogger != nil {
+		ts.auditLogger.LogTokenIssuance(req.UserStableID, req.Tier, req.PollID, clientIP, userAgent, true, "")
 	}
 
 	// Return response

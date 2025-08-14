@@ -3,7 +3,6 @@ package voting
 import (
 	"fmt"
 	"log"
-	"math"
 )
 
 // VerificationTier represents the different verification levels

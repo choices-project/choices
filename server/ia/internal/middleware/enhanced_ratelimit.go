@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"fmt"
 	"net/http"
 	"sync"
 	"time"
@@ -151,7 +152,6 @@ func EnhancedRateLimitMiddleware() func(http.Handler) http.Handler {
 
 			// Check rate limit
 			if !limiter.isAllowed(userID, userTier, clientIP) {
-				remaining := limiter.getRemainingRequests(userID, userTier)
 				w.Header().Set("X-RateLimit-Remaining", "0")
 				w.Header().Set("X-RateLimit-Reset", time.Now().Add(time.Hour).Format(time.RFC3339))
 				http.Error(w, "Rate limit exceeded", http.StatusTooManyRequests)
@@ -160,8 +160,8 @@ func EnhancedRateLimitMiddleware() func(http.Handler) http.Handler {
 
 			// Add rate limit headers
 			remaining := limiter.getRemainingRequests(userID, userTier)
-			w.Header().Set("X-RateLimit-Remaining", string(rune(remaining)))
-			w.Header().Set("X-RateLimit-Limit", string(rune(limiter.limits[userTier].Requests)))
+			w.Header().Set("X-RateLimit-Remaining", fmt.Sprintf("%d", remaining))
+			w.Header().Set("X-RateLimit-Limit", fmt.Sprintf("%d", limiter.limits[userTier].Requests))
 			w.Header().Set("X-RateLimit-Window", limiter.limits[userTier].Window.String())
 
 			next.ServeHTTP(w, r)
@@ -169,8 +169,8 @@ func EnhancedRateLimitMiddleware() func(http.Handler) http.Handler {
 	}
 }
 
-// TokenRateLimitMiddleware creates middleware specifically for token issuance
-func TokenRateLimitMiddleware() func(http.Handler) http.Handler {
+// EnhancedTokenRateLimitMiddleware creates middleware specifically for token issuance
+func EnhancedTokenRateLimitMiddleware() func(http.Handler) http.Handler {
 	limiter := NewEnhancedRateLimiter()
 	
 	// Override limits for token issuance (more restrictive)
@@ -193,7 +193,6 @@ func TokenRateLimitMiddleware() func(http.Handler) http.Handler {
 			}
 
 			if !limiter.isAllowed(userID, userTier, clientIP) {
-				remaining := limiter.getRemainingRequests(userID, userTier)
 				w.Header().Set("X-RateLimit-Remaining", "0")
 				w.Header().Set("X-RateLimit-Reset", time.Now().Add(time.Hour).Format(time.RFC3339))
 				http.Error(w, "Token rate limit exceeded", http.StatusTooManyRequests)
@@ -201,8 +200,8 @@ func TokenRateLimitMiddleware() func(http.Handler) http.Handler {
 			}
 
 			remaining := limiter.getRemainingRequests(userID, userTier)
-			w.Header().Set("X-RateLimit-Remaining", string(rune(remaining)))
-			w.Header().Set("X-RateLimit-Limit", string(rune(limiter.limits[userTier].Requests)))
+			w.Header().Set("X-RateLimit-Remaining", fmt.Sprintf("%d", remaining))
+			w.Header().Set("X-RateLimit-Limit", fmt.Sprintf("%d", limiter.limits[userTier].Requests))
 
 			next.ServeHTTP(w, r)
 		})

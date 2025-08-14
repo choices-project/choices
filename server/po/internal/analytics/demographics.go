@@ -3,10 +3,7 @@ package analytics
 import (
 	"crypto/rand"
 	"encoding/json"
-	"fmt"
-	"log"
 	"math"
-	"sort"
 )
 
 // DemographicCategory represents different demographic categories

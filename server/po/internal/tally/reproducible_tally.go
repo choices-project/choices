@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"log"
 	"sort"
-	"strconv"
 	"time"
 )
 
@@ -147,9 +146,10 @@ func (rt *ReproducibleTally) ComputeTally(input TallyInput) (*TallyResult, error
 	
 	// Populate result
 	result.TotalVotes = len(input.Votes)
-	result.ValidVotes = step4.Output.(map[int]int)["valid"]
-	result.InvalidVotes = step4.Output.(map[int]int)["invalid"]
-	result.ChoiceCounts = step4.Output.(map[int]int)
+	step4Result := step4.Output.(map[string]interface{})
+	result.ValidVotes = step4Result["valid_votes"].(int)
+	result.InvalidVotes = step4Result["invalid_votes"].(int)
+	result.ChoiceCounts = step4Result["choice_counts"].(map[int]int)
 	result.WeightedCounts = step5.Output.(map[int]float64)
 	result.InputHash = result.VerificationData.InputChecksum
 	result.ResultHash = step6.Output.(string)
@@ -289,10 +289,14 @@ func (rt *ReproducibleTally) countVotes(votes []VoteRecord) ProcessingStep {
 		}
 	}
 	
-	choiceCounts["valid"] = validVotes
-	choiceCounts["invalid"] = invalidVotes
+	// Create result with both choice counts and valid/invalid counts
+	result := map[string]interface{}{
+		"choice_counts": choiceCounts,
+		"valid_votes":   validVotes,
+		"invalid_votes": invalidVotes,
+	}
 	
-	step.Output = choiceCounts
+	step.Output = result
 	step.Checksum = rt.computeChecksum(step)
 	return step
 }

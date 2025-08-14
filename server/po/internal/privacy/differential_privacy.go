@@ -5,7 +5,6 @@ import (
 	"encoding/binary"
 	"fmt"
 	"math"
-	"math/big"
 )
 
 // DifferentialPrivacy provides differential privacy mechanisms
@@ -70,7 +69,7 @@ func (dp *DifferentialPrivacy) ExponentialMechanism(utilityScores map[string]flo
 	weights := make(map[string]float64)
 	maxScore := math.Inf(-1)
 	
-	for item, score := range utilityScores {
+	for _, score := range utilityScores {
 		if score > maxScore {
 			maxScore = score
 		}
@@ -95,11 +94,6 @@ func (dp *DifferentialPrivacy) ExponentialMechanism(utilityScores map[string]flo
 		if u <= cumulativeWeight {
 			return item, nil
 		}
-	}
-	
-	// Fallback to last item
-	for item := range weights {
-		return item, nil
 	}
 	
 	return "", nil
@@ -286,8 +280,14 @@ func (dp *DifferentialPrivacy) PrivateMode(values []string, sensitivity int) (st
 		counts[value]++
 	}
 	
+	// Convert to float64 for exponential mechanism
+	utilityScores := make(map[string]float64)
+	for item, count := range counts {
+		utilityScores[item] = float64(count)
+	}
+	
 	// Use exponential mechanism to select the mode
-	return dp.ExponentialMechanism(counts, float64(sensitivity))
+	return dp.ExponentialMechanism(utilityScores, float64(sensitivity))
 }
 
 // ComposePrivacyBudgets composes multiple differential privacy operations
@@ -310,8 +310,8 @@ func (dp *DifferentialPrivacy) ComposePrivacyBudgets(epsilons []float64, deltas 
 // AdvancedComposition provides advanced composition for multiple queries
 func (dp *DifferentialPrivacy) AdvancedComposition(k int, epsilon, delta float64) (float64, float64) {
 	// Advanced composition theorem
-	composedEpsilon := epsilon * math.Sqrt(2*k*math.Log(1/dp.delta))
-	composedDelta := k * delta
+	composedEpsilon := epsilon * math.Sqrt(2*float64(k)*math.Log(1/dp.delta))
+	composedDelta := float64(k) * delta
 	
 	return composedEpsilon, composedDelta
 }
