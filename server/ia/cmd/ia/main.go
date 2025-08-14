@@ -16,7 +16,7 @@ import (
 
 func main() {
 	// Initialize database
-	db, err := database.NewDatabase("data/ia.db")
+	db, err := database.NewDatabase("")
 	if err != nil {
 		log.Fatalf("Failed to initialize database: %v", err)
 	}
@@ -68,35 +68,15 @@ func main() {
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 			return
 		}
-		
+
 		events := auditLogger.GetEvents()
-		jsonData, err := json.Marshal(events)
-		if err != nil {
-			http.Error(w, "Failed to marshal events", http.StatusInternalServerError)
-			return
-		}
-		
 		w.Header().Set("Content-Type", "application/json")
-		w.Write(jsonData)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"events": events,
+		})
 	})
 
-	mux.HandleFunc("/api/v1/audit/export", func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodGet {
-			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-			return
-		}
-		
-		jsonData, err := auditLogger.ExportAuditLog()
-		if err != nil {
-			http.Error(w, "Failed to export audit log", http.StatusInternalServerError)
-			return
-		}
-		
-		w.Header().Set("Content-Type", "application/json")
-		w.Write(jsonData)
-	})
-
-	// Apply middleware chain with enhanced rate limiting
+	// Apply CORS middleware
 	handler := middleware.CORSMiddleware()(
 		middleware.LoggingMiddleware()(
 			middleware.EnhancedTokenRateLimitMiddleware()(
@@ -105,17 +85,9 @@ func main() {
 		),
 	)
 
-	log.Println("IA listening on :8081")
-	log.Println("Available endpoints:")
-	log.Println("  GET  /healthz")
-	log.Println("  POST /api/v1/tokens")
-	log.Println("  GET  /api/v1/public-key")
-	log.Println("  POST /api/v1/webauthn/register/begin")
-	log.Println("  POST /api/v1/webauthn/register/finish")
-	log.Println("  POST /api/v1/webauthn/login/begin")
-	log.Println("  POST /api/v1/webauthn/login/finish")
-	log.Println("  GET  /api/v1/audit/events")
-	log.Println("  GET  /api/v1/audit/export")
-	
-	log.Fatal(http.ListenAndServe(":8081", handler))
+	// Start server
+	log.Println("IA service starting on :8081")
+	if err := http.ListenAndServe(":8081", handler); err != nil {
+		log.Fatalf("Failed to start server: %v", err)
+	}
 }
