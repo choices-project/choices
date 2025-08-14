@@ -9,6 +9,7 @@ import (
 	"choice/po/internal/analytics"
 	"choice/po/internal/api"
 	"choice/po/internal/audit"
+	"choice/po/internal/dashboard"
 	"choice/po/internal/database"
 	"choice/po/internal/middleware"
 	"choice/po/internal/privacy"
@@ -35,6 +36,13 @@ func main() {
 	_ = analytics.NewDemographicAnalyzer(10, 0.1, 0.95) // minGroupSize=10, noiseLevel=0.1, confidenceLevel=0.95
 	_ = privacy.NewDifferentialPrivacy(1.0, 0.0001) // epsilon=1.0, delta=0.0001
 	_ = tally.NewReproducibleTally("1.0", "weighted-voting")
+	
+	// Initialize Phase 8: Real-time Dashboard
+	realTimeDashboard := dashboard.NewRealTimeDashboard()
+	dashboardService := api.NewDashboardService(realTimeDashboard)
+	
+	// Generate sample data for testing
+	realTimeDashboard.GenerateSampleData()
 
 	// For now, we'll use a hardcoded IA public key
 	// In production, this would be fetched from the IA service
@@ -185,6 +193,20 @@ func main() {
 		w.Write(jsonData)
 	})
 
+	// Phase 8: Real-time Dashboard endpoints
+	mux.HandleFunc("/api/v1/dashboard", dashboardService.HandleGetDashboardData)
+	mux.HandleFunc("/api/v1/dashboard/metrics", dashboardService.HandleGetPollMetrics)
+	mux.HandleFunc("/api/v1/dashboard/all-metrics", dashboardService.HandleGetAllMetrics)
+	mux.HandleFunc("/api/v1/dashboard/geographic", dashboardService.HandleGetGeographicData)
+	mux.HandleFunc("/api/v1/dashboard/demographics", dashboardService.HandleGetDemographics)
+	mux.HandleFunc("/api/v1/dashboard/trends", dashboardService.HandleGetTrends)
+	mux.HandleFunc("/api/v1/dashboard/engagement", dashboardService.HandleGetEngagement)
+	mux.HandleFunc("/api/v1/dashboard/activity", dashboardService.HandleGetRecentActivity)
+	mux.HandleFunc("/api/v1/dashboard/export", dashboardService.HandleExportMetrics)
+	mux.HandleFunc("/api/v1/dashboard/heatmap", dashboardService.HandleGetHeatmapData)
+	mux.HandleFunc("/api/v1/dashboard/timeline", dashboardService.HandleGetVoteTimeline)
+	mux.HandleFunc("/api/v1/dashboard/tier-breakdown", dashboardService.HandleGetTierBreakdown)
+
 	// Apply middleware chain
 	handler := middleware.CORSMiddleware()(
 		middleware.LoggingMiddleware()(
@@ -211,6 +233,16 @@ func main() {
 	log.Println("  GET  /api/v1/tiers/weights")
 	log.Println("  GET  /api/v1/analytics/demographics?poll_id=<poll_id>&category=<category>")
 	log.Println("  GET  /api/v1/tally/reproducible?poll_id=<poll_id>")
+	log.Println("  GET  /api/v1/dashboard")
+	log.Println("  GET  /api/v1/dashboard/metrics?poll_id=<poll_id>")
+	log.Println("  GET  /api/v1/dashboard/geographic?poll_id=<poll_id>")
+	log.Println("  GET  /api/v1/dashboard/demographics?poll_id=<poll_id>")
+	log.Println("  GET  /api/v1/dashboard/trends?days=<days>")
+	log.Println("  GET  /api/v1/dashboard/engagement")
+	log.Println("  GET  /api/v1/dashboard/activity?poll_id=<poll_id>&limit=<limit>")
+	log.Println("  GET  /api/v1/dashboard/heatmap?poll_id=<poll_id>")
+	log.Println("  GET  /api/v1/dashboard/timeline?poll_id=<poll_id>")
+	log.Println("  GET  /api/v1/dashboard/tier-breakdown?poll_id=<poll_id>")
 	
 	log.Fatal(http.ListenAndServe(":8082", handler))
 }
