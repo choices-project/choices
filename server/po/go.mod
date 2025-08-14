@@ -2,4 +2,7 @@ module choice/po
 
 go 1.23.0
 
-require golang.org/x/crypto v0.41.0 // indirect
+require (
+	github.com/mattn/go-sqlite3 v1.14.31 // indirect
+	golang.org/x/crypto v0.41.0 // indirect
+)

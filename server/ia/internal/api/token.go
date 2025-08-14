@@ -1,11 +1,15 @@
 package api
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"time"
 
+	"choice/ia/internal/database"
 	"choice/ia/internal/voprf"
 )
 
@@ -30,18 +34,22 @@ type TokenIssuanceResponse struct {
 
 // TokenService handles token issuance operations
 type TokenService struct {
-	voprf *voprf.VOPRF
+	voprf           *voprf.VOPRF
+	userRepo        *database.UserRepository
+	tokenRepo       *database.TokenRepository
 }
 
 // NewTokenService creates a new token service
-func NewTokenService() (*TokenService, error) {
+func NewTokenService(userRepo *database.UserRepository, tokenRepo *database.TokenRepository) (*TokenService, error) {
 	voprfInstance, err := voprf.NewVOPRF()
 	if err != nil {
 		return nil, fmt.Errorf("failed to create VOPRF instance: %w", err)
 	}
 
 	return &TokenService{
-		voprf: voprfInstance,
+		voprf:     voprfInstance,
+		userRepo:  userRepo,
+		tokenRepo: tokenRepo,
 	}, nil
 }
 
@@ -71,6 +79,29 @@ func (ts *TokenService) HandleTokenIssuance(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
+	// Check if user exists, create if not
+	user, err := ts.userRepo.GetUserByStableID(req.UserStableID)
+	if err != nil {
+		log.Printf("Error getting user: %v", err)
+		http.Error(w, "Failed to check user", http.StatusInternalServerError)
+		return
+	}
+
+	if user == nil {
+		// Create new user
+		user = &database.User{
+			StableID:        req.UserStableID,
+			VerificationTier: req.Tier,
+			IsActive:        true,
+		}
+		if err := ts.userRepo.CreateUser(user); err != nil {
+			log.Printf("Error creating user: %v", err)
+			http.Error(w, "Failed to create user", http.StatusInternalServerError)
+			return
+		}
+		log.Printf("Created user: %s", req.UserStableID)
+	}
+
 	// Generate per-poll tag using VOPRF
 	tag, err := ts.voprf.GeneratePerPollTag([]byte(req.UserStableID), []byte(req.PollID))
 	if err != nil {
@@ -78,8 +109,30 @@ func (ts *TokenService) HandleTokenIssuance(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	// Create response
+	// Create token hash for storage
+	tokenHash := sha256.Sum256(tag)
+	tokenHashHex := hex.EncodeToString(tokenHash[:])
+
+	// Store token in database
 	now := time.Now()
+	dbToken := &database.Token{
+		UserStableID: req.UserStableID,
+		PollID:       req.PollID,
+		TokenHash:    tokenHashHex,
+		Tag:          fmt.Sprintf("%x", tag),
+		Tier:         req.Tier,
+		Scope:        req.Scope,
+		ExpiresAt:    now.Add(24 * time.Hour),
+	}
+
+	if err := ts.tokenRepo.CreateToken(dbToken); err != nil {
+		log.Printf("Error creating token: %v", err)
+		http.Error(w, "Failed to store token", http.StatusInternalServerError)
+		return
+	}
+	log.Printf("Created token for user: %s, poll: %s", req.UserStableID, req.PollID)
+
+	// Create response
 	response := TokenIssuanceResponse{
 		Token:     fmt.Sprintf("%x", tag), // Use tag as token for now
 		Tag:       fmt.Sprintf("%x", tag),
