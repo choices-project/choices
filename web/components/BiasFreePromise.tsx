@@ -11,7 +11,6 @@ interface Promise {
   icon: React.ReactNode;
   title: string;
   description: string;
-  snarkySubtext?: string;
   color: string;
 }
 
@@ -39,7 +38,7 @@ export function BiasFreePromise({ title, promises }: BiasFreePromiseProps) {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
         >
-          Unlike those "other" polling sites, we're actually transparent about who we are and what we do.
+          Our platform is built on principles of transparency, data integrity, and unbiased methodology.
         </motion.p>
       </div>
 
@@ -72,13 +71,7 @@ export function BiasFreePromise({ title, promises }: BiasFreePromiseProps) {
               {promise.description}
             </p>
 
-            {/* Snarky Subtext */}
-            {promise.snarkySubtext && (
-              <div className="flex items-center gap-2 text-sm text-gray-500 italic">
-                <AlertTriangle className="h-4 w-4" />
-                <span>{promise.snarkySubtext}</span>
-              </div>
-            )}
+
           </motion.div>
         ))}
       </div>
@@ -100,19 +93,19 @@ export function BiasFreePromise({ title, promises }: BiasFreePromiseProps) {
             <ul className="space-y-2">
               <li className="flex items-center gap-2 text-sm text-gray-700">
                 <Heart className="h-4 w-4 text-green-600" />
-                Let real people ask real questions
+                Community-driven question creation
               </li>
               <li className="flex items-center gap-2 text-sm text-gray-700">
                 <Eye className="h-4 w-4 text-green-600" />
-                Show you exactly who's voting
+                Transparent demographic breakdowns
               </li>
               <li className="flex items-center gap-2 text-sm text-gray-700">
                 <Shield className="h-4 w-4 text-green-600" />
-                Protect your privacy with encryption
+                Privacy protection with encryption
               </li>
               <li className="flex items-center gap-2 text-sm text-gray-700">
                 <TrendingUp className="h-4 w-4 text-green-600" />
-                Share real-time, unfiltered results
+                Real-time, unfiltered results
               </li>
             </ul>
           </div>
@@ -126,19 +119,19 @@ export function BiasFreePromise({ title, promises }: BiasFreePromiseProps) {
             <ul className="space-y-2">
               <li className="flex items-center gap-2 text-sm text-gray-700">
                 <Building2 className="h-4 w-4 text-red-600" />
-                Let corporations write the questions
+                Corporate-driven question creation
               </li>
               <li className="flex items-center gap-2 text-sm text-gray-700">
                 <Eye className="h-4 w-4 text-red-600" />
-                Hide their funding sources
+                Obscured funding and methodology
               </li>
               <li className="flex items-center gap-2 text-sm text-gray-700">
                 <Zap className="h-4 w-4 text-red-600" />
-                Use algorithms to "adjust" results
+                Algorithmic result manipulation
               </li>
               <li className="flex items-center gap-2 text-sm text-gray-700">
                 <TrendingUp className="h-4 w-4 text-red-600" />
-                Share "curated" data that fits their agenda
+                Curated data presentation
               </li>
             </ul>
           </div>
@@ -154,7 +147,7 @@ export function BiasFreePromise({ title, promises }: BiasFreePromiseProps) {
       >
         <div className="inline-flex items-center gap-2 px-4 py-2 bg-green-100 text-green-800 rounded-full text-sm font-medium">
           <Shield className="h-4 w-4" />
-          <span>100% Independent • 0% Corporate Funding</span>
+          <span>Independent Platform • Data-Driven Methodology</span>
         </div>
       </motion.div>
     </div>
@@ -165,44 +158,38 @@ export function BiasFreePromise({ title, promises }: BiasFreePromiseProps) {
 export const defaultPromises: Promise[] = [
   {
     icon: <Users className="h-6 w-6" />,
-    title: "Real People, Real Questions",
-    description: "Our polls are created by actual citizens, not corporate PR teams or political consultants.",
-    snarkySubtext: "Unlike those sites that let lobbyists write the questions...",
+    title: "Community-Driven Questions",
+    description: "Our polls are created by actual citizens, ensuring diverse perspectives and authentic engagement.",
     color: "#3b82f6"
   },
   {
     icon: <Eye className="h-6 w-6" />,
     title: "Complete Transparency",
-    description: "See exactly who's voting, where they're from, and what they think. No hidden demographics.",
-    snarkySubtext: "We don't hide our funding sources like some other polling sites...",
+    description: "See exactly who's voting, where they're from, and what they think. No hidden demographics or obscured data.",
     color: "#10b981"
   },
   {
     icon: <Shield className="h-6 w-6" />,
-    title: "No Corporate Agenda",
-    description: "We're funded by our community, not by corporations or political parties with vested interests.",
-    snarkySubtext: "Unlike those 'independent' polls funded by billionaires...",
+    title: "Independent Methodology",
+    description: "Our platform operates independently, ensuring unbiased data collection and analysis.",
     color: "#8b5cf6"
   },
   {
     icon: <TrendingUp className="h-6 w-6" />,
     title: "Unfiltered Results",
-    description: "What you see is what people actually voted. No algorithms 'adjusting' the numbers.",
-    snarkySubtext: "We don't use 'statistical modeling' to make results fit narratives...",
+    description: "What you see is what people actually voted. No algorithmic manipulation or statistical adjustments.",
     color: "#f59e0b"
   },
   {
     icon: <Globe className="h-6 w-6" />,
-    title: "Diverse Perspectives",
-    description: "Our community represents the full spectrum of American society, not just echo chambers.",
-    snarkySubtext: "Unlike sites that only poll their own bubble...",
+    title: "Diverse Participation",
+    description: "Our community represents the full spectrum of society, ensuring comprehensive demographic coverage.",
     color: "#ef4444"
   },
   {
     icon: <Zap className="h-6 w-6" />,
-    title: "Instant Democracy",
-    description: "Get real-time results as votes come in. Watch democracy happen live.",
-    snarkySubtext: "No waiting weeks for 'analysis' and 'interpretation'...",
+    title: "Real-Time Democracy",
+    description: "Get real-time results as votes come in. Experience democratic participation as it happens.",
     color: "#06b6d4"
   }
 ]
