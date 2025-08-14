@@ -116,22 +116,11 @@ const mockPolls: Poll[] = [
 ]
 
 export default function PollsPage() {
-  const [polls, setPolls] = useState<Poll[]>([])
-  const [loading, setLoading] = useState(true)
+  const [polls, setPolls] = useState<Poll[]>(mockPolls)
+  const [loading, setLoading] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
   const [sortBy, setSortBy] = useState('recent')
-
-  useEffect(() => {
-    fetchPolls()
-  }, [])
-
-  const fetchPolls = () => {
-    setLoading(true)
-    // Use mock data immediately
-    setPolls(mockPolls)
-    setLoading(false)
-  }
 
   const getStatusColor = (status: string) => {
     switch (status) {
