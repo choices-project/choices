@@ -1,7 +1,7 @@
 // API utility functions for communicating with backend services
 
-const IA_BASE_URL = '/api/ia'
-const PO_BASE_URL = '/api/po'
+const IA_BASE_URL = 'http://localhost:8081/api'
+const PO_BASE_URL = 'http://localhost:8082/api'
 
 export interface TokenResponse {
   token: string
@@ -292,6 +292,50 @@ export const poApi = {
 
     const result = await response.json()
     return result.verified || false
+  },
+
+  // Get dashboard data
+  async getDashboardData(): Promise<any> {
+    const response = await fetch(`${PO_BASE_URL}/v1/dashboard`)
+    
+    if (!response.ok) {
+      throw new Error(`Failed to get dashboard data: ${response.statusText}`)
+    }
+
+    return response.json()
+  },
+
+  // Get geographic data
+  async getGeographicData(): Promise<any> {
+    const response = await fetch(`${PO_BASE_URL}/v1/dashboard/geographic`)
+    
+    if (!response.ok) {
+      throw new Error(`Failed to get geographic data: ${response.statusText}`)
+    }
+
+    return response.json()
+  },
+
+  // Get demographics data
+  async getDemographicsData(): Promise<any> {
+    const response = await fetch(`${PO_BASE_URL}/v1/dashboard/demographics`)
+    
+    if (!response.ok) {
+      throw new Error(`Failed to get demographics data: ${response.statusText}`)
+    }
+
+    return response.json()
+  },
+
+  // Get engagement data
+  async getEngagementData(): Promise<any> {
+    const response = await fetch(`${PO_BASE_URL}/v1/dashboard/engagement`)
+    
+    if (!response.ok) {
+      throw new Error(`Failed to get engagement data: ${response.statusText}`)
+    }
+
+    return response.json()
   },
 }
 
