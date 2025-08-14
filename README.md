@@ -1,22 +1,22 @@
 # Choices - Democratic Polling Platform
 
-A modern, unbiased polling platform designed to give voice to real people, not corporate interests.
+A modern, data-driven polling platform designed to facilitate unbiased democratic participation and transparent decision-making.
 
 ## 🚀 Current Status: **Phase 1 Complete - Enhanced Landing & User Experience**
 
 ### ✅ **Recently Completed Features**
 
 #### **Enhanced Landing Page** (`/enhanced-landing`)
-- **Demographic Visualization**: Interactive charts showing user demographics with unity-focused messaging
+- **Demographic Visualization**: Interactive charts showing user demographics and participation patterns
 - **Topic Analysis**: Interactive UBI poll example with Yes/No toggle showing support/opposition breakdowns
-- **Bias-Free Promise**: Clear messaging about platform's unbiased approach
+- **Platform Principles**: Clear messaging about data-driven, unbiased methodology
 - **Tier System**: Introduction to user tiers and capabilities
 - **Real-time Data**: Connected to PostgreSQL database with live user/poll/vote data
 
 #### **Data Visualization System**
-- **Fancy Charts**: Custom animated donut charts, progress rings, and metric cards
-- **Interactive Demographics**: Age, location, education, income, urban/rural breakdowns
-- **Unity Focus**: Emphasizes common interests (84% want affordable healthcare) over political division
+- **Interactive Charts**: Custom animated donut charts, progress rings, and metric cards
+- **Demographic Breakdowns**: Age, location, education, income, urban/rural analysis
+- **Data-Driven Insights**: Patterns derived from actual user participation
 - **Real Database Integration**: PostgreSQL with 5 users, 3 polls, 6 votes currently
 
 #### **Technical Infrastructure**
@@ -31,19 +31,19 @@ A modern, unbiased polling platform designed to give voice to real people, not c
 #### **Demographic Analysis**
 - **Interactive Charts**: Toggle between different demographic breakdowns
 - **Color-coded Data**: Unique colors for each demographic segment
-- **Insight Generation**: Automatic highlighting of key patterns
+- **Pattern Recognition**: Automatic identification of data trends
 - **Privacy Controls**: Toggle between detailed and summary views
 
 #### **Topic Analysis Example**
-- **UBI Poll**: Sample poll with realistic demographic breakdowns
+- **UBI Poll**: Sample poll demonstrating demographic breakdown capabilities
 - **Yes/No Toggle**: Switch between support and opposition views
 - **Dynamic Insights**: Different insights based on selected view
 - **Professional Presentation**: Clean, engaging interface
 
-#### **Platform Messaging**
-- **Unity Focus**: Emphasizes common ground over political division
+#### **Platform Principles**
+- **Data-Driven**: All insights derived from actual user participation
 - **Transparency**: Clear labeling of demo vs real data
-- **Bias-Free Promise**: Explicit commitment to unbiased information
+- **Unbiased Methodology**: No algorithmic manipulation or hidden agendas
 - **User Empowerment**: Tier system for different engagement levels
 
 ### 🏗️ **Architecture**
@@ -79,11 +79,11 @@ Choices/
 - `analytics_events`: User interaction tracking
 - `analytics_demographics`: Demographic data aggregation
 
-#### **Sample Data**
+#### **Current Data**
 - **5 Active Users**: Real user accounts in database
 - **3 Active Polls**: Sample polls with vote data
 - **6 Total Votes**: Real vote records across polls
-- **Demographic Mock Data**: Realistic breakdowns for demonstration
+- **Demo Visualizations**: Sample demographic breakdowns for demonstration
 
 ### 🎨 **Design System**
 

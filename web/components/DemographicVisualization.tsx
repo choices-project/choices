@@ -113,26 +113,26 @@ export function DemographicVisualization({
     return data.ageDistribution.reduce((sum, item) => sum + item.count, 0)
   }
 
-  const getInsightMessage = () => {
-    switch (activeTab) {
-      case 'interests':
-        return "We all care about the same things. The differences are in how we think we should achieve them."
-      case 'values':
-        return "Our values unite us more than our politics divide us."
-      case 'age':
-        return "Every generation has a voice. Young and old alike are shaping our future."
-      case 'location':
-        return "From coast to coast, we're all part of the same conversation."
-      case 'education':
-        return "Education levels vary, but wisdom and common sense are universal."
-      case 'income':
-        return "Economic circumstances differ, but our aspirations are shared."
-      case 'urban':
-        return "City, suburb, or rural - we all want the same things for our communities."
-      default:
-        return "Real people, real perspectives, real democracy."
-    }
-  }
+                    const getInsightMessage = () => {
+                    switch (activeTab) {
+                      case 'interests':
+                        return "Data shows consistent patterns across demographic groups."
+                      case 'values':
+                        return "Participation patterns reveal shared priorities."
+                      case 'age':
+                        return "Every age group shows active participation in democratic processes."
+                      case 'location':
+                        return "Geographic distribution shows broad national engagement."
+                      case 'education':
+                        return "Education levels show varied but consistent participation patterns."
+                      case 'income':
+                        return "Economic diversity is reflected in participation data."
+                      case 'urban':
+                        return "Urban, suburban, and rural areas all show active engagement."
+                      default:
+                        return "Data-driven insights from real participation patterns."
+                    }
+                  }
 
   if (loading && useRealData && !useMockData) {
     return (
@@ -292,8 +292,8 @@ export function DemographicVisualization({
         transition={{ delay: 0.5 }}
       >
         <div className="flex items-center justify-center gap-2 mb-2">
-          <Heart className="h-5 w-5 text-red-600" />
-          <span className="font-semibold text-gray-800">Finding Common Ground</span>
+          <BarChart3 className="h-5 w-5 text-blue-600" />
+          <span className="font-semibold text-gray-800">Data Insights</span>
         </div>
         <p className="text-sm text-gray-700 italic">
           "{getInsightMessage()}"
