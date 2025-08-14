@@ -56,7 +56,7 @@
 - [ ] Natural language processing for sentiment analysis
 - [ ] Advanced data visualization components
 - [ ] Real-time analytics pipeline
-- [ ] Custom dashboard builder
+   - [ ] Custom dashboard builder
 
 ### **Phase 11: Enterprise Features & Integration** 📋
 **Status**: Planning Phase
