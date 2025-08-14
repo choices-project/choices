@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"fmt"
 	"net/http"
 	"sync"
 	"time"
@@ -76,9 +77,9 @@ func RateLimitMiddleware(limit int, window time.Duration) func(http.Handler) htt
 				return
 			}
 
-			// Add rate limit headers
-			w.Header().Set("X-RateLimit-Limit", string(rune(limit)))
-			w.Header().Set("X-RateLimit-Window", window.String())
+			// Add rate limit headers - disabled due to proxy issues
+			// w.Header().Set("X-RateLimit-Limit", fmt.Sprintf("%d", limit))
+			// w.Header().Set("X-RateLimit-Window", window.String())
 
 			next.ServeHTTP(w, r)
 		})

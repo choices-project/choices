@@ -7,8 +7,19 @@ import {
   Vote 
 } from '../types';
 
-const IA_BASE_URL = 'http://localhost:8081/api';
-const PO_BASE_URL = 'http://localhost:8082/api';
+// Network configuration - use your computer's IP address for mobile device access
+// If you're testing on the same computer, use localhost
+// If you're testing on a phone, use your computer's IP address
+const getBaseUrls = () => {
+  // You can change this to 'localhost' if testing on the same computer
+  const host = '10.0.0.184'; // Your computer's IP address
+  return {
+    IA_BASE_URL: `http://${host}:8081/api`,
+    PO_BASE_URL: `http://${host}:8082/api`
+  };
+};
+
+const { IA_BASE_URL, PO_BASE_URL } = getBaseUrls();
 
 class ApiService {
   // IA Service API functions
