@@ -9,7 +9,7 @@ A modern, data-driven polling platform designed to facilitate unbiased democrati
 #### **Enhanced Landing Page** (`/enhanced-landing`)
 - **Demographic Visualization**: Interactive charts showing user demographics and participation patterns
 - **Topic Analysis**: Interactive UBI poll example with Yes/No toggle showing support/opposition breakdowns
-- **Platform Principles**: Clear messaging about data-driven, neutral methodology
+- **Platform Principles**: Clear messaging about data-driven, unbiased methodology
 - **Tier System**: Introduction to user tiers and capabilities
 - **Real-time Data**: Connected to PostgreSQL database with live user/poll/vote data
 
@@ -43,7 +43,7 @@ A modern, data-driven polling platform designed to facilitate unbiased democrati
 #### **Platform Principles**
 - **Data-Driven**: All insights derived from actual user participation
 - **Transparency**: Clear labeling of demo vs real data
-- **Neutral Methodology**: No algorithmic manipulation or hidden agendas
+- **Unbiased Methodology**: No algorithmic manipulation or hidden agendas
 - **User Empowerment**: Tier system for different engagement levels
 
 ### 🏗️ **Architecture**

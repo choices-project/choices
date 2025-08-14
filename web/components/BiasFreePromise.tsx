@@ -38,7 +38,7 @@ export function BiasFreePromise({ title, promises }: BiasFreePromiseProps) {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
         >
-          Our platform is built on principles of transparency, data integrity, and neutral methodology.
+          Our platform is built on principles of transparency, data integrity, and unbiased methodology.
         </motion.p>
       </div>
 
@@ -147,7 +147,7 @@ export function BiasFreePromise({ title, promises }: BiasFreePromiseProps) {
       >
         <div className="inline-flex items-center gap-2 px-4 py-2 bg-green-100 text-green-800 rounded-full text-sm font-medium">
           <Shield className="h-4 w-4" />
-          <span>Independent Platform • Neutral Methodology</span>
+          <span>Independent Platform • Unbiased Methodology</span>
         </div>
       </motion.div>
     </div>
@@ -171,7 +171,7 @@ export const defaultPromises: Promise[] = [
   {
     icon: <Shield className="h-6 w-6" />,
     title: "Independent Methodology",
-    description: "Our platform operates independently, ensuring neutral data collection and analysis.",
+    description: "Our platform operates independently, ensuring unbiased data collection and analysis.",
     color: "#8b5cf6"
   },
   {
