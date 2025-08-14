@@ -85,8 +85,9 @@ func RateLimitMiddleware(limit int, window time.Duration) func(http.Handler) htt
 	}
 }
 
-// TokenRateLimitMiddleware applies stricter rate limiting for token issuance
-func TokenRateLimitMiddleware() func(http.Handler) http.Handler {
+// LegacyTokenRateLimitMiddleware applies stricter rate limiting for token issuance
+// This is kept for backward compatibility but EnhancedTokenRateLimitMiddleware is preferred
+func LegacyTokenRateLimitMiddleware() func(http.Handler) http.Handler {
 	// Allow 10 tokens per hour per IP
 	return RateLimitMiddleware(10, time.Hour)
 }

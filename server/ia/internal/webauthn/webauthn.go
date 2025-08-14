@@ -23,6 +23,7 @@ func NewWebAuthnService(userRepo *database.UserRepository) (*WebAuthnService, er
 	config := &webauthn.Config{
 		RPDisplayName: "Choices Voting System",
 		RPID:          "localhost", // In production, this would be your domain
+		RPOrigins:     []string{"http://localhost:3000", "http://localhost:8081"}, // Allowed origins
 	}
 
 	webAuthn, err := webauthn.New(config)
