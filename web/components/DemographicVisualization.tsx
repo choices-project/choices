@@ -5,9 +5,10 @@ import { motion } from 'framer-motion'
 import { 
   Users, MapPin, GraduationCap, DollarSign, 
   Building2, Globe, Heart, Eye, EyeOff,
-  Target, Zap, Shield
+  Target, Zap, Shield, Database, Wifi, WifiOff
 } from 'lucide-react'
 import { FancyDonutChart, FancyBarChart } from './FancyCharts'
+import { useDemographics } from '../hooks/useDemographics'
 
 interface DemographicData {
   ageDistribution: { range: string; count: number; percentage: number }[];
@@ -20,20 +21,29 @@ interface DemographicData {
 }
 
 interface DemographicVisualizationProps {
-  data: DemographicData;
+  data?: DemographicData;
   title: string;
   subtitle: string;
   showPrivacyToggle?: boolean;
+  useRealData?: boolean;
 }
 
 export function DemographicVisualization({ 
-  data, 
+  data: propData, 
   title, 
   subtitle, 
-  showPrivacyToggle = true 
+  showPrivacyToggle = true,
+  useRealData = true
 }: DemographicVisualizationProps) {
   const [activeTab, setActiveTab] = useState('interests')
   const [showDetailed, setShowDetailed] = useState(false)
+  const [useMockData, setUseMockData] = useState(!useRealData)
+
+  // Fetch real data if enabled
+  const { data: realData, loading, error } = useDemographics()
+
+  // Use real data if available, otherwise fall back to prop data or mock data
+  const data = useMockData ? propData : (realData || propData)
 
   const tabs = [
     { id: 'interests', label: 'Common Interests', icon: Heart, color: '#ef4444' },
@@ -46,6 +56,8 @@ export function DemographicVisualization({
   ]
 
   const getActiveData = () => {
+    if (!data) return []
+    
     const colors = ['#3b82f6', '#10b981', '#8b5cf6', '#f59e0b', '#ef4444', '#06b6d4', '#84cc16', '#f97316', '#ec4899', '#6366f1']
     
     switch (activeTab) {
@@ -97,6 +109,7 @@ export function DemographicVisualization({
   }
 
   const getTotalUsers = () => {
+    if (!data) return 0
     return data.ageDistribution.reduce((sum, item) => sum + item.count, 0)
   }
 
@@ -121,6 +134,35 @@ export function DemographicVisualization({
     }
   }
 
+  if (loading && useRealData && !useMockData) {
+    return (
+      <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-100">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading real demographic data...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error && useRealData && !useMockData) {
+    return (
+      <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-100">
+        <div className="text-center">
+          <WifiOff className="h-12 w-12 text-red-500 mx-auto mb-4" />
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">Database Connection Error</h3>
+          <p className="text-gray-600 mb-4">Unable to load real data. Using demo data instead.</p>
+          <button
+            onClick={() => setUseMockData(true)}
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Use Demo Data
+          </button>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-100">
       {/* Header */}
@@ -142,13 +184,32 @@ export function DemographicVisualization({
           {subtitle}
         </motion.p>
         
+        {/* Data Source Toggle */}
+        <motion.div 
+          className="flex items-center justify-center gap-4 text-sm text-gray-500 mb-4"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.2 }}
+        >
+          <div className="flex items-center gap-2">
+            {useMockData ? <WifiOff className="h-4 w-4" /> : <Wifi className="h-4 w-4" />}
+            <span>{useMockData ? 'Demo Data' : 'Live Data'}</span>
+          </div>
+          <button
+            onClick={() => setUseMockData(!useMockData)}
+            className="text-blue-600 hover:text-blue-700 font-medium"
+          >
+            Switch to {useMockData ? 'Live' : 'Demo'} Data
+          </button>
+        </motion.div>
+        
         {/* Privacy Toggle */}
         {showPrivacyToggle && (
           <motion.div 
             className="flex items-center justify-center gap-2 text-sm text-gray-500"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 0.2 }}
+            transition={{ delay: 0.3 }}
           >
             {showDetailed ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
             <button
@@ -166,7 +227,7 @@ export function DemographicVisualization({
         className="text-center mb-8"
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
-        transition={{ delay: 0.3 }}
+        transition={{ delay: 0.4 }}
       >
         <div className="inline-flex items-center gap-3 px-6 py-3 bg-blue-50 rounded-full">
           <Users className="h-6 w-6 text-blue-600" />
@@ -174,6 +235,11 @@ export function DemographicVisualization({
             {getTotalUsers().toLocaleString()}
           </span>
           <span className="text-blue-600 font-medium">active citizens</span>
+          {!useMockData && realData && (
+            <span className="text-xs text-blue-500">
+              (Updated: {new Date(realData.lastUpdated).toLocaleTimeString()})
+            </span>
+          )}
         </div>
       </motion.div>
 
@@ -223,7 +289,7 @@ export function DemographicVisualization({
         className="text-center mb-6 p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-200"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.4 }}
+        transition={{ delay: 0.5 }}
       >
         <div className="flex items-center justify-center gap-2 mb-2">
           <Heart className="h-5 w-5 text-red-600" />
@@ -278,7 +344,7 @@ export function DemographicVisualization({
         className="text-center mt-8 p-4 bg-green-50 rounded-lg border border-green-200"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.5 }}
+        transition={{ delay: 0.6 }}
       >
         <div className="flex items-center justify-center gap-2 mb-2">
           <Globe className="h-5 w-5 text-green-600" />
