@@ -126,16 +126,11 @@ export default function PollsPage() {
     fetchPolls()
   }, [])
 
-  const fetchPolls = async () => {
-    try {
-      setLoading(true)
-      // Use mock data for now since API isn't working
-      setPolls(mockPolls)
-    } catch (error) {
-      console.error('Failed to fetch polls:', error)
-    } finally {
-      setLoading(false)
-    }
+  const fetchPolls = () => {
+    setLoading(true)
+    // Use mock data immediately
+    setPolls(mockPolls)
+    setLoading(false)
   }
 
   const getStatusColor = (status: string) => {
