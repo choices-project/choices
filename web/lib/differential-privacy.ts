@@ -290,7 +290,7 @@ export class PrivateAnalytics {
     const patterns = new Map<string, NoisyResult>()
     
     // Vote distribution by category
-    const categories = [...new Set(votes.map(v => v.category))]
+    const categories = Array.from(new Set(votes.map(v => v.category)))
     categories.forEach(category => {
       const count = votes.filter(v => v.category === category).length
       patterns.set(`category_${category}`, this.dp.laplaceMechanism(count))

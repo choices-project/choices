@@ -69,6 +69,38 @@ export class PWAAnalytics {
   private offlineActions: any[] = []
 
   constructor() {
+    if (typeof window === 'undefined') {
+      // Server-side rendering - initialize with defaults
+      this.startTime = Date.now()
+      this.sessionId = 'server-side'
+      this.isOnline = true
+      
+      this.metrics = {
+        loadTime: 0,
+        firstContentfulPaint: 0,
+        largestContentfulPaint: 0,
+        cumulativeLayoutShift: 0,
+        installPromptShown: false,
+        installPromptAccepted: false,
+        serviceWorkerRegistered: false,
+        offlineUsage: 0,
+        backgroundSyncCount: 0,
+        dataCollected: 0,
+        dataShared: 0,
+        encryptionEnabled: true,
+        anonymizationLevel: 'full',
+        sessionDuration: 0,
+        pagesVisited: 0,
+        featuresUsed: [],
+        offlineActions: 0,
+        webAuthnSupported: false,
+        webAuthnUsed: false,
+        deviceVerificationScore: 0,
+        botDetectionScore: 0
+      }
+      return
+    }
+
     this.startTime = Date.now()
     this.sessionId = this.generateSessionId()
     this.isOnline = navigator.onLine
@@ -130,7 +162,7 @@ export class PWAAnalytics {
       new PerformanceObserver((list) => {
         let cls = 0
         for (const entry of list.getEntries()) {
-          if (!entry.hadRecentInput) {
+          if (!(entry as any).hadRecentInput) {
             cls += (entry as any).value
           }
         }

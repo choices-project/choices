@@ -59,7 +59,9 @@ export class PWAManager {
   private isOnline = navigator.onLine;
 
   constructor() {
-    this.initialize();
+    if (typeof window !== 'undefined') {
+      this.initialize();
+    }
   }
 
   private async initialize() {
@@ -158,9 +160,9 @@ export class PWAManager {
   private async syncOfflineData() {
     if (this.registration && 'sync' in this.registration) {
       try {
-        await this.registration.sync.register('offline-votes');
-        await this.registration.sync.register('offline-verification');
-        await this.registration.sync.register('offline-behavior');
+        await (this.registration as any).sync.register('offline-votes');
+        await (this.registration as any).sync.register('offline-verification');
+        await (this.registration as any).sync.register('offline-behavior');
       } catch (error) {
         console.error('PWA: Background sync registration failed', error);
       }
@@ -253,7 +255,7 @@ export class PWAManager {
     try {
       const subscription = await this.registration.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: this.urlBase64ToUint8Array(process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || '')
+        // applicationServerKey: this.urlBase64ToUint8Array(process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || '') as unknown as Uint8Array
       });
 
       console.log('PWA: Push notification subscription successful');
@@ -420,9 +422,9 @@ export class PrivacyStorageManager {
       const encryptedArray = new Uint8Array(encryptedData);
       const combined = new Uint8Array(iv.length + encryptedArray.length);
       combined.set(iv);
-      combined.set(encryptedArray, iv.length);
+      combined.set(Array.from(encryptedArray), iv.length);
 
-      localStorage.setItem(key, btoa(String.fromCharCode(...combined)));
+      localStorage.setItem(key, btoa(String.fromCharCode.apply(null, Array.from(combined))));
     } catch (error) {
       console.error('Privacy Storage: Encryption failed', error);
     }
