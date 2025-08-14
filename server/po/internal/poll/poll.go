@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"sync"
 	"time"
+
+	"choice/po/internal/merkle"
 )
 
 // Poll represents a polling event
@@ -35,16 +37,18 @@ type Vote struct {
 
 // PollManager manages polls and votes
 type PollManager struct {
-	polls map[string]*Poll
-	votes map[string][]*Vote // pollID -> votes
-	mutex sync.RWMutex
+	polls      map[string]*Poll
+	votes      map[string][]*Vote // pollID -> votes
+	merkleTrees map[string]*merkle.MerkleTree // pollID -> Merkle tree
+	mutex      sync.RWMutex
 }
 
 // NewPollManager creates a new poll manager
 func NewPollManager() *PollManager {
 	return &PollManager{
-		polls: make(map[string]*Poll),
-		votes: make(map[string][]*Vote),
+		polls:       make(map[string]*Poll),
+		votes:       make(map[string][]*Vote),
+		merkleTrees: make(map[string]*merkle.MerkleTree),
 	}
 }
 
@@ -71,6 +75,7 @@ func (pm *PollManager) CreatePoll(title, description string, options []string, s
 
 	pm.polls[pollID] = poll
 	pm.votes[pollID] = make([]*Vote, 0)
+	pm.merkleTrees[pollID] = merkle.NewMerkleTree()
 
 	return poll, nil
 }
@@ -144,8 +149,19 @@ func (pm *PollManager) SubmitVote(pollID, token, tag string, choice int) (*Vote,
 		VotedAt: now,
 	}
 
-	// Generate Merkle leaf (simplified for now)
+	// Generate Merkle leaf
 	vote.MerkleLeaf = generateMerkleLeaf(vote)
+
+	// Add vote to Merkle tree
+	merkleTree := pm.merkleTrees[pollID]
+	proof, err := merkleTree.AddLeaf(vote.MerkleLeaf)
+	if err != nil {
+		return nil, fmt.Errorf("failed to add vote to Merkle tree: %w", err)
+	}
+
+	// Convert proof to string array for JSON serialization
+	vote.MerkleProof = make([]string, len(proof.Path))
+	copy(vote.MerkleProof, proof.Path)
 
 	// Add vote to poll
 	pm.votes[pollID] = append(pm.votes[pollID], vote)
@@ -189,6 +205,43 @@ func (pm *PollManager) GetTally(pollID string) (map[int]int, error) {
 	}
 
 	return tally, nil
+}
+
+// GetCommitmentLog returns the commitment log for a poll
+func (pm *PollManager) GetCommitmentLog(pollID string) (map[string]interface{}, error) {
+	pm.mutex.RLock()
+	defer pm.mutex.RUnlock()
+
+	_, exists := pm.polls[pollID]
+	if !exists {
+		return nil, fmt.Errorf("poll not found: %s", pollID)
+	}
+
+	merkleTree := pm.merkleTrees[pollID]
+	return merkleTree.GetCommitmentLog(), nil
+}
+
+// VerifyVoteProof verifies a vote's Merkle proof
+func (pm *PollManager) VerifyVoteProof(pollID, merkleLeaf string, merkleProof []string) (bool, error) {
+	pm.mutex.RLock()
+	defer pm.mutex.RUnlock()
+
+	_, exists := pm.polls[pollID]
+	if !exists {
+		return false, fmt.Errorf("poll not found: %s", pollID)
+	}
+
+	merkleTree := pm.merkleTrees[pollID]
+	
+	// Create proof object
+	proof := &merkle.MerkleProof{
+		Leaf:      merkleLeaf,
+		Path:      merkleProof,
+		Root:      merkleTree.GetRoot(),
+		LeafCount: merkleTree.GetLeafCount(),
+	}
+
+	return merkleTree.VerifyProof(proof), nil
 }
 
 // ActivatePoll activates a poll for voting

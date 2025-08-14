@@ -35,6 +35,10 @@ func main() {
 	http.HandleFunc("/api/v1/votes", pollService.HandleSubmitVote)
 	http.HandleFunc("/api/v1/tally", pollService.HandleGetTally)
 
+	// Commitment and audit endpoints
+	http.HandleFunc("/api/v1/commitment", pollService.HandleGetCommitmentLog)
+	http.HandleFunc("/api/v1/verify", pollService.HandleVerifyProof)
+
 	log.Println("PO listening on :8082")
 	log.Println("Available endpoints:")
 	log.Println("  GET  /healthz")
@@ -45,6 +49,8 @@ func main() {
 	log.Println("  POST /api/v1/polls/close?poll_id=<poll_id>")
 	log.Println("  POST /api/v1/votes?poll_id=<poll_id>")
 	log.Println("  GET  /api/v1/tally?poll_id=<poll_id>")
+	log.Println("  GET  /api/v1/commitment?poll_id=<poll_id>")
+	log.Println("  POST /api/v1/verify?poll_id=<poll_id>")
 	
 	log.Fatal(http.ListenAndServe(":8082", nil))
 }
