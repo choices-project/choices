@@ -3,28 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Vote, Clock, Users, CheckCircle, XCircle, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
-
-interface Poll {
-  id: string
-  title: string
-  description: string
-  options: string[]
-  status: 'draft' | 'active' | 'closed'
-  start_time: string
-  end_time: string
-  sponsors: string[]
-  created_at: string
-}
-
-interface Vote {
-  poll_id: string
-  token: string
-  tag: string
-  choice: number
-  voted_at: string
-  merkle_leaf: string
-  merkle_proof: string[]
-}
+import { iaApi, poApi, Poll, Vote as VoteType } from '../../lib/api'
 
 export default function PollsPage() {
   const [polls, setPolls] = useState<Poll[]>([])
@@ -40,11 +19,8 @@ export default function PollsPage() {
 
   const fetchPolls = async () => {
     try {
-      const response = await fetch('http://localhost:8082/api/v1/polls/list')
-      if (response.ok) {
-        const data = await response.json()
-        setPolls(data)
-      }
+      const data = await poApi.getPolls()
+      setPolls(data)
     } catch (error) {
       console.error('Failed to fetch polls:', error)
     } finally {
@@ -54,23 +30,8 @@ export default function PollsPage() {
 
   const getToken = async (pollId: string) => {
     try {
-      const response = await fetch('http://localhost:8081/api/v1/tokens', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          user_stable_id: userStableId,
-          poll_id: pollId,
-          tier: 'T1',
-          scope: `poll:${pollId}`,
-        }),
-      })
-
-      if (response.ok) {
-        const data = await response.json()
-        return data
-      }
+      const data = await iaApi.getToken(userStableId, pollId, 'T1')
+      return data
     } catch (error) {
       console.error('Failed to get token:', error)
     }
@@ -87,27 +48,11 @@ export default function PollsPage() {
       }
 
       // Submit vote
-      const response = await fetch(`http://localhost:8082/api/v1/votes?poll_id=${pollId}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          token: tokenData.token,
-          tag: tokenData.tag,
-          choice: choice,
-        }),
-      })
-
-      if (response.ok) {
-        const voteData = await response.json()
-        alert('Vote submitted successfully!')
-        setSelectedPoll(null)
-        setUserChoice(null)
-        fetchPolls() // Refresh polls
-      } else {
-        throw new Error('Failed to submit vote')
-      }
+      const voteData = await poApi.submitVote(pollId, tokenData.token, tokenData.tag, choice)
+      alert('Vote submitted successfully!')
+      setSelectedPoll(null)
+      setUserChoice(null)
+      fetchPolls() // Refresh polls
     } catch (error) {
       console.error('Failed to submit vote:', error)
       alert('Failed to submit vote. Please try again.')
