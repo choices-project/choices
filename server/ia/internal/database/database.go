@@ -67,7 +67,7 @@ func initializeSchema(db *sql.DB) error {
 	CREATE TABLE IF NOT EXISTS users (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		stable_id TEXT UNIQUE NOT NULL,
-		email TEXT UNIQUE,
+		email TEXT,
 		created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 		updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 		verification_tier TEXT DEFAULT 'T0',
@@ -85,8 +85,7 @@ func initializeSchema(db *sql.DB) error {
 		scope TEXT NOT NULL,
 		issued_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 		expires_at DATETIME NOT NULL,
-		is_revoked BOOLEAN DEFAULT 0,
-		FOREIGN KEY (user_stable_id) REFERENCES users(stable_id)
+		is_revoked BOOLEAN DEFAULT 0
 	);
 
 	-- Verification sessions for WebAuthn
@@ -97,8 +96,7 @@ func initializeSchema(db *sql.DB) error {
 		challenge TEXT NOT NULL,
 		created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 		expires_at DATETIME NOT NULL,
-		is_used BOOLEAN DEFAULT 0,
-		FOREIGN KEY (user_stable_id) REFERENCES users(stable_id)
+		is_used BOOLEAN DEFAULT 0
 	);
 
 	-- WebAuthn credentials
@@ -110,8 +108,7 @@ func initializeSchema(db *sql.DB) error {
 		sign_count INTEGER DEFAULT 0,
 		created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 		last_used_at DATETIME,
-		is_active BOOLEAN DEFAULT 1,
-		FOREIGN KEY (user_stable_id) REFERENCES users(stable_id)
+		is_active BOOLEAN DEFAULT 1
 	);
 
 	-- Create indexes for better performance

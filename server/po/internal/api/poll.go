@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"time"
 
+	"choice/po/internal/database"
 	"choice/po/internal/poll"
 	"choice/po/internal/verification"
 )
@@ -18,14 +19,14 @@ type PollService struct {
 }
 
 // NewPollService creates a new poll service
-func NewPollService(iaPublicKey string) (*PollService, error) {
+func NewPollService(iaPublicKey string, pollRepo *database.PollRepository, voteRepo *database.VoteRepository, merkleTreeRepo *database.MerkleTreeRepository) (*PollService, error) {
 	tokenVerifier, err := verification.NewTokenVerifier(iaPublicKey)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create token verifier: %w", err)
 	}
 
 	return &PollService{
-		pollManager:   poll.NewPollManager(),
+		pollManager:   poll.NewPollManager(pollRepo, voteRepo, merkleTreeRepo),
 		tokenVerifier: tokenVerifier,
 		iaPublicKey:   iaPublicKey,
 	}, nil
@@ -131,7 +132,11 @@ func (ps *PollService) HandleListPolls(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	polls := ps.pollManager.ListPolls()
+	polls, err := ps.pollManager.ListPolls()
+	if err != nil {
+		http.Error(w, "Failed to list polls", http.StatusInternalServerError)
+		return
+	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)

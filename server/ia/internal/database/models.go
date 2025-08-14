@@ -70,7 +70,15 @@ func (r *UserRepository) CreateUser(user *User) error {
 		VALUES (?, ?, ?, ?)
 	`
 	
-	result, err := r.db.Exec(query, user.StableID, user.Email, user.VerificationTier, user.IsActive)
+	// Handle empty email by using NULL instead of empty string
+	var email interface{}
+	if user.Email == "" {
+		email = nil
+	} else {
+		email = user.Email
+	}
+	
+	result, err := r.db.Exec(query, user.StableID, email, user.VerificationTier, user.IsActive)
 	if err != nil {
 		return err
 	}
