@@ -308,10 +308,10 @@ export default function PollsPage() {
                         {getStatusIcon(poll.status)}
                         {poll.status.charAt(0).toUpperCase() + poll.status.slice(1)}
                       </span>
-                      <div className="flex items-center gap-2 text-gray-500">
-                        <Eye className="h-4 w-4" />
-                        <span className="text-sm">{Math.floor(Math.random() * 1000) + 100} views</span>
-                      </div>
+                                             <div className="flex items-center gap-2 text-gray-500">
+                         <Eye className="h-4 w-4" />
+                         <span className="text-sm">{Math.floor((poll.id.charCodeAt(0) + poll.id.length) * 10) + 100} views</span>
+                       </div>
                     </div>
                     
                     <h3 className="text-xl font-bold text-gray-900 mb-2">{poll.title}</h3>
@@ -321,14 +321,14 @@ export default function PollsPage() {
                     <div className="mb-4">
                       <p className="text-sm font-medium text-gray-700 mb-2">Options:</p>
                       <div className="space-y-1">
-                        {poll.options.slice(0, 2).map((option, idx) => (
-                          <div key={idx} className="flex items-center justify-between text-sm">
-                            <span className="text-gray-600">{option}</span>
-                            <span className="text-gray-500">
-                              {Math.floor(Math.random() * 50) + 10}%
-                            </span>
-                          </div>
-                        ))}
+                                                 {poll.options.slice(0, 2).map((option, idx) => (
+                           <div key={idx} className="flex items-center justify-between text-sm">
+                             <span className="text-gray-600">{option}</span>
+                             <span className="text-gray-500">
+                               {Math.floor((option.length + idx * 10) % 40) + 10}%
+                             </span>
+                           </div>
+                         ))}
                         {poll.options.length > 2 && (
                           <p className="text-sm text-blue-600">+{poll.options.length - 2} more options</p>
                         )}
