@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { poApi } from '../src/lib/api';
 import { 
   BarChart3, 
   Map, 
@@ -142,15 +143,14 @@ export default function Dashboard() {
   const fetchDashboardData = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await fetch('http://localhost:8082/api/v1/dashboard');
-      if (!response.ok) {
-        throw new Error('Failed to fetch dashboard data');
-      }
-      const data = await response.json();
+      console.log('Fetching dashboard data...');
+      const data = await poApi.getDashboardData();
+      console.log('Dashboard data received:', data);
       setDashboardData(data);
       setLastUpdated(new Date());
       setError(null);
     } catch (err) {
+      console.error('Dashboard fetch error:', err);
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setLoading(false);
@@ -166,7 +166,7 @@ export default function Dashboard() {
     }
   }, [fetchDashboardData, autoRefresh]);
 
-  if (loading && !dashboardData) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
         <div className="text-center">
