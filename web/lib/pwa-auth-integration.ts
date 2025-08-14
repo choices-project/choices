@@ -39,7 +39,9 @@ export class PWAAuthIntegration {
   private isInitialized = false
 
   constructor() {
-    this.initialize()
+    if (typeof window !== 'undefined') {
+      this.initialize()
+    }
   }
 
   private async initialize() {
@@ -48,7 +50,10 @@ export class PWAAuthIntegration {
       const session = await this.getStoredSession()
       if (session && session.expiresAt > Date.now()) {
         this.currentSession = session
-        await this.loadUser(session.userId)
+        const user = await this.getUser(session.userId)
+        if (user) {
+          this.currentUser = user
+        }
       }
 
       // Track analytics
@@ -163,7 +168,7 @@ export class PWAAuthIntegration {
       
       if (credential) {
         // Update user
-        user.webauthnCredentials = [credential.id as ArrayBuffer]
+        user.webauthnCredentials = [credential.id as unknown as ArrayBuffer]
         user.pwaFeatures = {
           ...user.pwaFeatures,
           webAuthnEnabled: true
