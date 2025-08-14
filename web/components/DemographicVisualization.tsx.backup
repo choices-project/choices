@@ -4,16 +4,14 @@ import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { 
   Users, MapPin, GraduationCap, DollarSign, 
-  Building2, Globe, Heart, Eye, EyeOff,
-  Target, Zap, Shield
+  Building2, Globe, TrendingUp, Eye, EyeOff 
 } from 'lucide-react'
 import { FancyDonutChart, FancyBarChart } from './FancyCharts'
 
 interface DemographicData {
   ageDistribution: { range: string; count: number; percentage: number }[];
   geographicSpread: { state: string; count: number; percentage: number }[];
-  commonInterests: { interest: string; count: number; percentage: number }[];
-  topValues: { value: string; count: number; percentage: number }[];
+  politicalBreakdown: { affiliation: string; count: number; percentage: number }[];
   educationLevels: { level: string; count: number; percentage: number }[];
   incomeBrackets: { bracket: string; count: number; percentage: number }[];
   urbanRural: { type: string; count: number; percentage: number }[];
@@ -32,64 +30,55 @@ export function DemographicVisualization({
   subtitle, 
   showPrivacyToggle = true 
 }: DemographicVisualizationProps) {
-  const [activeTab, setActiveTab] = useState('interests')
+  const [activeTab, setActiveTab] = useState('age')
   const [showDetailed, setShowDetailed] = useState(false)
 
   const tabs = [
-    { id: 'interests', label: 'Common Interests', icon: Heart, color: '#ef4444' },
-    { id: 'values', label: 'Top Values', icon: Target, color: '#8b5cf6' },
     { id: 'age', label: 'Age', icon: Users, color: '#3b82f6' },
     { id: 'location', label: 'Location', icon: MapPin, color: '#10b981' },
+    { id: 'politics', label: 'Politics', icon: TrendingUp, color: '#8b5cf6' },
     { id: 'education', label: 'Education', icon: GraduationCap, color: '#f59e0b' },
-    { id: 'income', label: 'Income', icon: DollarSign, color: '#06b6d4' },
-    { id: 'urban', label: 'Urban/Rural', icon: Building2, color: '#84cc16' }
+    { id: 'income', label: 'Income', icon: DollarSign, color: '#ef4444' },
+    { id: 'urban', label: 'Urban/Rural', icon: Building2, color: '#06b6d4' }
   ]
 
   const getActiveData = () => {
-    const colors = ['#3b82f6', '#10b981', '#8b5cf6', '#f59e0b', '#ef4444', '#06b6d4', '#84cc16', '#f97316', '#ec4899', '#6366f1']
-    
     switch (activeTab) {
       case 'age':
-        return data.ageDistribution.map((item, index) => ({
+        return data.ageDistribution.map(item => ({
           name: item.range,
           value: item.percentage,
-          color: colors[index % colors.length]
+          color: '#3b82f6'
         }))
       case 'location':
-        return data.geographicSpread.slice(0, 10).map((item, index) => ({
+        return data.geographicSpread.slice(0, 10).map(item => ({
           name: item.state,
           value: item.percentage,
-          color: colors[index % colors.length]
+          color: '#10b981'
         }))
-      case 'interests':
-        return data.commonInterests.map((item, index) => ({
-          name: item.interest,
+      case 'politics':
+        return data.politicalBreakdown.map(item => ({
+          name: item.affiliation,
           value: item.percentage,
-          color: colors[index % colors.length]
-        }))
-      case 'values':
-        return data.topValues.map((item, index) => ({
-          name: item.value,
-          value: item.percentage,
-          color: colors[index % colors.length]
+          color: '#8b5cf6'
         }))
       case 'education':
-        return data.educationLevels.map((item, index) => ({
+        return data.educationLevels.map(item => ({
           name: item.level,
           value: item.percentage,
-          color: colors[index % colors.length]
+          color: '#f59e0b'
         }))
       case 'income':
-        return data.incomeBrackets.map((item, index) => ({
+        return data.incomeBrackets.map(item => ({
           name: item.bracket,
           value: item.percentage,
-          color: colors[index % colors.length]
+          color: '#ef4444'
         }))
       case 'urban':
-        return data.urbanRural.map((item, index) => ({
+        return data.urbanRural.map(item => ({
           name: item.type,
           value: item.percentage,
-          color: colors[index % colors.length]
+          color: '#06b6d4'
         }))
       default:
         return []
@@ -98,27 +87,6 @@ export function DemographicVisualization({
 
   const getTotalUsers = () => {
     return data.ageDistribution.reduce((sum, item) => sum + item.count, 0)
-  }
-
-  const getInsightMessage = () => {
-    switch (activeTab) {
-      case 'interests':
-        return "We all care about the same things. The differences are in how we think we should achieve them."
-      case 'values':
-        return "Our values unite us more than our politics divide us."
-      case 'age':
-        return "Every generation has a voice. Young and old alike are shaping our future."
-      case 'location':
-        return "From coast to coast, we're all part of the same conversation."
-      case 'education':
-        return "Education levels vary, but wisdom and common sense are universal."
-      case 'income':
-        return "Economic circumstances differ, but our aspirations are shared."
-      case 'urban':
-        return "City, suburb, or rural - we all want the same things for our communities."
-      default:
-        return "Real people, real perspectives, real democracy."
-    }
   }
 
   return (
@@ -218,22 +186,6 @@ export function DemographicVisualization({
         </div>
       </motion.div>
 
-      {/* Insight Message */}
-      <motion.div
-        className="text-center mb-6 p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-200"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.4 }}
-      >
-        <div className="flex items-center justify-center gap-2 mb-2">
-          <Heart className="h-5 w-5 text-red-600" />
-          <span className="font-semibold text-gray-800">Finding Common Ground</span>
-        </div>
-        <p className="text-sm text-gray-700 italic">
-          "{getInsightMessage()}"
-        </p>
-      </motion.div>
-
       {/* Detailed Breakdown */}
       {showDetailed && (
         <motion.div
@@ -278,7 +230,7 @@ export function DemographicVisualization({
         className="text-center mt-8 p-4 bg-green-50 rounded-lg border border-green-200"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.5 }}
+        transition={{ delay: 0.4 }}
       >
         <div className="flex items-center justify-center gap-2 mb-2">
           <Globe className="h-5 w-5 text-green-600" />
@@ -292,7 +244,7 @@ export function DemographicVisualization({
   )
 }
 
-// Updated mock data focusing on common interests and values
+// Mock data for development
 export const mockDemographicData: DemographicData = {
   ageDistribution: [
     { range: '18-24', count: 125000, percentage: 15 },
@@ -314,21 +266,11 @@ export const mockDemographicData: DemographicData = {
     { state: 'Georgia', count: 45000, percentage: 5 },
     { state: 'North Carolina', count: 40000, percentage: 5 }
   ],
-  commonInterests: [
-    { interest: 'Affordable Healthcare', count: 700000, percentage: 84 },
-    { interest: 'Quality Education', count: 650000, percentage: 78 },
-    { interest: 'Economic Security', count: 600000, percentage: 72 },
-    { interest: 'Environmental Protection', count: 550000, percentage: 66 },
-    { interest: 'Community Safety', count: 500000, percentage: 60 },
-    { interest: 'Infrastructure Investment', count: 450000, percentage: 54 }
-  ],
-  topValues: [
-    { value: 'Family & Community', count: 750000, percentage: 90 },
-    { value: 'Fairness & Justice', count: 700000, percentage: 84 },
-    { value: 'Personal Freedom', count: 650000, percentage: 78 },
-    { value: 'Hard Work & Responsibility', count: 600000, percentage: 72 },
-    { value: 'Innovation & Progress', count: 550000, percentage: 66 },
-    { value: 'Tradition & Stability', count: 500000, percentage: 60 }
+  politicalBreakdown: [
+    { affiliation: 'Independent', count: 350000, percentage: 42 },
+    { affiliation: 'Democrat', count: 250000, percentage: 30 },
+    { affiliation: 'Republican', count: 200000, percentage: 24 },
+    { affiliation: 'Other', count: 50000, percentage: 6 }
   ],
   educationLevels: [
     { level: 'Bachelor\'s Degree', count: 300000, percentage: 36 },
