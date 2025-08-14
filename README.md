@@ -120,8 +120,8 @@ A revolutionary privacy-first voting platform that combines advanced encryption,
    
    Configure the following variables:
    ```env
-   DATABASE_URL="postgresql://username:password@localhost:5432/choices"
-   NEXTAUTH_SECRET="your-secret-key"
+   DATABASE_URL="postgresql://..."
+       NEXTAUTH_SECRET="[GENERATE-A-SECURE-RANDOM-STRING]"
    NEXTAUTH_URL="http://localhost:3000"
    ```
 
@@ -261,7 +261,7 @@ npm start
 ```env
 # Production environment variables
 DATABASE_URL="postgresql://..."
-NEXTAUTH_SECRET="production-secret"
+    NEXTAUTH_SECRET="[GENERATE-A-SECURE-RANDOM-STRING]"
 NEXTAUTH_URL="https://your-domain.com"
 NEXT_PUBLIC_VAPID_PUBLIC_KEY="your-vapid-key"
 ```

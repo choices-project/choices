@@ -55,7 +55,7 @@
       "headers": [
         {
           "key": "Access-Control-Allow-Origin",
-          "value": "*"
+          "value": "https://choices-platform.vercel.app"
         },
         {
           "key": "Access-Control-Allow-Methods",

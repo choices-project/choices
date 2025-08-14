@@ -3,11 +3,7 @@ import { Pool } from 'pg'
 
 // Database connection pool
 const pool = new Pool({
-  host: process.env.POSTGRES_HOST || 'localhost',
-  port: parseInt(process.env.POSTGRES_PORT || '5432'),
-  database: process.env.POSTGRES_DB || 'choices',
-  user: process.env.POSTGRES_USER || 'choices_user',
-  password: process.env.POSTGRES_PASSWORD || 'choices_password',
+  connectionString: process.env.DATABASE_URL,
   ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
 })
 
