@@ -5,7 +5,7 @@ import { motion } from 'framer-motion'
 import { 
   Users, MapPin, GraduationCap, DollarSign, 
   Building2, Globe, Heart, Eye, EyeOff,
-  Target, Zap, Shield, Database, Wifi, WifiOff
+  Target, Zap, Shield, Database, BarChart3, Wifi, WifiOff
 } from 'lucide-react'
 import { FancyDonutChart, FancyBarChart } from './FancyCharts'
 import { useDemographics } from '../hooks/useDemographics'
@@ -203,7 +203,7 @@ export function DemographicVisualization({
           </button>
         </motion.div>
         
-        {/* Privacy Toggle */}
+        {/* Data Source Toggle */}
         {showPrivacyToggle && (
           <motion.div 
             className="flex items-center justify-center gap-2 text-sm text-gray-500"
@@ -211,12 +211,12 @@ export function DemographicVisualization({
             animate={{ opacity: 1 }}
             transition={{ delay: 0.3 }}
           >
-            {showDetailed ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+            {showDetailed ? <Database className="h-4 w-4" /> : <BarChart3 className="h-4 w-4" />}
             <button
               onClick={() => setShowDetailed(!showDetailed)}
               className="hover:text-gray-700 transition-colors"
             >
-              {showDetailed ? 'Showing detailed data' : 'Showing anonymized data'}
+              {showDetailed ? 'Showing detailed breakdown' : 'Showing summary view'}
             </button>
           </motion.div>
         )}
@@ -341,17 +341,17 @@ export function DemographicVisualization({
 
       {/* Trust Message */}
       <motion.div
-        className="text-center mt-8 p-4 bg-green-50 rounded-lg border border-green-200"
+        className="text-center mt-8 p-4 bg-blue-50 rounded-lg border border-blue-200"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.6 }}
       >
         <div className="flex items-center justify-center gap-2 mb-2">
-          <Globe className="h-5 w-5 text-green-600" />
-          <span className="font-semibold text-green-800">Real People, Real Data</span>
+          <BarChart3 className="h-5 w-5 text-blue-600" />
+          <span className="font-semibold text-blue-800">Demo Data, Real Insights</span>
         </div>
-        <p className="text-sm text-green-700">
-          This is who's actually voting. No hidden demographics, no corporate filters.
+        <p className="text-sm text-blue-700">
+          This shows how demographic analysis works. Real data will replace this when users join.
         </p>
       </motion.div>
     </div>

@@ -9,6 +9,7 @@ import {
 import { DemographicVisualization, mockDemographicData } from '../../components/DemographicVisualization'
 import { BiasFreePromise, defaultPromises } from '../../components/BiasFreePromise'
 import { TierSystem, defaultTiers } from '../../components/TierSystem'
+import { TopicAnalysis } from '../../components/TopicAnalysis'
 import { FancyDonutChart, FancyProgressRing } from '../../components/FancyCharts'
 
 export default function EnhancedLandingPage() {
@@ -131,6 +132,16 @@ export default function EnhancedLandingPage() {
             useRealData={true}
             title="Meet Your Fellow Citizens"
             subtitle="See who's actually voting. No hidden demographics, no corporate filters."
+          />
+        </div>
+      </section>
+
+      {/* Topic Analysis Section */}
+      <section className="py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <TopicAnalysis
+            title="See How Analysis Works"
+            subtitle="Explore a sample poll result with interactive demographic breakdowns"
           />
         </div>
       </section>
