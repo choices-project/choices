@@ -210,9 +210,7 @@ func main() {
 	// Apply middleware chain
 	handler := middleware.CORSMiddleware()(
 		middleware.LoggingMiddleware()(
-			middleware.VoteRateLimitMiddleware()(
-				mux,
-			),
+			mux,
 		),
 	)
 
