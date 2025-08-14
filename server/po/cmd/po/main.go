@@ -6,15 +6,28 @@ import (
 	"net/http"
 
 	"choice/po/internal/api"
+	"choice/po/internal/database"
 )
 
 func main() {
+	// Initialize database
+	db, err := database.NewDatabase("data/po.db")
+	if err != nil {
+		log.Fatalf("Failed to initialize database: %v", err)
+	}
+	defer db.Close()
+
+	// Create repositories
+	pollRepo := database.NewPollRepository(db)
+	voteRepo := database.NewVoteRepository(db)
+	merkleTreeRepo := database.NewMerkleTreeRepository(db)
+
 	// For now, we'll use a hardcoded IA public key
 	// In production, this would be fetched from the IA service
 	iaPublicKey := "6f0c2a37090a7bc2f7e670c07afa333edc06fe62759b1add546912c2f294787d"
 
 	// Create poll service
-	pollService, err := api.NewPollService(iaPublicKey)
+	pollService, err := api.NewPollService(iaPublicKey, pollRepo, voteRepo, merkleTreeRepo)
 	if err != nil {
 		log.Fatalf("Failed to create poll service: %v", err)
 	}
@@ -35,6 +48,10 @@ func main() {
 	http.HandleFunc("/api/v1/votes", pollService.HandleSubmitVote)
 	http.HandleFunc("/api/v1/tally", pollService.HandleGetTally)
 
+	// Commitment and audit endpoints
+	http.HandleFunc("/api/v1/commitment", pollService.HandleGetCommitmentLog)
+	http.HandleFunc("/api/v1/verify", pollService.HandleVerifyProof)
+
 	log.Println("PO listening on :8082")
 	log.Println("Available endpoints:")
 	log.Println("  GET  /healthz")
@@ -45,6 +62,8 @@ func main() {
 	log.Println("  POST /api/v1/polls/close?poll_id=<poll_id>")
 	log.Println("  POST /api/v1/votes?poll_id=<poll_id>")
 	log.Println("  GET  /api/v1/tally?poll_id=<poll_id>")
+	log.Println("  GET  /api/v1/commitment?poll_id=<poll_id>")
+	log.Println("  POST /api/v1/verify?poll_id=<poll_id>")
 	
 	log.Fatal(http.ListenAndServe(":8082", nil))
 }
