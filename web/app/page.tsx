@@ -239,12 +239,12 @@ export default function HomePage() {
                     </div>
                   )}
                   
-                  {/* Action Button */}
-                  <Link href="/polls">
-                    <button className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 rounded-xl font-semibold transition-all duration-200 hover:shadow-lg hover:-translate-y-1">
-                      Vote Now
-                    </button>
-                  </Link>
+                                     {/* Action Button */}
+                   <Link href={`/polls/${poll.id}`}>
+                     <button className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 rounded-xl font-semibold transition-all duration-200 hover:shadow-lg hover:-translate-y-1">
+                       Vote Now
+                     </button>
+                   </Link>
                 </div>
               ))}
             </div>
