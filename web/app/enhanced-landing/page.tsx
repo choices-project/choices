@@ -128,7 +128,7 @@ export default function EnhancedLandingPage() {
       <section className="py-20 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <DemographicVisualization
-            data={mockDemographicData}
+            useRealData={true}
             title="Meet Your Fellow Citizens"
             subtitle="See who's actually voting. No hidden demographics, no corporate filters."
           />
