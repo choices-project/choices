@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 
 	"choice/po/internal/analytics"
 	"choice/po/internal/api"
@@ -44,9 +45,11 @@ func main() {
 	// Generate sample data for testing
 	realTimeDashboard.GenerateSampleData()
 
-	// For now, we'll use a hardcoded IA public key
-	// In production, this would be fetched from the IA service
-	iaPublicKey := "6f0c2a37090a7bc2f7e670c07afa333edc06fe62759b1add546912c2f294787d"
+	// Get IA public key from environment variable
+	iaPublicKey := os.Getenv("IA_PUBLIC_KEY")
+	if iaPublicKey == "" {
+		log.Fatal("IA_PUBLIC_KEY environment variable is required")
+	}
 
 	// Create poll service
 	pollService, err := api.NewPollService(iaPublicKey, pollRepo, voteRepo, merkleTreeRepo)

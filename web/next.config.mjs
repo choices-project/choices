@@ -2,9 +2,63 @@ import withPWA from 'next-pwa'
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Image Optimization for Vercel
   images: {
-    domains: ['localhost'],
+    domains: ['localhost', 'choices-platform.vercel.app', 'choices-project.vercel.app'],
+    formats: ['image/webp', 'image/avif'],
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
   },
+  
+  // Performance Optimizations
+  experimental: {
+    optimizePackageImports: ['lucide-react', 'framer-motion'],
+  },
+  
+  // Compression
+  compress: true,
+  
+  // Security Headers
+  async headers() {
+    return [
+      {
+        source: '/(.*)',
+        headers: [
+          {
+            key: 'X-DNS-Prefetch-Control',
+            value: 'on'
+          },
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff'
+          },
+          {
+            key: 'X-Frame-Options',
+            value: 'DENY'
+          },
+          {
+            key: 'X-XSS-Protection',
+            value: '1; mode=block'
+          },
+          {
+            key: 'Referrer-Policy',
+            value: 'strict-origin-when-cross-origin'
+          }
+        ]
+      }
+    ]
+  },
+  
+  // Redirects
+  async redirects() {
+    return [
+      {
+        source: '/home',
+        destination: '/',
+        permanent: true
+      }
+    ]
+  }
 }
 
 const config = withPWA({
