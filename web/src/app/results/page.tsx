@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { BarChart3, Shield, CheckCircle, ArrowLeft, RefreshCw } from 'lucide-react'
 import Link from 'next/link'
-import { poApi, Poll, Tally, CommitmentLog } from '@/lib/api'
+import { poApi, Poll, Tally, CommitmentLog } from '../../lib/api'
 
 export default function ResultsPage() {
   const [polls, setPolls] = useState<Poll[]>([])
@@ -48,7 +48,7 @@ export default function ResultsPage() {
   }
 
   const getTotalVotes = (tally: Tally) => {
-    return Object.values(tally).reduce((sum, count) => sum + count, 0)
+    return Object.values(tally).reduce((sum, count) => (sum as number) + (count as number), 0)
   }
 
   const getPercentage = (votes: number, total: number) => {
@@ -124,7 +124,7 @@ export default function ResultsPage() {
                   <span className="font-medium">Options:</span> {selectedPoll.options.length}
                 </div>
                 <div>
-                  <span className="font-medium">Total Votes:</span> {tally ? getTotalVotes(tally) : 'Loading...'}
+                  <span className="font-medium">Total Votes:</span> {tally ? getTotalVotes(tally).toString() : 'Loading...'}
                 </div>
               </div>
 
@@ -153,7 +153,7 @@ export default function ResultsPage() {
 
                 <div className="space-y-4">
                   {selectedPoll.options.map((option, index) => {
-                    const votes = tally[index] || 0
+                    const votes = (tally[index] as number) || 0
                     const total = getTotalVotes(tally)
                     const percentage = getPercentage(votes, total)
                     
