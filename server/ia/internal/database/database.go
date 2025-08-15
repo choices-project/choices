@@ -21,7 +21,7 @@ func NewDatabase(dbURL string) (*Database, error) {
 	if dbURL == "" {
 		dbURL = os.Getenv("DATABASE_URL")
 		if dbURL == "" {
-			dbURL = "postgres://choices_user:choices_password@localhost:5432/choices?sslmode=disable"
+			return nil, fmt.Errorf("DATABASE_URL environment variable is required")
 		}
 	}
 
