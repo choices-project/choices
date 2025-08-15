@@ -98,7 +98,7 @@ export class PerformanceMonitor {
 
     // First Input Delay
     this.observeMetric('first-input', (entries) => {
-      entries.forEach((entry) => {
+      entries.forEach((entry: any) => {
         this.recordMetric('fid', entry.processingStart - entry.startTime)
       })
     })
@@ -139,7 +139,7 @@ export class PerformanceMonitor {
 
     // Resource Load Time
     this.observeMetric('resource', (entries) => {
-      entries.forEach((entry) => {
+      entries.forEach((entry: any) => {
         const loadTime = entry.responseEnd - entry.fetchStart
         this.recordMetric('resourceLoadTime', loadTime)
       })
@@ -182,9 +182,12 @@ export class PerformanceMonitor {
     }, 10000)
   }
 
-  private observeMetric(type: string, callback: (entries: PerformanceEntryList) => void) {
+  private observeMetric(type: string, callback: (entries: PerformanceEntry[]) => void) {
     try {
-      const observer = new PerformanceObserver(callback)
+      const observer = new PerformanceObserver((list) => {
+        const entries = Array.from(list.getEntries())
+        callback(entries)
+      })
       observer.observe({ type, buffered: true })
       this.observers.set(type, observer)
     } catch (error) {
