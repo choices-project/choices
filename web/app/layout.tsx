@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
 import { PWAInstallPrompt, OfflineIndicator, PWAUpdatePrompt } from '../components/PWAComponents'
+import FeedbackWidget from '../components/FeedbackWidget'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -45,6 +46,9 @@ export default function RootLayout({
         <PWAInstallPrompt />
         <OfflineIndicator />
         <PWAUpdatePrompt />
+        
+        {/* Feedback Widget - Appears on all pages */}
+        <FeedbackWidget />
         
         {/* Hidden elements for PWA functionality */}
         <div id="install-pwa" style={{ display: 'none' }} />
