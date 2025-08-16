@@ -96,7 +96,7 @@ A revolutionary privacy-first voting platform that combines advanced encryption,
 
 ### Prerequisites
 - Node.js 18+ 
-- PostgreSQL 12+
+- PostgreSQL 12+ (optional - app works with mock data)
 - npm or yarn
 
 ### Installation
