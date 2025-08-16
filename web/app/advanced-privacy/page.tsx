@@ -1,29 +1,16 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { motion } from 'framer-motion'
+import { useState, useEffect, useCallback } from 'react'
 import { 
   Shield, 
   Lock, 
   Eye, 
-  EyeOff, 
   Brain, 
-  Zap, 
   BarChart3,
   Activity,
   CheckCircle,
   AlertCircle,
-  Settings,
   RefreshCw,
-  Download,
-  Upload,
-  Fingerprint,
-  Key,
-  Database,
-  Network,
-  Cpu,
-  HardDrive,
-  Smartphone,
   Globe,
   TrendingUp,
   Users,
@@ -38,8 +25,8 @@ import { usePrivacyUtils } from '../../hooks/usePrivacyUtils'
 import { usePWAUtils } from '../../hooks/usePWAUtils'
 
 export default function AdvancedPrivacyPage() {
-  const { utils: privacyUtils, loading: privacyLoading, error: privacyError } = usePrivacyUtils()
-  const { utils: pwaUtils, loading: pwaLoading, error: pwaError } = usePWAUtils()
+  const { utils: privacyUtils, loading: privacyLoading } = usePrivacyUtils()
+  const { utils: pwaUtils, loading: pwaLoading } = usePWAUtils()
   const [activeTab, setActiveTab] = useState('overview')
   const [privacyMetrics, setPrivacyMetrics] = useState<any>(null)
   const [zkProofs, setZkProofs] = useState<any[]>([])
@@ -47,13 +34,7 @@ export default function AdvancedPrivacyPage() {
   const [isRunningAnalysis, setIsRunningAnalysis] = useState(false)
   const [analysisResults, setAnalysisResults] = useState<any>(null)
 
-  useEffect(() => {
-    if (privacyUtils && pwaUtils && !privacyLoading && !pwaLoading) {
-      initializePrivacyDashboard()
-    }
-  }, [privacyUtils, pwaUtils, privacyLoading, pwaLoading])
-
-  const initializePrivacyDashboard = async () => {
+  const initializePrivacyDashboard = useCallback(async () => {
     if (!privacyUtils || !pwaUtils) return
     
     // Get privacy metrics
@@ -77,7 +58,15 @@ export default function AdvancedPrivacyPage() {
       verification: privacyUtils.zkProofManager.verifyProof(id)
     }))
     setZkProofs(proofs)
-  }
+  }, [privacyUtils, pwaUtils])
+
+  useEffect(() => {
+    if (privacyUtils && pwaUtils && !privacyLoading && !pwaLoading) {
+      initializePrivacyDashboard()
+    }
+  }, [privacyUtils, pwaUtils, privacyLoading, pwaLoading, initializePrivacyDashboard])
+
+
 
   const runPrivateAnalysis = async () => {
     setIsRunningAnalysis(true)

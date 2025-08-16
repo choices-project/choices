@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import { 
   CheckCircle, 
@@ -54,14 +54,7 @@ export default function ComprehensiveTestingPage() {
   const [activeTab, setActiveTab] = useState('overview')
   const [exportData, setExportData] = useState<string>('')
 
-  useEffect(() => {
-    if (testingUtils && !utilsLoading) {
-      // Auto-run tests on page load
-      runComprehensiveTests()
-    }
-  }, [testingUtils, utilsLoading])
-
-  const runComprehensiveTests = async () => {
+  const runComprehensiveTests = useCallback(async () => {
     if (!testingUtils) return
     
     setIsRunningTests(true)
@@ -78,7 +71,14 @@ export default function ComprehensiveTestingPage() {
     } finally {
       setIsRunningTests(false)
     }
-  }
+  }, [testingUtils])
+
+  useEffect(() => {
+    if (testingUtils && !utilsLoading) {
+      // Auto-run tests on page load
+      runComprehensiveTests()
+    }
+  }, [testingUtils, utilsLoading, runComprehensiveTests])
 
   const getStatusIcon = (status: string) => {
     switch (status) {
