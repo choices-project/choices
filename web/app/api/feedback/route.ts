@@ -45,7 +45,15 @@ export async function POST(request: NextRequest) {
     }
 
     // Insert feedback into database
-    const supabaseClient = supabase
+    if (!supabase) {
+      console.warn('Supabase not configured - using mock response')
+      return NextResponse.json({
+        success: true,
+        message: 'Feedback submitted successfully (mock)',
+        feedback_id: 'mock-' + Date.now()
+      })
+    }
+
     const { data, error } = await supabase
       .from('feedback')
       .insert([feedbackData])
@@ -91,7 +99,15 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '50')
     const offset = parseInt(searchParams.get('offset') || '0')
 
-    const supabaseClient = supabase
+    if (!supabase) {
+      console.warn('Supabase not configured - using mock response')
+      return NextResponse.json({
+        success: true,
+        feedback: [],
+        count: 0
+      })
+    }
+
     let query = supabase
       .from('feedback')
       .select('*')
