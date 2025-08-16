@@ -12,20 +12,12 @@ import {
   Lock,
   Clock,
   Users,
-  BarChart3,
-  Fingerprint,
-  Zap,
-  RefreshCw,
-  Download,
-  Upload,
-  Eye,
-  EyeOff,
+  TrendingUp,
   Smartphone,
-  Globe
+  Download
 } from 'lucide-react'
-import { pwaAuth, PWAUser } from '../lib/pwa-auth-integration'
-import { pwaManager } from '../lib/pwa-utils'
-import { pwaAnalytics } from '../lib/pwa-analytics'
+import { useFeatureFlag } from '../hooks/useFeatureFlags'
+import { usePWAUtils } from '../hooks/usePWAUtils'
 
 interface Poll {
   id: string
@@ -42,7 +34,7 @@ interface Poll {
 
 interface PWAVotingInterfaceProps {
   poll: Poll
-  onVote?: (choice: number) => void
+  onVote: (choice: number) => void
   showResults?: boolean
   offlineMode?: boolean
 }
@@ -53,195 +45,151 @@ export function PWAVotingInterface({
   showResults = false, 
   offlineMode = false 
 }: PWAVotingInterfaceProps) {
+  const { enabled: pwaEnabled } = useFeatureFlag('pwa')
+  const { utils: pwaUtils, loading: utilsLoading } = usePWAUtils()
+  
   const [selectedChoice, setSelectedChoice] = useState<number | null>(null)
+  const [hasVoted, setHasVoted] = useState(false)
   const [isVoting, setIsVoting] = useState(false)
-  const [voteSubmitted, setVoteSubmitted] = useState(false)
-  const [currentUser, setCurrentUser] = useState<PWAUser | null>(null)
-  const [isOnline, setIsOnline] = useState(navigator.onLine)
-  const [showPrivacyInfo, setShowPrivacyInfo] = useState(false)
-  const [voteHistory, setVoteHistory] = useState<any[]>([])
-  const [syncStatus, setSyncStatus] = useState<'synced' | 'pending' | 'failed'>('synced')
+  const [isOnline, setIsOnline] = useState(true)
+  const [showPWAFeatures, setShowPWAFeatures] = useState(false)
 
   useEffect(() => {
-    // Get current user
-    const user = pwaAuth.getCurrentUser()
-    setCurrentUser(user)
-
-    // Check online status
+    setIsOnline(navigator.onLine)
+    
     const handleOnline = () => setIsOnline(true)
     const handleOffline = () => setIsOnline(false)
     
     window.addEventListener('online', handleOnline)
     window.addEventListener('offline', handleOffline)
-
-    // Load vote history
-    loadVoteHistory()
-
+    
     return () => {
       window.removeEventListener('online', handleOnline)
       window.removeEventListener('offline', handleOffline)
     }
   }, [])
 
-  const loadVoteHistory = async () => {
-    try {
-      // Load from encrypted storage
-      const history = await pwaManager.getDeviceFingerprint()
-      // This would be loaded from encrypted storage in a real implementation
-      setVoteHistory([])
-    } catch (error) {
-      console.error('Failed to load vote history:', error)
-    }
-  }
-
   const handleVote = async (choice: number) => {
-    if (!currentUser) {
-      // Create anonymous user if none exists
-      try {
-        const newUser = await pwaAuth.createUser()
-        setCurrentUser(newUser)
-      } catch (error) {
-        console.error('Failed to create user:', error)
-        return
-      }
-    }
+    if (hasVoted || isVoting) return
 
     setIsVoting(true)
     setSelectedChoice(choice)
 
     try {
-      // Vote with PWA enhancements
-      const success = await pwaAuth.vote(poll.id, choice, !isOnline)
+      if (pwaEnabled && pwaUtils && !isOnline) {
+        // Store offline vote
+        await pwaUtils.pwaManager.storeOfflineVote({
+          pollId: poll.id,
+          choice
+        })
+        
+        // Track offline action
+        pwaUtils.pwaAnalytics.trackOfflineAction()
+        pwaUtils.pwaAnalytics.trackFeatureUsage('offline_vote')
+        
+        console.log('PWA: Vote stored offline')
+      }
+
+      // Call the parent vote handler
+      onVote(choice)
+      setHasVoted(true)
       
-      if (success) {
-        setVoteSubmitted(true)
-        
-        // Track analytics
-        pwaAnalytics.trackFeatureUsage(isOnline ? 'online_vote_success' : 'offline_vote_success')
-        
-        // Update sync status
-        if (!isOnline) {
-          setSyncStatus('pending')
-        }
-        
-        // Call parent callback
-        if (onVote) {
-          onVote(choice)
-        }
-      } else {
-        throw new Error('Vote failed')
+      // Track analytics
+      if (pwaUtils) {
+        pwaUtils.pwaAnalytics.trackFeatureUsage('vote_cast')
+        pwaUtils.pwaAnalytics.trackDataCollection(1)
       }
     } catch (error) {
       console.error('Vote failed:', error)
-      pwaAnalytics.trackFeatureUsage('vote_failed')
     } finally {
       setIsVoting(false)
     }
   }
 
-  const syncOfflineVotes = async () => {
-    if (syncStatus === 'pending' && isOnline) {
-      setSyncStatus('synced')
-      pwaAnalytics.trackFeatureUsage('offline_votes_synced')
-    }
+  const calculatePercentage = (votes: number) => {
+    return poll.totalVotes > 0 ? Math.round((votes / poll.totalVotes) * 100) : 0
   }
 
-  const getVotePercentage = (choice: number) => {
-    if (!poll.results || poll.totalVotes === 0) return 0
-    return Math.round((poll.results[choice] / poll.totalVotes) * 100)
+  const getTimeRemaining = () => {
+    const now = new Date()
+    const expires = new Date(poll.expiresAt)
+    const diff = expires.getTime() - now.getTime()
+    
+    if (diff <= 0) return 'Expired'
+    
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24))
+    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
+    
+    if (days > 0) return `${days}d ${hours}h`
+    if (hours > 0) return `${hours}h`
+    return 'Less than 1h'
   }
 
-  const getTrustTierColor = (tier: string) => {
-    const colors = {
-      T0: 'text-gray-600 bg-gray-100',
-      T1: 'text-blue-600 bg-blue-100',
-      T2: 'text-green-600 bg-green-100',
-      T3: 'text-purple-600 bg-purple-100'
-    }
-    return colors[tier as keyof typeof colors] || colors.T0
-  }
-
-  const getTrustTierName = (tier: string) => {
-    const names = {
-      T0: 'Anonymous',
-      T1: 'Verified',
-      T2: 'Trusted',
-      T3: 'Validator'
-    }
-    return names[tier as keyof typeof names] || 'Unknown'
+  const isExpired = () => {
+    return new Date() > new Date(poll.expiresAt)
   }
 
   return (
-    <div className="space-y-6">
-      {/* Poll Header */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
-        <div className="flex items-start justify-between mb-4">
+    <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+      {/* Header */}
+      <div className="p-6 border-b border-gray-200">
+        <div className="flex items-start justify-between">
           <div className="flex-1">
-            <h2 className="text-xl font-bold text-gray-900 mb-2">{poll.question}</h2>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              {poll.question}
+            </h3>
             <div className="flex items-center space-x-4 text-sm text-gray-600">
               <div className="flex items-center space-x-1">
                 <Users className="w-4 h-4" />
-                <span>{poll.totalVotes} votes</span>
+                <span>{poll.totalVotes.toLocaleString()} votes</span>
               </div>
               <div className="flex items-center space-x-1">
                 <Clock className="w-4 h-4" />
-                <span>Expires {new Date(poll.expiresAt).toLocaleDateString()}</span>
+                <span>{getTimeRemaining()}</span>
               </div>
               <div className="flex items-center space-x-1">
-                <Globe className="w-4 h-4" />
+                <TrendingUp className="w-4 h-4" />
                 <span>{poll.category}</span>
               </div>
             </div>
           </div>
           
-          {/* Online/Offline Status */}
-          <div className="flex items-center space-x-2">
-            {isOnline ? (
-              <div className="flex items-center space-x-1 text-green-600">
-                <Wifi className="w-4 h-4" />
-                <span className="text-sm">Online</span>
-              </div>
-            ) : (
-              <div className="flex items-center space-x-1 text-orange-600">
-                <WifiOff className="w-4 h-4" />
-                <span className="text-sm">Offline</span>
-              </div>
-            )}
-          </div>
+          {/* PWA Status Indicators */}
+          {pwaEnabled && (
+            <div className="flex items-center space-x-2">
+              {offlineMode ? (
+                <div className="flex items-center space-x-1 text-orange-600">
+                  <WifiOff className="w-4 h-4" />
+                  <span className="text-xs">Offline</span>
+                </div>
+              ) : (
+                <div className="flex items-center space-x-1 text-green-600">
+                  <Wifi className="w-4 h-4" />
+                  <span className="text-xs">Online</span>
+                </div>
+              )}
+              
+              {pwaUtils?.pwaManager.isInstalled() && (
+                <div className="flex items-center space-x-1 text-blue-600">
+                  <Smartphone className="w-4 h-4" />
+                  <span className="text-xs">PWA</span>
+                </div>
+              )}
+            </div>
+          )}
         </div>
-
-        {/* User Trust Tier */}
-        {currentUser && (
-          <div className="flex items-center space-x-3 p-3 rounded-lg border border-gray-200">
-            <div className={`px-2 py-1 rounded-full text-xs font-medium ${getTrustTierColor(currentUser.trustTier)}`}>
-              {getTrustTierName(currentUser.trustTier)}
-            </div>
-            <div className="flex items-center space-x-2 text-sm text-gray-600">
-              <Shield className="w-4 h-4" />
-              <span>Trust Score: {currentUser.verificationScore}%</span>
-            </div>
-            {currentUser.pwaFeatures?.webAuthnEnabled && (
-              <div className="flex items-center space-x-1 text-blue-600">
-                <Fingerprint className="w-4 h-4" />
-                <span className="text-sm">WebAuthn</span>
-              </div>
-            )}
-          </div>
-        )}
       </div>
 
       {/* Voting Options */}
-      {!voteSubmitted && poll.isActive && (
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Cast Your Vote</h3>
-          
+      {!hasVoted && !isExpired() && (
+        <div className="p-6">
           <div className="space-y-3">
             {poll.options.map((option, index) => (
               <motion.button
                 key={index}
                 onClick={() => handleVote(index)}
                 disabled={isVoting}
-                className={`w-full p-4 rounded-lg border-2 transition-all duration-200 ${
+                className={`w-full p-4 rounded-lg border-2 transition-all duration-200 text-left ${
                   selectedChoice === index
                     ? 'border-blue-500 bg-blue-50'
                     : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
@@ -250,85 +198,53 @@ export function PWAVotingInterface({
                 whileTap={!isVoting ? { scale: 0.98 } : {}}
               >
                 <div className="flex items-center justify-between">
-                  <span className="text-left font-medium text-gray-900">{option}</span>
-                  {selectedChoice === index && isVoting && (
-                    <RefreshCw className="w-5 h-5 text-blue-600 animate-spin" />
+                  <span className="font-medium text-gray-900">{option}</span>
+                  {isVoting && selectedChoice === index && (
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500" />
                   )}
                 </div>
               </motion.button>
             ))}
           </div>
 
-          {/* Privacy Notice */}
-          <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
-            <div className="flex items-start space-x-2">
-              <Lock className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
-              <div className="text-sm text-blue-800">
-                <p className="font-medium">Privacy-First Voting</p>
-                <p>Your vote is encrypted and anonymized. No personal data is shared with the server.</p>
+          {/* PWA Features Info */}
+          {pwaEnabled && offlineMode && (
+            <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+              <div className="flex items-center space-x-2 text-blue-800">
+                <Download className="w-4 h-4" />
+                <span className="text-sm font-medium">Offline Vote</span>
               </div>
-            </div>
-          </div>
-
-          {/* Offline Notice */}
-          {!isOnline && (
-            <div className="mt-4 p-3 bg-orange-50 rounded-lg border border-orange-200">
-              <div className="flex items-start space-x-2">
-                <WifiOff className="w-4 h-4 text-orange-600 mt-0.5 flex-shrink-0" />
-                <div className="text-sm text-orange-800">
-                  <p className="font-medium">Offline Mode</p>
-                  <p>Your vote will be stored locally and synced when you're back online.</p>
-                </div>
-              </div>
+              <p className="text-sm text-blue-700 mt-1">
+                Your vote will be stored locally and synced when you're back online.
+              </p>
             </div>
           )}
         </div>
       )}
 
-      {/* Vote Confirmation */}
-      {voteSubmitted && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-green-50 rounded-lg border border-green-200 p-6"
-        >
-          <div className="flex items-center space-x-3">
-            <CheckCircle className="w-6 h-6 text-green-600" />
-            <div>
-              <h3 className="text-lg font-semibold text-green-800">Vote Submitted!</h3>
-              <p className="text-green-700">
-                {isOnline 
-                  ? 'Your vote has been recorded successfully.'
-                  : 'Your vote has been stored locally and will sync when online.'
-                }
-              </p>
-            </div>
-          </div>
-        </motion.div>
-      )}
-
       {/* Results */}
       {showResults && poll.results && (
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Results</h3>
-          
-          <div className="space-y-4">
+        <div className="p-6 bg-gray-50">
+          <h4 className="text-lg font-semibold text-gray-900 mb-4">Results</h4>
+          <div className="space-y-3">
             {poll.options.map((option, index) => {
-              const percentage = getVotePercentage(index)
               const votes = poll.results?.[index] || 0
+              const percentage = calculatePercentage(votes)
               
               return (
                 <div key={index} className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="font-medium text-gray-900">{option}</span>
-                    <span className="text-gray-600">{votes} votes ({percentage}%)</span>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-gray-900">{option}</span>
+                    <span className="text-sm text-gray-600">
+                      {votes} votes ({percentage}%)
+                    </span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2">
                     <motion.div
-                      className="bg-blue-600 h-2 rounded-full"
+                      className="bg-blue-500 h-2 rounded-full"
                       initial={{ width: 0 }}
                       animate={{ width: `${percentage}%` }}
-                      transition={{ duration: 0.8, ease: "easeOut" }}
+                      transition={{ duration: 0.5, delay: index * 0.1 }}
                     />
                   </div>
                 </div>
@@ -338,80 +254,87 @@ export function PWAVotingInterface({
         </div>
       )}
 
-      {/* Sync Status */}
-      {syncStatus === 'pending' && isOnline && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-blue-50 rounded-lg border border-blue-200 p-4"
-        >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <Upload className="w-4 h-4 text-blue-600" />
-              <span className="text-sm text-blue-800">Syncing offline votes...</span>
-            </div>
-            <button
-              onClick={syncOfflineVotes}
-              className="text-blue-600 hover:text-blue-700 text-sm font-medium"
-            >
-              Sync Now
-            </button>
+      {/* Vote Confirmation */}
+      {hasVoted && (
+        <div className="p-6 bg-green-50 border-t border-green-200">
+          <div className="flex items-center space-x-2 text-green-800">
+            <CheckCircle className="w-5 h-5" />
+            <span className="font-medium">Vote recorded successfully!</span>
           </div>
-        </motion.div>
+          {offlineMode && (
+            <p className="text-sm text-green-700 mt-1">
+              Your vote has been stored offline and will sync when you're back online.
+            </p>
+          )}
+        </div>
       )}
 
-      {/* PWA Features */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">PWA Features</h3>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="flex items-center space-x-3 p-3 rounded-lg border border-gray-200">
-            <Smartphone className="w-5 h-5 text-blue-600" />
-            <div>
-              <p className="font-medium text-gray-900">Offline Voting</p>
-              <p className="text-sm text-gray-600">Vote without internet connection</p>
-            </div>
+      {/* Expired Poll */}
+      {isExpired() && (
+        <div className="p-6 bg-gray-50 border-t border-gray-200">
+          <div className="flex items-center space-x-2 text-gray-600">
+            <AlertCircle className="w-5 h-5" />
+            <span className="font-medium">This poll has expired</span>
           </div>
-          
-          <div className="flex items-center space-x-3 p-3 rounded-lg border border-gray-200">
-            <Shield className="w-5 h-5 text-green-600" />
-            <div>
-              <p className="font-medium text-gray-900">Secure Authentication</p>
-              <p className="text-sm text-gray-600">WebAuthn biometric verification</p>
-            </div>
-          </div>
-          
-          <div className="flex items-center space-x-3 p-3 rounded-lg border border-gray-200">
-            <Lock className="w-5 h-5 text-purple-600" />
-            <div>
-              <p className="font-medium text-gray-900">Encrypted Storage</p>
-              <p className="text-sm text-gray-600">Local data protection</p>
-            </div>
-          </div>
-          
-          <div className="flex items-center space-x-3 p-3 rounded-lg border border-gray-200">
-            <Zap className="w-5 h-5 text-orange-600" />
-            <div>
-              <p className="font-medium text-gray-900">Background Sync</p>
-              <p className="text-sm text-gray-600">Automatic data synchronization</p>
-            </div>
-          </div>
+          <p className="text-sm text-gray-600 mt-1">
+            Voting is no longer available for this poll.
+          </p>
         </div>
-      </div>
+      )}
 
-      {/* Vote History */}
-      {voteHistory.length > 0 && (
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Votes</h3>
+      {/* PWA Features Toggle */}
+      {pwaEnabled && (
+        <div className="border-t border-gray-200">
+          <button
+            onClick={() => setShowPWAFeatures(!showPWAFeatures)}
+            className="w-full p-3 text-left text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-colors"
+          >
+            <div className="flex items-center justify-between">
+              <span>PWA Features</span>
+              <Shield className="w-4 h-4" />
+            </div>
+          </button>
           
-          <div className="space-y-2">
-            {voteHistory.slice(0, 5).map((vote, index) => (
-              <div key={index} className="flex items-center justify-between p-2 rounded-lg bg-gray-50">
-                <span className="text-sm text-gray-700">{vote.pollQuestion}</span>
-                <span className="text-sm font-medium text-gray-900">{vote.choice}</span>
-              </div>
-            ))}
-          </div>
+          <AnimatePresence>
+            {showPWAFeatures && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="overflow-hidden"
+              >
+                <div className="p-4 bg-gray-50 border-t border-gray-200">
+                  <div className="grid grid-cols-2 gap-3 text-xs">
+                    <div className="flex items-center space-x-2">
+                      <div className={`w-2 h-2 rounded-full ${isOnline ? 'bg-green-500' : 'bg-orange-500'}`} />
+                      <span className="text-gray-600">
+                        {isOnline ? 'Online' : 'Offline'}
+                      </span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <div className={`w-2 h-2 rounded-full ${pwaUtils?.pwaManager.isInstalled() ? 'bg-blue-500' : 'bg-gray-300'}`} />
+                      <span className="text-gray-600">
+                        {pwaUtils?.pwaManager.isInstalled() ? 'Installed' : 'Browser'}
+                      </span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <div className={`w-2 h-2 rounded-full ${pwaUtils?.pwaManager.getPWAStatus().serviceWorker ? 'bg-green-500' : 'bg-red-500'}`} />
+                      <span className="text-gray-600">
+                        Service Worker
+                      </span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <div className={`w-2 h-2 rounded-full ${pwaUtils?.pwaManager.getPWAStatus().offlineVotes > 0 ? 'bg-orange-500' : 'bg-gray-300'}`} />
+                      <span className="text-gray-600">
+                        {pwaUtils?.pwaManager.getPWAStatus().offlineVotes} offline votes
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       )}
     </div>

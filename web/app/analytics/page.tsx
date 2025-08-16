@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   BarChart3, 
   TrendingUp, 
@@ -28,63 +28,12 @@ import {
   Database,
   BarChart,
   LineChart,
-  Funnel
+  Funnel,
+  Brain,
+  Lightbulb,
+  BarChart4
 } from 'lucide-react';
-import { useFeatureFlags } from '../hooks/useFeatureFlags';
-import { isFeatureEnabled } from '../lib/feature-flags';
-import { PWAAnalytics } from '../lib/pwa-analytics';
-
-interface AnalyticsData {
-  overview: {
-    totalPolls: number;
-    activePolls: number;
-    totalVotes: number;
-    totalUsers: number;
-    participationRate: number;
-    averageSessionDuration: number;
-    bounceRate: number;
-    conversionRate: number;
-  };
-  trends: {
-    daily: Array<{ date: string; votes: number; users: number; polls: number }>;
-    weekly: Array<{ week: string; votes: number; users: number; polls: number }>;
-    monthly: Array<{ month: string; votes: number; users: number; polls: number }>;
-  };
-  demographics: {
-    ageGroups: Record<string, number>;
-    geographicDistribution: Record<string, number>;
-    verificationTiers: Record<string, number>;
-    deviceTypes: Record<string, number>;
-    engagementLevels: Record<string, number>;
-  };
-  performance: {
-    loadTimes: Array<{ page: string; averageLoadTime: number; p95LoadTime: number }>;
-    errorRates: Array<{ endpoint: string; errorRate: number; totalRequests: number }>;
-    userExperience: {
-      firstContentfulPaint: number;
-      largestContentfulPaint: number;
-      cumulativeLayoutShift: number;
-    };
-  };
-  privacy: {
-    dataCollected: number;
-    dataShared: number;
-    anonymizationLevel: string;
-    encryptionEnabled: boolean;
-    userConsent: {
-      granted: number;
-      denied: number;
-      pending: number;
-    };
-  };
-  engagement: {
-    activeUsers: number;
-    returningUsers: number;
-    sessionDuration: number;
-    pagesPerSession: number;
-    featureUsage: Record<string, number>;
-  };
-}
+import { useAnalytics } from '../../hooks/useAnalytics';
 
 interface AnalyticsView {
   id: string;
@@ -95,47 +44,28 @@ interface AnalyticsView {
   enabled: boolean;
 }
 
-interface AnalyticsDashboardProps {
-  title?: string;
-  subtitle?: string;
-  showHeader?: boolean;
-  showNavigation?: boolean;
-  defaultView?: string;
-  autoRefresh?: boolean;
-  refreshInterval?: number;
-  onDataUpdate?: (data: AnalyticsData) => void;
-  onError?: (error: string) => void;
-  className?: string;
-}
-
-export default function AnalyticsDashboard({
-  title = "Analytics Dashboard",
-  subtitle = "Comprehensive insights and data visualization",
-  showHeader = true,
-  showNavigation = true,
-  defaultView = 'overview',
-  autoRefresh = true,
-  refreshInterval = 30000,
-  onDataUpdate,
-  onError,
-  className = ""
-}: AnalyticsDashboardProps) {
-  const featureFlags = useFeatureFlags();
-  const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [selectedView, setSelectedView] = useState<string>(defaultView);
-  const [autoRefreshEnabled, setAutoRefreshEnabled] = useState(autoRefresh);
-  const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
-  const [filters, setFilters] = useState({
-    dateRange: '30d',
-    pollId: 'all',
-    userType: 'all',
-    deviceType: 'all'
+export default function AnalyticsPage() {
+  const {
+    data: analyticsData,
+    loading,
+    error,
+    analyticsEnabled,
+    aiFeaturesEnabled,
+    fetchData,
+    refreshData,
+    clearError,
+    autoRefresh,
+    setAutoRefresh,
+    filters,
+    setFilters,
+    exportData,
+    generateReport
+  } = useAnalytics({
+    autoRefresh: true,
+    refreshInterval: 30000
   });
 
-  // Check if analytics feature is enabled
-  const analyticsEnabled = isFeatureEnabled('analytics');
+  const [selectedView, setSelectedView] = useState<string>('overview');
 
   const analyticsViews: AnalyticsView[] = [
     {
@@ -190,138 +120,23 @@ export default function AnalyticsDashboard({
       id: 'advanced',
       name: 'Advanced Analytics',
       description: 'Advanced statistical analysis and predictions',
-      icon: <BarChart3 className="h-5 w-5" />,
+      icon: <Brain className="h-5 w-5" />,
       category: 'advanced',
-      enabled: analyticsEnabled && isFeatureEnabled('aiFeatures')
+      enabled: analyticsEnabled && aiFeaturesEnabled
     }
   ];
 
-  const fetchAnalyticsData = useCallback(async () => {
-    try {
-      setLoading(true);
-      
-      // Fetch data from multiple sources
-      const [dashboardResponse, pwaMetrics] = await Promise.all([
-        fetch('/api/dashboard'),
-        Promise.resolve(new PWAAnalytics().getMetrics())
-      ]);
-
-      if (!dashboardResponse.ok) {
-        throw new Error('Failed to fetch dashboard data');
-      }
-
-      const dashboardData = await dashboardResponse.json();
-      
-      // Combine and transform data
-      const combinedData: AnalyticsData = {
-        overview: {
-          totalPolls: dashboardData.overall_metrics?.total_polls || 0,
-          activePolls: dashboardData.overall_metrics?.active_polls || 0,
-          totalVotes: dashboardData.overall_metrics?.total_votes || 0,
-          totalUsers: dashboardData.overall_metrics?.total_users || 0,
-          participationRate: dashboardData.overall_metrics?.average_participation || 0,
-          averageSessionDuration: pwaMetrics.sessionDuration / 1000 / 60, // Convert to minutes
-          bounceRate: 0, // Calculate from session data
-          conversionRate: 0 // Calculate from user actions
-        },
-        trends: {
-          daily: dashboardData.trends?.slice(-30) || [],
-          weekly: [], // Aggregate daily data
-          monthly: [] // Aggregate daily data
-        },
-        demographics: {
-          ageGroups: dashboardData.demographics?.age_groups || {},
-          geographicDistribution: dashboardData.geographic_map || {},
-          verificationTiers: dashboardData.demographics?.verification_tiers || {},
-          deviceTypes: {
-            desktop: 60,
-            mobile: 35,
-            tablet: 5
-          },
-          engagementLevels: {
-            high: 25,
-            medium: 45,
-            low: 30
-          }
-        },
-        performance: {
-          loadTimes: [
-            { page: 'Home', averageLoadTime: pwaMetrics.loadTime, p95LoadTime: pwaMetrics.loadTime * 1.5 },
-            { page: 'Polls', averageLoadTime: 1200, p95LoadTime: 1800 },
-            { page: 'Dashboard', averageLoadTime: 800, p95LoadTime: 1200 }
-          ],
-          errorRates: [
-            { endpoint: '/api/polls', errorRate: 0.5, totalRequests: 1000 },
-            { endpoint: '/api/votes', errorRate: 0.2, totalRequests: 500 },
-            { endpoint: '/api/dashboard', errorRate: 0.1, totalRequests: 200 }
-          ],
-          userExperience: {
-            firstContentfulPaint: pwaMetrics.firstContentfulPaint,
-            largestContentfulPaint: pwaMetrics.largestContentfulPaint,
-            cumulativeLayoutShift: pwaMetrics.cumulativeLayoutShift
-          }
-        },
-        privacy: {
-          dataCollected: pwaMetrics.dataCollected,
-          dataShared: 0, // TODO: Add to PWAMetrics
-          anonymizationLevel: pwaMetrics.anonymizationLevel,
-          encryptionEnabled: true, // TODO: Add to PWAMetrics
-          userConsent: {
-            granted: 85,
-            denied: 10,
-            pending: 5
-          }
-        },
-        engagement: {
-          activeUsers: dashboardData.engagement?.active_users || 0,
-          returningUsers: dashboardData.engagement?.returning_users || 0,
-          sessionDuration: pwaMetrics.sessionDuration / 1000 / 60,
-          pagesPerSession: pwaMetrics.featuresUsed.length,
-          featureUsage: {
-            voting: 80,
-            dashboard: 60,
-            polls: 90,
-            profile: 30
-          }
-        }
-      };
-
-      setAnalyticsData(combinedData);
-      setLastUpdated(new Date());
-      setError(null);
-      
-      // Call callback if provided
-      if (onDataUpdate) {
-        onDataUpdate(combinedData);
-      }
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'An error occurred';
-      setError(errorMessage);
-      
-      // Call error callback if provided
-      if (onError) {
-        onError(errorMessage);
-      }
-    } finally {
-      setLoading(false);
-    }
-  }, [onDataUpdate, onError]);
-
+  // Fetch data when view changes
   useEffect(() => {
-    if (analyticsEnabled) {
-      fetchAnalyticsData();
-      
-      if (autoRefreshEnabled) {
-        const interval = setInterval(fetchAnalyticsData, refreshInterval);
-        return () => clearInterval(interval);
-      }
+    if (analyticsEnabled && selectedView !== 'overview') {
+      fetchData(selectedView);
     }
-  }, [fetchAnalyticsData, autoRefreshEnabled, refreshInterval, analyticsEnabled]);
+  }, [selectedView, analyticsEnabled, fetchData]);
 
   if (!analyticsEnabled) {
     return (
-      <div className={`bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-8 ${className}`}>
-        <div className="text-center max-w-md mx-auto">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto p-8">
           <Shield className="h-16 w-16 text-gray-400 mx-auto mb-4" />
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Analytics Disabled</h1>
           <p className="text-gray-600 mb-4">
@@ -339,7 +154,7 @@ export default function AnalyticsDashboard({
 
   if (loading && !analyticsData) {
     return (
-      <div className={`bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-8 ${className}`}>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
         <div className="text-center">
           <RefreshCw className="animate-spin h-12 w-12 text-blue-600 mx-auto mb-4" />
           <h2 className="text-xl font-semibold text-gray-700">Loading Analytics...</h2>
@@ -351,13 +166,13 @@ export default function AnalyticsDashboard({
 
   if (error) {
     return (
-      <div className={`bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-8 ${className}`}>
-        <div className="text-center max-w-md mx-auto">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto p-8">
           <Bell className="h-16 w-16 text-red-400 mx-auto mb-4" />
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Analytics Error</h1>
           <p className="text-gray-600 mb-4">{error}</p>
           <button
-            onClick={fetchAnalyticsData}
+            onClick={refreshData}
             className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
           >
             Retry
@@ -370,61 +185,65 @@ export default function AnalyticsDashboard({
   if (!analyticsData) return null;
 
   return (
-    <div className={`bg-gradient-to-br from-blue-50 to-indigo-100 ${className}`}>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       {/* Header */}
-      {showHeader && (
-        <div className="bg-white shadow-sm border-b">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900">{title}</h1>
-                <p className="text-gray-600 mt-1">{subtitle}</p>
+      <div className="bg-white shadow-sm border-b">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Analytics Dashboard</h1>
+              <p className="text-gray-600 mt-1">
+                Comprehensive insights and data visualization
+              </p>
+            </div>
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-2">
+                <RefreshCw className={`h-4 w-4 ${autoRefresh ? 'text-green-600' : 'text-gray-400'}`} />
+                <span className="text-sm text-gray-600">
+                  {autoRefresh ? 'Auto-refresh on' : 'Auto-refresh off'}
+                </span>
               </div>
-              <div className="flex items-center space-x-4">
-                <div className="flex items-center space-x-2">
-                  <RefreshCw className={`h-4 w-4 ${autoRefreshEnabled ? 'text-green-600' : 'text-gray-400'}`} />
-                  <span className="text-sm text-gray-600">
-                    {autoRefreshEnabled ? 'Auto-refresh on' : 'Auto-refresh off'}
-                  </span>
-                </div>
-                <button
-                  onClick={() => setAutoRefreshEnabled(!autoRefreshEnabled)}
-                  className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                  {autoRefreshEnabled ? 'Disable' : 'Enable'} Auto-refresh
-                </button>
-              </div>
+              <button
+                onClick={() => setAutoRefresh(!autoRefresh)}
+                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                {autoRefresh ? 'Disable' : 'Enable'} Auto-refresh
+              </button>
+              <button
+                onClick={() => exportData('json')}
+                className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
+              >
+                Export Data
+              </button>
             </div>
           </div>
         </div>
-      )}
+      </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Navigation Tabs */}
-        {showNavigation && (
-          <div className="bg-white rounded-xl shadow-sm border mb-8">
-            <div className="border-b border-gray-200">
-              <nav className="flex space-x-8 px-6" aria-label="Analytics tabs">
-                {analyticsViews
-                  .filter(view => view.enabled)
-                  .map((view) => (
-                    <button
-                      key={view.id}
-                      onClick={() => setSelectedView(view.id)}
-                      className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 ${
-                        selectedView === view.id
-                          ? 'border-blue-500 text-blue-600'
-                          : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                      }`}
-                    >
-                      {view.icon}
-                      <span>{view.name}</span>
-                    </button>
-                  ))}
-              </nav>
-            </div>
+        <div className="bg-white rounded-xl shadow-sm border mb-8">
+          <div className="border-b border-gray-200">
+            <nav className="flex space-x-8 px-6" aria-label="Analytics tabs">
+              {analyticsViews
+                .filter(view => view.enabled)
+                .map((view) => (
+                  <button
+                    key={view.id}
+                    onClick={() => setSelectedView(view.id)}
+                    className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 ${
+                      selectedView === view.id
+                        ? 'border-blue-500 text-blue-600'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    }`}
+                  >
+                    {view.icon}
+                    <span>{view.name}</span>
+                  </button>
+                ))}
+            </nav>
           </div>
-        )}
+        </div>
 
         {/* Content Area */}
         <div className="space-y-8">
@@ -462,14 +281,14 @@ export default function AnalyticsDashboard({
 }
 
 // Overview View Component
-function OverviewView({ data }: { data: AnalyticsData }) {
+function OverviewView({ data }: { data: any }) {
   return (
     <div className="space-y-8">
       {/* Key Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <MetricCard
           title="Total Polls"
-          value={data.overview.totalPolls}
+          value={data.overview?.totalPolls || 0}
           icon={<BarChart3 className="h-6 w-6" />}
           color="blue"
           trend="+12%"
@@ -477,7 +296,7 @@ function OverviewView({ data }: { data: AnalyticsData }) {
         />
         <MetricCard
           title="Active Polls"
-          value={data.overview.activePolls}
+          value={data.overview?.activePolls || 0}
           icon={<Activity className="h-6 w-6" />}
           color="green"
           trend="+5%"
@@ -485,7 +304,7 @@ function OverviewView({ data }: { data: AnalyticsData }) {
         />
         <MetricCard
           title="Total Votes"
-          value={data.overview.totalVotes.toLocaleString()}
+          value={data.overview?.totalVotes || 0}
           icon={<Users className="h-6 w-6" />}
           color="purple"
           trend="+23%"
@@ -493,7 +312,7 @@ function OverviewView({ data }: { data: AnalyticsData }) {
         />
         <MetricCard
           title="Participation Rate"
-          value={`${data.overview.participationRate.toFixed(1)}%`}
+          value={`${data.overview?.participationRate || 0}%`}
           icon={<TrendingUp className="h-6 w-6" />}
           color="orange"
           trend="+8%"
@@ -509,19 +328,19 @@ function OverviewView({ data }: { data: AnalyticsData }) {
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">Session Duration</span>
               <span className="text-sm font-medium text-gray-900">
-                {data.overview.averageSessionDuration.toFixed(1)} min
+                {data.overview?.averageSessionDuration || 0} min
               </span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">Bounce Rate</span>
               <span className="text-sm font-medium text-gray-900">
-                {data.overview.bounceRate.toFixed(1)}%
+                {data.overview?.bounceRate || 0}%
               </span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">Conversion Rate</span>
               <span className="text-sm font-medium text-gray-900">
-                {data.overview.conversionRate.toFixed(1)}%
+                {data.overview?.conversionRate || 0}%
               </span>
             </div>
           </div>
@@ -547,7 +366,7 @@ function OverviewView({ data }: { data: AnalyticsData }) {
 }
 
 // Trends View Component
-function TrendsView({ data }: { data: AnalyticsData }) {
+function TrendsView({ data }: { data: any }) {
   return (
     <div className="space-y-8">
       <div className="bg-white rounded-xl shadow-sm border p-6">
@@ -561,24 +380,24 @@ function TrendsView({ data }: { data: AnalyticsData }) {
 }
 
 // Demographics View Component
-function DemographicsView({ data }: { data: AnalyticsData }) {
+function DemographicsView({ data }: { data: any }) {
   return (
     <div className="space-y-8">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <div className="bg-white rounded-xl shadow-sm border p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Age Distribution</h3>
           <div className="space-y-3">
-            {Object.entries(data.demographics.ageGroups).map(([age, count]) => (
+            {Object.entries(data.demographics?.ageGroups || {}).map(([age, count]) => (
               <div key={age} className="flex items-center justify-between">
                 <span className="text-sm text-gray-600">{age}</span>
                 <div className="flex items-center space-x-2">
                   <div className="w-16 bg-gray-200 rounded-full h-2">
                     <div
                       className="bg-blue-600 h-2 rounded-full"
-                      style={{ width: `${(count / Math.max(...Object.values(data.demographics.ageGroups))) * 100}%` }}
+                      style={{ width: `${(Number(count) / Math.max(...Object.values(data.demographics?.ageGroups || {}).map(v => Number(v)))) * 100}%` }}
                     />
                   </div>
-                  <span className="text-sm font-medium text-gray-900">{count}</span>
+                  <span className="text-sm font-medium text-gray-900">{String(count)}</span>
                 </div>
               </div>
             ))}
@@ -588,7 +407,7 @@ function DemographicsView({ data }: { data: AnalyticsData }) {
         <div className="bg-white rounded-xl shadow-sm border p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Device Types</h3>
           <div className="space-y-3">
-            {Object.entries(data.demographics.deviceTypes).map(([device, percentage]) => (
+            {Object.entries(data.demographics?.deviceTypes || {}).map(([device, percentage]) => (
               <div key={device} className="flex items-center justify-between">
                 <span className="text-sm text-gray-600 capitalize">{device}</span>
                 <div className="flex items-center space-x-2">
@@ -598,7 +417,7 @@ function DemographicsView({ data }: { data: AnalyticsData }) {
                       style={{ width: `${percentage}%` }}
                     />
                   </div>
-                  <span className="text-sm font-medium text-gray-900">{percentage}%</span>
+                  <span className="text-sm font-medium text-gray-900">{String(percentage)}%</span>
                 </div>
               </div>
             ))}
@@ -610,13 +429,13 @@ function DemographicsView({ data }: { data: AnalyticsData }) {
 }
 
 // Performance View Component
-function PerformanceView({ data }: { data: AnalyticsData }) {
+function PerformanceView({ data }: { data: any }) {
   return (
     <div className="space-y-8">
       <div className="bg-white rounded-xl shadow-sm border p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Page Load Times</h3>
         <div className="space-y-4">
-          {data.performance.loadTimes.map((page) => (
+          {data.performance?.loadTimes?.map((page: any) => (
             <div key={page.page} className="flex items-center justify-between">
               <span className="text-sm text-gray-600">{page.page}</span>
               <div className="flex items-center space-x-4">
@@ -632,7 +451,7 @@ function PerformanceView({ data }: { data: AnalyticsData }) {
 }
 
 // Privacy View Component
-function PrivacyView({ data }: { data: AnalyticsData }) {
+function PrivacyView({ data }: { data: any }) {
   return (
     <div className="space-y-8">
       <div className="bg-white rounded-xl shadow-sm border p-6">
@@ -641,27 +460,27 @@ function PrivacyView({ data }: { data: AnalyticsData }) {
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">Data Collected</span>
-              <span className="text-sm font-medium text-gray-900">{data.privacy.dataCollected} fields</span>
+              <span className="text-sm font-medium text-gray-900">{data.privacy?.dataCollected || 0} fields</span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">Data Shared</span>
-              <span className="text-sm font-medium text-gray-900">{data.privacy.dataShared} fields</span>
+              <span className="text-sm font-medium text-gray-900">{data.privacy?.dataShared || 0} fields</span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">Anonymization</span>
-              <span className="text-sm font-medium text-gray-900 capitalize">{data.privacy.anonymizationLevel}</span>
+              <span className="text-sm font-medium text-gray-900 capitalize">{data.privacy?.anonymizationLevel || 'N/A'}</span>
             </div>
           </div>
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">Encryption</span>
               <span className="text-sm font-medium text-gray-900">
-                {data.privacy.encryptionEnabled ? 'Enabled' : 'Disabled'}
+                {data.privacy?.encryptionEnabled ? 'Enabled' : 'Disabled'}
               </span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">Consent Granted</span>
-              <span className="text-sm font-medium text-gray-900">{data.privacy.userConsent.granted}%</span>
+              <span className="text-sm font-medium text-gray-900">{data.privacy?.userConsent?.granted || 0}%</span>
             </div>
           </div>
         </div>
@@ -671,7 +490,7 @@ function PrivacyView({ data }: { data: AnalyticsData }) {
 }
 
 // Engagement View Component
-function EngagementView({ data }: { data: AnalyticsData }) {
+function EngagementView({ data }: { data: any }) {
   return (
     <div className="space-y-8">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -680,19 +499,19 @@ function EngagementView({ data }: { data: AnalyticsData }) {
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">Active Users</span>
-              <span className="text-sm font-medium text-gray-900">{data.engagement.activeUsers}</span>
+              <span className="text-sm font-medium text-gray-900">{data.engagement?.activeUsers || 0}</span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">Returning Users</span>
-              <span className="text-sm font-medium text-gray-900">{data.engagement.returningUsers}</span>
+              <span className="text-sm font-medium text-gray-900">{data.engagement?.returningUsers || 0}</span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">Session Duration</span>
-              <span className="text-sm font-medium text-gray-900">{data.engagement.sessionDuration.toFixed(1)} min</span>
+              <span className="text-sm font-medium text-gray-900">{data.engagement?.sessionDuration || 0} min</span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">Pages per Session</span>
-              <span className="text-sm font-medium text-gray-900">{data.engagement.pagesPerSession}</span>
+              <span className="text-sm font-medium text-gray-900">{data.engagement?.pagesPerSession || 0}</span>
             </div>
           </div>
         </div>
@@ -700,7 +519,7 @@ function EngagementView({ data }: { data: AnalyticsData }) {
         <div className="bg-white rounded-xl shadow-sm border p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Feature Usage</h3>
           <div className="space-y-3">
-            {Object.entries(data.engagement.featureUsage).map(([feature, percentage]) => (
+            {Object.entries(data.engagement?.featureUsage || {}).map(([feature, percentage]) => (
               <div key={feature} className="flex items-center justify-between">
                 <span className="text-sm text-gray-600 capitalize">{feature}</span>
                 <div className="flex items-center space-x-2">
@@ -710,7 +529,7 @@ function EngagementView({ data }: { data: AnalyticsData }) {
                       style={{ width: `${percentage}%` }}
                     />
                   </div>
-                  <span className="text-sm font-medium text-gray-900">{percentage}%</span>
+                  <span className="text-sm font-medium text-gray-900">{String(percentage)}%</span>
                 </div>
               </div>
             ))}
@@ -722,7 +541,7 @@ function EngagementView({ data }: { data: AnalyticsData }) {
 }
 
 // Advanced View Component
-function AdvancedView({ data }: { data: AnalyticsData }) {
+function AdvancedView({ data }: { data: any }) {
   return (
     <div className="space-y-8">
       <div className="bg-white rounded-xl shadow-sm border p-6">

@@ -40,6 +40,8 @@ export class ModuleLoader {
    */
   private initializeModules(): void {
     // Core modules - always loaded
+    // Authentication module temporarily disabled - AuthProvider not found
+    /*
     this.registerModule({
       id: 'authentication',
       name: 'Authentication Module',
@@ -48,7 +50,10 @@ export class ModuleLoader {
       loadFunction: () => import('../components/auth/AuthProvider'),
       fallback: null
     });
+    */
 
+    // Voting module temporarily disabled - VotingInterface not found
+    /*
     this.registerModule({
       id: 'voting',
       name: 'Voting Module',
@@ -57,7 +62,10 @@ export class ModuleLoader {
       loadFunction: () => import('../components/voting/VotingInterface'),
       fallback: null
     });
+    */
 
+    // Database module temporarily disabled - database module not found
+    /*
     this.registerModule({
       id: 'database',
       name: 'Database Module',
@@ -66,6 +74,7 @@ export class ModuleLoader {
       loadFunction: () => import('./database'),
       fallback: null
     });
+    */
 
     this.registerModule({
       id: 'api',
@@ -76,6 +85,8 @@ export class ModuleLoader {
       fallback: null
     });
 
+    // UI module temporarily disabled - ui module not found
+    /*
     this.registerModule({
       id: 'ui',
       name: 'UI Module',
@@ -84,8 +95,11 @@ export class ModuleLoader {
       loadFunction: () => import('../components/ui'),
       fallback: null
     });
+    */
 
     // Optional modules - loaded based on feature flags
+    // Advanced Privacy module temporarily disabled - AdvancedPrivacy not found
+    /*
     this.registerModule({
       id: 'advancedPrivacy',
       name: 'Advanced Privacy Module',
@@ -94,7 +108,10 @@ export class ModuleLoader {
       loadFunction: () => import('../components/privacy/AdvancedPrivacy'),
       fallback: null
     });
+    */
 
+    // Analytics module temporarily disabled - AnalyticsDashboard not found
+    /*
     this.registerModule({
       id: 'analytics',
       name: 'Analytics Module',
@@ -103,7 +120,10 @@ export class ModuleLoader {
       loadFunction: () => import('../components/analytics/AnalyticsDashboard'),
       fallback: null
     });
+    */
 
+    // PWA module temporarily disabled - PWAProvider not found
+    /*
     this.registerModule({
       id: 'pwa',
       name: 'PWA Module',
@@ -112,7 +132,10 @@ export class ModuleLoader {
       loadFunction: () => import('../components/pwa/PWAProvider'),
       fallback: null
     });
+    */
 
+    // Admin module temporarily disabled - AdminPanel not found
+    /*
     this.registerModule({
       id: 'admin',
       name: 'Admin Module',
@@ -121,7 +144,10 @@ export class ModuleLoader {
       loadFunction: () => import('../components/admin/AdminPanel'),
       fallback: null
     });
+    */
 
+    // Audit module temporarily disabled - AuditProvider not found
+    /*
     this.registerModule({
       id: 'audit',
       name: 'Audit Module',
@@ -130,8 +156,11 @@ export class ModuleLoader {
       loadFunction: () => import('../components/audit/AuditProvider'),
       fallback: null
     });
+    */
 
     // Experimental modules
+    // Experimental UI module temporarily disabled - ExperimentalUI not found
+    /*
     this.registerModule({
       id: 'experimentalUI',
       name: 'Experimental UI Module',
@@ -140,7 +169,10 @@ export class ModuleLoader {
       loadFunction: () => import('../components/experimental/ExperimentalUI'),
       fallback: null
     });
+    */
 
+    // AI Features module temporarily disabled - AIFeatures not found
+    /*
     this.registerModule({
       id: 'aiFeatures',
       name: 'AI Features Module',
@@ -149,6 +181,7 @@ export class ModuleLoader {
       loadFunction: () => import('../components/ai/AIFeatures'),
       fallback: null
     });
+    */
   }
 
   /**

@@ -20,16 +20,16 @@ export { PrivacyAuditor } from './privacy-auditor'
 
 // Privacy utilities and hooks
 export { usePrivacyUtils } from './hooks/usePrivacyUtils'
-export { usePrivacyBudget } from './hooks/usePrivacyBudget'
-export { useZKProofs } from './hooks/useZKProofs'
+// export { usePrivacyBudget } from './hooks/usePrivacyBudget' // Hook not found
+// export { useZKProofs } from './hooks/useZKProofs' // Hook not found
 
-// Privacy components
-export { PrivacyDashboard } from './components/PrivacyDashboard'
-export { PrivacyControls } from './components/PrivacyControls'
-export { PrivacyMetrics } from './components/PrivacyMetrics'
+// Privacy components - not found
+// export { PrivacyDashboard } from './components/PrivacyDashboard'
+// export { PrivacyControls } from './components/PrivacyControls'
+// export { PrivacyMetrics } from './components/PrivacyMetrics'
 
 // Privacy configuration
-export { PrivacyConfig } from './config/privacy-config'
+export type { PrivacyConfig } from './config/privacy-config'
 
 // Check if advanced privacy is enabled
 export const isAdvancedPrivacyEnabled = (): boolean => {

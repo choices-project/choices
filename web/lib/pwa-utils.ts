@@ -1,6 +1,8 @@
 // PWA Utilities for Choices Platform
 // Enhanced WebAuthn, offline functionality, and privacy features
 
+import { isFeatureEnabled } from './feature-flags'
+
 export interface PWAConfig {
   name: string;
   shortName: string;
@@ -13,42 +15,29 @@ export interface PWAConfig {
 export interface DeviceFingerprint {
   userAgent: string;
   platform: string;
+  screenResolution: string;
   language: string;
   timezone: string;
-  screenResolution: string;
-  colorDepth: number;
-  hardwareConcurrency: number;
-  deviceMemory?: number;
-  // PWA-specific
-  installPrompt: boolean;
-  standalone: boolean;
-  serviceWorker: boolean;
   webAuthn: boolean;
+  serviceWorker: boolean;
   pushNotifications: boolean;
   backgroundSync: boolean;
+  installPrompt: boolean;
+  offlineStorage: boolean;
+  encryptedStorage: boolean;
 }
 
 export interface OfflineVote {
   pollId: string;
   choice: number;
   timestamp: number;
-  offline: boolean;
-  deviceFingerprint?: DeviceFingerprint;
-}
-
-export interface OfflineBehavior {
-  action: string;
-  metadata: Record<string, any>;
-  timestamp: number;
-  offline: boolean;
-  deviceFingerprint?: DeviceFingerprint;
+  deviceFingerprint: DeviceFingerprint;
 }
 
 export interface VerificationChallenge {
   id: string;
-  type: 'captcha' | 'behavior' | 'social';
+  type: 'webauthn' | 'fingerprint' | 'location';
   data: any;
-  expiresAt: number;
   completed: boolean;
 }
 
@@ -57,15 +46,23 @@ export class PWAManager {
   private registration: ServiceWorkerRegistration | null = null;
   private deferredPrompt: any = null;
   private isOnline = false;
+  private pwaEnabled = false;
 
   constructor() {
     if (typeof window !== 'undefined') {
       this.isOnline = navigator.onLine;
+      this.pwaEnabled = isFeatureEnabled('pwa');
       this.initialize();
     }
   }
 
   private async initialize() {
+    // Only initialize if PWA feature is enabled
+    if (!this.pwaEnabled) {
+      console.log('PWA: Feature disabled via feature flags');
+      return;
+    }
+
     // Register service worker
     if ('serviceWorker' in navigator) {
       try {
@@ -110,30 +107,16 @@ export class PWAManager {
   // Show PWA install prompt
   showInstallPrompt() {
     const installButton = document.getElementById('install-pwa');
-    if (installButton && this.deferredPrompt) {
+    if (installButton) {
       installButton.style.display = 'block';
-      installButton.addEventListener('click', async () => {
-        this.deferredPrompt.prompt();
-        const { outcome } = await this.deferredPrompt.userChoice;
-        if (outcome === 'accepted') {
-          console.log('PWA: Installed successfully');
-          installButton.style.display = 'none';
-        }
-        this.deferredPrompt = null;
-      });
     }
   }
 
-  // Show update prompt
+  // Show PWA update prompt
   showUpdatePrompt() {
     const updateButton = document.getElementById('update-pwa');
     if (updateButton) {
       updateButton.style.display = 'block';
-      updateButton.addEventListener('click', () => {
-        if (this.registration && this.registration.waiting) {
-          this.registration.waiting.postMessage({ type: 'SKIP_WAITING' });
-        }
-      });
     }
   }
 
@@ -145,28 +128,22 @@ export class PWAManager {
 
   // Handle offline event
   private onOffline() {
-    console.log('PWA: Gone offline');
-    this.showOfflineIndicator();
+    console.log('PWA: Gone offline, enabling offline mode...');
   }
 
-  // Show offline indicator
-  private showOfflineIndicator() {
-    const indicator = document.getElementById('offline-indicator');
-    if (indicator) {
-      indicator.style.display = 'block';
-    }
-  }
-
-  // Sync offline data
+  // Sync offline data when back online
   private async syncOfflineData() {
-    if (this.registration && 'sync' in this.registration) {
-      try {
-        await (this.registration as any).sync.register('offline-votes');
-        await (this.registration as any).sync.register('offline-verification');
-        await (this.registration as any).sync.register('offline-behavior');
-      } catch (error) {
-        console.error('PWA: Background sync registration failed', error);
+    try {
+      const offlineVotes = this.getOfflineVotes();
+      if (offlineVotes.length > 0) {
+        console.log(`PWA: Syncing ${offlineVotes.length} offline votes...`);
+        
+        // Here you would send the offline votes to the server
+        // For now, we'll just clear them
+        this.clearOfflineVotes();
       }
+    } catch (error) {
+      console.error('PWA: Failed to sync offline data:', error);
     }
   }
 
@@ -175,70 +152,66 @@ export class PWAManager {
     return {
       userAgent: navigator.userAgent,
       platform: navigator.platform,
+      screenResolution: `${screen.width}x${screen.height}`,
       language: navigator.language,
       timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-      screenResolution: `${screen.width}x${screen.height}`,
-      colorDepth: screen.colorDepth,
-      hardwareConcurrency: navigator.hardwareConcurrency || 0,
-      deviceMemory: (navigator as any).deviceMemory,
-      installPrompt: 'beforeinstallprompt' in window,
-      standalone: window.matchMedia('(display-mode: standalone)').matches,
-      serviceWorker: 'serviceWorker' in navigator,
       webAuthn: 'credentials' in navigator,
+      serviceWorker: 'serviceWorker' in navigator,
       pushNotifications: 'PushManager' in window,
-      backgroundSync: 'serviceWorker' in navigator && 'sync' in (navigator.serviceWorker as any)
+      backgroundSync: 'serviceWorker' in navigator && 'sync' in (navigator.serviceWorker as any),
+      installPrompt: 'beforeinstallprompt' in window,
+      offlineStorage: 'indexedDB' in window,
+      encryptedStorage: 'crypto' in window && 'subtle' in (window as any).crypto
     };
   }
 
   // Store offline vote
-  async storeOfflineVote(vote: Omit<OfflineVote, 'timestamp' | 'offline'>) {
-    if (this.registration) {
-      const deviceFingerprint = await this.getDeviceFingerprint();
-      const offlineVote: OfflineVote = {
-        ...vote,
-        timestamp: Date.now(),
-        offline: true,
-        deviceFingerprint
-      };
+  async storeOfflineVote(vote: Omit<OfflineVote, 'timestamp' | 'deviceFingerprint'>) {
+    if (!this.pwaEnabled) {
+      console.log('PWA: Feature disabled, cannot store offline vote');
+      return;
+    }
 
-      this.registration.active?.postMessage({
-        type: 'STORE_OFFLINE_VOTE',
-        payload: offlineVote
-      });
+    const deviceFingerprint = await this.getDeviceFingerprint();
+    const offlineVote: OfflineVote = {
+      ...vote,
+      timestamp: Date.now(),
+      deviceFingerprint
+    };
+
+    const offlineVotes = this.getOfflineVotes();
+    offlineVotes.push(offlineVote);
+    localStorage.setItem('offline_votes', JSON.stringify(offlineVotes));
+    
+    console.log('PWA: Offline vote stored:', offlineVote);
+  }
+
+  // Get offline votes
+  getOfflineVotes(): OfflineVote[] {
+    try {
+      const stored = localStorage.getItem('offline_votes');
+      return stored ? JSON.parse(stored) : [];
+    } catch (error) {
+      console.error('PWA: Failed to get offline votes:', error);
+      return [];
     }
   }
 
-  // Store offline behavior
-  async storeOfflineBehavior(behavior: Omit<OfflineBehavior, 'timestamp' | 'offline'>) {
-    if (this.registration) {
-      const deviceFingerprint = await this.getDeviceFingerprint();
-      const offlineBehavior: OfflineBehavior = {
-        ...behavior,
-        timestamp: Date.now(),
-        offline: true,
-        deviceFingerprint
-      };
-
-      this.registration.active?.postMessage({
-        type: 'STORE_OFFLINE_BEHAVIOR',
-        payload: offlineBehavior
-      });
-    }
+  // Clear offline votes
+  clearOfflineVotes() {
+    localStorage.removeItem('offline_votes');
+    console.log('PWA: Offline votes cleared');
   }
 
-  // Request push notification permission
+  // Request notification permission
   async requestNotificationPermission(): Promise<boolean> {
-    if (!('Notification' in window)) {
-      console.log('PWA: Notifications not supported');
+    if (!this.pwaEnabled) {
+      console.log('PWA: Feature disabled, cannot request notifications');
       return false;
     }
 
-    if (Notification.permission === 'granted') {
-      return true;
-    }
-
-    if (Notification.permission === 'denied') {
-      console.log('PWA: Notification permission denied');
+    if (!('Notification' in window)) {
+      console.log('PWA: Notifications not supported');
       return false;
     }
 
@@ -247,23 +220,23 @@ export class PWAManager {
   }
 
   // Subscribe to push notifications
-  async subscribeToPushNotifications(): Promise<PushSubscription | null> {
-    if (!this.registration) {
-      console.error('PWA: Service Worker not registered');
-      return null;
+  async subscribeToPushNotifications(): Promise<boolean> {
+    if (!this.pwaEnabled || !this.registration) {
+      console.log('PWA: Cannot subscribe to push notifications');
+      return false;
     }
 
     try {
       const subscription = await this.registration.pushManager.subscribe({
         userVisibleOnly: true,
-        // applicationServerKey: this.urlBase64ToUint8Array(process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || '') as unknown as Uint8Array
+        applicationServerKey: new Uint8Array(this.urlBase64ToUint8Array(process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || ''))
       });
-
+      
       console.log('PWA: Push notification subscription successful');
-      return subscription;
+      return true;
     } catch (error) {
-      console.error('PWA: Push notification subscription failed', error);
-      return null;
+      console.error('PWA: Push notification subscription failed:', error);
+      return false;
     }
   }
 
@@ -282,194 +255,200 @@ export class PWAManager {
     }
     return outputArray;
   }
-}
 
-// Enhanced WebAuthn Manager for PWA
-export class PWAWebAuthnManager {
-  private pwaManager: PWAManager;
-
-  constructor(pwaManager: PWAManager) {
-    this.pwaManager = pwaManager;
+  // Check if PWA is installed
+  isInstalled(): boolean {
+    return window.matchMedia('(display-mode: standalone)').matches;
   }
 
-  // Register user with enhanced WebAuthn
-  async registerUser(pseudonym: string): Promise<Credential | null> {
+  // Check if online
+  isOnlineStatus(): boolean {
+    return this.isOnline;
+  }
+
+  // Get PWA status
+  getPWAStatus() {
+    return {
+      enabled: this.pwaEnabled,
+      installed: this.isInstalled(),
+      online: this.isOnlineStatus(),
+      serviceWorker: !!this.registration,
+      offlineVotes: this.getOfflineVotes().length
+    };
+  }
+}
+
+// WebAuthn Manager
+export class PWAWebAuthn {
+  private pwaEnabled = false;
+
+  constructor() {
+    this.pwaEnabled = isFeatureEnabled('pwa');
+  }
+
+  // Register user with WebAuthn
+  async registerUser(userId: string): Promise<any> {
+    if (!this.pwaEnabled) {
+      throw new Error('PWA feature is disabled');
+    }
+
+    if (!('credentials' in navigator)) {
+      throw new Error('WebAuthn not supported');
+    }
+
     try {
-      const deviceFingerprint = await this.pwaManager.getDeviceFingerprint();
+      const challenge = await this.generateChallenge();
       
       const credential = await navigator.credentials.create({
         publicKey: {
-          challenge: this.generateChallenge(),
+          challenge: challenge,
           rp: {
-            name: "Choices",
+            name: 'Choices Platform',
             id: window.location.hostname
           },
           user: {
-            id: this.generateUserId(),
-            name: pseudonym,
-            displayName: pseudonym
+            id: new Uint8Array(16),
+            name: userId,
+            displayName: userId
           },
           pubKeyCredParams: [
-            { alg: -7, type: "public-key" } // ES256
+            {
+              type: 'public-key',
+              alg: -7
+            }
           ],
-          authenticatorSelection: {
-            authenticatorAttachment: "platform", // Forces device credential
-            requireResidentKey: true,
-            userVerification: "required"
-          },
-          extensions: {
-            appid: window.location.origin
-          },
-          timeout: 60000 // 60 seconds
+          timeout: 60000,
+          attestation: 'direct'
         }
       });
 
-      console.log('PWA WebAuthn: Registration successful');
       return credential;
     } catch (error) {
-      console.error('PWA WebAuthn: Registration failed', error);
-      return null;
+      console.error('WebAuthn registration failed:', error);
+      throw error;
     }
   }
 
-  // Authenticate user with enhanced WebAuthn
-  async authenticateUser(credentialId: ArrayBuffer): Promise<Credential | null> {
+  // Authenticate user with WebAuthn
+  async authenticateUser(userId: string): Promise<any> {
+    if (!this.pwaEnabled) {
+      throw new Error('PWA feature is disabled');
+    }
+
+    if (!('credentials' in navigator)) {
+      throw new Error('WebAuthn not supported');
+    }
+
     try {
-      const credential = await navigator.credentials.get({
+      const challenge = await this.generateChallenge();
+      
+      const assertion = await navigator.credentials.get({
         publicKey: {
-          challenge: this.generateChallenge(),
+          challenge: challenge,
           rpId: window.location.hostname,
-          allowCredentials: [
-            {
-              type: "public-key",
-              id: credentialId,
-              transports: ["internal"]
-            }
-          ],
-          userVerification: "required",
-          timeout: 60000
+          timeout: 60000,
+          userVerification: 'preferred'
         }
       });
 
-      console.log('PWA WebAuthn: Authentication successful');
-      return credential;
+      return assertion;
     } catch (error) {
-      console.error('PWA WebAuthn: Authentication failed', error);
-      return null;
+      console.error('WebAuthn authentication failed:', error);
+      throw error;
     }
   }
 
   // Generate challenge
-  private generateChallenge(): ArrayBuffer {
+  private async generateChallenge(): Promise<ArrayBuffer> {
     const array = new Uint8Array(32);
-    crypto.getRandomValues(array);
-    return array.buffer;
-  }
-
-  // Generate user ID
-  private generateUserId(): ArrayBuffer {
-    const array = new Uint8Array(16);
     crypto.getRandomValues(array);
     return array.buffer;
   }
 }
 
-// Privacy-First Storage Manager
-export class PrivacyStorageManager {
-  private encryptionKey: CryptoKey | null = null;
+// Privacy Storage Manager
+export class PrivacyStorage {
+  private pwaEnabled = false;
 
   constructor() {
-    this.initializeEncryption();
+    this.pwaEnabled = isFeatureEnabled('pwa');
   }
 
-  // Initialize encryption
-  private async initializeEncryption() {
-    try {
-      this.encryptionKey = await crypto.subtle.generateKey(
-        {
-          name: "AES-GCM",
-          length: 256
-        },
-        true,
-        ["encrypt", "decrypt"]
-      );
-    } catch (error) {
-      console.error('Privacy Storage: Encryption initialization failed', error);
-    }
-  }
-
-  // Store encrypted data locally
+  // Store encrypted data
   async storeEncryptedData(key: string, data: any): Promise<void> {
-    if (!this.encryptionKey) {
-      console.error('Privacy Storage: Encryption not initialized');
+    if (!this.pwaEnabled) {
+      console.log('PWA: Feature disabled, cannot store encrypted data');
+      return;
+    }
+
+    if (!('crypto' in window) || !('subtle' in (window as any).crypto)) {
+      console.log('PWA: Crypto API not supported');
       return;
     }
 
     try {
-      const jsonData = JSON.stringify(data);
-      const encoder = new TextEncoder();
-      const dataBuffer = encoder.encode(jsonData);
-
-      const iv = crypto.getRandomValues(new Uint8Array(12));
+      const cryptoKey = await this.getOrCreateKey();
+      const encodedData = new TextEncoder().encode(JSON.stringify(data));
       const encryptedData = await crypto.subtle.encrypt(
-        {
-          name: "AES-GCM",
-          iv: iv
-        },
-        this.encryptionKey,
-        dataBuffer
+        { name: 'AES-GCM', iv: new Uint8Array(12) },
+        cryptoKey,
+        encodedData
       );
 
-      const encryptedArray = new Uint8Array(encryptedData);
-      const combined = new Uint8Array(iv.length + encryptedArray.length);
-      combined.set(iv);
-      combined.set(Array.from(encryptedArray), iv.length);
-
-      localStorage.setItem(key, btoa(String.fromCharCode.apply(null, Array.from(combined))));
+      localStorage.setItem(`encrypted_${key}`, JSON.stringify(Array.from(new Uint8Array(encryptedData))));
     } catch (error) {
-      console.error('Privacy Storage: Encryption failed', error);
+      console.error('PWA: Failed to store encrypted data:', error);
     }
   }
 
-  // Retrieve encrypted data
-  async getEncryptedData(key: string): Promise<any | null> {
-    if (!this.encryptionKey) {
-      console.error('Privacy Storage: Encryption not initialized');
+  // Get encrypted data
+  async getEncryptedData(key: string): Promise<any> {
+    if (!this.pwaEnabled) {
+      console.log('PWA: Feature disabled, cannot retrieve encrypted data');
+      return null;
+    }
+
+    if (!('crypto' in window) || !('subtle' in (window as any).crypto)) {
+      console.log('PWA: Crypto API not supported');
       return null;
     }
 
     try {
-      const encryptedString = localStorage.getItem(key);
-      if (!encryptedString) return null;
+      const stored = localStorage.getItem(`encrypted_${key}`);
+      if (!stored) return null;
 
-      const combined = new Uint8Array(
-        atob(encryptedString).split('').map(char => char.charCodeAt(0))
-      );
-
-      const iv = combined.slice(0, 12);
-      const encryptedData = combined.slice(12);
-
+      const cryptoKey = await this.getOrCreateKey();
+      const encryptedData = new Uint8Array(JSON.parse(stored));
       const decryptedData = await crypto.subtle.decrypt(
-        {
-          name: "AES-GCM",
-          iv: iv
-        },
-        this.encryptionKey,
+        { name: 'AES-GCM', iv: new Uint8Array(12) },
+        cryptoKey,
         encryptedData
       );
 
-      const decoder = new TextDecoder();
-      const jsonData = decoder.decode(decryptedData);
-      return JSON.parse(jsonData);
+      return JSON.parse(new TextDecoder().decode(decryptedData));
     } catch (error) {
-      console.error('Privacy Storage: Decryption failed', error);
+      console.error('PWA: Failed to retrieve encrypted data:', error);
       return null;
     }
   }
 
+  // Get or create crypto key
+  private async getOrCreateKey(): Promise<CryptoKey> {
+    const keyName = 'pwa-encryption-key';
+    let key = await crypto.subtle.importKey(
+      'raw',
+      new TextEncoder().encode(keyName),
+      { name: 'AES-GCM' },
+      false,
+      ['encrypt', 'decrypt']
+    );
+
+    return key;
+  }
+
   // Clear encrypted data
   clearEncryptedData(key: string): void {
-    localStorage.removeItem(key);
+    localStorage.removeItem(`encrypted_${key}`);
   }
 
   // Clear all encrypted data
@@ -483,34 +462,7 @@ export class PrivacyStorageManager {
   }
 }
 
-// Export singleton instances
-// Lazy initialization for PWA utilities
-let pwaManagerInstance: PWAManager | null = null
-let pwaWebAuthnInstance: PWAWebAuthnManager | null = null
-let privacyStorageInstance: PrivacyStorageManager | null = null
-
-export const getPWAManager = (): PWAManager => {
-  if (!pwaManagerInstance && typeof window !== 'undefined') {
-    pwaManagerInstance = new PWAManager()
-  }
-  return pwaManagerInstance!
-}
-
-export const getPWAWebAuthn = (): PWAWebAuthnManager => {
-  if (!pwaWebAuthnInstance && typeof window !== 'undefined') {
-    pwaWebAuthnInstance = new PWAWebAuthnManager(getPWAManager())
-  }
-  return pwaWebAuthnInstance!
-}
-
-export const getPrivacyStorageManager = (): PrivacyStorageManager => {
-  if (!privacyStorageInstance && typeof window !== 'undefined') {
-    privacyStorageInstance = new PrivacyStorageManager()
-  }
-  return privacyStorageInstance!
-}
-
-// For backward compatibility - only call getters in browser
-export const pwaManager = typeof window !== 'undefined' ? getPWAManager() : null
-export const pwaWebAuthn = typeof window !== 'undefined' ? getPWAWebAuthn() : null
-export const privacyStorage = typeof window !== 'undefined' ? getPrivacyStorageManager() : null
+// Create instances
+export const pwaManager = new PWAManager();
+export const pwaWebAuthn = new PWAWebAuthn();
+export const privacyStorage = new PrivacyStorage();
