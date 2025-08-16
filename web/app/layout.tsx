@@ -4,6 +4,7 @@ import './globals.css'
 import { PWAInstallPrompt, OfflineIndicator, PWAUpdatePrompt } from '../components/PWAComponents'
 import FeedbackWidget from '../components/FeedbackWidget'
 import ClientOnly from '../components/ClientOnly'
+import { AuthProvider } from '../contexts/AuthContext'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -47,24 +48,26 @@ export default function RootLayout({
         <meta name="msapplication-tileImage" content="/icons/icon-144x144.png" />
       </head>
       <body className={inter.className}>
-        {children}
-        
-        {/* PWA Components - Only render on client side */}
-        <ClientOnly>
-          <PWAInstallPrompt />
-          <OfflineIndicator />
-          <PWAUpdatePrompt />
-        </ClientOnly>
-        
-        {/* Feedback Widget - Only render on client side */}
-        <ClientOnly>
-          <FeedbackWidget />
-        </ClientOnly>
-        
-        {/* Hidden elements for PWA functionality */}
-        <div id="install-pwa" style={{ display: 'none' }} />
-        <div id="update-pwa" style={{ display: 'none' }} />
-        <div id="offline-indicator" style={{ display: 'none' }} />
+        <AuthProvider>
+          {children}
+          
+          {/* PWA Components - Only render on client side */}
+          <ClientOnly>
+            <PWAInstallPrompt />
+            <OfflineIndicator />
+            <PWAUpdatePrompt />
+          </ClientOnly>
+          
+          {/* Feedback Widget - Only render on client side */}
+          <ClientOnly>
+            <FeedbackWidget />
+          </ClientOnly>
+          
+          {/* Hidden elements for PWA functionality */}
+          <div id="install-pwa" style={{ display: 'none' }} />
+          <div id="update-pwa" style={{ display: 'none' }} />
+          <div id="offline-indicator" style={{ display: 'none' }} />
+        </AuthProvider>
       </body>
     </html>
   )
