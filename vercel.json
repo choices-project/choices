@@ -1,7 +1,5 @@
 {
   "version": 2,
-  "buildCommand": "cd web && npm ci && npm run build",
-  "outputDirectory": "web/.next",
   "framework": "nextjs",
   "functions": {
     "web/app/api/**/*.ts": {
@@ -43,7 +41,7 @@
       "headers": [
         {
           "key": "Access-Control-Allow-Origin",
-          "value": "https://choices-platform.vercel.app"
+          "value": "*"
         },
         {
           "key": "Access-Control-Allow-Methods",
