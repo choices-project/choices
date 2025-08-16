@@ -1,6 +1,6 @@
 # 🗳️ Choices - Privacy-First Voting Platform
 
-A revolutionary privacy-first voting platform that combines advanced encryption, differential privacy, and zero-knowledge proofs to ensure secure, anonymous, and verifiable voting experiences.
+A revolutionary privacy-first voting platform built as a Progressive Web App (PWA) that combines advanced encryption, differential privacy, and zero-knowledge proofs to ensure secure, anonymous, and verifiable voting experiences across all devices.
 
 ## 🚀 Features
 
@@ -15,12 +15,13 @@ A revolutionary privacy-first voting platform that combines advanced encryption,
 ### 📱 Progressive Web App (PWA)
 - **Offline Voting**: Complete offline functionality with background sync
 - **Push Notifications**: Real-time updates and engagement
-- **App Installation**: Native app-like experience across all devices
+- **App Installation**: Native app-like experience - add to home screen
 - **Service Worker**: Intelligent caching and offline capabilities
 - **Background Sync**: Automatic data synchronization when online
+- **Cross-Platform**: Works seamlessly on mobile, tablet, and desktop
 
-### 🌐 Cross-Platform Compatibility
-- **Responsive Design**: Optimized for mobile, tablet, and desktop
+### 🌐 Universal Compatibility
+- **Responsive Design**: Optimized for all screen sizes
 - **Touch Interface**: Gesture recognition and touch target optimization
 - **Browser Compatibility**: Works across all modern browsers
 - **Accessibility**: WCAG compliant with screen reader support
@@ -28,8 +29,8 @@ A revolutionary privacy-first voting platform that combines advanced encryption,
 
 ### 🧪 Comprehensive Testing Suite
 - **MVP Testing**: Core functionality, security, and performance validation
-- **Cross-Platform Testing**: 49+ tests across 7 categories
-- **Mobile Compatibility**: Touch interface and mobile-specific optimization
+- **Cross-Platform Testing**: Comprehensive testing across all devices
+- **PWA Testing**: Progressive web app feature validation
 - **Real-time Testing**: Live test execution with detailed reporting
 - **Deployment Readiness**: Complete validation for production deployment
 
@@ -59,15 +60,9 @@ A revolutionary privacy-first voting platform that combines advanced encryption,
 - **Trust Tiers**: Multi-level trust scoring based on device characteristics
 - **Session Management**: Secure session handling with automatic expiration
 
-### Data Minimization
-- **Minimal Data Collection**: Only essential data is collected
-- **Purpose Limitation**: Data is used only for specified purposes
-- **Data Retention**: Automatic data deletion after specified periods
-- **User Control**: Complete user control over data sharing and deletion
-
 ## 🛠️ Technology Stack
 
-### Frontend
+### Frontend (PWA)
 - **Next.js 14**: React framework with App Router
 - **TypeScript**: Type-safe development
 - **Tailwind CSS**: Utility-first CSS framework
@@ -75,7 +70,7 @@ A revolutionary privacy-first voting platform that combines advanced encryption,
 - **Lucide React**: Beautiful icon library
 
 ### Backend
-- **PostgreSQL**: Robust relational database
+- **PostgreSQL**: Robust relational database (via Supabase)
 - **Prisma**: Type-safe database client
 - **Next.js API Routes**: Serverless API endpoints
 - **WebAuthn**: Web Authentication API
@@ -86,17 +81,15 @@ A revolutionary privacy-first voting platform that combines advanced encryption,
 - **Service Workers**: Offline capabilities and caching
 - **Push API**: Real-time notifications
 
-### Testing & Quality
-- **Comprehensive Testing Suite**: 100+ tests across all platforms
-- **Cross-Platform Validation**: Mobile, tablet, and desktop testing
-- **Performance Monitoring**: Real-time performance metrics
-- **Accessibility Testing**: WCAG compliance validation
+### Infrastructure
+- **Vercel**: Production deployment and hosting
+- **Supabase**: Database and authentication
+- **GitHub Actions**: CI/CD pipeline
 
 ## 🚀 Getting Started
 
 ### Prerequisites
 - Node.js 18+ 
-- PostgreSQL 12+ (optional - app works with mock data)
 - npm or yarn
 
 ### Installation
@@ -121,50 +114,19 @@ A revolutionary privacy-first voting platform that combines advanced encryption,
    Configure the following variables:
    ```env
    DATABASE_URL="postgresql://..."
-       NEXTAUTH_SECRET="[GENERATE-A-SECURE-RANDOM-STRING]"
+   NEXTAUTH_SECRET="[GENERATE-A-SECURE-RANDOM-STRING]"
    NEXTAUTH_URL="http://localhost:3000"
+   SUPABASE_URL="your-supabase-url"
+   SUPABASE_ANON_KEY="your-supabase-anon-key"
    ```
 
-4. **Set up the database**
-   ```bash
-   npx prisma generate
-   npx prisma db push
-   ```
-
-5. **Run the development server**
+4. **Run the development server**
    ```bash
    npm run dev
    ```
 
-6. **Open your browser**
+5. **Open your browser**
    Navigate to [http://localhost:3000](http://localhost:3000)
-
-## 🧪 Testing
-
-### Comprehensive Testing Suite
-Visit `/comprehensive-testing` to run the complete testing suite:
-
-- **MVP Testing**: Core functionality and security validation
-- **Cross-Platform Testing**: 49+ tests across 7 categories
-- **Mobile Compatibility**: Touch interface and mobile optimization
-- **Deployment Readiness**: Complete production validation
-
-### Individual Testing Pages
-- **MVP Testing**: `/mvp-testing` - Core functionality validation
-- **Cross-Platform Testing**: `/cross-platform-testing` - Platform compatibility
-- **PWA Testing**: `/pwa-testing` - Progressive web app features
-
-### Running Tests
-```bash
-# Build the application
-npm run build
-
-# Run comprehensive tests
-npm run test
-
-# Check for TypeScript errors
-npm run type-check
-```
 
 ## 📱 Progressive Web App Features
 
@@ -185,6 +147,33 @@ npm run type-check
 - **Image Optimization**: Automatic image optimization
 - **Code Splitting**: Efficient bundle splitting
 - **Service Worker**: Intelligent caching strategies
+
+## 🧪 Testing
+
+### Comprehensive Testing Suite
+Visit `/comprehensive-testing` to run the complete testing suite:
+
+- **MVP Testing**: Core functionality and security validation
+- **Cross-Platform Testing**: Comprehensive testing across all devices
+- **PWA Testing**: Progressive web app feature validation
+- **Deployment Readiness**: Complete production validation
+
+### Individual Testing Pages
+- **MVP Testing**: `/mvp-testing` - Core functionality validation
+- **Cross-Platform Testing**: `/cross-platform-testing` - Platform compatibility
+- **PWA Testing**: `/pwa-testing` - Progressive web app features
+
+### Running Tests
+```bash
+# Build the application
+npm run build
+
+# Run comprehensive tests
+npm run test
+
+# Check for TypeScript errors
+npm run type-check
+```
 
 ## 🔒 Security & Privacy Features
 
@@ -240,7 +229,7 @@ const ageProof = generateAgeProof(userAge, minimumAge);
 - **Cumulative Layout Shift (CLS)**: < 0.1
 - **First Input Delay (FID)**: < 100ms
 
-### Mobile Performance
+### PWA Performance
 - **Load Time**: < 3s on 3G connections
 - **Memory Usage**: Optimized for low-end devices
 - **Battery Efficiency**: Minimal battery impact
@@ -261,9 +250,11 @@ npm start
 ```env
 # Production environment variables
 DATABASE_URL="postgresql://..."
-    NEXTAUTH_SECRET="[GENERATE-A-SECURE-RANDOM-STRING]"
+NEXTAUTH_SECRET="[GENERATE-A-SECURE-RANDOM-STRING]"
 NEXTAUTH_URL="https://your-domain.com"
 NEXT_PUBLIC_VAPID_PUBLIC_KEY="your-vapid-key"
+SUPABASE_URL="your-supabase-url"
+SUPABASE_ANON_KEY="your-supabase-anon-key"
 ```
 
 ### Deployment Checklist
@@ -272,8 +263,8 @@ NEXT_PUBLIC_VAPID_PUBLIC_KEY="your-vapid-key"
 - ✅ Performance benchmarks met
 - ✅ Accessibility requirements satisfied
 - ✅ Cross-platform compatibility verified
-- ✅ Mobile compatibility tested
 - ✅ PWA features working correctly
+- ✅ Service worker properly configured
 
 ## 🤝 Contributing
 
@@ -299,7 +290,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 🔗 Links
 
 - **Live Demo**: [https://choices-platform.vercel.app](https://choices-platform.vercel.app)
-- **Documentation**: [https://choices-project.github.io](https://choices-project.github.io)
+- **Documentation**: [PROJECT_SUMMARY.md](PROJECT_SUMMARY.md)
 - **Issues**: [https://github.com/choices-project/choices/issues](https://github.com/choices-project/choices/issues)
 - **Discussions**: [https://github.com/choices-project/choices/discussions](https://github.com/choices-project/choices/discussions)
 
@@ -313,3 +304,5 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ---
 
 **Built with ❤️ for a more private and secure voting experience**
+
+*Available as a Progressive Web App - works on all devices without app store installation*
