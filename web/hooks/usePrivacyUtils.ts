@@ -1,11 +1,14 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { isFeatureEnabled } from '../lib/feature-flags'
 
 interface PrivacyUtils {
   privacyBudgetManager: any
   privateAnalytics: any
   zkProofManager: any
+  bridge?: any
+  auditor?: any
 }
 
 export function usePrivacyUtils() {
@@ -19,18 +22,57 @@ export function usePrivacyUtils() {
         setLoading(true)
         setError(null)
         
-        // Dynamic imports - only loaded on client side
-        const [privacyBudgetModule, privateAnalyticsModule, zkProofModule] = await Promise.all([
-          import('../lib/differential-privacy'),
-          import('../lib/differential-privacy'),
-          import('../lib/zero-knowledge-proofs')
-        ])
+        // Check if advanced privacy is enabled
+        const privacyEnabled = isFeatureEnabled('advancedPrivacy')
         
-        setUtils({
-          privacyBudgetManager: privacyBudgetModule.privacyBudgetManager,
-          privateAnalytics: privateAnalyticsModule.privateAnalytics,
-          zkProofManager: zkProofModule.zkProofManager
-        })
+        if (privacyEnabled) {
+          // Use new modular privacy system
+          const [
+            { getPrivacyBudgetManager, getPrivateAnalytics },
+            { getZKProofManager },
+            { getPrivacyBridge },
+            { getPrivacyAuditor }
+          ] = await Promise.all([
+            import('../modules/advanced-privacy/differential-privacy'),
+            import('../modules/advanced-privacy/zero-knowledge-proofs'),
+            import('../modules/advanced-privacy/privacy-bridge'),
+            import('../modules/advanced-privacy/privacy-auditor')
+          ])
+
+          // Initialize bridge
+          const bridge = getPrivacyBridge()
+          await bridge.initialize()
+
+          // Initialize auditor
+          const auditor = getPrivacyAuditor()
+          await auditor.initialize()
+
+          // Get component instances
+          const privacyBudgetManager = getPrivacyBudgetManager()
+          const privateAnalytics = getPrivateAnalytics()
+          const zkProofManager = getZKProofManager()
+          
+          setUtils({
+            privacyBudgetManager,
+            privateAnalytics,
+            zkProofManager,
+            bridge,
+            auditor
+          })
+        } else {
+          // Fallback to legacy system for backward compatibility
+          const [privacyBudgetModule, privateAnalyticsModule, zkProofModule] = await Promise.all([
+            import('../lib/differential-privacy'),
+            import('../lib/differential-privacy'),
+            import('../lib/zero-knowledge-proofs')
+          ])
+          
+          setUtils({
+            privacyBudgetManager: privacyBudgetModule.privacyBudgetManager,
+            privateAnalytics: privateAnalyticsModule.privateAnalytics,
+            zkProofManager: zkProofModule.zkProofManager
+          })
+        }
       } catch (err) {
         console.error('Error loading privacy utils:', err)
         setError(err instanceof Error ? err.message : 'Unknown error')
