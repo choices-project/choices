@@ -8,6 +8,12 @@ export async function GET(request: NextRequest) {
     const cookieStore = await cookies();
     const supabase = createClient(cookieStore);
     
+    // If Supabase client is not available, return mock data
+    if (!supabase) {
+      console.log('Supabase client not available, using mock data');
+      return NextResponse.json(getMockDemographicsResponse());
+    }
+    
     try {
       // Get total users
       const { data: users, error: usersError } = await supabase
