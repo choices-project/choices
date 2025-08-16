@@ -18,7 +18,7 @@ All sensitive data must be stored in environment variables:
 
 ```bash
 # ✅ CORRECT - Use environment variables
-DATABASE_URL="postgresql://postgres:password@host:5432/db"
+DATABASE_URL="postgresql://postgres:[PASSWORD]@host:5432/db"
 SUPABASE_ANON_KEY="your-anon-key"
 SUPABASE_SERVICE_ROLE_KEY="your-service-role-key"
 
@@ -81,7 +81,7 @@ logs/
    SUPABASE_ANON_KEY="[YOUR-SUPABASE-ANON-KEY]"
    
    # ❌ Never use real values
-   DATABASE_URL="postgresql://postgres:MyRealPassword123@host:5432/db"
+   DATABASE_URL="postgresql://postgres:[PASSWORD]@host:5432/db"
    ```
 
 3. **When creating setup scripts:**
@@ -177,7 +177,7 @@ When an AI assistant encounters credentials in messages:
 
 ```bash
 # ✅ Good practices
-export DATABASE_URL="postgresql://user:pass@host:5432/db"
+export DATABASE_URL="postgresql://username:password@host:5432/db"
 source .env.local
 
 # ❌ Bad practices
@@ -185,15 +185,15 @@ echo "password123" > config.txt
 git add config.txt
 ```
 
-### **Template Files**
+### **Vercel Environment Variables**
 
-Always use template files with placeholders:
+Use Vercel's shared environment variables for team collaboration:
 
 ```bash
-# env.production.template
-DATABASE_URL="postgresql://postgres:[YOUR-PASSWORD]@host:5432/db"
-SUPABASE_ANON_KEY="[YOUR-SUPABASE-ANON-KEY]"
-SUPABASE_SERVICE_ROLE_KEY="[YOUR-SUPABASE-SERVICE-ROLE-KEY]"
+# In Vercel dashboard:
+DATABASE_URL=postgresql://username:password@host:5432/db
+SUPABASE_ANON_KEY=your-supabase-anon-key
+SUPABASE_SERVICE_ROLE_KEY=your-supabase-service-role-key
 ```
 
 ### **Documentation Standards**
@@ -201,14 +201,14 @@ SUPABASE_SERVICE_ROLE_KEY="[YOUR-SUPABASE-SERVICE-ROLE-KEY]"
 ```markdown
 # ✅ Good documentation
 To set up the database:
-1. Copy `env.production.template` to `.env.local`
-2. Replace `[YOUR-PASSWORD]` with your actual password
-3. Replace `[YOUR-SUPABASE-ANON-KEY]` with your actual key
+1. Configure environment variables in Vercel dashboard
+2. Use shared environment variables for team access
+3. Never commit .env files to git
 
 # ❌ Bad documentation
 To set up the database:
-1. Set DATABASE_URL="postgresql://postgres:MyPassword123@host:5432/db"
-2. Set SUPABASE_ANON_KEY="[YOUR-SUPABASE-ANON-KEY]"
+1. Set DATABASE_URL="postgresql://postgres:password@host:5432/db"
+2. Set SUPABASE_ANON_KEY="your-key"
 ```
 
 ## 🚨 **Emergency Response**
