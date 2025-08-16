@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google'
 import './globals.css'
 import { PWAInstallPrompt, OfflineIndicator, PWAUpdatePrompt } from '../components/PWAComponents'
 import FeedbackWidget from '../components/FeedbackWidget'
+import ClientOnly from '../components/ClientOnly'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -10,8 +11,6 @@ export const metadata: Metadata = {
   title: 'Choices - Democratic Polling Platform',
   description: 'A privacy-first, unbiased polling platform for democratic participation',
   manifest: '/manifest.json',
-  themeColor: '#3b82f6',
-  viewport: 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
@@ -20,6 +19,14 @@ export const metadata: Metadata = {
   formatDetection: {
     telephone: false
   }
+}
+
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  themeColor: '#3b82f6'
 }
 
 export default function RootLayout({
@@ -42,13 +49,17 @@ export default function RootLayout({
       <body className={inter.className}>
         {children}
         
-        {/* PWA Components */}
-        <PWAInstallPrompt />
-        <OfflineIndicator />
-        <PWAUpdatePrompt />
+        {/* PWA Components - Only render on client side */}
+        <ClientOnly>
+          <PWAInstallPrompt />
+          <OfflineIndicator />
+          <PWAUpdatePrompt />
+        </ClientOnly>
         
-        {/* Feedback Widget - Appears on all pages */}
-        <FeedbackWidget />
+        {/* Feedback Widget - Only render on client side */}
+        <ClientOnly>
+          <FeedbackWidget />
+        </ClientOnly>
         
         {/* Hidden elements for PWA functionality */}
         <div id="install-pwa" style={{ display: 'none' }} />

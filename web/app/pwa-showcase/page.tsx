@@ -19,43 +19,48 @@ import {
   AlertCircle
 } from 'lucide-react'
 import { PWAFeaturesShowcase, PWAStatus } from '../../components/PWAComponents'
-import { pwaManager, pwaWebAuthn, privacyStorage } from '../../lib/pwa-utils'
+import { usePWAUtils } from '../../hooks/usePWAUtils'
 
 export default function PWAShowcasePage() {
+  const { utils: pwaUtils, loading: utilsLoading, error: utilsError } = usePWAUtils()
   const [deviceFingerprint, setDeviceFingerprint] = useState<any>(null)
   const [webAuthnSupported, setWebAuthnSupported] = useState(false)
   const [notificationPermission, setNotificationPermission] = useState<string>('default')
 
   useEffect(() => {
-    // Get device fingerprint
-    pwaManager.getDeviceFingerprint().then(setDeviceFingerprint)
-    
-    // Check WebAuthn support
-    setWebAuthnSupported('credentials' in navigator)
-    
-    // Check notification permission
-    if ('Notification' in window) {
-      setNotificationPermission(Notification.permission)
+    if (pwaUtils && !utilsLoading) {
+      // Get device fingerprint
+      pwaUtils.pwaManager.getDeviceFingerprint().then(setDeviceFingerprint)
+      
+      // Check WebAuthn support
+      setWebAuthnSupported('credentials' in navigator)
+      
+      // Check notification permission
+      if ('Notification' in window) {
+        setNotificationPermission(Notification.permission)
+      }
     }
-  }, [])
+  }, [pwaUtils, utilsLoading])
 
   const handleRequestNotifications = async () => {
-    const granted = await pwaManager.requestNotificationPermission()
+    if (!pwaUtils) return
+    
+    const granted = await pwaUtils.pwaManager.requestNotificationPermission()
     if (granted) {
       setNotificationPermission('granted')
       // Subscribe to push notifications
-      await pwaManager.subscribeToPushNotifications()
+      await pwaUtils.pwaManager.subscribeToPushNotifications()
     }
   }
 
   const handleTestWebAuthn = async () => {
-    if (!webAuthnSupported) {
+    if (!pwaUtils || !webAuthnSupported) {
       alert('WebAuthn is not supported in this browser')
       return
     }
 
     try {
-      const credential = await pwaWebAuthn.registerUser('test-user')
+      const credential = await pwaUtils.pwaWebAuthn.registerUser('test-user')
       if (credential) {
         alert('WebAuthn registration successful!')
       }
@@ -65,7 +70,9 @@ export default function PWAShowcasePage() {
   }
 
   const handleTestOfflineVote = async () => {
-    await pwaManager.storeOfflineVote({
+    if (!pwaUtils) return
+    
+    await pwaUtils.pwaManager.storeOfflineVote({
       pollId: 'test-poll-123',
       choice: 1
     })
@@ -73,13 +80,15 @@ export default function PWAShowcasePage() {
   }
 
   const handleTestEncryptedStorage = async () => {
+    if (!pwaUtils) return
+    
     const testData = {
       sensitiveInfo: 'This is encrypted data',
       timestamp: Date.now()
     }
     
-    await privacyStorage.storeEncryptedData('test_key', testData)
-    const retrieved = await privacyStorage.getEncryptedData('test_key')
+    await pwaUtils.privacyStorage.storeEncryptedData('test_key', testData)
+    const retrieved = await pwaUtils.privacyStorage.getEncryptedData('test_key')
     
     if (retrieved) {
       alert('Encrypted storage test successful! Data retrieved: ' + JSON.stringify(retrieved))

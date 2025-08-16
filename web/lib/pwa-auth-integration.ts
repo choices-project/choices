@@ -486,4 +486,15 @@ export class PWAAuthIntegration {
 }
 
 // Singleton instance
-export const pwaAuth = new PWAAuthIntegration()
+// Lazy initialization for PWA auth
+let pwaAuthInstance: PWAAuthIntegration | null = null
+
+export const getPWAAuth = (): PWAAuthIntegration => {
+  if (!pwaAuthInstance && typeof window !== 'undefined') {
+    pwaAuthInstance = new PWAAuthIntegration()
+  }
+  return pwaAuthInstance!
+}
+
+// For backward compatibility - only call getter in browser
+export const pwaAuth = typeof window !== 'undefined' ? getPWAAuth() : null

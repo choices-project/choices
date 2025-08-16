@@ -34,11 +34,12 @@ import {
   PieChart,
   LineChart
 } from 'lucide-react'
-import { privacyBudgetManager, privateAnalytics } from '../../lib/differential-privacy'
-import { zkProofManager } from '../../lib/zero-knowledge-proofs'
-import { pwaAnalytics } from '../../lib/pwa-analytics'
+import { usePrivacyUtils } from '../../hooks/usePrivacyUtils'
+import { usePWAUtils } from '../../hooks/usePWAUtils'
 
 export default function AdvancedPrivacyPage() {
+  const { utils: privacyUtils, loading: privacyLoading, error: privacyError } = usePrivacyUtils()
+  const { utils: pwaUtils, loading: pwaLoading, error: pwaError } = usePWAUtils()
   const [activeTab, setActiveTab] = useState('overview')
   const [privacyMetrics, setPrivacyMetrics] = useState<any>(null)
   const [zkProofs, setZkProofs] = useState<any[]>([])
@@ -47,29 +48,33 @@ export default function AdvancedPrivacyPage() {
   const [analysisResults, setAnalysisResults] = useState<any>(null)
 
   useEffect(() => {
-    initializePrivacyDashboard()
-  }, [])
+    if (privacyUtils && pwaUtils && !privacyLoading && !pwaLoading) {
+      initializePrivacyDashboard()
+    }
+  }, [privacyUtils, pwaUtils, privacyLoading, pwaLoading])
 
   const initializePrivacyDashboard = async () => {
+    if (!privacyUtils || !pwaUtils) return
+    
     // Get privacy metrics
-    const metrics = pwaAnalytics.getMetrics()
+    const metrics = pwaUtils.pwaAnalytics.getMetrics()
     setPrivacyMetrics(metrics)
 
     // Get privacy budget status
     const budget = {
-      demographics: privacyBudgetManager.getRemainingBudget('demographics'),
-      voting: privacyBudgetManager.getRemainingBudget('voting'),
-      trends: privacyBudgetManager.getRemainingBudget('trends'),
-      analytics: privacyBudgetManager.getRemainingBudget('analytics')
+      demographics: privacyUtils.privacyBudgetManager.getRemainingBudget('demographics'),
+      voting: privacyUtils.privacyBudgetManager.getRemainingBudget('voting'),
+      trends: privacyUtils.privacyBudgetManager.getRemainingBudget('trends'),
+      analytics: privacyUtils.privacyBudgetManager.getRemainingBudget('analytics')
     }
     setPrivacyBudget(budget)
 
     // Get ZK proofs
-    const proofIds = zkProofManager.listProofs()
+    const proofIds = privacyUtils.zkProofManager.listProofs()
     const proofs = proofIds.map(id => ({
       id,
-      proof: zkProofManager.getProof(id),
-      verification: zkProofManager.verifyProof(id)
+      proof: privacyUtils.zkProofManager.getProof(id),
+      verification: privacyUtils.zkProofManager.verifyProof(id)
     }))
     setZkProofs(proofs)
   }
@@ -95,9 +100,9 @@ export default function AdvancedPrivacyPage() {
       ]
 
       // Run private analytics
-      const demographics = privateAnalytics.privateDemographics(mockData)
-      const votingPatterns = privateAnalytics.privateVotingPatterns(mockVotes)
-      const trends = privateAnalytics.privateTrendAnalysis(mockData)
+      const demographics = privacyUtils.privateAnalytics.privateDemographics(mockData)
+      const votingPatterns = privacyUtils.privateAnalytics.privateVotingPatterns(mockVotes)
+      const trends = privacyUtils.privateAnalytics.privateTrendAnalysis(mockData)
 
       setAnalysisResults({
         demographics: Array.from(demographics.entries()),
@@ -106,7 +111,7 @@ export default function AdvancedPrivacyPage() {
       })
 
       // Track analytics
-      pwaAnalytics.trackFeatureUsage('private_analysis_run')
+      pwaUtils.pwaAnalytics.trackFeatureUsage('private_analysis_run')
     } catch (error) {
       console.error('Private analysis failed:', error)
     } finally {
@@ -115,15 +120,17 @@ export default function AdvancedPrivacyPage() {
   }
 
   const createZKProof = async (type: string, data: any) => {
+    if (!privacyUtils) return
+    
     try {
-      const proofId = zkProofManager.createProof(type, data)
-      const proof = zkProofManager.getProof(proofId)
-      const verification = zkProofManager.verifyProof(proofId)
+      const proofId = privacyUtils.zkProofManager.createProof(type, data)
+      const proof = privacyUtils.zkProofManager.getProof(proofId)
+      const verification = privacyUtils.zkProofManager.verifyProof(proofId)
 
       setZkProofs(prev => [...prev, { id: proofId, proof, verification }])
       
       // Track analytics
-      pwaAnalytics.trackFeatureUsage(`zk_proof_created_${type}`)
+      pwaUtils.pwaAnalytics.trackFeatureUsage(`zk_proof_created_${type}`)
     } catch (error) {
       console.error('Failed to create ZK proof:', error)
     }
@@ -574,7 +581,7 @@ export default function AdvancedPrivacyPage() {
 
               <div className="mt-6 flex space-x-2">
                 <button
-                  onClick={() => privacyBudgetManager.resetAllBudgets()}
+                  onClick={() => privacyUtils?.privacyBudgetManager.resetAllBudgets()}
                   className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md transition-colors"
                 >
                   Reset All Budgets

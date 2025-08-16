@@ -1119,4 +1119,15 @@ export class MobileCompatibilityTesting {
 }
 
 // Export singleton instance
-export const mobileCompatibilityTesting = new MobileCompatibilityTesting()
+// Lazy initialization for mobile compatibility testing
+let mobileCompatibilityTestingInstance: MobileCompatibilityTesting | null = null
+
+export const getMobileCompatibilityTesting = (): MobileCompatibilityTesting => {
+  if (!mobileCompatibilityTestingInstance && typeof window !== 'undefined') {
+    mobileCompatibilityTestingInstance = new MobileCompatibilityTesting()
+  }
+  return mobileCompatibilityTestingInstance!
+}
+
+// For backward compatibility - only call getter in browser
+export const mobileCompatibilityTesting = typeof window !== 'undefined' ? getMobileCompatibilityTesting() : null

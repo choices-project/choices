@@ -39,7 +39,7 @@ const FeedbackWidget: React.FC = () => {
     description: '',
     sentiment: 'neutral',
     userJourney: {
-      page: window.location.pathname,
+      page: typeof window !== 'undefined' ? window.location.pathname : '/',
       action: 'feedback_widget_opened',
       timestamp: new Date()
     }
@@ -85,7 +85,7 @@ const FeedbackWidget: React.FC = () => {
       description: '',
       sentiment: 'neutral',
       userJourney: {
-        page: window.location.pathname,
+        page: typeof window !== 'undefined' ? window.location.pathname : '/',
         action: 'feedback_widget_closed',
         timestamp: new Date()
       }

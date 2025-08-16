@@ -24,12 +24,13 @@ import {
   CheckCircle,
   AlertCircle
 } from 'lucide-react'
-import { pwaAuth, PWAUser } from '../../lib/pwa-auth-integration'
-import { pwaManager } from '../../lib/pwa-utils'
-import { pwaAnalytics } from '../../lib/pwa-analytics'
+import { usePWAUtils } from '../../hooks/usePWAUtils'
 import { PWAVotingInterface } from '../../components/PWAVotingInterface'
 import { PWAUserProfile } from '../../components/PWAUserProfile'
 import { PWAFeaturesShowcase } from '../../components/PWAComponents'
+
+// Import PWAUser type separately to avoid SSR issues
+import type { PWAUser } from '../../lib/pwa-auth-integration'
 
 interface Poll {
   id: string
@@ -45,8 +46,9 @@ interface Poll {
 }
 
 export default function PWAAppPage() {
+  const { utils: pwaUtils, loading: utilsLoading, error: utilsError } = usePWAUtils()
   const [currentUser, setCurrentUser] = useState<PWAUser | null>(null)
-  const [isOnline, setIsOnline] = useState(navigator.onLine)
+  const [isOnline, setIsOnline] = useState(false)
   const [activeTab, setActiveTab] = useState('polls')
   const [polls, setPolls] = useState<Poll[]>([])
   const [loading, setLoading] = useState(true)
@@ -54,20 +56,24 @@ export default function PWAAppPage() {
   const [showProfile, setShowProfile] = useState(false)
 
   useEffect(() => {
-    initializeApp()
-  }, [])
+    if (pwaUtils && !utilsLoading) {
+      initializeApp()
+    }
+  }, [pwaUtils, utilsLoading])
 
   const initializeApp = async () => {
+    if (!pwaUtils) return
+    
     try {
       // Check for existing user
-      const user = pwaAuth.getCurrentUser()
+      const user = pwaUtils.pwaAuth.getCurrentUser()
       setCurrentUser(user)
 
       // Load polls
       await loadPolls()
 
       // Get metrics
-      setMetrics(pwaAnalytics.getMetrics())
+      setMetrics(pwaUtils.pwaAnalytics.getMetrics())
 
       // Check online status
       setIsOnline(navigator.onLine)
@@ -126,8 +132,10 @@ export default function PWAAppPage() {
   }
 
   const handleCreateUser = async () => {
+    if (!pwaUtils) return
+    
     try {
-      const user = await pwaAuth.createUser()
+      const user = await pwaUtils.pwaAuth.createUser()
       setCurrentUser(user)
     } catch (error) {
       console.error('Failed to create user:', error)
@@ -137,10 +145,12 @@ export default function PWAAppPage() {
   const handleEnableWebAuthn = async () => {
     if (!currentUser) return
     
+    if (!pwaUtils) return
+    
     try {
-      const success = await pwaAuth.enableWebAuthn(currentUser.stableId)
+      const success = await pwaUtils.pwaAuth.enableWebAuthn(currentUser.stableId)
       if (success) {
-        setCurrentUser(pwaAuth.getCurrentUser())
+        setCurrentUser(pwaUtils.pwaAuth.getCurrentUser())
       }
     } catch (error) {
       console.error('Failed to enable WebAuthn:', error)
@@ -148,12 +158,12 @@ export default function PWAAppPage() {
   }
 
   const handleEnableNotifications = async () => {
-    if (!currentUser) return
+    if (!currentUser || !pwaUtils) return
     
     try {
-      const success = await pwaAuth.enablePushNotifications(currentUser.stableId)
+      const success = await pwaUtils.pwaAuth.enablePushNotifications(currentUser.stableId)
       if (success) {
-        setCurrentUser(pwaAuth.getCurrentUser())
+        setCurrentUser(pwaUtils.pwaAuth.getCurrentUser())
       }
     } catch (error) {
       console.error('Failed to enable notifications:', error)

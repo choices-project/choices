@@ -17,7 +17,6 @@ import {
   Shield,
   Eye,
   MousePointer,
-
   Wifi,
   WifiOff,
   Battery,
@@ -45,9 +44,13 @@ import {
   Shield as BrowserCompatibilityIcon,
   Eye as DeviceSpecificIcon
 } from 'lucide-react'
-import { crossPlatformTesting, PlatformTestSuite, TestResult, DeviceInfo, BrowserInfo } from '../../lib/cross-platform-testing'
+import { useTestingUtils } from '../../hooks/useTestingUtils'
+
+// Import types separately to avoid SSR issues
+import type { PlatformTestSuite, TestResult, DeviceInfo, BrowserInfo } from '../../lib/cross-platform-testing'
 
 export default function CrossPlatformTestingPage() {
+  const { utils: testingUtils, loading: utilsLoading, error: utilsError } = useTestingUtils()
   const [isRunningTests, setIsRunningTests] = useState(false)
   const [testSuites, setTestSuites] = useState<PlatformTestSuite[]>([])
   const [comprehensiveReport, setComprehensiveReport] = useState<any>(null)
@@ -56,18 +59,22 @@ export default function CrossPlatformTestingPage() {
   const [browserInfo, setBrowserInfo] = useState<BrowserInfo | null>(null)
 
   useEffect(() => {
-    // Auto-run tests on page load
-    runAllTests()
-  }, [])
+    if (testingUtils && !utilsLoading) {
+      // Auto-run tests on page load
+      runAllTests()
+    }
+  }, [testingUtils, utilsLoading])
 
   const runAllTests = async () => {
+    if (!testingUtils) return
+    
     setIsRunningTests(true)
     
     try {
-      const suites = await crossPlatformTesting.runAllTests()
+      const suites = await testingUtils.crossPlatformTesting.runAllTests()
       setTestSuites(suites)
       
-      const report = await crossPlatformTesting.generateComprehensiveReport()
+      const report = await testingUtils.crossPlatformTesting.generateComprehensiveReport()
       setComprehensiveReport(report)
       setDeviceInfo(report.deviceInfo)
       setBrowserInfo(report.browserInfo)

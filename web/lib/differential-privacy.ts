@@ -391,6 +391,24 @@ export class PrivacyBudgetManager {
   }
 }
 
-// Export singleton instances
-export const privacyBudgetManager = new PrivacyBudgetManager()
-export const privateAnalytics = new PrivateAnalytics()
+// Export singleton instances - lazy initialization
+let privacyBudgetManagerInstance: PrivacyBudgetManager | null = null
+let privateAnalyticsInstance: PrivateAnalytics | null = null
+
+export const getPrivacyBudgetManager = (): PrivacyBudgetManager => {
+  if (!privacyBudgetManagerInstance) {
+    privacyBudgetManagerInstance = new PrivacyBudgetManager()
+  }
+  return privacyBudgetManagerInstance
+}
+
+export const getPrivateAnalytics = (): PrivateAnalytics => {
+  if (!privateAnalyticsInstance) {
+    privateAnalyticsInstance = new PrivateAnalytics()
+  }
+  return privateAnalyticsInstance
+}
+
+// For backward compatibility - only call getters in browser
+export const privacyBudgetManager = typeof window !== 'undefined' ? getPrivacyBudgetManager() : null
+export const privateAnalytics = typeof window !== 'undefined' ? getPrivateAnalytics() : null

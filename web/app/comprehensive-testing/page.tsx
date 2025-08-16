@@ -27,7 +27,6 @@ import {
   Network,
   HardDrive,
   Cpu,
-
   Battery,
   Wifi,
   WifiOff,
@@ -43,28 +42,36 @@ import {
   Copy,
   Share2
 } from 'lucide-react'
-import { comprehensiveTestingRunner, ComprehensiveReport, ComprehensiveTestResult } from '../../lib/comprehensive-testing-runner'
+import { useTestingUtils } from '../../hooks/useTestingUtils'
+
+// Import types separately to avoid SSR issues
+import type { ComprehensiveReport, ComprehensiveTestResult } from '../../lib/comprehensive-testing-runner'
 
 export default function ComprehensiveTestingPage() {
+  const { utils: testingUtils, loading: utilsLoading, error: utilsError } = useTestingUtils()
   const [isRunningTests, setIsRunningTests] = useState(false)
   const [report, setReport] = useState<ComprehensiveReport | null>(null)
   const [activeTab, setActiveTab] = useState('overview')
   const [exportData, setExportData] = useState<string>('')
 
   useEffect(() => {
-    // Auto-run tests on page load
-    runComprehensiveTests()
-  }, [])
+    if (testingUtils && !utilsLoading) {
+      // Auto-run tests on page load
+      runComprehensiveTests()
+    }
+  }, [testingUtils, utilsLoading])
 
   const runComprehensiveTests = async () => {
+    if (!testingUtils) return
+    
     setIsRunningTests(true)
     
     try {
-      const comprehensiveReport = await comprehensiveTestingRunner.runAllTests()
+      const comprehensiveReport = await testingUtils.comprehensiveTestingRunner.runAllTests()
       setReport(comprehensiveReport)
       
       // Generate export data
-      const exportReport = await comprehensiveTestingRunner.exportReport()
+      const exportReport = await testingUtils.comprehensiveTestingRunner.exportReport()
       setExportData(exportReport)
     } catch (error) {
       console.error('Comprehensive testing failed:', error)

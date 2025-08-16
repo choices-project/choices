@@ -453,4 +453,15 @@ export class TestingSuite {
 }
 
 // Export singleton instance
-export const testingSuite = new TestingSuite()
+// Lazy initialization for testing suite
+let testingSuiteInstance: TestingSuite | null = null
+
+export const getTestingSuite = (): TestingSuite => {
+  if (!testingSuiteInstance && typeof window !== 'undefined') {
+    testingSuiteInstance = new TestingSuite()
+  }
+  return testingSuiteInstance!
+}
+
+// For backward compatibility - only call getter in browser
+export const testingSuite = typeof window !== 'undefined' ? getTestingSuite() : null
