@@ -132,8 +132,7 @@ export class AuthService {
   // WebAuthn-based login
   async loginWithWebAuthn(email: string): Promise<AuthSession> {
     // Import PWA WebAuthn manager dynamically
-    const { getPWAWebAuthn } = await import('./pwa-utils')
-    const pwaWebAuthn = getPWAWebAuthn()
+    const { pwaWebAuthn } = await import('./pwa-utils')
 
     // Get user's WebAuthn credentials
     const response = await fetch(`${this.baseUrl}/auth/webauthn/credentials`, {
@@ -201,8 +200,7 @@ export class AuthService {
     }
 
     // Import PWA WebAuthn manager dynamically
-    const { getPWAWebAuthn } = await import('./pwa-utils')
-    const pwaWebAuthn = getPWAWebAuthn()
+    const { pwaWebAuthn } = await import('./pwa-utils')
 
     // Get user info for WebAuthn registration
     const user = this.getStoredUser()

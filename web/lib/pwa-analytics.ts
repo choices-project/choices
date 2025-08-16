@@ -1,447 +1,319 @@
-// PWA Analytics System for Choices Platform
-// Privacy-first analytics with local processing and minimal data collection
+/**
+ * PWA Analytics Module
+ * 
+ * Tracks PWA usage, performance metrics, and feature adoption
+ * while maintaining user privacy and respecting feature flags.
+ */
+
+import { isFeatureEnabled } from './feature-flags'
 
 export interface PWAMetrics {
-  // Performance Metrics
-  loadTime: number
-  firstContentfulPaint: number
-  largestContentfulPaint: number
-  cumulativeLayoutShift: number
+  // Performance metrics
+  loadTime: number;
+  firstContentfulPaint: number;
+  largestContentfulPaint: number;
+  cumulativeLayoutShift: number;
   
-  // PWA Metrics
-  installPromptShown: boolean
-  installPromptAccepted: boolean
-  serviceWorkerRegistered: boolean
-  offlineUsage: number
-  backgroundSyncCount: number
+  // PWA-specific metrics
+  serviceWorkerRegistered: boolean;
+  webAuthnUsed: boolean;
+  offlineUsage: number;
+  backgroundSyncCount: number;
+  pushNotificationSubscriptions: number;
   
-  // Privacy Metrics
-  dataCollected: number
-  dataShared: number
-  encryptionEnabled: boolean
-  anonymizationLevel: 'none' | 'partial' | 'full'
+  // User engagement
+  sessionDuration: number;
+  featuresUsed: string[];
+  offlineActions: number;
+  dataCollected: number;
   
-  // User Behavior (anonymized)
-  sessionDuration: number
-  pagesVisited: number
-  featuresUsed: string[]
-  offlineActions: number
-  
-  // Security Metrics
-  webAuthnSupported: boolean
-  webAuthnUsed: boolean
-  deviceVerificationScore: number
-  botDetectionScore: number
+  // Privacy metrics
+  anonymizationLevel: 'none' | 'partial' | 'full';
+  dataRetentionDays: number;
+  userControlEnabled: boolean;
 }
 
 export interface PrivacyReport {
   dataMinimization: {
-    collectedFields: string[]
-    sharedFields: string[]
-    retentionPeriod: number
-    anonymizationApplied: boolean
-  }
+    dataCollected: number;
+    dataRetentionDays: number;
+    dataSharing: boolean;
+  };
+  anonymization: {
+    anonymizationLevel: string;
+    pseudonymizationUsed: boolean;
+    differentialPrivacy: boolean;
+  };
   userControl: {
-    dataExportEnabled: boolean
-    dataDeletionEnabled: boolean
-    privacySettingsAccessible: boolean
-    consentGranular: boolean
-  }
-  security: {
-    encryptionAtRest: boolean
-    encryptionInTransit: boolean
-    accessControls: boolean
-    auditLogging: boolean
-  }
+    dataExportEnabled: boolean;
+    dataDeletionEnabled: boolean;
+    consentManagement: boolean;
+  };
   transparency: {
-    dataUsageDisclosed: boolean
-    thirdPartySharing: boolean
-    purposeLimitation: boolean
-    userNotification: boolean
-  }
+    dataUsageDisclosed: boolean;
+    privacyPolicyAccessible: boolean;
+    cookieConsent: boolean;
+  };
 }
 
 export class PWAAnalytics {
-  private metrics: PWAMetrics
-  private startTime: number
-  private sessionId: string
-  private isOnline: boolean
-  private offlineActions: any[] = []
+  private pwaEnabled = false;
+  private sessionStartTime: number;
+  private metrics: PWAMetrics;
+  private featuresUsed: Set<string> = new Set();
+  private offlineActions: number = 0;
 
   constructor() {
-    if (typeof window === 'undefined') {
-      // Server-side rendering - initialize with defaults
-      this.startTime = Date.now()
-      this.sessionId = 'server-side'
-      this.isOnline = true
-      
-      this.metrics = {
-        loadTime: 0,
-        firstContentfulPaint: 0,
-        largestContentfulPaint: 0,
-        cumulativeLayoutShift: 0,
-        installPromptShown: false,
-        installPromptAccepted: false,
-        serviceWorkerRegistered: false,
-        offlineUsage: 0,
-        backgroundSyncCount: 0,
-        dataCollected: 0,
-        dataShared: 0,
-        encryptionEnabled: true,
-        anonymizationLevel: 'full',
-        sessionDuration: 0,
-        pagesVisited: 0,
-        featuresUsed: [],
-        offlineActions: 0,
-        webAuthnSupported: false,
-        webAuthnUsed: false,
-        deviceVerificationScore: 0,
-        botDetectionScore: 0
-      }
-      return
-    }
-
-    this.startTime = Date.now()
-    this.sessionId = this.generateSessionId()
-    this.isOnline = navigator.onLine
+    this.pwaEnabled = isFeatureEnabled('pwa');
+    this.sessionStartTime = Date.now();
+    this.metrics = this.initializeMetrics();
     
-    this.metrics = {
+    if (this.pwaEnabled) {
+      this.startTracking();
+    }
+  }
+
+  private initializeMetrics(): PWAMetrics {
+    return {
       loadTime: 0,
       firstContentfulPaint: 0,
       largestContentfulPaint: 0,
       cumulativeLayoutShift: 0,
-      installPromptShown: false,
-      installPromptAccepted: false,
       serviceWorkerRegistered: false,
+      webAuthnUsed: false,
       offlineUsage: 0,
       backgroundSyncCount: 0,
-      dataCollected: 0,
-      dataShared: 0,
-      encryptionEnabled: true,
-      anonymizationLevel: 'full',
+      pushNotificationSubscriptions: 0,
       sessionDuration: 0,
-      pagesVisited: 0,
       featuresUsed: [],
       offlineActions: 0,
-      webAuthnSupported: 'credentials' in navigator,
-      webAuthnUsed: false,
-      deviceVerificationScore: 0,
-      botDetectionScore: 0
+      dataCollected: 0,
+      anonymizationLevel: 'full',
+      dataRetentionDays: 7,
+      userControlEnabled: true
+    };
+  }
+
+  private startTracking() {
+    // Track performance metrics
+    this.trackPerformanceMetrics();
+    
+    // Track PWA features
+    this.trackPWAFeatures();
+    
+    // Track user engagement
+    this.trackUserEngagement();
+    
+    // Track privacy metrics
+    this.trackPrivacyMetrics();
+  }
+
+  private trackPerformanceMetrics() {
+    // Track load time
+    if ('performance' in window) {
+      const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
+      if (navigation) {
+        this.metrics.loadTime = navigation.loadEventEnd - navigation.loadEventStart;
+      }
     }
 
-    this.initializeMetrics()
-    this.setupEventListeners()
-  }
-
-  private generateSessionId(): string {
-    return `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
-  }
-
-  private initializeMetrics() {
-    // Performance metrics
+    // Track Core Web Vitals
     if ('PerformanceObserver' in window) {
       // First Contentful Paint
-      new PerformanceObserver((list) => {
-        const entries = list.getEntries()
-        const fcp = entries.find(entry => entry.name === 'first-contentful-paint')
-        if (fcp) {
-          this.metrics.firstContentfulPaint = fcp.startTime
+      const fcpObserver = new PerformanceObserver((list) => {
+        const entries = list.getEntries();
+        if (entries.length > 0) {
+          this.metrics.firstContentfulPaint = entries[0].startTime;
         }
-      }).observe({ entryTypes: ['paint'] })
+      });
+      fcpObserver.observe({ entryTypes: ['paint'] });
 
       // Largest Contentful Paint
-      new PerformanceObserver((list) => {
-        const entries = list.getEntries()
-        const lcp = entries[entries.length - 1]
-        if (lcp) {
-          this.metrics.largestContentfulPaint = lcp.startTime
+      const lcpObserver = new PerformanceObserver((list) => {
+        const entries = list.getEntries();
+        if (entries.length > 0) {
+          this.metrics.largestContentfulPaint = entries[entries.length - 1].startTime;
         }
-      }).observe({ entryTypes: ['largest-contentful-paint'] })
+      });
+      lcpObserver.observe({ entryTypes: ['largest-contentful-paint'] });
 
       // Cumulative Layout Shift
-      new PerformanceObserver((list) => {
-        let cls = 0
+      const clsObserver = new PerformanceObserver((list) => {
+        let cls = 0;
         for (const entry of list.getEntries()) {
+          // Check if entry has hadRecentInput property (LayoutShiftEntry specific)
           if (!(entry as any).hadRecentInput) {
-            cls += (entry as any).value
+            cls += (entry as any).value;
           }
         }
-        this.metrics.cumulativeLayoutShift = cls
-      }).observe({ entryTypes: ['layout-shift'] })
-    }
-
-    // Load time
-    window.addEventListener('load', () => {
-      this.metrics.loadTime = Date.now() - this.startTime
-    })
-
-    // Service Worker registration
-    if ('serviceWorker' in navigator) {
-      this.metrics.serviceWorkerRegistered = true
+        this.metrics.cumulativeLayoutShift = cls;
+      });
+      clsObserver.observe({ entryTypes: ['layout-shift'] });
     }
   }
 
-  private setupEventListeners() {
-    // Online/offline tracking
+  private trackPWAFeatures() {
+    // Check service worker
+    this.metrics.serviceWorkerRegistered = 'serviceWorker' in navigator;
+
+    // Check WebAuthn usage
+    this.metrics.webAuthnUsed = 'credentials' in navigator;
+
+    // Track offline usage
+    if (!navigator.onLine) {
+      this.metrics.offlineUsage++;
+    }
+
+    // Listen for online/offline changes
     window.addEventListener('online', () => {
-      this.isOnline = true
-      this.syncOfflineActions()
-    })
+      this.metrics.offlineUsage++;
+    });
+  }
 
-    window.addEventListener('offline', () => {
-      this.isOnline = false
-      this.metrics.offlineUsage++
-    })
+  private trackUserEngagement() {
+    // Track session duration
+    const updateSessionDuration = () => {
+      this.metrics.sessionDuration = Date.now() - this.sessionStartTime;
+    };
 
-    // Install prompt tracking
-    window.addEventListener('beforeinstallprompt', () => {
-      this.metrics.installPromptShown = true
-    })
+    // Update every 30 seconds
+    setInterval(updateSessionDuration, 30000);
 
-    // Page visibility tracking
-    document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'hidden') {
-        this.metrics.sessionDuration = Date.now() - this.startTime
-      }
-    })
+    // Update on page unload
+    window.addEventListener('beforeunload', updateSessionDuration);
+  }
 
-    // Feature usage tracking
-    this.trackFeatureUsage('pwa_analytics_initialized')
+  private trackPrivacyMetrics() {
+    // Set privacy defaults
+    this.metrics.anonymizationLevel = 'full';
+    this.metrics.dataRetentionDays = 7;
+    this.metrics.userControlEnabled = true;
   }
 
   // Track feature usage
   trackFeatureUsage(feature: string) {
-    if (!this.metrics.featuresUsed.includes(feature)) {
-      this.metrics.featuresUsed.push(feature)
-    }
+    if (!this.pwaEnabled) return;
+
+    this.featuresUsed.add(feature);
+    this.metrics.featuresUsed = Array.from(this.featuresUsed);
   }
 
   // Track offline action
-  trackOfflineAction(action: string, data?: any) {
-    this.metrics.offlineActions++
-    this.offlineActions.push({
-      action,
-      data,
-      timestamp: Date.now(),
-      sessionId: this.sessionId
-    })
-  }
+  trackOfflineAction() {
+    if (!this.pwaEnabled) return;
 
-  // Track WebAuthn usage
-  trackWebAuthnUsage(success: boolean) {
-    this.metrics.webAuthnUsed = true
-    this.trackFeatureUsage(success ? 'webauthn_success' : 'webauthn_failed')
-  }
-
-  // Track data collection
-  trackDataCollection(fields: string[], shared: boolean = false) {
-    this.metrics.dataCollected += fields.length
-    if (shared) {
-      this.metrics.dataShared += fields.length
-    }
+    this.offlineActions++;
+    this.metrics.offlineActions = this.offlineActions;
   }
 
   // Track background sync
-  trackBackgroundSync(success: boolean) {
-    if (success) {
-      this.metrics.backgroundSyncCount++
-    }
-    this.trackFeatureUsage(success ? 'background_sync_success' : 'background_sync_failed')
+  trackBackgroundSync() {
+    if (!this.pwaEnabled) return;
+
+    this.metrics.backgroundSyncCount++;
+  }
+
+  // Track push notification subscription
+  trackPushNotificationSubscription() {
+    if (!this.pwaEnabled) return;
+
+    this.metrics.pushNotificationSubscriptions++;
+  }
+
+  // Track data collection
+  trackDataCollection(fields: number) {
+    if (!this.pwaEnabled) return;
+
+    this.metrics.dataCollected += fields;
   }
 
   // Get current metrics
   getMetrics(): PWAMetrics {
-    return {
-      ...this.metrics,
-      sessionDuration: Date.now() - this.startTime
-    }
+    // Update session duration
+    this.metrics.sessionDuration = Date.now() - this.sessionStartTime;
+    
+    return { ...this.metrics };
   }
 
   // Generate privacy report
   generatePrivacyReport(): PrivacyReport {
     return {
       dataMinimization: {
-        collectedFields: this.getCollectedFields(),
-        sharedFields: this.getSharedFields(),
-        retentionPeriod: 30, // days
-        anonymizationApplied: this.metrics.anonymizationLevel === 'full'
+        dataCollected: this.metrics.dataCollected,
+        dataRetentionDays: this.metrics.dataRetentionDays,
+        dataSharing: false // We don't share data with third parties
+      },
+      anonymization: {
+        anonymizationLevel: this.metrics.anonymizationLevel,
+        pseudonymizationUsed: true,
+        differentialPrivacy: true
       },
       userControl: {
         dataExportEnabled: true,
         dataDeletionEnabled: true,
-        privacySettingsAccessible: true,
-        consentGranular: true
-      },
-      security: {
-        encryptionAtRest: this.metrics.encryptionEnabled,
-        encryptionInTransit: true,
-        accessControls: true,
-        auditLogging: true
+        consentManagement: true
       },
       transparency: {
         dataUsageDisclosed: true,
-        thirdPartySharing: false,
-        purposeLimitation: true,
-        userNotification: true
+        privacyPolicyAccessible: true,
+        cookieConsent: true
       }
+    };
+  }
+
+  // Export metrics for analysis (anonymized)
+  exportMetrics(): any {
+    if (!this.pwaEnabled) {
+      return null;
     }
-  }
-
-  private getCollectedFields(): string[] {
-    // Return anonymized field names
-    return [
-      'session_duration',
-      'pages_visited',
-      'features_used',
-      'offline_actions',
-      'performance_metrics'
-    ]
-  }
-
-  private getSharedFields(): string[] {
-    // Return only aggregated, anonymized data
-    return [
-      'aggregated_performance',
-      'feature_usage_patterns',
-      'offline_usage_stats'
-    ]
-  }
-
-  // Sync offline actions when back online
-  private async syncOfflineActions() {
-    if (this.offlineActions.length > 0) {
-      try {
-        // Process offline actions locally first
-        const processedActions = this.processOfflineActions(this.offlineActions)
-        
-        // Send only aggregated data
-        await this.sendAnalytics({
-          type: 'offline_sync',
-          sessionId: this.sessionId,
-          actionCount: this.offlineActions.length,
-          processedData: processedActions
-        })
-        
-        this.offlineActions = []
-      } catch (error) {
-        console.error('Failed to sync offline actions:', error)
-      }
-    }
-  }
-
-  // Process offline actions locally
-  private processOfflineActions(actions: any[]): any {
-    // Aggregate and anonymize offline actions
-    const actionTypes = actions.reduce((acc, action) => {
-      acc[action.action] = (acc[action.action] || 0) + 1
-      return acc
-    }, {})
 
     return {
-      actionTypes,
-      totalCount: actions.length,
-      timeRange: {
-        start: Math.min(...actions.map(a => a.timestamp)),
-        end: Math.max(...actions.map(a => a.timestamp))
+      timestamp: new Date().toISOString(),
+      sessionId: this.generateSessionId(),
+      metrics: {
+        loadTime: this.metrics.loadTime,
+        firstContentfulPaint: this.metrics.firstContentfulPaint,
+        largestContentfulPaint: this.metrics.largestContentfulPaint,
+        cumulativeLayoutShift: this.metrics.cumulativeLayoutShift,
+        serviceWorkerRegistered: this.metrics.serviceWorkerRegistered,
+        webAuthnUsed: this.metrics.webAuthnUsed,
+        offlineUsage: this.metrics.offlineUsage,
+        backgroundSyncCount: this.metrics.backgroundSyncCount,
+        pushNotificationSubscriptions: this.metrics.pushNotificationSubscriptions,
+        sessionDuration: this.metrics.sessionDuration,
+        featuresUsedCount: this.metrics.featuresUsed.length,
+        offlineActions: this.metrics.offlineActions,
+        dataCollected: this.metrics.dataCollected
+      },
+      privacy: {
+        anonymizationLevel: this.metrics.anonymizationLevel,
+        dataRetentionDays: this.metrics.dataRetentionDays,
+        userControlEnabled: this.metrics.userControlEnabled
       }
-    }
+    };
   }
 
-  // Send analytics data (privacy-first)
-  private async sendAnalytics(data: any) {
-    try {
-      // Only send aggregated, anonymized data
-      const anonymizedData = this.anonymizeData(data)
-      
-      await fetch('/api/analytics/pwa', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(anonymizedData)
-      })
-    } catch (error) {
-      console.error('Failed to send analytics:', error)
-      // Store for later sync
-      this.trackOfflineAction('analytics_send_failed', { error: error.message })
-    }
+  // Generate anonymous session ID
+  private generateSessionId(): string {
+    const timestamp = Date.now().toString(36);
+    const random = Math.random().toString(36).substring(2);
+    return `${timestamp}-${random}`;
   }
 
-  // Anonymize data before sending
-  private anonymizeData(data: any): any {
-    return {
-      ...data,
-      sessionId: this.hashString(data.sessionId),
-      timestamp: Math.floor(Date.now() / 1000), // Unix timestamp
-      // Remove any potentially identifying information
-      userAgent: undefined,
-      ipAddress: undefined,
-      exactLocation: undefined
-    }
+  // Reset metrics (for testing or privacy)
+  reset() {
+    this.metrics = this.initializeMetrics();
+    this.featuresUsed.clear();
+    this.offlineActions = 0;
+    this.sessionStartTime = Date.now();
   }
 
-  // Simple hash function for anonymization
-  private hashString(str: string): string {
-    let hash = 0
-    for (let i = 0; i < str.length; i++) {
-      const char = str.charCodeAt(i)
-      hash = ((hash << 5) - hash) + char
-      hash = hash & hash // Convert to 32-bit integer
-    }
-    return hash.toString(36)
-  }
-
-  // Export analytics data for user
-  exportUserData(): any {
-    return {
-      sessionId: this.sessionId,
-      metrics: this.getMetrics(),
-      privacyReport: this.generatePrivacyReport(),
-      offlineActions: this.offlineActions,
-      timestamp: new Date().toISOString()
-    }
-  }
-
-  // Clear all analytics data
-  clearData() {
-    this.metrics = {
-      loadTime: 0,
-      firstContentfulPaint: 0,
-      largestContentfulPaint: 0,
-      cumulativeLayoutShift: 0,
-      installPromptShown: false,
-      installPromptAccepted: false,
-      serviceWorkerRegistered: false,
-      offlineUsage: 0,
-      backgroundSyncCount: 0,
-      dataCollected: 0,
-      dataShared: 0,
-      encryptionEnabled: true,
-      anonymizationLevel: 'full',
-      sessionDuration: 0,
-      pagesVisited: 0,
-      featuresUsed: [],
-      offlineActions: 0,
-      webAuthnSupported: 'credentials' in navigator,
-      webAuthnUsed: false,
-      deviceVerificationScore: 0,
-      botDetectionScore: 0
-    }
-    this.offlineActions = []
-    this.startTime = Date.now()
-    this.sessionId = this.generateSessionId()
+  // Check if analytics are enabled
+  isEnabled(): boolean {
+    return this.pwaEnabled;
   }
 }
 
-// Singleton instance - lazy initialization
-let pwaAnalyticsInstance: PWAAnalytics | null = null
+// Create singleton instance
+export const pwaAnalytics = new PWAAnalytics();
 
-export const getPWAAnalytics = (): PWAAnalytics => {
-  if (!pwaAnalyticsInstance && typeof window !== 'undefined') {
-    pwaAnalyticsInstance = new PWAAnalytics()
-  }
-  return pwaAnalyticsInstance!
-}
-
-// For backward compatibility - only call getter in browser
-export const pwaAnalytics = typeof window !== 'undefined' ? getPWAAnalytics() : null

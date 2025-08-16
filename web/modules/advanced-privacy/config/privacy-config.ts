@@ -296,7 +296,7 @@ export class PrivacyConfigManager {
    * Check if compliance is enabled
    */
   isComplianceEnabled(regulation: keyof PrivacyConfig['compliance']): boolean {
-    return this.config.compliance[regulation]
+    return Boolean(this.config.compliance[regulation])
   }
 
   /**
