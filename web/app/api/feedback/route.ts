@@ -45,6 +45,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Insert feedback into database
+    const supabaseClient = supabase
     const { data, error } = await supabase
       .from('feedback')
       .insert([feedbackData])
@@ -90,6 +91,7 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '50')
     const offset = parseInt(searchParams.get('offset') || '0')
 
+    const supabaseClient = supabase
     let query = supabase
       .from('feedback')
       .select('*')

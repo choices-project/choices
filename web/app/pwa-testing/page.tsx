@@ -26,10 +26,10 @@ import {
   HardDrive,
   Smartphone as Mobile
 } from 'lucide-react'
-import { pwaAnalytics } from '../../lib/pwa-analytics'
-import { pwaManager, pwaWebAuthn, privacyStorage } from '../../lib/pwa-utils'
+import { usePWAUtils } from '../../hooks/usePWAUtils'
 
 export default function PWATestingPage() {
+  const { utils: pwaUtils, loading: utilsLoading, error: utilsError } = usePWAUtils()
   const [metrics, setMetrics] = useState<any>(null)
   const [privacyReport, setPrivacyReport] = useState<any>(null)
   const [deviceInfo, setDeviceInfo] = useState<any>(null)
@@ -38,20 +38,22 @@ export default function PWATestingPage() {
   const [activeTab, setActiveTab] = useState('overview')
 
   useEffect(() => {
-    // Initialize metrics
-    const updateMetrics = () => {
-      setMetrics(pwaAnalytics.getMetrics())
-      setPrivacyReport(pwaAnalytics.generatePrivacyReport())
+    if (pwaUtils && !utilsLoading) {
+      // Initialize metrics
+      const updateMetrics = () => {
+        setMetrics(pwaUtils.pwaAnalytics.getMetrics())
+        setPrivacyReport(pwaUtils.pwaAnalytics.generatePrivacyReport())
+      }
+
+      updateMetrics()
+      const interval = setInterval(updateMetrics, 5000)
+
+      // Get device info
+      pwaUtils.pwaManager.getDeviceFingerprint().then(setDeviceInfo)
+
+      return () => clearInterval(interval)
     }
-
-    updateMetrics()
-    const interval = setInterval(updateMetrics, 5000)
-
-    // Get device info
-    pwaManager.getDeviceFingerprint().then(setDeviceInfo)
-
-    return () => clearInterval(interval)
-  }, [])
+  }, [pwaUtils, utilsLoading])
 
   const runAllTests = async () => {
     setIsRunningTests(true)
@@ -127,7 +129,7 @@ export default function PWATestingPage() {
     
     // WebAuthn test
     try {
-      const credential = await pwaWebAuthn.registerUser('test-user')
+      const credential = await pwaUtils.pwaWebAuthn.registerUser('test-user')
       results.webauthnTest = !!credential
     } catch (error) {
       results.webauthnTest = false
@@ -136,8 +138,8 @@ export default function PWATestingPage() {
     
     // Encryption test
     try {
-      await privacyStorage.storeEncryptedData('test', { test: 'data' })
-      const retrieved = await privacyStorage.getEncryptedData('test')
+      await pwaUtils.privacyStorage.storeEncryptedData('test', { test: 'data' })
+      const retrieved = await pwaUtils.privacyStorage.getEncryptedData('test')
       results.encryptionTest = retrieved?.test === 'data'
     } catch (error) {
       results.encryptionTest = false
