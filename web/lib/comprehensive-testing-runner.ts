@@ -395,4 +395,15 @@ export class ComprehensiveTestingRunner {
 }
 
 // Export singleton instance
-export const comprehensiveTestingRunner = new ComprehensiveTestingRunner()
+// Lazy initialization for comprehensive testing runner
+let comprehensiveTestingRunnerInstance: ComprehensiveTestingRunner | null = null
+
+export const getComprehensiveTestingRunner = (): ComprehensiveTestingRunner => {
+  if (!comprehensiveTestingRunnerInstance && typeof window !== 'undefined') {
+    comprehensiveTestingRunnerInstance = new ComprehensiveTestingRunner()
+  }
+  return comprehensiveTestingRunnerInstance!
+}
+
+// For backward compatibility - only call getter in browser
+export const comprehensiveTestingRunner = typeof window !== 'undefined' ? getComprehensiveTestingRunner() : null

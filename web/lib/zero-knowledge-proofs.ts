@@ -515,4 +515,15 @@ export class ZKProofManager {
 }
 
 // Export singleton instances
-export const zkProofManager = new ZKProofManager()
+// Lazy initialization for ZK proof manager
+let zkProofManagerInstance: ZKProofManager | null = null
+
+export const getZKProofManager = (): ZKProofManager => {
+  if (!zkProofManagerInstance && typeof window !== 'undefined') {
+    zkProofManagerInstance = new ZKProofManager()
+  }
+  return zkProofManagerInstance!
+}
+
+// For backward compatibility - only call getter in browser
+export const zkProofManager = typeof window !== 'undefined' ? getZKProofManager() : null

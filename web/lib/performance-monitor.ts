@@ -397,7 +397,10 @@ export const getPerformanceMonitor = (): PerformanceMonitor => {
   return performanceMonitor
 }
 
-// Auto-initialize when module is imported
+// Auto-initialize when module is imported (only in browser)
 if (typeof window !== 'undefined') {
-  getPerformanceMonitor()
+  // Use setTimeout to ensure this runs after the module is fully loaded
+  setTimeout(() => {
+    getPerformanceMonitor()
+  }, 0)
 }

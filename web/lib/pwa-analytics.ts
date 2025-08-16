@@ -433,5 +433,15 @@ export class PWAAnalytics {
   }
 }
 
-// Singleton instance
-export const pwaAnalytics = new PWAAnalytics()
+// Singleton instance - lazy initialization
+let pwaAnalyticsInstance: PWAAnalytics | null = null
+
+export const getPWAAnalytics = (): PWAAnalytics => {
+  if (!pwaAnalyticsInstance && typeof window !== 'undefined') {
+    pwaAnalyticsInstance = new PWAAnalytics()
+  }
+  return pwaAnalyticsInstance!
+}
+
+// For backward compatibility - only call getter in browser
+export const pwaAnalytics = typeof window !== 'undefined' ? getPWAAnalytics() : null

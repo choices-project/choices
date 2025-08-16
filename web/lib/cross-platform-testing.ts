@@ -1068,4 +1068,15 @@ export class CrossPlatformTesting {
 }
 
 // Export singleton instance
-export const crossPlatformTesting = new CrossPlatformTesting()
+// Lazy initialization for cross platform testing
+let crossPlatformTestingInstance: CrossPlatformTesting | null = null
+
+export const getCrossPlatformTesting = (): CrossPlatformTesting => {
+  if (!crossPlatformTestingInstance && typeof window !== 'undefined') {
+    crossPlatformTestingInstance = new CrossPlatformTesting()
+  }
+  return crossPlatformTestingInstance!
+}
+
+// For backward compatibility - only call getter in browser
+export const crossPlatformTesting = typeof window !== 'undefined' ? getCrossPlatformTesting() : null

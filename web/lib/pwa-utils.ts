@@ -56,10 +56,11 @@ export interface VerificationChallenge {
 export class PWAManager {
   private registration: ServiceWorkerRegistration | null = null;
   private deferredPrompt: any = null;
-  private isOnline = navigator.onLine;
+  private isOnline = false;
 
   constructor() {
     if (typeof window !== 'undefined') {
+      this.isOnline = navigator.onLine;
       this.initialize();
     }
   }
@@ -483,6 +484,33 @@ export class PrivacyStorageManager {
 }
 
 // Export singleton instances
-export const pwaManager = new PWAManager();
-export const pwaWebAuthn = new PWAWebAuthnManager(pwaManager);
-export const privacyStorage = new PrivacyStorageManager();
+// Lazy initialization for PWA utilities
+let pwaManagerInstance: PWAManager | null = null
+let pwaWebAuthnInstance: PWAWebAuthnManager | null = null
+let privacyStorageInstance: PrivacyStorageManager | null = null
+
+export const getPWAManager = (): PWAManager => {
+  if (!pwaManagerInstance && typeof window !== 'undefined') {
+    pwaManagerInstance = new PWAManager()
+  }
+  return pwaManagerInstance!
+}
+
+export const getPWAWebAuthn = (): PWAWebAuthnManager => {
+  if (!pwaWebAuthnInstance && typeof window !== 'undefined') {
+    pwaWebAuthnInstance = new PWAWebAuthnManager(getPWAManager())
+  }
+  return pwaWebAuthnInstance!
+}
+
+export const getPrivacyStorageManager = (): PrivacyStorageManager => {
+  if (!privacyStorageInstance && typeof window !== 'undefined') {
+    privacyStorageInstance = new PrivacyStorageManager()
+  }
+  return privacyStorageInstance!
+}
+
+// For backward compatibility - only call getters in browser
+export const pwaManager = typeof window !== 'undefined' ? getPWAManager() : null
+export const pwaWebAuthn = typeof window !== 'undefined' ? getPWAWebAuthn() : null
+export const privacyStorage = typeof window !== 'undefined' ? getPrivacyStorageManager() : null

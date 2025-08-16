@@ -15,6 +15,25 @@ const nextConfig = {
     optimizePackageImports: ['lucide-react', 'framer-motion'],
   },
   
+
+  
+  // Disable static generation for problematic pages
+  async rewrites() {
+    return [
+      {
+        source: '/:path*',
+        destination: '/:path*',
+        has: [
+          {
+            type: 'header',
+            key: 'x-requested-with',
+            value: 'XMLHttpRequest'
+          }
+        ]
+      }
+    ]
+  },
+  
   // Compression
   compress: true,
   
