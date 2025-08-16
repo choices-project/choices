@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import { 
   Vote, 
@@ -55,13 +55,7 @@ export default function PWAAppPage() {
   const [metrics, setMetrics] = useState<any>(null)
   const [showProfile, setShowProfile] = useState(false)
 
-  useEffect(() => {
-    if (pwaUtils && !utilsLoading) {
-      initializeApp()
-    }
-  }, [pwaUtils, utilsLoading])
-
-  const initializeApp = async () => {
+  const initializeApp = useCallback(async () => {
     if (!pwaUtils) return
     
     try {
@@ -87,7 +81,13 @@ export default function PWAAppPage() {
       console.error('App initialization failed:', error)
       setLoading(false)
     }
-  }
+  }, [pwaUtils])
+
+  useEffect(() => {
+    if (pwaUtils && !utilsLoading) {
+      initializeApp()
+    }
+  }, [pwaUtils, utilsLoading, initializeApp])
 
   const loadPolls = async () => {
     try {

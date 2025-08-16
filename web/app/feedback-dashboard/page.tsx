@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import { 
   MessageCircle, 
@@ -45,11 +45,7 @@ const FeedbackDashboard: React.FC = () => {
     negative: 0
   })
 
-  useEffect(() => {
-    fetchFeedback()
-  }, [])
-
-  const fetchFeedback = async () => {
+  const fetchFeedback = useCallback(async () => {
     try {
       const response = await fetch('/api/feedback?limit=100')
       const data = await response.json()
@@ -63,7 +59,11 @@ const FeedbackDashboard: React.FC = () => {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    fetchFeedback()
+  }, [fetchFeedback])
 
   const calculateStats = (data: FeedbackItem[]) => {
     setStats({

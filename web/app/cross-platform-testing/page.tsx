@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import { 
   CheckCircle, 
@@ -58,14 +58,7 @@ export default function CrossPlatformTestingPage() {
   const [deviceInfo, setDeviceInfo] = useState<DeviceInfo | null>(null)
   const [browserInfo, setBrowserInfo] = useState<BrowserInfo | null>(null)
 
-  useEffect(() => {
-    if (testingUtils && !utilsLoading) {
-      // Auto-run tests on page load
-      runAllTests()
-    }
-  }, [testingUtils, utilsLoading])
-
-  const runAllTests = async () => {
+  const runAllTests = useCallback(async () => {
     if (!testingUtils) return
     
     setIsRunningTests(true)
@@ -83,7 +76,14 @@ export default function CrossPlatformTestingPage() {
     } finally {
       setIsRunningTests(false)
     }
-  }
+  }, [testingUtils])
+
+  useEffect(() => {
+    if (testingUtils && !utilsLoading) {
+      // Auto-run tests on page load
+      runAllTests()
+    }
+  }, [testingUtils, utilsLoading, runAllTests])
 
   const getStatusIcon = (status: string) => {
     switch (status) {

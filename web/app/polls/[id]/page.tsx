@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { 
   Vote, Users, Clock, Calendar, TrendingUp, BarChart3, 
@@ -110,17 +110,7 @@ export default function PollDetailPage() {
   const [voting, setVoting] = useState(false)
   const [activeTab, setActiveTab] = useState('results')
 
-  useEffect(() => {
-    if (pollData) {
-      // Generate realistic vote results that tell a story
-      generateVoteResults(pollData)
-      
-      // Generate demographic data
-      generateDemographics()
-    }
-  }, [pollId])
-
-  const generateVoteResults = (pollData: Poll) => {
+  const generateVoteResults = useCallback((pollData: Poll) => {
     const totalVotes = pollData.total_votes || 2500
     
     // Create results that tell a compelling story based on the poll topic
@@ -153,9 +143,9 @@ export default function PollDetailPage() {
     }
     
     setVoteResults(results)
-  }
+  }, [])
 
-  const generateDemographics = () => {
+  const generateDemographics = useCallback(() => {
     setDemographics({
       age_groups: {
         '18-24': 28,
@@ -175,7 +165,17 @@ export default function PollDetailPage() {
          votes: Math.floor((pollData.id.charCodeAt(0) + i * 20) % 200) + 100
        }))
     })
-  }
+  }, [pollData])
+
+  useEffect(() => {
+    if (pollData) {
+      // Generate realistic vote results that tell a story
+      generateVoteResults(pollData)
+      
+      // Generate demographic data
+      generateDemographics()
+    }
+  }, [pollId, pollData, generateDemographics, generateVoteResults])
 
   const handleVote = async (choice: number) => {
     setVoting(true)

@@ -10,11 +10,9 @@ import React, { useState, useEffect } from 'react';
 import { 
   FileText, 
   Search, 
-  Filter, 
   Download, 
   RefreshCw,
   AlertTriangle,
-  CheckCircle,
   Info,
   XCircle,
   Clock,
@@ -24,7 +22,6 @@ import {
   Activity,
   Eye,
   EyeOff,
-  Calendar,
   Settings
 } from 'lucide-react';
 
