@@ -1,0 +1,147 @@
+{
+  "lastUpdated": "2024-12-19",
+  "totalFiles": 15,
+  "lockedFiles": 3,
+  "availableFiles": 12,
+  "locks": {
+    "database/schema.sql": {
+      "file": "database/schema.sql",
+      "lockedBy": "DB-001",
+      "lockType": "WRITE",
+      "lockDate": "2024-12-19",
+      "expiryDate": "2024-12-22",
+      "purpose": "Schema design and migration",
+      "dependencies": [],
+      "blocking": ["API-001", "VOTE-001"],
+      "status": "LOCKED"
+    },
+    "web/lib/feature-flags.ts": {
+      "file": "web/lib/feature-flags.ts",
+      "lockedBy": "ARCH-001",
+      "lockType": "WRITE",
+      "lockDate": "2024-12-19",
+      "expiryDate": "2024-12-21",
+      "purpose": "Feature flag implementation",
+      "dependencies": [],
+      "blocking": ["ADMIN-001", "ANALYTICS-001", "PWA-001", "PRIVACY-001"],
+      "status": "LOCKED"
+    },
+    "web/hooks/useFeatureFlags.ts": {
+      "file": "web/hooks/useFeatureFlags.ts",
+      "lockedBy": "ARCH-001",
+      "lockType": "WRITE",
+      "lockDate": "2024-12-19",
+      "expiryDate": "2024-12-21",
+      "purpose": "Feature flag hook implementation",
+      "dependencies": ["web/lib/feature-flags.ts"],
+      "blocking": ["ADMIN-001", "ANALYTICS-001", "PWA-001", "PRIVACY-001"],
+      "status": "LOCKED"
+    }
+  },
+  "availableFiles": {
+    "web/lib/auth.ts": {
+      "file": "web/lib/auth.ts",
+      "owner": "AUTH-001",
+      "lastModified": "2024-12-19",
+      "integrationReady": true,
+      "dependencies": [],
+      "status": "AVAILABLE"
+    },
+    "web/hooks/useAuth.ts": {
+      "file": "web/hooks/useAuth.ts",
+      "owner": "AUTH-001",
+      "lastModified": "2024-12-19",
+      "integrationReady": true,
+      "dependencies": ["web/lib/auth.ts"],
+      "status": "AVAILABLE"
+    },
+    "web/lib/api.ts": {
+      "file": "web/lib/api.ts",
+      "owner": "API-001",
+      "lastModified": "2024-12-19",
+      "integrationReady": false,
+      "dependencies": ["database/schema.sql"],
+      "status": "AVAILABLE"
+    },
+    "web/hooks/useApi.ts": {
+      "file": "web/hooks/useApi.ts",
+      "owner": "API-001",
+      "lastModified": "2024-12-19",
+      "integrationReady": false,
+      "dependencies": ["web/lib/api.ts"],
+      "status": "AVAILABLE"
+    },
+    "web/app/polls/page.tsx": {
+      "file": "web/app/polls/page.tsx",
+      "owner": "FE-001",
+      "lastModified": "2024-12-19",
+      "integrationReady": false,
+      "dependencies": ["web/lib/api.ts", "voting-system"],
+      "status": "AVAILABLE"
+    },
+    "web/app/dashboard/page.tsx": {
+      "file": "web/app/dashboard/page.tsx",
+      "owner": "FE-001",
+      "lastModified": "2024-12-19",
+      "integrationReady": false,
+      "dependencies": ["web/lib/api.ts"],
+      "status": "AVAILABLE"
+    },
+    "web/app/admin/page.tsx": {
+      "file": "web/app/admin/page.tsx",
+      "owner": "ADMIN-001",
+      "lastModified": "2024-12-19",
+      "integrationReady": false,
+      "dependencies": ["web/lib/feature-flags.ts"],
+      "status": "AVAILABLE"
+    },
+    "web/app/analytics/page.tsx": {
+      "file": "web/app/analytics/page.tsx",
+      "owner": "ANALYTICS-001",
+      "lastModified": "2024-12-19",
+      "integrationReady": false,
+      "dependencies": ["web/lib/feature-flags.ts"],
+      "status": "AVAILABLE"
+    },
+    "web/app/pwa/page.tsx": {
+      "file": "web/app/pwa/page.tsx",
+      "owner": "PWA-001",
+      "lastModified": "2024-12-19",
+      "integrationReady": false,
+      "dependencies": ["web/lib/feature-flags.ts"],
+      "status": "AVAILABLE"
+    },
+    "web/app/privacy/page.tsx": {
+      "file": "web/app/privacy/page.tsx",
+      "owner": "PRIVACY-001",
+      "lastModified": "2024-12-19",
+      "integrationReady": false,
+      "dependencies": ["web/lib/feature-flags.ts"],
+      "status": "AVAILABLE"
+    },
+    "web/lib/performance.ts": {
+      "file": "web/lib/performance.ts",
+      "owner": "PERF-001",
+      "lastModified": "2024-12-19",
+      "integrationReady": false,
+      "dependencies": ["all-modules"],
+      "status": "AVAILABLE"
+    },
+    "tests/": {
+      "file": "tests/",
+      "owner": "TEST-001",
+      "lastModified": "2024-12-19",
+      "integrationReady": false,
+      "dependencies": ["all-modules"],
+      "status": "AVAILABLE"
+    }
+  },
+  "lockRequests": [],
+  "conflicts": [],
+  "metrics": {
+    "lockUtilization": 20.0,
+    "averageLockDuration": 3.0,
+    "conflictRate": 0.0,
+    "lockEfficiency": 100.0
+  }
+}
