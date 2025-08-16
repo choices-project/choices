@@ -8,11 +8,6 @@ require (
 	golang.org/x/crypto v0.41.0
 )
 
-// Development tools
-require (
-	golang.org/x/lint v0.0.0-20210508222113-6edffad5e616 // indirect
-)
-
 require (
 	github.com/fxamacker/cbor/v2 v2.9.0 // indirect
 	github.com/go-webauthn/x v0.1.23 // indirect

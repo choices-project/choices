@@ -62,7 +62,7 @@ Choices is a privacy-first, modular voting and polling platform built with Next.
 
 ```
 choices/
-├── web/                    # Next.js frontend application
+├── web/                    # Next.js frontend application (PWA)
 │   ├── app/               # App router pages
 │   ├── components/        # React components
 │   ├── hooks/            # Custom React hooks
@@ -73,7 +73,6 @@ choices/
 │   ├── ia/              # AI/ML service (Go)
 │   ├── po/              # Poll orchestration (Go)
 │   └── profile/         # User profiles (Go)
-├── mobile/              # Mobile application
 ├── .github/             # CI/CD workflows
 └── docs/               # Project documentation
 ```
@@ -144,8 +143,8 @@ NEXT_PUBLIC_VAPID_PRIVATE_KEY=...
 - Security hardening
 - Documentation
 
-### **Phase 5: Mobile & Testing** 🔄
-- Mobile application
+### **Phase 5: PWA Enhancement & Testing** 🔄
+- Progressive Web App optimization
 - Comprehensive testing
 - Cross-platform validation
 - Performance monitoring

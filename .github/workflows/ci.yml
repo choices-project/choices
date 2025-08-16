@@ -61,19 +61,3 @@ jobs:
         run: |
           cd web
           npm run build
-      
-      # Mobile Application
-      - name: Install mobile dependencies
-        run: |
-          cd mobile
-          npm ci
-      
-      - name: Mobile type check
-        run: |
-          cd mobile
-          npm run type-check
-      
-      - name: Mobile lint
-        run: |
-          cd mobile
-          npm run lint
