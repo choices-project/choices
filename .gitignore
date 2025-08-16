@@ -32,6 +32,9 @@ dist/
 *.test
 *.out
 go.work
+# Compiled binaries
+po
+ia
 
 # IDE
 .vscode/
@@ -103,4 +106,49 @@ public
 # Temporary folders
 tmp/
 temp/
+
+# Development artifacts (not needed in production)
+dev/
+
+# Database files (use environment variables instead)
 database/
+*.db
+*.sqlite
+*.sqlite3
+
+# Build artifacts
+*.tsbuildinfo
+.next/
+out/
+build/
+dist/
+
+# Documentation files (consolidated into PROJECT_SUMMARY.md)
+AGENT_COORDINATION_SYSTEM*.md
+AI_STANDARDS.md
+ANALYTICS_SYSTEM_DOCUMENTATION.md
+CI_CD_MONITORING.md
+COMPREHENSIVE_SYSTEM_ANALYSIS.md
+DEVELOPMENT_PLAN.md
+FUNCTIONALITY_TESTING_PLAN.md
+MODULAR_TASK_BREAKDOWN.md
+PROPOSED_CHANGES_MASTER.md
+SETUP_MONITORING.md
+VERSION_CONTROL_STRATEGY.md
+FEEDBACK_SYSTEM_SETUP.md
+FEATURE_USER_FEEDBACK_README.md
+BRANCHING_SUMMARY.md
+BRANCHING_STRATEGY.md
+DEPLOYMENT_OPTIONS.md
+DEPLOYMENT_STATUS_REPORT.md
+PRIVACY_FIRST_PROFILE_SYSTEM.md
+PULL_REQUEST_COMPREHENSIVE_TESTING.md
+DEPLOYMENT_CHECKLIST.md
+DATABASE_UPGRADE.md
+TECHNICAL_IMPLEMENTATION.md
+PROJECT_STATUS.md
+FEATURE_SPEC.md
+PROJECT_ROADMAP.md
+TESTING_GUIDE.md
+PHASE*.md
+CONTEXT_TRACKER.md
