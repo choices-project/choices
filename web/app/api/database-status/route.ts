@@ -1,20 +1,30 @@
 import { NextResponse } from 'next/server';
-import { getDatabaseStatus, testDatabaseConnection } from '@/lib/database-config';
+import { createClient } from '@/utils/supabase/server';
+import { cookies } from 'next/headers';
 
 export async function GET() {
   try {
-    const status = getDatabaseStatus();
-    const connectionTest = await testDatabaseConnection();
+    const cookieStore = await cookies();
+    const supabase = createClient(cookieStore);
+    
+    // Test the connection
+    const { data, error } = await supabase.from('ia_users').select('count').limit(1);
     
     return NextResponse.json({
-      status,
-      connectionTest,
+      status: {
+        environment: process.env.NODE_ENV,
+        databaseType: 'supabase',
+        databaseEnabled: true,
+        supabaseConfigured: true,
+        connectionSuccess: !error
+      },
+      connectionTest: {
+        success: !error,
+        error: error?.message || null
+      },
       timestamp: new Date().toISOString(),
       environment: {
         NODE_ENV: process.env.NODE_ENV,
-        VERCEL_URL: process.env.VERCEL_URL,
-        LOCAL_DATABASE: process.env.LOCAL_DATABASE,
-        DATABASE_URL: process.env.DATABASE_URL ? 'Configured' : 'Not configured',
         SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL ? 'Configured' : 'Not configured',
         SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? 'Configured' : 'Not configured'
       }

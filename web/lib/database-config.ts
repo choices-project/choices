@@ -24,6 +24,16 @@ const LOCAL_DATABASE_URL = process.env.LOCAL_DATABASE_URL
 
 // Database configuration based on environment
 export const getDatabaseConfig = (): DatabaseConfig => {
+  // If Supabase is configured, use it (both production and development)
+  if (SUPABASE_URL && SUPABASE_ANON_KEY) {
+    return {
+      type: 'supabase',
+      url: SUPABASE_URL,
+      enabled: true,
+      fallbackToMock: true
+    }
+  }
+
   // Production with Vercel - use Supabase
   if (isProduction && process.env.VERCEL_URL && SUPABASE_URL && SUPABASE_ANON_KEY) {
     return {
@@ -34,7 +44,7 @@ export const getDatabaseConfig = (): DatabaseConfig => {
     }
   }
 
-  // Local development with database
+  // Local development with PostgreSQL
   if (isLocalDevelopment && (DATABASE_URL || LOCAL_DATABASE_URL)) {
     return {
       type: 'postgres',
