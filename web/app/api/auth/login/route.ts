@@ -4,17 +4,24 @@ import jwt from 'jsonwebtoken'
 import { createClient } from '@supabase/supabase-js'
 
 // Initialize Supabase client
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+const supabase = supabaseUrl && supabaseKey ? createClient(supabaseUrl, supabaseKey) : null;
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, password, twoFactorCode } = await request.json()
+    if (!supabase) {
+      return NextResponse.json(
+        { error: 'Authentication service not configured' },
+        { status: 503 }
+      );
+    }
+
+    const { email, userPassword, twoFactorCode } = await request.json()
 
     // Validate input
-    if (!email || !password) {
+    if (!email || !userPassword) {
       return NextResponse.json(
         { code: 'MISSING_FIELDS', message: 'Email and password are required' },
         { status: 400 }
@@ -37,7 +44,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify password
-    const isPasswordValid = await bcrypt.compare(password, user.password_hash)
+    const isPasswordValid = await bcrypt.compare(userPassword, user.password_hash)
     if (!isPasswordValid) {
       return NextResponse.json(
         { code: 'INVALID_CREDENTIALS', message: 'Invalid email or password' },
@@ -64,6 +71,17 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Check JWT secrets
+    const jwtSecret = process.env.JWT_SECRET;
+    const jwtRefreshSecret = process.env.JWT_REFRESH_SECRET;
+
+    if (!jwtSecret || !jwtRefreshSecret) {
+      return NextResponse.json(
+        { error: 'JWT configuration not available' },
+        { status: 503 }
+      );
+    }
+
     // Generate JWT token
     const token = jwt.sign(
       {
@@ -72,7 +90,7 @@ export async function POST(request: NextRequest) {
         stableId: user.stable_id,
         verificationTier: user.verification_tier,
       },
-      process.env.JWT_SECRET!,
+      jwtSecret,
       { expiresIn: '1h' }
     )
 
@@ -82,7 +100,7 @@ export async function POST(request: NextRequest) {
         userId: user.id,
         type: 'refresh',
       },
-      process.env.JWT_REFRESH_SECRET!,
+      jwtRefreshSecret,
       { expiresIn: '7d' }
     )
 

@@ -4,17 +4,24 @@ import jwt from 'jsonwebtoken'
 import { createClient } from '@supabase/supabase-js'
 
 // Initialize Supabase client
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+const supabase = supabaseUrl && supabaseKey ? createClient(supabaseUrl, supabaseKey) : null;
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, password, twoFactorEnabled } = await request.json()
+    if (!supabase) {
+      return NextResponse.json(
+        { error: 'Authentication service not configured' },
+        { status: 503 }
+      );
+    }
+
+    const { email, userPassword, twoFactorEnabled } = await request.json()
 
     // Validate input
-    if (!email || !password) {
+    if (!email || !userPassword) {
       return NextResponse.json(
         { code: 'MISSING_FIELDS', message: 'Email and password are required' },
         { status: 400 }
@@ -32,7 +39,7 @@ export async function POST(request: NextRequest) {
 
     // Validate password strength
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/
-    if (!passwordRegex.test(password)) {
+    if (!passwordRegex.test(userPassword)) {
       return NextResponse.json(
         { code: 'INVALID_PASSWORD', message: 'Password must be at least 8 characters with uppercase, lowercase, number, and special character' },
         { status: 400 }
@@ -55,7 +62,7 @@ export async function POST(request: NextRequest) {
 
     // Hash password
     const saltRounds = 12
-    const hashedPassword = await bcrypt.hash(password, saltRounds)
+    const hashedPassword = await bcrypt.hash(userPassword, saltRounds)
 
     // Generate stable ID
     const stableId = `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
@@ -82,6 +89,17 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Check JWT secrets
+    const jwtSecret = process.env.JWT_SECRET;
+    const jwtRefreshSecret = process.env.JWT_REFRESH_SECRET;
+
+    if (!jwtSecret || !jwtRefreshSecret) {
+      return NextResponse.json(
+        { error: 'JWT configuration not available' },
+        { status: 503 }
+      );
+    }
+
     // Generate JWT token
     const token = jwt.sign(
       {
@@ -90,7 +108,7 @@ export async function POST(request: NextRequest) {
         stableId: user.stable_id,
         verificationTier: user.verification_tier,
       },
-      process.env.JWT_SECRET!,
+      jwtSecret,
       { expiresIn: '1h' }
     )
 
@@ -100,7 +118,7 @@ export async function POST(request: NextRequest) {
         userId: user.id,
         type: 'refresh',
       },
-      process.env.JWT_REFRESH_SECRET!,
+      jwtRefreshSecret,
       { expiresIn: '7d' }
     )
 
