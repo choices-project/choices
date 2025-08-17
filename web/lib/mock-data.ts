@@ -169,3 +169,56 @@ export const mockChartData = {
     { name: 'Jun', value: 92 },
   ]
 };
+
+// Mock demographics response
+export const getMockDemographicsResponse = () => ({
+  totalUsers: 1250,
+  recentPolls: [
+    {
+      poll_id: '1',
+      title: 'Who do you think would win in a debate between Gavin Newsom and Donald Trump?',
+      total_votes: 847,
+      participation_rate: 67.8,
+      created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()
+    },
+    {
+      poll_id: '2',
+      title: 'Should AI development be regulated by governments?',
+      total_votes: 1247,
+      participation_rate: 85.2,
+      created_at: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString()
+    }
+  ],
+  recentVotes: [
+    {
+      poll_id: '1',
+      voted_at: new Date(Date.now() - 30 * 60 * 1000).toISOString()
+    },
+    {
+      poll_id: '2',
+      voted_at: new Date(Date.now() - 45 * 60 * 1000).toISOString()
+    }
+  ],
+  demographics: {
+    ageGroups: [
+      { name: '18-24', value: 25 },
+      { name: '25-34', value: 35 },
+      { name: '35-44', value: 20 },
+      { name: '45-54', value: 15 },
+      { name: '55+', value: 5 }
+    ],
+    locations: [
+      { name: 'United States', value: 45 },
+      { name: 'Europe', value: 25 },
+      { name: 'Asia', value: 20 },
+      { name: 'Other', value: 10 }
+    ],
+    interests: [
+      { name: 'Politics', value: 30 },
+      { name: 'Technology', value: 25 },
+      { name: 'Entertainment', value: 20 },
+      { name: 'Sports', value: 15 },
+      { name: 'Other', value: 10 }
+    ]
+  }
+});
