@@ -10,7 +10,11 @@ import {
   AlertCircle,
   CheckCircle2,
   Clock,
-  Save
+  Save,
+  Info,
+  HelpCircle,
+  ArrowLeft,
+  ArrowRight
 } from 'lucide-react';
 import { pollService, CreatePollRequest } from '../lib/poll-service';
 
@@ -20,11 +24,87 @@ interface CreatePollProps {
   isOpen?: boolean;
 }
 
+interface VotingMethod {
+  type: 'single' | 'approval' | 'ranked' | 'range' | 'quadratic';
+  name: string;
+  description: string;
+  bestFor: string[];
+  tips: string[];
+  icon: string;
+}
+
+const VOTING_METHODS: VotingMethod[] = [
+  {
+    type: 'single',
+    name: 'Single Choice',
+    description: 'Voters select one option. Highest vote count wins.',
+    bestFor: ['Quick decisions', 'Binary choices', 'Simple polls', 'Yes/No questions'],
+    tips: [
+      'Best for straightforward decisions',
+      'Avoid when you have many similar options',
+      'Consider approval voting for multi-candidate scenarios'
+    ],
+    icon: '🎯'
+  },
+  {
+    type: 'approval',
+    name: 'Approval Voting',
+    description: 'Voters can approve multiple options. Most approvals wins.',
+    bestFor: ['Multi-candidate elections', 'Consensus building', 'Committee selection', 'Preference expression'],
+    tips: [
+      'Great for finding broadly acceptable options',
+      'Prevents vote splitting between similar choices',
+      'Encourages consensus over polarization'
+    ],
+    icon: '✅'
+  },
+  {
+    type: 'ranked',
+    name: 'Ranked Choice',
+    description: 'Voters rank options by preference. Eliminates lowest until majority winner.',
+    bestFor: ['Elections', 'Preference-based decisions', 'Multi-round scenarios', 'Fair representation'],
+    tips: [
+      'Ensures majority support for the winner',
+      'Prevents vote splitting and spoiler effects',
+      'More complex counting but fairer results',
+      'Best for important decisions with multiple options'
+    ],
+    icon: '🏆'
+  },
+  {
+    type: 'range',
+    name: 'Range Voting',
+    description: 'Voters rate each option on a scale. Highest average rating wins.',
+    bestFor: ['Satisfaction surveys', 'Product ratings', 'Preference intensity', 'Detailed feedback'],
+    tips: [
+      'Captures intensity of preference',
+      'Good for measuring satisfaction levels',
+      'Provides detailed feedback on each option',
+      'Consider using 0-10 scale for clarity'
+    ],
+    icon: '📊'
+  },
+  {
+    type: 'quadratic',
+    name: 'Quadratic Voting',
+    description: 'Voters allocate credits with quadratic cost. Prevents majority tyranny.',
+    bestFor: ['Budget allocation', 'Resource distribution', 'Governance decisions', 'Complex trade-offs'],
+    tips: [
+      'Prevents majority from dominating decisions',
+      'Encourages thoughtful voting on important issues',
+      'Requires credit system setup',
+      'Best for complex decisions with trade-offs'
+    ],
+    icon: '💰'
+  }
+];
+
 export const CreatePoll: React.FC<CreatePollProps> = ({
   onPollCreated,
   onCancel,
   isOpen = false
 }) => {
+  const [step, setStep] = useState(1);
   const [formData, setFormData] = useState<CreatePollRequest>({
     title: '',
     description: '',
@@ -33,6 +113,36 @@ export const CreatePoll: React.FC<CreatePollProps> = ({
     category: '',
     tags: [],
     sponsors: []
+  });
+
+  // Enhanced form data for voting methods
+  const [enhancedFormData, setEnhancedFormData] = useState({
+    title: '',
+    description: '',
+    votingMethod: 'single' as VotingMethod['type'],
+    options: [
+      { id: '1', text: '', description: '' },
+      { id: '2', text: '', description: '' }
+    ],
+    settings: {
+      allowAbstention: false,
+      requireAllRanks: false,
+      minSelections: 1,
+      maxSelections: 1,
+      rangeMin: 0,
+      rangeMax: 10,
+      quadraticCredits: 100,
+      isPublic: true,
+      allowComments: true,
+      showResults: true,
+      requireVerification: false
+    },
+    schedule: {
+      startDate: new Date().toISOString().split('T')[0],
+      startTime: '09:00',
+      endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      endTime: '18:00'
+    }
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -52,6 +162,113 @@ export const CreatePoll: React.FC<CreatePollProps> = ({
     'other'
   ];
 
+  const getCurrentMethod = () => {
+    return VOTING_METHODS.find(method => method.type === enhancedFormData.votingMethod)!;
+  };
+
+  const addOption = () => {
+    if (enhancedFormData.options.length < 10) {
+      const newId = (enhancedFormData.options.length + 1).toString();
+      setEnhancedFormData(prev => ({
+        ...prev,
+        options: [...prev.options, { id: newId, text: '', description: '' }]
+      }));
+    }
+  };
+
+  const removeOption = (id: string) => {
+    if (enhancedFormData.options.length > 2) {
+      setEnhancedFormData(prev => ({
+        ...prev,
+        options: prev.options.filter(option => option.id !== id)
+      }));
+    }
+  };
+
+  const updateOption = (id: string, field: 'text' | 'description', value: string) => {
+    setEnhancedFormData(prev => ({
+      ...prev,
+      options: prev.options.map(option =>
+        option.id === id ? { ...option, [field]: value } : option
+      )
+    }));
+  };
+
+  const validatePoll = () => {
+    if (!enhancedFormData.title.trim()) {
+      setError('Poll title is required');
+      return false;
+    }
+    
+    if (enhancedFormData.options.length < 2) {
+      setError('At least 2 options are required');
+      return false;
+    }
+
+    const emptyOptions = enhancedFormData.options.filter(option => !option.text.trim());
+    if (emptyOptions.length > 0) {
+      setError('All options must have text');
+      return false;
+    }
+
+    const startDate = new Date(`${enhancedFormData.schedule.startDate}T${enhancedFormData.schedule.startTime}`);
+    const endDate = new Date(`${enhancedFormData.schedule.endDate}T${enhancedFormData.schedule.endTime}`);
+    
+    if (endDate <= startDate) {
+      setError('End date must be after start date');
+      return false;
+    }
+
+    return true;
+  };
+
+  const handleCreatePoll = async () => {
+    if (!validatePoll()) return;
+
+    setIsSubmitting(true);
+    setError(null);
+    setSuccess(false);
+
+    try {
+      const response = await fetch('/api/polls', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(enhancedFormData)
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setSuccess(true);
+        if (onPollCreated) {
+          onPollCreated(data.poll);
+        }
+      } else {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to create poll');
+      }
+    } catch (error: any) {
+      console.error('Error creating poll:', error);
+      setError(error.message || 'Failed to create poll');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const nextStep = () => {
+    if (step === 1 && !enhancedFormData.title.trim()) {
+      setError('Poll title is required');
+      return;
+    }
+    setStep(prev => Math.min(prev + 1, 4));
+    setError(null);
+  };
+
+  const prevStep = () => {
+    setStep(prev => Math.max(prev - 1, 1));
+    setError(null);
+  };
+
+  // Legacy methods for backward compatibility
   const handleInputChange = (field: keyof CreatePollRequest, value: any) => {
     setFormData(prev => ({
       ...prev,
@@ -67,25 +284,6 @@ export const CreatePoll: React.FC<CreatePollProps> = ({
       ...prev,
       options: newOptions
     }));
-  };
-
-  const addOption = () => {
-    if (formData.options.length < 10) { // Limit to 10 options
-      setFormData(prev => ({
-        ...prev,
-        options: [...prev.options, '']
-      }));
-    }
-  };
-
-  const removeOption = (index: number) => {
-    if (formData.options.length > 2) { // Keep at least 2 options
-      const newOptions = formData.options.filter((_, i) => i !== index);
-      setFormData(prev => ({
-        ...prev,
-        options: newOptions
-      }));
-    }
   };
 
   const addTag = (tag: string) => {
@@ -104,411 +302,451 @@ export const CreatePoll: React.FC<CreatePollProps> = ({
     }));
   };
 
-  const addSponsor = (sponsor: string) => {
-    if (sponsor && !formData.sponsors?.includes(sponsor)) {
-      setFormData(prev => ({
-        ...prev,
-        sponsors: [...(prev.sponsors || []), sponsor]
-      }));
-    }
-  };
-
-  const removeSponsor = (sponsorToRemove: string) => {
-    setFormData(prev => ({
-      ...prev,
-      sponsors: prev.sponsors?.filter(sponsor => sponsor !== sponsorToRemove) || []
-    }));
-  };
-
-  const validateForm = (): boolean => {
-    if (!formData.title.trim()) {
-      setError('Poll title is required');
-      return false;
-    }
-
-    if (!formData.description.trim()) {
-      setError('Poll description is required');
-      return false;
-    }
-
-    if (formData.options.length < 2) {
-      setError('At least 2 options are required');
-      return false;
-    }
-
-    if (formData.options.some(option => !option.trim())) {
-      setError('All options must have content');
-      return false;
-    }
-
-    if (!formData.end_time) {
-      setError('End date is required');
-      return false;
-    }
-
-    const endDate = new Date(formData.end_time);
-    const now = new Date();
-    if (endDate <= now) {
-      setError('End date must be in the future');
-      return false;
-    }
-
-    return true;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!validateForm()) {
-      return;
-    }
-
+  const handleSubmit = async () => {
     setIsSubmitting(true);
     setError(null);
 
     try {
-      const newPoll = await pollService.createPoll(formData);
-      
-      if (newPoll) {
+      const result = await pollService.createPoll(formData);
+      if (result) {
         setSuccess(true);
-        setFormData({
-          title: '',
-          description: '',
-          options: ['', ''],
-          end_time: '',
-          category: '',
-          tags: [],
-          sponsors: []
-        });
-        
-        onPollCreated?.(newPoll);
-        
-        // Reset success state after 3 seconds
-        setTimeout(() => setSuccess(false), 3000);
+        if (onPollCreated) {
+          onPollCreated(result);
+        }
       } else {
-        setError('Failed to create poll. Please try again.');
+        setError('Failed to create poll');
       }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An unexpected error occurred');
+    } catch (error: any) {
+      setError(error.message || 'Failed to create poll');
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleCancel = () => {
-    setFormData({
-      title: '',
-      description: '',
-      options: ['', ''],
-      end_time: '',
-      category: '',
-      tags: [],
-      sponsors: []
-    });
-    setError(null);
-    setSuccess(false);
-    onCancel?.();
-  };
-
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-xl shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-              <Plus className="w-5 h-5 text-blue-600" />
-            </div>
-            <div>
-              <h2 className="text-xl font-bold text-gray-900">Create New Poll</h2>
-              <p className="text-sm text-gray-600">Start a new democratic decision</p>
-            </div>
+          <div className="flex items-center space-x-4">
+            <button
+              onClick={onCancel}
+              className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span>Cancel</span>
+            </button>
           </div>
-          <button
-            onClick={handleCancel}
-            className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          <h2 className="text-xl font-bold text-gray-900">Create Poll</h2>
+          <div className="w-24"></div>
         </div>
 
-        {/* Success Message */}
-        {success && (
-          <div className="mx-6 mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
-            <div className="flex items-center gap-2 text-green-700">
-              <CheckCircle2 className="w-5 h-5" />
-              <span className="font-medium">Poll created successfully!</span>
+        {/* Progress Bar */}
+        <div className="bg-gray-50 px-6 py-4">
+          <div className="flex items-center">
+            {[1, 2, 3, 4].map((stepNumber) => (
+              <div key={stepNumber} className="flex items-center">
+                <div className={`
+                  w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium
+                  ${step >= stepNumber 
+                    ? 'bg-blue-600 text-white' 
+                    : 'bg-gray-200 text-gray-600'
+                  }
+                `}>
+                  {stepNumber}
+                </div>
+                {stepNumber < 4 && (
+                  <div className={`
+                    w-16 h-1 mx-2
+                    ${step > stepNumber ? 'bg-blue-600' : 'bg-gray-200'}
+                  `} />
+                )}
+              </div>
+            ))}
+            <div className="ml-4 text-sm text-gray-600">
+              Step {step} of 4
             </div>
-            <p className="text-green-600 text-sm mt-1">
-              Your poll is now live and ready for voting.
-            </p>
           </div>
-        )}
+        </div>
 
-        {/* Error Message */}
+        {/* Error/Success Messages */}
         {error && (
-          <div className="mx-6 mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-            <div className="flex items-center gap-2 text-red-700">
-              <AlertCircle className="w-5 h-5" />
-              <span className="font-medium">Error</span>
+          <div className="mx-6 mt-4 bg-red-50 border border-red-200 rounded-lg p-4">
+            <div className="flex items-center">
+              <AlertCircle className="w-5 h-5 text-red-500 mr-2" />
+              <p className="text-red-800">{error}</p>
             </div>
-            <p className="text-red-600 text-sm mt-1">{error}</p>
+          </div>
+        )}
+        {success && (
+          <div className="mx-6 mt-4 bg-green-50 border border-green-200 rounded-lg p-4">
+            <div className="flex items-center">
+              <CheckCircle2 className="w-5 h-5 text-green-500 mr-2" />
+              <p className="text-green-800">Poll created successfully!</p>
+            </div>
           </div>
         )}
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
-          {/* Title */}
-          <div>
-            <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-2">
-              Poll Title *
-            </label>
-            <input
-              type="text"
-              id="title"
-              value={formData.title}
-              onChange={(e) => handleInputChange('title', e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="What should we decide on?"
-              maxLength={100}
-            />
-            <p className="text-xs text-gray-500 mt-1">
-              {formData.title.length}/100 characters
-            </p>
-          </div>
+        {/* Step 1: Basic Information */}
+        {step === 1 && (
+          <div className="p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-6">Basic Information</h3>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Poll Title *
+                </label>
+                <input
+                  type="text"
+                  value={enhancedFormData.title}
+                  onChange={(e) => setEnhancedFormData(prev => ({ ...prev, title: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="What would you like to ask?"
+                />
+              </div>
 
-          {/* Description */}
-          <div>
-            <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
-              Description *
-            </label>
-            <textarea
-              id="description"
-              value={formData.description}
-              onChange={(e) => handleInputChange('description', e.target.value)}
-              rows={3}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Provide context and details about this decision..."
-              maxLength={500}
-            />
-            <p className="text-xs text-gray-500 mt-1">
-              {formData.description.length}/500 characters
-            </p>
-          </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Description
+                </label>
+                <textarea
+                  value={enhancedFormData.description}
+                  onChange={(e) => setEnhancedFormData(prev => ({ ...prev, description: e.target.value }))}
+                  rows={3}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Provide additional context or details..."
+                />
+              </div>
+            </div>
 
-          {/* Category */}
-          <div>
-            <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-2">
-              Category
-            </label>
-            <select
-              id="category"
-              value={formData.category}
-              onChange={(e) => handleInputChange('category', e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value="">Select a category</option>
-              {categories.map(category => (
-                <option key={category} value={category}>
-                  {category.charAt(0).toUpperCase() + category.slice(1)}
-                </option>
-              ))}
-            </select>
+            <div className="flex justify-end mt-6">
+              <button
+                onClick={nextStep}
+                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                Next: Choose Voting Method
+              </button>
+            </div>
           </div>
+        )}
 
-          {/* Options */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Voting Options *
-            </label>
-            <div className="space-y-3">
-              {formData.options.map((option, index) => (
-                <div key={index} className="flex items-center gap-3">
-                  <input
-                    type="text"
-                    value={option}
-                    onChange={(e) => handleOptionChange(index, e.target.value)}
-                    className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder={`Option ${index + 1}`}
-                    maxLength={100}
-                  />
-                  {formData.options.length > 2 && (
-                    <button
-                      type="button"
-                      onClick={() => removeOption(index)}
-                      className="p-2 text-red-500 hover:text-red-700 transition-colors"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  )}
+        {/* Step 2: Voting Method */}
+        {step === 2 && (
+          <div className="p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-6">Choose Voting Method</h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {VOTING_METHODS.map((method) => (
+                <div
+                  key={method.type}
+                  onClick={() => setEnhancedFormData(prev => ({ ...prev, votingMethod: method.type }))}
+                  className={`
+                    p-4 border rounded-lg cursor-pointer transition-all
+                    ${enhancedFormData.votingMethod === method.type
+                      ? 'border-blue-500 bg-blue-50'
+                      : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                    }
+                  `}
+                >
+                  <div className="flex items-start space-x-3">
+                    <span className="text-2xl">{method.icon}</span>
+                    <div className="flex-1">
+                      <h4 className="font-semibold text-gray-900">{method.name}</h4>
+                      <p className="text-sm text-gray-600 mt-1">{method.description}</p>
+                      
+                      <div className="mt-3">
+                        <p className="text-xs font-medium text-gray-700 mb-1">Best for:</p>
+                        <div className="flex flex-wrap gap-1">
+                          {method.bestFor.map((useCase, index) => (
+                            <span
+                              key={index}
+                              className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-full"
+                            >
+                              {useCase}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="mt-3">
+                        <p className="text-xs font-medium text-gray-700 mb-1">Tips:</p>
+                        <ul className="text-xs text-gray-600 space-y-1">
+                          {method.tips.map((tip, index) => (
+                            <li key={index} className="flex items-start">
+                              <span className="text-blue-500 mr-1">•</span>
+                              {tip}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>
-            {formData.options.length < 10 && (
+
+            <div className="flex justify-between mt-6">
               <button
-                type="button"
+                onClick={prevStep}
+                className="px-6 py-2 text-gray-600 hover:text-gray-900 transition-colors"
+              >
+                Back
+              </button>
+              <button
+                onClick={nextStep}
+                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                Next: Add Options
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Step 3: Poll Options */}
+        {step === 3 && (
+          <div className="p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-semibold text-gray-900">Poll Options</h3>
+              <button
                 onClick={addOption}
-                className="mt-3 flex items-center gap-2 text-blue-600 hover:text-blue-700 text-sm font-medium"
+                className="flex items-center space-x-2 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
               >
                 <Plus className="w-4 h-4" />
-                Add Option
+                <span>Add Option</span>
               </button>
-            )}
-            <p className="text-xs text-gray-500 mt-2">
-              {formData.options.length}/10 options
-            </p>
-          </div>
-
-          {/* End Date */}
-          <div>
-            <label htmlFor="end_time" className="block text-sm font-medium text-gray-700 mb-2">
-              End Date *
-            </label>
-            <div className="flex items-center gap-3">
-              <Calendar className="w-5 h-5 text-gray-400" />
-              <input
-                type="datetime-local"
-                id="end_time"
-                value={formData.end_time}
-                onChange={(e) => handleInputChange('end_time', e.target.value)}
-                className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                min={new Date().toISOString().slice(0, 16)}
-              />
             </div>
-          </div>
-
-          {/* Tags */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Tags
-            </label>
-            <div className="flex flex-wrap gap-2 mb-3">
-              {formData.tags?.map((tag, index) => (
-                <span
-                  key={index}
-                  className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm"
-                >
-                  <Tag className="w-3 h-3" />
-                  {tag}
-                  <button
-                    type="button"
-                    onClick={() => removeTag(tag)}
-                    className="ml-1 text-blue-500 hover:text-blue-700"
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
-                </span>
+            
+            <div className="space-y-4">
+              {enhancedFormData.options.map((option, index) => (
+                <div key={option.id} className="p-4 border border-gray-200 rounded-lg">
+                  <div className="flex items-start space-x-3">
+                    <div className="flex-1 space-y-3">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Option {index + 1} *
+                        </label>
+                        <input
+                          type="text"
+                          value={option.text}
+                          onChange={(e) => updateOption(option.id, 'text', e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          placeholder={`Option ${index + 1}`}
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Description (optional)
+                        </label>
+                        <input
+                          type="text"
+                          value={option.description || ''}
+                          onChange={(e) => updateOption(option.id, 'description', e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          placeholder="Brief description..."
+                        />
+                      </div>
+                    </div>
+                    
+                    {enhancedFormData.options.length > 2 && (
+                      <button
+                        onClick={() => removeOption(option.id)}
+                        className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+                </div>
               ))}
             </div>
-            <div className="flex gap-2">
-              <input
-                type="text"
-                placeholder="Add a tag"
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                onKeyPress={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    const input = e.target as HTMLInputElement;
-                    addTag(input.value.trim());
-                    input.value = '';
-                  }
-                }}
-              />
+
+            <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+              <div className="flex items-start space-x-2">
+                <Info className="w-5 h-5 text-blue-600 mt-0.5" />
+                <div>
+                  <p className="text-sm font-medium text-blue-900">Voting Method: {getCurrentMethod().name}</p>
+                  <p className="text-sm text-blue-700 mt-1">
+                    {getCurrentMethod().description}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-between mt-6">
               <button
-                type="button"
-                onClick={(e) => {
-                  const input = e.currentTarget.previousElementSibling as HTMLInputElement;
-                  addTag(input.value.trim());
-                  input.value = '';
-                }}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                onClick={prevStep}
+                className="px-6 py-2 text-gray-600 hover:text-gray-900 transition-colors"
               >
-                Add
+                Back
+              </button>
+              <button
+                onClick={nextStep}
+                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                Next: Settings & Schedule
               </button>
             </div>
           </div>
+        )}
 
-          {/* Sponsors */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Sponsors
-            </label>
-            <div className="flex flex-wrap gap-2 mb-3">
-              {formData.sponsors?.map((sponsor, index) => (
-                <span
-                  key={index}
-                  className="inline-flex items-center gap-1 px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm"
-                >
-                  <Users className="w-3 h-3" />
-                  {sponsor}
-                  <button
-                    type="button"
-                    onClick={() => removeSponsor(sponsor)}
-                    className="ml-1 text-green-500 hover:text-green-700"
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
-                </span>
-              ))}
+        {/* Step 4: Settings & Schedule */}
+        {step === 4 && (
+          <div className="p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-6">Settings & Schedule</h3>
+            
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Poll Settings */}
+              <div className="space-y-4">
+                <h4 className="font-medium text-gray-900">Poll Settings</h4>
+                
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h5 className="font-medium text-gray-900">Public Poll</h5>
+                      <p className="text-sm text-gray-600">Anyone can view and vote</p>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={enhancedFormData.settings.isPublic}
+                        onChange={(e) => setEnhancedFormData(prev => ({
+                          ...prev,
+                          settings: { ...prev.settings, isPublic: e.target.checked }
+                        }))}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                    </label>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h5 className="font-medium text-gray-900">Show Results</h5>
+                      <p className="text-sm text-gray-600">Display results to voters</p>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={enhancedFormData.settings.showResults}
+                        onChange={(e) => setEnhancedFormData(prev => ({
+                          ...prev,
+                          settings: { ...prev.settings, showResults: e.target.checked }
+                        }))}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                    </label>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h5 className="font-medium text-gray-900">Allow Comments</h5>
+                      <p className="text-sm text-gray-600">Voters can add comments</p>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={enhancedFormData.settings.allowComments}
+                        onChange={(e) => setEnhancedFormData(prev => ({
+                          ...prev,
+                          settings: { ...prev.settings, allowComments: e.target.checked }
+                        }))}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              {/* Schedule */}
+              <div className="space-y-4">
+                <h4 className="font-medium text-gray-900">Schedule</h4>
+                
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Start Date & Time
+                    </label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <input
+                        type="date"
+                        value={enhancedFormData.schedule.startDate}
+                        onChange={(e) => setEnhancedFormData(prev => ({
+                          ...prev,
+                          schedule: { ...prev.schedule, startDate: e.target.value }
+                        }))}
+                        className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      />
+                      <input
+                        type="time"
+                        value={enhancedFormData.schedule.startTime}
+                        onChange={(e) => setEnhancedFormData(prev => ({
+                          ...prev,
+                          schedule: { ...prev.schedule, startTime: e.target.value }
+                        }))}
+                        className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      End Date & Time
+                    </label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <input
+                        type="date"
+                        value={enhancedFormData.schedule.endDate}
+                        onChange={(e) => setEnhancedFormData(prev => ({
+                          ...prev,
+                          schedule: { ...prev.schedule, endDate: e.target.value }
+                        }))}
+                        className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      />
+                      <input
+                        type="time"
+                        value={enhancedFormData.schedule.endTime}
+                        onChange={(e) => setEnhancedFormData(prev => ({
+                          ...prev,
+                          schedule: { ...prev.schedule, endTime: e.target.value }
+                        }))}
+                        className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
-            <div className="flex gap-2">
-              <input
-                type="text"
-                placeholder="Add a sponsor"
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                onKeyPress={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    const input = e.target as HTMLInputElement;
-                    addSponsor(input.value.trim());
-                    input.value = '';
-                  }
-                }}
-              />
+
+            <div className="flex justify-between mt-6">
               <button
-                type="button"
-                onClick={(e) => {
-                  const input = e.currentTarget.previousElementSibling as HTMLInputElement;
-                  addSponsor(input.value.trim());
-                  input.value = '';
-                }}
-                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                onClick={prevStep}
+                className="px-6 py-2 text-gray-600 hover:text-gray-900 transition-colors"
               >
-                Add
+                Back
+              </button>
+              <button
+                onClick={handleCreatePoll}
+                disabled={isSubmitting}
+                className={`
+                  flex items-center space-x-2 px-6 py-2 rounded-lg transition-colors
+                  ${isSubmitting 
+                    ? 'bg-gray-400 text-white cursor-not-allowed' 
+                    : 'bg-green-600 text-white hover:bg-green-700'
+                  }
+                `}
+              >
+                <Save className="w-4 h-4" />
+                <span>{isSubmitting ? 'Creating Poll...' : 'Create Poll'}</span>
               </button>
             </div>
           </div>
-
-          {/* Actions */}
-          <div className="flex items-center justify-end gap-4 pt-6 border-t border-gray-200">
-            <button
-              type="button"
-              onClick={handleCancel}
-              className="px-6 py-3 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isSubmitting ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  Creating...
-                </>
-              ) : (
-                <>
-                  <Save className="w-4 h-4" />
-                  Create Poll
-                </>
-              )}
-            </button>
-          </div>
-        </form>
+        )}
       </div>
     </div>
   );
