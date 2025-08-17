@@ -1,128 +1,245 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server'
+import { createClient } from '@/utils/supabase/server'
+import { cookies } from 'next/headers'
+
+export const dynamic = 'force-dynamic'
 
 export async function GET(request: NextRequest) {
   try {
-    // For now, return the same data structure as the PO service
-    // TODO: Fix the PO service header issues
-    const dashboardData = {
-      polls: [
-        {
-          id: "poll-1",
-          title: "Sample Poll",
-          status: "active",
-          total_votes: 1250,
-          participation: 85.5,
-          created_at: new Date().toISOString(),
-          ends_at: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
-          choices: [
-            { id: "choice-1", text: "Option A", votes: 650 },
-            { id: "choice-2", text: "Option B", votes: 600 }
-          ]
-        },
-        {
-          id: "poll-2",
-          title: "Community Feedback",
-          status: "active",
-          total_votes: 890,
-          participation: 72.3,
-          created_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-          ends_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-          choices: [
-            { id: "choice-3", text: "Excellent", votes: 450 },
-            { id: "choice-4", text: "Good", votes: 320 },
-            { id: "choice-5", text: "Needs Improvement", votes: 120 }
-          ]
-        }
-      ],
-      overall_metrics: {
-        total_polls: 5,
-        active_polls: 3,
-        total_votes: 2140,
-        total_users: 850,
-        average_participation: 78.2
-      },
-      trends: [
-        {
-          date: new Date().toISOString(),
-          votes: 2140,
-          users: 850,
-          polls: 5
-        }
-      ],
-      geographic_map: {
-        regions: [
-          {
-            name: "North America",
-            vote_count: 450,
-            population: 1000000,
-            percentage: 36,
-            latitude: 40.7128,
-            longitude: -74.006
-          }
-        ],
-        countries: [
-          {
-            code: "US",
-            name: "United States",
-            vote_count: 450,
-            population: 1000000,
-            percentage: 36
-          }
-        ],
-        heatmap: [
-          {
-            latitude: 40.7128,
-            longitude: -74.006,
-            intensity: 0.8
-          }
-        ]
-      },
-      demographics: {
-        age_groups: {
-          "18-25": 200,
-          "26-35": 350,
-          "36-45": 300,
-          "46-55": 250,
-          "55+": 150
-        },
-        genders: {
-          female: 550,
-          male: 600,
-          other: 100
-        },
-        education: {
-          bachelor: 500,
-          high_school: 200,
-          master: 300,
-          phd: 250
-        },
-        income: {
-          high: 450,
-          low: 300,
-          medium: 500
-        },
-        verification_tiers: {
-          T0: 100,
-          T1: 300,
-          T2: 400,
-          T3: 450
-        }
-      },
-      engagement: {
-        active_users: 850,
-        new_users: 150,
-        returning_users: 700,
-        session_duration: 8.5,
-        bounce_rate: 15.2
-      }
-    };
+    // Get Supabase client
+    const cookieStore = await cookies()
+    const supabase = createClient(cookieStore)
     
-    return NextResponse.json(dashboardData);
+    if (!supabase) {
+      return NextResponse.json(
+        { error: 'Supabase not configured' },
+        { status: 500 }
+      )
+    }
+
+    // Get current user
+    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    
+    if (userError || !user) {
+      return NextResponse.json(
+        { error: 'User not authenticated' },
+        { status: 401 }
+      )
+    }
+
+    // Get user-specific statistics
+    const userStats = await getUserStats(supabase, user.id)
+    
+    // Get general platform statistics
+    const platformStats = await getPlatformStats(supabase)
+
+    const dashboardData = {
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.user_metadata?.full_name || user.email?.split('@')[0]
+      },
+      stats: userStats,
+      platform: platformStats,
+      recentActivity: await getRecentActivity(supabase, user.id),
+      polls: await getActivePolls(supabase)
+    }
+
+    return NextResponse.json(dashboardData)
+
   } catch (error) {
-    console.error('Dashboard API error:', error);
+    console.error('Dashboard API error:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
-    );
+    )
+  }
+}
+
+async function getUserStats(supabase: any, userId: string) {
+  try {
+    // Get polls created by user
+    const { data: createdPolls, error: pollsError } = await supabase
+      .from('po_polls')
+      .select('id, title, created_at')
+      .eq('created_by', userId)
+
+    if (pollsError) {
+      console.error('Error fetching created polls:', pollsError)
+    }
+
+    // Get votes cast by user
+    const { data: userVotes, error: votesError } = await supabase
+      .from('po_votes')
+      .select('id, poll_id, created_at')
+      .eq('user_id', userId)
+
+    if (votesError) {
+      console.error('Error fetching user votes:', votesError)
+    }
+
+    // Get active polls count
+    const { data: activePolls, error: activeError } = await supabase
+      .from('po_polls')
+      .select('id')
+      .eq('status', 'active')
+
+    if (activeError) {
+      console.error('Error fetching active polls:', activeError)
+    }
+
+    // Calculate participation rate
+    const totalPolls = activePolls?.length || 0
+    const userVoteCount = userVotes?.length || 0
+    const participationRate = totalPolls > 0 ? Math.round((userVoteCount / totalPolls) * 100) : 0
+
+    return {
+      pollsCreated: createdPolls?.length || 0,
+      votesCast: userVotes?.length || 0,
+      activePolls: activePolls?.length || 0,
+      participationRate: Math.min(participationRate, 100),
+      averageVotesPerPoll: totalPolls > 0 ? Math.round((userVoteCount / totalPolls) * 10) / 10 : 0
+    }
+  } catch (error) {
+    console.error('Error calculating user stats:', error)
+    return {
+      pollsCreated: 0,
+      votesCast: 0,
+      activePolls: 0,
+      participationRate: 0,
+      averageVotesPerPoll: 0
+    }
+  }
+}
+
+async function getPlatformStats(supabase: any) {
+  try {
+    // Get total polls
+    const { data: totalPolls, error: pollsError } = await supabase
+      .from('po_polls')
+      .select('id', { count: 'exact' })
+
+    // Get total votes
+    const { data: totalVotes, error: votesError } = await supabase
+      .from('po_votes')
+      .select('id', { count: 'exact' })
+
+    // Get total users (from user_profiles)
+    const { data: totalUsers, error: usersError } = await supabase
+      .from('user_profiles')
+      .select('id', { count: 'exact' })
+
+    // Get active polls
+    const { data: activePolls, error: activeError } = await supabase
+      .from('po_polls')
+      .select('id')
+      .eq('status', 'active')
+
+    return {
+      totalPolls: totalPolls?.length || 0,
+      totalVotes: totalVotes?.length || 0,
+      totalUsers: totalUsers?.length || 0,
+      activePolls: activePolls?.length || 0,
+      averageParticipation: totalPolls?.length > 0 ? Math.round((totalVotes?.length / totalPolls?.length) * 10) / 10 : 0
+    }
+  } catch (error) {
+    console.error('Error calculating platform stats:', error)
+    return {
+      totalPolls: 0,
+      totalVotes: 0,
+      totalUsers: 0,
+      activePolls: 0,
+      averageParticipation: 0
+    }
+  }
+}
+
+async function getRecentActivity(supabase: any, userId: string) {
+  try {
+    // Get recent votes by user
+    const { data: recentVotes, error: votesError } = await supabase
+      .from('po_votes')
+      .select(`
+        id,
+        created_at,
+        po_polls!inner(title)
+      `)
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(5)
+
+    if (votesError) {
+      console.error('Error fetching recent votes:', votesError)
+      return []
+    }
+
+    // Get recent polls created by user
+    const { data: recentPolls, error: pollsError } = await supabase
+      .from('po_polls')
+      .select('id, title, created_at')
+      .eq('created_by', userId)
+      .order('created_at', { ascending: false })
+      .limit(5)
+
+    if (pollsError) {
+      console.error('Error fetching recent polls:', pollsError)
+      return []
+    }
+
+    // Combine and sort activities
+    const activities = [
+      ...(recentVotes?.map((vote: any) => ({
+        id: vote.id,
+        type: 'vote',
+        title: `Voted on "${vote.po_polls.title}"`,
+        timestamp: vote.created_at,
+        icon: 'vote'
+      })) || []),
+      ...(recentPolls?.map((poll: any) => ({
+        id: poll.id,
+        type: 'poll',
+        title: `Created poll "${poll.title}"`,
+        timestamp: poll.created_at,
+        icon: 'poll'
+      })) || [])
+    ]
+
+    // Sort by timestamp and return top 5
+    return activities
+      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+      .slice(0, 5)
+
+  } catch (error) {
+    console.error('Error fetching recent activity:', error)
+    return []
+  }
+}
+
+async function getActivePolls(supabase: any) {
+  try {
+    const { data: polls, error } = await supabase
+      .from('po_polls')
+      .select(`
+        id,
+        title,
+        description,
+        status,
+        created_at,
+        ends_at,
+        total_votes
+      `)
+      .eq('status', 'active')
+      .order('created_at', { ascending: false })
+      .limit(6)
+
+    if (error) {
+      console.error('Error fetching active polls:', error)
+      return []
+    }
+
+    return polls || []
+  } catch (error) {
+    console.error('Error fetching active polls:', error)
+    return []
   }
 }

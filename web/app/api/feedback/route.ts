@@ -33,25 +33,10 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Prepare feedback data
-    const feedbackData = {
-      type,
-      title: title.trim(),
-      description: description.trim(),
-      sentiment,
-      screenshot: screenshot || null,
-      user_journey: userJourney,
-      status: 'open',
-      priority: type === 'bug' ? 'high' : 'medium',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    }
-
     // Get Supabase client
     const cookieStore = await cookies()
     const supabase = createClient(cookieStore)
     
-    // Insert feedback into database
     if (!supabase) {
       console.warn('Supabase not configured - using mock response')
       return NextResponse.json({
@@ -61,6 +46,34 @@ export async function POST(request: NextRequest) {
       })
     }
 
+    // Get current user (if authenticated)
+    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    
+    if (userError) {
+      console.warn('Could not get user, proceeding with anonymous feedback:', userError.message)
+    }
+
+    // Prepare feedback data
+    const feedbackData = {
+      user_id: user?.id || null, // Set user_id to null for anonymous feedback
+      type,
+      title: title.trim(),
+      description: description.trim(),
+      sentiment,
+      screenshot: screenshot || null,
+      user_journey: userJourney || {},
+      status: 'open',
+      priority: type === 'bug' ? 'high' : 'medium'
+      // Remove created_at and updated_at - let database handle these
+    }
+
+    console.log('Inserting feedback data:', {
+      user_id: feedbackData.user_id ? 'authenticated' : 'anonymous',
+      type: feedbackData.type,
+      sentiment: feedbackData.sentiment
+    })
+
+    // Insert feedback into database
     const { data, error } = await supabase
       .from('feedback')
       .insert([feedbackData])
@@ -69,7 +82,7 @@ export async function POST(request: NextRequest) {
     if (error) {
       console.error('Database error:', error)
       return NextResponse.json(
-        { error: 'Failed to save feedback' },
+        { error: 'Failed to save feedback', details: error.message },
         { status: 500 }
       )
     }
@@ -79,7 +92,8 @@ export async function POST(request: NextRequest) {
       type,
       sentiment,
       page: userJourney?.page,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      user_id: user?.id ? 'authenticated' : 'anonymous'
     })
 
     return NextResponse.json({
