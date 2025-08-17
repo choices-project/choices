@@ -14,6 +14,7 @@ import {
 import { MetricCard, BasicLineChart, BasicBarChart, ChartWrapper, ChartSkeleton } from '../charts/BasicCharts';
 import { useTrendingTopics, useGeneratedPolls, useSystemMetrics, useRealTimeSubscriptions } from '../../../lib/admin-hooks';
 import { useAdminStore } from '../../../lib/admin-store';
+import { mockChartData } from '../../../lib/mock-data';
 
 export const DashboardOverview: React.FC = () => {
   const { systemMetrics, activityFeed } = useAdminStore();
@@ -26,33 +27,10 @@ export const DashboardOverview: React.FC = () => {
   const { data: polls, isLoading: pollsLoading } = useGeneratedPolls();
   const { data: metrics, isLoading: metricsLoading } = useSystemMetrics();
 
-  // Mock data for charts (replace with real data later)
-  const recentActivityData = [
-    { name: 'Mon', value: 12 },
-    { name: 'Tue', value: 19 },
-    { name: 'Wed', value: 15 },
-    { name: 'Thu', value: 25 },
-    { name: 'Fri', value: 22 },
-    { name: 'Sat', value: 18 },
-    { name: 'Sun', value: 24 },
-  ];
-
-  const topicCategoriesData = [
-    { name: 'Politics', value: 35 },
-    { name: 'Technology', value: 25 },
-    { name: 'Entertainment', value: 20 },
-    { name: 'Sports', value: 15 },
-    { name: 'Other', value: 5 },
-  ];
-
-  const pollPerformanceData = [
-    { name: 'Jan', value: 65 },
-    { name: 'Feb', value: 78 },
-    { name: 'Mar', value: 82 },
-    { name: 'Apr', value: 75 },
-    { name: 'May', value: 88 },
-    { name: 'Jun', value: 92 },
-  ];
+  // Use mock chart data
+  const recentActivityData = mockChartData.recentActivity;
+  const topicCategoriesData = mockChartData.topicCategories;
+  const pollPerformanceData = mockChartData.pollPerformance;
 
   const getSystemHealthIcon = (health: string) => {
     switch (health) {
