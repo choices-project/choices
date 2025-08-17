@@ -15,7 +15,7 @@ async function deploySecuritySimple() {
     console.log('🔒 Security Deployment - Manual Method\n');
 
     // Read the security policies SQL file
-    const sqlFilePath = path.join(__dirname, '../database/security_policies.sql');
+    const sqlFilePath = path.join(__dirname, '../database/security_policies_fixed.sql');
     
     if (!fs.existsSync(sqlFilePath)) {
       console.error('❌ Security policies SQL file not found:', sqlFilePath);
