@@ -18,6 +18,12 @@ const supabase = createClient(
 // API functions
 const fetchTrendingTopics = async (): Promise<TrendingTopic[]> => {
   try {
+    // For now, always return mock data since the database tables don't exist yet
+    console.log('Using mock trending topics data for development');
+    return mockTrendingTopics;
+    
+    // TODO: Uncomment when database tables are set up
+    /*
     const { data, error } = await supabase
       .from('trending_topics')
       .select('*')
@@ -32,6 +38,7 @@ const fetchTrendingTopics = async (): Promise<TrendingTopic[]> => {
     }
     
     return data;
+    */
   } catch (error) {
     console.log('Error fetching trending topics, using mock data:', error);
     return mockTrendingTopics;
@@ -40,6 +47,12 @@ const fetchTrendingTopics = async (): Promise<TrendingTopic[]> => {
 
 const fetchGeneratedPolls = async (): Promise<GeneratedPoll[]> => {
   try {
+    // For now, always return mock data since the database tables don't exist yet
+    console.log('Using mock generated polls data for development');
+    return mockGeneratedPolls;
+    
+    // TODO: Uncomment when database tables are set up
+    /*
     const { data, error } = await supabase
       .from('generated_polls')
       .select('*')
@@ -54,6 +67,7 @@ const fetchGeneratedPolls = async (): Promise<GeneratedPoll[]> => {
     }
     
     return data;
+    */
   } catch (error) {
     console.log('Error fetching generated polls, using mock data:', error);
     return mockGeneratedPolls;
@@ -62,6 +76,12 @@ const fetchGeneratedPolls = async (): Promise<GeneratedPoll[]> => {
 
 const fetchSystemMetrics = async (): Promise<SystemMetrics> => {
   try {
+    // For now, always return mock data since the database tables don't exist yet
+    console.log('Using mock system metrics data for development');
+    return mockSystemMetrics;
+    
+    // TODO: Uncomment when database tables are set up
+    /*
     // Get counts from different tables
     const [topicsResult, pollsResult, activePollsResult] = await Promise.all([
       supabase.from('trending_topics').select('count', { count: 'exact' }),
@@ -84,6 +104,7 @@ const fetchSystemMetrics = async (): Promise<SystemMetrics> => {
     }
 
     return metrics;
+    */
   } catch (error) {
     console.log('Error fetching system metrics, using mock data:', error);
     return mockSystemMetrics;
