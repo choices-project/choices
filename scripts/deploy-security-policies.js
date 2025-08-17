@@ -15,7 +15,7 @@
 const { createClient } = require('@supabase/supabase-js');
 const fs = require('fs');
 const path = require('path');
-require('dotenv').config({ path: '.env.local' });
+require('dotenv').config({ path: './web/.env.local' });
 
 // Get Supabase credentials from environment
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;

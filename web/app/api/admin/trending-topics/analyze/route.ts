@@ -34,8 +34,8 @@ export async function POST(request: NextRequest) {
       .eq('stable_id', user.id)
       .single();
 
-    // HARDCODED OWNER CHECK - Replace 'your-user-id-here' with your actual user ID
-    const OWNER_USER_ID = 'your-user-id-here'; // TODO: Replace with your actual user ID
+    // HARDCODED OWNER CHECK - Replace '2d698450-a16a-4e27-9595-b9d02b9468cd' with your actual user ID
+    const OWNER_USER_ID = '2d698450-a16a-4e27-9595-b9d02b9468cd'; // TODO: Replace with your actual user ID
     
     if (!userProfile || user.id !== OWNER_USER_ID) {
       return NextResponse.json(
