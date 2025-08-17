@@ -6,9 +6,10 @@ interface CompleteStepProps {
   data: any
   onComplete: () => void
   onBack: () => void
+  isLoading?: boolean
 }
 
-export default function CompleteStep({ data, onComplete, onBack }: CompleteStepProps) {
+export default function CompleteStep({ data, onComplete, onBack, isLoading = false }: CompleteStepProps) {
   const getParticipationIcon = (style: string) => {
     switch (style) {
       case 'observer': return '👁️'
@@ -104,7 +105,7 @@ export default function CompleteStep({ data, onComplete, onBack }: CompleteStepP
           <div>
             <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
               <TrendingUp className="w-5 h-5 text-purple-500 mr-2" />
-              Participation style
+              Your participation style
             </h4>
             <div className="flex items-center space-x-2">
               <span className="text-2xl">{getParticipationIcon(data.participationStyle)}</span>
@@ -115,25 +116,27 @@ export default function CompleteStep({ data, onComplete, onBack }: CompleteStepP
           {/* Privacy settings */}
           <div>
             <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
-              <Shield className="w-5 h-5 text-green-500 mr-2" />
+              <Shield className="w-5 h-5 text-gray-600 mr-2" />
               Privacy settings
             </h4>
             <div className="space-y-2 text-sm">
-              <div className="flex items-center space-x-2">
-                <CheckCircle className="w-4 h-4 text-green-500" />
-                <span>Profile sharing: {data.privacy?.shareProfile ? 'Enabled' : 'Disabled'}</span>
+              <div className="flex items-center justify-between">
+                <span>Share profile publicly</span>
+                <span className={data.privacy?.shareProfile ? 'text-green-600' : 'text-gray-400'}>
+                  {data.privacy?.shareProfile ? '✓' : '✗'}
+                </span>
               </div>
-              <div className="flex items-center space-x-2">
-                <CheckCircle className="w-4 h-4 text-green-500" />
-                <span>Demographics sharing: {data.privacy?.shareDemographics ? 'Enabled' : 'Disabled'}</span>
+              <div className="flex items-center justify-between">
+                <span>Share demographics</span>
+                <span className={data.privacy?.shareDemographics ? 'text-green-600' : 'text-gray-400'}>
+                  {data.privacy?.shareDemographics ? '✓' : '✗'}
+                </span>
               </div>
-              <div className="flex items-center space-x-2">
-                <CheckCircle className="w-4 h-4 text-green-500" />
-                <span>Participation sharing: {data.privacy?.shareParticipation ? 'Enabled' : 'Disabled'}</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <CheckCircle className="w-4 h-4 text-green-500" />
-                <span>Analytics: {data.privacy?.allowAnalytics ? 'Enabled' : 'Disabled'}</span>
+              <div className="flex items-center justify-between">
+                <span>Allow analytics</span>
+                <span className={data.privacy?.allowAnalytics ? 'text-green-600' : 'text-gray-400'}>
+                  {data.privacy?.allowAnalytics ? '✓' : '✗'}
+                </span>
               </div>
             </div>
           </div>
@@ -141,60 +144,60 @@ export default function CompleteStep({ data, onComplete, onBack }: CompleteStepP
       </div>
 
       {/* What's next */}
-      <div className="bg-blue-50 rounded-xl p-6 border border-blue-200">
+      <div className="bg-blue-50 rounded-2xl p-6 border border-blue-200">
         <h3 className="font-semibold text-blue-900 mb-4">What's next?</h3>
         <div className="space-y-3 text-blue-800 text-sm">
           <div className="flex items-start space-x-2">
-            <div className="w-2 h-2 bg-blue-600 rounded-full mt-2 flex-shrink-0"></div>
-            <p>Browse and vote on current polls</p>
+            <span className="text-blue-600">1.</span>
+            <span>Explore active polls and start voting</span>
           </div>
           <div className="flex items-start space-x-2">
-            <div className="w-2 h-2 bg-blue-600 rounded-full mt-2 flex-shrink-0"></div>
-            <p>Connect with people who share your concerns</p>
+            <span className="text-blue-600">2.</span>
+            <span>Create your own polls to gather community input</span>
           </div>
           <div className="flex items-start space-x-2">
-            <div className="w-2 h-2 bg-blue-600 rounded-full mt-2 flex-shrink-0"></div>
-            <p>Suggest new polls for the community</p>
+            <span className="text-blue-600">3.</span>
+            <span>Connect with others who share your values</span>
           </div>
           <div className="flex items-start space-x-2">
-            <div className="w-2 h-2 bg-blue-600 rounded-full mt-2 flex-shrink-0"></div>
-            <p>See insights and analysis from your participation</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Privacy reminder */}
-      <div className="bg-green-50 rounded-xl p-6 border border-green-200">
-        <div className="flex items-start space-x-3">
-          <Shield className="w-6 h-6 text-green-600 mt-1 flex-shrink-0" />
-          <div>
-            <h3 className="font-semibold text-green-900 mb-2">Remember: You're in control</h3>
-            <p className="text-green-800 text-sm">
-              You can change your privacy settings, update your profile, or delete your account anytime. 
-              Your data is yours, and we're committed to keeping it that way.
-            </p>
+            <span className="text-blue-600">4.</span>
+            <span>Update your profile anytime from your dashboard</span>
           </div>
         </div>
       </div>
 
       {/* Navigation */}
-      <div className="flex justify-between pt-6">
+      <div className="flex justify-between pt-4">
         <button
           onClick={onBack}
-          className="px-6 py-3 text-gray-600 hover:text-gray-800 transition-colors"
+          disabled={isLoading}
+          className="px-6 py-2 text-gray-600 hover:text-gray-800 transition-colors disabled:opacity-50"
         >
-          ← Back
+          Back
         </button>
         <button
           onClick={onComplete}
-          className="px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+          disabled={isLoading}
+          className={`
+            px-8 py-3 rounded-lg font-semibold transition-all duration-200 flex items-center space-x-2
+            ${isLoading 
+              ? 'bg-gray-400 text-white cursor-not-allowed' 
+              : 'bg-blue-600 text-white hover:bg-blue-700 shadow-lg hover:shadow-xl'
+            }
+          `}
         >
-          Start Exploring
+          {isLoading ? (
+            <>
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+              <span>Saving your profile...</span>
+            </>
+          ) : (
+            <>
+              <span>Complete Setup</span>
+              <span>→</span>
+            </>
+          )}
         </button>
-      </div>
-      
-      <div className="text-center text-sm text-gray-500">
-        Step 6 of 6 • Welcome to the community!
       </div>
     </div>
   )
