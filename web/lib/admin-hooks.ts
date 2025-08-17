@@ -70,19 +70,26 @@ const fetchGeneratedPolls = async (): Promise<GeneratedPoll[]> => {
 
 const fetchSystemMetrics = async (): Promise<SystemMetrics> => {
   try {
-    // For now, return mock data since we don't have a system metrics API yet
-    console.log('Using mock system metrics data for development');
-    return mockSystemMetrics;
-    
-    // TODO: Create system metrics API endpoint when needed
-    /*
-    const response = await fetch('/api/admin/system-metrics');
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    const data = await response.json();
-    return data.metrics || mockSystemMetrics;
-    */
+    // Fetch real metrics from database
+    const [topicsResult, pollsResult] = await Promise.all([
+      supabase.from('trending_topics').select('id, processing_status'),
+      supabase.from('generated_polls').select('id, status')
+    ]);
+
+    const totalTopics = topicsResult.data?.length || 0;
+    const totalPolls = pollsResult.data?.length || 0;
+    const activePolls = pollsResult.data?.filter(poll => poll.status === 'active').length || 0;
+
+    const metrics: SystemMetrics = {
+      total_topics: totalTopics,
+      total_polls: totalPolls,
+      active_polls: activePolls,
+      system_health: 'healthy',
+      last_updated: new Date().toISOString()
+    };
+
+    console.log('Fetched real system metrics:', metrics);
+    return metrics;
   } catch (error) {
     console.log('Error fetching system metrics, using mock data:', error);
     return mockSystemMetrics;
