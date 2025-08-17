@@ -22,9 +22,12 @@
     "@supabase/ssr": "^0.6.1",
     "@supabase/supabase-js": "^2.55.0",
     "@tailwindcss/postcss": "^4.1.11",
+    "@tanstack/react-query": "^5.85.3",
     "@types/pg": "^8.15.5",
+    "@visx/visx": "^3.12.0",
     "bcryptjs": "^3.0.2",
     "clsx": "^2.1.1",
+    "date-fns": "^4.1.0",
     "echarts": "^5.6.0",
     "echarts-for-react": "^3.0.2",
     "framer-motion": "^12.23.12",
@@ -37,7 +40,8 @@
     "react-dom": "18.2.0",
     "recharts": "^3.1.2",
     "tailwind-merge": "^3.3.1",
-    "workbox-webpack-plugin": "^7.3.0"
+    "workbox-webpack-plugin": "^7.3.0",
+    "zustand": "^5.0.7"
   },
   "devDependencies": {
     "@types/bcryptjs": "^3.0.0",
