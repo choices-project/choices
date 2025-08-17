@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Share2, Copy, Link, Twitter, Facebook, LinkedIn, Mail, QrCode, Download } from 'lucide-react'
+import { Share2, Copy, Link, Twitter, Facebook, Linkedin, Mail, QrCode, Download } from 'lucide-react'
 
 interface PollShareProps {
   pollId: string
@@ -116,8 +116,8 @@ export default function PollShare({ pollId, poll }: PollShareProps) {
             onClick={() => handleSocialShare('linkedin')}
             className="flex items-center justify-center space-x-2 p-3 bg-blue-700 text-white rounded-lg hover:bg-blue-800 transition-colors"
           >
-            <LinkedIn className="w-5 h-5" />
-            <span className="text-sm font-medium">LinkedIn</span>
+            <Linkedin className="w-5 h-5" />
+            <span className="text-sm font-medium">Linkedin</span>
           </button>
           
           <button
