@@ -69,7 +69,7 @@ export async function POST(
       )
     }
 
-    // Validate rankings for ranked choice voting
+    // Validate based on voting method
     if (votingMethod === 'ranked') {
       if (!rankings || typeof rankings !== 'object') {
         return NextResponse.json(
@@ -107,6 +107,24 @@ export async function POST(
             { status: 400 }
           )
         }
+      }
+    } else if (votingMethod === 'single') {
+      const { choice } = body
+      if (!choice || typeof choice !== 'string') {
+        return NextResponse.json(
+          { error: 'Invalid choice data' },
+          { status: 400 }
+        )
+      }
+
+      const pollOptions = poll.options || []
+      const validOptionIds = pollOptions.map((opt: any) => opt.id)
+      
+      if (!validOptionIds.includes(choice)) {
+        return NextResponse.json(
+          { error: 'Invalid choice option' },
+          { status: 400 }
+        )
       }
     }
 
