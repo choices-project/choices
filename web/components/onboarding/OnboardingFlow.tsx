@@ -1,8 +1,9 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Shield, Lock, Eye, Users, TrendingUp, CheckCircle } from 'lucide-react'
+import { createClient } from '@/utils/supabase/client'
 import WelcomeStep from './steps/WelcomeStep'
 import AuthStep from './steps/AuthStep'
 import ValuesStep from './steps/ValuesStep'
@@ -14,7 +15,7 @@ export type OnboardingStep = 'welcome' | 'auth' | 'values' | 'demographics' | 'p
 
 interface OnboardingData {
   // Auth data
-  authMethod?: 'google' | 'github' | 'twitter' | 'email'
+  authMethod?: 'google' | 'github' | 'email'
   user?: any
   
   // Profile data
@@ -46,6 +47,8 @@ interface OnboardingData {
 
 export default function OnboardingFlow() {
   const [currentStep, setCurrentStep] = useState<OnboardingStep>('welcome')
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [onboardingData, setOnboardingData] = useState<OnboardingData>({
     primaryConcerns: [],
     communityFocus: [],
@@ -60,6 +63,48 @@ export default function OnboardingFlow() {
   })
   
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const supabase = createClient()
+
+  // Check authentication status and handle step from URL
+  useEffect(() => {
+    const checkAuthAndStep = async () => {
+      try {
+        const stepParam = searchParams.get('step')
+        if (stepParam && ['auth', 'values', 'demographics', 'privacy', 'complete'].includes(stepParam)) {
+          setCurrentStep(stepParam as OnboardingStep)
+        }
+
+        // Check if user is authenticated
+        const { data: { user }, error: userError } = await supabase.auth.getUser()
+        
+        if (user && !userError) {
+          // User is authenticated, update data
+          setOnboardingData(prev => ({
+            ...prev,
+            user,
+            displayName: user.user_metadata?.full_name || user.email?.split('@')[0],
+            avatar: user.user_metadata?.avatar_url
+          }))
+          
+          // If we're on auth step and user is authenticated, move to values
+          if (currentStep === 'auth') {
+            setCurrentStep('values')
+          }
+        } else if (currentStep !== 'welcome' && currentStep !== 'auth') {
+          // User is not authenticated but trying to access protected steps
+          setCurrentStep('auth')
+        }
+      } catch (error) {
+        console.error('Error checking auth status:', error)
+        setError('Failed to check authentication status')
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    checkAuthAndStep()
+  }, [searchParams, currentStep, supabase.auth])
 
   const updateData = (updates: Partial<OnboardingData>) => {
     setOnboardingData(prev => ({ ...prev, ...updates }))
@@ -69,7 +114,13 @@ export default function OnboardingFlow() {
     const steps: OnboardingStep[] = ['welcome', 'auth', 'values', 'demographics', 'privacy', 'complete']
     const currentIndex = steps.indexOf(currentStep)
     if (currentIndex < steps.length - 1) {
-      setCurrentStep(steps[currentIndex + 1])
+      const nextStepName = steps[currentIndex + 1]
+      setCurrentStep(nextStepName)
+      
+      // Update URL to reflect current step
+      const url = new URL(window.location.href)
+      url.searchParams.set('step', nextStepName)
+      window.history.replaceState({}, '', url.toString())
     }
   }
 
@@ -77,12 +128,21 @@ export default function OnboardingFlow() {
     const steps: OnboardingStep[] = ['welcome', 'auth', 'values', 'demographics', 'privacy', 'complete']
     const currentIndex = steps.indexOf(currentStep)
     if (currentIndex > 0) {
-      setCurrentStep(steps[currentIndex - 1])
+      const prevStepName = steps[currentIndex - 1]
+      setCurrentStep(prevStepName)
+      
+      // Update URL to reflect current step
+      const url = new URL(window.location.href)
+      url.searchParams.set('step', prevStepName)
+      window.history.replaceState({}, '', url.toString())
     }
   }
 
   const handleComplete = async () => {
     try {
+      setIsLoading(true)
+      setError(null)
+      
       // Save profile data
       const response = await fetch('/api/profile', {
         method: 'POST',
@@ -90,12 +150,56 @@ export default function OnboardingFlow() {
         body: JSON.stringify(onboardingData)
       })
       
-      if (response.ok) {
-        router.push('/dashboard')
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to save profile')
       }
-    } catch (error) {
+      
+      const result = await response.json()
+      console.log('Profile saved successfully:', result)
+      
+      // Redirect to dashboard
+      router.push('/dashboard')
+      
+    } catch (error: any) {
       console.error('Error saving profile:', error)
+      setError(error.message || 'Failed to save profile. Please try again.')
+    } finally {
+      setIsLoading(false)
     }
+  }
+
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="text-gray-600">Loading your onboarding experience...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
+        <div className="text-center space-y-4 max-w-md mx-auto">
+          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto">
+            <span className="text-red-600 text-2xl">⚠️</span>
+          </div>
+          <h2 className="text-xl font-semibold text-gray-900">Something went wrong</h2>
+          <p className="text-gray-600">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    )
   }
 
   const renderStep = () => {
@@ -144,6 +248,7 @@ export default function OnboardingFlow() {
             data={onboardingData}
             onComplete={handleComplete}
             onBack={prevStep}
+            isLoading={isLoading}
           />
         )
       default:
@@ -185,6 +290,11 @@ export default function OnboardingFlow() {
                 )}
               </div>
             ))}
+          </div>
+          <div className="text-center">
+            <p className="text-sm text-gray-600">
+              Step {['welcome', 'auth', 'values', 'demographics', 'privacy', 'complete'].indexOf(currentStep) + 1} of 6
+            </p>
           </div>
         </div>
 
