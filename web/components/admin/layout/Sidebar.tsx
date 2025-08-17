@@ -2,6 +2,7 @@ import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAdminStore } from '../../../lib/admin-store';
+import { useSystemMetrics } from '../../../lib/admin-hooks';
 import {
   LayoutDashboard,
   TrendingUp,
@@ -42,6 +43,7 @@ const navigationItems = [
 export const Sidebar: React.FC = () => {
   const pathname = usePathname();
   const { sidebarCollapsed, toggleSidebar } = useAdminStore();
+  const { data: metrics } = useSystemMetrics();
 
   return (
     <>
@@ -102,15 +104,15 @@ export const Sidebar: React.FC = () => {
               <div className="space-y-2 text-sm text-gray-600">
                 <div className="flex justify-between">
                   <span>Topics:</span>
-                  <span className="font-medium">0</span>
+                  <span className="font-medium">{metrics?.total_topics || 0}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Polls:</span>
-                  <span className="font-medium">0</span>
+                  <span className="font-medium">{metrics?.total_polls || 0}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Active:</span>
-                  <span className="font-medium">0</span>
+                  <span className="font-medium">{metrics?.active_polls || 0}</span>
                 </div>
               </div>
             </div>

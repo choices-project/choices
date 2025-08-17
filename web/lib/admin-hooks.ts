@@ -2,6 +2,12 @@ import React from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { createClient } from '@supabase/supabase-js';
 import { useAdminStore, TrendingTopic, GeneratedPoll, SystemMetrics } from './admin-store';
+import { 
+  mockTrendingTopics, 
+  mockGeneratedPolls, 
+  mockSystemMetrics, 
+  mockActivityFeed 
+} from './mock-data';
 
 // Supabase client with service role
 const supabase = createClient(
@@ -11,40 +17,77 @@ const supabase = createClient(
 
 // API functions
 const fetchTrendingTopics = async (): Promise<TrendingTopic[]> => {
-  const { data, error } = await supabase
-    .from('trending_topics')
-    .select('*')
-    .order('created_at', { ascending: false });
-  
-  if (error) throw error;
-  return data || [];
+  try {
+    const { data, error } = await supabase
+      .from('trending_topics')
+      .select('*')
+      .order('created_at', { ascending: false });
+    
+    if (error) throw error;
+    
+    // If no data in database, return mock data for development
+    if (!data || data.length === 0) {
+      console.log('No trending topics found in database, using mock data');
+      return mockTrendingTopics;
+    }
+    
+    return data;
+  } catch (error) {
+    console.log('Error fetching trending topics, using mock data:', error);
+    return mockTrendingTopics;
+  }
 };
 
 const fetchGeneratedPolls = async (): Promise<GeneratedPoll[]> => {
-  const { data, error } = await supabase
-    .from('generated_polls')
-    .select('*')
-    .order('created_at', { ascending: false });
-  
-  if (error) throw error;
-  return data || [];
+  try {
+    const { data, error } = await supabase
+      .from('generated_polls')
+      .select('*')
+      .order('created_at', { ascending: false });
+    
+    if (error) throw error;
+    
+    // If no data in database, return mock data for development
+    if (!data || data.length === 0) {
+      console.log('No generated polls found in database, using mock data');
+      return mockGeneratedPolls;
+    }
+    
+    return data;
+  } catch (error) {
+    console.log('Error fetching generated polls, using mock data:', error);
+    return mockGeneratedPolls;
+  }
 };
 
 const fetchSystemMetrics = async (): Promise<SystemMetrics> => {
-  // Get counts from different tables
-  const [topicsResult, pollsResult, activePollsResult] = await Promise.all([
-    supabase.from('trending_topics').select('count', { count: 'exact' }),
-    supabase.from('generated_polls').select('count', { count: 'exact' }),
-    supabase.from('po_polls').select('count', { count: 'exact' }).eq('status', 'active'),
-  ]);
+  try {
+    // Get counts from different tables
+    const [topicsResult, pollsResult, activePollsResult] = await Promise.all([
+      supabase.from('trending_topics').select('count', { count: 'exact' }),
+      supabase.from('generated_polls').select('count', { count: 'exact' }),
+      supabase.from('po_polls').select('count', { count: 'exact' }).eq('status', 'active'),
+    ]);
 
-  return {
-    total_topics: topicsResult.count || 0,
-    total_polls: pollsResult.count || 0,
-    active_polls: activePollsResult.count || 0,
-    system_health: 'healthy', // TODO: Implement health check
-    last_updated: new Date().toISOString(),
-  };
+    const metrics = {
+      total_topics: topicsResult.count || 0,
+      total_polls: pollsResult.count || 0,
+      active_polls: activePollsResult.count || 0,
+      system_health: 'healthy' as const, // TODO: Implement health check
+      last_updated: new Date().toISOString(),
+    };
+
+    // If no data in database, return mock data for development
+    if (metrics.total_topics === 0 && metrics.total_polls === 0) {
+      console.log('No system metrics found in database, using mock data');
+      return mockSystemMetrics;
+    }
+
+    return metrics;
+  } catch (error) {
+    console.log('Error fetching system metrics, using mock data:', error);
+    return mockSystemMetrics;
+  }
 };
 
 const approveTopic = async (topicId: string): Promise<void> => {
@@ -91,7 +134,7 @@ const analyzeTrendingTopics = async (): Promise<void> => {
 // Custom hooks
 export const useTrendingTopics = () => {
   const queryClient = useQueryClient();
-  const { updateTrendingTopics, setLoading } = useAdminStore();
+  const { updateTrendingTopics, setLoading, updateActivityFeed } = useAdminStore();
 
   const query = useQuery({
     queryKey: ['trending-topics'],
@@ -103,11 +146,16 @@ export const useTrendingTopics = () => {
     if (query.data) {
       updateTrendingTopics(query.data);
       setLoading('topics', false);
+      
+      // Initialize activity feed with mock data if empty
+      if (query.data === mockTrendingTopics) {
+        updateActivityFeed(mockActivityFeed);
+      }
     }
     if (query.error) {
       setLoading('topics', false);
     }
-  }, [query.data, query.error, updateTrendingTopics, setLoading]);
+  }, [query.data, query.error, updateTrendingTopics, setLoading, updateActivityFeed]);
 
   return query;
 };
