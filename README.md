@@ -5,9 +5,9 @@ A revolutionary privacy-first voting platform built as a Progressive Web App (PW
 ## 🚀 Quick Start for New Contributors
 
 ### **For New Agents/Contributors**
-1. **📚 Consolidated Documentation**: Start with [`docs/consolidated/README.md`](docs/consolidated/README.md)
-2. **🏗️ Architecture**: Read [`docs/consolidated/core/ARCHITECTURE.md`](docs/consolidated/core/ARCHITECTURE.md)
-3. **🔒 Security**: Review [`docs/consolidated/security/SECURITY_OVERVIEW.md`](docs/consolidated/security/SECURITY_OVERVIEW.md)
+1. **📚 Documentation System**: Start with [`docs/consolidated/README.md`](docs/consolidated/README.md)
+2. **👋 Onboarding Guide**: Read [`docs/consolidated/development/AGENT_ONBOARDING.md`](docs/consolidated/development/AGENT_ONBOARDING.md)
+3. **🏗️ Architecture**: Review [`docs/consolidated/core/ARCHITECTURE.md`](docs/consolidated/core/ARCHITECTURE.md)
 4. **🛠️ Development**: Study [`docs/consolidated/development/DEVELOPMENT_GUIDE.md`](docs/consolidated/development/DEVELOPMENT_GUIDE.md)
 5. **🔍 Quick Assessment**: Run `node scripts/assess-project-status.js`
 
