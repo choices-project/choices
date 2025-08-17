@@ -10,8 +10,10 @@ import {
 
 // API functions
 const fetchTrendingTopics = async (): Promise<TrendingTopic[]> => {
+  console.log('fetchTrendingTopics called');
   try {
     const response = await fetch('/api/admin/trending-topics');
+    console.log('fetchTrendingTopics response status:', response.status);
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
@@ -40,8 +42,10 @@ const fetchGeneratedPolls = async (): Promise<GeneratedPoll[]> => {
 };
 
 const fetchSystemMetrics = async (): Promise<SystemMetrics> => {
+  console.log('fetchSystemMetrics called');
   try {
     const response = await fetch('/api/admin/system-metrics');
+    console.log('fetchSystemMetrics response status:', response.status);
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
