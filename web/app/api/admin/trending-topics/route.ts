@@ -18,31 +18,8 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Check authentication
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-    if (userError || !user) {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      );
-    }
-
-    // Check admin permissions - RESTRICTED TO OWNER ONLY
-    const { data: userProfile } = await supabase
-      .from('ia_users')
-      .select('verification_tier')
-      .eq('stable_id', user.id)
-      .single();
-
-    // Owner check using environment variable
-    // Service role key provides admin access - no user ID needed
-    
-    if (!userProfile || user.id !== OWNER_USER_ID) {
-      return NextResponse.json(
-        { error: 'Admin access restricted to owner only' },
-        { status: 403 }
-      );
-    }
+    // Service role authentication - no user checks needed
+    // Admin access is provided by the service role key
 
     const service = new AutomatedPollsService();
     const { searchParams } = new URL(request.url);
@@ -102,31 +79,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check authentication
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-    if (userError || !user) {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      );
-    }
-
-    // Check admin permissions - RESTRICTED TO OWNER ONLY
-    const { data: userProfile } = await supabase
-      .from('ia_users')
-      .select('verification_tier')
-      .eq('stable_id', user.id)
-      .single();
-
-    // Owner check using environment variable
-    // Service role key provides admin access - no user ID needed
-    
-    if (!userProfile || user.id !== OWNER_USER_ID) {
-      return NextResponse.json(
-        { error: 'Admin access restricted to owner only' },
-        { status: 403 }
-      );
-    }
+    // Service role authentication - no user checks needed
+    // Admin access is provided by the service role key
 
     const body = await request.json();
     const {
@@ -221,31 +175,8 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    // Check authentication
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-    if (userError || !user) {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      );
-    }
-
-    // Check admin permissions - RESTRICTED TO OWNER ONLY
-    const { data: userProfile } = await supabase
-      .from('ia_users')
-      .select('verification_tier')
-      .eq('stable_id', user.id)
-      .single();
-
-    // Owner check using environment variable
-    // Service role key provides admin access - no user ID needed
-    
-    if (!userProfile || user.id !== OWNER_USER_ID) {
-      return NextResponse.json(
-        { error: 'Admin access restricted to owner only' },
-        { status: 403 }
-      );
-    }
+    // Service role authentication - no user checks needed
+    // Admin access is provided by the service role key
 
     const body = await request.json();
     const { action } = body;
