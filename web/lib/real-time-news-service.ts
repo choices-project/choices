@@ -27,6 +27,7 @@ export interface BreakingNewsStory {
     geographicScope: 'local' | 'national' | 'international' | 'global';
     politicalImpact: number; // 0-1 scale
     publicInterest: number; // 0-1 scale
+    complexity?: 'low' | 'medium' | 'high';
   };
   createdAt: Date;
   updatedAt: Date;
@@ -627,7 +628,7 @@ export class RealTimeNewsService {
     
     if (metadata.controversy > 0.8) return 'ranked';
     if (entities.length > 4) return 'approval';
-    if (metadata.complexity === 'high') return 'range';
+    if (metadata.complexity && metadata.complexity === 'high') return 'range';
     return 'single';
   }
 
