@@ -10,6 +10,7 @@ import {
   Settings,
   Menu,
   X,
+  Newspaper,
 } from 'lucide-react';
 
 const navigationItems = [
@@ -17,6 +18,11 @@ const navigationItems = [
     name: 'Dashboard',
     href: '/admin',
     icon: LayoutDashboard,
+  },
+  {
+    name: 'Breaking News',
+    href: '/admin/breaking-news',
+    icon: Newspaper,
   },
   {
     name: 'Trending Topics',
