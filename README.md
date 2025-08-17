@@ -2,6 +2,37 @@
 
 A revolutionary privacy-first voting platform built as a Progressive Web App (PWA) that combines advanced encryption, differential privacy, and zero-knowledge proofs to ensure secure, anonymous, and verifiable voting experiences across all devices.
 
+## 🚀 Quick Start for New Contributors
+
+### **For New Agents/Contributors**
+1. **Read the Onboarding Guide**: Start with [`AGENT_ONBOARDING.md`](AGENT_ONBOARDING.md)
+2. **Check Current State**: Review [`PROJECT_SUMMARY.md`](PROJECT_SUMMARY.md)
+3. **Follow Best Practices**: Study [`DEVELOPMENT_BEST_PRACTICES.md`](DEVELOPMENT_BEST_PRACTICES.md)
+4. **Understand Deployment**: See [`FINAL_DEPLOYMENT_INSTRUCTIONS.md`](FINAL_DEPLOYMENT_INSTRUCTIONS.md)
+
+### **Current Project Status**
+- ✅ **Core Application**: Next.js frontend with Go backend services
+- ✅ **Database**: PostgreSQL via Supabase with comprehensive RLS security
+- ✅ **Authentication**: Supabase Auth with tiered user system
+- ✅ **Automated Polls**: MVP feature for trending topic analysis
+- ⚠️ **Security Policies**: Need final deployment (see deployment guide)
+
+### **Quick Development Setup**
+```bash
+# Clone and setup
+git clone https://github.com/choices-project/choices.git
+cd choices
+
+# Start development server
+cd web && npm install && npm run dev
+
+# Check database status
+node scripts/check_supabase_auth.js
+
+# Follow deployment guide for database setup
+# See FINAL_DEPLOYMENT_INSTRUCTIONS.md
+```
+
 ## 🚀 Features
 
 ### 🔐 Advanced Privacy & Security
@@ -33,6 +64,12 @@ A revolutionary privacy-first voting platform built as a Progressive Web App (PW
 - **PWA Testing**: Progressive web app feature validation
 - **Real-time Testing**: Live test execution with detailed reporting
 - **Deployment Readiness**: Complete validation for production deployment
+
+### 🤖 Automated Polls Feature (MVP)
+- **Trending Topics Analysis**: Automated scanning of current events
+- **Poll Generation**: AI-powered poll creation with context awareness
+- **Admin Dashboard**: Comprehensive admin interface for poll management
+- **Security-First**: Complete data isolation and privacy protection
 
 ## 🔒 Privacy & Encryption Techniques
 
