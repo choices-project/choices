@@ -1,6 +1,5 @@
 import React from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { createClient } from '@supabase/supabase-js';
 import { useAdminStore, TrendingTopic, GeneratedPoll, SystemMetrics } from './admin-store';
 import { 
   mockTrendingTopics, 
@@ -9,33 +8,16 @@ import {
   mockActivityFeed 
 } from './mock-data';
 
-// Supabase client with service role
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
-
 // API functions
 const fetchTrendingTopics = async (): Promise<TrendingTopic[]> => {
   try {
-    // Try to fetch from database first
-    const { data, error } = await supabase
-      .from('trending_topics')
-      .select('*')
-      .order('created_at', { ascending: false });
-    
-    if (error) {
-      console.log('Database error, using mock data:', error);
-      return mockTrendingTopics;
+    const response = await fetch('/api/admin/trending-topics');
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
-    
-    if (!data || data.length === 0) {
-      console.log('No data in database, using mock data');
-      return mockTrendingTopics;
-    }
-    
-    console.log('Fetched trending topics from database:', data.length);
-    return data;
+    const data = await response.json();
+    console.log('Fetched trending topics from API:', data.topics?.length || 0);
+    return data.topics || mockTrendingTopics;
   } catch (error) {
     console.log('Error fetching trending topics, using mock data:', error);
     return mockTrendingTopics;
@@ -44,24 +26,13 @@ const fetchTrendingTopics = async (): Promise<TrendingTopic[]> => {
 
 const fetchGeneratedPolls = async (): Promise<GeneratedPoll[]> => {
   try {
-    // Try to fetch from database first
-    const { data, error } = await supabase
-      .from('generated_polls')
-      .select('*')
-      .order('created_at', { ascending: false });
-    
-    if (error) {
-      console.log('Database error, using mock data:', error);
-      return mockGeneratedPolls;
+    const response = await fetch('/api/admin/generated-polls');
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
-    
-    if (!data || data.length === 0) {
-      console.log('No data in database, using mock data');
-      return mockGeneratedPolls;
-    }
-    
-    console.log('Fetched generated polls from database:', data.length);
-    return data;
+    const data = await response.json();
+    console.log('Fetched generated polls from API:', data.polls?.length || 0);
+    return data.polls || mockGeneratedPolls;
   } catch (error) {
     console.log('Error fetching generated polls, using mock data:', error);
     return mockGeneratedPolls;
@@ -70,26 +41,13 @@ const fetchGeneratedPolls = async (): Promise<GeneratedPoll[]> => {
 
 const fetchSystemMetrics = async (): Promise<SystemMetrics> => {
   try {
-    // Fetch real metrics from database
-    const [topicsResult, pollsResult] = await Promise.all([
-      supabase.from('trending_topics').select('id, processing_status'),
-      supabase.from('generated_polls').select('id, status')
-    ]);
-
-    const totalTopics = topicsResult.data?.length || 0;
-    const totalPolls = pollsResult.data?.length || 0;
-    const activePolls = pollsResult.data?.filter(poll => poll.status === 'active').length || 0;
-
-    const metrics: SystemMetrics = {
-      total_topics: totalTopics,
-      total_polls: totalPolls,
-      active_polls: activePolls,
-      system_health: 'healthy',
-      last_updated: new Date().toISOString()
-    };
-
-    console.log('Fetched real system metrics:', metrics);
-    return metrics;
+    const response = await fetch('/api/admin/system-metrics');
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const data = await response.json();
+    console.log('Fetched system metrics from API:', data.metrics);
+    return data.metrics || mockSystemMetrics;
   } catch (error) {
     console.log('Error fetching system metrics, using mock data:', error);
     return mockSystemMetrics;
