@@ -747,3 +747,4 @@ export function assessPollQuality(poll: GeneratedPoll): QualityMetrics {
     updatedAt: new Date()
   };
 }
+

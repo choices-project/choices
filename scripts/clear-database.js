@@ -179,3 +179,4 @@ async function clearDatabase() {
 
 // Run the clear
 clearDatabase().catch(console.error)
+

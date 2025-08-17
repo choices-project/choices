@@ -158,3 +158,4 @@ async function testUserSync() {
 
 // Run the test
 testUserSync().catch(console.error)
+
