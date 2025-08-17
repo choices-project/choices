@@ -3,7 +3,7 @@
 import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
-import { ArrowLeft, Plus, Trash2, Save, Info, HelpCircle, CheckCircle, AlertCircle } from 'lucide-react'
+import { ArrowLeft, Plus, Trash2, Save, Info, HelpCircle, CheckCircle, AlertCircle, Settings, Clock, Users, Eye, EyeOff, MessageCircle, BarChart3, Target, Zap } from 'lucide-react'
 
 interface PollOption {
   id: string
@@ -18,6 +18,8 @@ interface VotingMethod {
   bestFor: string[]
   tips: string[]
   icon: string
+  color: string
+  realTimeAnalysis: boolean
 }
 
 const VOTING_METHODS: VotingMethod[] = [
@@ -25,13 +27,16 @@ const VOTING_METHODS: VotingMethod[] = [
     type: 'single',
     name: 'Single Choice',
     description: 'Voters select one option. Highest vote count wins.',
-    bestFor: ['Quick decisions', 'Binary choices', 'Simple polls', 'Yes/No questions'],
+    bestFor: ['Quick decisions', 'Binary choices', 'Simple polls', 'Yes/No questions', 'Political favorability'],
     tips: [
       'Best for straightforward decisions',
-      'Avoid when you have many similar options',
-      'Consider approval voting for multi-candidate scenarios'
+      'Perfect for approval/disapproval tracking',
+      'Excellent for real-time political analysis',
+      'Avoid when you have many similar options'
     ],
-    icon: '🎯'
+    icon: '🎯',
+    color: 'blue',
+    realTimeAnalysis: true
   },
   {
     type: 'approval',
@@ -41,9 +46,12 @@ const VOTING_METHODS: VotingMethod[] = [
     tips: [
       'Great for finding broadly acceptable options',
       'Prevents vote splitting between similar choices',
-      'Encourages consensus over polarization'
+      'Encourages consensus over polarization',
+      'Good for primary elections'
     ],
-    icon: '✅'
+    icon: '✅',
+    color: 'green',
+    realTimeAnalysis: true
   },
   {
     type: 'ranked',
@@ -56,20 +64,24 @@ const VOTING_METHODS: VotingMethod[] = [
       'More complex counting but fairer results',
       'Best for important decisions with multiple options'
     ],
-    icon: '🏆'
+    icon: '🏆',
+    color: 'purple',
+    realTimeAnalysis: false
   },
   {
     type: 'range',
     name: 'Range Voting',
     description: 'Voters rate each option on a scale. Highest average rating wins.',
-    bestFor: ['Satisfaction surveys', 'Product ratings', 'Preference intensity', 'Detailed feedback'],
+    bestFor: ['Satisfaction surveys', 'Product ratings', 'Preference intensity', 'Detailed feedback', 'Political sentiment'],
     tips: [
       'Captures intensity of preference',
       'Good for measuring satisfaction levels',
       'Provides detailed feedback on each option',
-      'Consider using 0-10 scale for clarity'
+      'Excellent for political sentiment tracking'
     ],
-    icon: '📊'
+    icon: '📊',
+    color: 'yellow',
+    realTimeAnalysis: true
   },
   {
     type: 'quadratic',
@@ -82,7 +94,9 @@ const VOTING_METHODS: VotingMethod[] = [
       'Requires credit system setup',
       'Best for complex decisions with trade-offs'
     ],
-    icon: '💰'
+    icon: '💰',
+    color: 'pink',
+    realTimeAnalysis: false
   }
 ]
 
@@ -115,14 +129,19 @@ export default function CreatePollPage() {
       isPublic: true,
       allowComments: true,
       showResults: true,
-      requireVerification: false
+      requireVerification: false,
+      enableRealTimeAnalysis: true,
+      allowAnonymousVoting: false,
+      requireEmailVerification: false
     },
     schedule: {
       startDate: new Date().toISOString().split('T')[0],
       startTime: '09:00',
       endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
       endTime: '18:00'
-    }
+    },
+    categories: [] as string[],
+    tags: [] as string[]
   })
 
   useEffect(() => {
@@ -225,13 +244,29 @@ export default function CreatePollPage() {
       setError('Poll title is required')
       return
     }
-    setStep(prev => Math.min(prev + 1, 4))
+    setStep(prev => Math.min(prev + 1, 5))
     setError(null)
   }
 
   const prevStep = () => {
     setStep(prev => Math.max(prev - 1, 1))
     setError(null)
+  }
+
+  const addTag = (tag: string) => {
+    if (tag.trim() && !pollData.tags.includes(tag.trim())) {
+      setPollData(prev => ({
+        ...prev,
+        tags: [...prev.tags, tag.trim()]
+      }))
+    }
+  }
+
+  const removeTag = (tagToRemove: string) => {
+    setPollData(prev => ({
+      ...prev,
+      tags: prev.tags.filter(tag => tag !== tagToRemove)
+    }))
   }
 
   if (loading) {
@@ -253,7 +288,7 @@ export default function CreatePollPage() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       {/* Header */}
       <header className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <div className="flex items-center space-x-4">
               <button
@@ -264,7 +299,7 @@ export default function CreatePollPage() {
                 <span>Back to Dashboard</span>
               </button>
             </div>
-            <h1 className="text-2xl font-bold text-gray-900">Create Poll</h1>
+            <h1 className="text-2xl font-bold text-gray-900">Create Your Poll</h1>
             <div className="w-24"></div>
           </div>
         </div>
@@ -272,9 +307,9 @@ export default function CreatePollPage() {
 
       {/* Progress Bar */}
       <div className="bg-white border-b border-gray-200">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center py-4">
-            {[1, 2, 3, 4].map((stepNumber) => (
+            {[1, 2, 3, 4, 5].map((stepNumber) => (
               <div key={stepNumber} className="flex items-center">
                 <div className={`
                   w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium
@@ -285,23 +320,23 @@ export default function CreatePollPage() {
                 `}>
                   {stepNumber}
                 </div>
-                {stepNumber < 4 && (
+                {stepNumber < 5 && (
                   <div className={`
-                    w-16 h-1 mx-2
+                    w-12 h-1 mx-2
                     ${step > stepNumber ? 'bg-blue-600' : 'bg-gray-200'}
                   `} />
                 )}
               </div>
             ))}
             <div className="ml-4 text-sm text-gray-600">
-              Step {step} of 4
+              Step {step} of 5
             </div>
           </div>
         </div>
       </div>
 
       {/* Main Content */}
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Error/Success Messages */}
         {error && (
           <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
@@ -352,6 +387,40 @@ export default function CreatePollPage() {
                     placeholder="Provide additional context or details..."
                   />
                 </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Tags
+                  </label>
+                  <div className="flex flex-wrap gap-2 mb-2">
+                    {pollData.tags.map((tag) => (
+                      <span
+                        key={tag}
+                        className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-100 text-blue-800"
+                      >
+                        {tag}
+                        <button
+                          onClick={() => removeTag(tag)}
+                          className="ml-2 text-blue-600 hover:text-blue-800"
+                        >
+                          ×
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                  <input
+                    type="text"
+                    placeholder="Add tags (press Enter to add)"
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault()
+                        addTag(e.currentTarget.value)
+                        e.currentTarget.value = ''
+                      }
+                    }}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
               </div>
             </div>
 
@@ -370,29 +439,36 @@ export default function CreatePollPage() {
         {step === 2 && (
           <div className="space-y-6">
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-6">Choose Voting Method</h2>
+              <h2 className="text-xl font-semibold text-gray-900 mb-6">Choose Your Voting Method</h2>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {VOTING_METHODS.map((method) => (
                   <div
                     key={method.type}
                     onClick={() => setPollData(prev => ({ ...prev, votingMethod: method.type }))}
                     className={`
-                      p-4 border rounded-lg cursor-pointer transition-all
+                      p-6 border-2 rounded-xl cursor-pointer transition-all
                       ${pollData.votingMethod === method.type
-                        ? 'border-blue-500 bg-blue-50'
+                        ? `border-${method.color}-500 bg-${method.color}-50`
                         : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
                       }
                     `}
                   >
-                    <div className="flex items-start space-x-3">
-                      <span className="text-2xl">{method.icon}</span>
+                    <div className="flex items-start space-x-4">
+                      <span className="text-3xl">{method.icon}</span>
                       <div className="flex-1">
-                        <h3 className="font-semibold text-gray-900">{method.name}</h3>
-                        <p className="text-sm text-gray-600 mt-1">{method.description}</p>
+                        <div className="flex items-center space-x-2 mb-2">
+                          <h3 className="font-semibold text-gray-900">{method.name}</h3>
+                          {method.realTimeAnalysis && (
+                            <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
+                              Real-time
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-sm text-gray-600 mb-3">{method.description}</p>
                         
-                        <div className="mt-3">
-                          <p className="text-xs font-medium text-gray-700 mb-1">Best for:</p>
+                        <div className="mb-3">
+                          <p className="text-xs font-medium text-gray-700 mb-1">Perfect for:</p>
                           <div className="flex flex-wrap gap-1">
                             {method.bestFor.map((useCase, index) => (
                               <span
@@ -405,8 +481,8 @@ export default function CreatePollPage() {
                           </div>
                         </div>
 
-                        <div className="mt-3">
-                          <p className="text-xs font-medium text-gray-700 mb-1">Tips:</p>
+                        <div>
+                          <p className="text-xs font-medium text-gray-700 mb-1">Pro tips:</p>
                           <ul className="text-xs text-gray-600 space-y-1">
                             {method.tips.map((tip, index) => (
                               <li key={index} className="flex items-start">
@@ -595,6 +671,25 @@ export default function CreatePollPage() {
                       <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
                     </label>
                   </div>
+
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="font-medium text-gray-900">Real-time Analysis</h4>
+                      <p className="text-sm text-gray-600">Live results and trends</p>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={pollData.settings.enableRealTimeAnalysis}
+                        onChange={(e) => setPollData(prev => ({
+                          ...prev,
+                          settings: { ...prev.settings, enableRealTimeAnalysis: e.target.checked }
+                        }))}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                    </label>
+                  </div>
                 </div>
               </div>
 
@@ -666,10 +761,107 @@ export default function CreatePollPage() {
                 Back
               </button>
               <button
+                onClick={nextStep}
+                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                Next: Review & Create
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Step 5: Review & Create */}
+        {step === 5 && (
+          <div className="space-y-6">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <h2 className="text-xl font-semibold text-gray-900 mb-6">Review Your Poll</h2>
+              
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Poll Summary */}
+                <div className="space-y-4">
+                  <h3 className="font-semibold text-gray-900">Poll Details</h3>
+                  <div className="space-y-2">
+                    <div>
+                      <span className="font-medium text-gray-700">Title:</span>
+                      <p className="text-gray-900">{pollData.title}</p>
+                    </div>
+                    {pollData.description && (
+                      <div>
+                        <span className="font-medium text-gray-700">Description:</span>
+                        <p className="text-gray-900">{pollData.description}</p>
+                      </div>
+                    )}
+                    <div>
+                      <span className="font-medium text-gray-700">Voting Method:</span>
+                      <p className="text-gray-900">{getCurrentMethod().name}</p>
+                    </div>
+                    <div>
+                      <span className="font-medium text-gray-700">Options:</span>
+                      <p className="text-gray-900">{pollData.options.length} options</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Settings Summary */}
+                <div className="space-y-4">
+                  <h3 className="font-semibold text-gray-900">Settings</h3>
+                  <div className="space-y-2">
+                    <div className="flex items-center space-x-2">
+                      <span className="font-medium text-gray-700">Public:</span>
+                      <span className={pollData.settings.isPublic ? 'text-green-600' : 'text-red-600'}>
+                        {pollData.settings.isPublic ? 'Yes' : 'No'}
+                      </span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <span className="font-medium text-gray-700">Show Results:</span>
+                      <span className={pollData.settings.showResults ? 'text-green-600' : 'text-red-600'}>
+                        {pollData.settings.showResults ? 'Yes' : 'No'}
+                      </span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <span className="font-medium text-gray-700">Real-time Analysis:</span>
+                      <span className={pollData.settings.enableRealTimeAnalysis ? 'text-green-600' : 'text-red-600'}>
+                        {pollData.settings.enableRealTimeAnalysis ? 'Yes' : 'No'}
+                      </span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <span className="font-medium text-gray-700">Allow Comments:</span>
+                      <span className={pollData.settings.allowComments ? 'text-green-600' : 'text-red-600'}>
+                        {pollData.settings.allowComments ? 'Yes' : 'No'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Options Preview */}
+              <div className="mt-6">
+                <h3 className="font-semibold text-gray-900 mb-3">Options Preview</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {pollData.options.map((option, index) => (
+                    <div key={option.id} className="p-3 border border-gray-200 rounded-lg">
+                      <div className="font-medium text-gray-900">{option.text}</div>
+                      {option.description && (
+                        <div className="text-sm text-gray-600 mt-1">{option.description}</div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-between">
+              <button
+                onClick={prevStep}
+                className="px-6 py-2 text-gray-600 hover:text-gray-900 transition-colors"
+              >
+                Back
+              </button>
+              <button
                 onClick={handleCreatePoll}
                 disabled={isCreating}
                 className={`
-                  flex items-center space-x-2 px-6 py-2 rounded-lg transition-colors
+                  flex items-center space-x-2 px-6 py-2 rounded-lg font-medium transition-colors
                   ${isCreating 
                     ? 'bg-gray-400 text-white cursor-not-allowed' 
                     : 'bg-green-600 text-white hover:bg-green-700'
