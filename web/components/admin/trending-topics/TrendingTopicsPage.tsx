@@ -26,14 +26,7 @@ export const TrendingTopicsPage: React.FC = () => {
   const rejectTopic = useRejectTopic();
   const analyzeTopics = useAnalyzeTrendingTopics();
 
-  // Debug logging
-  console.log('TrendingTopicsPage render:', {
-    topics: topics?.length || 0,
-    searchTerm,
-    statusFilter,
-    categoryFilter,
-    isLoading
-  });
+
 
   // Filter topics based on search and filters
   const filteredTopics = (topics as any)?.filter((topic: any) => {
@@ -168,11 +161,6 @@ export const TrendingTopicsPage: React.FC = () => {
 
       {/* Topics Table */}
       <ChartWrapper title={`Trending Topics (${filteredTopics.length})`}>
-        {/* Debug info */}
-        <div className="mb-4 p-2 bg-blue-50 text-blue-800 text-sm rounded">
-          Debug: {topics?.length || 0} topics loaded, {filteredTopics.length} filtered, 
-          Search: "{searchTerm}", Status: {statusFilter}, Category: {categoryFilter}
-        </div>
         
         {isLoading ? (
           <div className="space-y-4">
