@@ -1,0 +1,29 @@
+{
+  "checks": {
+    "linting": true,
+    "typeChecking": true,
+    "buildTest": true,
+    "securityAudit": true,
+    "bundleSize": true
+  },
+  "thresholds": {
+    "maxBundleSizeKB": 200,
+    "maxWarnings": 10,
+    "maxTodos": 5
+  },
+  "notifications": {
+    "slack": false,
+    "email": false,
+    "github": true
+  },
+  "environments": {
+    "development": {
+      "strictChecks": false,
+      "allowWarnings": true
+    },
+    "production": {
+      "strictChecks": true,
+      "allowWarnings": false
+    }
+  }
+}
