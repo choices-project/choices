@@ -21,7 +21,8 @@ function RegisterForm() {
   
   const router = useRouter()
   const searchParams = useSearchParams()
-  const redirectTo = searchParams.get('redirectTo') || '/dashboard'
+  // Use a smarter default redirect - let the auth callback decide
+  const redirectTo = searchParams.get('redirectTo') || '/'
   const supabase = createClient()
 
   const handleInputChange = (field: string, value: string) => {
@@ -46,6 +47,10 @@ function RegisterForm() {
       return
     }
 
+    // Create proper redirect URL for email verification
+    const baseUrl = window.location.origin
+    const emailRedirectTo = `${baseUrl}/auth/callback?redirectTo=${encodeURIComponent(redirectTo)}`
+
     const { error: signUpError } = await supabase.auth.signUp({
       email: formData.email,
       password: formData.password,
@@ -53,14 +58,14 @@ function RegisterForm() {
         data: {
           name: formData.name,
         },
-        emailRedirectTo: `${window.location.origin}/auth/callback?redirectTo=${redirectTo}`,
+        emailRedirectTo: emailRedirectTo,
       },
     })
 
     if (signUpError) {
       setError(signUpError.message)
     } else {
-      setMessage('Check your email to confirm your account!')
+      setMessage('Check your email to confirm your account! Please check your spam folder if you don\'t see it.')
     }
     setLoading(false)
   }
