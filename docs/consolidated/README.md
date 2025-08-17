@@ -10,9 +10,10 @@ Choices is a privacy-first, modular voting and polling platform built with Next.
 ## 🚀 **Quick Start**
 
 ### **For New Developers (10 minutes)**
-1. **📖 Read**: [`docs/consolidated/core/ARCHITECTURE.md`](core/ARCHITECTURE.md)
-2. **🔒 Understand**: [`docs/consolidated/security/SECURITY_OVERVIEW.md`](security/SECURITY_OVERVIEW.md)
-3. **🛠️ Learn**: [`docs/consolidated/development/DEVELOPMENT_GUIDE.md`](development/DEVELOPMENT_GUIDE.md)
+1. **👋 Onboard**: [`docs/consolidated/development/AGENT_ONBOARDING.md`](development/AGENT_ONBOARDING.md)
+2. **📖 Read**: [`docs/consolidated/core/ARCHITECTURE.md`](core/ARCHITECTURE.md)
+3. **🔒 Understand**: [`docs/consolidated/security/SECURITY_OVERVIEW.md`](security/SECURITY_OVERVIEW.md)
+4. **🛠️ Learn**: [`docs/consolidated/development/DEVELOPMENT_GUIDE.md`](development/DEVELOPMENT_GUIDE.md)
 
 ### **Quick Assessment (2 minutes)**
 ```bash
