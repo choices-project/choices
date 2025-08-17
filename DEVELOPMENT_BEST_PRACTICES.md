@@ -17,6 +17,11 @@
 - **Impact**: Scope creep, unclear objectives, wasted effort
 - **Solution**: Detailed planning with milestones and validation points
 
+### 4. **Architectural Integrity Violations** ⚠️ **CRITICAL**
+- **Problem**: Removing critical components at first sign of trouble instead of fixing the actual issue
+- **Impact**: Breaking fundamental security models, losing core functionality, architectural debt
+- **Solution**: Always investigate root cause, understand component purpose, fix rather than remove
+
 ## 🔬 Research-First Methodology
 
 ### Phase 1: Comprehensive Research (MANDATORY)
@@ -116,12 +121,17 @@
 #### 1. **Root Cause Analysis (MANDATORY)**
 ```markdown
 ❌ DON'T: Apply quick fixes
+❌ DON'T: Remove components without understanding their purpose
+❌ DON'T: Assume simple solutions to complex architectural issues
 ✅ DO: Investigate underlying causes
+✅ DO: Understand component relationships and dependencies
+✅ DO: Fix the actual problem, not symptoms
 
 Questions to ask:
 - What is the fundamental problem?
 - Why did this happen?
-- What patterns led to this?
+- What is the purpose of this component in the architecture?
+- What dependencies will be broken if I remove this?
 - How can we prevent this in the future?
 ```
 
@@ -150,6 +160,8 @@ Questions to ask:
 ❌ DON'T: Ignore underlying problems
 ❌ DON'T: Skip testing
 ❌ DON'T: Rush implementation
+❌ DON'T: Remove architectural components without understanding their purpose
+❌ DON'T: Assume simple solutions to complex security or architectural issues
 ```
 
 ### 2. **Infinite Loop Patterns**
@@ -325,5 +337,8 @@ Questions to ask:
 5. **Document decisions and rationale**
 6. **Test thoroughly before deployment**
 7. **Review and improve processes continuously**
+8. **Never remove architectural components without understanding their purpose**
+9. **Always investigate root causes before applying fixes**
+10. **Maintain architectural integrity above all else**
 
-**This document serves as a binding commitment to quality-first, research-driven development.**
+**This document serves as a binding commitment to quality-first, research-driven development with architectural integrity.**
