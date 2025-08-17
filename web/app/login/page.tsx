@@ -16,7 +16,8 @@ function LoginForm() {
   
   const router = useRouter()
   const searchParams = useSearchParams()
-  const redirectTo = searchParams.get('redirectTo') || '/dashboard'
+  // Use a smarter default redirect - let the auth callback decide
+  const redirectTo = searchParams.get('redirectTo') || '/'
   const supabase = createClient()
 
   const handleEmailLogin = async (e: React.FormEvent) => {
