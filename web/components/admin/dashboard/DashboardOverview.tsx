@@ -22,10 +22,17 @@ export const DashboardOverview: React.FC = () => {
   // Initialize real-time subscriptions
   useRealTimeSubscriptions();
   
-  // Fetch data
+  // Fetch data using admin hooks
   const { data: topics, isLoading: topicsLoading } = useTrendingTopics();
   const { data: polls, isLoading: pollsLoading } = useGeneratedPolls();
   const { data: metrics, isLoading: metricsLoading } = useSystemMetrics();
+
+  // Debug logging
+  console.log('DashboardOverview - Data loaded:', {
+    topics: topics?.length || 0,
+    polls: polls?.length || 0,
+    metrics
+  });
 
   // Use mock chart data
   const recentActivityData = mockChartData.recentActivity;
