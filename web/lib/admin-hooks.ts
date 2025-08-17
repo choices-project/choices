@@ -1,6 +1,5 @@
 import React from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { createClient } from '@supabase/supabase-js';
 import { useAdminStore, TrendingTopic, GeneratedPoll, SystemMetrics } from './admin-store';
 import { 
   mockTrendingTopics, 
@@ -9,101 +8,51 @@ import {
   mockActivityFeed 
 } from './mock-data';
 
-// Supabase client with service role
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
-
 // API functions
 const fetchTrendingTopics = async (): Promise<TrendingTopic[]> => {
   try {
-    // For now, always return mock data since the database tables don't exist yet
-    console.log('Using mock trending topics data for development');
-    return mockTrendingTopics;
-    
-    // TODO: Uncomment when database tables are set up
-    /*
-    const { data, error } = await supabase
-      .from('trending_topics')
-      .select('*')
-      .order('created_at', { ascending: false });
-    
-    if (error) throw error;
-    
-    // If no data in database, return mock data for development
-    if (!data || data.length === 0) {
-      console.log('No trending topics found in database, using mock data');
-      return mockTrendingTopics;
+    const response = await fetch('/api/admin/trending-topics');
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
-    
-    return data;
-    */
+    const data = await response.json();
+    console.log('Fetched trending topics from API:', data.topics?.length || 0);
+    return data.topics || [];
   } catch (error) {
-    console.log('Error fetching trending topics, using mock data:', error);
+    console.log('Error fetching trending topics from API, using mock data:', error);
     return mockTrendingTopics;
   }
 };
 
 const fetchGeneratedPolls = async (): Promise<GeneratedPoll[]> => {
   try {
-    // For now, always return mock data since the database tables don't exist yet
-    console.log('Using mock generated polls data for development');
-    return mockGeneratedPolls;
-    
-    // TODO: Uncomment when database tables are set up
-    /*
-    const { data, error } = await supabase
-      .from('generated_polls')
-      .select('*')
-      .order('created_at', { ascending: false });
-    
-    if (error) throw error;
-    
-    // If no data in database, return mock data for development
-    if (!data || data.length === 0) {
-      console.log('No generated polls found in database, using mock data');
-      return mockGeneratedPolls;
+    const response = await fetch('/api/admin/generated-polls');
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
-    
-    return data;
-    */
+    const data = await response.json();
+    console.log('Fetched generated polls from API:', data.polls?.length || 0);
+    return data.polls || [];
   } catch (error) {
-    console.log('Error fetching generated polls, using mock data:', error);
+    console.log('Error fetching generated polls from API, using mock data:', error);
     return mockGeneratedPolls;
   }
 };
 
 const fetchSystemMetrics = async (): Promise<SystemMetrics> => {
   try {
-    // For now, always return mock data since the database tables don't exist yet
+    // For now, return mock data since we don't have a system metrics API yet
     console.log('Using mock system metrics data for development');
     return mockSystemMetrics;
     
-    // TODO: Uncomment when database tables are set up
+    // TODO: Create system metrics API endpoint when needed
     /*
-    // Get counts from different tables
-    const [topicsResult, pollsResult, activePollsResult] = await Promise.all([
-      supabase.from('trending_topics').select('count', { count: 'exact' }),
-      supabase.from('generated_polls').select('count', { count: 'exact' }),
-      supabase.from('po_polls').select('count', { count: 'exact' }).eq('status', 'active'),
-    ]);
-
-    const metrics = {
-      total_topics: topicsResult.count || 0,
-      total_polls: pollsResult.count || 0,
-      active_polls: activePollsResult.count || 0,
-      system_health: 'healthy' as const, // TODO: Implement health check
-      last_updated: new Date().toISOString(),
-    };
-
-    // If no data in database, return mock data for development
-    if (metrics.total_topics === 0 && metrics.total_polls === 0) {
-      console.log('No system metrics found in database, using mock data');
-      return mockSystemMetrics;
+    const response = await fetch('/api/admin/system-metrics');
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
-
-    return metrics;
+    const data = await response.json();
+    return data.metrics || mockSystemMetrics;
     */
   } catch (error) {
     console.log('Error fetching system metrics, using mock data:', error);
@@ -112,44 +61,48 @@ const fetchSystemMetrics = async (): Promise<SystemMetrics> => {
 };
 
 const approveTopic = async (topicId: string): Promise<void> => {
-  const { error } = await supabase
-    .from('trending_topics')
-    .update({ status: 'approved' })
-    .eq('id', topicId);
-  
-  if (error) throw error;
+  const response = await fetch(`/api/admin/trending-topics/${topicId}/approve`, {
+    method: 'POST',
+  });
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
 };
 
 const rejectTopic = async (topicId: string): Promise<void> => {
-  const { error } = await supabase
-    .from('trending_topics')
-    .update({ status: 'rejected' })
-    .eq('id', topicId);
-  
-  if (error) throw error;
+  const response = await fetch(`/api/admin/trending-topics/${topicId}/reject`, {
+    method: 'POST',
+  });
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
 };
 
 const approvePoll = async (pollId: string): Promise<void> => {
-  const { error } = await supabase
-    .from('generated_polls')
-    .update({ status: 'approved' })
-    .eq('id', pollId);
-  
-  if (error) throw error;
+  const response = await fetch(`/api/admin/generated-polls/${pollId}/approve`, {
+    method: 'POST',
+  });
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
 };
 
 const rejectPoll = async (pollId: string): Promise<void> => {
-  const { error } = await supabase
-    .from('generated_polls')
-    .update({ status: 'rejected' })
-    .eq('id', pollId);
-  
-  if (error) throw error;
+  const response = await fetch(`/api/admin/generated-polls/${pollId}/reject`, {
+    method: 'POST',
+  });
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
 };
 
 const analyzeTrendingTopics = async (): Promise<void> => {
-  const { error } = await supabase.rpc('analyze_trending_topics');
-  if (error) throw error;
+  const response = await fetch('/api/admin/trending-topics/analyze', {
+    method: 'POST',
+  });
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
 };
 
 // Custom hooks
@@ -348,46 +301,11 @@ export const useAnalyzeTrendingTopics = () => {
   });
 };
 
-// Real-time subscription hook
+// Real-time subscription hook (disabled for now - using API routes instead)
 export const useRealTimeSubscriptions = () => {
-  const { addTopic, updateTopic, addPoll, updatePoll } = useAdminStore();
-
+  // TODO: Implement real-time updates via WebSocket or Server-Sent Events when needed
+  // For now, we rely on React Query's refetch intervals for data updates
   React.useEffect(() => {
-    // Subscribe to trending topics changes
-    const topicsSubscription = supabase
-      .channel('trending-topics-changes')
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'trending_topics',
-      }, (payload) => {
-        if (payload.eventType === 'INSERT') {
-          addTopic(payload.new as TrendingTopic);
-        } else if (payload.eventType === 'UPDATE') {
-          updateTopic(payload.new.id, payload.new as Partial<TrendingTopic>);
-        }
-      })
-      .subscribe();
-
-    // Subscribe to generated polls changes
-    const pollsSubscription = supabase
-      .channel('generated-polls-changes')
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'generated_polls',
-      }, (payload) => {
-        if (payload.eventType === 'INSERT') {
-          addPoll(payload.new as GeneratedPoll);
-        } else if (payload.eventType === 'UPDATE') {
-          updatePoll(payload.new.id, payload.new as Partial<GeneratedPoll>);
-        }
-      })
-      .subscribe();
-
-    return () => {
-      topicsSubscription.unsubscribe();
-      pollsSubscription.unsubscribe();
-    };
-  }, [addTopic, updateTopic, addPoll, updatePoll]);
+    // No real-time subscriptions for now
+  }, []);
 };
