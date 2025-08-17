@@ -144,13 +144,14 @@ async function assessProjectStatus() {
     console.log('------------------------------')
     
     const coreDocs = [
-      'DOCUMENTATION_SYSTEM.md',
-      'AGENT_QUICK_REFERENCE.md',
-      'AGENT_ONBOARDING.md',
-      'DEVELOPMENT_BEST_PRACTICES.md',
-      'PROJECT_STATUS_ASSESSMENT.md',
-      'CHANGE_LOG.md',
-      'DEPLOYMENT_SUCCESS_SUMMARY.md'
+      'docs/consolidated/README.md',
+      'docs/consolidated/core/ARCHITECTURE.md',
+      'docs/consolidated/security/SECURITY_OVERVIEW.md',
+      'docs/consolidated/development/DEVELOPMENT_GUIDE.md',
+      'docs/consolidated/deployment/DEPLOYMENT_GUIDE.md',
+      'docs/consolidated/features/AUTOMATED_POLLS.md',
+      'docs/consolidated/historical/PROJECT_STATUS.md',
+      'docs/consolidated/historical/CHANGE_LOG.md'
     ]
 
     for (const doc of coreDocs) {
@@ -239,10 +240,10 @@ async function assessProjectStatus() {
     }
 
     console.log('\n📖 Next Steps:')
-    console.log('1. Read DOCUMENTATION_SYSTEM.md for navigation')
-    console.log('2. Check AGENT_QUICK_REFERENCE.md for quick context')
-    console.log('3. Review PROJECT_STATUS_ASSESSMENT.md for detailed status')
-    console.log('4. Check CHANGE_LOG.md for recent changes')
+    console.log('1. Read docs/consolidated/README.md for navigation')
+    console.log('2. Check docs/consolidated/core/ARCHITECTURE.md for system overview')
+    console.log('3. Review docs/consolidated/historical/PROJECT_STATUS.md for detailed status')
+    console.log('4. Check docs/consolidated/historical/CHANGE_LOG.md for recent changes')
 
     return status
 
@@ -269,12 +270,12 @@ function determineOverallStatus(status) {
 
 // Run assessment
 assessProjectStatus().then(status => {
-  console.log('\n🎉 Assessment Complete!')
-  console.log('======================')
-  console.log('For detailed information, check:')
-  console.log('- PROJECT_STATUS_ASSESSMENT.md')
-  console.log('- DEPLOYMENT_SUCCESS_SUMMARY.md')
-  console.log('- CHANGE_LOG.md')
+      console.log('\n🎉 Assessment Complete!')
+    console.log('======================')
+    console.log('For detailed information, check:')
+    console.log('- docs/consolidated/historical/PROJECT_STATUS.md')
+    console.log('- docs/consolidated/deployment/DEPLOYMENT_GUIDE.md')
+    console.log('- docs/consolidated/historical/CHANGE_LOG.md')
 }).catch(error => {
   console.error('❌ Assessment failed:', error)
   process.exit(1)

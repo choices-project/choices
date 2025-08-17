@@ -5,12 +5,11 @@ A revolutionary privacy-first voting platform built as a Progressive Web App (PW
 ## 🚀 Quick Start for New Contributors
 
 ### **For New Agents/Contributors**
-1. **📚 Documentation System**: Start with [`DOCUMENTATION_SYSTEM.md`](DOCUMENTATION_SYSTEM.md)
-2. **👋 Onboarding Guide**: Read [`AGENT_ONBOARDING.md`](AGENT_ONBOARDING.md)
-3. **🏗️ Project Overview**: Review [`PROJECT_SUMMARY.md`](PROJECT_SUMMARY.md)
-4. **🎯 Best Practices**: Study [`DEVELOPMENT_BEST_PRACTICES.md`](DEVELOPMENT_BEST_PRACTICES.md)
-5. **🚀 Current Status**: Check [`PROJECT_STATUS_ASSESSMENT.md`](PROJECT_STATUS_ASSESSMENT.md)
-6. **🔍 Quick Assessment**: Run `node scripts/assess-project-status.js`
+1. **📚 Consolidated Documentation**: Start with [`docs/consolidated/README.md`](docs/consolidated/README.md)
+2. **🏗️ Architecture**: Read [`docs/consolidated/core/ARCHITECTURE.md`](docs/consolidated/core/ARCHITECTURE.md)
+3. **🔒 Security**: Review [`docs/consolidated/security/SECURITY_OVERVIEW.md`](docs/consolidated/security/SECURITY_OVERVIEW.md)
+4. **🛠️ Development**: Study [`docs/consolidated/development/DEVELOPMENT_GUIDE.md`](docs/consolidated/development/DEVELOPMENT_GUIDE.md)
+5. **🔍 Quick Assessment**: Run `node scripts/assess-project-status.js`
 
 ### **Current Project Status**
 - ✅ **Core Application**: Next.js frontend with Go backend services
@@ -153,10 +152,10 @@ node scripts/check_supabase_auth.js
    Configure the following variables:
    ```env
    DATABASE_URL="postgresql://..."
-   NEXTAUTH_SECRET="[GENERATE-A-SECURE-RANDOM-STRING]"
+   NEXTAUTH_SECRET="your-secure-random-string-here"
    NEXTAUTH_URL="http://localhost:3000"
    SUPABASE_URL="your-supabase-url"
-   SUPABASE_ANON_KEY="your-supabase-anon-key"
+   SUPABASE_ANON_KEY="your-supabase-anon-key-here"
    ```
 
 4. **Run the development server**
@@ -289,11 +288,11 @@ npm start
 ```env
 # Production environment variables
 DATABASE_URL="postgresql://..."
-NEXTAUTH_SECRET="[GENERATE-A-SECURE-RANDOM-STRING]"
+NEXTAUTH_SECRET="your-secure-random-string-here"
 NEXTAUTH_URL="https://your-domain.com"
-NEXT_PUBLIC_VAPID_PUBLIC_KEY="your-vapid-key"
+NEXT_PUBLIC_VAPID_PUBLIC_KEY="your-vapid-public-key-here"
 SUPABASE_URL="your-supabase-url"
-SUPABASE_ANON_KEY="your-supabase-anon-key"
+SUPABASE_ANON_KEY="your-supabase-anon-key-here"
 ```
 
 ### Deployment Checklist

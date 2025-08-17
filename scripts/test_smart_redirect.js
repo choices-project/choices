@@ -58,7 +58,7 @@ async function testSmartRedirect() {
 
   // Test 1: User with no profile (new user) - using real user ID
   console.log('Test 1: New user (no profile)')
-  const existingUserId = '2d698450-a16a-4e27-9595-b9d02b9468cd'
+  const existingUserId = process.env.ADMIN_USER_ID || ''
   const newUserRedirect = await getRedirectDestination(existingUserId, '/dashboard')
   console.log(`Result: ${newUserRedirect}`)
   console.log(`Expected: /onboarding`)
