@@ -9,7 +9,8 @@ A revolutionary privacy-first voting platform built as a Progressive Web App (PW
 2. **👋 Onboarding Guide**: Read [`AGENT_ONBOARDING.md`](AGENT_ONBOARDING.md)
 3. **🏗️ Project Overview**: Review [`PROJECT_SUMMARY.md`](PROJECT_SUMMARY.md)
 4. **🎯 Best Practices**: Study [`DEVELOPMENT_BEST_PRACTICES.md`](DEVELOPMENT_BEST_PRACTICES.md)
-5. **🚀 Current Status**: Check [`DEPLOYMENT_SUCCESS_SUMMARY.md`](DEPLOYMENT_SUCCESS_SUMMARY.md)
+5. **🚀 Current Status**: Check [`PROJECT_STATUS_ASSESSMENT.md`](PROJECT_STATUS_ASSESSMENT.md)
+6. **🔍 Quick Assessment**: Run `node scripts/assess-project-status.js`
 
 ### **Current Project Status**
 - ✅ **Core Application**: Next.js frontend with Go backend services
