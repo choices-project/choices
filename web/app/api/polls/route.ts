@@ -46,9 +46,9 @@ export async function GET(request: NextRequest) {
         title: poll.title,
         total_votes: poll.total_votes || 0,
         participation_rate: poll.participation_rate || 0,
-        privacy_level: poll.privacy_level || 'public',
-        category: poll.category,
-        tags: poll.tags || [],
+        privacy_level: (poll as any).privacy_level || 'public',
+        category: (poll as any).category,
+        tags: (poll as any).tags || [],
         aggregated_results: poll.options ? 
           poll.options.reduce((acc, option, index) => {
             acc[`option_${index + 1}`] = 0; // Default to 0 until we can count votes
