@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
 import { cookies } from 'next/headers';
+import { HybridVotingService } from '@/lib/hybrid-voting-service';
 
 export const dynamic = 'force-dynamic';
 
@@ -46,7 +47,7 @@ export async function POST(
     }
 
     const body = await request.json();
-    const { choice } = body;
+    const { choice, privacy_level = 'public' } = body;
 
     // Validate choice
     if (!choice || typeof choice !== 'number' || choice < 1) {
@@ -56,83 +57,31 @@ export async function POST(
       );
     }
 
-    // Verify poll exists and is active
-    const { data: poll, error: pollError } = await supabase
-      .from('po_polls')
-      .select('poll_id, title, options, status')
-      .eq('poll_id', pollId)
-      .eq('status', 'active')
-      .single();
+    // Use hybrid voting service
+    const votingService = new HybridVotingService();
+    const voteRequest = {
+      pollId,
+      choice,
+      privacyLevel: privacy_level,
+      userId: user.id
+    };
 
-    if (pollError || !poll) {
-      return NextResponse.json(
-        { error: 'Poll not found or not active' },
-        { status: 404 }
-      );
-    }
+    const response = await votingService.submitVote(voteRequest);
 
-    // Validate choice is within poll options
-    if (choice > poll.options.length) {
+    if (!response.success) {
       return NextResponse.json(
-        { error: 'Invalid choice - option does not exist' },
+        { error: response.message },
         { status: 400 }
       );
     }
 
-    // Check if user has already voted (using secure function)
-    const { data: existingVote } = await supabase
-      .from('po_votes')
-      .select('id')
-      .eq('poll_id', pollId)
-      .eq('user_id', user.id)
-      .single();
-
-    if (existingVote) {
-      return NextResponse.json(
-        { error: 'You have already voted on this poll' },
-        { status: 409 }
-      );
-    }
-
-    // Create vote token for privacy
-    const voteToken = `vote_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-
-    // Insert vote (individual vote data is protected by RLS)
-    const { data: vote, error: voteError } = await supabase
-      .from('po_votes')
-      .insert({
-        poll_id: pollId,
-        user_id: user.id,
-        token: voteToken,
-        choice: choice,
-        voted_at: new Date().toISOString()
-      })
-      .select()
-      .single();
-
-    if (voteError) {
-      console.error('Error creating vote:', voteError);
-      return NextResponse.json(
-        { error: 'Failed to submit vote' },
-        { status: 500 }
-      );
-    }
-
-    // Update poll vote count (using secure function)
-    const { error: updateError } = await supabase
-      .rpc('update_poll_vote_count', { poll_id_param: pollId });
-
-    if (updateError) {
-      console.error('Error updating poll vote count:', updateError);
-      // Vote was still recorded, just couldn't update count
-    }
-
-    // Return success response (no individual vote data)
     return NextResponse.json({
       success: true,
-      message: 'Vote submitted successfully',
+      message: response.message,
       poll_id: pollId,
-      // Do NOT return individual vote data for privacy
+      privacy_level: response.privacyLevel,
+      response_time: response.responseTime,
+      audit_receipt: response.auditReceipt,
       vote_confirmed: true
     });
 

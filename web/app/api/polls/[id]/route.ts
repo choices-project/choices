@@ -23,7 +23,7 @@ export async function GET(
     // Fetch poll data from po_polls table
     const { data: poll, error } = await supabase
       .from('po_polls')
-      .select('poll_id, title, description, options, total_votes, participation_rate, status')
+      .select('poll_id, title, description, options, total_votes, participation_rate, status, privacy_level, category, tags')
       .eq('poll_id', pollId)
       .eq('status', 'active')
       .single();
@@ -35,7 +35,7 @@ export async function GET(
       );
     }
 
-    // Return sanitized poll data (no sensitive information)
+    // Return sanitized poll data with privacy info
     const sanitizedPoll = {
       poll_id: poll.poll_id,
       title: poll.title,
@@ -43,6 +43,9 @@ export async function GET(
       options: poll.options,
       total_votes: poll.total_votes || 0,
       participation_rate: poll.participation_rate || 0,
+      privacy_level: poll.privacy_level || 'public',
+      category: poll.category,
+      tags: poll.tags || [],
       status: 'active', // Always show as active for public view
       created_at: new Date().toISOString(), // Generic timestamp
     };
