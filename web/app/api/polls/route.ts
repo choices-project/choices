@@ -21,45 +21,37 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '20');
     const status = searchParams.get('status') || 'active';
 
-    // Try to use secure function first, fallback to direct query
+    // Fetch active polls from po_polls table
     let polls;
     let error;
 
     try {
-      // Try the RPC function (if security policies are deployed)
-      const { data: rpcPolls, error: rpcError } = await supabase
-        .rpc('get_poll_results', { poll_id_param: null })
+      console.log('Fetching active polls from po_polls table...');
+      const { data: directPolls, error: directError } = await supabase
+        .from('po_polls')
+        .select('poll_id, title, total_votes, participation_rate, options, status')
+        .eq('status', 'active')
         .limit(limit);
 
-      if (!rpcError && rpcPolls) {
-        polls = rpcPolls;
-      } else {
-        // Fallback to direct query (temporary until security policies deployed)
-        console.log('RPC function not available, using direct query');
-        const { data: directPolls, error: directError } = await supabase
-          .from('po_polls')
-          .select('poll_id, title, total_votes, participation_rate, options, status')
-          .eq('status', 'active')
-          .limit(limit);
-
-        if (directError) {
-          throw directError;
-        }
-
-        // Manually aggregate results (temporary solution)
-        polls = directPolls?.map(poll => ({
-          poll_id: poll.poll_id,
-          title: poll.title,
-          total_votes: poll.total_votes || 0,
-          participation_rate: poll.participation_rate || 0,
-          aggregated_results: poll.options ? 
-            poll.options.reduce((acc, option, index) => {
-              acc[`option_${index + 1}`] = 0; // Default to 0 until we can count votes
-              return acc;
-            }, {}) : {},
-          status: poll.status
-        })) || [];
+      if (directError) {
+        throw directError;
       }
+
+      console.log('Found polls:', directPolls?.length || 0);
+
+      // Manually aggregate results (temporary solution)
+      polls = directPolls?.map(poll => ({
+        poll_id: poll.poll_id,
+        title: poll.title,
+        total_votes: poll.total_votes || 0,
+        participation_rate: poll.participation_rate || 0,
+        aggregated_results: poll.options ? 
+          poll.options.reduce((acc, option, index) => {
+            acc[`option_${index + 1}`] = 0; // Default to 0 until we can count votes
+            return acc;
+          }, {}) : {},
+        status: poll.status
+      })) || [];
     } catch (fallbackError) {
       console.error('Error fetching polls:', fallbackError);
       return NextResponse.json(

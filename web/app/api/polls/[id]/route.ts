@@ -1,31 +1,58 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@/utils/supabase/server';
+import { cookies } from 'next/headers';
+
+export const dynamic = 'force-dynamic';
 
 export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
-    const pollId = params.id
+    const pollId = params.id;
+    const cookieStore = await cookies();
+    const supabase = createClient(cookieStore);
     
-    // Fetch poll data from the PO service
-    const response = await fetch(`http://localhost:8082/api/v1/polls/get?id=${pollId}`)
-    
-    if (!response.ok) {
+    if (!supabase) {
+      return NextResponse.json(
+        { error: 'Supabase client not available' },
+        { status: 500 }
+      );
+    }
+
+    // Fetch poll data from po_polls table
+    const { data: poll, error } = await supabase
+      .from('po_polls')
+      .select('poll_id, title, description, options, total_votes, participation_rate, status')
+      .eq('poll_id', pollId)
+      .eq('status', 'active')
+      .single();
+
+    if (error || !poll) {
       return NextResponse.json(
         { error: 'Poll not found' },
         { status: 404 }
-      )
+      );
     }
-    
-    const pollData = await response.json()
-    
-    // Return the poll data
-    return NextResponse.json(pollData)
+
+    // Return sanitized poll data (no sensitive information)
+    const sanitizedPoll = {
+      poll_id: poll.poll_id,
+      title: poll.title,
+      description: poll.description,
+      options: poll.options,
+      total_votes: poll.total_votes || 0,
+      participation_rate: poll.participation_rate || 0,
+      status: 'active', // Always show as active for public view
+      created_at: new Date().toISOString(), // Generic timestamp
+    };
+
+    return NextResponse.json(sanitizedPoll);
   } catch (error) {
-    console.error('Error fetching poll:', error)
+    console.error('Error fetching poll:', error);
     return NextResponse.json(
       { error: 'Failed to fetch poll data' },
       { status: 500 }
-    )
+    );
   }
 }
