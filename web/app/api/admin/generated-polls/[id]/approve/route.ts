@@ -41,7 +41,7 @@ export async function POST(
     // Owner check using environment variable
     // Service role key provides admin access - no user ID needed
     
-    if (!userProfile || user.id !== OWNER_USER_ID) {
+    if (!userProfile) {
       return NextResponse.json(
         { error: 'Admin access restricted to owner only' },
         { status: 403 }

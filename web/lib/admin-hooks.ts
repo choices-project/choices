@@ -93,54 +93,69 @@ export const useTrendingTopics = () => {
   const queryClient = useQueryClient();
   const { updateTrendingTopics, setLoading } = useAdminStore();
 
-  return useQuery({
+  const query = useQuery({
     queryKey: ['trending-topics'],
     queryFn: fetchTrendingTopics,
     refetchInterval: 30000, // 30 seconds
-    onSuccess: (data) => {
-      updateTrendingTopics(data);
-      setLoading('topics', false);
-    },
-    onError: () => {
-      setLoading('topics', false);
-    },
   });
+
+  React.useEffect(() => {
+    if (query.data) {
+      updateTrendingTopics(query.data);
+      setLoading('topics', false);
+    }
+    if (query.error) {
+      setLoading('topics', false);
+    }
+  }, [query.data, query.error, updateTrendingTopics, setLoading]);
+
+  return query;
 };
 
 export const useGeneratedPolls = () => {
   const queryClient = useQueryClient();
   const { updateGeneratedPolls, setLoading } = useAdminStore();
 
-  return useQuery({
+  const query = useQuery({
     queryKey: ['generated-polls'],
     queryFn: fetchGeneratedPolls,
     refetchInterval: 30000, // 30 seconds
-    onSuccess: (data) => {
-      updateGeneratedPolls(data);
-      setLoading('polls', false);
-    },
-    onError: () => {
-      setLoading('polls', false);
-    },
   });
+
+  React.useEffect(() => {
+    if (query.data) {
+      updateGeneratedPolls(query.data);
+      setLoading('polls', false);
+    }
+    if (query.error) {
+      setLoading('polls', false);
+    }
+  }, [query.data, query.error, updateGeneratedPolls, setLoading]);
+
+  return query;
 };
 
 export const useSystemMetrics = () => {
   const queryClient = useQueryClient();
   const { updateSystemMetrics, setLoading } = useAdminStore();
 
-  return useQuery({
+  const query = useQuery({
     queryKey: ['system-metrics'],
     queryFn: fetchSystemMetrics,
     refetchInterval: 60000, // 1 minute
-    onSuccess: (data) => {
-      updateSystemMetrics(data);
-      setLoading('metrics', false);
-    },
-    onError: () => {
-      setLoading('metrics', false);
-    },
   });
+
+  React.useEffect(() => {
+    if (query.data) {
+      updateSystemMetrics(query.data);
+      setLoading('metrics', false);
+    }
+    if (query.error) {
+      setLoading('metrics', false);
+    }
+  }, [query.data, query.error, updateSystemMetrics, setLoading]);
+
+  return query;
 };
 
 // Mutation hooks

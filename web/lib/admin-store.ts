@@ -165,11 +165,11 @@ export const useAdminStore = create<AdminStore>()(
         activityFeed: [
           {
             id: crypto.randomUUID(),
-            type: 'topic_created',
+            type: 'topic_created' as const,
             title: 'New Trending Topic',
             description: `"${topic.title}" was detected as trending`,
             timestamp: new Date().toISOString(),
-            severity: 'info',
+            severity: 'info' as const,
           },
           ...state.activityFeed,
         ].slice(0, 50), // Keep only last 50 activities
@@ -186,11 +186,11 @@ export const useAdminStore = create<AdminStore>()(
         activityFeed: [
           {
             id: crypto.randomUUID(),
-            type: 'poll_generated',
+            type: 'poll_generated' as const,
             title: 'New Poll Generated',
             description: `"${poll.title}" was generated from trending topic`,
             timestamp: new Date().toISOString(),
-            severity: 'info',
+            severity: 'info' as const,
           },
           ...state.activityFeed,
         ].slice(0, 50),

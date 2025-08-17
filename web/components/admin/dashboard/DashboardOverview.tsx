@@ -99,7 +99,7 @@ export const DashboardOverview: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <MetricCard
           title="Total Topics"
-          value={metrics?.total_topics || 0}
+          value={(metrics as any)?.total_topics || 0}
           trend="+12%"
           trendValue={12}
           icon={<TrendingUp className="h-6 w-6" />}
@@ -107,7 +107,7 @@ export const DashboardOverview: React.FC = () => {
         />
         <MetricCard
           title="Generated Polls"
-          value={metrics?.total_polls || 0}
+          value={(metrics as any)?.total_polls || 0}
           trend="+8%"
           trendValue={8}
           icon={<BarChart3 className="h-6 w-6" />}
@@ -115,7 +115,7 @@ export const DashboardOverview: React.FC = () => {
         />
         <MetricCard
           title="Active Polls"
-          value={metrics?.active_polls || 0}
+          value={(metrics as any)?.active_polls || 0}
           trend="+5%"
           trendValue={5}
           icon={<Activity className="h-6 w-6" />}
@@ -123,9 +123,9 @@ export const DashboardOverview: React.FC = () => {
         />
         <MetricCard
           title="System Health"
-          value={metrics?.system_health || 'healthy'}
-          icon={getSystemHealthIcon(metrics?.system_health || 'healthy')}
-          color={getSystemHealthColor(metrics?.system_health || 'healthy')}
+          value={(metrics as any)?.system_health || 'healthy'}
+          icon={getSystemHealthIcon((metrics as any)?.system_health || 'healthy')}
+          color={getSystemHealthColor((metrics as any)?.system_health || 'healthy')}
         />
       </div>
 

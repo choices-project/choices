@@ -27,7 +27,7 @@ export const TrendingTopicsPage: React.FC = () => {
   const analyzeTopics = useAnalyzeTrendingTopics();
 
   // Filter topics based on search and filters
-  const filteredTopics = topics?.filter(topic => {
+  const filteredTopics = (topics as any)?.filter((topic: any) => {
     const matchesSearch = topic.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          topic.category.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'all' || topic.status === statusFilter;
