@@ -30,8 +30,79 @@ export async function GET(request: NextRequest) {
     const votingMethod = searchParams.get('votingMethod');
     const minQualityScore = parseFloat(searchParams.get('minQualityScore') || '0');
 
-    // Get generated polls
-    let polls = await service.getGeneratedPolls(status, limit);
+    // For development, return mock data since database tables don't exist yet
+    const mockPolls = [
+      {
+        id: '1',
+        topicId: '1',
+        title: 'Who do you think is winning the political feud between Gavin Newsom and Donald Trump?',
+        description: 'Based on recent exchanges and public opinion polls, who appears to be gaining more support?',
+        options: [
+          { id: '1', text: 'Gavin Newsom is winning', description: 'Newsom has stronger arguments and public support' },
+          { id: '2', text: 'Donald Trump is winning', description: 'Trump has more vocal supporters and media attention' },
+          { id: '3', text: 'It\'s too close to call', description: 'Both sides have valid points and strong followings' },
+          { id: '4', text: 'Neither is winning', description: 'The feud is damaging to both political parties' }
+        ],
+        votingMethod: 'single_choice' as const,
+        category: 'Politics',
+        tags: ['politics', 'newsom', 'trump', 'feud'],
+        qualityScore: 8.5,
+        status: 'pending' as const,
+        topicAnalysis: { sentiment: 'negative', controversy: 'high' },
+        qualityMetrics: { bias: 0.2, clarity: 0.9, completeness: 0.8 },
+        generationMetadata: { source: 'automated', confidence: 0.85 },
+        createdAt: new Date('2024-01-15T10:30:00Z'),
+        updatedAt: new Date('2024-01-15T10:30:00Z')
+      },
+      {
+        id: '2',
+        topicId: '3',
+        title: 'How confident are you that the 2024 Paris Olympics will be successful?',
+        description: 'Considering the preparations, security measures, and infrastructure development, what\'s your confidence level?',
+        options: [
+          { id: '1', text: 'Very confident', description: 'Paris is well-prepared and will deliver an excellent Olympics' },
+          { id: '2', text: 'Somewhat confident', description: 'Most aspects are ready, with minor concerns' },
+          { id: '3', text: 'Not very confident', description: 'There are significant concerns about readiness' },
+          { id: '4', text: 'Not confident at all', description: 'The Olympics will face major problems' }
+        ],
+        votingMethod: 'single_choice' as const,
+        category: 'Sports',
+        tags: ['olympics', 'paris', 'sports', 'international'],
+        qualityScore: 7.8,
+        status: 'approved' as const,
+        approvedBy: 'admin',
+        approvedAt: new Date('2024-01-13T12:00:00Z'),
+        topicAnalysis: { sentiment: 'neutral', controversy: 'medium' },
+        qualityMetrics: { bias: 0.1, clarity: 0.8, completeness: 0.7 },
+        generationMetadata: { source: 'automated', confidence: 0.75 },
+        createdAt: new Date('2024-01-13T09:30:00Z'),
+        updatedAt: new Date('2024-01-13T12:00:00Z')
+      },
+      {
+        id: '3',
+        topicId: '4',
+        title: 'What approach should governments take to AI regulation?',
+        description: 'As AI technology advances rapidly, what regulatory approach do you think is most appropriate?',
+        options: [
+          { id: '1', text: 'Strict regulation', description: 'Heavy oversight to prevent misuse and ensure safety' },
+          { id: '2', text: 'Moderate regulation', description: 'Balanced approach with some oversight but not stifling innovation' },
+          { id: '3', text: 'Light regulation', description: 'Minimal oversight to encourage innovation and development' },
+          { id: '4', text: 'No regulation', description: 'Let the market and industry self-regulate' }
+        ],
+        votingMethod: 'single_choice' as const,
+        category: 'Technology',
+        tags: ['ai', 'regulation', 'technology', 'policy'],
+        qualityScore: 8.2,
+        status: 'pending' as const,
+        topicAnalysis: { sentiment: 'neutral', controversy: 'medium' },
+        qualityMetrics: { bias: 0.15, clarity: 0.9, completeness: 0.85 },
+        generationMetadata: { source: 'automated', confidence: 0.8 },
+        createdAt: new Date('2024-01-12T15:00:00Z'),
+        updatedAt: new Date('2024-01-12T15:00:00Z')
+      }
+    ];
+
+    let polls = mockPolls;
 
     // Apply additional filters
     if (category) {
