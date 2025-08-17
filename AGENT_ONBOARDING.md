@@ -4,6 +4,9 @@
 
 Welcome to the **Choices** platform! This is a comprehensive voting and polling system with automated trending topic analysis.
 
+### **📚 First: Read the Documentation System**
+Before diving in, please read [`DOCUMENTATION_SYSTEM.md`](DOCUMENTATION_SYSTEM.md) to understand how our documentation is organized and how to navigate it effectively.
+
 ### **Current Project State**
 - ✅ **Core Application**: Next.js frontend with Go backend services
 - ✅ **Database**: PostgreSQL via Supabase with comprehensive RLS security
