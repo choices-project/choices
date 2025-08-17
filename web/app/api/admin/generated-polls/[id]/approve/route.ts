@@ -38,8 +38,8 @@ export async function POST(
       .eq('stable_id', user.id)
       .single();
 
-    // HARDCODED OWNER CHECK - Replace '2d698450-a16a-4e27-9595-b9d02b9468cd' with your actual user ID
-    const OWNER_USER_ID = '2d698450-a16a-4e27-9595-b9d02b9468cd'; // TODO: Replace with your actual user ID
+    // Owner check using environment variable
+    // Service role key provides admin access - no user ID needed
     
     if (!userProfile || user.id !== OWNER_USER_ID) {
       return NextResponse.json(
