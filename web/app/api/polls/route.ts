@@ -1,57 +1,68 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
 import { cookies } from 'next/headers';
-import { getMockPollsResponse } from '@/lib/mock-data';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET() {
+// GET /api/polls - Get active polls with aggregated results only
+export async function GET(request: NextRequest) {
   try {
     const cookieStore = await cookies();
     const supabase = createClient(cookieStore);
     
-    // If Supabase client is not available, return mock data
     if (!supabase) {
-      console.log('Supabase client not available, using mock data');
-      return NextResponse.json(getMockPollsResponse());
+      return NextResponse.json(
+        { error: 'Supabase client not available' },
+        { status: 500 }
+      );
     }
-    
-    try {
-      const { data, error } = await supabase
-        .from('po_polls')
-        .select('*')
-        .eq('status', 'active')
-        .order('created_at', { ascending: false });
 
-      if (error) throw error;
+    const { searchParams } = new URL(request.url);
+    const limit = parseInt(searchParams.get('limit') || '20');
+    const status = searchParams.get('status') || 'active';
 
-      // Transform Supabase data to match expected format
-      const polls = data?.map(poll => ({
-        id: poll.poll_id,
-        question: poll.title,
-        options: poll.options || [],
-        totalVotes: poll.total_votes || 0,
-        results: {}, // Will be calculated from votes
-        expiresAt: poll.end_time,
-        category: 'Community', // Default category
-        isActive: poll.status === 'active',
-        description: poll.description,
-        createdBy: 'Community'
-      })) || [];
+    // Use secure function to get poll results (aggregated only)
+    const { data: polls, error } = await supabase
+      .rpc('get_poll_results', { poll_id_param: null }) // null to get all active polls
+      .limit(limit);
 
-      return NextResponse.json({ polls });
-    } catch (error) {
-      console.error('Supabase error:', error);
-      // Fallback to mock data
-      return NextResponse.json(getMockPollsResponse());
+    if (error) {
+      console.error('Error fetching polls:', error);
+      return NextResponse.json(
+        { error: 'Failed to fetch polls' },
+        { status: 500 }
+      );
     }
+
+    // Additional security: ensure no sensitive data is returned
+    const sanitizedPolls = polls?.map(poll => ({
+      poll_id: poll.poll_id,
+      title: poll.title,
+      total_votes: poll.total_votes,
+      participation_rate: poll.participation_rate,
+      aggregated_results: poll.aggregated_results,
+      // Only include safe fields
+      status: 'active', // Always show as active for public view
+      created_at: new Date().toISOString(), // Generic timestamp
+    })) || [];
+
+    return NextResponse.json({
+      success: true,
+      polls: sanitizedPolls,
+      count: sanitizedPolls.length,
+      message: 'Aggregated poll results only - no individual vote data'
+    });
+
   } catch (error) {
     console.error('Error in polls API:', error);
-    // Always return mock data as final fallback
-    return NextResponse.json(getMockPollsResponse());
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
 }
 
+// POST /api/polls - Create new poll (authenticated users only)
 export async function POST(request: NextRequest) {
   try {
     const cookieStore = await cookies();
@@ -59,114 +70,103 @@ export async function POST(request: NextRequest) {
     
     if (!supabase) {
       return NextResponse.json(
-        { error: 'Supabase not configured' },
+        { error: 'Supabase client not available' },
         { status: 500 }
       );
     }
 
-    // Get current user
+    // Check authentication
     const { data: { user }, error: userError } = await supabase.auth.getUser();
-    
     if (userError || !user) {
       return NextResponse.json(
-        { error: 'User not authenticated' },
+        { error: 'Authentication required to create polls' },
         { status: 401 }
       );
     }
 
+    // Verify user is active
+    const { data: userProfile } = await supabase
+      .from('ia_users')
+      .select('is_active')
+      .eq('stable_id', user.id)
+      .single();
+
+    if (!userProfile || !userProfile.is_active) {
+      return NextResponse.json(
+        { error: 'Active account required to create polls' },
+        { status: 403 }
+      );
+    }
+
     const body = await request.json();
-    const {
-      title,
-      description,
-      votingMethod,
-      options,
-      settings,
-      schedule
-    } = body;
+    const { title, description, options, voting_method = 'single' } = body;
 
     // Validate required fields
-    if (!title?.trim()) {
+    if (!title || !options || !Array.isArray(options) || options.length < 2) {
       return NextResponse.json(
-        { error: 'Poll title is required' },
+        { error: 'Title and at least 2 options are required' },
         { status: 400 }
       );
     }
 
-    if (!options || options.length < 2) {
+    // Sanitize and validate options
+    const sanitizedOptions = options
+      .filter(option => typeof option === 'string' && option.trim().length > 0)
+      .map(option => option.trim())
+      .slice(0, 10); // Limit to 10 options max
+
+    if (sanitizedOptions.length < 2) {
       return NextResponse.json(
-        { error: 'At least 2 options are required' },
+        { error: 'At least 2 valid options are required' },
         { status: 400 }
       );
     }
 
-    // Validate options have text
-    const emptyOptions = options.filter((option: any) => !option.text?.trim());
-    if (emptyOptions.length > 0) {
-      return NextResponse.json(
-        { error: 'All options must have text' },
-        { status: 400 }
-      );
-    }
-
-    // Create poll data
-    const pollData = {
-      poll_id: `poll_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      title: title.trim(),
-      description: description?.trim() || null,
-      options: options.map((option: any) => ({
-        id: option.id,
-        text: option.text.trim(),
-        description: option.description?.trim() || null
-      })),
-      voting_method: votingMethod || 'single',
-      voting_settings: settings || {},
-      start_time: `${schedule.startDate}T${schedule.startTime}:00`,
-      end_time: `${schedule.endDate}T${schedule.endTime}:00`,
-      status: 'active',
-      created_by: user.id,
-      ia_public_key: 'mock_key_for_now', // TODO: Implement proper key generation
-      total_votes: 0,
-      participation_rate: 0,
-      sponsors: [],
-      created_at: new Date().toISOString()
-    };
-
-    // Insert poll into database
-    const { data: poll, error: insertError } = await supabase
+    // Create poll with user as creator
+    const { data: poll, error: pollError } = await supabase
       .from('po_polls')
-      .insert([pollData])
+      .insert({
+        title: title.trim(),
+        description: description?.trim() || null,
+        options: sanitizedOptions,
+        voting_method,
+        status: 'active',
+        created_by: user.id,
+        total_votes: 0,
+        participation_rate: 0.0
+      })
       .select()
       .single();
 
-    if (insertError) {
-      console.error('Error creating poll:', insertError);
+    if (pollError) {
+      console.error('Error creating poll:', pollError);
       return NextResponse.json(
         { error: 'Failed to create poll' },
         { status: 500 }
       );
     }
 
+    // Return sanitized poll data (no sensitive information)
+    const sanitizedPoll = {
+      poll_id: poll.poll_id,
+      title: poll.title,
+      description: poll.description,
+      options: poll.options,
+      voting_method: poll.voting_method,
+      status: poll.status,
+      total_votes: poll.total_votes,
+      participation_rate: poll.participation_rate,
+      created_at: poll.created_at
+    };
+
     return NextResponse.json({
       success: true,
-      message: 'Poll created successfully',
-      poll: {
-        id: poll.poll_id,
-        title: poll.title,
-        description: poll.description,
-        votingMethod: poll.voting_method,
-        options: poll.options,
-        settings: poll.voting_settings,
-        startTime: poll.start_time,
-        endTime: poll.end_time,
-        status: poll.status,
-        createdBy: user.id,
-        totalVotes: poll.total_votes,
-        participationRate: poll.participation_rate
-      }
+      poll: sanitizedPoll,
+      message: 'Poll created successfully'
     });
 
   } catch (error) {
-    console.error('Error creating poll:', error);
+    console.error('Error in polls API:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
