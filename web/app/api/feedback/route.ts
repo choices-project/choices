@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { createClient } from '@/utils/supabase/server'
+import { cookies } from 'next/headers'
+
+export const dynamic = 'force-dynamic'
 
 export async function POST(request: NextRequest) {
   try {
@@ -44,6 +47,10 @@ export async function POST(request: NextRequest) {
       updated_at: new Date().toISOString()
     }
 
+    // Get Supabase client
+    const cookieStore = await cookies()
+    const supabase = createClient(cookieStore)
+    
     // Insert feedback into database
     if (!supabase) {
       console.warn('Supabase not configured - using mock response')
@@ -98,6 +105,10 @@ export async function GET(request: NextRequest) {
     const type = searchParams.get('type')
     const limit = parseInt(searchParams.get('limit') || '50')
     const offset = parseInt(searchParams.get('offset') || '0')
+
+    // Get Supabase client
+    const cookieStore = await cookies()
+    const supabase = createClient(cookieStore)
 
     if (!supabase) {
       console.warn('Supabase not configured - using mock response')
