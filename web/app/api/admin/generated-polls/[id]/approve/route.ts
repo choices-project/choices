@@ -31,16 +31,19 @@ export async function POST(
       );
     }
 
-    // Check admin permissions
+    // Check admin permissions - RESTRICTED TO OWNER ONLY
     const { data: userProfile } = await supabase
       .from('ia_users')
       .select('verification_tier')
       .eq('stable_id', user.id)
       .single();
 
-    if (!userProfile || !['T2', 'T3'].includes(userProfile.verification_tier)) {
+    // HARDCODED OWNER CHECK - Replace 'your-user-id-here' with your actual user ID
+    const OWNER_USER_ID = 'your-user-id-here'; // TODO: Replace with your actual user ID
+    
+    if (!userProfile || user.id !== OWNER_USER_ID) {
       return NextResponse.json(
-        { error: 'Insufficient permissions' },
+        { error: 'Admin access restricted to owner only' },
         { status: 403 }
       );
     }
