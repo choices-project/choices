@@ -33,7 +33,7 @@ export async function GET() {
     }
     
     // Test the connection
-    const { data, error } = await supabase.from('ia_users').select('count').limit(1);
+    const { error } = await supabase.from('ia_users').select('count').limit(1);
     
     return NextResponse.json({
       status: {

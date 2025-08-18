@@ -705,7 +705,7 @@ export function generatePollOptions(topicAnalysis: TopicAnalysis): PollOption[] 
 }
 
 export function assessPollQuality(poll: GeneratedPoll): QualityMetrics {
-  const { title, description, options, votingMethod } = poll;
+  const { title, options, votingMethod } = poll;
   
   // Bias assessment (simplified)
   const biasScore = 0.8; // Placeholder - would use NLP analysis

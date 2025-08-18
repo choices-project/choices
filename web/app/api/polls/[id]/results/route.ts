@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server'
 import { devLog } from '@/lib/logger';
 import { createClient } from '@/utils/supabase/server';
 import { cookies } from 'next/headers';
@@ -24,7 +24,7 @@ export async function GET(
     const pollId = params.id;
 
     // Fetch poll data and calculate aggregated results
-    const { data: poll, error: pollError } = await supabase
+    const { data: poll } = await supabase
       .from('po_polls')
       .select('poll_id, title, options, total_votes, participation_rate, status')
       .eq('poll_id', pollId)

@@ -48,7 +48,7 @@ export default function TestUserSync() {
       setAuthUser(user)
 
       // Check if user exists in ia_users table
-      const { data: iaUserData, error: iaError } = await getUserFromIaUsers(user.id)
+      const { error: iaError } = await getUserFromIaUsers(user.id)
       
       if (iaError) {
         devLog('Error getting ia_user:', iaError)

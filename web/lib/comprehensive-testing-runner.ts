@@ -2,6 +2,7 @@
 // Executes all testing suites and generates complete deployment readiness report
 
 import { testingSuite } from './testing-suite'
+import { devLog } from '@/lib/logger';
 import { crossPlatformTesting } from './cross-platform-testing'
 import { mobileCompatibilityTesting } from './mobile-compatibility-testing'
 
@@ -49,31 +50,31 @@ export class ComprehensiveTestingRunner {
 
   // Run all comprehensive tests
   async runAllTests(): Promise<ComprehensiveReport> {
-    console.log('🚀 Starting Comprehensive Testing...')
+    devLog('🚀 Starting Comprehensive Testing...')
     
     this.results = []
     
     // Run MVP Testing Suite
-    console.log('📋 Running MVP Testing Suite...')
+    devLog('📋 Running MVP Testing Suite...')
     const mvpResult = await this.runMVPTesting()
     this.results.push(mvpResult)
     
     // Run Cross-Platform Testing Suite
-    console.log('🌐 Running Cross-Platform Testing Suite...')
+    devLog('🌐 Running Cross-Platform Testing Suite...')
     const crossPlatformResult = await this.runCrossPlatformTesting()
     this.results.push(crossPlatformResult)
     
     // Run Mobile Compatibility Testing Suite
-    console.log('📱 Running Mobile Compatibility Testing Suite...')
+    devLog('📱 Running Mobile Compatibility Testing Suite...')
     const mobileResult = await this.runMobileCompatibilityTesting()
     this.results.push(mobileResult)
     
     // Generate comprehensive report
     const report = this.generateComprehensiveReport()
     
-    console.log('✅ Comprehensive Testing Complete!')
-    console.log(`📊 Overall Success Rate: ${(report.overallSuccessRate * 100).toFixed(1)}%`)
-    console.log(`🚀 Deployment Status: ${report.overallStatus.toUpperCase()}`)
+    devLog('✅ Comprehensive Testing Complete!')
+    devLog(`📊 Overall Success Rate: ${(report.overallSuccessRate * 100).toFixed(1)}%`)
+    devLog(`🚀 Deployment Status: ${report.overallStatus.toUpperCase()}`)
     
     return report
   }
@@ -114,7 +115,7 @@ export class ComprehensiveTestingRunner {
         timestamp: Date.now()
       }
     } catch (error) {
-      console.error('❌ MVP Testing failed:', error)
+      devLog('❌ MVP Testing failed:', error)
       return {
         testSuite: 'MVP Testing',
         status: 'fail',
@@ -167,7 +168,7 @@ export class ComprehensiveTestingRunner {
         timestamp: Date.now()
       }
     } catch (error) {
-      console.error('❌ Cross-Platform Testing failed:', error)
+      devLog('❌ Cross-Platform Testing failed:', error)
       return {
         testSuite: 'Cross-Platform Testing',
         status: 'fail',
@@ -219,7 +220,7 @@ export class ComprehensiveTestingRunner {
         timestamp: Date.now()
       }
     } catch (error) {
-      console.error('❌ Mobile Compatibility Testing failed:', error)
+      devLog('❌ Mobile Compatibility Testing failed:', error)
       return {
         testSuite: 'Mobile Compatibility Testing',
         status: 'fail',
@@ -359,38 +360,38 @@ export class ComprehensiveTestingRunner {
 
   // Print summary to console
   printSummary(report: ComprehensiveReport): void {
-    console.log('\n' + '='.repeat(60))
-    console.log('📊 COMPREHENSIVE TESTING SUMMARY')
-    console.log('='.repeat(60))
+    devLog('\n' + '='.repeat(60))
+    devLog('📊 COMPREHENSIVE TESTING SUMMARY')
+    devLog('='.repeat(60))
     
-    console.log(`\n🎯 Overall Status: ${report.overallStatus.toUpperCase()}`)
-    console.log(`📈 Success Rate: ${(report.overallSuccessRate * 100).toFixed(1)}%`)
-    console.log(`📋 Test Suites: ${report.totalTestSuites}`)
-    console.log(`✅ Passed: ${report.passedSuites}`)
-    console.log(`⚠️ Warnings: ${report.warningSuites}`)
-    console.log(`❌ Failed: ${report.failedSuites}`)
+    devLog(`\n🎯 Overall Status: ${report.overallStatus.toUpperCase()}`)
+    devLog(`📈 Success Rate: ${(report.overallSuccessRate * 100).toFixed(1)}%`)
+    devLog(`📋 Test Suites: ${report.totalTestSuites}`)
+    devLog(`✅ Passed: ${report.passedSuites}`)
+    devLog(`⚠️ Warnings: ${report.warningSuites}`)
+    devLog(`❌ Failed: ${report.failedSuites}`)
     
-    console.log(`\n📊 Test Summary:`)
-    console.log(`   Total Tests: ${report.summary.totalTests}`)
-    console.log(`   Passed: ${report.summary.totalPassed}`)
-    console.log(`   Failed: ${report.summary.totalFailed}`)
-    console.log(`   Warnings: ${report.summary.totalWarnings}`)
+    devLog(`\n📊 Test Summary:`)
+    devLog(`   Total Tests: ${report.summary.totalTests}`)
+    devLog(`   Passed: ${report.summary.totalPassed}`)
+    devLog(`   Failed: ${report.summary.totalFailed}`)
+    devLog(`   Warnings: ${report.summary.totalWarnings}`)
     
-    console.log(`\n🚀 Deployment Readiness:`)
+    devLog(`\n🚀 Deployment Readiness:`)
     Object.entries(report.deploymentReadiness).forEach(([key, value]) => {
       const status = value ? '✅' : '❌'
       const label = key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())
-      console.log(`   ${status} ${label}`)
+      devLog(`   ${status} ${label}`)
     })
     
     if (report.recommendations.length > 0) {
-      console.log(`\n💡 Recommendations:`)
+      devLog(`\n💡 Recommendations:`)
       report.recommendations.forEach(rec => {
-        console.log(`   ${rec}`)
+        devLog(`   ${rec}`)
       })
     }
     
-    console.log('\n' + '='.repeat(60))
+    devLog('\n' + '='.repeat(60))
   }
 }
 

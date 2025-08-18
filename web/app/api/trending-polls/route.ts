@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server'
+import { devLog } from '@/lib/logger';
 import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(
@@ -16,7 +17,7 @@ export async function GET(request: NextRequest) {
       .limit(5);
 
     if (trendingError) {
-      console.error('Error fetching trending topics:', trendingError);
+      devLog('Error fetching trending topics:', trendingError);
       return NextResponse.json({ 
         success: false, 
         error: 'Failed to fetch trending topics' 
@@ -33,13 +34,13 @@ export async function GET(request: NextRequest) {
         .limit(10);
 
       if (pollsError) {
-        console.error('Error fetching polls:', pollsError);
+        devLog('Error fetching polls:', pollsError);
         // Continue without polls - we'll use fallback data
       } else {
         polls = pollsData || [];
       }
     } catch (pollsError) {
-      console.error('Error fetching polls:', pollsError);
+      devLog('Error fetching polls:', pollsError);
       // Continue without polls - we'll use fallback data
     }
 
@@ -86,7 +87,7 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Error in trending polls API:', error);
+    devLog('Error in trending polls API:', error);
     return NextResponse.json({ 
       success: false, 
       error: 'Internal server error' 

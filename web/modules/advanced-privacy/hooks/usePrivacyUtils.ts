@@ -8,6 +8,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { devLog } from '@/lib/logger';
 import { isFeatureEnabled } from '../../../lib/feature-flags'
 
 interface PrivacyUtils {
@@ -116,7 +117,7 @@ export function usePrivacyUtils() {
       })
 
     } catch (err) {
-      console.error('Error loading privacy utils:', err)
+      devLog('Error loading privacy utils:', err)
       setError(err instanceof Error ? err.message : 'Unknown error')
     } finally {
       setLoading(false)
@@ -135,7 +136,7 @@ export function usePrivacyUtils() {
     try {
       return await utils.bridge.usePrivacyBudget(category, amount)
     } catch (error) {
-      console.error('Failed to use privacy budget:', error)
+      devLog('Failed to use privacy budget:', error)
       return false
     }
   }, [utils])
@@ -146,7 +147,7 @@ export function usePrivacyUtils() {
     try {
       return await utils.bridge.getRemainingPrivacyBudget(category)
     } catch (error) {
-      console.error('Failed to get remaining budget:', error)
+      devLog('Failed to get remaining budget:', error)
       return 0
     }
   }, [utils])
@@ -157,7 +158,7 @@ export function usePrivacyUtils() {
     try {
       await utils.bridge.resetPrivacyBudget(category)
     } catch (error) {
-      console.error('Failed to reset budget:', error)
+      devLog('Failed to reset budget:', error)
     }
   }, [utils])
 
@@ -171,7 +172,7 @@ export function usePrivacyUtils() {
     try {
       return await utils.bridge.runPrivateAnalysis(data, type)
     } catch (error) {
-      console.error('Failed to run private analysis:', error)
+      devLog('Failed to run private analysis:', error)
       return null
     }
   }, [utils])
@@ -183,7 +184,7 @@ export function usePrivacyUtils() {
     try {
       return await utils.bridge.createZKProof(type, data)
     } catch (error) {
-      console.error('Failed to create ZK proof:', error)
+      devLog('Failed to create ZK proof:', error)
       return null
     }
   }, [utils])
@@ -194,7 +195,7 @@ export function usePrivacyUtils() {
     try {
       return await utils.bridge.verifyZKProof(proofId)
     } catch (error) {
-      console.error('Failed to verify ZK proof:', error)
+      devLog('Failed to verify ZK proof:', error)
       return null
     }
   }, [utils])
@@ -206,7 +207,7 @@ export function usePrivacyUtils() {
     try {
       return await utils.auditor.runPrivacyAudit()
     } catch (error) {
-      console.error('Failed to run privacy audit:', error)
+      devLog('Failed to run privacy audit:', error)
       return null
     }
   }, [utils])
@@ -217,7 +218,7 @@ export function usePrivacyUtils() {
     try {
       return await utils.auditor.runPrivacyTests()
     } catch (error) {
-      console.error('Failed to run privacy tests:', error)
+      devLog('Failed to run privacy tests:', error)
       return []
     }
   }, [utils])
@@ -228,7 +229,7 @@ export function usePrivacyUtils() {
     try {
       return await utils.auditor.generateComplianceReport()
     } catch (error) {
-      console.error('Failed to generate compliance report:', error)
+      devLog('Failed to generate compliance report:', error)
       return null
     }
   }, [utils])

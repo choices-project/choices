@@ -29,7 +29,7 @@ import {
 import { usePWAUtils } from '../../hooks/usePWAUtils'
 
 export default function PWATestingPage() {
-  const { utils: pwaUtils, loading: utilsLoading, error: utilsError } = usePWAUtils()
+  const { error: utilsError } = usePWAUtils()
   const [metrics, setMetrics] = useState<any>(null)
   const [privacyReport, setPrivacyReport] = useState<any>(null)
   const [deviceInfo, setDeviceInfo] = useState<any>(null)

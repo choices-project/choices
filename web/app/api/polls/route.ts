@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server'
 import { devLog } from '@/lib/logger';
 import { createClient } from '@/utils/supabase/server';
 import { cookies } from 'next/headers';
@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
 
     try {
       devLog('Fetching active polls from po_polls table...');
-      const { data: directPolls, error: directError } = await supabase
+      const { data: directPolls } = await supabase
         .from('po_polls')
         .select('poll_id, title, total_votes, participation_rate, options, status')
         .eq('status', 'active')
@@ -126,7 +126,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { title, description, options, voting_method = 'single' } = body;
+    const { title, options, voting_method = 'single' } = body;
 
     // Validate required fields
     if (!title || !options || !Array.isArray(options) || options.length < 2) {
@@ -150,7 +150,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create poll with user as creator
-    const { data: poll, error: pollError } = await supabase
+    const { data: poll } = await supabase
       .from('po_polls')
       .insert({
         title: title.trim(),

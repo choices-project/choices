@@ -6,6 +6,7 @@
  */
 
 import { isFeatureEnabled } from '../../lib/feature-flags'
+import { devLog } from '@/lib/logger';
 import { PrivacyBridge } from './privacy-bridge'
 
 export interface PrivacyAuditResult {
@@ -73,7 +74,7 @@ export class PrivacyAuditor {
   async initialize(): Promise<boolean> {
     try {
       if (!this.enabled) {
-        console.log('Privacy auditor disabled - advanced privacy features not enabled')
+        devLog('Privacy auditor disabled - advanced privacy features not enabled')
         return false
       }
 
@@ -81,10 +82,10 @@ export class PrivacyAuditor {
       const { getPrivacyBridge } = await import('./privacy-bridge')
       this.bridge = getPrivacyBridge()
 
-      console.log('Privacy Auditor initialized successfully')
+      devLog('Privacy Auditor initialized successfully')
       return true
     } catch (error) {
-      console.error('Failed to initialize Privacy Auditor:', error)
+      devLog('Failed to initialize Privacy Auditor:', error)
       return false
     }
   }
@@ -130,7 +131,7 @@ export class PrivacyAuditor {
 
     } catch (error) {
       result.errors.push(`Audit failed: ${error}`)
-      console.error('Privacy audit failed:', error)
+      devLog('Privacy audit failed:', error)
     }
 
     return result
@@ -369,7 +370,7 @@ export class PrivacyAuditor {
       tests.push(await this.testDataMinimization())
 
     } catch (error) {
-      console.error('Privacy tests failed:', error)
+      devLog('Privacy tests failed:', error)
     }
 
     return tests
@@ -562,7 +563,7 @@ export class PrivacyAuditor {
    */
   updateComplianceConfig(newConfig: Partial<PrivacyComplianceConfig>): void {
     this.config = { ...this.config, ...newConfig }
-    console.log('Privacy compliance configuration updated:', this.config)
+    devLog('Privacy compliance configuration updated:', this.config)
   }
 
   /**

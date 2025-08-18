@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { devLog } from '@/lib/logger';
 import { createClient } from '@/utils/supabase/server'
 import { cookies } from 'next/headers'
@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get user from ia_users table to verify password
-    const { data: iaUser, error: iaError } = await supabase
+    const { data: iaUser } = await supabase
       .from('ia_users')
       .select('*')
       .eq('stable_id', user.id)
@@ -94,7 +94,7 @@ export async function POST(request: NextRequest) {
         .eq('created_by', user.id)
 
       // Finally, delete the user from ia_users table
-      const { error: deleteError } = await supabase
+      const {  } = await supabase
         .from('ia_users')
         .delete()
         .eq('stable_id', user.id)
@@ -108,7 +108,7 @@ export async function POST(request: NextRequest) {
       }
 
       // Delete user from Supabase Auth
-      const { error: authDeleteError } = await supabase.auth.admin.deleteUser(user.id)
+      const {  } = await supabase.auth.admin.deleteUser(user.id)
       
       if (authDeleteError) {
         devLog('Error deleting user from Supabase Auth:', authDeleteError)

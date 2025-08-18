@@ -2,6 +2,7 @@
 // Enhanced WebAuthn, offline functionality, and privacy features
 
 import { isFeatureEnabled } from './feature-flags'
+import { devLog } from '@/lib/logger';
 
 export interface PWAConfig {
   name: string;
@@ -59,7 +60,7 @@ export class PWAManager {
   private async initialize() {
     // Only initialize if PWA feature is enabled
     if (!this.pwaEnabled) {
-      console.log('PWA: Feature disabled via feature flags');
+      devLog('PWA: Feature disabled via feature flags');
       return;
     }
 
@@ -67,7 +68,7 @@ export class PWAManager {
     if ('serviceWorker' in navigator) {
       try {
         this.registration = await navigator.serviceWorker.register('/sw.js');
-        console.log('PWA: Service Worker registered');
+        devLog('PWA: Service Worker registered');
         
         // Listen for updates
         this.registration.addEventListener('updatefound', () => {
@@ -81,7 +82,7 @@ export class PWAManager {
           }
         });
       } catch (error) {
-        console.error('PWA: Service Worker registration failed', error);
+        devLog('PWA: Service Worker registration failed', error);
       }
     }
 
@@ -122,13 +123,13 @@ export class PWAManager {
 
   // Handle online event
   private onOnline() {
-    console.log('PWA: Back online, syncing data...');
+    devLog('PWA: Back online, syncing data...');
     this.syncOfflineData();
   }
 
   // Handle offline event
   private onOffline() {
-    console.log('PWA: Gone offline, enabling offline mode...');
+    devLog('PWA: Gone offline, enabling offline mode...');
   }
 
   // Sync offline data when back online
@@ -136,14 +137,14 @@ export class PWAManager {
     try {
       const offlineVotes = this.getOfflineVotes();
       if (offlineVotes.length > 0) {
-        console.log(`PWA: Syncing ${offlineVotes.length} offline votes...`);
+        devLog(`PWA: Syncing ${offlineVotes.length} offline votes...`);
         
         // Here you would send the offline votes to the server
         // For now, we'll just clear them
         this.clearOfflineVotes();
       }
     } catch (error) {
-      console.error('PWA: Failed to sync offline data:', error);
+      devLog('PWA: Failed to sync offline data:', error);
     }
   }
 
@@ -168,7 +169,7 @@ export class PWAManager {
   // Store offline vote
   async storeOfflineVote(vote: Omit<OfflineVote, 'timestamp' | 'deviceFingerprint'>) {
     if (!this.pwaEnabled) {
-      console.log('PWA: Feature disabled, cannot store offline vote');
+      devLog('PWA: Feature disabled, cannot store offline vote');
       return;
     }
 
@@ -183,7 +184,7 @@ export class PWAManager {
     offlineVotes.push(offlineVote);
     localStorage.setItem('offline_votes', JSON.stringify(offlineVotes));
     
-    console.log('PWA: Offline vote stored:', offlineVote);
+    devLog('PWA: Offline vote stored:', offlineVote);
   }
 
   // Get offline votes
@@ -192,7 +193,7 @@ export class PWAManager {
       const stored = localStorage.getItem('offline_votes');
       return stored ? JSON.parse(stored) : [];
     } catch (error) {
-      console.error('PWA: Failed to get offline votes:', error);
+      devLog('PWA: Failed to get offline votes:', error);
       return [];
     }
   }
@@ -200,18 +201,18 @@ export class PWAManager {
   // Clear offline votes
   clearOfflineVotes() {
     localStorage.removeItem('offline_votes');
-    console.log('PWA: Offline votes cleared');
+    devLog('PWA: Offline votes cleared');
   }
 
   // Request notification permission
   async requestNotificationPermission(): Promise<boolean> {
     if (!this.pwaEnabled) {
-      console.log('PWA: Feature disabled, cannot request notifications');
+      devLog('PWA: Feature disabled, cannot request notifications');
       return false;
     }
 
     if (!('Notification' in window)) {
-      console.log('PWA: Notifications not supported');
+      devLog('PWA: Notifications not supported');
       return false;
     }
 
@@ -222,7 +223,7 @@ export class PWAManager {
   // Subscribe to push notifications
   async subscribeToPushNotifications(): Promise<boolean> {
     if (!this.pwaEnabled || !this.registration) {
-      console.log('PWA: Cannot subscribe to push notifications');
+      devLog('PWA: Cannot subscribe to push notifications');
       return false;
     }
 
@@ -232,10 +233,10 @@ export class PWAManager {
         applicationServerKey: new Uint8Array(this.urlBase64ToUint8Array(process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || ''))
       });
       
-      console.log('PWA: Push notification subscription successful');
+      devLog('PWA: Push notification subscription successful');
       return true;
     } catch (error) {
-      console.error('PWA: Push notification subscription failed:', error);
+      devLog('PWA: Push notification subscription failed:', error);
       return false;
     }
   }
@@ -324,7 +325,7 @@ export class PWAWebAuthn {
 
       return credential;
     } catch (error) {
-      console.error('WebAuthn registration failed:', error);
+      devLog('WebAuthn registration failed:', error);
       throw error;
     }
   }
@@ -353,7 +354,7 @@ export class PWAWebAuthn {
 
       return assertion;
     } catch (error) {
-      console.error('WebAuthn authentication failed:', error);
+      devLog('WebAuthn authentication failed:', error);
       throw error;
     }
   }
@@ -377,12 +378,12 @@ export class PrivacyStorage {
   // Store encrypted data
   async storeEncryptedData(key: string, data: any): Promise<void> {
     if (!this.pwaEnabled) {
-      console.log('PWA: Feature disabled, cannot store encrypted data');
+      devLog('PWA: Feature disabled, cannot store encrypted data');
       return;
     }
 
     if (!('crypto' in window) || !('subtle' in (window as any).crypto)) {
-      console.log('PWA: Crypto API not supported');
+      devLog('PWA: Crypto API not supported');
       return;
     }
 
@@ -397,19 +398,19 @@ export class PrivacyStorage {
 
       localStorage.setItem(`encrypted_${key}`, JSON.stringify(Array.from(new Uint8Array(encryptedData))));
     } catch (error) {
-      console.error('PWA: Failed to store encrypted data:', error);
+      devLog('PWA: Failed to store encrypted data:', error);
     }
   }
 
   // Get encrypted data
   async getEncryptedData(key: string): Promise<any> {
     if (!this.pwaEnabled) {
-      console.log('PWA: Feature disabled, cannot retrieve encrypted data');
+      devLog('PWA: Feature disabled, cannot retrieve encrypted data');
       return null;
     }
 
     if (!('crypto' in window) || !('subtle' in (window as any).crypto)) {
-      console.log('PWA: Crypto API not supported');
+      devLog('PWA: Crypto API not supported');
       return null;
     }
 
@@ -427,7 +428,7 @@ export class PrivacyStorage {
 
       return JSON.parse(new TextDecoder().decode(decryptedData));
     } catch (error) {
-      console.error('PWA: Failed to retrieve encrypted data:', error);
+      devLog('PWA: Failed to retrieve encrypted data:', error);
       return null;
     }
   }

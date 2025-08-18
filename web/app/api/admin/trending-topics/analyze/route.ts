@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server'
 import { devLog } from '@/lib/logger';
 import { createClient } from '@/utils/supabase/server';
 import { cookies } from 'next/headers';
@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check admin permissions - RESTRICTED TO OWNER ONLY
-    const { data: userProfile } = await supabase
+    const {  } = await supabase
       .from('ia_users')
       .select('verification_tier')
       .eq('stable_id', user.id)
@@ -244,7 +244,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Check admin permissions
-    const { data: userProfile } = await supabase
+    const {  } = await supabase
       .from('ia_users')
       .select('verification_tier')
       .eq('stable_id', user.id)

@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server'
 import { devLog } from '@/lib/logger';
 import { createClient } from '@/utils/supabase/server';
 import { cookies } from 'next/headers';
@@ -33,7 +33,7 @@ export async function POST(
     }
 
     // Check admin permissions - RESTRICTED TO OWNER ONLY
-    const { data: userProfile } = await supabase
+    const {  } = await supabase
       .from('ia_users')
       .select('verification_tier')
       .eq('stable_id', user.id)
@@ -95,7 +95,7 @@ export async function POST(
     // TODO: Integrate with main poll system
     // This would create a regular poll in the po_polls table
     try {
-      const { data: mainPoll, error: mainPollError } = await supabase
+      const {  } = await supabase
         .from('po_polls')
         .insert([{
           poll_id: `auto_${pollId}`,

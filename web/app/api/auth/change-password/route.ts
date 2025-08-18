@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { devLog } from '@/lib/logger';
 import { createClient } from '@/utils/supabase/server'
 import { cookies } from 'next/headers'
@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get user from ia_users table to verify current password
-    const { data: iaUser, error: iaError } = await supabase
+    const {  } = await supabase
       .from('ia_users')
       .select('*')
       .eq('stable_id', user.id)
@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
     const newHashedPassword = await bcrypt.hash(newPassword, saltRounds)
 
     // Update password in ia_users table
-    const { error: updateError } = await supabase
+    const {  } = await supabase
       .from('ia_users')
       .update({ 
         password_hash: newHashedPassword,
@@ -91,7 +91,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Update password in Supabase Auth
-    const { error: authUpdateError } = await supabase.auth.updateUser({
+    const {  } = await supabase.auth.updateUser({
       password: newPassword
     })
 

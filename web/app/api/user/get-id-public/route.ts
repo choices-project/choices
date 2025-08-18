@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server'
 import { devLog } from '@/lib/logger';
 import { createClient } from '@/utils/supabase/server';
 import { cookies } from 'next/headers';
@@ -69,7 +69,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get user profile from ia_users table
-    const { data: userProfile } = await supabase
+    const {  } = await supabase
       .from('ia_users')
       .select('stable_id, verification_tier, is_active')
       .eq('stable_id', user.id)

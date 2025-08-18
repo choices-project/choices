@@ -46,8 +46,8 @@ export function PWAVotingInterface({
   showResults = false, 
   offlineMode = false 
 }: PWAVotingInterfaceProps) {
-  const { enabled: pwaEnabled } = useFeatureFlag('pwa')
-  const { utils: pwaUtils, loading: utilsLoading } = usePWAUtils()
+  const {  } = useFeatureFlag('pwa')
+  const {  } = usePWAUtils()
   
   const [selectedChoice, setSelectedChoice] = useState<number | null>(null)
   const [hasVoted, setHasVoted] = useState(false)

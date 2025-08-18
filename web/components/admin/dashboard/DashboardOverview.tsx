@@ -18,15 +18,15 @@ import { mockChartData } from '../../../lib/mock-data';
 import { devLog } from '@/lib/logger';
 
 export const DashboardOverview: React.FC = () => {
-  const { systemMetrics, activityFeed } = useAdminStore();
+  const { activityFeed } = useAdminStore();
   
   // Initialize real-time subscriptions
   useRealTimeSubscriptions();
   
   // Fetch data using admin hooks
-  const { data: topics, isLoading: topicsLoading } = useTrendingTopics();
-  const { data: polls, isLoading: pollsLoading } = useGeneratedPolls();
-  const { data: metrics, isLoading: metricsLoading } = useSystemMetrics();
+  const { data: topics } = useTrendingTopics();
+  const { data: polls } = useGeneratedPolls();
+  const { data: metrics } = useSystemMetrics();
 
   // Debug logging
   devLog('DashboardOverview - Data loaded:', {

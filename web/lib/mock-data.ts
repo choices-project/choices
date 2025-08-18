@@ -1,4 +1,4 @@
-import { SystemMetrics, ActivityItem, TrendingTopic, GeneratedPoll } from './admin-store'
+import { SystemMetrics, GeneratedPoll } from './admin-store'
 
 // Mock trending topics data
 export const mockTrendingTopics: TrendingTopic[] = [

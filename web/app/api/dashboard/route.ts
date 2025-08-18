@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { devLog } from '@/lib/logger';
 import { createClient } from '@/utils/supabase/server'
 import { cookies } from 'next/headers'
@@ -60,7 +60,7 @@ export async function GET(request: NextRequest) {
 async function getUserStats(supabase: any, userId: string) {
   try {
     // Get polls created by user
-    const { data: createdPolls, error: pollsError } = await supabase
+    const { error: pollsError } = await supabase
       .from('po_polls')
       .select('id, title, created_at')
       .eq('created_by', userId)
@@ -70,7 +70,7 @@ async function getUserStats(supabase: any, userId: string) {
     }
 
     // Get votes cast by user
-    const { data: userVotes, error: votesError } = await supabase
+    const { error: votesError } = await supabase
       .from('po_votes')
       .select('id, poll_id, created_at')
       .eq('user_id', userId)
@@ -80,7 +80,7 @@ async function getUserStats(supabase: any, userId: string) {
     }
 
     // Get active polls count
-    const { data: activePolls, error: activeError } = await supabase
+    const { error: activeError } = await supabase
       .from('po_polls')
       .select('id')
       .eq('status', 'active')
@@ -116,22 +116,22 @@ async function getUserStats(supabase: any, userId: string) {
 async function getPlatformStats(supabase: any) {
   try {
     // Get total polls
-    const { data: totalPolls } = await supabase
+    const {  } = await supabase
       .from('po_polls')
       .select('id', { count: 'exact' })
 
     // Get total votes
-    const { data: totalVotes } = await supabase
+    const {  } = await supabase
       .from('po_votes')
       .select('id', { count: 'exact' })
 
     // Get total users (from user_profiles)
-    const { data: totalUsers } = await supabase
+    const {  } = await supabase
       .from('user_profiles')
       .select('id', { count: 'exact' })
 
     // Get active polls
-    const { data: activePolls } = await supabase
+    const {  } = await supabase
       .from('po_polls')
       .select('id')
       .eq('status', 'active')
@@ -158,7 +158,7 @@ async function getPlatformStats(supabase: any) {
 async function getRecentActivity(supabase: any, userId: string) {
   try {
     // Get recent votes by user
-    const { data: recentVotes, error: votesError } = await supabase
+    const { error: votesError } = await supabase
       .from('po_votes')
       .select(`
         id,
@@ -175,7 +175,7 @@ async function getRecentActivity(supabase: any, userId: string) {
     }
 
     // Get recent polls created by user
-    const { data: recentPolls, error: pollsError } = await supabase
+    const { error: pollsError } = await supabase
       .from('po_polls')
       .select('id, title, created_at')
       .eq('created_by', userId)
@@ -218,7 +218,7 @@ async function getRecentActivity(supabase: any, userId: string) {
 
 async function getActivePolls(supabase: any) {
   try {
-    const { data: polls, error } = await supabase
+    const { error } = await supabase
       .from('po_polls')
       .select(`
         id,

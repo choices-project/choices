@@ -10,7 +10,7 @@ export const GeneratedPollsPage: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState('all');
   const [categoryFilter, setCategoryFilter] = useState('all');
 
-  const { data: polls, isLoading, error } = useGeneratedPolls();
+  const { isLoading, error } = useGeneratedPolls();
   const approvePoll = useApprovePoll();
   const rejectPoll = useRejectPoll();
 

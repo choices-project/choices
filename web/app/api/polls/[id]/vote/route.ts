@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server'
 import { devLog } from '@/lib/logger';
 import { createClient } from '@/utils/supabase/server';
 import { cookies } from 'next/headers';
@@ -34,7 +34,7 @@ export async function POST(
     }
 
     // Verify user is active
-    const { data: userProfile } = await supabase
+    const {  } = await supabase
       .from('ia_users')
       .select('is_active')
       .eq('stable_id', user.id)
@@ -123,7 +123,7 @@ export async function GET(
     }
 
     // Check if user has voted (returns boolean only, no vote data)
-    const { data: existingVote } = await supabase
+    const {  } = await supabase
       .from('po_votes')
       .select('id')
       .eq('poll_id', pollId)

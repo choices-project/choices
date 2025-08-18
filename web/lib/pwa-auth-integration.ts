@@ -6,6 +6,7 @@
  */
 
 import { isFeatureEnabled } from './feature-flags'
+import { devLog } from '@/lib/logger';
 
 export interface PWAUser {
   stableId: string;
@@ -86,7 +87,7 @@ export class PWAAuth {
     this.currentUser = user;
     this.saveUserToStorage(user);
     
-    console.log('PWA: User created:', user.pseudonym);
+    devLog('PWA: User created:', user.pseudonym);
     return user;
   }
 
@@ -114,19 +115,19 @@ export class PWAAuth {
   // Enable WebAuthn for user
   async enableWebAuthn(stableId: string): Promise<boolean> {
     if (!this.pwaEnabled) {
-      console.log('PWA: Feature disabled, cannot enable WebAuthn');
+      devLog('PWA: Feature disabled, cannot enable WebAuthn');
       return false;
     }
 
     if (!this.currentUser || this.currentUser.stableId !== stableId) {
-      console.log('PWA: User not found or not current user');
+      devLog('PWA: User not found or not current user');
       return false;
     }
 
     try {
       // Check if WebAuthn is supported
       if (!('credentials' in navigator)) {
-        console.log('PWA: WebAuthn not supported');
+        devLog('PWA: WebAuthn not supported');
         return false;
       }
 
@@ -164,13 +165,13 @@ export class PWAAuth {
           verificationScore: Math.min(100, this.currentUser.verificationScore + 20)
         });
 
-        console.log('PWA: WebAuthn enabled successfully');
+        devLog('PWA: WebAuthn enabled successfully');
         return true;
       }
 
       return false;
     } catch (error) {
-      console.error('PWA: Failed to enable WebAuthn:', error);
+      devLog('PWA: Failed to enable WebAuthn:', error);
       return false;
     }
   }
@@ -178,19 +179,19 @@ export class PWAAuth {
   // Enable push notifications for user
   async enablePushNotifications(stableId: string): Promise<boolean> {
     if (!this.pwaEnabled) {
-      console.log('PWA: Feature disabled, cannot enable push notifications');
+      devLog('PWA: Feature disabled, cannot enable push notifications');
       return false;
     }
 
     if (!this.currentUser || this.currentUser.stableId !== stableId) {
-      console.log('PWA: User not found or not current user');
+      devLog('PWA: User not found or not current user');
       return false;
     }
 
     try {
       // Request notification permission
       if (!('Notification' in window)) {
-        console.log('PWA: Notifications not supported');
+        devLog('PWA: Notifications not supported');
         return false;
       }
 
@@ -213,7 +214,7 @@ export class PWAAuth {
               }
             });
 
-            console.log('PWA: Push notifications enabled successfully');
+            devLog('PWA: Push notifications enabled successfully');
             return true;
           }
         }
@@ -221,7 +222,7 @@ export class PWAAuth {
 
       return false;
     } catch (error) {
-      console.error('PWA: Failed to enable push notifications:', error);
+      devLog('PWA: Failed to enable push notifications:', error);
       return false;
     }
   }
@@ -233,7 +234,7 @@ export class PWAAuth {
     }
 
     if (!this.currentUser.pwaFeatures?.webAuthnEnabled) {
-      console.log('PWA: WebAuthn not enabled for user');
+      devLog('PWA: WebAuthn not enabled for user');
       return false;
     }
 
@@ -253,13 +254,13 @@ export class PWAAuth {
           lastActive: new Date()
         });
 
-        console.log('PWA: WebAuthn authentication successful');
+        devLog('PWA: WebAuthn authentication successful');
         return true;
       }
 
       return false;
     } catch (error) {
-      console.error('PWA: WebAuthn authentication failed:', error);
+      devLog('PWA: WebAuthn authentication failed:', error);
       return false;
     }
   }
@@ -337,10 +338,10 @@ export class PWAAuth {
       });
 
       this.currentUser = null;
-      console.log('PWA: User account deleted');
+      devLog('PWA: User account deleted');
       return true;
     } catch (error) {
-      console.error('PWA: Failed to delete user account:', error);
+      devLog('PWA: Failed to delete user account:', error);
       return false;
     }
   }
@@ -427,7 +428,7 @@ export class PWAAuth {
     try {
       localStorage.setItem('pwa_user', JSON.stringify(user));
     } catch (error) {
-      console.error('PWA: Failed to save user to storage:', error);
+      devLog('PWA: Failed to save user to storage:', error);
     }
   }
 
@@ -440,7 +441,7 @@ export class PWAAuth {
         this.currentUser.lastActive = new Date();
       }
     } catch (error) {
-      console.error('PWA: Failed to load user from storage:', error);
+      devLog('PWA: Failed to load user from storage:', error);
     }
   }
 }

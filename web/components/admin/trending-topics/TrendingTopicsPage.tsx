@@ -22,7 +22,7 @@ export const TrendingTopicsPage: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all');
   const [categoryFilter, setCategoryFilter] = useState('all');
 
-  const { data: topics, isLoading, refetch } = useTrendingTopics();
+  const { isLoading, refetch } = useTrendingTopics();
   const approveTopic = useApproveTopic();
   const rejectTopic = useRejectTopic();
   const analyzeTopics = useAnalyzeTrendingTopics();
