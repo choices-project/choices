@@ -4,7 +4,7 @@ import { motion } from 'framer-motion'
 import { 
   Vote, Users, TrendingUp, Shield, Globe, 
   ArrowRight, CheckCircle, Star, Zap, Heart,
-  BarChart3, MapPin, Clock, Target
+  BarChart3, MapPin, Clock, Target, Play
 } from 'lucide-react'
 import { DemographicVisualization, mockDemographicData } from '../../components/DemographicVisualization'
 import { BiasFreePromise, defaultPromises } from '../../components/BiasFreePromise'
@@ -309,11 +309,4 @@ export default function EnhancedLandingPage() {
   )
 }
 
-// Simple Play icon component
-function Play({ className }: { className?: string }) {
-  return (
-    <svg className={className} fill="currentColor" viewBox="0 0 20 20">
-      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
-    </svg>
-  )
-}
+
