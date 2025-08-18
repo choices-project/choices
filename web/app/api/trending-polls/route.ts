@@ -25,10 +25,9 @@ export async function GET(request: NextRequest) {
 
     // Fetch available polls
     const { data: polls, error: pollsError } = await supabase
-      .from('polls')
-      .select('*')
+      .from('po_polls')
+      .select('poll_id, title, total_votes, participation_rate, options, status')
       .eq('status', 'active')
-      .order('created_at', { ascending: false })
       .limit(10);
 
     if (pollsError) {
