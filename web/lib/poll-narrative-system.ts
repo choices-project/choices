@@ -840,7 +840,7 @@ export const NEWSOM_TRUMP_NARRATIVE: Omit<PollNarrative, 'id' | 'createdAt' | 'u
       trends: [
         {
           period: 'Last 24 hours',
-          sentiment: 'mixed',
+          sentiment: 'neutral',
           intensity: 0.7,
           factors: ['Media coverage', 'Social media reaction']
         }
