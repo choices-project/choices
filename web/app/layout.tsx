@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
 import { PWAInstallPrompt, OfflineIndicator, PWAUpdatePrompt } from '../components/PWAComponents'
-import FeedbackWidget from '../components/FeedbackWidget'
+import EnhancedFeedbackWidget from '../components/EnhancedFeedbackWidget'
 import ClientOnly from '../components/ClientOnly'
 import { AuthProvider } from '../contexts/AuthContext'
 
@@ -58,9 +58,9 @@ export default function RootLayout({
             <PWAUpdatePrompt />
           </ClientOnly>
           
-          {/* Feedback Widget - Only render on client side */}
+          {/* Enhanced Feedback Widget - Only render on client side */}
           <ClientOnly>
-            <FeedbackWidget />
+            <EnhancedFeedbackWidget />
           </ClientOnly>
           
           {/* Hidden elements for PWA functionality */}
