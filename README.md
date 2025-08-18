@@ -2,6 +2,38 @@
 
 A revolutionary privacy-first voting platform built as a Progressive Web App (PWA) that combines advanced encryption, differential privacy, and zero-knowledge proofs to ensure secure, anonymous, and verifiable voting experiences across all devices.
 
+## 🚀 Quick Start for New Contributors
+
+### **For New Agents/Contributors**
+1. **📚 Documentation System**: Start with [`docs/consolidated/README.md`](docs/consolidated/README.md)
+2. **👋 Onboarding Guide**: Read [`docs/consolidated/development/AGENT_ONBOARDING.md`](docs/consolidated/development/AGENT_ONBOARDING.md)
+3. **🏗️ Architecture**: Review [`docs/consolidated/core/ARCHITECTURE.md`](docs/consolidated/core/ARCHITECTURE.md)
+4. **🛠️ Development**: Study [`docs/consolidated/development/DEVELOPMENT_GUIDE.md`](docs/consolidated/development/DEVELOPMENT_GUIDE.md)
+5. **🔍 Quick Assessment**: Run `node scripts/assess-project-status.js`
+
+### **Current Project Status**
+- ✅ **Core Application**: Next.js frontend with Go backend services
+- ✅ **Database**: PostgreSQL via Supabase with comprehensive RLS security
+- ✅ **Authentication**: Supabase Auth with tiered user system
+- ✅ **Automated Polls**: MVP feature for trending topic analysis
+- ⚠️ **Security Policies**: Need final deployment (see deployment guide)
+
+### **Quick Development Setup**
+```bash
+# Clone and setup
+git clone https://github.com/choices-project/choices.git
+cd choices
+
+# Start development server
+cd web && npm install && npm run dev
+
+# Check database status
+node scripts/check_supabase_auth.js
+
+# Follow deployment guide for database setup
+# See FINAL_DEPLOYMENT_INSTRUCTIONS.md
+```
+
 ## 🚀 Features
 
 ### 🔐 Advanced Privacy & Security
@@ -33,6 +65,12 @@ A revolutionary privacy-first voting platform built as a Progressive Web App (PW
 - **PWA Testing**: Progressive web app feature validation
 - **Real-time Testing**: Live test execution with detailed reporting
 - **Deployment Readiness**: Complete validation for production deployment
+
+### 🤖 Automated Polls Feature (MVP)
+- **Trending Topics Analysis**: Automated scanning of current events
+- **Poll Generation**: AI-powered poll creation with context awareness
+- **Admin Dashboard**: Comprehensive admin interface for poll management
+- **Security-First**: Complete data isolation and privacy protection
 
 ## 🔒 Privacy & Encryption Techniques
 
@@ -114,10 +152,10 @@ A revolutionary privacy-first voting platform built as a Progressive Web App (PW
    Configure the following variables:
    ```env
    DATABASE_URL="postgresql://..."
-   NEXTAUTH_SECRET="[GENERATE-A-SECURE-RANDOM-STRING]"
+   NEXTAUTH_SECRET="your-secure-random-string-here"
    NEXTAUTH_URL="http://localhost:3000"
    SUPABASE_URL="your-supabase-url"
-   SUPABASE_ANON_KEY="your-supabase-anon-key"
+   SUPABASE_ANON_KEY="your-supabase-anon-key-here"
    ```
 
 4. **Run the development server**
@@ -250,11 +288,11 @@ npm start
 ```env
 # Production environment variables
 DATABASE_URL="postgresql://..."
-NEXTAUTH_SECRET="[GENERATE-A-SECURE-RANDOM-STRING]"
+NEXTAUTH_SECRET="your-secure-random-string-here"
 NEXTAUTH_URL="https://your-domain.com"
-NEXT_PUBLIC_VAPID_PUBLIC_KEY="your-vapid-key"
+NEXT_PUBLIC_VAPID_PUBLIC_KEY="your-vapid-public-key-here"
 SUPABASE_URL="your-supabase-url"
-SUPABASE_ANON_KEY="your-supabase-anon-key"
+SUPABASE_ANON_KEY="your-supabase-anon-key-here"
 ```
 
 ### Deployment Checklist

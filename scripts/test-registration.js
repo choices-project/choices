@@ -21,7 +21,7 @@ async function testRegistration() {
   console.log('🧪 Testing Registration with Existing Email...')
   console.log('==============================================')
   
-  const testEmail = 'michaeltempesta@gmail.com' // Your email from the image
+  const testEmail = 'test@example.com' // Test email for registration
   const testPassword = 'TestPassword123!'
   
   try {

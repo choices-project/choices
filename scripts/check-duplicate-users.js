@@ -21,7 +21,7 @@ async function checkDuplicateUsers() {
   console.log('🔍 Checking for Duplicate Users...')
   console.log('==================================')
   
-  const testEmail = 'michaeltempesta@gmail.com'
+  const testEmail = 'test@example.com'
   
   try {
     console.log(`\n📧 Checking for users with email: ${testEmail}`)
@@ -95,3 +95,4 @@ async function checkDuplicateUsers() {
 
 // Run the check
 checkDuplicateUsers().catch(console.error)
+

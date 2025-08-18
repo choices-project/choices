@@ -157,3 +157,4 @@ export async function hasUserProfile(authUserId: string) {
     }
   }
 }
+
