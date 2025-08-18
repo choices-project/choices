@@ -36,7 +36,7 @@ class Logger {
 
   debug(message: string, context?: LogContext): void {
     if (this.shouldLog(LogLevel.DEBUG)) {
-      devLog(this.formatMessage('DEBUG', message, context));
+      console.debug(this.formatMessage('DEBUG', message, context));
     }
   }
 
@@ -48,7 +48,7 @@ class Logger {
 
   warn(message: string, context?: LogContext): void {
     if (this.shouldLog(LogLevel.WARN)) {
-      devLog(this.formatMessage('WARN', message, context));
+      console.warn(this.formatMessage('WARN', message, context));
     }
   }
 
@@ -59,7 +59,7 @@ class Logger {
         error: error?.message,
         stack: error?.stack
       };
-      devLog(this.formatMessage('ERROR', message, errorContext));
+      console.error(this.formatMessage('ERROR', message, errorContext));
     }
   }
 
@@ -124,6 +124,6 @@ export const logPerformance = (operation: string, duration: number, context?: Lo
 // Development-only logging (replaces console.log)
 export const devLog = (message: string, ...args: any[]) => {
   if (process.env.NODE_ENV === 'development') {
-    devLog(`[DEV] ${message}`, ...args);
+    console.log(`[DEV] ${message}`, ...args);
   }
 };
