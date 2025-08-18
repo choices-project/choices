@@ -6,6 +6,9 @@ This folder contains the most frequently used scripts for your development workf
 
 | Script | Purpose | Usage |
 |--------|---------|-------|
+| `ai-workflow.sh` | Interactive AI task workflow guide | `./ai-workflow.sh` |
+| `ai-context-builder.sh` | Create context file from brainstorming | `./ai-context-builder.sh "task" "notes"` |
+| `ai-copy-context.sh` | Copy context to clipboard | `./ai-copy-context.sh [file]` |
 | `ai-new-task.sh` | Provide context for new AI agents | `./ai-new-task.sh "task description"` |
 | `push-and-monitor.sh` | Push code and automatically monitor CI | `./push-and-monitor.sh origin <branch>` |
 | `monitor-ci.sh` | Monitor CI status in real-time | `./monitor-ci.sh` |
@@ -18,6 +21,54 @@ This folder contains the most frequently used scripts for your development workf
 ---
 
 ## 🤖 **AI Context & Instructions**
+
+### **ai-workflow.sh** - Interactive AI Task Workflow
+**What it does:** Guides you through the complete AI task workflow from brainstorming to implementation.
+
+**Usage:**
+```bash
+./ai-workflow.sh
+```
+
+**Workflow Steps:**
+1. **Phase 1: Brainstorming** - Use /ask mode to explore ideas
+2. **Phase 2: Create Context** - Generate structured context file
+3. **Phase 3: Copy to Clipboard** - Ready for AI agent
+4. **Phase 4: Implementation** - Start systematic development
+
+**Perfect for:**
+- Complete task workflow from idea to implementation
+- Ensuring proper context transfer between phases
+- Maintaining systematic approach throughout
+
+### **ai-context-builder.sh** - Context File Creator
+**What it does:** Creates structured context files from your brainstorming sessions.
+
+**Usage:**
+```bash
+./ai-context-builder.sh "implement user feedback system" "User wants real-time feedback collection with admin dashboard"
+```
+
+**Features:**
+- ✅ Captures task description and brainstorming notes
+- ✅ Generates comprehensive context with guidelines
+- ✅ Includes project context and requirements
+- ✅ Provides implementation approach patterns
+
+### **ai-copy-context.sh** - Context to Clipboard
+**What it does:** Copies context files to clipboard for easy pasting to AI agents.
+
+**Usage:**
+```bash
+./ai-copy-context.sh                    # Copy latest context file
+./ai-copy-context.sh ai-context-20250818-143000.txt  # Copy specific file
+```
+
+**Features:**
+- ✅ Automatically finds latest context file
+- ✅ Copies to clipboard for easy pasting
+- ✅ Shows file content for verification
+- ✅ Cross-platform clipboard support
 
 ### **ai-new-task.sh** - New Agent Task Instructions
 **What it does:** Provides comprehensive context and guidelines for new AI agents working on tasks.
