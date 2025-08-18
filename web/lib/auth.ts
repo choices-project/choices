@@ -1,6 +1,8 @@
 // Authentication System for Choices Platform
 // Progressive authentication: Email/password + 2FA for basic users, WebAuthn for advanced users
 
+import { devLog } from './logger';
+
 export interface User {
   id: string
   email: string
@@ -101,7 +103,7 @@ export class AuthService {
       try {
         return await this.loginWithWebAuthn(credentials.email)
       } catch (error) {
-        console.log('WebAuthn login failed, falling back to password:', error)
+        devLog('WebAuthn login failed, falling back to password:', error)
         // Fall back to password authentication
       }
     }

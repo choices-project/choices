@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { Lock, Shield, Eye, Users } from 'lucide-react'
 import { createClient } from '@/utils/supabase/client'
+import { devLog } from '@/lib/logger';
 
 interface AuthStepProps {
   data: any
@@ -35,7 +36,7 @@ export default function AuthStep({ data, onUpdate, onNext, onBack }: AuthStepPro
 
       // The user will be redirected to OAuth provider
       // When they return, they'll be authenticated
-      console.log('OAuth initiated:', provider)
+      devLog('OAuth initiated:', provider)
       
     } catch (error: any) {
       console.error('Login error:', error)

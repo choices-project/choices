@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { CreatePollForm, CreatePollData } from '@/components/polls/CreatePollForm';
 import { PrivacyLevelIndicator } from '@/components/privacy/PrivacyLevelIndicator';
 import { PrivacyLevel, HybridPrivacyManager } from '@/lib/hybrid-privacy';
+import { devLog } from '@/lib/logger';
 
 interface TestPoll {
   id: string;
@@ -56,7 +57,7 @@ export default function TestPrivacyPage() {
       setPolls(prev => [newPoll, ...prev]);
       setShowCreateForm(false);
       
-      console.log('Poll created successfully:', result);
+      devLog('Poll created successfully:', result);
     } catch (error) {
       console.error('Error creating poll:', error);
       alert('Failed to create poll. Please try again.');
@@ -99,7 +100,7 @@ export default function TestPrivacyPage() {
       setVoteChoice(0);
       setVotePrivacyLevel('public');
       
-      console.log('Vote submitted successfully:', result);
+      devLog('Vote submitted successfully:', result);
       alert(`Vote submitted successfully! Response time: ${result.response_time}ms`);
     } catch (error) {
       console.error('Error submitting vote:', error);

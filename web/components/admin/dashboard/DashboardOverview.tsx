@@ -15,6 +15,7 @@ import { MetricCard, BasicLineChart, BasicBarChart, ChartWrapper, ChartSkeleton 
 import { useTrendingTopics, useGeneratedPolls, useSystemMetrics, useRealTimeSubscriptions } from '../../../lib/admin-hooks';
 import { useAdminStore } from '../../../lib/admin-store';
 import { mockChartData } from '../../../lib/mock-data';
+import { devLog } from '@/lib/logger';
 
 export const DashboardOverview: React.FC = () => {
   const { systemMetrics, activityFeed } = useAdminStore();
@@ -28,7 +29,7 @@ export const DashboardOverview: React.FC = () => {
   const { data: metrics, isLoading: metricsLoading } = useSystemMetrics();
 
   // Debug logging
-  console.log('DashboardOverview - Data loaded:', {
+  devLog('DashboardOverview - Data loaded:', {
     topics: topics?.length || 0,
     polls: polls?.length || 0,
     metrics

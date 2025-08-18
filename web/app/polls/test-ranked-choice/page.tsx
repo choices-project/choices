@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
 import RankedChoiceVoting from '@/components/voting/RankedChoiceVoting'
+import { devLog } from '@/lib/logger';
 
 // Sample poll data for testing
 const samplePoll = {
@@ -59,7 +60,7 @@ export default function TestRankedChoicePage() {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000))
       
-      console.log('Vote submitted:', rankings)
+      devLog('Vote submitted:', rankings)
       setUserVote(rankings)
       setHasVoted(true)
       

@@ -1,4 +1,5 @@
 import { ApiAuthManager } from './api';
+import { devLog } from './logger';
 
 // Types
 export interface Poll {
@@ -445,7 +446,7 @@ class PollService {
 
   private async savePollToAPI(poll: Poll): Promise<void> {
     // TODO: Implement when API-001 is ready
-    console.log('Saving poll to API:', poll);
+    devLog('Saving poll to API:', poll);
   }
 
   private async submitVoteToAPI(pollId: string, choice: number): Promise<VoteResponse> {

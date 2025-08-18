@@ -10,6 +10,7 @@ import ValuesStep from './steps/ValuesStep'
 import DemographicsStep from './steps/DemographicsStep'
 import PrivacyStep from './steps/PrivacyStep'
 import CompleteStep from './steps/CompleteStep'
+import { devLog } from '@/lib/logger';
 
 export type OnboardingStep = 'welcome' | 'auth' | 'values' | 'demographics' | 'privacy' | 'complete'
 
@@ -156,7 +157,7 @@ export default function OnboardingFlow() {
       }
       
       const result = await response.json()
-      console.log('Profile saved successfully:', result)
+      devLog('Profile saved successfully:', result)
       
       // Redirect to dashboard
       router.push('/dashboard')
