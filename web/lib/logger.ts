@@ -120,3 +120,10 @@ export const logUserAction = (action: string, userId?: string, context?: LogCont
 export const logPerformance = (operation: string, duration: number, context?: LogContext) => {
   logger.performance(operation, duration, context);
 };
+
+// Development-only logging (replaces console.log)
+export const devLog = (message: string, ...args: any[]) => {
+  if (process.env.NODE_ENV === 'development') {
+    console.log(`[DEV] ${message}`, ...args);
+  }
+};
