@@ -182,3 +182,9 @@ echo "  2. git commit -m 'your message'"
 echo "  3. git push origin $CURRENT_BRANCH"
 echo ""
 print_status "INFO" "The CI pipeline will run the same checks on GitHub"
+
+# Offer to start CI monitoring after push
+echo ""
+print_status "INFO" "Would you like to automatically monitor the CI pipeline after push?"
+print_status "INFO" "Run: ./scripts/monitor-ci.sh"
+print_status "INFO" "Or add this to your push command: git push && ./scripts/monitor-ci.sh"
