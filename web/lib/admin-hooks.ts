@@ -1,28 +1,65 @@
 import React from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAdminStore, TrendingTopic, GeneratedPoll, SystemMetrics } from './admin-store';
-import { 
-  mockTrendingTopics, 
-  mockGeneratedPolls, 
-  mockSystemMetrics, 
-  mockActivityFeed 
-} from './mock-data';
+import { mockActivityFeed } from './mock-data';
+
+// Mock data for fallback
+const mockTrendingTopics: TrendingTopic[] = [
+  {
+    id: '1',
+    title: 'Climate Change Policy',
+    category: 'environment',
+    trend_score: 0.8,
+    status: 'pending',
+    created_at: new Date().toISOString(),
+    source: 'automated'
+  }
+];
+
+const mockGeneratedPolls: GeneratedPoll[] = [
+  {
+    id: '1',
+    title: 'Should renewable energy be prioritized over fossil fuels?',
+    options: ['Yes', 'No', 'Undecided'],
+    source_topic_id: '1',
+    status: 'pending',
+    created_at: new Date().toISOString(),
+    metrics: {
+      total_votes: 0,
+      engagement_rate: 0.7
+    }
+  }
+];
+
+const mockSystemMetrics: SystemMetrics = {
+  total_topics: 25,
+  total_polls: 45,
+  active_polls: 12,
+  system_health: 'healthy',
+  last_updated: new Date().toISOString()
+};
+
 import { BreakingNewsStory, PollContext } from './real-time-news-service';
+
+// Utility function for development logging
+const devLog = (message: string, data?: any) => {
+  if (process.env.NODE_ENV === 'development') {
+    console.log(`[DEV] ${message}`, data || '');
+  }
+};
 
 // API functions
 const fetchTrendingTopics = async (): Promise<TrendingTopic[]> => {
-  console.log('fetchTrendingTopics called');
   try {
     const response = await fetch('/api/admin/trending-topics');
-    console.log('fetchTrendingTopics response status:', response.status);
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
     const data = await response.json();
-    console.log('Fetched trending topics from API:', data.topics?.length || 0);
+    devLog('Fetched trending topics from API', { count: data.topics?.length || 0 });
     return data.topics || mockTrendingTopics;
   } catch (error) {
-    console.log('Error fetching trending topics, using mock data:', error);
+    devLog('Error fetching trending topics, using mock data', error);
     return mockTrendingTopics;
   }
 };
@@ -34,27 +71,25 @@ const fetchGeneratedPolls = async (): Promise<GeneratedPoll[]> => {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
     const data = await response.json();
-    console.log('Fetched generated polls from API:', data.polls?.length || 0);
+    devLog('Fetched generated polls from API', { count: data.polls?.length || 0 });
     return data.polls || mockGeneratedPolls;
   } catch (error) {
-    console.log('Error fetching generated polls, using mock data:', error);
+    devLog('Error fetching generated polls, using mock data', error);
     return mockGeneratedPolls;
   }
 };
 
 const fetchSystemMetrics = async (): Promise<SystemMetrics> => {
-  console.log('fetchSystemMetrics called');
   try {
     const response = await fetch('/api/admin/system-metrics');
-    console.log('fetchSystemMetrics response status:', response.status);
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
     const data = await response.json();
-    console.log('Fetched system metrics from API:', data.metrics);
+    devLog('Fetched system metrics from API', data.metrics);
     return data.metrics || mockSystemMetrics;
   } catch (error) {
-    console.log('Error fetching system metrics, using mock data:', error);
+    devLog('Error fetching system metrics, using mock data', error);
     return mockSystemMetrics;
   }
 };
@@ -106,18 +141,16 @@ const analyzeTrendingTopics = async (): Promise<void> => {
 
 // Breaking News API functions
 const fetchBreakingNews = async (): Promise<BreakingNewsStory[]> => {
-  console.log('fetchBreakingNews called');
   try {
     const response = await fetch('/api/admin/breaking-news');
-    console.log('fetchBreakingNews response status:', response.status);
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
     const data = await response.json();
-    console.log('Fetched breaking news from API:', data.stories?.length || 0);
+    devLog('Fetched breaking news from API', { count: data.stories?.length || 0 });
     return data.stories || [];
   } catch (error) {
-    console.log('Error fetching breaking news, using empty array:', error);
+    devLog('Error fetching breaking news, using empty array', error);
     return [];
   }
 };
