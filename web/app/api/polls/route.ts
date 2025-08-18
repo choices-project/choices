@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
 import { cookies } from 'next/headers';
-import { HybridPrivacyManager, PrivacyLevel } from '@/lib/hybrid-privacy';
 
 export const dynamic = 'force-dynamic';
 
@@ -46,9 +45,6 @@ export async function GET(request: NextRequest) {
         title: poll.title,
         total_votes: poll.total_votes || 0,
         participation_rate: poll.participation_rate || 0,
-        privacy_level: (poll as any).privacy_level || 'public',
-        category: (poll as any).category,
-        tags: (poll as any).tags || [],
         aggregated_results: poll.options ? 
           poll.options.reduce((acc, option, index) => {
             acc[`option_${index + 1}`] = 0; // Default to 0 until we can count votes
@@ -129,23 +125,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { 
-      title, 
-      description, 
-      options, 
-      voting_method = 'single',
-      privacy_level = 'public',
-      category,
-      tags = []
-    } = body;
-
-    // Validate privacy level
-    if (!HybridPrivacyManager.isValidPrivacyLevel(privacy_level)) {
-      return NextResponse.json(
-        { error: 'Invalid privacy level' },
-        { status: 400 }
-      );
-    }
+    const { title, description, options, voting_method = 'single' } = body;
 
     // Validate required fields
     if (!title || !options || !Array.isArray(options) || options.length < 2) {
@@ -168,7 +148,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create poll with privacy settings
+    // Create poll with user as creator
     const { data: poll, error: pollError } = await supabase
       .from('po_polls')
       .insert({
@@ -176,25 +156,10 @@ export async function POST(request: NextRequest) {
         description: description?.trim() || null,
         options: sanitizedOptions,
         voting_method,
-        privacy_level,
-        category: category?.trim() || null,
-        tags: tags.filter((tag: string) => tag.trim().length > 0),
         status: 'active',
-        user_id: user.id,
         created_by: user.id,
         total_votes: 0,
-        participation_rate: 0.0,
-        privacy_metadata: {
-          created_at: new Date().toISOString(),
-          created_by: user.id,
-          privacy_level,
-          features: HybridPrivacyManager.getPrivacyConfig(privacy_level).features,
-          recommended_level: HybridPrivacyManager.getRecommendedPrivacyLevel({
-            title,
-            description: description || '',
-            category
-          })
-        }
+        participation_rate: 0.0
       })
       .select()
       .single();
@@ -207,16 +172,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Return sanitized poll data with privacy info
+    // Return sanitized poll data (no sensitive information)
     const sanitizedPoll = {
       poll_id: poll.poll_id,
       title: poll.title,
       description: poll.description,
       options: poll.options,
       voting_method: poll.voting_method,
-      privacy_level: poll.privacy_level,
-      category: poll.category,
-      tags: poll.tags,
       status: poll.status,
       total_votes: poll.total_votes,
       participation_rate: poll.participation_rate,
@@ -226,13 +188,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       poll: sanitizedPoll,
-      message: 'Poll created successfully',
-      privacy_info: {
-        level: poll.privacy_level,
-        features: HybridPrivacyManager.getPrivacyConfig(privacy_level).features,
-        response_time: HybridPrivacyManager.getEstimatedResponseTime(privacy_level),
-        cost_multiplier: HybridPrivacyManager.getCostMultiplier(privacy_level)
-      }
+      message: 'Poll created successfully'
     });
 
   } catch (error) {
