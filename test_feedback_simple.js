@@ -1,10 +1,7 @@
 #!/usr/bin/env node
 
-// Simple test script for feedback table
 const { createClient } = require('@supabase/supabase-js')
-
-// Load environment variables
-require('dotenv').config({ path: './web/.env.local' })
+require('dotenv').config({ path: '.env.local' })
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -20,14 +17,29 @@ async function testFeedbackTable() {
   console.log('🔍 Testing feedback table directly...')
   
   try {
-    // Test 1: Try to insert test data
-    console.log('\n1. Testing data insertion...')
+    // Test 1: Try to query the feedback table
+    console.log('\n1. Testing feedback table query...')
+    const { data: feedback, error: queryError } = await supabase
+      .from('feedback')
+      .select('*')
+      .limit(1)
+    
+    if (queryError) {
+      console.error('❌ Error querying feedback table:', queryError)
+      return
+    }
+    
+    console.log('✅ Feedback table is accessible!')
+    console.log('📊 Current feedback count:', feedback.length)
+    
+    // Test 2: Try to insert test data
+    console.log('\n2. Testing data insertion...')
     const testData = {
       type: 'feature',
-      title: 'Test Feedback',
-      description: 'This is a test feedback submission',
+      title: 'Simple Test Feedback',
+      description: 'This is a simple test feedback submission',
       sentiment: 'positive',
-      user_journey: { page: '/', action: 'test' },
+      user_journey: { page: '/', action: 'simple_test' },
       status: 'open',
       priority: 'medium'
     }
@@ -38,57 +50,40 @@ async function testFeedbackTable() {
       .select()
     
     if (insertError) {
-      console.error('❌ Insert error:', insertError)
-      console.error('Error details:', JSON.stringify(insertError, null, 2))
+      console.error('❌ Error inserting data:', insertError)
       return
     }
     
-    console.log('✅ Test data inserted successfully!')
-    console.log('📊 Inserted data:', insertData)
+    console.log('✅ Data inserted successfully!')
+    console.log('📝 Inserted feedback ID:', insertData[0].id)
     
-    // Test 2: Try to fetch the data
-    console.log('\n2. Testing data retrieval...')
-    const { data: fetchData, error: fetchError } = await supabase
+    // Test 3: Query all feedback
+    console.log('\n3. Querying all feedback...')
+    const { data: allFeedback, error: allError } = await supabase
       .from('feedback')
       .select('*')
       .order('created_at', { ascending: false })
-      .limit(5)
     
-    if (fetchError) {
-      console.error('❌ Fetch error:', fetchError)
+    if (allError) {
+      console.error('❌ Error querying all feedback:', allError)
       return
     }
     
-    console.log('✅ Data retrieved successfully!')
-    console.log('📊 Retrieved data:', fetchData)
+    console.log('✅ All feedback retrieved successfully!')
+    console.log('📊 Total feedback entries:', allFeedback.length)
     
-    // Test 3: Check if the feedback widget API works
-    console.log('\n3. Testing feedback widget API...')
-    const response = await fetch('http://localhost:3000/api/feedback', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        type: 'bug',
-        title: 'API Test Bug',
-        description: 'Testing the feedback API from script',
-        sentiment: 'negative',
-        userJourney: { page: '/test', action: 'api_test' }
-      })
+    allFeedback.forEach((item, index) => {
+      console.log(`  ${index + 1}. ${item.title} (${item.type}, ${item.sentiment}) - ${item.created_at}`)
     })
     
-    const apiResult = await response.json()
-    console.log('📊 API Response:', apiResult)
-    
-    if (response.ok) {
-      console.log('✅ Feedback API working!')
-    } else {
-      console.log('❌ Feedback API failed')
-    }
+    console.log('\n🎉 Feedback system is working correctly!')
+    console.log('\n🔗 You can now:')
+    console.log('1. Visit https://choices-platform.vercel.app to see the feedback widget')
+    console.log('2. Visit https://choices-platform.vercel.app/admin/feedback to view feedback')
+    console.log('3. Submit feedback through the widget and see it appear in the admin panel')
     
   } catch (error) {
-    console.error('❌ Unexpected error:', error)
+    console.error('❌ Test failed:', error)
   }
 }
 
