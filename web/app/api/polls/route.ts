@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { devLog } from '@/lib/logger';
 import { createClient } from '@/utils/supabase/server';
 import { cookies } from 'next/headers';
@@ -150,7 +150,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create poll with user as creator
-    const { data: poll } = await supabase
+    const { data: poll, error: pollError } = await supabase
       .from('po_polls')
       .insert({
         title: title.trim(),

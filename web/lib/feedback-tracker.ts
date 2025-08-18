@@ -393,7 +393,7 @@ class FeedbackTracker {
       // For now, return undefined
       return undefined
     } catch (error) {
-      devLog('Failed to capture screenshot:', error)
+      console.log('Failed to capture screenshot:', error)
       return undefined
     }
   }

@@ -38,7 +38,7 @@ export async function ensureUserSynced(): Promise<UserSyncResult> {
     }
 
     // Check if user exists in ia_users table
-    const { error: checkError } = await supabase
+    const { data: existingUser, error: checkError } = await supabase
       .from('ia_users')
       .select('*')
       .eq('stable_id', user.id)
@@ -63,7 +63,7 @@ export async function ensureUserSynced(): Promise<UserSyncResult> {
     }
 
     // User doesn't exist in ia_users table, create them
-    const { error: createError } = await supabase
+    const { data: newUser, error: createError } = await supabase
       .from('ia_users')
       .insert({
         stable_id: user.id,
@@ -113,13 +113,13 @@ export async function getUserFromIaUsers(authUserId: string) {
       return { data: null, error: 'Supabase client not available' }
     }
 
-    const { error } = await supabase
+    const { data: result, error } = await supabase
       .from('ia_users')
       .select('*')
       .eq('stable_id', authUserId)
       .single()
 
-    return { data, error }
+    return { data: result, error }
   } catch (error) {
     return {
       data: null,
@@ -139,7 +139,7 @@ export async function hasUserProfile(authUserId: string) {
       return { hasProfile: false, error: 'Supabase client not available' }
     }
 
-    const { error } = await supabase
+    const { data: result, error } = await supabase
       .from('user_profiles')
       .select('user_id')
       .eq('user_id', authUserId)
@@ -149,7 +149,7 @@ export async function hasUserProfile(authUserId: string) {
       return { hasProfile: false, error: error.message }
     }
 
-    return { hasProfile: !!data, error: null }
+    return { hasProfile: !!result, error: null }
   } catch (error) {
     return {
       hasProfile: false,

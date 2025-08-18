@@ -43,7 +43,7 @@ export class HybridVotingService {
     const { pollId, userId } = request;
     
     // Get poll privacy settings
-    const { error: pollError } = await this.supabase
+    const { data: pollSettings, error: pollError } = await this.supabase
       .rpc('get_poll_privacy_settings', { poll_id_param: pollId })
       .single();
 
@@ -57,7 +57,7 @@ export class HybridVotingService {
     }
 
     // Check if privacy level matches poll settings
-    if (pollSettings.privacy_level !== privacyLevel) {
+    if (pollSettings.privacy_level !== request.privacyLevel) {
       return {
         isValid: false,
         error: `Poll requires ${pollSettings.privacy_level} privacy level`,
@@ -97,13 +97,13 @@ export class HybridVotingService {
         success: false,
         message: validation.error || 'Invalid vote request',
         pollId,
-        privacyLevel,
+        privacyLevel: request.privacyLevel,
         responseTime: Date.now() - startTime
       };
     }
 
     try {
-      switch (privacyLevel) {
+      switch (request.privacyLevel) {
         case 'public':
           return await this.submitPublicVote(request);
         case 'private':
@@ -111,14 +111,14 @@ export class HybridVotingService {
         case 'high-privacy':
           return await this.submitHighPrivacyVote(request);
         default:
-          throw new Error(`Unsupported privacy level: ${privacyLevel}`);
+          throw new Error(`Unsupported privacy level: ${request.privacyLevel}`);
       }
     } catch (error) {
       return {
         success: false,
         message: error instanceof Error ? error.message : 'Vote submission failed',
         pollId,
-        privacyLevel,
+        privacyLevel: request.privacyLevel,
         responseTime: Date.now() - startTime
       };
     }
@@ -132,7 +132,7 @@ export class HybridVotingService {
     const { pollId, choice } = request;
 
     // Simple vote insertion
-    const { error } = await this.supabase
+    const { data: vote, error } = await this.supabase
       .from('po_votes')
       .insert({
         poll_id: pollId,
@@ -161,7 +161,7 @@ export class HybridVotingService {
       success: true,
       message: 'Public vote submitted successfully',
       pollId,
-      voteId: vote.id,
+      voteId: vote?.id || 'unknown',
       privacyLevel: 'public',
       responseTime: Date.now() - startTime
     };
@@ -179,7 +179,7 @@ export class HybridVotingService {
     }
 
     // Check if user has already voted
-    const {  } = await this.supabase
+    const { data: existingVote, error: existingVoteError } = await this.supabase
       .from('po_votes')
       .select('id')
       .eq('poll_id', pollId)
@@ -191,7 +191,7 @@ export class HybridVotingService {
     }
 
     // Private vote insertion with user tracking
-    const { error } = await this.supabase
+    const { data: vote, error } = await this.supabase
       .from('po_votes')
       .insert({
         poll_id: pollId,
@@ -222,7 +222,7 @@ export class HybridVotingService {
       success: true,
       message: 'Private vote submitted successfully',
       pollId,
-      voteId: vote.id,
+      voteId: vote?.id || 'unknown',
       privacyLevel: 'private',
       responseTime: Date.now() - startTime
     };

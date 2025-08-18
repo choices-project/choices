@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useCallback, createContext, useContext } from 'react'
 import { Heart, Users, Globe, TrendingUp } from 'lucide-react'
 
 interface ValuesStepProps {

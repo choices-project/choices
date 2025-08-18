@@ -15,7 +15,7 @@ const nextConfig = {
     optimizePackageImports: ['lucide-react', 'framer-motion'],
   },
   
-  // Make build more permissive in CI environments
+  // Temporarily disable for deploy - will re-enable after fixing all errors systematically
   eslint: {
     ignoreDuringBuilds: true,
   },
@@ -98,7 +98,7 @@ const config = withPWA({
   dest: 'public',
   register: true,
   skipWaiting: true,
-  disable: process.env.NODE_ENV === 'development',
+  disable: false, // Enable PWA in development for testing SPA behavior
   buildExcludes: [/middleware-manifest\.json$/],
   runtimeCaching: [
     {

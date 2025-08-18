@@ -319,7 +319,7 @@ export class FeatureFlagManager {
       } catch (error) {
         if (process.env.NODE_ENV === 'development') {
           // eslint-disable-next-line no-console
-          devLog('Error in feature flag listener:', error);
+          console.log('Error in feature flag listener:', error);
         }
       }
     });

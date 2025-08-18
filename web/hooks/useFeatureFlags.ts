@@ -5,7 +5,7 @@
  * re-rendering when flags change.
  */
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, createContext, useContext } from 'react';
 import { 
   featureFlagManager, 
   FeatureFlag, 

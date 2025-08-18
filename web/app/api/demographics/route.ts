@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { devLog } from '@/lib/logger';
 import { createClient } from '@/utils/supabase/server';
 import { cookies } from 'next/headers';
@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
     
     try {
       // Get total users
-      const { data: users } = await supabase
+      const { data: users, error: usersError } = await supabase
         .from('ia_users')
         .select('*')
         .eq('is_active', true);
@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
       const totalUsers = users?.length || 0;
 
       // Get recent polls
-      const { data: polls } = await supabase
+      const { data: polls, error: pollsError } = await supabase
         .from('po_polls')
         .select('poll_id, title, total_votes, participation_rate, created_at')
         .eq('status', 'active')
@@ -39,7 +39,7 @@ export async function GET(request: NextRequest) {
       if (pollsError) throw pollsError;
 
       // Get recent votes
-      const { data: votes } = await supabase
+      const { data: votes, error: votesError } = await supabase
         .from('po_votes')
         .select('poll_id, voted_at')
         .gte('voted_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())

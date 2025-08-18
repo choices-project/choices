@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useCallback, createContext, useContext } from 'react'
 import { Shield, Eye, Users, TrendingUp, Lock } from 'lucide-react'
 
 interface PrivacyStepProps {

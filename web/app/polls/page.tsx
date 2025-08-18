@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, createContext, useContext } from 'react';
 import Link from 'next/link';
 import { 
   Search, Filter, TrendingUp, TrendingDown, BarChart3, PieChart, 

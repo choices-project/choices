@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { devLog } from '@/lib/logger';
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { email, twoFactorCode } = await request.json()
+    const { email, password: userPassword, twoFactorCode } = await request.json()
 
     // Validate input
     if (!email || !userPassword) {
@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Find user by email
-    const { data: user } = await supabase
+    const { data: user, error: userError } = await supabase
       .from('ia_users')
       .select('*')
       .eq('email', email.toLowerCase())

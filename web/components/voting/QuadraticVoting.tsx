@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback, createContext, useContext } from 'react'
 import { CheckCircle, AlertCircle, Info, Vote, DollarSign, TrendingUp, TrendingDown } from 'lucide-react'
 
 interface PollOption {
