@@ -177,8 +177,8 @@ class FeedbackTracker {
   }
   
   private getFID(): number | undefined {
-    const fidEntry = performance.getEntriesByName('first-input-delay')[0]
-    return fidEntry ? fidEntry.processingStart - fidEntry.startTime : undefined
+    const fidEntry = performance.getEntriesByName('first-input-delay')[0] as any
+    return fidEntry ? (fidEntry.processingStart || 0) - (fidEntry.startTime || 0) : undefined
   }
   
   private getCLS(): number | undefined {
@@ -233,7 +233,7 @@ class FeedbackTracker {
         // Store network request info
         this.performanceMetrics.networkRequests = this.performanceMetrics.networkRequests || []
         this.performanceMetrics.networkRequests.push({
-          url: typeof args[0] === 'string' ? args[0] : args[0].url,
+          url: typeof args[0] === 'string' ? args[0] : (args[0] as Request).url,
           method: args[1]?.method || 'GET',
           status: response.status,
           duration
