@@ -42,12 +42,7 @@ const mockSystemMetrics: SystemMetrics = {
 
 import { BreakingNewsStory, PollContext } from './real-time-news-service';
 
-// Utility function for development logging
-const devLog = (message: string, data?: any) => {
-  if (process.env.NODE_ENV === 'development') {
-    devLog(`[DEV] ${message}`, data || '');
-  }
-};
+// Remove duplicate devLog definition - using imported one from logger
 
 // API functions
 const fetchTrendingTopics = async (): Promise<TrendingTopic[]> => {
