@@ -10,7 +10,9 @@
     "start": "next start",
     "type-check": "tsc --noEmit",
     "lint": "next lint",
-    "lint:ci": "next lint --max-warnings=9999"
+    "lint:ci": "next lint --max-warnings=9999",
+    "cleanup:analyze": "node ../scripts/cleanup-code.js",
+    "cleanup:fix": "node ../scripts/cleanup-code.js --fix"
   },
   "dependencies": {
     "@headlessui/react": "^2.2.7",
