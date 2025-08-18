@@ -67,7 +67,7 @@ async function diagnoseEmail() {
 
     // 3. Check for existing users with your email
     console.log('\n3. Checking for Existing Users...')
-    const yourEmail = 'michaeltempesta@gmail.com'
+    const yourEmail = 'test@example.com'
     
     // Check ia_users table
     const { data: iaUsers, error: iaError } = await supabase
@@ -148,3 +148,4 @@ async function diagnoseEmail() {
 
 // Run the diagnostic
 diagnoseEmail().catch(console.error)
+

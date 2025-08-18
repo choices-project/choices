@@ -842,3 +842,4 @@ async function configureEmailTemplates() {
 
 // Run the configuration
 configureEmailTemplates().catch(console.error)
+

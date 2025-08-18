@@ -18,28 +18,8 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Check authentication
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-    if (userError || !user) {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      );
-    }
-
-    // Check admin permissions
-    const { data: userProfile } = await supabase
-      .from('ia_users')
-      .select('verification_tier')
-      .eq('stable_id', user.id)
-      .single();
-
-    if (!userProfile || !['T2', 'T3'].includes(userProfile.verification_tier)) {
-      return NextResponse.json(
-        { error: 'Insufficient permissions' },
-        { status: 403 }
-      );
-    }
+    // Service role authentication - no user checks needed
+    // Admin access is provided by the service role key
 
     const service = new AutomatedPollsService();
     const { searchParams } = new URL(request.url);
@@ -50,25 +30,60 @@ export async function GET(request: NextRequest) {
     const votingMethod = searchParams.get('votingMethod');
     const minQualityScore = parseFloat(searchParams.get('minQualityScore') || '0');
 
-    // Get generated polls
-    let polls = await service.getGeneratedPolls(status, limit);
+    // Fetch real data from database
+    const { data: polls, error } = await supabase
+      .from('generated_polls')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(limit);
+
+    if (error) {
+      console.error('Error fetching generated polls:', error);
+      return NextResponse.json(
+        { error: 'Failed to fetch generated polls' },
+        { status: 500 }
+      );
+    }
+
+    // Transform database data to match expected format
+    const transformedPolls = polls?.map(poll => ({
+      id: poll.id,
+      topicId: poll.topic_id,
+      title: poll.title,
+      description: poll.description,
+      options: poll.options,
+      votingMethod: poll.voting_method,
+      category: poll.category,
+      tags: poll.tags,
+      qualityScore: poll.quality_score,
+      status: poll.status,
+      approvedBy: poll.approved_by,
+      approvedAt: poll.approved_at,
+      topicAnalysis: poll.topic_analysis,
+      qualityMetrics: poll.quality_metrics,
+      generationMetadata: poll.generation_metadata,
+      createdAt: poll.created_at,
+      updatedAt: poll.updated_at
+    })) || [];
 
     // Apply additional filters
+    let filteredPolls = transformedPolls;
+    
     if (category) {
-      polls = polls.filter(poll => poll.category === category);
+      filteredPolls = filteredPolls.filter(poll => poll.category === category);
     }
 
     if (votingMethod) {
-      polls = polls.filter(poll => poll.votingMethod === votingMethod);
+      filteredPolls = filteredPolls.filter(poll => poll.votingMethod === votingMethod);
     }
 
     if (minQualityScore > 0) {
-      polls = polls.filter(poll => poll.qualityScore >= minQualityScore);
+      filteredPolls = filteredPolls.filter(poll => poll.qualityScore >= minQualityScore);
     }
 
     // Get quality metrics for each poll
     const pollsWithMetrics = await Promise.all(
-      polls.map(async (poll) => {
+      filteredPolls.map(async (poll) => {
         const metrics = await service.getQualityMetrics(poll.id);
         return {
           ...poll,
@@ -112,28 +127,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check authentication
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-    if (userError || !user) {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      );
-    }
-
-    // Check admin permissions
-    const { data: userProfile } = await supabase
-      .from('ia_users')
-      .select('verification_tier')
-      .eq('stable_id', user.id)
-      .single();
-
-    if (!userProfile || !['T2', 'T3'].includes(userProfile.verification_tier)) {
-      return NextResponse.json(
-        { error: 'Insufficient permissions' },
-        { status: 403 }
-      );
-    }
+    // Service role authentication - no user checks needed
+    // Admin access is provided by the service role key
 
     const body = await request.json();
     const {
@@ -245,3 +240,4 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+

@@ -1,242 +1,224 @@
-// Mock Data for Development and Testing
-export interface MockPoll {
-  id: string
-  question: string
-  options: string[]
-  totalVotes: number
-  results: Record<number, number>
-  expiresAt: string
-  category: string
-  isActive: boolean
-  description?: string
-  createdBy?: string
-}
+import { TrendingTopic, GeneratedPoll, SystemMetrics, ActivityItem } from './admin-store';
 
-export interface MockDemographics {
-  totalUsers: number
-  ageDistribution: Array<{ range: string; count: number; percentage: number }>
-  geographicSpread: Array<{ state: string; count: number; percentage: number }>
-  commonInterests: Array<{ interest: string; count: number; percentage: number }>
-  topValues: Array<{ value: string; count: number; percentage: number }>
-  educationLevels: Array<{ level: string; count: number; percentage: number }>
-  incomeBrackets: Array<{ bracket: string; count: number; percentage: number }>
-  urbanRural: Array<{ type: string; count: number; percentage: number }>
-  recentPolls: any[]
-  recentVotes: any[]
-  lastUpdated: string
-}
-
-export interface MockUser {
-  id: string
-  email: string
-  name: string
-  verificationTier: string
-  isActive: boolean
-  createdAt: string
-  lastLogin: string
-}
-
-// Generate realistic mock data
-export const generateMockPolls = (): MockPoll[] => {
-  const baseTime = Date.now()
-  
-  return [
-    {
-      id: '1',
-      question: 'What is the most important issue facing our community?',
-      options: ['Healthcare', 'Education', 'Environment', 'Economy'],
-      totalVotes: 1247,
-      results: { 0: 456, 1: 234, 2: 345, 3: 212 },
-      expiresAt: new Date(baseTime + 7 * 24 * 60 * 60 * 1000).toISOString(),
-      category: 'Community',
-      isActive: true,
-      description: 'Help us understand the priorities of our community members.',
-      createdBy: 'Community Council'
-    },
-    {
-      id: '2',
-      question: 'How should we prioritize local infrastructure projects?',
-      options: ['Roads & Bridges', 'Public Transit', 'Parks & Recreation', 'Utilities'],
-      totalVotes: 892,
-      results: { 0: 234, 1: 345, 2: 178, 3: 135 },
-      expiresAt: new Date(baseTime + 5 * 24 * 60 * 60 * 1000).toISOString(),
-      category: 'Infrastructure',
-      isActive: true,
-      description: 'Your input will guide our infrastructure investment decisions.',
-      createdBy: 'City Planning Department'
-    },
-    {
-      id: '3',
-      question: 'Which environmental initiative should receive priority funding?',
-      options: ['Renewable Energy', 'Waste Reduction', 'Green Spaces', 'Water Conservation'],
-      totalVotes: 1567,
-      results: { 0: 567, 1: 234, 2: 456, 3: 310 },
-      expiresAt: new Date(baseTime + 10 * 24 * 60 * 60 * 1000).toISOString(),
-      category: 'Environment',
-      isActive: true,
-      description: 'Help us make our community more sustainable.',
-      createdBy: 'Environmental Committee'
-    },
-    {
-      id: '4',
-      question: 'What type of community event would you most like to see?',
-      options: ['Cultural Festival', 'Sports Tournament', 'Art Exhibition', 'Food Fair'],
-      totalVotes: 734,
-      results: { 0: 234, 1: 156, 2: 189, 3: 155 },
-      expiresAt: new Date(baseTime + 3 * 24 * 60 * 60 * 1000).toISOString(),
-      category: 'Events',
-      isActive: true,
-      description: 'We want to organize events that bring our community together.',
-      createdBy: 'Events Committee'
-    },
-    {
-      id: '5',
-      question: 'How should we improve public safety in our neighborhood?',
-      options: ['More Police Patrols', 'Better Lighting', 'Community Watch', 'Youth Programs'],
-      totalVotes: 1023,
-      results: { 0: 234, 1: 345, 2: 289, 3: 155 },
-      expiresAt: new Date(baseTime + 6 * 24 * 60 * 60 * 1000).toISOString(),
-      category: 'Safety',
-      isActive: true,
-      description: 'Your safety is our top priority.',
-      createdBy: 'Public Safety Department'
-    }
-  ]
-}
-
-export const generateMockDemographics = (): MockDemographics => {
-  const mockTotalUsers = 1250
-  
-  return {
-    totalUsers: mockTotalUsers,
-    ageDistribution: [
-      { range: '18-24', count: Math.floor(mockTotalUsers * 0.15), percentage: 15 },
-      { range: '25-34', count: Math.floor(mockTotalUsers * 0.30), percentage: 30 },
-      { range: '35-44', count: Math.floor(mockTotalUsers * 0.24), percentage: 24 },
-      { range: '45-54', count: Math.floor(mockTotalUsers * 0.18), percentage: 18 },
-      { range: '55-64', count: Math.floor(mockTotalUsers * 0.09), percentage: 9 },
-      { range: '65+', count: Math.floor(mockTotalUsers * 0.06), percentage: 6 }
-    ],
-    geographicSpread: [
-      { state: 'California', count: Math.floor(mockTotalUsers * 0.18), percentage: 18 },
-      { state: 'Texas', count: Math.floor(mockTotalUsers * 0.14), percentage: 14 },
-      { state: 'New York', count: Math.floor(mockTotalUsers * 0.12), percentage: 12 },
-      { state: 'Florida', count: Math.floor(mockTotalUsers * 0.11), percentage: 11 },
-      { state: 'Illinois', count: Math.floor(mockTotalUsers * 0.09), percentage: 9 },
-      { state: 'Pennsylvania', count: Math.floor(mockTotalUsers * 0.08), percentage: 8 },
-      { state: 'Ohio', count: Math.floor(mockTotalUsers * 0.07), percentage: 7 },
-      { state: 'Michigan', count: Math.floor(mockTotalUsers * 0.06), percentage: 6 },
-      { state: 'Georgia', count: Math.floor(mockTotalUsers * 0.05), percentage: 5 },
-      { state: 'North Carolina', count: Math.floor(mockTotalUsers * 0.05), percentage: 5 }
-    ],
-    commonInterests: [
-      { interest: 'Affordable Healthcare', count: Math.floor(mockTotalUsers * 0.84), percentage: 84 },
-      { interest: 'Quality Education', count: Math.floor(mockTotalUsers * 0.78), percentage: 78 },
-      { interest: 'Economic Security', count: Math.floor(mockTotalUsers * 0.72), percentage: 72 },
-      { interest: 'Environmental Protection', count: Math.floor(mockTotalUsers * 0.66), percentage: 66 },
-      { interest: 'Community Safety', count: Math.floor(mockTotalUsers * 0.60), percentage: 60 },
-      { interest: 'Infrastructure Investment', count: Math.floor(mockTotalUsers * 0.54), percentage: 54 }
-    ],
-    topValues: [
-      { value: 'Family & Community', count: Math.floor(mockTotalUsers * 0.90), percentage: 90 },
-      { value: 'Fairness & Justice', count: Math.floor(mockTotalUsers * 0.84), percentage: 84 },
-      { value: 'Personal Freedom', count: Math.floor(mockTotalUsers * 0.78), percentage: 78 },
-      { value: 'Hard Work & Responsibility', count: Math.floor(mockTotalUsers * 0.72), percentage: 72 },
-      { value: 'Innovation & Progress', count: Math.floor(mockTotalUsers * 0.66), percentage: 66 },
-      { value: 'Tradition & Stability', count: Math.floor(mockTotalUsers * 0.60), percentage: 60 }
-    ],
-    educationLevels: [
-      { level: 'Bachelor\'s Degree', count: Math.floor(mockTotalUsers * 0.36), percentage: 36 },
-      { level: 'Some College', count: Math.floor(mockTotalUsers * 0.24), percentage: 24 },
-      { level: 'High School', count: Math.floor(mockTotalUsers * 0.21), percentage: 21 },
-      { level: 'Graduate Degree', count: Math.floor(mockTotalUsers * 0.15), percentage: 15 },
-      { level: 'Less than HS', count: Math.floor(mockTotalUsers * 0.06), percentage: 6 }
-    ],
-    incomeBrackets: [
-      { bracket: '$50k-$75k', count: Math.floor(mockTotalUsers * 0.24), percentage: 24 },
-      { bracket: '$30k-$50k', count: Math.floor(mockTotalUsers * 0.21), percentage: 21 },
-      { bracket: '$75k-$100k', count: Math.floor(mockTotalUsers * 0.18), percentage: 18 },
-      { bracket: '$100k+', count: Math.floor(mockTotalUsers * 0.15), percentage: 15 },
-      { bracket: '$20k-$30k', count: Math.floor(mockTotalUsers * 0.12), percentage: 12 },
-      { bracket: 'Under $20k', count: Math.floor(mockTotalUsers * 0.09), percentage: 9 }
-    ],
-    urbanRural: [
-      { type: 'Urban', count: Math.floor(mockTotalUsers * 0.60), percentage: 60 },
-      { type: 'Suburban', count: Math.floor(mockTotalUsers * 0.30), percentage: 30 },
-      { type: 'Rural', count: Math.floor(mockTotalUsers * 0.12), percentage: 12 }
-    ],
-    recentPolls: [
-      { poll_id: '1', title: 'Community Priorities', total_votes: 1247, participation_rate: 85 },
-      { poll_id: '2', title: 'Infrastructure Projects', total_votes: 892, participation_rate: 72 },
-      { poll_id: '3', title: 'Environmental Initiatives', total_votes: 1567, participation_rate: 91 }
-    ],
-    recentVotes: [
-      { poll_id: '1', title: 'Community Priorities', vote_count: 45, voted_at: new Date().toISOString() },
-      { poll_id: '2', title: 'Infrastructure Projects', vote_count: 32, voted_at: new Date(Date.now() - 3600000).toISOString() },
-      { poll_id: '3', title: 'Environmental Initiatives', vote_count: 67, voted_at: new Date(Date.now() - 7200000).toISOString() }
-    ],
-    lastUpdated: new Date().toISOString()
+// Mock trending topics data
+export const mockTrendingTopics: TrendingTopic[] = [
+  {
+    id: '1',
+    title: 'Gavin Newsom vs Donald Trump: California Governor Challenges Former President',
+    category: 'politics',
+    trend_score: 95,
+    status: 'pending',
+    created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), // 2 hours ago
+    source: 'Twitter Trends'
+  },
+  {
+    id: '2',
+    title: 'AI Regulation Debate: Tech Leaders vs Government Officials',
+    category: 'technology',
+    trend_score: 87,
+    status: 'approved',
+    created_at: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(), // 4 hours ago
+    source: 'Reddit'
+  },
+  {
+    id: '3',
+    title: 'Climate Change Summit: Global Leaders Meet in Paris',
+    category: 'politics',
+    trend_score: 82,
+    status: 'pending',
+    created_at: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(), // 6 hours ago
+    source: 'News API'
+  },
+  {
+    id: '4',
+    title: 'SpaceX Starship Launch: Latest Mission to Mars',
+    category: 'technology',
+    trend_score: 78,
+    status: 'rejected',
+    created_at: new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString(), // 8 hours ago
+    source: 'NASA'
+  },
+  {
+    id: '5',
+    title: 'Olympic Games 2024: Controversy Over Russian Athletes',
+    category: 'sports',
+    trend_score: 75,
+    status: 'approved',
+    created_at: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString(), // 12 hours ago
+    source: 'Sports News'
   }
-}
+];
 
-export const generateMockUsers = (): MockUser[] => {
-  return [
-    {
-      id: '1',
-      email: 'john.doe@example.com',
-      name: 'John Doe',
-      verificationTier: 'T2',
-      isActive: true,
-      createdAt: '2024-01-15T10:30:00Z',
-      lastLogin: new Date().toISOString()
-    },
-    {
-      id: '2',
-      email: 'jane.smith@example.com',
-      name: 'Jane Smith',
-      verificationTier: 'T1',
-      isActive: true,
-      createdAt: '2024-01-20T14:45:00Z',
-      lastLogin: new Date(Date.now() - 3600000).toISOString()
-    },
-    {
-      id: '3',
-      email: 'mike.johnson@example.com',
-      name: 'Mike Johnson',
-      verificationTier: 'T3',
-      isActive: true,
-      createdAt: '2024-01-10T09:15:00Z',
-      lastLogin: new Date(Date.now() - 7200000).toISOString()
+// Mock generated polls data
+export const mockGeneratedPolls: GeneratedPoll[] = [
+  {
+    id: '1',
+    title: 'Who do you think would win in a debate between Gavin Newsom and Donald Trump?',
+    options: ['Gavin Newsom', 'Donald Trump', 'It would be a tie', 'Neither would win'],
+    source_topic_id: '1',
+    status: 'pending',
+    created_at: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(), // 1 hour ago
+    metrics: {
+      total_votes: 0,
+      engagement_rate: 0
     }
-  ]
-}
-
-// Mock data API responses
-export const getMockPollsResponse = () => ({
-  polls: generateMockPolls()
-})
-
-export const getMockDemographicsResponse = () => generateMockDemographics()
-
-export const getMockUsersResponse = () => ({
-  users: generateMockUsers()
-})
-
-// Mock data for specific scenarios
-export const getMockDataForScenario = (scenario: 'empty' | 'loading' | 'error' | 'success') => {
-  switch (scenario) {
-    case 'empty':
-      return { polls: [], users: [], demographics: { totalUsers: 0, ageDistribution: [] } }
-    case 'loading':
-      return { loading: true }
-    case 'error':
-      return { error: 'Failed to load data', polls: [], users: [] }
-    case 'success':
-    default:
-      return {
-        polls: generateMockPolls(),
-        users: generateMockUsers(),
-        demographics: generateMockDemographics()
-      }
+  },
+  {
+    id: '2',
+    title: 'Should AI development be regulated by governments?',
+    options: ['Yes, strict regulation needed', 'Yes, but minimal regulation', 'No, let the market decide', 'Not sure'],
+    source_topic_id: '2',
+    status: 'approved',
+    created_at: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString(), // 3 hours ago
+    metrics: {
+      total_votes: 1247,
+      engagement_rate: 85.2
+    }
+  },
+  {
+    id: '3',
+    title: 'Do you support the new climate change agreements?',
+    options: ['Strongly support', 'Somewhat support', 'Neutral', 'Oppose', 'Strongly oppose'],
+    source_topic_id: '3',
+    status: 'pending',
+    created_at: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(), // 5 hours ago
+    metrics: {
+      total_votes: 0,
+      engagement_rate: 0
+    }
   }
-}
+];
+
+// Mock system metrics
+export const mockSystemMetrics: SystemMetrics = {
+  total_topics: 15,
+  total_polls: 8,
+  active_polls: 3,
+  system_health: 'healthy',
+  last_updated: new Date().toISOString()
+};
+
+// Mock activity feed
+export const mockActivityFeed: ActivityItem[] = [
+  {
+    id: '1',
+    type: 'topic_created',
+    title: 'New Trending Topic',
+    description: '"Gavin Newsom vs Donald Trump: California Governor Challenges Former President" was detected as trending',
+    timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+    severity: 'info'
+  },
+  {
+    id: '2',
+    type: 'poll_generated',
+    title: 'New Poll Generated',
+    description: '"Who do you think would win in a debate between Gavin Newsom and Donald Trump?" was generated from trending topic',
+    timestamp: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(),
+    severity: 'info'
+  },
+  {
+    id: '3',
+    type: 'poll_approved',
+    title: 'Poll Approved',
+    description: '"Should AI development be regulated by governments?" has been approved and is now live',
+    timestamp: new Date(Date.now() - 30 * 60 * 1000).toISOString(), // 30 minutes ago
+    severity: 'info'
+  },
+  {
+    id: '4',
+    type: 'system_alert',
+    title: 'System Health Check',
+    description: 'All systems are operating normally. Database performance is optimal.',
+    timestamp: new Date(Date.now() - 15 * 60 * 1000).toISOString(), // 15 minutes ago
+    severity: 'info'
+  },
+  {
+    id: '5',
+    type: 'topic_created',
+    title: 'New Trending Topic',
+    description: '"Climate Change Summit: Global Leaders Meet in Paris" was detected as trending',
+    timestamp: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(),
+    severity: 'info'
+  }
+];
+
+// Mock chart data
+export const mockChartData = {
+  recentActivity: [
+    { name: 'Mon', value: 12 },
+    { name: 'Tue', value: 19 },
+    { name: 'Wed', value: 15 },
+    { name: 'Thu', value: 25 },
+    { name: 'Fri', value: 22 },
+    { name: 'Sat', value: 18 },
+    { name: 'Sun', value: 24 },
+  ],
+  topicCategories: [
+    { name: 'Politics', value: 35 },
+    { name: 'Technology', value: 25 },
+    { name: 'Entertainment', value: 20 },
+    { name: 'Sports', value: 15 },
+    { name: 'Other', value: 5 },
+  ],
+  pollPerformance: [
+    { name: 'Jan', value: 65 },
+    { name: 'Feb', value: 78 },
+    { name: 'Mar', value: 82 },
+    { name: 'Apr', value: 75 },
+    { name: 'May', value: 88 },
+    { name: 'Jun', value: 92 },
+  ]
+};
+
+// Mock demographics response
+export const getMockDemographicsResponse = () => ({
+  totalUsers: 1250,
+  recentPolls: [
+    {
+      poll_id: '1',
+      title: 'Who do you think would win in a debate between Gavin Newsom and Donald Trump?',
+      total_votes: 847,
+      participation_rate: 67.8,
+      created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()
+    },
+    {
+      poll_id: '2',
+      title: 'Should AI development be regulated by governments?',
+      total_votes: 1247,
+      participation_rate: 85.2,
+      created_at: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString()
+    }
+  ],
+  recentVotes: [
+    {
+      poll_id: '1',
+      voted_at: new Date(Date.now() - 30 * 60 * 1000).toISOString()
+    },
+    {
+      poll_id: '2',
+      voted_at: new Date(Date.now() - 45 * 60 * 1000).toISOString()
+    }
+  ],
+  demographics: {
+    ageGroups: [
+      { name: '18-24', value: 25 },
+      { name: '25-34', value: 35 },
+      { name: '35-44', value: 20 },
+      { name: '45-54', value: 15 },
+      { name: '55+', value: 5 }
+    ],
+    locations: [
+      { name: 'United States', value: 45 },
+      { name: 'Europe', value: 25 },
+      { name: 'Asia', value: 20 },
+      { name: 'Other', value: 10 }
+    ],
+    interests: [
+      { name: 'Politics', value: 30 },
+      { name: 'Technology', value: 25 },
+      { name: 'Entertainment', value: 20 },
+      { name: 'Sports', value: 15 },
+      { name: 'Other', value: 10 }
+    ]
+  }
+});
