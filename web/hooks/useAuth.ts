@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useCallback } from 'react'
+import { useEffect, useCallback, useState } from 'react'
 import { devLog } from '@/lib/logger';
 import { getAuthService, User, LoginCredentials, RegisterData, AuthError } from '../lib/auth'
 
