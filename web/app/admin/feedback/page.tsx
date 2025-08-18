@@ -1,12 +1,11 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { devLog } from '@/lib/logger'
 import { 
   MessageCircle, 
   Bug, 
   Lightbulb, 
-  Heart, 
   Smile, 
   Frown, 
   Meh,
@@ -14,9 +13,6 @@ import {
   CheckCircle,
   Clock,
   AlertCircle,
-  TrendingUp,
-  Users,
-  Star,
   RefreshCw
 } from 'lucide-react'
 
@@ -47,7 +43,7 @@ const FeedbackAdminPage: React.FC = () => {
     negative: 0
   })
 
-  const fetchFeedback = async () => {
+  const fetchFeedback = useCallback(async () => {
     try {
       setLoading(true)
       const response = await fetch('/api/feedback?limit=100')
@@ -64,11 +60,11 @@ const FeedbackAdminPage: React.FC = () => {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
   useEffect(() => {
     fetchFeedback()
-  }, [])
+  }, [fetchFeedback])
 
   const calculateStats = (data: FeedbackItem[]) => {
     setStats({
@@ -97,15 +93,7 @@ const FeedbackAdminPage: React.FC = () => {
     }
   }
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'open': return <Clock className="w-4 h-4" />
-      case 'in_progress': return <AlertCircle className="w-4 h-4" />
-      case 'resolved': return <CheckCircle className="w-4 h-4" />
-      case 'closed': return <Eye className="w-4 h-4" />
-      default: return <Clock className="w-4 h-4" />
-    }
-  }
+
 
   const getStatusColor = (status: string) => {
     switch (status) {
