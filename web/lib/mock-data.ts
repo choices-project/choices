@@ -1,63 +1,71 @@
-import { SystemMetrics, GeneratedPoll } from './admin-store'
+import { TrendingTopic, GeneratedPoll, ActivityItem } from '@/types';
 
-// Mock trending topics data
 export const mockTrendingTopics: TrendingTopic[] = [
   {
     id: '1',
-    title: 'Gavin Newsom vs Donald Trump: California Governor Challenges Former President',
+    title: 'Gavin Newsom vs Donald Trump',
+    description: 'California Governor Challenges Former President',
     category: 'politics',
     trend_score: 95,
-    status: 'pending',
-    created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), // 2 hours ago
-    source: 'Twitter Trends'
+    trending_score: 95,
+    status: 'active',
+    source: 'Twitter Trends',
+    created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()
   },
   {
     id: '2',
-    title: 'AI Regulation Debate: Tech Leaders vs Government Officials',
+    title: 'AI Regulation Debate',
+    description: 'Should AI development be regulated by governments?',
     category: 'technology',
     trend_score: 87,
-    status: 'approved',
-    created_at: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(), // 4 hours ago
-    source: 'Reddit'
+    trending_score: 87,
+    status: 'active',
+    source: 'Reddit',
+    created_at: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString()
   },
   {
     id: '3',
-    title: 'Climate Change Summit: Global Leaders Meet in Paris',
-    category: 'politics',
+    title: 'Climate Change Summit',
+    description: 'Global Leaders Meet in Paris',
+    category: 'environment',
     trend_score: 82,
-    status: 'pending',
-    created_at: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(), // 6 hours ago
-    source: 'News API'
+    trending_score: 82,
+    status: 'active',
+    source: 'News API',
+    created_at: new Date(Date.now() - 30 * 60 * 1000).toISOString()
   },
   {
     id: '4',
-    title: 'SpaceX Starship Launch: Latest Mission to Mars',
-    category: 'technology',
+    title: 'Space Exploration',
+    description: 'NASA Announces New Mars Mission',
+    category: 'science',
     trend_score: 78,
-    status: 'rejected',
-    created_at: new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString(), // 8 hours ago
-    source: 'NASA'
+    trending_score: 78,
+    status: 'active',
+    source: 'NASA',
+    created_at: new Date(Date.now() - 15 * 60 * 1000).toISOString()
   },
   {
     id: '5',
-    title: 'Olympic Games 2024: Controversy Over Russian Athletes',
+    title: 'World Cup Final',
+    description: 'Championship Match Draws Global Attention',
     category: 'sports',
     trend_score: 75,
-    status: 'approved',
-    created_at: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString(), // 12 hours ago
-    source: 'Sports News'
+    trending_score: 75,
+    status: 'active',
+    source: 'Sports News',
+    created_at: new Date(Date.now() - 5 * 60 * 1000).toISOString()
   }
 ];
 
-// Mock generated polls data
 export const mockGeneratedPolls: GeneratedPoll[] = [
   {
     id: '1',
     title: 'Who do you think would win in a debate between Gavin Newsom and Donald Trump?',
-    options: ['Gavin Newsom', 'Donald Trump', 'It would be a tie', 'Neither would win'],
+    options: ['Gavin Newsom', 'Donald Trump', 'Too close to call', 'Neither'],
     source_topic_id: '1',
     status: 'pending',
-    created_at: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(), // 1 hour ago
+    created_at: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(),
     metrics: {
       total_votes: 0,
       engagement_rate: 0
@@ -66,22 +74,22 @@ export const mockGeneratedPolls: GeneratedPoll[] = [
   {
     id: '2',
     title: 'Should AI development be regulated by governments?',
-    options: ['Yes, strict regulation needed', 'Yes, but minimal regulation', 'No, let the market decide', 'Not sure'],
+    options: ['Yes, strict regulation', 'Yes, moderate regulation', 'No, let market decide', 'Not sure'],
     source_topic_id: '2',
     status: 'approved',
-    created_at: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString(), // 3 hours ago
+    created_at: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
     metrics: {
-      total_votes: 1247,
-      engagement_rate: 85.2
+      total_votes: 847,
+      engagement_rate: 67.8
     }
   },
   {
     id: '3',
-    title: 'Do you support the new climate change agreements?',
-    options: ['Strongly support', 'Somewhat support', 'Neutral', 'Oppose', 'Strongly oppose'],
+    title: 'What is the most important issue facing the world today?',
+    options: ['Climate Change', 'Economic Inequality', 'Global Health', 'Political Polarization'],
     source_topic_id: '3',
     status: 'pending',
-    created_at: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(), // 5 hours ago
+    created_at: new Date(Date.now() - 15 * 60 * 1000).toISOString(),
     metrics: {
       total_votes: 0,
       engagement_rate: 0
@@ -89,56 +97,43 @@ export const mockGeneratedPolls: GeneratedPoll[] = [
   }
 ];
 
-// Mock system metrics
-export const mockSystemMetrics: SystemMetrics = {
-  total_topics: 15,
-  total_polls: 8,
-  active_polls: 3,
-  system_health: 'healthy',
-  last_updated: new Date().toISOString()
-};
-
-// Mock activity feed
 export const mockActivityFeed: ActivityItem[] = [
   {
     id: '1',
+    title: 'Topic Created',
     type: 'topic_created',
-    title: 'New Trending Topic',
     description: '"Gavin Newsom vs Donald Trump: California Governor Challenges Former President" was detected as trending',
     timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
     severity: 'info'
   },
   {
     id: '2',
+    title: 'Poll Generated',
     type: 'poll_generated',
-    title: 'New Poll Generated',
     description: '"Who do you think would win in a debate between Gavin Newsom and Donald Trump?" was generated from trending topic',
     timestamp: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(),
     severity: 'info'
   },
   {
     id: '3',
-    type: 'poll_approved',
     title: 'Poll Approved',
+    type: 'poll_approved',
     description: '"Should AI development be regulated by governments?" has been approved and is now live',
-    timestamp: new Date(Date.now() - 30 * 60 * 1000).toISOString(), // 30 minutes ago
-    severity: 'info'
+    timestamp: new Date(Date.now() - 30 * 60 * 1000).toISOString()
   },
   {
     id: '4',
+    title: 'System Alert',
     type: 'system_alert',
-    title: 'System Health Check',
     description: 'All systems are operating normally. Database performance is optimal.',
-    timestamp: new Date(Date.now() - 15 * 60 * 1000).toISOString(), // 15 minutes ago
-    severity: 'info'
+    timestamp: new Date(Date.now() - 15 * 60 * 1000).toISOString()
   },
   {
     id: '5',
+    title: 'Topic Created',
     type: 'topic_created',
-    title: 'New Trending Topic',
     description: '"Climate Change Summit: Global Leaders Meet in Paris" was detected as trending',
-    timestamp: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(),
-    severity: 'info'
+    timestamp: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString()
   }
 ];
 
@@ -176,14 +171,12 @@ export const getMockDemographicsResponse = () => ({
   recentPolls: [
     {
       poll_id: '1',
-      title: 'Who do you think would win in a debate between Gavin Newsom and Donald Trump?',
       total_votes: 847,
       participation_rate: 67.8,
       created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()
     },
     {
       poll_id: '2',
-      title: 'Should AI development be regulated by governments?',
       total_votes: 1247,
       participation_rate: 85.2,
       created_at: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString()
@@ -216,7 +209,7 @@ export const getMockDemographicsResponse = () => ({
     interests: [
       { name: 'Politics', value: 30 },
       { name: 'Technology', value: 25 },
-      { name: 'Entertainment', value: 20 },
+      { name: 'Environment', value: 20 },
       { name: 'Sports', value: 15 },
       { name: 'Other', value: 10 }
     ]

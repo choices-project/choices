@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useCallback, createContext, useContext } from 'react'
 import { devLog } from '@/lib/logger';
 import { Shield, Key, CheckCircle, AlertCircle } from 'lucide-react'
 

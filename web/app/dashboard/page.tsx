@@ -3,7 +3,7 @@
 import { useAuth } from '@/contexts/AuthContext'
 import { devLog } from '@/lib/logger';
 import { useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback, createContext, useContext } from 'react'
 import { LogOut, User, Mail, Calendar, Shield, Edit, Vote, TrendingUp, BarChart3, Heart, Users, Activity } from 'lucide-react'
 
 interface UserProfile {

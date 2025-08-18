@@ -3,7 +3,7 @@
 import { useAuth } from '@/contexts/AuthContext'
 import { devLog } from '@/lib/logger';
 import { useRouter } from 'next/navigation'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback, createContext, useContext } from 'react'
 import { ArrowLeft, Plus, Trash2, Save, Info, CheckCircle, AlertCircle, Settings, Target, Zap } from 'lucide-react'
 
 interface PollOption {

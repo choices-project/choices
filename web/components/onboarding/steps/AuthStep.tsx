@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useCallback, createContext, useContext } from 'react'
 import { Lock, Shield, Users } from 'lucide-react'
 import { createClient } from '@/utils/supabase/client'
 import { devLog } from '@/lib/logger';

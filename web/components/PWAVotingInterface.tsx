@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback, createContext, useContext } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
   Vote, 
@@ -46,8 +46,8 @@ export function PWAVotingInterface({
   showResults = false, 
   offlineMode = false 
 }: PWAVotingInterfaceProps) {
-  const {  } = useFeatureFlag('pwa')
-  const {  } = usePWAUtils()
+  const { enabled: pwaEnabled } = useFeatureFlag('pwa')
+  const { utils: pwaUtils } = usePWAUtils()
   
   const [selectedChoice, setSelectedChoice] = useState<number | null>(null)
   const [hasVoted, setHasVoted] = useState(false)

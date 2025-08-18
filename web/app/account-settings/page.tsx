@@ -3,7 +3,7 @@
 import { useAuth } from '@/contexts/AuthContext'
 import { devLog } from '@/lib/logger';
 import { useRouter } from 'next/navigation'
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, createContext, useContext } from 'react'
 import { 
   ArrowLeft, 
   User, 

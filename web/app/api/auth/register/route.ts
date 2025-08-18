@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { devLog } from '@/lib/logger';
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
     const stableId = `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
 
     // Create user
-    const { data: user } = await supabase
+    const { data: user, error: createError } = await supabase
       .from('ia_users')
       .insert({
         stable_id: stableId,

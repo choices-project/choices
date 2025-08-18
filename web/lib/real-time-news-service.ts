@@ -530,7 +530,7 @@ export class RealTimeNewsService {
     const { entities, metadata } = story;
     
     // Generate poll question based on story content
-    const question = this.generatePollQuestion(headline, summary);
+    const question = this.generatePollQuestion(story.headline, story.summary);
     
     // Create context explaining why this matters
     const context = this.generateContext(story);

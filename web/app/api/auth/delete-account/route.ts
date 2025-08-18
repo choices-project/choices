@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { devLog } from '@/lib/logger';
 import { createClient } from '@/utils/supabase/server'
 import { cookies } from 'next/headers'
@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get user from ia_users table to verify password
-    const { data: iaUser } = await supabase
+    const { data: iaUser, error: iaError } = await supabase
       .from('ia_users')
       .select('*')
       .eq('stable_id', user.id)

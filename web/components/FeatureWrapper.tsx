@@ -112,7 +112,7 @@ export function FeatureWrapperBatch({
   }
 
   // Check if conditions are met
-  const shouldRender = anyEnabled ? anyEnabledResult : allEnabled;
+  const shouldRender = anyEnabled ? anyEnabledResult : enabled;
 
   // If conditions are met, render children
   if (shouldRender) {
@@ -253,7 +253,7 @@ export function withFeatureFlagsBatch<P extends object>(
       return <div>Loading...</div>;
     }
 
-    const shouldRender = anyEnabled ? anyEnabledResult : allEnabled;
+    const shouldRender = anyEnabled ? anyEnabledResult : true;
 
     if (shouldRender) {
       return <WrappedComponent {...props} />;

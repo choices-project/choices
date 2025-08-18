@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback, createContext, useContext } from 'react'
 import { motion, Variants } from 'framer-motion'
 import { TrendingUp, TrendingDown, Minus, Activity } from 'lucide-react'
 import * as Tooltip from '@radix-ui/react-tooltip'

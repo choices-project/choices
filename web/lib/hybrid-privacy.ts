@@ -151,7 +151,7 @@ export class HybridPrivacyManager {
     isSensitive?: boolean;
   }): PrivacyLevel {
     const { isSensitive } = pollData;
-    const text = `${title} ${description} ${category}`.toLowerCase();
+    const text = `${pollData.title} ${pollData.description} ${pollData.category || ''}`.toLowerCase();
     
     // High privacy keywords
     const highPrivacyKeywords = [

@@ -1,3 +1,5 @@
+'use client';
+
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -49,7 +51,7 @@ const navigationItems = [
 export const Sidebar: React.FC = () => {
   const pathname = usePathname();
   const { sidebarCollapsed, toggleSidebar } = useAdminStore();
-  const {  } = useSystemMetrics();
+  const { metrics } = useSystemMetrics();
 
   return (
     <>

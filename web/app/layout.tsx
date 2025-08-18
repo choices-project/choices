@@ -39,13 +39,13 @@ export default function RootLayout({
     <html lang="en">
       <head>
         <link rel="manifest" href="/manifest.json" />
-        <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
+        <link rel="apple-touch-icon" href="/favicon.ico" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="Choices" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="msapplication-TileColor" content="#3b82f6" />
-        <meta name="msapplication-tileImage" content="/icons/icon-144x144.png" />
+        <meta name="msapplication-tileImage" content="/favicon.ico" />
       </head>
       <body className={inter.className}>
         <AuthProvider>

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { PollNarrative } from '@/types';
 import { 
   BookOpen, 
   Users, 

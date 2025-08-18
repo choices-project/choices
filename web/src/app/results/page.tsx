@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback, createContext, useContext } from 'react'
 import { devLog } from '@/lib/logger';
 import { BarChart3, Shield, CheckCircle, ArrowLeft, RefreshCw } from 'lucide-react'
 import Link from 'next/link'
