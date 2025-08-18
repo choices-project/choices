@@ -2,7 +2,6 @@
 
 import React from 'react';
 import { useAnalytics } from '../../hooks/useAnalytics';
-import { isFeatureEnabled } from '../../lib/feature-flags';
 import { devLog } from '@/lib/logger';
 
 export default function AnalyticsTestPage() {

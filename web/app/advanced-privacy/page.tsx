@@ -11,15 +11,7 @@ import {
   CheckCircle,
   AlertCircle,
   RefreshCw,
-  Globe,
-  TrendingUp,
-  Users,
-  Vote,
-  Clock,
-  Target,
-  Gauge,
-  PieChart,
-  LineChart
+  Gauge
 } from 'lucide-react'
 import { usePrivacyUtils } from '../../hooks/usePrivacyUtils'
 import { usePWAUtils } from '../../hooks/usePWAUtils'
@@ -28,7 +20,6 @@ export default function AdvancedPrivacyPage() {
   const { utils: privacyUtils, loading: privacyLoading } = usePrivacyUtils()
   const { utils: pwaUtils, loading: pwaLoading } = usePWAUtils()
   const [activeTab, setActiveTab] = useState('overview')
-  const [privacyMetrics, setPrivacyMetrics] = useState<any>(null)
   const [zkProofs, setZkProofs] = useState<any[]>([])
   const [privacyBudget, setPrivacyBudget] = useState<any>(null)
   const [isRunningAnalysis, setIsRunningAnalysis] = useState(false)
@@ -37,10 +28,6 @@ export default function AdvancedPrivacyPage() {
   const initializePrivacyDashboard = useCallback(async () => {
     if (!privacyUtils || !pwaUtils) return
     
-    // Get privacy metrics
-    const metrics = pwaUtils.pwaAnalytics.getMetrics()
-    setPrivacyMetrics(metrics)
-
     // Get privacy budget status
     const budget = {
       demographics: privacyUtils.privacyBudgetManager.getRemainingBudget('demographics'),

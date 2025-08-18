@@ -19,11 +19,9 @@ import {
   Server,
   CheckCircle,
   Download,
-  Trash2,
   Eye,
   EyeOff
 } from 'lucide-react';
-import { useFeatureFlags } from '../../../hooks/useFeatureFlags';
 
 interface SystemConfig {
   general: {
@@ -79,7 +77,6 @@ export default function SystemSettingsPage() {
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState('general');
   const [showHiddenFields, setShowHiddenFields] = useState(false);
-  const { isEnabled } = useFeatureFlags();
 
   // Mock data - replace with actual API calls
   useEffect(() => {
