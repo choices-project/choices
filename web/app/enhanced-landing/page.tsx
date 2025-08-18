@@ -10,7 +10,7 @@ import { DemographicVisualization, mockDemographicData } from '../../components/
 import { BiasFreePromise, defaultPromises } from '../../components/BiasFreePromise'
 import { TierSystem, defaultTiers } from '../../components/TierSystem'
 import { TopicAnalysis } from '../../components/TopicAnalysis'
-import { FancyDonutChart, FancyProgressRing } from '../../components/FancyCharts'
+import { FancyProgressRing } from '../../components/FancyCharts'
 
 export default function EnhancedLandingPage() {
   return (

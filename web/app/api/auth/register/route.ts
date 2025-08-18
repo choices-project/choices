@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { devLog } from '@/lib/logger';
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import { createClient } from '@supabase/supabase-js'
@@ -82,7 +83,7 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (createError) {
-      console.error('User creation error:', createError)
+      devLog('User creation error:', createError)
       return NextResponse.json(
         { code: 'CREATE_USER_FAILED', message: 'Failed to create user' },
         { status: 500 }
@@ -150,7 +151,7 @@ export async function POST(request: NextRequest) {
     })
 
   } catch (error) {
-    console.error('Registration error:', error)
+    devLog('Registration error:', error)
     return NextResponse.json(
       { code: 'INTERNAL_ERROR', message: 'Internal server error' },
       { status: 500 }

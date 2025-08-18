@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useEffect, useCallback } from 'react'
+import { devLog } from '@/lib/logger';
 import { getApiAuthManager, ApiAuthContext } from '../lib/api'
 import { useAuth } from './useAuth'
 
@@ -46,7 +47,7 @@ export function useApiAuth(): ApiAuthState & ApiAuthActions {
           }))
         }
       } catch (error) {
-        console.error('API Auth initialization error:', error)
+        devLog('API Auth initialization error:', error)
         setState(prev => ({
           ...prev,
           authContext: null,
@@ -79,7 +80,7 @@ export function useApiAuth(): ApiAuthState & ApiAuthActions {
         }))
       }
     } catch (error) {
-      console.error('Refresh API Auth error:', error)
+      devLog('Refresh API Auth error:', error)
       setState(prev => ({
         ...prev,
         isLoading: false,

@@ -3,7 +3,7 @@
 
 import { createClient } from '@/utils/supabase/server';
 import { cookies } from 'next/headers';
-import { HybridPrivacyManager, PrivacyLevel } from './hybrid-privacy';
+import { PrivacyLevel } from './hybrid-privacy'
 
 export interface VoteRequest {
   pollId: string;

@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useRef, useEffect } from 'react'
+import { devLog } from '@/lib/logger';
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
   MessageCircle, 
@@ -153,7 +154,7 @@ const FeedbackWidget: React.FC = () => {
         throw new Error('Failed to submit feedback')
       }
     } catch (error) {
-      console.error('Error submitting feedback:', error)
+      devLog('Error submitting feedback:', error)
       // Show error message to user
     } finally {
       setIsSubmitting(false)

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { devLog } from '@/lib/logger';
 import { createClient } from '@/utils/supabase/server'
 import { cookies } from 'next/headers'
 import bcrypt from 'bcryptjs'
@@ -82,7 +83,7 @@ export async function POST(request: NextRequest) {
       .eq('stable_id', user.id)
 
     if (updateError) {
-      console.error('Error updating password:', updateError)
+      devLog('Error updating password:', updateError)
       return NextResponse.json(
         { error: 'Failed to update password' },
         { status: 500 }
@@ -95,7 +96,7 @@ export async function POST(request: NextRequest) {
     })
 
     if (authUpdateError) {
-      console.error('Error updating Supabase Auth password:', authUpdateError)
+      devLog('Error updating Supabase Auth password:', authUpdateError)
       // Don't fail the request if Supabase Auth update fails
       // The ia_users table is our source of truth
     }
@@ -106,7 +107,7 @@ export async function POST(request: NextRequest) {
     })
 
   } catch (error) {
-    console.error('Error in change password:', error)
+    devLog('Error in change password:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

@@ -2,6 +2,7 @@
 // Focuses on gathering reputable data and presenting it as breaking news stories
 
 import { createClient } from '@/utils/supabase/server';
+import { devLog } from '@/lib/logger';
 import { cookies } from 'next/headers';
 
 // ============================================================================
@@ -430,7 +431,7 @@ export class RealTimeNewsService {
 
       return data?.map(this.mapBreakingNewsFromDB) || [];
     } catch (error) {
-      console.error('Error fetching breaking news:', error);
+      devLog('Error fetching breaking news:', error);
       return [];
     }
   }
@@ -447,7 +448,7 @@ export class RealTimeNewsService {
 
       return data ? this.mapBreakingNewsFromDB(data) : null;
     } catch (error) {
-      console.error('Error fetching breaking news:', error);
+      devLog('Error fetching breaking news:', error);
       return null;
     }
   }
@@ -464,7 +465,7 @@ export class RealTimeNewsService {
 
       return data ? this.mapBreakingNewsFromDB(data) : null;
     } catch (error) {
-      console.error('Error creating breaking news:', error);
+      devLog('Error creating breaking news:', error);
       return null;
     }
   }
@@ -485,7 +486,7 @@ export class RealTimeNewsService {
 
       return data?.map(this.mapNewsSourceFromDB) || [];
     } catch (error) {
-      console.error('Error fetching news sources:', error);
+      devLog('Error fetching news sources:', error);
       return [];
     }
   }
@@ -503,7 +504,7 @@ export class RealTimeNewsService {
 
       return data ? this.mapNewsSourceFromDB(data) : null;
     } catch (error) {
-      console.error('Error updating news source:', error);
+      devLog('Error updating news source:', error);
       return null;
     }
   }
@@ -520,7 +521,7 @@ export class RealTimeNewsService {
       const context = this.analyzeStoryForPollContext(story);
       return context;
     } catch (error) {
-      console.error('Error generating poll context:', error);
+      devLog('Error generating poll context:', error);
       return null;
     }
   }

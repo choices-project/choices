@@ -1,4 +1,5 @@
 import { createClient } from '@/utils/supabase/server'
+import { devLog } from '@/lib/logger';
 import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 
@@ -20,22 +21,22 @@ async function getRedirectDestination(supabase: any, user: any, requestedRedirec
       .single()
 
     if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
-      console.error('Error checking user profile:', error)
+      devLog('Error checking user profile:', error)
       // If there's an error checking profile, default to dashboard
       return '/dashboard'
     }
 
     // If no profile exists, user needs to complete onboarding
     if (!profile) {
-      console.log('User has no profile, redirecting to onboarding')
+      devLog('User has no profile, redirecting to onboarding')
       return '/onboarding'
     }
 
     // User has completed onboarding, go to dashboard or requested destination
-    console.log('User has completed onboarding, redirecting to dashboard')
+    devLog('User has completed onboarding, redirecting to dashboard')
     return '/dashboard'
   } catch (error) {
-    console.error('Error in getRedirectDestination:', error)
+    devLog('Error in getRedirectDestination:', error)
     // Fallback to dashboard on any error
     return '/dashboard'
   }
@@ -51,7 +52,7 @@ export async function GET(request: Request) {
 
   // Handle OAuth errors
   if (error) {
-    console.error('OAuth error:', error, errorDescription)
+    devLog('OAuth error:', error, errorDescription)
     return NextResponse.redirect(
       `${origin}/login?error=${encodeURIComponent(errorDescription || error)}`
     )
@@ -62,7 +63,7 @@ export async function GET(request: Request) {
     const supabase = createClient(cookieStore)
     
     if (!supabase) {
-      console.error('Supabase client not available in auth callback')
+      devLog('Supabase client not available in auth callback')
       return NextResponse.redirect(
         `${origin}/login?error=${encodeURIComponent('Authentication service not available')}`
       )
@@ -72,28 +73,28 @@ export async function GET(request: Request) {
       const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
       
       if (exchangeError) {
-        console.error('Session exchange error:', exchangeError)
+        devLog('Session exchange error:', exchangeError)
         return NextResponse.redirect(
           `${origin}/login?error=${encodeURIComponent(exchangeError.message)}`
         )
       }
 
       if (data.session && data.user) {
-        console.log('Successfully authenticated user:', data.user.email)
+        devLog('Successfully authenticated user:', data.user.email)
         
         // Determine the appropriate redirect destination
         const finalRedirect = await getRedirectDestination(supabase, data.user, redirectTo)
         
-        console.log(`Redirecting user to: ${finalRedirect}`)
+        devLog(`Redirecting user to: ${finalRedirect}`)
         return NextResponse.redirect(`${origin}${finalRedirect}`)
       } else {
-        console.error('No session returned from code exchange')
+        devLog('No session returned from code exchange')
         return NextResponse.redirect(
           `${origin}/login?error=${encodeURIComponent('Authentication failed - no session created')}`
         )
       }
     } catch (error) {
-      console.error('Unexpected error in auth callback:', error)
+      devLog('Unexpected error in auth callback:', error)
       return NextResponse.redirect(
         `${origin}/login?error=${encodeURIComponent('Unexpected authentication error')}`
       )
@@ -101,7 +102,7 @@ export async function GET(request: Request) {
   }
 
   // No code provided
-  console.error('No authentication code provided')
+  devLog('No authentication code provided')
   return NextResponse.redirect(
     `${origin}/login?error=${encodeURIComponent('No authentication code provided')}`
   )

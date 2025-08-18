@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { devLog } from '@/lib/logger';
 import { createClient } from '@/utils/supabase/server';
 import { cookies } from 'next/headers';
 import { RealTimeNewsService } from '@/lib/real-time-news-service';
@@ -91,7 +92,7 @@ export async function POST(
       .single();
 
     if (contextError) {
-      console.error('Error storing poll context:', contextError);
+      devLog('Error storing poll context:', contextError);
       return NextResponse.json(
         { error: 'Failed to store poll context' },
         { status: 500 }
@@ -117,7 +118,7 @@ export async function POST(
     });
 
   } catch (error) {
-    console.error('Error generating poll context:', error);
+    devLog('Error generating poll context:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -182,7 +183,7 @@ export async function GET(
       .single();
 
     if (contextError && contextError.code !== 'PGRST116') {
-      console.error('Error fetching poll context:', contextError);
+      devLog('Error fetching poll context:', contextError);
       return NextResponse.json(
         { error: 'Failed to fetch poll context' },
         { status: 500 }
@@ -207,7 +208,7 @@ export async function GET(
     });
 
   } catch (error) {
-    console.error('Error fetching poll context:', error);
+    devLog('Error fetching poll context:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

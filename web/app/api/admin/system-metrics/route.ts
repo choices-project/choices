@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { devLog } from '@/lib/logger';
 import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(
@@ -28,7 +29,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ metrics });
   } catch (error) {
-    console.error('Error fetching system metrics:', error);
+    devLog('Error fetching system metrics:', error);
     return NextResponse.json(
       { error: 'Failed to fetch system metrics' },
       { status: 500 }

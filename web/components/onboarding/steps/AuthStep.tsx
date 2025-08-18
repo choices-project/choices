@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Lock, Shield, Eye, Users } from 'lucide-react'
+import { Lock, Shield, Users } from 'lucide-react'
 import { createClient } from '@/utils/supabase/client'
 import { devLog } from '@/lib/logger';
 
@@ -39,7 +39,7 @@ export default function AuthStep({ data, onUpdate, onNext, onBack }: AuthStepPro
       devLog('OAuth initiated:', provider)
       
     } catch (error: any) {
-      console.error('Login error:', error)
+      devLog('Login error:', error)
       setError(error.message || 'Failed to sign in. Please try again.')
     } finally {
       setIsLoading(false)
@@ -54,7 +54,7 @@ export default function AuthStep({ data, onUpdate, onNext, onBack }: AuthStepPro
       // Redirect to login page with return to onboarding
       window.location.href = `/login?redirectTo=${encodeURIComponent('/onboarding?step=values')}`
     } catch (error: any) {
-      console.error('Login error:', error)
+      devLog('Login error:', error)
       setError(error.message || 'Failed to redirect to login.')
     } finally {
       setIsLoading(false)

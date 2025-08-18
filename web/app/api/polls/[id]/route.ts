@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { devLog } from '@/lib/logger';
 import { createClient } from '@/utils/supabase/server';
 import { cookies } from 'next/headers';
 
@@ -52,7 +53,7 @@ export async function GET(
 
     return NextResponse.json(sanitizedPoll);
   } catch (error) {
-    console.error('Error fetching poll:', error);
+    devLog('Error fetching poll:', error);
     return NextResponse.json(
       { error: 'Failed to fetch poll data' },
       { status: 500 }

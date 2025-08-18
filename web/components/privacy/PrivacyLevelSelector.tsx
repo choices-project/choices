@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Shield, Lock, Globe, Info, CheckCircle } from 'lucide-react';
-import { PrivacyLevel, PRIVACY_DESCRIPTIONS, HybridPrivacyManager } from '@/lib/hybrid-privacy';
+import { Shield, Info, CheckCircle } from 'lucide-react'
+import { PrivacyLevel, HybridPrivacyManager } from '@/lib/hybrid-privacy'
 
 interface PrivacyLevelSelectorProps {
   value: PrivacyLevel;

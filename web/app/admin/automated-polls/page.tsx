@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { devLog } from '@/lib/logger';
 import { 
   TrendingUp, 
   Play, 
@@ -65,7 +66,7 @@ export default function AutomatedPollsPage() {
         setCategories(data.categories);
       }
     } catch (error) {
-      console.error('Error fetching categories:', error);
+      devLog('Error fetching categories:', error);
     }
   };
 
@@ -77,7 +78,7 @@ export default function AutomatedPollsPage() {
         setTrendingTopics(data.topics || []);
       }
     } catch (error) {
-      console.error('Error fetching trending topics:', error);
+      devLog('Error fetching trending topics:', error);
     }
   };
 
@@ -89,7 +90,7 @@ export default function AutomatedPollsPage() {
         setGeneratedPolls(data.polls || []);
       }
     } catch (error) {
-      console.error('Error fetching generated polls:', error);
+      devLog('Error fetching generated polls:', error);
     }
   };
 
@@ -125,7 +126,7 @@ export default function AutomatedPollsPage() {
         alert(`Error: ${data.error}`);
       }
     } catch (error) {
-      console.error('Error triggering analysis:', error);
+      devLog('Error triggering analysis:', error);
       alert('Error triggering analysis');
     } finally {
       setIsAnalyzing(false);

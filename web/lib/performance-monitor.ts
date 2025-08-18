@@ -191,7 +191,7 @@ export class PerformanceMonitor {
       observer.observe({ type, buffered: true })
       this.observers.set(type, observer)
     } catch (error) {
-      console.warn(`PerformanceObserver for ${type} not supported:`, error)
+      devLog(`PerformanceObserver for ${type} not supported:`, error)
     }
   }
 
@@ -287,7 +287,7 @@ export class PerformanceMonitor {
       }
 
       // Log alert
-      console.warn(`Performance Alert: ${message}`)
+      devLog(`Performance Alert: ${message}`)
     }
   }
 

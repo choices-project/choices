@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { devLog } from '@/lib/logger';
 import { useFeatureFlags } from './useFeatureFlags';
 import { isFeatureEnabled } from '../lib/feature-flags';
 import { PWAAnalytics } from '../lib/pwa-analytics';
@@ -149,7 +150,7 @@ export function useAnalytics(options: UseAnalyticsOptions = {}): UseAnalyticsRet
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An error occurred';
       setError(errorMessage);
-      console.error('Analytics fetch error:', err);
+      devLog('Analytics fetch error:', err);
     } finally {
       setLoading(false);
     }
@@ -182,7 +183,7 @@ export function useAnalytics(options: UseAnalyticsOptions = {}): UseAnalyticsRet
 
   const exportData = useCallback((format: 'json' | 'csv' = 'json') => {
     if (!data) {
-      console.warn('No data to export');
+      devLog('No data to export');
       return;
     }
 
@@ -210,7 +211,7 @@ export function useAnalytics(options: UseAnalyticsOptions = {}): UseAnalyticsRet
 
   const generateReport = useCallback((type: string) => {
     if (!data) {
-      console.warn('No data to generate report');
+      devLog('No data to generate report');
       return;
     }
 

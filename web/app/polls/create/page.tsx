@@ -1,9 +1,10 @@
 'use client'
 
 import { useAuth } from '@/contexts/AuthContext'
+import { devLog } from '@/lib/logger';
 import { useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
-import { ArrowLeft, Plus, Trash2, Save, Info, HelpCircle, CheckCircle, AlertCircle, Settings, Clock, Users, Eye, EyeOff, MessageCircle, BarChart3, Target, Zap } from 'lucide-react'
+import { ArrowLeft, Plus, Trash2, Save, Info, CheckCircle, AlertCircle, Settings, Target, Zap } from 'lucide-react'
 
 interface PollOption {
   id: string
@@ -232,7 +233,7 @@ export default function CreatePollPage() {
         throw new Error(errorData.error || 'Failed to create poll')
       }
     } catch (error: any) {
-      console.error('Error creating poll:', error)
+      devLog('Error creating poll:', error)
       setError(error.message || 'Failed to create poll')
     } finally {
       setIsCreating(false)

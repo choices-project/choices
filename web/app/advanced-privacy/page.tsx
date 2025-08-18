@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { devLog } from '@/lib/logger';
 import { 
   Shield, 
   Lock, 
@@ -89,7 +90,7 @@ export default function AdvancedPrivacyPage() {
       // Track analytics
       pwaUtils.pwaAnalytics.trackFeatureUsage('private_analysis_run')
     } catch (error) {
-      console.error('Private analysis failed:', error)
+      devLog('Private analysis failed:', error)
     } finally {
       setIsRunningAnalysis(false)
     }
@@ -108,7 +109,7 @@ export default function AdvancedPrivacyPage() {
       // Track analytics
       pwaUtils.pwaAnalytics.trackFeatureUsage(`zk_proof_created_${type}`)
     } catch (error) {
-      console.error('Failed to create ZK proof:', error)
+      devLog('Failed to create ZK proof:', error)
     }
   }
 

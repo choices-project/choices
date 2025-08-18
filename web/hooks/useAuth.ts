@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
-import { getAuthService, User, AuthSession, LoginCredentials, RegisterData, AuthError } from '../lib/auth'
+import { useEffect, useCallback } from 'react'
+import { devLog } from '@/lib/logger';
+import { getAuthService, User, LoginCredentials, RegisterData, AuthError } from '../lib/auth'
 
 export interface AuthState {
   user: User | null
@@ -64,7 +65,7 @@ export function useAuth(): AuthState & AuthActions {
           }))
         }
       } catch (error) {
-        console.error('Auth initialization error:', error)
+        devLog('Auth initialization error:', error)
         setState(prev => ({
           ...prev,
           user: null,
@@ -93,7 +94,7 @@ export function useAuth(): AuthState & AuthActions {
         error: null,
       }))
     } catch (error) {
-      console.error('Login error:', error)
+      devLog('Login error:', error)
       setState(prev => ({
         ...prev,
         isLoading: false,
@@ -118,7 +119,7 @@ export function useAuth(): AuthState & AuthActions {
         error: null,
       }))
     } catch (error) {
-      console.error('Registration error:', error)
+      devLog('Registration error:', error)
       setState(prev => ({
         ...prev,
         isLoading: false,
@@ -143,7 +144,7 @@ export function useAuth(): AuthState & AuthActions {
         error: null,
       }))
     } catch (error) {
-      console.error('Logout error:', error)
+      devLog('Logout error:', error)
       // Even if logout fails, clear local state
       setState(prev => ({
         ...prev,
@@ -170,7 +171,7 @@ export function useAuth(): AuthState & AuthActions {
         error: null,
       }))
     } catch (error) {
-      console.error('Refresh user error:', error)
+      devLog('Refresh user error:', error)
       setState(prev => ({
         ...prev,
         user: null,

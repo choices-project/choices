@@ -18,7 +18,7 @@ import {
   MapPin,
   Users
 } from 'lucide-react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQueryClient } from '@tanstack/react-query'
 import { ChartWrapper, ChartSkeleton } from '../charts/BasicCharts';
 import { useBreakingNews, useGeneratePollContext } from '../../../lib/admin-hooks';
 import { devLog } from '@/lib/logger';
@@ -186,7 +186,7 @@ export const BreakingNewsPage: React.FC = () => {
         setShowPollContext(true);
       },
       onError: (error) => {
-        console.error('Failed to generate poll context:', error);
+        devLog('Failed to generate poll context:', error);
       }
     });
   };

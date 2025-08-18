@@ -2,6 +2,7 @@
 // Detects propaganda and bias by comparing mainstream media polls with real public opinion
 
 import { createClient } from '@/utils/supabase/server';
+import { devLog } from '@/lib/logger';
 import { cookies } from 'next/headers';
 
 // ============================================================================
@@ -545,7 +546,7 @@ export class MediaBiasAnalysisService {
 
       return data ? this.mapMediaPollFromDB(data) : null;
     } catch (error) {
-      console.error('Error tracking media poll:', error);
+      devLog('Error tracking media poll:', error);
       return null;
     }
   }
@@ -575,7 +576,7 @@ export class MediaBiasAnalysisService {
 
       return data ? this.mapComparisonFromDB(data) : null;
     } catch (error) {
-      console.error('Error comparing polls:', error);
+      devLog('Error comparing polls:', error);
       return null;
     }
   }

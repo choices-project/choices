@@ -2,6 +2,7 @@
 // Each poll becomes an educational narrative with community-moderated facts
 
 import { createClient } from '@/utils/supabase/server';
+import { devLog } from '@/lib/logger';
 import { cookies } from 'next/headers';
 
 // ============================================================================
@@ -314,7 +315,7 @@ export class PollNarrativeService {
 
       return data ? this.mapNarrativeFromDB(data) : null;
     } catch (error) {
-      console.error('Error creating narrative:', error);
+      devLog('Error creating narrative:', error);
       return null;
     }
   }
@@ -335,7 +336,7 @@ export class PollNarrativeService {
 
       return data ? this.mapVerifiedFactFromDB(data) : null;
     } catch (error) {
-      console.error('Error adding verified fact:', error);
+      devLog('Error adding verified fact:', error);
       return null;
     }
   }
@@ -363,7 +364,7 @@ export class PollNarrativeService {
 
       return data ? this.mapCommunityFactFromDB(data) : null;
     } catch (error) {
-      console.error('Error submitting community fact:', error);
+      devLog('Error submitting community fact:', error);
       return null;
     }
   }
@@ -394,7 +395,7 @@ export class PollNarrativeService {
 
       return true;
     } catch (error) {
-      console.error('Error voting on community fact:', error);
+      devLog('Error voting on community fact:', error);
       return false;
     }
   }
@@ -436,7 +437,7 @@ export class PollNarrativeService {
 
       return true;
     } catch (error) {
-      console.error('Error moderating narrative:', error);
+      devLog('Error moderating narrative:', error);
       return false;
     }
   }
@@ -461,7 +462,7 @@ export class PollNarrativeService {
 
       return data ? this.mapVerificationRequestFromDB(data) : null;
     } catch (error) {
-      console.error('Error requesting fact verification:', error);
+      devLog('Error requesting fact verification:', error);
       return null;
     }
   }
@@ -485,7 +486,7 @@ export class PollNarrativeService {
 
       return data ? this.mapNarrativeWithContextFromDB(data) : null;
     } catch (error) {
-      console.error('Error getting narrative with context:', error);
+      devLog('Error getting narrative with context:', error);
       return null;
     }
   }
@@ -521,7 +522,7 @@ export class PollNarrativeService {
 
       return data ? data.map(item => this.mapNarrativeFromDB(item)) : [];
     } catch (error) {
-      console.error('Error searching narratives:', error);
+      devLog('Error searching narratives:', error);
       return [];
     }
   }

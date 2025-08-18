@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { devLog } from '@/lib/logger';
 import { motion } from 'framer-motion'
 import { 
   CheckCircle, 
@@ -56,7 +57,7 @@ export default function MVPTestingPage() {
       const report = await testingSuite.generateDeploymentReport()
       setDeploymentReport(report)
     } catch (error) {
-      console.error('Test execution failed:', error)
+      devLog('Test execution failed:', error)
     } finally {
       setIsRunningTests(false)
     }

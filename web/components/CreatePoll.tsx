@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { devLog } from '@/lib/logger';
 import { 
   Plus, 
   X, 
@@ -247,7 +248,7 @@ export const CreatePoll: React.FC<CreatePollProps> = ({
         throw new Error(errorData.error || 'Failed to create poll');
       }
     } catch (error: any) {
-      console.error('Error creating poll:', error);
+      devLog('Error creating poll:', error);
       setError(error.message || 'Failed to create poll');
     } finally {
       setIsSubmitting(false);

@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Vote, Clock, Users, CheckCircle, XCircle, ArrowLeft } from 'lucide-react'
+import { devLog } from '@/lib/logger';
+import { Vote, Clock, CheckCircle, XCircle, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 import { iaApi, poApi, Poll, Vote as VoteType } from '../../lib/api'
 
@@ -22,7 +23,7 @@ export default function PollsPage() {
       const data = await poApi.getPolls()
       setPolls(data)
     } catch (error) {
-      console.error('Failed to fetch polls:', error)
+      devLog('Failed to fetch polls:', error)
     } finally {
       setLoading(false)
     }
@@ -33,7 +34,7 @@ export default function PollsPage() {
       const data = await iaApi.getToken(userStableId, pollId, 'T1')
       return data
     } catch (error) {
-      console.error('Failed to get token:', error)
+      devLog('Failed to get token:', error)
     }
     return null
   }
@@ -54,7 +55,7 @@ export default function PollsPage() {
       setUserChoice(null)
       fetchPolls() // Refresh polls
     } catch (error) {
-      console.error('Failed to submit vote:', error)
+      devLog('Failed to submit vote:', error)
       alert('Failed to submit vote. Please try again.')
     } finally {
       setVoting(false)

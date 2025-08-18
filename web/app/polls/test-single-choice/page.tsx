@@ -76,7 +76,7 @@ export default function TestSingleChoicePage() {
       // }
       
     } catch (error: any) {
-      console.error('Error submitting vote:', error)
+      devLog('Error submitting vote:', error)
       throw error
     } finally {
       setIsVoting(false)

@@ -286,7 +286,7 @@ export class AuthService {
         })
       }
     } catch (error) {
-      console.error('Logout error:', error)
+      devLog('Logout error:', error)
     } finally {
       this.clearSession()
     }
@@ -351,7 +351,7 @@ export class AuthService {
       this.storeUser(user)
       return user
     } catch (error) {
-      console.error('Get current user error:', error)
+      devLog('Get current user error:', error)
       return null
     }
   }

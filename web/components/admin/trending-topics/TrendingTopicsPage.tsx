@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { devLog } from '@/lib/logger';
 import { 
   TrendingUp, 
   CheckCircle, 
@@ -76,7 +77,7 @@ export const TrendingTopicsPage: React.FC = () => {
     try {
       await analyzeTopics.mutateAsync();
     } catch (error) {
-      console.error('Failed to analyze trending topics:', error);
+      devLog('Failed to analyze trending topics:', error);
     }
   };
 

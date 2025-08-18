@@ -1,6 +1,7 @@
 'use client'
 
 import { useAuth } from '@/contexts/AuthContext'
+import { devLog } from '@/lib/logger';
 import { useRouter } from 'next/navigation'
 import { useEffect, useState, useCallback } from 'react'
 import { 
@@ -73,7 +74,7 @@ export default function AccountSettingsPage() {
         twoFactorEnabled: false // TODO: Implement 2FA
       })
     } catch (error) {
-      console.error('Error loading account settings:', error)
+      devLog('Error loading account settings:', error)
       setError('Failed to load account settings')
     } finally {
       setIsLoading(false)
@@ -122,7 +123,7 @@ export default function AccountSettingsPage() {
         throw new Error(data.error || 'Failed to change password')
       }
     } catch (error: any) {
-      console.error('Error changing password:', error)
+      devLog('Error changing password:', error)
       setError(error.message || 'Failed to change password')
     } finally {
       setIsChangingPassword(false)
@@ -160,7 +161,7 @@ export default function AccountSettingsPage() {
         throw new Error(data.error || 'Failed to delete account')
       }
     } catch (error: any) {
-      console.error('Error deleting account:', error)
+      devLog('Error deleting account:', error)
       setError(error.message || 'Failed to delete account')
     } finally {
       setIsDeletingAccount(false)
@@ -189,7 +190,7 @@ export default function AccountSettingsPage() {
         throw new Error(data.error || 'Failed to request password reset')
       }
     } catch (error: any) {
-      console.error('Error requesting password reset:', error)
+      devLog('Error requesting password reset:', error)
       setError(error.message || 'Failed to request password reset')
     } finally {
       setIsRequestingReset(false)

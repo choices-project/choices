@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { devLog } from '@/lib/logger';
 import { createClient } from '@/utils/supabase/server'
 import { cookies } from 'next/headers'
 
@@ -48,7 +49,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(dashboardData)
 
   } catch (error) {
-    console.error('Dashboard API error:', error)
+    devLog('Dashboard API error:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -65,7 +66,7 @@ async function getUserStats(supabase: any, userId: string) {
       .eq('created_by', userId)
 
     if (pollsError) {
-      console.error('Error fetching created polls:', pollsError)
+      devLog('Error fetching created polls:', pollsError)
     }
 
     // Get votes cast by user
@@ -75,7 +76,7 @@ async function getUserStats(supabase: any, userId: string) {
       .eq('user_id', userId)
 
     if (votesError) {
-      console.error('Error fetching user votes:', votesError)
+      devLog('Error fetching user votes:', votesError)
     }
 
     // Get active polls count
@@ -85,7 +86,7 @@ async function getUserStats(supabase: any, userId: string) {
       .eq('status', 'active')
 
     if (activeError) {
-      console.error('Error fetching active polls:', activeError)
+      devLog('Error fetching active polls:', activeError)
     }
 
     // Calculate participation rate
@@ -101,7 +102,7 @@ async function getUserStats(supabase: any, userId: string) {
       averageVotesPerPoll: totalPolls > 0 ? Math.round((userVoteCount / totalPolls) * 10) / 10 : 0
     }
   } catch (error) {
-    console.error('Error calculating user stats:', error)
+    devLog('Error calculating user stats:', error)
     return {
       pollsCreated: 0,
       votesCast: 0,
@@ -143,7 +144,7 @@ async function getPlatformStats(supabase: any) {
       averageParticipation: totalPolls?.length > 0 ? Math.round((totalVotes?.length / totalPolls?.length) * 10) / 10 : 0
     }
   } catch (error) {
-    console.error('Error calculating platform stats:', error)
+    devLog('Error calculating platform stats:', error)
     return {
       totalPolls: 0,
       totalVotes: 0,
@@ -169,7 +170,7 @@ async function getRecentActivity(supabase: any, userId: string) {
       .limit(5)
 
     if (votesError) {
-      console.error('Error fetching recent votes:', votesError)
+      devLog('Error fetching recent votes:', votesError)
       return []
     }
 
@@ -182,7 +183,7 @@ async function getRecentActivity(supabase: any, userId: string) {
       .limit(5)
 
     if (pollsError) {
-      console.error('Error fetching recent polls:', pollsError)
+      devLog('Error fetching recent polls:', pollsError)
       return []
     }
 
@@ -210,7 +211,7 @@ async function getRecentActivity(supabase: any, userId: string) {
       .slice(0, 5)
 
   } catch (error) {
-    console.error('Error fetching recent activity:', error)
+    devLog('Error fetching recent activity:', error)
     return []
   }
 }
@@ -233,13 +234,13 @@ async function getActivePolls(supabase: any) {
       .limit(6)
 
     if (error) {
-      console.error('Error fetching active polls:', error)
+      devLog('Error fetching active polls:', error)
       return []
     }
 
     return polls || []
   } catch (error) {
-    console.error('Error fetching active polls:', error)
+    devLog('Error fetching active polls:', error)
     return []
   }
 }

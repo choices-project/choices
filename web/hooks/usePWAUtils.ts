@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { devLog } from '@/lib/logger';
 
 interface PWAUtils {
   pwaAuth: any
@@ -36,7 +37,7 @@ export function usePWAUtils() {
           privacyStorage: pwaUtilsModule.privacyStorage
         })
       } catch (err) {
-        console.error('Error loading PWA utils:', err)
+        devLog('Error loading PWA utils:', err)
         setError(err instanceof Error ? err.message : 'Unknown error')
       } finally {
         setLoading(false)

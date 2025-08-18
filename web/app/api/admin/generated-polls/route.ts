@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { devLog } from '@/lib/logger';
 import { createClient } from '@/utils/supabase/server';
 import { cookies } from 'next/headers';
 import { AutomatedPollsService } from '@/lib/automated-polls';
@@ -38,7 +39,7 @@ export async function GET(request: NextRequest) {
       .limit(limit);
 
     if (error) {
-      console.error('Error fetching generated polls:', error);
+      devLog('Error fetching generated polls:', error);
       return NextResponse.json(
         { error: 'Failed to fetch generated polls' },
         { status: 500 }
@@ -106,7 +107,7 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Error in generated polls API:', error);
+    devLog('Error in generated polls API:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -233,7 +234,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Error creating generated poll:', error);
+    devLog('Error creating generated poll:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

@@ -260,7 +260,7 @@ class PollService {
 
       return polls.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
     } catch (error) {
-      console.error('Error fetching polls:', error);
+      devLog('Error fetching polls:', error);
       // Fallback to mock data if API fails
       return config.mockDataEnabled ? mockPolls : [];
     }
@@ -284,7 +284,7 @@ class PollService {
 
       return null;
     } catch (error) {
-      console.error('Error fetching poll:', error);
+      devLog('Error fetching poll:', error);
       return null;
     }
   }
@@ -318,7 +318,7 @@ class PollService {
 
       return newPoll;
     } catch (error) {
-      console.error('Error creating poll:', error);
+      devLog('Error creating poll:', error);
       return null;
     }
   }
@@ -349,7 +349,7 @@ class PollService {
       // Fallback to local storage for user polls
       return await this.submitVoteToLocal(pollId, choice);
     } catch (error) {
-      console.error('Error submitting vote:', error);
+      devLog('Error submitting vote:', error);
       return {
         success: false,
         voteId: '',
@@ -372,7 +372,7 @@ class PollService {
         merkleProof: ['hash1', 'hash2', 'hash3']
       };
     } catch (error) {
-      console.error('Error verifying vote:', error);
+      devLog('Error verifying vote:', error);
       return {
         success: false,
         verified: false,

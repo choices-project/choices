@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { devLog } from '@/lib/logger';
 import { createClient } from '@/utils/supabase/server'
 import { cookies } from 'next/headers'
 
@@ -38,7 +39,7 @@ export async function POST(request: NextRequest) {
     const supabase = createClient(cookieStore)
     
     if (!supabase) {
-      console.warn('Supabase not configured - using mock response')
+      devLog('Supabase not configured - using mock response')
       return NextResponse.json({
         success: true,
         message: 'Feedback submitted successfully (mock)',
@@ -50,7 +51,7 @@ export async function POST(request: NextRequest) {
     const { data: { user }, error: userError } = await supabase.auth.getUser()
     
     if (userError) {
-      console.warn('Could not get user, proceeding with anonymous feedback:', userError.message)
+      devLog('Could not get user, proceeding with anonymous feedback:', userError.message)
     }
 
     // Prepare feedback data
@@ -67,7 +68,7 @@ export async function POST(request: NextRequest) {
       // Remove created_at and updated_at - let database handle these
     }
 
-    console.log('Inserting feedback data:', {
+    devLog('Inserting feedback data:', {
       user_id: feedbackData.user_id ? 'authenticated' : 'anonymous',
       type: feedbackData.type,
       sentiment: feedbackData.sentiment
@@ -80,7 +81,7 @@ export async function POST(request: NextRequest) {
       .select()
 
     if (error) {
-      console.error('Database error:', error)
+      devLog('Database error:', error)
       return NextResponse.json(
         { error: 'Failed to save feedback', details: error.message },
         { status: 500 }
@@ -88,7 +89,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Log feedback submission for analytics
-    console.log('Feedback submitted:', {
+    devLog('Feedback submitted:', {
       type,
       sentiment,
       page: userJourney?.page,
@@ -103,7 +104,7 @@ export async function POST(request: NextRequest) {
     })
 
   } catch (error) {
-    console.error('Feedback API error:', error)
+    devLog('Feedback API error:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -125,7 +126,7 @@ export async function GET(request: NextRequest) {
     const supabase = createClient(cookieStore)
 
     if (!supabase) {
-      console.warn('Supabase not configured - using mock response')
+      devLog('Supabase not configured - using mock response')
       return NextResponse.json({
         success: true,
         feedback: [],
@@ -150,7 +151,7 @@ export async function GET(request: NextRequest) {
     const { data, error } = await query
 
     if (error) {
-      console.error('Database error:', error)
+      devLog('Database error:', error)
       return NextResponse.json(
         { error: 'Failed to fetch feedback' },
         { status: 500 }
@@ -164,7 +165,7 @@ export async function GET(request: NextRequest) {
     })
 
   } catch (error) {
-    console.error('Feedback API error:', error)
+    devLog('Feedback API error:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

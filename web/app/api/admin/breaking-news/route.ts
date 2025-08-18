@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { devLog } from '@/lib/logger';
 import { createClient } from '@/utils/supabase/server';
 import { cookies } from 'next/headers';
 import { RealTimeNewsService } from '@/lib/real-time-news-service';
@@ -70,7 +71,7 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Error fetching breaking news:', error);
+    devLog('Error fetching breaking news:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -166,7 +167,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Error creating breaking news:', error);
+    devLog('Error creating breaking news:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

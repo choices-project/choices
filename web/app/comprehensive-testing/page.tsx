@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { devLog } from '@/lib/logger';
 import { motion } from 'framer-motion'
 import { 
   CheckCircle, 
@@ -67,7 +68,7 @@ export default function ComprehensiveTestingPage() {
       const exportReport = await testingUtils.comprehensiveTestingRunner.exportReport()
       setExportData(exportReport)
     } catch (error) {
-      console.error('Comprehensive testing failed:', error)
+      devLog('Comprehensive testing failed:', error)
     } finally {
       setIsRunningTests(false)
     }
@@ -149,7 +150,7 @@ export default function ComprehensiveTestingPage() {
         await navigator.clipboard.writeText(exportData)
         alert('Report copied to clipboard!')
       } catch (error) {
-        console.error('Failed to copy report:', error)
+        devLog('Failed to copy report:', error)
       }
     }
   }

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { devLog } from '@/lib/logger';
 import { motion } from 'framer-motion'
 import { 
   CheckCircle, 
@@ -72,7 +73,7 @@ export default function CrossPlatformTestingPage() {
       setDeviceInfo(report.deviceInfo)
       setBrowserInfo(report.browserInfo)
     } catch (error) {
-      console.error('Cross-platform test execution failed:', error)
+      devLog('Cross-platform test execution failed:', error)
     } finally {
       setIsRunningTests(false)
     }
