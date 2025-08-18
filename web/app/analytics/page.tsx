@@ -7,20 +7,10 @@ import {
   Users, 
   Activity, 
   RefreshCw,
-  Settings,
   Bell,
-  Calendar,
-  Target,
-  Award,
   Zap,
   Shield,
-  Database,
-  BarChart,
-  LineChart,
-  Funnel,
-  Brain,
-  Lightbulb,
-  BarChart4
+  Brain
 } from 'lucide-react';
 import { useAnalytics } from '../../hooks/useAnalytics';
 
@@ -44,10 +34,7 @@ export default function AnalyticsPage() {
     refreshData,
     autoRefresh,
     setAutoRefresh,
-    filters,
-    setFilters,
-    exportData,
-    generateReport
+    exportData
   } = useAnalytics({
     autoRefresh: true,
     refreshInterval: 30000
@@ -354,7 +341,7 @@ function OverviewView({ data }: { data: any }) {
 }
 
 // Trends View Component
-function TrendsView({ data }: { data: any }) {
+function TrendsView({ data: _data }: { data: any }) {
   return (
     <div className="space-y-8">
       <div className="bg-white rounded-xl shadow-sm border p-6">
@@ -529,7 +516,7 @@ function EngagementView({ data }: { data: any }) {
 }
 
 // Advanced View Component
-function AdvancedView({ data }: { data: any }) {
+function AdvancedView({ data: _data }: { data: any }) {
   return (
     <div className="space-y-8">
       <div className="bg-white rounded-xl shadow-sm border p-6">

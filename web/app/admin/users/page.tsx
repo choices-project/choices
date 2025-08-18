@@ -10,23 +10,17 @@ import React, { useState, useEffect } from 'react';
 import { 
   Users, 
   Search, 
-  Filter, 
-  MoreVertical, 
   Edit, 
   Trash2, 
   Eye, 
-  EyeOff,
   UserPlus,
   Download,
-  Upload,
   RefreshCw,
-  Mail,
-  Calendar,
   Shield,
   CheckCircle,
-  XCircle,
-  AlertTriangle
+  XCircle
 } from 'lucide-react';
+import { devLog } from '../../../lib/logger';
 
 interface User {
   id: string;
@@ -49,7 +43,6 @@ export default function UsersManagementPage() {
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive' | 'suspended'>('all');
   const [roleFilter, setRoleFilter] = useState<'all' | 'admin' | 'user' | 'moderator'>('all');
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
-  const [showBulkActions, setShowBulkActions] = useState(false);
 
   // Mock data - replace with actual API calls
   useEffect(() => {
@@ -168,9 +161,8 @@ export default function UsersManagementPage() {
 
   const handleBulkAction = (action: 'activate' | 'deactivate' | 'suspend' | 'delete') => {
     // Implement bulk actions
-    console.log(`Bulk action: ${action}`, selectedUsers);
+    devLog(`Bulk action: ${action}`, selectedUsers);
     setSelectedUsers([]);
-    setShowBulkActions(false);
   };
 
   const getStatusColor = (status: string) => {
