@@ -8,8 +8,66 @@ This folder contains the most frequently used scripts for your development workf
 |--------|---------|-------|
 | `push-and-monitor.sh` | Push code and automatically monitor CI | `./push-and-monitor.sh origin <branch>` |
 | `monitor-ci.sh` | Monitor CI status in real-time | `./monitor-ci.sh` |
+| `safe-run.sh` | Run any script with automatic backup branch | `./safe-run.sh <script> [args]` |
+| `safe-cleanup.sh` | Safe code cleanup with backup branch | `./safe-cleanup.sh [--fix]` |
+| `safe-validation.sh` | Safe pre-push validation with backup | `./safe-validation.sh` |
 | `pre-push-validation.sh` | Run all CI checks locally before pushing | `./pre-push-validation.sh` |
 | `cleanup-code.js` | Analyze and fix code quality issues | `node cleanup-code.js [--fix]` |
+
+---
+
+## 🛡️ **Safety Features - Automatic Backup Branches**
+
+**All potentially destructive operations now have safety wrappers that automatically create backup branches:**
+
+### **safe-run.sh** - Universal Safety Wrapper
+**What it does:** Runs any script with automatic backup branch creation and recovery instructions.
+
+**Usage:**
+```bash
+./safe-run.sh cleanup-code.js --fix
+./safe-run.sh pre-push-validation.sh
+./safe-run.sh monitor-ci.sh
+```
+
+**Safety Features:**
+- ✅ Creates backup branch before running
+- ✅ Checks for uncommitted changes
+- ✅ Provides recovery instructions
+- ✅ Auto-cleanup of old backup branches (keeps 5 most recent)
+- ✅ Supports both .sh and .js scripts
+
+### **safe-cleanup.sh** - Safe Code Cleanup
+**What it does:** Runs code cleanup with automatic backup branch creation.
+
+**Usage:**
+```bash
+# Analyze only (safe)
+./safe-cleanup.sh
+
+# Analyze and fix (with confirmation)
+./safe-cleanup.sh --fix
+```
+
+**Features:**
+- ✅ Creates backup branch before cleanup
+- ✅ Warns before applying automatic fixes
+- ✅ Provides recovery instructions
+- ✅ Safe fallback if something goes wrong
+
+### **safe-validation.sh** - Safe Pre-push Validation
+**What it does:** Runs comprehensive validation with automatic backup branch creation.
+
+**Usage:**
+```bash
+./safe-validation.sh
+```
+
+**Features:**
+- ✅ Creates backup branch before validation
+- ✅ Runs all CI checks locally
+- ✅ Safe environment for testing
+- ✅ Recovery instructions provided
 
 ---
 
@@ -138,7 +196,32 @@ node cleanup-code.js --fix
 
 ## 🎯 **Daily Workflow Examples**
 
-### **Typical Development Session:**
+### **Typical Development Session (Safe):**
+```bash
+# 1. Make your changes
+# 2. Test locally with backup
+./safe-validation.sh
+
+# 3. Push and monitor CI
+./push-and-monitor.sh origin feature/your-feature
+
+# 4. If you need to monitor manually later
+./monitor-ci.sh
+```
+
+### **Safe Code Cleanup:**
+```bash
+# Check what needs cleaning (with backup)
+./safe-cleanup.sh
+
+# Fix issues automatically (with backup and confirmation)
+./safe-cleanup.sh --fix
+
+# Verify fixes (with backup)
+./safe-validation.sh
+```
+
+### **Traditional Development Session:**
 ```bash
 # 1. Make your changes
 # 2. Test locally
