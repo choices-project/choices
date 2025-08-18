@@ -114,6 +114,8 @@ const EnhancedFeedbackWidget: React.FC = () => {
   }
 
   const handleSubmit = async () => {
+    if (isSubmitting) return // Prevent double submission
+    
     setIsSubmitting(true)
     
     try {
@@ -171,10 +173,13 @@ const EnhancedFeedbackWidget: React.FC = () => {
       }
     } catch (error) {
       devLog('Error submitting feedback:', error)
-      // Don't show success state if there was an error
+      // Ensure we don't show success state if there was an error
       setShowSuccess(false)
       setStep('sentiment') // Go back to previous step
-      alert('Failed to submit feedback. Please try again.')
+      
+      // More user-friendly error message
+      const errorMessage = error instanceof Error ? error.message : 'Failed to submit feedback'
+      alert(`Feedback submission failed: ${errorMessage}. Please try again.`)
     } finally {
       setIsSubmitting(false)
     }
@@ -332,6 +337,21 @@ const EnhancedFeedbackWidget: React.FC = () => {
                           </button>
                         ))}
                       </div>
+                      <div className="flex justify-end space-x-3">
+                        <button
+                          onClick={handleSubmit}
+                          disabled={isSubmitting}
+                          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                        >
+                          {isSubmitting ? 'Submitting...' : 'Submit Feedback'}
+                        </button>
+                        <button
+                          onClick={() => setStep('screenshot')}
+                          className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
+                        >
+                          Add Screenshot
+                        </button>
+                      </div>
                     </motion.div>
                   )}
 
@@ -359,10 +379,11 @@ const EnhancedFeedbackWidget: React.FC = () => {
                         </button>
                         
                         <button
-                          onClick={() => setStep('success')}
-                          className="w-full p-3 text-sm text-gray-600 hover:text-gray-800"
+                          onClick={handleSubmit}
+                          disabled={isSubmitting}
+                          className="w-full p-3 text-sm text-gray-600 hover:text-gray-800 disabled:opacity-50"
                         >
-                          Skip screenshot
+                          {isSubmitting ? 'Submitting...' : 'Submit Feedback'}
                         </button>
                       </div>
                     </motion.div>
