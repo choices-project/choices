@@ -23,19 +23,24 @@ export async function GET(request: NextRequest) {
       }, { status: 500 });
     }
 
-    // Fetch available polls
-    const { data: polls, error: pollsError } = await supabase
-      .from('po_polls')
-      .select('poll_id, title, total_votes, participation_rate, options, status')
-      .eq('status', 'active')
-      .limit(10);
+    // Fetch available polls (optional - if no polls exist, we'll still create trending polls)
+    let polls = [];
+    try {
+      const { data: pollsData, error: pollsError } = await supabase
+        .from('po_polls')
+        .select('poll_id, title, total_votes, participation_rate, options, status')
+        .eq('status', 'active')
+        .limit(10);
 
-    if (pollsError) {
+      if (pollsError) {
+        console.error('Error fetching polls:', pollsError);
+        // Continue without polls - we'll use fallback data
+      } else {
+        polls = pollsData || [];
+      }
+    } catch (pollsError) {
       console.error('Error fetching polls:', pollsError);
-      return NextResponse.json({ 
-        success: false, 
-        error: 'Failed to fetch polls' 
-      }, { status: 500 });
+      // Continue without polls - we'll use fallback data
     }
 
     // Create dynamic trending polls by combining trending topics with poll data
