@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { devLog } from '@/lib/logger';
 import { motion } from 'framer-motion'
 import { 
   Vote, 
@@ -78,7 +79,7 @@ export default function PWAAppPage() {
 
       setLoading(false)
     } catch (error) {
-      console.error('App initialization failed:', error)
+      devLog('App initialization failed:', error)
       setLoading(false)
     }
   }, [pwaUtils])
@@ -127,7 +128,7 @@ export default function PWAAppPage() {
 
       setPolls(mockPolls)
     } catch (error) {
-      console.error('Failed to load polls:', error)
+      devLog('Failed to load polls:', error)
     }
   }
 
@@ -138,7 +139,7 @@ export default function PWAAppPage() {
       const user = await pwaUtils.pwaAuth.createUser()
       setCurrentUser(user)
     } catch (error) {
-      console.error('Failed to create user:', error)
+      devLog('Failed to create user:', error)
     }
   }
 
@@ -153,7 +154,7 @@ export default function PWAAppPage() {
         setCurrentUser(pwaUtils.pwaAuth.getCurrentUser())
       }
     } catch (error) {
-      console.error('Failed to enable WebAuthn:', error)
+      devLog('Failed to enable WebAuthn:', error)
     }
   }
 
@@ -166,7 +167,7 @@ export default function PWAAppPage() {
         setCurrentUser(pwaUtils.pwaAuth.getCurrentUser())
       }
     } catch (error) {
-      console.error('Failed to enable notifications:', error)
+      devLog('Failed to enable notifications:', error)
     }
   }
 

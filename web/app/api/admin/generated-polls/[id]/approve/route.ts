@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { devLog } from '@/lib/logger';
 import { createClient } from '@/utils/supabase/server';
 import { cookies } from 'next/headers';
 import { AutomatedPollsService } from '@/lib/automated-polls';
@@ -116,7 +117,7 @@ export async function POST(
         .single();
 
       if (mainPollError) {
-        console.error('Error creating main poll:', mainPollError);
+        devLog('Error creating main poll:', mainPollError);
         // Don't fail the approval if main poll creation fails
       }
 
@@ -130,7 +131,7 @@ export async function POST(
       });
 
     } catch (error) {
-      console.error('Error integrating with main poll system:', error);
+      devLog('Error integrating with main poll system:', error);
       // Don't fail the approval if integration fails
     }
 
@@ -143,7 +144,7 @@ export async function POST(
     });
 
   } catch (error) {
-    console.error('Error approving generated poll:', error);
+    devLog('Error approving generated poll:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

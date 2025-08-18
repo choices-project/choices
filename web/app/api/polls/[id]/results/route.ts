@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { devLog } from '@/lib/logger';
 import { createClient } from '@/utils/supabase/server';
 import { cookies } from 'next/headers';
 
@@ -62,7 +63,7 @@ export async function GET(
     });
 
   } catch (error) {
-    console.error('Error in poll results API:', error);
+    devLog('Error in poll results API:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

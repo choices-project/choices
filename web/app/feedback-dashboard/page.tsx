@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useCallback } from 'react'
+import { devLog } from '@/lib/logger';
 import { motion } from 'framer-motion'
 import { 
   MessageCircle, 
@@ -55,7 +56,7 @@ const FeedbackDashboard: React.FC = () => {
         calculateStats(data.feedback || [])
       }
     } catch (error) {
-      console.error('Error fetching feedback:', error)
+      devLog('Error fetching feedback:', error)
     } finally {
       setLoading(false)
     }

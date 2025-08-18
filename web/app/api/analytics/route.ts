@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { devLog } from '@/lib/logger';
 import { isFeatureEnabled } from '../../../lib/feature-flags';
 
 interface AnalyticsRequest {
@@ -87,7 +88,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(response);
 
   } catch (error) {
-    console.error('Analytics API error:', error);
+    devLog('Analytics API error:', error);
     
     const response: AnalyticsResponse = {
       success: false,
@@ -169,7 +170,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(response);
 
   } catch (error) {
-    console.error('Analytics API error:', error);
+    devLog('Analytics API error:', error);
     
     const response: AnalyticsResponse = {
       success: false,

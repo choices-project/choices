@@ -1,4 +1,5 @@
 import { createClient } from '@/utils/supabase/server'
+import { devLog } from '@/lib/logger';
 import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 
@@ -35,14 +36,14 @@ export async function GET(request: Request) {
       })
 
       if (error) {
-        console.error('Email verification error:', error)
+        devLog('Email verification error:', error)
         return NextResponse.redirect(
           `${origin}/login?error=${encodeURIComponent('Email verification failed. Please try signing up again.')}`
         )
       }
 
       if (data.session) {
-        console.log('Email verified successfully for:', data.user?.email)
+        devLog('Email verified successfully for:', data.user?.email)
         return NextResponse.redirect(`${origin}${redirectTo}`)
       }
     } else {
@@ -50,14 +51,14 @@ export async function GET(request: Request) {
       const { data, error } = await supabase.auth.exchangeCodeForSession(token)
       
       if (error) {
-        console.error('Token exchange error:', error)
+        devLog('Token exchange error:', error)
         return NextResponse.redirect(
           `${origin}/login?error=${encodeURIComponent('Verification link expired or invalid. Please try signing up again.')}`
         )
       }
 
       if (data.session) {
-        console.log('Session created successfully for:', data.user?.email)
+        devLog('Session created successfully for:', data.user?.email)
         return NextResponse.redirect(`${origin}${redirectTo}`)
       }
     }
@@ -68,7 +69,7 @@ export async function GET(request: Request) {
     )
 
   } catch (error) {
-    console.error('Unexpected error in verification:', error)
+    devLog('Unexpected error in verification:', error)
     return NextResponse.redirect(
       `${origin}/login?error=${encodeURIComponent('Unexpected error during verification')}`
     )

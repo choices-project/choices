@@ -1,9 +1,10 @@
 'use client'
 
 import { useAuth } from '@/contexts/AuthContext'
+import { devLog } from '@/lib/logger';
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import { LogOut, User, Mail, Calendar, Shield, Edit, Vote, TrendingUp, BarChart3, Settings, Heart, Users, Activity } from 'lucide-react'
+import { LogOut, User, Mail, Calendar, Shield, Edit, Vote, TrendingUp, BarChart3, Heart, Users, Activity } from 'lucide-react'
 
 interface UserProfile {
   id: string
@@ -65,7 +66,7 @@ export default function DashboardPage() {
         setProfile(data.profile)
       }
     } catch (error) {
-      console.error('Error loading profile:', error)
+      devLog('Error loading profile:', error)
     } finally {
       setIsLoadingProfile(false)
     }
@@ -86,7 +87,7 @@ export default function DashboardPage() {
         })
       }
     } catch (error) {
-      console.error('Error loading stats:', error)
+      devLog('Error loading stats:', error)
     } finally {
       setIsLoadingStats(false)
     }

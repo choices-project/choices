@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { Shield, Lock, Eye, Users, TrendingUp, CheckCircle } from 'lucide-react'
+import { CheckCircle } from 'lucide-react'
 import { createClient } from '@/utils/supabase/client'
 import WelcomeStep from './steps/WelcomeStep'
 import AuthStep from './steps/AuthStep'
@@ -97,7 +97,7 @@ export default function OnboardingFlow() {
           setCurrentStep('auth')
         }
       } catch (error) {
-        console.error('Error checking auth status:', error)
+        devLog('Error checking auth status:', error)
         setError('Failed to check authentication status')
       } finally {
         setIsLoading(false)
@@ -163,7 +163,7 @@ export default function OnboardingFlow() {
       router.push('/dashboard')
       
     } catch (error: any) {
-      console.error('Error saving profile:', error)
+      devLog('Error saving profile:', error)
       setError(error.message || 'Failed to save profile. Please try again.')
     } finally {
       setIsLoading(false)

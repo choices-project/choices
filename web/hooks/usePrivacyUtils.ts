@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { devLog } from '@/lib/logger';
 import { isFeatureEnabled } from '../lib/feature-flags'
 
 interface PrivacyUtils {
@@ -74,7 +75,7 @@ export function usePrivacyUtils() {
           })
         }
       } catch (err) {
-        console.error('Error loading privacy utils:', err)
+        devLog('Error loading privacy utils:', err)
         setError(err instanceof Error ? err.message : 'Unknown error')
       } finally {
         setLoading(false)

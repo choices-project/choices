@@ -151,7 +151,7 @@ export default function Dashboard() {
       setLastUpdated(new Date());
       setError(null);
     } catch (err) {
-      console.error('Dashboard fetch error:', err);
+      devLog('Dashboard fetch error:', err);
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setLoading(false);

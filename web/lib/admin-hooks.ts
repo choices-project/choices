@@ -1,4 +1,5 @@
 import React from 'react';
+import { devLog } from '@/lib/logger';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAdminStore, TrendingTopic, GeneratedPoll, SystemMetrics } from './admin-store';
 import { mockActivityFeed } from './mock-data';
@@ -44,7 +45,7 @@ import { BreakingNewsStory, PollContext } from './real-time-news-service';
 // Utility function for development logging
 const devLog = (message: string, data?: any) => {
   if (process.env.NODE_ENV === 'development') {
-    console.log(`[DEV] ${message}`, data || '');
+    devLog(`[DEV] ${message}`, data || '');
   }
 };
 

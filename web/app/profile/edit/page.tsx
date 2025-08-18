@@ -1,9 +1,10 @@
 'use client'
 
 import { useAuth } from '@/contexts/AuthContext'
+import { devLog } from '@/lib/logger';
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import { ArrowLeft, Save, User, Heart, Users, Shield } from 'lucide-react'
+import { ArrowLeft, Save, User, Heart, Shield } from 'lucide-react'
 
 interface UserProfile {
   id: string
@@ -78,7 +79,7 @@ export default function EditProfilePage() {
         }
       }
     } catch (error) {
-      console.error('Error loading profile:', error)
+      devLog('Error loading profile:', error)
       setError('Failed to load profile')
     } finally {
       setIsLoading(false)
@@ -106,7 +107,7 @@ export default function EditProfilePage() {
         throw new Error(errorData.error || 'Failed to update profile')
       }
     } catch (error: any) {
-      console.error('Error saving profile:', error)
+      devLog('Error saving profile:', error)
       setError(error.message || 'Failed to save profile')
     } finally {
       setIsSaving(false)

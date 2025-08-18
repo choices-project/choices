@@ -1,9 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { devLog } from '@/lib/logger';
 import { useParams, useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
-import { ArrowLeft, Share2, BarChart3, Settings, Eye, EyeOff, RefreshCw, Users, Clock, TrendingUp } from 'lucide-react'
+import { ArrowLeft, Share2, BarChart3, Settings, Users, Clock, TrendingUp } from 'lucide-react'
 import SingleChoiceVoting from '@/components/voting/SingleChoiceVoting'
 import RankedChoiceVoting from '@/components/voting/RankedChoiceVoting'
 import ApprovalVoting from '@/components/voting/ApprovalVoting'
@@ -121,7 +122,7 @@ export default function PollPage() {
       //   }
       // }
     } catch (error) {
-      console.error('Error checking user vote:', error)
+      devLog('Error checking user vote:', error)
     }
   }
 

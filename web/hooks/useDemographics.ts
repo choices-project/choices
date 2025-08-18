@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { devLog } from '@/lib/logger';
 
 interface DemographicData {
   totalUsers: number
@@ -34,7 +35,7 @@ export function useDemographics() {
         const demographicData = await response.json()
         setData(demographicData)
       } catch (err) {
-        console.error('Error fetching demographics:', err)
+        devLog('Error fetching demographics:', err)
         setError(err instanceof Error ? err.message : 'Unknown error')
       } finally {
         setLoading(false)

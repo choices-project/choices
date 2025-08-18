@@ -4,81 +4,104 @@ import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { 
   Users, MapPin, GraduationCap, DollarSign, 
-  Building2, Globe, TrendingUp, Eye, EyeOff 
+  Building2, Globe, Heart, Eye, EyeOff,
+  Target, Zap, Shield, Database, BarChart3, Wifi, WifiOff
 } from 'lucide-react'
 import { FancyDonutChart, FancyBarChart } from './FancyCharts'
+import { useDemographics } from '../hooks/useDemographics'
 
 interface DemographicData {
   ageDistribution: { range: string; count: number; percentage: number }[];
   geographicSpread: { state: string; count: number; percentage: number }[];
-  politicalBreakdown: { affiliation: string; count: number; percentage: number }[];
+  commonInterests: { interest: string; count: number; percentage: number }[];
+  topValues: { value: string; count: number; percentage: number }[];
   educationLevels: { level: string; count: number; percentage: number }[];
   incomeBrackets: { bracket: string; count: number; percentage: number }[];
   urbanRural: { type: string; count: number; percentage: number }[];
 }
 
 interface DemographicVisualizationProps {
-  data: DemographicData;
+  data?: DemographicData;
   title: string;
   subtitle: string;
   showPrivacyToggle?: boolean;
+  useRealData?: boolean;
 }
 
 export function DemographicVisualization({ 
-  data, 
+  data: propData, 
   title, 
   subtitle, 
-  showPrivacyToggle = true 
+  showPrivacyToggle = true,
+  useRealData = true
 }: DemographicVisualizationProps) {
-  const [activeTab, setActiveTab] = useState('age')
+  const [activeTab, setActiveTab] = useState('interests')
   const [showDetailed, setShowDetailed] = useState(false)
+  const [useMockData, setUseMockData] = useState(!useRealData)
+
+  // Fetch real data if enabled
+  const { data: realData, loading, error } = useDemographics()
+
+  // Use real data if available, otherwise fall back to prop data or mock data
+  const data = useMockData ? propData : (realData || propData)
 
   const tabs = [
+    { id: 'interests', label: 'Common Interests', icon: Heart, color: '#ef4444' },
+    { id: 'values', label: 'Top Values', icon: Target, color: '#8b5cf6' },
     { id: 'age', label: 'Age', icon: Users, color: '#3b82f6' },
     { id: 'location', label: 'Location', icon: MapPin, color: '#10b981' },
-    { id: 'politics', label: 'Politics', icon: TrendingUp, color: '#8b5cf6' },
     { id: 'education', label: 'Education', icon: GraduationCap, color: '#f59e0b' },
-    { id: 'income', label: 'Income', icon: DollarSign, color: '#ef4444' },
-    { id: 'urban', label: 'Urban/Rural', icon: Building2, color: '#06b6d4' }
+    { id: 'income', label: 'Income', icon: DollarSign, color: '#06b6d4' },
+    { id: 'urban', label: 'Urban/Rural', icon: Building2, color: '#84cc16' }
   ]
 
   const getActiveData = () => {
+    if (!data) return []
+    
+    const colors = ['#3b82f6', '#10b981', '#8b5cf6', '#f59e0b', '#ef4444', '#06b6d4', '#84cc16', '#f97316', '#ec4899', '#6366f1']
+    
     switch (activeTab) {
       case 'age':
-        return data.ageDistribution.map(item => ({
+        return data.ageDistribution.map((item, index) => ({
           name: item.range,
           value: item.percentage,
-          color: '#3b82f6'
+          color: colors[index % colors.length]
         }))
       case 'location':
-        return data.geographicSpread.slice(0, 10).map(item => ({
+        return data.geographicSpread.slice(0, 10).map((item, index) => ({
           name: item.state,
           value: item.percentage,
-          color: '#10b981'
+          color: colors[index % colors.length]
         }))
-      case 'politics':
-        return data.politicalBreakdown.map(item => ({
-          name: item.affiliation,
+      case 'interests':
+        return data.commonInterests.map((item, index) => ({
+          name: item.interest,
           value: item.percentage,
-          color: '#8b5cf6'
+          color: colors[index % colors.length]
+        }))
+      case 'values':
+        return data.topValues.map((item, index) => ({
+          name: item.value,
+          value: item.percentage,
+          color: colors[index % colors.length]
         }))
       case 'education':
-        return data.educationLevels.map(item => ({
+        return data.educationLevels.map((item, index) => ({
           name: item.level,
           value: item.percentage,
-          color: '#f59e0b'
+          color: colors[index % colors.length]
         }))
       case 'income':
-        return data.incomeBrackets.map(item => ({
+        return data.incomeBrackets.map((item, index) => ({
           name: item.bracket,
           value: item.percentage,
-          color: '#ef4444'
+          color: colors[index % colors.length]
         }))
       case 'urban':
-        return data.urbanRural.map(item => ({
+        return data.urbanRural.map((item, index) => ({
           name: item.type,
           value: item.percentage,
-          color: '#06b6d4'
+          color: colors[index % colors.length]
         }))
       default:
         return []
@@ -86,7 +109,58 @@ export function DemographicVisualization({
   }
 
   const getTotalUsers = () => {
+    if (!data) return 0
     return data.ageDistribution.reduce((sum, item) => sum + item.count, 0)
+  }
+
+                                         const getInsightMessage = () => {
+                     switch (activeTab) {
+                       case 'interests':
+                         return "Participation data shows demographic distribution patterns."
+                       case 'values':
+                         return "Voting patterns reflect diverse demographic representation."
+                       case 'age':
+                         return "Age distribution shows participation across all demographic groups."
+                       case 'location':
+                         return "Geographic data shows national participation distribution."
+                       case 'education':
+                         return "Education levels show varied participation patterns."
+                       case 'income':
+                         return "Income distribution reflects economic diversity in participation."
+                       case 'urban':
+                         return "Urban, suburban, and rural areas show different participation rates."
+                       default:
+                         return "Data analysis reveals participation patterns across demographics."
+                     }
+                   }
+
+  if (loading && useRealData && !useMockData) {
+    return (
+      <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-100">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading real demographic data...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error && useRealData && !useMockData) {
+    return (
+      <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-100">
+        <div className="text-center">
+          <WifiOff className="h-12 w-12 text-red-500 mx-auto mb-4" />
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">Database Connection Error</h3>
+          <p className="text-gray-600 mb-4">Unable to load real data. Using demo data instead.</p>
+          <button
+            onClick={() => setUseMockData(true)}
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Use Demo Data
+          </button>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -110,20 +184,39 @@ export function DemographicVisualization({
           {subtitle}
         </motion.p>
         
-        {/* Privacy Toggle */}
+        {/* Data Source Toggle */}
+        <motion.div 
+          className="flex items-center justify-center gap-4 text-sm text-gray-500 mb-4"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.2 }}
+        >
+          <div className="flex items-center gap-2">
+            {useMockData ? <WifiOff className="h-4 w-4" /> : <Wifi className="h-4 w-4" />}
+            <span>{useMockData ? 'Demo Data' : 'Live Data'}</span>
+          </div>
+          <button
+            onClick={() => setUseMockData(!useMockData)}
+            className="text-blue-600 hover:text-blue-700 font-medium"
+          >
+            Switch to {useMockData ? 'Live' : 'Demo'} Data
+          </button>
+        </motion.div>
+        
+        {/* Data Source Toggle */}
         {showPrivacyToggle && (
           <motion.div 
             className="flex items-center justify-center gap-2 text-sm text-gray-500"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 0.2 }}
+            transition={{ delay: 0.3 }}
           >
-            {showDetailed ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+            {showDetailed ? <Database className="h-4 w-4" /> : <BarChart3 className="h-4 w-4" />}
             <button
               onClick={() => setShowDetailed(!showDetailed)}
               className="hover:text-gray-700 transition-colors"
             >
-              {showDetailed ? 'Showing detailed data' : 'Showing anonymized data'}
+              {showDetailed ? 'Showing detailed breakdown' : 'Showing summary view'}
             </button>
           </motion.div>
         )}
@@ -134,7 +227,7 @@ export function DemographicVisualization({
         className="text-center mb-8"
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
-        transition={{ delay: 0.3 }}
+        transition={{ delay: 0.4 }}
       >
         <div className="inline-flex items-center gap-3 px-6 py-3 bg-blue-50 rounded-full">
           <Users className="h-6 w-6 text-blue-600" />
@@ -142,6 +235,11 @@ export function DemographicVisualization({
             {getTotalUsers().toLocaleString()}
           </span>
           <span className="text-blue-600 font-medium">active citizens</span>
+          {!useMockData && realData && (
+            <span className="text-xs text-blue-500">
+              (Updated: {new Date(realData.lastUpdated).toLocaleTimeString()})
+            </span>
+          )}
         </div>
       </motion.div>
 
@@ -186,6 +284,22 @@ export function DemographicVisualization({
         </div>
       </motion.div>
 
+      {/* Insight Message */}
+      <motion.div
+        className="text-center mb-6 p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-200"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.5 }}
+      >
+        <div className="flex items-center justify-center gap-2 mb-2">
+          <BarChart3 className="h-5 w-5 text-blue-600" />
+          <span className="font-semibold text-gray-800">Data Insights</span>
+        </div>
+        <p className="text-sm text-gray-700 italic">
+          "{getInsightMessage()}"
+        </p>
+      </motion.div>
+
       {/* Detailed Breakdown */}
       {showDetailed && (
         <motion.div
@@ -227,24 +341,24 @@ export function DemographicVisualization({
 
       {/* Trust Message */}
       <motion.div
-        className="text-center mt-8 p-4 bg-green-50 rounded-lg border border-green-200"
+        className="text-center mt-8 p-4 bg-blue-50 rounded-lg border border-blue-200"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.4 }}
+        transition={{ delay: 0.6 }}
       >
         <div className="flex items-center justify-center gap-2 mb-2">
-          <Globe className="h-5 w-5 text-green-600" />
-          <span className="font-semibold text-green-800">Real People, Real Data</span>
+          <BarChart3 className="h-5 w-5 text-blue-600" />
+          <span className="font-semibold text-blue-800">Demo Data, Real Insights</span>
         </div>
-        <p className="text-sm text-green-700">
-          This is who's actually voting. No hidden demographics, no corporate filters.
+        <p className="text-sm text-blue-700">
+          This shows how demographic analysis works. Real data will replace this when users join.
         </p>
       </motion.div>
     </div>
   )
 }
 
-// Mock data for development
+// Updated mock data focusing on common interests and values
 export const mockDemographicData: DemographicData = {
   ageDistribution: [
     { range: '18-24', count: 125000, percentage: 15 },
@@ -266,11 +380,21 @@ export const mockDemographicData: DemographicData = {
     { state: 'Georgia', count: 45000, percentage: 5 },
     { state: 'North Carolina', count: 40000, percentage: 5 }
   ],
-  politicalBreakdown: [
-    { affiliation: 'Independent', count: 350000, percentage: 42 },
-    { affiliation: 'Democrat', count: 250000, percentage: 30 },
-    { affiliation: 'Republican', count: 200000, percentage: 24 },
-    { affiliation: 'Other', count: 50000, percentage: 6 }
+  commonInterests: [
+    { interest: 'Affordable Healthcare', count: 700000, percentage: 84 },
+    { interest: 'Quality Education', count: 650000, percentage: 78 },
+    { interest: 'Economic Security', count: 600000, percentage: 72 },
+    { interest: 'Environmental Protection', count: 550000, percentage: 66 },
+    { interest: 'Community Safety', count: 500000, percentage: 60 },
+    { interest: 'Infrastructure Investment', count: 450000, percentage: 54 }
+  ],
+  topValues: [
+    { value: 'Family & Community', count: 750000, percentage: 90 },
+    { value: 'Fairness & Justice', count: 700000, percentage: 84 },
+    { value: 'Personal Freedom', count: 650000, percentage: 78 },
+    { value: 'Hard Work & Responsibility', count: 600000, percentage: 72 },
+    { value: 'Innovation & Progress', count: 550000, percentage: 66 },
+    { value: 'Tradition & Stability', count: 500000, percentage: 60 }
   ],
   educationLevels: [
     { level: 'Bachelor\'s Degree', count: 300000, percentage: 36 },

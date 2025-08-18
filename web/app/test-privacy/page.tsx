@@ -59,7 +59,7 @@ export default function TestPrivacyPage() {
       
       devLog('Poll created successfully:', result);
     } catch (error) {
-      console.error('Error creating poll:', error);
+      devLog('Error creating poll:', error);
       alert('Failed to create poll. Please try again.');
     } finally {
       setIsLoading(false);
@@ -103,7 +103,7 @@ export default function TestPrivacyPage() {
       devLog('Vote submitted successfully:', result);
       alert(`Vote submitted successfully! Response time: ${result.response_time}ms`);
     } catch (error) {
-      console.error('Error submitting vote:', error);
+      devLog('Error submitting vote:', error);
       alert(`Failed to submit vote: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };

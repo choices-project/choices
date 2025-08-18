@@ -7,6 +7,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { devLog } from '@/lib/logger';
 import { useFeatureFlagManagement } from '../../../hooks/useFeatureFlags';
 import { FeatureFlagDebugger } from '../../../components/FeatureWrapper';
 
@@ -85,7 +86,7 @@ export default function FeatureFlagsAdminPage() {
           const config = JSON.parse(e.target?.result as string);
           importConfig(config);
         } catch (error) {
-          console.error('Failed to import config:', error);
+          devLog('Failed to import config:', error);
           alert('Failed to import configuration file');
         }
       };

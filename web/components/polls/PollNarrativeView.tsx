@@ -31,7 +31,7 @@ import {
   Plus,
   Minus
 } from 'lucide-react';
-import { PollNarrative, VerifiedFact, CommunityFact, NarrativeSource, TimelineEvent, Stakeholder } from '@/lib/poll-narrative-system';
+import { PollNarrative, CommunityFact, Stakeholder } from '@/lib/poll-narrative-system'
 
 interface PollNarrativeViewProps {
   narrative: PollNarrative;

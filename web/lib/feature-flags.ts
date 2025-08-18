@@ -317,7 +317,7 @@ export class FeatureFlagManager {
       try {
         listener(new Map(this.flags));
       } catch (error) {
-        console.error('Error in feature flag listener:', error);
+        devLog('Error in feature flag listener:', error);
       }
     });
   }

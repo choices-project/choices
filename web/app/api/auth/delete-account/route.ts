@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { devLog } from '@/lib/logger';
 import { createClient } from '@/utils/supabase/server'
 import { cookies } from 'next/headers'
 import bcrypt from 'bcryptjs'
@@ -99,7 +100,7 @@ export async function POST(request: NextRequest) {
         .eq('stable_id', user.id)
 
       if (deleteError) {
-        console.error('Error deleting user from ia_users:', deleteError)
+        devLog('Error deleting user from ia_users:', deleteError)
         return NextResponse.json(
           { error: 'Failed to delete user account' },
           { status: 500 }
@@ -110,7 +111,7 @@ export async function POST(request: NextRequest) {
       const { error: authDeleteError } = await supabase.auth.admin.deleteUser(user.id)
       
       if (authDeleteError) {
-        console.error('Error deleting user from Supabase Auth:', authDeleteError)
+        devLog('Error deleting user from Supabase Auth:', authDeleteError)
         // Don't fail the request if Supabase Auth deletion fails
         // The ia_users table deletion is our primary concern
       }
@@ -124,7 +125,7 @@ export async function POST(request: NextRequest) {
       })
 
     } catch (deleteError) {
-      console.error('Error during account deletion:', deleteError)
+      devLog('Error during account deletion:', deleteError)
       return NextResponse.json(
         { error: 'Failed to delete account. Please try again.' },
         { status: 500 }
@@ -132,7 +133,7 @@ export async function POST(request: NextRequest) {
     }
 
   } catch (error) {
-    console.error('Error in delete account:', error)
+    devLog('Error in delete account:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

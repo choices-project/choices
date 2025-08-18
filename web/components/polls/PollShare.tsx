@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { devLog } from '@/lib/logger';
 import { Share2, Copy, Link, Twitter, Facebook, Linkedin, Mail, QrCode, Download } from 'lucide-react'
 
 interface PollShareProps {
@@ -27,7 +28,7 @@ export default function PollShare({ pollId, poll }: PollShareProps) {
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     } catch (error) {
-      console.error('Failed to copy link:', error)
+      devLog('Failed to copy link:', error)
     }
   }
 
@@ -36,7 +37,7 @@ export default function PollShare({ pollId, poll }: PollShareProps) {
       try {
         await navigator.share(shareData)
       } catch (error) {
-        console.error('Error sharing:', error)
+        devLog('Error sharing:', error)
       }
     }
   }

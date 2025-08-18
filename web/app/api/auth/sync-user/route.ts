@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { devLog } from '@/lib/logger';
 import { createClient } from '@/utils/supabase/server'
 import { cookies } from 'next/headers'
 
@@ -26,7 +27,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    console.log('Syncing user:', {
+    devLog('Syncing user:', {
       id: user.id,
       email: user.email,
       email_confirmed: user.email_confirmed_at
@@ -40,7 +41,7 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (checkError && checkError.code !== 'PGRST116') {
-      console.error('Error checking existing user:', checkError)
+      devLog('Error checking existing user:', checkError)
       return NextResponse.json(
         { error: 'Database error' },
         { status: 500 }
@@ -48,7 +49,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (existingUser) {
-      console.log('User already exists in ia_users table')
+      devLog('User already exists in ia_users table')
       return NextResponse.json({
         success: true,
         message: 'User already synced',
@@ -77,14 +78,14 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (createError) {
-      console.error('Error creating user in ia_users:', createError)
+      devLog('Error creating user in ia_users:', createError)
       return NextResponse.json(
         { error: 'Failed to create user record' },
         { status: 500 }
       )
     }
 
-    console.log('Successfully created user in ia_users table:', newUser)
+    devLog('Successfully created user in ia_users table:', newUser)
 
     return NextResponse.json({
       success: true,
@@ -99,7 +100,7 @@ export async function POST(request: NextRequest) {
     })
 
   } catch (error) {
-    console.error('Unexpected error in sync-user:', error)
+    devLog('Unexpected error in sync-user:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

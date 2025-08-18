@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { devLog } from '@/lib/logger';
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
   Download, 
@@ -55,7 +56,7 @@ export function PWAInstallPrompt() {
         setShowPrompt(false)
       }, 2000)
     } catch (error) {
-      console.error('PWA install failed:', error)
+      devLog('PWA install failed:', error)
       setIsInstalling(false)
     }
   }

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { devLog } from '@/lib/logger';
 import { createClient } from '@supabase/supabase-js';
 
 /**
@@ -19,7 +20,7 @@ export async function serviceRoleAdminAuth(request: NextRequest) {
     // Service role key provides full admin access
     return { success: true, supabase };
   } catch (error) {
-    console.error('Service role auth error:', error);
+    devLog('Service role auth error:', error);
     return { success: false, error: 'Service role authentication failed' };
   }
 }

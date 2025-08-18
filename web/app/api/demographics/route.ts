@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { devLog } from '@/lib/logger';
 import { createClient } from '@/utils/supabase/server';
 import { cookies } from 'next/headers';
 import { getMockDemographicsResponse } from '@/lib/mock-data';
@@ -12,7 +13,7 @@ export async function GET(request: NextRequest) {
     
     // If Supabase client is not available, return mock data
     if (!supabase) {
-      console.log('Supabase client not available, using mock data');
+      devLog('Supabase client not available, using mock data');
       return NextResponse.json(getMockDemographicsResponse());
     }
     
@@ -55,12 +56,12 @@ export async function GET(request: NextRequest) {
 
       return NextResponse.json(demographics);
     } catch (error) {
-      console.error('Supabase error:', error);
+      devLog('Supabase error:', error);
       // Fallback to mock data
       return NextResponse.json(getMockDemographicsResponse());
     }
   } catch (error) {
-    console.error('Error in demographics API:', error);
+    devLog('Error in demographics API:', error);
     // Always return mock data as final fallback
     return NextResponse.json(getMockDemographicsResponse());
   }

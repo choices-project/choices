@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { devLog } from '@/lib/logger';
 import { createClient } from '@/utils/supabase/server'
 import { cookies } from 'next/headers'
 
@@ -57,7 +58,7 @@ export async function POST(request: NextRequest) {
       updated_at: new Date().toISOString()
     }
 
-    console.log('Creating user profile:', {
+    devLog('Creating user profile:', {
       user_id: profileData.user_id,
       display_name: profileData.display_name,
       participation_style: profileData.participation_style
@@ -73,14 +74,14 @@ export async function POST(request: NextRequest) {
       .select()
 
     if (error) {
-      console.error('Database error:', error)
+      devLog('Database error:', error)
       return NextResponse.json(
         { error: 'Failed to save profile', details: error.message },
         { status: 500 }
       )
     }
 
-    console.log('Profile created successfully:', data?.[0]?.id)
+    devLog('Profile created successfully:', data?.[0]?.id)
 
     return NextResponse.json({
       success: true,
@@ -89,7 +90,7 @@ export async function POST(request: NextRequest) {
     })
 
   } catch (error) {
-    console.error('Profile API error:', error)
+    devLog('Profile API error:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -128,7 +129,7 @@ export async function GET(request: NextRequest) {
       .single()
 
     if (error && error.code !== 'PGRST116') {
-      console.error('Database error:', error)
+      devLog('Database error:', error)
       return NextResponse.json(
         { error: 'Failed to fetch profile' },
         { status: 500 }
@@ -142,7 +143,7 @@ export async function GET(request: NextRequest) {
     })
 
   } catch (error) {
-    console.error('Profile API error:', error)
+    devLog('Profile API error:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -188,7 +189,7 @@ export async function PUT(request: NextRequest) {
       .select()
 
     if (error) {
-      console.error('Database error:', error)
+      devLog('Database error:', error)
       return NextResponse.json(
         { error: 'Failed to update profile' },
         { status: 500 }
@@ -202,7 +203,7 @@ export async function PUT(request: NextRequest) {
     })
 
   } catch (error) {
-    console.error('Profile API error:', error)
+    devLog('Profile API error:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

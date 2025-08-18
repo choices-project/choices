@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { devLog } from '@/lib/logger';
 import { createClient } from '@/utils/supabase/server';
 import { cookies } from 'next/headers';
 import { HybridVotingService } from '@/lib/hybrid-voting-service';
@@ -86,7 +87,7 @@ export async function POST(
     });
 
   } catch (error) {
-    console.error('Error in vote API:', error);
+    devLog('Error in vote API:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -135,7 +136,7 @@ export async function GET(
     });
 
   } catch (error) {
-    console.error('Error checking vote status:', error);
+    devLog('Error checking vote status:', error);
     return NextResponse.json(
       { has_voted: false },
       { status: 200 }

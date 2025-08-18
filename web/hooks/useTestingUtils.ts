@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { devLog } from '@/lib/logger';
 
 interface TestingUtils {
   testingSuite: any
@@ -35,7 +36,7 @@ export function useTestingUtils() {
           mobileCompatibilityTesting: mobileModule.mobileCompatibilityTesting
         })
       } catch (err) {
-        console.error('Error loading testing utils:', err)
+        devLog('Error loading testing utils:', err)
         setError(err instanceof Error ? err.message : 'Unknown error')
       } finally {
         setLoading(false)

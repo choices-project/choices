@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { devLog } from '@/lib/logger';
 import { createClient } from '@/utils/supabase/server';
 import { cookies } from 'next/headers';
 import { AutomatedPollsService } from '@/lib/automated-polls';
@@ -37,7 +38,7 @@ export async function GET(request: NextRequest) {
       .limit(limit);
 
     if (error) {
-      console.error('Error fetching trending topics:', error);
+      devLog('Error fetching trending topics:', error);
       return NextResponse.json(
         { error: 'Failed to fetch trending topics' },
         { status: 500 }
@@ -93,7 +94,7 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Error in trending topics API:', error);
+    devLog('Error in trending topics API:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -189,7 +190,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Error creating trending topic:', error);
+    devLog('Error creating trending topic:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -233,7 +234,7 @@ export async function PUT(request: NextRequest) {
     );
 
   } catch (error) {
-    console.error('Error refreshing trending topics:', error);
+    devLog('Error refreshing trending topics:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

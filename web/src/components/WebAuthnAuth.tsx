@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { devLog } from '@/lib/logger';
 import { Shield, Key, CheckCircle, AlertCircle } from 'lucide-react'
 
 interface WebAuthnAuthProps {
@@ -84,7 +85,7 @@ export default function WebAuthnAuth({ onAuthenticated }: WebAuthnAuthProps) {
       }, 2000)
 
     } catch (error) {
-      console.error('Registration error:', error)
+      devLog('Registration error:', error)
       setError('Registration failed. Please try again.')
       setStep('input')
     } finally {
@@ -164,7 +165,7 @@ export default function WebAuthnAuth({ onAuthenticated }: WebAuthnAuthProps) {
       }, 2000)
 
     } catch (error) {
-      console.error('Login error:', error)
+      devLog('Login error:', error)
       setError('Login failed. Please try again.')
       setStep('input')
     } finally {

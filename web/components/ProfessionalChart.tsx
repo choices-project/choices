@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { motion, Variants } from 'framer-motion'
-import { TrendingUp, TrendingDown, Minus, BarChart3, PieChart, Activity } from 'lucide-react'
+import { TrendingUp, TrendingDown, Minus, Activity } from 'lucide-react'
 import * as Tooltip from '@radix-ui/react-tooltip'
 
 interface ChartData {

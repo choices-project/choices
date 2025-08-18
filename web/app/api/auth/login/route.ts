@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { devLog } from '@/lib/logger';
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import { createClient } from '@supabase/supabase-js'
@@ -138,7 +139,7 @@ export async function POST(request: NextRequest) {
     })
 
   } catch (error) {
-    console.error('Login error:', error)
+    devLog('Login error:', error)
     return NextResponse.json(
       { code: 'INTERNAL_ERROR', message: 'Internal server error' },
       { status: 500 }
@@ -165,7 +166,7 @@ async function verifyTwoFactorCode(userId: string, code: string): Promise<boolea
     // In production, use a library like 'speakeasy' to verify TOTP codes
     return code.length === 6 && /^\d{6}$/.test(code)
   } catch (error) {
-    console.error('2FA verification error:', error)
+    devLog('2FA verification error:', error)
     return false
   }
 }

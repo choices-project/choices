@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { devLog } from '@/lib/logger';
 import { Plus, X, Save, AlertCircle } from 'lucide-react';
 import { PrivacyLevelSelector } from '../privacy/PrivacyLevelSelector';
 import { PrivacyLevel, HybridPrivacyManager } from '@/lib/hybrid-privacy';
@@ -85,7 +86,7 @@ export const CreatePollForm: React.FC<CreatePollFormProps> = ({
     try {
       await onSubmit(pollData);
     } catch (error) {
-      console.error('Error creating poll:', error);
+      devLog('Error creating poll:', error);
     }
   };
 

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { devLog } from '@/lib/logger';
 
 interface PerformanceUtils {
   performanceMonitor: any
@@ -24,7 +25,7 @@ export function usePerformanceUtils() {
           performanceMonitor: performanceModule.getPerformanceMonitor
         })
       } catch (err) {
-        console.error('Error loading performance utils:', err)
+        devLog('Error loading performance utils:', err)
         setError(err instanceof Error ? err.message : 'Unknown error')
       } finally {
         setLoading(false)

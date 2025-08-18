@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { devLog } from '@/lib/logger';
 import HeroSection from '../components/HeroSection';
 import FeaturedPolls from '../components/FeaturedPolls';
 import DataStories from '../components/DataStories';
@@ -133,7 +134,7 @@ export default function HomePage() {
         const pollsData = await pollService.getPolls();
         setPolls(pollsData);
       } catch (error) {
-        console.error('Error loading polls:', error);
+        devLog('Error loading polls:', error);
       } finally {
         setIsLoading(false);
       }
@@ -170,7 +171,7 @@ export default function HomePage() {
       
       return response;
     } catch (error) {
-      console.error('Error submitting vote:', error);
+      devLog('Error submitting vote:', error);
       return {
         success: false,
         voteId: '',
@@ -184,7 +185,7 @@ export default function HomePage() {
   };
 
   const handleViewDetails = (pollId: string) => {
-    console.log(`Viewing details for poll ${pollId}`);
+    devLog(`Viewing details for poll ${pollId}`);
     // In a real app, this would navigate to the poll detail page
   };
 

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { CheckCircle, AlertCircle, Info, ArrowUp, ArrowDown, Vote } from 'lucide-react'
+import { CheckCircle, AlertCircle, Info, Vote } from 'lucide-react'
 
 interface PollOption {
   id: string

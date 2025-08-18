@@ -2,6 +2,7 @@
 // Core interfaces and service classes for the automated poll generation system
 
 import { createClient } from '@/utils/supabase/server';
+import { devLog } from '@/lib/logger';
 import { cookies } from 'next/headers';
 
 // ============================================================================
@@ -183,7 +184,7 @@ export class AutomatedPollsService {
 
       return data?.map(this.mapTrendingTopicFromDB) || [];
     } catch (error) {
-      console.error('Error fetching trending topics:', error);
+      devLog('Error fetching trending topics:', error);
       return [];
     }
   }
@@ -200,7 +201,7 @@ export class AutomatedPollsService {
 
       return data ? this.mapTrendingTopicFromDB(data) : null;
     } catch (error) {
-      console.error('Error fetching trending topic:', error);
+      devLog('Error fetching trending topic:', error);
       return null;
     }
   }
@@ -217,7 +218,7 @@ export class AutomatedPollsService {
 
       return data ? this.mapTrendingTopicFromDB(data) : null;
     } catch (error) {
-      console.error('Error creating trending topic:', error);
+      devLog('Error creating trending topic:', error);
       return null;
     }
   }
@@ -235,7 +236,7 @@ export class AutomatedPollsService {
 
       return data ? this.mapTrendingTopicFromDB(data) : null;
     } catch (error) {
-      console.error('Error updating trending topic:', error);
+      devLog('Error updating trending topic:', error);
       return null;
     }
   }
@@ -262,7 +263,7 @@ export class AutomatedPollsService {
 
       return data?.map(this.mapGeneratedPollFromDB) || [];
     } catch (error) {
-      console.error('Error fetching generated polls:', error);
+      devLog('Error fetching generated polls:', error);
       return [];
     }
   }
@@ -279,7 +280,7 @@ export class AutomatedPollsService {
 
       return data ? this.mapGeneratedPollFromDB(data) : null;
     } catch (error) {
-      console.error('Error fetching generated poll:', error);
+      devLog('Error fetching generated poll:', error);
       return null;
     }
   }
@@ -296,7 +297,7 @@ export class AutomatedPollsService {
 
       return data ? this.mapGeneratedPollFromDB(data) : null;
     } catch (error) {
-      console.error('Error creating generated poll:', error);
+      devLog('Error creating generated poll:', error);
       return null;
     }
   }
@@ -314,7 +315,7 @@ export class AutomatedPollsService {
 
       return data ? this.mapGeneratedPollFromDB(data) : null;
     } catch (error) {
-      console.error('Error updating generated poll:', error);
+      devLog('Error updating generated poll:', error);
       return null;
     }
   }
@@ -350,7 +351,7 @@ export class AutomatedPollsService {
 
       return data?.map(this.mapDataSourceFromDB) || [];
     } catch (error) {
-      console.error('Error fetching data sources:', error);
+      devLog('Error fetching data sources:', error);
       return [];
     }
   }
@@ -368,7 +369,7 @@ export class AutomatedPollsService {
 
       return data ? this.mapDataSourceFromDB(data) : null;
     } catch (error) {
-      console.error('Error updating data source:', error);
+      devLog('Error updating data source:', error);
       return null;
     }
   }
@@ -389,7 +390,7 @@ export class AutomatedPollsService {
 
       return data ? this.mapQualityMetricsFromDB(data) : null;
     } catch (error) {
-      console.error('Error fetching quality metrics:', error);
+      devLog('Error fetching quality metrics:', error);
       return null;
     }
   }
@@ -406,7 +407,7 @@ export class AutomatedPollsService {
 
       return data ? this.mapQualityMetricsFromDB(data) : null;
     } catch (error) {
-      console.error('Error creating quality metrics:', error);
+      devLog('Error creating quality metrics:', error);
       return null;
     }
   }
@@ -428,7 +429,7 @@ export class AutomatedPollsService {
 
       return data ? this.mapSystemConfigurationFromDB(data) : null;
     } catch (error) {
-      console.error('Error fetching system configuration:', error);
+      devLog('Error fetching system configuration:', error);
       return null;
     }
   }
@@ -446,7 +447,7 @@ export class AutomatedPollsService {
 
       return data ? this.mapSystemConfigurationFromDB(data) : null;
     } catch (error) {
-      console.error('Error updating system configuration:', error);
+      devLog('Error updating system configuration:', error);
       return null;
     }
   }

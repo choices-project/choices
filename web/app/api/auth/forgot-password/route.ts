@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { devLog } from '@/lib/logger';
 import { createClient } from '@/utils/supabase/server'
 import { cookies } from 'next/headers'
 
@@ -47,7 +48,7 @@ export async function POST(request: NextRequest) {
     })
 
     if (resetError) {
-      console.error('Password reset error:', resetError)
+      devLog('Password reset error:', resetError)
       // Don't reveal the error to the user for security
       return NextResponse.json({
         success: true,
@@ -61,7 +62,7 @@ export async function POST(request: NextRequest) {
     })
 
   } catch (error) {
-    console.error('Error in forgot password:', error)
+    devLog('Error in forgot password:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

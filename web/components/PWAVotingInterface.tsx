@@ -101,7 +101,7 @@ export function PWAVotingInterface({
         pwaUtils.pwaAnalytics.trackDataCollection(1)
       }
     } catch (error) {
-      console.error('Vote failed:', error)
+      devLog('Vote failed:', error)
     } finally {
       setIsVoting(false)
     }

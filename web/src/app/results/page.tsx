@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { devLog } from '@/lib/logger';
 import { BarChart3, Shield, CheckCircle, ArrowLeft, RefreshCw } from 'lucide-react'
 import Link from 'next/link'
 import { poApi, Poll, Tally, CommitmentLog } from '../../lib/api'
@@ -22,7 +23,7 @@ export default function ResultsPage() {
       const data = await poApi.getPolls()
       setPolls(data)
     } catch (error) {
-      console.error('Failed to fetch polls:', error)
+      devLog('Failed to fetch polls:', error)
     } finally {
       setLoading(false)
     }
@@ -41,7 +42,7 @@ export default function ResultsPage() {
       setTally(tallyData)
       setCommitmentLog(commitmentData)
     } catch (error) {
-      console.error('Failed to load poll results:', error)
+      devLog('Failed to load poll results:', error)
     } finally {
       setRefreshing(false)
     }

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { devLog } from '@/lib/logger';
 import { createClient } from '@/utils/supabase/client'
 import { ensureUserSynced, getUserFromIaUsers, hasUserProfile } from '@/lib/user-sync'
 
@@ -50,7 +51,7 @@ export default function TestUserSync() {
       const { data: iaUserData, error: iaError } = await getUserFromIaUsers(user.id)
       
       if (iaError) {
-        console.error('Error getting ia_user:', iaError)
+        devLog('Error getting ia_user:', iaError)
       } else {
         setIaUser(iaUserData)
       }
@@ -59,7 +60,7 @@ export default function TestUserSync() {
       const { hasProfile: profileExists, error: profileError } = await hasUserProfile(user.id)
       
       if (profileError) {
-        console.error('Error checking profile:', profileError)
+        devLog('Error checking profile:', profileError)
       } else {
         setHasProfile(profileExists)
       }
