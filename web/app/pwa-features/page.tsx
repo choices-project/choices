@@ -36,7 +36,7 @@ import { PWAFeaturesShowcase, PWAStatus } from '../../components/PWAComponents'
 
 export default function PWAFeaturesPage() {
   const { enabled: pwaEnabled, flag: pwaFlag } = useFeatureFlag('pwa')
-  const {  } = usePWAUtils()
+  const { utils: pwaUtils, loading: utilsLoading, error: utilsError } = usePWAUtils()
   
   const [deviceFingerprint, setDeviceFingerprint] = useState<any>(null)
   const [pwaStatus, setPwaStatus] = useState<any>(null)
