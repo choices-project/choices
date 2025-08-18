@@ -327,10 +327,12 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🔗 Links
 
-- **Live Demo**: [https://choices-platform.vercel.app](https://choices-platform.vercel.app)
-- **Documentation**: [PROJECT_SUMMARY.md](PROJECT_SUMMARY.md)
-- **Issues**: [https://github.com/choices-project/choices/issues](https://github.com/choices-project/choices/issues)
-- **Discussions**: [https://github.com/choices-project/choices/discussions](https://github.com/choices-project/choices/discussions)
+- **🌐 Live Platform**: [https://choices-platform.vercel.app](https://choices-platform.vercel.app)
+- **📊 Admin Dashboard**: [https://choices-platform.vercel.app/admin](https://choices-platform.vercel.app/admin)
+- **📚 Project Summary**: [PROJECT_SUMMARY.md](PROJECT_SUMMARY.md) - Comprehensive feature overview
+- **📖 Documentation**: [docs/consolidated/README.md](docs/consolidated/README.md) - Technical documentation
+- **🐛 Issues**: [https://github.com/choices-project/choices/issues](https://github.com/choices-project/choices/issues)
+- **💬 Discussions**: [https://github.com/choices-project/choices/discussions](https://github.com/choices-project/choices/discussions)
 
 ## 🙏 Acknowledgments
 

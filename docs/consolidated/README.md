@@ -7,6 +7,8 @@
 
 Choices is a privacy-first, modular voting and polling platform built with Next.js, featuring advanced security, automated poll generation, and comprehensive privacy protection.
 
+**📚 For a comprehensive overview of all features and current status, see [PROJECT_SUMMARY.md](../../PROJECT_SUMMARY.md)**
+
 ## 🚀 **Quick Start**
 
 ### **For New Developers (10 minutes)**
