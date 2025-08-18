@@ -287,8 +287,18 @@ export const BreakingNewsPage: React.FC = () => {
             <p className="text-gray-600">
               {searchTerm || urgencyFilter !== 'all' || categoryFilter !== 'all'
                 ? 'Try adjusting your filters or search terms.'
-                : 'Breaking news stories will appear here as they are discovered.'}
+                : stories.length === 0 
+                  ? 'No breaking news stories available. The system is ready to display stories as they are discovered.'
+                  : 'No stories match your current filters.'}
             </p>
+            {stories.length === 0 && (
+              <div className="mt-4">
+                <button className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+                  <Plus className="h-4 w-4 mr-2 inline" />
+                  Add First Story
+                </button>
+              </div>
+            )}
           </div>
         ) : (
           filteredStories.map((story) => (
