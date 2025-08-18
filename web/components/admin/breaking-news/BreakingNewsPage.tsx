@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ChartWrapper, ChartSkeleton } from '../charts/BasicCharts';
+import { useBreakingNews, useGeneratePollContext } from '../../../lib/admin-hooks';
 
 // Mock data for development
 const mockBreakingNews = [
@@ -110,32 +111,11 @@ export const BreakingNewsPage: React.FC = () => {
 
   const queryClient = useQueryClient();
 
-  // Mock query for breaking news
-  const { data: stories = mockBreakingNews, isLoading } = useQuery({
-    queryKey: ['breaking-news'],
-    queryFn: async () => {
-      // In production, this would fetch from the API
-      return mockBreakingNews;
-    },
-    staleTime: 5 * 60 * 1000, // 5 minutes
-  });
+  // Real API query for breaking news
+  const { data: stories = [], isLoading } = useBreakingNews();
 
-  // Mock mutation for generating poll context
-  const generatePollContext = useMutation({
-    mutationFn: async (storyId: string) => {
-      // In production, this would call the API
-      console.log('Generating poll context for story:', storyId);
-      return { success: true, pollContext: { question: "Should Gavin Newsom and Donald Trump participate in a presidential debate?" } };
-    },
-    onSuccess: (data, storyId) => {
-      console.log('Poll context generated successfully:', data);
-      setShowPollContext(true);
-      queryClient.invalidateQueries({ queryKey: ['breaking-news'] });
-    },
-    onError: (error) => {
-      console.error('Failed to generate poll context:', error);
-    }
-  });
+  // Real API mutation for generating poll context
+  const generatePollContext = useGeneratePollContext();
 
   // Filter stories based on search and filters
   const filteredStories = stories.filter((story) => {
@@ -199,7 +179,15 @@ export const BreakingNewsPage: React.FC = () => {
 
   const handleGeneratePoll = (story: any) => {
     setSelectedStory(story);
-    generatePollContext.mutate(story.id);
+    generatePollContext.mutate(story.id, {
+      onSuccess: (data) => {
+        console.log('Poll context generated successfully:', data);
+        setShowPollContext(true);
+      },
+      onError: (error) => {
+        console.error('Failed to generate poll context:', error);
+      }
+    });
   };
 
   return (

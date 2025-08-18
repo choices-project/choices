@@ -7,6 +7,7 @@ import {
   mockSystemMetrics, 
   mockActivityFeed 
 } from './mock-data';
+import { BreakingNewsStory, PollContext } from './real-time-news-service';
 
 // API functions
 const fetchTrendingTopics = async (): Promise<TrendingTopic[]> => {
@@ -101,6 +102,50 @@ const analyzeTrendingTopics = async (): Promise<void> => {
   if (!response.ok) {
     throw new Error(`HTTP error! status: ${response.status}`);
   }
+};
+
+// Breaking News API functions
+const fetchBreakingNews = async (): Promise<BreakingNewsStory[]> => {
+  console.log('fetchBreakingNews called');
+  try {
+    const response = await fetch('/api/admin/breaking-news');
+    console.log('fetchBreakingNews response status:', response.status);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const data = await response.json();
+    console.log('Fetched breaking news from API:', data.stories?.length || 0);
+    return data.stories || [];
+  } catch (error) {
+    console.log('Error fetching breaking news, using empty array:', error);
+    return [];
+  }
+};
+
+const createBreakingNews = async (story: Omit<BreakingNewsStory, 'id' | 'createdAt' | 'updatedAt'>): Promise<BreakingNewsStory> => {
+  const response = await fetch('/api/admin/breaking-news', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(story),
+  });
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+  const data = await response.json();
+  return data.story;
+};
+
+const generatePollContext = async (storyId: string): Promise<PollContext> => {
+  const response = await fetch(`/api/admin/breaking-news/${storyId}/poll-context`, {
+    method: 'POST',
+  });
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+  const data = await response.json();
+  return data.pollContext;
 };
 
 // Custom hooks
@@ -294,6 +339,67 @@ export const useAnalyzeTrendingTopics = () => {
         type: 'error',
         title: 'Analysis Failed',
         message: 'Failed to analyze trending topics.',
+      });
+    },
+  });
+};
+
+// Breaking News hooks
+export const useBreakingNews = () => {
+  const queryClient = useQueryClient();
+
+  const query = useQuery({
+    queryKey: ['breaking-news'],
+    queryFn: fetchBreakingNews,
+    refetchInterval: 30000, // 30 seconds
+  });
+
+  return query;
+};
+
+export const useCreateBreakingNews = () => {
+  const queryClient = useQueryClient();
+  const { addNotification } = useAdminStore();
+
+  return useMutation({
+    mutationFn: createBreakingNews,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['breaking-news'] });
+      addNotification({
+        type: 'success',
+        title: 'Story Created',
+        message: 'Breaking news story has been created successfully.',
+      });
+    },
+    onError: (error) => {
+      addNotification({
+        type: 'error',
+        title: 'Creation Failed',
+        message: 'Failed to create breaking news story.',
+      });
+    },
+  });
+};
+
+export const useGeneratePollContext = () => {
+  const queryClient = useQueryClient();
+  const { addNotification } = useAdminStore();
+
+  return useMutation({
+    mutationFn: generatePollContext,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['breaking-news'] });
+      addNotification({
+        type: 'success',
+        title: 'Poll Context Generated',
+        message: 'Poll context has been generated successfully.',
+      });
+    },
+    onError: (error) => {
+      addNotification({
+        type: 'error',
+        title: 'Generation Failed',
+        message: 'Failed to generate poll context.',
       });
     },
   });
