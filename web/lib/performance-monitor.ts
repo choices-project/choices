@@ -191,7 +191,10 @@ export class PerformanceMonitor {
       observer.observe({ type, buffered: true })
       this.observers.set(type, observer)
     } catch (error) {
-      devLog(`PerformanceObserver for ${type} not supported:`, error)
+      if (process.env.NODE_ENV === 'development') {
+        // eslint-disable-next-line no-console
+        console.error(`PerformanceObserver for ${type} not supported:`, error)
+      }
     }
   }
 
@@ -286,8 +289,11 @@ export class PerformanceMonitor {
         this.alerts = this.alerts.slice(-50)
       }
 
-      // Log alert
-      devLog(`Performance Alert: ${message}`)
+      // Log alert (dev only)
+      if (process.env.NODE_ENV === 'development') {
+        // eslint-disable-next-line no-console
+        console.warn(`Performance Alert: ${message}`)
+      }
     }
   }
 

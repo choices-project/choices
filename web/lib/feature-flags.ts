@@ -317,7 +317,10 @@ export class FeatureFlagManager {
       try {
         listener(new Map(this.flags));
       } catch (error) {
-        devLog('Error in feature flag listener:', error);
+        if (process.env.NODE_ENV === 'development') {
+          // eslint-disable-next-line no-console
+          console.error('Error in feature flag listener:', error);
+        }
       }
     });
   }

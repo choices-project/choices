@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Vote, ArrowRight, CheckCircle } from 'lucide-react'
+import { Vote, ArrowRight, CheckCircle, Shield, Users, Lock } from 'lucide-react'
 import Link from 'next/link'
 
 export default function Home() {
