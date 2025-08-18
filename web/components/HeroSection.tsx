@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { 
   Vote, 
@@ -11,8 +11,37 @@ import {
   CheckCircle2,
   Globe,
   Zap,
-  Lock
+  Lock,
+  TrendingDown,
+  Activity
 } from 'lucide-react';
+import { devLog } from '@/lib/logger';
+
+interface TrendingTopic {
+  id: string;
+  title: string;
+  description: string;
+  trendingScore: number;
+  velocity: number;
+  momentum: number;
+  sentimentScore: number;
+  category: string[];
+  sourceName: string;
+  metadata: {
+    engagement: string;
+    controversy: string;
+  };
+}
+
+interface Poll {
+  poll_id: string;
+  title: string;
+  total_votes: number;
+  participation_rate: number;
+  aggregated_results: Record<string, number>;
+  status: string;
+  created_at: string;
+}
 
 interface HeroSectionProps {
   isAuthenticated?: boolean;
@@ -27,6 +56,68 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
   isAuthenticated = false,
   userStats
 }) => {
+  const [trendingPoll, setTrendingPoll] = useState<{
+    title: string;
+    description: string;
+    totalVotes: number;
+    options: Array<{ text: string; votes: number; color: string }>;
+    trendingScore: number;
+    source: string;
+    category: string[];
+  } | null>(null);
+  const [isLoadingTrending, setIsLoadingTrending] = useState(true);
+
+  // Fetch trending polls
+  useEffect(() => {
+    const fetchTrendingPoll = async () => {
+      try {
+        setIsLoadingTrending(true);
+        
+        // Fetch trending polls from our new API
+        const response = await fetch('/api/trending-polls');
+        const data = await response.json();
+        
+        if (data.success && data.trendingPolls.length > 0) {
+          const topTrending = data.trendingPolls[0]; // Get the highest trending score
+          
+          setTrendingPoll({
+            title: topTrending.title,
+            description: topTrending.description,
+            totalVotes: topTrending.totalVotes,
+            options: topTrending.options,
+            trendingScore: topTrending.trendingScore,
+            source: topTrending.source,
+            category: topTrending.category
+          });
+        }
+      } catch (error) {
+        devLog('Error fetching trending poll:', error);
+        // Fallback to default poll
+        setTrendingPoll({
+          title: "Climate Action Priorities 2024",
+          description: "Help us determine the most important climate action initiatives for the coming year.",
+          totalVotes: 2847,
+          options: [
+            { text: 'Renewable Energy Investment', votes: 45, color: 'bg-green-500' },
+            { text: 'Carbon Tax Implementation', votes: 23, color: 'bg-blue-500' },
+            { text: 'Electric Vehicle Infrastructure', votes: 18, color: 'bg-purple-500' },
+            { text: 'Green Building Standards', votes: 9, color: 'bg-yellow-500' },
+            { text: 'Public Transportation', votes: 5, color: 'bg-red-500' }
+          ],
+          trendingScore: 85,
+          source: "Environmental Coalition",
+          category: ["Environment", "Policy"]
+        });
+      } finally {
+        setIsLoadingTrending(false);
+      }
+    };
+
+    fetchTrendingPoll();
+  }, []);
+
+
+
   const features = [
     {
       icon: <Shield className="w-6 h-6" />,
@@ -170,8 +261,12 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                     <Vote className="w-5 h-5 text-blue-600" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-900">Climate Action 2024</h3>
-                    <p className="text-sm text-gray-500">Active • 2,847 votes</p>
+                    <h3 className="font-semibold text-gray-900">
+                      {isLoadingTrending ? 'Loading trending poll...' : trendingPoll?.title || 'Climate Action 2024'}
+                    </h3>
+                    <p className="text-sm text-gray-500">
+                      Active • {trendingPoll?.totalVotes.toLocaleString() || '2,847'} votes
+                    </p>
                   </div>
                 </div>
                 <div className="flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">
@@ -180,28 +275,56 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 </div>
               </div>
 
+              {/* Trending Badge */}
+              {trendingPoll && (
+                <div className="mb-4">
+                  <div className="inline-flex items-center gap-1 px-2 py-1 bg-orange-100 text-orange-700 rounded-full text-xs font-medium">
+                    <TrendingUp className="w-3 h-3" />
+                    Trending #{trendingPoll.trendingScore}
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Source: {trendingPoll.source} • {trendingPoll.category.join(', ')}
+                  </p>
+                </div>
+              )}
+
               {/* Options */}
               <div className="space-y-3 mb-6">
-                {[
-                  { text: 'Renewable Energy Investment', votes: 45, color: 'bg-green-500' },
-                  { text: 'Carbon Tax Implementation', votes: 23, color: 'bg-blue-500' },
-                  { text: 'Electric Vehicle Infrastructure', votes: 18, color: 'bg-purple-500' },
-                  { text: 'Green Building Standards', votes: 9, color: 'bg-yellow-500' },
-                  { text: 'Public Transportation', votes: 5, color: 'bg-red-500' }
-                ].map((option, index) => (
-                  <div key={index} className="relative">
-                    <div className="flex items-center justify-between text-sm mb-1">
-                      <span className="text-gray-700">{option.text}</span>
-                      <span className="text-gray-500">{option.votes}%</span>
+                {isLoadingTrending ? (
+                  // Loading skeleton
+                  Array.from({ length: 5 }).map((_, index) => (
+                    <div key={index} className="animate-pulse">
+                      <div className="flex items-center justify-between text-sm mb-1">
+                        <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                        <div className="h-4 bg-gray-200 rounded w-8"></div>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div className="bg-gray-300 h-2 rounded-full" style={{ width: `${Math.random() * 100}%` }}></div>
+                      </div>
                     </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div
-                        className={`h-2 rounded-full transition-all duration-1000 ${option.color}`}
-                        style={{ width: `${option.votes}%` }}
-                      />
+                  ))
+                ) : (
+                  (trendingPoll?.options || [
+                    { text: 'Renewable Energy Investment', votes: 45, color: 'bg-green-500' },
+                    { text: 'Carbon Tax Implementation', votes: 23, color: 'bg-blue-500' },
+                    { text: 'Electric Vehicle Infrastructure', votes: 18, color: 'bg-purple-500' },
+                    { text: 'Green Building Standards', votes: 9, color: 'bg-yellow-500' },
+                    { text: 'Public Transportation', votes: 5, color: 'bg-red-500' }
+                  ]).map((option, index) => (
+                    <div key={index} className="relative">
+                      <div className="flex items-center justify-between text-sm mb-1">
+                        <span className="text-gray-700">{option.text}</span>
+                        <span className="text-gray-500">{option.votes}%</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div
+                          className={`h-2 rounded-full transition-all duration-1000 ${option.color}`}
+                          style={{ width: `${option.votes}%` }}
+                        />
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
 
               {/* Action Button */}
@@ -229,7 +352,9 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             <div className="absolute -bottom-4 -right-4 bg-green-100 rounded-lg p-3 shadow-lg">
               <div className="flex items-center gap-2">
                 <Users className="w-5 h-5 text-green-600" />
-                <span className="text-sm font-medium text-green-700">2.8k votes</span>
+                <span className="text-sm font-medium text-green-700">
+                  {trendingPoll?.totalVotes.toLocaleString() || '2.8k'} votes
+                </span>
               </div>
             </div>
           </div>
