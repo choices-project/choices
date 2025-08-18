@@ -11,6 +11,7 @@
  */
 
 import { isFeatureEnabled } from '../../lib/feature-flags'
+import { devLog } from '@/lib/logger';
 
 // Core privacy components
 export { DifferentialPrivacy, PrivacyBudgetManager, PrivateAnalytics } from './differential-privacy'
@@ -39,7 +40,7 @@ export const isAdvancedPrivacyEnabled = (): boolean => {
 // Initialize privacy module
 export const initializePrivacyModule = async (): Promise<boolean> => {
   if (!isAdvancedPrivacyEnabled()) {
-    console.log('Advanced privacy features are disabled')
+    devLog('Advanced privacy features are disabled')
     return false
   }
 
@@ -56,10 +57,10 @@ export const initializePrivacyModule = async (): Promise<boolean> => {
     const auditor = new PrivacyAuditor()
     await auditor.initialize()
     
-    console.log('Advanced privacy module initialized successfully')
+    devLog('Advanced privacy module initialized successfully')
     return true
   } catch (error) {
-    console.error('Failed to initialize privacy module:', error)
+    devLog('Failed to initialize privacy module:', error)
     return false
   }
 }

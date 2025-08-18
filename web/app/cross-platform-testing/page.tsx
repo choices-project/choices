@@ -51,7 +51,7 @@ import { useTestingUtils } from '../../hooks/useTestingUtils'
 import type { PlatformTestSuite, TestResult, DeviceInfo, BrowserInfo } from '../../lib/cross-platform-testing'
 
 export default function CrossPlatformTestingPage() {
-  const { utils: testingUtils, loading: utilsLoading, error: utilsError } = useTestingUtils()
+  const {  } = useTestingUtils()
   const [isRunningTests, setIsRunningTests] = useState(false)
   const [testSuites, setTestSuites] = useState<PlatformTestSuite[]>([])
   const [comprehensiveReport, setComprehensiveReport] = useState<any>(null)

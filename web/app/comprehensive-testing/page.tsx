@@ -49,7 +49,7 @@ import { useTestingUtils } from '../../hooks/useTestingUtils'
 import type { ComprehensiveReport, ComprehensiveTestResult } from '../../lib/comprehensive-testing-runner'
 
 export default function ComprehensiveTestingPage() {
-  const { utils: testingUtils, loading: utilsLoading, error: utilsError } = useTestingUtils()
+  const {  } = useTestingUtils()
   const [isRunningTests, setIsRunningTests] = useState(false)
   const [report, setReport] = useState<ComprehensiveReport | null>(null)
   const [activeTab, setActiveTab] = useState('overview')

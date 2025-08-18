@@ -193,7 +193,7 @@ export class PerformanceMonitor {
     } catch (error) {
       if (process.env.NODE_ENV === 'development') {
         // eslint-disable-next-line no-console
-        console.error(`PerformanceObserver for ${type} not supported:`, error)
+        devLog(`PerformanceObserver for ${type} not supported:`, error)
       }
     }
   }
@@ -292,7 +292,7 @@ export class PerformanceMonitor {
       // Log alert (dev only)
       if (process.env.NODE_ENV === 'development') {
         // eslint-disable-next-line no-console
-        console.warn(`Performance Alert: ${message}`)
+        devLog(`Performance Alert: ${message}`)
       }
     }
   }

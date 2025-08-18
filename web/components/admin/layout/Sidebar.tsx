@@ -49,7 +49,7 @@ const navigationItems = [
 export const Sidebar: React.FC = () => {
   const pathname = usePathname();
   const { sidebarCollapsed, toggleSidebar } = useAdminStore();
-  const { data: metrics } = useSystemMetrics();
+  const {  } = useSystemMetrics();
 
   return (
     <>

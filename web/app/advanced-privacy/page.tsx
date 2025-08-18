@@ -18,8 +18,8 @@ import { usePrivacyUtils } from '../../hooks/usePrivacyUtils'
 import { usePWAUtils } from '../../hooks/usePWAUtils'
 
 export default function AdvancedPrivacyPage() {
-  const { utils: privacyUtils, loading: privacyLoading } = usePrivacyUtils()
-  const { utils: pwaUtils, loading: pwaLoading } = usePWAUtils()
+  const {  } = usePrivacyUtils()
+  const {  } = usePWAUtils()
   const [activeTab, setActiveTab] = useState('overview')
   const [zkProofs, setZkProofs] = useState<any[]>([])
   const [privacyBudget, setPrivacyBudget] = useState<any>(null)

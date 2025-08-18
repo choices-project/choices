@@ -40,10 +40,10 @@ export class HybridVotingService {
    * Validate vote request based on privacy level
    */
   async validateVoteRequest(request: VoteRequest): Promise<VoteValidation> {
-    const { pollId, privacyLevel, userId } = request;
+    const { pollId, userId } = request;
     
     // Get poll privacy settings
-    const { data: pollSettings, error: pollError } = await this.supabase
+    const { error: pollError } = await this.supabase
       .rpc('get_poll_privacy_settings', { poll_id_param: pollId })
       .single();
 
@@ -88,7 +88,7 @@ export class HybridVotingService {
    */
   async submitVote(request: VoteRequest): Promise<VoteResponse> {
     const startTime = Date.now();
-    const { pollId, choice, privacyLevel, userId } = request;
+    const { pollId, choice, userId } = request;
 
     // Validate request
     const validation = await this.validateVoteRequest(request);
@@ -132,7 +132,7 @@ export class HybridVotingService {
     const { pollId, choice } = request;
 
     // Simple vote insertion
-    const { data: vote, error } = await this.supabase
+    const { error } = await this.supabase
       .from('po_votes')
       .insert({
         poll_id: pollId,
@@ -179,7 +179,7 @@ export class HybridVotingService {
     }
 
     // Check if user has already voted
-    const { data: existingVote } = await this.supabase
+    const {  } = await this.supabase
       .from('po_votes')
       .select('id')
       .eq('poll_id', pollId)
@@ -191,7 +191,7 @@ export class HybridVotingService {
     }
 
     // Private vote insertion with user tracking
-    const { data: vote, error } = await this.supabase
+    const { error } = await this.supabase
       .from('po_votes')
       .insert({
         poll_id: pollId,

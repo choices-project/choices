@@ -2,7 +2,7 @@
 
 import { useEffect, useCallback, useState } from 'react'
 import { devLog } from '@/lib/logger';
-import { getAuthService, User, LoginCredentials, RegisterData, AuthError } from '../lib/auth'
+import { getAuthService, User, AuthError } from '../lib/auth'
 
 export interface AuthState {
   user: User | null

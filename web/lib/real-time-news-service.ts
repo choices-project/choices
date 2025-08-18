@@ -527,7 +527,7 @@ export class RealTimeNewsService {
   }
 
   private analyzeStoryForPollContext(story: BreakingNewsStory): PollContext {
-    const { headline, summary, entities, metadata } = story;
+    const { entities, metadata } = story;
     
     // Generate poll question based on story content
     const question = this.generatePollQuestion(headline, summary);
@@ -573,7 +573,7 @@ export class RealTimeNewsService {
   }
 
   private generateContext(story: BreakingNewsStory): string {
-    const { headline, summary, metadata } = story;
+    const { metadata } = story;
     
     return `This breaking news story involves ${metadata.geographicScope} implications and has generated significant public interest. The situation is ${metadata.timeSensitivity} priority and could have lasting political impact.`;
   }

@@ -104,7 +104,7 @@ export function FeatureWrapperBatch({
   className,
   style
 }: FeatureWrapperBatchProps): React.ReactElement | null {
-  const { enabled, allEnabled, anyEnabled: anyEnabledResult, loading } = useFeatureFlagsBatch(features);
+  const { enabled, anyEnabled: anyEnabledResult, loading } = useFeatureFlagsBatch(features);
 
   // Show loading state if requested and loading
   if (showLoading && loading) {
@@ -247,7 +247,7 @@ export function withFeatureFlagsBatch<P extends object>(
   anyEnabled = false
 ) {
   return function WithFeatureFlagsBatchComponent(props: P): React.ReactElement | null {
-    const { allEnabled, anyEnabled: anyEnabledResult, loading } = useFeatureFlagsBatch(features);
+    const { anyEnabled: anyEnabledResult, loading } = useFeatureFlagsBatch(features);
 
     if (loading) {
       return <div>Loading...</div>;

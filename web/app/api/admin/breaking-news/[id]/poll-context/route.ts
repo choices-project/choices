@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server'
 import { devLog } from '@/lib/logger';
 import { createClient } from '@/utils/supabase/server';
 import { cookies } from 'next/headers';
@@ -32,7 +32,7 @@ export async function POST(
     }
 
     // Check admin permissions - RESTRICTED TO OWNER ONLY
-    const { data: userProfile } = await supabase
+    const {  } = await supabase
       .from('ia_users')
       .select('verification_tier')
       .eq('stable_id', user.id)
@@ -74,7 +74,7 @@ export async function POST(
     }
 
     // Store the poll context in the database
-    const { data: contextData, error: contextError } = await supabase
+    const {  } = await supabase
       .from('poll_contexts')
       .insert([{
         story_id: storyId,
@@ -152,7 +152,7 @@ export async function GET(
     }
 
     // Check admin permissions
-    const { data: userProfile } = await supabase
+    const {  } = await supabase
       .from('ia_users')
       .select('verification_tier')
       .eq('stable_id', user.id)
@@ -174,7 +174,7 @@ export async function GET(
     }
 
     // Get existing poll context
-    const { data: contextData, error: contextError } = await supabase
+    const {  } = await supabase
       .from('poll_contexts')
       .select('*')
       .eq('story_id', storyId)

@@ -7,6 +7,7 @@
  */
 
 import { isFeatureEnabled } from '../../lib/feature-flags'
+import { devLog } from '@/lib/logger';
 import { DifferentialPrivacy, PrivacyBudgetManager, PrivateAnalytics } from './differential-privacy'
 import { ZeroKnowledgeProofs, ZKProofManager } from './zero-knowledge-proofs'
 
@@ -71,7 +72,7 @@ export class PrivacyBridge {
   async initialize(): Promise<boolean> {
     try {
       if (this.config.enableLogging) {
-        console.log('Initializing Privacy Bridge...')
+        devLog('Initializing Privacy Bridge...')
       }
 
       // Check if advanced privacy is enabled
@@ -81,7 +82,7 @@ export class PrivacyBridge {
 
       if (!privacyEnabled) {
         if (this.config.enableLogging) {
-          console.log('Advanced privacy features are disabled')
+          devLog('Advanced privacy features are disabled')
         }
         this.status.initialized = true
         return true
@@ -98,12 +99,12 @@ export class PrivacyBridge {
       this.status.initialized = true
 
       if (this.config.enableLogging) {
-        console.log('Privacy Bridge initialized successfully')
+        devLog('Privacy Bridge initialized successfully')
       }
 
       return true
     } catch (error) {
-      console.error('Failed to initialize Privacy Bridge:', error)
+      devLog('Failed to initialize Privacy Bridge:', error)
       return false
     }
   }
@@ -156,10 +157,10 @@ export class PrivacyBridge {
       this.status.compatibility.legacySupport = true
 
       if (this.config.enableLogging) {
-        console.log('Backward compatibility layer initialized')
+        devLog('Backward compatibility layer initialized')
       }
     } catch (error) {
-      console.warn('Failed to set up backward compatibility:', error)
+      devLog('Failed to set up backward compatibility:', error)
     }
   }
 
@@ -234,7 +235,7 @@ export class PrivacyBridge {
           throw new Error(`Unknown analysis type: ${type}`)
       }
     } catch (error) {
-      console.error(`Failed to run ${type} analysis:`, error)
+      devLog(`Failed to run ${type} analysis:`, error)
       return null
     }
   }
@@ -250,7 +251,7 @@ export class PrivacyBridge {
     try {
       return this.zkProofManager.createProof(type, data)
     } catch (error) {
-      console.error(`Failed to create ZK proof of type ${type}:`, error)
+      devLog(`Failed to create ZK proof of type ${type}:`, error)
       return null
     }
   }
@@ -266,7 +267,7 @@ export class PrivacyBridge {
     try {
       return this.zkProofManager.verifyProof(proofId)
     } catch (error) {
-      console.error(`Failed to verify ZK proof ${proofId}:`, error)
+      devLog(`Failed to verify ZK proof ${proofId}:`, error)
       return null
     }
   }
@@ -282,7 +283,7 @@ export class PrivacyBridge {
     try {
       return this.privacyBudgetManager.useBudget(category, amount)
     } catch (error) {
-      console.error(`Failed to use privacy budget for ${category}:`, error)
+      devLog(`Failed to use privacy budget for ${category}:`, error)
       return false
     }
   }
@@ -298,7 +299,7 @@ export class PrivacyBridge {
     try {
       return this.privacyBudgetManager.getRemainingBudget(category)
     } catch (error) {
-      console.error(`Failed to get remaining privacy budget for ${category}:`, error)
+      devLog(`Failed to get remaining privacy budget for ${category}:`, error)
       return 0
     }
   }
@@ -318,7 +319,7 @@ export class PrivacyBridge {
         this.privacyBudgetManager.resetAllBudgets()
       }
     } catch (error) {
-      console.error('Failed to reset privacy budget:', error)
+      devLog('Failed to reset privacy budget:', error)
     }
   }
 
@@ -329,7 +330,7 @@ export class PrivacyBridge {
     this.config = { ...this.config, ...newConfig }
     
     if (this.config.enableLogging) {
-      console.log('Privacy Bridge configuration updated:', this.config)
+      devLog('Privacy Bridge configuration updated:', this.config)
     }
   }
 
@@ -352,10 +353,10 @@ export class PrivacyBridge {
       this.status.enabled = false
 
       if (this.config.enableLogging) {
-        console.log('Privacy Bridge cleaned up')
+        devLog('Privacy Bridge cleaned up')
       }
     } catch (error) {
-      console.error('Failed to cleanup Privacy Bridge:', error)
+      devLog('Failed to cleanup Privacy Bridge:', error)
     }
   }
 }

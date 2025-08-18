@@ -134,7 +134,7 @@ export const testDatabaseConnection = async () => {
     if (!supabase) return { success: false, error: 'Supabase client not configured' }
     
     try {
-      const { data, error } = await supabase.from('ia_users').select('count').limit(1)
+      const { error } = await supabase.from('ia_users').select('count').limit(1)
       return { success: !error, error: error?.message }
     } catch (error) {
       return { success: false, error: error instanceof Error ? error.message : 'Unknown error' }
