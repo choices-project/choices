@@ -15,8 +15,6 @@ const nextConfig = {
     optimizePackageImports: ['lucide-react', 'framer-motion'],
   },
   
-
-  
   // Disable static generation for problematic pages
   async rewrites() {
     return [
@@ -80,11 +78,13 @@ const nextConfig = {
   }
 }
 
+// Restore PWA with stable configuration
 const config = withPWA({
   dest: 'public',
   register: true,
   skipWaiting: true,
   disable: process.env.NODE_ENV === 'development',
+  buildExcludes: [/middleware-manifest\.json$/],
   runtimeCaching: [
     {
       urlPattern: /^https?.*/,
