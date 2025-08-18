@@ -6,6 +6,7 @@ This folder contains the most frequently used scripts for your development workf
 
 | Script | Purpose | Usage |
 |--------|---------|-------|
+| `ai-new-task.sh` | Provide context for new AI agents | `./ai-new-task.sh "task description"` |
 | `push-and-monitor.sh` | Push code and automatically monitor CI | `./push-and-monitor.sh origin <branch>` |
 | `monitor-ci.sh` | Monitor CI status in real-time | `./monitor-ci.sh` |
 | `safe-run.sh` | Run any script with automatic backup branch | `./safe-run.sh <script> [args]` |
@@ -13,6 +14,39 @@ This folder contains the most frequently used scripts for your development workf
 | `safe-validation.sh` | Safe pre-push validation with backup | `./safe-validation.sh` |
 | `pre-push-validation.sh` | Run all CI checks locally before pushing | `./pre-push-validation.sh` |
 | `cleanup-code.js` | Analyze and fix code quality issues | `node cleanup-code.js [--fix]` |
+
+---
+
+## 🤖 **AI Context & Instructions**
+
+### **ai-new-task.sh** - New Agent Task Instructions
+**What it does:** Provides comprehensive context and guidelines for new AI agents working on tasks.
+
+**Usage:**
+```bash
+./ai-new-task.sh "implement user feedback system"
+./ai-new-task.sh "fix TypeScript errors in auth module"
+./ai-new-task.sh "add new admin dashboard feature"
+```
+
+**What it provides:**
+- ✅ Core principles and working style expectations
+- 🚫 Red flags and what to avoid
+- 🏗️ Project context and technology stack
+- 📚 Documentation requirements
+- 🔧 Version control requirements
+- 🧪 Testing requirements
+- 💡 Effective approach patterns
+- 🎯 Success metrics
+- 🔧 Available tools and commands
+- 📝 Language to use and avoid
+
+**Perfect for:**
+- Starting new chat sessions with AI agents
+- Ensuring consistent working style
+- Setting proper expectations
+- Providing project context
+- Establishing best practices
 
 ---
 
