@@ -72,7 +72,7 @@ export const FeaturedPolls: React.FC<FeaturedPollsProps> = ({
 
   // Filter and sort polls
   const filteredPolls = useMemo(() => {
-    let filtered = polls.filter(poll => {
+    const filtered = polls.filter(poll => {
       // Search filter
       const matchesSearch = searchQuery === '' || 
         poll.title.toLowerCase().includes(searchQuery.toLowerCase()) ||

@@ -115,22 +115,22 @@ async function getUserStats(supabase: any, userId: string) {
 async function getPlatformStats(supabase: any) {
   try {
     // Get total polls
-    const { data: totalPolls, error: pollsError } = await supabase
+    const { data: totalPolls } = await supabase
       .from('po_polls')
       .select('id', { count: 'exact' })
 
     // Get total votes
-    const { data: totalVotes, error: votesError } = await supabase
+    const { data: totalVotes } = await supabase
       .from('po_votes')
       .select('id', { count: 'exact' })
 
     // Get total users (from user_profiles)
-    const { data: totalUsers, error: usersError } = await supabase
+    const { data: totalUsers } = await supabase
       .from('user_profiles')
       .select('id', { count: 'exact' })
 
     // Get active polls
-    const { data: activePolls, error: activeError } = await supabase
+    const { data: activePolls } = await supabase
       .from('po_polls')
       .select('id')
       .eq('status', 'active')

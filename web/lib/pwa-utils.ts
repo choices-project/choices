@@ -435,7 +435,7 @@ export class PrivacyStorage {
   // Get or create crypto key
   private async getOrCreateKey(): Promise<CryptoKey> {
     const keyName = 'pwa-encryption-key';
-    let key = await crypto.subtle.importKey(
+    const key = await crypto.subtle.importKey(
       'raw',
       new TextEncoder().encode(keyName),
       { name: 'AES-GCM' },

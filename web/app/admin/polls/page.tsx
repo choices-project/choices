@@ -24,6 +24,7 @@ import {
   Globe,
   Settings
 } from 'lucide-react';
+import { devLog } from '@/lib/logger';
 
 interface Poll {
   id: string;
@@ -189,7 +190,7 @@ export default function PollsManagementPage() {
 
   const handleBulkAction = (action: 'activate' | 'deactivate' | 'archive' | 'delete' | 'feature') => {
     // Implement bulk actions
-    console.log(`Bulk action: ${action}`, selectedPolls);
+    devLog(`Bulk action: ${action}`, selectedPolls);
     setSelectedPolls([]);
   };
 
