@@ -3,6 +3,7 @@
 import React from 'react';
 import { useAnalytics } from '../../hooks/useAnalytics';
 import { isFeatureEnabled } from '../../lib/feature-flags';
+import { devLog } from '@/lib/logger';
 
 export default function AnalyticsTestPage() {
   const {
@@ -19,7 +20,7 @@ export default function AnalyticsTestPage() {
   });
 
   const handleTestFetch = async (type: string) => {
-    console.log(`Testing analytics fetch for type: ${type}`);
+    devLog(`Testing analytics fetch for type: ${type}`);
     await fetchData(type);
   };
 

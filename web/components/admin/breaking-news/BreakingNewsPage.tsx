@@ -21,6 +21,7 @@ import {
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ChartWrapper, ChartSkeleton } from '../charts/BasicCharts';
 import { useBreakingNews, useGeneratePollContext } from '../../../lib/admin-hooks';
+import { devLog } from '@/lib/logger';
 
 // Mock data for development
 const mockBreakingNews = [
@@ -181,7 +182,7 @@ export const BreakingNewsPage: React.FC = () => {
     setSelectedStory(story);
     generatePollContext.mutate(story.id, {
       onSuccess: (data) => {
-        console.log('Poll context generated successfully:', data);
+        devLog('Poll context generated successfully:', data);
         setShowPollContext(true);
       },
       onError: (error) => {

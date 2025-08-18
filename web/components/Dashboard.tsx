@@ -27,6 +27,7 @@ import {
   Monitor,
   Tablet
 } from 'lucide-react';
+import { devLog } from '@/lib/logger';
 
 interface DashboardData {
   polls: PollSummary[];
@@ -143,9 +144,9 @@ export default function Dashboard() {
   const fetchDashboardData = useCallback(async () => {
     try {
       setLoading(true);
-      console.log('Fetching dashboard data...');
+      devLog('Fetching dashboard data...');
       const data = await poApi.getDashboardData();
-      console.log('Dashboard data received:', data);
+      devLog('Dashboard data received:', data);
       setDashboardData(data);
       setLastUpdated(new Date());
       setError(null);

@@ -18,6 +18,7 @@ import {
 } from 'lucide-react'
 import { useFeatureFlag } from '../hooks/useFeatureFlags'
 import { usePWAUtils } from '../hooks/usePWAUtils'
+import { devLog } from '@/lib/logger';
 
 interface Poll {
   id: string
@@ -87,7 +88,7 @@ export function PWAVotingInterface({
         pwaUtils.pwaAnalytics.trackOfflineAction()
         pwaUtils.pwaAnalytics.trackFeatureUsage('offline_vote')
         
-        console.log('PWA: Vote stored offline')
+        devLog('PWA: Vote stored offline')
       }
 
       // Call the parent vote handler
