@@ -47,7 +47,7 @@ interface Poll {
 }
 
 export default function PWAAppPage() {
-  const {  } = usePWAUtils()
+  const { utils: pwaUtils, loading: utilsLoading, error: utilsError } = usePWAUtils()
   const [currentUser, setCurrentUser] = useState<PWAUser | null>(null)
   const [isOnline, setIsOnline] = useState(false)
   const [activeTab, setActiveTab] = useState('polls')
