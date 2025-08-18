@@ -1,7 +1,8 @@
 # 🎯 Best Practices Guide
 
-**Last Updated**: 2025-01-27  
-**Status**: ✅ **Implemented and Active**
+**Last Updated**: 2025-08-18  
+**Status**: ✅ **Implemented and Active**  
+**Recent Updates**: ✅ **Feedback System Database Fixes Applied**
 
 ## 📋 **Overview**
 
@@ -101,6 +102,48 @@ web/
 └── app/
     ├── api/              # API routes
     └── ...
+```
+
+## 🗄️ **Database Best Practices**
+
+### **✅ Implemented: Schema Management**
+```sql
+-- Always use IF NOT EXISTS for safety
+ALTER TABLE feedback ADD COLUMN IF NOT EXISTS title TEXT;
+
+-- Use proper constraints
+ALTER TABLE feedback ADD CONSTRAINT feedback_type_check 
+  CHECK (type IN ('bug', 'feature', 'general'));
+
+-- Create performance indexes
+CREATE INDEX IF NOT EXISTS idx_feedback_type ON feedback(type);
+
+-- Enable RLS for security
+ALTER TABLE feedback ENABLE ROW LEVEL SECURITY;
+```
+
+### **✅ Implemented: Service Role Access**
+```javascript
+// Use service role key for admin operations
+const supabase = createClient(supabaseUrl, supabaseServiceKey, {
+  auth: { autoRefreshToken: false, persistSession: false }
+});
+
+// Programmatic schema management
+const { error } = await supabase.rpc('exec_sql', { 
+  sql: 'ALTER TABLE feedback ADD COLUMN IF NOT EXISTS title TEXT;' 
+});
+```
+
+### **✅ Implemented: Schema Cache Management**
+```javascript
+// Refresh schema cache after changes
+const { error } = await supabase.rpc('exec_sql', { 
+  sql: 'NOTIFY pgrst, \'reload schema\';' 
+});
+
+// Wait for cache refresh
+await new Promise(resolve => setTimeout(resolve, 5000));
 ```
 
 ## 🚀 **Performance Best Practices**
