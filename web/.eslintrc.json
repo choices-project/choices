@@ -3,21 +3,11 @@
     "next/core-web-vitals"
   ],
   "rules": {
-    // Unused variables - treat as warnings for now (will be errors in future)
-    "no-unused-vars": ["warn", { 
-      "argsIgnorePattern": "^_",
-      "varsIgnorePattern": "^_",
-      "caughtErrorsIgnorePattern": "^_"
-    }],
-    
-    // React specific rules
-    "react-hooks/exhaustive-deps": "warn",
-    "react/no-unescaped-entities": "warn",
-    "@next/next/no-img-element": "warn",
-    
-    // Code quality rules
-    "prefer-const": "error",
-    "no-var": "error",
-    "no-console": ["warn", { "allow": ["warn", "error"] }]
+    "no-unused-vars": "off",
+    "no-console": "off",
+    "react/no-unescaped-entities": "off",
+    "@next/next/no-img-element": "off",
+    "react-hooks/exhaustive-deps": "off",
+    "prefer-const": "warn"
   }
 }

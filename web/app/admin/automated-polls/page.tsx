@@ -5,14 +5,10 @@ import {
   TrendingUp, 
   Play, 
   CheckCircle, 
-  XCircle, 
   AlertTriangle,
   RefreshCw,
   Eye,
-  Settings,
   BarChart3,
-  Users,
-  Calendar,
   Zap
 } from 'lucide-react';
 

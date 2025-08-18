@@ -2,10 +2,9 @@
 
 import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { 
   ArrowLeft, 
-  Save, 
   User, 
   Lock, 
   Shield, 
@@ -33,7 +32,6 @@ export default function AccountSettingsPage() {
     twoFactorEnabled: false
   })
   const [isLoading, setIsLoading] = useState(true)
-  const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
 
@@ -65,19 +63,7 @@ export default function AccountSettingsPage() {
   const [forgotPasswordEmail, setForgotPasswordEmail] = useState('')
   const [isRequestingReset, setIsRequestingReset] = useState(false)
 
-  useEffect(() => {
-    if (!loading && !user) {
-      router.push('/login?redirectTo=/account-settings')
-    }
-  }, [user, loading, router])
-
-  useEffect(() => {
-    if (user) {
-      loadAccountSettings()
-    }
-  }, [user])
-
-  const loadAccountSettings = async () => {
+  const loadAccountSettings = useCallback(async () => {
     try {
       setIsLoading(true)
       // Load user data from auth context
@@ -92,7 +78,19 @@ export default function AccountSettingsPage() {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [user])
+
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push('/login?redirectTo=/account-settings')
+    }
+  }, [user, loading, router])
+
+  useEffect(() => {
+    if (user) {
+      loadAccountSettings()
+    }
+  }, [user, loadAccountSettings])
 
   const handlePasswordChange = async () => {
     if (passwordData.newPassword !== passwordData.confirmPassword) {
