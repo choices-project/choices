@@ -160,11 +160,20 @@ const EnhancedFeedbackWidget: React.FC = () => {
             page: currentUserJourney.currentPage
           })
         }
+
+        // Auto-close after 3 seconds
+        setTimeout(() => {
+          handleClose()
+          setShowSuccess(false)
+        }, 3000)
       } else {
         throw new Error(result.error || 'Failed to submit feedback')
       }
     } catch (error) {
       devLog('Error submitting feedback:', error)
+      // Don't show success state if there was an error
+      setShowSuccess(false)
+      setStep('sentiment') // Go back to previous step
       alert('Failed to submit feedback. Please try again.')
     } finally {
       setIsSubmitting(false)
@@ -392,11 +401,10 @@ const EnhancedFeedbackWidget: React.FC = () => {
                       </p>
                       
                       <button
-                        onClick={handleSubmit}
-                        disabled={isSubmitting}
-                        className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                        onClick={handleClose}
+                        className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
                       >
-                        {isSubmitting ? 'Submitting...' : 'Submit Feedback'}
+                        Close
                       </button>
                     </motion.div>
                   )}
