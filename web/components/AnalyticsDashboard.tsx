@@ -263,9 +263,9 @@ export default function AnalyticsDashboard({
         },
         privacy: {
           dataCollected: pwaMetrics.dataCollected,
-          dataShared: 0, // TODO: Add to PWAMetrics
+          dataShared: pwaMetrics.dataShared || 0,
           anonymizationLevel: pwaMetrics.anonymizationLevel,
-          encryptionEnabled: true, // TODO: Add to PWAMetrics
+          encryptionEnabled: pwaMetrics.encryptionEnabled || true,
           userConsent: {
             granted: 85,
             denied: 10,

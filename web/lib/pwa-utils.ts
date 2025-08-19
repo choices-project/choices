@@ -111,6 +111,45 @@ export class PWAManager {
     if (installButton) {
       installButton.style.display = 'block';
     }
+    
+    // Track install prompt shown
+    if (this.pwaEnabled) {
+      devLog('PWA: Install prompt shown');
+      // You can add analytics tracking here
+    }
+  }
+
+  // Install PWA
+  async installPWA(): Promise<boolean> {
+    if (!this.pwaEnabled) {
+      throw new Error('PWA feature is disabled');
+    }
+
+    if (!this.deferredPrompt) {
+      throw new Error('No install prompt available');
+    }
+
+    try {
+      // Show the install prompt
+      this.deferredPrompt.prompt();
+      
+      // Wait for the user to respond to the prompt
+      const { outcome } = await this.deferredPrompt.userChoice;
+      
+      // Clear the deferred prompt
+      this.deferredPrompt = null;
+      
+      if (outcome === 'accepted') {
+        devLog('PWA: User accepted the install prompt');
+        return true;
+      } else {
+        devLog('PWA: User dismissed the install prompt');
+        return false;
+      }
+    } catch (error) {
+      devLog('PWA: Install failed:', error);
+      throw error;
+    }
   }
 
   // Show PWA update prompt
@@ -130,6 +169,12 @@ export class PWAManager {
   // Handle offline event
   private onOffline() {
     devLog('PWA: Gone offline, enabling offline mode...');
+    
+    // Track offline usage
+    if (this.pwaEnabled) {
+      // You can add analytics tracking here
+      devLog('PWA: Offline mode activated');
+    }
   }
 
   // Sync offline data when back online
@@ -196,6 +241,28 @@ export class PWAManager {
       devLog('PWA: Failed to get offline votes:', error);
       return [];
     }
+  }
+
+  // Check if PWA is installed
+  isPWAInstalled(): boolean {
+    if (typeof window === 'undefined') return false;
+    
+    // Check if running in standalone mode (installed PWA)
+    return window.matchMedia('(display-mode: standalone)').matches ||
+           (window.navigator as any).standalone === true;
+  }
+
+  // Get PWA installation status
+  getInstallationStatus(): {
+    isInstalled: boolean;
+    canInstall: boolean;
+    hasPrompt: boolean;
+  } {
+    return {
+      isInstalled: this.isPWAInstalled(),
+      canInstall: 'beforeinstallprompt' in window,
+      hasPrompt: !!this.deferredPrompt
+    };
   }
 
   // Clear offline votes
