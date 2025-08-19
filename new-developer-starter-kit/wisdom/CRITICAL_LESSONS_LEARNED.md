@@ -245,6 +245,26 @@ These lessons represent the **hardest-won wisdom** from our journey. They're not
 
 **Action**: Commit frequently, use meaningful commit messages, and maintain clean history.
 
+### **16. Import Only What You Need**
+**Lesson**: Only import the specific modules and functions you actually use.
+
+**Why It Matters**:
+- Reduces bundle size
+- Improves performance
+- Prevents unused variable warnings
+- Keeps code clean and maintainable
+- Avoids feature creep and unnecessary complexity
+
+**Our Experience**:
+- **Before**: Importing entire libraries and unused components → Bundle bloat, linting warnings, maintenance overhead
+- **After**: Specific imports only → Cleaner code, better performance, easier maintenance
+
+**Action**: 
+- Import specific functions: `import { useState, useEffect } from 'react'` instead of `import * as React from 'react'`
+- Remove unused imports immediately
+- Use ESLint rules to catch unused imports
+- Review imports regularly during development
+
 ## 🎯 **Critical Success Factors**
 
 ### **What Made Us Successful**
@@ -270,6 +290,7 @@ These lessons represent the **hardest-won wisdom** from our journey. They're not
 8. **Incomplete testing** - We tested thoroughly
 9. **Silent failures** - We handled all errors
 10. **Stagnation** - We improved continuously
+11. **Import bloat** - We imported only what we needed
 
 ## 🏆 **The Bottom Line**
 
