@@ -69,39 +69,52 @@ export default function PollPage() {
   const loadPoll = async () => {
     try {
       setIsLoading(true)
-      // TODO: Replace with actual API call
-      const mockPoll: Poll = {
-        id: pollId,
-        title: 'What should we have for lunch?',
-        description: 'Help us decide where to go for our team lunch today!',
-        votingMethod: 'single',
-        options: [
-          { id: 'pizza', text: 'Pizza', description: 'Classic Italian pizza with various toppings' },
-          { id: 'sushi', text: 'Sushi', description: 'Fresh Japanese sushi and sashimi' },
-          { id: 'tacos', text: 'Tacos', description: 'Authentic Mexican street tacos' },
-          { id: 'salad', text: 'Salad', description: 'Healthy green salad with protein' },
-          { id: 'burger', text: 'Burger', description: 'Juicy gourmet burger with fries' }
-        ],
+      setError(null)
+      
+      // Fetch real poll data from API
+      const response = await fetch(`/api/polls/${pollId}`)
+      
+      if (!response.ok) {
+        if (response.status === 404) {
+          throw new Error('Poll not found')
+        }
+        throw new Error(`Failed to load poll: ${response.statusText}`)
+      }
+      
+      const apiPoll = await response.json()
+      
+      // Transform API response to match frontend Poll interface
+      const poll: Poll = {
+        id: apiPoll.poll_id,
+        title: apiPoll.title,
+        description: apiPoll.description || '',
+        votingMethod: 'single', // Default to single choice
+        options: apiPoll.options?.map((option: any, index: number) => ({
+          id: `option-${index}`,
+          text: option,
+          description: ''
+        })) || [],
         settings: {
-          isPublic: true,
+          isPublic: apiPoll.privacy_level === 'public',
           showResults: true,
           allowComments: true,
           enableRealTimeAnalysis: true
         },
         schedule: {
-          startDate: '2024-12-01',
-          endDate: '2024-12-31'
+          startDate: apiPoll.created_at?.split('T')[0] || '2024-01-01',
+          endDate: '2024-12-31' // Default end date
         },
         stats: {
-          totalVotes: 1247,
-          participationRate: 78,
-          isActive: true
+          totalVotes: apiPoll.total_votes || 0,
+          participationRate: apiPoll.participation_rate || 0,
+          isActive: apiPoll.status === 'active'
         }
       }
       
-      setPoll(mockPoll)
+      setPoll(poll)
     } catch (error) {
-      setError('Failed to load poll')
+      console.error('Error loading poll:', error)
+      setError(error instanceof Error ? error.message : 'Failed to load poll')
     } finally {
       setIsLoading(false)
     }
@@ -111,18 +124,20 @@ export default function PollPage() {
     if (!user) return
     
     try {
-      // TODO: Replace with actual API call
-      // const response = await fetch(`/api/polls/${pollId}/vote`)
-      // if (response.ok) {
-      //   const data = await response.json()
-      //   if (data.hasVoted) {
-      //     setUserVote(data.vote)
-      //     setHasVoted(true)
-      //     setShowResults(true)
-      //   }
-      // }
+      // Check if user has already voted using real API
+      const response = await fetch(`/api/polls/${pollId}/vote`)
+      
+      if (response.ok) {
+        const data = await response.json()
+        if (data.has_voted) {
+          setHasVoted(true)
+          setShowResults(true)
+          // Note: API doesn't return vote details for privacy
+        }
+      }
     } catch (error) {
-      devLog('Error checking user vote:', error)
+      console.error('Error checking user vote:', error)
+      // Don't show error to user for vote check
     }
   }
 
@@ -134,17 +149,38 @@ export default function PollPage() {
 
     setIsVoting(true)
     try {
-      // TODO: Replace with actual API call
-      await new Promise(resolve => setTimeout(resolve, 1000)) // Simulate API call
+      // Submit vote using real API
+      const response = await fetch(`/api/polls/${pollId}/vote`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          choice: voteData.choice,
+          privacy_level: 'public' // Default to public voting
+        }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error || `Failed to submit vote: ${response.statusText}`)
+      }
+
+      const result = await response.json()
       
-      setUserVote(voteData)
-      setHasVoted(true)
-      setShowResults(true)
-      setCurrentView('results')
-      
-      // Refresh poll stats
-      loadPoll()
+      if (result.success) {
+        setUserVote(voteData)
+        setHasVoted(true)
+        setShowResults(true)
+        setCurrentView('results')
+        
+        // Refresh poll stats
+        loadPoll()
+      } else {
+        throw new Error(result.message || 'Failed to submit vote')
+      }
     } catch (error: any) {
+      console.error('Error submitting vote:', error)
       setError(error.message || 'Failed to submit vote')
     } finally {
       setIsVoting(false)
