@@ -393,7 +393,9 @@ class FeedbackTracker {
       // For now, return undefined
       return undefined
     } catch (error) {
-      console.log('Failed to capture screenshot:', error)
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Failed to capture screenshot:', error)
+      }
       return undefined
     }
   }
