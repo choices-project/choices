@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { email, twoFactorEnabled } = await request.json()
+    const { email, password: userPassword, twoFactorEnabled } = await request.json()
 
     // Validate input
     if (!email || !userPassword) {

@@ -60,7 +60,7 @@ export async function GET(request: NextRequest) {
 async function getUserStats(supabase: any, userId: string) {
   try {
     // Get polls created by user
-    const { error: pollsError } = await supabase
+    const { data: createdPolls, error: pollsError } = await supabase
       .from('po_polls')
       .select('id, title, created_at')
       .eq('created_by', userId)
@@ -70,7 +70,7 @@ async function getUserStats(supabase: any, userId: string) {
     }
 
     // Get votes cast by user
-    const { error: votesError } = await supabase
+    const { data: userVotes, error: votesError } = await supabase
       .from('po_votes')
       .select('id, poll_id, created_at')
       .eq('user_id', userId)
@@ -116,22 +116,22 @@ async function getUserStats(supabase: any, userId: string) {
 async function getPlatformStats(supabase: any) {
   try {
     // Get total polls
-    const {  } = await supabase
+    const { data: totalPolls, error: totalPollsError } = await supabase
       .from('po_polls')
       .select('id', { count: 'exact' })
 
     // Get total votes
-    const {  } = await supabase
+    const { data: totalVotes, error: totalVotesError } = await supabase
       .from('po_votes')
       .select('id', { count: 'exact' })
 
     // Get total users (from user_profiles)
-    const {  } = await supabase
+    const { data: totalUsers, error: totalUsersError } = await supabase
       .from('user_profiles')
       .select('id', { count: 'exact' })
 
     // Get active polls
-    const {  } = await supabase
+    const { data: activePolls, error: activePollsError } = await supabase
       .from('po_polls')
       .select('id')
       .eq('status', 'active')
