@@ -31,6 +31,8 @@ export interface PWAMetrics {
   anonymizationLevel: 'none' | 'partial' | 'full';
   dataRetentionDays: number;
   userControlEnabled: boolean;
+  dataShared: number;
+  encryptionEnabled: boolean;
 }
 
 export interface PrivacyReport {
@@ -90,7 +92,9 @@ export class PWAAnalytics {
       dataCollected: 0,
       anonymizationLevel: 'full',
       dataRetentionDays: 7,
-      userControlEnabled: true
+      userControlEnabled: true,
+      dataShared: 0,
+      encryptionEnabled: true
     };
   }
 
@@ -227,6 +231,20 @@ export class PWAAnalytics {
     this.metrics.dataCollected += fields;
   }
 
+  // Track data sharing
+  trackDataSharing(amount: number) {
+    if (!this.pwaEnabled) return;
+
+    this.metrics.dataShared += amount;
+  }
+
+  // Track encryption status
+  setEncryptionEnabled(enabled: boolean) {
+    if (!this.pwaEnabled) return;
+
+    this.metrics.encryptionEnabled = enabled;
+  }
+
   // Get current metrics
   getMetrics(): PWAMetrics {
     // Update session duration
@@ -283,12 +301,16 @@ export class PWAAnalytics {
         sessionDuration: this.metrics.sessionDuration,
         featuresUsedCount: this.metrics.featuresUsed.length,
         offlineActions: this.metrics.offlineActions,
-        dataCollected: this.metrics.dataCollected
+        dataCollected: this.metrics.dataCollected,
+        dataShared: this.metrics.dataShared,
+        encryptionEnabled: this.metrics.encryptionEnabled
       },
       privacy: {
         anonymizationLevel: this.metrics.anonymizationLevel,
         dataRetentionDays: this.metrics.dataRetentionDays,
-        userControlEnabled: this.metrics.userControlEnabled
+        userControlEnabled: this.metrics.userControlEnabled,
+        dataShared: this.metrics.dataShared,
+        encryptionEnabled: this.metrics.encryptionEnabled
       }
     };
   }
