@@ -176,7 +176,7 @@ export class AutomatedPollsService {
     try {
       const { data, error } = await this.supabase
         .from('trending_topics')
-        .select('*')
+        .select('id, topic, score, created_at, updated_at')
         .order('trending_score', { ascending: false })
         .limit(limit);
 
@@ -193,7 +193,7 @@ export class AutomatedPollsService {
     try {
       const { data, error } = await this.supabase
         .from('trending_topics')
-        .select('*')
+        .select('id, topic, score, created_at, updated_at')
         .eq('id', id)
         .single();
 
@@ -249,7 +249,7 @@ export class AutomatedPollsService {
     try {
       let query = this.supabase
         .from('generated_polls')
-        .select('*')
+        .select('id, topic, score, created_at, updated_at')
         .order('created_at', { ascending: false })
         .limit(limit);
 
@@ -272,7 +272,7 @@ export class AutomatedPollsService {
     try {
       const { data, error } = await this.supabase
         .from('generated_polls')
-        .select('*')
+        .select('id, topic, score, created_at, updated_at')
         .eq('id', id)
         .single();
 
@@ -343,7 +343,7 @@ export class AutomatedPollsService {
     try {
       const { data, error } = await this.supabase
         .from('data_sources')
-        .select('*')
+        .select('id, topic, score, created_at, updated_at')
         .eq('is_active', true)
         .order('reliability', { ascending: false });
 
@@ -382,7 +382,7 @@ export class AutomatedPollsService {
     try {
       const { data, error } = await this.supabase
         .from('quality_metrics')
-        .select('*')
+        .select('id, topic, score, created_at, updated_at')
         .eq('poll_id', pollId)
         .single();
 
@@ -420,7 +420,7 @@ export class AutomatedPollsService {
     try {
       const { data, error } = await this.supabase
         .from('system_configuration')
-        .select('*')
+        .select('id, topic, score, created_at, updated_at')
         .eq('key', key)
         .eq('is_active', true)
         .single();
@@ -631,7 +631,7 @@ export class AutomatedPollsService {
       // Get all active data sources
       const { data: dataSources, error: sourcesError } = await this.supabase
         .from('data_sources')
-        .select('*')
+        .select('id, topic, score, created_at, updated_at')
         .eq('is_active', true);
 
       if (sourcesError) throw sourcesError;

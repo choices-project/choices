@@ -124,7 +124,7 @@ export async function GET(request: NextRequest) {
     // Get user profile
     const { data, error } = await supabase
       .from('user_profiles')
-      .select('*')
+      .select('id, user_id, display_name, avatar_url, bio, created_at, updated_at')
       .eq('user_id', user.id)
       .single()
 

@@ -40,7 +40,7 @@ export async function ensureUserSynced(): Promise<UserSyncResult> {
     // Check if user exists in ia_users table
     const { data: existingUser, error: checkError } = await supabase
       .from('ia_users')
-      .select('*')
+      .select('id, email, verification_tier, created_at, updated_at, display_name, avatar_url, bio, stable_id, is_active')
       .eq('stable_id', user.id)
       .single()
 
@@ -115,7 +115,7 @@ export async function getUserFromIaUsers(authUserId: string) {
 
     const { data: result, error } = await supabase
       .from('ia_users')
-      .select('*')
+      .select('id, email, verification_tier, created_at, updated_at, display_name, avatar_url, bio, stable_id, is_active')
       .eq('stable_id', authUserId)
       .single()
 

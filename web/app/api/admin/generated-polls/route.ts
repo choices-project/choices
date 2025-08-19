@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
     // Fetch real data from database
     const { data: polls, error } = await supabase
       .from('generated_polls')
-      .select('*')
+      .select('id, title, description, status, created_at, updated_at')
       .order('created_at', { ascending: false })
       .limit(limit);
 

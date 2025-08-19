@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
     // Fetch feedback items
     let query = supabase
       .from('feedback')
-      .select('*')
+      .select('id, email, verification_tier, created_at, updated_at, display_name, avatar_url, bio, stable_id, is_active')
       .order('created_at', { ascending: false });
 
     if (feedbackIds && feedbackIds.length > 0) {

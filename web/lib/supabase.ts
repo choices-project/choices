@@ -192,7 +192,7 @@ export const supabaseHelpers = {
   async getUserByStableId(stableId: string) {
     const { data, error } = await typedSupabase
       .from('ia_users')
-      .select('*')
+      .select('id, email, verification_tier, created_at, updated_at, display_name, avatar_url, bio, stable_id, is_active')
       .eq('stable_id', stableId)
       .single()
     
@@ -215,7 +215,7 @@ export const supabaseHelpers = {
   async getPolls() {
     const { data, error } = await typedSupabase
       .from('po_polls')
-      .select('*')
+      .select('id, email, verification_tier, created_at, updated_at, display_name, avatar_url, bio, stable_id, is_active')
       .order('created_at', { ascending: false })
     
     if (error) throw error
@@ -225,7 +225,7 @@ export const supabaseHelpers = {
   async getPoll(pollId: string) {
     const { data, error } = await typedSupabase
       .from('po_polls')
-      .select('*')
+      .select('id, email, verification_tier, created_at, updated_at, display_name, avatar_url, bio, stable_id, is_active')
       .eq('poll_id', pollId)
       .single()
     
@@ -248,7 +248,7 @@ export const supabaseHelpers = {
   async getVotesForPoll(pollId: string) {
     const { data, error } = await typedSupabase
       .from('po_votes')
-      .select('*')
+      .select('id, email, verification_tier, created_at, updated_at, display_name, avatar_url, bio, stable_id, is_active')
       .eq('poll_id', pollId)
     
     if (error) throw error

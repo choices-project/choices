@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
       // Get total users
       const { data: users, error: usersError } = await supabase
         .from('ia_users')
-        .select('*')
+        .select('id, email, verification_tier, created_at, updated_at, display_name, avatar_url, bio, stable_id, is_active')
         .eq('is_active', true);
 
       if (usersError) throw usersError;
