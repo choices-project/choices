@@ -265,6 +265,45 @@ These lessons represent the **hardest-won wisdom** from our journey. They're not
 - Use ESLint rules to catch unused imports
 - Review imports regularly during development
 
+### **17. Never Leave Console.log in Production**
+**Lesson**: Remove all console.log statements before deploying to production.
+
+**Why It Matters**:
+- Providers (like Supabase) flag console.log as warnings
+- Affects performance and security
+- Creates noise in production logs
+- Can expose sensitive information
+- Professional code should be clean
+
+**Our Experience**:
+- **Before**: Console.log statements everywhere → Supabase warnings, performance issues, security concerns
+- **After**: Clean production code → No warnings, better performance, professional standards
+
+**Action**: 
+- Use proper logging library for development
+- Remove all console.log before deployment
+- Use ESLint rules to catch console statements
+- Implement proper error handling instead
+
+### **18. Handle useSearchParams with Suspense**
+**Lesson**: Always wrap components using useSearchParams in Suspense boundaries.
+
+**Why It Matters**:
+- Prevents hydration warnings and errors
+- Ensures proper server-side rendering
+- Maintains good user experience
+- Follows Next.js best practices
+
+**Our Experience**:
+- **Before**: Direct useSearchParams usage → Hydration warnings, SSR issues
+- **After**: Proper Suspense boundaries → Clean rendering, no warnings
+
+**Action**: 
+- Wrap useSearchParams components in Suspense
+- Provide fallback UI for loading states
+- Test SSR and hydration thoroughly
+- Follow Next.js App Router patterns
+
 ## 🎯 **Critical Success Factors**
 
 ### **What Made Us Successful**
@@ -291,6 +330,8 @@ These lessons represent the **hardest-won wisdom** from our journey. They're not
 9. **Silent failures** - We handled all errors
 10. **Stagnation** - We improved continuously
 11. **Import bloat** - We imported only what we needed
+12. **Console.log in production** - We removed all console statements
+13. **useSearchParams without Suspense** - We wrapped in proper boundaries
 
 ## 🏆 **The Bottom Line**
 
