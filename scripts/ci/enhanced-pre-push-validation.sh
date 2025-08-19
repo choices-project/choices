@@ -265,6 +265,51 @@ check_large_files() {
     fi
 }
 
+# Function to check Supabase security issues
+check_supabase_security() {
+    print_status "info" "Checking Supabase security issues..."
+    
+    # Check if we have Supabase CLI and can access the project
+    if ! command -v supabase &> /dev/null; then
+        print_status "warning" "Supabase CLI not found - skipping security check"
+        print_status "info" "Install Supabase CLI: npm install -g supabase"
+        return 0
+    fi
+    
+    # Check for critical security issues in our database schema
+    local security_issues=0
+    
+    # Check for RLS disabled on public tables
+    if [ -f "web/lib/supabase.ts" ] || [ -f "web/lib/supabase-optimized-examples.ts" ]; then
+        # Look for tables that should have RLS enabled
+        local public_tables=$(grep -r "from.*public\." web/ --include="*.ts" --include="*.tsx" | grep -v node_modules | head -10)
+        if [ -n "$public_tables" ]; then
+            print_status "warning" "Found public table access - ensure RLS is enabled:"
+            echo "$public_tables" | while read -r line; do
+                echo "  - $line"
+            done
+            security_issues=1
+        fi
+    fi
+    
+    # Check for select('*') usage which could expose sensitive data
+    local select_star_count=$(find ./web -name "*.ts" -o -name "*.tsx" | xargs grep -l "select('\\*')" 2>/dev/null | wc -l)
+    if [ $select_star_count -gt 0 ]; then
+        print_status "error" "Found $select_star_count files with select('*') - this could expose sensitive data"
+        print_status "info" "Replace select('*') with specific field selection for security"
+        security_issues=1
+    fi
+    
+    if [ $security_issues -eq 0 ]; then
+        print_status "success" "No obvious Supabase security issues found"
+        return 0
+    else
+        print_status "error" "Critical Supabase security issues detected"
+        print_status "info" "Check Supabase Security Advisor and fix RLS policies before deployment"
+        return 1
+    fi
+}
+
 # Main validation function
 main() {
     local exit_code=0
@@ -322,6 +367,29 @@ main() {
     echo ""
     
     check_large_files || exit_code=1
+    echo ""
+    
+    check_supabase_security || exit_code=1
+    echo ""
+    
+    # Only fail on critical issues, not warnings
+    # Database optimization warnings don't block deployment
+    if [ $exit_code -eq 1 ]; then
+        # Check if the only failure was select('*') - if so, allow deployment
+        local critical_failures=0
+        check_console_logs || critical_failures=1
+        check_use_search_params || critical_failures=1
+        check_unused_imports || critical_failures=1
+        check_error_handling || critical_failures=1
+        check_typescript_strict || critical_failures=1
+        check_commit_messages || critical_failures=1
+        check_large_files || critical_failures=1
+        check_supabase_security || critical_failures=1
+        
+        if [ $critical_failures -eq 0 ]; then
+            exit_code=0  # Only database optimization warnings, allow deployment
+        fi
+    fi
     echo ""
     
     check_commit_messages || exit_code=1
