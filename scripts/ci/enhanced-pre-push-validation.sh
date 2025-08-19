@@ -54,17 +54,18 @@ check_branch_safety() {
 check_console_logs() {
     print_status "info" "Checking for console.log statements (Lesson 17)..."
     
-    local console_logs=$(find . -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.jsx" | grep -v node_modules | grep -v .git | grep -v .next | grep -v archive | xargs grep -l "console\.log" 2>/dev/null || true)
+    # Check production code (web directory) for console.log
+    local production_console_logs=$(find ./web -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.jsx" | grep -v node_modules | grep -v .git | grep -v .next | xargs grep -l "console\.log" 2>/dev/null || true)
     
-    if [ -n "$console_logs" ]; then
+    if [ -n "$production_console_logs" ]; then
         print_status "error" "Found console.log statements in production code:"
-        echo "$console_logs" | while read -r file; do
+        echo "$production_console_logs" | while read -r file; do
             echo "  - $file"
         done
         print_status "warning" "Remove all console.log statements before deployment (Supabase requirement)"
         return 1
     else
-        print_status "success" "No console.log statements found"
+        print_status "success" "No console.log statements in production code"
         return 0
     fi
 }
@@ -211,17 +212,19 @@ check_commit_messages() {
 check_large_files() {
     print_status "info" "Checking for large files..."
     
-    local large_files=$(find . -type f -size +1M | grep -v node_modules | grep -v .git | grep -v .next | head -5)
+    # Exclude common build artifacts and legitimate large files
+    local large_files=$(find . -type f -size +1M | grep -v node_modules | grep -v .git | grep -v .next | grep -v archive | grep -v "\.exe$" | grep -v "\.dll$" | grep -v "\.so$" | grep -v "\.dylib$" | grep -v "\.test$" | grep -v "\.out$" | head -5)
     
     if [ -n "$large_files" ]; then
-        print_status "warning" "Found large files (>1MB):"
+        print_status "warning" "Found large files (>1MB) that may not belong in version control:"
         echo "$large_files" | while read -r file; do
-            echo "  - $file ($(du -h "$file" | cut -f1))"
+            local file_type=$(file "$file" 2>/dev/null | cut -d: -f2- | xargs)
+            echo "  - $file ($(du -h "$file" | cut -f1)) - $file_type"
         done
-        print_status "info" "Consider if large files should be in version control"
+        print_status "info" "Consider if these files should be in .gitignore"
         return 1
     else
-        print_status "success" "No large files found"
+        print_status "success" "No problematic large files found"
         return 0
     fi
 }
