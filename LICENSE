@@ -1,4 +1,69 @@
-GNU AFFERO GENERAL PUBLIC LICENSE
-Version 3, 19 November 2007
+MIT License
 
-<shortened for starter scaffold; replace with full text before production>
+Copyright (c) 2024 Choices Platform
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+---
+
+## Additional Terms for Biometric Authentication
+
+### Biometric Data Protection
+This software includes biometric authentication features. By using these features, you acknowledge and agree that:
+
+1. **Data Privacy**: Biometric data never leaves your device and is processed according to our Privacy Policy
+2. **Consent**: You provide explicit consent for biometric data processing
+3. **Compliance**: Usage complies with applicable privacy laws and regulations
+4. **Security**: Appropriate security measures are implemented to protect biometric data
+
+### Commercial Use
+This software is designed for commercial use. Commercial users must:
+
+1. **License Compliance**: Comply with all license terms and conditions
+2. **Privacy Compliance**: Implement appropriate privacy protections
+3. **Security Standards**: Maintain security standards for biometric data
+4. **Legal Compliance**: Comply with applicable laws and regulations
+
+### Third-Party Components
+This software includes third-party components with their own licenses:
+
+- **WebAuthn**: Web Authentication standard implementation
+- **Supabase**: Database and authentication services
+- **Next.js**: React framework
+- **React**: User interface library
+- **TypeScript**: Programming language
+- **Tailwind CSS**: Styling framework
+
+### Support and Liability
+- **No Warranty**: The software is provided without warranties
+- **Limited Liability**: Liability is limited as specified in our Terms of Service
+- **Support**: Support provided according to our support policies
+- **Updates**: Updates and maintenance provided as available
+
+### Legal Compliance
+Users must comply with:
+
+1. **Privacy Laws**: GDPR, CCPA, BIPA, and other applicable privacy laws
+2. **Biometric Laws**: State and federal biometric privacy laws
+3. **Data Protection**: Appropriate data protection measures
+4. **User Rights**: Respect for user privacy and data rights
+
+---
+
+**For questions about licensing, contact: legal@choices-platform.com**

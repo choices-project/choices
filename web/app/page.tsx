@@ -1,327 +1,378 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { devLog } from '@/lib/logger';
-import HeroSection from '../components/HeroSection';
-import FeaturedPolls from '../components/FeaturedPolls';
-import DataStories from '../components/DataStories';
-import UserEngagement from '../components/UserEngagement';
-import CreatePoll from '../components/CreatePoll';
-import { pollService, Poll } from '../lib/poll-service';
-
-// Mock data for data stories and engagement metrics
-const mockDataStories = [
-  {
-    id: '1',
-    title: 'Youth Participation Surge',
-    subtitle: '18-25 age group shows unprecedented engagement',
-    chart: 'trend' as const,
-    data: [
-      { name: '18-25', value: 78, trend: '+12%', color: '#3B82F6', sample_size: 1200 },
-      { name: '26-35', value: 65, trend: '+8%', color: '#8B5CF6', sample_size: 1500 },
-      { name: '36-45', value: 52, trend: '+5%', color: '#10B981', sample_size: 1800 },
-      { name: '46-55', value: 41, trend: '+3%', color: '#F59E0B', sample_size: 1600 },
-      { name: '55+', value: 28, trend: '+2%', color: '#EF4444', sample_size: 1400 }
-    ],
-    insight: 'Young voters are driving unprecedented participation rates, with 78% of 18-25 year olds engaging in climate and technology polls.',
-    trend: 'up' as const,
-    color: '#3B82F6',
-    statistical_analysis: {
-      sample_size: '7,500 respondents',
-      margin_of_error: '±2.1%',
-      confidence_level: '95%',
-      methodology: 'Random sampling across demographic groups',
-      key_finding: 'Youth engagement increased 12% year-over-year, highest in platform history.'
-    }
-  },
-  {
-    id: '2',
-    title: 'Geographic Participation',
-    subtitle: 'Urban vs rural voting patterns',
-    chart: 'pie' as const,
-    data: [
-      { name: 'Urban Centers', value: 45, color: '#3B82F6', sample_size: 3400 },
-      { name: 'Suburban Areas', value: 32, color: '#8B5CF6', sample_size: 2400 },
-      { name: 'Rural Communities', value: 23, color: '#10B981', sample_size: 1700 }
-    ],
-    insight: 'Urban centers show highest participation, but rural communities are closing the gap with improved digital access.',
-    trend: 'stable' as const,
-    color: '#8B5CF6',
-    statistical_analysis: {
-      sample_size: '7,500 respondents',
-      margin_of_error: '±2.8%',
-      confidence_level: '95%',
-      methodology: 'Geographic clustering analysis',
-      key_finding: 'Rural participation increased 8% following broadband infrastructure improvements.'
-    }
-  },
-  {
-    id: '3',
-    title: 'Topic Engagement Trends',
-    subtitle: 'Most popular poll categories',
-    chart: 'bar' as const,
-    data: [
-      { name: 'Climate Action', value: 85, trend: '+15%', color: '#10B981', sample_size: 2847 },
-      { name: 'Technology', value: 72, trend: '+8%', color: '#3B82F6', sample_size: 1956 },
-      { name: 'Education', value: 68, trend: '+12%', color: '#8B5CF6', sample_size: 3421 },
-      { name: 'Healthcare', value: 65, trend: '+5%', color: '#F59E0B', sample_size: 4123 },
-      { name: 'Transportation', value: 58, trend: '+3%', color: '#EF4444', sample_size: 1567 }
-    ],
-    insight: 'Climate action polls consistently receive the highest engagement, indicating strong public interest in environmental issues.',
-    trend: 'up' as const,
-    color: '#10B981',
-    statistical_analysis: {
-      sample_size: '13,914 total votes',
-      margin_of_error: '±1.8%',
-      confidence_level: '95%',
-      methodology: 'Cross-category participation analysis',
-      key_finding: 'Climate topics show 15% higher engagement than other categories.'
-    }
-  }
-];
-
-const mockEngagementMetrics = {
-  totalUsers: 52480,
-  activeUsers: 3421,
-  totalVotes: 1234567,
-  votesToday: 2847,
-  participationRate: 78,
-  averageResponseTime: 245,
-  pollsCreated: 156,
-  pollsActive: 23
-};
-
-const mockGeographicData = [
-  { country: 'United States', users: 28470, votes: 456789, percentage: 45 },
-  { country: 'Canada', users: 8234, votes: 123456, percentage: 18 },
-  { country: 'United Kingdom', users: 6543, votes: 98765, percentage: 15 },
-  { country: 'Germany', users: 4321, votes: 65432, percentage: 12 },
-  { country: 'Australia', users: 3456, votes: 54321, percentage: 8 },
-  { country: 'Other', users: 1456, votes: 21804, percentage: 2 }
-];
-
-const mockActivityData = [
-  { time: '00:00', votes: 45, users: 23, polls: 12 },
-  { time: '02:00', votes: 32, users: 18, polls: 8 },
-  { time: '04:00', votes: 28, users: 15, polls: 6 },
-  { time: '06:00', votes: 67, users: 34, polls: 15 },
-  { time: '08:00', votes: 123, users: 67, polls: 23 },
-  { time: '10:00', votes: 234, users: 128, polls: 31 },
-  { time: '12:00', votes: 189, users: 98, polls: 28 },
-  { time: '14:00', votes: 256, users: 145, polls: 35 },
-  { time: '16:00', votes: 198, users: 112, polls: 29 },
-  { time: '18:00', votes: 167, users: 89, polls: 25 },
-  { time: '20:00', votes: 145, users: 76, polls: 22 },
-  { time: '22:00', votes: 89, users: 45, polls: 18 }
-];
+import Link from 'next/link'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { 
+  Shield, 
+  Fingerprint, 
+  Vote, 
+  Lock, 
+  CheckCircle, 
+  Users, 
+  Zap,
+  TrendingUp,
+  Clock
+} from 'lucide-react'
 
 export default function HomePage() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [polls, setPolls] = useState<Poll[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [showCreatePoll, setShowCreatePoll] = useState(false);
-  const [userStats, setUserStats] = useState({
-    totalVotes: 47,
-    activePolls: 3,
-    participationRate: 85
-  });
-
-  // Load polls from service
-  useEffect(() => {
-    const loadPolls = async () => {
-      try {
-        setIsLoading(true);
-        const pollsData = await pollService.getPolls();
-        setPolls(pollsData);
-      } catch (error) {
-        devLog('Error loading polls:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadPolls();
-  }, []);
-
-  // Simulate authentication check
-  useEffect(() => {
-    const checkAuth = () => {
-      // Mock: 30% chance of being authenticated
-      setIsAuthenticated(Math.random() > 0.7);
-    };
-    
-    checkAuth();
-  }, []);
-
-  const handleVote = async (pollId: string, choice: number) => {
-    try {
-      const response = await pollService.submitVote(pollId, choice);
-      
-      if (response.success) {
-        // Update user stats
-        setUserStats(prev => ({
-          ...prev,
-          totalVotes: prev.totalVotes + 1
-        }));
-
-        // Refresh polls to get updated vote counts
-        const updatedPolls = await pollService.getPolls();
-        setPolls(updatedPolls);
-      }
-      
-      return response;
-    } catch (error) {
-      devLog('Error submitting vote:', error);
-      return {
-        success: false,
-        voteId: '',
-        message: 'Failed to submit vote'
-      };
-    }
-  };
-
-  const handleVerify = async (voteId: string) => {
-    return await pollService.verifyVote(voteId);
-  };
-
-  const handleViewDetails = (pollId: string) => {
-    devLog(`Viewing details for poll ${pollId}`);
-    // In a real app, this would navigate to the poll detail page
-  };
-
-  const handlePollCreated = (newPoll: Poll) => {
-    // Add the new poll to the list
-    setPolls(prev => [newPoll, ...prev]);
-    
-    // Update user stats
-    setUserStats(prev => ({
-      ...prev,
-      activePolls: prev.activePolls + 1
-    }));
-  };
+  // Mock trending poll data - in production this would come from the database
+  const trendingPoll = {
+    id: 'trending-1',
+    title: 'What\'s your preferred way to stay informed about current events?',
+    description: 'Help us understand how people prefer to consume news and stay updated in today\'s digital age.',
+    options: [
+      { id: '1', text: 'Social Media', votes: 1247, percentage: 42 },
+      { id: '2', text: 'Traditional News Sites', votes: 892, percentage: 30 },
+      { id: '3', text: 'News Apps', votes: 456, percentage: 15 },
+      { id: '4', text: 'Podcasts', votes: 234, percentage: 8 },
+      { id: '5', text: 'Word of Mouth', votes: 156, percentage: 5 }
+    ],
+    totalVotes: 2985,
+    timeRemaining: '2 days left',
+    category: 'Technology & Media'
+  }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       {/* Hero Section */}
-      <HeroSection 
-        isAuthenticated={isAuthenticated}
-        userStats={userStats}
-      />
-
-      {/* Onboarding CTA for new users */}
-      {!isAuthenticated && (
-        <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white py-12">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <h2 className="text-3xl font-bold mb-4">
-              Ready to make your voice heard?
-            </h2>
-            <p className="text-xl mb-8 text-blue-100">
-              Join our community and start participating in polls that matter. 
-              It only takes 2 minutes to get started.
+      <section className="relative overflow-hidden">
+        <div className="container mx-auto px-4 py-20">
+          <div className="text-center max-w-4xl mx-auto">
+            <div className="flex items-center justify-center gap-2 mb-6">
+              <Shield className="h-8 w-8 text-blue-600" />
+              <h1 className="text-5xl font-bold text-gray-900">
+                Choices Platform
+              </h1>
+            </div>
+            <p className="text-xl text-gray-600 mb-8">
+              Secure voting with modern authentication and privacy protection
             </p>
-            <a
-              href="/onboarding"
-              className="inline-flex items-center gap-2 px-8 py-4 bg-white text-blue-600 font-semibold rounded-lg hover:bg-gray-100 transition-colors duration-200 shadow-lg hover:shadow-xl"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-              </svg>
-              Get Started
-            </a>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
+              <Button asChild size="lg" className="text-lg px-8 py-3">
+                <Link href="/register">Get Started</Link>
+              </Button>
+              <Button asChild variant="outline" size="lg" className="text-lg px-8 py-3">
+                <Link href="/login">Sign In</Link>
+              </Button>
+            </div>
+            
+            {/* Simple Trust Indicators */}
+            <div className="flex flex-wrap justify-center gap-4 mb-8">
+              <Badge variant="secondary" className="px-4 py-2 text-sm">
+                <Shield className="h-4 w-4 mr-2" />
+                Secure & Private
+              </Badge>
+              <Badge variant="secondary" className="px-4 py-2 text-sm">
+                <Fingerprint className="h-4 w-4 mr-2" />
+                Modern Auth
+              </Badge>
+            </div>
           </div>
         </div>
-      )}
+      </section>
 
-      {/* Featured Polls */}
-      <FeaturedPolls
-        polls={polls}
-        onVote={handleVote}
-        onViewDetails={handleViewDetails}
-        title="Active Polls"
-        subtitle="Participate in important decisions that shape our future"
-        maxPolls={6}
-      />
+      {/* Trending Poll Section */}
+      <section className="py-16 bg-white">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <div className="flex items-center justify-center gap-2 mb-4">
+              <TrendingUp className="h-6 w-6 text-orange-500" />
+              <h2 className="text-3xl font-bold text-gray-900">Trending Now</h2>
+            </div>
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              See what people are voting on right now. Join the conversation and make your voice heard.
+            </p>
+          </div>
 
-      {/* Create Poll Button */}
-      <div className="text-center py-8">
-        <button
-          onClick={() => setShowCreatePoll(true)}
-          className="inline-flex items-center gap-2 px-8 py-4 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors duration-200 shadow-lg hover:shadow-xl"
-        >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-          </svg>
-          Create Your Own Poll
-        </button>
-      </div>
+          <div className="max-w-4xl mx-auto">
+            <Card className="border-0 shadow-xl hover:shadow-2xl transition-shadow">
+              <CardHeader>
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-3">
+                      <Badge variant="outline" className="text-orange-600 border-orange-200">
+                        <TrendingUp className="h-3 w-3 mr-1" />
+                        Trending
+                      </Badge>
+                      <Badge variant="secondary" className="text-sm">
+                        {trendingPoll.category}
+                      </Badge>
+                    </div>
+                    <CardTitle className="text-2xl mb-2">{trendingPoll.title}</CardTitle>
+                    <CardDescription className="text-base">
+                      {trendingPoll.description}
+                    </CardDescription>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm text-gray-500">
+                    <Clock className="h-4 w-4" />
+                    <span>{trendingPoll.timeRemaining}</span>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {trendingPoll.options.map((option) => (
+                    <div key={option.id} className="relative">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="font-medium text-gray-900">{option.text}</span>
+                        <span className="text-sm text-gray-600">{option.percentage}%</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-3">
+                        <div 
+                          className="bg-gradient-to-r from-blue-500 to-indigo-600 h-3 rounded-full transition-all duration-500"
+                          style={{ width: `${option.percentage}%` }}
+                        ></div>
+                      </div>
+                      <div className="flex justify-between text-xs text-gray-500 mt-1">
+                        <span>{option.votes.toLocaleString()} votes</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                
+                <div className="mt-6 pt-6 border-t border-gray-200">
+                  <div className="flex items-center justify-between">
+                    <div className="text-sm text-gray-600">
+                      <span className="font-medium">{trendingPoll.totalVotes.toLocaleString()}</span> total votes
+                    </div>
+                    <Button asChild variant="outline" size="sm">
+                      <Link href={`/polls/${trendingPoll.id}`}>View Full Poll</Link>
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
 
-      {/* Data Stories */}
-      <DataStories
-        stories={mockDataStories}
-        title="Voting Insights"
-        subtitle="Discover trends and patterns in democratic participation"
-        maxStories={3}
-      />
+      {/* Features Section */}
+      <section className="py-20 bg-gray-50">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">
+              Secure Voting Made Simple
+            </h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              Create and participate in polls with confidence. Built with modern security 
+              and privacy protection.
+            </p>
+          </div>
 
-      {/* User Engagement */}
-      <UserEngagement
-        metrics={mockEngagementMetrics}
-        geographicData={mockGeographicData}
-        activityData={mockActivityData}
-        title="Live Platform Activity"
-        subtitle="Real-time participation and engagement metrics"
-      />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {/* Secure Voting */}
+            <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow">
+              <CardHeader>
+                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
+                  <Vote className="h-6 w-6 text-blue-600" />
+                </div>
+                <CardTitle>Secure Voting</CardTitle>
+                <CardDescription>
+                  Create and participate in polls with advanced security and verification
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-2 text-sm text-gray-600">
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4 text-green-500" />
+                    Real-time results
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4 text-green-500" />
+                    Trust-based verification
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4 text-green-500" />
+                    Admin dashboard
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4 text-green-500" />
+                    Analytics & insights
+                  </li>
+                </ul>
+              </CardContent>
+            </Card>
 
-      {/* Create Poll Modal */}
-      <CreatePoll
-        isOpen={showCreatePoll}
-        onPollCreated={handlePollCreated}
-        onCancel={() => setShowCreatePoll(false)}
-      />
+            {/* Modern Authentication */}
+            <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow">
+              <CardHeader>
+                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-4">
+                  <Fingerprint className="h-6 w-6 text-green-600" />
+                </div>
+                <CardTitle>Modern Authentication</CardTitle>
+                <CardDescription>
+                  Secure login with biometric authentication and traditional methods
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-2 text-sm text-gray-600">
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4 text-green-500" />
+                    Biometric login (fingerprint, face)
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4 text-green-500" />
+                    Email & password
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4 text-green-500" />
+                    Trust scoring
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4 text-green-500" />
+                    Device security
+                  </li>
+                </ul>
+              </CardContent>
+            </Card>
+
+            {/* Privacy Protection */}
+            <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow">
+              <CardHeader>
+                <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
+                  <Lock className="h-6 w-6 text-purple-600" />
+                </div>
+                <CardTitle>Privacy Protection</CardTitle>
+                <CardDescription>
+                  Your data is protected with encryption and privacy controls
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-2 text-sm text-gray-600">
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4 text-green-500" />
+                    End-to-end encryption
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4 text-green-500" />
+                    Data export & deletion
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4 text-green-500" />
+                    Privacy controls
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4 text-green-500" />
+                    Compliance ready
+                  </li>
+                </ul>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
+
+      {/* How It Works */}
+      <section className="py-20 bg-white">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">
+              How It Works
+            </h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              Simple steps to secure voting and participation
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="text-center">
+              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span className="text-2xl font-bold text-blue-600">1</span>
+              </div>
+              <h3 className="text-xl font-semibold mb-2">Create Account</h3>
+              <p className="text-gray-600">
+                Sign up with email and optionally set up biometric authentication for enhanced security
+              </p>
+            </div>
+            
+            <div className="text-center">
+              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span className="text-2xl font-bold text-green-600">2</span>
+              </div>
+              <h3 className="text-xl font-semibold mb-2">Participate</h3>
+              <p className="text-gray-600">
+                Vote on polls or create your own. All votes are secure and verified
+              </p>
+            </div>
+            
+            <div className="text-center">
+              <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span className="text-2xl font-bold text-purple-600">3</span>
+              </div>
+              <h3 className="text-xl font-semibold mb-2">Track Results</h3>
+              <p className="text-gray-600">
+                View real-time results and analytics. Your privacy is always protected
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-20 bg-gradient-to-r from-blue-600 to-indigo-600">
+        <div className="container mx-auto px-4 text-center">
+          <h2 className="text-4xl font-bold text-white mb-4">
+            Ready to Get Started?
+          </h2>
+          <p className="text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
+            Join users who trust Choices Platform for secure, private voting.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button asChild size="lg" variant="secondary" className="text-lg px-8 py-3">
+              <Link href="/register">Get Started Free</Link>
+            </Button>
+            <Button asChild size="lg" variant="outline" className="text-lg px-8 py-3 border-white text-white hover:bg-white hover:text-blue-600">
+              <Link href="/login">Sign In</Link>
+            </Button>
+          </div>
+        </div>
+      </section>
 
       {/* Footer */}
       <footer className="bg-gray-900 text-white py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid md:grid-cols-4 gap-8">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div>
               <h3 className="text-lg font-semibold mb-4">Choices Platform</h3>
               <p className="text-gray-400 text-sm">
-                Empowering democratic decision-making through secure, transparent, and accessible voting technology.
+                Secure voting with modern authentication and privacy protection.
               </p>
             </div>
             <div>
-              <h4 className="font-medium mb-4">Platform</h4>
+              <h4 className="font-semibold mb-4">Platform</h4>
               <ul className="space-y-2 text-sm text-gray-400">
-                <li><a href="#" className="hover:text-white transition-colors">How It Works</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Security</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Privacy</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Transparency</a></li>
+                <li><Link href="/register" className="hover:text-white">Sign Up</Link></li>
+                <li><Link href="/login" className="hover:text-white">Sign In</Link></li>
+                <li><Link href="/polls" className="hover:text-white">Browse Polls</Link></li>
+                <li><Link href="/create-poll" className="hover:text-white">Create Poll</Link></li>
               </ul>
             </div>
             <div>
-              <h4 className="font-medium mb-4">Resources</h4>
+              <h4 className="font-semibold mb-4">Legal</h4>
               <ul className="space-y-2 text-sm text-gray-400">
-                <li><a href="#" className="hover:text-white transition-colors">Documentation</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">API Reference</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Support</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Blog</a></li>
+                <li><Link href="/privacy" className="hover:text-white">Privacy Policy</Link></li>
+                <li><Link href="/terms" className="hover:text-white">Terms of Service</Link></li>
+                <li><Link href="/compliance" className="hover:text-white">Legal Compliance</Link></li>
+                <li><Link href="/biometric" className="hover:text-white">Biometric Policy</Link></li>
               </ul>
             </div>
             <div>
-              <h4 className="font-medium mb-4">Legal</h4>
+              <h4 className="font-semibold mb-4">Support</h4>
               <ul className="space-y-2 text-sm text-gray-400">
-                <li><a href="#" className="hover:text-white transition-colors">Privacy Policy</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Terms of Service</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Cookie Policy</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">GDPR</a></li>
+                <li><Link href="/help" className="hover:text-white">Help Center</Link></li>
+                <li><Link href="/contact" className="hover:text-white">Contact Us</Link></li>
+                <li><Link href="/security" className="hover:text-white">Security</Link></li>
+                <li><Link href="/status" className="hover:text-white">System Status</Link></li>
               </ul>
             </div>
           </div>
           <div className="border-t border-gray-800 mt-8 pt-8 text-center text-sm text-gray-400">
-            <p>&copy; 2024 Choices Platform. All rights reserved. Built with privacy and transparency in mind.</p>
+            <p>&copy; 2024 Choices Platform. All rights reserved. Built with privacy in mind.</p>
           </div>
         </div>
       </footer>
     </div>
-  );
+  )
 }
