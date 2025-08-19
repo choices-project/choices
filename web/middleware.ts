@@ -51,14 +51,14 @@ function checkRateLimit(ip: string, endpoint: string): { allowed: boolean; remai
 }
 
 // Content validation function
-function validateContent(content: string): { valid: boolean; reason?: string } {
+function validateContent(content: string, field: string): { valid: boolean; reason?: string } {
   if (content.length > securityConfig.contentFilters.maxLength) {
-    return { valid: false, reason: 'Content too long' }
+    return { valid: false, reason: `${field} too long` }
   }
   
   for (const pattern of securityConfig.contentFilters.suspiciousPatterns) {
     if (pattern.test(content)) {
-      return { valid: false, reason: 'Suspicious content detected' }
+      return { valid: false, reason: `${field} suspicious content detected` }
     }
   }
   
@@ -112,17 +112,31 @@ export async function middleware(request: NextRequest) {
   if (request.method === 'POST' && path.includes('/api/feedback')) {
     try {
       const body = await request.clone().json()
-      if (body.content) {
-        const validation = validateContent(body.content)
-        if (!validation.valid) {
+      
+      // Validate title if present
+      if (body.title) {
+        const titleValidation = validateContent(body.title, 'title')
+        if (!titleValidation.valid) {
           return NextResponse.json(
-            { error: validation.reason },
+            { error: titleValidation.reason },
+            { status: 400 }
+          )
+        }
+      }
+      
+      // Validate description if present
+      if (body.description) {
+        const descriptionValidation = validateContent(body.description, 'description')
+        if (!descriptionValidation.valid) {
+          return NextResponse.json(
+            { error: descriptionValidation.reason },
             { status: 400 }
           )
         }
       }
     } catch (error) {
       // Invalid JSON - continue with normal processing
+      console.log('Middleware content validation error:', error)
     }
   }
 
