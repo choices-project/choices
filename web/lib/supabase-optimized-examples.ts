@@ -5,6 +5,12 @@
 import { createClient } from '@supabase/supabase-js';
 import { logger } from '@/lib/logger';
 
+// Initialize Supabase client
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
+
 // 1. Specific field selection (instead of select('*'))
 export async function getOptimizedUserProfile(userId: string) {
   const { data, error } = await supabase
