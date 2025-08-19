@@ -195,7 +195,7 @@ export const useTrendingTopics = () => {
       
       // Initialize activity feed with mock data if empty
       if (query.data === mockTrendingTopics) {
-        updateActivityFeed(mockActivityFeed);
+        updateActivityFeed(mockActivityFeed as any);
       }
     }
     if (query.error) {

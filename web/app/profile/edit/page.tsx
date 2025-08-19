@@ -21,7 +21,7 @@ interface UserProfile {
 }
 
 export default function EditProfilePage() {
-  const { loading } = useAuth()
+  const { user, loading } = useAuth()
   const router = useRouter()
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [isLoading, setIsLoading] = useState(true)

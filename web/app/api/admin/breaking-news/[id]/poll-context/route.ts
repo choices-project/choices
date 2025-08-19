@@ -32,7 +32,7 @@ export async function POST(
     }
 
     // Check admin permissions - RESTRICTED TO OWNER ONLY
-    const {  } = await supabase
+    const { data: userProfile, error: profileError } = await supabase
       .from('ia_users')
       .select('verification_tier')
       .eq('stable_id', user.id)
@@ -74,7 +74,7 @@ export async function POST(
     }
 
     // Store the poll context in the database
-    const {  } = await supabase
+    const { data: contextData, error: contextError } = await supabase
       .from('poll_contexts')
       .insert([{
         story_id: storyId,

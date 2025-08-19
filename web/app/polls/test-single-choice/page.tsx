@@ -41,7 +41,7 @@ const samplePoll = {
 }
 
 export default function TestSingleChoicePage() {
-  const { loading } = useAuth()
+  const { user, loading } = useAuth()
   const router = useRouter()
   const [isVoting, setIsVoting] = useState(false)
   const [hasVoted, setHasVoted] = useState(false)

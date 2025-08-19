@@ -22,7 +22,7 @@ import { PWAFeaturesShowcase, PWAStatus } from '../../components/PWAComponents'
 import { usePWAUtils } from '../../hooks/usePWAUtils'
 
 export default function PWAShowcasePage() {
-  const { loading: utilsLoading } = usePWAUtils()
+  const { utils: pwaUtils, loading: utilsLoading } = usePWAUtils()
   const [deviceFingerprint, setDeviceFingerprint] = useState<any>(null)
   const [webAuthnSupported, setWebAuthnSupported] = useState(false)
   const [notificationPermission, setNotificationPermission] = useState<string>('default')

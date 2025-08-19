@@ -69,7 +69,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get user profile from ia_users table
-    const {  } = await supabase
+    const { data: userProfile, error: profileError } = await supabase
       .from('ia_users')
       .select('stable_id, verification_tier, is_active')
       .eq('stable_id', user.id)
