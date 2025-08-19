@@ -2,7 +2,7 @@ import withPWA from 'next-pwa'
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Image Optimization for Vercel
+  // Image Optimization
   images: {
     domains: ['localhost', 'choices-platform.vercel.app', 'choices-project.vercel.app'],
     formats: ['image/webp', 'image/avif'],
@@ -12,39 +12,16 @@ const nextConfig = {
   
   // Performance Optimizations
   experimental: {
-    optimizePackageImports: ['lucide-react', 'framer-motion'],
+    optimizePackageImports: ['lucide-react'],
   },
   
-  // Temporarily disable for deploy - will re-enable after fixing all errors systematically
+  // Enable proper error checking for development
   eslint: {
-    ignoreDuringBuilds: true,
+    ignoreDuringBuilds: false, // Re-enable ESLint checking
   },
   
   typescript: {
-    ignoreBuildErrors: true,
-  },
-  
-  // Disable all warnings in CI
-  onDemandEntries: {
-    maxInactiveAge: 25 * 1000,
-    pagesBufferLength: 2,
-  },
-  
-  // Disable static generation for problematic pages
-  async rewrites() {
-    return [
-      {
-        source: '/:path*',
-        destination: '/:path*',
-        has: [
-          {
-            type: 'header',
-            key: 'x-requested-with',
-            value: 'XMLHttpRequest'
-          }
-        ]
-      }
-    ]
+    ignoreBuildErrors: false, // Re-enable TypeScript checking
   },
   
   // Compression
@@ -93,12 +70,12 @@ const nextConfig = {
   }
 }
 
-// Restore PWA with stable configuration
+// Simplified PWA configuration
 const config = withPWA({
   dest: 'public',
   register: true,
   skipWaiting: true,
-  disable: false, // Enable PWA in development for testing SPA behavior
+  disable: process.env.NODE_ENV === 'development', // Disable PWA in development to reduce complexity
   buildExcludes: [/middleware-manifest\.json$/],
   runtimeCaching: [
     {

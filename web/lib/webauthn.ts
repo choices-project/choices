@@ -43,7 +43,8 @@ export function base64ToArrayBuffer(base64: string): ArrayBuffer {
 
 // Generate random challenge
 export function generateChallenge(): ArrayBuffer {
-  return crypto.getRandomValues(new Uint8Array(WEBAUTHN_CONFIG.challengeLength))
+  const challenge = crypto.getRandomValues(new Uint8Array(WEBAUTHN_CONFIG.challengeLength))
+  return challenge.buffer
 }
 
 // Check if WebAuthn is supported
