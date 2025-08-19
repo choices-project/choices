@@ -251,6 +251,10 @@ node scripts/security/verify-privacy-system.js
 - Test with realistic data volumes
 - Monitor performance continuously
 - Document all decisions
+- Import only specific functions you need
+- Remove unused imports immediately
+- Use ESLint to catch unused variables
+- Review imports regularly during development
 
 ### **❌ Don't Do These**
 - Start coding before schema design
@@ -259,6 +263,9 @@ node scripts/security/verify-privacy-system.js
 - Ignore data types and constraints
 - Forget to plan for scalability
 - Skip documentation
+- Import entire libraries when you only need specific functions
+- Leave unused imports in your code
+- Accumulate unused variables and components
 
 ## 🎯 **Remember**
 
