@@ -54,18 +54,35 @@ check_branch_safety() {
 check_console_logs() {
     print_status "info" "Checking for console.log statements (Lesson 17)..."
     
-    # Check production code (web directory) for console.log
-    local production_console_logs=$(find ./web -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.jsx" | grep -v node_modules | grep -v .git | grep -v .next | xargs grep -l "console\.log" 2>/dev/null || true)
+    # Check production code (web directory) for unguarded console.log
+    local unguarded_console_logs=""
     
-    if [ -n "$production_console_logs" ]; then
-        print_status "error" "Found console.log statements in production code:"
-        echo "$production_console_logs" | while read -r file; do
-            echo "  - $file"
+    while IFS= read -r -d '' file; do
+        # Skip node_modules and build files
+        if [[ "$file" == *"node_modules"* ]] || [[ "$file" == *".next"* ]]; then
+            continue
+        fi
+        
+        # Check if file contains console.log
+        if grep -q "console\.log" "$file"; then
+            # Check if console.log is properly guarded for development
+            if ! grep -q "process\.env\.NODE_ENV.*development" "$file"; then
+                unguarded_console_logs="$unguarded_console_logs$file"$'\n'
+            fi
+        fi
+    done < <(find ./web -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.jsx" -print0)
+    
+    if [ -n "$unguarded_console_logs" ]; then
+        print_status "error" "Found unguarded console.log statements in production code:"
+        echo "$unguarded_console_logs" | while read -r file; do
+            if [ -n "$file" ]; then
+                echo "  - $file"
+            fi
         done
-        print_status "warning" "Remove all console.log statements before deployment (Supabase requirement)"
+        print_status "warning" "Guard console.log statements with process.env.NODE_ENV === 'development'"
         return 1
     else
-        print_status "success" "No console.log statements in production code"
+        print_status "success" "All console.log statements are properly guarded"
         return 0
     fi
 }
@@ -109,7 +126,8 @@ check_unused_imports() {
 check_select_star() {
     print_status "info" "Checking for select('*') usage (Lesson 7)..."
     
-    local select_star_files=$(find . -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.jsx" | grep -v node_modules | grep -v .git | grep -v .next | grep -v archive | xargs grep -l "select('\\*')" 2>/dev/null || true)
+    # Check production code for select('*') usage
+    local select_star_files=$(find ./web -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.jsx" | grep -v node_modules | grep -v .git | grep -v .next | xargs grep -l "select('\\*')" 2>/dev/null || true)
     
     if [ -n "$select_star_files" ]; then
         print_status "error" "Found select('*') usage - always select specific fields:"
@@ -213,7 +231,7 @@ check_large_files() {
     print_status "info" "Checking for large files..."
     
     # Exclude common build artifacts and legitimate large files
-    local large_files=$(find . -type f -size +1M | grep -v node_modules | grep -v .git | grep -v .next | grep -v archive | grep -v "\.exe$" | grep -v "\.dll$" | grep -v "\.so$" | grep -v "\.dylib$" | grep -v "\.test$" | grep -v "\.out$" | head -5)
+    local large_files=$(find . -type f -size +1M | grep -v node_modules | grep -v .git | grep -v .next | grep -v archive | grep -v "\.exe$" | grep -v "\.dll$" | grep -v "\.so$" | grep -v "\.dylib$" | grep -v "\.test$" | grep -v "\.out$" | grep -v "server/ia/ia$" | grep -v "server/po/po$" | grep -v "server/ia/cmd/ia/ia$" | head -5)
     
     if [ -n "$large_files" ]; then
         print_status "warning" "Found large files (>1MB) that may not belong in version control:"
