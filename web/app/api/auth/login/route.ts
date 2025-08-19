@@ -3,6 +3,7 @@ import { devLog } from '@/lib/logger';
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import { createClient } from '@supabase/supabase-js'
+import speakeasy from 'speakeasy'
 
 // Initialize Supabase client
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -161,10 +162,15 @@ async function verifyTwoFactorCode(userId: string, code: string): Promise<boolea
       return false
     }
 
-    // TODO: Implement TOTP verification
-    // For now, return true if code is provided
-    // In production, use a library like 'speakeasy' to verify TOTP codes
-    return code.length === 6 && /^\d{6}$/.test(code)
+    // Verify TOTP code using speakeasy
+    const verified = speakeasy.totp.verify({
+      secret: user.two_factor_secret,
+      encoding: 'base32',
+      token: code,
+      window: 2 // Allow 2 time steps (60 seconds) for clock skew
+    })
+
+    return verified
   } catch (error) {
     devLog('2FA verification error:', error)
     return false

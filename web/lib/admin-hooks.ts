@@ -3,6 +3,7 @@ import { devLog } from '@/lib/logger';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAdminStore, TrendingTopic, GeneratedPoll, SystemMetrics } from './admin-store';
 import { mockActivityFeed } from './mock-data';
+import { realTimeService } from './real-time-service';
 
 // Mock data for fallback
 const mockTrendingTopics: TrendingTopic[] = [
@@ -425,11 +426,48 @@ export const useGeneratePollContext = () => {
   });
 };
 
-// Real-time subscription hook (disabled for now - using API routes instead)
+// Real-time subscription hook
 export const useRealTimeSubscriptions = () => {
-  // TODO: Implement real-time updates via WebSocket or Server-Sent Events when needed
-  // For now, we rely on React Query's refetch intervals for data updates
+  const [subscriptions, setSubscriptions] = React.useState<string[]>([]);
+
   React.useEffect(() => {
-    // No real-time subscriptions for now
+    // Subscribe to admin updates
+    const adminSubscriptionId = realTimeService.subscribeToAdminUpdates(
+      (data) => {
+        // Handle admin updates
+        devLog('Admin real-time update:', data);
+      },
+      (error) => {
+        devLog('Admin real-time error:', error);
+      }
+    );
+
+    // Subscribe to feedback updates
+    const feedbackSubscriptionId = realTimeService.subscribeToFeedbackUpdates(
+      (data) => {
+        // Handle feedback updates
+        devLog('Feedback real-time update:', data);
+      },
+      (error) => {
+        devLog('Feedback real-time error:', error);
+      }
+    );
+
+    setSubscriptions([adminSubscriptionId, feedbackSubscriptionId]);
+
+    // Cleanup on unmount
+    return () => {
+      realTimeService.unsubscribe(adminSubscriptionId);
+      realTimeService.unsubscribe(feedbackSubscriptionId);
+    };
   }, []);
+
+  return {
+    subscriptions,
+    isConnected: subscriptions.length > 0,
+    closeAll: () => {
+      subscriptions.forEach(id => realTimeService.unsubscribe(id));
+      setSubscriptions([]);
+    }
+  };
 };
