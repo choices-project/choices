@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { devLog } from '@/lib/logger';
 import { useRouter } from 'next/navigation'
 import { useEffect, useState, useCallback, createContext, useContext } from 'react'
+import { createClient } from '@supabase/supabase-js'
 import { 
   ArrowLeft, 
   User, 
@@ -27,6 +28,11 @@ interface AccountSettings {
 export default function AccountSettingsPage() {
   const { user, loading, signOut } = useAuth()
   const router = useRouter()
+  
+  // Initialize Supabase client
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const supabase = supabaseUrl && supabaseKey ? createClient(supabaseUrl, supabaseKey) : null;
   const [settings, setSettings] = useState<AccountSettings>({
     email: '',
     displayName: '',
@@ -64,14 +70,30 @@ export default function AccountSettingsPage() {
   const [forgotPasswordEmail, setForgotPasswordEmail] = useState('')
   const [isRequestingReset, setIsRequestingReset] = useState(false)
 
+  // 2FA state
+  const [show2FASetup, setShow2FASetup] = useState(false)
+  const [twoFactorData, setTwoFactorData] = useState({
+    secret: '',
+    qrCode: '',
+    verificationCode: ''
+  })
+  const [isSettingUp2FA, setIsSettingUp2FA] = useState(false)
+  const [isDisabling2FA, setIsDisabling2FA] = useState(false)
+
   const loadAccountSettings = useCallback(async () => {
     try {
       setIsLoading(true)
       // Load user data from auth context
+      const { data: userProfile } = await supabase
+        .from('ia_users')
+        .select('two_factor_enabled')
+        .eq('stable_id', user.id)
+        .single()
+
       setSettings({
         email: user?.email || '',
         displayName: user?.user_metadata?.name || '',
-        twoFactorEnabled: false // TODO: Implement 2FA
+        twoFactorEnabled: userProfile?.two_factor_enabled || false
       })
     } catch (error) {
       devLog('Error loading account settings:', error)
@@ -165,6 +187,110 @@ export default function AccountSettingsPage() {
       setError(error.message || 'Failed to delete account')
     } finally {
       setIsDeletingAccount(false)
+    }
+  }
+
+  const handle2FASetup = async () => {
+    try {
+      setIsSettingUp2FA(true)
+      setError(null)
+
+      const response = await fetch('/api/auth/2fa/setup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'generate' })
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        setTwoFactorData({
+          secret: data.secret,
+          qrCode: data.qrCode,
+          verificationCode: ''
+        })
+        setShow2FASetup(true)
+      } else {
+        throw new Error(data.error || 'Failed to generate 2FA setup')
+      }
+    } catch (error: any) {
+      devLog('Error setting up 2FA:', error)
+      setError(error.message || 'Failed to setup 2FA')
+    } finally {
+      setIsSettingUp2FA(false)
+    }
+  }
+
+  const handle2FAEnable = async () => {
+    if (!twoFactorData.verificationCode) {
+      setError('Please enter the verification code')
+      return
+    }
+
+    try {
+      setIsSettingUp2FA(true)
+      setError(null)
+
+      const response = await fetch('/api/auth/2fa/setup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'enable',
+          code: twoFactorData.verificationCode
+        })
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        setSuccess('Two-factor authentication enabled successfully!')
+        setSettings(prev => ({ ...prev, twoFactorEnabled: true }))
+        setShow2FASetup(false)
+        setTwoFactorData({ secret: '', qrCode: '', verificationCode: '' })
+      } else {
+        throw new Error(data.error || 'Failed to enable 2FA')
+      }
+    } catch (error: any) {
+      devLog('Error enabling 2FA:', error)
+      setError(error.message || 'Failed to enable 2FA')
+    } finally {
+      setIsSettingUp2FA(false)
+    }
+  }
+
+  const handle2FADisable = async () => {
+    if (!twoFactorData.verificationCode) {
+      setError('Please enter the verification code')
+      return
+    }
+
+    try {
+      setIsDisabling2FA(true)
+      setError(null)
+
+      const response = await fetch('/api/auth/2fa/setup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'disable',
+          code: twoFactorData.verificationCode
+        })
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        setSuccess('Two-factor authentication disabled successfully!')
+        setSettings(prev => ({ ...prev, twoFactorEnabled: false }))
+        setTwoFactorData({ secret: '', qrCode: '', verificationCode: '' })
+      } else {
+        throw new Error(data.error || 'Failed to disable 2FA')
+      }
+    } catch (error: any) {
+      devLog('Error disabling 2FA:', error)
+      setError(error.message || 'Failed to disable 2FA')
+    } finally {
+      setIsDisabling2FA(false)
     }
   }
 

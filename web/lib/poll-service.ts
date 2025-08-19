@@ -433,29 +433,137 @@ class PollService {
     };
   }
 
-  // API methods (to be implemented when backend is ready)
+  // API methods (API-001 integration)
   private async fetchPollsFromAPI(): Promise<Poll[]> {
-    // TODO: Implement when API-001 is ready
-    return [];
+    try {
+      const response = await fetch('/api/polls');
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch polls: ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to fetch polls');
+      }
+      
+      // Transform API response to match Poll interface
+      return data.polls?.map((apiPoll: any) => ({
+        id: apiPoll.poll_id,
+        title: apiPoll.title,
+        description: apiPoll.description || '',
+        status: apiPoll.status || 'active',
+        options: apiPoll.options || [],
+        total_votes: apiPoll.total_votes || 0,
+        participation: apiPoll.participation_rate || 0,
+        sponsors: [],
+        created_at: apiPoll.created_at || new Date().toISOString(),
+        end_time: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // Default 30 days
+        category: apiPoll.category,
+        tags: apiPoll.tags || [],
+        is_mock: false
+      })) || [];
+    } catch (error) {
+      console.error('Error fetching polls from API:', error);
+      return [];
+    }
   }
 
   private async fetchPollFromAPI(id: string): Promise<Poll | null> {
-    // TODO: Implement when API-001 is ready
-    return null;
+    try {
+      const response = await fetch(`/api/polls/${id}`);
+      
+      if (!response.ok) {
+        if (response.status === 404) {
+          return null;
+        }
+        throw new Error(`Failed to fetch poll: ${response.statusText}`);
+      }
+      
+      const apiPoll = await response.json();
+      
+      // Transform API response to match Poll interface
+      return {
+        id: apiPoll.poll_id,
+        title: apiPoll.title,
+        description: apiPoll.description || '',
+        status: apiPoll.status || 'active',
+        options: apiPoll.options || [],
+        total_votes: apiPoll.total_votes || 0,
+        participation: apiPoll.participation_rate || 0,
+        sponsors: [],
+        created_at: apiPoll.created_at || new Date().toISOString(),
+        end_time: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // Default 30 days
+        category: apiPoll.category,
+        tags: apiPoll.tags || [],
+        is_mock: false
+      };
+    } catch (error) {
+      console.error('Error fetching poll from API:', error);
+      return null;
+    }
   }
 
   private async savePollToAPI(poll: Poll): Promise<void> {
-    // TODO: Implement when API-001 is ready
-    devLog('Saving poll to API:', poll);
+    try {
+      const response = await fetch('/api/polls', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title: poll.title,
+          description: poll.description,
+          options: poll.options,
+          end_time: poll.end_time,
+          category: poll.category,
+          tags: poll.tags,
+          sponsors: poll.sponsors
+        }),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `Failed to save poll: ${response.statusText}`);
+      }
+      
+      devLog('Poll saved to API successfully');
+    } catch (error) {
+      console.error('Error saving poll to API:', error);
+      throw error;
+    }
   }
 
   private async submitVoteToAPI(pollId: string, choice: number): Promise<VoteResponse> {
-    // TODO: Implement when VOTE-001 is ready
-    return {
-      success: true,
-      voteId: `api_vote_${Date.now()}`,
-      message: 'Vote submitted via API'
-    };
+    try {
+      const response = await fetch(`/api/polls/${pollId}/vote`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          choice,
+          privacy_level: 'public'
+        }),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `Failed to submit vote: ${response.statusText}`);
+      }
+      
+      const result = await response.json();
+      
+      return {
+        success: result.success || true,
+        voteId: result.vote_id || `vote_${Date.now()}`,
+        message: result.message || 'Vote submitted successfully!'
+      };
+    } catch (error) {
+      console.error('Error submitting vote to API:', error);
+      throw error;
+    }
   }
 
   // Configuration methods
