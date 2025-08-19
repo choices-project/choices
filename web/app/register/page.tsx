@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { createClient } from '@/utils/supabase/client'
 import { Eye, EyeOff, Mail, Lock, User, Github, Chrome } from 'lucide-react'
 
-function RegisterForm() {
+function RegisterFormContent() {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -225,7 +225,7 @@ function RegisterForm() {
 export default function RegisterPage() {
   return (
     <Suspense fallback={<div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">Loading...</div>}>
-      <RegisterForm />
+      <RegisterFormContent />
     </Suspense>
   )
 }

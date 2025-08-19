@@ -46,7 +46,7 @@ interface OnboardingData {
   }
 }
 
-function OnboardingFlowContent() {
+function OnboardingFlowInner() {
   const [currentStep, setCurrentStep] = useState<OnboardingStep>('welcome')
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -318,7 +318,7 @@ export default function OnboardingFlow() {
         </div>
       </div>
     }>
-      <OnboardingFlowContent />
+      <OnboardingFlowInner />
     </Suspense>
   )
 }
