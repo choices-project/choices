@@ -80,7 +80,7 @@ async function getUserStats(supabase: any, userId: string) {
     }
 
     // Get active polls count
-    const { error: activeError } = await supabase
+    const { data: activePolls, error: activeError } = await supabase
       .from('po_polls')
       .select('id')
       .eq('status', 'active')
@@ -158,7 +158,7 @@ async function getPlatformStats(supabase: any) {
 async function getRecentActivity(supabase: any, userId: string) {
   try {
     // Get recent votes by user
-    const { error: votesError } = await supabase
+    const { data: recentVotes, error: votesError } = await supabase
       .from('po_votes')
       .select(`
         id,
@@ -175,7 +175,7 @@ async function getRecentActivity(supabase: any, userId: string) {
     }
 
     // Get recent polls created by user
-    const { error: pollsError } = await supabase
+    const { data: recentPolls, error: pollsError } = await supabase
       .from('po_polls')
       .select('id, title, created_at')
       .eq('created_by', userId)
@@ -218,7 +218,7 @@ async function getRecentActivity(supabase: any, userId: string) {
 
 async function getActivePolls(supabase: any) {
   try {
-    const { error } = await supabase
+    const { data: polls, error } = await supabase
       .from('po_polls')
       .select(`
         id,

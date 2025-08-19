@@ -33,7 +33,7 @@ export async function POST(
     }
 
     // Check admin permissions - RESTRICTED TO OWNER ONLY
-    const {  } = await supabase
+    const { data: userProfile, error: profileError } = await supabase
       .from('ia_users')
       .select('verification_tier')
       .eq('stable_id', user.id)
@@ -95,7 +95,7 @@ export async function POST(
     // TODO: Integrate with main poll system
     // This would create a regular poll in the po_polls table
     try {
-      const {  } = await supabase
+      const { data: mainPoll, error: mainPollError } = await supabase
         .from('po_polls')
         .insert([{
           poll_id: `auto_${pollId}`,
