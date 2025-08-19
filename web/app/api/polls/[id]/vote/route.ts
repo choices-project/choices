@@ -34,7 +34,7 @@ export async function POST(
     }
 
     // Verify user is active
-    const {  } = await supabase
+    const { data: userProfile, error: profileError } = await supabase
       .from('ia_users')
       .select('is_active')
       .eq('stable_id', user.id)
@@ -123,7 +123,7 @@ export async function GET(
     }
 
     // Check if user has voted (returns boolean only, no vote data)
-    const {  } = await supabase
+    const { data: existingVote, error: voteError } = await supabase
       .from('po_votes')
       .select('id')
       .eq('poll_id', pollId)

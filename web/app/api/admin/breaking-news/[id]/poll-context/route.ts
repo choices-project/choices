@@ -174,7 +174,7 @@ export async function GET(
     }
 
     // Get existing poll context
-    const {  } = await supabase
+    const { data: contextData, error: contextError } = await supabase
       .from('poll_contexts')
       .select('*')
       .eq('story_id', storyId)
