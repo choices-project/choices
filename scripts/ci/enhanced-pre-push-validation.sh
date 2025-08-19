@@ -91,17 +91,35 @@ check_console_logs() {
 check_use_search_params() {
     print_status "info" "Checking useSearchParams usage (Lesson 18)..."
     
-    local search_params_files=$(find . -name "*.tsx" | grep -v node_modules | grep -v .git | xargs grep -l "useSearchParams" 2>/dev/null || true)
+    local unguarded_search_params=""
     
-    if [ -n "$search_params_files" ]; then
-        print_status "warning" "Found useSearchParams usage - ensure Suspense boundaries are in place:"
-        echo "$search_params_files" | while read -r file; do
-            echo "  - $file"
+    while IFS= read -r -d '' file; do
+        # Skip node_modules and build files
+        if [[ "$file" == *"node_modules"* ]] || [[ "$file" == *".next"* ]]; then
+            continue
+        fi
+        
+        # Check if file contains useSearchParams
+        if grep -q "useSearchParams" "$file"; then
+            # Check if the component using useSearchParams is wrapped in Suspense
+            # Look for Suspense wrapper around the component
+            if ! grep -q "Suspense.*fallback" "$file"; then
+                unguarded_search_params="$unguarded_search_params$file"$'\n'
+            fi
+        fi
+    done < <(find ./web -name "*.tsx" -print0)
+    
+    if [ -n "$unguarded_search_params" ]; then
+        print_status "warning" "Found useSearchParams usage without proper Suspense boundaries:"
+        echo "$unguarded_search_params" | while read -r file; do
+            if [ -n "$file" ]; then
+                echo "  - $file"
+            fi
         done
         print_status "info" "Wrap useSearchParams components in Suspense boundaries"
         return 1
     else
-        print_status "success" "No useSearchParams usage found"
+        print_status "success" "All useSearchParams usage is properly wrapped in Suspense"
         return 0
     fi
 }
@@ -274,14 +292,20 @@ main() {
     check_console_logs || exit_code=1
     echo ""
     
-    # Temporarily make these warnings instead of errors for deployment
-    check_use_search_params || echo "⚠️  useSearchParams check failed (will be addressed)"
+    # Run all checks - no bypassing!
+    check_branch_safety || exit_code=1
+    echo ""
+    
+    check_console_logs || exit_code=1
+    echo ""
+    
+    check_use_search_params || exit_code=1
     echo ""
     
     check_unused_imports || exit_code=1
     echo ""
     
-    check_select_star || echo "⚠️  select('*') check failed (will be addressed)"
+    check_select_star || exit_code=1
     echo ""
     
     check_error_handling || exit_code=1
@@ -290,7 +314,13 @@ main() {
     check_documentation_timestamps || exit_code=1
     echo ""
     
-    check_typescript_strict || echo "⚠️  TypeScript strict mode check failed (will be addressed)"
+    check_typescript_strict || exit_code=1
+    echo ""
+    
+    check_commit_messages || exit_code=1
+    echo ""
+    
+    check_large_files || exit_code=1
     echo ""
     
     check_commit_messages || exit_code=1
