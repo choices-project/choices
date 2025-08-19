@@ -244,7 +244,7 @@ export class HybridVotingService {
       const tokenResponse = await this.requestBlindedToken(pollId, userId);
       
       // Step 2: Submit vote through PO service
-      const voteResponse = await this.submitToPOService(pollId, choice, tokenResponse.token);
+      const voteResponse = await this.submitToPOService(pollId, choice, tokenResponse.token, tokenResponse.tag);
       
       return {
         success: true,
@@ -263,23 +263,84 @@ export class HybridVotingService {
   /**
    * Request blinded token from IA service
    */
-  private async requestBlindedToken(pollId: string, userId: string): Promise<{ token: string }> {
-    // TODO: Implement IA service integration
-    // For now, return a mock token
-    return {
-      token: `ia_token_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
-    };
+  private async requestBlindedToken(pollId: string, userId: string): Promise<{ token: string; tag: string }> {
+    try {
+      // Get user profile to determine tier
+      const { data: userProfile, error: profileError } = await this.supabase
+        .from('ia_users')
+        .select('verification_tier')
+        .eq('stable_id', userId)
+        .single();
+
+      if (profileError || !userProfile) {
+        throw new Error('User profile not found');
+      }
+
+      const tier = userProfile.verification_tier || 'T1';
+
+      // Request token from IA service
+      const response = await fetch('/api/ia/tokens', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          user_stable_id: userId,
+          poll_id: pollId,
+          tier,
+          scope: `poll:${pollId}`,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `Failed to get token: ${response.statusText}`);
+      }
+
+      const tokenData = await response.json();
+      
+      return {
+        token: tokenData.token,
+        tag: tokenData.tag
+      };
+    } catch (error) {
+      console.error('Error requesting blinded token:', error);
+      throw new Error(`Token request failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
   }
 
   /**
    * Submit vote to PO service
    */
-  private async submitToPOService(pollId: string, choice: number, token: string): Promise<{ voteId: string; auditReceipt: string }> {
-    // TODO: Implement PO service integration
-    // For now, return mock response
-    return {
-      voteId: `po_vote_${Date.now()}`,
-      auditReceipt: `merkle_receipt_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
-    };
+  private async submitToPOService(pollId: string, choice: number, token: string, tag: string): Promise<{ voteId: string; auditReceipt: string }> {
+    try {
+      // Submit vote to PO service
+      const response = await fetch(`/api/po/votes?poll_id=${pollId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          token,
+          tag,
+          choice,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `Failed to submit vote: ${response.statusText}`);
+      }
+
+      const voteData = await response.json();
+      
+      return {
+        voteId: voteData.vote_id || `vote_${Date.now()}`,
+        auditReceipt: voteData.audit_receipt || `receipt_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+      };
+    } catch (error) {
+      console.error('Error submitting vote to PO service:', error);
+      throw new Error(`Vote submission failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
   }
 }
