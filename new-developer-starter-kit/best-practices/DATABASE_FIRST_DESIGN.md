@@ -255,6 +255,10 @@ node scripts/security/verify-privacy-system.js
 - Remove unused imports immediately
 - Use ESLint to catch unused variables
 - Review imports regularly during development
+- Remove all console.log statements before deployment
+- Wrap useSearchParams components in Suspense boundaries
+- Use proper logging library for development
+- Test SSR and hydration thoroughly
 
 ### **❌ Don't Do These**
 - Start coding before schema design
@@ -266,6 +270,8 @@ node scripts/security/verify-privacy-system.js
 - Import entire libraries when you only need specific functions
 - Leave unused imports in your code
 - Accumulate unused variables and components
+- Leave console.log statements in production code
+- Use useSearchParams without Suspense boundaries
 
 ## 🎯 **Remember**
 
