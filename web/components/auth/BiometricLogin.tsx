@@ -16,7 +16,7 @@ import {
 import { devLog } from '@/lib/logger'
 
 interface BiometricLoginProps {
-  onSuccess?: (user: any) => void
+  onSuccess?: (user?: any) => void
   onError?: (error: string) => void
   onCancel?: () => void
 }
@@ -62,7 +62,9 @@ export default function BiometricLogin({ onSuccess, onError, onCancel }: Biometr
       
       if (result.success) {
         setSuccess(true)
-        onSuccess?.(result.user)
+        // The server should return user data in the response
+        // For now, we'll call onSuccess without user data
+        onSuccess?.()
       } else {
         setError(result.error || 'Authentication failed')
         onError?.(result.error || 'Authentication failed')

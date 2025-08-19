@@ -98,6 +98,16 @@ A secure, modern voting platform with enterprise-grade biometric authentication,
 ### Prerequisites
 - Node.js 18+ 
 - npm or yarn
+- Supabase account (for authentication and database)
+
+### ⚠️ **IMPORTANT: Email Bounce Protection**
+This project uses Supabase's email service. To avoid email bounce issues:
+- **Use real email addresses only** (no test@example.com)
+- **Use OAuth for development testing** (Google/GitHub)
+- **Check spam folder** for confirmation emails
+- **Monitor Supabase dashboard** for email metrics
+
+See `EMAIL_BOUNCE_WARNING.md` for detailed guidelines.
 - Supabase account
 - Modern browser with WebAuthn support
 

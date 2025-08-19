@@ -19,13 +19,13 @@ const WEBAUTHN_CONFIG = {
 // Generate random challenge
 function generateChallenge(): string {
   const challenge = crypto.getRandomValues(new Uint8Array(WEBAUTHN_CONFIG.challengeLength))
-  return arrayBufferToBase64(challenge)
+  return arrayBufferToBase64(challenge.buffer)
 }
 
 // Generate random user ID
 function generateUserId(): string {
   const userId = crypto.getRandomValues(new Uint8Array(16))
-  return arrayBufferToBase64(userId)
+  return arrayBufferToBase64(userId.buffer)
 }
 
 export async function POST(request: NextRequest) {
@@ -128,7 +128,7 @@ export async function POST(request: NextRequest) {
       // Verify the challenge matches
       if (credential.response?.clientDataJSON) {
         const clientData = JSON.parse(
-          Buffer.from(base64ToArrayBuffer(credential.response.clientDataJSON), 'utf-8').toString()
+          Buffer.from(base64ToArrayBuffer(credential.response.clientDataJSON)).toString('utf-8')
         )
         
         if (clientData.challenge !== challengeData.challenge) {
