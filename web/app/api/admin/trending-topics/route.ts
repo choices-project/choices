@@ -218,14 +218,30 @@ export async function PUT(request: NextRequest) {
     const { action } = body;
 
     if (action === 'refresh') {
-      // TODO: Implement data source refresh logic
-      // This would trigger the automated data ingestion process
+      // Implement data source refresh logic
+      const service = new AutomatedPollsService();
       
-      return NextResponse.json({
-        success: true,
-        message: 'Data source refresh initiated',
-        timestamp: new Date().toISOString()
-      });
+      try {
+        // Trigger automated data ingestion process
+        const refreshResult = await service.refreshDataSources();
+        
+        return NextResponse.json({
+          success: true,
+          message: 'Data source refresh completed successfully',
+          timestamp: new Date().toISOString(),
+          sourcesRefreshed: refreshResult.sourcesRefreshed,
+          newTopicsFound: refreshResult.newTopicsFound,
+          processingTime: refreshResult.processingTime
+        });
+      } catch (error) {
+        devLog('Error during data source refresh:', error);
+        return NextResponse.json({
+          success: false,
+          message: 'Data source refresh failed',
+          error: error instanceof Error ? error.message : 'Unknown error',
+          timestamp: new Date().toISOString()
+        }, { status: 500 });
+      }
     }
 
     return NextResponse.json(

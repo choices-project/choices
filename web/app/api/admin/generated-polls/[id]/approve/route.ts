@@ -92,8 +92,8 @@ export async function POST(
       );
     }
 
-    // TODO: Integrate with main poll system
-    // This would create a regular poll in the po_polls table
+    // Integrate with main poll system
+    // Create a regular poll in the po_polls table
     try {
       const { data: mainPoll, error: mainPollError } = await supabase
         .from('po_polls')
