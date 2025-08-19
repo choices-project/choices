@@ -152,7 +152,7 @@ export async function GET(
     }
 
     // Check admin permissions
-    const {  } = await supabase
+    const { data: userProfile, error: profileError } = await supabase
       .from('ia_users')
       .select('verification_tier')
       .eq('stable_id', user.id)

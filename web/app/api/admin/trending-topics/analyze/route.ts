@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check admin permissions - RESTRICTED TO OWNER ONLY
-    const {  } = await supabase
+    const { data: userProfile, error: profileError } = await supabase
       .from('ia_users')
       .select('verification_tier')
       .eq('stable_id', user.id)
@@ -244,7 +244,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Check admin permissions
-    const {  } = await supabase
+    const { data: userProfile, error: profileError } = await supabase
       .from('ia_users')
       .select('verification_tier')
       .eq('stable_id', user.id)

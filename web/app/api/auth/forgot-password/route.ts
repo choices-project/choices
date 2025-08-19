@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if user exists
-    const { error: userError } = await supabase
+    const { data: user, error: userError } = await supabase
       .from('ia_users')
       .select('id, email')
       .eq('email', email.toLowerCase())

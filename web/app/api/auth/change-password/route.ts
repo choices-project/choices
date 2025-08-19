@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get user from ia_users table to verify current password
-    const {  } = await supabase
+    const { data: iaUser, error: iaError } = await supabase
       .from('ia_users')
       .select('*')
       .eq('stable_id', user.id)
@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
     const newHashedPassword = await bcrypt.hash(newPassword, saltRounds)
 
     // Update password in ia_users table
-    const {  } = await supabase
+    const { data: updatedUser, error: updateError } = await supabase
       .from('ia_users')
       .update({ 
         password_hash: newHashedPassword,
@@ -91,7 +91,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Update password in Supabase Auth
-    const {  } = await supabase.auth.updateUser({
+    const { data: authUser, error: authUpdateError } = await supabase.auth.updateUser({
       password: newPassword
     })
 

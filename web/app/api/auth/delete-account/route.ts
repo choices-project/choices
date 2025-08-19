@@ -94,7 +94,7 @@ export async function POST(request: NextRequest) {
         .eq('created_by', user.id)
 
       // Finally, delete the user from ia_users table
-      const {  } = await supabase
+      const { data: deletedUser, error: deleteError } = await supabase
         .from('ia_users')
         .delete()
         .eq('stable_id', user.id)
@@ -108,7 +108,7 @@ export async function POST(request: NextRequest) {
       }
 
       // Delete user from Supabase Auth
-      const {  } = await supabase.auth.admin.deleteUser(user.id)
+      const { data: authDeletedUser, error: authDeleteError } = await supabase.auth.admin.deleteUser(user.id)
       
       if (authDeleteError) {
         devLog('Error deleting user from Supabase Auth:', authDeleteError)

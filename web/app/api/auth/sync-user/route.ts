@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
     })
 
     // Check if user already exists in ia_users table
-    const { error: checkError } = await supabase
+    const { data: existingUser, error: checkError } = await supabase
       .from('ia_users')
       .select('*')
       .eq('stable_id', user.id)
@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create user in ia_users table
-    const { error: createError } = await supabase
+    const { data: newUser, error: createError } = await supabase
       .from('ia_users')
       .insert({
         stable_id: user.id,
