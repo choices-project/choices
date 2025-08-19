@@ -5,8 +5,54 @@ import { devLog } from '@/lib/logger'
 
 export const dynamic = 'force-dynamic'
 
+// Security configuration for feedback API
+const securityConfig = {
+  maxContentLength: 1000,
+  maxTitleLength: 200,
+  maxRequestSize: 1024 * 1024, // 1MB
+  suspiciousPatterns: [
+    /[A-Z]{5,}/,                                    // ALL CAPS
+    /!{3,}/,                                        // Multiple exclamation marks
+    /https?:\/\/[^\s]+/g,                           // URLs
+    /spam|scam|click here|buy now|free money/i      // Spam words
+  ]
+}
+
+// Content validation function
+function validateContent(content: string, fieldName: string): { valid: boolean; reason?: string } {
+  if (content.length > securityConfig.maxContentLength) {
+    return { valid: false, reason: `${fieldName} too long (max ${securityConfig.maxContentLength} characters)` }
+  }
+  
+  for (const pattern of securityConfig.suspiciousPatterns) {
+    if (pattern.test(content)) {
+      return { valid: false, reason: `Suspicious content detected in ${fieldName}` }
+    }
+  }
+  
+  return { valid: true }
+}
+
+// Request size validation
+function validateRequestSize(request: NextRequest): { valid: boolean; reason?: string } {
+  const contentLength = request.headers.get('content-length')
+  if (contentLength && parseInt(contentLength) > securityConfig.maxRequestSize) {
+    return { valid: false, reason: 'Request too large' }
+  }
+  return { valid: true }
+}
+
 export async function POST(request: NextRequest) {
   try {
+    // Request size validation
+    const sizeValidation = validateRequestSize(request)
+    if (!sizeValidation.valid) {
+      return NextResponse.json(
+        { error: sizeValidation.reason },
+        { status: 413 }
+      )
+    }
+
     const body = await request.json()
     const { 
       type, 
@@ -22,6 +68,23 @@ export async function POST(request: NextRequest) {
     if (!type || !title || !description || !sentiment) {
       return NextResponse.json(
         { error: 'Missing required fields' },
+        { status: 400 }
+      )
+    }
+
+    // Enhanced content validation
+    const titleValidation = validateContent(title, 'title')
+    if (!titleValidation.valid) {
+      return NextResponse.json(
+        { error: titleValidation.reason },
+        { status: 400 }
+      )
+    }
+
+    const descriptionValidation = validateContent(description, 'description')
+    if (!descriptionValidation.valid) {
+      return NextResponse.json(
+        { error: descriptionValidation.reason },
         { status: 400 }
       )
     }
@@ -62,6 +125,23 @@ export async function POST(request: NextRequest) {
       devLog('Could not get user, proceeding with anonymous feedback:', userError.message)
     }
 
+    // Check daily feedback limit for authenticated users
+    if (user?.id) {
+      const today = new Date().toISOString().split('T')[0]
+      const { count } = await supabase
+        .from('feedback')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .gte('created_at', today)
+      
+      if (count && count >= 10) {
+        return NextResponse.json(
+          { error: 'Daily feedback limit exceeded (10 per day)' },
+          { status: 429 }
+        )
+      }
+    }
+
     // Prepare enhanced feedback data
     const feedbackData = {
       user_id: user?.id || null,
@@ -85,6 +165,11 @@ export async function POST(request: NextRequest) {
           sessionId: userJourney?.sessionId,
           sessionStartTime: userJourney?.sessionStartTime,
           totalPageViews: userJourney?.totalPageViews
+        },
+        security: {
+          ipAddress: request.ip || request.headers.get('x-forwarded-for')?.split(',')[0] || 'unknown',
+          userAgent: request.headers.get('user-agent') || 'unknown',
+          timestamp: new Date().toISOString()
         }
       }
     }
