@@ -1,134 +1,105 @@
-# 🗳️ Choices - Privacy-First Voting Platform
+# Choices Platform
 
-A revolutionary privacy-first voting platform built as a Progressive Web App (PWA) that combines advanced encryption, differential privacy, and zero-knowledge proofs to ensure secure, anonymous, and verifiable voting experiences across all devices.
-
-## 🚀 Quick Start for New Contributors
-
-### **For New Agents/Contributors**
-1. **📚 Documentation System**: Start with [`docs/consolidated/README.md`](docs/consolidated/README.md)
-2. **👋 Onboarding Guide**: Read [`docs/consolidated/development/AGENT_ONBOARDING.md`](docs/consolidated/development/AGENT_ONBOARDING.md)
-3. **🏗️ Architecture**: Review [`docs/consolidated/core/ARCHITECTURE.md`](docs/consolidated/core/ARCHITECTURE.md)
-4. **🛠️ Development**: Study [`docs/consolidated/development/DEVELOPMENT_GUIDE.md`](docs/consolidated/development/DEVELOPMENT_GUIDE.md)
-5. **🔍 Quick Assessment**: Run `node scripts/assess-project-status.js`
-
-### **Current Project Status**
-- ✅ **Core Application**: Next.js frontend with Go backend services
-- ✅ **Database**: PostgreSQL via Supabase with comprehensive RLS security
-- ✅ **Authentication**: Supabase Auth with tiered user system
-- ✅ **Automated Polls**: MVP feature for trending topic analysis
-- ⚠️ **Security Policies**: Need final deployment (see deployment guide)
-
-### **Quick Development Setup**
-```bash
-# Clone and setup
-git clone https://github.com/choices-project/choices.git
-cd choices
-
-# Start development server
-cd web && npm install && npm run dev
-
-# Check database status
-node scripts/check_supabase_auth.js
-
-# Follow deployment guide for database setup
-# See FINAL_DEPLOYMENT_INSTRUCTIONS.md
-```
+A secure, modern voting platform with enterprise-grade biometric authentication, comprehensive security features, and full legal compliance.
 
 ## 🚀 Features
 
-### 🔐 Advanced Privacy & Security
-- **AES-256 Encryption**: End-to-end encryption for all data transmission and storage
-- **Differential Privacy**: Laplace and Gaussian mechanisms with privacy budget management
-- **Zero-Knowledge Proofs**: Age verification, vote validation, and range proofs
-- **WebAuthn Integration**: Biometric and hardware-based authentication
-- **Device Fingerprinting**: Advanced bot detection and trust tier management
-- **Local Storage Encryption**: Client-side data encryption with secure key management
+### Core Platform
+- **Secure Voting**: Create and participate in polls with advanced security
+- **Real-time Results**: Live voting results and analytics
+- **User Management**: Comprehensive user account management
+- **Admin Dashboard**: Advanced administrative tools and analytics
 
-### 📱 Progressive Web App (PWA)
-- **Offline Voting**: Complete offline functionality with background sync
-- **Push Notifications**: Real-time updates and engagement
-- **App Installation**: Native app-like experience - add to home screen
-- **Service Worker**: Intelligent caching and offline capabilities
-- **Background Sync**: Automatic data synchronization when online
-- **Cross-Platform**: Works seamlessly on mobile, tablet, and desktop
+### Biometric Authentication
+- **WebAuthn Support**: Industry-standard biometric authentication
+- **Multi-device Support**: Fingerprint, Face ID, and other biometric methods
+- **Trust Scoring**: Advanced trust assessment and verification
+- **Audit Logging**: Comprehensive authentication audit trails
+- **Security Monitoring**: Real-time security monitoring and alerts
 
-### 🌐 Universal Compatibility
-- **Responsive Design**: Optimized for all screen sizes
-- **Touch Interface**: Gesture recognition and touch target optimization
-- **Browser Compatibility**: Works across all modern browsers
-- **Accessibility**: WCAG compliant with screen reader support
-- **Performance**: Optimized for low-end devices and slow connections
+### Security Features
+- **Multi-layered Security**: Comprehensive security architecture
+- **Rate Limiting**: Protection against spam and DDoS attacks
+- **Content Filtering**: Advanced content validation and filtering
+- **IP Intelligence**: Geographic and behavioral analysis
+- **Encryption**: End-to-end encryption for all data
 
-### 🧪 Comprehensive Testing Suite
-- **MVP Testing**: Core functionality, security, and performance validation
-- **Cross-Platform Testing**: Comprehensive testing across all devices
-- **PWA Testing**: Progressive web app feature validation
-- **Real-time Testing**: Live test execution with detailed reporting
-- **Deployment Readiness**: Complete validation for production deployment
+### Legal Compliance
+- **GDPR Compliant**: Full European data protection compliance
+- **CCPA Compliant**: California privacy law compliance
+- **BIPA Compliant**: Illinois biometric privacy compliance
+- **State Laws**: Compliance with various state privacy laws
+- **Industry Standards**: ISO 27001, SOC 2, NIST compliance
 
-### 🤖 Automated Polls Feature (MVP)
-- **Trending Topics Analysis**: Automated scanning of current events
-- **Poll Generation**: AI-powered poll creation with context awareness
-- **Admin Dashboard**: Comprehensive admin interface for poll management
-- **Security-First**: Complete data isolation and privacy protection
+## 🛡️ Security Architecture
 
-## 🔒 Privacy & Encryption Techniques
+### Biometric Authentication
+- **WebAuthn Protocol**: Industry-standard implementation
+- **Device Binding**: Credentials tied to specific devices
+- **Challenge-Response**: Secure authentication protocols
+- **Privacy by Design**: Biometric data never leaves user devices
 
-### AES-256 Encryption
-- **End-to-End Encryption**: All data is encrypted in transit and at rest
-- **Client-Side Encryption**: Data is encrypted before leaving the user's device
-- **Secure Key Management**: Cryptographic keys are securely generated and stored
-- **Local Storage Security**: Sensitive data is encrypted before local storage
+### Data Protection
+- **Encryption**: AES-256 encryption at rest and in transit
+- **Access Controls**: Row-level security and role-based access
+- **Audit Logging**: Comprehensive audit trails
+- **Data Minimization**: Minimal data collection and storage
 
-### Differential Privacy
-- **Laplace Mechanism**: Adds calibrated noise to numerical data
-- **Gaussian Mechanism**: Provides privacy guarantees for statistical queries
-- **Privacy Budget Management**: Tracks and limits privacy loss across queries
-- **Epsilon-Delta Privacy**: Configurable privacy parameters (ε, δ)
+### Platform Security
+- **Rate Limiting**: Protection against abuse and attacks
+- **Content Validation**: Input validation and sanitization
+- **Security Headers**: Comprehensive security headers
+- **Monitoring**: Real-time security monitoring
 
-### Zero-Knowledge Proofs (ZKPs)
-- **Age Verification**: Prove age without revealing exact date of birth
-- **Vote Validation**: Verify vote integrity without revealing vote content
-- **Range Proofs**: Prove values fall within specified ranges
-- **Non-Interactive ZKPs**: Efficient proof generation and verification
+## 📊 Trust System
 
-### Advanced Authentication
-- **WebAuthn Integration**: Biometric and hardware-based authentication
-- **Device Fingerprinting**: Advanced bot detection and device verification
-- **Trust Tiers**: Multi-level trust scoring based on device characteristics
-- **Session Management**: Secure session handling with automatic expiration
+### User Tiers
+- **T0 (Anonymous)**: Basic access with limitations
+- **T1 (Basic)**: Email-verified users
+- **T2 (Verified)**: Biometric-authenticated users
+- **T3 (Premium)**: High-trust verified users
+- **T4 (Admin)**: Administrative access
 
-## 🛠️ Technology Stack
+### Trust Scoring
+- **Biometric Trust**: Device consistency and authentication history
+- **Behavioral Analysis**: Usage patterns and reliability
+- **Geographic Consistency**: Location-based trust factors
+- **Social Integration**: Enhanced trust through social verification
 
-### Frontend (PWA)
+## 🏗️ Technical Stack
+
+### Frontend
 - **Next.js 14**: React framework with App Router
 - **TypeScript**: Type-safe development
-- **Tailwind CSS**: Utility-first CSS framework
-- **Framer Motion**: Smooth animations and transitions
-- **Lucide React**: Beautiful icon library
+- **Tailwind CSS**: Utility-first styling
+- **React Query**: Data fetching and caching
+- **Zustand**: State management
 
 ### Backend
-- **PostgreSQL**: Robust relational database (via Supabase)
-- **Prisma**: Type-safe database client
-- **Next.js API Routes**: Serverless API endpoints
-- **WebAuthn**: Web Authentication API
-
-### Privacy & Security
-- **Web Crypto API**: Cryptographic operations
-- **IndexedDB**: Client-side encrypted storage
-- **Service Workers**: Offline capabilities and caching
-- **Push API**: Real-time notifications
-
-### Infrastructure
-- **Vercel**: Production deployment and hosting
 - **Supabase**: Database and authentication
-- **GitHub Actions**: CI/CD pipeline
+- **PostgreSQL**: Primary database
+- **Row Level Security**: Database-level security
+- **Real-time Subscriptions**: Live data updates
 
-## 🚀 Getting Started
+### Authentication
+- **WebAuthn**: Biometric authentication standard
+- **Supabase Auth**: Traditional authentication
+- **Multi-factor**: Enhanced security options
+- **Social Login**: OAuth integration
+
+### Security
+- **Vercel**: Secure hosting and CDN
+- **Nginx**: Reverse proxy and rate limiting
+- **Security Headers**: Comprehensive security headers
+- **Monitoring**: Real-time security monitoring
+
+## 🚀 Quick Start
 
 ### Prerequisites
 - Node.js 18+ 
 - npm or yarn
+- Supabase account
+- Modern browser with WebAuthn support
 
 ### Installation
 
@@ -140,209 +111,167 @@ node scripts/check_supabase_auth.js
 
 2. **Install dependencies**
    ```bash
-   cd web
    npm install
    ```
 
 3. **Set up environment variables**
    ```bash
-   cp .env.example .env.local
-   ```
-   
-   Configure the following variables:
-   ```env
-   DATABASE_URL="postgresql://..."
-   NEXTAUTH_SECRET="your-secure-random-string-here"
-   NEXTAUTH_URL="http://localhost:3000"
-   SUPABASE_URL="your-supabase-url"
-   SUPABASE_ANON_KEY="your-supabase-anon-key-here"
+   cp web/.env.example web/.env.local
+   # Edit web/.env.local with your Supabase credentials
    ```
 
-4. **Run the development server**
+4. **Set up database**
    ```bash
+   node scripts/setup-biometric-schema.js
+   ```
+
+5. **Start development server**
+   ```bash
+   cd web
    npm run dev
    ```
 
-5. **Open your browser**
-   Navigate to [http://localhost:3000](http://localhost:3000)
+6. **Access the platform**
+   - Open http://localhost:3000
+   - Create an account
+   - Set up biometric authentication (optional)
 
-## 📱 Progressive Web App Features
+## 📋 Legal Compliance
 
-### Offline Capabilities
-- **Complete Offline Voting**: Vote without internet connection
-- **Background Sync**: Automatic synchronization when online
-- **Intelligent Caching**: Smart resource caching for performance
-- **Offline Indicators**: Clear offline/online status
+### Privacy Laws
+- **GDPR**: European data protection compliance
+- **CCPA**: California privacy law compliance
+- **BIPA**: Illinois biometric privacy compliance
+- **State Laws**: Various state privacy protections
 
-### App-Like Experience
-- **Install Prompt**: Add to home screen functionality
-- **Push Notifications**: Real-time updates and engagement
-- **Native Feel**: Smooth animations and transitions
-- **Full-Screen Mode**: Immersive voting experience
+### Security Standards
+- **ISO 27001**: Information security management
+- **SOC 2**: Security, availability, and confidentiality
+- **NIST**: Cybersecurity framework compliance
+- **OWASP**: Web application security standards
 
-### Performance Optimization
-- **Lazy Loading**: Efficient resource loading
-- **Image Optimization**: Automatic image optimization
-- **Code Splitting**: Efficient bundle splitting
-- **Service Worker**: Intelligent caching strategies
+### User Rights
+- **Data Access**: Right to access personal data
+- **Data Portability**: Right to export data
+- **Data Deletion**: Right to delete data
+- **Consent Management**: Granular consent control
 
-## 🧪 Testing
+## 🔧 Configuration
 
-### Comprehensive Testing Suite
-Visit `/comprehensive-testing` to run the complete testing suite:
-
-- **MVP Testing**: Core functionality and security validation
-- **Cross-Platform Testing**: Comprehensive testing across all devices
-- **PWA Testing**: Progressive web app feature validation
-- **Deployment Readiness**: Complete production validation
-
-### Individual Testing Pages
-- **MVP Testing**: `/mvp-testing` - Core functionality validation
-- **Cross-Platform Testing**: `/cross-platform-testing` - Platform compatibility
-- **PWA Testing**: `/pwa-testing` - Progressive web app features
-
-### Running Tests
+### Environment Variables
 ```bash
-# Build the application
-npm run build
+# Supabase Configuration
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 
-# Run comprehensive tests
-npm run test
+# Security Configuration
+NEXTAUTH_SECRET=your_nextauth_secret
+NEXTAUTH_URL=http://localhost:3000
 
-# Check for TypeScript errors
-npm run type-check
+# Email Configuration
+SMTP_HOST=your_smtp_host
+SMTP_PORT=587
+SMTP_USER=your_smtp_user
+SMTP_PASS=your_smtp_password
+
+# GitHub Integration
+GITHUB_TOKEN=your_github_token
+GITHUB_REPO=your_github_repo
 ```
 
-## 🔒 Security & Privacy Features
-
-### Encryption Implementation
-```typescript
-// AES-256 encryption for sensitive data
-const encryptedData = await encryptData(sensitiveData, userKey);
-
-// Differential privacy for statistical queries
-const privateResult = applyDifferentialPrivacy(rawData, epsilon, delta);
-
-// Zero-knowledge proof for age verification
-const ageProof = generateAgeProof(userAge, minimumAge);
-```
-
-### Privacy Budget Management
-- **Epsilon Tracking**: Monitor privacy loss across queries
-- **Budget Allocation**: Distribute privacy budget efficiently
-- **Threshold Enforcement**: Prevent excessive privacy loss
-- **Audit Trail**: Complete privacy budget audit trail
-
-### Data Protection
-- **Client-Side Encryption**: Data encrypted before transmission
-- **Secure Storage**: Encrypted local storage with key management
-- **Data Minimization**: Minimal data collection and retention
-- **User Control**: Complete user control over data sharing
-
-## 🌐 Cross-Platform Compatibility
-
-### Responsive Design
-- **Mobile-First**: Optimized for mobile devices
-- **Tablet Support**: Enhanced tablet experience
-- **Desktop Optimization**: Full desktop functionality
-- **Touch Interface**: Gesture recognition and touch targets
-
-### Browser Support
-- **Chrome**: Full feature support
-- **Firefox**: Complete compatibility
-- **Safari**: Full PWA support
-- **Edge**: Complete feature set
-
-### Accessibility
-- **Screen Reader Support**: Full NVDA/JAWS compatibility
-- **Keyboard Navigation**: Complete keyboard accessibility
-- **Color Contrast**: WCAG AA compliance
-- **Focus Management**: Proper focus handling
-
-## 📊 Performance Metrics
-
-### Core Web Vitals
-- **First Contentful Paint (FCP)**: < 1.5s
-- **Largest Contentful Paint (LCP)**: < 2.5s
-- **Cumulative Layout Shift (CLS)**: < 0.1
-- **First Input Delay (FID)**: < 100ms
-
-### PWA Performance
-- **Load Time**: < 3s on 3G connections
-- **Memory Usage**: Optimized for low-end devices
-- **Battery Efficiency**: Minimal battery impact
-- **Offline Performance**: Complete offline functionality
-
-## 🚀 Deployment
-
-### Production Build
+### Database Setup
 ```bash
-# Create production build
-npm run build
-
-# Start production server
-npm start
+# Run database setup scripts
+node scripts/setup-biometric-schema.js
+node scripts/security-database-setup.js
 ```
 
-### Environment Configuration
-```env
-# Production environment variables
-DATABASE_URL="postgresql://..."
-NEXTAUTH_SECRET="your-secure-random-string-here"
-NEXTAUTH_URL="https://your-domain.com"
-NEXT_PUBLIC_VAPID_PUBLIC_KEY="your-vapid-public-key-here"
-SUPABASE_URL="your-supabase-url"
-SUPABASE_ANON_KEY="your-supabase-anon-key-here"
-```
+## 📚 Documentation
 
-### Deployment Checklist
-- ✅ Core functionality tests passing
-- ✅ Security and privacy features validated
-- ✅ Performance benchmarks met
-- ✅ Accessibility requirements satisfied
-- ✅ Cross-platform compatibility verified
-- ✅ PWA features working correctly
-- ✅ Service worker properly configured
+### User Guides
+- [Getting Started](docs/GETTING_STARTED.md)
+- [Biometric Authentication](docs/BIOMETRIC_AUTHENTICATION.md)
+- [Security Features](docs/SECURITY_ENHANCEMENT.md)
+- [Admin Dashboard](docs/ADMIN_DASHBOARD.md)
+
+### Legal Documentation
+- [Privacy Policy](docs/PRIVACY_POLICY.md)
+- [Terms of Service](docs/TERMS_OF_SERVICE.md)
+- [Legal Compliance](docs/LEGAL_COMPLIANCE.md)
+
+### Technical Documentation
+- [API Reference](docs/API_REFERENCE.md)
+- [Database Schema](docs/DATABASE_SCHEMA.md)
+- [Security Architecture](docs/SECURITY_ARCHITECTURE.md)
+- [Deployment Guide](docs/DEPLOYMENT.md)
 
 ## 🤝 Contributing
 
-We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details.
-
-### Development Workflow
+### Development Setup
 1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+2. Create a feature branch
+3. Make your changes
+4. Add tests and documentation
+5. Submit a pull request
 
-### Testing Requirements
-- All new features must include comprehensive tests
-- Cross-platform compatibility must be validated
-- Performance impact must be assessed
-- Security implications must be reviewed
+### Code Standards
+- **TypeScript**: Strict type checking
+- **ESLint**: Code quality enforcement
+- **Prettier**: Code formatting
+- **Conventional Commits**: Standardized commit messages
+
+### Security
+- **Security Review**: All changes reviewed for security
+- **Vulnerability Reporting**: Report security issues privately
+- **Code Audit**: Regular security audits
+- **Penetration Testing**: Periodic penetration testing
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License with additional terms for biometric authentication. See [LICENSE](LICENSE) for details.
 
-## 🔗 Links
+### License Terms
+- **MIT License**: Open source software license
+- **Biometric Terms**: Additional terms for biometric features
+- **Commercial Use**: Appropriate for commercial applications
+- **Legal Compliance**: Must comply with applicable laws
 
-- **🌐 Live Platform**: [https://choices-platform.vercel.app](https://choices-platform.vercel.app)
-- **📊 Admin Dashboard**: [https://choices-platform.vercel.app/admin](https://choices-platform.vercel.app/admin)
-- **📚 Project Summary**: [PROJECT_SUMMARY.md](PROJECT_SUMMARY.md) - Comprehensive feature overview
-- **📖 Documentation**: [docs/consolidated/README.md](docs/consolidated/README.md) - Technical documentation
-- **🐛 Issues**: [https://github.com/choices-project/choices/issues](https://github.com/choices-project/choices/issues)
-- **💬 Discussions**: [https://github.com/choices-project/choices/discussions](https://github.com/choices-project/choices/discussions)
+## 🆘 Support
 
-## 🙏 Acknowledgments
+### Documentation
+- [User Guide](docs/USER_GUIDE.md)
+- [FAQ](docs/FAQ.md)
+- [Troubleshooting](docs/TROUBLESHOOTING.md)
 
-- **Privacy Research**: Based on cutting-edge privacy research
-- **Open Source**: Built with amazing open-source tools
-- **Community**: Thanks to our amazing community contributors
-- **Research Partners**: Collaboration with privacy research institutions
+### Contact
+- **Support**: support@choices-platform.com
+- **Security**: security@choices-platform.com
+- **Legal**: legal@choices-platform.com
+- **Privacy**: privacy@choices-platform.com
+
+### Community
+- **GitHub Issues**: Bug reports and feature requests
+- **Discussions**: Community discussions and questions
+- **Discord**: Real-time community support
+
+## 🏆 Acknowledgments
+
+### Open Source
+- **WebAuthn**: Web Authentication standard
+- **Supabase**: Database and authentication platform
+- **Next.js**: React framework
+- **Tailwind CSS**: Utility-first CSS framework
+
+### Security
+- **OWASP**: Web application security standards
+- **NIST**: Cybersecurity framework
+- **ISO**: Information security standards
+
+### Legal
+- **Privacy Laws**: GDPR, CCPA, BIPA compliance
+- **Industry Standards**: Security and privacy best practices
 
 ---
 
-**Built with ❤️ for a more private and secure voting experience**
-
-*Available as a Progressive Web App - works on all devices without app store installation*
+**Built with ❤️ for secure, accessible, and compliant voting**
