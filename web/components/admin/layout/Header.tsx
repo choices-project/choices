@@ -1,3 +1,5 @@
+'use client';
+
 import React from 'react';
 import { useAdminStore } from '../../../lib/admin-store';
 import {
