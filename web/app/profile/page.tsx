@@ -15,9 +15,6 @@ import {
   Download, 
   Trash2, 
   Fingerprint, 
-  Settings, 
-  Eye, 
-  EyeOff,
   AlertTriangle,
   CheckCircle,
   XCircle,
@@ -165,17 +162,6 @@ export default function ProfilePage() {
       setSuccess('Data exported successfully')
       setShowExportConfirm(false)
 
-      // Log export for audit
-      await supabase.rpc('log_biometric_auth', {
-        p_user_id: user.id,
-        p_credential_id: 'data-export',
-        p_result: true,
-        p_ip_address: null,
-        p_user_agent: navigator.userAgent,
-        p_device_info: { action: 'data_export' },
-        p_location_info: null
-      })
-
     } catch (error) {
       devLog('Error exporting data:', error)
       setError('Failed to export data')
@@ -208,12 +194,6 @@ export default function ProfilePage() {
         .from('ia_users')
         .delete()
         .eq('id', user.id)
-
-      // Delete Supabase auth user
-      const { error: authError } = await supabase.auth.admin.deleteUser(user.id)
-      if (authError) {
-        devLog('Error deleting auth user:', authError)
-      }
 
       // Sign out
       await supabase.auth.signOut()
@@ -303,8 +283,8 @@ export default function ProfilePage() {
         <div className="flex items-center gap-3">
           <User className="h-8 w-8 text-blue-600" />
           <div>
-            <h1 className="text-3xl font-bold">Profile & Privacy</h1>
-            <p className="text-gray-600">Manage your account, privacy settings, and data</p>
+            <h1 className="text-3xl font-bold">Profile & Settings</h1>
+            <p className="text-gray-600">Manage your account and privacy settings</p>
           </div>
         </div>
 
@@ -379,7 +359,7 @@ export default function ProfilePage() {
               Biometric Authentication
             </CardTitle>
             <CardDescription>
-              Manage your biometric authentication settings
+              Manage your biometric login settings
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -437,15 +417,15 @@ export default function ProfilePage() {
           </CardContent>
         </Card>
 
-        {/* Privacy & Data Rights */}
+        {/* Privacy & Data */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Shield className="h-5 w-5" />
-              Privacy & Data Rights
+              Privacy & Data
             </CardTitle>
             <CardDescription>
-              Exercise your privacy rights under GDPR, CCPA, and other privacy laws
+              Manage your data and privacy settings
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -455,9 +435,8 @@ export default function ProfilePage() {
                 <div>
                   <h4 className="font-medium text-blue-900">Your Privacy Rights</h4>
                   <p className="text-sm text-blue-800 mt-1">
-                    Under privacy laws like GDPR and CCPA, you have the right to access, export, 
-                    and delete your personal data. You can also manage your biometric authentication 
-                    settings and withdraw consent at any time.
+                    You have the right to access, export, and delete your personal data. 
+                    You can also manage your biometric authentication settings.
                   </p>
                 </div>
               </div>
@@ -465,10 +444,10 @@ export default function ProfilePage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-3">
-                <h4 className="font-medium">Data Access & Export</h4>
+                <h4 className="font-medium">Export Your Data</h4>
                 <p className="text-sm text-gray-600">
-                  Download a copy of all your personal data including profile information, 
-                  biometric credentials, and authentication logs.
+                  Download a copy of all your personal data including profile information 
+                  and biometric credentials.
                 </p>
                 <Button 
                   onClick={() => setShowExportConfirm(true)}
@@ -476,14 +455,15 @@ export default function ProfilePage() {
                   variant="outline"
                 >
                   <Download className="h-4 w-4 mr-2" />
-                  Export My Data
+                  Export Data
                 </Button>
               </div>
 
               <div className="space-y-3">
-                <h4 className="font-medium">Account Deletion</h4>
+                <h4 className="font-medium">Delete Account</h4>
                 <p className="text-sm text-gray-600">
-                  Permanently delete your account and all associated data. This action cannot be undone.
+                  Permanently delete your account and all associated data. 
+                  This action cannot be undone.
                 </p>
                 <Button 
                   onClick={() => setShowDeleteConfirm(true)}
