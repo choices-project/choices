@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
 
     try {
       devLog('Fetching active polls from po_polls table...');
-      const { data: directPolls } = await supabase
+      const { data: directPolls, error: directError } = await supabase
         .from('po_polls')
         .select('poll_id, title, total_votes, participation_rate, options, status')
         .eq('status', 'active')
@@ -154,7 +154,7 @@ export async function POST(request: NextRequest) {
       .from('po_polls')
       .insert({
         title: title.trim(),
-        description: description?.trim() || null,
+        description: body.description?.trim() || null,
         options: sanitizedOptions,
         voting_method,
         status: 'active',

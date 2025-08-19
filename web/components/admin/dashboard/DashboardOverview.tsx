@@ -24,7 +24,7 @@ export const DashboardOverview: React.FC = () => {
   useRealTimeSubscriptions();
   
   // Fetch data using admin hooks
-  const { data: topics } = useTrendingTopics();
+  const { data: topics, isLoading: topicsLoading } = useTrendingTopics();
   const { data: polls } = useGeneratedPolls();
   const { data: metrics } = useSystemMetrics();
 

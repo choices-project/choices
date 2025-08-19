@@ -102,7 +102,7 @@ const VOTING_METHODS: VotingMethod[] = [
 ]
 
 export default function CreatePollPage() {
-  const { loading } = useAuth()
+  const { user, loading } = useAuth()
   const router = useRouter()
   
   const [step, setStep] = useState(1)

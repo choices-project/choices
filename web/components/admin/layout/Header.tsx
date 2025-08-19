@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 
 export const Header: React.FC = () => {
-  const { notifications, markNotificationRead } = useAdminStore();
+  const { notifications, markNotificationRead, toggleSidebar } = useAdminStore();
 
   const unreadNotifications = notifications.filter(n => !n.read);
 
