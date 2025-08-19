@@ -755,7 +755,7 @@ export class MediaBiasAnalysisService {
   private async getMediaPoll(id: string): Promise<MediaPoll | null> {
     const { data, error } = await this.supabase
       .from('media_polls')
-      .select('*')
+      .select('id, source_id, title, content, created_at')
       .eq('id', id)
       .single();
 

@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
     // Check if user already exists in ia_users table
     const { data: existingUser, error: checkError } = await supabase
       .from('ia_users')
-      .select('*')
+      .select('id, stable_id, email, verification_tier, is_active')
       .eq('stable_id', user.id)
       .single()
 

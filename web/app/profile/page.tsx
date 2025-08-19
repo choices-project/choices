@@ -77,7 +77,7 @@ export default function ProfilePage() {
       // Get user profile
       const { data: profileData, error: profileError } = await supabase
         .from('ia_users')
-        .select('*')
+        .select('id, email, verification_tier, created_at, updated_at, display_name, avatar_url, bio')
         .eq('id', user.id)
         .single()
 

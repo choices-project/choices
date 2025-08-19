@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
     // Find user by email
     const { data: user, error: userError } = await supabase
       .from('ia_users')
-      .select('*')
+      .select('id, email, password_hash, two_factor_enabled, stable_id, verification_tier')
       .eq('email', email.toLowerCase())
       .eq('is_active', true)
       .single()

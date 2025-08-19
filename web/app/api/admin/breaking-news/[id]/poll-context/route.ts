@@ -176,7 +176,7 @@ export async function GET(
     // Get existing poll context
     const { data: contextData, error: contextError } = await supabase
       .from('poll_contexts')
-      .select('*')
+      .select('id, email, verification_tier, created_at, updated_at, display_name, avatar_url, bio, stable_id, is_active')
       .eq('story_id', storyId)
       .order('created_at', { ascending: false })
       .limit(1)

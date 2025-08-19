@@ -423,7 +423,7 @@ export class RealTimeNewsService {
     try {
       const { data, error } = await this.supabase
         .from('breaking_news')
-        .select('*')
+        .select('id, title, content, source, created_at')
         .order('created_at', { ascending: false })
         .limit(limit);
 
@@ -440,7 +440,7 @@ export class RealTimeNewsService {
     try {
       const { data, error } = await this.supabase
         .from('breaking_news')
-        .select('*')
+        .select('id, title, content, source, created_at')
         .eq('id', id)
         .single();
 
@@ -478,7 +478,7 @@ export class RealTimeNewsService {
     try {
       const { data, error } = await this.supabase
         .from('news_sources')
-        .select('*')
+        .select('id, title, content, source, created_at')
         .eq('is_active', true)
         .order('reliability', { ascending: false });
 
