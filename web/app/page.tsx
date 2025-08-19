@@ -10,14 +10,8 @@ import {
   Vote, 
   Lock, 
   CheckCircle, 
-  Globe, 
   Users, 
-  Zap,
-  Award,
-  Eye,
-  Download,
-  Trash2,
-  XCircle
+  Zap
 } from 'lucide-react'
 
 export default function HomePage() {
@@ -34,7 +28,7 @@ export default function HomePage() {
               </h1>
             </div>
             <p className="text-xl text-gray-600 mb-8">
-              Secure, privacy-first voting with enterprise-grade biometric authentication
+              Secure voting with modern authentication and privacy protection
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
               <Button asChild size="lg" className="text-lg px-8 py-3">
@@ -45,23 +39,15 @@ export default function HomePage() {
               </Button>
             </div>
             
-            {/* Trust Badges */}
+            {/* Simple Trust Indicators */}
             <div className="flex flex-wrap justify-center gap-4 mb-8">
               <Badge variant="secondary" className="px-4 py-2 text-sm">
-                <CheckCircle className="h-4 w-4 mr-2" />
-                GDPR Compliant
-              </Badge>
-              <Badge variant="secondary" className="px-4 py-2 text-sm">
                 <Shield className="h-4 w-4 mr-2" />
-                SOC 2 Certified
-              </Badge>
-              <Badge variant="secondary" className="px-4 py-2 text-sm">
-                <Lock className="h-4 w-4 mr-2" />
-                End-to-End Encrypted
+                Secure & Private
               </Badge>
               <Badge variant="secondary" className="px-4 py-2 text-sm">
                 <Fingerprint className="h-4 w-4 mr-2" />
-                Biometric Secure
+                Modern Auth
               </Badge>
             </div>
           </div>
@@ -73,152 +59,20 @@ export default function HomePage() {
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-gray-900 mb-4">
-              Enterprise-Grade Security & Privacy
+              Secure Voting Made Simple
             </h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Built with privacy by design, featuring biometric authentication, comprehensive security, 
-              and full legal compliance for the modern digital world.
+              Create and participate in polls with confidence. Built with modern security 
+              and privacy protection.
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {/* Biometric Authentication */}
+            {/* Secure Voting */}
             <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow">
               <CardHeader>
                 <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
-                  <Fingerprint className="h-6 w-6 text-blue-600" />
-                </div>
-                <CardTitle>Biometric Authentication</CardTitle>
-                <CardDescription>
-                  Secure, passwordless login using fingerprint, face recognition, and other biometric methods
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-2 text-sm text-gray-600">
-                  <li className="flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 text-green-500" />
-                    WebAuthn standard implementation
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 text-green-500" />
-                    Device-bound credentials
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 text-green-500" />
-                    Trust scoring system
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 text-green-500" />
-                    Comprehensive audit logging
-                  </li>
-                </ul>
-              </CardContent>
-            </Card>
-
-            {/* Privacy & Compliance */}
-            <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow">
-              <CardHeader>
-                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-4">
-                  <Shield className="h-6 w-6 text-green-600" />
-                </div>
-                <CardTitle>Privacy & Compliance</CardTitle>
-                <CardDescription>
-                  Full compliance with GDPR, CCPA, BIPA, and other privacy regulations
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-2 text-sm text-gray-600">
-                  <li className="flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 text-green-500" />
-                    GDPR compliant data processing
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 text-green-500" />
-                    California privacy law compliance
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 text-green-500" />
-                    Illinois biometric privacy
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 text-green-500" />
-                    User rights management
-                  </li>
-                </ul>
-              </CardContent>
-            </Card>
-
-            {/* Security Features */}
-            <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow">
-              <CardHeader>
-                <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
-                  <Lock className="h-6 w-6 text-purple-600" />
-                </div>
-                <CardTitle>Advanced Security</CardTitle>
-                <CardDescription>
-                  Multi-layered security with encryption, rate limiting, and threat detection
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-2 text-sm text-gray-600">
-                  <li className="flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 text-green-500" />
-                    AES-256 encryption
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 text-green-500" />
-                    Rate limiting & DDoS protection
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 text-green-500" />
-                    Content filtering
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 text-green-500" />
-                    Real-time monitoring
-                  </li>
-                </ul>
-              </CardContent>
-            </Card>
-
-            {/* User Rights */}
-            <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow">
-              <CardHeader>
-                <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mb-4">
-                  <Users className="h-6 w-6 text-orange-600" />
-                </div>
-                <CardTitle>User Rights</CardTitle>
-                <CardDescription>
-                  Complete control over your data with comprehensive privacy rights
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-2 text-sm text-gray-600">
-                  <li className="flex items-center gap-2">
-                    <Download className="h-4 w-4 text-blue-500" />
-                    Data export capabilities
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <Eye className="h-4 w-4 text-blue-500" />
-                    Data access rights
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <Trash2 className="h-4 w-4 text-red-500" />
-                    Account deletion
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 text-green-500" />
-                    Consent management
-                  </li>
-                </ul>
-              </CardContent>
-            </Card>
-
-            {/* Voting Platform */}
-            <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow">
-              <CardHeader>
-                <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center mb-4">
-                  <Vote className="h-6 w-6 text-red-600" />
+                  <Vote className="h-6 w-6 text-blue-600" />
                 </div>
                 <CardTitle>Secure Voting</CardTitle>
                 <CardDescription>
@@ -247,34 +101,67 @@ export default function HomePage() {
               </CardContent>
             </Card>
 
-            {/* Global Compliance */}
+            {/* Modern Authentication */}
             <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow">
               <CardHeader>
-                <div className="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center mb-4">
-                  <Globe className="h-6 w-6 text-indigo-600" />
+                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-4">
+                  <Fingerprint className="h-6 w-6 text-green-600" />
                 </div>
-                <CardTitle>Global Compliance</CardTitle>
+                <CardTitle>Modern Authentication</CardTitle>
                 <CardDescription>
-                  Built for global deployment with comprehensive legal compliance
+                  Secure login with biometric authentication and traditional methods
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <ul className="space-y-2 text-sm text-gray-600">
                   <li className="flex items-center gap-2">
                     <CheckCircle className="h-4 w-4 text-green-500" />
-                    International privacy laws
+                    Biometric login (fingerprint, face)
                   </li>
                   <li className="flex items-center gap-2">
                     <CheckCircle className="h-4 w-4 text-green-500" />
-                    Industry standards
+                    Email & password
                   </li>
                   <li className="flex items-center gap-2">
                     <CheckCircle className="h-4 w-4 text-green-500" />
-                    Security certifications
+                    Trust scoring
                   </li>
                   <li className="flex items-center gap-2">
                     <CheckCircle className="h-4 w-4 text-green-500" />
-                    Regular audits
+                    Device security
+                  </li>
+                </ul>
+              </CardContent>
+            </Card>
+
+            {/* Privacy Protection */}
+            <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow">
+              <CardHeader>
+                <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
+                  <Lock className="h-6 w-6 text-purple-600" />
+                </div>
+                <CardTitle>Privacy Protection</CardTitle>
+                <CardDescription>
+                  Your data is protected with encryption and privacy controls
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-2 text-sm text-gray-600">
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4 text-green-500" />
+                    End-to-end encryption
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4 text-green-500" />
+                    Data export & deletion
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4 text-green-500" />
+                    Privacy controls
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4 text-green-500" />
+                    Compliance ready
                   </li>
                 </ul>
               </CardContent>
@@ -283,180 +170,48 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Privacy & Security Section */}
+      {/* How It Works */}
       <section className="py-20 bg-gray-50">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-gray-900 mb-4">
-              Privacy by Design
+              How It Works
             </h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Your privacy and security are our top priorities. We've built the platform with 
-              privacy by design principles and comprehensive legal compliance.
+              Simple steps to secure voting and participation
             </p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            <div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-6">
-                What We Collect
-              </h3>
-              <div className="space-y-4">
-                <div className="flex items-start gap-3">
-                  <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
-                  <div>
-                    <h4 className="font-medium">Public Keys</h4>
-                    <p className="text-gray-600 text-sm">
-                      Cryptographic public keys for authentication (not biometric data)
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
-                  <div>
-                    <h4 className="font-medium">Device Information</h4>
-                    <p className="text-gray-600 text-sm">
-                      Device type and capabilities for security verification
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
-                  <div>
-                    <h4 className="font-medium">Authentication Logs</h4>
-                    <p className="text-gray-600 text-sm">
-                      Success/failure attempts for security monitoring
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
-                  <div>
-                    <h4 className="font-medium">Trust Scores</h4>
-                    <p className="text-gray-600 text-sm">
-                      Calculated trust metrics based on authentication patterns
-                    </p>
-                  </div>
-                </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="text-center">
+              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span className="text-2xl font-bold text-blue-600">1</span>
               </div>
+              <h3 className="text-xl font-semibold mb-2">Create Account</h3>
+              <p className="text-gray-600">
+                Sign up with email and optionally set up biometric authentication for enhanced security
+              </p>
             </div>
-
-            <div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-6">
-                What We Don't Collect
-              </h3>
-              <div className="space-y-4">
-                <div className="flex items-start gap-3">
-                  <XCircle className="h-5 w-5 text-red-500 mt-0.5" />
-                  <div>
-                    <h4 className="font-medium">Biometric Templates</h4>
-                    <p className="text-gray-600 text-sm">
-                      Actual fingerprint, face, or iris data never leaves your device
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <XCircle className="h-5 w-5 text-red-500 mt-0.5" />
-                  <div>
-                    <h4 className="font-medium">Private Keys</h4>
-                    <p className="text-gray-600 text-sm">
-                      Cryptographic private keys remain securely on your device
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <XCircle className="h-5 w-5 text-red-500 mt-0.5" />
-                  <div>
-                    <h4 className="font-medium">Raw Biometric Data</h4>
-                    <p className="text-gray-600 text-sm">
-                      No biometric samples or templates are stored or transmitted
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <XCircle className="h-5 w-5 text-red-500 mt-0.5" />
-                  <div>
-                    <h4 className="font-medium">Personal Identifiers</h4>
-                    <p className="text-gray-600 text-sm">
-                      No direct biometric identifiers are collected or stored
-                    </p>
-                  </div>
-                </div>
+            
+            <div className="text-center">
+              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span className="text-2xl font-bold text-green-600">2</span>
               </div>
+              <h3 className="text-xl font-semibold mb-2">Participate</h3>
+              <p className="text-gray-600">
+                Vote on polls or create your own. All votes are secure and verified
+              </p>
             </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Legal Compliance Section */}
-      <section className="py-20 bg-white">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">
-              Legal Compliance
-            </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              We maintain full compliance with privacy laws and regulations worldwide, 
-              ensuring your data is protected according to the highest standards.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            <Card className="text-center border-0 shadow-lg">
-              <CardHeader>
-                <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Award className="h-8 w-8 text-blue-600" />
-                </div>
-                <CardTitle>GDPR Compliant</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-gray-600">
-                  Full compliance with European data protection regulations
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="text-center border-0 shadow-lg">
-              <CardHeader>
-                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Shield className="h-8 w-8 text-green-600" />
-                </div>
-                <CardTitle>CCPA Compliant</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-gray-600">
-                  California Consumer Privacy Act compliance
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="text-center border-0 shadow-lg">
-              <CardHeader>
-                <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Fingerprint className="h-8 w-8 text-purple-600" />
-                </div>
-                <CardTitle>BIPA Compliant</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-gray-600">
-                  Illinois Biometric Information Privacy Act compliance
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="text-center border-0 shadow-lg">
-              <CardHeader>
-                <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Globe className="h-8 w-8 text-orange-600" />
-                </div>
-                <CardTitle>Global Standards</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-gray-600">
-                  ISO 27001, SOC 2, and NIST cybersecurity framework
-                </p>
-              </CardContent>
-            </Card>
+            
+            <div className="text-center">
+              <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span className="text-2xl font-bold text-purple-600">3</span>
+              </div>
+              <h3 className="text-xl font-semibold mb-2">Track Results</h3>
+              <p className="text-gray-600">
+                View real-time results and analytics. Your privacy is always protected
+              </p>
+            </div>
           </div>
         </div>
       </section>
@@ -465,11 +220,10 @@ export default function HomePage() {
       <section className="py-20 bg-gradient-to-r from-blue-600 to-indigo-600">
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-4xl font-bold text-white mb-4">
-            Ready to Experience Secure Voting?
+            Ready to Get Started?
           </h2>
           <p className="text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
-            Join thousands of users who trust Choices Platform for secure, 
-            privacy-first voting with biometric authentication.
+            Join users who trust Choices Platform for secure, private voting.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button asChild size="lg" variant="secondary" className="text-lg px-8 py-3">
@@ -489,7 +243,7 @@ export default function HomePage() {
             <div>
               <h3 className="text-lg font-semibold mb-4">Choices Platform</h3>
               <p className="text-gray-400 text-sm">
-                Secure, privacy-first voting with enterprise-grade biometric authentication.
+                Secure voting with modern authentication and privacy protection.
               </p>
             </div>
             <div>
@@ -521,7 +275,7 @@ export default function HomePage() {
             </div>
           </div>
           <div className="border-t border-gray-800 mt-8 pt-8 text-center text-sm text-gray-400">
-            <p>&copy; 2024 Choices Platform. All rights reserved. Built with privacy by design.</p>
+            <p>&copy; 2024 Choices Platform. All rights reserved. Built with privacy in mind.</p>
           </div>
         </div>
       </footer>
