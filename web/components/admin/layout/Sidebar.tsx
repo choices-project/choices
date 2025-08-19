@@ -13,6 +13,7 @@ import {
   Menu,
   X,
   Newspaper,
+  MessageCircle,
 } from 'lucide-react';
 
 const navigationItems = [
@@ -40,6 +41,11 @@ const navigationItems = [
     name: 'Analytics',
     href: '/admin/analytics',
     icon: BarChart3,
+  },
+  {
+    name: 'Feedback',
+    href: '/admin/feedback',
+    icon: MessageCircle,
   },
   {
     name: 'Settings',
