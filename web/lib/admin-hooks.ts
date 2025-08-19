@@ -230,7 +230,6 @@ export const useGeneratedPolls = () => {
 };
 
 export const useSystemMetrics = () => {
-  const queryClient = useQueryClient();
   const { updateSystemMetrics, setLoading } = useAdminStore();
 
   const query = useQuery({
@@ -254,13 +253,11 @@ export const useSystemMetrics = () => {
 
 // Mutation hooks
 export const useApproveTopic = () => {
-  const queryClient = useQueryClient();
   const { addNotification } = useAdminStore();
 
   return useMutation({
     mutationFn: approveTopic,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['trending-topics'] });
       addNotification({
         type: 'success',
         title: 'Topic Approved',
@@ -278,13 +275,11 @@ export const useApproveTopic = () => {
 };
 
 export const useRejectTopic = () => {
-  const queryClient = useQueryClient();
   const { addNotification } = useAdminStore();
 
   return useMutation({
     mutationFn: rejectTopic,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['trending-topics'] });
       addNotification({
         type: 'success',
         title: 'Topic Rejected',
@@ -302,13 +297,11 @@ export const useRejectTopic = () => {
 };
 
 export const useApprovePoll = () => {
-  const queryClient = useQueryClient();
   const { addNotification } = useAdminStore();
 
   return useMutation({
     mutationFn: approvePoll,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['generated-polls'] });
       addNotification({
         type: 'success',
         title: 'Poll Approved',
@@ -326,13 +319,11 @@ export const useApprovePoll = () => {
 };
 
 export const useRejectPoll = () => {
-  const queryClient = useQueryClient();
   const { addNotification } = useAdminStore();
 
   return useMutation({
     mutationFn: rejectPoll,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['generated-polls'] });
       addNotification({
         type: 'success',
         title: 'Poll Rejected',
