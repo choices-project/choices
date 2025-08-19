@@ -136,7 +136,10 @@ export async function middleware(request: NextRequest) {
       }
     } catch (error) {
       // Invalid JSON - continue with normal processing
-      console.log('Middleware content validation error:', error)
+      // Error logged in development only
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Middleware content validation error:', error)
+      }
     }
   }
 

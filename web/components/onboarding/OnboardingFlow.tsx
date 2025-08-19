@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, createContext, useContext } from 'react'
+import { useState, useEffect, useCallback, createContext, useContext, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { CheckCircle } from 'lucide-react'
 import { createClient } from '@/utils/supabase/client'
@@ -46,7 +46,7 @@ interface OnboardingData {
   }
 }
 
-export default function OnboardingFlow() {
+function OnboardingFlowContent() {
   const [currentStep, setCurrentStep] = useState<OnboardingStep>('welcome')
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -305,5 +305,20 @@ export default function OnboardingFlow() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function OnboardingFlow() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="text-gray-600">Loading your onboarding experience...</p>
+        </div>
+      </div>
+    }>
+      <OnboardingFlowContent />
+    </Suspense>
   )
 }
