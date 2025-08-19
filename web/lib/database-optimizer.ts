@@ -45,7 +45,8 @@ export async function checkDatabaseHealth(): Promise<DatabaseHealth> {
         healthy: false,
         error: connectionError.message,
         responseTime: Date.now() - startTime,
-        warnings
+        warnings,
+        metrics: {}
       };
     }
 
@@ -82,7 +83,8 @@ export async function checkDatabaseHealth(): Promise<DatabaseHealth> {
       healthy: false,
       error: error instanceof Error ? error.message : 'Unknown error',
       responseTime: Date.now() - startTime,
-      warnings
+      warnings,
+      metrics: {}
     };
   }
 }
