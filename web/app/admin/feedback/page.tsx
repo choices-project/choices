@@ -2,11 +2,11 @@
 
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { 
-  Search, 
-  Filter, 
-  Download, 
-  MessageSquare, 
+import {
+  Search,
+  Filter,
+  Download,
+  MessageSquare,
   Eye,
   CheckCircle,
   Clock,
@@ -14,12 +14,14 @@ import {
   Star,
   Calendar,
   User,
-  Tag
+  Tag,
+  Github
 } from 'lucide-react';
 import { FeedbackList } from '@/components/admin/feedback/FeedbackList';
 import { FeedbackFilters } from '@/components/admin/feedback/FeedbackFilters';
 import { FeedbackStats } from '@/components/admin/feedback/FeedbackStats';
 import { FeedbackDetailModal } from '@/components/admin/feedback/FeedbackDetailModal';
+import { IssueGenerationPanel } from '@/components/admin/feedback/IssueGenerationPanel';
 import { devLog } from '@/lib/logger';
 
 interface Feedback {
@@ -49,9 +51,10 @@ export default function AdminFeedbackPage() {
     dateRange: 'all',
     search: ''
   });
-  
+
   const [selectedFeedback, setSelectedFeedback] = useState<Feedback | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<'overview' | 'issues'>('overview');
 
   // Fetch feedback data
   const { data: feedback, isLoading, error, refetch } = useQuery({
@@ -65,11 +68,11 @@ export default function AdminFeedbackPage() {
         dateRange: filters.dateRange,
         search: filters.search
       }));
-      
+
       if (!response.ok) {
         throw new Error('Failed to fetch feedback');
       }
-      
+
       return response.json();
     },
     staleTime: 30000, // 30 seconds
@@ -115,6 +118,18 @@ export default function AdminFeedbackPage() {
     }
   };
 
+  const handleIssueGenerated = (feedbackId: string, issueData: any) => {
+    devLog('GitHub issue generated:', { feedbackId, issueData });
+    // Refetch data to update the UI
+    refetch();
+  };
+
+  const handleBulkGenerate = (feedbackIds: string[]) => {
+    devLog('Bulk issue generation completed:', { feedbackIds });
+    // Refetch data to update the UI
+    refetch();
+  };
+
   if (error) {
     return (
       <div className="p-6">
@@ -155,24 +170,67 @@ export default function AdminFeedbackPage() {
         </div>
       </div>
 
-      {/* Stats Cards */}
-      <FeedbackStats feedback={feedback?.data || []} />
-
-      {/* Filters */}
-      <FeedbackFilters 
-        filters={filters} 
-        onFiltersChange={setFilters} 
-      />
-
-      {/* Feedback List */}
-      <div className="bg-white rounded-lg shadow">
-        <FeedbackList
-          feedback={feedback?.data || []}
-          isLoading={isLoading}
-          onFeedbackSelect={handleFeedbackSelect}
-          onStatusUpdate={handleStatusUpdate}
-        />
+      {/* Tab Navigation */}
+      <div className="border-b border-gray-200">
+        <nav className="-mb-px flex space-x-8">
+          <button
+            onClick={() => setActiveTab('overview')}
+            className={`py-2 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'overview'
+                ? 'border-blue-500 text-blue-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+          >
+            <div className="flex items-center space-x-2">
+              <MessageSquare className="h-4 w-4" />
+              <span>Overview</span>
+            </div>
+          </button>
+          <button
+            onClick={() => setActiveTab('issues')}
+            className={`py-2 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'issues'
+                ? 'border-blue-500 text-blue-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+          >
+            <div className="flex items-center space-x-2">
+              <Github className="h-4 w-4" />
+              <span>GitHub Issues</span>
+            </div>
+          </button>
+        </nav>
       </div>
+
+      {/* Tab Content */}
+      {activeTab === 'overview' ? (
+        <>
+          {/* Stats Cards */}
+          <FeedbackStats feedback={feedback?.data || []} />
+
+          {/* Filters */}
+          <FeedbackFilters
+            filters={filters}
+            onFiltersChange={setFilters}
+          />
+
+          {/* Feedback List */}
+          <div className="bg-white rounded-lg shadow">
+            <FeedbackList
+              feedback={feedback?.data || []}
+              isLoading={isLoading}
+              onFeedbackSelect={handleFeedbackSelect}
+              onStatusUpdate={handleStatusUpdate}
+            />
+          </div>
+        </>
+      ) : (
+        <IssueGenerationPanel
+          feedback={feedback?.data || []}
+          onIssueGenerated={handleIssueGenerated}
+          onBulkGenerate={handleBulkGenerate}
+        />
+      )}
 
       {/* Detail Modal */}
       {selectedFeedback && (
