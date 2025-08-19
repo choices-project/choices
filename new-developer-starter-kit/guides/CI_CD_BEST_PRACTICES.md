@@ -161,22 +161,47 @@ jobs:
 
 ## 🎯 **Customization Options**
 
-### **Adjusting Check Strictness**
+### **Our Philosophy: Fix, Don't Bypass**
 
-You can modify the validation script to make certain checks warnings instead of errors:
+**⚠️ Important**: Our best practices are about **fixing problems**, not bypassing them. The checks exist because we've learned these issues cause real problems in production.
 
+**❌ Don't Do This** (Bypassing checks):
 ```bash
-# In enhanced-pre-push-validation.sh
-# Change return 1 to return 0 for warnings
+# DON'T: Make checks warnings to avoid fixing issues
 check_console_logs() {
-    # ... existing code ...
     if [ -n "$console_logs" ]; then
         print_status "warning" "Found console.log statements"
-        # return 1  # Error - blocks push
-        return 0    # Warning - allows push
+        return 0    # Warning - allows push (BAD!)
     fi
 }
 ```
+
+**✅ Do This** (Fixing the root cause):
+```bash
+# DO: Fix the actual issues
+# 1. Remove console.log statements from production code
+# 2. Use proper logging library for development
+# 3. Implement proper error handling
+
+# Example: Replace console.log with proper logging
+// Before (BAD):
+console.log('User logged in:', user.id);
+
+// After (GOOD):
+logger.info('User logged in', { userId: user.id, timestamp: new Date() });
+```
+
+### **When to Adjust Check Strictness**
+
+**Only adjust strictness when**:
+- ✅ The check is too broad and catching legitimate cases
+- ✅ You're in development/testing phase and need temporary flexibility
+- ✅ You're adding new checks and want to gather data first
+
+**Never adjust strictness to**:
+- ❌ Avoid fixing known issues
+- ❌ Bypass quality standards
+- ❌ Allow technical debt to accumulate
 
 ### **Adding Custom Checks**
 
