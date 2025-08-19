@@ -11,10 +11,29 @@ import {
   Lock, 
   CheckCircle, 
   Users, 
-  Zap
+  Zap,
+  TrendingUp,
+  Clock
 } from 'lucide-react'
 
 export default function HomePage() {
+  // Mock trending poll data - in production this would come from the database
+  const trendingPoll = {
+    id: 'trending-1',
+    title: 'What\'s your preferred way to stay informed about current events?',
+    description: 'Help us understand how people prefer to consume news and stay updated in today\'s digital age.',
+    options: [
+      { id: '1', text: 'Social Media', votes: 1247, percentage: 42 },
+      { id: '2', text: 'Traditional News Sites', votes: 892, percentage: 30 },
+      { id: '3', text: 'News Apps', votes: 456, percentage: 15 },
+      { id: '4', text: 'Podcasts', votes: 234, percentage: 8 },
+      { id: '5', text: 'Word of Mouth', votes: 156, percentage: 5 }
+    ],
+    totalVotes: 2985,
+    timeRemaining: '2 days left',
+    category: 'Technology & Media'
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       {/* Hero Section */}
@@ -54,8 +73,83 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Trending Poll Section */}
+      <section className="py-16 bg-white">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <div className="flex items-center justify-center gap-2 mb-4">
+              <TrendingUp className="h-6 w-6 text-orange-500" />
+              <h2 className="text-3xl font-bold text-gray-900">Trending Now</h2>
+            </div>
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              See what people are voting on right now. Join the conversation and make your voice heard.
+            </p>
+          </div>
+
+          <div className="max-w-4xl mx-auto">
+            <Card className="border-0 shadow-xl hover:shadow-2xl transition-shadow">
+              <CardHeader>
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-3">
+                      <Badge variant="outline" className="text-orange-600 border-orange-200">
+                        <TrendingUp className="h-3 w-3 mr-1" />
+                        Trending
+                      </Badge>
+                      <Badge variant="secondary" className="text-sm">
+                        {trendingPoll.category}
+                      </Badge>
+                    </div>
+                    <CardTitle className="text-2xl mb-2">{trendingPoll.title}</CardTitle>
+                    <CardDescription className="text-base">
+                      {trendingPoll.description}
+                    </CardDescription>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm text-gray-500">
+                    <Clock className="h-4 w-4" />
+                    <span>{trendingPoll.timeRemaining}</span>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {trendingPoll.options.map((option) => (
+                    <div key={option.id} className="relative">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="font-medium text-gray-900">{option.text}</span>
+                        <span className="text-sm text-gray-600">{option.percentage}%</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-3">
+                        <div 
+                          className="bg-gradient-to-r from-blue-500 to-indigo-600 h-3 rounded-full transition-all duration-500"
+                          style={{ width: `${option.percentage}%` }}
+                        ></div>
+                      </div>
+                      <div className="flex justify-between text-xs text-gray-500 mt-1">
+                        <span>{option.votes.toLocaleString()} votes</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                
+                <div className="mt-6 pt-6 border-t border-gray-200">
+                  <div className="flex items-center justify-between">
+                    <div className="text-sm text-gray-600">
+                      <span className="font-medium">{trendingPoll.totalVotes.toLocaleString()}</span> total votes
+                    </div>
+                    <Button asChild variant="outline" size="sm">
+                      <Link href={`/polls/${trendingPoll.id}`}>View Full Poll</Link>
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
+
       {/* Features Section */}
-      <section className="py-20 bg-white">
+      <section className="py-20 bg-gray-50">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-gray-900 mb-4">
@@ -171,7 +265,7 @@ export default function HomePage() {
       </section>
 
       {/* How It Works */}
-      <section className="py-20 bg-gray-50">
+      <section className="py-20 bg-white">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-gray-900 mb-4">
