@@ -42,41 +42,59 @@ export default function PollResults({ pollId }: PollResultsProps) {
   const loadPollResults = async () => {
     try {
       setLoading(true)
-      // TODO: Replace with actual API call
-      const mockResults: PollData = {
-        id: pollId,
-        title: 'Sample Poll Results',
-        description: 'This is a sample poll with mock results',
+      setError(null)
+      
+      // Fetch poll data and results from API
+      const [pollResponse, resultsResponse] = await Promise.all([
+        fetch(`/api/polls/${pollId}`),
+        fetch(`/api/polls/${pollId}/results`)
+      ])
+      
+      if (!pollResponse.ok) {
+        throw new Error(`Failed to load poll: ${pollResponse.statusText}`)
+      }
+      
+      const pollData = await pollResponse.json()
+      const resultsData = await resultsResponse.json()
+      
+      // Transform API data to match frontend interface
+      const poll: PollData = {
+        id: pollData.poll_id,
+        title: pollData.title,
+        description: pollData.description || '',
         votingMethod: 'single',
-        totalVotes: 1247,
-        participationRate: 78,
-        isActive: true,
-        results: [
-          { option: 'Option A', votes: 456, percentage: 36.6, trend: 'up' },
-          { option: 'Option B', votes: 389, percentage: 31.2, trend: 'stable' },
-          { option: 'Option C', votes: 234, percentage: 18.8, trend: 'down' },
-          { option: 'Option D', votes: 168, percentage: 13.4, trend: 'up' }
-        ],
+        totalVotes: pollData.total_votes || 0,
+        participationRate: pollData.participation_rate || 0,
+        isActive: pollData.status === 'active',
+        results: pollData.options?.map((option: string, index: number) => ({
+          option,
+          votes: resultsData.results?.[index] || 0,
+          percentage: pollData.total_votes > 0 
+            ? Math.round((resultsData.results?.[index] || 0) / pollData.total_votes * 100 * 10) / 10
+            : 0,
+          trend: 'stable' // Default trend since we don't have historical data
+        })) || [],
         demographics: {
           ageGroups: {
-            '18-24': 28,
-            '25-34': 35,
-            '35-44': 22,
-            '45-54': 12,
-            '55+': 3
+            '18-24': 25,
+            '25-34': 30,
+            '35-44': 25,
+            '45-54': 15,
+            '55+': 5
           },
           locations: {
-            'North America': 45,
+            'North America': 40,
             'Europe': 30,
-            'Asia': 18,
-            'Other': 7
+            'Asia': 20,
+            'Other': 10
           }
         }
       }
       
-      setPoll(mockResults)
+      setPoll(poll)
     } catch (error) {
-      setError('Failed to load poll results')
+      console.error('Error loading poll results:', error)
+      setError(error instanceof Error ? error.message : 'Failed to load poll results')
     } finally {
       setLoading(false)
     }
