@@ -167,7 +167,7 @@ function OnboardingFlowInner() {
       
     } catch (error: any) {
       devLog('Error saving profile:', error)
-      setError(error instanceof Error ? error.message : "Unknown error" || 'Failed to save profile. Please try again.')
+      setError(error instanceof Error ? error.message : 'Failed to save profile. Please try again.')
     } finally {
       setIsLoading(false)
     }

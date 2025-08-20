@@ -417,7 +417,7 @@ export default function UsersManagementPage() {
                       <div className="flex-shrink-0 h-10 w-10">
                         <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
                           <span className="text-sm font-medium text-gray-700">
-                            {user.name.split(' ').map(n => n[0]).join('')}
+                            {user.name.split(' ').map((n: string) => n[0]).join('')}
                           </span>
                         </div>
                       </div>

@@ -234,7 +234,7 @@ export default function CreatePollPage() {
       }
     } catch (error: any) {
       devLog('Error creating poll:', error)
-      setError(error instanceof Error ? error.message : "Unknown error" || 'Failed to create poll')
+      setError(error instanceof Error ? error.message : 'Failed to create poll')
     } finally {
       setIsCreating(false)
     }
