@@ -134,7 +134,7 @@ export async function POST(request: NextRequest) {
       // Verify challenge exists and is valid
       const { data: challengeData, error: challengeError } = await supabase
         .from('webauthn_challenges')
-        .select('id, email, verification_tier, created_at, updated_at, display_name, avatar_url, bio, stable_id, is_active')
+        .select('id, user_id, challenge, challenge_type, expires_at, created_at')
         .eq('user_id', credentialData.user_id)
         .eq('challenge_type', 'authentication')
         .gte('expires_at', new Date().toISOString())
