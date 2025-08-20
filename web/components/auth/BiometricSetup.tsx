@@ -70,7 +70,7 @@ export default function BiometricSetup({ userId, username, onSuccess, onError }:
         onError?.(result.error || 'Registration failed')
       }
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+      const errorMessage = error instanceof Error ? error instanceof Error ? error.message : "Unknown error" : 'Unknown error'
       setError(errorMessage)
       onError?.(errorMessage)
     } finally {

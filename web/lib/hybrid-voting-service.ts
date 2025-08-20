@@ -117,7 +117,7 @@ export class HybridVotingService {
     } catch (error) {
       return {
         success: false,
-        message: error instanceof Error ? error instanceof Error ? error.message : "Unknown error" : 'Vote submission failed',
+        message: error instanceof Error ? error instanceof Error ? error instanceof Error ? error.message : "Unknown error" : "Unknown error" : 'Vote submission failed',
         pollId,
         privacyLevel: request.privacyLevel,
         responseTime: Date.now() - startTime
@@ -153,7 +153,7 @@ export class HybridVotingService {
       .single();
 
     if (error) {
-      throw new Error(`Failed to submit public vote: ${error instanceof Error ? error.message : "Unknown error"}`);
+      throw new Error(`Failed to submit public vote: ${error instanceof Error ? error instanceof Error ? error.message : "Unknown error" : "Unknown error"}`);
     }
 
     // Update poll vote count
@@ -219,7 +219,7 @@ export class HybridVotingService {
       .single();
 
     if (error) {
-      throw new Error(`Failed to submit private vote: ${error instanceof Error ? error.message : "Unknown error"}`);
+      throw new Error(`Failed to submit private vote: ${error instanceof Error ? error instanceof Error ? error.message : "Unknown error" : "Unknown error"}`);
     }
 
     // Update poll vote count
@@ -265,7 +265,7 @@ export class HybridVotingService {
         responseTime: Date.now() - startTime
       };
     } catch (error) {
-      throw new Error(`High-privacy vote failed: ${error instanceof Error ? error instanceof Error ? error.message : "Unknown error" : 'Unknown error'}`);
+      throw new Error(`High-privacy vote failed: ${error instanceof Error ? error instanceof Error ? error instanceof Error ? error.message : "Unknown error" : "Unknown error" : 'Unknown error'}`);
     }
   }
 
@@ -316,7 +316,7 @@ export class HybridVotingService {
       };
     } catch (error) {
       console.error('Error requesting blinded token:', error);
-      throw new Error(`Token request failed: ${error instanceof Error ? error instanceof Error ? error.message : "Unknown error" : 'Unknown error'}`);
+      throw new Error(`Token request failed: ${error instanceof Error ? error instanceof Error ? error instanceof Error ? error.message : "Unknown error" : "Unknown error" : 'Unknown error'}`);
     }
   }
 
@@ -351,7 +351,7 @@ export class HybridVotingService {
       };
     } catch (error) {
       console.error('Error submitting vote to PO service:', error);
-      throw new Error(`Vote submission failed: ${error instanceof Error ? error instanceof Error ? error.message : "Unknown error" : 'Unknown error'}`);
+      throw new Error(`Vote submission failed: ${error instanceof Error ? error instanceof Error ? error instanceof Error ? error.message : "Unknown error" : "Unknown error" : 'Unknown error'}`);
     }
   }
 }

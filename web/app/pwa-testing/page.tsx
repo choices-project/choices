@@ -136,7 +136,7 @@ export default function PWATestingPage() {
       results.webauthnTest = !!credential
     } catch (error) {
       results.webauthnTest = false
-      results.webauthnError = error instanceof Error ? error.message : 'Unknown error'
+      results.webauthnError = error instanceof Error ? error instanceof Error ? error.message : "Unknown error" : 'Unknown error'
     }
     
     // Encryption test
@@ -149,7 +149,7 @@ export default function PWATestingPage() {
       results.encryptionTest = retrieved?.test === 'data'
     } catch (error) {
       results.encryptionTest = false
-      results.encryptionError = error instanceof Error ? error.message : 'Unknown error'
+      results.encryptionError = error instanceof Error ? error instanceof Error ? error.message : "Unknown error" : 'Unknown error'
     }
     
     return results

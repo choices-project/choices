@@ -43,7 +43,7 @@ export default function AuthStep({ data, onUpdate, onNext, onBack }: AuthStepPro
       
     } catch (error: any) {
       devLog('Login error:', error)
-      setError(error.message || 'Failed to sign in. Please try again.')
+      setError(error instanceof Error ? error.message : "Unknown error" || 'Failed to sign in. Please try again.')
     } finally {
       setIsLoading(false)
     }
@@ -58,7 +58,7 @@ export default function AuthStep({ data, onUpdate, onNext, onBack }: AuthStepPro
       window.location.href = `/login?redirectTo=${encodeURIComponent('/onboarding?step=values')}`
     } catch (error: any) {
       devLog('Login error:', error)
-      setError(error.message || 'Failed to redirect to login.')
+      setError(error instanceof Error ? error.message : "Unknown error" || 'Failed to redirect to login.')
     } finally {
       setIsLoading(false)
     }

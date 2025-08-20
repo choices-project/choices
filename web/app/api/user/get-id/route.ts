@@ -100,7 +100,7 @@ export async function GET(request: NextRequest) {
       { 
         error: 'Internal server error',
         debug: {
-          message: error instanceof Error ? error.message : 'Unknown error',
+          message: error instanceof Error ? error instanceof Error ? error.message : "Unknown error" : 'Unknown error',
           cookies: (await cookies()).getAll().map(c => c.name)
         }
       },

@@ -416,7 +416,7 @@ class GitHubIssueIntegration {
     const errors = feedback.user_journey?.errors || [];
     
     errors.forEach((error: any) => {
-      if (error.message) patterns.push(error.message);
+      if (error instanceof Error ? error.message : "Unknown error") patterns.push(error instanceof Error ? error.message : "Unknown error");
     });
     
     return patterns;

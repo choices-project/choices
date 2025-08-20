@@ -200,7 +200,7 @@ export async function registerBiometric(userId: string, username: string): Promi
     devLog('Error during biometric registration:', error)
     return { 
       success: false, 
-      error: error instanceof Error ? error.message : 'Unknown error during registration' 
+      error: error instanceof Error ? error instanceof Error ? error.message : "Unknown error" : 'Unknown error during registration' 
     }
   }
 }
@@ -294,7 +294,7 @@ export async function authenticateBiometric(username: string): Promise<{
     devLog('Error during biometric authentication:', error)
     return { 
       success: false, 
-      error: error instanceof Error ? error.message : 'Unknown error during authentication' 
+      error: error instanceof Error ? error instanceof Error ? error.message : "Unknown error" : 'Unknown error during authentication' 
     }
   }
 }
@@ -320,7 +320,7 @@ export async function getUserBiometricCredentials(): Promise<{
     devLog('Error getting biometric credentials:', error)
     return { 
       success: false, 
-      error: error instanceof Error ? error.message : 'Unknown error getting credentials' 
+      error: error instanceof Error ? error instanceof Error ? error.message : "Unknown error" : 'Unknown error getting credentials' 
     }
   }
 }
@@ -349,7 +349,7 @@ export async function deleteBiometricCredential(credentialId: string): Promise<{
     devLog('Error deleting biometric credential:', error)
     return { 
       success: false, 
-      error: error instanceof Error ? error.message : 'Unknown error deleting credential' 
+      error: error instanceof Error ? error instanceof Error ? error.message : "Unknown error" : 'Unknown error deleting credential' 
     }
   }
 }
@@ -375,7 +375,7 @@ export async function getBiometricTrustScore(): Promise<{
     devLog('Error getting biometric trust score:', error)
     return { 
       success: false, 
-      error: error instanceof Error ? error.message : 'Unknown error getting trust score' 
+      error: error instanceof Error ? error instanceof Error ? error.message : "Unknown error" : 'Unknown error getting trust score' 
     }
   }
 }
@@ -401,7 +401,7 @@ export async function getBiometricAuthLogs(limit: number = 10): Promise<{
     devLog('Error getting biometric auth logs:', error)
     return { 
       success: false, 
-      error: error instanceof Error ? error.message : 'Unknown error getting logs' 
+      error: error instanceof Error ? error instanceof Error ? error.message : "Unknown error" : 'Unknown error getting logs' 
     }
   }
 }

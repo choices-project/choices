@@ -21,7 +21,7 @@ export async function getOptimizedUserProfile(userId: string) {
 
   if (error) {
     logger.error('Failed to get user profile', error);
-    return { error: error.message };
+    return { error: error instanceof Error ? error.message : "Unknown error" };
   }
 
   return { data };
@@ -38,7 +38,7 @@ export async function getOptimizedPolls(limit = 20) {
 
   if (error) {
     logger.error('Failed to get polls', error);
-    return { error: error.message };
+    return { error: error instanceof Error ? error.message : "Unknown error" };
   }
 
   return { data };
@@ -59,7 +59,7 @@ export async function getOptimizedFeedback(status?: string) {
 
   if (error) {
     logger.error('Failed to get feedback', error);
-    return { error: error.message };
+    return { error: error instanceof Error ? error.message : "Unknown error" };
   }
 
   return { data };
@@ -74,7 +74,7 @@ export async function getOptimizedAdminStats() {
 
   if (error) {
     logger.error('Failed to get admin stats', error);
-    return { error: error.message };
+    return { error: error instanceof Error ? error.message : "Unknown error" };
   }
 
   return { data, count };

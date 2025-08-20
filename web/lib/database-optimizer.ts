@@ -91,7 +91,7 @@ export async function checkDatabaseHealth(): Promise<DatabaseHealth> {
   } catch (error) {
     return {
       healthy: false,
-      error: error instanceof Error ? error instanceof Error ? error.message : "Unknown error" : 'Unknown error',
+      error: error instanceof Error ? error instanceof Error ? error instanceof Error ? error.message : "Unknown error" : "Unknown error" : 'Unknown error',
       responseTime: Date.now() - startTime,
       warnings,
       metrics: {}
@@ -301,7 +301,7 @@ export function withPerformanceTracking<T extends any[], R>(
         executionTime,
         timestamp: new Date(),
         success: false,
-        error: error instanceof Error ? error instanceof Error ? error.message : "Unknown error" : 'Unknown error'
+        error: error instanceof Error ? error instanceof Error ? error instanceof Error ? error.message : "Unknown error" : "Unknown error" : 'Unknown error'
       });
 
       throw error;

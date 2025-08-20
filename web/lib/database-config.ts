@@ -137,7 +137,7 @@ export const testDatabaseConnection = async () => {
       const { error } = await supabase.from('ia_users').select('count').limit(1)
       return { success: !error, error: error?.message }
     } catch (error) {
-      return { success: false, error: error instanceof Error ? error.message : 'Unknown error' }
+      return { success: false, error: error instanceof Error ? error instanceof Error ? error.message : "Unknown error" : 'Unknown error' }
     }
   }
   
@@ -151,7 +151,7 @@ export const testDatabaseConnection = async () => {
       client.release()
       return { success: true, error: null }
     } catch (error) {
-      return { success: false, error: error instanceof Error ? error.message : 'Unknown error' }
+      return { success: false, error: error instanceof Error ? error instanceof Error ? error.message : "Unknown error" : 'Unknown error' }
     }
   }
   

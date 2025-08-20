@@ -114,7 +114,7 @@ export default function PollPage() {
       setPoll(poll)
     } catch (error) {
       console.error('Error loading poll:', error)
-      setError(error instanceof Error ? error.message : 'Failed to load poll')
+      setError(error instanceof Error ? error instanceof Error ? error.message : "Unknown error" : 'Failed to load poll')
     } finally {
       setIsLoading(false)
     }
@@ -181,7 +181,7 @@ export default function PollPage() {
       }
     } catch (error: any) {
       console.error('Error submitting vote:', error)
-      setError(error.message || 'Failed to submit vote')
+      setError(error instanceof Error ? error.message : "Unknown error" || 'Failed to submit vote')
     } finally {
       setIsVoting(false)
     }

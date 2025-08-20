@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
     if (error) {
       devLog('Database error:', error)
       return NextResponse.json(
-        { error: 'Failed to save profile', details: error.message },
+        { error: 'Failed to save profile', details: error instanceof Error ? error.message : "Unknown error" },
         { status: 500 }
       )
     }

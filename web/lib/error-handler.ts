@@ -102,7 +102,7 @@ export class ErrorHandler {
     if (error instanceof ApplicationError) {
       appError = {
         type: error.type,
-        message: error.message,
+        message: error instanceof Error ? error.message : "Unknown error",
         code: error.code,
         details: error.details,
         timestamp: error.timestamp,
@@ -112,7 +112,7 @@ export class ErrorHandler {
     } else {
       appError = {
         type: ErrorType.UNKNOWN,
-        message: error.message || 'An unexpected error occurred',
+        message: error instanceof Error ? error.message : "Unknown error" || 'An unexpected error occurred',
         timestamp: new Date(),
         details: {
           originalError: error.name,

@@ -48,7 +48,7 @@ export const PrivacyLevelSelector: React.FC<PrivacyLevelSelectorProps> = ({
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         {levels.map((level: any) => {
           const config = HybridPrivacyManager.getPrivacyConfig(level);
-          const description = PRIVACY_DESCRIPTIONS[level];
+          const description = PRIVACY_DESCRIPTIONS[level as keyof typeof PRIVACY_DESCRIPTIONS];
           const isSelected = value === level;
           const isRecommended = recommendedLevel === level;
 

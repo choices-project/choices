@@ -353,7 +353,7 @@ class PollService {
       return {
         success: false,
         voteId: '',
-        message: error instanceof Error ? error.message : 'Failed to submit vote'
+        message: error instanceof Error ? error instanceof Error ? error.message : "Unknown error" : 'Failed to submit vote'
       };
     }
   }
@@ -376,7 +376,7 @@ class PollService {
       return {
         success: false,
         verified: false,
-        message: error instanceof Error ? error.message : 'Verification failed'
+        message: error instanceof Error ? error instanceof Error ? error.message : "Unknown error" : 'Verification failed'
       };
     }
   }

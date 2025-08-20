@@ -94,7 +94,7 @@ export default function PollResults({ pollId }: PollResultsProps) {
       setPoll(poll)
     } catch (error) {
       console.error('Error loading poll results:', error)
-      setError(error instanceof Error ? error.message : 'Failed to load poll results')
+      setError(error instanceof Error ? error instanceof Error ? error.message : "Unknown error" : 'Failed to load poll results')
     } finally {
       setLoading(false)
     }
