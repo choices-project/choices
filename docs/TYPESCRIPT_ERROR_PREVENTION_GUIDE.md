@@ -278,6 +278,39 @@ grep -v "^[[:space:]]*//" | grep -l "select('\\*')" *.ts
 
 **Always test your validation scripts with edge cases before deploying them.**
 
+## **🎯 JSX vs TypeScript File Handling**
+
+### **Never Add Type Annotations to JSX Elements**
+
+When creating automated scripts, always distinguish between TypeScript and JSX files:
+
+```javascript
+// ❌ WRONG - Don't add types to JSX destructured parameters
+{items.map(({ key: any, label: any }: any) => (
+  <div key={key}>{label}</div>
+))}
+
+// ✅ CORRECT - JSX doesn't use type annotations
+{items.map(({ key, label }) => (
+  <div key={key}>{label}</div>
+))}
+```
+
+**JSX Error Patterns to Watch For:**
+- `error TS1005: ',' expected.`
+- `error TS1382: Unexpected token. Did you mean '{'>'}' or '&gt;'?`
+- `error TS1381: Unexpected token. Did you mean '{'}'}' or '&rbrace;'?`
+
+**Script Best Practice:**
+```javascript
+// Handle different file types appropriately
+if (file.name.endsWith('.tsx')) {
+  // JSX files - no type annotations in destructured parameters
+} else if (file.name.endsWith('.ts')) {
+  // TypeScript files - can add type annotations
+}
+```
+
 ---
 
 **Remember**: The goal is not just to fix errors, but to prevent them from happening in the first place. Use these patterns consistently and the codebase will become more robust and maintainable.
