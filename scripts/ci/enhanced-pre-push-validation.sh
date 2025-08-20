@@ -153,6 +153,7 @@ check_select_star() {
             echo "  - $file"
         done
         print_status "warning" "Replace select('*') with specific field selection for better performance"
+        print_status "info" "See docs/TYPESCRIPT_ERROR_PREVENTION_GUIDE.md for field mappings"
         return 1
     else
         print_status "success" "No select('*') usage found"
