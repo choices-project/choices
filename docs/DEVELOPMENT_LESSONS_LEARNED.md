@@ -101,6 +101,31 @@ We learned this the hard way - we had to completely transform a broken system in
 
 **The combination of automated fixing + prevention strategy created a 10x improvement in code quality and development velocity.**
 
+### **2.6. 🎯 FALSE POSITIVE VALIDATION LESSON**
+**Epiphany**: "Automated validation scripts need to be smarter than simple grep patterns"
+
+#### **🎯 The Problem:**
+Our pre-push validation script was blocking commits because it detected `select('*')` in comments, not actual code:
+```bash
+# Script was detecting this comment as an error:
+// 1. Specific field selection (instead of select('*'))
+```
+
+#### **🚀 The Solution:**
+Updated the validation script to ignore comments:
+```bash
+# Before: Simple grep that caught comments
+local select_star_files=$(find ./web -name "*.ts" -o -name "*.tsx" | xargs grep -l "select('\\*')" 2>/dev/null || true)
+
+# After: Smart grep that ignores comment lines
+local select_star_files=$(find ./web -name "*.ts" -o -name "*.tsx" | xargs grep -v "^[[:space:]]*//" | grep -l "select('\\*')" 2>/dev/null || true)
+```
+
+#### **💡 Wisdom Gained:**
+**"When building automated validation scripts, always consider edge cases like comments, documentation, and examples. Simple regex patterns can create false positives that block legitimate work."**
+
+**The fix took 2 minutes but saved hours of debugging and confusion.**
+
 #### **🛠️ Automated Scripts Created (For Future Reference):**
 
 **1. `scripts/fix-remaining-typescript-errors.js`**
