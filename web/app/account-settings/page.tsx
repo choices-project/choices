@@ -84,6 +84,10 @@ export default function AccountSettingsPage() {
     try {
       setIsLoading(true)
       // Load user data from auth context
+      if (!supabase || !user) {
+        throw new Error('User not authenticated')
+      }
+      
       const { data: userProfile } = await supabase
         .from('ia_users')
         .select('two_factor_enabled')
@@ -91,8 +95,8 @@ export default function AccountSettingsPage() {
         .single()
 
       setSettings({
-        email: user?.email || '',
-        displayName: user?.user_metadata?.name || '',
+        email: user.email || '',
+        displayName: user.user_metadata?.name || '',
         twoFactorEnabled: userProfile?.two_factor_enabled || false
       })
     } catch (error) {

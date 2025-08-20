@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Fetch available polls (optional - if no polls exist, we'll still create trending polls)
-    let polls = [];
+    let polls: any[] = [];
     try {
       const { data: pollsData, error: pollsError } = await supabase
         .from('po_polls')

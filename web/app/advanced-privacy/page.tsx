@@ -39,8 +39,10 @@ export default function AdvancedPrivacyPage() {
     setPrivacyBudget(budget)
 
     // Get ZK proofs
+    if (!privacyUtils) return
+    
     const proofIds = privacyUtils.zkProofManager.listProofs()
-    const proofs = proofIds.map(id => ({
+    const proofs = proofIds.map((id: any) => ({
       id,
       proof: privacyUtils.zkProofManager.getProof(id),
       verification: privacyUtils.zkProofManager.verifyProof(id)
@@ -77,6 +79,8 @@ export default function AdvancedPrivacyPage() {
       ]
 
       // Run private analytics
+      if (!privacyUtils) return
+      
       const demographics = privacyUtils.privateAnalytics.privateDemographics(mockData)
       const votingPatterns = privacyUtils.privateAnalytics.privateVotingPatterns(mockVotes)
       const trends = privacyUtils.privateAnalytics.privateTrendAnalysis(mockData)
@@ -88,7 +92,9 @@ export default function AdvancedPrivacyPage() {
       })
 
       // Track analytics
-      pwaUtils.pwaAnalytics.trackFeatureUsage('private_analysis_run')
+      if (pwaUtils) {
+        pwaUtils.pwaAnalytics.trackFeatureUsage('private_analysis_run')
+      }
     } catch (error) {
       devLog('Private analysis failed:', error)
     } finally {
@@ -107,7 +113,9 @@ export default function AdvancedPrivacyPage() {
       setZkProofs(prev => [...prev, { id: proofId, proof, verification }])
       
       // Track analytics
-      pwaUtils.pwaAnalytics.trackFeatureUsage(`zk_proof_created_${type}`)
+      if (pwaUtils) {
+        pwaUtils.pwaAnalytics.trackFeatureUsage(`zk_proof_created_${type}`)
+      }
     } catch (error) {
       devLog('Failed to create ZK proof:', error)
     }
