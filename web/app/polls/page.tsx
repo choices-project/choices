@@ -498,7 +498,7 @@ export default function PollsPage() {
 
                   {/* Data Visualization */}
                   <div className="space-y-3 mb-6">
-                    {poll.options.slice(0, 2).map((option, idx: any) => (
+                    {poll.options.slice(0, 2).map((option: any, idx: any) => (
                       <div key={option} className="bg-gray-50 rounded-lg p-3">
                         <div className="flex justify-between items-center">
                           <span className="text-gray-700 text-sm font-medium line-clamp-1">{option}</span>

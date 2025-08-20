@@ -336,7 +336,7 @@ const PerformanceDashboard: React.FC = () => {
                     Recent Alerts ({summary.totalAlerts})
                   </h4>
                   <div className="space-y-2">
-                    {summary.recentAlerts.slice(0, 3).map((alert, index: any) => (
+                    {summary.recentAlerts.slice(0, 3).map((alert: any, index: any) => (
                       <motion.div
                         key={index}
                         initial={{ opacity: 0, x: -20 }}
@@ -367,7 +367,7 @@ const PerformanceDashboard: React.FC = () => {
                     Optimization Tips
                   </h4>
                   <div className="space-y-2">
-                    {getOptimizationTips().map((tip, index: any) => (
+                    {getOptimizationTips().map((tip: any, index: any) => (
                       <motion.div
                         key={index}
                         initial={{ opacity: 0, x: -20 }}

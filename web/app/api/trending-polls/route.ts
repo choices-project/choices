@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Create dynamic trending polls by combining trending topics with poll data
-    const trendingPolls = trendingTopics?.map((topic, index: any) => {
+    const trendingPolls = trendingTopics?.map((topic: any, index: any) => {
       // Try to find a matching poll, or use the first available poll
       const matchingPoll = polls?.find(poll => 
         poll.title.toLowerCase().includes(topic.category?.[0]?.toLowerCase() || '') ||
@@ -149,7 +149,7 @@ function generateDynamicOptions(topic: any, matchingPoll: any) {
   // Generate realistic vote distribution
   const percentages = [35, 25, 20, 15, 5]; // Realistic distribution
   
-  return texts.map((text, index: any) => ({
+  return texts.map((text: any, index: any) => ({
     text,
     votes: percentages[index],
     color: colors[index],

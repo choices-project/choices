@@ -353,7 +353,7 @@ export default function CrossPlatformTestingPage() {
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Responsive Design Tests</h3>
                 
                 <div className="space-y-3">
-                  {testSuites.find(s => s.name === 'Responsive Design')?.tests.map((test, index: any) => (
+                  {testSuites.find(s => s.name === 'Responsive Design')?.tests.map((test: any, index: any) => (
                     <div key={index} className={`p-4 rounded-lg border ${getStatusColor(test.status)}`}>
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center space-x-2">
@@ -387,7 +387,7 @@ export default function CrossPlatformTestingPage() {
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">PWA Features Tests</h3>
                 
                 <div className="space-y-3">
-                  {testSuites.find(s => s.name === 'PWA Features')?.tests.map((test, index: any) => (
+                  {testSuites.find(s => s.name === 'PWA Features')?.tests.map((test: any, index: any) => (
                     <div key={index} className={`p-4 rounded-lg border ${getStatusColor(test.status)}`}>
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center space-x-2">
@@ -421,7 +421,7 @@ export default function CrossPlatformTestingPage() {
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Touch Interface Tests</h3>
                 
                 <div className="space-y-3">
-                  {testSuites.find(s => s.name === 'Touch Interface')?.tests.map((test, index: any) => (
+                  {testSuites.find(s => s.name === 'Touch Interface')?.tests.map((test: any, index: any) => (
                     <div key={index} className={`p-4 rounded-lg border ${getStatusColor(test.status)}`}>
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center space-x-2">
@@ -455,7 +455,7 @@ export default function CrossPlatformTestingPage() {
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Performance Tests</h3>
                 
                 <div className="space-y-3">
-                  {testSuites.find(s => s.name === 'Performance')?.tests.map((test, index: any) => (
+                  {testSuites.find(s => s.name === 'Performance')?.tests.map((test: any, index: any) => (
                     <div key={index} className={`p-4 rounded-lg border ${getStatusColor(test.status)}`}>
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center space-x-2">
@@ -489,7 +489,7 @@ export default function CrossPlatformTestingPage() {
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Accessibility Tests</h3>
                 
                 <div className="space-y-3">
-                  {testSuites.find(s => s.name === 'Accessibility')?.tests.map((test, index: any) => (
+                  {testSuites.find(s => s.name === 'Accessibility')?.tests.map((test: any, index: any) => (
                     <div key={index} className={`p-4 rounded-lg border ${getStatusColor(test.status)}`}>
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center space-x-2">
@@ -523,7 +523,7 @@ export default function CrossPlatformTestingPage() {
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Browser Compatibility Tests</h3>
                 
                 <div className="space-y-3">
-                  {testSuites.find(s => s.name === 'Browser Compatibility')?.tests.map((test, index: any) => (
+                  {testSuites.find(s => s.name === 'Browser Compatibility')?.tests.map((test: any, index: any) => (
                     <div key={index} className={`p-4 rounded-lg border ${getStatusColor(test.status)}`}>
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center space-x-2">
@@ -557,7 +557,7 @@ export default function CrossPlatformTestingPage() {
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Device Specific Tests</h3>
                 
                 <div className="space-y-3">
-                  {testSuites.find(s => s.name === 'Device Specific')?.tests.map((test, index: any) => (
+                  {testSuites.find(s => s.name === 'Device Specific')?.tests.map((test: any, index: any) => (
                     <div key={index} className={`p-4 rounded-lg border ${getStatusColor(test.status)}`}>
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center space-x-2">

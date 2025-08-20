@@ -186,7 +186,7 @@ export default function TestPrivacyPage() {
                     </div>
                     {poll.tags.length > 0 && (
                       <div className="flex flex-wrap gap-1">
-                        {poll.tags.map((tag, index: any) => (
+                        {poll.tags.map((tag: any, index: any) => (
                           <span
                             key={index}
                             className="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs"
@@ -203,7 +203,7 @@ export default function TestPrivacyPage() {
                 <div className="mb-4">
                   <h4 className="font-medium text-gray-900 mb-2">Options:</h4>
                   <div className="space-y-2">
-                    {poll.options.map((option, index: any) => (
+                    {poll.options.map((option: any, index: any) => (
                       <div key={index} className="flex items-center gap-2">
                         <span className="text-sm text-gray-500 w-6">{index + 1}.</span>
                         <span className="text-gray-700">{option}</span>
@@ -233,7 +233,7 @@ export default function TestPrivacyPage() {
                         Select your choice:
                       </label>
                       <div className="space-y-2">
-                        {poll.options.map((option, index: any) => (
+                        {poll.options.map((option: any, index: any) => (
                           <label key={index} className="flex items-center gap-2">
                             <input
                               type="radio"

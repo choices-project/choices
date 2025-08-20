@@ -471,7 +471,7 @@ export default function CreatePollPage() {
                         <div className="mb-3">
                           <p className="text-xs font-medium text-gray-700 mb-1">Perfect for:</p>
                           <div className="flex flex-wrap gap-1">
-                            {method.bestFor.map((useCase, index: any) => (
+                            {method.bestFor.map((useCase: any, index: any) => (
                               <span
                                 key={index}
                                 className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-full"
@@ -485,7 +485,7 @@ export default function CreatePollPage() {
                         <div>
                           <p className="text-xs font-medium text-gray-700 mb-1">Pro tips:</p>
                           <ul className="text-xs text-gray-600 space-y-1">
-                            {method.tips.map((tip, index: any) => (
+                            {method.tips.map((tip: any, index: any) => (
                               <li key={index} className="flex items-start">
                                 <span className="text-blue-500 mr-1">•</span>
                                 {tip}
@@ -533,7 +533,7 @@ export default function CreatePollPage() {
               </div>
               
               <div className="space-y-4">
-                {pollData.options.map((option, index: any) => (
+                {pollData.options.map((option: any, index: any) => (
                   <div key={option.id} className="p-4 border border-gray-200 rounded-lg">
                     <div className="flex items-start space-x-3">
                       <div className="flex-1 space-y-3">
@@ -839,7 +839,7 @@ export default function CreatePollPage() {
               <div className="mt-6">
                 <h3 className="font-semibold text-gray-900 mb-3">Options Preview</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {pollData.options.map((option, index: any) => (
+                  {pollData.options.map((option: any, index: any) => (
                     <div key={option.id} className="p-3 border border-gray-200 rounded-lg">
                       <div className="font-medium text-gray-900">{option.text}</div>
                       {option.description && (

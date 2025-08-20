@@ -62,43 +62,43 @@ export function DemographicVisualization({
     
     switch (activeTab) {
       case 'age':
-        return data.ageDistribution.map((item, index: any) => ({
+        return data.ageDistribution.map((item: any, index: any) => ({
           name: item.range,
           value: item.percentage,
           color: colors[index % colors.length]
         }))
       case 'location':
-        return data.geographicSpread.slice(0, 10).map((item, index: any) => ({
+        return data.geographicSpread.slice(0, 10).map((item: any, index: any) => ({
           name: item.state,
           value: item.percentage,
           color: colors[index % colors.length]
         }))
       case 'interests':
-        return data.commonInterests.map((item, index: any) => ({
+        return data.commonInterests.map((item: any, index: any) => ({
           name: item.interest,
           value: item.percentage,
           color: colors[index % colors.length]
         }))
       case 'values':
-        return data.topValues.map((item, index: any) => ({
+        return data.topValues.map((item: any, index: any) => ({
           name: item.value,
           value: item.percentage,
           color: colors[index % colors.length]
         }))
       case 'education':
-        return data.educationLevels.map((item, index: any) => ({
+        return data.educationLevels.map((item: any, index: any) => ({
           name: item.level,
           value: item.percentage,
           color: colors[index % colors.length]
         }))
       case 'income':
-        return data.incomeBrackets.map((item, index: any) => ({
+        return data.incomeBrackets.map((item: any, index: any) => ({
           name: item.bracket,
           value: item.percentage,
           color: colors[index % colors.length]
         }))
       case 'urban':
-        return data.urbanRural.map((item, index: any) => ({
+        return data.urbanRural.map((item: any, index: any) => ({
           name: item.type,
           value: item.percentage,
           color: colors[index % colors.length]
@@ -245,7 +245,7 @@ export function DemographicVisualization({
 
       {/* Tab Navigation */}
       <div className="flex flex-wrap justify-center gap-2 mb-8">
-        {tabs.map((tab, index: any) => (
+        {tabs.map((tab: any, index: any) => (
           <motion.button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
@@ -312,7 +312,7 @@ export function DemographicVisualization({
             Detailed Breakdown
           </h3>
           <div className="space-y-3">
-            {getActiveData().map((item, index: any) => (
+            {getActiveData().map((item: any, index: any) => (
               <motion.div
                 key={item.name}
                 className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"

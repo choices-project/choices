@@ -189,7 +189,7 @@ export const FeedbackDetailModal: React.FC<FeedbackDetailModalProps> = ({
             <div>
               <h3 className="text-lg font-medium text-gray-900 mb-2">Tags</h3>
               <div className="flex flex-wrap gap-2">
-                {feedback.tags.map((tag, index: any) => (
+                {feedback.tags.map((tag: any, index: any) => (
                   <span
                     key={index}
                     className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800"

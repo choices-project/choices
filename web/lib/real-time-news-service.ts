@@ -422,7 +422,8 @@ export class RealTimeNewsService {
   async getBreakingNews(limit: number = 10): Promise<BreakingNewsStory[]> {
     try {
       if (!this.supabase) { throw new Error('Supabase client not available'); }
-      const { data, error } = if (!this.supabase) { throw new Error('Supabase client not available'); }
+      if (!this.supabase) { throw new Error('Supabase client not available'); }
+    const { data, error } = await this.supabase
       await this.supabase
         .from('breaking_news')
         .select('id, title, content, source, created_at')
@@ -441,7 +442,8 @@ export class RealTimeNewsService {
   async getBreakingNewsById(id: string): Promise<BreakingNewsStory | null> {
     try {
       if (!this.supabase) { throw new Error('Supabase client not available'); }
-      const { data, error } = if (!this.supabase) { throw new Error('Supabase client not available'); }
+      if (!this.supabase) { throw new Error('Supabase client not available'); }
+    const { data, error } = await this.supabase
       await this.supabase
         .from('breaking_news')
         .select('id, title, content, source, created_at')
@@ -460,7 +462,8 @@ export class RealTimeNewsService {
   async createBreakingNews(story: Omit<BreakingNewsStory, 'id' | 'createdAt' | 'updatedAt'>): Promise<BreakingNewsStory | null> {
     try {
       if (!this.supabase) { throw new Error('Supabase client not available'); }
-      const { data, error } = if (!this.supabase) { throw new Error('Supabase client not available'); }
+      if (!this.supabase) { throw new Error('Supabase client not available'); }
+    const { data, error } = await this.supabase
       await this.supabase
         .from('breaking_news')
         .insert([this.mapBreakingNewsToDB(story)])
@@ -483,7 +486,8 @@ export class RealTimeNewsService {
   async getNewsSources(): Promise<NewsSource[]> {
     try {
       if (!this.supabase) { throw new Error('Supabase client not available'); }
-      const { data, error } = if (!this.supabase) { throw new Error('Supabase client not available'); }
+      if (!this.supabase) { throw new Error('Supabase client not available'); }
+    const { data, error } = await this.supabase
       await this.supabase
         .from('news_sources')
         .select('id, title, content, source, created_at')
@@ -502,7 +506,8 @@ export class RealTimeNewsService {
   async updateNewsSource(id: string, updates: Partial<NewsSource>): Promise<NewsSource | null> {
     try {
       if (!this.supabase) { throw new Error('Supabase client not available'); }
-      const { data, error } = if (!this.supabase) { throw new Error('Supabase client not available'); }
+      if (!this.supabase) { throw new Error('Supabase client not available'); }
+    const { data, error } = await this.supabase
       await this.supabase
         .from('news_sources')
         .update(this.mapNewsSourceToDB(updates))

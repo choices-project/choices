@@ -177,7 +177,7 @@ export default function AutomatedPollsPage() {
                 { id: 'analyze', name: 'Topic Analysis', icon: Zap },
                 { id: 'topics', name: 'Trending Topics', icon: TrendingUp },
                 { id: 'polls', name: 'Generated Polls', icon: BarChart3 }
-              ].map((tab) => {
+              ].map((tab: any) => {
                 const Icon = tab.icon;
                 return (
                   <button
@@ -238,7 +238,7 @@ export default function AutomatedPollsPage() {
                     <div>
                       <h4 className="text-sm font-medium text-gray-700 mb-1">Example Topics:</h4>
                       <ul className="text-sm text-gray-600 space-y-1">
-                        {categories.find(c => c.id === selectedCategory)?.exampleTopics.map((topic, index: any) => (
+                        {categories.find(c => c.id === selectedCategory)?.exampleTopics.map((topic: any, index: any) => (
                           <li key={index} className="flex items-start gap-2">
                             <span className="text-blue-500 mt-1">•</span>
                             <span>{topic}</span>

@@ -270,7 +270,7 @@ export default function MVPTestingPage() {
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Core Functionality Tests</h3>
                 
                 <div className="space-y-3">
-                  {testSuites.find(s => s.name === 'Core Functionality')?.tests.map((test, index: any) => (
+                  {testSuites.find(s => s.name === 'Core Functionality')?.tests.map((test: any, index: any) => (
                     <div key={index} className={`p-4 rounded-lg border ${getStatusColor(test.status)}`}>
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center space-x-2">
@@ -304,7 +304,7 @@ export default function MVPTestingPage() {
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Security & Privacy Tests</h3>
                 
                 <div className="space-y-3">
-                  {testSuites.find(s => s.name === 'Security & Privacy')?.tests.map((test, index: any) => (
+                  {testSuites.find(s => s.name === 'Security & Privacy')?.tests.map((test: any, index: any) => (
                     <div key={index} className={`p-4 rounded-lg border ${getStatusColor(test.status)}`}>
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center space-x-2">
@@ -338,7 +338,7 @@ export default function MVPTestingPage() {
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Performance Tests</h3>
                 
                 <div className="space-y-3">
-                  {testSuites.find(s => s.name === 'Performance')?.tests.map((test, index: any) => (
+                  {testSuites.find(s => s.name === 'Performance')?.tests.map((test: any, index: any) => (
                     <div key={index} className={`p-4 rounded-lg border ${getStatusColor(test.status)}`}>
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center space-x-2">
@@ -372,7 +372,7 @@ export default function MVPTestingPage() {
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">PWA Features Tests</h3>
                 
                 <div className="space-y-3">
-                  {testSuites.find(s => s.name === 'PWA Features')?.tests.map((test, index: any) => (
+                  {testSuites.find(s => s.name === 'PWA Features')?.tests.map((test: any, index: any) => (
                     <div key={index} className={`p-4 rounded-lg border ${getStatusColor(test.status)}`}>
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center space-x-2">

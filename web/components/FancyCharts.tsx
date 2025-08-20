@@ -31,7 +31,7 @@ export function FancyDonutChart({ data, size = 200, strokeWidth = 20, title }: F
     <div className="relative">
       <svg width={size} height={size} className="transform -rotate-90">
         <defs>
-          {data.map((item, index: any) => (
+          {data.map((item: any, index: any) => (
             <linearGradient key={index} id={`gradient-${index}`} x1="0%" y1="0%" x2="100%" y2="0%">
               <stop offset="0%" stopColor={item.color} stopOpacity="0.8" />
               <stop offset="100%" stopColor={item.color} stopOpacity="1" />
@@ -39,7 +39,7 @@ export function FancyDonutChart({ data, size = 200, strokeWidth = 20, title }: F
           ))}
         </defs>
         
-        {data.map((item, index: any) => {
+        {data.map((item: any, index: any) => {
           const percentage = (item.value / total) * 100
           const angle = (percentage / 100) * 360
           const startAngle = currentAngle
@@ -91,7 +91,7 @@ export function FancyDonutChart({ data, size = 200, strokeWidth = 20, title }: F
       
       {/* Legend */}
       <div className="mt-4 space-y-2">
-        {data.map((item, index: any) => (
+        {data.map((item: any, index: any) => (
           <motion.div
             key={index}
             className="flex items-center gap-2 text-sm"
@@ -128,7 +128,7 @@ export function FancyBarChart({ data, height = 300, title }: FancyBarChartProps)
       {title && <h3 className="text-lg font-semibold text-gray-900">{title}</h3>}
       
       <div className="space-y-3">
-        {data.map((item, index: any) => {
+        {data.map((item: any, index: any) => {
           const percentage = (item.value / maxValue) * 100
           
           return (

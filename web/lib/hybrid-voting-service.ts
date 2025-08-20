@@ -43,8 +43,8 @@ export class HybridVotingService {
     const { pollId, userId } = request;
     
     // Get poll privacy settings
-    const { data: pollSettings, error: pollError } = if (!this.supabase) { throw new Error('Supabase client not available'); }
-      await this.supabase
+    if (!this.supabase) { throw new Error('Supabase client not available'); }
+    const { data: pollSettings, error: pollError } = await this.supabase
       .rpc('get_poll_privacy_settings', { poll_id_param: pollId })
       .single();
 
@@ -133,7 +133,8 @@ export class HybridVotingService {
     const { pollId, choice } = request;
 
     // Simple vote insertion
-    const { data: vote, error } = if (!this.supabase) { throw new Error('Supabase client not available'); }
+    if (!this.supabase) { throw new Error('Supabase client not available'); }
+    const { data: vote, error } = await this.supabase
       await this.supabase
       .from('po_votes')
       .insert({
@@ -182,7 +183,8 @@ export class HybridVotingService {
     }
 
     // Check if user has already voted
-    const { data: existingVote, error: existingVoteError } = if (!this.supabase) { throw new Error('Supabase client not available'); }
+    if (!this.supabase) { throw new Error('Supabase client not available'); }
+    const { data: existingVote, error: existingVoteError } = await this.supabase
       await this.supabase
       .from('po_votes')
       .select('id')
@@ -195,7 +197,8 @@ export class HybridVotingService {
     }
 
     // Private vote insertion with user tracking
-    const { data: vote, error } = if (!this.supabase) { throw new Error('Supabase client not available'); }
+    if (!this.supabase) { throw new Error('Supabase client not available'); }
+    const { data: vote, error } = await this.supabase
       await this.supabase
       .from('po_votes')
       .insert({
@@ -272,7 +275,8 @@ export class HybridVotingService {
   private async requestBlindedToken(pollId: string, userId: string): Promise<{ token: string; tag: string }> {
     try {
       // Get user profile to determine tier
-      const { data: userProfile, error: profileError } = if (!this.supabase) { throw new Error('Supabase client not available'); }
+      if (!this.supabase) { throw new Error('Supabase client not available'); }
+    const { data: userProfile, error: profileError } = await this.supabase
       await this.supabase
         .from('ia_users')
         .select('verification_tier')

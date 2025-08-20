@@ -153,7 +153,7 @@ export default function ResultsPage() {
                 </div>
 
                 <div className="space-y-4">
-                  {selectedPoll.options.map((option, index: any) => {
+                  {selectedPoll.options.map((option: any, index: any) => {
                     const votes = (tally[index] as number) || 0
                     const total = getTotalVotes(tally)
                     const percentage = getPercentage(votes, total)

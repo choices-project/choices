@@ -111,7 +111,7 @@ export const CreatePollForm: React.FC<CreatePollFormProps> = ({
   const updateOption = (index: number, value: string) => {
     setFormData(prev => ({
       ...prev,
-      options: prev.options.map((option, i: any) => i === index ? value : option)
+      options: prev.options.map((option: any, i: any) => i === index ? value : option)
     }));
   };
 
@@ -261,7 +261,7 @@ export const CreatePollForm: React.FC<CreatePollFormProps> = ({
             Poll Options *
           </label>
           <div className="space-y-2">
-            {formData.options.map((option, index: any) => (
+            {formData.options.map((option: any, index: any) => (
               <div key={index} className="flex items-center gap-2">
                 <input
                   type="text"
@@ -327,7 +327,7 @@ export const CreatePollForm: React.FC<CreatePollFormProps> = ({
           </div>
           {formData.tags.length > 0 && (
             <div className="flex flex-wrap gap-2">
-              {formData.tags.map((tag, index: any) => (
+              {formData.tags.map((tag: any, index: any) => (
                 <span
                   key={index}
                   className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-sm"

@@ -168,7 +168,7 @@ export const FeedbackList: React.FC<FeedbackListProps> = ({
                       </p>
                       {item.tags && item.tags.length > 0 && (
                         <div className="flex gap-1 mt-1">
-                          {item.tags.slice(0, 2).map((tag, index: any) => (
+                          {item.tags.slice(0, 2).map((tag: any, index: any) => (
                             <span
                               key={index}
                               className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800"

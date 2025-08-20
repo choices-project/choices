@@ -265,7 +265,7 @@ const EnhancedFeedbackWidget: React.FC = () => {
                     >
                       <h4 className="text-lg font-semibold text-gray-900">What type of feedback?</h4>
                       <div className="grid grid-cols-2 gap-3">
-                        {feedbackTypes.map(({ key, label, icon: Icon, color, bgColor }) => (
+                        {feedbackTypes.map(({ key: any, label: any, icon: Icon, color: any, bgColor }: any) => (
                           <button
                             key={key}
                             onClick={() => handleTypeSelect(key as FeedbackData['type'])}
@@ -326,7 +326,7 @@ const EnhancedFeedbackWidget: React.FC = () => {
                     >
                       <h4 className="text-lg font-semibold text-gray-900">How do you feel?</h4>
                       <div className="grid grid-cols-2 gap-3">
-                        {sentimentOptions.map(({ key, label, icon: Icon, color, bgColor }) => (
+                        {sentimentOptions.map(({ key: any, label: any, icon: Icon, color: any, bgColor }: any) => (
                           <button
                             key={key}
                             onClick={() => handleSentimentSelect(key as FeedbackData['sentiment'])}
@@ -413,7 +413,7 @@ const EnhancedFeedbackWidget: React.FC = () => {
                       </p>
                       
                       <div className="flex items-center justify-center gap-1 text-yellow-500">
-                        {[1, 2, 3, 4, 5].map((star) => (
+                        {[1, 2, 3, 4, 5].map((star: any) => (
                           <Star key={star} className="w-5 h-5 fill-current" />
                         ))}
                       </div>
