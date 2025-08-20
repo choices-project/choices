@@ -144,8 +144,8 @@ check_unused_imports() {
 check_select_star() {
     print_status "info" "Checking for select('*') usage (Lesson 7)..."
     
-    # Check production code for select('*') usage
-    local select_star_files=$(find ./web -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.jsx" | grep -v node_modules | grep -v .git | grep -v .next | xargs grep -l "select('\\*')" 2>/dev/null || true)
+    # Check production code for select('*') usage (ignore comments)
+    local select_star_files=$(find ./web -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.jsx" | grep -v node_modules | grep -v .git | grep -v .next | xargs grep -v "^[[:space:]]*//" | grep -l "select('\\*')" 2>/dev/null || true)
     
     if [ -n "$select_star_files" ]; then
         print_status "error" "Found select('*') usage - always select specific fields:"
