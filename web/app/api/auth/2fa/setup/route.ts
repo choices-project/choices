@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { devLog } from '@/lib/logger';
-import speakeasy from 'speakeasy'
-import qrcode from 'qrcode'
+import * as speakeasy from 'speakeasy'
+import * as qrcode from 'qrcode'
 import { createClient } from '@supabase/supabase-js'
 
 // Initialize Supabase client

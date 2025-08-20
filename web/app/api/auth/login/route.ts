@@ -3,7 +3,7 @@ import { devLog } from '@/lib/logger';
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import { createClient } from '@supabase/supabase-js'
-import speakeasy from 'speakeasy'
+import * as speakeasy from 'speakeasy'
 
 // Initialize Supabase client
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
