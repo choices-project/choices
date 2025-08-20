@@ -45,7 +45,7 @@ export default function TestRankedChoicePage() {
   const router = useRouter()
   const [isVoting, setIsVoting] = useState(false)
   const [hasVoted, setHasVoted] = useState(false)
-  const [userVote, setUserVote] = useState<{ [optionId: string]: number } | null>(null)
+  const [userVote, setUserVote] = useState<{ [optionId: string]: number } | undefined>(undefined)
 
   useEffect(() => {
     if (!loading && !user) {

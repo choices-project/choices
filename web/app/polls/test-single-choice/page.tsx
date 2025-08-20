@@ -45,7 +45,7 @@ export default function TestSingleChoicePage() {
   const router = useRouter()
   const [isVoting, setIsVoting] = useState(false)
   const [hasVoted, setHasVoted] = useState(false)
-  const [userVote, setUserVote] = useState<string | null>(null)
+  const [userVote, setUserVote] = useState<string | undefined>(undefined)
 
   useEffect(() => {
     if (!loading && !user) {
