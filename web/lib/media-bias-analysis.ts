@@ -574,7 +574,7 @@ export class MediaBiasAnalysisService {
 
       if (error) throw error;
 
-      return data ? this.mapComparisonFromDB(data) : null;
+      return data ? this?.mapComparisonFromDB(data) : null;
     } catch (error) {
       devLog('Error comparing polls:', error);
       return null;
@@ -760,7 +760,7 @@ export class MediaBiasAnalysisService {
       .single();
 
     if (error) return null;
-    return data ? this.mapMediaPollFromDB(data) : null;
+    return data ? this?.mapMediaPollFromDB(data) : null;
   }
 
   private async getOurPoll(id: string): Promise<any> {

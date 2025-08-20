@@ -182,7 +182,7 @@ export class AutomatedPollsService {
 
       if (error) throw error;
 
-      return data ? data.map((item) => this?.mapTrendingTopicFromDB(item)) : [];
+      return data ? data.map((item) => this.mapTrendingTopicFromDB(item)) : [];
     } catch (error) {
       devLog('Error fetching trending topics:', error);
       return [];
@@ -199,7 +199,7 @@ export class AutomatedPollsService {
 
       if (error) throw error;
 
-      return data ? this.mapTrendingTopicFromDB(data) : null;
+      return data ? this?.mapTrendingTopicFromDB(data) : null;
     } catch (error) {
       devLog('Error fetching trending topic:', error);
       return null;
@@ -216,7 +216,7 @@ export class AutomatedPollsService {
 
       if (error) throw error;
 
-      return data ? this.mapTrendingTopicFromDB(data) : null;
+      return data ? this?.mapTrendingTopicFromDB(data) : null;
     } catch (error) {
       devLog('Error creating trending topic:', error);
       return null;
@@ -234,7 +234,7 @@ export class AutomatedPollsService {
 
       if (error) throw error;
 
-      return data ? this.mapTrendingTopicFromDB(data) : null;
+      return data ? this?.mapTrendingTopicFromDB(data) : null;
     } catch (error) {
       devLog('Error updating trending topic:', error);
       return null;
@@ -261,7 +261,7 @@ export class AutomatedPollsService {
 
       if (error) throw error;
 
-      return data ? data.map(this.mapGeneratedPollFromDB) : [];
+      return data ? data.map((item) => this?.mapGeneratedPollFromDB(item)) : [];
     } catch (error) {
       devLog('Error fetching generated polls:', error);
       return [];
@@ -278,7 +278,7 @@ export class AutomatedPollsService {
 
       if (error) throw error;
 
-      return data ? this.mapGeneratedPollFromDB(data) : null;
+      return data ? this?.mapGeneratedPollFromDB(data) : null;
     } catch (error) {
       devLog('Error fetching generated poll:', error);
       return null;
@@ -295,7 +295,7 @@ export class AutomatedPollsService {
 
       if (error) throw error;
 
-      return data ? this.mapGeneratedPollFromDB(data) : null;
+      return data ? this?.mapGeneratedPollFromDB(data) : null;
     } catch (error) {
       devLog('Error creating generated poll:', error);
       return null;
@@ -313,7 +313,7 @@ export class AutomatedPollsService {
 
       if (error) throw error;
 
-      return data ? this.mapGeneratedPollFromDB(data) : null;
+      return data ? this?.mapGeneratedPollFromDB(data) : null;
     } catch (error) {
       devLog('Error updating generated poll:', error);
       return null;
@@ -349,7 +349,7 @@ export class AutomatedPollsService {
 
       if (error) throw error;
 
-      return data?.map(this.mapDataSourceFromDB) || [];
+      return data ? data.map((item) => this?.mapDataSourceFromDB(item)) : [];
     } catch (error) {
       devLog('Error fetching data sources:', error);
       return [];
@@ -367,7 +367,7 @@ export class AutomatedPollsService {
 
       if (error) throw error;
 
-      return data ? this.mapDataSourceFromDB(data) : null;
+      return data ? this?.mapDataSourceFromDB(data) : null;
     } catch (error) {
       devLog('Error updating data source:', error);
       return null;
@@ -388,7 +388,7 @@ export class AutomatedPollsService {
 
       if (error) throw error;
 
-      return data ? this.mapQualityMetricsFromDB(data) : null;
+      return data ? this?.mapQualityMetricsFromDB(data) : null;
     } catch (error) {
       devLog('Error fetching quality metrics:', error);
       return null;
@@ -405,7 +405,7 @@ export class AutomatedPollsService {
 
       if (error) throw error;
 
-      return data ? this.mapQualityMetricsFromDB(data) : null;
+      return data ? this?.mapQualityMetricsFromDB(data) : null;
     } catch (error) {
       devLog('Error creating quality metrics:', error);
       return null;
@@ -427,7 +427,7 @@ export class AutomatedPollsService {
 
       if (error) throw error;
 
-      return data ? this.mapSystemConfigurationFromDB(data) : null;
+      return data ? this?.mapSystemConfigurationFromDB(data) : null;
     } catch (error) {
       devLog('Error fetching system configuration:', error);
       return null;
@@ -445,7 +445,7 @@ export class AutomatedPollsService {
 
       if (error) throw error;
 
-      return data ? this.mapSystemConfigurationFromDB(data) : null;
+      return data ? this?.mapSystemConfigurationFromDB(data) : null;
     } catch (error) {
       devLog('Error updating system configuration:', error);
       return null;

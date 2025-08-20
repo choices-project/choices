@@ -313,7 +313,7 @@ export class PollNarrativeService {
 
       if (error) throw error;
 
-      return data ? this.mapNarrativeFromDB(data) : null;
+      return data ? this?.mapNarrativeFromDB(data) : null;
     } catch (error) {
       devLog('Error creating narrative:', error);
       return null;
@@ -334,7 +334,7 @@ export class PollNarrativeService {
 
       if (error) throw error;
 
-      return data ? this.mapVerifiedFactFromDB(data) : null;
+      return data ? this?.mapVerifiedFactFromDB(data) : null;
     } catch (error) {
       devLog('Error adding verified fact:', error);
       return null;
@@ -362,7 +362,7 @@ export class PollNarrativeService {
 
       if (error) throw error;
 
-      return data ? this.mapCommunityFactFromDB(data) : null;
+      return data ? this?.mapCommunityFactFromDB(data) : null;
     } catch (error) {
       devLog('Error submitting community fact:', error);
       return null;
