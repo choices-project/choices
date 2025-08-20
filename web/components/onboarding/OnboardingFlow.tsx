@@ -266,7 +266,7 @@ function OnboardingFlowInner() {
         {/* Progress indicator */}
         <div className="max-w-2xl mx-auto mb-8">
           <div className="flex items-center justify-between mb-4">
-            {['welcome', 'auth', 'values', 'demographics', 'privacy', 'complete'].map((step, index) => (
+            {['welcome', 'auth', 'values', 'demographics', 'privacy', 'complete'].map((step: any, index: any) => (
               <div key={step} className="flex items-center">
                 <div className={`
                   w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium

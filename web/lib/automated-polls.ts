@@ -182,7 +182,7 @@ export class AutomatedPollsService {
 
       if (error) throw error;
 
-      return data ? data.map((item) => this.mapTrendingTopicFromDB(item)) : [];
+      return data ? data.map((item: any) => this.mapTrendingTopicFromDB(item)) : [];
     } catch (error) {
       devLog('Error fetching trending topics:', error);
       return [];
@@ -261,7 +261,7 @@ export class AutomatedPollsService {
 
       if (error) throw error;
 
-      return data ? data.map((item) => this?.mapGeneratedPollFromDB(item)) : [];
+      return data ? data.map((item: any) => this?.mapGeneratedPollFromDB(item)) : [];
     } catch (error) {
       devLog('Error fetching generated polls:', error);
       return [];
@@ -349,7 +349,7 @@ export class AutomatedPollsService {
 
       if (error) throw error;
 
-      return data ? data.map((item) => this?.mapDataSourceFromDB(item)) : [];
+      return data ? data.map((item: any) => this?.mapDataSourceFromDB(item)) : [];
     } catch (error) {
       devLog('Error fetching data sources:', error);
       return [];
@@ -743,7 +743,7 @@ export function generatePollOptions(topicAnalysis: TopicAnalysis): PollOption[] 
   
   // Use recommended options if available
   if (pollRecommendation.suggestedOptions.length > 0) {
-    return pollRecommendation.suggestedOptions.map((option, index) => ({
+    return pollRecommendation.suggestedOptions.map((option: any, index: any) => ({
       id: `option_${index + 1}`,
       text: option,
       description: undefined,

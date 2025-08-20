@@ -146,7 +146,7 @@ export default function PollsPage() {
                 <div className="mb-6">
                   <span className="text-sm font-medium text-gray-700">Sponsored by:</span>
                   <div className="flex flex-wrap gap-2 mt-1">
-                    {selectedPoll.sponsors.map((sponsor, index: any) => (
+                    {selectedPoll.sponsors.map((sponsor: any, index: any) => (
                       <span key={index} className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded">
                         {sponsor}
                       </span>
@@ -160,7 +160,7 @@ export default function PollsPage() {
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">Cast Your Vote</h3>
                   <div className="space-y-3">
-                    {selectedPoll.options.map((option, index: any) => (
+                    {selectedPoll.options.map((option: any, index: any) => (
                       <button
                         key={index}
                         onClick={() => setUserChoice(index)}

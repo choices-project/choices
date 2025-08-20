@@ -227,7 +227,7 @@ const FeedbackDashboard: React.FC = () => {
               { key: 'open', label: 'Open Issues', count: stats.open },
               { key: 'bugs', label: 'Bug Reports', count: stats.bugs },
               { key: 'features', label: 'Feature Requests', count: stats.features }
-            ].map((filterOption) => (
+            ].map((filterOption: any) => (
               <button
                 key={filterOption.key}
                 onClick={() => setFilter(filterOption.key)}
@@ -258,7 +258,7 @@ const FeedbackDashboard: React.FC = () => {
                 <p className="text-gray-500">No feedback found</p>
               </div>
             ) : (
-              filteredFeedback.map((item, index: any) => (
+              filteredFeedback.map((item: any, index: any) => (
                 <motion.div
                   key={item.id}
                   initial={{ opacity: 0, y: 20 }}

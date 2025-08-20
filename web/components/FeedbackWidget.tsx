@@ -253,7 +253,7 @@ const FeedbackWidget: React.FC = () => {
                           { type: 'bug', label: 'Report a Bug', description: 'Something isn\'t working' },
                           { type: 'feature', label: 'Feature Request', description: 'I have an idea' },
                           { type: 'general', label: 'General Feedback', description: 'Thoughts or suggestions' }
-                        ].map((option) => (
+                        ].map((option: any) => (
                           <motion.button
                             key={option.type}
                             onClick={() => handleTypeSelect(option.type as any)}
@@ -496,7 +496,7 @@ const FeedbackWidget: React.FC = () => {
                       </p>
                       
                       <div className="flex items-center justify-center gap-1 text-yellow-500">
-                        {[1, 2, 3, 4, 5].map((star) => (
+                        {[1, 2, 3, 4, 5].map((star: any) => (
                           <Star key={star} className="w-5 h-5 fill-current" />
                         ))}
                       </div>

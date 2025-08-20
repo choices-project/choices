@@ -347,7 +347,7 @@ export const CreatePoll: React.FC<CreatePollProps> = ({
         {/* Progress Bar */}
         <div className="bg-gray-50 px-6 py-4">
           <div className="flex items-center">
-            {[1, 2, 3, 4].map((stepNumber) => (
+            {[1, 2, 3, 4].map((stepNumber: any) => (
               <div key={stepNumber} className="flex items-center">
                 <div className={`
                   w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium
@@ -461,7 +461,7 @@ export const CreatePoll: React.FC<CreatePollProps> = ({
                       <div className="mt-3">
                         <p className="text-xs font-medium text-gray-700 mb-1">Best for:</p>
                         <div className="flex flex-wrap gap-1">
-                          {method.bestFor.map((useCase, index: any) => (
+                          {method.bestFor.map((useCase: any, index: any) => (
                             <span
                               key={index}
                               className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-full"
@@ -475,7 +475,7 @@ export const CreatePoll: React.FC<CreatePollProps> = ({
                       <div className="mt-3">
                         <p className="text-xs font-medium text-gray-700 mb-1">Tips:</p>
                         <ul className="text-xs text-gray-600 space-y-1">
-                          {method.tips.map((tip, index: any) => (
+                          {method.tips.map((tip: any, index: any) => (
                             <li key={index} className="flex items-start">
                               <span className="text-blue-500 mr-1">•</span>
                               {tip}
@@ -521,7 +521,7 @@ export const CreatePoll: React.FC<CreatePollProps> = ({
             </div>
             
             <div className="space-y-4">
-              {enhancedFormData.options.map((option, index: any) => (
+              {enhancedFormData.options.map((option: any, index: any) => (
                 <div key={option.id} className="p-4 border border-gray-200 rounded-lg">
                   <div className="flex items-start space-x-3">
                     <div className="flex-1 space-y-3">

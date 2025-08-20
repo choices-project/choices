@@ -48,7 +48,7 @@ export function TierSystem({ tiers, currentTier = 0 }: TierSystemProps) {
 
       {/* Tiers Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
-        {tiers.map((tier, index: any) => (
+        {tiers.map((tier: any, index: any) => (
           <motion.div
             key={tier.level}
             className={`relative p-6 rounded-xl border-2 transition-all duration-300 hover:shadow-xl ${
@@ -100,7 +100,7 @@ export function TierSystem({ tiers, currentTier = 0 }: TierSystemProps) {
 
             {/* Features */}
             <div className="space-y-3 mb-8">
-              {tier.features.map((feature, featureIndex: any) => (
+              {tier.features.map((feature: any, featureIndex: any) => (
                 <motion.div
                   key={featureIndex}
                   className="flex items-center gap-3"

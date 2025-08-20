@@ -292,7 +292,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               <div className="space-y-3 mb-6">
                 {isLoadingTrending ? (
                   // Loading skeleton
-                  Array.from({ length: 5 }).map((_, index: any) => (
+                  Array.from({ length: 5 }).map((_: any, index: any) => (
                     <div key={index} className="animate-pulse">
                       <div className="flex items-center justify-between text-sm mb-1">
                         <div className="h-4 bg-gray-200 rounded w-3/4"></div>
@@ -310,7 +310,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                     { text: 'Electric Vehicle Infrastructure', votes: 18, color: 'bg-purple-500' },
                     { text: 'Green Building Standards', votes: 9, color: 'bg-yellow-500' },
                     { text: 'Public Transportation', votes: 5, color: 'bg-red-500' }
-                  ]).map((option, index: any) => (
+                  ]).map((option: any, index: any) => (
                     <div key={index} className="relative">
                       <div className="flex items-center justify-between text-sm mb-1">
                         <span className="text-gray-700">{option.text}</span>
@@ -373,7 +373,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {features.map((feature, index: any) => (
+            {features.map((feature: any, index: any) => (
               <div
                 key={index}
                 className="text-center p-6 bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200 border border-gray-100"

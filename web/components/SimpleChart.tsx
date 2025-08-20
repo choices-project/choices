@@ -36,7 +36,7 @@ export function SimpleChart({
 
   const renderBarChart = () => (
     <div className="space-y-4">
-      {sortedData.map((item, index: any) => {
+      {sortedData.map((item: any, index: any) => {
         const percentage = (item.value / maxValue) * 100;
         const trendChange = item.previousValue ? item.value - item.previousValue : 0;
         const trendPercentage = item.previousValue ? (trendChange / item.previousValue) * 100 : 0;
@@ -95,7 +95,7 @@ export function SimpleChart({
 
   const renderProgressChart = () => (
     <div className="space-y-6">
-      {sortedData.map((item, index: any) => (
+      {sortedData.map((item: any, index: any) => (
         <div key={item.name} className="space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-sm font-medium text-gray-700">{item.name}</span>
@@ -117,7 +117,7 @@ export function SimpleChart({
 
   const renderTrendChart = () => (
     <div className="space-y-4">
-      {sortedData.map((item, index: any) => {
+      {sortedData.map((item: any, index: any) => {
         const trendChange = item.previousValue ? item.value - item.previousValue : 0;
         
         return (

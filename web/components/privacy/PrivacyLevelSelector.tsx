@@ -109,7 +109,7 @@ export const PrivacyLevelSelector: React.FC<PrivacyLevelSelectorProps> = ({
               {showDetails && (
                 <div className="mt-3 pt-3 border-t border-gray-200">
                   <ul className="text-xs text-gray-600 space-y-1">
-                    {config.features.map((feature, index: any) => (
+                    {config.features.map((feature: any, index: any) => (
                       <li key={index} className="flex items-center gap-1">
                         <div className="w-1 h-1 bg-gray-400 rounded-full" />
                         {feature}

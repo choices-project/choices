@@ -109,7 +109,7 @@ export const DataStories: React.FC<DataStoriesProps> = ({
       case 'bar':
         return (
           <div className="space-y-3">
-            {chartData.map((item, index: any) => (
+            {chartData.map((item: any, index: any) => (
               <div key={index} className="space-y-2">
                 <div className="flex items-center justify-between text-sm">
                   <span className="font-medium text-gray-700">{item.name}</span>
@@ -139,7 +139,7 @@ export const DataStories: React.FC<DataStoriesProps> = ({
       case 'pie':
         return (
           <div className="grid grid-cols-2 gap-4">
-            {chartData.map((item, index: any) => (
+            {chartData.map((item: any, index: any) => (
               <div key={index} className="text-center">
                 <div className="relative w-20 h-20 mx-auto mb-2">
                   <svg className="w-20 h-20 transform -rotate-90" viewBox="0 0 36 36">
@@ -170,7 +170,7 @@ export const DataStories: React.FC<DataStoriesProps> = ({
       case 'trend':
         return (
           <div className="space-y-4">
-            {chartData.map((item, index: any) => (
+            {chartData.map((item: any, index: any) => (
               <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                 <div className="flex items-center gap-3">
                   <div 

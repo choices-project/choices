@@ -116,7 +116,7 @@ export function TopicAnalysis({
     const colors = ['#3b82f6', '#10b981', '#8b5cf6', '#f59e0b', '#ef4444', '#06b6d4', '#84cc16']
     const breakdown = data.breakdowns[activeBreakdown as keyof typeof data.breakdowns]
     
-    return breakdown.map((item, index: any) => {
+    return breakdown.map((item: any, index: any) => {
       const key = Object.keys(item)[0] as keyof typeof item
       const name = String(item[key])
       const value = showYes ? item.yes : item.no
@@ -192,7 +192,7 @@ export function TopicAnalysis({
 
       {/* Breakdown Toggle */}
       <div className="flex flex-wrap justify-center gap-2 mb-8">
-        {breakdownOptions.map((option, index: any) => (
+        {breakdownOptions.map((option: any, index: any) => (
           <motion.button
             key={option.id}
             onClick={() => setActiveBreakdown(option.id)}
@@ -296,7 +296,7 @@ export function TopicAnalysis({
             Key Insights from {getBreakdownLabel()} Analysis
           </h3>
           <div className="grid gap-3">
-            {data.insights[showYes ? 'yes' : 'no'].map((insight, index: any) => (
+            {data.insights[showYes ? 'yes' : 'no'].map((insight: any, index: any) => (
               <motion.div
                 key={index}
                 className={`flex items-start gap-3 p-3 rounded-lg border ${

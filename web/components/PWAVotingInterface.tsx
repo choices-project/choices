@@ -185,7 +185,7 @@ export function PWAVotingInterface({
       {!hasVoted && !isExpired() && (
         <div className="p-6">
           <div className="space-y-3">
-            {poll.options.map((option, index: any) => (
+            {poll.options.map((option: any, index: any) => (
               <motion.button
                 key={index}
                 onClick={() => handleVote(index)}
@@ -228,7 +228,7 @@ export function PWAVotingInterface({
         <div className="p-6 bg-gray-50">
           <h4 className="text-lg font-semibold text-gray-900 mb-4">Results</h4>
           <div className="space-y-3">
-            {poll.options.map((option, index: any) => {
+            {poll.options.map((option: any, index: any) => {
               const votes = poll.results?.[index] || 0
               const percentage = calculatePercentage(votes)
               
