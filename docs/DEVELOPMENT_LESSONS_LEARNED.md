@@ -506,6 +506,68 @@ We learned this the hard way - we had to completely transform a broken system in
 - Don't compromise on security
 - Don't ignore performance
 - Don't skip testing
+- Don't use `select('*')` in database queries
+
+## 🔒 **Critical Security Lessons**
+
+### **Lesson 20: Never Use select('*') - Always Select Specific Fields**
+
+**The Problem**: Using `select('*')` in database queries can expose sensitive data and create security vulnerabilities.
+
+**The Solution**: Always select only the specific fields you need for each operation.
+
+**Why This Matters**: 
+- Prevents accidental exposure of sensitive data (passwords, tokens, etc.)
+- Improves query performance by reducing data transfer
+- Makes code more explicit about data requirements
+- Follows principle of least privilege
+
+**Implementation**: 
+- Replace `select('*')` with specific field lists
+- Create field mapping configurations for different tables
+- Use automated scripts to find and fix instances
+- Add CI checks to prevent future usage
+
+**Example**: 
+```typescript
+// ❌ BAD - Could expose sensitive data
+const { data: user } = await supabase
+  .from('ia_users')
+  .select('*')
+  .eq('id', userId)
+  .single()
+
+// ✅ GOOD - Only selects needed fields
+const { data: user } = await supabase
+  .from('ia_users')
+  .select('id, email, verification_tier, created_at, updated_at')
+  .eq('id', userId)
+  .single()
+```
+
+**Field Mapping Strategy**:
+```javascript
+const fieldMappings = {
+  'ia_users': 'id, email, verification_tier, created_at, updated_at, display_name, avatar_url, bio, stable_id, is_active',
+  'po_polls': 'id, title, description, status, created_at, updated_at, created_by, poll_type',
+  'feedback': 'id, user_id, type, title, description, sentiment, created_at, updated_at'
+  // ... etc
+}
+```
+
+**Automated Fix Script**:
+```javascript
+// Script to systematically replace select('*') with specific fields
+function replaceSelectStar(content, fieldMappings) {
+  const selectStarRegex = /\.select\(['"`]\*['"`]\)/g;
+  return content.replace(selectStarRegex, (match) => {
+    // Extract table name and replace with specific fields
+    const tableName = extractTableName(match);
+    const fields = fieldMappings[tableName];
+    return fields ? `.select('${fields}')` : match;
+  });
+}
+```
 
 ## 🚀 **Moving Forward**
 
@@ -546,5 +608,5 @@ We learned this the hard way - we had to completely transform a broken system in
 **Remember**: These lessons were learned through pain and effort. Use them to avoid the same mistakes and build better systems from the start.
 
 **Status**: 📚 **Essential Knowledge Base**  
-**Last Updated**: 2025-01-27 (Updated with documentation workflow)  
+**Last Updated**: 2025-01-27 (Updated with select('*') security lesson)  
 **Next Review**: 2025-02-27

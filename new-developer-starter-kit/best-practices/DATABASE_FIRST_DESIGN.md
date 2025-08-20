@@ -259,6 +259,9 @@ node scripts/security/verify-privacy-system.js
 - Wrap useSearchParams components in Suspense boundaries
 - Use proper logging library for development
 - Test SSR and hydration thoroughly
+- Always select specific database fields, never use `select('*')`
+- Create field mapping configurations for different tables
+- Use automated scripts to find and fix `select('*')` instances
 
 ### **❌ Don't Do These**
 - Start coding before schema design
@@ -272,6 +275,8 @@ node scripts/security/verify-privacy-system.js
 - Accumulate unused variables and components
 - Leave console.log statements in production code
 - Use useSearchParams without Suspense boundaries
+- Use `select('*')` in database queries
+- Expose sensitive data through broad field selection
 
 ## 🎯 **Remember**
 
@@ -283,4 +288,4 @@ node scripts/security/verify-privacy-system.js
 
 **Status**: 📚 **Essential Best Practice**  
 **Created**: 2025-01-27  
-**Last Updated**: 2025-01-27
+**Last Updated**: 2025-01-27 (Added select('*') security best practice)

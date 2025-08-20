@@ -500,7 +500,7 @@ export class PollNarrativeService {
     try {
       let queryBuilder = this.supabase
         .from('poll_narratives')
-        .select('*')
+        .select('id, poll_id, narrative_data, created_at')
         .or(`title.ilike.%${query}%,summary.ilike.%${query}%,full_story.ilike.%${query}%`);
 
       if (filters?.category) {
