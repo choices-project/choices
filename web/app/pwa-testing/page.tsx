@@ -129,21 +129,27 @@ export default function PWATestingPage() {
     
     // WebAuthn test
     try {
+      if (!pwaUtils) {
+        throw new Error('PWA utils not available')
+      }
       const credential = await pwaUtils.pwaWebAuthn.registerUser('test-user')
       results.webauthnTest = !!credential
     } catch (error) {
       results.webauthnTest = false
-      results.webauthnError = error.message
+      results.webauthnError = error instanceof Error ? error.message : 'Unknown error'
     }
     
     // Encryption test
     try {
+      if (!pwaUtils) {
+        throw new Error('PWA utils not available')
+      }
       await pwaUtils.privacyStorage.storeEncryptedData('test', { test: 'data' })
       const retrieved = await pwaUtils.privacyStorage.getEncryptedData('test')
       results.encryptionTest = retrieved?.test === 'data'
     } catch (error) {
       results.encryptionTest = false
-      results.encryptionError = error.message
+      results.encryptionError = error instanceof Error ? error.message : 'Unknown error'
     }
     
     return results
