@@ -35,6 +35,16 @@ export async function checkDatabaseHealth(): Promise<DatabaseHealth> {
     const cookieStore = await cookies();
     const supabase = createClient(cookieStore);
     
+    if (!supabase) {
+      return {
+        healthy: false,
+        error: 'Failed to create Supabase client',
+        responseTime: Date.now() - startTime,
+        warnings,
+        metrics: {}
+      };
+    }
+    
     const { error: connectionError } = await supabase
       .from('ia_users')
       .select('count')
@@ -52,7 +62,7 @@ export async function checkDatabaseHealth(): Promise<DatabaseHealth> {
 
     // Test query performance
     const queryStart = Date.now();
-    const { error: queryError } = await supabase
+    const { error: queryError } = await supabase!
       .from('po_polls')
       .select('poll_id')
       .eq('status', 'active')

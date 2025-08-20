@@ -182,7 +182,7 @@ export class AutomatedPollsService {
 
       if (error) throw error;
 
-      return data ? data.map(this.mapTrendingTopicFromDB) : [];
+      return data ? data.map((item) => this?.mapTrendingTopicFromDB(item)) : [];
     } catch (error) {
       devLog('Error fetching trending topics:', error);
       return [];

@@ -82,6 +82,9 @@ export class ComprehensiveTestingRunner {
   // Run MVP Testing Suite
   private async runMVPTesting(): Promise<ComprehensiveTestResult> {
     try {
+      if (!testingSuite) {
+        throw new Error('Testing suite not available')
+      }
       const report = await testingSuite.generateDeploymentReport()
       
       const totalTests = report.totalTests
@@ -124,7 +127,7 @@ export class ComprehensiveTestingRunner {
         failedTests: 1,
         warningTests: 0,
         successRate: 0,
-        details: { error: error.message },
+        details: { error: error instanceof Error ? error.message : 'Unknown error' },
         timestamp: Date.now()
       }
     }
@@ -133,6 +136,9 @@ export class ComprehensiveTestingRunner {
   // Run Cross-Platform Testing Suite
   private async runCrossPlatformTesting(): Promise<ComprehensiveTestResult> {
     try {
+      if (!crossPlatformTesting) {
+        throw new Error('Cross-platform testing not available')
+      }
       const report = await crossPlatformTesting.generateComprehensiveReport()
       
       const totalTests = report.totalTests
