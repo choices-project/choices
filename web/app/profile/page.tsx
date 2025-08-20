@@ -66,6 +66,11 @@ export default function ProfilePage() {
     try {
       setIsLoading(true)
       
+      if (!supabase) {
+        setError('Authentication service not available')
+        return
+      }
+      
       // Get current user
       const { data: { user }, error: userError } = await supabase.auth.getUser()
       if (userError || !user) {
@@ -75,7 +80,7 @@ export default function ProfilePage() {
       setUser(user)
 
       // Get user profile
-      const { data: profileData, error: profileError } = await supabase
+      const { data: profileData, error: profileError } = await supabase!
         .from('ia_users')
         .select('id, email, verification_tier, created_at, updated_at, display_name, avatar_url, bio')
         .eq('id', user.id)
@@ -89,7 +94,7 @@ export default function ProfilePage() {
       }
 
       // Get biometric credentials
-      const { data: credentials, error: credentialsError } = await supabase
+      const { data: credentials, error: credentialsError } = await supabase!
         .from('biometric_credentials')
         .select(`
           id,
@@ -115,7 +120,7 @@ export default function ProfilePage() {
       }
 
       // Get trust score
-      const { data: trustData, error: trustError } = await supabase
+      const { data: trustData, error: trustError } = await supabase!
         .from('biometric_trust_scores')
         .select('overall_score')
         .eq('user_id', user.id)
@@ -175,6 +180,11 @@ export default function ProfilePage() {
       setIsDeleting(true)
       setError(null)
 
+      if (!supabase || !user) {
+        setError('Authentication service not available')
+        return
+      }
+
       // Delete biometric credentials first
       if (biometricCredentials.length > 0) {
         await supabase
@@ -214,6 +224,11 @@ export default function ProfilePage() {
 
   const handleDeleteBiometricCredential = async (credentialId: string) => {
     try {
+      if (!supabase) {
+        setError('Authentication service not available')
+        return
+      }
+      
       const { error } = await supabase
         .from('biometric_credentials')
         .delete()
