@@ -32,8 +32,7 @@ export async function GET(request: NextRequest) {
 
     // Fetch real data from database
     const { data: topics, error } = await supabase
-      .from('trending_topics')
-      .select('id, topic, score, created_at, updated_at')
+      .from('trending_topics').select('id, topic, score, created_at, updated_at, title, description, source_url, source_name, source_type, category, trending_score, velocity, momentum, sentiment_score, entities, metadata, processing_status, analysis_data')
       .order('created_at', { ascending: false })
       .limit(limit);
 

@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
     // Find user by email
     const { data: user, error: userError } = await supabase
       .from('ia_users')
-      .select('id, email, password_hash, two_factor_enabled, stable_id, verification_tier')
+      .select('id, email, password_hash, two_factor_enabled, stable_id, verification_tier, is_active, created_at, updated_at')
       .eq('email', email.toLowerCase())
       .eq('is_active', true)
       .single()
@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
       }
 
       // Verify 2FA code (implement TOTP verification here)
-      const is2FAValid = await verifyTwoFactorCode(user.id, twoFactorCode)
+      const is2FAValid = await verifyTwoFactorCode(supabase, user.id, twoFactorCode)
       if (!is2FAValid) {
         return NextResponse.json(
           { code: 'INVALID_2FA', message: 'Invalid two-factor authentication code' },
@@ -149,10 +149,10 @@ export async function POST(request: NextRequest) {
 }
 
 // Helper function to verify 2FA code
-async function verifyTwoFactorCode(userId: string, code: string): Promise<boolean> {
+async function verifyTwoFactorCode(supabaseClient: any, userId: string, code: string): Promise<boolean> {
   try {
     // Get user's 2FA secret
-    const { data: user } = await supabase
+    const { data: user } = await supabaseClient
       .from('ia_users')
       .select('two_factor_secret')
       .eq('id', userId)

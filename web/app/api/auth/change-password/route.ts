@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
     // Get user from ia_users table to verify current password
     const { data: iaUser, error: iaError } = await supabase
       .from('ia_users')
-      .select('id, email, verification_tier, created_at, updated_at, display_name, avatar_url, bio, stable_id, is_active')
+      .select('id, email, verification_tier, created_at, updated_at, display_name, avatar_url, bio, stable_id, is_active, password_hash')
       .eq('stable_id', user.id)
       .single()
 

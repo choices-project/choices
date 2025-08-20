@@ -276,7 +276,7 @@ export async function GET(request: NextRequest) {
 
     let query = supabase
       .from('feedback')
-      .select('id, user_id, type, title, description, sentiment, created_at, updated_at')
+      .select('id, user_id, type, title, description, sentiment, created_at, updated_at, user_journey, metadata, ai_analysis')
       .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1)
 
