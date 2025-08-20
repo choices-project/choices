@@ -324,6 +324,44 @@ These lessons represent the **hardest-won wisdom** from our journey. They're not
 - Maintain quality standards consistently
 - Only adjust checks when they're too broad or incorrect
 
+### **20. Never Use select('*') - Always Select Specific Fields**
+**Lesson**: Always select only the specific database fields you need, never use `select('*')`.
+
+**Why It Matters**:
+- Prevents accidental exposure of sensitive data (passwords, tokens, etc.)
+- Improves query performance by reducing data transfer
+- Makes code more explicit about data requirements
+- Follows principle of least privilege
+- Security providers flag this as a critical issue
+
+**Our Experience**:
+- **Before**: `select('*')` everywhere → Potential data exposure, performance issues, security warnings
+- **After**: Specific field selection → Secure, performant, explicit code
+
+**Action**: 
+- Replace `select('*')` with specific field lists
+- Create field mapping configurations for different tables
+- Use automated scripts to find and fix instances
+- Add CI checks to prevent future usage
+- Always think about what data is actually needed
+
+**Example**: 
+```typescript
+// ❌ BAD - Could expose sensitive data
+const { data: user } = await supabase
+  .from('ia_users')
+  .select('*')
+  .eq('id', userId)
+  .single()
+
+// ✅ GOOD - Only selects needed fields
+const { data: user } = await supabase
+  .from('ia_users')
+  .select('id, email, verification_tier, created_at, updated_at')
+  .eq('id', userId)
+  .single()
+```
+
 ## 🎯 **Critical Success Factors**
 
 ### **What Made Us Successful**
@@ -353,6 +391,7 @@ These lessons represent the **hardest-won wisdom** from our journey. They're not
 12. **Console.log in production** - We removed all console statements
 13. **useSearchParams without Suspense** - We wrapped in proper boundaries
 14. **Bypassing quality checks** - We fix root causes instead
+15. **select('*') in database queries** - We select specific fields for security
 
 ## 🏆 **The Bottom Line**
 
@@ -366,4 +405,4 @@ These lessons represent the **hardest-won wisdom** from our journey. They're not
 
 **Status**: 🧠 **Critical Wisdom**  
 **Created**: 2025-01-27  
-**Last Updated**: 2025-01-27
+**Last Updated**: 2025-01-27 (Added select('*') security lesson)
