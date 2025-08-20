@@ -301,7 +301,7 @@ function generateReportSummary(data: AnalyticsData, type: string): string {
       return `Platform Overview: ${data.overview.totalPolls} total polls with ${data.overview.totalVotes} votes from ${data.overview.totalUsers} users. Participation rate is ${data.overview.participationRate}%.`;
     
     case 'performance':
-      const avgLoadTime = data.performance.loadTimes.reduce((sum, page) => sum + page.averageLoadTime, 0) / data.performance.loadTimes.length;
+      const avgLoadTime = data.performance.loadTimes.reduce((sum: any, page: any) => sum + page.averageLoadTime, 0) / data.performance.loadTimes.length;
       return `Performance Summary: Average page load time is ${avgLoadTime.toFixed(0)}ms. ${data.performance.loadTimes.length} pages monitored.`;
     
     case 'engagement':

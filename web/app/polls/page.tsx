@@ -361,13 +361,13 @@ export default function PollsPage() {
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-gray-900">
-                {polls.reduce((sum, poll) => sum + poll.total_votes, 0).toLocaleString()}
+                {polls.reduce((sum: any, poll: any) => sum + poll.total_votes, 0).toLocaleString()}
               </div>
               <div className="text-sm text-gray-600">Total Votes</div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-gray-900">
-                {Math.round(polls.reduce((sum, poll) => sum + poll.participation, 0) / polls.length)}%
+                {Math.round(polls.reduce((sum: any, poll: any) => sum + poll.participation, 0) / polls.length)}%
               </div>
               <div className="text-sm text-gray-600">Avg Participation</div>
             </div>
@@ -388,7 +388,7 @@ export default function PollsPage() {
           </div>
           
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {pollInsights.map((insight) => (
+            {pollInsights.map((insight: any) => (
               <div key={insight.id} className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2">
@@ -474,7 +474,7 @@ export default function PollsPage() {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {sortedPolls.map((poll) => (
+              {sortedPolls.map((poll: any) => (
                 <div key={poll.id} className="group bg-white rounded-2xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300 hover:-translate-y-2">
                   {/* Status and Views */}
                   <div className="flex items-center justify-between mb-4">
@@ -498,7 +498,7 @@ export default function PollsPage() {
 
                   {/* Data Visualization */}
                   <div className="space-y-3 mb-6">
-                    {poll.options.slice(0, 2).map((option, idx) => (
+                    {poll.options.slice(0, 2).map((option, idx: any) => (
                       <div key={option} className="bg-gray-50 rounded-lg p-3">
                         <div className="flex justify-between items-center">
                           <span className="text-gray-700 text-sm font-medium line-clamp-1">{option}</span>
@@ -535,7 +535,7 @@ export default function PollsPage() {
                   <div className="mb-6">
                     <div className="text-xs text-gray-500 mb-2">Sponsored by:</div>
                     <div className="flex flex-wrap gap-2">
-                      {poll.sponsors.map((sponsor) => (
+                      {poll.sponsors.map((sponsor: any) => (
                         <span key={sponsor} className="px-2 py-1 bg-blue-50 text-blue-700 text-xs rounded-full">
                           {sponsor}
                         </span>

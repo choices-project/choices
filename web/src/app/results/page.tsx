@@ -49,7 +49,7 @@ export default function ResultsPage() {
   }
 
   const getTotalVotes = (tally: Tally) => {
-    return Object.values(tally).reduce((sum, count) => (sum as number) + (count as number), 0)
+    return Object.values(tally).reduce((sum: any, count: any) => (sum as number) + (count as number), 0)
   }
 
   const getPercentage = (votes: number, total: number) => {
@@ -153,7 +153,7 @@ export default function ResultsPage() {
                 </div>
 
                 <div className="space-y-4">
-                  {selectedPoll.options.map((option, index) => {
+                  {selectedPoll.options.map((option, index: any) => {
                     const votes = (tally[index] as number) || 0
                     const total = getTotalVotes(tally)
                     const percentage = getPercentage(votes, total)
@@ -229,7 +229,7 @@ export default function ResultsPage() {
             </div>
 
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {polls.map((poll) => (
+              {polls.map((poll: any) => (
                 <div key={poll.id} className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-semibold text-gray-900">{poll.title}</h3>

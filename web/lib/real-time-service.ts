@@ -232,7 +232,7 @@ class RealTimeService {
    * Close all subscriptions
    */
   closeAll(): void {
-    this.subscriptions.forEach((subscription, id) => {
+    this.subscriptions.forEach((subscription: any, id: any) => {
       this.unsubscribe(id);
     });
   }

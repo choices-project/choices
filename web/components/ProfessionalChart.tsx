@@ -66,7 +66,7 @@ export function ProfessionalChart({
 
   const renderBarChart = () => (
     <div className="space-y-4">
-      {sortedData.map((item, index) => {
+      {sortedData.map((item, index: any) => {
         const percentage = (item.value / calculatedMaxValue) * 100;
         const trendChange = item.previousValue ? item.value - item.previousValue : 0;
         const trendPercentage = item.previousValue ? (trendChange / item.previousValue) * 100 : 0;
@@ -165,7 +165,7 @@ export function ProfessionalChart({
 
   const renderProgressChart = () => (
     <div className="space-y-6">
-      {sortedData.map((item, index) => (
+      {sortedData.map((item, index: any) => (
         <motion.div
           key={item.name}
           variants={itemVariants}

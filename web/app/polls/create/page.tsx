@@ -310,7 +310,7 @@ export default function CreatePollPage() {
       <div className="bg-white border-b border-gray-200">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center py-4">
-            {[1, 2, 3, 4, 5].map((stepNumber) => (
+            {[1, 2, 3, 4, 5].map((stepNumber: any) => (
               <div key={stepNumber} className="flex items-center">
                 <div className={`
                   w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium
@@ -394,7 +394,7 @@ export default function CreatePollPage() {
                     Tags
                   </label>
                   <div className="flex flex-wrap gap-2 mb-2">
-                    {pollData.tags.map((tag) => (
+                    {pollData.tags.map((tag: any) => (
                       <span
                         key={tag}
                         className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-100 text-blue-800"
@@ -443,7 +443,7 @@ export default function CreatePollPage() {
               <h2 className="text-xl font-semibold text-gray-900 mb-6">Choose Your Voting Method</h2>
               
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {VOTING_METHODS.map((method) => (
+                {VOTING_METHODS.map((method: any) => (
                   <div
                     key={method.type}
                     onClick={() => setPollData(prev => ({ ...prev, votingMethod: method.type }))}
@@ -471,7 +471,7 @@ export default function CreatePollPage() {
                         <div className="mb-3">
                           <p className="text-xs font-medium text-gray-700 mb-1">Perfect for:</p>
                           <div className="flex flex-wrap gap-1">
-                            {method.bestFor.map((useCase, index) => (
+                            {method.bestFor.map((useCase, index: any) => (
                               <span
                                 key={index}
                                 className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-full"
@@ -485,7 +485,7 @@ export default function CreatePollPage() {
                         <div>
                           <p className="text-xs font-medium text-gray-700 mb-1">Pro tips:</p>
                           <ul className="text-xs text-gray-600 space-y-1">
-                            {method.tips.map((tip, index) => (
+                            {method.tips.map((tip, index: any) => (
                               <li key={index} className="flex items-start">
                                 <span className="text-blue-500 mr-1">•</span>
                                 {tip}
@@ -533,7 +533,7 @@ export default function CreatePollPage() {
               </div>
               
               <div className="space-y-4">
-                {pollData.options.map((option, index) => (
+                {pollData.options.map((option, index: any) => (
                   <div key={option.id} className="p-4 border border-gray-200 rounded-lg">
                     <div className="flex items-start space-x-3">
                       <div className="flex-1 space-y-3">
@@ -839,7 +839,7 @@ export default function CreatePollPage() {
               <div className="mt-6">
                 <h3 className="font-semibold text-gray-900 mb-3">Options Preview</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {pollData.options.map((option, index) => (
+                  {pollData.options.map((option, index: any) => (
                     <div key={option.id} className="p-3 border border-gray-200 rounded-lg">
                       <div className="font-medium text-gray-900">{option.text}</div>
                       {option.description && (

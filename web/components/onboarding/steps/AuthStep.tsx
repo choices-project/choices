@@ -130,7 +130,7 @@ export default function AuthStep({ data, onUpdate, onNext, onBack }: AuthStepPro
 
       {/* Social login options */}
       <div className="space-y-4">
-        {authOptions.map((option) => (
+        {authOptions.map((option: any) => (
           <button
             key={option.provider}
             onClick={() => {

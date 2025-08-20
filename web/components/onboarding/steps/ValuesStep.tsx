@@ -142,14 +142,14 @@ export default function ValuesStep({ data, onUpdate, onNext, onBack }: ValuesSte
         </h3>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {valueCategories.map((category) => (
+          {valueCategories.map((category: any) => (
             <div key={category.title} className="space-y-3">
               <div className={`flex items-center space-x-2 p-3 rounded-lg ${category.color}`}>
                 {category.icon}
                 <span className="font-semibold">{category.title}</span>
               </div>
               <div className="space-y-2">
-                {category.concerns.map((concern) => (
+                {category.concerns.map((concern: any) => (
                   <button
                     key={concern}
                     onClick={() => handleConcernToggle(concern)}
@@ -176,7 +176,7 @@ export default function ValuesStep({ data, onUpdate, onNext, onBack }: ValuesSte
           Where do you want to make an impact?
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          {communityOptions.map((option) => (
+          {communityOptions.map((option: any) => (
             <button
               key={option.value}
               onClick={() => handleCommunityToggle(option.value)}
@@ -201,7 +201,7 @@ export default function ValuesStep({ data, onUpdate, onNext, onBack }: ValuesSte
           How would you like to participate?
         </h3>
         <div className="space-y-3">
-          {participationOptions.map((option) => (
+          {participationOptions.map((option: any) => (
             <button
               key={option.value}
               onClick={() => handleParticipationChange(option.value)}

@@ -187,7 +187,7 @@ export const PollCard: React.FC<PollCardProps> = ({
         <div className="mb-4">
           <p className="text-xs text-gray-500 mb-1">Sponsored by:</p>
           <div className="flex flex-wrap gap-1">
-            {poll.sponsors.map((sponsor, index) => (
+            {poll.sponsors.map((sponsor, index: any) => (
               <span
                 key={index}
                 className="inline-block px-2 py-1 bg-blue-50 text-blue-700 text-xs rounded-full"
@@ -204,7 +204,7 @@ export const PollCard: React.FC<PollCardProps> = ({
         <div className="mb-4">
           <p className="text-sm font-medium text-gray-700 mb-2">Select your choice:</p>
           <div className="space-y-2">
-            {poll.options.map((option, index) => (
+            {poll.options.map((option, index: any) => (
               <button
                 key={index}
                 onClick={() => setSelectedChoice(index)}
@@ -261,7 +261,7 @@ export const PollCard: React.FC<PollCardProps> = ({
         <div className="mb-4">
           <p className="text-sm font-medium text-gray-700 mb-2">Results:</p>
           <div className="space-y-2">
-            {poll.options.map((option, index) => {
+            {poll.options.map((option, index: any) => {
               const votes = poll.results![index] || 0;
               const percentage = poll.results!.total > 0 
                 ? Math.round((votes / poll.results!.total) * 100) 

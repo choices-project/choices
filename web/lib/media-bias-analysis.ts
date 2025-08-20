@@ -429,7 +429,7 @@ export class PropagandaDetector {
     });
 
     // Check option bias
-    const optionBias = poll.options.reduce((sum, option) => sum + option.biasScore, 0) / poll.options.length;
+    const optionBias = poll.options.reduce((sum: any, option: any) => sum + option.biasScore, 0) / poll.options.length;
     biasScore += optionBias * 0.5;
 
     return Math.min(biasScore, 1);
@@ -531,7 +531,9 @@ export class MediaBiasAnalysisService {
       // Fact check the poll
       const factCheck = await this.factCheckPoll(poll);
 
-      const { data, error } = await this.supabase
+      if (!this.supabase) { throw new Error('Supabase client not available'); }
+      const { data, error } = if (!this.supabase) { throw new Error('Supabase client not available'); }
+      await this.supabase
         .from('media_polls')
         .insert([{
           ...poll,
@@ -561,7 +563,9 @@ export class MediaBiasAnalysisService {
       const comparison = this.calculateComparison(mediaPoll, ourPoll);
       const analysis = this.analyzeDifferences(mediaPoll, ourPoll, comparison);
 
-      const { data, error } = await this.supabase
+      if (!this.supabase) { throw new Error('Supabase client not available'); }
+      const { data, error } = if (!this.supabase) { throw new Error('Supabase client not available'); }
+      await this.supabase
         .from('public_opinion_comparisons')
         .insert([{
           media_poll_id: mediaPollId,
@@ -574,7 +578,7 @@ export class MediaBiasAnalysisService {
 
       if (error) throw error;
 
-      return data ? this?.mapComparisonFromDB(data) : null;
+      return data ? this.mapComparisonFromDB(data) : null;
     } catch (error) {
       devLog('Error comparing polls:', error);
       return null;
@@ -661,7 +665,7 @@ export class MediaBiasAnalysisService {
     // Compare option similarity
     let totalAlignment = 0;
     mediaOptions.forEach(mediaOption => {
-      const bestMatch = ourOptions.reduce((best, ourOption) => {
+      const bestMatch = ourOptions.reduce((best: any, ourOption: any) => {
         const similarity = this.calculateTextSimilarity(mediaOption.text, ourOption.text);
         return similarity > best ? similarity : best;
       }, 0);
@@ -753,14 +757,16 @@ export class MediaBiasAnalysisService {
   }
 
   private async getMediaPoll(id: string): Promise<MediaPoll | null> {
-    const { data, error } = await this.supabase
+    if (!this.supabase) { throw new Error('Supabase client not available'); }
+      const { data, error } = if (!this.supabase) { throw new Error('Supabase client not available'); }
+      await this.supabase
       .from('media_polls')
       .select('id, source_id, title, content, created_at')
       .eq('id', id)
       .single();
 
     if (error) return null;
-    return data ? this?.mapMediaPollFromDB(data) : null;
+    return data ? this.mapMediaPollFromDB(data) : null;
   }
 
   private async getOurPoll(id: string): Promise<any> {

@@ -62,43 +62,43 @@ export function DemographicVisualization({
     
     switch (activeTab) {
       case 'age':
-        return data.ageDistribution.map((item, index) => ({
+        return data.ageDistribution.map((item, index: any) => ({
           name: item.range,
           value: item.percentage,
           color: colors[index % colors.length]
         }))
       case 'location':
-        return data.geographicSpread.slice(0, 10).map((item, index) => ({
+        return data.geographicSpread.slice(0, 10).map((item, index: any) => ({
           name: item.state,
           value: item.percentage,
           color: colors[index % colors.length]
         }))
       case 'interests':
-        return data.commonInterests.map((item, index) => ({
+        return data.commonInterests.map((item, index: any) => ({
           name: item.interest,
           value: item.percentage,
           color: colors[index % colors.length]
         }))
       case 'values':
-        return data.topValues.map((item, index) => ({
+        return data.topValues.map((item, index: any) => ({
           name: item.value,
           value: item.percentage,
           color: colors[index % colors.length]
         }))
       case 'education':
-        return data.educationLevels.map((item, index) => ({
+        return data.educationLevels.map((item, index: any) => ({
           name: item.level,
           value: item.percentage,
           color: colors[index % colors.length]
         }))
       case 'income':
-        return data.incomeBrackets.map((item, index) => ({
+        return data.incomeBrackets.map((item, index: any) => ({
           name: item.bracket,
           value: item.percentage,
           color: colors[index % colors.length]
         }))
       case 'urban':
-        return data.urbanRural.map((item, index) => ({
+        return data.urbanRural.map((item, index: any) => ({
           name: item.type,
           value: item.percentage,
           color: colors[index % colors.length]
@@ -110,7 +110,7 @@ export function DemographicVisualization({
 
   const getTotalUsers = () => {
     if (!data) return 0
-    return data.ageDistribution.reduce((sum, item) => sum + item.count, 0)
+    return data.ageDistribution.reduce((sum: any, item: any) => sum + item.count, 0)
   }
 
                                          const getInsightMessage = () => {
@@ -245,7 +245,7 @@ export function DemographicVisualization({
 
       {/* Tab Navigation */}
       <div className="flex flex-wrap justify-center gap-2 mb-8">
-        {tabs.map((tab, index) => (
+        {tabs.map((tab, index: any) => (
           <motion.button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
@@ -312,7 +312,7 @@ export function DemographicVisualization({
             Detailed Breakdown
           </h3>
           <div className="space-y-3">
-            {getActiveData().map((item, index) => (
+            {getActiveData().map((item, index: any) => (
               <motion.div
                 key={item.name}
                 className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"

@@ -331,7 +331,7 @@ export default function Dashboard() {
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                 >
                   <option value="all">All Polls</option>
-                  {dashboardData.polls.map((poll) => (
+                  {dashboardData.polls.map((poll: any) => (
                     <option key={poll.id} value={poll.id}>{poll.title}</option>
                   ))}
                 </select>
@@ -464,7 +464,7 @@ function EnhancedMetricCard({ title, value, icon, color, trend, trendDirection }
 
 // Poll Card Component
 function PollCard({ poll }: { poll: PollSummary }) {
-  const totalVotes = poll.choices.reduce((sum, choice) => sum + choice.votes, 0);
+  const totalVotes = poll.choices.reduce((sum: any, choice: any) => sum + choice.votes, 0);
   
   return (
     <div className="border rounded-lg p-4 hover:shadow-md transition-shadow">
@@ -478,7 +478,7 @@ function PollCard({ poll }: { poll: PollSummary }) {
       </div>
       
       <div className="space-y-2">
-        {poll.choices.map((choice) => {
+        {poll.choices.map((choice: any) => {
           const percentage = totalVotes > 0 ? (choice.votes / totalVotes) * 100 : 0;
           return (
             <div key={choice.id} className="flex items-center justify-between">
@@ -509,7 +509,7 @@ function PollCard({ poll }: { poll: PollSummary }) {
 
 // Enhanced Poll Card Component
 function EnhancedPollCard({ poll }: { poll: PollSummary }) {
-  const totalVotes = poll.choices.reduce((sum, choice) => sum + choice.votes, 0);
+  const totalVotes = poll.choices.reduce((sum: any, choice: any) => sum + choice.votes, 0);
   const timeRemaining = new Date(poll.ends_at).getTime() - new Date().getTime();
   const daysRemaining = Math.ceil(timeRemaining / (1000 * 60 * 60 * 24));
   
@@ -532,7 +532,7 @@ function EnhancedPollCard({ poll }: { poll: PollSummary }) {
       </div>
       
       <div className="space-y-2">
-        {poll.choices.map((choice) => {
+        {poll.choices.map((choice: any) => {
           const percentage = totalVotes > 0 ? (choice.votes / totalVotes) * 100 : 0;
           return (
             <div key={choice.id} className="flex items-center justify-between">
@@ -646,7 +646,7 @@ function GeographicChart({ data }: { data: GeographicMap }) {
       <div>
         <h4 className="font-medium text-gray-900 mb-2">Top Regions</h4>
         <div className="space-y-2">
-          {data.regions.slice(0, 5).map((region) => (
+          {data.regions.slice(0, 5).map((region: any) => (
             <div key={region.name} className="flex items-center justify-between">
               <span className="text-sm text-gray-600">{region.name}</span>
               <div className="flex items-center space-x-2">
@@ -675,7 +675,7 @@ function EnhancedGeographicChart({ data }: { data: GeographicMap }) {
       <div>
         <h4 className="font-medium text-gray-900 mb-3">Top Regions</h4>
         <div className="space-y-3">
-          {data.regions.slice(0, 5).map((region) => (
+          {data.regions.slice(0, 5).map((region: any) => (
             <div key={region.name} className="flex items-center justify-between">
               <span className="text-sm text-gray-600">{region.name}</span>
               <div className="flex items-center space-x-2">
@@ -771,7 +771,7 @@ function TrendsChart({ data }: { data: TrendData[] }) {
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        {data.slice(-3).map((trend, index) => (
+        {data.slice(-3).map((trend, index: any) => (
           <div key={index} className="text-center p-4 bg-gray-50 rounded-lg">
             <p className="text-lg font-bold text-gray-900">{trend.votes}</p>
             <p className="text-sm text-gray-600">Votes</p>
@@ -790,7 +790,7 @@ function EnhancedTrendsChart({ data }: { data: TrendData[] }) {
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {data.slice(-3).map((trend, index) => (
+        {data.slice(-3).map((trend, index: any) => (
           <div key={index} className="text-center p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
             <p className="text-lg font-bold text-gray-900">{trend.votes}</p>
             <p className="text-sm text-gray-600">Votes</p>
@@ -823,7 +823,7 @@ function OverviewView({ data }: { data: DashboardData }) {
             <Globe className="h-5 w-5 text-gray-400" />
           </div>
           <div className="space-y-4">
-            {data.polls.map((poll) => (
+            {data.polls.map((poll: any) => (
               <EnhancedPollCard key={poll.id} poll={poll} />
             ))}
           </div>

@@ -267,7 +267,7 @@ export default function PWAAppPage() {
         {/* Tab Navigation */}
         <div className="mb-8">
           <nav className="flex space-x-1 bg-white rounded-lg border border-gray-200 p-1">
-            {tabs.map((tab) => {
+            {tabs.map((tab: any) => {
               const Icon = tab.icon
               return (
                 <button
@@ -308,7 +308,7 @@ export default function PWAAppPage() {
                   <div>
                     <p className="text-sm text-gray-600">Total Votes</p>
                     <p className="text-2xl font-bold text-gray-900">
-                      {polls.reduce((sum, poll) => sum + poll.totalVotes, 0).toLocaleString()}
+                      {polls.reduce((sum: any, poll: any) => sum + poll.totalVotes, 0).toLocaleString()}
                     </p>
                   </div>
                 </div>
@@ -329,7 +329,7 @@ export default function PWAAppPage() {
 
             {/* Polls List */}
             <div className="space-y-6">
-              {polls.map((poll) => (
+              {polls.map((poll: any) => (
                 <div key={poll.id} className="bg-white rounded-lg border border-gray-200 overflow-hidden">
                   <PWAVotingInterface
                     poll={poll}

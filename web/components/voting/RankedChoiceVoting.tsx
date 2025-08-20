@@ -181,7 +181,7 @@ export default function RankedChoiceVoting({
       {/* Voting Interface */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {options.map((option, index) => (
+          {options.map((option, index: any) => (
             <div
               key={option.id}
               onClick={() => handleRankClick(option.id)}

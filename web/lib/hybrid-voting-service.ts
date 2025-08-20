@@ -43,7 +43,8 @@ export class HybridVotingService {
     const { pollId, userId } = request;
     
     // Get poll privacy settings
-    const { data: pollSettings, error: pollError } = await this.supabase
+    const { data: pollSettings, error: pollError } = if (!this.supabase) { throw new Error('Supabase client not available'); }
+      await this.supabase
       .rpc('get_poll_privacy_settings', { poll_id_param: pollId })
       .single();
 
@@ -116,7 +117,7 @@ export class HybridVotingService {
     } catch (error) {
       return {
         success: false,
-        message: error instanceof Error ? error.message : 'Vote submission failed',
+        message: error instanceof Error ? error instanceof Error ? error.message : "Unknown error" : 'Vote submission failed',
         pollId,
         privacyLevel: request.privacyLevel,
         responseTime: Date.now() - startTime
@@ -132,7 +133,8 @@ export class HybridVotingService {
     const { pollId, choice } = request;
 
     // Simple vote insertion
-    const { data: vote, error } = await this.supabase
+    const { data: vote, error } = if (!this.supabase) { throw new Error('Supabase client not available'); }
+      await this.supabase
       .from('po_votes')
       .insert({
         poll_id: pollId,
@@ -150,11 +152,12 @@ export class HybridVotingService {
       .single();
 
     if (error) {
-      throw new Error(`Failed to submit public vote: ${error.message}`);
+      throw new Error(`Failed to submit public vote: ${error instanceof Error ? error.message : "Unknown error"}`);
     }
 
     // Update poll vote count
-    await this.supabase
+    if (!this.supabase) { throw new Error('Supabase client not available'); }
+      await this.supabase
       .rpc('update_poll_vote_count', { poll_id_param: pollId });
 
     return {
@@ -179,7 +182,8 @@ export class HybridVotingService {
     }
 
     // Check if user has already voted
-    const { data: existingVote, error: existingVoteError } = await this.supabase
+    const { data: existingVote, error: existingVoteError } = if (!this.supabase) { throw new Error('Supabase client not available'); }
+      await this.supabase
       .from('po_votes')
       .select('id')
       .eq('poll_id', pollId)
@@ -191,7 +195,8 @@ export class HybridVotingService {
     }
 
     // Private vote insertion with user tracking
-    const { data: vote, error } = await this.supabase
+    const { data: vote, error } = if (!this.supabase) { throw new Error('Supabase client not available'); }
+      await this.supabase
       .from('po_votes')
       .insert({
         poll_id: pollId,
@@ -211,11 +216,12 @@ export class HybridVotingService {
       .single();
 
     if (error) {
-      throw new Error(`Failed to submit private vote: ${error.message}`);
+      throw new Error(`Failed to submit private vote: ${error instanceof Error ? error.message : "Unknown error"}`);
     }
 
     // Update poll vote count
-    await this.supabase
+    if (!this.supabase) { throw new Error('Supabase client not available'); }
+      await this.supabase
       .rpc('update_poll_vote_count', { poll_id_param: pollId });
 
     return {
@@ -256,7 +262,7 @@ export class HybridVotingService {
         responseTime: Date.now() - startTime
       };
     } catch (error) {
-      throw new Error(`High-privacy vote failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(`High-privacy vote failed: ${error instanceof Error ? error instanceof Error ? error.message : "Unknown error" : 'Unknown error'}`);
     }
   }
 
@@ -266,7 +272,8 @@ export class HybridVotingService {
   private async requestBlindedToken(pollId: string, userId: string): Promise<{ token: string; tag: string }> {
     try {
       // Get user profile to determine tier
-      const { data: userProfile, error: profileError } = await this.supabase
+      const { data: userProfile, error: profileError } = if (!this.supabase) { throw new Error('Supabase client not available'); }
+      await this.supabase
         .from('ia_users')
         .select('verification_tier')
         .eq('stable_id', userId)
@@ -305,7 +312,7 @@ export class HybridVotingService {
       };
     } catch (error) {
       console.error('Error requesting blinded token:', error);
-      throw new Error(`Token request failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(`Token request failed: ${error instanceof Error ? error instanceof Error ? error.message : "Unknown error" : 'Unknown error'}`);
     }
   }
 
@@ -340,7 +347,7 @@ export class HybridVotingService {
       };
     } catch (error) {
       console.error('Error submitting vote to PO service:', error);
-      throw new Error(`Vote submission failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(`Vote submission failed: ${error instanceof Error ? error instanceof Error ? error.message : "Unknown error" : 'Unknown error'}`);
     }
   }
 }

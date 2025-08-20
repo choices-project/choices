@@ -352,7 +352,7 @@ export default function PollPage() {
           {/* Navigation Tabs */}
           <div className="border-t border-gray-200 pt-4">
             <nav className="flex space-x-8">
-              {(['voting', 'results', 'share'] as ViewMode[]).map((view) => (
+              {(['voting', 'results', 'share'] as ViewMode[]).map((view: any) => (
                 <button
                   key={view}
                   onClick={() => setCurrentView(view)}

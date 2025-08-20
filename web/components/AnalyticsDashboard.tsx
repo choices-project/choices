@@ -407,7 +407,7 @@ export default function AnalyticsDashboard({
               <nav className="flex space-x-8 px-6" aria-label="Analytics tabs">
                 {analyticsViews
                   .filter(view => view.enabled)
-                  .map((view) => (
+                  .map((view: any) => (
                     <button
                       key={view.id}
                       onClick={() => setSelectedView(view.id)}
@@ -616,7 +616,7 @@ function PerformanceView({ data }: { data: AnalyticsData }) {
       <div className="bg-white rounded-xl shadow-sm border p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Page Load Times</h3>
         <div className="space-y-4">
-          {data.performance.loadTimes.map((page) => (
+          {data.performance.loadTimes.map((page: any) => (
             <div key={page.page} className="flex items-center justify-between">
               <span className="text-sm text-gray-600">{page.page}</span>
               <div className="flex items-center space-x-4">

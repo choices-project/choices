@@ -272,7 +272,7 @@ const PerformanceDashboard: React.FC = () => {
                     { key: 'lcp', label: 'Largest Contentful Paint', icon: <BarChart3 className="w-4 h-4" /> },
                     { key: 'fid', label: 'First Input Delay', icon: <Zap className="w-4 h-4" /> },
                     { key: 'cls', label: 'Cumulative Layout Shift', icon: <TrendingDown className="w-4 h-4" /> }
-                  ].map((metric) => {
+                  ].map((metric: any) => {
                     const value = summary.latestMetrics?.[metric.key as keyof PerformanceMetrics] as number
                     return (
                       <div
@@ -311,7 +311,7 @@ const PerformanceDashboard: React.FC = () => {
                     { key: 'networkSpeed', label: 'Network', icon: <Wifi className="w-4 h-4" /> },
                     { key: 'pageLoadTime', label: 'Load Time', icon: <Clock className="w-4 h-4" /> },
                     { key: 'timeToInteractive', label: 'TTI', icon: <Zap className="w-4 h-4" /> }
-                  ].map((metric) => {
+                  ].map((metric: any) => {
                     const value = summary.latestMetrics?.[metric.key as keyof PerformanceMetrics] as number
                     return (
                       <div key={metric.key} className="p-3 bg-gray-50 rounded-lg">
@@ -336,7 +336,7 @@ const PerformanceDashboard: React.FC = () => {
                     Recent Alerts ({summary.totalAlerts})
                   </h4>
                   <div className="space-y-2">
-                    {summary.recentAlerts.slice(0, 3).map((alert, index) => (
+                    {summary.recentAlerts.slice(0, 3).map((alert, index: any) => (
                       <motion.div
                         key={index}
                         initial={{ opacity: 0, x: -20 }}
@@ -367,7 +367,7 @@ const PerformanceDashboard: React.FC = () => {
                     Optimization Tips
                   </h4>
                   <div className="space-y-2">
-                    {getOptimizationTips().map((tip, index) => (
+                    {getOptimizationTips().map((tip, index: any) => (
                       <motion.div
                         key={index}
                         initial={{ opacity: 0, x: -20 }}

@@ -98,7 +98,7 @@ export default function DemographicsStep({ data, onUpdate, onNext, onBack }: Dem
 
       {/* Demographics form */}
       <div className="space-y-6">
-        {demographicFields.map((field) => (
+        {demographicFields.map((field: any) => (
           <div key={field.field} className="space-y-3">
             <div>
               <label className="block text-lg font-semibold text-gray-900 mb-1">
@@ -110,7 +110,7 @@ export default function DemographicsStep({ data, onUpdate, onNext, onBack }: Dem
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {field.options.map((option) => (
+              {field.options.map((option: any) => (
                 <button
                   key={option.value}
                   onClick={() => handleDemographicChange(field.field, option.value)}

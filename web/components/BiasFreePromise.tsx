@@ -44,7 +44,7 @@ export function BiasFreePromise({ title, promises }: BiasFreePromiseProps) {
 
       {/* Promises Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
-        {promises.map((promise, index) => (
+        {promises.map((promise, index: any) => (
           <motion.div
             key={index}
             className="relative p-6 rounded-xl border-2 border-gray-100 hover:border-blue-200 transition-all duration-300 hover:shadow-lg"

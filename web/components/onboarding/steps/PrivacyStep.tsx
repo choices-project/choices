@@ -98,7 +98,7 @@ export default function PrivacyStep({ data, onUpdate, onNext, onBack }: PrivacyS
 
       {/* Privacy toggles */}
       <div className="space-y-4">
-        {privacyOptions.map((option) => (
+        {privacyOptions.map((option: any) => (
           <div
             key={option.field}
             className={`
