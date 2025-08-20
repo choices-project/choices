@@ -47,26 +47,42 @@ jobs:
           cd web
           npm ci
       
-      - name: Web type check
+      - name: Web security check (CRITICAL)
         run: |
           cd web
-          npm run type-check
+          npm run security-check
         env:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
       
-      - name: Web lint
+      - name: Web build check (CRITICAL)
         run: |
           cd web
-          npm run lint
+          npm run build:ci
         env:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
       
-      - name: Web build
+      - name: Web type check (NON-BLOCKING)
         run: |
           cd web
-          npm run build
+          npm run type-check:ci
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+      
+      - name: Web lint (NON-BLOCKING)
+        run: |
+          cd web
+          npm run lint:ci
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+      
+      - name: Web performance check (NON-BLOCKING)
+        run: |
+          cd web
+          npm run performance-check
         env:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}

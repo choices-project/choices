@@ -74,7 +74,7 @@ export class TestingSuite {
         category: 'Infrastructure',
         status: 'fail',
         message: 'Database connection error',
-        details: { error: error.message },
+        details: { error: error instanceof Error ? error.message : "Unknown error" },
         timestamp: Date.now()
       }
     }
@@ -146,7 +146,7 @@ export class TestingSuite {
         category: 'Core',
         status: 'fail',
         message: 'Voting system error',
-        details: { error: error.message },
+        details: { error: error instanceof Error ? error.message : "Unknown error" },
         timestamp: Date.now()
       }
     }
@@ -260,7 +260,7 @@ export class TestingSuite {
         category: 'Data',
         status: 'fail',
         message: 'Data integrity error',
-        details: { error: error.message },
+        details: { error: error instanceof Error ? error.message : "Unknown error" },
         timestamp: Date.now()
       }
     }

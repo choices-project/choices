@@ -70,7 +70,7 @@ export default function BiometricLogin({ onSuccess, onError, onCancel }: Biometr
         onError?.(result.error || 'Authentication failed')
       }
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+      const errorMessage = error instanceof Error ? error instanceof Error ? error.message : "Unknown error" : 'Unknown error'
       setError(errorMessage)
       onError?.(errorMessage)
     } finally {

@@ -342,7 +342,7 @@ export const poApi = {
 // Utility function to handle API errors
 export const handleApiError = (error: any): string => {
   if (error instanceof Error) {
-    return error.message
+    return error instanceof Error ? error.message : "Unknown error"
   }
   return 'An unexpected error occurred'
 }

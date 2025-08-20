@@ -97,7 +97,7 @@ export async function ensureUserSynced(): Promise<UserSyncResult> {
       success: false,
       userExists: false,
       synced: false,
-      error: `Unexpected error: ${error instanceof Error ? error.message : 'Unknown error'}`
+      error: `Unexpected error: ${error instanceof Error ? error instanceof Error ? error.message : "Unknown error" : 'Unknown error'}`
     }
   }
 }
@@ -123,7 +123,7 @@ export async function getUserFromIaUsers(authUserId: string) {
   } catch (error) {
     return {
       data: null,
-      error: error instanceof Error ? error.message : 'Unknown error'
+      error: error instanceof Error ? error instanceof Error ? error.message : "Unknown error" : 'Unknown error'
     }
   }
 }
@@ -146,14 +146,14 @@ export async function hasUserProfile(authUserId: string) {
       .single()
 
     if (error && error.code !== 'PGRST116') {
-      return { hasProfile: false, error: error.message }
+      return { hasProfile: false, error: error instanceof Error ? error.message : "Unknown error" }
     }
 
     return { hasProfile: !!result, error: null }
   } catch (error) {
     return {
       hasProfile: false,
-      error: error instanceof Error ? error.message : 'Unknown error'
+      error: error instanceof Error ? error instanceof Error ? error.message : "Unknown error" : 'Unknown error'
     }
   }
 }

@@ -150,7 +150,7 @@ export default function AccountSettingsPage() {
       }
     } catch (error: any) {
       devLog('Error changing password:', error)
-      setError(error.message || 'Failed to change password')
+      setError(error instanceof Error ? error.message : "Unknown error" || 'Failed to change password')
     } finally {
       setIsChangingPassword(false)
     }
@@ -188,7 +188,7 @@ export default function AccountSettingsPage() {
       }
     } catch (error: any) {
       devLog('Error deleting account:', error)
-      setError(error.message || 'Failed to delete account')
+      setError(error instanceof Error ? error.message : "Unknown error" || 'Failed to delete account')
     } finally {
       setIsDeletingAccount(false)
     }
@@ -219,7 +219,7 @@ export default function AccountSettingsPage() {
       }
     } catch (error: any) {
       devLog('Error setting up 2FA:', error)
-      setError(error.message || 'Failed to setup 2FA')
+      setError(error instanceof Error ? error.message : "Unknown error" || 'Failed to setup 2FA')
     } finally {
       setIsSettingUp2FA(false)
     }
@@ -256,7 +256,7 @@ export default function AccountSettingsPage() {
       }
     } catch (error: any) {
       devLog('Error enabling 2FA:', error)
-      setError(error.message || 'Failed to enable 2FA')
+      setError(error instanceof Error ? error.message : "Unknown error" || 'Failed to enable 2FA')
     } finally {
       setIsSettingUp2FA(false)
     }
@@ -292,7 +292,7 @@ export default function AccountSettingsPage() {
       }
     } catch (error: any) {
       devLog('Error disabling 2FA:', error)
-      setError(error.message || 'Failed to disable 2FA')
+      setError(error instanceof Error ? error.message : "Unknown error" || 'Failed to disable 2FA')
     } finally {
       setIsDisabling2FA(false)
     }
@@ -321,7 +321,7 @@ export default function AccountSettingsPage() {
       }
     } catch (error: any) {
       devLog('Error requesting password reset:', error)
-      setError(error.message || 'Failed to request password reset')
+      setError(error instanceof Error ? error.message : "Unknown error" || 'Failed to request password reset')
     } finally {
       setIsRequestingReset(false)
     }

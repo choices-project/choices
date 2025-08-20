@@ -54,10 +54,10 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       status: 'error',
       timestamp: new Date().toISOString(),
-      error: error instanceof Error ? error.message : 'Unknown error',
+      error: error instanceof Error ? error instanceof Error ? error.message : "Unknown error" : 'Unknown error',
       health: {
         healthy: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: error instanceof Error ? error instanceof Error ? error.message : "Unknown error" : 'Unknown error',
         responseTime: 0,
         warnings: ['Health check failed']
       },
@@ -121,7 +121,7 @@ export async function POST(request: NextRequest) {
     
     return NextResponse.json({
       status: 'error',
-      error: error instanceof Error ? error.message : 'Unknown error',
+      error: error instanceof Error ? error instanceof Error ? error.message : "Unknown error" : 'Unknown error',
       timestamp: new Date().toISOString()
     }, { status: 500 });
   }

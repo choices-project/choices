@@ -192,9 +192,9 @@ export async function POST(request: NextRequest) {
     if (error) {
       devLog('Database error:', error)
       // If table doesn't exist or schema cache issue, use mock response for testing
-      if (error.message.includes('relation "feedback" does not exist') || 
-          error.message.includes('does not exist') ||
-          error.message.includes('schema cache')) {
+      if (error instanceof Error ? error.message : "Unknown error".includes('relation "feedback" does not exist') || 
+          error instanceof Error ? error.message : "Unknown error".includes('does not exist') ||
+          error instanceof Error ? error.message : "Unknown error".includes('schema cache')) {
         devLog('Schema cache issue or table not ready - using mock response')
         return NextResponse.json({
           success: true,
@@ -208,7 +208,7 @@ export async function POST(request: NextRequest) {
         })
       }
       return NextResponse.json(
-        { error: 'Failed to save feedback', details: error.message },
+        { error: 'Failed to save feedback', details: error instanceof Error ? error.message : "Unknown error" },
         { status: 500 }
       )
     }
@@ -297,9 +297,9 @@ export async function GET(request: NextRequest) {
     if (error) {
       devLog('Database error:', error)
       // If table doesn't exist or schema cache issue, return empty mock response
-      if (error.message.includes('relation "feedback" does not exist') || 
-          error.message.includes('does not exist') ||
-          error.message.includes('schema cache')) {
+      if (error instanceof Error ? error.message : "Unknown error".includes('relation "feedback" does not exist') || 
+          error instanceof Error ? error.message : "Unknown error".includes('does not exist') ||
+          error instanceof Error ? error.message : "Unknown error".includes('schema cache')) {
         devLog('Schema cache issue or table not ready - using mock response')
         return NextResponse.json({
           success: true,

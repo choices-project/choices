@@ -85,7 +85,7 @@ export class AuthService {
 
     if (!response.ok) {
       const error = await response.json()
-      throw new AuthError(error.code, error.message)
+      throw new AuthError(error.code, error instanceof Error ? error.message : "Unknown error")
     }
 
     const session = await response.json()
@@ -123,7 +123,7 @@ export class AuthService {
 
     if (!response.ok) {
       const error = await response.json()
-      throw new AuthError(error.code, error.message)
+      throw new AuthError(error.code, error instanceof Error ? error.message : "Unknown error")
     }
 
     const session = await response.json()
@@ -186,7 +186,7 @@ export class AuthService {
 
     if (!loginResponse.ok) {
       const error = await loginResponse.json()
-      throw new AuthError(error.code, error.message)
+      throw new AuthError(error.code, error instanceof Error ? error.message : "Unknown error")
     }
 
     const session = await loginResponse.json()
@@ -239,7 +239,7 @@ export class AuthService {
 
     if (!response.ok) {
       const error = await response.json()
-      throw new AuthError(error.code, error.message)
+      throw new AuthError(error.code, error instanceof Error ? error.message : "Unknown error")
     }
 
     return await response.json()
@@ -374,7 +374,7 @@ export class AuthService {
 
     if (!response.ok) {
       const error = await response.json()
-      throw new AuthError(error.code, error.message)
+      throw new AuthError(error.code, error instanceof Error ? error.message : "Unknown error")
     }
   }
 
@@ -401,7 +401,7 @@ export class AuthService {
 
     if (!response.ok) {
       const error = await response.json()
-      throw new AuthError(error.code, error.message)
+      throw new AuthError(error.code, error instanceof Error ? error.message : "Unknown error")
     }
   }
 
@@ -422,7 +422,7 @@ export class AuthService {
 
     if (!response.ok) {
       const error = await response.json()
-      throw new AuthError(error.code, error.message)
+      throw new AuthError(error.code, error instanceof Error ? error.message : "Unknown error")
     }
 
     return await response.json()
@@ -448,7 +448,7 @@ export class AuthService {
 
     if (!response.ok) {
       const error = await response.json()
-      throw new AuthError(error.code, error.message)
+      throw new AuthError(error.code, error instanceof Error ? error.message : "Unknown error")
     }
   }
 
@@ -472,7 +472,7 @@ export class AuthService {
 
     if (!response.ok) {
       const error = await response.json()
-      throw new AuthError(error.code, error.message)
+      throw new AuthError(error.code, error instanceof Error ? error.message : "Unknown error")
     }
 
     return true

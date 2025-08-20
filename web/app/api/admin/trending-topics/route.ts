@@ -237,7 +237,7 @@ export async function PUT(request: NextRequest) {
         return NextResponse.json({
           success: false,
           message: 'Data source refresh failed',
-          error: error instanceof Error ? error.message : 'Unknown error',
+          error: error instanceof Error ? error instanceof Error ? error.message : "Unknown error" : 'Unknown error',
           timestamp: new Date().toISOString()
         }, { status: 500 });
       }

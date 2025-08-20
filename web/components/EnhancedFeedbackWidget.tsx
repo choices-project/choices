@@ -178,7 +178,7 @@ const EnhancedFeedbackWidget: React.FC = () => {
       setStep('sentiment') // Go back to previous step
       
       // More user-friendly error message
-      const errorMessage = error instanceof Error ? error.message : 'Failed to submit feedback'
+      const errorMessage = error instanceof Error ? error instanceof Error ? error.message : "Unknown error" : 'Failed to submit feedback'
       alert(`Feedback submission failed: ${errorMessage}. Please try again.`)
     } finally {
       setIsSubmitting(false)

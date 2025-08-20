@@ -104,7 +104,7 @@ export default function TestPrivacyPage() {
       alert(`Vote submitted successfully! Response time: ${result.response_time}ms`);
     } catch (error) {
       devLog('Error submitting vote:', error);
-      alert(`Failed to submit vote: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      alert(`Failed to submit vote: ${error instanceof Error ? error instanceof Error ? error.message : "Unknown error" : 'Unknown error'}`);
     }
   };
 

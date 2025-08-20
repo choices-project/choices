@@ -92,7 +92,7 @@ export async function GET(request: NextRequest) {
     
     const response: AnalyticsResponse = {
       success: false,
-      error: error instanceof Error ? error.message : 'An error occurred',
+      error: error instanceof Error ? error instanceof Error ? error.message : "Unknown error" : 'An error occurred',
       featureEnabled: isFeatureEnabled('analytics'),
       timestamp: new Date().toISOString()
     };
@@ -174,7 +174,7 @@ export async function POST(request: NextRequest) {
     
     const response: AnalyticsResponse = {
       success: false,
-      error: error instanceof Error ? error.message : 'An error occurred',
+      error: error instanceof Error ? error instanceof Error ? error.message : "Unknown error" : 'An error occurred',
       featureEnabled: isFeatureEnabled('analytics'),
       timestamp: new Date().toISOString()
     };
