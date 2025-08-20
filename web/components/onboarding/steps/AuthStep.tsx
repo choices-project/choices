@@ -23,6 +23,9 @@ export default function AuthStep({ data, onUpdate, onNext, onBack }: AuthStepPro
     setError(null)
     
     try {
+      if (!supabase) {
+        throw new Error('Supabase client not available')
+      }
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {

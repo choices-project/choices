@@ -51,6 +51,9 @@ export default function MVPTestingPage() {
     setIsRunningTests(true)
     
     try {
+      if (!testingSuite) {
+        throw new Error('Testing suite not available')
+      }
       const suites = await testingSuite.runAllTests()
       setTestSuites(suites)
       

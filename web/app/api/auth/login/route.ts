@@ -151,6 +151,9 @@ export async function POST(request: NextRequest) {
 // Helper function to verify 2FA code
 async function verifyTwoFactorCode(userId: string, code: string): Promise<boolean> {
   try {
+    if (!supabase) {
+      throw new Error('Database connection not available');
+    }
     // Get user's 2FA secret
     const { data: user } = await supabase
       .from('ia_users')

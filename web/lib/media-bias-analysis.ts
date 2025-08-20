@@ -531,6 +531,10 @@ export class MediaBiasAnalysisService {
       // Fact check the poll
       const factCheck = await this.factCheckPoll(poll);
 
+      if (!this.supabase) {
+        throw new Error('Supabase client not available')
+      }
+
       const { data, error } = await this.supabase
         .from('media_polls')
         .insert([{
@@ -560,6 +564,10 @@ export class MediaBiasAnalysisService {
 
       const comparison = this.calculateComparison(mediaPoll, ourPoll);
       const analysis = this.analyzeDifferences(mediaPoll, ourPoll, comparison);
+
+      if (!this.supabase) {
+        throw new Error('Supabase client not available')
+      }
 
       const { data, error } = await this.supabase
         .from('public_opinion_comparisons')
@@ -753,6 +761,9 @@ export class MediaBiasAnalysisService {
   }
 
   private async getMediaPoll(id: string): Promise<MediaPoll | null> {
+    if (!this.supabase) {
+      return null;
+    }
     const { data, error } = await this.supabase
       .from('media_polls')
       .select('*')

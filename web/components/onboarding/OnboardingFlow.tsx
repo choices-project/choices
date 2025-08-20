@@ -77,6 +77,9 @@ function OnboardingFlowInner() {
         }
 
         // Check if user is authenticated
+        if (!supabase) {
+          throw new Error('Supabase client not available')
+        }
         const { data: { user }, error: userError } = await supabase.auth.getUser()
         
         if (user && !userError) {
@@ -105,7 +108,7 @@ function OnboardingFlowInner() {
     }
 
     checkAuthAndStep()
-  }, [searchParams, currentStep, supabase.auth])
+  }, [searchParams, currentStep, supabase?.auth])
 
   const updateData = (updates: Partial<OnboardingData>) => {
     setOnboardingData(prev => ({ ...prev, ...updates }))

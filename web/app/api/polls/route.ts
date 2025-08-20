@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
         total_votes: poll.total_votes || 0,
         participation_rate: poll.participation_rate || 0,
         aggregated_results: poll.options ? 
-          poll.options.reduce((acc, option, index) => {
+          poll.options.reduce((acc: Record<string, number>, option: any, index: number) => {
             acc[`option_${index + 1}`] = 0; // Default to 0 until we can count votes
             return acc;
           }, {}) : {},

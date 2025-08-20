@@ -35,6 +35,16 @@ export async function checkDatabaseHealth(): Promise<DatabaseHealth> {
     const cookieStore = await cookies();
     const supabase = createClient(cookieStore);
     
+    if (!supabase) {
+      return {
+        healthy: false,
+        error: 'Supabase client not available',
+        responseTime: Date.now() - startTime,
+        warnings,
+        metrics: {}
+      };
+    }
+    
     const { error: connectionError } = await supabase
       .from('ia_users')
       .select('count')
@@ -102,6 +112,10 @@ export async function getPollsWithVoteCounts(limit: number = 20) {
     const cookieStore = await cookies();
     const supabase = createClient(cookieStore);
     
+    if (!supabase) {
+      throw new Error('Supabase client not available')
+    }
+    
     const { data, error } = await supabase
       .from('po_polls')
       .select(`
@@ -144,6 +158,10 @@ export async function processVotesBatch(votes: any[]) {
     const cookieStore = await cookies();
     const supabase = createClient(cookieStore);
     
+    if (!supabase) {
+      throw new Error('Supabase client not available')
+    }
+    
     const { data, error } = await supabase
       .from('votes')
       .upsert(votes, { 
@@ -165,6 +183,10 @@ export async function getPollsMinimal(limit: number = 20) {
   try {
     const cookieStore = await cookies();
     const supabase = createClient(cookieStore);
+    
+    if (!supabase) {
+      throw new Error('Supabase client not available')
+    }
     
     const { data, error } = await supabase
       .from('po_polls')

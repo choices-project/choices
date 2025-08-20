@@ -159,8 +159,10 @@ export class PWAAuth {
         // Update user profile
         await this.updateUserProfile({
           pwaFeatures: {
-            ...this.currentUser.pwaFeatures,
-            webAuthnEnabled: true
+            webAuthnEnabled: true,
+            pushNotificationsEnabled: this.currentUser.pwaFeatures?.pushNotificationsEnabled ?? false,
+            offlineVotingEnabled: this.currentUser.pwaFeatures?.offlineVotingEnabled ?? false,
+            encryptedStorageEnabled: this.currentUser.pwaFeatures?.encryptedStorageEnabled ?? false
           },
           verificationScore: Math.min(100, this.currentUser.verificationScore + 20)
         });
@@ -209,8 +211,10 @@ export class PWAAuth {
             // Update user profile
             await this.updateUserProfile({
               pwaFeatures: {
-                ...this.currentUser.pwaFeatures,
-                pushNotificationsEnabled: true
+                webAuthnEnabled: this.currentUser.pwaFeatures?.webAuthnEnabled ?? false,
+                pushNotificationsEnabled: true,
+                offlineVotingEnabled: this.currentUser.pwaFeatures?.offlineVotingEnabled ?? false,
+                encryptedStorageEnabled: this.currentUser.pwaFeatures?.encryptedStorageEnabled ?? false
               }
             });
 
@@ -438,7 +442,9 @@ export class PWAAuth {
       if (stored) {
         this.currentUser = JSON.parse(stored);
         // Update last active time
-        this.currentUser.lastActive = new Date();
+        if (this.currentUser) {
+          this.currentUser.lastActive = new Date();
+        }
       }
     } catch (error) {
       devLog('PWA: Failed to load user from storage:', error);

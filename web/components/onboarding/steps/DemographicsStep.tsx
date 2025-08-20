@@ -13,7 +13,7 @@ interface DemographicsStepProps {
 export default function DemographicsStep({ data, onUpdate, onNext, onBack }: DemographicsStepProps) {
   const [demographics, setDemographics] = useState(data.demographics || {})
 
-  const handleDemographicChange = (field: string, value: string) => {
+  const handleDemographicChange = (field: string, value: string | undefined) => {
     const newDemographics = { ...demographics, [field]: value }
     setDemographics(newDemographics)
     onUpdate({ demographics: newDemographics })

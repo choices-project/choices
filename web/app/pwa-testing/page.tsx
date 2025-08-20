@@ -121,6 +121,10 @@ export default function PWATestingPage() {
   const runSecurityTests = async () => {
     const results: any = {}
     
+    if (!pwaUtils) {
+      throw new Error('PWA utils not available')
+    }
+    
     // HTTPS test
     results.https = window.location.protocol === 'https:'
     
@@ -133,7 +137,7 @@ export default function PWATestingPage() {
       results.webauthnTest = !!credential
     } catch (error) {
       results.webauthnTest = false
-      results.webauthnError = error.message
+      results.webauthnError = error instanceof Error ? error.message : "Unknown error"
     }
     
     // Encryption test
@@ -143,7 +147,7 @@ export default function PWATestingPage() {
       results.encryptionTest = retrieved?.test === 'data'
     } catch (error) {
       results.encryptionTest = false
-      results.encryptionError = error.message
+      results.encryptionError = error instanceof Error ? error.message : "Unknown error"
     }
     
     return results

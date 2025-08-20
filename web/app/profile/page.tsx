@@ -66,6 +66,10 @@ export default function ProfilePage() {
     try {
       setIsLoading(true)
       
+      if (!supabase) {
+        throw new Error('Supabase client not available')
+      }
+      
       // Get current user
       const { data: { user }, error: userError } = await supabase.auth.getUser()
       if (userError || !user) {
@@ -175,6 +179,10 @@ export default function ProfilePage() {
       setIsDeleting(true)
       setError(null)
 
+      if (!supabase) {
+        throw new Error('Supabase client not available')
+      }
+
       // Delete biometric credentials first
       if (biometricCredentials.length > 0) {
         await supabase
@@ -214,6 +222,9 @@ export default function ProfilePage() {
 
   const handleDeleteBiometricCredential = async (credentialId: string) => {
     try {
+      if (!supabase) {
+        throw new Error('Supabase client not available')
+      }
       const { error } = await supabase
         .from('biometric_credentials')
         .delete()

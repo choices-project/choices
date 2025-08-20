@@ -118,7 +118,7 @@ export function TopicAnalysis({
     
     return breakdown.map((item, index) => {
       const key = Object.keys(item)[0] as keyof typeof item
-      const name = item[key] as string
+      const name = String(item[key])
       const value = showYes ? item.yes : item.no
       const color = showYes ? colors[index % colors.length] : '#ef4444' // Red for No
       

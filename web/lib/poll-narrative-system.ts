@@ -299,6 +299,9 @@ export class PollNarrativeService {
 
   async createNarrative(narrative: Omit<PollNarrative, 'id' | 'createdAt' | 'updatedAt' | 'lastModeratedAt'>): Promise<PollNarrative | null> {
     try {
+      if (!this.supabase) {
+        throw new Error('Supabase client not available')
+      }
       const { data, error } = await this.supabase
         .from('poll_narratives')
         .insert([{
@@ -322,6 +325,9 @@ export class PollNarrativeService {
 
   async addVerifiedFact(narrativeId: string, fact: Omit<VerifiedFact, 'id' | 'lastVerified'>): Promise<VerifiedFact | null> {
     try {
+      if (!this.supabase) {
+        throw new Error('Supabase client not available')
+      }
       const { data, error } = await this.supabase
         .from('verified_facts')
         .insert([{
@@ -343,6 +349,9 @@ export class PollNarrativeService {
 
   async submitCommunityFact(narrativeId: string, fact: Omit<CommunityFact, 'id' | 'submittedAt' | 'status' | 'votes'>): Promise<CommunityFact | null> {
     try {
+      if (!this.supabase) {
+        throw new Error('Supabase client not available')
+      }
       const { data, error } = await this.supabase
         .from('community_facts')
         .insert([{
@@ -371,6 +380,9 @@ export class PollNarrativeService {
 
   async voteOnCommunityFact(factId: string, userId: string, voteType: 'helpful' | 'notHelpful' | 'verified' | 'disputed'): Promise<boolean> {
     try {
+      if (!this.supabase) {
+        throw new Error('Supabase client not available')
+      }
       // Get current fact
       const { data: fact, error: fetchError } = await this.supabase
         .from('community_facts')
@@ -402,6 +414,9 @@ export class PollNarrativeService {
 
   async moderateNarrative(narrativeId: string, moderatorId: string, action: ModerationAction): Promise<boolean> {
     try {
+      if (!this.supabase) {
+        throw new Error('Supabase client not available')
+      }
       // Create moderation action
       const { error: actionError } = await this.supabase
         .from('moderation_actions')
@@ -444,6 +459,9 @@ export class PollNarrativeService {
 
   async requestFactVerification(factId: string, requesterId: string, reason: string, evidence: string[]): Promise<FactVerificationRequest | null> {
     try {
+      if (!this.supabase) {
+        throw new Error('Supabase client not available')
+      }
       const { data, error } = await this.supabase
         .from('fact_verification_requests')
         .insert([{
@@ -469,6 +487,9 @@ export class PollNarrativeService {
 
   async getNarrativeWithContext(narrativeId: string): Promise<PollNarrative | null> {
     try {
+      if (!this.supabase) {
+        throw new Error('Supabase client not available')
+      }
       const { data, error } = await this.supabase
         .from('poll_narratives')
         .select(`
@@ -498,6 +519,9 @@ export class PollNarrativeService {
     status?: string;
   }): Promise<PollNarrative[]> {
     try {
+      if (!this.supabase) {
+        throw new Error('Supabase client not available')
+      }
       let queryBuilder = this.supabase
         .from('poll_narratives')
         .select('*')
@@ -587,7 +611,7 @@ export class PollNarrativeService {
       votes: data.votes,
       moderatorNotes: data.moderator_notes || '',
       reviewedBy: data.reviewed_by,
-      reviewedAt: data.reviewed_at ? new Date(data.reviewed_at) : undefined,
+      reviewedAt: data.reviewed_at ? new Date(data.reviewed_at) : new Date(),
       sources: data.sources || [],
       tags: data.tags || [],
       parentFact: data.parent_fact

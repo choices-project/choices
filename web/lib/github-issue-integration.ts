@@ -562,7 +562,7 @@ class GitHubIssueIntegration {
       .replace('{{USER_SEGMENT}}', analysis.userSegment.join(', '))
       .replace('{{TECHNICAL_DETAILS}}', this.formatTechnicalDetails(feedback))
       .replace('{{USER_JOURNEY}}', this.formatUserJourney(feedback))
-      .replace('{{RELATED_ISSUES}}', analysis.relatedIssues.join(', ') || 'None found');
+      .replace('{{RELATED_ISSUES}}', analysis.relatedIssues?.join(', ') || 'None found');
   }
 
   private getTemplateBody(template: string): string {

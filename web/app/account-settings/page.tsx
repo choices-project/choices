@@ -84,6 +84,12 @@ export default function AccountSettingsPage() {
     try {
       setIsLoading(true)
       // Load user data from auth context
+      if (!supabase) {
+        throw new Error('Supabase client not available')
+      }
+      if (!user) {
+        throw new Error('User not available')
+      }
       const { data: userProfile } = await supabase
         .from('ia_users')
         .select('two_factor_enabled')
@@ -101,7 +107,7 @@ export default function AccountSettingsPage() {
     } finally {
       setIsLoading(false)
     }
-  }, [user])
+  }, [user, supabase])
 
   useEffect(() => {
     if (!loading && !user) {
