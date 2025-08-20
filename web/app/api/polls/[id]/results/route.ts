@@ -40,7 +40,7 @@ export async function GET(
 
     // Calculate aggregated results (all zeros for now since no votes exist)
     const aggregatedResults = poll.options ? 
-      poll.options.reduce((acc, option, index) => {
+      poll.options.reduce((acc: any, option: any, index: any) => {
         acc[`option_${index + 1}`] = 0; // Default to 0 until we can count votes
         return acc;
       }, {} as Record<string, number>) : {};

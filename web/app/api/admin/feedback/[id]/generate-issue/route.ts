@@ -67,7 +67,7 @@ export async function POST(
     // Fetch the feedback
     const { data: feedback, error: fetchError } = await supabase
       .from('feedback')
-      .select('id, email, verification_tier, created_at, updated_at, display_name, avatar_url, bio, stable_id, is_active')
+      .select('id, user_id, type, title, description, sentiment, created_at, updated_at, metadata')
       .eq('id', feedbackId)
       .single();
 

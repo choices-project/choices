@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
     // Fetch trending topics
     const { data: trendingTopics, error: trendingError } = await supabase
       .from('trending_topics')
-      .select('id, topic, score, created_at, updated_at')
+      .select('id, topic, score, created_at, updated_at, title, description, source_name, category, trending_score, velocity, momentum, sentiment_score, metadata')
       .order('trending_score', { ascending: false })
       .limit(5);
 
