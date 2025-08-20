@@ -126,6 +126,45 @@ local select_star_files=$(find ./web -name "*.ts" -o -name "*.tsx" | xargs grep 
 
 **The fix took 2 minutes but saved hours of debugging and confusion.**
 
+### **2.7. 🎯 JSX TYPE ANNOTATION DISASTER**
+**Epiphany**: "Automated scripts must distinguish between TypeScript and JSX files"
+
+#### **🎯 The Problem:**
+Our automated TypeScript fixing scripts were adding type annotations to JSX elements, causing syntax errors:
+```jsx
+// ❌ BROKEN - Script incorrectly added types to JSX
+{feedbackTypes.map(({ key: any, label: any, icon: Icon, color: any, bgColor }: any) => (
+
+// ✅ CORRECT - JSX should not have type annotations
+{feedbackTypes.map(({ key, label, icon: Icon, color, bgColor }) => (
+```
+
+#### **🚨 The Errors:**
+- `error TS1005: ',' expected.`
+- `error TS1382: Unexpected token. Did you mean '{'>'}' or '&gt;'?`
+- `error TS1381: Unexpected token. Did you mean '{'}'}' or '&rbrace;'?`
+
+#### **🚀 The Solution:**
+Updated scripts to exclude JSX files or handle them differently:
+```javascript
+// Before: Applied to all .ts/.tsx files
+if (file.isFile() && /\.(ts|tsx)$/.test(file.name)) {
+
+// After: Handle JSX files separately
+if (file.isFile() && /\.(ts|tsx)$/.test(file.name)) {
+  if (file.name.endsWith('.tsx')) {
+    // Handle JSX files differently - no type annotations in JSX
+  } else {
+    // Handle regular TypeScript files
+  }
+}
+```
+
+#### **💡 Wisdom Gained:**
+**"When creating automated code transformation scripts, always consider different file types and their specific syntax requirements. JSX and TypeScript have different rules for type annotations."**
+
+**The JSX disaster cost us time reverting files and fixing syntax errors manually.**
+
 #### **🛠️ Automated Scripts Created (For Future Reference):**
 
 **1. `scripts/fix-remaining-typescript-errors.js`**
