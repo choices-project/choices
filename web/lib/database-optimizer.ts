@@ -112,7 +112,7 @@ export async function getPollsWithVoteCounts(limit: number = 20) {
     const cookieStore = await cookies();
     const supabase = createClient(cookieStore);
     
-    const { data, error } = await supabase
+    const { data, error } = await supabase!
       .from('po_polls')
       .select(`
         poll_id,
@@ -154,7 +154,7 @@ export async function processVotesBatch(votes: any[]) {
     const cookieStore = await cookies();
     const supabase = createClient(cookieStore);
     
-    const { data, error } = await supabase
+    const { data, error } = await supabase!
       .from('votes')
       .upsert(votes, { 
         onConflict: 'poll_id,user_id',
@@ -176,7 +176,7 @@ export async function getPollsMinimal(limit: number = 20) {
     const cookieStore = await cookies();
     const supabase = createClient(cookieStore);
     
-    const { data, error } = await supabase
+    const { data, error } = await supabase!
       .from('po_polls')
       .select('poll_id, title, status, created_at')
       .eq('status', 'active')
