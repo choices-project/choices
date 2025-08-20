@@ -282,7 +282,7 @@ export const UserEngagement: React.FC<UserEngagementProps> = ({
             </div>
 
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {geographicData.slice(0, 6).map((country, index) => (
+              {geographicData.slice(0, 6).map((country, index: any) => (
                 <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
@@ -316,7 +316,7 @@ export const UserEngagement: React.FC<UserEngagementProps> = ({
             </div>
 
             <div className="grid grid-cols-6 md:grid-cols-12 gap-2">
-              {activityData.map((activity, index) => (
+              {activityData.map((activity, index: any) => (
                 <div key={index} className="text-center">
                   <div className="text-xs text-gray-500 mb-1">{activity.time}</div>
                   <div 
@@ -353,7 +353,7 @@ export const UserEngagement: React.FC<UserEngagementProps> = ({
               { user: 'Maria L.', action: 'voted on Technology Priorities', time: '12 seconds ago' },
               { user: 'David R.', action: 'created a new poll', time: '1 minute ago' },
               { user: 'Emma W.', action: 'voted on Education Reform', time: '2 minutes ago' }
-            ].map((activity, index) => (
+            ].map((activity, index: any) => (
               <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
                 <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
                   <span className="text-sm font-medium text-blue-600">

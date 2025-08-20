@@ -202,7 +202,7 @@ export default function AnalyticsPage() {
             <nav className="flex space-x-8 px-6" aria-label="Analytics tabs">
               {analyticsViews
                 .filter(view => view.enabled)
-                .map((view) => (
+                .map((view: any) => (
                   <button
                     key={view.id}
                     onClick={() => setSelectedView(view.id)}

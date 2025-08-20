@@ -219,7 +219,7 @@ export default function AutomatedPollsPage() {
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="">Choose a category...</option>
-                    {categories.map((category) => (
+                    {categories.map((category: any) => (
                       <option key={category.id} value={category.id}>
                         {category.name}
                       </option>
@@ -238,7 +238,7 @@ export default function AutomatedPollsPage() {
                     <div>
                       <h4 className="text-sm font-medium text-gray-700 mb-1">Example Topics:</h4>
                       <ul className="text-sm text-gray-600 space-y-1">
-                        {categories.find(c => c.id === selectedCategory)?.exampleTopics.map((topic, index) => (
+                        {categories.find(c => c.id === selectedCategory)?.exampleTopics.map((topic, index: any) => (
                           <li key={index} className="flex items-start gap-2">
                             <span className="text-blue-500 mt-1">•</span>
                             <span>{topic}</span>
@@ -363,7 +363,7 @@ export default function AutomatedPollsPage() {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {trendingTopics.map((topic) => (
+                  {trendingTopics.map((topic: any) => (
                     <tr key={topic.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4">
                         <div>
@@ -429,7 +429,7 @@ export default function AutomatedPollsPage() {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {generatedPolls.map((poll) => (
+                  {generatedPolls.map((poll: any) => (
                     <tr key={poll.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4">
                         <div className="text-sm font-medium text-gray-900">{poll.title}</div>

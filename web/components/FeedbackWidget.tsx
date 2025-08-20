@@ -365,7 +365,7 @@ const FeedbackWidget: React.FC = () => {
                           { sentiment: 'positive', icon: <Smile className="w-8 h-8" />, label: 'Happy' },
                           { sentiment: 'neutral', icon: <Meh className="w-8 h-8" />, label: 'Okay' },
                           { sentiment: 'negative', icon: <Frown className="w-8 h-8" />, label: 'Frustrated' }
-                        ].map((option) => (
+                        ].map((option: any) => (
                           <motion.button
                             key={option.sentiment}
                             onClick={() => handleSentimentSelect(option.sentiment as any)}

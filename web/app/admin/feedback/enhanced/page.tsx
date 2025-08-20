@@ -330,7 +330,7 @@ const EnhancedFeedbackAdminPage: React.FC = () => {
             </div>
           ) : (
             <div className="divide-y divide-gray-200">
-              {filteredFeedback.map((item) => (
+              {filteredFeedback.map((item: any) => (
                 <div key={item.id} className="p-6 hover:bg-gray-50 cursor-pointer" onClick={() => {
                   setSelectedFeedback(item)
                   setShowDetails(true)
@@ -387,7 +387,7 @@ const EnhancedFeedbackAdminPage: React.FC = () => {
                       
                       {item.tags && item.tags.length > 0 && (
                         <div className="flex gap-1 mt-2">
-                          {item.tags.slice(0, 5).map((tag, index) => (
+                          {item.tags.slice(0, 5).map((tag, index: any) => (
                             <span key={index} className="px-2 py-1 bg-gray-100 rounded text-xs">
                               {tag}
                             </span>
@@ -500,7 +500,7 @@ const EnhancedFeedbackAdminPage: React.FC = () => {
                 <div className="mt-6">
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">Tags</h3>
                   <div className="flex flex-wrap gap-2">
-                    {selectedFeedback.tags.map((tag, index) => (
+                    {selectedFeedback.tags.map((tag, index: any) => (
                       <span key={index} className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm">
                         {tag}
                       </span>

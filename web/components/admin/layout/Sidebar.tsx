@@ -89,7 +89,7 @@ export const Sidebar: React.FC = () => {
 
         <nav className="mt-6 px-3">
           <ul className="space-y-2">
-            {navigationItems.map((item) => {
+            {navigationItems.map((item: any) => {
               const isActive = pathname === item.href;
               return (
                 <li key={item.name}>

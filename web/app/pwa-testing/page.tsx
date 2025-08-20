@@ -264,7 +264,7 @@ export default function PWATestingPage() {
         {/* Tab Navigation */}
         <div className="mb-8">
           <nav className="flex space-x-1 bg-white rounded-lg border border-gray-200 p-1">
-            {tabs.map((tab) => {
+            {tabs.map((tab: any) => {
               const Icon = tab.icon
               return (
                 <button

@@ -119,7 +119,7 @@ export const BreakingNewsPage: React.FC = () => {
   const generatePollContext = useGeneratePollContext();
 
   // Filter stories based on search and filters
-  const filteredStories = stories.filter((story) => {
+  const filteredStories = stories.filter((story: any) => {
     const matchesSearch = story.headline.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          story.summary.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesUrgency = urgencyFilter === 'all' || story.urgency === urgencyFilter;
@@ -270,7 +270,7 @@ export const BreakingNewsPage: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
         {isLoading ? (
           // Loading skeletons
-          Array.from({ length: 6 }).map((_, i) => (
+          Array.from({ length: 6 }).map((_, i: any) => (
             <div key={i} className="bg-white rounded-lg shadow-md p-6 animate-pulse">
               <div className="h-4 bg-gray-200 rounded mb-2"></div>
               <div className="h-3 bg-gray-200 rounded mb-4"></div>
@@ -302,7 +302,7 @@ export const BreakingNewsPage: React.FC = () => {
             )}
           </div>
         ) : (
-          filteredStories.map((story) => (
+          filteredStories.map((story: any) => (
             <div key={story.id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
               {/* Story Header */}
               <div className="p-6 border-b border-gray-200">

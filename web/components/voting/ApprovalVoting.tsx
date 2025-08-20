@@ -132,7 +132,7 @@ export default function ApprovalVoting({
       {/* Voting Interface */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
         <div className="space-y-3">
-          {options.map((option) => (
+          {options.map((option: any) => (
             <div
               key={option.id}
               onClick={() => handleOptionToggle(option.id)}

@@ -395,7 +395,7 @@ export default function ProfilePage() {
                 <Separator />
                 
                 <div className="space-y-3">
-                  {biometricCredentials.map((credential) => (
+                  {biometricCredentials.map((credential: any) => (
                     <div key={credential.id} className="flex items-center justify-between p-3 border rounded-lg">
                       <div>
                         <p className="font-medium">{credential.authenticatorType}</p>

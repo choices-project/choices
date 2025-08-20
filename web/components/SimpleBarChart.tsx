@@ -21,7 +21,7 @@ export function SimpleBarChart({ data, title, height = 200 }: SimpleBarChartProp
       <h3 className="text-lg font-semibold text-gray-900 mb-4">{title}</h3>
       
       <div className="space-y-4">
-        {sortedData.map((item, index) => {
+        {sortedData.map((item, index: any) => {
           const percentage = (item.value / maxValue) * 100;
           
           return (

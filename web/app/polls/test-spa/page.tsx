@@ -126,7 +126,7 @@ export default function TestSPAPage() {
           {/* Navigation Tabs */}
           <div className="border-t border-gray-200 pt-4">
             <nav className="flex space-x-8">
-              {views.map((view) => (
+              {views.map((view: any) => (
                 <button
                   key={view.id}
                   onClick={() => setCurrentView(view.id as any)}

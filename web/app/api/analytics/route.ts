@@ -400,9 +400,9 @@ function aggregateData(data: any[], period: 'week' | 'month') {
     const group = data.slice(i, i + groupSize);
     const aggregatedEntry = {
       period: `${period}_${Math.floor(i / groupSize) + 1}`,
-      votes: group.reduce((sum, item) => sum + (item.votes || 0), 0),
-      users: group.reduce((sum, item) => sum + (item.users || 0), 0),
-      polls: group.reduce((sum, item) => sum + (item.polls || 0), 0)
+      votes: group.reduce((sum: any, item: any) => sum + (item.votes || 0), 0),
+      users: group.reduce((sum: any, item: any) => sum + (item.users || 0), 0),
+      polls: group.reduce((sum: any, item: any) => sum + (item.polls || 0), 0)
     };
     aggregated.push(aggregatedEntry);
   }

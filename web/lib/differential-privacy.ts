@@ -77,7 +77,7 @@ export class DifferentialPrivacy {
       Math.exp(this.privacyBudget.epsilon * u / (2 * this.privacyBudget.sensitivity))
     )
     
-    const totalProbability = probabilities.reduce((sum, p) => sum + p, 0)
+    const totalProbability = probabilities.reduce((sum: any, p: any) => sum + p, 0)
     const normalizedProbabilities = probabilities.map(p => p / totalProbability)
     
     // Sample based on probabilities
@@ -100,7 +100,7 @@ export class DifferentialPrivacy {
     
     // Add noise to each count
     const noisyHistogram = new Map<T, NoisyResult>()
-    histogram.forEach((count, category) => {
+    histogram.forEach((count: any, category: any) => {
       noisyHistogram.set(category, this.laplaceMechanism(count))
     })
     
@@ -109,7 +109,7 @@ export class DifferentialPrivacy {
 
   // Mean with differential privacy
   privateMean(values: number[]): NoisyResult {
-    const mean = values.reduce((sum, val) => sum + val, 0) / values.length
+    const mean = values.reduce((sum: any, val: any) => sum + val, 0) / values.length
     return this.gaussianMechanism(mean)
   }
 
@@ -122,8 +122,8 @@ export class DifferentialPrivacy {
 
   // Variance with differential privacy
   privateVariance(values: number[]): NoisyResult {
-    const mean = values.reduce((sum, val) => sum + val, 0) / values.length
-    const variance = values.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / values.length
+    const mean = values.reduce((sum: any, val: any) => sum + val, 0) / values.length
+    const variance = values.reduce((sum: any, val: any) => sum + Math.pow(val - mean, 2), 0) / values.length
     return this.gaussianMechanism(variance)
   }
 
@@ -159,8 +159,8 @@ export class DifferentialPrivacy {
 
   // Composition of privacy budgets
   composePrivacyBudgets(budgets: PrivacyBudget[]): PrivacyBudget {
-    const totalEpsilon = budgets.reduce((sum, budget) => sum + budget.epsilon, 0)
-    const totalDelta = budgets.reduce((sum, budget) => sum + budget.delta, 0)
+    const totalEpsilon = budgets.reduce((sum: any, budget: any) => sum + budget.epsilon, 0)
+    const totalDelta = budgets.reduce((sum: any, budget: any) => sum + budget.delta, 0)
     const maxSensitivity = Math.max(...budgets.map(budget => budget.sensitivity))
     
     return {
@@ -336,7 +336,7 @@ export class PrivateAnalytics {
 
   private calculateEngagementScore(data: any[]): number {
     // Simplified engagement score
-    return data.length > 0 ? data.reduce((sum, item) => sum + (item.engagement || 0), 0) / data.length : 0
+    return data.length > 0 ? data.reduce((sum: any, item: any) => sum + (item.engagement || 0), 0) / data.length : 0
   }
 
   private calculateRetentionRate(data: any[]): number {

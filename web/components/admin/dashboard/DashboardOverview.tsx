@@ -158,7 +158,7 @@ export const DashboardOverview: React.FC = () => {
               <p className="text-sm">Activity will appear here as you use the system</p>
             </div>
           ) : (
-            activityFeed.slice(0, 10).map((activity) => (
+            activityFeed.slice(0, 10).map((activity: any) => (
               <div
                 key={activity.id}
                 className="flex items-start space-x-3 p-4 bg-gray-50 rounded-lg"

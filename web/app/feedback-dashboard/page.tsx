@@ -258,7 +258,7 @@ const FeedbackDashboard: React.FC = () => {
                 <p className="text-gray-500">No feedback found</p>
               </div>
             ) : (
-              filteredFeedback.map((item, index) => (
+              filteredFeedback.map((item, index: any) => (
                 <motion.div
                   key={item.id}
                   initial={{ opacity: 0, y: 20 }}

@@ -154,7 +154,7 @@ export const FeedbackList: React.FC<FeedbackListProps> = ({
           </tr>
         </thead>
         <tbody className="bg-white divide-y divide-gray-200">
-          {feedback.map((item) => (
+          {feedback.map((item: any) => (
             <tr key={item.id} className="hover:bg-gray-50">
               <td className="px-6 py-4">
                 <div className="flex-1 min-w-0">
@@ -168,7 +168,7 @@ export const FeedbackList: React.FC<FeedbackListProps> = ({
                       </p>
                       {item.tags && item.tags.length > 0 && (
                         <div className="flex gap-1 mt-1">
-                          {item.tags.slice(0, 2).map((tag, index) => (
+                          {item.tags.slice(0, 2).map((tag, index: any) => (
                             <span
                               key={index}
                               className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800"

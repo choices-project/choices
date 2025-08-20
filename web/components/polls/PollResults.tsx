@@ -189,7 +189,7 @@ export default function PollResults({ pollId }: PollResultsProps) {
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
         <h3 className="text-xl font-semibold text-gray-900 mb-4">Detailed Results</h3>
         <div className="space-y-4">
-          {poll.results.map((result, index) => (
+          {poll.results.map((result, index: any) => (
             <div key={index} className="border border-gray-200 rounded-xl p-6 hover:bg-gray-50 transition-colors">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-3">
@@ -248,7 +248,7 @@ export default function PollResults({ pollId }: PollResultsProps) {
                   paddingAngle={5}
                   dataKey="value"
                 >
-                  {Object.entries(poll.demographics.ageGroups).map((entry, index) => (
+                  {Object.entries(poll.demographics.ageGroups).map((entry, index: any) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>

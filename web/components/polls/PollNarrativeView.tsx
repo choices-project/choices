@@ -175,7 +175,7 @@ export default function PollNarrativeView({
       {/* Navigation Tabs */}
       <div className="border-b border-gray-200">
         <nav className="flex space-x-8 px-6">
-          {tabs.map((tab) => {
+          {tabs.map((tab: any) => {
             const Icon = tab.icon;
             return (
               <button
@@ -334,7 +334,7 @@ export default function PollNarrativeView({
 
             {/* Verified Facts List */}
             <div className="space-y-4">
-              {narrative.verifiedFacts.map((fact) => (
+              {narrative.verifiedFacts.map((fact: any) => (
                 <div key={fact.id} className="border border-gray-200 rounded-lg p-4">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
@@ -431,7 +431,7 @@ export default function PollNarrativeView({
               <div className="mt-8">
                 <h3 className="text-lg font-semibold mb-4">Community Contributions</h3>
                 <div className="space-y-3">
-                  {narrative.communityFacts.map((fact) => (
+                  {narrative.communityFacts.map((fact: any) => (
                     <div key={fact.id} className="border border-gray-200 rounded-lg p-4">
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
@@ -479,7 +479,7 @@ export default function PollNarrativeView({
           <div className="space-y-4">
             <h2 className="text-xl font-semibold">Sources & References</h2>
             <div className="grid gap-4">
-              {narrative.sources.map((source) => (
+              {narrative.sources.map((source: any) => (
                 <div key={source.id} className="border border-gray-200 rounded-lg p-4">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
@@ -590,7 +590,7 @@ export default function PollNarrativeView({
           <div className="space-y-4">
             <h2 className="text-xl font-semibold">Key Stakeholders</h2>
             <div className="grid gap-4">
-              {narrative.stakeholders.map((stakeholder) => (
+              {narrative.stakeholders.map((stakeholder: any) => (
                 <div key={stakeholder.id} className="border border-gray-200 rounded-lg p-4">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
@@ -683,7 +683,7 @@ export default function PollNarrativeView({
             {/* Community Facts */}
             {narrative.communityFacts.length > 0 ? (
               <div className="space-y-4">
-                {narrative.communityFacts.map((fact) => (
+                {narrative.communityFacts.map((fact: any) => (
                   <div key={fact.id} className="border border-gray-200 rounded-lg p-4">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">

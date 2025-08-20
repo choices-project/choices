@@ -120,7 +120,7 @@ export const BasicPieChart: React.FC<BasicPieChartProps> = ({
             fill="#8884d8"
             dataKey="value"
           >
-            {data.map((entry, index) => (
+            {data.map((entry, index: any) => (
               <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
             ))}
           </Pie>

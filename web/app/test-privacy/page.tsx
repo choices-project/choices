@@ -162,7 +162,7 @@ export default function TestPrivacyPage() {
               <p className="text-gray-600">Create your first poll to test the privacy system!</p>
             </div>
           ) : (
-            polls.map((poll) => (
+            polls.map((poll: any) => (
               <div key={poll.id} className="bg-white rounded-lg shadow-md p-6">
                 {/* Poll Header */}
                 <div className="flex items-start justify-between mb-4">
@@ -186,7 +186,7 @@ export default function TestPrivacyPage() {
                     </div>
                     {poll.tags.length > 0 && (
                       <div className="flex flex-wrap gap-1">
-                        {poll.tags.map((tag, index) => (
+                        {poll.tags.map((tag, index: any) => (
                           <span
                             key={index}
                             className="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs"
@@ -203,7 +203,7 @@ export default function TestPrivacyPage() {
                 <div className="mb-4">
                   <h4 className="font-medium text-gray-900 mb-2">Options:</h4>
                   <div className="space-y-2">
-                    {poll.options.map((option, index) => (
+                    {poll.options.map((option, index: any) => (
                       <div key={index} className="flex items-center gap-2">
                         <span className="text-sm text-gray-500 w-6">{index + 1}.</span>
                         <span className="text-gray-700">{option}</span>
@@ -233,7 +233,7 @@ export default function TestPrivacyPage() {
                         Select your choice:
                       </label>
                       <div className="space-y-2">
-                        {poll.options.map((option, index) => (
+                        {poll.options.map((option, index: any) => (
                           <label key={index} className="flex items-center gap-2">
                             <input
                               type="radio"

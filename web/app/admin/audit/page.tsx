@@ -239,7 +239,7 @@ export default function AuditLogsPage() {
           <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
           <div className="h-10 bg-gray-200 rounded mb-6"></div>
           <div className="space-y-4">
-            {[...Array(5)].map((_, i) => (
+            {[...Array(5)].map((_, i: any) => (
               <div key={i} className="h-20 bg-gray-200 rounded"></div>
             ))}
           </div>
@@ -424,7 +424,7 @@ export default function AuditLogsPage() {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {filteredLogs.map((log) => (
+              {filteredLogs.map((log: any) => (
                 <tr key={log.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     <div className="flex items-center space-x-2">

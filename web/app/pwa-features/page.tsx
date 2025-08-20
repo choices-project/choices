@@ -189,7 +189,7 @@ export default function PWAFeaturesPage() {
         {/* Tab Navigation */}
         <div className="mb-8">
           <nav className="flex space-x-1 bg-white rounded-lg border border-gray-200 p-1">
-            {tabs.map((tab) => {
+            {tabs.map((tab: any) => {
               const Icon = tab.icon
               return (
                 <button
@@ -245,7 +245,7 @@ export default function PWAFeaturesPage() {
 
             {/* Feature Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {featureCards.map((feature, index) => {
+              {featureCards.map((feature, index: any) => {
                 const Icon = feature.icon
                 const StatusIcon = getStatusIcon(feature.status)
                 

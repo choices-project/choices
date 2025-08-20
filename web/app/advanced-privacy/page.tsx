@@ -167,7 +167,7 @@ export default function AdvancedPrivacyPage() {
         {/* Tab Navigation */}
         <div className="mb-8">
           <nav className="flex space-x-1 bg-white rounded-lg border border-gray-200 p-1">
-            {tabs.map((tab) => {
+            {tabs.map((tab: any) => {
               const Icon = tab.icon
               return (
                 <button
@@ -454,7 +454,7 @@ export default function AdvancedPrivacyPage() {
                 <div>
                   <h4 className="font-medium text-gray-900 mb-3">Existing Proofs</h4>
                   <div className="space-y-3">
-                    {zkProofs.map((proofData, index) => (
+                    {zkProofs.map((proofData, index: any) => (
                       <div key={proofData.id} className="p-4 rounded-lg border border-gray-200">
                         <div className="flex items-center justify-between mb-2">
                           <h5 className="font-medium text-gray-900">Proof #{index + 1}</h5>

@@ -51,7 +51,7 @@ export default function QuadraticVoting({
   }, [userVote, options])
 
   const getTotalSpent = () => {
-    return Object.values(allocations).reduce((total, credits) => {
+    return Object.values(allocations).reduce((total: any, credits: any) => {
       return total + (credits * credits) // Quadratic cost
     }, 0)
   }
@@ -84,7 +84,7 @@ export default function QuadraticVoting({
     if (hasVoted || isVoting) return
 
     // Validate that at least some credits are allocated
-    const totalAllocated = Object.values(allocations).reduce((sum, credits) => sum + credits, 0)
+    const totalAllocated = Object.values(allocations).reduce((sum: any, credits: any) => sum + credits, 0)
     if (totalAllocated === 0) {
       setError('Please allocate at least some credits to vote')
       return
@@ -187,7 +187,7 @@ export default function QuadraticVoting({
       {/* Voting Interface */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
         <div className="space-y-6">
-          {options.map((option) => {
+          {options.map((option: any) => {
             const credits = allocations[option.id] || 0
             const cost = credits ** 2
             return (

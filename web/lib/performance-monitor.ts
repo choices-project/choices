@@ -81,7 +81,7 @@ export class PerformanceMonitor {
   private initCoreWebVitals() {
     // First Contentful Paint
     this.observeMetric('paint', (entries) => {
-      entries.forEach((entry) => {
+      entries.forEach((entry: any) => {
         if (entry.name === 'first-contentful-paint') {
           this.recordMetric('fcp', entry.startTime)
         }

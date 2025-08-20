@@ -238,7 +238,7 @@ export const VotingInterface: React.FC<VotingInterfaceProps> = ({
           <h3 className="text-lg font-medium text-gray-900 mb-4">Select your choice:</h3>
           
           <div className="space-y-3 mb-6">
-            {poll.options.map((option, index) => (
+            {poll.options.map((option, index: any) => (
               <button
                 key={index}
                 onClick={() => setSelectedChoice(index)}
@@ -387,7 +387,7 @@ export const VotingInterface: React.FC<VotingInterfaceProps> = ({
           <h3 className="text-lg font-medium text-gray-900 mb-4">Current Results</h3>
           
           <div className="space-y-4">
-            {poll.options.map((option, index) => {
+            {poll.options.map((option, index: any) => {
               const votes = poll.results![index] || 0;
               const percentage = poll.results!.total > 0 
                 ? Math.round((votes / poll.results!.total) * 100) 

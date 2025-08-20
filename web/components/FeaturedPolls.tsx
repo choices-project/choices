@@ -163,7 +163,7 @@ export const FeaturedPolls: React.FC<FeaturedPollsProps> = ({
                     { value: 'all', label: 'All', count: polls.length },
                     { value: 'active', label: 'Active', count: getStatusCount('active') },
                     { value: 'closed', label: 'Closed', count: getStatusCount('closed') }
-                  ].map((filter) => (
+                  ].map((filter: any) => (
                     <button
                       key={filter.value}
                       onClick={() => setStatusFilter(filter.value as any)}
@@ -190,7 +190,7 @@ export const FeaturedPolls: React.FC<FeaturedPollsProps> = ({
                     onChange={(e) => setCategoryFilter(e.target.value)}
                     className="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   >
-                    {categories.map((category) => (
+                    {categories.map((category: any) => (
                       <option key={category} value={category}>
                         {category === 'all' ? 'All Categories' : category} ({getCategoryCount(category)})
                       </option>
@@ -212,7 +212,7 @@ export const FeaturedPolls: React.FC<FeaturedPollsProps> = ({
             <div className="flex items-center gap-4 text-sm text-gray-500">
               <div className="flex items-center gap-1">
                 <Users className="w-4 h-4" />
-                <span>{polls.reduce((sum, poll) => sum + poll.total_votes, 0).toLocaleString()} total votes</span>
+                <span>{polls.reduce((sum: any, poll: any) => sum + poll.total_votes, 0).toLocaleString()} total votes</span>
               </div>
               <div className="flex items-center gap-1">
                 <BarChart3 className="w-4 h-4" />
@@ -225,7 +225,7 @@ export const FeaturedPolls: React.FC<FeaturedPollsProps> = ({
         {/* Polls Grid */}
         {filteredPolls.length > 0 ? (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredPolls.map((poll) => (
+            {filteredPolls.map((poll: any) => (
               <PollCard
                 key={poll.id}
                 poll={poll}
@@ -270,14 +270,14 @@ export const FeaturedPolls: React.FC<FeaturedPollsProps> = ({
           
           <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-100 text-center">
             <div className="text-2xl font-bold text-green-600 mb-1">
-              {polls.reduce((sum, poll) => sum + poll.total_votes, 0).toLocaleString()}
+              {polls.reduce((sum: any, poll: any) => sum + poll.total_votes, 0).toLocaleString()}
             </div>
             <div className="text-sm text-gray-600">Total Votes</div>
           </div>
           
           <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-100 text-center">
             <div className="text-2xl font-bold text-purple-600 mb-1">
-              {Math.round(polls.reduce((sum, poll) => sum + poll.participation, 0) / polls.length)}%
+              {Math.round(polls.reduce((sum: any, poll: any) => sum + poll.participation, 0) / polls.length)}%
             </div>
             <div className="text-sm text-gray-600">Avg Participation</div>
           </div>

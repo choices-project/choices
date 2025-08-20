@@ -255,7 +255,7 @@ export const IssueGenerationPanel: React.FC<IssueGenerationPanelProps> = ({
               <p className="text-gray-600">All feedback has been converted to GitHub issues.</p>
             </div>
           ) : (
-            feedbackWithoutIssues.map((item) => (
+            feedbackWithoutIssues.map((item: any) => (
               <div key={item.id} className="px-6 py-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
@@ -298,7 +298,7 @@ export const IssueGenerationPanel: React.FC<IssueGenerationPanelProps> = ({
             <h3 className="text-lg font-medium text-gray-900">Recently Generated Issues</h3>
           </div>
           <div className="divide-y divide-gray-200">
-            {generationResults.slice(-5).map((result, index) => (
+            {generationResults.slice(-5).map((result, index: any) => (
               <div key={index} className="px-6 py-4">
                 <div className="flex items-center justify-between">
                   <div>

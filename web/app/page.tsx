@@ -113,7 +113,7 @@ export default function HomePage() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {trendingPoll.options.map((option) => (
+                  {trendingPoll.options.map((option: any) => (
                     <div key={option.id} className="relative">
                       <div className="flex items-center justify-between mb-2">
                         <span className="font-medium text-gray-900">{option.text}</span>

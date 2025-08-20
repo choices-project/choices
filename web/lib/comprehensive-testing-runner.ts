@@ -127,7 +127,7 @@ export class ComprehensiveTestingRunner {
         failedTests: 1,
         warningTests: 0,
         successRate: 0,
-        details: { error: error instanceof Error ? error.message : 'Unknown error' },
+        details: { error: error instanceof Error ? error instanceof Error ? error.message : "Unknown error" : 'Unknown error' },
         timestamp: Date.now()
       }
     }
@@ -183,7 +183,7 @@ export class ComprehensiveTestingRunner {
         failedTests: 1,
         warningTests: 0,
         successRate: 0,
-        details: { error: error instanceof Error ? error.message : 'Unknown error' },
+        details: { error: error instanceof Error ? error instanceof Error ? error.message : "Unknown error" : 'Unknown error' },
         timestamp: Date.now()
       }
     }
@@ -238,7 +238,7 @@ export class ComprehensiveTestingRunner {
         failedTests: 1,
         warningTests: 0,
         successRate: 0,
-        details: { error: error instanceof Error ? error.message : 'Unknown error' },
+        details: { error: error instanceof Error ? error instanceof Error ? error.message : "Unknown error" : 'Unknown error' },
         timestamp: Date.now()
       }
     }
@@ -251,10 +251,10 @@ export class ComprehensiveTestingRunner {
     const failedSuites = this.results.filter(r => r.status === 'fail').length
     const warningSuites = this.results.filter(r => r.status === 'warning').length
     
-    const totalTests = this.results.reduce((sum, r) => sum + r.totalTests, 0)
-    const totalPassed = this.results.reduce((sum, r) => sum + r.passedTests, 0)
-    const totalFailed = this.results.reduce((sum, r) => sum + r.failedTests, 0)
-    const totalWarnings = this.results.reduce((sum, r) => sum + r.warningTests, 0)
+    const totalTests = this.results.reduce((sum: any, r: any) => sum + r.totalTests, 0)
+    const totalPassed = this.results.reduce((sum: any, r: any) => sum + r.passedTests, 0)
+    const totalFailed = this.results.reduce((sum: any, r: any) => sum + r.failedTests, 0)
+    const totalWarnings = this.results.reduce((sum: any, r: any) => sum + r.warningTests, 0)
     
     const overallSuccessRate = totalTests > 0 ? totalPassed / totalTests : 0
     

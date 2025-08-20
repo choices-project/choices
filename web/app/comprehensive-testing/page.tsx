@@ -192,7 +192,7 @@ export default function ComprehensiveTestingPage() {
         {/* Tab Navigation */}
         <div className="mb-8">
           <nav className="flex space-x-1 bg-white rounded-lg border border-gray-200 p-1 overflow-x-auto">
-            {tabs.map((tab) => {
+            {tabs.map((tab: any) => {
               const Icon = tab.icon
               return (
                 <button
@@ -250,7 +250,7 @@ export default function ComprehensiveTestingPage() {
 
               {/* Test Suites Summary */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {report.results.map((result) => (
+                {report.results.map((result: any) => (
                   <div key={result.testSuite} className="bg-gray-50 rounded-lg p-4">
                     <div className="flex items-center justify-between mb-2">
                       <h4 className="font-medium text-gray-900">{result.testSuite}</h4>
@@ -286,7 +286,7 @@ export default function ComprehensiveTestingPage() {
               <div className="bg-white rounded-lg border border-gray-200 p-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Recommendations</h3>
                 <div className="space-y-3">
-                  {report.recommendations.map((rec, index) => (
+                  {report.recommendations.map((rec, index: any) => (
                     <div key={index} className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg">
                       <Info className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
                       <span className="text-gray-700">{rec}</span>
@@ -627,7 +627,7 @@ export default function ComprehensiveTestingPage() {
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Detailed Test Results</h3>
               
               <div className="space-y-4">
-                {report.results.map((result) => (
+                {report.results.map((result: any) => (
                   <div key={result.testSuite} className="border border-gray-200 rounded-lg p-4">
                     <div className="flex items-center justify-between mb-3">
                       <h4 className="font-medium text-gray-900">{result.testSuite}</h4>

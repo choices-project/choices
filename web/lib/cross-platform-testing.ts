@@ -1020,11 +1020,11 @@ export class CrossPlatformTesting {
   async generateComprehensiveReport(): Promise<any> {
     const allSuites = await this.runAllTests()
     
-    const totalTests = allSuites.reduce((sum, suite) => sum + suite.summary.total, 0)
-    const totalPassed = allSuites.reduce((sum, suite) => sum + suite.summary.passed, 0)
-    const totalFailed = allSuites.reduce((sum, suite) => sum + suite.summary.failed, 0)
-    const totalWarnings = allSuites.reduce((sum, suite) => sum + suite.summary.warnings, 0)
-    const totalSkipped = allSuites.reduce((sum, suite) => sum + suite.summary.skipped, 0)
+    const totalTests = allSuites.reduce((sum: any, suite: any) => sum + suite.summary.total, 0)
+    const totalPassed = allSuites.reduce((sum: any, suite: any) => sum + suite.summary.passed, 0)
+    const totalFailed = allSuites.reduce((sum: any, suite: any) => sum + suite.summary.failed, 0)
+    const totalWarnings = allSuites.reduce((sum: any, suite: any) => sum + suite.summary.warnings, 0)
+    const totalSkipped = allSuites.reduce((sum: any, suite: any) => sum + suite.summary.skipped, 0)
     const overallSuccessRate = totalTests > 0 ? totalPassed / totalTests : 0
 
     const crossPlatformReady = overallSuccessRate >= 0.9 && totalFailed === 0
