@@ -131,7 +131,7 @@ export default function PollShare({ pollId, poll }: PollShareProps) {
         </div>
 
         {/* Native Share (Mobile) */}
-        {navigator.share && (
+        {'share' in navigator && (
           <div className="mt-4">
             <button
               onClick={handleNativeShare}
