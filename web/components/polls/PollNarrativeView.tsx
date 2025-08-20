@@ -231,7 +231,7 @@ export default function PollNarrativeView({
             <div>
               <h3 className="text-lg font-semibold mb-3">Key Issues</h3>
               <ul className="space-y-2">
-                {narrative.context.keyIssues.map((issue, index) => (
+                {narrative.context.keyIssues.map((issue: any, index: any) => (
                   <li key={index} className="flex items-start">
                     <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 mr-3 flex-shrink-0"></div>
                     <span className="text-gray-700">{issue}</span>
@@ -363,7 +363,7 @@ export default function PollNarrativeView({
                             <div>
                               <h4 className="text-sm font-semibold text-gray-700 mb-1">Sources:</h4>
                               <div className="space-y-1">
-                                {fact.sources.map((source, index) => (
+                                {fact.sources.map((source: any, index: any) => (
                                   <div key={index} className="flex items-center space-x-2 text-sm">
                                     <ExternalLink className="h-3 w-3 text-gray-400" />
                                     <a href={source.url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
@@ -381,7 +381,7 @@ export default function PollNarrativeView({
                             <div>
                               <h4 className="text-sm font-semibold text-gray-700 mb-1">Fact Checkers:</h4>
                               <div className="space-y-1">
-                                {fact.factCheckers.map((checker, index) => (
+                                {fact.factCheckers.map((checker: any, index: any) => (
                                   <div key={index} className="text-sm">
                                     <span className="font-medium">{checker.name}</span>
                                     <span className="text-gray-500"> ({checker.organization})</span>
@@ -395,7 +395,7 @@ export default function PollNarrativeView({
                           {/* Tags */}
                           {fact.tags.length > 0 && (
                             <div className="flex flex-wrap gap-1">
-                              {fact.tags.map((tag, index) => (
+                              {fact.tags.map((tag: any, index: any) => (
                                 <span key={index} className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">
                                   {tag}
                                 </span>
@@ -503,7 +503,7 @@ export default function PollNarrativeView({
                         <div className="mt-3">
                           <h4 className="text-sm font-semibold text-gray-700 mb-1">Key Quotes:</h4>
                           <div className="space-y-1">
-                            {source.keyQuotes.map((quote, index) => (
+                            {source.keyQuotes.map((quote: any, index: any) => (
                               <blockquote key={index} className="text-sm text-gray-600 italic border-l-2 border-gray-300 pl-2">
                                 "{quote}"
                               </blockquote>
@@ -541,7 +541,7 @@ export default function PollNarrativeView({
           <div className="space-y-4">
             <h2 className="text-xl font-semibold">Timeline of Events</h2>
             <div className="relative">
-              {narrative.timeline.map((event, index) => (
+                              {narrative.timeline.map((event: any, index: any) => (
                 <div key={event.id} className="flex items-start space-x-4">
                   <div className="flex-shrink-0">
                     <div className="w-4 h-4 bg-blue-500 rounded-full"></div>
@@ -571,7 +571,7 @@ export default function PollNarrativeView({
                     <p className="text-gray-700 mb-2">{event.description}</p>
                     {event.tags.length > 0 && (
                       <div className="flex flex-wrap gap-1">
-                        {event.tags.map((tag, tagIndex) => (
+                        {event.tags.map((tag: any, tagIndex: any) => (
                           <span key={tagIndex} className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">
                             {tag}
                           </span>
@@ -644,7 +644,7 @@ export default function PollNarrativeView({
                         <div>
                           <h4 className="text-sm font-semibold text-gray-700 mb-1">Key Statements:</h4>
                           <div className="space-y-2">
-                            {stakeholder.statements.map((statement, index) => (
+                            {stakeholder.statements.map((statement: any, index: any) => (
                               <blockquote key={index} className="text-sm text-gray-600 italic border-l-2 border-gray-300 pl-2">
                                 "{statement.quote}"
                                 <div className="text-xs text-gray-500 mt-1">
