@@ -127,7 +127,7 @@ export class ComprehensiveTestingRunner {
         failedTests: 1,
         warningTests: 0,
         successRate: 0,
-        details: { error: error instanceof Error ? error instanceof Error ? error.message : "Unknown error" : 'Unknown error' },
+        details: { error: error instanceof Error ? error instanceof Error ? error instanceof Error ? error.message : "Unknown error" : "Unknown error" : 'Unknown error' },
         timestamp: Date.now()
       }
     }
@@ -183,7 +183,7 @@ export class ComprehensiveTestingRunner {
         failedTests: 1,
         warningTests: 0,
         successRate: 0,
-        details: { error: error instanceof Error ? error instanceof Error ? error.message : "Unknown error" : 'Unknown error' },
+        details: { error: error instanceof Error ? error instanceof Error ? error instanceof Error ? error.message : "Unknown error" : "Unknown error" : 'Unknown error' },
         timestamp: Date.now()
       }
     }
@@ -238,7 +238,7 @@ export class ComprehensiveTestingRunner {
         failedTests: 1,
         warningTests: 0,
         successRate: 0,
-        details: { error: error instanceof Error ? error instanceof Error ? error.message : "Unknown error" : 'Unknown error' },
+        details: { error: error instanceof Error ? error instanceof Error ? error instanceof Error ? error.message : "Unknown error" : "Unknown error" : 'Unknown error' },
         timestamp: Date.now()
       }
     }
