@@ -256,4 +256,28 @@ const fieldMappings = {
 
 ---
 
+## **🔍 Validation Script Best Practices**
+
+### **Avoid False Positives in Automated Validation**
+
+When creating automated validation scripts (like pre-push hooks), always consider edge cases:
+
+```bash
+# ❌ Bad: Simple grep that catches comments
+grep -l "select('\\*')" *.ts
+
+# ✅ Good: Smart grep that ignores comments
+grep -v "^[[:space:]]*//" | grep -l "select('\\*')" *.ts
+```
+
+**Common false positive sources:**
+- Comments mentioning the pattern
+- Documentation examples
+- Test files with intentional examples
+- Template files
+
+**Always test your validation scripts with edge cases before deploying them.**
+
+---
+
 **Remember**: The goal is not just to fix errors, but to prevent them from happening in the first place. Use these patterns consistently and the codebase will become more robust and maintainable.
