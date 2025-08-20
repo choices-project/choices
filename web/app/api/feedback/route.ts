@@ -192,9 +192,10 @@ export async function POST(request: NextRequest) {
     if (error) {
       devLog('Database error:', error)
       // If table doesn't exist or schema cache issue, use mock response for testing
-      if (error instanceof Error ? error.message : "Unknown error".includes('relation "feedback" does not exist') || 
-          error instanceof Error ? error.message : "Unknown error".includes('does not exist') ||
-          error instanceof Error ? error.message : "Unknown error".includes('schema cache')) {
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      if (errorMessage.includes('relation "feedback" does not exist') || 
+          errorMessage.includes('does not exist') ||
+          errorMessage.includes('schema cache')) {
         devLog('Schema cache issue or table not ready - using mock response')
         return NextResponse.json({
           success: true,
@@ -297,9 +298,10 @@ export async function GET(request: NextRequest) {
     if (error) {
       devLog('Database error:', error)
       // If table doesn't exist or schema cache issue, return empty mock response
-      if (error instanceof Error ? error.message : "Unknown error".includes('relation "feedback" does not exist') || 
-          error instanceof Error ? error.message : "Unknown error".includes('does not exist') ||
-          error instanceof Error ? error.message : "Unknown error".includes('schema cache')) {
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      if (errorMessage.includes('relation "feedback" does not exist') || 
+          errorMessage.includes('does not exist') ||
+          errorMessage.includes('schema cache')) {
         devLog('Schema cache issue or table not ready - using mock response')
         return NextResponse.json({
           success: true,

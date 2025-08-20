@@ -161,7 +161,7 @@ export interface PollRecommendation {
 // ============================================================================
 
 export class AutomatedPollsService {
-  private supabase;
+  private supabase: ReturnType<typeof createClient>;
 
   constructor() {
     const cookieStore = cookies();
@@ -174,6 +174,9 @@ export class AutomatedPollsService {
 
   async getTrendingTopics(limit: number = 20): Promise<TrendingTopic[]> {
     try {
+      if (!this.supabase) {
+        throw new Error('Supabase client not available')
+      }
       const { data, error } = await this.supabase
         .from('trending_topics')
         .select('id, topic, score, created_at, updated_at')
@@ -191,6 +194,9 @@ export class AutomatedPollsService {
 
   async getTrendingTopicById(id: string): Promise<TrendingTopic | null> {
     try {
+      if (!this.supabase) {
+        throw new Error('Supabase client not available')
+      }
       const { data, error } = await this.supabase
         .from('trending_topics')
         .select('id, topic, score, created_at, updated_at')
@@ -208,6 +214,9 @@ export class AutomatedPollsService {
 
   async createTrendingTopic(topic: Omit<TrendingTopic, 'id' | 'createdAt' | 'updatedAt'>): Promise<TrendingTopic | null> {
     try {
+      if (!this.supabase) {
+        throw new Error('Supabase client not available')
+      }
       const { data, error } = await this.supabase
         .from('trending_topics')
         .insert([this.mapTrendingTopicToDB(topic)])
