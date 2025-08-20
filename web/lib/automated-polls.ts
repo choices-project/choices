@@ -182,7 +182,7 @@ export class AutomatedPollsService {
 
       if (error) throw error;
 
-      return data?.map(this.mapTrendingTopicFromDB) || [];
+      return data ? data.map(this.mapTrendingTopicFromDB) : [];
     } catch (error) {
       devLog('Error fetching trending topics:', error);
       return [];
@@ -261,7 +261,7 @@ export class AutomatedPollsService {
 
       if (error) throw error;
 
-      return data?.map(this.mapGeneratedPollFromDB) || [];
+      return data ? data.map(this.mapGeneratedPollFromDB) : [];
     } catch (error) {
       devLog('Error fetching generated polls:', error);
       return [];
