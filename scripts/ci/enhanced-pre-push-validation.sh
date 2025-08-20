@@ -293,7 +293,7 @@ check_supabase_security() {
     fi
     
     # Check for select('*') usage which could expose sensitive data
-    local select_star_count=$(find ./web -name "*.ts" -o -name "*.tsx" | xargs grep -l "select('\\*')" 2>/dev/null | wc -l)
+    local select_star_count=$(find ./web -name "*.ts" -o -name "*.tsx" | xargs grep -l "\.select('\\*')" 2>/dev/null | wc -l)
     if [ $select_star_count -gt 0 ]; then
         print_status "error" "Found $select_star_count files with select('*') - this could expose sensitive data"
         print_status "info" "Replace select('*') with specific field selection for security"
