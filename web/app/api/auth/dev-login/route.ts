@@ -4,6 +4,14 @@ import jwt from 'jsonwebtoken'
 
 // Development authentication bypass for testing
 export async function POST(request: NextRequest) {
+  // Block access in production
+  if (process.env.NODE_ENV !== 'development') {
+    return NextResponse.json(
+      { error: 'Development login not available in production' },
+      { status: 403 }
+    )
+  }
+
   try {
     const { email } = await request.json()
 
@@ -71,14 +79,14 @@ export async function POST(request: NextRequest) {
     // Set secure cookies
     response.cookies.set('auth-token', token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: process.env.NODE_ENV !== 'development',
       sameSite: 'lax',
       maxAge: 24 * 60 * 60, // 24 hours
     })
 
     response.cookies.set('refresh-token', refreshToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: process.env.NODE_ENV !== 'development',
       sameSite: 'lax',
       maxAge: 7 * 24 * 60 * 60, // 7 days
     })
