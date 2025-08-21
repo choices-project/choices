@@ -4,7 +4,8 @@ import { useState, Suspense, useEffect, useCallback, createContext, useContext }
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/utils/supabase/client'
-import { Eye, EyeOff, Mail, Lock, User, Github, Chrome } from 'lucide-react'
+import { Eye, EyeOff, Mail, Lock, User, Github, Chrome, Fingerprint } from 'lucide-react'
+import { isWebAuthnSupported, isBiometricAvailable } from '@/lib/webauthn'
 
 function RegisterFormContent() {
   const [formData, setFormData] = useState({
@@ -18,12 +19,35 @@ function RegisterFormContent() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
+  const [biometricSupported, setBiometricSupported] = useState<boolean | null>(null)
+  const [biometricAvailable, setBiometricAvailable] = useState<boolean | null>(null)
   
   const router = useRouter()
   const searchParams = useSearchParams()
   // Use a smarter default redirect - let the auth callback decide
   const redirectTo = searchParams.get('redirectTo') || '/'
   const supabase = createClient()
+
+  // Check biometric support on component mount
+  useEffect(() => {
+    const checkBiometricSupport = async () => {
+      try {
+        const supported = isWebAuthnSupported()
+        setBiometricSupported(supported)
+        
+        if (supported) {
+          const available = await isBiometricAvailable()
+          setBiometricAvailable(available)
+        }
+      } catch (error) {
+        console.error('Error checking biometric support:', error)
+        setBiometricSupported(false)
+        setBiometricAvailable(false)
+      }
+    }
+    
+    checkBiometricSupport()
+  }, [])
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }))
@@ -92,6 +116,21 @@ function RegisterFormContent() {
       setError(signUpError.message)
     }
     setLoading(false)
+  }
+
+  const handleBiometricRegister = async () => {
+    setLoading(true)
+    setError(null)
+    setMessage(null)
+
+    if (!biometricAvailable) {
+      setError('Biometric authentication is not available on this device.')
+      setLoading(false)
+      return
+    }
+
+    // Redirect to biometric setup page
+    router.push(`/auth/biometric-setup?redirectTo=${encodeURIComponent(redirectTo)}`)
   }
 
   return (
@@ -208,7 +247,23 @@ function RegisterFormContent() {
             >
               <Github size={24} className="text-gray-800" />
             </button>
+            {biometricAvailable && (
+              <button
+                onClick={handleBiometricRegister}
+                className="p-3 border border-gray-300 rounded-full hover:bg-gray-50 transition duration-150 ease-in-out"
+                aria-label="Sign up with biometric authentication"
+                disabled={loading}
+                title="Use fingerprint, Face ID, or other biometric authentication"
+              >
+                <Fingerprint size={24} className="text-blue-600" />
+              </button>
+            )}
           </div>
+          {biometricSupported && !biometricAvailable && (
+            <p className="text-sm text-gray-500 mt-2">
+              Biometric authentication not available on this device
+            </p>
+          )}
         </div>
 
         <p className="mt-6 text-center text-sm text-gray-600">
