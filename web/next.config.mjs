@@ -70,12 +70,12 @@ const nextConfig = {
   }
 }
 
-// Simplified PWA configuration
+// Enhanced PWA configuration - Enabled for development
 const config = withPWA({
   dest: 'public',
   register: true,
   skipWaiting: true,
-  disable: process.env.NODE_ENV === 'development', // Disable PWA in development to reduce complexity
+  disable: false, // Enable PWA in development for mobile testing
   buildExcludes: [/middleware-manifest\.json$/],
   runtimeCaching: [
     {
