@@ -97,6 +97,31 @@ a:focus-visible {
   outline-offset: 2px;
 }
 
+/* Mobile-specific improvements */
+@media (max-width: 768px) {
+  /* Ensure minimum touch target sizes */
+  button, a, input, select, textarea {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Improve touch interactions */
+  * {
+    -webkit-tap-highlight-color: rgba(59, 130, 246, 0.1);
+  }
+  
+  /* Prevent horizontal scrolling on mobile */
+  body {
+    overflow-x: hidden;
+  }
+  
+  /* Improve text readability on mobile */
+  body {
+    -webkit-text-size-adjust: 100%;
+    -ms-text-size-adjust: 100%;
+  }
+}
+
 /* Loading skeleton animation */
 @keyframes shimmer {
   0% {
