@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { devLog } from '@/lib/logger';
 import { createClient } from '@/utils/supabase/server'
 import { cookies } from 'next/headers'
+import { getCurrentUser } from '@/lib/auth-utils'
 
 export const dynamic = 'force-dynamic'
 
@@ -29,10 +30,10 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Get current user
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    // Get current user from JWT token
+    const user = getCurrentUser(request)
     
-    if (userError || !user) {
+    if (!user) {
       return NextResponse.json(
         { error: 'User not authenticated' },
         { status: 401 }
@@ -41,8 +42,8 @@ export async function POST(request: NextRequest) {
 
     // Prepare profile data
     const profileData = {
-      user_id: user.id,
-      display_name: displayName || user.user_metadata?.full_name || user.email?.split('@')[0],
+      user_id: user.userId,
+      display_name: displayName || user.email?.split('@')[0],
       bio: bio || null,
       primary_concerns: primaryConcerns || [],
       community_focus: communityFocus || [],
@@ -111,10 +112,10 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Get current user
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    // Get current user from JWT token
+    const user = getCurrentUser(request)
     
-    if (userError || !user) {
+    if (!user) {
       return NextResponse.json(
         { error: 'User not authenticated' },
         { status: 401 }
@@ -125,7 +126,7 @@ export async function GET(request: NextRequest) {
     const { data, error } = await supabase
       .from('user_profiles')
       .select('id, user_id, display_name, avatar_url, bio, created_at, updated_at')
-      .eq('user_id', user.id)
+      .eq('user_id', user.userId)
       .single()
 
     if (error && error.code !== 'PGRST116') {

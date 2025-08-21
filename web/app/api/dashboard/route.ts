@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { devLog } from '@/lib/logger';
 import { createClient } from '@/utils/supabase/server'
+import { getCurrentUser } from '@/lib/auth-utils'
 import { cookies } from 'next/headers'
 
 export const dynamic = 'force-dynamic'
@@ -18,10 +19,10 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Get current user
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    // Get current user from JWT token
+    const user = getCurrentUser(request)
     
-    if (userError || !user) {
+    if (!user) {
       return NextResponse.json(
         { error: 'User not authenticated' },
         { status: 401 }
