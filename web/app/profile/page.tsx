@@ -20,9 +20,9 @@ import {
   XCircle,
   Info
 } from 'lucide-react'
-import { createClient } from '@/utils/supabase/client'
 import { devLog } from '@/lib/logger'
 import BiometricSetup from '@/components/auth/BiometricSetup'
+import { useAuth } from '@/hooks/useAuth'
 
 interface UserProfile {
   id: string
@@ -44,11 +44,10 @@ interface BiometricCredential {
 
 export default function ProfilePage() {
   const router = useRouter()
-  const [user, setUser] = useState<any>(null)
+  const { user, isLoading, logout } = useAuth()
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [biometricCredentials, setBiometricCredentials] = useState<BiometricCredential[]>([])
   const [trustScore, setTrustScore] = useState<number | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
@@ -56,85 +55,43 @@ export default function ProfilePage() {
   const [isExporting, setIsExporting] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
 
-  const supabase = createClient()
-
   useEffect(() => {
     loadUserData()
   }, [])
 
   const loadUserData = async () => {
     try {
-      setIsLoading(true)
-      
-      if (!supabase) {
-        setError('Authentication service not available')
-        return
-      }
-      
-      // Get current user
-      const { data: { user }, error: userError } = await supabase.auth.getUser()
-      if (userError || !user) {
+      if (!user) {
         router.push('/login')
         return
       }
-      setUser(user)
 
-      // Get user profile
-      const { data: profileData, error: profileError } = await supabase!
-        .from('ia_users')
-        .select('id, email, verification_tier, created_at, updated_at, display_name, avatar_url, bio')
-        .eq('id', user.id)
-        .single()
-
-      if (profileError) {
-        devLog('Error loading profile:', profileError)
-        setError('Failed to load profile data')
+      // Get user profile from API
+      const response = await fetch('/api/profile')
+      if (response.ok) {
+        const data = await response.json()
+        setProfile(data.profile)
       } else {
-        setProfile(profileData)
+        setError('Failed to load profile data')
       }
 
-      // Get biometric credentials
-      const { data: credentials, error: credentialsError } = await supabase!
-        .from('biometric_credentials')
-        .select(`
-          id,
-          credential_id,
-          device_type,
-          authenticator_type,
-          sign_count,
-          created_at,
-          last_used_at
-        `)
-        .eq('user_id', user.id)
-
-      if (!credentialsError && credentials) {
-        setBiometricCredentials(credentials.map(cred => ({
-          id: cred.id,
-          credentialId: cred.credential_id,
-          deviceType: cred.device_type,
-          authenticatorType: cred.authenticator_type,
-          signCount: cred.sign_count || 0,
-          createdAt: cred.created_at,
-          lastUsedAt: cred.last_used_at
-        })))
+      // Get biometric credentials from API
+      const credentialsResponse = await fetch('/api/auth/webauthn/credentials')
+      if (credentialsResponse.ok) {
+        const credentialsData = await credentialsResponse.json()
+        setBiometricCredentials(credentialsData.credentials || [])
       }
 
-      // Get trust score
-      const { data: trustData, error: trustError } = await supabase!
-        .from('biometric_trust_scores')
-        .select('overall_score')
-        .eq('user_id', user.id)
-        .single()
-
-      if (!trustError && trustData) {
-        setTrustScore(trustData.overall_score)
+      // Get trust score from API
+      const trustResponse = await fetch('/api/auth/webauthn/trust-score')
+      if (trustResponse.ok) {
+        const trustData = await trustResponse.json()
+        setTrustScore(trustData.score || null)
       }
 
     } catch (error) {
       devLog('Error loading user data:', error)
       setError('Failed to load user data')
-    } finally {
-      setIsLoading(false)
     }
   }
 
@@ -180,38 +137,26 @@ export default function ProfilePage() {
       setIsDeleting(true)
       setError(null)
 
-      if (!supabase || !user) {
+      if (!user) {
         setError('Authentication service not available')
         return
       }
 
-      // Delete biometric credentials first
-      if (biometricCredentials.length > 0) {
-        await supabase
-          .from('biometric_credentials')
-          .delete()
-          .eq('user_id', user.id)
+      // Delete account via API
+      const response = await fetch('/api/auth/delete-account', {
+        method: 'DELETE'
+      })
+
+      if (response.ok) {
+        await logout()
+        setSuccess('Account deleted successfully')
+        setTimeout(() => {
+          router.push('/')
+        }, 2000)
+      } else {
+        const errorData = await response.json()
+        setError(errorData.error || 'Failed to delete account')
       }
-
-      // Delete trust score
-      await supabase
-        .from('biometric_trust_scores')
-        .delete()
-        .eq('user_id', user.id)
-
-      // Delete user profile
-      await supabase
-        .from('ia_users')
-        .delete()
-        .eq('id', user.id)
-
-      // Sign out
-      await supabase.auth.signOut()
-      
-      setSuccess('Account deleted successfully')
-      setTimeout(() => {
-        router.push('/')
-      }, 2000)
 
     } catch (error) {
       devLog('Error deleting account:', error)
@@ -224,21 +169,15 @@ export default function ProfilePage() {
 
   const handleDeleteBiometricCredential = async (credentialId: string) => {
     try {
-      if (!supabase) {
-        setError('Authentication service not available')
-        return
-      }
-      
-      const { error } = await supabase
-        .from('biometric_credentials')
-        .delete()
-        .eq('credential_id', credentialId)
+      const response = await fetch(`/api/auth/webauthn/credentials/${credentialId}`, {
+        method: 'DELETE'
+      })
 
-      if (error) {
-        setError('Failed to delete biometric credential')
-      } else {
+      if (response.ok) {
         setSuccess('Biometric credential deleted successfully')
         loadUserData() // Reload data
+      } else {
+        setError('Failed to delete biometric credential')
       }
     } catch (error) {
       devLog('Error deleting biometric credential:', error)
