@@ -1,6 +1,6 @@
 'use client'
 
-import { useAuth } from '@/contexts/AuthContext'
+import { useAuth } from '@/hooks/useAuth'
 import { devLog } from '@/lib/logger';
 import { useRouter } from 'next/navigation'
 import { useEffect, useState, useCallback, createContext, useContext } from 'react'
@@ -30,7 +30,7 @@ interface DashboardStats {
 }
 
 export default function DashboardPage() {
-  const { user, loading, signOut } = useAuth()
+  const { user, isLoading, logout } = useAuth()
   const router = useRouter()
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [stats, setStats] = useState<DashboardStats>({
@@ -45,10 +45,10 @@ export default function DashboardPage() {
   const [isLoadingStats, setIsLoadingStats] = useState(true)
 
   useEffect(() => {
-    if (!loading && !user) {
+    if (!isLoading && !user) {
       router.push('/login?redirectTo=/dashboard')
     }
-  }, [user, loading, router])
+  }, [user, isLoading, router])
 
   useEffect(() => {
     if (user) {
@@ -94,7 +94,7 @@ export default function DashboardPage() {
   }
 
   const handleSignOut = async () => {
-    await signOut()
+    await logout()
     router.push('/')
   }
 
@@ -120,7 +120,7 @@ export default function DashboardPage() {
     }
   }
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
         <div className="text-center">
@@ -182,7 +182,7 @@ export default function DashboardPage() {
                   )}
                 </div>
                 <h2 className="text-xl font-semibold text-gray-900">
-                  {profile?.display_name || user.user_metadata?.full_name || user.email?.split('@')[0]}
+                  {profile?.display_name || user.email?.split('@')[0]}
                 </h2>
                 <p className="text-gray-600">{user.email}</p>
                 {profile?.bio && (
@@ -217,7 +217,7 @@ export default function DashboardPage() {
                   <div>
                     <p className="text-sm font-medium text-gray-900">Member Since</p>
                     <p className="text-sm text-gray-600">
-                      {new Date(user.created_at).toLocaleDateString()}
+                      {new Date(user.createdAt).toLocaleDateString()}
                     </p>
                   </div>
                 </div>
