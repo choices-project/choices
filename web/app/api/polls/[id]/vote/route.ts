@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { devLog } from '@/lib/logger';
 import { createClient } from '@/utils/supabase/server';
 import { cookies } from 'next/headers';
+import { getCurrentUser } from '@/lib/auth-utils'
 import { HybridVotingService } from '@/lib/hybrid-voting-service';
 
 export const dynamic = 'force-dynamic';
@@ -25,8 +26,8 @@ export async function POST(
     const pollId = params.id;
 
     // Check authentication
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-    if (userError || !user) {
+    const user = getCurrentUser(request);
+    if (!user) {
       return NextResponse.json(
         { error: 'Authentication required to vote' },
         { status: 401 }
@@ -37,7 +38,7 @@ export async function POST(
     const { data: userProfile, error: profileError } = await supabase
       .from('ia_users')
       .select('is_active')
-      .eq('stable_id', user.id)
+      .eq('stable_id', user.userId)
       .single();
 
     if (!userProfile || !userProfile.is_active) {
@@ -64,7 +65,7 @@ export async function POST(
       pollId,
       choice,
       privacyLevel: privacy_level,
-      userId: user.id
+      userId: user.userId
     };
 
     const response = await votingService.submitVote(voteRequest);
@@ -114,8 +115,8 @@ export async function GET(
     const pollId = params.id;
 
     // Check authentication
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-    if (userError || !user) {
+    const user = getCurrentUser(request);
+    if (!user) {
       return NextResponse.json(
         { has_voted: false },
         { status: 200 }
