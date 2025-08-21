@@ -30,20 +30,20 @@ export async function GET(request: NextRequest) {
     }
 
     // Get user-specific statistics
-    const userStats = await getUserStats(supabase, user.id)
+    const userStats = await getUserStats(supabase, user.userId)
     
     // Get general platform statistics
     const platformStats = await getPlatformStats(supabase)
 
     const dashboardData = {
       user: {
-        id: user.id,
+        id: user.userId,
         email: user.email,
-        name: user.user_metadata?.full_name || user.email?.split('@')[0]
+        name: user.email?.split('@')[0]
       },
       stats: userStats,
       platform: platformStats,
-      recentActivity: await getRecentActivity(supabase, user.id),
+      recentActivity: await getRecentActivity(supabase, user.userId),
       polls: await getActivePolls(supabase)
     }
 
