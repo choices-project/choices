@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
-import { createClient } from '@supabase/supabase-js'
-import bcrypt from 'bcryptjs'
-import dotenv from 'dotenv'
+const { createClient } = require('@supabase/supabase-js')
+const bcrypt = require('bcryptjs')
+const dotenv = require('dotenv')
 
 // Load environment variables
 dotenv.config({ path: '.env.local' })
@@ -62,7 +62,6 @@ async function createAdminAccount() {
         verification_tier: 'T3', // Admin tier
         is_active: true,
         two_factor_enabled: false,
-        is_admin: true,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       })
