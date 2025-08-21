@@ -233,9 +233,47 @@
 ## 📚 **Testing Documentation**
 
 ### **Related Documents**
-- `2FA_TESTING_PLAN.md` - Specific 2FA testing procedures
-- `2FA_TESTING_CHECKLIST.md` - Real-time testing checklist
 - `DEPLOYMENT_READY_SUMMARY.md` - Deployment testing status
+
+### **2FA Testing Checklist**
+```
+## 🧪 **2FA Testing Checklist - Real-Time Progress**
+
+### **✅ Setup Flow**
+- [ ] Navigate to Account Settings
+- [ ] Click "Setup 2FA" button
+- [ ] Verify QR code displays
+- [ ] Scan QR code with authenticator app
+- [ ] Enter 6-digit verification code
+- [ ] Verify 2FA enables successfully
+
+### **🔄 Login Flow**
+- [ ] Log out of application
+- [ ] Attempt login with username/password
+- [ ] Verify 2FA code prompt appears
+- [ ] Enter correct 6-digit code
+- [ ] Verify successful login
+
+### **🔄 Disable Flow**
+- [ ] Navigate to Account Settings
+- [ ] Click "Disable 2FA" button
+- [ ] Confirm disable action
+- [ ] Verify 2FA disabled successfully
+
+### **🛡️ Error Handling Testing**
+- [ ] Test non-numeric characters
+- [ ] Test 5 or 7 digit codes
+- [ ] Test expired codes
+- [ ] Test incorrect codes
+- [ ] Test offline scenarios
+- [ ] Test slow network conditions
+
+### **🔒 Security Testing**
+- [ ] Test same code twice (reuse prevention)
+- [ ] Test multiple incorrect codes (brute force protection)
+- [ ] Verify rate limiting
+- [ ] Test session management
+```
 
 ### **Testing Resources**
 - **Test Data**: Sample users, polls, votes
