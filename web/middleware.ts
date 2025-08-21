@@ -177,9 +177,30 @@ export async function middleware(request: NextRequest) {
   // supabase.auth.getUser(). A simple mistake could make it very hard to debug
   // issues with users being randomly logged out.
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  // Check for custom auth token in cookies or headers
+  const authToken = request.cookies.get('auth-token')?.value || 
+                   request.headers.get('authorization')?.replace('Bearer ', '')
+  
+  let isAuthenticated = false
+  let user = null
+  
+  if (authToken) {
+    try {
+      // Verify JWT token
+      const jwt = require('jsonwebtoken')
+      const jwtSecret = process.env.JWT_SECRET
+      
+      if (jwtSecret) {
+        const decoded = jwt.verify(authToken, jwtSecret)
+        isAuthenticated = true
+        user = decoded
+      }
+    } catch (error) {
+      // Token is invalid or expired
+      isAuthenticated = false
+      user = null
+    }
+  }
 
   // Define protected routes
   const protectedRoutes = ['/dashboard', '/profile', '/create-poll', '/admin']
@@ -188,14 +209,14 @@ export async function middleware(request: NextRequest) {
   const isAuthRoute = authRoutes.some(route => request.nextUrl.pathname.startsWith(route))
 
   // Redirect logic
-  if (isProtectedRoute && !user) {
+  if (isProtectedRoute && !isAuthenticated) {
     // Redirect to login if accessing protected route without authentication
     const redirectUrl = new URL('/login', request.url)
     redirectUrl.searchParams.set('redirectTo', request.nextUrl.pathname)
     return NextResponse.redirect(redirectUrl)
   }
 
-  if (isAuthRoute && user) {
+  if (isAuthRoute && isAuthenticated) {
     // Redirect to dashboard if accessing auth routes while authenticated
     return NextResponse.redirect(new URL('/dashboard', request.url))
   }
