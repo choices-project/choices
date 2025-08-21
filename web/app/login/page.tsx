@@ -69,10 +69,11 @@ function LoginFormContent() {
         setError(data.message || 'Login failed. Please try again.')
       } else {
         setMessage('Logged in successfully! Redirecting...')
-        // Store tokens in cookies or localStorage as needed
+        // Store tokens in cookies for middleware access
         if (data.token) {
-          // You might want to store the token in a secure way
-          localStorage.setItem('auth-token', data.token)
+          // Set auth token as HTTP-only cookie
+          document.cookie = `auth-token=${data.token}; path=/; max-age=3600; secure; samesite=strict`
+          // Store refresh token in localStorage for token refresh
           localStorage.setItem('refresh-token', data.refreshToken)
         }
         router.push(redirectTo)
