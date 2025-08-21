@@ -612,7 +612,7 @@ export default function AccountSettingsPage() {
                         <img 
                           src={twoFactorData.qrCode} 
                           alt="2FA QR Code" 
-                          className="w-48 h-48"
+                          className="w-32 h-32 sm:w-48 sm:h-48 md:w-56 md:h-56"
                         />
                       </div>
                     )}
@@ -635,7 +635,7 @@ export default function AccountSettingsPage() {
                     />
                   </div>
                   
-                  <div className="flex space-x-3">
+                  <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3">
                     <button
                       onClick={handle2FAEnable}
                       disabled={isSettingUp2FA || !twoFactorData.verificationCode}
@@ -676,7 +676,7 @@ export default function AccountSettingsPage() {
                     />
                   </div>
                   
-                  <div className="flex space-x-3">
+                  <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3">
                     <button
                       onClick={handle2FADisable}
                       disabled={isDisabling2FA || !twoFactorData.verificationCode}
