@@ -391,7 +391,7 @@ class PollService {
   // Get current user ID
   private async getCurrentUserId(): Promise<string> {
     const authContext = await this.authManager.getAuthContext();
-    return authContext.user?.id || 'anonymous';
+    return authContext?.user?.id || 'anonymous';
   }
 
   // Simulate mock vote
