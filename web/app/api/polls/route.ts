@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { devLog } from '@/lib/logger';
 import { createClient } from '@/utils/supabase/server';
 import { cookies } from 'next/headers';
+import { getCurrentUser } from '@/lib/auth-utils'
 
 export const dynamic = 'force-dynamic';
 
@@ -103,8 +104,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Check authentication
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-    if (userError || !user) {
+    const user = getCurrentUser(request);
+    if (!user) {
       return NextResponse.json(
         { error: 'Authentication required to create polls' },
         { status: 401 }
@@ -115,7 +116,7 @@ export async function POST(request: NextRequest) {
     const { data: userProfile } = await supabase
       .from('ia_users')
       .select('is_active')
-      .eq('stable_id', user.id)
+      .eq('stable_id', user.userId)
       .single();
 
     if (!userProfile || !userProfile.is_active) {
@@ -158,7 +159,7 @@ export async function POST(request: NextRequest) {
         options: sanitizedOptions,
         voting_method,
         status: 'active',
-        created_by: user.id,
+        created_by: user.userId,
         total_votes: 0,
         participation_rate: 0.0
       })
