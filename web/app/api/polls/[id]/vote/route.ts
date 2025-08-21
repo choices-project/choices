@@ -128,7 +128,7 @@ export async function GET(
       .from('po_votes')
       .select('id')
       .eq('poll_id', pollId)
-      .eq('user_id', user.id)
+      .eq('user_id', user.userId)
       .single();
 
     return NextResponse.json({
