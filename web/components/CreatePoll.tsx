@@ -247,9 +247,9 @@ export const CreatePoll: React.FC<CreatePollProps> = ({
         const errorData = await response.json();
         throw new Error(errorData.error || 'Failed to create poll');
       }
-    } catch (error: any) {
+    } catch (error) {
       devLog('Error creating poll:', error);
-      setError(error instanceof Error ? error.message : "Unknown error" || 'Failed to create poll');
+      setError(error instanceof Error ? error.message : 'Failed to create poll');
     } finally {
       setIsSubmitting(false);
     }
@@ -317,8 +317,8 @@ export const CreatePoll: React.FC<CreatePollProps> = ({
       } else {
         setError('Failed to create poll');
       }
-    } catch (error: any) {
-      setError(error instanceof Error ? error.message : "Unknown error" || 'Failed to create poll');
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Failed to create poll');
     } finally {
       setIsSubmitting(false);
     }

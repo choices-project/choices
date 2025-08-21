@@ -233,7 +233,7 @@ export class TestingSuite {
 
       // Validate required fields
       const requiredFields = ['pollId', 'choice', 'userId', 'timestamp']
-      const missingFields = requiredFields.filter(field => !testData[field])
+      const missingFields = requiredFields.filter(field => !(testData as any)[field])
 
       if (missingFields.length === 0) {
         return {

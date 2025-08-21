@@ -148,9 +148,9 @@ export default function AccountSettingsPage() {
       } else {
         throw new Error(data.error || 'Failed to change password')
       }
-    } catch (error: any) {
+    } catch (error) {
       devLog('Error changing password:', error)
-      setError(error instanceof Error ? error.message : "Unknown error" || 'Failed to change password')
+      setError(error instanceof Error ? error.message : 'Failed to change password')
     } finally {
       setIsChangingPassword(false)
     }
@@ -186,9 +186,9 @@ export default function AccountSettingsPage() {
       } else {
         throw new Error(data.error || 'Failed to delete account')
       }
-    } catch (error: any) {
+    } catch (error) {
       devLog('Error deleting account:', error)
-      setError(error instanceof Error ? error.message : "Unknown error" || 'Failed to delete account')
+      setError(error instanceof Error ? error.message : 'Failed to delete account')
     } finally {
       setIsDeletingAccount(false)
     }
@@ -217,9 +217,9 @@ export default function AccountSettingsPage() {
       } else {
         throw new Error(data.error || 'Failed to generate 2FA setup')
       }
-    } catch (error: any) {
+    } catch (error) {
       devLog('Error setting up 2FA:', error)
-      setError(error instanceof Error ? error.message : "Unknown error" || 'Failed to setup 2FA')
+      setError(error instanceof Error ? error.message : 'Failed to setup 2FA')
     } finally {
       setIsSettingUp2FA(false)
     }
@@ -254,9 +254,9 @@ export default function AccountSettingsPage() {
       } else {
         throw new Error(data.error || 'Failed to enable 2FA')
       }
-    } catch (error: any) {
+    } catch (error) {
       devLog('Error enabling 2FA:', error)
-      setError(error instanceof Error ? error.message : "Unknown error" || 'Failed to enable 2FA')
+      setError(error instanceof Error ? error.message : 'Failed to enable 2FA')
     } finally {
       setIsSettingUp2FA(false)
     }
@@ -290,9 +290,9 @@ export default function AccountSettingsPage() {
       } else {
         throw new Error(data.error || 'Failed to disable 2FA')
       }
-    } catch (error: any) {
+    } catch (error) {
       devLog('Error disabling 2FA:', error)
-      setError(error instanceof Error ? error.message : "Unknown error" || 'Failed to disable 2FA')
+      setError(error instanceof Error ? error.message : 'Failed to disable 2FA')
     } finally {
       setIsDisabling2FA(false)
     }
@@ -319,9 +319,9 @@ export default function AccountSettingsPage() {
       } else {
         throw new Error(data.error || 'Failed to request password reset')
       }
-    } catch (error: any) {
+    } catch (error) {
       devLog('Error requesting password reset:', error)
-      setError(error instanceof Error ? error.message : "Unknown error" || 'Failed to request password reset')
+      setError(error instanceof Error ? error.message : 'Failed to request password reset')
     } finally {
       setIsRequestingReset(false)
     }
@@ -438,14 +438,31 @@ export default function AccountSettingsPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-700">Two-Factor Authentication</p>
-                  <p className="text-sm text-gray-500">Add an extra layer of security</p>
+                  <p className="text-sm text-gray-500">
+                    {settings.twoFactorEnabled 
+                      ? 'Enabled - Your account is protected with 2FA' 
+                      : 'Add an extra layer of security to your account'
+                    }
+                  </p>
                 </div>
-                <button
-                  disabled
-                  className="px-3 py-1 text-sm bg-gray-100 text-gray-500 rounded-md cursor-not-allowed"
-                >
-                  Coming Soon
-                </button>
+                <div className="flex space-x-2">
+                  {!settings.twoFactorEnabled ? (
+                    <button
+                      onClick={handle2FASetup}
+                      disabled={isSettingUp2FA}
+                      className="px-3 py-1 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+                    >
+                      {isSettingUp2FA ? 'Setting up...' : 'Enable 2FA'}
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => setShow2FASetup(true)}
+                      className="px-3 py-1 text-sm bg-gray-600 text-white rounded-md hover:bg-gray-700"
+                    >
+                      Manage 2FA
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -575,6 +592,110 @@ export default function AccountSettingsPage() {
                   Cancel
                 </button>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Two-Factor Authentication Setup */}
+        {show2FASetup && (
+          <div className="bg-white rounded-lg shadow p-6 mt-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Two-Factor Authentication Setup</h3>
+            <div className="space-y-6">
+              {!settings.twoFactorEnabled ? (
+                <>
+                  <div className="text-center">
+                    <p className="text-gray-600 mb-4">
+                      Scan this QR code with your authenticator app (Google Authenticator, Authy, etc.)
+                    </p>
+                    {twoFactorData.qrCode && (
+                      <div className="inline-block p-4 bg-white border border-gray-300 rounded-lg">
+                        <img 
+                          src={twoFactorData.qrCode} 
+                          alt="2FA QR Code" 
+                          className="w-48 h-48"
+                        />
+                      </div>
+                    )}
+                    <p className="text-sm text-gray-500 mt-2">
+                      Or manually enter this secret: <code className="bg-gray-100 px-2 py-1 rounded">{twoFactorData.secret}</code>
+                    </p>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Verification Code
+                    </label>
+                    <input
+                      type="text"
+                      value={twoFactorData.verificationCode}
+                      onChange={(e) => setTwoFactorData(prev => ({ ...prev, verificationCode: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="Enter 6-digit code from your app"
+                      maxLength={6}
+                    />
+                  </div>
+                  
+                  <div className="flex space-x-3">
+                    <button
+                      onClick={handle2FAEnable}
+                      disabled={isSettingUp2FA || !twoFactorData.verificationCode}
+                      className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50"
+                    >
+                      {isSettingUp2FA ? 'Enabling...' : 'Enable 2FA'}
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShow2FASetup(false)
+                        setTwoFactorData({ secret: '', qrCode: '', verificationCode: '' })
+                      }}
+                      className="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="text-center">
+                    <p className="text-gray-600 mb-4">
+                      Enter your current 2FA code to disable two-factor authentication
+                    </p>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Verification Code
+                    </label>
+                    <input
+                      type="text"
+                      value={twoFactorData.verificationCode}
+                      onChange={(e) => setTwoFactorData(prev => ({ ...prev, verificationCode: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="Enter 6-digit code from your app"
+                      maxLength={6}
+                    />
+                  </div>
+                  
+                  <div className="flex space-x-3">
+                    <button
+                      onClick={handle2FADisable}
+                      disabled={isDisabling2FA || !twoFactorData.verificationCode}
+                      className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 disabled:opacity-50"
+                    >
+                      {isDisabling2FA ? 'Disabling...' : 'Disable 2FA'}
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShow2FASetup(false)
+                        setTwoFactorData({ secret: '', qrCode: '', verificationCode: '' })
+                      }}
+                      className="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         )}
