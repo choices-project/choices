@@ -1,16 +1,22 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Mail, ArrowRight, AlertTriangle } from 'lucide-react'
+import { Mail, ArrowRight, AlertTriangle, Shield } from 'lucide-react'
 
 export default function DevLoginPage() {
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
+  const [isDevelopment, setIsDevelopment] = useState(false)
   
   const router = useRouter()
+
+  useEffect(() => {
+    // Only allow in development
+    setIsDevelopment(process.env.NODE_ENV === 'development')
+  }, [])
 
   const handleDevLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -46,6 +52,32 @@ export default function DevLoginPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  // Block access in production
+  if (!isDevelopment) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-red-50 via-white to-red-50 flex items-center justify-center p-4">
+        <div className="max-w-md w-full space-y-8">
+          <div className="text-center">
+            <div className="mx-auto h-12 w-12 bg-red-600 rounded-full flex items-center justify-center">
+              <Shield className="h-6 w-6 text-white" />
+            </div>
+            <h2 className="mt-6 text-3xl font-bold text-gray-900">
+              Access Denied
+            </h2>
+            <p className="mt-2 text-sm text-gray-600">
+              Development login is not available in production
+            </p>
+            <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-md">
+              <p className="text-xs text-red-800">
+                ⚠️ This feature is only available in development mode for security reasons.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
