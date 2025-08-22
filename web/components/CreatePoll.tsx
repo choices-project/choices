@@ -104,7 +104,7 @@ export const CreatePoll: React.FC<CreatePollProps> = ({
     title: '',
     description: '',
     options: ['', ''], // Start with 2 empty options
-    endtime: '',
+    end_time: '',
     category: '',
     tags: [],
     sponsors: []

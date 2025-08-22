@@ -147,7 +147,7 @@ export function useDeviceDetection() {
     switch (deviceInfo.type) {
       case 'mobile':
         settings.image_quality = capabilities.network_speed === 'slow' ? 'low' : 'medium'
-        settings.animation_enabled = !capabilities.reduced_motion
+        settings.animation_enabled = !window.matchMedia('(prefers-reduced-motion: reduce)').matches
         settings.data_saver = capabilities.network_speed === 'slow'
         break
       case 'tablet':

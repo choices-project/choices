@@ -87,8 +87,8 @@ function OnboardingFlowInner() {
           setOnboardingData(prev => ({
             ...prev,
             user,
-            displayName: user.usermetadata?.fullname || user.email?.split('@')[0],
-            avatar: user.usermetadata?.avatarurl
+            displayName: user.user_metadata?.fullname || user.email?.split('@')[0],
+            avatar: user.user_metadata?.avatarurl
           }))
           
           // If we're on auth step and user is authenticated, move to values

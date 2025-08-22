@@ -183,7 +183,7 @@ export default function RangeVoting({
 
                 {/* Star Rating Visual */}
                 <div className="flex items-center space-x-1">
-                  {Array.from({ length: maxRating - minRating + 1 }, (i) => {
+                  {Array.from({ length: maxRating - minRating + 1 }, (_, i) => {
                     const starValue = i + minRating
                     const isFilled = (ratings[option.id] || minRating) >= starValue
                     return (

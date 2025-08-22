@@ -135,10 +135,10 @@ export default function PollsPage() {
               
               <div className="grid grid-cols-2 gap-4 mb-6 text-sm text-gray-600">
                 <div>
-                  <span className="font-medium">Start:</span> {new Date(selectedPoll.starttime).toLocaleDateString()}
+                  <span className="font-medium">Start:</span> {new Date(selectedPoll.start_time).toLocaleDateString()}
                 </div>
                 <div>
-                  <span className="font-medium">End:</span> {new Date(selectedPoll.endtime).toLocaleDateString()}
+                  <span className="font-medium">End:</span> {new Date(selectedPoll.end_time).toLocaleDateString()}
                 </div>
               </div>
 
