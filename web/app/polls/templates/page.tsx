@@ -235,14 +235,8 @@ export default function PollTemplatesPage() {
     router.push(`/polls/create?template=${template.id}`);
   };
 
-  const handlePreviewTemplate = (template: PollTemplate) => {
-    // TODO: Implement template preview modal
+  const previewTemplate = (template: PollTemplate) => {
     console.log('Preview template:', template);
-  };
-
-  const refreshTemplates = () => {
-    // Refresh templates from API or reset to sample data
-    setTemplates([...SAMPLETEMPLATES]);
   };
 
   const getDifficultyColor = (difficulty: string) => {
@@ -399,7 +393,7 @@ export default function PollTemplatesPage() {
                   </Button>
                   <Button
                     variant="outline"
-                    onClick={() => handlePreviewTemplate(template)}
+                    onClick={() => previewTemplate(template)}
                   >
                     <Eye className="h-4 w-4" />
                   </Button>
