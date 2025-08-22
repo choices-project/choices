@@ -263,61 +263,6 @@ export const CreatePoll: React.FC<CreatePollProps> = ({
     setError(null);
   };
 
-  // Legacy methods for backward compatibility
-  const handleInputChange = (field: keyof CreatePollRequest, value: any) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
-    setError(null);
-  };
-
-  const handleOptionChange = (index: number, value: string) => {
-    const newOptions = [...formData.options];
-    newOptions[index] = value;
-    setFormData(prev => ({
-      ...prev,
-      options: newOptions
-    }));
-  };
-
-  const addTag = (tag: string) => {
-    if (tag && !formData.tags?.includes(tag)) {
-      setFormData(prev => ({
-        ...prev,
-        tags: [...(prev.tags || []), tag]
-      }));
-    }
-  };
-
-  const removeTag = (tagToRemove: string) => {
-    setFormData(prev => ({
-      ...prev,
-      tags: prev.tags?.filter(tag => tag !== tagToRemove) || []
-    }));
-  };
-
-  const handleSubmit = async () => {
-    setIsSubmitting(true);
-    setError(null);
-
-    try {
-      const result = await pollService.createPoll(formData);
-      if (result) {
-        setSuccess(true);
-        if (onPollCreated) {
-          onPollCreated(result);
-        }
-      } else {
-        setError('Failed to create poll');
-      }
-    } catch (error) {
-      setError(error instanceof Error ? error.message : 'Failed to create poll');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
   if (!isOpen) return null;
 
   return (
