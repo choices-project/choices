@@ -13,32 +13,6 @@ import {
 } from 'lucide-react';
 import { devLog } from '@/lib/logger';
 
-interface TrendingTopic {
-  id: string;
-  title: string;
-  description: string;
-  trendingScore: number;
-  velocity: number;
-  momentum: number;
-  sentimentScore: number;
-  category: string[];
-  sourceName: string;
-  metadata: {
-    engagement: string;
-    controversy: string;
-  };
-}
-
-interface Poll {
-  pollid: string;
-  title: string;
-  totalvotes: number;
-  participationrate: number;
-  aggregatedresults: Record<string, number>;
-  status: string;
-  createdat: string;
-}
-
 interface HeroSectionProps {
   isAuthenticated?: boolean;
   userStats?: {

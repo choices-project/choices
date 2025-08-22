@@ -36,7 +36,7 @@ interface FeedbackListProps {
   feedback: Feedback[];
   isLoading: boolean;
   onFeedbackSelect: (feedback: Feedback) => void;
-  onStatusUpdate: (feedbackId: string, newStatus: string) => void;
+  onStatusUpdate: (_feedbackId: string, _newStatus: string) => void;
 }
 
 export const FeedbackList: React.FC<FeedbackListProps> = ({
