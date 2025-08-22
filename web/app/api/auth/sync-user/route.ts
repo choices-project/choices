@@ -1,30 +1,25 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server';
 import { devLog } from '@/lib/logger';
-import { createClient } from '@/utils/supabase/server'
-import { cookies } from 'next/headers'
+import { createClient } from '@/utils/supabase/server';
+import { cookies } from 'next/headers';
+import { handleError, getUserMessage, getHttpStatus, AuthenticationError } from '@/lib/error-handler';
 
 export const dynamic = 'force-dynamic'
 
-export async function POST(request: NextRequest) {
+export async function POST(_request: NextRequest) {
   try {
     const cookieStore = await cookies()
     const supabase = createClient(cookieStore)
     
     if (!supabase) {
-      return NextResponse.json(
-        { error: 'Supabase not configured' },
-        { status: 500 }
-      )
+      throw new Error('Supabase not configured')
     }
 
     // Get current authenticated user from Supabase Auth
     const { data: { user }, error: userError } = await supabase.auth.getUser()
     
     if (userError || !user) {
-      return NextResponse.json(
-        { error: 'User not authenticated' },
-        { status: 401 }
-      )
+      throw new AuthenticationError('User not authenticated')
     }
 
     devLog('Syncing user:', {
@@ -42,10 +37,7 @@ export async function POST(request: NextRequest) {
 
     if (checkError && checkError.code !== 'PGRST116') {
       devLog('Error checking existing user:', checkError)
-      return NextResponse.json(
-        { error: 'Database error' },
-        { status: 500 }
-      )
+      throw new Error('Database error')
     }
 
     if (existingUser) {
@@ -79,10 +71,7 @@ export async function POST(request: NextRequest) {
 
     if (createError) {
       devLog('Error creating user in ia_users:', createError)
-      return NextResponse.json(
-        { error: 'Failed to create user record' },
-        { status: 500 }
-      )
+      throw new Error('Failed to create user record')
     }
 
     devLog('Successfully created user in ia_users table:', newUser)
@@ -101,10 +90,11 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     devLog('Unexpected error in sync-user:', error)
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
+    const appError = handleError(error as Error, { context: 'sync-user' })
+    const userMessage = getUserMessage(appError)
+    const statusCode = getHttpStatus(appError)
+    
+    return NextResponse.json({ error: userMessage }, { status: statusCode })
   }
 }
 

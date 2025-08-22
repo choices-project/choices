@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server';
 import { devLog } from '@/lib/logger';
 import { createClient } from '@/utils/supabase/server';
 import { cookies } from 'next/headers';
@@ -6,7 +6,7 @@ import { cookies } from 'next/headers';
 export const dynamic = 'force-dynamic';
 
 // GET /api/user/get-id - Get current user ID (for security setup)
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const cookieStore = await cookies();
     const supabase = createClient(cookieStore);
@@ -57,7 +57,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get user profile from ia_users table
-    const { data: userProfile, error: profileError } = await supabase
+    const { data: userProfile, error: _profileError } = await supabase
       .from('ia_users')
       .select('stable_id, verification_tier, is_active')
       .eq('stable_id', user.id)

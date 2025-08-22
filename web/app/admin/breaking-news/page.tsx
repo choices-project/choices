@@ -3,7 +3,7 @@
 import React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AdminLayout } from '../../../components/admin/layout/AdminLayout';
-import { BreakingNewsPage } from '../../../components/admin/breaking-news/BreakingNewsPage';
+import { BreakingNewsPage } from './BreakingNewsPage';
 
 // Create a client
 const queryClient = new QueryClient({

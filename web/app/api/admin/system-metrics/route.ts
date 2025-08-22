@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server';
 import { devLog } from '@/lib/logger';
 import { createClient } from '@supabase/supabase-js';
 
@@ -14,7 +14,7 @@ function createSupabaseClient() {
   return createClient(supabaseUrl, supabaseKey);
 }
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     // Create Supabase client
     const supabase = createSupabaseClient();

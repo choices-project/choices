@@ -6,29 +6,11 @@ import {
   TrendingUp, 
   Users, 
   Activity, 
-  Globe, 
-  PieChart, 
-  Clock,
-  Download,
   RefreshCw,
-  Filter,
-  Search,
-  Eye,
-  EyeOff,
-  Settings,
   Bell,
-  Calendar,
-  Target,
-  Award,
   Zap,
-  Smartphone,
-  Monitor,
-  Tablet,
   Shield,
-  Database,
-  BarChart,
-  LineChart,
-  Funnel
+  Database
 } from 'lucide-react';
 import { useFeatureFlags } from '../hooks/useFeatureFlags';
 import { isFeatureEnabled } from '../lib/feature-flags';
@@ -215,11 +197,11 @@ export default function AnalyticsDashboard({
       // Combine and transform data
       const combinedData: AnalyticsData = {
         overview: {
-          totalPolls: dashboardData.overall_metrics?.total_polls || 0,
-          activePolls: dashboardData.overall_metrics?.active_polls || 0,
-          totalVotes: dashboardData.overall_metrics?.total_votes || 0,
-          totalUsers: dashboardData.overall_metrics?.total_users || 0,
-          participationRate: dashboardData.overall_metrics?.average_participation || 0,
+          totalPolls: dashboardData.overallmetrics?.totalpolls || 0,
+          activePolls: dashboardData.overallmetrics?.activepolls || 0,
+          totalVotes: dashboardData.overallmetrics?.totalvotes || 0,
+          totalUsers: dashboardData.overallmetrics?.totalusers || 0,
+          participationRate: dashboardData.overallmetrics?.averageparticipation || 0,
           averageSessionDuration: pwaMetrics.sessionDuration / 1000 / 60, // Convert to minutes
           bounceRate: 0, // Calculate from session data
           conversionRate: 0 // Calculate from user actions
@@ -230,9 +212,9 @@ export default function AnalyticsDashboard({
           monthly: [] // Aggregate daily data
         },
         demographics: {
-          ageGroups: dashboardData.demographics?.age_groups || {},
-          geographicDistribution: dashboardData.geographic_map || {},
-          verificationTiers: dashboardData.demographics?.verification_tiers || {},
+          ageGroups: dashboardData.demographics?.agegroups || {},
+          geographicDistribution: dashboardData.geographicmap || {},
+          verificationTiers: dashboardData.demographics?.verificationtiers || {},
           deviceTypes: {
             desktop: 60,
             mobile: 35,
@@ -273,8 +255,8 @@ export default function AnalyticsDashboard({
           }
         },
         engagement: {
-          activeUsers: dashboardData.engagement?.active_users || 0,
-          returningUsers: dashboardData.engagement?.returning_users || 0,
+          activeUsers: dashboardData.engagement?.activeusers || 0,
+          returningUsers: dashboardData.engagement?.returningusers || 0,
           sessionDuration: pwaMetrics.sessionDuration / 1000 / 60,
           pagesPerSession: pwaMetrics.featuresUsed.length,
           featureUsage: {

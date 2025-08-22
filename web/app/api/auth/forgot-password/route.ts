@@ -1,7 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server';
 import { devLog } from '@/lib/logger';
-import { createClient } from '@/utils/supabase/server'
-import { cookies } from 'next/headers'
+import { createClient } from '@/utils/supabase/server';
+import { cookies } from 'next/headers';
+import { handleError, getUserMessage, getHttpStatus, ValidationError } from '@/lib/error-handler';
 
 export const dynamic = 'force-dynamic'
 
@@ -10,20 +11,14 @@ export async function POST(request: NextRequest) {
     const { email } = await request.json()
     
     if (!email) {
-      return NextResponse.json(
-        { error: 'Email is required' },
-        { status: 400 }
-      )
+      throw new ValidationError('Email is required')
     }
 
     const cookieStore = await cookies()
     const supabase = createClient(cookieStore)
     
     if (!supabase) {
-      return NextResponse.json(
-        { error: 'Supabase not configured' },
-        { status: 500 }
-      )
+      throw new Error('Supabase not configured')
     }
 
     // Check if user exists
@@ -63,10 +58,11 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     devLog('Error in forgot password:', error)
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
+    const appError = handleError(error as Error, { context: 'forgot-password' })
+    const userMessage = getUserMessage(appError)
+    const statusCode = getHttpStatus(appError)
+    
+    return NextResponse.json({ error: userMessage }, { status: statusCode })
   }
 }
 

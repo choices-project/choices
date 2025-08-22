@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, createContext, useContext } from 'react'
+import { useState, useEffect } from 'react'
 import { devLog } from '@/lib/logger';
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
@@ -12,8 +12,7 @@ import {
   Shield, 
   Zap,
   X,
-  CheckCircle,
-  AlertCircle
+  CheckCircle
 } from 'lucide-react'
 import { pwaManager } from '../lib/pwa-utils'
 
@@ -400,17 +399,34 @@ export function PWAStatus() {
     isStandalone: false,
     isOnline: true,
     hasServiceWorker: false,
-    hasPushSupport: false
+    hasPushSupport: false,
+    pwaStatus: null as any
   })
 
   useEffect(() => {
-    const updateStatus = () => {
-      setStatus({
-        isStandalone: window.matchMedia('(display-mode: standalone)').matches,
-        isOnline: navigator.onLine,
-        hasServiceWorker: 'serviceWorker' in navigator,
-        hasPushSupport: 'PushManager' in window
-      })
+    const updateStatus = async () => {
+      try {
+        // Use pwaManager for comprehensive PWA status
+        const pwaStatus = await pwaManager.getPWAStatus()
+        
+        setStatus({
+          isStandalone: window.matchMedia('(display-mode: standalone)').matches,
+          isOnline: navigator.onLine,
+          hasServiceWorker: 'serviceWorker' in navigator,
+          hasPushSupport: 'PushManager' in window,
+          pwaStatus
+        })
+      } catch (error) {
+        devLog('Error getting PWA status:', error)
+        // Fallback to basic status
+        setStatus({
+          isStandalone: window.matchMedia('(display-mode: standalone)').matches,
+          isOnline: navigator.onLine,
+          hasServiceWorker: 'serviceWorker' in navigator,
+          hasPushSupport: 'PushManager' in window,
+          pwaStatus: null
+        })
+      }
     }
 
     updateStatus()

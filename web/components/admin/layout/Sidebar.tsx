@@ -14,6 +14,7 @@ import {
   X,
   Newspaper,
   MessageCircle,
+  Activity,
 } from 'lucide-react';
 
 const navigationItems = [
@@ -116,15 +117,18 @@ export const Sidebar: React.FC = () => {
             <div className="bg-gray-50 rounded-lg p-4">
               <h3 className="text-sm font-medium text-gray-900 mb-2">Quick Stats</h3>
               <div className="space-y-2 text-sm text-gray-600">
-                <div className="flex justify-between">
+                <div className="flex items-center space-x-2 text-sm text-gray-600">
+                  <BarChart3 className="w-4 h-4" />
                   <span>Topics:</span>
                   <span className="font-medium">{metrics?.total_topics || 0}</span>
                 </div>
-                <div className="flex justify-between">
+                <div className="flex items-center space-x-2 text-sm text-gray-600">
+                  <BarChart3 className="w-4 h-4" />
                   <span>Polls:</span>
                   <span className="font-medium">{metrics?.total_polls || 0}</span>
                 </div>
-                <div className="flex justify-between">
+                <div className="flex items-center space-x-2 text-sm text-gray-600">
+                  <Activity className="w-4 h-4" />
                   <span>Active:</span>
                   <span className="font-medium">{metrics?.active_polls || 0}</span>
                 </div>
@@ -136,3 +140,4 @@ export const Sidebar: React.FC = () => {
     </>
   );
 };
+

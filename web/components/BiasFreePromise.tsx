@@ -1,10 +1,10 @@
 'use client'
 
-import { motion } from 'framer-motion'
+import { motion } from 'framer-motion';
 import { 
   Shield, Users, TrendingUp, Eye, 
   Building2, Globe, Zap, CheckCircle,
-  XCircle, AlertTriangle, Heart
+  XCircle, Heart
 } from 'lucide-react'
 
 interface Promise {
@@ -165,7 +165,7 @@ export const defaultPromises: Promise[] = [
   {
     icon: <Eye className="h-6 w-6" />,
     title: "Complete Transparency",
-    description: "See exactly who's voting, where they're from, and what they think. No hidden demographics or obscured data.",
+    description: "See exactly who&apos;s voting, where they&apos;re from, and what they think. No hidden demographics or obscured data.",
     color: "#10b981"
   },
   {

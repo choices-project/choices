@@ -1,6 +1,6 @@
 'use client';
 
-import { FancyDonutChart, FancyProgressRing } from '../../components/FancyCharts'
+import { FancyDonutChart, FancyProgressRing } from '../../components/FancyCharts';
 
 export default function SimplePage() {
   return (

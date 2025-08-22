@@ -1,47 +1,41 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { devLog } from '@/lib/logger';
-import { createClient } from '@/utils/supabase/server'
 import { cookies } from 'next/headers'
+import { createClient } from '@/utils/supabase/server'
 import bcrypt from 'bcryptjs'
+import { devLog } from '@/lib/logger'
+import { 
+  ValidationError, 
+  AuthenticationError, 
+  NotFoundError, 
+  handleError, 
+  getUserMessage, 
+  getHttpStatus 
+} from '@/lib/error-handler'
 
 export const dynamic = 'force-dynamic'
 
 export async function POST(request: NextRequest) {
   try {
-    const { password, confirmDelete } = await request.json()
-    
-    if (!password || !confirmDelete) {
-      return NextResponse.json(
-        { error: 'Password and confirmation are required' },
-        { status: 400 }
-      )
-    }
+    const body = await request.json()
+    const { password } = body
 
-    if (confirmDelete !== 'DELETE') {
-      return NextResponse.json(
-        { error: 'Please type DELETE to confirm account deletion' },
-        { status: 400 }
-      )
+    // Validate input
+    if (!password) {
+      throw new ValidationError('Password is required to delete account')
     }
 
     const cookieStore = await cookies()
     const supabase = createClient(cookieStore)
     
     if (!supabase) {
-      return NextResponse.json(
-        { error: 'Supabase not configured' },
-        { status: 500 }
-      )
+      throw new Error('Supabase not configured')
     }
 
     // Get current authenticated user
     const { data: { user }, error: userError } = await supabase.auth.getUser()
     
     if (userError || !user) {
-      return NextResponse.json(
-        { error: 'User not authenticated' },
-        { status: 401 }
-      )
+      throw new AuthenticationError('User not authenticated')
     }
 
     // Get user from ia_users table to verify password
@@ -52,19 +46,13 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (iaError || !iaUser) {
-      return NextResponse.json(
-        { error: 'User not found in system' },
-        { status: 404 }
-      )
+      throw new NotFoundError('User')
     }
 
     // Verify password
     const isPasswordValid = await bcrypt.compare(password, iaUser.password_hash)
     if (!isPasswordValid) {
-      return NextResponse.json(
-        { error: 'Password is incorrect' },
-        { status: 401 }
-      )
+      throw new AuthenticationError('Password is incorrect')
     }
 
     // Delete user data from all tables
@@ -94,21 +82,18 @@ export async function POST(request: NextRequest) {
         .eq('created_by', user.id)
 
       // Finally, delete the user from ia_users table
-      const { data: deletedUser, error: deleteError } = await supabase
+      const { error: deleteError } = await supabase
         .from('ia_users')
         .delete()
         .eq('stable_id', user.id)
 
       if (deleteError) {
         devLog('Error deleting user from ia_users:', deleteError)
-        return NextResponse.json(
-          { error: 'Failed to delete user account' },
-          { status: 500 }
-        )
+        throw new Error('Failed to delete user account')
       }
 
       // Delete user from Supabase Auth
-      const { data: authDeletedUser, error: authDeleteError } = await supabase.auth.admin.deleteUser(user.id)
+      const { error: authDeleteError } = await supabase.auth.admin.deleteUser(user.id)
       
       if (authDeleteError) {
         devLog('Error deleting user from Supabase Auth:', authDeleteError)
@@ -126,17 +111,17 @@ export async function POST(request: NextRequest) {
 
     } catch (deleteError) {
       devLog('Error during account deletion:', deleteError)
-      return NextResponse.json(
-        { error: 'Failed to delete account. Please try again.' },
-        { status: 500 }
-      )
+      throw new Error('Failed to delete account. Please try again.')
     }
 
   } catch (error) {
-    devLog('Error in delete account:', error)
+    const appError = handleError(error as Error, { context: 'delete-account' })
+    const userMessage = getUserMessage(appError)
+    const statusCode = getHttpStatus(appError)
+    
     return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
+      { error: userMessage },
+      { status: statusCode }
     )
   }
 }

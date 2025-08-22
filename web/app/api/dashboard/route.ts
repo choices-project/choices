@@ -121,21 +121,37 @@ async function getPlatformStats(supabase: any) {
       .from('po_polls')
       .select('id', { count: 'exact' })
 
+    if (totalPollsError) {
+      devLog('Error fetching total polls:', totalPollsError)
+    }
+
     // Get total votes
     const { data: totalVotes, error: totalVotesError } = await supabase
       .from('po_votes')
       .select('id', { count: 'exact' })
+
+    if (totalVotesError) {
+      devLog('Error fetching total votes:', totalVotesError)
+    }
 
     // Get total users (from user_profiles)
     const { data: totalUsers, error: totalUsersError } = await supabase
       .from('user_profiles')
       .select('id', { count: 'exact' })
 
+    if (totalUsersError) {
+      devLog('Error fetching total users:', totalUsersError)
+    }
+
     // Get active polls
     const { data: activePolls, error: activePollsError } = await supabase
       .from('po_polls')
       .select('id')
       .eq('status', 'active')
+
+    if (activePollsError) {
+      devLog('Error fetching active polls:', activePollsError)
+    }
 
     return {
       totalPolls: totalPolls?.length || 0,

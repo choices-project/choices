@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, createContext, useContext } from 'react'
+import { useState, useEffect } from 'react'
 import { devLog } from '@/lib/logger';
 import { BarChart3, Shield, CheckCircle, ArrowLeft, RefreshCw } from 'lucide-react'
 import Link from 'next/link'
@@ -116,10 +116,10 @@ export default function ResultsPage() {
               
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-600">
                 <div>
-                  <span className="font-medium">Start:</span> {new Date(selectedPoll.start_time).toLocaleDateString()}
+                  <span className="font-medium">Start:</span> {new Date(selectedPoll.starttime).toLocaleDateString()}
                 </div>
                 <div>
-                  <span className="font-medium">End:</span> {new Date(selectedPoll.end_time).toLocaleDateString()}
+                  <span className="font-medium">End:</span> {new Date(selectedPoll.endtime).toLocaleDateString()}
                 </div>
                 <div>
                   <span className="font-medium">Options:</span> {selectedPoll.options.length}
@@ -198,7 +198,7 @@ export default function ResultsPage() {
                         </div>
                       </div>
                       <div>
-                        <span className="text-gray-600">Leaf Count:</span> {commitmentLog.leaf_count}
+                        <span className="text-gray-600">Leaf Count:</span> {commitmentLog.leafcount}
                       </div>
                       <div>
                         <span className="text-gray-600">Timestamp:</span> {commitmentLog.timestamp}
@@ -242,7 +242,7 @@ export default function ResultsPage() {
                   
                   <div className="flex items-center justify-between text-xs text-gray-500 mb-4">
                     <span>{poll.options.length} options</span>
-                    <span>{new Date(poll.created_at).toLocaleDateString()}</span>
+                    <span>{new Date(poll.createdat).toLocaleDateString()}</span>
                   </div>
 
                   <button

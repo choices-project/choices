@@ -1,9 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { devLog } from '@/lib/logger';
-import { createClient } from '@/utils/supabase/server';
-import { cookies } from 'next/headers';
+import { cookies } from 'next/headers'
+import { createClient } from '@/utils/supabase/server'
+import { devLog } from '@/lib/logger'
 import { getCurrentUser } from '@/lib/auth-utils'
-import { HybridVotingService } from '@/lib/hybrid-voting-service';
+import { HybridVotingService } from '@/lib/hybrid-voting-service'
+import { 
+  ValidationError, 
+  AuthenticationError, 
+  NotFoundError, 
+  handleError, 
+  getUserMessage, 
+  getHttpStatus 
+} from '@/lib/error-handler'
 
 export const dynamic = 'force-dynamic';
 
@@ -13,68 +21,62 @@ export async function POST(
   { params }: { params: { id: string } }
 ) {
   try {
-    const cookieStore = await cookies();
-    const supabase = createClient(cookieStore);
+    devLog('Vote submission attempt for poll:', params.id)
     
-    if (!supabase) {
-      return NextResponse.json(
-        { error: 'Supabase client not available' },
-        { status: 500 }
-      );
+    const pollId = params.id
+
+    if (!pollId) {
+      throw new ValidationError('Poll ID is required')
     }
 
-    const pollId = params.id;
+    const cookieStore = await cookies()
+    const supabase = createClient(cookieStore)
+    
+    if (!supabase) {
+      throw new Error('Supabase client not available')
+    }
 
     // Check authentication
-    const user = getCurrentUser(request);
+    const user = getCurrentUser(request)
     if (!user) {
-      return NextResponse.json(
-        { error: 'Authentication required to vote' },
-        { status: 401 }
-      );
+      throw new AuthenticationError('Authentication required to vote')
     }
 
     // Verify user is active
-    const { data: userProfile, error: profileError } = await supabase
+    const { data: userProfile } = await supabase
       .from('ia_users')
       .select('is_active')
       .eq('stable_id', user.userId)
-      .single();
+      .single()
 
     if (!userProfile || !userProfile.is_active) {
-      return NextResponse.json(
-        { error: 'Active account required to vote' },
-        { status: 403 }
-      );
+      throw new AuthenticationError('Active account required to vote')
     }
 
-    const body = await request.json();
-    const { choice, privacy_level = 'public' } = body;
+    const body = await request.json()
+    const { choice, privacy_level = 'public' } = body
 
     // Validate choice
     if (!choice || typeof choice !== 'number' || choice < 1) {
-      return NextResponse.json(
-        { error: 'Valid choice is required' },
-        { status: 400 }
-      );
+      throw new ValidationError('Valid choice is required')
     }
 
     // Use hybrid voting service
-    const votingService = new HybridVotingService();
+    const votingService = new HybridVotingService()
     const voteRequest = {
       pollId,
       choice,
       privacyLevel: privacy_level,
       userId: user.userId
-    };
+    }
 
-    const response = await votingService.submitVote(voteRequest);
+    const response = await votingService.submitVote(voteRequest)
 
     if (!response.success) {
-      return NextResponse.json(
-        { error: response.message },
-        { status: 400 }
-      );
+      if (response.message.includes('not found') || response.message.includes('Poll not found')) {
+        throw new NotFoundError('Poll not found')
+      }
+      throw new Error(response.message)
     }
 
     return NextResponse.json({
@@ -85,14 +87,17 @@ export async function POST(
       response_time: response.responseTime,
       audit_receipt: response.auditReceipt,
       vote_confirmed: true
-    });
+    })
 
   } catch (error) {
-    devLog('Error in vote API:', error);
+    const appError = handleError(error as Error, { context: 'vote-submission' })
+    const userMessage = getUserMessage(appError)
+    const statusCode = getHttpStatus(appError)
+    
     return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+      { error: userMessage },
+      { status: statusCode }
+    )
   }
 }
 
@@ -102,45 +107,49 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const cookieStore = await cookies();
-    const supabase = createClient(cookieStore);
-    
-    if (!supabase) {
-      return NextResponse.json(
-        { error: 'Supabase client not available' },
-        { status: 500 }
-      );
+    const pollId = params.id
+
+    if (!pollId) {
+      throw new ValidationError('Poll ID is required')
     }
 
-    const pollId = params.id;
+    const cookieStore = await cookies()
+    const supabase = createClient(cookieStore)
+    
+    if (!supabase) {
+      throw new Error('Supabase client not available')
+    }
 
     // Check authentication
-    const user = getCurrentUser(request);
+    const user = getCurrentUser(request)
     if (!user) {
       return NextResponse.json(
         { has_voted: false },
         { status: 200 }
-      );
+      )
     }
 
     // Check if user has voted (returns boolean only, no vote data)
-    const { data: existingVote, error: voteError } = await supabase
+    const { data: existingVote } = await supabase
       .from('po_votes')
       .select('id')
       .eq('poll_id', pollId)
       .eq('user_id', user.userId)
-      .single();
+      .single()
 
     return NextResponse.json({
       has_voted: !!existingVote,
       // Do NOT return any vote details for privacy
-    });
+    })
 
   } catch (error) {
-    devLog('Error checking vote status:', error);
+    const appError = handleError(error as Error, { context: 'vote-status-check' })
+    const userMessage = getUserMessage(appError)
+    const statusCode = getHttpStatus(appError)
+    
     return NextResponse.json(
-      { has_voted: false },
-      { status: 200 }
-    );
+      { error: userMessage },
+      { status: statusCode }
+    )
   }
 }

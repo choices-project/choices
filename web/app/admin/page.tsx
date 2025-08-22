@@ -4,7 +4,7 @@
 
 'use client';
 
-import { useEffect, useState, useCallback, createContext, useContext } from 'react';
+import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
 export default function AdminDashboard() {

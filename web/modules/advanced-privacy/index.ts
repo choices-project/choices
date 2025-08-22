@@ -10,7 +10,7 @@
  * Features are controlled by the 'advancedPrivacy' feature flag.
  */
 
-import { isFeatureEnabled } from '../../lib/feature-flags'
+import { isFeatureEnabled } from '../../lib/feature-flags';
 import { devLog } from '@/lib/logger';
 
 // Core privacy components

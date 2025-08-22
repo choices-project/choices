@@ -421,11 +421,87 @@ export class ZeroKnowledgeProofs {
   }
 
   private verifyEqualityProofInternal(proof: any, commitment1: string, commitment2: string): boolean {
-    return proof.type === 'equality'
+    // Verify that both commitments are valid
+    if (!commitment1 || !commitment2) {
+      return false;
+    }
+    
+    // Verify proof structure
+    if (proof.type !== 'equality' || !proof.proof) {
+      return false;
+    }
+    
+    try {
+      // Parse the proof data
+      const proofData = JSON.parse(proof.proof);
+      
+      // Verify that commitments match the proof
+      if (proofData.commitment1 !== commitment1 || proofData.commitment2 !== commitment2) {
+        return false;
+      }
+      
+      // Verify cryptographic properties (simplified for now)
+      // In production, this would use actual cryptographic verification
+      const hash1 = this.hashCommitment(commitment1);
+      const hash2 = this.hashCommitment(commitment2);
+      
+      return hash1 === hash2 && proofData.verified === true;
+    } catch (error) {
+      return false;
+    }
   }
 
   private verifyVoteProofInternal(proof: any, voteCommitment: string, pollCommitment: string): boolean {
-    return proof.type === 'vote'
+    // Verify that both commitments are valid
+    if (!voteCommitment || !pollCommitment) {
+      return false;
+    }
+    
+    // Verify proof structure
+    if (proof.type !== 'vote' || !proof.proof) {
+      return false;
+    }
+    
+    try {
+      // Parse the proof data
+      const proofData = JSON.parse(proof.proof);
+      
+      // Verify that commitments match the proof
+      if (proofData.voteCommitment !== voteCommitment || proofData.pollCommitment !== pollCommitment) {
+        return false;
+      }
+      
+      // Verify vote is within poll constraints
+      if (proofData.pollId && proofData.voteChoice !== undefined) {
+        // Check if vote choice is valid for the poll
+        const isValidChoice = this.validateVoteChoice(proofData.voteChoice, proofData.pollId);
+        if (!isValidChoice) {
+          return false;
+        }
+      }
+      
+      return proofData.verified === true;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  private hashCommitment(commitment: string): string {
+    // Simple hash function for demonstration
+    // In production, use proper cryptographic hashing
+    let hash = 0;
+    for (let i = 0; i < commitment.length; i++) {
+      const char = commitment.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash; // Convert to 32-bit integer
+    }
+    return hash.toString();
+  }
+
+  private validateVoteChoice(choice: number, pollId: string): boolean {
+    // Validate that the vote choice is within valid range for the poll
+    // This would typically check against poll configuration
+    return choice >= 0 && choice <= 10; // Assuming polls have 0-10 options
   }
 }
 

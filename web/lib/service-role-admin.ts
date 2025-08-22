@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server';
 import { devLog } from '@/lib/logger';
 import { createClient } from '@supabase/supabase-js';
 
@@ -11,6 +11,13 @@ import { createClient } from '@supabase/supabase-js';
 
 export async function serviceRoleAdminAuth(request: NextRequest) {
   try {
+    // Log the service role auth attempt
+    devLog('Service role auth attempt:', {
+      method: request.method,
+      url: request.url,
+      userAgent: request.headers.get('user-agent')
+    });
+
     // Create service role client
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,

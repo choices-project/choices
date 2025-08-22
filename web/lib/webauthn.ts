@@ -3,7 +3,7 @@
  * Comprehensive biometric authentication utilities for the Choices platform
  */
 
-import { devLog } from './logger'
+import { devLog } from './logger';
 
 // WebAuthn configuration
 const WEBAUTHN_CONFIG = {

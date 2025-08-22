@@ -9,11 +9,7 @@ import {
   TrendingUp, 
   ArrowRight, 
   CheckCircle2,
-  Globe,
-  Zap,
-  Lock,
-  TrendingDown,
-  Activity
+  Lock
 } from 'lucide-react';
 import { devLog } from '@/lib/logger';
 
@@ -34,13 +30,13 @@ interface TrendingTopic {
 }
 
 interface Poll {
-  poll_id: string;
+  pollid: string;
   title: string;
-  total_votes: number;
-  participation_rate: number;
-  aggregated_results: Record<string, number>;
+  totalvotes: number;
+  participationrate: number;
+  aggregatedresults: Record<string, number>;
   status: string;
-  created_at: string;
+  createdat: string;
 }
 
 interface HeroSectionProps {
@@ -292,7 +288,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               <div className="space-y-3 mb-6">
                 {isLoadingTrending ? (
                   // Loading skeleton
-                  Array.from({ length: 5 }).map((_: any, index: any) => (
+                  Array.from({ length: 5 }).map((any, index: any) => (
                     <div key={index} className="animate-pulse">
                       <div className="flex items-center justify-between text-sm mb-1">
                         <div className="h-4 bg-gray-200 rounded w-3/4"></div>

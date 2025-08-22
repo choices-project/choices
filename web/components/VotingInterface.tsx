@@ -22,11 +22,11 @@ interface Poll {
   description: string;
   status: 'active' | 'closed' | 'draft';
   options: string[];
-  total_votes: number;
+  totalvotes: number;
   participation: number;
   sponsors: string[];
-  created_at: string;
-  end_time: string;
+  createdat: string;
+  endtime: string;
   results?: PollResults;
 }
 
@@ -86,7 +86,7 @@ export const VotingInterface: React.FC<VotingInterfaceProps> = ({
   useEffect(() => {
     const updateTimeRemaining = () => {
       const now = new Date();
-      const end = new Date(poll.end_time);
+      const end = new Date(poll.endtime);
       const diff = end.getTime() - now.getTime();
       
       if (diff <= 0) {
@@ -111,7 +111,7 @@ export const VotingInterface: React.FC<VotingInterfaceProps> = ({
     const interval = setInterval(updateTimeRemaining, 60000); // Update every minute
 
     return () => clearInterval(interval);
-  }, [poll.end_time]);
+  }, [poll.endtime]);
 
   const handleVote = async () => {
     if (!selectedChoice || poll.status !== 'active') return;
@@ -223,7 +223,7 @@ export const VotingInterface: React.FC<VotingInterfaceProps> = ({
         <div className="flex items-center gap-4 text-sm text-gray-500">
           <div className="flex items-center gap-1">
             <Users className="w-4 h-4" />
-            <span>{poll.total_votes.toLocaleString()} total votes</span>
+            <span>{poll.totalvotes.toLocaleString()} total votes</span>
           </div>
           <div className="flex items-center gap-1">
             <Clock className="w-4 h-4" />

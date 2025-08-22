@@ -1,36 +1,18 @@
 'use client'
 
-import { useState, useEffect, useCallback, createContext, useContext } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { devLog } from '@/lib/logger';
-import { motion } from 'framer-motion'
 import { 
   CheckCircle, 
   XCircle, 
   AlertTriangle, 
   Play, 
   RefreshCw,
-  Download,
-  Smartphone,
-  Monitor,
-  Tablet,
   Globe,
-  Zap,
-  Shield,
-  Eye,
-  MousePointer,
-  Wifi,
-  WifiOff,
-  Battery,
-  Cpu,
-  HardDrive,
-  Network,
   Smartphone as MobileIcon,
   Monitor as DesktopIcon,
   Tablet as TabletIcon,
   Globe as BrowserIcon,
-  Zap as PerformanceIcon,
-  Shield as SecurityIcon,
-  Eye as AccessibilityIcon,
   MousePointer as TouchIcon,
   Wifi as NetworkIcon,
   Battery as BatteryIcon,

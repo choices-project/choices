@@ -1,10 +1,9 @@
 'use client'
 
-import { useState, useEffect, useCallback, createContext, useContext } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { 
   Smartphone, 
-  Wifi, 
   WifiOff, 
   Shield, 
   Zap, 
@@ -15,8 +14,7 @@ import {
   BarChart3,
   Lock,
   Globe,
-  CheckCircle,
-  AlertCircle
+  CheckCircle
 } from 'lucide-react'
 import { PWAFeaturesShowcase, PWAStatus } from '../../components/PWAComponents'
 import { usePWAUtils } from '../../hooks/usePWAUtils'
@@ -87,8 +85,8 @@ export default function PWAShowcasePage() {
       timestamp: Date.now()
     }
     
-    await pwaUtils.privacyStorage.storeEncryptedData('test_key', testData)
-    const retrieved = await pwaUtils.privacyStorage.getEncryptedData('test_key')
+    await pwaUtils.privacyStorage.storeEncryptedData('testkey', testData)
+    const retrieved = await pwaUtils.privacyStorage.getEncryptedData('testkey')
     
     if (retrieved) {
       alert('Encrypted storage test successful! Data retrieved: ' + JSON.stringify(retrieved))

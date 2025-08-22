@@ -5,7 +5,7 @@
  * providing enhanced security and privacy features.
  */
 
-import { isFeatureEnabled } from './feature-flags'
+import { isFeatureEnabled } from './feature-flags';
 import { devLog } from '@/lib/logger';
 
 export interface PWAUser {

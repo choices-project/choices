@@ -35,11 +35,7 @@ export default function PollResults({ pollId }: PollResultsProps) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    loadPollResults()
-  }, [pollId])
-
-  const loadPollResults = async () => {
+  const loadPollResults = useCallback(async () => {
     try {
       setLoading(true)
       setError(null)
@@ -59,18 +55,18 @@ export default function PollResults({ pollId }: PollResultsProps) {
       
       // Transform API data to match frontend interface
       const poll: PollData = {
-        id: pollData.poll_id,
+        id: pollData.pollid,
         title: pollData.title,
         description: pollData.description || '',
         votingMethod: 'single',
-        totalVotes: pollData.total_votes || 0,
-        participationRate: pollData.participation_rate || 0,
+        totalVotes: pollData.totalvotes || 0,
+        participationRate: pollData.participationrate || 0,
         isActive: pollData.status === 'active',
         results: pollData.options?.map((option: string, index: number) => ({
           option,
           votes: resultsData.results?.[index] || 0,
-          percentage: pollData.total_votes > 0 
-            ? Math.round((resultsData.results?.[index] || 0) / pollData.total_votes * 100 * 10) / 10
+          percentage: pollData.totalvotes > 0 
+            ? Math.round((resultsData.results?.[index] || 0) / pollData.totalvotes * 100 * 10) / 10
             : 0,
           trend: 'stable' // Default trend since we don't have historical data
         })) || [],
@@ -98,7 +94,11 @@ export default function PollResults({ pollId }: PollResultsProps) {
     } finally {
       setLoading(false)
     }
-  }
+  }, [pollId])
+
+  useEffect(() => {
+    loadPollResults()
+  }, [pollId, loadPollResults])
 
   const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#06B6D4']
 

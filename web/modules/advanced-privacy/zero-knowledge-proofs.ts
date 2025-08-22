@@ -5,7 +5,7 @@
  * It preserves the existing functionality while making it more modular and configurable.
  */
 
-import { isFeatureEnabled } from '../../lib/feature-flags'
+import { isFeatureEnabled } from '../../lib/feature-flags';
 
 export interface ZKProof {
   proof: string

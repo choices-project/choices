@@ -26,7 +26,7 @@ export interface FeatureFlagConfig {
 export class FeatureFlagManager {
   private flags: Map<string, FeatureFlag> = new Map();
   private config: FeatureFlagConfig;
-  private listeners: Set<(flags: Map<string, FeatureFlag>) => void> = new Set();
+  private listeners: Set<(flags: Map<string, _FeatureFlag>) => void> = new Set();
 
   constructor(config?: Partial<FeatureFlagConfig>) {
     this.config = {
@@ -300,7 +300,7 @@ export class FeatureFlagManager {
   /**
    * Subscribe to flag changes
    */
-  subscribe(listener: (flags: Map<string, FeatureFlag>) => void): () => void {
+  subscribe(listener: (flags: Map<string, _FeatureFlag>) => void): () => void {
     this.listeners.add(listener);
     
     // Return unsubscribe function

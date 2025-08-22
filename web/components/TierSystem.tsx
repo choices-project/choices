@@ -1,6 +1,6 @@
 'use client'
 
-import { motion } from 'framer-motion'
+import { motion } from 'framer-motion';
 import { 
   Vote, Users, BarChart3, Shield, Zap, 
   Star, Crown, CheckCircle, ArrowRight,

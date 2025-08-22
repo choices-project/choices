@@ -1,8 +1,7 @@
 'use client'
 
-import { useState, useEffect, useCallback, createContext, useContext } from 'react'
+import { useState, useEffect } from 'react'
 import { devLog } from '@/lib/logger';
-import { motion } from 'framer-motion'
 import { 
   CheckCircle, 
   XCircle, 
@@ -13,28 +12,18 @@ import {
   Upload,
   Shield,
   Zap,
-  Database,
   Smartphone,
-  Users,
-  Vote,
-  BarChart3,
   Settings,
-  Clock,
   Target,
-  TrendingUp,
   Activity,
   FileText,
-  Eye,
-  Lock,
-  Globe,
   Server,
   HardDrive,
   Network,
   Cpu,
-  Wifi,
-  WifiOff
+  Wifi
 } from 'lucide-react'
-import { testingSuite, TestSuite, TestResult } from '../../lib/testing-suite'
+import { testingSuite, TestSuite } from '../../lib/testing-suite'
 
 export default function MVPTestingPage() {
   const [isRunningTests, setIsRunningTests] = useState(false)

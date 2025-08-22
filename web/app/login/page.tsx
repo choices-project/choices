@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, Suspense, useEffect, useCallback, createContext, useContext } from 'react'
+import { useState, Suspense, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/utils/supabase/client'
@@ -290,7 +290,7 @@ function LoginFormContent() {
         </div>
 
         <p className="mt-6 text-center text-sm text-gray-600">
-          Don&apos;t have an account?{' '}
+          Don't have an account?{' '}
           <Link href="/register" className="text-blue-600 hover:underline">
             Sign up
           </Link>

@@ -56,7 +56,7 @@ const EnhancedFeedbackWidget: React.FC = () => {
       ...prev,
       userJourney
     }))
-  }, [])
+  }, [feedbackTracker])
 
   const handleOpen = () => {
     setIsOpen(true)
@@ -71,9 +71,9 @@ const EnhancedFeedbackWidget: React.FC = () => {
     
     // Track analytics
     if (typeof window !== 'undefined' && window.gtag) {
-      window.gtag('event', 'feedback_widget_opened', {
+      window.gtag('event', 'feedbackwidgetopened', {
         page: window.location.pathname,
-        session_id: userJourney.sessionId
+        sessionid: userJourney.sessionId
       })
     }
   }
@@ -156,8 +156,8 @@ const EnhancedFeedbackWidget: React.FC = () => {
         
         // Track successful submission
         if (typeof window !== 'undefined' && window.gtag) {
-          window.gtag('event', 'feedback_submitted', {
-            feedback_type: feedback.type,
+          window.gtag('event', 'feedbacksubmitted', {
+            feedbacktype: feedback.type,
             sentiment: feedback.sentiment,
             page: currentUserJourney.currentPage
           })

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, createContext, useContext } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
   Vote, 
@@ -86,7 +86,7 @@ export function PWAVotingInterface({
         
         // Track offline action
         pwaUtils.pwaAnalytics.trackOfflineAction()
-        pwaUtils.pwaAnalytics.trackFeatureUsage('offline_vote')
+        pwaUtils.pwaAnalytics.trackFeatureUsage('offlinevote')
         
         devLog('PWA: Vote stored offline')
       }
@@ -97,7 +97,7 @@ export function PWAVotingInterface({
       
       // Track analytics
       if (pwaUtils) {
-        pwaUtils.pwaAnalytics.trackFeatureUsage('vote_cast')
+        pwaUtils.pwaAnalytics.trackFeatureUsage('votecast')
         pwaUtils.pwaAnalytics.trackDataCollection(1)
       }
     } catch (error) {

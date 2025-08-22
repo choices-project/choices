@@ -1,12 +1,10 @@
 'use client'
 
-import { useState, useEffect, useCallback, createContext, useContext } from 'react'
-import { motion } from 'framer-motion'
+import { useState, useEffect } from 'react'
 import { 
   Activity, 
   Shield, 
   Zap, 
-  Wifi, 
   WifiOff, 
   Download, 
   Smartphone,

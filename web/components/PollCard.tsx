@@ -21,11 +21,11 @@ interface Poll {
   description: string;
   status: 'active' | 'closed' | 'draft';
   options: string[];
-  total_votes: number;
+  totalvotes: number;
   participation: number;
   sponsors: string[];
-  created_at: string;
-  end_time: string;
+  createdat: string;
+  endtime: string;
   results?: PollResults;
 }
 
@@ -109,7 +109,7 @@ export const PollCard: React.FC<PollCardProps> = ({
 
   const getTimeRemaining = () => {
     const now = new Date();
-    const end = new Date(poll.end_time);
+    const end = new Date(poll.endtime);
     const diff = end.getTime() - now.getTime();
     
     if (diff <= 0) return 'Ended';
@@ -170,7 +170,7 @@ export const PollCard: React.FC<PollCardProps> = ({
       <div className="flex items-center gap-4 mb-4 text-sm text-gray-500">
         <div className="flex items-center gap-1">
           <Users className="w-4 h-4" />
-          <span>{poll.total_votes.toLocaleString()} votes</span>
+          <span>{poll.totalvotes.toLocaleString()} votes</span>
         </div>
         <div className="flex items-center gap-1">
           <TrendingUp className="w-4 h-4" />
@@ -178,7 +178,7 @@ export const PollCard: React.FC<PollCardProps> = ({
         </div>
         <div className="flex items-center gap-1">
           <Calendar className="w-4 h-4" />
-          <span>Ends {formatDate(poll.end_time)}</span>
+          <span>Ends {formatDate(poll.endtime)}</span>
         </div>
       </div>
 

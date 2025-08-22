@@ -63,7 +63,7 @@ export default function PollShare({ pollId, poll }: PollShareProps) {
     }
     
     if (shareUrl) {
-      window.open(shareUrl, '_blank', 'width=600,height=400')
+      window.open(shareUrl, 'blank', 'width=600,height=400')
     }
   }
 

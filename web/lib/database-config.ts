@@ -1,6 +1,6 @@
 // Database Configuration and Connection Management
-import { createClient, SupabaseClient } from '@supabase/supabase-js'
-import { Pool } from 'pg'
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { Pool } from 'pg';
 
 // Environment detection
 export const isDevelopment = process.env.NODE_ENV === 'development'

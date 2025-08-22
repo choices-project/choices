@@ -30,6 +30,7 @@ export class ModuleLoader {
   private modules: Map<string, ModuleConfig> = new Map();
   private loadedModules: Map<string, LoadedModule> = new Map();
   private loadingPromises: Map<string, Promise<any>> = new Map();
+  private eventListeners: Array<(event: 'module-loaded' | 'module-failed' | 'module-unloaded', moduleId: string) => void> = [];
 
   constructor() {
     this.initializeModules();
@@ -103,7 +104,7 @@ export class ModuleLoader {
     this.registerModule({
       id: 'advancedPrivacy',
       name: 'Advanced Privacy Module',
-      description: 'Zero-knowledge proofs, differential privacy, VOPRF protocol',
+      description: 'Zero-knowledge proofs, _differential privacy, _VOPRF protocol',
       featureFlag: 'advancedPrivacy',
       loadFunction: () => import('../components/privacy/AdvancedPrivacy'),
       fallback: null
@@ -284,6 +285,7 @@ export class ModuleLoader {
       };
 
       this.loadedModules.set(moduleId, loadedModule);
+      this.emitEvent('module-loaded', moduleId);
       return loadedModule;
     } catch (error) {
       const loadTime = Date.now() - startTime;
@@ -297,6 +299,7 @@ export class ModuleLoader {
       };
 
       this.loadedModules.set(moduleId, loadedModule);
+      this.emitEvent('module-failed', moduleId);
       return loadedModule;
     }
   }
@@ -425,9 +428,29 @@ export class ModuleLoader {
    * Subscribe to module loading events
    */
   subscribe(listener: (event: 'module-loaded' | 'module-failed' | 'module-unloaded', moduleId: string) => void): () => void {
-    // This would be implemented with an event system
-    // For now, return a no-op unsubscribe function
-    return () => {};
+    // Add listener to the event system
+    this.eventListeners.push(listener);
+    
+    // Return unsubscribe function
+    return () => {
+      const index = this.eventListeners.indexOf(listener);
+      if (index > -1) {
+        this.eventListeners.splice(index, 1);
+      }
+    };
+  }
+
+  /**
+   * Emit module loading events
+   */
+  private emitEvent(event: 'module-loaded' | 'module-failed' | 'module-unloaded', moduleId: string): void {
+    this.eventListeners.forEach(listener => {
+      try {
+        listener(event, moduleId);
+      } catch (error) {
+        console.error('Error in module event listener:', error);
+      }
+    });
   }
 }
 

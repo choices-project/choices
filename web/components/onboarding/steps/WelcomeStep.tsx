@@ -1,6 +1,6 @@
 'use client'
 
-import { Shield, Users, TrendingUp, Heart } from 'lucide-react'
+import { Shield, Users, TrendingUp, Heart } from 'lucide-react';
 
 interface WelcomeStepProps {
   onNext: () => void
