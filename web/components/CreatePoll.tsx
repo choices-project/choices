@@ -105,6 +105,7 @@ export const CreatePoll: React.FC<CreatePollProps> = ({
   const [enhancedFormData, setEnhancedFormData] = useState({
     title: '',
     description: '',
+    category: '',
     votingMethod: 'single' as VotingMethod['type'],
     options: [
       { id: '1', text: '', description: '' },
@@ -134,6 +135,20 @@ export const CreatePoll: React.FC<CreatePollProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+
+  // Poll categories for better organization
+  const pollCategories = [
+    { value: 'climate', label: 'Climate & Environment', icon: '🌍' },
+    { value: 'technology', label: 'Technology', icon: '💻' },
+    { value: 'education', label: 'Education', icon: '📚' },
+    { value: 'healthcare', label: 'Healthcare', icon: '🏥' },
+    { value: 'transportation', label: 'Transportation', icon: '🚗' },
+    { value: 'privacy', label: 'Privacy & Security', icon: '🔒' },
+    { value: 'economy', label: 'Economy', icon: '💰' },
+    { value: 'social', label: 'Social Issues', icon: '👥' },
+    { value: 'environment', label: 'Environment', icon: '🌱' },
+    { value: 'other', label: 'Other', icon: '📋' }
+  ];
 
   const getCurrentMethod = () => {
     return VOTINGMETHODS.find(method => method.type === enhancedFormData.votingMethod)!;
@@ -170,6 +185,11 @@ export const CreatePoll: React.FC<CreatePollProps> = ({
   const validatePoll = () => {
     if (!enhancedFormData.title.trim()) {
       setError('Poll title is required');
+      return false;
+    }
+    
+    if (!enhancedFormData.category) {
+      setError('Please select a category');
       return false;
     }
     
@@ -228,9 +248,9 @@ export const CreatePoll: React.FC<CreatePollProps> = ({
   };
 
   const nextStep = () => {
-    if (step === 1 && !enhancedFormData.title.trim()) {
-      setError('Poll title is required');
-      return;
+                    if (step === 1 && (!enhancedFormData.title.trim() || !enhancedFormData.category)) {
+        setError('Poll title and category are required');
+        return;
     }
     setStep(prev => Math.min(prev + 1, 4));
     setError(null);
@@ -337,6 +357,24 @@ export const CreatePoll: React.FC<CreatePollProps> = ({
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   placeholder="Provide additional context or details..."
                 />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Category
+                </label>
+                <select
+                  value={enhancedFormData.category}
+                  onChange={(e) => setEnhancedFormData(prev => ({ ...prev, category: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="">Select a category</option>
+                  {pollCategories.map((category) => (
+                    <option key={category.value} value={category.value}>
+                      {category.icon} {category.label}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
 
