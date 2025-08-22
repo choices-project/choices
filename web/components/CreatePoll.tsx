@@ -100,7 +100,7 @@ export const CreatePoll: React.FC<CreatePollProps> = ({
   isOpen = false
 }) => {
   const [step, setStep] = useState(1);
-  const [formData, setFormData] = useState<CreatePollRequest>({
+  const [_formData, _setFormData] = useState<CreatePollRequest>({
     title: '',
     description: '',
     options: ['', ''], // Start with 2 empty options

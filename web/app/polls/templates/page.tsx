@@ -198,7 +198,7 @@ export default function PollTemplatesPage() {
   const [selectedCategory, setSelectedCategory] = useState<PollCategory | 'all'>('all');
   const [sortBy, setSortBy] = useState<'popular' | 'recent' | 'rating' | 'name'>('popular');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
-  const [templates, setTemplates] = useState<PollTemplate[]>(SAMPLETEMPLATES);
+  const [templates, _setTemplates] = useState<PollTemplate[]>(SAMPLETEMPLATES);
 
   const filteredTemplates = templates.filter(template => {
     const matchesSearch = template.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
