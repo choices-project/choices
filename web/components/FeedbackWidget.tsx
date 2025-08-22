@@ -45,7 +45,7 @@ const FeedbackWidget: React.FC = () => {
     }
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [showSuccess, setShowSuccess] = useState(false)
+  const [_showSuccess, setShowSuccess] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Track user journey
@@ -173,14 +173,6 @@ const FeedbackWidget: React.FC = () => {
       case 'bug': return 'bg-red-500 hover:bg-red-600'
       case 'feature': return 'bg-blue-500 hover:bg-blue-600'
       default: return 'bg-green-500 hover:bg-green-600'
-    }
-  }
-
-  const getSentimentIcon = (sentiment: string) => {
-    switch (sentiment) {
-      case 'positive': return <Smile className="w-6 h-6" />
-      case 'negative': return <Frown className="w-6 h-6" />
-      default: return <Meh className="w-6 h-6" />
     }
   }
 

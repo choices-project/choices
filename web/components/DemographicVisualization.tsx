@@ -1,13 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useCallback, createContext, useContext } from 'react'
 import { motion } from 'framer-motion'
 import { 
   Users, MapPin, GraduationCap, DollarSign, 
-  Building2, Heart, Eye, EyeOff,
-  Target, Zap, Shield, Database, BarChart3, Wifi, WifiOff
+  Building2, Heart, Target, Database, BarChart3, Wifi, WifiOff
 } from 'lucide-react'
-import { FancyDonutChart, FancyBarChart } from './FancyCharts'
+import { FancyDonutChart } from './FancyCharts'
 import { useDemographics } from '../hooks/useDemographics'
 
 interface DemographicData {
