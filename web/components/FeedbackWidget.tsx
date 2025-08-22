@@ -45,7 +45,6 @@ const FeedbackWidget: React.FC = () => {
     }
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [_showSuccess, setShowSuccess] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Track user journey

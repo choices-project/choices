@@ -100,15 +100,6 @@ export const CreatePoll: React.FC<CreatePollProps> = ({
   isOpen = false
 }) => {
   const [step, setStep] = useState(1);
-  const [_formData, _setFormData] = useState<CreatePollRequest>({
-    title: '',
-    description: '',
-    options: ['', ''], // Start with 2 empty options
-    end_time: '',
-    category: '',
-    tags: [],
-    sponsors: []
-  });
 
   // Enhanced form data for voting methods
   const [enhancedFormData, setEnhancedFormData] = useState({
@@ -143,19 +134,6 @@ export const CreatePoll: React.FC<CreatePollProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
-
-  const [_categories] = [
-    'climate',
-    'technology',
-    'education',
-    'healthcare',
-    'transportation',
-    'privacy',
-    'economy',
-    'social',
-    'environment',
-    'other'
-  ];
 
   const getCurrentMethod = () => {
     return VOTINGMETHODS.find(method => method.type === enhancedFormData.votingMethod)!;

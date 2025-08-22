@@ -9,7 +9,8 @@ import {
   RefreshCw,
   Bell,
   Zap,
-  Shield
+  Shield,
+  Clock
 } from 'lucide-react';
 import { useFeatureFlags } from '../hooks/useFeatureFlags';
 import { isFeatureEnabled } from '../lib/feature-flags';
@@ -107,8 +108,8 @@ export default function AnalyticsDashboard({
   const [error, setError] = useState<string | null>(null);
   const [selectedView, setSelectedView] = useState<string>(defaultView);
   const [autoRefreshEnabled, setAutoRefreshEnabled] = useState(autoRefresh);
-  const [_lastUpdated, setLastUpdated] = useState<Date>(new Date());
-  const [_filters, _setFilters] = useState({
+  const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
+  const [filters, setFilters] = useState({
     dateRange: '30d',
     pollId: 'all',
     userType: 'all',
@@ -181,9 +182,17 @@ export default function AnalyticsDashboard({
     try {
       setLoading(true);
       
+      // Build query parameters from filters
+      const queryParams = new URLSearchParams({
+        dateRange: filters.dateRange,
+        pollId: filters.pollId,
+        userType: filters.userType,
+        deviceType: filters.deviceType
+      });
+
       // Fetch data from multiple sources
       const [dashboardResponse, pwaMetrics] = await Promise.all([
-        fetch('/api/dashboard'),
+        fetch(`/api/dashboard?${queryParams.toString()}`),
         Promise.resolve(new PWAAnalytics().getMetrics())
       ]);
 
@@ -268,8 +277,8 @@ export default function AnalyticsDashboard({
       };
 
       setAnalyticsData(combinedData);
-      setLastUpdated(new Date());
       setError(null);
+      setLastUpdated(new Date()); // Update last updated time
       
       // Call callback if provided
       if (onDataUpdate) {
@@ -286,7 +295,7 @@ export default function AnalyticsDashboard({
     } finally {
       setLoading(false);
     }
-  }, [onDataUpdate, onError]);
+  }, [onDataUpdate, onError, filters]);
 
   useEffect(() => {
     if (analyticsEnabled) {
@@ -297,7 +306,7 @@ export default function AnalyticsDashboard({
         return () => clearInterval(interval);
       }
     }
-  }, [fetchAnalyticsData, autoRefreshEnabled, refreshInterval, analyticsEnabled]);
+  }, [fetchAnalyticsData, autoRefreshEnabled, refreshInterval, analyticsEnabled, filters]);
 
   if (!analyticsEnabled) {
     return (
@@ -363,6 +372,12 @@ export default function AnalyticsDashboard({
               </div>
               <div className="flex items-center space-x-4">
                 <div className="flex items-center space-x-2">
+                  <Clock className="h-4 w-4 text-gray-400" />
+                  <span className="text-sm text-gray-600">
+                    Last updated: {lastUpdated.toLocaleTimeString()}
+                  </span>
+                </div>
+                <div className="flex items-center space-x-2">
                   <RefreshCw className={`h-4 w-4 ${autoRefreshEnabled ? 'text-green-600' : 'text-gray-400'}`} />
                   <span className="text-sm text-gray-600">
                     {autoRefreshEnabled ? 'Auto-refresh on' : 'Auto-refresh off'}
@@ -406,6 +421,77 @@ export default function AnalyticsDashboard({
             </div>
           </div>
         )}
+
+        {/* Filters */}
+        <div className="bg-white rounded-xl shadow-sm border mb-8 p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-gray-900">Filters</h3>
+            <button
+              onClick={() => setFilters({
+                dateRange: '30d',
+                pollId: 'all',
+                userType: 'all',
+                deviceType: 'all'
+              })}
+              className="text-sm text-blue-600 hover:text-blue-700"
+            >
+              Reset Filters
+            </button>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Date Range</label>
+              <select
+                value={filters.dateRange}
+                onChange={(e) => setFilters(prev => ({ ...prev, dateRange: e.target.value }))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="7d">Last 7 days</option>
+                <option value="30d">Last 30 days</option>
+                <option value="90d">Last 90 days</option>
+                <option value="1y">Last year</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Poll ID</label>
+              <select
+                value={filters.pollId}
+                onChange={(e) => setFilters(prev => ({ ...prev, pollId: e.target.value }))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="all">All Polls</option>
+                <option value="featured">Featured Only</option>
+                <option value="active">Active Only</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">User Type</label>
+              <select
+                value={filters.userType}
+                onChange={(e) => setFilters(prev => ({ ...prev, userType: e.target.value }))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="all">All Users</option>
+                <option value="verified">Verified Only</option>
+                <option value="new">New Users</option>
+                <option value="returning">Returning Users</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Device Type</label>
+              <select
+                value={filters.deviceType}
+                onChange={(e) => setFilters(prev => ({ ...prev, deviceType: e.target.value }))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="all">All Devices</option>
+                <option value="desktop">Desktop</option>
+                <option value="mobile">Mobile</option>
+                <option value="tablet">Tablet</option>
+              </select>
+            </div>
+          </div>
+        </div>
 
         {/* Content Area */}
         <div className="space-y-8">
