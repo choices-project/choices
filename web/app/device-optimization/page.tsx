@@ -300,15 +300,15 @@ export default function DeviceOptimizationPage() {
                   <div>
                     <p className="font-medium">High Quality Images</p>
                     <p className="text-sm text-gray-600">
-                      {optimizationSettings.imagequality === 'high' ? 'Enabled' : 'Optimized for performance'}
+                      {optimizationSettings.image_quality === 'high' ? 'Enabled' : 'Optimized for performance'}
                     </p>
                   </div>
                   <Button
-                    variant={optimizationSettings.imagequality === 'high' ? 'default' : 'outline'}
+                    variant={optimizationSettings.image_quality === 'high' ? 'default' : 'outline'}
                     size="sm"
-                    onClick={() => handleSettingToggle('imagequality', optimizationSettings.imagequality !== 'high')}
+                    onClick={() => handleSettingToggle('image_quality', optimizationSettings.image_quality !== 'high')}
                   >
-                    {optimizationSettings.imagequality === 'high' ? 'Enabled' : 'Disabled'}
+                    {optimizationSettings.image_quality === 'high' ? 'Enabled' : 'Disabled'}
                   </Button>
                 </div>
 
@@ -317,15 +317,15 @@ export default function DeviceOptimizationPage() {
                   <div>
                     <p className="font-medium">Animations</p>
                     <p className="text-sm text-gray-600">
-                      {optimizationSettings.animationenabled ? 'Smooth animations' : 'Reduced motion'}
+                      {optimizationSettings.animation_enabled ? 'Smooth animations' : 'Reduced motion'}
                     </p>
                   </div>
                   <Button
-                    variant={optimizationSettings.animationenabled ? 'default' : 'outline'}
+                    variant={optimizationSettings.animation_enabled ? 'default' : 'outline'}
                     size="sm"
-                    onClick={() => handleSettingToggle('animationenabled', !optimizationSettings.animationenabled)}
+                    onClick={() => handleSettingToggle('animation_enabled', !optimizationSettings.animation_enabled)}
                   >
-                    {optimizationSettings.animationenabled ? 'Enabled' : 'Disabled'}
+                    {optimizationSettings.animation_enabled ? 'Enabled' : 'Disabled'}
                   </Button>
                 </div>
 
