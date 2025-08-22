@@ -426,51 +426,6 @@ function EnhancedMetricCard({ title, value, icon, color, trend, trendDirection }
   );
 }
 
-// Poll Card Component
-function PollCard({ poll }: { poll: PollSummary }) {
-  const totalVotes = poll.choices.reduce((sum: any, choice: any) => sum + choice.votes, 0);
-  
-  return (
-    <div className="border rounded-lg p-4 hover:shadow-md transition-shadow">
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="font-semibold text-gray-900">{poll.title}</h3>
-        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-          poll.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-        }`}>
-          {poll.status}
-        </span>
-      </div>
-      
-      <div className="space-y-2">
-        {poll.choices.map((choice: any) => {
-          const percentage = totalVotes > 0 ? (choice.votes / totalVotes) * 100 : 0;
-          return (
-            <div key={choice.id} className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">{choice.text}</span>
-              <div className="flex items-center space-x-2">
-                <div className="w-20 bg-gray-200 rounded-full h-2">
-                  <div
-                    className="bg-blue-600 h-2 rounded-full"
-                    style={{ width: `${percentage}%` }}
-                  />
-                </div>
-                <span className="text-sm font-medium text-gray-900">
-                  {choice.votes} ({percentage.toFixed(1)}%)
-                </span>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-      
-      <div className="mt-3 pt-3 border-t flex justify-between text-sm text-gray-500">
-        <span>Total: {totalVotes} votes</span>
-        <span>{poll.participation.toFixed(1)}% participation</span>
-      </div>
-    </div>
-  );
-}
-
 // Enhanced Poll Card Component
 function EnhancedPollCard({ poll }: { poll: PollSummary }) {
   const totalVotes = poll.choices.reduce((sum: any, choice: any) => sum + choice.votes, 0);
@@ -525,37 +480,6 @@ function EnhancedPollCard({ poll }: { poll: PollSummary }) {
   );
 }
 
-// Demographics Chart Component
-function DemographicsChart({ data }: { data: DemographicsData }) {
-  return (
-    <div className="space-y-4">
-      <div>
-        <h4 className="font-medium text-gray-900 mb-2">Age Groups</h4>
-        <div className="space-y-2">
-          {Object.entries(data.agegroups).map(([age, count]) => (
-            <div key={age} className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">{age}</span>
-              <span className="text-sm font-medium text-gray-900">{count}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-      
-      <div>
-        <h4 className="font-medium text-gray-900 mb-2">Verification Tiers</h4>
-        <div className="space-y-2">
-          {Object.entries(data.verificationtiers).map(([tier, count]) => (
-            <div key={tier} className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Tier {tier}</span>
-              <span className="text-sm font-medium text-gray-900">{count}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
 // Enhanced Demographics Chart Component
 function EnhancedDemographicsChart({ data }: { data: DemographicsData }) {
   return (
@@ -603,35 +527,6 @@ function EnhancedDemographicsChart({ data }: { data: DemographicsData }) {
   );
 }
 
-// Geographic Chart Component
-function GeographicChart({ data }: { data: GeographicMap }) {
-  return (
-    <div className="space-y-4">
-      <div>
-        <h4 className="font-medium text-gray-900 mb-2">Top Regions</h4>
-        <div className="space-y-2">
-          {data.regions.slice(0, 5).map((region: any) => (
-            <div key={region.name} className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">{region.name}</span>
-              <div className="flex items-center space-x-2">
-                <div className="w-16 bg-gray-200 rounded-full h-2">
-                  <div
-                    className="bg-green-600 h-2 rounded-full"
-                    style={{ width: `${region.percentage}%` }}
-                  />
-                </div>
-                <span className="text-sm font-medium text-gray-900">
-                  {region.votecount} ({region.percentage.toFixed(1)}%)
-                </span>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
 // Enhanced Geographic Chart Component
 function EnhancedGeographicChart({ data }: { data: GeographicMap }) {
   return (
@@ -668,35 +563,6 @@ function EnhancedGeographicChart({ data }: { data: GeographicMap }) {
   );
 }
 
-// Engagement Chart Component
-function EngagementChart({ data }: { data: EngagementMetrics }) {
-  return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
-        <div className="text-center p-4 bg-blue-50 rounded-lg">
-          <p className="text-2xl font-bold text-blue-600">{data.activeusers}</p>
-          <p className="text-sm text-gray-600">Active Users</p>
-        </div>
-        <div className="text-center p-4 bg-green-50 rounded-lg">
-          <p className="text-2xl font-bold text-green-600">{data.newusers}</p>
-          <p className="text-sm text-gray-600">New Users</p>
-        </div>
-      </div>
-      
-      <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <span className="text-sm text-gray-600">Session Duration</span>
-          <span className="text-sm font-medium text-gray-900">{data.sessionduration} min</span>
-        </div>
-        <div className="flex items-center justify-between">
-          <span className="text-sm text-gray-600">Bounce Rate</span>
-          <span className="text-sm font-medium text-gray-900">{data.bouncerate}%</span>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 // Enhanced Engagement Chart Component
 function EnhancedEngagementChart({ data }: { data: EngagementMetrics }) {
   return (
@@ -725,25 +591,6 @@ function EnhancedEngagementChart({ data }: { data: EngagementMetrics }) {
           <span className="text-sm text-gray-600">Returning Users</span>
           <span className="text-sm font-medium text-gray-900">{data.returningusers}</span>
         </div>
-      </div>
-    </div>
-  );
-}
-
-// Trends Chart Component
-function TrendsChart({ data }: { data: TrendData[] }) {
-  return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        {data.slice(-3).map((trend, index: any) => (
-          <div key={index} className="text-center p-4 bg-gray-50 rounded-lg">
-            <p className="text-lg font-bold text-gray-900">{trend.votes}</p>
-            <p className="text-sm text-gray-600">Votes</p>
-            <p className="text-xs text-gray-500">
-              {new Date(trend.date).toLocaleDateString()}
-            </p>
-          </div>
-        ))}
       </div>
     </div>
   );
