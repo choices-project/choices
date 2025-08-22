@@ -45,6 +45,7 @@ const FeedbackWidget: React.FC = () => {
     }
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [showSuccess, setShowSuccess] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Track user journey
@@ -437,7 +438,8 @@ const FeedbackWidget: React.FC = () => {
                       <div className="flex gap-3 pt-4">
                         <button
                           onClick={() => setStep('sentiment')}
-                          className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+                          disabled={isSubmitting}
+                          className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50"
                         >
                           Back
                         </button>
@@ -459,6 +461,15 @@ const FeedbackWidget: React.FC = () => {
                           )}
                         </button>
                       </div>
+                      
+                      {isSubmitting && (
+                        <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                          <div className="flex items-center justify-center gap-2 text-blue-700">
+                            <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                            <span className="text-sm">Processing your feedback...</span>
+                          </div>
+                        </div>
+                      )}
                     </motion.div>
                   )}
 
@@ -469,6 +480,18 @@ const FeedbackWidget: React.FC = () => {
                       animate={{ opacity: 1, scale: 1 }}
                       className="text-center py-8"
                     >
+                      {showSuccess && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg"
+                        >
+                          <div className="flex items-center justify-center gap-2 text-green-700">
+                            <CheckCircle className="w-4 h-4" />
+                            <span className="text-sm font-medium">Feedback submitted successfully!</span>
+                          </div>
+                        </motion.div>
+                      )}
                       <motion.div
                         initial={{ scale: 0 }}
                         animate={{ scale: 1 }}
