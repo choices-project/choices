@@ -3,13 +3,11 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
-  Vote, 
   CheckCircle, 
   AlertCircle, 
   Wifi, 
   WifiOff, 
   Shield, 
-  Lock,
   Clock,
   Users,
   TrendingUp,

@@ -40,7 +40,7 @@ interface FeedbackDetailModalProps {
   feedback: Feedback;
   isOpen: boolean;
   onClose: () => void;
-  onStatusUpdate: (feedbackId: string, newStatus: string) => void;
+  onStatusUpdate: (_feedbackId: string, _newStatus: string) => void;
 }
 
 export const FeedbackDetailModal: React.FC<FeedbackDetailModalProps> = ({
