@@ -3,7 +3,7 @@
 import React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AdminLayout } from '../../../components/admin/layout/AdminLayout';
-import { TrendingTopicsPage } from '../../../components/admin/trending-topics/TrendingTopicsPage';
+import { TrendingTopicsPage } from './TrendingTopicsPage';
 
 // Create a client
 const queryClient = new QueryClient({

@@ -43,7 +43,6 @@ class PerformanceMonitor {
     }
 
     const startTime = performance.now();
-    const startDate = new Date();
 
     try {
       const result = await fn();

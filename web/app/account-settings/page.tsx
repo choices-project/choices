@@ -3,7 +3,7 @@
 import { useAuth } from '@/contexts/AuthContext'
 import { devLog } from '@/lib/logger';
 import { useRouter } from 'next/navigation'
-import { useEffect, useState, useCallback, createContext, useContext } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { createClient } from '@supabase/supabase-js'
 import { 
   ArrowLeft, 
@@ -105,7 +105,7 @@ export default function AccountSettingsPage() {
     } finally {
       setIsLoading(false)
     }
-  }, [user])
+  }, [user, supabase])
 
   useEffect(() => {
     if (!loading && !user) {
@@ -117,7 +117,7 @@ export default function AccountSettingsPage() {
     if (user) {
       loadAccountSettings()
     }
-  }, [user, loadAccountSettings])
+  }, [user, loadAccountSettings, supabase])
 
   const handlePasswordChange = async () => {
     if (passwordData.newPassword !== passwordData.confirmPassword) {

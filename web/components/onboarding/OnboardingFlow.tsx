@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, createContext, useContext, Suspense } from 'react'
+import { useState, useEffect, useCallback, createContext, useContext, Suspense, useMemo } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { CheckCircle } from 'lucide-react'
 import { createClient } from '@/utils/supabase/client'
@@ -65,7 +65,7 @@ function OnboardingFlowInner() {
   
   const router = useRouter()
   const searchParams = useSearchParams()
-  const supabase = createClient()
+  const supabase = useMemo(() => createClient(), [])
 
   // Check authentication status and handle step from URL
   useEffect(() => {
@@ -87,8 +87,8 @@ function OnboardingFlowInner() {
           setOnboardingData(prev => ({
             ...prev,
             user,
-            displayName: user.user_metadata?.full_name || user.email?.split('@')[0],
-            avatar: user.user_metadata?.avatar_url
+            displayName: user.usermetadata?.fullname || user.email?.split('@')[0],
+            avatar: user.usermetadata?.avatarurl
           }))
           
           // If we're on auth step and user is authenticated, move to values

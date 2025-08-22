@@ -59,7 +59,7 @@ export default function AuditLogsPage() {
           timestamp: '2024-12-19 14:30:25',
           level: 'security',
           category: 'security',
-          action: 'LOGIN_ATTEMPT',
+          action: 'LOGINATTEMPT',
           description: 'Failed login attempt for user admin@choices.com',
           userId: 'user-123',
           userEmail: 'admin@choices.com',
@@ -73,12 +73,12 @@ export default function AuditLogsPage() {
           timestamp: '2024-12-19 14:25:10',
           level: 'info',
           category: 'user',
-          action: 'USER_REGISTRATION',
+          action: 'USERREGISTRATION',
           description: 'New user registered: john.doe@example.com',
           userId: 'user-456',
           userEmail: 'john.doe@example.com',
           ipAddress: '203.0.113.45',
-          userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
+          userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10157) AppleWebKit/537.36',
           metadata: { verificationRequired: true },
           source: 'web'
         },
@@ -87,7 +87,7 @@ export default function AuditLogsPage() {
           timestamp: '2024-12-19 14:20:15',
           level: 'warning',
           category: 'system',
-          action: 'HIGH_CPU_USAGE',
+          action: 'HIGHCPUUSAGE',
           description: 'CPU usage exceeded 80% threshold',
           metadata: { cpuUsage: 85, memoryUsage: 72 },
           source: 'system'
@@ -97,7 +97,7 @@ export default function AuditLogsPage() {
           timestamp: '2024-12-19 14:15:30',
           level: 'info',
           category: 'database',
-          action: 'BACKUP_COMPLETED',
+          action: 'BACKUPCOMPLETED',
           description: 'Database backup completed successfully',
           metadata: { size: '2.4GB', duration: '5m 23s' },
           source: 'system'
@@ -107,7 +107,7 @@ export default function AuditLogsPage() {
           timestamp: '2024-12-19 14:10:45',
           level: 'error',
           category: 'api',
-          action: 'API_RATE_LIMIT_EXCEEDED',
+          action: 'APIRATELIMITEXCEEDED',
           description: 'API rate limit exceeded for IP 203.0.113.45',
           ipAddress: '203.0.113.45',
           metadata: { requests: 150, limit: 100 },
@@ -118,12 +118,12 @@ export default function AuditLogsPage() {
           timestamp: '2024-12-19 14:05:20',
           level: 'security',
           category: 'security',
-          action: 'PASSWORD_CHANGE',
+          action: 'PASSWORDCHANGE',
           description: 'Password changed for user jane.smith@example.com',
           userId: 'user-789',
           userEmail: 'jane.smith@example.com',
           ipAddress: '198.51.100.67',
-          metadata: { changeReason: 'user_request' },
+          metadata: { changeReason: 'userrequest' },
           source: 'web'
         },
         {
@@ -131,7 +131,7 @@ export default function AuditLogsPage() {
           timestamp: '2024-12-19 14:00:10',
           level: 'info',
           category: 'user',
-          action: 'POLL_CREATED',
+          action: 'POLLCREATED',
           description: 'New poll created: "Favorite Programming Language 2024"',
           userId: 'user-123',
           userEmail: 'admin@choices.com',
@@ -143,7 +143,7 @@ export default function AuditLogsPage() {
           timestamp: '2024-12-19 13:55:30',
           level: 'warning',
           category: 'database',
-          action: 'SLOW_QUERY',
+          action: 'SLOWQUERY',
           description: 'Slow database query detected',
           metadata: { query: 'SELECT * FROM votes', duration: '2.5s' },
           source: 'database'
@@ -239,7 +239,7 @@ export default function AuditLogsPage() {
           <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
           <div className="h-10 bg-gray-200 rounded mb-6"></div>
           <div className="space-y-4">
-            {[...Array(5)].map((_: any, i: any) => (
+            {[...Array(5)].map((any, i: any) => (
               <div key={i} className="h-20 bg-gray-200 rounded"></div>
             ))}
           </div>

@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
+import { Inter } from 'next/font/google';
 import './globals.css'
-import { PWAInstallPrompt, OfflineIndicator, PWAUpdatePrompt } from '../components/PWAComponents'
+import { PWAInstallPrompt, OfflineIndicator, PWAUpdatePrompt } from '../components/PWAComponents';
 import EnhancedFeedbackWidget from '../components/EnhancedFeedbackWidget'
 import ClientOnly from '../components/ClientOnly'
 // Removed old Supabase-based AuthProvider - using custom auth system instead

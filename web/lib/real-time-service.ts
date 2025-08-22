@@ -55,11 +55,12 @@ class RealTimeService {
           const realTimeEvent: RealTimeEvent = JSON.parse(event.data);
           subscription.onMessage(realTimeEvent);
         } catch (error) {
-          devLog('Error parsing real-time event:', error);
+          devLog('Error parsing real-time event:', error, 'Raw event data:', event.data);
         }
       };
 
       eventSource.onerror = (error) => {
+        devLog('Real-time connection error:', error);
         subscription.onError(error);
         this.handleReconnect(subscriptionId, endpoint, onMessage, onError);
       };
@@ -104,7 +105,11 @@ class RealTimeService {
     onError?: (error: Event) => void
   ): string {
     const endpoint = `/api/polls/${pollId}/updates`;
-    return this.subscribe(endpoint, onUpdate, onError);
+    const wrappedOnUpdate = (event: RealTimeEvent) => {
+      devLog(`Poll update received for ${pollId}:`, event);
+      onUpdate(event.data || event);
+    };
+    return this.subscribe(endpoint, wrappedOnUpdate, onError);
   }
 
   /**
@@ -116,7 +121,11 @@ class RealTimeService {
     onError?: (error: Event) => void
   ): string {
     const endpoint = `/api/user/${userId}/activity`;
-    return this.subscribe(endpoint, onUpdate, onError);
+    const wrappedOnUpdate = (event: RealTimeEvent) => {
+      devLog(`User activity update received for ${userId}:`, event);
+      onUpdate(event.data || event);
+    };
+    return this.subscribe(endpoint, wrappedOnUpdate, onError);
   }
 
   /**
@@ -127,7 +136,11 @@ class RealTimeService {
     onError?: (error: Event) => void
   ): string {
     const endpoint = '/api/admin/updates';
-    return this.subscribe(endpoint, onUpdate, onError);
+    const wrappedOnUpdate = (event: RealTimeEvent) => {
+      devLog('Admin dashboard update received:', event);
+      onUpdate(event.data || event);
+    };
+    return this.subscribe(endpoint, wrappedOnUpdate, onError);
   }
 
   /**
@@ -138,7 +151,11 @@ class RealTimeService {
     onError?: (error: Event) => void
   ): string {
     const endpoint = '/api/feedback/updates';
-    return this.subscribe(endpoint, onUpdate, onError);
+    const wrappedOnUpdate = (event: RealTimeEvent) => {
+      devLog('Feedback update received:', event);
+      onUpdate(event.data || event);
+    };
+    return this.subscribe(endpoint, wrappedOnUpdate, onError);
   }
 
   /**

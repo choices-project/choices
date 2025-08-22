@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { cookies } from 'next/headers'
-import { createClient } from '@/utils/supabase/server'
-import { devLog } from '@/lib/logger'
-import { arrayBufferToBase64, base64ToArrayBuffer } from '@/lib/webauthn'
+import { NextRequest, NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
+import { createClient } from '@/utils/supabase/server';
+import { devLog } from '@/lib/logger';
+import { arrayBufferToBase64, base64ToArrayBuffer } from '@/lib/webauthn';
 
 export const dynamic = 'force-dynamic'
 
@@ -158,7 +158,7 @@ export async function POST(request: NextRequest) {
       }
 
       // Store the credential
-      const { data: credentialData, error: credentialError } = await supabase
+      const { data: _credentialData, error: credentialError } = await supabase
         .from('biometric_credentials')
         .insert({
           user_id: user.id,

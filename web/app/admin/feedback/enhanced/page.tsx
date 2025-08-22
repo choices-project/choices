@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react'
 import { devLog } from '@/lib/logger'
-import { motion } from 'framer-motion'
 import { 
   MessageCircle, 
   Bug, 
@@ -10,9 +9,6 @@ import {
   Zap,
   Shield,
   Accessibility,
-  Smile, 
-  Frown, 
-  Meh,
   AlertTriangle,
   CheckCircle,
   Clock,
@@ -34,10 +30,10 @@ interface FeedbackItem {
   title: string
   description: string
   sentiment: 'positive' | 'negative' | 'neutral' | 'mixed'
-  status: 'open' | 'in_progress' | 'resolved' | 'closed'
+  status: 'open' | 'inprogress' | 'resolved' | 'closed'
   priority: 'low' | 'medium' | 'high' | 'urgent'
-  created_at: string
-  updated_at: string
+  createdat: string
+  updatedat: string
   userJourney: any
   metadata: any
   aiAnalysis: any
@@ -291,8 +287,8 @@ const EnhancedFeedbackAdminPage: React.FC = () => {
               { key: 'bugs', label: 'Bugs', icon: Bug },
               { key: 'features', label: 'Features', icon: Lightbulb },
               { key: 'performance', label: 'Performance', icon: Zap },
-              { key: 'positive', label: 'Positive', icon: Smile },
-              { key: 'negative', label: 'Negative', icon: Frown }
+              { key: 'positive', label: 'Positive', icon: CheckCircle },
+              { key: 'negative', label: 'Negative', icon: AlertTriangle }
             ].map(({ key, label, icon: Icon }) => (
               <button
                 key={key}
@@ -358,7 +354,7 @@ const EnhancedFeedbackAdminPage: React.FC = () => {
                       <p className="text-gray-700 mb-3">{item.description}</p>
                       
                       <div className="flex items-center gap-4 text-sm text-gray-500">
-                        <span>Created: {new Date(item.created_at).toLocaleDateString()}</span>
+                        <span>Created: {new Date(item.createdat).toLocaleDateString()}</span>
                         {item.deviceType && (
                           <div className="flex items-center gap-1">
                             {getDeviceIcon(item.deviceType)}

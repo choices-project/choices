@@ -1,7 +1,7 @@
 // API utility functions for communicating with backend services
 // Integrated with Authentication System (AUTH-001)
 
-import { getAuthService, AuthSession, User, AuthError } from './auth'
+import { getAuthService, AuthSession, User, AuthError } from './auth';
 
 const IA_BASE_URL = 'http://localhost:8081/api'
 const PO_BASE_URL = 'http://localhost:8082/api'

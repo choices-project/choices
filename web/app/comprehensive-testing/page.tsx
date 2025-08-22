@@ -1,8 +1,7 @@
 'use client'
 
-import { useState, useEffect, useCallback, createContext, useContext } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { devLog } from '@/lib/logger';
-import { motion } from 'framer-motion'
 import { 
   CheckCircle, 
   XCircle, 
@@ -10,43 +9,20 @@ import {
   Play, 
   RefreshCw,
   Download,
-  FileText,
   Target,
   Globe,
   Smartphone,
-  Shield,
-  Zap,
-  Eye,
-  Monitor,
-  Tablet,
-  Clock,
-  TrendingUp,
   BarChart3,
   Activity,
-  Settings,
-  Database,
-  Network,
-  HardDrive,
-  Cpu,
-  Battery,
-  Wifi,
-  WifiOff,
-  Server,
-  Cloud,
-  Lock,
-  Unlock,
   CheckSquare,
-  Square,
   AlertCircle,
   Info,
-  ExternalLink,
-  Copy,
-  Share2
+  Copy
 } from 'lucide-react'
 import { useTestingUtils } from '../../hooks/useTestingUtils'
 
 // Import types separately to avoid SSR issues
-import type { ComprehensiveReport, ComprehensiveTestResult } from '../../lib/comprehensive-testing-runner'
+import type { ComprehensiveReport } from '../../lib/comprehensive-testing-runner'
 
 export default function ComprehensiveTestingPage() {
   const { utils: testingUtils, loading: utilsLoading, error: utilsError } = useTestingUtils()
@@ -189,6 +165,16 @@ export default function ComprehensiveTestingPage() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Error Display */}
+        {utilsError && (
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+            <div className="flex items-center">
+              <AlertCircle className="h-5 w-5 text-red-600 mr-2" />
+              <span className="text-red-800">Testing Error: {utilsError}</span>
+            </div>
+          </div>
+        )}
+        
         {/* Tab Navigation */}
         <div className="mb-8">
           <nav className="flex space-x-1 bg-white rounded-lg border border-gray-200 p-1 overflow-x-auto">

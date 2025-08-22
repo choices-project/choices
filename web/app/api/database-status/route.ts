@@ -1,6 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
 import { cookies } from 'next/headers';
+import { handleError, getUserMessage, getHttpStatus } from '@/lib/error-handler';
 
 export async function GET() {
   try {
@@ -55,9 +56,13 @@ export async function GET() {
       }
     });
   } catch (error) {
+    const appError = handleError(error as Error, { context: 'database-status' })
+    const userMessage = getUserMessage(appError)
+    const statusCode = getHttpStatus(appError)
+    
     return NextResponse.json({
-      error: error instanceof Error ? error instanceof Error ? error.message : "Unknown error" : 'Unknown error',
+      error: userMessage,
       timestamp: new Date().toISOString()
-    }, { status: 500 });
+    }, { status: statusCode });
   }
 }

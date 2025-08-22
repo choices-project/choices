@@ -2,7 +2,7 @@
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AdminLayout } from '@/components/admin/layout/AdminLayout';
-import { MediaBiasAnalysisPage } from '@/components/admin/media-bias-analysis/MediaBiasAnalysisPage';
+import { MediaBiasAnalysisPage } from './MediaBiasAnalysisPage';
 
 const queryClient = new QueryClient();
 

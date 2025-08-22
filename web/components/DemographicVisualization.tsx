@@ -1,10 +1,10 @@
 'use client'
 
-import { useState, useEffect, useCallback, createContext, useContext } from 'react'
+import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { 
   Users, MapPin, GraduationCap, DollarSign, 
-  Building2, Globe, Heart, Eye, EyeOff,
+  Building2, Heart, Eye, EyeOff,
   Target, Zap, Shield, Database, BarChart3, Wifi, WifiOff
 } from 'lucide-react'
 import { FancyDonutChart, FancyBarChart } from './FancyCharts'

@@ -1,7 +1,7 @@
-import { createClient } from '@/utils/supabase/server'
+import { createClient } from '@/utils/supabase/server';
 import { devLog } from '@/lib/logger';
-import { NextRequest, NextResponse } from 'next/server'
-import { cookies } from 'next/headers'
+import { NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 
 export const dynamic = 'force-dynamic'
 
@@ -45,7 +45,7 @@ async function getRedirectDestination(supabase: any, user: any, requestedRedirec
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get('code')
-  const next = searchParams.get('next') ?? '/dashboard'
+  const _next = searchParams.get('next') ?? '/dashboard'
   const redirectTo = searchParams.get('redirectTo') ?? '/dashboard'
   const error = searchParams.get('error')
   const errorDescription = searchParams.get('error_description')

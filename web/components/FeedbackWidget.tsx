@@ -8,14 +8,13 @@ import {
   X, 
   Bug, 
   Lightbulb, 
-  Heart, 
   Camera, 
-  Send,
   CheckCircle,
   Star,
   Smile,
   Frown,
-  Meh
+  Meh,
+  Send
 } from 'lucide-react'
 
 interface FeedbackData {
@@ -41,7 +40,7 @@ const FeedbackWidget: React.FC = () => {
     sentiment: 'neutral',
     userJourney: {
       page: typeof window !== 'undefined' ? window.location.pathname : '/',
-      action: 'feedback_widget_opened',
+      action: 'feedbackwidgetopened',
       timestamp: new Date()
     }
   })
@@ -71,7 +70,7 @@ const FeedbackWidget: React.FC = () => {
     setStep('type')
     // Track analytics
     if (typeof window !== 'undefined' && window.gtag) {
-      window.gtag('event', 'feedback_widget_opened', {
+      window.gtag('event', 'feedbackwidgetopened', {
         page: window.location.pathname
       })
     }
@@ -87,7 +86,7 @@ const FeedbackWidget: React.FC = () => {
       sentiment: 'neutral',
       userJourney: {
         page: typeof window !== 'undefined' ? window.location.pathname : '/',
-        action: 'feedback_widget_closed',
+        action: 'feedbackwidgetclosed',
         timestamp: new Date()
       }
     })
@@ -139,8 +138,8 @@ const FeedbackWidget: React.FC = () => {
         
         // Track success
         if (typeof window !== 'undefined' && window.gtag) {
-          window.gtag('event', 'feedback_submitted', {
-            feedback_type: feedback.type,
+          window.gtag('event', 'feedbacksubmitted', {
+            feedbacktype: feedback.type,
             sentiment: feedback.sentiment
           })
         }

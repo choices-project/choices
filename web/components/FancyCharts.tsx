@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect, useCallback, createContext, useContext } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { useState } from 'react';
+import { motion } from 'framer-motion';
 
 interface ChartData {
   name: string
@@ -21,7 +21,6 @@ export function FancyDonutChart({ data, size = 200, strokeWidth = 20, title }: F
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
   
   const radius = (size - strokeWidth) / 2
-  const circumference = 2 * Math.PI * radius
   
   const total = data.reduce((sum: any, item: any) => sum + item.value, 0)
   
@@ -118,7 +117,7 @@ interface FancyBarChartProps {
   title?: string
 }
 
-export function FancyBarChart({ data, height = 300, title }: FancyBarChartProps) {
+export function FancyBarChart({ data, title }: FancyBarChartProps) {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
   
   const maxValue = Math.max(...data.map(item => item.value))

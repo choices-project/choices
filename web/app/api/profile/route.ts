@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server';
 import { devLog } from '@/lib/logger';
-import { createClient } from '@/utils/supabase/server'
-import { cookies } from 'next/headers'
-import { getCurrentUser } from '@/lib/auth-utils'
+import { createClient } from '@/utils/supabase/server';
+import { cookies } from 'next/headers';
+import { getCurrentUser } from '@/lib/auth-utils';
 
 export const dynamic = 'force-dynamic'
 

@@ -186,14 +186,35 @@ export class PerformanceMonitor {
     try {
       const observer = new PerformanceObserver((list) => {
         const entries = Array.from(list.getEntries())
-        callback(entries)
-      })
-      observer.observe({ type, buffered: true })
-      this.observers.set(type, observer)
+        
+        // Process each entry and record relevant metrics
+        entries.forEach(entry => {
+          if (entry.entryType === 'navigation') {
+            const navEntry = entry as PerformanceNavigationTiming;
+            this.recordMetric('pageLoadTime', navEntry.loadEventEnd - navEntry.loadEventStart);
+            this.recordMetric('domContentLoaded', navEntry.domContentLoadedEventEnd - navEntry.domContentLoadedEventStart);
+            this.recordMetric('ttfb', navEntry.responseStart - navEntry.requestStart);
+          } else if (entry.entryType === 'paint') {
+            const paintEntry = entry as PerformancePaintTiming;
+            if (paintEntry.name === 'first-contentful-paint') {
+              this.recordMetric('fcp', paintEntry.startTime);
+            }
+          } else if (entry.entryType === 'largest-contentful-paint') {
+            const lcpEntry = entry as PerformanceEntry;
+            this.recordMetric('lcp', lcpEntry.startTime);
+          }
+        });
+        
+        // Call the original callback with processed entries
+        callback(entries);
+      });
+      
+      observer.observe({ type, buffered: true });
+      this.observers.set(type, observer);
     } catch (error) {
       if (process.env.NODE_ENV === 'development') {
         // eslint-disable-next-line no-console
-        console.log(`PerformanceObserver for ${type} not supported:`, error)
+        console.log(`PerformanceObserver for ${type} not supported:`, error);
       }
     }
   }

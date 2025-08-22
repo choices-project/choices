@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server';
 import { devLog } from '@/lib/logger';
 import { createClient } from '@/utils/supabase/server';
 import { cookies } from 'next/headers';
-import { getCurrentUser } from '@/lib/auth-utils'
+import { getCurrentUser } from '@/lib/auth-utils';
 
 export const dynamic = 'force-dynamic';
 
@@ -21,11 +21,10 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const limit = parseInt(searchParams.get('limit') || '20');
-    const status = searchParams.get('status') || 'active';
+    const _status = searchParams.get('status') || 'active';
 
     // Fetch active polls from po_polls table
     let polls;
-    let error;
 
     try {
       devLog('Fetching active polls from po_polls table...');
@@ -48,8 +47,8 @@ export async function GET(request: NextRequest) {
         total_votes: poll.total_votes || 0,
         participation_rate: poll.participation_rate || 0,
         aggregated_results: poll.options ? 
-          poll.options.reduce((acc: any, option: any, index: any) => {
-            acc[`option_${index + 1}`] = 0; // Default to 0 until we can count votes
+          poll.options.reduce((acc: any, option: any, _index: any) => {
+            acc[`option_${_index + 1}`] = 0; // Default to 0 until we can count votes
             return acc;
           }, {}) : {},
         status: poll.status

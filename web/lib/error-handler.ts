@@ -3,7 +3,7 @@
  * Provides structured error handling and user-friendly error messages
  */
 
-import { logger } from './logger';
+import { devLog } from './logger';
 
 export enum ErrorType {
   VALIDATION = 'VALIDATION',
@@ -102,7 +102,7 @@ export class ErrorHandler {
     if (error instanceof ApplicationError) {
       appError = {
         type: error.type,
-        message: error instanceof Error ? error.message : "Unknown error",
+        message: error.message,
         code: error.code,
         details: error.details,
         timestamp: error.timestamp,
@@ -112,7 +112,7 @@ export class ErrorHandler {
     } else {
       appError = {
         type: ErrorType.UNKNOWN,
-        message: error instanceof Error ? error.message : 'An unexpected error occurred',
+        message: error.message || 'An unexpected error occurred',
         timestamp: new Date(),
         details: {
           originalError: error.name,
@@ -122,7 +122,7 @@ export class ErrorHandler {
     }
 
     // Log the error
-    logger.error(appError.message, error, {
+    devLog('Error handled:', appError.message, {
       type: appError.type,
       code: appError.code,
       context
@@ -222,3 +222,4 @@ export const withErrorHandling = <T extends any[], R>(
     }
   };
 };
+

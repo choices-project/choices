@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { cookies } from 'next/headers'
-import { createClient } from '@/utils/supabase/server'
-import { devLog } from '@/lib/logger'
+import { NextRequest, NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
+import { createClient } from '@/utils/supabase/server';
+import { devLog } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic'
 

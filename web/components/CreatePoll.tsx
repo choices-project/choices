@@ -5,17 +5,11 @@ import { devLog } from '@/lib/logger';
 import { 
   Plus, 
   X, 
-  Calendar, 
-  Tag, 
-  Users, 
   AlertCircle,
   CheckCircle2,
-  Clock,
   Save,
   Info,
-  HelpCircle,
-  ArrowLeft,
-  ArrowRight
+  ArrowLeft
 } from 'lucide-react';
 import { pollService, CreatePollRequest } from '../lib/poll-service';
 
@@ -34,7 +28,7 @@ interface VotingMethod {
   icon: string;
 }
 
-const VOTING_METHODS: VotingMethod[] = [
+const VOTINGMETHODS: VotingMethod[] = [
   {
     type: 'single',
     name: 'Single Choice',
@@ -110,7 +104,7 @@ export const CreatePoll: React.FC<CreatePollProps> = ({
     title: '',
     description: '',
     options: ['', ''], // Start with 2 empty options
-    end_time: '',
+    endtime: '',
     category: '',
     tags: [],
     sponsors: []
@@ -164,7 +158,7 @@ export const CreatePoll: React.FC<CreatePollProps> = ({
   ];
 
   const getCurrentMethod = () => {
-    return VOTING_METHODS.find(method => method.type === enhancedFormData.votingMethod)!;
+    return VOTINGMETHODS.find(method => method.type === enhancedFormData.votingMethod)!;
   };
 
   const addOption = () => {
@@ -440,7 +434,7 @@ export const CreatePoll: React.FC<CreatePollProps> = ({
             <h3 className="text-lg font-semibold text-gray-900 mb-6">Choose Voting Method</h3>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {VOTING_METHODS.map((method: any) => (
+              {VOTINGMETHODS.map((method: any) => (
                 <div
                   key={method.type}
                   onClick={() => setEnhancedFormData(prev => ({ ...prev, votingMethod: method.type }))}

@@ -1,13 +1,14 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server';
 import { devLog } from '@/lib/logger';
 import { createClient } from '@supabase/supabase-js';
+import { handleError, getUserMessage, getHttpStatus } from '@/lib/error-handler';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     // Fetch trending topics
     const { data: trendingTopics, error: trendingError } = await supabase
@@ -18,10 +19,7 @@ export async function GET(request: NextRequest) {
 
     if (trendingError) {
       devLog('Error fetching trending topics:', trendingError);
-      return NextResponse.json({ 
-        success: false, 
-        error: 'Failed to fetch trending topics' 
-      }, { status: 500 });
+      throw new Error('Failed to fetch trending topics')
     }
 
     // Fetch available polls (optional - if no polls exist, we'll still create trending polls)
@@ -45,7 +43,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Create dynamic trending polls by combining trending topics with poll data
-    const trendingPolls = trendingTopics?.map((topic: any, index: any) => {
+    const trendingPolls = trendingTopics?.map((topic: any, _index: any) => {
       // Try to find a matching poll, or use the first available poll
       const matchingPoll = polls?.find(poll => 
         poll.title.toLowerCase().includes(topic.category?.[0]?.toLowerCase() || '') ||
@@ -88,14 +86,18 @@ export async function GET(request: NextRequest) {
 
   } catch (error) {
     devLog('Error in trending polls API:', error);
+    const appError = handleError(error as Error, { context: 'trending-polls' })
+    const userMessage = getUserMessage(appError)
+    const statusCode = getHttpStatus(appError)
+    
     return NextResponse.json({ 
       success: false, 
-      error: 'Internal server error' 
-    }, { status: 500 });
+      error: userMessage 
+    }, { status: statusCode });
   }
 }
 
-function generateDynamicOptions(topic: any, matchingPoll: any) {
+function generateDynamicOptions(topic: any, _matchingPoll: any) {
   const category = topic.category?.[0]?.toLowerCase() || 'general';
   
   const optionTexts: Record<string, string[]> = {

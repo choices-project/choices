@@ -107,8 +107,8 @@ export default function SystemSettingsPage() {
         database: {
           host: 'localhost',
           port: 5432,
-          name: 'choices_db',
-          user: 'choices_user',
+          name: 'choicesdb',
+          user: 'choicesuser',
           maxConnections: 100,
           backupFrequency: 'daily'
         },
@@ -166,7 +166,7 @@ export default function SystemSettingsPage() {
           <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
           <div className="h-10 bg-gray-200 rounded mb-6"></div>
           <div className="space-y-4">
-            {[...Array(5)].map((_: any, i: any) => (
+            {[...Array(5)].map((any, i: any) => (
               <div key={i} className="h-16 bg-gray-200 rounded"></div>
             ))}
           </div>
@@ -314,10 +314,10 @@ export default function SystemSettingsPage() {
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   >
                     <option value="UTC">UTC</option>
-                    <option value="America/New_York">Eastern Time</option>
+                    <option value="America/NewYork">Eastern Time</option>
                     <option value="America/Chicago">Central Time</option>
                     <option value="America/Denver">Mountain Time</option>
-                    <option value="America/Los_Angeles">Pacific Time</option>
+                    <option value="America/LosAngeles">Pacific Time</option>
                   </select>
                 </div>
                 <div>

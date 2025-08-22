@@ -48,6 +48,7 @@ export class PWAManager {
   private deferredPrompt: any = null;
   private isOnline = false;
   private pwaEnabled = false;
+  private pushSubscription: PushSubscription | null = null;
 
   constructor() {
     if (typeof window !== 'undefined') {
@@ -300,7 +301,10 @@ export class PWAManager {
         applicationServerKey: new Uint8Array(this.urlBase64ToUint8Array(process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || ''))
       });
       
-      devLog('PWA: Push notification subscription successful');
+      // Store the subscription for later use
+      this.pushSubscription = subscription;
+      
+      devLog('PWA: Push notification subscription successful', subscription);
       return true;
     } catch (error) {
       devLog('PWA: Push notification subscription failed:', error);
