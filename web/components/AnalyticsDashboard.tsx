@@ -9,8 +9,7 @@ import {
   RefreshCw,
   Bell,
   Zap,
-  Shield,
-  Database
+  Shield
 } from 'lucide-react';
 import { useFeatureFlags } from '../hooks/useFeatureFlags';
 import { isFeatureEnabled } from '../lib/feature-flags';
@@ -85,8 +84,8 @@ interface AnalyticsDashboardProps {
   defaultView?: string;
   autoRefresh?: boolean;
   refreshInterval?: number;
-  onDataUpdate?: (data: AnalyticsData) => void;
-  onError?: (error: string) => void;
+  onDataUpdate?: (_data: AnalyticsData) => void;
+  onError?: (_error: string) => void;
   className?: string;
 }
 
@@ -108,8 +107,8 @@ export default function AnalyticsDashboard({
   const [error, setError] = useState<string | null>(null);
   const [selectedView, setSelectedView] = useState<string>(defaultView);
   const [autoRefreshEnabled, setAutoRefreshEnabled] = useState(autoRefresh);
-  const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
-  const [filters, setFilters] = useState({
+  const [_lastUpdated, setLastUpdated] = useState<Date>(new Date());
+  const [_filters, setFilters] = useState({
     dateRange: '30d',
     pollId: 'all',
     userType: 'all',
