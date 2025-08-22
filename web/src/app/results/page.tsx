@@ -116,10 +116,10 @@ export default function ResultsPage() {
               
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-600">
                 <div>
-                  <span className="font-medium">Start:</span> {new Date(selectedPoll.starttime).toLocaleDateString()}
+                  <span className="font-medium">Start:</span> {new Date(selectedPoll.start_time).toLocaleDateString()}
                 </div>
                 <div>
-                  <span className="font-medium">End:</span> {new Date(selectedPoll.endtime).toLocaleDateString()}
+                  <span className="font-medium">End:</span> {new Date(selectedPoll.end_time).toLocaleDateString()}
                 </div>
                 <div>
                   <span className="font-medium">Options:</span> {selectedPoll.options.length}
@@ -198,7 +198,7 @@ export default function ResultsPage() {
                         </div>
                       </div>
                       <div>
-                        <span className="text-gray-600">Leaf Count:</span> {commitmentLog.leafcount}
+                        <span className="text-gray-600">Leaf Count:</span> {commitmentLog.leaf_count}
                       </div>
                       <div>
                         <span className="text-gray-600">Timestamp:</span> {commitmentLog.timestamp}
