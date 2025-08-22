@@ -33,8 +33,8 @@ interface PollResults {
 
 interface FeaturedPollsProps {
   polls: Poll[];
-  onVote?: (pollId: string, choice: number) => Promise<any>;
-  onViewDetails?: (pollId: string) => void;
+  onVote?: (_pollId: string, _choice: number) => Promise<any>;
+  onViewDetails?: (_pollId: string) => void;
   userVotes?: Record<string, number>;
   title?: string;
   subtitle?: string;

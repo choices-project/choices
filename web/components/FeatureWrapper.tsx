@@ -40,7 +40,7 @@ export function FeatureWrapper({
   className,
   style
 }: FeatureWrapperProps): React.ReactElement | null {
-  const { enabled, disabled, loading } = useFeatureFlag(feature);
+  const { enabled, disabled: _disabled, loading } = useFeatureFlag(feature);
 
   // Show loading state if requested and loading
   if (showLoading && loading) {
@@ -171,7 +171,7 @@ export function FeatureWrapperWithDependencies({
   className,
   style
 }: FeatureWrapperWithDependenciesProps): React.ReactElement | null {
-  const { enabled, disabled, dependenciesMet, loading } = useFeatureFlagWithDependencies(feature);
+  const { enabled, disabled: _disabled, dependenciesMet, loading } = useFeatureFlagWithDependencies(feature);
 
   // Show loading state if requested and loading
   if (showLoading && loading) {
@@ -218,7 +218,7 @@ export function withFeatureFlag<P extends object>(
   fallback?: React.ComponentType<P>
 ) {
   return function WithFeatureFlagComponent(props: P): React.ReactElement | null {
-    const { enabled, disabled, loading } = useFeatureFlag(feature);
+    const { enabled, disabled: _disabled, loading } = useFeatureFlag(feature);
 
     if (loading) {
       return <div>Loading...</div>;
