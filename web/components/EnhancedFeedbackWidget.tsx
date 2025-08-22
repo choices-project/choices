@@ -2,16 +2,14 @@
 
 import React, { useState, useRef, useEffect } from 'react'
 import { devLog } from '@/lib/logger'
-import { getFeedbackTracker, FeedbackContext } from '@/lib/feedback-tracker'
+import { getFeedbackTracker } from '@/lib/feedback-tracker'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
   MessageCircle, 
   X, 
   Bug, 
   Lightbulb, 
-  Heart, 
   Camera, 
-  Send,
   CheckCircle,
   Star,
   Smile,
@@ -20,8 +18,7 @@ import {
   AlertTriangle,
   Zap,
   Shield,
-  Accessibility,
-  TrendingUp
+  Accessibility
 } from 'lucide-react'
 
 interface FeedbackData {

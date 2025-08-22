@@ -108,7 +108,7 @@ export default function AnalyticsDashboard({
   const [selectedView, setSelectedView] = useState<string>(defaultView);
   const [autoRefreshEnabled, setAutoRefreshEnabled] = useState(autoRefresh);
   const [_lastUpdated, setLastUpdated] = useState<Date>(new Date());
-  const [_filters, setFilters] = useState({
+  const [_filters, _setFilters] = useState({
     dateRange: '30d',
     pollId: 'all',
     userType: 'all',
