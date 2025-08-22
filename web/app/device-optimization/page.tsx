@@ -334,15 +334,15 @@ export default function DeviceOptimizationPage() {
                   <div>
                     <p className="font-medium">Real-time Updates</p>
                     <p className="text-sm text-gray-600">
-                      {optimizationSettings.realtimeupdates ? 'Live updates enabled' : 'Manual refresh only'}
+                      {optimizationSettings.real_time_updates ? 'Live updates enabled' : 'Manual refresh only'}
                     </p>
                   </div>
                   <Button
-                    variant={optimizationSettings.realtimeupdates ? 'default' : 'outline'}
+                    variant={optimizationSettings.real_time_updates ? 'default' : 'outline'}
                     size="sm"
-                    onClick={() => handleSettingToggle('realtimeupdates', !optimizationSettings.realtimeupdates)}
+                    onClick={() => handleSettingToggle('real_time_updates', !optimizationSettings.real_time_updates)}
                   >
-                    {optimizationSettings.realtimeupdates ? 'Enabled' : 'Disabled'}
+                    {optimizationSettings.real_time_updates ? 'Enabled' : 'Disabled'}
                   </Button>
                 </div>
 
@@ -351,34 +351,34 @@ export default function DeviceOptimizationPage() {
                   <div>
                     <p className="font-medium">Data Saver</p>
                     <p className="text-sm text-gray-600">
-                      {optimizationSettings.datasaver ? 'Reduced data usage' : 'Full content'}
+                      {optimizationSettings.data_saver ? 'Reduced data usage' : 'Full content'}
                     </p>
                   </div>
                   <Button
-                    variant={optimizationSettings.datasaver ? 'default' : 'outline'}
+                    variant={optimizationSettings.data_saver ? 'default' : 'outline'}
                     size="sm"
-                    onClick={() => handleSettingToggle('datasaver', !optimizationSettings.datasaver)}
+                    onClick={() => handleSettingToggle('data_saver', !optimizationSettings.data_saver)}
                   >
-                    {optimizationSettings.datasaver ? 'Enabled' : 'Disabled'}
+                    {optimizationSettings.data_saver ? 'Enabled' : 'Disabled'}
                   </Button>
                 </div>
 
                 {/* Offline Mode */}
-                {capabilities.offlinesupport && (
+                {capabilities.offline_support && (
                   <div className="flex items-center justify-between p-4 border rounded-lg">
                     <div>
                       <p className="font-medium">Offline Mode</p>
                       <p className="text-sm text-gray-600">
-                        {optimizationSettings.offlinemode ? 'Available offline' : 'Online only'}
+                        {optimizationSettings.offline_mode ? 'Available offline' : 'Online only'}
                       </p>
                     </div>
                     <Button
-                      variant={optimizationSettings.offlinemode ? 'default' : 'outline'}
+                      variant={optimizationSettings.offline_mode ? 'default' : 'outline'}
                       size="sm"
                       onClick={handleOfflineModeToggle}
                       disabled={isEnablingOffline}
                     >
-                      {isEnablingOffline ? 'Enabling...' : (optimizationSettings.offlinemode ? 'Enabled' : 'Disabled')}
+                      {isEnablingOffline ? 'Enabling...' : (optimizationSettings.offline_mode ? 'Enabled' : 'Disabled')}
                     </Button>
                   </div>
                 )}
@@ -401,7 +401,7 @@ export default function DeviceOptimizationPage() {
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* Camera Access */}
-                  {capabilities.cameraaccess && (
+                  {capabilities.camera_access && (
                     <div className="flex items-center justify-between p-4 border rounded-lg">
                       <div className="flex items-center space-x-3">
                         <Camera className="h-5 w-5" />
@@ -421,7 +421,7 @@ export default function DeviceOptimizationPage() {
                   )}
 
                   {/* Location Access */}
-                  {capabilities.locationaccess && (
+                  {capabilities.location_access && (
                     <div className="flex items-center justify-between p-4 border rounded-lg">
                       <div className="flex items-center space-x-3">
                         <MapPin className="h-5 w-5" />
@@ -441,14 +441,14 @@ export default function DeviceOptimizationPage() {
                   )}
 
                   {/* Storage Information */}
-                  {capabilities.storagequota > 0 && (
+                  {capabilities.storage_quota > 0 && (
                     <div className="p-4 border rounded-lg">
                       <div className="flex items-center space-x-3 mb-2">
                         <Download className="h-5 w-5" />
                         <p className="font-medium">Available Storage</p>
                       </div>
                       <p className="text-sm text-gray-600">
-                        {Math.round(capabilities.storagequota / (1024 * 1024 * 1024))} GB available
+                        {Math.round(capabilities.storage_quota / (1024 * 1024 * 1024))} GB available
                       </p>
                     </div>
                   )}
