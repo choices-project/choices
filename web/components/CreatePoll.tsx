@@ -14,7 +14,7 @@ import {
 import { pollService, CreatePollRequest } from '../lib/poll-service';
 
 interface CreatePollProps {
-  onPollCreated?: (poll: any) => void;
+  onPollCreated?: (_poll: any) => void;
   onCancel?: () => void;
   isOpen?: boolean;
 }
@@ -144,7 +144,7 @@ export const CreatePoll: React.FC<CreatePollProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
-  const categories = [
+  const [_categories] = [
     'climate',
     'technology',
     'education',

@@ -386,35 +386,6 @@ export default function Dashboard() {
   );
 }
 
-// Metric Card Component
-function MetricCard({ title, value, icon, color }: {
-  title: string;
-  value: string | number;
-  icon: React.ReactNode;
-  color: string;
-}) {
-  const colorClasses = {
-    blue: 'bg-blue-500',
-    green: 'bg-green-500',
-    purple: 'bg-purple-500',
-    orange: 'bg-orange-500',
-  };
-
-  return (
-    <div className="bg-white rounded-xl shadow-sm border p-6">
-      <div className="flex items-center">
-        <div className={`${colorClasses[color as keyof typeof colorClasses]} p-3 rounded-lg`}>
-          <div className="text-white">{icon}</div>
-        </div>
-        <div className="ml-4">
-          <p className="text-sm font-medium text-gray-600">{title}</p>
-          <p className="text-2xl font-bold text-gray-900">{value}</p>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 // Enhanced Metric Card Component
 function EnhancedMetricCard({ title, value, icon, color, trend, trendDirection }: {
   title: string;
