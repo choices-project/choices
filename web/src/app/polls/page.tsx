@@ -50,6 +50,15 @@ export default function PollsPage() {
 
       // Submit vote
       const voteData = await poApi.submitVote(pollId, tokenData.token, tokenData.tag, choice)
+      
+      // Log successful vote submission with vote data
+      devLog('Vote submitted successfully:', {
+        pollId,
+        voteId: voteData.vote_id,
+        auditReceipt: voteData.audit_receipt,
+        choice
+      })
+      
       alert('Vote submitted successfully!')
       setSelectedPoll(null)
       setUserChoice(null)
