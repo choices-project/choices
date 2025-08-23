@@ -45,6 +45,10 @@ interface BiometricSetupProps {
 }
 
 export default function BiometricSetup({ userId, username, onSuccess, onError }: BiometricSetupProps) {
+  // Validate required parameters
+  if (!userId || !username) {
+    throw new Error('userId and username are required for biometric setup')
+  }
   const [isSupported, setIsSupported] = useState<boolean | null>(null)
   const [isAvailable, setIsAvailable] = useState<boolean | null>(null)
   const [hasCredentials, setHasCredentials] = useState<boolean | null>(null)
@@ -132,7 +136,7 @@ export default function BiometricSetup({ userId, username, onSuccess, onError }:
             <Shield className="h-4 w-4 text-green-600" />
           </CardTitle>
           <CardDescription>
-            Set up fingerprint or face recognition for secure, passwordless login
+            Set up fingerprint or face recognition for secure, passwordless login for {username}
           </CardDescription>
         </CardHeader>
 
