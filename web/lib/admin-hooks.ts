@@ -381,6 +381,14 @@ export const useBreakingNews = () => {
     refetchInterval: 30000, // 30 seconds
   });
 
+  // Invalidate related queries when breaking news updates
+  React.useEffect(() => {
+    if (query.data) {
+      queryClient.invalidateQueries({ queryKey: ['activity-feed'] });
+      queryClient.invalidateQueries({ queryKey: ['system-metrics'] });
+    }
+  }, [query.data, queryClient]);
+
   return query;
 };
 
