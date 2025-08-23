@@ -887,6 +887,9 @@ export function assessPollQuality(poll: GeneratedPoll): QualityMetrics {
     controversyScore * 0.1
   );
   
+  // Include method appropriateness in overall assessment
+  const finalScore = (overallScore + methodAppropriateness) / 2;
+  
   // Helper function to assess voting method appropriateness
   function assessVotingMethodAppropriateness(method: string, optionCount: number): number {
     switch (method) {
@@ -913,7 +916,7 @@ export function assessPollQuality(poll: GeneratedPoll): QualityMetrics {
     completenessScore,
     relevanceScore,
     controversyScore,
-    overallScore,
+    overallScore: finalScore,
     assessmentMetadata: {
       assessedAt: new Date().toISOString(),
       method: 'automated'
