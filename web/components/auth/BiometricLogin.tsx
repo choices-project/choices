@@ -25,7 +25,10 @@ const BiometricContext = createContext<{
   isSupported: null,
   isAvailable: null,
   username: '',
-  setUsername: () => {}
+  setUsername: (username: string) => {
+    // Default implementation - will be overridden by actual implementation
+    console.warn('BiometricContext setUsername called before initialization')
+  }
 });
 
 // Hook to use biometric context
