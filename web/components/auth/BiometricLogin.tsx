@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback, createContext, useContext } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -14,6 +14,24 @@ import {
   isBiometricAvailable
 } from '@/lib/webauthn'
 import { devLog } from '@/lib/logger'
+
+// Context for sharing biometric authentication state
+const BiometricContext = createContext<{
+  isSupported: boolean | null;
+  isAvailable: boolean | null;
+  username: string;
+  setUsername: (username: string) => void;
+}>({
+  isSupported: null,
+  isAvailable: null,
+  username: '',
+  setUsername: () => {}
+});
+
+// Hook to use biometric context
+export function useBiometricContext() {
+  return useContext(BiometricContext);
+}
 
 interface BiometricLoginProps {
   onSuccess?: (user?: any) => void
@@ -33,7 +51,7 @@ export default function BiometricLogin({ onSuccess, onError, onCancel }: Biometr
     checkBiometricSupport()
   }, [])
 
-  const checkBiometricSupport = async () => {
+  const checkBiometricSupport = useCallback(async () => {
     try {
       const supported = isWebAuthnSupported()
       setIsSupported(supported)
@@ -46,7 +64,7 @@ export default function BiometricLogin({ onSuccess, onError, onCancel }: Biometr
       devLog('Error checking biometric support:', error)
       setError('Failed to check biometric support')
     }
-  }
+  }, [])
 
   const handleAuthenticate = async () => {
     if (!username.trim()) {
@@ -63,7 +81,7 @@ export default function BiometricLogin({ onSuccess, onError, onCancel }: Biometr
       if (result.success) {
         setSuccess(true)
         // Pass the user data from the authentication result
-        const user = result.user || { username: username.trim() }
+        const user = { username: username.trim() }
         onSuccess?.(user)
       } else {
         const errorMessage = result.error || 'Authentication failed'
