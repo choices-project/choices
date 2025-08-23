@@ -246,8 +246,9 @@ class FeedbackTracker {
         const duration = Date.now() - startTime
         this.errors.push({
           type: 'network',
-          message: error instanceof Error ? error instanceof Error ? error.message : "Unknown error" : 'Unknown error',
-          timestamp: new Date().toISOString()
+          message: error instanceof Error ? error.message : 'Unknown error',
+          timestamp: new Date().toISOString(),
+          duration
         })
         throw error
       }
