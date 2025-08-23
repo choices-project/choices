@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, createContext, useContext } from 'react'
 import { motion } from 'framer-motion'
+import { devLog } from '@/lib/logger'
 import { 
   TrendingUp, TrendingDown, Users, MapPin, 
   GraduationCap, DollarSign, Building2, 
@@ -108,8 +109,14 @@ const TopicContext = createContext<{
   updateData: (newData: TopicData) => {
     // Update the context data when new data is provided
     devLog('Topic analysis data updated:', newData.question)
-    // In a real implementation, this would update the context state
-    // For now, we log the update for debugging purposes
+    // Validate newData before processing
+    if (newData && newData.question && newData.breakdowns) {
+      // In a real implementation, this would update the context state
+      // For now, we log the update for debugging purposes
+      devLog('Valid newData received with breakdowns:', Object.keys(newData.breakdowns))
+    } else {
+      devLog('Invalid newData received:', newData)
+    }
   }
 })
 
@@ -196,7 +203,11 @@ export function TopicAnalysis({
     <TopicContext.Provider value={{
       data,
       insights,
-      loading
+      loading,
+      updateData: (newData: TopicData) => {
+        // This would update the context data in a real implementation
+        devLog('Topic analysis data updated:', newData.question)
+      }
     }}>
       <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-100">
       {/* Header */}

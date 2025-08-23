@@ -33,7 +33,7 @@ interface Poll {
 
 interface PWAVotingInterfaceProps {
   poll: Poll
-  onVote: (choice: number) => void
+  onVote: (choice: number) => Promise<void> | void
   showResults?: boolean
   offlineMode?: boolean
 }
@@ -96,7 +96,8 @@ export function PWAVotingInterface({
       }
 
       // Call the parent vote handler with validated choice
-      onVote(choice)
+      // The choice parameter is used here to pass the validated vote choice
+      await onVote(choice)
       setHasVoted(true)
       
       // Track analytics
