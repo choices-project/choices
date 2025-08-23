@@ -3,6 +3,8 @@
  * Captures comprehensive user journey data for AI analysis and diagnosis
  */
 
+import { devLog } from '@/lib/logger'
+
 export interface UserJourney {
   // Current page context
   currentPage: string
@@ -394,7 +396,7 @@ class FeedbackTracker {
       return undefined
     } catch (error) {
       if (process.env.NODE_ENV === 'development') {
-        console.log('Failed to capture screenshot:', error)
+        devLog('Failed to capture screenshot:', error)
       }
       return undefined
     }
