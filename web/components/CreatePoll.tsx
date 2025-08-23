@@ -223,21 +223,27 @@ export const CreatePoll: React.FC<CreatePollProps> = ({
     setSuccess(false);
 
     try {
-      const response = await fetch('/api/polls', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(enhancedFormData)
-      });
+      // Transform enhanced form data to CreatePollRequest format
+      const pollData: CreatePollRequest = {
+        title: enhancedFormData.title,
+        description: enhancedFormData.description,
+        category: enhancedFormData.category,
+        options: enhancedFormData.options.map(option => option.text).filter(text => text.trim()),
+        end_time: new Date(`${enhancedFormData.schedule.endDate}T${enhancedFormData.schedule.endTime}`).toISOString(),
+        tags: enhancedFormData.settings.allowComments ? ['comments-enabled'] : [],
+        sponsors: []
+      };
 
-      if (response.ok) {
-        const data = await response.json();
+      // Use pollService to create the poll
+      const createdPoll = await pollService.createPoll(pollData);
+
+      if (createdPoll) {
         setSuccess(true);
         if (onPollCreated) {
-          onPollCreated(data.poll);
+          onPollCreated(createdPoll);
         }
       } else {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to create poll');
+        throw new Error('Failed to create poll');
       }
     } catch (error) {
       devLog('Error creating poll:', error);
