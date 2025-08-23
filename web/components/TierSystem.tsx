@@ -132,11 +132,14 @@ export function TierSystem({ tiers, currentTier = 0 }: TierSystemProps) {
                 >
                   {currentTier >= tier.level ? (
                     <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0" />
+                  ) : currentTier === tier.level - 1 ? (
+                    <Unlock className="h-5 w-5 text-blue-500 flex-shrink-0" />
                   ) : (
                     <Lock className="h-5 w-5 text-gray-400 flex-shrink-0" />
                   )}
                   <span className={`text-sm ${
-                    currentTier >= tier.level ? 'text-gray-700' : 'text-gray-500'
+                    currentTier >= tier.level ? 'text-gray-700' : 
+                    currentTier === tier.level - 1 ? 'text-blue-600 font-medium' : 'text-gray-500'
                   }`}>
                     {feature}
                   </span>
