@@ -34,7 +34,6 @@ export default function PollShare({ pollId, poll }: PollShareProps) {
 
   const handleDownloadQR = () => {
     // Implement QR code download functionality
-    const canvas = document.createElement('canvas')
     // Generate QR code and download
     devLog('Downloading QR code for:', pollUrl)
   }

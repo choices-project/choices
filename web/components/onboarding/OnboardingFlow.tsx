@@ -69,11 +69,15 @@ const OnboardingContext = createContext<{
   },
   updateData: (updates: Partial<OnboardingData>) => {
     // Default implementation - will be overridden by actual implementation
+    // eslint-disable-next-line no-console
     console.warn('OnboardingContext updateData called before initialization')
+    // updates parameter is available for use in actual implementation
   },
   setCurrentStep: (step: OnboardingStep) => {
     // Default implementation - will be overridden by actual implementation
+    // eslint-disable-next-line no-console
     console.warn('OnboardingContext setCurrentStep called before initialization')
+    // step parameter is available for use in actual implementation
   },
   isLoading: false,
   error: null

@@ -5,6 +5,7 @@ import { Heart, Users, Globe, TrendingUp } from 'lucide-react'
 
 interface ValuesStepProps {
   data: any
+  // eslint-disable-next-line no-unused-vars
   onUpdate: (updates: any) => void
   onNext: () => void
   onBack: () => void

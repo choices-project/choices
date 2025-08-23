@@ -137,13 +137,7 @@ export const CreatePollForm: React.FC<CreatePollFormProps> = ({
     }));
   };
 
-  const getRecommendedPrivacyLevel = () => {
-    return HybridPrivacyManager.getRecommendedPrivacyLevel({
-      title: formData.title,
-      description: formData.description,
-      category: formData.category
-    });
-  };
+
 
   return (
     <div className="bg-white rounded-lg shadow-lg p-6 max-w-2xl mx-auto">

@@ -46,7 +46,7 @@ export const PrivacyLevelSelector: React.FC<PrivacyLevelSelectorProps> = ({
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-        {levels.map((level: any) => {
+        {levels.map((level: any) => { // eslint-disable-line no-unused-vars
           const config = HybridPrivacyManager.getPrivacyConfig(level);
           const description = PRIVACY_DESCRIPTIONS[level as keyof typeof PRIVACY_DESCRIPTIONS];
           const isSelected = value === level;

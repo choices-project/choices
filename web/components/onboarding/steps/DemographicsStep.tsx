@@ -6,6 +6,7 @@ import { useOnboardingContext } from '../OnboardingFlow'
 
 interface DemographicsStepProps {
   data: any
+  // eslint-disable-next-line no-unused-vars
   onUpdate: (updates: any) => void
   onNext: () => void
   onBack: () => void
