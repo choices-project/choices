@@ -687,9 +687,34 @@ export class MediaBiasAnalysisService {
   }
 
   private calculateResultDifference(mediaResults: MediaPollResults, ourResults: any): number {
-    // Calculate percentage difference in results
-    // This is a simplified calculation
-    return 0.15; // Placeholder
+    // Calculate percentage difference in results between media poll and our poll
+    if (!mediaResults || !ourResults || !mediaResults.optionResults || !ourResults.optionResults) {
+      return 0; // No data to compare
+    }
+
+    const mediaOptions = Object.keys(mediaResults.optionResults);
+    const ourOptions = Object.keys(ourResults.optionResults);
+    
+    if (mediaOptions.length === 0 || ourOptions.length === 0) {
+      return 0; // No options to compare
+    }
+
+    // Calculate total difference across all matching options
+    let totalDifference = 0;
+    let comparisonCount = 0;
+
+    mediaOptions.forEach(option => {
+      if (ourOptions.includes(option)) {
+        const mediaPercentage = mediaResults.optionResults[option] || 0;
+        const ourPercentage = ourResults.optionResults[option] || 0;
+        const difference = Math.abs(mediaPercentage - ourPercentage);
+        totalDifference += difference;
+        comparisonCount++;
+      }
+    });
+
+    // Return average difference, or 0 if no comparisons were made
+    return comparisonCount > 0 ? totalDifference / comparisonCount : 0;
   }
 
   private calculateTextSimilarity(text1: string, text2: string): number {
