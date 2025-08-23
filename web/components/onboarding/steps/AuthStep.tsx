@@ -37,9 +37,11 @@ export default function AuthStep({ data, onUpdate, onNext, onBack }: AuthStepPro
         throw error
       }
 
+      // Log OAuth initiation with provider data
+      devLog('OAuth initiated:', { provider, data })
+      
       // The user will be redirected to OAuth provider
       // When they return, they'll be authenticated
-      devLog('OAuth initiated:', provider)
       
     } catch (error: any) {
       devLog('Login error:', error)
@@ -122,6 +124,16 @@ export default function AuthStep({ data, onUpdate, onNext, onBack }: AuthStepPro
               <li>• Basic profile (name, email, avatar)</li>
               <li>• No access to your contacts or posts</li>
               <li>• No tracking across other sites</li>
+              
+              {/* Skip option for users who want to continue without auth */}
+              <div className="mt-4 pt-4 border-t border-blue-200">
+                <button
+                  onClick={onNext}
+                  className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                >
+                  Skip for now →
+                </button>
+              </div>
               <li>• You can delete your data anytime</li>
             </ul>
           </div>
