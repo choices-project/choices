@@ -46,6 +46,12 @@ export default function BiometricSetup({ userId, username, onSuccess, onError }:
         if (available) {
           const hasCreds = await hasBiometricCredentials()
           setHasCredentials(hasCreds)
+          
+          // Check for existing credentials to provide better user feedback
+          if (hasCreds) {
+            const existingCreds = await getUserBiometricCredentials()
+            devLog('Existing biometric credentials found:', existingCreds.length)
+          }
         }
       }
     } catch (error) {
