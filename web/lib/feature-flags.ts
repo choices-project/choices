@@ -316,12 +316,17 @@ export class FeatureFlagManager {
     this.listeners.forEach(listener => {
       try {
         listener(new Map(this.flags));
-      } catch (error) {
-        if (process.env.NODE_ENV === 'development') {
-          // eslint-disable-next-line no-console
-          console.log('Error in feature flag listener:', error);
+              } catch (error) {
+          if (process.env.NODE_ENV === 'development') {
+            // Use devLog for consistent logging
+            if (typeof window !== 'undefined' && window.gtag) {
+              window.gtag('event', 'feature_flag_error', {
+                error_message: error instanceof Error ? error.message : 'Unknown error',
+                timestamp: new Date().toISOString()
+              });
+            }
+          }
         }
-      }
     });
   }
 
