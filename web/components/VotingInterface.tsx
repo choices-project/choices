@@ -136,12 +136,22 @@ export const VotingInterface: React.FC<VotingInterfaceProps> = ({
   const handleVote = async () => {
     if (!selectedChoice || poll.status !== 'active') return;
     
+    // Validate choice is within valid range
+    if (selectedChoice < 0 || selectedChoice >= poll.options.length) {
+      setError('Invalid choice selected');
+      return;
+    }
+    
     setIsSubmitting(true);
     setError(null);
     setSuccess(false);
     
     try {
-      const response = await onVote(poll.id, selectedChoice);
+      // Use pollId and choice parameters properly
+      const pollId = poll.id;
+      const choice = selectedChoice;
+      
+      const response = await onVote(pollId, choice);
       
       if (response.success) {
         setVoteId(response.voteId);
