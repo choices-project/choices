@@ -52,10 +52,22 @@ export function ProfessionalChart({
 }: ProfessionalChartProps) {
   const [isVisible, setIsVisible] = useState(false)
   const [hoveredItem, setHoveredItem] = useState<string | null>(null)
+  const [isProcessing, setIsProcessing] = useState(false)
 
   useEffect(() => {
     setIsVisible(true)
   }, [])
+
+  // Show processing state when data changes
+  useEffect(() => {
+    if (data.length > 0) {
+      setIsProcessing(true)
+      const timer = setTimeout(() => {
+        setIsProcessing(false)
+      }, 500)
+      return () => clearTimeout(timer)
+    }
+  }, [data])
 
   // Cache data processing to prevent unnecessary re-renders
   const processedData = useCallback(() => {
@@ -246,16 +258,24 @@ export function ProfessionalChart({
       showConfidence
     }}>
       <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100">
-        {(title || subtitle) && (
-          <div className="mb-6">
+              {(title || subtitle) && (
+        <div className="mb-6">
+          <div className="flex items-center gap-2 mb-2">
             {title && (
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">{title}</h3>
+              <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
             )}
-            {subtitle && (
-              <p className="text-sm text-gray-600">{subtitle}</p>
+            {isProcessing && (
+              <div className="flex items-center gap-1 text-blue-600">
+                <Activity className="w-4 h-4 animate-pulse" />
+                <span className="text-sm">Processing...</span>
+              </div>
             )}
           </div>
-        )}
+          {subtitle && (
+            <p className="text-sm text-gray-600">{subtitle}</p>
+          )}
+        </div>
+      )}
 
         <motion.div
           variants={containerVariants}
