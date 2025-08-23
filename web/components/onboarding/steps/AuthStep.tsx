@@ -18,6 +18,9 @@ export default function AuthStep({ data, onUpdate, onNext, onBack }: AuthStepPro
   const [error, setError] = useState<string | null>(null)
   const { updateData } = useOnboardingContext()
 
+  // Initialize from existing data if available
+  const [authMethod, setAuthMethod] = useState(data?.authMethod || '')
+
   const supabase = createClient()
 
   const handleSocialLogin = async (provider: 'google' | 'github') => {
