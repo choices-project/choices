@@ -273,7 +273,8 @@ class FeedbackTracker {
       language: navigator.language,
       timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
       screenResolution: `${screen.width}x${screen.height}`,
-      viewportSize: `${window.innerWidth}x${window.innerHeight}`
+      viewportSize: `${window.innerWidth}x${window.innerHeight}`,
+      userAgent: userAgent // Include user agent for debugging and analytics
     }
   }
   
