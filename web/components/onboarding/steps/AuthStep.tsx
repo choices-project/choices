@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Lock, Shield } from 'lucide-react'
 import { createClient } from '@/utils/supabase/client'
 import { devLog } from '@/lib/logger';
@@ -20,6 +20,13 @@ export default function AuthStep({ data, onUpdate, onNext, onBack }: AuthStepPro
 
   // Initialize from existing data if available
   const [authMethod, setAuthMethod] = useState(data?.authMethod || '')
+
+  // Update local state when data changes
+  useEffect(() => {
+    if (data?.authMethod && data.authMethod !== authMethod) {
+      setAuthMethod(data.authMethod)
+    }
+  }, [data?.authMethod, authMethod])
 
   const supabase = createClient()
 
