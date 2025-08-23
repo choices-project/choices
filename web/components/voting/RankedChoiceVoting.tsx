@@ -92,6 +92,16 @@ export default function RankedChoiceVoting({
     setError(null)
 
     try {
+      // Track analytics with poll ID
+      if (typeof window !== 'undefined' && window.gtag) {
+        window.gtag('event', 'vote_submitted', {
+          poll_id: pollId,
+          rankings: rankings,
+          voting_method: 'ranked_choice',
+          ranked_options_count: rankedOptions.length
+        })
+      }
+      
       await onVote(rankings)
     } catch (err: any) {
       setError(err.message || 'Failed to submit vote')

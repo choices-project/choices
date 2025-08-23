@@ -65,6 +65,16 @@ export default function ApprovalVoting({
     setError(null)
 
     try {
+      // Track analytics with poll ID
+      if (typeof window !== 'undefined' && window.gtag) {
+        window.gtag('event', 'vote_submitted', {
+          poll_id: pollId,
+          choices: approvedOptions,
+          voting_method: 'approval',
+          approval_count: approvedOptions.length
+        })
+      }
+      
       await onVote(approvedOptions)
     } catch (err: any) {
       setError(err.message || 'Failed to submit vote')

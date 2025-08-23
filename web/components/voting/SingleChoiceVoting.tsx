@@ -61,6 +61,15 @@ export default function SingleChoiceVoting({
     setError(null)
 
     try {
+      // Track analytics with poll ID
+      if (typeof window !== 'undefined' && window.gtag) {
+        window.gtag('event', 'vote_submitted', {
+          poll_id: pollId,
+          choice: selectedOption,
+          voting_method: 'single_choice'
+        })
+      }
+      
       await onVote(selectedOption)
     } catch (err: any) {
       setError(err.message || 'Failed to submit vote')
