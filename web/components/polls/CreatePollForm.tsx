@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { devLog } from '@/lib/logger';
 import { Plus, X, Save, AlertCircle } from 'lucide-react';
 import { PrivacyLevelSelector } from '../privacy/PrivacyLevelSelector';
-import { PrivacyLevel, HybridPrivacyManager } from '@/lib/hybrid-privacy';
+import { PrivacyLevel } from '@/lib/hybrid-privacy';
 
 interface CreatePollFormProps {
   onSubmit: (pollData: CreatePollData) => Promise<void>;

@@ -442,7 +442,7 @@ export const optimizedQueries = {
   getCachedPolls: withPerformanceTracking('getCachedPolls', getCachedPolls),
 };
 
-export default {
+const databaseOptimizer = {
   checkDatabaseHealth,
   optimizedQueries,
   queryMonitor,
@@ -450,3 +450,5 @@ export default {
   PERFORMANCE_INDEXES,
   OPTIMIZED_POOL_CONFIG
 };
+
+export default databaseOptimizer;

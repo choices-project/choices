@@ -275,7 +275,7 @@ export const useApproveTopic = () => {
       addNotification({
         type: 'error',
         title: 'Approval Failed',
-        message: 'Failed to approve the trending topic.',
+        message: `Failed to approve the trending topic: ${error.message}`,
       });
     },
   });
@@ -297,7 +297,7 @@ export const useRejectTopic = () => {
       addNotification({
         type: 'error',
         title: 'Rejection Failed',
-        message: 'Failed to reject the trending topic.',
+        message: `Failed to reject the trending topic: ${error.message}`,
       });
     },
   });
@@ -319,7 +319,7 @@ export const useApprovePoll = () => {
       addNotification({
         type: 'error',
         title: 'Approval Failed',
-        message: 'Failed to approve the generated poll.',
+        message: `Failed to approve the generated poll: ${error.message}`,
       });
     },
   });
@@ -341,7 +341,7 @@ export const useRejectPoll = () => {
       addNotification({
         type: 'error',
         title: 'Rejection Failed',
-        message: 'Failed to reject the generated poll.',
+        message: `Failed to reject the generated poll: ${error.message}`,
       });
     },
   });
@@ -365,7 +365,7 @@ export const useAnalyzeTrendingTopics = () => {
       addNotification({
         type: 'error',
         title: 'Analysis Failed',
-        message: 'Failed to analyze trending topics.',
+        message: `Failed to analyze trending topics: ${error.message}`,
       });
     },
   });
