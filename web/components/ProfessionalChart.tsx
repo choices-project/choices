@@ -23,6 +23,24 @@ interface ProfessionalChartProps {
   maxValue?: number
 }
 
+// Context for sharing chart data
+const ChartContext = createContext<{
+  data: ChartData[];
+  maxValue: number;
+  showTrends: boolean;
+  showConfidence: boolean;
+}>({
+  data: [],
+  maxValue: 0,
+  showTrends: false,
+  showConfidence: false
+})
+
+// Hook to use chart context
+export function useChartContext() {
+  return useContext(ChartContext)
+}
+
 export function ProfessionalChart({
   data,
   title,
@@ -33,13 +51,24 @@ export function ProfessionalChart({
   maxValue
 }: ProfessionalChartProps) {
   const [isVisible, setIsVisible] = useState(false)
+  const [hoveredItem, setHoveredItem] = useState<string | null>(null)
 
   useEffect(() => {
     setIsVisible(true)
   }, [])
 
-  const sortedData = [...data].sort((a, b) => b.value - a.value)
-  const calculatedMaxValue = maxValue || Math.max(...data.map(item => item.value))
+  // Cache data processing to prevent unnecessary re-renders
+  const processedData = useCallback(() => {
+    return [...data].sort((a, b) => b.value - a.value)
+  }, [data])
+
+  // Cache max value calculation
+  const calculatedMaxValue = useCallback(() => {
+    return maxValue || Math.max(...data.map(item => item.value))
+  }, [data, maxValue])
+
+  const sortedData = processedData()
+  const maxValueCalculated = calculatedMaxValue()
 
   const containerVariants: Variants = {
     hidden: { opacity: 0 },
@@ -67,7 +96,7 @@ export function ProfessionalChart({
   const renderBarChart = () => (
     <div className="space-y-4">
       {sortedData.map((item: any, index: any) => {
-        const percentage = (item.value / calculatedMaxValue) * 100;
+        const percentage = (item.value / maxValueCalculated) * 100;
         const trendChange = item.previousValue ? item.value - item.previousValue : 0;
         const trendPercentage = item.previousValue ? (trendChange / item.previousValue) * 100 : 0;
 
@@ -202,25 +231,32 @@ export function ProfessionalChart({
   );
 
   return (
-    <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100">
-      {(title || subtitle) && (
-        <div className="mb-6">
-          {title && (
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">{title}</h3>
-          )}
-          {subtitle && (
-            <p className="text-sm text-gray-600">{subtitle}</p>
-          )}
-        </div>
-      )}
+    <ChartContext.Provider value={{
+      data: sortedData,
+      maxValue: maxValueCalculated,
+      showTrends,
+      showConfidence
+    }}>
+      <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100">
+        {(title || subtitle) && (
+          <div className="mb-6">
+            {title && (
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">{title}</h3>
+            )}
+            {subtitle && (
+              <p className="text-sm text-gray-600">{subtitle}</p>
+            )}
+          </div>
+        )}
 
-      <motion.div
-        variants={containerVariants}
-        initial="hidden"
-        animate={isVisible ? "visible" : "hidden"}
-      >
-        {type === 'bar' ? renderBarChart() : renderProgressChart()}
-      </motion.div>
-    </div>
+        <motion.div
+          variants={containerVariants}
+          initial="hidden"
+          animate={isVisible ? "visible" : "hidden"}
+        >
+          {type === 'bar' ? renderBarChart() : renderProgressChart()}
+        </motion.div>
+      </div>
+    </ChartContext.Provider>
   );
 }
