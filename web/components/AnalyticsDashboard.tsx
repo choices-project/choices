@@ -13,7 +13,6 @@ import {
   Clock
 } from 'lucide-react';
 import { useFeatureFlags } from '../hooks/useFeatureFlags';
-import { isFeatureEnabled } from '../lib/feature-flags';
 import { PWAAnalytics } from '../lib/pwa-analytics';
 
 interface AnalyticsData {
@@ -117,7 +116,7 @@ export default function AnalyticsDashboard({
   });
 
   // Check if analytics feature is enabled
-  const analyticsEnabled = isFeatureEnabled('analytics');
+  const analyticsEnabled = featureFlags.isEnabled('analytics');
 
   const analyticsViews: AnalyticsView[] = [
     {
@@ -174,7 +173,7 @@ export default function AnalyticsDashboard({
       description: 'Advanced statistical analysis and predictions',
       icon: <BarChart3 className="h-5 w-5" />,
       category: 'advanced',
-      enabled: analyticsEnabled && isFeatureEnabled('aiFeatures')
+      enabled: analyticsEnabled && featureFlags.isEnabled('aiFeatures')
     }
   ];
 
@@ -389,6 +388,14 @@ export default function AnalyticsDashboard({
                 >
                   {autoRefreshEnabled ? 'Disable' : 'Enable'} Auto-refresh
                 </button>
+                
+                {/* Feature Flag Status */}
+                <div className="flex items-center space-x-2">
+                  <div className={`w-2 h-2 rounded-full ${analyticsEnabled ? 'bg-green-500' : 'bg-red-500'}`} />
+                  <span className="text-sm text-gray-600">
+                    Analytics: {analyticsEnabled ? 'Enabled' : 'Disabled'}
+                  </span>
+                </div>
               </div>
             </div>
           </div>
