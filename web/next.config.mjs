@@ -16,8 +16,6 @@ const nextConfig = {
     optimizePackageImports: ['lucide-react'],
     // Optimize webpack performance
     webpackBuildWorker: true,
-    // Reduce memory usage
-    memoryBasedWorkers: true,
   },
   
   // Webpack optimization

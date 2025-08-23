@@ -3,6 +3,7 @@
   "framework": "nextjs",
   "buildCommand": "npm run build",
   "installCommand": "npm install",
+  "outputDirectory": "web/.next",
   "functions": {
     "app/api/**/*.ts": {
       "maxDuration": 30
