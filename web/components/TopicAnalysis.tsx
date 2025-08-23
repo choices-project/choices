@@ -95,6 +95,22 @@ interface TopicAnalysisProps {
   subtitle?: string
 }
 
+// Context for sharing topic analysis data
+const TopicContext = createContext<{
+  data: TopicData;
+  insights: string[];
+  loading: boolean;
+}>({
+  data: sampleTopicData,
+  insights: [],
+  loading: false
+})
+
+// Hook to use topic context
+export function useTopicContext() {
+  return useContext(TopicContext)
+}
+
 export function TopicAnalysis({ 
   data = sampleTopicData, 
   title = "Topic Analysis", 
@@ -103,6 +119,30 @@ export function TopicAnalysis({
   const [activeBreakdown, setActiveBreakdown] = useState('age')
   const [showInsights, setShowInsights] = useState(false)
   const [showYes, setShowYes] = useState(true)
+  const [loading, setLoading] = useState(false)
+  const [insights, setInsights] = useState<string[]>([])
+
+  // Cache data processing to prevent unnecessary re-renders
+  const processedData = useCallback(() => {
+    return getActiveData()
+  }, [activeBreakdown, showYes, data])
+
+  const chartData = processedData()
+
+  // Effect to generate insights when data changes
+  useEffect(() => {
+    setLoading(true)
+    // Simulate insight generation
+    const timer = setTimeout(() => {
+      const newInsights = [
+        ...data.insights.yes.slice(0, 2),
+        ...data.insights.no.slice(0, 2)
+      ]
+      setInsights(newInsights)
+      setLoading(false)
+    }, 500)
+    return () => clearTimeout(timer)
+  }, [data])
 
   const breakdownOptions = [
     { id: 'age', label: 'Age Groups', icon: Users, color: '#3b82f6' },
@@ -142,7 +182,12 @@ export function TopicAnalysis({
   }
 
   return (
-    <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-100">
+    <TopicContext.Provider value={{
+      data,
+      insights,
+      loading
+    }}>
+      <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-100">
       {/* Header */}
       <div className="text-center mb-8">
         <motion.h2 
@@ -260,7 +305,7 @@ export function TopicAnalysis({
         </div>
         <div className="flex justify-center">
           <FancyDonutChart
-            data={getActiveData()}
+            data={chartData}
             size={300}
             strokeWidth={25}
             title={`${getBreakdownLabel()} Breakdown`}
@@ -336,6 +381,7 @@ export function TopicAnalysis({
           revealing patterns and insights that help understand the full picture.
         </p>
       </motion.div>
-    </div>
+      </div>
+    </TopicContext.Provider>
   )
 }
