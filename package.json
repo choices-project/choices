@@ -1,6 +1,7 @@
 {
   "scripts": {
-    "build": "cd web && npm install && npm run build"
+    "build": "cd web && npm install && npm run build",
+    "install": "cd web && npm install"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.55.0",
