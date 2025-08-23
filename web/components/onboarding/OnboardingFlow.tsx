@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback, createContext, useContext, Suspense, useMemo } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
 import { createClient } from '@/utils/supabase/client'
 import WelcomeStep from './steps/WelcomeStep'
 import AuthStep from './steps/AuthStep'
@@ -68,10 +68,10 @@ const OnboardingContext = createContext<{
     }
   },
   updateData: (_updates: Partial<OnboardingData>) => {
-    // No-op function for context default
+    // No-op function for context default - will be overridden by actual implementation
   },
   setCurrentStep: (_step: OnboardingStep) => {
-    // No-op function for context default
+    // No-op function for context default - will be overridden by actual implementation
   },
   isLoading: false,
   error: null
@@ -150,6 +150,30 @@ function OnboardingFlowInner() {
     checkAuthAndStep()
   }, [searchParams, currentStep, supabase?.auth])
 
+  // Step navigation handlers
+  const handleNext = useCallback(() => {
+    const stepOrder: OnboardingStep[] = ['welcome', 'auth', 'values', 'demographics', 'privacy', 'complete']
+    const currentIndex = stepOrder.indexOf(currentStep)
+    if (currentIndex < stepOrder.length - 1) {
+      setCurrentStep(stepOrder[currentIndex + 1])
+    }
+  }, [currentStep])
+
+  const handleBack = useCallback(() => {
+    const stepOrder: OnboardingStep[] = ['welcome', 'auth', 'values', 'demographics', 'privacy', 'complete']
+    const currentIndex = stepOrder.indexOf(currentStep)
+    if (currentIndex > 0) {
+      setCurrentStep(stepOrder[currentIndex - 1])
+    }
+  }, [currentStep])
+
+  const handleComplete = useCallback(() => {
+    // Handle onboarding completion
+    devLog('Onboarding completed:', onboardingData)
+    // Redirect to main app or dashboard
+    window.location.href = '/dashboard'
+  }, [onboardingData])
+
   // Create context value
   const contextValue = {
     currentStep,
@@ -166,12 +190,50 @@ function OnboardingFlowInner() {
         <div className="container mx-auto px-4 py-8">
           <div className="max-w-2xl mx-auto">
             <Suspense fallback={<div>Loading...</div>}>
-              {currentStep === 'welcome' && <WelcomeStep />}
-              {currentStep === 'auth' && <AuthStep />}
-              {currentStep === 'values' && <ValuesStep />}
-              {currentStep === 'demographics' && <DemographicsStep />}
-              {currentStep === 'privacy' && <PrivacyStep />}
-              {currentStep === 'complete' && <CompleteStep />}
+              {currentStep === 'welcome' && (
+                <WelcomeStep 
+                  onNext={handleNext}
+                />
+              )}
+              {currentStep === 'auth' && (
+                <AuthStep 
+                  data={onboardingData}
+                  onUpdate={updateData}
+                  onNext={handleNext}
+                  onBack={handleBack}
+                />
+              )}
+              {currentStep === 'values' && (
+                <ValuesStep 
+                  data={onboardingData}
+                  onUpdate={updateData}
+                  onNext={handleNext}
+                  onBack={handleBack}
+                />
+              )}
+              {currentStep === 'demographics' && (
+                <DemographicsStep 
+                  data={onboardingData}
+                  onUpdate={updateData}
+                  onNext={handleNext}
+                  onBack={handleBack}
+                />
+              )}
+              {currentStep === 'privacy' && (
+                <PrivacyStep 
+                  data={onboardingData}
+                  onUpdate={updateData}
+                  onNext={handleNext}
+                  onBack={handleBack}
+                />
+              )}
+              {currentStep === 'complete' && (
+                <CompleteStep 
+                  data={onboardingData}
+                  onComplete={handleComplete}
+                  onBack={handleBack}
+                />
+              )}
             </Suspense>
           </div>
         </div>
