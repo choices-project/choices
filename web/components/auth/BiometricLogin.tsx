@@ -62,15 +62,16 @@ export default function BiometricLogin({ onSuccess, onError, onCancel }: Biometr
       
       if (result.success) {
         setSuccess(true)
-        // The server should return user data in the response
-        // For now, we'll call onSuccess without user data
-        onSuccess?.()
+        // Pass the user data from the authentication result
+        const user = result.user || { username: username.trim() }
+        onSuccess?.(user)
       } else {
-        setError(result.error || 'Authentication failed')
-        onError?.(result.error || 'Authentication failed')
+        const errorMessage = result.error || 'Authentication failed'
+        setError(errorMessage)
+        onError?.(errorMessage)
       }
     } catch (error) {
-      const errorMessage = error instanceof Error ? error instanceof Error ? error.message : "Unknown error" : 'Unknown error'
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error'
       setError(errorMessage)
       onError?.(errorMessage)
     } finally {
