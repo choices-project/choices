@@ -9,6 +9,17 @@ import {
 import { FancyDonutChart } from './FancyCharts'
 import { useDemographics } from '../hooks/useDemographics'
 
+// Context for sharing demographic data
+const DemographicContext = createContext<{
+  data: DemographicData | null;
+  loading: boolean;
+  error: string | null;
+}>({
+  data: null,
+  loading: false,
+  error: null
+})
+
 interface DemographicData {
   ageDistribution: { range: string; count: number; percentage: number }[];
   geographicSpread: { state: string; count: number; percentage: number }[];
@@ -25,6 +36,20 @@ interface DemographicVisualizationProps {
   subtitle: string;
   showPrivacyToggle?: boolean;
   useRealData?: boolean;
+}
+
+// Provider component for demographic context
+export function DemographicProvider({ children, data }: { children: React.ReactNode; data: DemographicData | null }) {
+  return (
+    <DemographicContext.Provider value={{ data, loading: false, error: null }}>
+      {children}
+    </DemographicContext.Provider>
+  )
+}
+
+// Hook to use demographic context
+export function useDemographicContext() {
+  return useContext(DemographicContext)
 }
 
 export function DemographicVisualization({ 
@@ -44,6 +69,27 @@ export function DemographicVisualization({
   // Use real data if available, otherwise fall back to prop data or mock data
   const data = useMockData ? propData : (realData || propData)
 
+  // Cache data to avoid unnecessary re-renders
+  const cachedData = useCallback(() => {
+    return data
+  }, [data])
+
+  // Effect to handle data loading state
+  useEffect(() => {
+    if (loading) {
+      // Could add loading indicators or analytics tracking here
+      console.log('Loading demographic data...')
+    }
+  }, [loading])
+
+  // Effect to handle error state
+  useEffect(() => {
+    if (error) {
+      console.error('Error loading demographic data:', error)
+      // Could add error handling or fallback logic here
+    }
+  }, [error])
+
   const tabs = [
     { id: 'interests', label: 'Common Interests', icon: Heart, color: '#ef4444' },
     { id: 'values', label: 'Top Values', icon: Target, color: '#8b5cf6' },
@@ -55,49 +101,50 @@ export function DemographicVisualization({
   ]
 
   const getActiveData = () => {
-    if (!data) return []
+    const currentData = cachedData()
+    if (!currentData) return []
     
     const colors = ['#3b82f6', '#10b981', '#8b5cf6', '#f59e0b', '#ef4444', '#06b6d4', '#84cc16', '#f97316', '#ec4899', '#6366f1']
     
     switch (activeTab) {
       case 'age':
-        return data.ageDistribution.map((item: any, index: any) => ({
+        return currentData.ageDistribution.map((item: any, index: any) => ({
           name: item.range,
           value: item.percentage,
           color: colors[index % colors.length]
         }))
       case 'location':
-        return data.geographicSpread.slice(0, 10).map((item: any, index: any) => ({
+        return currentData.geographicSpread.slice(0, 10).map((item: any, index: any) => ({
           name: item.state,
           value: item.percentage,
           color: colors[index % colors.length]
         }))
       case 'interests':
-        return data.commonInterests.map((item: any, index: any) => ({
+        return currentData.commonInterests.map((item: any, index: any) => ({
           name: item.interest,
           value: item.percentage,
           color: colors[index % colors.length]
         }))
       case 'values':
-        return data.topValues.map((item: any, index: any) => ({
+        return currentData.topValues.map((item: any, index: any) => ({
           name: item.value,
           value: item.percentage,
           color: colors[index % colors.length]
         }))
       case 'education':
-        return data.educationLevels.map((item: any, index: any) => ({
+        return currentData.educationLevels.map((item: any, index: any) => ({
           name: item.level,
           value: item.percentage,
           color: colors[index % colors.length]
         }))
       case 'income':
-        return data.incomeBrackets.map((item: any, index: any) => ({
+        return currentData.incomeBrackets.map((item: any, index: any) => ({
           name: item.bracket,
           value: item.percentage,
           color: colors[index % colors.length]
         }))
       case 'urban':
-        return data.urbanRural.map((item: any, index: any) => ({
+        return currentData.urbanRural.map((item: any, index: any) => ({
           name: item.type,
           value: item.percentage,
           color: colors[index % colors.length]
