@@ -386,6 +386,12 @@ export class PropagandaDetector {
     if (electionMonths.includes(timing.startDate.getMonth())) {
       biasScore += 0.3;
     }
+    
+    // Check for recent timing bias (polls too close to current date)
+    const daysSinceStart = Math.floor((now.getTime() - timing.startDate.getTime()) / (1000 * 60 * 60 * 24));
+    if (daysSinceStart < 7) {
+      biasScore += 0.1; // Very recent polls might be rushed
+    }
 
     // Check for crisis timing
     // This would need more sophisticated analysis
@@ -613,13 +619,21 @@ export class MediaBiasAnalysisService {
 
   private async factCheckPoll(poll: any): Promise<FactCheckResult> {
     // This would integrate with fact-checking APIs
-    // For now, return a basic structure
+    // For now, return a basic structure with poll-specific analysis
+    const pollText = `${poll.headline} ${poll.question}`.toLowerCase();
+    const hasFactualClaims = pollText.includes('fact') || pollText.includes('data') || pollText.includes('study');
+    
     return {
-      accuracy: 'unknown',
+      accuracy: hasFactualClaims ? 'mixed' : 'unknown',
       sources: [],
-      claims: [],
-      overallScore: 0.5,
-      summary: 'Fact check pending',
+      claims: [{
+        claim: poll.question,
+        accuracy: 'mixed',
+        evidence: [],
+        sources: []
+      }],
+      overallScore: hasFactualClaims ? 0.6 : 0.5,
+      summary: hasFactualClaims ? 'Contains factual claims requiring verification' : 'Fact check pending',
       lastUpdated: new Date()
     };
   }
