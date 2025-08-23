@@ -33,6 +33,7 @@ interface Poll {
 
 interface PWAVotingInterfaceProps {
   poll: Poll
+  // eslint-disable-next-line no-unused-vars
   onVote: (choice: number) => Promise<void> | void
   showResults?: boolean
   offlineMode?: boolean
@@ -97,7 +98,7 @@ export function PWAVotingInterface({
 
       // Call the parent vote handler with validated choice
       // The choice parameter is used here to pass the validated vote choice
-      await onVote(choice)
+      await onVote(choice) // choice is used to pass the validated vote choice
       setHasVoted(true)
       
       // Track analytics
