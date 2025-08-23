@@ -32,6 +32,8 @@
     "eslint": "^8.57.1",
     "eslint-config-next": "^14.2.5",
     "@types/speakeasy": "^2.0.10",
-    "@types/qrcode": "^1.5.5"
+    "@types/qrcode": "^1.5.5",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/bcryptjs": "^3.0.0"
   }
 }
