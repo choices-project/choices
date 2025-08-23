@@ -80,12 +80,22 @@ export const Sidebar: React.FC = () => {
           {!sidebarCollapsed && (
             <h1 className="text-xl font-bold text-gray-900">Choices Admin</h1>
           )}
-          <button
-            onClick={toggleSidebar}
-            className="lg:hidden p-2 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100"
-          >
-            <X className="h-5 w-5" />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={toggleSidebar}
+              className="lg:hidden p-2 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+            >
+              {sidebarCollapsed ? <Menu className="h-5 w-5" /> : <X className="h-5 w-5" />}
+            </button>
+            {!sidebarCollapsed && (
+              <button
+                onClick={toggleSidebar}
+                className="hidden lg:block p-2 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+              >
+                <Menu className="h-5 w-5" />
+              </button>
+            )}
+          </div>
         </div>
 
         <nav className="mt-6 px-3">
