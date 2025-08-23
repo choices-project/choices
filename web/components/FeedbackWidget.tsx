@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { devLog } from '@/lib/logger';
 import { motion, AnimatePresence } from 'framer-motion'
+import Image from 'next/image'
 import { 
   MessageCircle, 
   X, 
@@ -420,9 +421,11 @@ const FeedbackWidget: React.FC = () => {
 
                         {feedback.screenshot && (
                           <div className="relative">
-                            <img
+                            <Image
                               src={feedback.screenshot}
                               alt="Screenshot"
+                              width={400}
+                              height={300}
                               className="w-full rounded-lg border border-gray-200"
                             />
                             <button
