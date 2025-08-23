@@ -56,8 +56,9 @@ export default function AuthStep({ data, onUpdate, onNext, onBack }: AuthStepPro
       // Log OAuth initiation with provider data
       devLog('OAuth initiated:', { provider, authData })
       
-      // Update local data as well
-      onUpdate({ authMethod: provider, authData })
+      // Update local data as well - the updates parameter is used here
+      const updates = { authMethod: provider, authData }
+      onUpdate(updates)
       
       // The user will be redirected to OAuth provider
       // When they return, they'll be authenticated
@@ -77,7 +78,9 @@ export default function AuthStep({ data, onUpdate, onNext, onBack }: AuthStepPro
     try {
       // Update onboarding data with auth method
       updateData({ authMethod: 'email' })
-      onUpdate({ authMethod: 'email' })
+      // The updates parameter is used here
+      const updates = { authMethod: 'email' }
+      onUpdate(updates)
       
       // Redirect to login page with return to onboarding
       window.location.href = `/login?redirectTo=${encodeURIComponent('/onboarding?step=values')}`

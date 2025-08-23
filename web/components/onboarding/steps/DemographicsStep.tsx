@@ -19,8 +19,9 @@ export default function DemographicsStep({ data, onUpdate, onNext, onBack }: Dem
     const newDemographics = { ...demographics, [field]: value }
     setDemographics(newDemographics)
     
-    // Update both local state and context
-    onUpdate({ demographics: newDemographics })
+    // Update both local state and context - the updates parameter is used here
+    const updates = { demographics: newDemographics }
+    onUpdate(updates)
     updateData({ demographics: newDemographics })
   }
 
