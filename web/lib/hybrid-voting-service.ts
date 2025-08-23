@@ -4,6 +4,7 @@
 import { createClient } from '@/utils/supabase/server';
 import { cookies } from 'next/headers';
 import { PrivacyLevel } from './hybrid-privacy'
+import { devLog } from '@/lib/logger'
 
 export interface VoteRequest {
   pollId: string;
@@ -90,6 +91,9 @@ export class HybridVotingService {
   async submitVote(request: VoteRequest): Promise<VoteResponse> {
     const startTime = Date.now();
     const { pollId, choice, userId } = request;
+
+    // Log vote attempt for analytics
+    devLog('Vote submission attempt:', { pollId, choice, userId, privacyLevel: request.privacyLevel });
 
     // Validate request
     const validation = await this.validateVoteRequest(request);
@@ -191,6 +195,10 @@ export class HybridVotingService {
       .eq('poll_id', pollId)
       .eq('user_id', userId)
       .single();
+
+    if (existingVoteError) {
+      devLog('Error checking existing vote:', existingVoteError);
+    }
 
     if (existingVote) {
       throw new Error('You have already voted on this poll');
@@ -315,8 +323,8 @@ export class HybridVotingService {
         tag: tokenData.tag
       };
     } catch (error) {
-      console.error('Error requesting blinded token:', error);
-      throw new Error(`Token request failed: ${error instanceof Error ? error instanceof Error ? error instanceof Error ? error.message : "Unknown error" : "Unknown error" : 'Unknown error'}`);
+      devLog('Error requesting blinded token:', error);
+      throw new Error(`Token request failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
@@ -350,8 +358,8 @@ export class HybridVotingService {
         auditReceipt: voteData.audit_receipt || `receipt_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
       };
     } catch (error) {
-      console.error('Error submitting vote to PO service:', error);
-      throw new Error(`Vote submission failed: ${error instanceof Error ? error instanceof Error ? error instanceof Error ? error.message : "Unknown error" : "Unknown error" : 'Unknown error'}`);
+      devLog('Error submitting vote to PO service:', error);
+      throw new Error(`Vote submission failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 }

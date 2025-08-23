@@ -1,15 +1,13 @@
 'use client'
 
-import { useState, useEffect, useCallback, createContext, useContext } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
-  Vote, 
   CheckCircle, 
   AlertCircle, 
   Wifi, 
   WifiOff, 
   Shield, 
-  Lock,
   Clock,
   Users,
   TrendingUp,
@@ -35,7 +33,7 @@ interface Poll {
 
 interface PWAVotingInterfaceProps {
   poll: Poll
-  onVote: (choice: number) => void
+  onVote: (choice: number) => Promise<void> | void
   showResults?: boolean
   offlineMode?: boolean
 }
@@ -73,6 +71,12 @@ export function PWAVotingInterface({
   const handleVote = async (choice: number) => {
     if (hasVoted || isVoting) return
 
+    // Validate choice is within valid range
+    if (choice < 0 || choice >= poll.options.length) {
+      devLog('Invalid choice:', choice)
+      return
+    }
+
     setIsVoting(true)
     setSelectedChoice(choice)
 
@@ -86,18 +90,19 @@ export function PWAVotingInterface({
         
         // Track offline action
         pwaUtils.pwaAnalytics.trackOfflineAction()
-        pwaUtils.pwaAnalytics.trackFeatureUsage('offline_vote')
+        pwaUtils.pwaAnalytics.trackFeatureUsage('offlinevote')
         
         devLog('PWA: Vote stored offline')
       }
 
-      // Call the parent vote handler
-      onVote(choice)
+      // Call the parent vote handler with validated choice
+      // The choice parameter is used here to pass the validated vote choice
+      await onVote(choice)
       setHasVoted(true)
       
       // Track analytics
       if (pwaUtils) {
-        pwaUtils.pwaAnalytics.trackFeatureUsage('vote_cast')
+        pwaUtils.pwaAnalytics.trackFeatureUsage('votecast')
         pwaUtils.pwaAnalytics.trackDataCollection(1)
       }
     } catch (error) {

@@ -33,6 +33,14 @@ export async function GET(request: NextRequest) {
       .eq('stable_id', user.id)
       .single();
 
+    if (profileError) {
+      devLog('Error fetching user profile:', profileError);
+      return NextResponse.json(
+        { error: 'Failed to verify user permissions' },
+        { status: 500 }
+      );
+    }
+
     if (!userProfile || !['T2', 'T3'].includes(userProfile.verification_tier)) {
       return NextResponse.json(
         { error: 'Insufficient permissions' },

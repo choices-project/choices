@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, createContext, useContext } from 'react'
+import { useState } from 'react'
 import { Shield, Users } from 'lucide-react';
 import { Vote, ArrowRight, CheckCircle, Lock } from 'lucide-react'
 import Link from 'next/link'

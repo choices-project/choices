@@ -54,7 +54,7 @@ function BiometricSetupContent() {
 
     try {
       // First create a temporary user account
-      const tempUserId = `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+      const tempUserId = `tempDate.now()}Math.random().toString(36).substr(2, 9)}`
       
       const result = await registerBiometric(tempUserId, username.trim())
       
@@ -96,7 +96,7 @@ function BiometricSetupContent() {
           <XCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
           <h2 className="text-2xl font-bold text-gray-800 mb-4">Biometric Authentication Not Supported</h2>
           <p className="text-gray-600 mb-6">
-            Your browser doesn't support biometric authentication. Please use a modern browser or try a different signup method.
+            Your browser doesn&apos;t support biometric authentication. Please use a modern browser or try a different signup method.
           </p>
           <button
             onClick={() => router.push('/register')}
@@ -140,6 +140,14 @@ function BiometricSetupContent() {
           <p className="text-gray-600">
             Set up fingerprint, Face ID, or other biometric authentication
           </p>
+        </div>
+
+        {/* Status Display */}
+        <div className="mb-6 p-4 bg-gray-50 border border-gray-200 rounded-md">
+          <div className="flex items-center justify-center space-x-3">
+            {getStatusIcon()}
+            <span className="text-sm font-medium text-gray-700">{getStatusText()}</span>
+          </div>
         </div>
 
         {error && (

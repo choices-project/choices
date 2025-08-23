@@ -1,12 +1,12 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { cookies } from 'next/headers'
-import { createClient } from '@/utils/supabase/server'
-import { devLog } from '@/lib/logger'
+import { NextRequest, NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
+import { createClient } from '@/utils/supabase/server';
+import { devLog } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic'
 
 // GET - List user's biometric credentials
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     // Get Supabase client
     const cookieStore = await cookies()
@@ -86,9 +86,9 @@ export async function GET(request: NextRequest) {
 }
 
 // DELETE - Delete a biometric credential
-export async function DELETE(request: NextRequest) {
+export async function DELETE(_request: NextRequest) {
   try {
-    const body = await request.json()
+    const body = await _request.json()
     const { credentialId } = body
 
     if (!credentialId) {

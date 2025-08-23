@@ -4,14 +4,9 @@ import React, { useState, useMemo } from 'react';
 import { 
   Search, 
   Filter, 
-  TrendingUp, 
-  Clock, 
   Users, 
   BarChart3,
-  Eye,
-  Vote,
-  Calendar,
-  MapPin
+  Eye
 } from 'lucide-react';
 import PollCard from './PollCard';
 
@@ -21,11 +16,11 @@ interface Poll {
   description: string;
   status: 'active' | 'closed' | 'draft';
   options: string[];
-  total_votes: number;
+  totalvotes: number;
   participation: number;
   sponsors: string[];
-  created_at: string;
-  end_time: string;
+  createdat: string;
+  endtime: string;
   results?: PollResults;
   category?: string;
   tags?: string[];
@@ -38,8 +33,8 @@ interface PollResults {
 
 interface FeaturedPollsProps {
   polls: Poll[];
-  onVote?: (pollId: string, choice: number) => Promise<any>;
-  onViewDetails?: (pollId: string) => void;
+  onVote?: (_pollId: string, _choice: number) => Promise<any>;
+  onViewDetails?: (_pollId: string) => void;
   userVotes?: Record<string, number>;
   title?: string;
   subtitle?: string;
@@ -94,11 +89,11 @@ export const FeaturedPolls: React.FC<FeaturedPollsProps> = ({
     filtered.sort((a, b) => {
       switch (sortBy) {
         case 'recent':
-          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+          return new Date(b.createdat).getTime() - new Date(a.createdat).getTime();
         case 'popular':
-          return b.total_votes - a.total_votes;
+          return b.totalvotes - a.totalvotes;
         case 'ending':
-          return new Date(a.end_time).getTime() - new Date(b.end_time).getTime();
+          return new Date(a.endtime).getTime() - new Date(b.endtime).getTime();
         default:
           return 0;
       }
@@ -212,7 +207,7 @@ export const FeaturedPolls: React.FC<FeaturedPollsProps> = ({
             <div className="flex items-center gap-4 text-sm text-gray-500">
               <div className="flex items-center gap-1">
                 <Users className="w-4 h-4" />
-                <span>{polls.reduce((sum: any, poll: any) => sum + poll.total_votes, 0).toLocaleString()} total votes</span>
+                <span>{polls.reduce((sum: any, poll: any) => sum + poll.totalvotes, 0).toLocaleString()} total votes</span>
               </div>
               <div className="flex items-center gap-1">
                 <BarChart3 className="w-4 h-4" />
@@ -270,7 +265,7 @@ export const FeaturedPolls: React.FC<FeaturedPollsProps> = ({
           
           <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-100 text-center">
             <div className="text-2xl font-bold text-green-600 mb-1">
-              {polls.reduce((sum: any, poll: any) => sum + poll.total_votes, 0).toLocaleString()}
+              {polls.reduce((sum: any, poll: any) => sum + poll.totalvotes, 0).toLocaleString()}
             </div>
             <div className="text-sm text-gray-600">Total Votes</div>
           </div>
@@ -284,7 +279,7 @@ export const FeaturedPolls: React.FC<FeaturedPollsProps> = ({
           
           <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-100 text-center">
             <div className="text-2xl font-bold text-orange-600 mb-1">
-              {polls.filter(poll => new Date(poll.end_time) > new Date()).length}
+              {polls.filter(poll => new Date(poll.endtime) > new Date()).length}
             </div>
             <div className="text-sm text-gray-600">Ending Soon</div>
           </div>

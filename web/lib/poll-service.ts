@@ -365,10 +365,12 @@ class PollService {
       // In real implementation, this would call the verification API
       await new Promise(resolve => setTimeout(resolve, 500));
 
+      devLog(`Verifying vote: ${voteId}`);
+
       return {
         success: true,
         verified: true,
-        message: 'Vote verified successfully with Merkle proof',
+        message: `Vote ${voteId} verified successfully with Merkle proof`,
         merkleProof: ['hash1', 'hash2', 'hash3']
       };
     } catch (error) {
@@ -398,10 +400,13 @@ class PollService {
   private async simulateMockVote(pollId: string, choice: number): Promise<VoteResponse> {
     await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API delay
 
+    // Log the mock vote for debugging
+    devLog(`Mock vote submitted for poll ${pollId}, choice ${choice}`);
+
     return {
       success: true,
       voteId: `vote_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      message: 'Vote submitted successfully!'
+      message: `Vote submitted successfully for poll ${pollId}!`
     };
   }
 

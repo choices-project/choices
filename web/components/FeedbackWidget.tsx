@@ -3,19 +3,19 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { devLog } from '@/lib/logger';
 import { motion, AnimatePresence } from 'framer-motion'
+import Image from 'next/image'
 import { 
   MessageCircle, 
   X, 
   Bug, 
   Lightbulb, 
-  Heart, 
   Camera, 
-  Send,
   CheckCircle,
   Star,
   Smile,
   Frown,
-  Meh
+  Meh,
+  Send
 } from 'lucide-react'
 
 interface FeedbackData {
@@ -41,7 +41,7 @@ const FeedbackWidget: React.FC = () => {
     sentiment: 'neutral',
     userJourney: {
       page: typeof window !== 'undefined' ? window.location.pathname : '/',
-      action: 'feedback_widget_opened',
+      action: 'feedbackwidgetopened',
       timestamp: new Date()
     }
   })
@@ -71,7 +71,7 @@ const FeedbackWidget: React.FC = () => {
     setStep('type')
     // Track analytics
     if (typeof window !== 'undefined' && window.gtag) {
-      window.gtag('event', 'feedback_widget_opened', {
+      window.gtag('event', 'feedbackwidgetopened', {
         page: window.location.pathname
       })
     }
@@ -87,7 +87,7 @@ const FeedbackWidget: React.FC = () => {
       sentiment: 'neutral',
       userJourney: {
         page: typeof window !== 'undefined' ? window.location.pathname : '/',
-        action: 'feedback_widget_closed',
+        action: 'feedbackwidgetclosed',
         timestamp: new Date()
       }
     })
@@ -139,8 +139,8 @@ const FeedbackWidget: React.FC = () => {
         
         // Track success
         if (typeof window !== 'undefined' && window.gtag) {
-          window.gtag('event', 'feedback_submitted', {
-            feedback_type: feedback.type,
+          window.gtag('event', 'feedbacksubmitted', {
+            feedbacktype: feedback.type,
             sentiment: feedback.sentiment
           })
         }
@@ -174,14 +174,6 @@ const FeedbackWidget: React.FC = () => {
       case 'bug': return 'bg-red-500 hover:bg-red-600'
       case 'feature': return 'bg-blue-500 hover:bg-blue-600'
       default: return 'bg-green-500 hover:bg-green-600'
-    }
-  }
-
-  const getSentimentIcon = (sentiment: string) => {
-    switch (sentiment) {
-      case 'positive': return <Smile className="w-6 h-6" />
-      case 'negative': return <Frown className="w-6 h-6" />
-      default: return <Meh className="w-6 h-6" />
     }
   }
 
@@ -429,9 +421,11 @@ const FeedbackWidget: React.FC = () => {
 
                         {feedback.screenshot && (
                           <div className="relative">
-                            <img
+                            <Image
                               src={feedback.screenshot}
                               alt="Screenshot"
+                              width={400}
+                              height={300}
                               className="w-full rounded-lg border border-gray-200"
                             />
                             <button
@@ -447,7 +441,8 @@ const FeedbackWidget: React.FC = () => {
                       <div className="flex gap-3 pt-4">
                         <button
                           onClick={() => setStep('sentiment')}
-                          className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+                          disabled={isSubmitting}
+                          className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50"
                         >
                           Back
                         </button>
@@ -469,6 +464,15 @@ const FeedbackWidget: React.FC = () => {
                           )}
                         </button>
                       </div>
+                      
+                      {isSubmitting && (
+                        <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                          <div className="flex items-center justify-center gap-2 text-blue-700">
+                            <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                            <span className="text-sm">Processing your feedback...</span>
+                          </div>
+                        </div>
+                      )}
                     </motion.div>
                   )}
 
@@ -479,6 +483,18 @@ const FeedbackWidget: React.FC = () => {
                       animate={{ opacity: 1, scale: 1 }}
                       className="text-center py-8"
                     >
+                      {showSuccess && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg"
+                        >
+                          <div className="flex items-center justify-center gap-2 text-green-700">
+                            <CheckCircle className="w-4 h-4" />
+                            <span className="text-sm font-medium">Feedback submitted successfully!</span>
+                          </div>
+                        </motion.div>
+                      )}
                       <motion.div
                         initial={{ scale: 0 }}
                         animate={{ scale: 1 }}

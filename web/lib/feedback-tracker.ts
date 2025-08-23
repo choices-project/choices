@@ -3,6 +3,8 @@
  * Captures comprehensive user journey data for AI analysis and diagnosis
  */
 
+import { devLog } from '@/lib/logger'
+
 export interface UserJourney {
   // Current page context
   currentPage: string
@@ -141,7 +143,7 @@ class FeedbackTracker {
     this.pageViews++
     
     // Track time on page
-    let startTime = Date.now()
+    const startTime = Date.now()
     window.addEventListener('beforeunload', () => {
       const timeOnPage = Date.now() - startTime
       this.updateTimeOnPage(timeOnPage)
@@ -244,8 +246,9 @@ class FeedbackTracker {
         const duration = Date.now() - startTime
         this.errors.push({
           type: 'network',
-          message: error instanceof Error ? error instanceof Error ? error.message : "Unknown error" : 'Unknown error',
-          timestamp: new Date().toISOString()
+          message: error instanceof Error ? error.message : 'Unknown error',
+          timestamp: new Date().toISOString(),
+          duration
         })
         throw error
       }
@@ -270,7 +273,8 @@ class FeedbackTracker {
       language: navigator.language,
       timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
       screenResolution: `${screen.width}x${screen.height}`,
-      viewportSize: `${window.innerWidth}x${window.innerHeight}`
+      viewportSize: `${window.innerWidth}x${window.innerHeight}`,
+      userAgent: userAgent // Include user agent for debugging and analytics
     }
   }
   
@@ -394,7 +398,7 @@ class FeedbackTracker {
       return undefined
     } catch (error) {
       if (process.env.NODE_ENV === 'development') {
-        console.log('Failed to capture screenshot:', error)
+        devLog('Failed to capture screenshot:', error)
       }
       return undefined
     }

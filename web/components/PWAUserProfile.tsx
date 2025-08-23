@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, createContext, useContext } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
   User, 
@@ -8,19 +8,10 @@ import {
   Eye, 
   EyeOff, 
   Download, 
-  Smartphone,
-  Wifi,
-  WifiOff,
-  Lock,
-  Unlock,
-  Settings,
-  Trash2,
-  CheckCircle,
-  AlertCircle,
-  Info,
   Fingerprint,
   Zap,
-  RefreshCw
+  RefreshCw,
+  Lock
 } from 'lucide-react'
 import { pwaManager, pwaWebAuthn, privacyStorage } from '../lib/pwa-utils'
 
@@ -43,10 +34,10 @@ interface UserProfile {
 
 interface PWAUserProfileProps {
   user?: UserProfile
-  onUpdate?: (profile: Partial<UserProfile>) => void
+  onUpdate?: (_profile: Partial<UserProfile>) => void
 }
 
-export function PWAUserProfile({ user, onUpdate }: PWAUserProfileProps) {
+export function PWAUserProfile({ user, onUpdate: _onUpdate }: PWAUserProfileProps) {
   const [isEditing, setIsEditing] = useState(false)
   const [showAdvanced, setShowAdvanced] = useState(false)
   const [deviceFingerprint, setDeviceFingerprint] = useState<any>(null)

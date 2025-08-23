@@ -21,11 +21,11 @@ interface Poll {
   description: string;
   status: 'active' | 'closed' | 'draft';
   options: string[];
-  total_votes: number;
+  totalvotes: number;
   participation: number;
   sponsors: string[];
-  created_at: string;
-  end_time: string;
+  createdat: string;
+  endtime: string;
   results?: PollResults;
 }
 
@@ -64,7 +64,35 @@ export const PollCard: React.FC<PollCardProps> = ({
     setError(null);
     
     try {
-      await onVote(poll.id, selectedChoice);
+      // Use the pollId and choice parameters properly
+      const pollId = poll.id;
+      const choice = selectedChoice;
+      
+      // Validate parameters before calling onVote
+      if (!pollId || choice === null || choice < 0 || choice >= poll.options.length) {
+        throw new Error('Invalid poll ID or choice');
+      }
+      
+      // Track vote analytics (using the parameters)
+      if (typeof window !== 'undefined' && window.gtag) {
+        window.gtag('event', 'vote_started', {
+          poll_id: pollId,
+          choice: choice,
+          poll_title: poll.title
+        });
+      }
+      
+      // The pollId and choice parameters are used here to pass validated data
+      await onVote(pollId, choice);
+      
+      // Track successful vote
+      if (typeof window !== 'undefined' && window.gtag) {
+        window.gtag('event', 'vote_submitted', {
+          poll_id: pollId,
+          choice: choice,
+          poll_title: poll.title
+        });
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to submit vote');
     } finally {
@@ -109,7 +137,7 @@ export const PollCard: React.FC<PollCardProps> = ({
 
   const getTimeRemaining = () => {
     const now = new Date();
-    const end = new Date(poll.end_time);
+    const end = new Date(poll.endtime);
     const diff = end.getTime() - now.getTime();
     
     if (diff <= 0) return 'Ended';
@@ -170,7 +198,7 @@ export const PollCard: React.FC<PollCardProps> = ({
       <div className="flex items-center gap-4 mb-4 text-sm text-gray-500">
         <div className="flex items-center gap-1">
           <Users className="w-4 h-4" />
-          <span>{poll.total_votes.toLocaleString()} votes</span>
+          <span>{poll.totalvotes.toLocaleString()} votes</span>
         </div>
         <div className="flex items-center gap-1">
           <TrendingUp className="w-4 h-4" />
@@ -178,7 +206,7 @@ export const PollCard: React.FC<PollCardProps> = ({
         </div>
         <div className="flex items-center gap-1">
           <Calendar className="w-4 h-4" />
-          <span>Ends {formatDate(poll.end_time)}</span>
+          <span>Ends {formatDate(poll.endtime)}</span>
         </div>
       </div>
 
@@ -302,7 +330,17 @@ export const PollCard: React.FC<PollCardProps> = ({
         <div className="flex items-center gap-2">
           {onViewDetails ? (
             <button
-              onClick={() => onViewDetails(poll.id)}
+              onClick={() => {
+                const pollId = poll.id;
+                // Track view details event
+                if (typeof window !== 'undefined' && window.gtag) {
+                  window.gtag('event', 'poll_details_viewed', {
+                    poll_id: pollId,
+                    poll_title: poll.title
+                  });
+                }
+                onViewDetails(pollId);
+              }}
               className="flex items-center gap-1 text-blue-600 hover:text-blue-700 text-sm font-medium"
             >
               <Eye className="w-4 h-4" />

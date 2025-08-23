@@ -5,7 +5,7 @@
  * It includes default configurations, environment-based overrides, and validation.
  */
 
-import { isFeatureEnabled } from '../../../lib/feature-flags'
+import { isFeatureEnabled } from '../../../lib/feature-flags';
 
 export interface PrivacyConfig {
   // Feature flags

@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect, useCallback, createContext, useContext } from 'react'
-import { CheckCircle, AlertCircle, Info, Vote, Square, CheckSquare } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { CheckCircle, AlertCircle, Info, CheckSquare } from 'lucide-react'
 
 interface PollOption {
   id: string
@@ -65,7 +65,26 @@ export default function ApprovalVoting({
     setError(null)
 
     try {
-      await onVote(approvedOptions)
+      // Validate approvals before submission
+      const validApprovals = approvedOptions.filter(approval => 
+        options.some(option => option.id === approval)
+      )
+      
+      if (validApprovals.length !== approvedOptions.length) {
+        throw new Error('Some approved options are invalid')
+      }
+      
+      // Track analytics with poll ID
+      if (typeof window !== 'undefined' && window.gtag) {
+        window.gtag('event', 'vote_submitted', {
+          poll_id: pollId,
+          choices: approvedOptions,
+          voting_method: 'approval',
+          approval_count: approvedOptions.length
+        })
+      }
+      
+      await onVote(validApprovals)
     } catch (err: any) {
       setError(err.message || 'Failed to submit vote')
     } finally {
@@ -176,7 +195,7 @@ export default function ApprovalVoting({
         {/* Instructions */}
         <div className="mt-6 p-4 bg-gray-50 rounded-lg">
           <div className="flex items-center space-x-2 mb-2">
-            <Vote className="w-5 h-5 text-gray-600" />
+            <CheckCircle className="w-5 h-5 text-gray-600" />
             <span className="font-medium text-gray-900">Voting Instructions</span>
           </div>
           <div className="text-sm text-gray-600 space-y-1">
@@ -206,7 +225,7 @@ export default function ApprovalVoting({
                 }
               `}
             >
-              <Vote className="w-5 h-5" />
+              <CheckCircle className="w-5 h-5" />
               <span>{isSubmitting ? 'Submitting Vote...' : 'Submit Vote'}</span>
             </button>
           )}

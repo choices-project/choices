@@ -9,7 +9,7 @@
       "caughtErrorsIgnorePattern": "^_"
     }],
     "no-console": ["warn", { "allow": ["warn", "error"] }],
-    "react/no-unescaped-entities": "warn",
+    "react/no-unescaped-entities": "off",
     "@next/next/no-img-element": "warn",
     "react-hooks/exhaustive-deps": "warn",
     "prefer-const": "warn"

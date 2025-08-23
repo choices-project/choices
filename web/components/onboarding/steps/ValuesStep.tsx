@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, createContext, useContext } from 'react'
+import { useState, useEffect } from 'react'
 import { Heart, Users, Globe, TrendingUp } from 'lucide-react'
 
 interface ValuesStepProps {
@@ -14,6 +14,19 @@ export default function ValuesStep({ data, onUpdate, onNext, onBack }: ValuesSte
   const [selectedConcerns, setSelectedConcerns] = useState<string[]>(data.primaryConcerns || [])
   const [communityFocus, setCommunityFocus] = useState<string[]>(data.communityFocus || [])
   const [participationStyle, setParticipationStyle] = useState(data.participationStyle || 'observer')
+
+  // Sync component state with data changes
+  useEffect(() => {
+    if (data.primaryConcerns && data.primaryConcerns !== selectedConcerns) {
+      setSelectedConcerns(data.primaryConcerns)
+    }
+    if (data.communityFocus && data.communityFocus !== communityFocus) {
+      setCommunityFocus(data.communityFocus)
+    }
+    if (data.participationStyle && data.participationStyle !== participationStyle) {
+      setParticipationStyle(data.participationStyle)
+    }
+  }, [data.primaryConcerns, data.communityFocus, data.participationStyle, selectedConcerns, communityFocus, participationStyle])
 
   const handleConcernToggle = (concern: string) => {
     const newConcerns = selectedConcerns.includes(concern)

@@ -15,13 +15,9 @@ import {
   Tablet,
   Monitor as Desktop,
   Wifi,
-  WifiOff,
-  HardDrive as Memory,
   HardDrive,
-  Gauge,
   Target,
   BarChart3,
-  LineChart,
   RefreshCw,
   Settings,
   Info
@@ -307,7 +303,7 @@ const PerformanceDashboard: React.FC = () => {
                 </h4>
                 <div className="grid grid-cols-2 gap-3">
                   {[
-                    { key: 'memoryUsage', label: 'Memory', icon: <Memory className="w-4 h-4" /> },
+                    { key: 'memoryUsage', label: 'Memory', icon: <HardDrive className="w-4 h-4" /> },
                     { key: 'networkSpeed', label: 'Network', icon: <Wifi className="w-4 h-4" /> },
                     { key: 'pageLoadTime', label: 'Load Time', icon: <Clock className="w-4 h-4" /> },
                     { key: 'timeToInteractive', label: 'TTI', icon: <Zap className="w-4 h-4" /> }

@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect, useCallback, createContext, useContext } from 'react'
-import { CheckCircle, AlertCircle, Info, Vote, DollarSign, TrendingUp, TrendingDown } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { CheckCircle, AlertCircle, Info, DollarSign, TrendingUp, TrendingDown } from 'lucide-react'
 
 interface PollOption {
   id: string
@@ -94,7 +94,33 @@ export default function QuadraticVoting({
     setError(null)
 
     try {
-      await onVote(allocations)
+      // Validate allocations before submission
+      const validAllocations: { [optionId: string]: number } = {}
+      let totalSpent = 0
+      
+      for (const [optionId, credits] of Object.entries(allocations)) {
+        if (options.some(option => option.id === optionId)) {
+          validAllocations[optionId] = Math.max(0, credits)
+          totalSpent += credits * credits // Quadratic cost
+        }
+      }
+      
+      if (totalSpent > totalCredits) {
+        throw new Error('Allocations exceed available credits')
+      }
+      
+      // Track analytics with poll ID
+      if (typeof window !== 'undefined' && window.gtag) {
+        window.gtag('event', 'vote_submitted', {
+          poll_id: pollId,
+          allocations: validAllocations,
+          voting_method: 'quadratic',
+          total_allocated: totalAllocated,
+          total_spent: totalSpent
+        })
+      }
+      
+      await onVote(validAllocations)
     } catch (err: any) {
       setError(err.message || 'Failed to submit vote')
     } finally {
@@ -242,7 +268,7 @@ export default function QuadraticVoting({
         {/* Instructions */}
         <div className="mt-6 p-4 bg-gray-50 rounded-lg">
           <div className="flex items-center space-x-2 mb-2">
-            <Vote className="w-5 h-5 text-gray-600" />
+            <DollarSign className="w-5 h-5 text-gray-600" />
             <span className="font-medium text-gray-900">Voting Instructions</span>
           </div>
           <div className="text-sm text-gray-600 space-y-1">
@@ -272,7 +298,7 @@ export default function QuadraticVoting({
                 }
               `}
             >
-              <Vote className="w-5 h-5" />
+              <DollarSign className="w-5 h-5" />
               <span>{isSubmitting ? 'Submitting Vote...' : 'Submit Vote'}</span>
             </button>
           )}

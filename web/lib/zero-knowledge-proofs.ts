@@ -421,11 +421,206 @@ export class ZeroKnowledgeProofs {
   }
 
   private verifyEqualityProofInternal(proof: any, commitment1: string, commitment2: string): boolean {
-    return proof.type === 'equality'
+    // Verify that both commitments are valid
+    if (!commitment1 || !commitment2) {
+      return false;
+    }
+    
+    // Verify proof structure
+    if (proof.type !== 'equality' || !proof.proof) {
+      return false;
+    }
+    
+    try {
+      // Parse the proof data
+      const proofData = JSON.parse(proof.proof);
+      
+      // Verify that commitments match the proof
+      if (proofData.commitment1 !== commitment1 || proofData.commitment2 !== commitment2) {
+        return false;
+      }
+      
+      // Verify cryptographic properties (simplified for now)
+      // In production, this would use actual cryptographic verification
+      const hash1 = this.hashCommitment(commitment1);
+      const hash2 = this.hashCommitment(commitment2);
+      
+      return hash1 === hash2 && proofData.verified === true;
+    } catch (error) {
+      return false;
+    }
   }
 
   private verifyVoteProofInternal(proof: any, voteCommitment: string, pollCommitment: string): boolean {
-    return proof.type === 'vote'
+    // Verify that both commitments are valid
+    if (!voteCommitment || !pollCommitment) {
+      return false;
+    }
+    
+    // Verify proof structure
+    if (proof.type !== 'vote' || !proof.proof) {
+      return false;
+    }
+    
+    try {
+      // Parse the proof data
+      const proofData = JSON.parse(proof.proof);
+      
+      // Verify that commitments match the proof
+      if (proofData.voteCommitment !== voteCommitment || proofData.pollCommitment !== pollCommitment) {
+        return false;
+      }
+      
+      // Verify vote is within poll constraints
+      if (proofData.pollId && proofData.voteChoice !== undefined) {
+        // Check if vote choice is valid for the poll
+        const isValidChoice = this.validateVoteChoice(proofData.voteChoice, proofData.pollId);
+        if (!isValidChoice) {
+          return false;
+        }
+      }
+      
+      return proofData.verified === true;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  private hashCommitment(commitment: string): string {
+    // Simple hash function for demonstration
+    // In production, use proper cryptographic hashing
+    let hash = 0;
+    for (let i = 0; i < commitment.length; i++) {
+      const char = commitment.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash; // Convert to 32-bit integer
+    }
+    return hash.toString();
+  }
+
+  private async validateVoteChoice(choice: number, pollId: string): Promise<boolean> {
+    // Validate that the vote choice is within valid range for the poll
+    if (!pollId || pollId.trim() === '') {
+      return false; // Invalid poll ID
+    }
+    
+    // Basic poll ID format validation
+    const isValidPollId = /^[a-zA-Z0-9-_]+$/.test(pollId);
+    if (!isValidPollId) {
+      return false;
+    }
+    
+    try {
+      // 1. Fetch poll configuration from database using pollId
+      const pollConfig = await this.fetchPollConfiguration(pollId);
+      if (!pollConfig) {
+        return false; // Poll not found
+      }
+      
+      // 2. Check if poll is active and accepting votes
+      if (pollConfig.status !== 'active') {
+        return false; // Poll is not active
+      }
+      
+      const now = new Date();
+      if (pollConfig.endTime && new Date(pollConfig.endTime) < now) {
+        return false; // Poll has ended
+      }
+      
+      // 3. Validate choice against actual poll options
+      const validChoices = pollConfig.options?.map((_: any, index: number) => index) || [];
+      if (!validChoices.includes(choice)) {
+        return false; // Invalid choice for this poll
+      }
+      
+      // 4. Check user eligibility and voting restrictions
+      const userEligibility = await this.checkUserEligibility(pollId);
+      if (!userEligibility.canVote) {
+        return false; // User not eligible to vote
+      }
+      
+      // Log successful validation for debugging
+      if (typeof window !== 'undefined' && window.gtag) {
+        window.gtag('event', 'vote_validation_success', {
+          poll_id: pollId,
+          choice: choice,
+          poll_status: pollConfig.status,
+          user_eligible: userEligibility.canVote,
+          timestamp: new Date().toISOString()
+        });
+      }
+      
+      return true;
+    } catch (error) {
+      // Log validation error
+      if (typeof window !== 'undefined' && window.gtag) {
+        window.gtag('event', 'vote_validation_error', {
+          poll_id: pollId,
+          choice: choice,
+          error: error instanceof Error ? error.message : 'Unknown error',
+          timestamp: new Date().toISOString()
+        });
+      }
+      return false;
+    }
+  }
+
+  private async fetchPollConfiguration(pollId: string): Promise<any> {
+    // Implement actual database fetch
+    // This would typically use Supabase or another database client
+    try {
+      // For now, simulate database call with mock data
+      // In production, this would be:
+      // const { data, error } = await supabase
+      //   .from('polls')
+      //   .select('*')
+      //   .eq('id', pollId)
+      //   .single();
+      
+      const mockPollConfig = {
+        id: pollId,
+        status: 'active',
+        endTime: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours from now
+        options: ['Option 1', 'Option 2', 'Option 3', 'Option 4'],
+        votingMethod: 'single',
+        allowMultipleVotes: false,
+        requireAuthentication: true
+      };
+      
+      return mockPollConfig;
+    } catch (error) {
+      throw new Error(`Failed to fetch poll configuration: ${error}`);
+    }
+  }
+
+  private async checkUserEligibility(pollId: string): Promise<{ canVote: boolean; reason?: string }> {
+    // Implement actual user eligibility check
+    // This would typically check:
+    // - User authentication status
+    // - Previous votes on this poll
+    // - User restrictions or bans
+    // - Geographic restrictions
+    // - Age restrictions
+    
+    try {
+      // For now, simulate eligibility check
+      // In production, this would be:
+      // const { data: { user } } = await supabase.auth.getUser();
+      // const { data: existingVotes } = await supabase
+      //   .from('votes')
+      //   .select('*')
+      //   .eq('poll_id', pollId)
+      //   .eq('user_id', user.id);
+      
+      const mockEligibility = {
+        canVote: true,
+        reason: 'User is eligible to vote'
+      };
+      
+      return mockEligibility;
+    } catch (error) {
+      return { canVote: false, reason: 'Failed to check eligibility' };
+    }
   }
 }
 

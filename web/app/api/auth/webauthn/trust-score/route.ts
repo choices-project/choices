@@ -1,12 +1,12 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { cookies } from 'next/headers'
-import { createClient } from '@/utils/supabase/server'
-import { devLog } from '@/lib/logger'
+import { NextRequest, NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
+import { createClient } from '@/utils/supabase/server';
+import { devLog } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic'
 
 // GET - Get user's biometric trust score
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     // Get Supabase client
     const cookieStore = await cookies()
@@ -54,7 +54,7 @@ export async function GET(request: NextRequest) {
 
     // If no trust score exists, calculate it
     if (!trustScore) {
-      const { data: calculatedScore, error: calculateError } = await supabase
+      const { data: _calculatedScore, error: calculateError } = await supabase
         .rpc('calculate_biometric_trust_score', { p_user_id: user.id })
 
       if (calculateError) {
@@ -133,7 +133,7 @@ export async function GET(request: NextRequest) {
 }
 
 // POST - Recalculate trust score
-export async function POST(request: NextRequest) {
+export async function POST(_request: NextRequest) {
   try {
     // Get Supabase client
     const cookieStore = await cookies()

@@ -147,7 +147,7 @@ export default function AnalyticsTestPage() {
             </p>
             <div className="bg-white p-4 rounded">
               <p className="text-sm font-mono text-gray-800">
-                Set environment variable: <code>ENABLE_ANALYTICS=true</code>
+                Set environment variable: <code>ENABLEANALYTICS=true</code>
               </p>
             </div>
           </div>

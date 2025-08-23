@@ -1,10 +1,10 @@
 'use client'
 
-import { useState, useEffect, useCallback, createContext, useContext } from 'react'
+import { useState, useEffect } from 'react'
 import { devLog } from '@/lib/logger';
 import { Vote, Clock, CheckCircle, XCircle, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
-import { iaApi, poApi, Poll, Vote as VoteType } from '../../lib/api'
+import { iaApi, poApi, Poll } from '../../lib/api'
 
 export default function PollsPage() {
   const [polls, setPolls] = useState<Poll[]>([])
@@ -12,7 +12,7 @@ export default function PollsPage() {
   const [selectedPoll, setSelectedPoll] = useState<Poll | null>(null)
   const [userChoice, setUserChoice] = useState<number | null>(null)
   const [voting, setVoting] = useState(false)
-  const [userStableId, setUserStableId] = useState('user123') // In real app, get from auth
+  const [userStableId] = useState('user123') // In real app, get from auth
 
   useEffect(() => {
     fetchPolls()
@@ -50,6 +50,14 @@ export default function PollsPage() {
 
       // Submit vote
       const voteData = await poApi.submitVote(pollId, tokenData.token, tokenData.tag, choice)
+      
+      // Log successful vote submission with vote data
+      devLog('Vote submitted successfully:', {
+        pollId,
+        voteData,
+        choice
+      })
+      
       alert('Vote submitted successfully!')
       setSelectedPoll(null)
       setUserChoice(null)
@@ -231,7 +239,7 @@ export default function PollsPage() {
                   
                   <div className="flex items-center justify-between text-xs text-gray-500 mb-4">
                     <span>{poll.options.length} options</span>
-                    <span>{new Date(poll.created_at).toLocaleDateString()}</span>
+                    <span>{new Date(poll.createdat).toLocaleDateString()}</span>
                   </div>
 
                   <button

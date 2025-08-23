@@ -1,7 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, createContext, useContext } from 'react'
-import { devLog } from '@/lib/logger';
+import { useState, useEffect, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { ArrowLeft, Share2, BarChart3, Settings, Users, Clock, TrendingUp } from 'lucide-react'
@@ -12,6 +11,7 @@ import RangeVoting from '@/components/voting/RangeVoting'
 import QuadraticVoting from '@/components/voting/QuadraticVoting'
 import PollResults from '@/components/polls/PollResults'
 import PollShare from '@/components/polls/PollShare'
+import { devLog } from '@/lib/logger'
 
 type ViewMode = 'voting' | 'results' | 'share' | 'settings'
 type VotingMethod = 'single' | 'ranked' | 'approval' | 'range' | 'quadratic'
@@ -59,15 +59,9 @@ export default function PollPage() {
 
   const pollId = params.id as string
 
-  useEffect(() => {
-    if (!loading) {
-      loadPoll()
-      checkUserVote()
-    }
-  }, [loading, pollId])
-
-  const loadPoll = async () => {
+  const loadPoll = useCallback(async () => {
     try {
+      devLog('Loading poll:', pollId)
       setIsLoading(true)
       setError(null)
       
@@ -85,7 +79,7 @@ export default function PollPage() {
       
       // Transform API response to match frontend Poll interface
       const poll: Poll = {
-        id: apiPoll.poll_id,
+        id: apiPoll.pollid,
         title: apiPoll.title,
         description: apiPoll.description || '',
         votingMethod: 'single', // Default to single choice
@@ -95,32 +89,32 @@ export default function PollPage() {
           description: ''
         })) || [],
         settings: {
-          isPublic: apiPoll.privacy_level === 'public',
+          isPublic: apiPoll.privacylevel === 'public',
           showResults: true,
           allowComments: true,
           enableRealTimeAnalysis: true
         },
         schedule: {
-          startDate: apiPoll.created_at?.split('T')[0] || '2024-01-01',
+          startDate: apiPoll.createdat?.split('T')[0] || '2024-01-01',
           endDate: '2024-12-31' // Default end date
         },
         stats: {
-          totalVotes: apiPoll.total_votes || 0,
-          participationRate: apiPoll.participation_rate || 0,
+          totalVotes: apiPoll.totalvotes || 0,
+          participationRate: apiPoll.participationrate || 0,
           isActive: apiPoll.status === 'active'
         }
       }
       
       setPoll(poll)
     } catch (error) {
-      console.error('Error loading poll:', error)
-      setError(error instanceof Error ? error instanceof Error ? error.message : "Unknown error" : 'Failed to load poll')
+      devLog('Error loading poll:', error)
+      setError(error instanceof Error ? error.message : 'Failed to load poll')
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [pollId])
 
-  const checkUserVote = async () => {
+  const checkUserVote = useCallback(async () => {
     if (!user) return
     
     try {
@@ -129,17 +123,24 @@ export default function PollPage() {
       
       if (response.ok) {
         const data = await response.json()
-        if (data.has_voted) {
+        if (data.hasvoted) {
           setHasVoted(true)
           setShowResults(true)
           // Note: API doesn't return vote details for privacy
         }
       }
     } catch (error) {
-      console.error('Error checking user vote:', error)
+      devLog('Error checking user vote:', error)
       // Don't show error to user for vote check
     }
-  }
+  }, [pollId, user])
+
+  useEffect(() => {
+    if (!loading) {
+      loadPoll()
+      checkUserVote()
+    }
+  }, [loading, pollId, loadPoll, checkUserVote])
 
   const handleVote = async (voteData: any) => {
     if (!user) {
@@ -157,7 +158,7 @@ export default function PollPage() {
         },
         body: JSON.stringify({
           choice: voteData.choice,
-          privacy_level: 'public' // Default to public voting
+          privacylevel: 'public' // Default to public voting
         }),
       })
 
@@ -218,9 +219,12 @@ export default function PollPage() {
   }
 
   const renderCurrentView = () => {
+    // Show results if user has voted or if showResults is enabled
+    const shouldShowResults = hasVoted || showResults || (poll?.settings?.showResults ?? false)
+    
     switch (currentView) {
       case 'voting':
-        return renderVotingInterface()
+        return shouldShowResults ? <PollResults pollId={pollId} /> : renderVotingInterface()
       case 'results':
         return <PollResults pollId={pollId} />
       case 'share':
@@ -335,7 +339,7 @@ export default function PollPage() {
               <div className="mt-4 flex items-center space-x-2">
                 <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
                   {poll.votingMethod === 'single' && '🎯 Single Choice'}
-                  {poll.votingMethod === 'ranked' && '�� Ranked Choice'}
+                  {poll.votingMethod === 'ranked' && '🏆 Ranked Choice'}
                   {poll.votingMethod === 'approval' && '✅ Approval Voting'}
                   {poll.votingMethod === 'range' && '📊 Range Voting'}
                   {poll.votingMethod === 'quadratic' && '💰 Quadratic Voting'}

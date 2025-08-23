@@ -386,6 +386,12 @@ export class PropagandaDetector {
     if (electionMonths.includes(timing.startDate.getMonth())) {
       biasScore += 0.3;
     }
+    
+    // Check for recent timing bias (polls too close to current date)
+    const daysSinceStart = Math.floor((now.getTime() - timing.startDate.getTime()) / (1000 * 60 * 60 * 24));
+    if (daysSinceStart < 7) {
+      biasScore += 0.1; // Very recent polls might be rushed
+    }
 
     // Check for crisis timing
     // This would need more sophisticated analysis
@@ -613,13 +619,21 @@ export class MediaBiasAnalysisService {
 
   private async factCheckPoll(poll: any): Promise<FactCheckResult> {
     // This would integrate with fact-checking APIs
-    // For now, return a basic structure
+    // For now, return a basic structure with poll-specific analysis
+    const pollText = `${poll.headline} ${poll.question}`.toLowerCase();
+    const hasFactualClaims = pollText.includes('fact') || pollText.includes('data') || pollText.includes('study');
+    
     return {
-      accuracy: 'unknown',
+      accuracy: hasFactualClaims ? 'mixed' : 'unknown',
       sources: [],
-      claims: [],
-      overallScore: 0.5,
-      summary: 'Fact check pending',
+      claims: [{
+        claim: poll.question,
+        accuracy: 'mixed',
+        evidence: [],
+        sources: []
+      }],
+      overallScore: hasFactualClaims ? 0.6 : 0.5,
+      summary: hasFactualClaims ? 'Contains factual claims requiring verification' : 'Fact check pending',
       lastUpdated: new Date()
     };
   }
@@ -673,9 +687,34 @@ export class MediaBiasAnalysisService {
   }
 
   private calculateResultDifference(mediaResults: MediaPollResults, ourResults: any): number {
-    // Calculate percentage difference in results
-    // This is a simplified calculation
-    return 0.15; // Placeholder
+    // Calculate percentage difference in results between media poll and our poll
+    if (!mediaResults || !ourResults || !mediaResults.optionResults || !ourResults.optionResults) {
+      return 0; // No data to compare
+    }
+
+    const mediaOptions = Object.keys(mediaResults.optionResults);
+    const ourOptions = Object.keys(ourResults.optionResults);
+    
+    if (mediaOptions.length === 0 || ourOptions.length === 0) {
+      return 0; // No options to compare
+    }
+
+    // Calculate total difference across all matching options
+    let totalDifference = 0;
+    let comparisonCount = 0;
+
+    mediaOptions.forEach(option => {
+      if (ourOptions.includes(option)) {
+        const mediaPercentage = mediaResults.optionResults[option] || 0;
+        const ourPercentage = ourResults.optionResults[option] || 0;
+        const difference = Math.abs(mediaPercentage - ourPercentage);
+        totalDifference += difference;
+        comparisonCount++;
+      }
+    });
+
+    // Return average difference, or 0 if no comparisons were made
+    return comparisonCount > 0 ? totalDifference / comparisonCount : 0;
   }
 
   private calculateTextSimilarity(text1: string, text2: string): number {

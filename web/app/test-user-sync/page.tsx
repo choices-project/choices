@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, createContext, useContext } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { devLog } from '@/lib/logger';
 import { createClient } from '@/utils/supabase/client'
 import { ensureUserSynced, getUserFromIaUsers, hasUserProfile } from '@/lib/user-sync'
@@ -15,11 +15,7 @@ export default function TestUserSync() {
 
   const supabase = createClient()
 
-  useEffect(() => {
-    checkUserStatus()
-  }, [])
-
-  const checkUserStatus = async () => {
+  const checkUserStatus = useCallback(async () => {
     setLoading(true)
     setError(null)
 
@@ -47,11 +43,11 @@ export default function TestUserSync() {
 
       setAuthUser(user)
 
-      // Check if user exists in ia_users table
+      // Check if user exists in iausers table
       const { data: iaUserData, error: iaError } = await getUserFromIaUsers(user.id)
       
       if (iaError) {
-        devLog('Error getting ia_user:', iaError)
+        devLog('Error getting iauser:', iaError)
       } else {
         setIaUser(iaUserData)
       }
@@ -61,6 +57,7 @@ export default function TestUserSync() {
       
       if (profileError) {
         devLog('Error checking profile:', profileError)
+        setError(`Profile check failed: ${profileError}`)
       } else {
         setHasProfile(profileExists)
       }
@@ -74,7 +71,11 @@ export default function TestUserSync() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [supabase])
+
+  useEffect(() => {
+    checkUserStatus()
+  }, [checkUserStatus])
 
   const handleSyncUser = async () => {
     setLoading(true)
@@ -115,9 +116,9 @@ export default function TestUserSync() {
               <div className="space-y-2">
                 <p><strong>ID:</strong> {authUser.id}</p>
                 <p><strong>Email:</strong> {authUser.email}</p>
-                <p><strong>Email Confirmed:</strong> {authUser.email_confirmed_at ? 'Yes' : 'No'}</p>
-                <p><strong>Created:</strong> {new Date(authUser.created_at).toLocaleString()}</p>
-                <p><strong>Last Sign In:</strong> {authUser.last_sign_in_at ? new Date(authUser.last_sign_in_at).toLocaleString() : 'Never'}</p>
+                <p><strong>Email Confirmed:</strong> {authUser.emailconfirmedat ? 'Yes' : 'No'}</p>
+                <p><strong>Created:</strong> {new Date(authUser.createdat).toLocaleString()}</p>
+                <p><strong>Last Sign In:</strong> {authUser.lastsigninat ? new Date(authUser.lastsigninat).toLocaleString() : 'Never'}</p>
               </div>
             ) : (
               <p className="text-gray-500">No authenticated user</p>
@@ -130,14 +131,14 @@ export default function TestUserSync() {
             {iaUser ? (
               <div className="space-y-2">
                 <p><strong>ID:</strong> {iaUser.id}</p>
-                <p><strong>Stable ID:</strong> {iaUser.stable_id}</p>
+                <p><strong>Stable ID:</strong> {iaUser.stableid}</p>
                 <p><strong>Email:</strong> {iaUser.email}</p>
-                <p><strong>Verification Tier:</strong> {iaUser.verification_tier}</p>
-                <p><strong>Active:</strong> {iaUser.is_active ? 'Yes' : 'No'}</p>
-                <p><strong>Created:</strong> {new Date(iaUser.created_at).toLocaleString()}</p>
+                <p><strong>Verification Tier:</strong> {iaUser.verificationtier}</p>
+                <p><strong>Active:</strong> {iaUser.isactive ? 'Yes' : 'No'}</p>
+                <p><strong>Created:</strong> {new Date(iaUser.createdat).toLocaleString()}</p>
               </div>
             ) : (
-              <p className="text-gray-500">User not found in ia_users table</p>
+              <p className="text-gray-500">User not found in iausers table</p>
             )}
           </div>
         </div>
@@ -153,7 +154,7 @@ export default function TestUserSync() {
           </div>
           <p className="text-gray-600 mt-2">
             {hasProfile 
-              ? 'User has completed onboarding and has a profile in user_profiles table'
+              ? 'User has completed onboarding and has a profile in userprofiles table'
               : 'User needs to complete onboarding to create a profile'
             }
           </p>

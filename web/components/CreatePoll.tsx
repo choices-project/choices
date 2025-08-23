@@ -5,22 +5,16 @@ import { devLog } from '@/lib/logger';
 import { 
   Plus, 
   X, 
-  Calendar, 
-  Tag, 
-  Users, 
   AlertCircle,
   CheckCircle2,
-  Clock,
   Save,
   Info,
-  HelpCircle,
-  ArrowLeft,
-  ArrowRight
+  ArrowLeft
 } from 'lucide-react';
 import { pollService, CreatePollRequest } from '../lib/poll-service';
 
 interface CreatePollProps {
-  onPollCreated?: (poll: any) => void;
+  onPollCreated?: (_poll: any) => void;
   onCancel?: () => void;
   isOpen?: boolean;
 }
@@ -34,7 +28,7 @@ interface VotingMethod {
   icon: string;
 }
 
-const VOTING_METHODS: VotingMethod[] = [
+const VOTINGMETHODS: VotingMethod[] = [
   {
     type: 'single',
     name: 'Single Choice',
@@ -106,20 +100,12 @@ export const CreatePoll: React.FC<CreatePollProps> = ({
   isOpen = false
 }) => {
   const [step, setStep] = useState(1);
-  const [formData, setFormData] = useState<CreatePollRequest>({
-    title: '',
-    description: '',
-    options: ['', ''], // Start with 2 empty options
-    end_time: '',
-    category: '',
-    tags: [],
-    sponsors: []
-  });
 
   // Enhanced form data for voting methods
   const [enhancedFormData, setEnhancedFormData] = useState({
     title: '',
     description: '',
+    category: '',
     votingMethod: 'single' as VotingMethod['type'],
     options: [
       { id: '1', text: '', description: '' },
@@ -150,21 +136,22 @@ export const CreatePoll: React.FC<CreatePollProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
-  const categories = [
-    'climate',
-    'technology',
-    'education',
-    'healthcare',
-    'transportation',
-    'privacy',
-    'economy',
-    'social',
-    'environment',
-    'other'
+  // Poll categories for better organization
+  const pollCategories = [
+    { value: 'climate', label: 'Climate & Environment', icon: '🌍' },
+    { value: 'technology', label: 'Technology', icon: '💻' },
+    { value: 'education', label: 'Education', icon: '📚' },
+    { value: 'healthcare', label: 'Healthcare', icon: '🏥' },
+    { value: 'transportation', label: 'Transportation', icon: '🚗' },
+    { value: 'privacy', label: 'Privacy & Security', icon: '🔒' },
+    { value: 'economy', label: 'Economy', icon: '💰' },
+    { value: 'social', label: 'Social Issues', icon: '👥' },
+    { value: 'environment', label: 'Environment', icon: '🌱' },
+    { value: 'other', label: 'Other', icon: '📋' }
   ];
 
   const getCurrentMethod = () => {
-    return VOTING_METHODS.find(method => method.type === enhancedFormData.votingMethod)!;
+    return VOTINGMETHODS.find(method => method.type === enhancedFormData.votingMethod)!;
   };
 
   const addOption = () => {
@@ -201,6 +188,11 @@ export const CreatePoll: React.FC<CreatePollProps> = ({
       return false;
     }
     
+    if (!enhancedFormData.category) {
+      setError('Please select a category');
+      return false;
+    }
+    
     if (enhancedFormData.options.length < 2) {
       setError('At least 2 options are required');
       return false;
@@ -231,21 +223,27 @@ export const CreatePoll: React.FC<CreatePollProps> = ({
     setSuccess(false);
 
     try {
-      const response = await fetch('/api/polls', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(enhancedFormData)
-      });
+      // Transform enhanced form data to CreatePollRequest format
+      const pollData: CreatePollRequest = {
+        title: enhancedFormData.title,
+        description: enhancedFormData.description,
+        category: enhancedFormData.category,
+        options: enhancedFormData.options.map(option => option.text).filter(text => text.trim()),
+        end_time: new Date(`${enhancedFormData.schedule.endDate}T${enhancedFormData.schedule.endTime}`).toISOString(),
+        tags: enhancedFormData.settings.allowComments ? ['comments-enabled'] : [],
+        sponsors: []
+      };
 
-      if (response.ok) {
-        const data = await response.json();
+      // Use pollService to create the poll
+      const createdPoll = await pollService.createPoll(pollData);
+
+      if (createdPoll) {
         setSuccess(true);
         if (onPollCreated) {
-          onPollCreated(data.poll);
+          onPollCreated(createdPoll);
         }
       } else {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to create poll');
+        throw new Error('Failed to create poll');
       }
     } catch (error) {
       devLog('Error creating poll:', error);
@@ -256,9 +254,9 @@ export const CreatePoll: React.FC<CreatePollProps> = ({
   };
 
   const nextStep = () => {
-    if (step === 1 && !enhancedFormData.title.trim()) {
-      setError('Poll title is required');
-      return;
+                    if (step === 1 && (!enhancedFormData.title.trim() || !enhancedFormData.category)) {
+        setError('Poll title and category are required');
+        return;
     }
     setStep(prev => Math.min(prev + 1, 4));
     setError(null);
@@ -267,61 +265,6 @@ export const CreatePoll: React.FC<CreatePollProps> = ({
   const prevStep = () => {
     setStep(prev => Math.max(prev - 1, 1));
     setError(null);
-  };
-
-  // Legacy methods for backward compatibility
-  const handleInputChange = (field: keyof CreatePollRequest, value: any) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
-    setError(null);
-  };
-
-  const handleOptionChange = (index: number, value: string) => {
-    const newOptions = [...formData.options];
-    newOptions[index] = value;
-    setFormData(prev => ({
-      ...prev,
-      options: newOptions
-    }));
-  };
-
-  const addTag = (tag: string) => {
-    if (tag && !formData.tags?.includes(tag)) {
-      setFormData(prev => ({
-        ...prev,
-        tags: [...(prev.tags || []), tag]
-      }));
-    }
-  };
-
-  const removeTag = (tagToRemove: string) => {
-    setFormData(prev => ({
-      ...prev,
-      tags: prev.tags?.filter(tag => tag !== tagToRemove) || []
-    }));
-  };
-
-  const handleSubmit = async () => {
-    setIsSubmitting(true);
-    setError(null);
-
-    try {
-      const result = await pollService.createPoll(formData);
-      if (result) {
-        setSuccess(true);
-        if (onPollCreated) {
-          onPollCreated(result);
-        }
-      } else {
-        setError('Failed to create poll');
-      }
-    } catch (error) {
-      setError(error instanceof Error ? error.message : 'Failed to create poll');
-    } finally {
-      setIsSubmitting(false);
-    }
   };
 
   if (!isOpen) return null;
@@ -421,6 +364,24 @@ export const CreatePoll: React.FC<CreatePollProps> = ({
                   placeholder="Provide additional context or details..."
                 />
               </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Category
+                </label>
+                <select
+                  value={enhancedFormData.category}
+                  onChange={(e) => setEnhancedFormData(prev => ({ ...prev, category: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="">Select a category</option>
+                  {pollCategories.map((category) => (
+                    <option key={category.value} value={category.value}>
+                      {category.icon} {category.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
 
             <div className="flex justify-end mt-6">
@@ -440,7 +401,7 @@ export const CreatePoll: React.FC<CreatePollProps> = ({
             <h3 className="text-lg font-semibold text-gray-900 mb-6">Choose Voting Method</h3>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {VOTING_METHODS.map((method: any) => (
+              {VOTINGMETHODS.map((method: any) => (
                 <div
                   key={method.type}
                   onClick={() => setEnhancedFormData(prev => ({ ...prev, votingMethod: method.type }))}

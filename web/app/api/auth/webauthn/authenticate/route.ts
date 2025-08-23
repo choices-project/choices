@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { cookies } from 'next/headers'
-import { createClient } from '@/utils/supabase/server'
-import { devLog } from '@/lib/logger'
-import { arrayBufferToBase64, base64ToArrayBuffer } from '@/lib/webauthn'
+import { NextRequest, NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
+import { createClient } from '@/utils/supabase/server';
+import { devLog } from '@/lib/logger';
+import { arrayBufferToBase64, base64ToArrayBuffer } from '@/lib/webauthn';
 
 export const dynamic = 'force-dynamic'
 

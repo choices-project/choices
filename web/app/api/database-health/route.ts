@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { checkDatabaseHealth, queryMonitor } from '@/lib/database-optimizer';
 import { devLog } from '@/lib/logger';
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const startTime = Date.now();
     
@@ -72,9 +72,9 @@ export async function GET(request: NextRequest) {
   }
 }
 
-export async function POST(request: NextRequest) {
+export async function POST(_request: NextRequest) {
   try {
-    const { action } = await request.json();
+    const { action } = await _request.json();
 
     switch (action) {
       case 'clear_metrics':

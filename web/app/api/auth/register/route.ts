@@ -1,8 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server';
 import { devLog } from '@/lib/logger';
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
-import { createClient } from '@supabase/supabase-js'
+import { createClient } from '@supabase/supabase-js';
+import { handleError, getUserMessage, getHttpStatus, ValidationError, AuthenticationError, NotFoundError } from '@/lib/error-handler';
 
 // Initialize Supabase client
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -12,39 +13,29 @@ const supabase = supabaseUrl && supabaseKey ? createClient(supabaseUrl, supabase
 
 export async function POST(request: NextRequest) {
   try {
+    devLog('Registration attempt for email:', request.body ? 'email provided' : 'no email')
+    
     if (!supabase) {
-      return NextResponse.json(
-        { error: 'Authentication service not configured' },
-        { status: 503 }
-      );
+      throw new Error('Authentication service not configured')
     }
 
     const { email, password: userPassword, twoFactorEnabled } = await request.json()
 
     // Validate input
     if (!email || !userPassword) {
-      return NextResponse.json(
-        { code: 'MISSING_FIELDS', message: 'Email and password are required' },
-        { status: 400 }
-      )
+      throw new ValidationError('Email and password are required')
     }
 
     // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     if (!emailRegex.test(email)) {
-      return NextResponse.json(
-        { code: 'INVALID_EMAIL', message: 'Invalid email format' },
-        { status: 400 }
-      )
+      throw new ValidationError('Invalid email format')
     }
 
     // Validate password strength
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/
     if (!passwordRegex.test(userPassword)) {
-      return NextResponse.json(
-        { code: 'INVALID_PASSWORD', message: 'Password must be at least 8 characters with uppercase, lowercase, number, and special character' },
-        { status: 400 }
-      )
+      throw new ValidationError('Password must be at least 8 characters with uppercase, lowercase, number, and special character')
     }
 
     // Check if user already exists
@@ -55,10 +46,7 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (existingUser) {
-      return NextResponse.json(
-        { code: 'USER_EXISTS', message: 'User with this email already exists' },
-        { status: 409 }
-      )
+      throw new AuthenticationError('User with this email already exists')
     }
 
     // Hash password
@@ -84,10 +72,7 @@ export async function POST(request: NextRequest) {
 
     if (createError) {
       devLog('User creation error:', createError)
-      return NextResponse.json(
-        { code: 'CREATE_USER_FAILED', message: 'Failed to create user' },
-        { status: 500 }
-      )
+      throw new NotFoundError('Failed to create user account')
     }
 
     // Check JWT secrets
@@ -95,10 +80,7 @@ export async function POST(request: NextRequest) {
     const jwtRefreshSecret = process.env.JWT_REFRESH_SECRET;
 
     if (!jwtSecret || !jwtRefreshSecret) {
-      return NextResponse.json(
-        { error: 'JWT configuration not available' },
-        { status: 503 }
-      );
+      throw new Error('JWT configuration not available')
     }
 
     // Generate JWT token
@@ -152,9 +134,10 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     devLog('Registration error:', error)
-    return NextResponse.json(
-      { code: 'INTERNAL_ERROR', message: 'Internal server error' },
-      { status: 500 }
-    )
+    const appError = handleError(error as Error, { context: 'auth-register' })
+    const userMessage = getUserMessage(appError)
+    const statusCode = getHttpStatus(appError)
+    
+    return NextResponse.json({ error: userMessage }, { status: statusCode })
   }
 }
