@@ -76,18 +76,35 @@ export default function RangeVoting({
     setError(null)
 
     try {
+      // Validate ratings before submission
+      const validRatings: { [optionId: string]: number } = {}
+      let totalRating = 0
+      
+      for (const [optionId, rating] of Object.entries(ratings)) {
+        if (options.some(option => option.id === optionId)) {
+          const validRating = Math.max(minRating, Math.min(maxRating, rating))
+          validRatings[optionId] = validRating
+          totalRating += validRating
+        }
+      }
+      
+      // Check if all options are rated
+      if (Object.keys(validRatings).length !== options.length) {
+        throw new Error('All options must be rated')
+      }
+      
       // Track analytics with poll ID
       if (typeof window !== 'undefined' && window.gtag) {
         window.gtag('event', 'vote_submitted', {
           poll_id: pollId,
-          ratings: ratings,
+          ratings: validRatings,
           voting_method: 'range',
-          average_rating: getAverageRating(),
-          rated_options_count: ratedOptions.length
+          average_rating: totalRating / options.length,
+          rated_options_count: Object.keys(validRatings).length
         })
       }
       
-      await onVote(ratings)
+      await onVote(validRatings)
     } catch (err: any) {
       setError(err.message || 'Failed to submit vote')
     } finally {
