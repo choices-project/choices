@@ -1,11 +1,5 @@
-// Try to import next-pwa, fallback to basic config if it fails
-let withPWA;
-try {
-  withPWA = (await import('next-pwa')).default;
-} catch (error) {
-  console.warn('next-pwa not available, using basic config');
-  withPWA = (config) => config;
-}
+// Import next-pwa with proper error handling
+import withPWA from 'next-pwa'
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -77,12 +71,12 @@ const nextConfig = {
   }
 }
 
-// Enhanced PWA configuration with fallback
+// Enhanced PWA configuration
 const config = withPWA({
   dest: 'public',
   register: true,
   skipWaiting: true,
-  disable: false, // Enable PWA in development for mobile testing
+  disable: process.env.NODE_ENV === 'development',
   buildExcludes: [/middleware-manifest\.json$/],
   runtimeCaching: [
     {
