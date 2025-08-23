@@ -143,7 +143,7 @@ class FeedbackTracker {
     this.pageViews++
     
     // Track time on page
-    let startTime = Date.now()
+    const startTime = Date.now()
     window.addEventListener('beforeunload', () => {
       const timeOnPage = Date.now() - startTime
       this.updateTimeOnPage(timeOnPage)
