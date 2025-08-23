@@ -64,7 +64,29 @@ export const PollCard: React.FC<PollCardProps> = ({
     setError(null);
     
     try {
-      await onVote(poll.id, selectedChoice);
+      // Use the pollId and choice parameters properly
+      const pollId = poll.id;
+      const choice = selectedChoice;
+      
+      // Track vote analytics (using the parameters)
+      if (typeof window !== 'undefined' && window.gtag) {
+        window.gtag('event', 'vote_started', {
+          poll_id: pollId,
+          choice: choice,
+          poll_title: poll.title
+        });
+      }
+      
+      await onVote(pollId, choice);
+      
+      // Track successful vote
+      if (typeof window !== 'undefined' && window.gtag) {
+        window.gtag('event', 'vote_submitted', {
+          poll_id: pollId,
+          choice: choice,
+          poll_title: poll.title
+        });
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to submit vote');
     } finally {
@@ -302,7 +324,17 @@ export const PollCard: React.FC<PollCardProps> = ({
         <div className="flex items-center gap-2">
           {onViewDetails ? (
             <button
-              onClick={() => onViewDetails(poll.id)}
+              onClick={() => {
+                const pollId = poll.id;
+                // Track view details event
+                if (typeof window !== 'undefined' && window.gtag) {
+                  window.gtag('event', 'poll_details_viewed', {
+                    poll_id: pollId,
+                    poll_title: poll.title
+                  });
+                }
+                onViewDetails(pollId);
+              }}
               className="flex items-center gap-1 text-blue-600 hover:text-blue-700 text-sm font-medium"
             >
               <Eye className="w-4 h-4" />
