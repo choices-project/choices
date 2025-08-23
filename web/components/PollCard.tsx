@@ -68,6 +68,11 @@ export const PollCard: React.FC<PollCardProps> = ({
       const pollId = poll.id;
       const choice = selectedChoice;
       
+      // Validate parameters before calling onVote
+      if (!pollId || choice === null || choice < 0 || choice >= poll.options.length) {
+        throw new Error('Invalid poll ID or choice');
+      }
+      
       // Track vote analytics (using the parameters)
       if (typeof window !== 'undefined' && window.gtag) {
         window.gtag('event', 'vote_started', {
@@ -77,6 +82,7 @@ export const PollCard: React.FC<PollCardProps> = ({
         });
       }
       
+      // The pollId and choice parameters are used here to pass validated data
       await onVote(pollId, choice);
       
       // Track successful vote
