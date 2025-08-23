@@ -100,10 +100,15 @@ const TopicContext = createContext<{
   data: TopicData;
   insights: string[];
   loading: boolean;
+  updateData: (newData: TopicData) => void;
 }>({
   data: sampleTopicData,
   insights: [],
-  loading: false
+  loading: false,
+  updateData: (newData: TopicData) => {
+    // Update the context data when new data is provided
+    devLog('Topic analysis data updated:', newData.question)
+  }
 })
 
 // Hook to use topic context
