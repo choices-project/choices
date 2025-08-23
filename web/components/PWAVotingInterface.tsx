@@ -71,6 +71,12 @@ export function PWAVotingInterface({
   const handleVote = async (choice: number) => {
     if (hasVoted || isVoting) return
 
+    // Validate choice is within valid range
+    if (choice < 0 || choice >= poll.options.length) {
+      devLog('Invalid choice:', choice)
+      return
+    }
+
     setIsVoting(true)
     setSelectedChoice(choice)
 
@@ -89,7 +95,7 @@ export function PWAVotingInterface({
         devLog('PWA: Vote stored offline')
       }
 
-      // Call the parent vote handler
+      // Call the parent vote handler with validated choice
       onVote(choice)
       setHasVoted(true)
       
