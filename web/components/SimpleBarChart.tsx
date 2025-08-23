@@ -41,7 +41,8 @@ export function SimpleBarChart({ data, title, height = 200 }: SimpleBarChartProp
                     className="h-full rounded-full transition-all duration-1000 ease-out"
                     style={{ 
                       backgroundColor: item.color,
-                      width: `${percentage}%`
+                      width: `${percentage}%`,
+                      animationDelay: `${index * 100}ms`
                     }}
                   >
                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
