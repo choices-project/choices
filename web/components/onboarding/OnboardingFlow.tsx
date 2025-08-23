@@ -99,7 +99,6 @@ function OnboardingFlowInner() {
     }
   })
   
-  const router = useRouter()
   const searchParams = useSearchParams()
   const supabase = useMemo(() => createClient(), [])
 
