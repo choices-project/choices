@@ -80,7 +80,8 @@ export function SimpleChart({
                   className="h-full rounded-full relative transition-all duration-1000 ease-out"
                   style={{ 
                     backgroundColor: item.color,
-                    width: `${percentage}%`
+                    width: `${percentage}%`,
+                    animationDelay: `${index * 150}ms`
                   }}
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
@@ -106,7 +107,8 @@ export function SimpleChart({
               className="h-full transition-all duration-1000 ease-out"
               style={{ 
                 backgroundColor: item.color,
-                width: `${item.value}%`
+                width: `${item.value}%`,
+                animationDelay: `${index * 150}ms`
               }}
             />
           </div>
@@ -153,7 +155,8 @@ export function SimpleChart({
                     className="h-full rounded-full transition-all duration-1000 ease-out"
                     style={{ 
                       backgroundColor: item.color,
-                      width: `${item.value}%`
+                      width: `${item.value}%`,
+                      animationDelay: `${index * 150}ms`
                     }}
                   />
                 </div>

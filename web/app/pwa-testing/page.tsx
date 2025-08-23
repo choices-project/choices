@@ -1,35 +1,25 @@
 'use client'
 
-import { useState, useEffect, useCallback, createContext, useContext } from 'react'
-import { motion } from 'framer-motion'
+import { useState, useEffect } from 'react'
 import { 
   Activity, 
   Shield, 
   Zap, 
-  Wifi, 
   WifiOff, 
   Download, 
   Smartphone,
   Lock,
-  Unlock,
-  Settings,
-  BarChart3,
   RefreshCw,
   CheckCircle,
   AlertCircle,
-  Info,
   TestTube,
   Bug,
-  Database,
-  Network,
-  Cpu,
-  HardDrive,
   Smartphone as Mobile
 } from 'lucide-react'
 import { usePWAUtils } from '../../hooks/usePWAUtils'
 
 export default function PWATestingPage() {
-  const { utils: pwaUtils, loading: utilsLoading, error: utilsError } = usePWAUtils()
+  const { utils: pwaUtils, loading: utilsLoading } = usePWAUtils()
   const [metrics, setMetrics] = useState<any>(null)
   const [privacyReport, setPrivacyReport] = useState<any>(null)
   const [deviceInfo, setDeviceInfo] = useState<any>(null)

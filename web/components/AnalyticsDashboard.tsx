@@ -6,32 +6,13 @@ import {
   TrendingUp, 
   Users, 
   Activity, 
-  Globe, 
-  PieChart, 
-  Clock,
-  Download,
   RefreshCw,
-  Filter,
-  Search,
-  Eye,
-  EyeOff,
-  Settings,
   Bell,
-  Calendar,
-  Target,
-  Award,
   Zap,
-  Smartphone,
-  Monitor,
-  Tablet,
   Shield,
-  Database,
-  BarChart,
-  LineChart,
-  Funnel
+  Clock
 } from 'lucide-react';
 import { useFeatureFlags } from '../hooks/useFeatureFlags';
-import { isFeatureEnabled } from '../lib/feature-flags';
 import { PWAAnalytics } from '../lib/pwa-analytics';
 
 interface AnalyticsData {
@@ -103,8 +84,8 @@ interface AnalyticsDashboardProps {
   defaultView?: string;
   autoRefresh?: boolean;
   refreshInterval?: number;
-  onDataUpdate?: (data: AnalyticsData) => void;
-  onError?: (error: string) => void;
+  onDataUpdate?: (_data: AnalyticsData) => void;
+  onError?: (_error: string) => void;
   className?: string;
 }
 
@@ -135,7 +116,7 @@ export default function AnalyticsDashboard({
   });
 
   // Check if analytics feature is enabled
-  const analyticsEnabled = isFeatureEnabled('analytics');
+  const analyticsEnabled = featureFlags.isEnabled('analytics');
 
   const analyticsViews: AnalyticsView[] = [
     {
@@ -192,7 +173,7 @@ export default function AnalyticsDashboard({
       description: 'Advanced statistical analysis and predictions',
       icon: <BarChart3 className="h-5 w-5" />,
       category: 'advanced',
-      enabled: analyticsEnabled && isFeatureEnabled('aiFeatures')
+      enabled: analyticsEnabled && featureFlags.isEnabled('aiFeatures')
     }
   ];
 
@@ -200,9 +181,17 @@ export default function AnalyticsDashboard({
     try {
       setLoading(true);
       
+      // Build query parameters from filters
+      const queryParams = new URLSearchParams({
+        dateRange: filters.dateRange,
+        pollId: filters.pollId,
+        userType: filters.userType,
+        deviceType: filters.deviceType
+      });
+
       // Fetch data from multiple sources
       const [dashboardResponse, pwaMetrics] = await Promise.all([
-        fetch('/api/dashboard'),
+        fetch(`/api/dashboard?${queryParams.toString()}`),
         Promise.resolve(new PWAAnalytics().getMetrics())
       ]);
 
@@ -215,11 +204,11 @@ export default function AnalyticsDashboard({
       // Combine and transform data
       const combinedData: AnalyticsData = {
         overview: {
-          totalPolls: dashboardData.overall_metrics?.total_polls || 0,
-          activePolls: dashboardData.overall_metrics?.active_polls || 0,
-          totalVotes: dashboardData.overall_metrics?.total_votes || 0,
-          totalUsers: dashboardData.overall_metrics?.total_users || 0,
-          participationRate: dashboardData.overall_metrics?.average_participation || 0,
+          totalPolls: dashboardData.overallmetrics?.totalpolls || 0,
+          activePolls: dashboardData.overallmetrics?.activepolls || 0,
+          totalVotes: dashboardData.overallmetrics?.totalvotes || 0,
+          totalUsers: dashboardData.overallmetrics?.totalusers || 0,
+          participationRate: dashboardData.overallmetrics?.averageparticipation || 0,
           averageSessionDuration: pwaMetrics.sessionDuration / 1000 / 60, // Convert to minutes
           bounceRate: 0, // Calculate from session data
           conversionRate: 0 // Calculate from user actions
@@ -230,9 +219,9 @@ export default function AnalyticsDashboard({
           monthly: [] // Aggregate daily data
         },
         demographics: {
-          ageGroups: dashboardData.demographics?.age_groups || {},
-          geographicDistribution: dashboardData.geographic_map || {},
-          verificationTiers: dashboardData.demographics?.verification_tiers || {},
+          ageGroups: dashboardData.demographics?.agegroups || {},
+          geographicDistribution: dashboardData.geographicmap || {},
+          verificationTiers: dashboardData.demographics?.verificationtiers || {},
           deviceTypes: {
             desktop: 60,
             mobile: 35,
@@ -273,8 +262,8 @@ export default function AnalyticsDashboard({
           }
         },
         engagement: {
-          activeUsers: dashboardData.engagement?.active_users || 0,
-          returningUsers: dashboardData.engagement?.returning_users || 0,
+          activeUsers: dashboardData.engagement?.activeusers || 0,
+          returningUsers: dashboardData.engagement?.returningusers || 0,
           sessionDuration: pwaMetrics.sessionDuration / 1000 / 60,
           pagesPerSession: pwaMetrics.featuresUsed.length,
           featureUsage: {
@@ -287,8 +276,8 @@ export default function AnalyticsDashboard({
       };
 
       setAnalyticsData(combinedData);
-      setLastUpdated(new Date());
       setError(null);
+      setLastUpdated(new Date()); // Update last updated time
       
       // Call callback if provided
       if (onDataUpdate) {
@@ -305,7 +294,7 @@ export default function AnalyticsDashboard({
     } finally {
       setLoading(false);
     }
-  }, [onDataUpdate, onError]);
+  }, [onDataUpdate, onError, filters]);
 
   useEffect(() => {
     if (analyticsEnabled) {
@@ -316,7 +305,7 @@ export default function AnalyticsDashboard({
         return () => clearInterval(interval);
       }
     }
-  }, [fetchAnalyticsData, autoRefreshEnabled, refreshInterval, analyticsEnabled]);
+  }, [fetchAnalyticsData, autoRefreshEnabled, refreshInterval, analyticsEnabled, filters]);
 
   if (!analyticsEnabled) {
     return (
@@ -382,6 +371,12 @@ export default function AnalyticsDashboard({
               </div>
               <div className="flex items-center space-x-4">
                 <div className="flex items-center space-x-2">
+                  <Clock className="h-4 w-4 text-gray-400" />
+                  <span className="text-sm text-gray-600">
+                    Last updated: {lastUpdated.toLocaleTimeString()}
+                  </span>
+                </div>
+                <div className="flex items-center space-x-2">
                   <RefreshCw className={`h-4 w-4 ${autoRefreshEnabled ? 'text-green-600' : 'text-gray-400'}`} />
                   <span className="text-sm text-gray-600">
                     {autoRefreshEnabled ? 'Auto-refresh on' : 'Auto-refresh off'}
@@ -393,6 +388,14 @@ export default function AnalyticsDashboard({
                 >
                   {autoRefreshEnabled ? 'Disable' : 'Enable'} Auto-refresh
                 </button>
+                
+                {/* Feature Flag Status */}
+                <div className="flex items-center space-x-2">
+                  <div className={`w-2 h-2 rounded-full ${analyticsEnabled ? 'bg-green-500' : 'bg-red-500'}`} />
+                  <span className="text-sm text-gray-600">
+                    Analytics: {analyticsEnabled ? 'Enabled' : 'Disabled'}
+                  </span>
+                </div>
               </div>
             </div>
           </div>
@@ -425,6 +428,77 @@ export default function AnalyticsDashboard({
             </div>
           </div>
         )}
+
+        {/* Filters */}
+        <div className="bg-white rounded-xl shadow-sm border mb-8 p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-gray-900">Filters</h3>
+            <button
+              onClick={() => setFilters({
+                dateRange: '30d',
+                pollId: 'all',
+                userType: 'all',
+                deviceType: 'all'
+              })}
+              className="text-sm text-blue-600 hover:text-blue-700"
+            >
+              Reset Filters
+            </button>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Date Range</label>
+              <select
+                value={filters.dateRange}
+                onChange={(e) => setFilters(prev => ({ ...prev, dateRange: e.target.value }))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="7d">Last 7 days</option>
+                <option value="30d">Last 30 days</option>
+                <option value="90d">Last 90 days</option>
+                <option value="1y">Last year</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Poll ID</label>
+              <select
+                value={filters.pollId}
+                onChange={(e) => setFilters(prev => ({ ...prev, pollId: e.target.value }))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="all">All Polls</option>
+                <option value="featured">Featured Only</option>
+                <option value="active">Active Only</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">User Type</label>
+              <select
+                value={filters.userType}
+                onChange={(e) => setFilters(prev => ({ ...prev, userType: e.target.value }))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="all">All Users</option>
+                <option value="verified">Verified Only</option>
+                <option value="new">New Users</option>
+                <option value="returning">Returning Users</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Device Type</label>
+              <select
+                value={filters.deviceType}
+                onChange={(e) => setFilters(prev => ({ ...prev, deviceType: e.target.value }))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="all">All Devices</option>
+                <option value="desktop">Desktop</option>
+                <option value="mobile">Mobile</option>
+                <option value="tablet">Tablet</option>
+              </select>
+            </div>
+          </div>
+        </div>
 
         {/* Content Area */}
         <div className="space-y-8">
@@ -552,8 +626,48 @@ function TrendsView({ data }: { data: AnalyticsData }) {
     <div className="space-y-8">
       <div className="bg-white rounded-xl shadow-sm border p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Voting Trends</h3>
-        <div className="h-64 bg-gray-50 rounded-lg flex items-center justify-center">
-          <p className="text-gray-500">Chart visualization will be implemented here</p>
+        <div className="space-y-6">
+          {/* Daily Trends */}
+          <div>
+            <h4 className="text-md font-medium text-gray-700 mb-3">Daily Activity</h4>
+            <div className="space-y-2">
+              {data.trends.daily.slice(-7).map((day: any, index: any) => (
+                <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <span className="text-sm text-gray-600">{day.date}</span>
+                  <div className="flex items-center space-x-4">
+                    <span className="text-sm text-gray-900">{day.votes} votes</span>
+                    <span className="text-sm text-gray-500">{day.users} users</span>
+                    <span className="text-sm text-gray-500">{day.polls} polls</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+          
+          {/* Weekly Trends */}
+          <div>
+            <h4 className="text-md font-medium text-gray-700 mb-3">Weekly Summary</h4>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="p-4 bg-blue-50 rounded-lg">
+                <div className="text-2xl font-bold text-blue-600">
+                  {data.trends.weekly.reduce((sum: any, week: any) => sum + week.votes, 0)}
+                </div>
+                <div className="text-sm text-blue-700">Total Votes</div>
+              </div>
+              <div className="p-4 bg-green-50 rounded-lg">
+                <div className="text-2xl font-bold text-green-600">
+                  {data.trends.weekly.reduce((sum: any, week: any) => sum + week.users, 0)}
+                </div>
+                <div className="text-sm text-green-700">Total Users</div>
+              </div>
+              <div className="p-4 bg-purple-50 rounded-lg">
+                <div className="text-2xl font-bold text-purple-600">
+                  {data.trends.weekly.reduce((sum: any, week: any) => sum + week.polls, 0)}
+                </div>
+                <div className="text-sm text-purple-700">Total Polls</div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -730,6 +844,30 @@ function AdvancedView({ data }: { data: AnalyticsData }) {
         <p className="text-gray-600 mb-4">
           Advanced analytics features including predictive modeling, statistical analysis, and AI-powered insights are available when the AI features flag is enabled.
         </p>
+        
+        {/* Data Summary */}
+        <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+          <h4 className="font-medium text-gray-900 mb-2">Data Summary</h4>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+            <div>
+              <span className="text-gray-600">Total Polls:</span>
+              <span className="ml-2 font-medium">{data.overview.totalPolls}</span>
+            </div>
+            <div>
+              <span className="text-gray-600">Active Users:</span>
+              <span className="ml-2 font-medium">{data.engagement.activeUsers}</span>
+            </div>
+            <div>
+              <span className="text-gray-600">Avg Session:</span>
+              <span className="ml-2 font-medium">{data.engagement.sessionDuration.toFixed(1)}m</span>
+            </div>
+            <div>
+              <span className="text-gray-600">Data Points:</span>
+              <span className="ml-2 font-medium">{data.privacy.dataCollected}</span>
+            </div>
+          </div>
+        </div>
+        
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="p-4 bg-blue-50 rounded-lg">
             <h4 className="font-medium text-blue-900 mb-2">Predictive Analytics</h4>

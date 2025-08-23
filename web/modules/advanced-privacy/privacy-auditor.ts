@@ -5,9 +5,9 @@
  * and audit functionality for the privacy system.
  */
 
-import { isFeatureEnabled } from '../../lib/feature-flags'
+import { isFeatureEnabled } from '../../lib/feature-flags';
 import { devLog } from '@/lib/logger';
-import { PrivacyBridge } from './privacy-bridge'
+import { PrivacyBridge } from './privacy-bridge';
 
 export interface PrivacyAuditResult {
   timestamp: number

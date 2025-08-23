@@ -1,7 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server';
 import { devLog } from '@/lib/logger';
 import { createClient } from '@/utils/supabase/server';
 import { cookies } from 'next/headers';
+import { getCurrentUser } from '@/lib/auth-utils';
 
 export const dynamic = 'force-dynamic';
 
@@ -20,11 +21,10 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const limit = parseInt(searchParams.get('limit') || '20');
-    const status = searchParams.get('status') || 'active';
+    const _status = searchParams.get('status') || 'active';
 
     // Fetch active polls from po_polls table
     let polls;
-    let error;
 
     try {
       devLog('Fetching active polls from po_polls table...');
@@ -47,8 +47,8 @@ export async function GET(request: NextRequest) {
         total_votes: poll.total_votes || 0,
         participation_rate: poll.participation_rate || 0,
         aggregated_results: poll.options ? 
-          poll.options.reduce((acc: any, option: any, index: any) => {
-            acc[`option_${index + 1}`] = 0; // Default to 0 until we can count votes
+          poll.options.reduce((acc: any, option: any, _index: any) => {
+            acc[`option_${_index + 1}`] = 0; // Default to 0 until we can count votes
             return acc;
           }, {}) : {},
         status: poll.status
@@ -103,8 +103,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Check authentication
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-    if (userError || !user) {
+    const user = getCurrentUser(request);
+    if (!user) {
       return NextResponse.json(
         { error: 'Authentication required to create polls' },
         { status: 401 }
@@ -115,7 +115,7 @@ export async function POST(request: NextRequest) {
     const { data: userProfile } = await supabase
       .from('ia_users')
       .select('is_active')
-      .eq('stable_id', user.id)
+      .eq('stable_id', user.userId)
       .single();
 
     if (!userProfile || !userProfile.is_active) {
@@ -158,7 +158,7 @@ export async function POST(request: NextRequest) {
         options: sanitizedOptions,
         voting_method,
         status: 'active',
-        created_by: user.id,
+        created_by: user.userId,
         total_votes: 0,
         participation_rate: 0.0
       })

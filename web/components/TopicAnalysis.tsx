@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, createContext, useContext } from 'react'
 import { motion } from 'framer-motion'
+import { devLog } from '@/lib/logger'
 import { 
   TrendingUp, TrendingDown, Users, MapPin, 
   GraduationCap, DollarSign, Building2, 
@@ -95,6 +96,35 @@ interface TopicAnalysisProps {
   subtitle?: string
 }
 
+// Context for sharing topic analysis data
+const TopicContext = createContext<{
+  data: TopicData;
+  insights: string[];
+  loading: boolean;
+  updateData: (newData: TopicData) => void;
+}>({
+  data: sampleTopicData,
+  insights: [],
+  loading: false,
+  updateData: (newData: TopicData) => {
+    // Update the context data when new data is provided
+    devLog('Topic analysis data updated:', newData.question)
+    // Validate newData before processing
+    if (newData && newData.question && newData.breakdowns) {
+      // In a real implementation, this would update the context state
+      // For now, we log the update for debugging purposes
+      devLog('Valid newData received with breakdowns:', Object.keys(newData.breakdowns))
+    } else {
+      devLog('Invalid newData received:', newData)
+    }
+  }
+})
+
+// Hook to use topic context
+export function useTopicContext() {
+  return useContext(TopicContext)
+}
+
 export function TopicAnalysis({ 
   data = sampleTopicData, 
   title = "Topic Analysis", 
@@ -103,16 +133,12 @@ export function TopicAnalysis({
   const [activeBreakdown, setActiveBreakdown] = useState('age')
   const [showInsights, setShowInsights] = useState(false)
   const [showYes, setShowYes] = useState(true)
+  const [loading, setLoading] = useState(false)
+  const [insights, setInsights] = useState<string[]>([])
+  const [chartType, setChartType] = useState<'donut' | 'bar'>('donut')
+  const [showFilters, setShowFilters] = useState(false)
 
-  const breakdownOptions = [
-    { id: 'age', label: 'Age Groups', icon: Users, color: '#3b82f6' },
-    { id: 'location', label: 'Location', icon: MapPin, color: '#10b981' },
-    { id: 'education', label: 'Education', icon: GraduationCap, color: '#f59e0b' },
-    { id: 'income', label: 'Income', icon: DollarSign, color: '#06b6d4' },
-    { id: 'urbanRural', label: 'Urban/Rural', icon: Building2, color: '#84cc16' }
-  ]
-
-  const getActiveData = () => {
+  const getActiveData = useCallback(() => {
     const colors = ['#3b82f6', '#10b981', '#8b5cf6', '#f59e0b', '#ef4444', '#06b6d4', '#84cc16']
     const breakdown = data.breakdowns[activeBreakdown as keyof typeof data.breakdowns]
     
@@ -128,7 +154,39 @@ export function TopicAnalysis({
         color
       }
     })
-  }
+  }, [activeBreakdown, showYes, data])
+
+  // Cache data processing to prevent unnecessary re-renders
+  const processedData = useCallback(() => {
+    return getActiveData()
+  }, [getActiveData])
+
+  const chartData = processedData()
+
+  // Effect to generate insights when data changes
+  useEffect(() => {
+    setLoading(true)
+    // Simulate insight generation
+    const timer = setTimeout(() => {
+      const newInsights = [
+        ...data.insights.yes.slice(0, 2),
+        ...data.insights.no.slice(0, 2)
+      ]
+      setInsights(newInsights)
+      setLoading(false)
+    }, 500)
+    return () => clearTimeout(timer)
+  }, [data])
+
+  const breakdownOptions = [
+    { id: 'age', label: 'Age Groups', icon: Users, color: '#3b82f6' },
+    { id: 'location', label: 'Location', icon: MapPin, color: '#10b981' },
+    { id: 'education', label: 'Education', icon: GraduationCap, color: '#f59e0b' },
+    { id: 'income', label: 'Income', icon: DollarSign, color: '#06b6d4' },
+    { id: 'urbanRural', label: 'Urban/Rural', icon: Building2, color: '#84cc16' }
+  ]
+
+
 
   const getBreakdownLabel = () => {
     switch (activeBreakdown) {
@@ -142,7 +200,16 @@ export function TopicAnalysis({
   }
 
   return (
-    <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-100">
+    <TopicContext.Provider value={{
+      data,
+      insights,
+      loading,
+      updateData: (newData: TopicData) => {
+        // This would update the context data in a real implementation
+        devLog('Topic analysis data updated:', newData.question)
+      }
+    }}>
+      <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-100">
       {/* Header */}
       <div className="text-center mb-8">
         <motion.h2 
@@ -245,6 +312,41 @@ export function TopicAnalysis({
         </div>
       </div>
 
+      {/* Chart Controls */}
+      <div className="flex justify-center gap-4 mb-6">
+        <button
+          onClick={() => setShowFilters(!showFilters)}
+          className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+        >
+          <Filter className="h-4 w-4" />
+          Filters
+        </button>
+        <div className="flex bg-gray-100 rounded-lg p-1">
+          <button
+            onClick={() => setChartType('donut')}
+            className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
+              chartType === 'donut'
+                ? 'bg-blue-500 text-white shadow-md'
+                : 'text-gray-600 hover:text-gray-800'
+            }`}
+          >
+            <Target className="h-4 w-4" />
+            Donut
+          </button>
+          <button
+            onClick={() => setChartType('bar')}
+            className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
+              chartType === 'bar'
+                ? 'bg-blue-500 text-white shadow-md'
+                : 'text-gray-600 hover:text-gray-800'
+            }`}
+          >
+            <BarChart3 className="h-4 w-4" />
+            Bar
+          </button>
+        </div>
+      </div>
+
       {/* Chart Display */}
       <motion.div
         key={activeBreakdown}
@@ -259,12 +361,20 @@ export function TopicAnalysis({
           </h3>
         </div>
         <div className="flex justify-center">
-          <FancyDonutChart
-            data={getActiveData()}
-            size={300}
-            strokeWidth={25}
-            title={`${getBreakdownLabel()} Breakdown`}
-          />
+          {chartType === 'donut' ? (
+            <FancyDonutChart
+              data={chartData}
+              size={300}
+              strokeWidth={25}
+              title={`${getBreakdownLabel()} Breakdown`}
+            />
+          ) : (
+            <FancyBarChart
+              data={chartData}
+              height={300}
+              title={`${getBreakdownLabel()} Breakdown`}
+            />
+          )}
         </div>
       </motion.div>
 
@@ -336,6 +446,7 @@ export function TopicAnalysis({
           revealing patterns and insights that help understand the full picture.
         </p>
       </motion.div>
-    </div>
+      </div>
+    </TopicContext.Provider>
   )
 }

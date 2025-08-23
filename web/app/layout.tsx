@@ -1,10 +1,10 @@
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
+import { Inter } from 'next/font/google';
 import './globals.css'
-import { PWAInstallPrompt, OfflineIndicator, PWAUpdatePrompt } from '../components/PWAComponents'
+import { PWAInstallPrompt, OfflineIndicator, PWAUpdatePrompt } from '../components/PWAComponents';
 import EnhancedFeedbackWidget from '../components/EnhancedFeedbackWidget'
 import ClientOnly from '../components/ClientOnly'
-import { AuthProvider } from '../contexts/AuthContext'
+// Removed old Supabase-based AuthProvider - using custom auth system instead
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -48,26 +48,24 @@ export default function RootLayout({
         <meta name="msapplication-tileImage" content="/favicon.ico" />
       </head>
       <body className={inter.className}>
-        <AuthProvider>
-          {children}
-          
-          {/* PWA Components - Only render on client side */}
-          <ClientOnly>
-            <PWAInstallPrompt />
-            <OfflineIndicator />
-            <PWAUpdatePrompt />
-          </ClientOnly>
-          
-          {/* Enhanced Feedback Widget - Only render on client side */}
-          <ClientOnly>
-            <EnhancedFeedbackWidget />
-          </ClientOnly>
-          
-          {/* Hidden elements for PWA functionality */}
-          <div id="install-pwa" style={{ display: 'none' }} />
-          <div id="update-pwa" style={{ display: 'none' }} />
-          <div id="offline-indicator" style={{ display: 'none' }} />
-        </AuthProvider>
+        {children}
+        
+        {/* PWA Components - Only render on client side */}
+        <ClientOnly>
+          <PWAInstallPrompt />
+          <OfflineIndicator />
+          <PWAUpdatePrompt />
+        </ClientOnly>
+        
+        {/* Enhanced Feedback Widget - Only render on client side */}
+        <ClientOnly>
+          <EnhancedFeedbackWidget />
+        </ClientOnly>
+        
+        {/* Hidden elements for PWA functionality */}
+        <div id="install-pwa" style={{ display: 'none' }} />
+        <div id="update-pwa" style={{ display: 'none' }} />
+        <div id="offline-indicator" style={{ display: 'none' }} />
       </body>
     </html>
   )

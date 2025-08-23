@@ -3,7 +3,7 @@
 import React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AdminLayout } from '../../../components/admin/layout/AdminLayout';
-import { GeneratedPollsPage } from '../../../components/admin/generated-polls/GeneratedPollsPage';
+import { GeneratedPollsPage } from './GeneratedPollsPage';
 
 // Create a client
 const queryClient = new QueryClient({

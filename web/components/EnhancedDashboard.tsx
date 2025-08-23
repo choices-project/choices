@@ -10,14 +10,8 @@ import {
   Globe, 
   PieChart, 
   Clock,
-  Download,
   RefreshCw,
   Filter,
-  Search,
-  Eye,
-  EyeOff,
-  Settings,
-  Bell,
   Calendar,
   Target,
   Award,
@@ -26,9 +20,9 @@ import {
 
 interface DashboardData {
   polls: PollSummary[];
-  overall_metrics: OverallMetrics;
+  overallmetrics: OverallMetrics;
   trends: TrendData[];
-  geographic_map: GeographicMap;
+  geographicmap: GeographicMap;
   demographics: DemographicsData;
   engagement: EngagementMetrics;
 }
@@ -37,10 +31,10 @@ interface PollSummary {
   id: string;
   title: string;
   status: string;
-  total_votes: number;
+  totalvotes: number;
   participation: number;
-  created_at: string;
-  ends_at: string;
+  createdat: string;
+  endsat: string;
   choices: Choice[];
 }
 
@@ -51,11 +45,11 @@ interface Choice {
 }
 
 interface OverallMetrics {
-  total_polls: number;
-  active_polls: number;
-  total_votes: number;
-  total_users: number;
-  average_participation: number;
+  totalpolls: number;
+  activepolls: number;
+  totalvotes: number;
+  totalusers: number;
+  averageparticipation: number;
 }
 
 interface TrendData {
@@ -73,7 +67,7 @@ interface GeographicMap {
 
 interface GeographicRegion {
   name: string;
-  vote_count: number;
+  votecount: number;
   population: number;
   percentage: number;
   latitude: number;
@@ -83,7 +77,7 @@ interface GeographicRegion {
 interface GeographicCountry {
   code: string;
   name: string;
-  vote_count: number;
+  votecount: number;
   population: number;
   percentage: number;
 }
@@ -95,19 +89,19 @@ interface HeatmapPoint {
 }
 
 interface DemographicsData {
-  age_groups: Record<string, number>;
+  agegroups: Record<string, number>;
   genders: Record<string, number>;
   education: Record<string, number>;
   income: Record<string, number>;
-  verification_tiers: Record<string, number>;
+  verificationtiers: Record<string, number>;
 }
 
 interface EngagementMetrics {
-  active_users: number;
-  new_users: number;
-  returning_users: number;
-  session_duration: number;
-  bounce_rate: number;
+  activeusers: number;
+  newusers: number;
+  returningusers: number;
+  sessionduration: number;
+  bouncerate: number;
 }
 
 export default function EnhancedDashboard() {
@@ -314,7 +308,7 @@ export default function EnhancedDashboard() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <EnhancedMetricCard
             title="Total Polls"
-            value={dashboardData.overall_metrics.total_polls}
+            value={dashboardData.overallmetrics.totalpolls}
             icon={<BarChart3 className="h-6 w-6" />}
             color="blue"
             trend="+12%"
@@ -322,7 +316,7 @@ export default function EnhancedDashboard() {
           />
           <EnhancedMetricCard
             title="Active Polls"
-            value={dashboardData.overall_metrics.active_polls}
+            value={dashboardData.overallmetrics.activepolls}
             icon={<Activity className="h-6 w-6" />}
             color="green"
             trend="+5%"
@@ -330,7 +324,7 @@ export default function EnhancedDashboard() {
           />
           <EnhancedMetricCard
             title="Total Votes"
-            value={dashboardData.overall_metrics.total_votes.toLocaleString()}
+            value={dashboardData.overallmetrics.totalvotes.toLocaleString()}
             icon={<Users className="h-6 w-6" />}
             color="purple"
             trend="+23%"
@@ -338,7 +332,7 @@ export default function EnhancedDashboard() {
           />
           <EnhancedMetricCard
             title="Avg Participation"
-            value={`${dashboardData.overall_metrics.average_participation.toFixed(1)}%`}
+            value={`${dashboardData.overallmetrics.averageparticipation.toFixed(1)}%`}
             icon={<TrendingUp className="h-6 w-6" />}
             color="orange"
             trend="+8%"
@@ -438,7 +432,7 @@ function OverviewView({ data }: { data: DashboardData }) {
             <h2 className="text-xl font-semibold text-gray-900">Geographic Distribution</h2>
             <Map className="h-5 w-5 text-gray-400" />
           </div>
-          <EnhancedGeographicChart data={data.geographic_map} />
+          <EnhancedGeographicChart data={data.geographicmap} />
         </div>
 
         {/* Enhanced Engagement Metrics */}
@@ -472,17 +466,17 @@ function DetailedView({ data }: { data: DashboardData }) {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="text-center p-4 bg-blue-50 rounded-lg">
             <Target className="h-8 w-8 text-blue-600 mx-auto mb-2" />
-            <p className="text-2xl font-bold text-blue-600">{data.overall_metrics.total_votes.toLocaleString()}</p>
+            <p className="text-2xl font-bold text-blue-600">{data.overallmetrics.totalvotes.toLocaleString()}</p>
             <p className="text-sm text-gray-600">Total Votes Cast</p>
           </div>
           <div className="text-center p-4 bg-green-50 rounded-lg">
             <Award className="h-8 w-8 text-green-600 mx-auto mb-2" />
-            <p className="text-2xl font-bold text-green-600">{data.overall_metrics.total_users.toLocaleString()}</p>
+            <p className="text-2xl font-bold text-green-600">{data.overallmetrics.totalusers.toLocaleString()}</p>
             <p className="text-sm text-gray-600">Unique Users</p>
           </div>
           <div className="text-center p-4 bg-purple-50 rounded-lg">
             <Calendar className="h-8 w-8 text-purple-600 mx-auto mb-2" />
-            <p className="text-2xl font-bold text-purple-600">{data.overall_metrics.active_polls}</p>
+            <p className="text-2xl font-bold text-purple-600">{data.overallmetrics.activepolls}</p>
             <p className="text-sm text-gray-600">Active Polls</p>
           </div>
         </div>
@@ -506,11 +500,11 @@ function AnalyticsView({ data }: { data: DashboardData }) {
               <div className="flex-1 bg-gray-200 rounded-full h-2 mr-4">
                 <div
                   className="bg-blue-600 h-2 rounded-full"
-                  style={{ width: `${data.overall_metrics.average_participation}%` }}
+                  style={{ width: `${data.overallmetrics.averageparticipation}%` }}
                 />
               </div>
               <span className="text-sm font-medium text-gray-900">
-                {data.overall_metrics.average_participation.toFixed(1)}%
+                {data.overallmetrics.averageparticipation.toFixed(1)}%
               </span>
             </div>
           </div>
@@ -520,11 +514,11 @@ function AnalyticsView({ data }: { data: DashboardData }) {
               <div className="flex-1 bg-gray-200 rounded-full h-2 mr-4">
                 <div
                   className="bg-green-600 h-2 rounded-full"
-                  style={{ width: `${(data.engagement.active_users / data.overall_metrics.total_users) * 100}%` }}
+                  style={{ width: `${(data.engagement.activeusers / data.overallmetrics.totalusers) * 100}%` }}
                 />
               </div>
               <span className="text-sm font-medium text-gray-900">
-                {((data.engagement.active_users / data.overall_metrics.total_users) * 100).toFixed(1)}%
+                {((data.engagement.activeusers / data.overallmetrics.totalusers) * 100).toFixed(1)}%
               </span>
             </div>
           </div>
@@ -539,7 +533,7 @@ function AnalyticsView({ data }: { data: DashboardData }) {
 // Enhanced Poll Card Component
 function EnhancedPollCard({ poll }: { poll: PollSummary }) {
   const totalVotes = poll.choices.reduce((sum: any, choice: any) => sum + choice.votes, 0);
-  const timeRemaining = new Date(poll.ends_at).getTime() - new Date().getTime();
+  const timeRemaining = new Date(poll.endsat).getTime() - new Date().getTime();
   const daysRemaining = Math.ceil(timeRemaining / (1000 * 60 * 60 * 24));
   
   return (
@@ -597,14 +591,14 @@ function EnhancedDemographicsChart({ data }: { data: DemographicsData }) {
       <div>
         <h4 className="font-medium text-gray-900 mb-3">Age Groups</h4>
         <div className="space-y-3">
-          {Object.entries(data.age_groups).map(([age, count]) => (
+          {Object.entries(data.agegroups).map(([age, count]) => (
             <div key={age} className="flex items-center justify-between">
               <span className="text-sm text-gray-600">{age}</span>
               <div className="flex items-center space-x-2">
                 <div className="w-16 bg-gray-200 rounded-full h-2">
                   <div
                     className="bg-blue-600 h-2 rounded-full"
-                    style={{ width: `${(count / Math.max(...Object.values(data.age_groups))) * 100}%` }}
+                    style={{ width: `${(count / Math.max(...Object.values(data.agegroups))) * 100}%` }}
                   />
                 </div>
                 <span className="text-sm font-medium text-gray-900">{count}</span>
@@ -617,14 +611,14 @@ function EnhancedDemographicsChart({ data }: { data: DemographicsData }) {
       <div>
         <h4 className="font-medium text-gray-900 mb-3">Verification Tiers</h4>
         <div className="space-y-3">
-          {Object.entries(data.verification_tiers).map(([tier, count]) => (
+          {Object.entries(data.verificationtiers).map(([tier, count]) => (
             <div key={tier} className="flex items-center justify-between">
               <span className="text-sm text-gray-600">Tier {tier}</span>
               <div className="flex items-center space-x-2">
                 <div className="w-16 bg-gray-200 rounded-full h-2">
                   <div
                     className="bg-green-600 h-2 rounded-full"
-                    style={{ width: `${(count / Math.max(...Object.values(data.verification_tiers))) * 100}%` }}
+                    style={{ width: `${(count / Math.max(...Object.values(data.verificationtiers))) * 100}%` }}
                   />
                 </div>
                 <span className="text-sm font-medium text-gray-900">{count}</span>
@@ -655,7 +649,7 @@ function EnhancedGeographicChart({ data }: { data: GeographicMap }) {
                   />
                 </div>
                 <span className="text-sm font-medium text-gray-900">
-                  {region.vote_count} ({region.percentage.toFixed(1)}%)
+                  {region.votecount} ({region.percentage.toFixed(1)}%)
                 </span>
               </div>
             </div>
@@ -679,11 +673,11 @@ function EnhancedEngagementChart({ data }: { data: EngagementMetrics }) {
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-4">
         <div className="text-center p-4 bg-blue-50 rounded-lg">
-          <p className="text-2xl font-bold text-blue-600">{data.active_users}</p>
+          <p className="text-2xl font-bold text-blue-600">{data.activeusers}</p>
           <p className="text-sm text-gray-600">Active Users</p>
         </div>
         <div className="text-center p-4 bg-green-50 rounded-lg">
-          <p className="text-2xl font-bold text-green-600">{data.new_users}</p>
+          <p className="text-2xl font-bold text-green-600">{data.newusers}</p>
           <p className="text-sm text-gray-600">New Users</p>
         </div>
       </div>
@@ -691,15 +685,15 @@ function EnhancedEngagementChart({ data }: { data: EngagementMetrics }) {
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <span className="text-sm text-gray-600">Session Duration</span>
-          <span className="text-sm font-medium text-gray-900">{data.session_duration} min</span>
+          <span className="text-sm font-medium text-gray-900">{data.sessionduration} min</span>
         </div>
         <div className="flex items-center justify-between">
           <span className="text-sm text-gray-600">Bounce Rate</span>
-          <span className="text-sm font-medium text-gray-900">{data.bounce_rate}%</span>
+          <span className="text-sm font-medium text-gray-900">{data.bouncerate}%</span>
         </div>
         <div className="flex items-center justify-between">
           <span className="text-sm text-gray-600">Returning Users</span>
-          <span className="text-sm font-medium text-gray-900">{data.returning_users}</span>
+          <span className="text-sm font-medium text-gray-900">{data.returningusers}</span>
         </div>
       </div>
     </div>

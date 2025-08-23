@@ -1,9 +1,10 @@
 'use client'
 
-import { useState, useEffect, useCallback, createContext, useContext } from 'react'
-import { Lock, Shield, Users } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Lock, Shield } from 'lucide-react'
 import { createClient } from '@/utils/supabase/client'
 import { devLog } from '@/lib/logger';
+import { useOnboardingContext } from '../OnboardingFlow'
 
 interface AuthStepProps {
   data: any
@@ -15,6 +16,17 @@ interface AuthStepProps {
 export default function AuthStep({ data, onUpdate, onNext, onBack }: AuthStepProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const { updateData } = useOnboardingContext()
+
+  // Initialize from existing data if available
+  const [authMethod, setAuthMethod] = useState(data?.authMethod || '')
+
+  // Update local state when data changes
+  useEffect(() => {
+    if (data?.authMethod && data.authMethod !== authMethod) {
+      setAuthMethod(data.authMethod)
+    }
+  }, [data?.authMethod, authMethod])
 
   const supabase = createClient()
 
@@ -26,7 +38,11 @@ export default function AuthStep({ data, onUpdate, onNext, onBack }: AuthStepPro
       if (!supabase) {
         throw new Error('Authentication service not available')
       }
-      const { data, error } = await supabase.auth.signInWithOAuth({
+      
+      // Update onboarding data with auth method
+      updateData({ authMethod: provider })
+      
+      const { data: authData, error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
           redirectTo: `${window.location.origin}/onboarding?step=values`
@@ -37,9 +53,15 @@ export default function AuthStep({ data, onUpdate, onNext, onBack }: AuthStepPro
         throw error
       }
 
+      // Log OAuth initiation with provider data
+      devLog('OAuth initiated:', { provider, authData })
+      
+      // Update local data as well - the updates parameter is used here
+      const updates = { authMethod: provider, authData }
+      onUpdate(updates)
+      
       // The user will be redirected to OAuth provider
       // When they return, they'll be authenticated
-      devLog('OAuth initiated:', provider)
       
     } catch (error: any) {
       devLog('Login error:', error)
@@ -54,6 +76,12 @@ export default function AuthStep({ data, onUpdate, onNext, onBack }: AuthStepPro
     setError(null)
     
     try {
+      // Update onboarding data with auth method
+      updateData({ authMethod: 'email' })
+      // The updates parameter is used here
+      const updates = { authMethod: 'email' }
+      onUpdate(updates)
+      
       // Redirect to login page with return to onboarding
       window.location.href = `/login?redirectTo=${encodeURIComponent('/onboarding?step=values')}`
     } catch (error: any) {
@@ -122,6 +150,16 @@ export default function AuthStep({ data, onUpdate, onNext, onBack }: AuthStepPro
               <li>• Basic profile (name, email, avatar)</li>
               <li>• No access to your contacts or posts</li>
               <li>• No tracking across other sites</li>
+              
+              {/* Skip option for users who want to continue without auth */}
+              <div className="mt-4 pt-4 border-t border-blue-200">
+                <button
+                  onClick={onNext}
+                  className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                >
+                  Skip for now →
+                </button>
+              </div>
               <li>• You can delete your data anytime</li>
             </ul>
           </div>

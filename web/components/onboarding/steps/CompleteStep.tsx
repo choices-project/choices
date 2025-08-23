@@ -1,6 +1,6 @@
 'use client'
 
-import { CheckCircle, Heart, Users, TrendingUp, Shield } from 'lucide-react'
+import { CheckCircle, Heart, Users, TrendingUp, Shield } from 'lucide-react';
 
 interface CompleteStepProps {
   data: any
@@ -41,7 +41,7 @@ export default function CompleteStep({ data, onComplete, onBack, isLoading = fal
           Welcome to Choices!
         </h2>
         <p className="text-gray-600">
-          You're all set up and ready to make your voice heard.
+          You&apos;re all set up and ready to make your voice heard.
         </p>
       </div>
 
@@ -54,11 +54,11 @@ export default function CompleteStep({ data, onComplete, onBack, isLoading = fal
         <div className="space-y-6">
           {/* Basic info */}
           <div className="flex items-center space-x-4">
-            <img
-              src={data.avatar || 'https://via.placeholder.com/60/3B82F6/FFFFFF?text=U'}
-              alt="Profile"
-              className="w-15 h-15 rounded-full"
-            />
+            <div className="w-15 h-15 rounded-full bg-blue-100 flex items-center justify-center">
+              <span className="text-blue-600 font-semibold text-lg">
+                {data.displayName ? data.displayName.charAt(0).toUpperCase() : 'U'}
+              </span>
+            </div>
             <div>
               <h4 className="font-semibold text-gray-900">{data.displayName || 'User'}</h4>
               <p className="text-gray-600 text-sm">Ready to participate</p>
@@ -143,7 +143,7 @@ export default function CompleteStep({ data, onComplete, onBack, isLoading = fal
         </div>
       </div>
 
-      {/* What's next */}
+      {/* What&apos;s next */}
       <div className="bg-blue-50 rounded-2xl p-6 border border-blue-200">
         <h3 className="font-semibold text-blue-900 mb-4">What's next?</h3>
         <div className="space-y-3 text-blue-800 text-sm">

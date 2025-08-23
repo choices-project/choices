@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server';
 import { devLog } from '@/lib/logger';
 import { createClient } from '@/utils/supabase/server';
 import { cookies } from 'next/headers';
@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
     // Service role authentication - no user checks needed
     // Admin access is provided by the service role key
 
-    const service = new AutomatedPollsService();
+    const _service = new AutomatedPollsService();
     const { searchParams } = new URL(request.url);
     
     const limit = parseInt(searchParams.get('limit') || '20');

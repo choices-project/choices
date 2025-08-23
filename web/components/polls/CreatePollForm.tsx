@@ -16,8 +16,8 @@ export interface CreatePollData {
   title: string;
   description: string;
   options: string[];
-  voting_method: 'single' | 'multiple' | 'ranked' | 'approval' | 'range' | 'quadratic';
-  privacy_level: PrivacyLevel;
+  votingmethod: 'single' | 'multiple' | 'ranked' | 'approval' | 'range' | 'quadratic';
+  privacylevel: PrivacyLevel;
   category?: string;
   tags: string[];
 }
@@ -31,8 +31,8 @@ export const CreatePollForm: React.FC<CreatePollFormProps> = ({
     title: '',
     description: '',
     options: ['', ''],
-    voting_method: 'single',
-    privacy_level: 'public',
+    votingmethod: 'single',
+    privacylevel: 'public',
     category: '',
     tags: []
   });
@@ -84,6 +84,11 @@ export const CreatePollForm: React.FC<CreatePollFormProps> = ({
     };
 
     try {
+      // Validate pollData before submission
+      if (!pollData.title || pollData.options.length < 2) {
+        throw new Error('Invalid poll data');
+      }
+      
       await onSubmit(pollData);
     } catch (error) {
       devLog('Error creating poll:', error);
@@ -103,7 +108,7 @@ export const CreatePollForm: React.FC<CreatePollFormProps> = ({
     if (formData.options.length > 2) {
       setFormData(prev => ({
         ...prev,
-        options: prev.options.filter((_: any, i: any) => i !== index)
+        options: prev.options.filter((any, i: any) => i !== index)
       }));
     }
   };
@@ -224,8 +229,8 @@ export const CreatePollForm: React.FC<CreatePollFormProps> = ({
 
         {/* Privacy Level */}
         <PrivacyLevelSelector
-          value={formData.privacy_level}
-          onChange={(level) => setFormData(prev => ({ ...prev, privacy_level: level }))}
+          value={formData.privacylevel}
+          onChange={(level) => setFormData(prev => ({ ...prev, privacylevel: level }))}
           pollData={{
             title: formData.title,
             description: formData.description,
@@ -239,10 +244,10 @@ export const CreatePollForm: React.FC<CreatePollFormProps> = ({
             Voting Method
           </label>
           <select
-            value={formData.voting_method}
+            value={formData.votingmethod}
             onChange={(e) => setFormData(prev => ({ 
               ...prev, 
-              voting_method: e.target.value as CreatePollData['voting_method']
+              votingmethod: e.target.value as CreatePollData['votingmethod']
             }))}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
@@ -350,20 +355,20 @@ export const CreatePollForm: React.FC<CreatePollFormProps> = ({
         <div className="bg-blue-50 p-4 rounded-lg">
           <div className="flex items-start gap-2">
             <div className="text-blue-600">
-              {formData.privacy_level === 'public' && '🌐'}
-              {formData.privacy_level === 'private' && '🔒'}
-              {formData.privacy_level === 'high-privacy' && '🛡️'}
+              {formData.privacylevel === 'public' && '🌐'}
+              {formData.privacylevel === 'private' && '🔒'}
+              {formData.privacylevel === 'high-privacy' && '🛡️'}
             </div>
             <div className="text-sm text-blue-800">
               <p className="font-medium">
-                {formData.privacy_level === 'public' && 'Public Poll'}
-                {formData.privacy_level === 'private' && 'Private Poll'}
-                {formData.privacy_level === 'high-privacy' && 'High Privacy Poll'}
+                {formData.privacylevel === 'public' && 'Public Poll'}
+                {formData.privacylevel === 'private' && 'Private Poll'}
+                {formData.privacylevel === 'high-privacy' && 'High Privacy Poll'}
               </p>
               <p className="text-blue-600">
-                {formData.privacy_level === 'public' && 'Fast voting with basic privacy protection'}
-                {formData.privacy_level === 'private' && 'Enhanced privacy with user authentication'}
-                {formData.privacy_level === 'high-privacy' && 'Maximum privacy with cryptographic guarantees'}
+                {formData.privacylevel === 'public' && 'Fast voting with basic privacy protection'}
+                {formData.privacylevel === 'private' && 'Enhanced privacy with user authentication'}
+                {formData.privacylevel === 'high-privacy' && 'Maximum privacy with cryptographic guarantees'}
               </p>
             </div>
           </div>

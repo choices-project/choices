@@ -1,42 +1,19 @@
 'use client'
 
-import { useState, useEffect, useCallback, createContext, useContext } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { devLog } from '@/lib/logger';
-import { motion } from 'framer-motion'
-import { 
-  CheckCircle, 
-  XCircle, 
-  AlertTriangle, 
-  Play, 
+import {
+  CheckCircle,
+  XCircle,
+  AlertTriangle,
+  Play,
   RefreshCw,
-  Download,
-  Smartphone,
-  Monitor,
-  Tablet,
   Globe,
-  Zap,
-  Shield,
-  Eye,
-  MousePointer,
-  Wifi,
-  WifiOff,
-  Battery,
-  Cpu,
-  HardDrive,
-  Network,
   Smartphone as MobileIcon,
   Monitor as DesktopIcon,
   Tablet as TabletIcon,
   Globe as BrowserIcon,
-  Zap as PerformanceIcon,
-  Shield as SecurityIcon,
-  Eye as AccessibilityIcon,
-  MousePointer as TouchIcon,
   Wifi as NetworkIcon,
-  Battery as BatteryIcon,
-  Cpu as DeviceIcon,
-  HardDrive as StorageIcon,
-  Network as ApiIcon,
   Smartphone as ResponsiveIcon,
   Monitor as PwaIcon,
   Tablet as TouchInterfaceIcon,
@@ -48,10 +25,10 @@ import {
 import { useTestingUtils } from '../../hooks/useTestingUtils'
 
 // Import types separately to avoid SSR issues
-import type { PlatformTestSuite, TestResult, DeviceInfo, BrowserInfo } from '../../lib/cross-platform-testing'
+import type { PlatformTestSuite, DeviceInfo, BrowserInfo } from '../../lib/cross-platform-testing'
 
 export default function CrossPlatformTestingPage() {
-  const { utils: testingUtils, loading: utilsLoading, error: utilsError } = useTestingUtils()
+  const { utils: testingUtils, loading: utilsLoading } = useTestingUtils()
   const [isRunningTests, setIsRunningTests] = useState(false)
   const [testSuites, setTestSuites] = useState<PlatformTestSuite[]>([])
   const [comprehensiveReport, setComprehensiveReport] = useState<any>(null)

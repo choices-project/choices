@@ -14,6 +14,7 @@ import {
   X,
   Newspaper,
   MessageCircle,
+  Activity,
 } from 'lucide-react';
 
 const navigationItems = [
@@ -79,12 +80,22 @@ export const Sidebar: React.FC = () => {
           {!sidebarCollapsed && (
             <h1 className="text-xl font-bold text-gray-900">Choices Admin</h1>
           )}
-          <button
-            onClick={toggleSidebar}
-            className="lg:hidden p-2 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100"
-          >
-            <X className="h-5 w-5" />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={toggleSidebar}
+              className="lg:hidden p-2 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+            >
+              {sidebarCollapsed ? <Menu className="h-5 w-5" /> : <X className="h-5 w-5" />}
+            </button>
+            {!sidebarCollapsed && (
+              <button
+                onClick={toggleSidebar}
+                className="hidden lg:block p-2 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+              >
+                <Menu className="h-5 w-5" />
+              </button>
+            )}
+          </div>
         </div>
 
         <nav className="mt-6 px-3">
@@ -116,15 +127,18 @@ export const Sidebar: React.FC = () => {
             <div className="bg-gray-50 rounded-lg p-4">
               <h3 className="text-sm font-medium text-gray-900 mb-2">Quick Stats</h3>
               <div className="space-y-2 text-sm text-gray-600">
-                <div className="flex justify-between">
+                <div className="flex items-center space-x-2 text-sm text-gray-600">
+                  <BarChart3 className="w-4 h-4" />
                   <span>Topics:</span>
                   <span className="font-medium">{metrics?.total_topics || 0}</span>
                 </div>
-                <div className="flex justify-between">
+                <div className="flex items-center space-x-2 text-sm text-gray-600">
+                  <BarChart3 className="w-4 h-4" />
                   <span>Polls:</span>
                   <span className="font-medium">{metrics?.total_polls || 0}</span>
                 </div>
-                <div className="flex justify-between">
+                <div className="flex items-center space-x-2 text-sm text-gray-600">
+                  <Activity className="w-4 h-4" />
                   <span>Active:</span>
                   <span className="font-medium">{metrics?.active_polls || 0}</span>
                 </div>
@@ -136,3 +150,4 @@ export const Sidebar: React.FC = () => {
     </>
   );
 };
+

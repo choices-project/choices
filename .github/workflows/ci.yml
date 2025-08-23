@@ -13,6 +13,10 @@ jobs:
         uses: actions/setup-go@v4
         with:
           go-version: '1.23'
+          cache: true
+          cache-dependency-path: |
+            server/ia/go.sum
+            server/po/go.sum
       
       - name: Go lint IA
         run: |

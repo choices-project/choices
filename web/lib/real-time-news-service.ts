@@ -626,6 +626,19 @@ export class RealTimeNewsService {
       });
     }
     
+    // Add entity-specific options if we have significant entities
+    if (entities && entities.length > 0) {
+      const topEntities = entities.slice(0, 2); // Use top 2 entities
+      topEntities.forEach((entity, index) => {
+        options.push({
+          id: `entity_${index}`,
+          text: `Focus on ${entity.name || entity.type}`,
+          description: `Prioritize ${entity.name || entity.type} in this discussion`,
+          stance: 'neutral'
+        });
+      });
+    }
+    
     return options;
   }
 
@@ -754,10 +767,21 @@ export function calculateNewsReliability(source: NewsSource, content: any): numb
 export function determineUrgency(story: BreakingNewsStory): BreakingNewsStory['urgency'] {
   const { metadata, sentiment } = story;
   
-  if (metadata.politicalImpact > 0.9 && metadata.publicInterest > 0.9) return 'breaking';
-  if (metadata.politicalImpact > 0.7 || metadata.publicInterest > 0.8) return 'high';
-  if (metadata.politicalImpact > 0.5 || metadata.publicInterest > 0.6) return 'medium';
-  return 'low';
+  // Base urgency on political impact and public interest
+  let urgency: BreakingNewsStory['urgency'] = 'low';
+  
+  if (metadata.politicalImpact > 0.9 && metadata.publicInterest > 0.9) urgency = 'breaking';
+  else if (metadata.politicalImpact > 0.7 || metadata.publicInterest > 0.8) urgency = 'high';
+  else if (metadata.politicalImpact > 0.5 || metadata.publicInterest > 0.6) urgency = 'medium';
+  
+  // Adjust urgency based on sentiment
+  if (sentiment === 'negative' && urgency !== 'breaking') {
+    // Negative sentiment can increase urgency
+    if (urgency === 'low') urgency = 'medium';
+    else if (urgency === 'medium') urgency = 'high';
+  }
+  
+  return urgency;
 }
 
 export function analyzeSentiment(text: string): BreakingNewsStory['sentiment'] {

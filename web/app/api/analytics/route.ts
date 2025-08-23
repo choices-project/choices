@@ -1,29 +1,33 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { devLog } from '@/lib/logger';
-import { isFeatureEnabled } from '../../../lib/feature-flags';
+import { devLog } from '@/lib/logger'
+import { isFeatureEnabled } from '@/lib/feature-flags'
+import { 
+  ValidationError, 
+  AuthenticationError,
+  handleError, 
+  getUserMessage, 
+  getHttpStatus 
+} from '@/lib/error-handler'
 
 interface AnalyticsRequest {
-  type: 'overview' | 'trends' | 'demographics' | 'performance' | 'privacy' | 'engagement' | 'advanced';
-  filters?: {
-    dateRange?: string;
-    pollId?: string;
-    userType?: string;
-    deviceType?: string;
-  };
+  type: string
+  filters?: any
 }
 
 interface AnalyticsResponse {
-  success: boolean;
-  data?: any;
-  error?: string;
-  featureEnabled: boolean;
-  timestamp: string;
+  success: boolean
+  data?: any
+  error?: string
+  featureEnabled: boolean
+  timestamp: string
 }
 
 export async function GET(request: NextRequest) {
   try {
+    devLog('Analytics API called with params:', request.nextUrl.searchParams.toString())
+    
     // Check if analytics feature is enabled
-    const analyticsEnabled = isFeatureEnabled('analytics');
+    const analyticsEnabled = isFeatureEnabled('analytics')
     
     if (!analyticsEnabled) {
       return NextResponse.json({
@@ -31,51 +35,57 @@ export async function GET(request: NextRequest) {
         error: 'Analytics feature is disabled',
         featureEnabled: false,
         timestamp: new Date().toISOString()
-      }, { status: 403 });
+      }, { status: 403 })
     }
 
-    const { searchParams } = new URL(request.url);
-    const type = searchParams.get('type') || 'overview';
-    const dateRange = searchParams.get('dateRange') || '30d';
-    const pollId = searchParams.get('pollId') || 'all';
-    const userType = searchParams.get('userType') || 'all';
-    const deviceType = searchParams.get('deviceType') || 'all';
+    // Check authentication (analytics should require authentication)
+    const authHeader = request.headers.get('authorization')
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      throw new AuthenticationError('Authentication required for analytics access')
+    }
+
+    const { searchParams } = new URL(request.url)
+    const type = searchParams.get('type') || 'overview'
+    const dateRange = searchParams.get('dateRange') || '30d'
+    const _pollId = searchParams.get('pollId') || 'all'
+    const _userType = searchParams.get('userType') || 'all'
+    const _deviceType = searchParams.get('deviceType') || 'all'
 
     // Fetch data from dashboard API
-    const dashboardResponse = await fetch(`${request.nextUrl.origin}/api/dashboard`);
+    const dashboardResponse = await fetch(`${request.nextUrl.origin}/api/dashboard`)
     if (!dashboardResponse.ok) {
-      throw new Error('Failed to fetch dashboard data');
+      throw new Error('Failed to fetch dashboard data')
     }
     
-    const dashboardData = await dashboardResponse.json();
+    const dashboardData = await dashboardResponse.json()
 
     // Generate analytics data based on type
-    let analyticsData;
+    let analyticsData
     
     switch (type) {
       case 'overview':
-        analyticsData = generateOverviewData(dashboardData);
-        break;
+        analyticsData = generateOverviewData(dashboardData)
+        break
       case 'trends':
-        analyticsData = generateTrendsData(dashboardData, dateRange);
-        break;
+        analyticsData = generateTrendsData(dashboardData, dateRange)
+        break
       case 'demographics':
-        analyticsData = generateDemographicsData(dashboardData);
-        break;
+        analyticsData = generateDemographicsData(dashboardData)
+        break
       case 'performance':
-        analyticsData = generatePerformanceData();
-        break;
+        analyticsData = generatePerformanceData()
+        break
       case 'privacy':
-        analyticsData = generatePrivacyData();
-        break;
+        analyticsData = generatePrivacyData()
+        break
       case 'engagement':
-        analyticsData = generateEngagementData(dashboardData);
-        break;
+        analyticsData = generateEngagementData(dashboardData)
+        break
       case 'advanced':
-        analyticsData = generateAdvancedData(dashboardData);
-        break;
+        analyticsData = generateAdvancedData(dashboardData)
+        break
       default:
-        throw new Error(`Unknown analytics type: ${type}`);
+        throw new ValidationError(`Unknown analytics type: ${type}`)
     }
 
     const response: AnalyticsResponse = {
@@ -83,28 +93,32 @@ export async function GET(request: NextRequest) {
       data: analyticsData,
       featureEnabled: true,
       timestamp: new Date().toISOString()
-    };
+    }
 
-    return NextResponse.json(response);
+    return NextResponse.json(response)
 
   } catch (error) {
-    devLog('Analytics API error:', error);
+    const appError = handleError(error as Error, { context: 'analytics-get' })
+    const userMessage = getUserMessage(appError)
+    const statusCode = getHttpStatus(appError)
     
     const response: AnalyticsResponse = {
       success: false,
-      error: error instanceof Error ? error instanceof Error ? error.message : "Unknown error" : 'An error occurred',
+      error: userMessage,
       featureEnabled: isFeatureEnabled('analytics'),
       timestamp: new Date().toISOString()
-    };
+    }
 
-    return NextResponse.json(response, { status: 500 });
+    return NextResponse.json(response, { status: statusCode })
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
+    devLog('Analytics POST API called')
+    
     // Check if analytics feature is enabled
-    const analyticsEnabled = isFeatureEnabled('analytics');
+    const analyticsEnabled = isFeatureEnabled('analytics')
     
     if (!analyticsEnabled) {
       return NextResponse.json({
@@ -112,52 +126,52 @@ export async function POST(request: NextRequest) {
         error: 'Analytics feature is disabled',
         featureEnabled: false,
         timestamp: new Date().toISOString()
-      }, { status: 403 });
+      }, { status: 403 })
     }
 
-    const body: AnalyticsRequest = await request.json();
-    const { type, filters } = body;
+    const body: AnalyticsRequest = await request.json()
+    const { type, filters } = body
 
     // Validate request
     if (!type) {
-      throw new Error('Analytics type is required');
+      throw new ValidationError('Analytics type is required')
     }
 
     // Fetch data from dashboard API
-    const dashboardResponse = await fetch(`${request.nextUrl.origin}/api/dashboard`);
+    const dashboardResponse = await fetch(`${request.nextUrl.origin}/api/dashboard`)
     if (!dashboardResponse.ok) {
-      throw new Error('Failed to fetch dashboard data');
+      throw new Error('Failed to fetch dashboard data')
     }
     
-    const dashboardData = await dashboardResponse.json();
+    const dashboardData = await dashboardResponse.json()
 
     // Generate analytics data based on type and filters
-    let analyticsData;
+    let analyticsData
     
     switch (type) {
       case 'overview':
-        analyticsData = generateOverviewData(dashboardData, filters);
-        break;
+        analyticsData = generateOverviewData(dashboardData, filters)
+        break
       case 'trends':
-        analyticsData = generateTrendsData(dashboardData, filters?.dateRange || '30d', filters);
-        break;
+        analyticsData = generateTrendsData(dashboardData, '30d', filters)
+        break
       case 'demographics':
-        analyticsData = generateDemographicsData(dashboardData, filters);
-        break;
+        analyticsData = generateDemographicsData(dashboardData, filters)
+        break
       case 'performance':
-        analyticsData = generatePerformanceData();
-        break;
+        analyticsData = generatePerformanceData()
+        break
       case 'privacy':
-        analyticsData = generatePrivacyData();
-        break;
+        analyticsData = generatePrivacyData()
+        break
       case 'engagement':
-        analyticsData = generateEngagementData(dashboardData, filters);
-        break;
+        analyticsData = generateEngagementData(dashboardData, filters)
+        break
       case 'advanced':
-        analyticsData = generateAdvancedData(dashboardData, filters);
-        break;
+        analyticsData = generateAdvancedData(dashboardData, filters)
+        break
       default:
-        throw new Error(`Unknown analytics type: ${type}`);
+        throw new ValidationError(`Unknown analytics type: ${type}`)
     }
 
     const response: AnalyticsResponse = {
@@ -165,27 +179,29 @@ export async function POST(request: NextRequest) {
       data: analyticsData,
       featureEnabled: true,
       timestamp: new Date().toISOString()
-    };
+    }
 
-    return NextResponse.json(response);
+    return NextResponse.json(response)
 
   } catch (error) {
-    devLog('Analytics API error:', error);
+    const appError = handleError(error as Error, { context: 'analytics-post' })
+    const userMessage = getUserMessage(appError)
+    const statusCode = getHttpStatus(appError)
     
     const response: AnalyticsResponse = {
       success: false,
-      error: error instanceof Error ? error instanceof Error ? error.message : "Unknown error" : 'An error occurred',
+      error: userMessage,
       featureEnabled: isFeatureEnabled('analytics'),
       timestamp: new Date().toISOString()
-    };
+    }
 
-    return NextResponse.json(response, { status: 500 });
+    return NextResponse.json(response, { status: statusCode })
   }
 }
 
 // Helper functions to generate analytics data
 
-function generateOverviewData(dashboardData: any, filters?: any) {
+function generateOverviewData(dashboardData: any, _filters?: any) {
   return {
     totalPolls: dashboardData.overall_metrics?.total_polls || 0,
     activePolls: dashboardData.overall_metrics?.active_polls || 0,
@@ -201,11 +217,11 @@ function generateOverviewData(dashboardData: any, filters?: any) {
       usersGrowth: '+8%',
       participationGrowth: '+5%'
     }
-  };
+  }
 }
 
-function generateTrendsData(dashboardData: any, dateRange: string, filters?: any) {
-  const trends = dashboardData.trends || [];
+function generateTrendsData(dashboardData: any, _dateRange: string, _filters?: any) {
+  const trends = dashboardData.trends || []
   
   return {
     daily: trends.slice(-30),
@@ -217,10 +233,10 @@ function generateTrendsData(dashboardData: any, dateRange: string, filters?: any
       growthRate: '+15%',
       seasonalPattern: 'Weekend activity 20% higher'
     }
-  };
+  }
 }
 
-function generateDemographicsData(dashboardData: any, filters?: any) {
+function generateDemographicsData(dashboardData: any, _filters?: any) {
   return {
     ageGroups: dashboardData.demographics?.age_groups || {
       '18-24': 25,
@@ -252,7 +268,7 @@ function generateDemographicsData(dashboardData: any, filters?: any) {
       medium: 45,
       low: 30
     }
-  };
+  }
 }
 
 function generatePerformanceData() {
@@ -280,7 +296,7 @@ function generatePerformanceData() {
       'Implement caching for frequently accessed data',
       'Consider CDN for static assets'
     ]
-  };
+  }
 }
 
 function generatePrivacyData() {
@@ -304,10 +320,10 @@ function generatePrivacyData() {
       analyticsData: '90 days',
       auditLogs: '1 year'
     }
-  };
+  }
 }
 
-function generateEngagementData(dashboardData: any, filters?: any) {
+function generateEngagementData(dashboardData: any, _filters?: any) {
   return {
     activeUsers: dashboardData.engagement?.active_users || 1250,
     returningUsers: dashboardData.engagement?.returning_users || 850,
@@ -330,19 +346,19 @@ function generateEngagementData(dashboardData: any, filters?: any) {
       day7: 45,
       day30: 25
     }
-  };
+  }
 }
 
-function generateAdvancedData(dashboardData: any, filters?: any) {
+function generateAdvancedData(_dashboardData: any, _filters?: any) {
   // Check if AI features are enabled
-  const aiFeaturesEnabled = isFeatureEnabled('aiFeatures');
+  const aiFeaturesEnabled = isFeatureEnabled('aiFeatures')
   
   if (!aiFeaturesEnabled) {
     return {
       available: false,
       message: 'AI features are disabled. Enable the aiFeatures flag to access advanced analytics.',
       featureFlag: 'aiFeatures'
-    };
+    }
   }
 
   return {
@@ -388,24 +404,24 @@ function generateAdvancedData(dashboardData: any, filters?: any) {
       'Implement age-based content personalization',
       'Optimize for weekend user activity patterns'
     ]
-  };
+  }
 }
 
 function aggregateData(data: any[], period: 'week' | 'month') {
   // Simple aggregation logic - in a real implementation, this would be more sophisticated
-  const aggregated = [];
-  const groupSize = period === 'week' ? 7 : 30;
+  const aggregated = []
+  const groupSize = period === 'week' ? 7 : 30
   
   for (let i = 0; i < data.length; i += groupSize) {
-    const group = data.slice(i, i + groupSize);
+    const group = data.slice(i, i + groupSize)
     const aggregatedEntry = {
       period: `${period}_${Math.floor(i / groupSize) + 1}`,
       votes: group.reduce((sum: any, item: any) => sum + (item.votes || 0), 0),
       users: group.reduce((sum: any, item: any) => sum + (item.users || 0), 0),
       polls: group.reduce((sum: any, item: any) => sum + (item.polls || 0), 0)
-    };
-    aggregated.push(aggregatedEntry);
+    }
+    aggregated.push(aggregatedEntry)
   }
   
-  return aggregated;
+  return aggregated
 }

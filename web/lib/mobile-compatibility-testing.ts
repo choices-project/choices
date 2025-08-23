@@ -939,15 +939,28 @@ export class MobileCompatibilityTesting {
   }
 
   private async testLimitedStorage(): Promise<MobileTestResult> {
-    const storageQuota = (navigator as any).storage?.estimate?.() || Promise.resolve({})
+    const storageQuota = await (navigator as any).storage?.estimate?.() || Promise.resolve({})
     const hasStorageOptimizations = this.hasStorageOptimizations()
+
+    // Calculate storage usage percentage if available
+    let storageUsage = null
+    if (storageQuota && storageQuota.usage && storageQuota.quota) {
+      storageUsage = Math.round((storageQuota.usage / storageQuota.quota) * 100)
+    }
 
     return {
       testName: 'Limited Storage Support',
       category: 'Device Specific',
       status: hasStorageOptimizations ? 'pass' : 'warning',
       message: hasStorageOptimizations ? 'Storage optimizations implemented' : 'Storage optimization recommended',
-      details: { hasStorageOptimizations },
+      details: { 
+        hasStorageOptimizations, 
+        storageQuota: storageQuota ? {
+          usage: storageQuota.usage,
+          quota: storageQuota.quota,
+          usagePercentage: storageUsage
+        } : null
+      },
       mobileSpecific: true,
       timestamp: Date.now()
     }

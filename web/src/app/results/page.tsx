@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, createContext, useContext } from 'react'
+import { useState, useEffect } from 'react'
 import { devLog } from '@/lib/logger';
 import { BarChart3, Shield, CheckCircle, ArrowLeft, RefreshCw } from 'lucide-react'
 import Link from 'next/link'
@@ -242,7 +242,7 @@ export default function ResultsPage() {
                   
                   <div className="flex items-center justify-between text-xs text-gray-500 mb-4">
                     <span>{poll.options.length} options</span>
-                    <span>{new Date(poll.created_at).toLocaleDateString()}</span>
+                    <span>{new Date(poll.createdat).toLocaleDateString()}</span>
                   </div>
 
                   <button

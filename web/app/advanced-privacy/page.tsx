@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, createContext, useContext } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { devLog } from '@/lib/logger';
 import { 
   Shield, 
@@ -164,6 +164,28 @@ export default function AdvancedPrivacyPage() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Error Display */}
+        {(privacyError || pwaError) && (
+          <div className="mb-6 space-y-3">
+            {privacyError && (
+              <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+                <div className="flex items-center">
+                  <AlertCircle className="h-5 w-5 text-red-600 mr-2" />
+                  <span className="text-red-800">Privacy Error: {privacyError}</span>
+                </div>
+              </div>
+            )}
+            {pwaError && (
+              <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+                <div className="flex items-center">
+                  <AlertCircle className="h-5 w-5 text-red-600 mr-2" />
+                  <span className="text-red-800">PWA Error: {pwaError}</span>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+        
         {/* Tab Navigation */}
         <div className="mb-8">
           <nav className="flex space-x-1 bg-white rounded-lg border border-gray-200 p-1">

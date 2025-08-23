@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { devLog } from '@/lib/logger';
 import { createClient } from '@/utils/supabase/server'
+import { getCurrentUser } from '@/lib/auth-utils'
 import { cookies } from 'next/headers'
 
 export const dynamic = 'force-dynamic'
@@ -18,10 +19,10 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Get current user
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    // Get current user from JWT token
+    const user = getCurrentUser(request)
     
-    if (userError || !user) {
+    if (!user) {
       return NextResponse.json(
         { error: 'User not authenticated' },
         { status: 401 }
@@ -29,20 +30,20 @@ export async function GET(request: NextRequest) {
     }
 
     // Get user-specific statistics
-    const userStats = await getUserStats(supabase, user.id)
+    const userStats = await getUserStats(supabase, user.userId)
     
     // Get general platform statistics
     const platformStats = await getPlatformStats(supabase)
 
     const dashboardData = {
       user: {
-        id: user.id,
+        id: user.userId,
         email: user.email,
-        name: user.user_metadata?.full_name || user.email?.split('@')[0]
+        name: user.email?.split('@')[0]
       },
       stats: userStats,
       platform: platformStats,
-      recentActivity: await getRecentActivity(supabase, user.id),
+      recentActivity: await getRecentActivity(supabase, user.userId),
       polls: await getActivePolls(supabase)
     }
 
@@ -120,21 +121,37 @@ async function getPlatformStats(supabase: any) {
       .from('po_polls')
       .select('id', { count: 'exact' })
 
+    if (totalPollsError) {
+      devLog('Error fetching total polls:', totalPollsError)
+    }
+
     // Get total votes
     const { data: totalVotes, error: totalVotesError } = await supabase
       .from('po_votes')
       .select('id', { count: 'exact' })
+
+    if (totalVotesError) {
+      devLog('Error fetching total votes:', totalVotesError)
+    }
 
     // Get total users (from user_profiles)
     const { data: totalUsers, error: totalUsersError } = await supabase
       .from('user_profiles')
       .select('id', { count: 'exact' })
 
+    if (totalUsersError) {
+      devLog('Error fetching total users:', totalUsersError)
+    }
+
     // Get active polls
     const { data: activePolls, error: activePollsError } = await supabase
       .from('po_polls')
       .select('id')
       .eq('status', 'active')
+
+    if (activePollsError) {
+      devLog('Error fetching active polls:', activePollsError)
+    }
 
     return {
       totalPolls: totalPolls?.length || 0,

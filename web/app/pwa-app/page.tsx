@@ -1,8 +1,7 @@
 'use client'
 
-import { useState, useEffect, useCallback, createContext, useContext } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { devLog } from '@/lib/logger';
-import { motion } from 'framer-motion'
 import { 
   Vote, 
   Users, 
@@ -11,19 +10,13 @@ import {
   Smartphone, 
   Wifi, 
   WifiOff,
-  Zap,
-  Lock,
   Fingerprint,
   RefreshCw,
-  Download,
-  Settings,
   User,
   Bell,
-  Globe,
-  TrendingUp,
-  Activity,
   CheckCircle,
-  AlertCircle
+  AlertCircle,
+  TrendingUp
 } from 'lucide-react'
 import { usePWAUtils } from '../../hooks/usePWAUtils'
 import { PWAVotingInterface } from '../../components/PWAVotingInterface'
@@ -47,7 +40,7 @@ interface Poll {
 }
 
 export default function PWAAppPage() {
-  const { utils: pwaUtils, loading: utilsLoading, error: utilsError } = usePWAUtils()
+  const { utils: pwaUtils, loading: utilsLoading } = usePWAUtils()
   const [currentUser, setCurrentUser] = useState<PWAUser | null>(null)
   const [isOnline, setIsOnline] = useState(false)
   const [activeTab, setActiveTab] = useState('polls')

@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect, useCallback, createContext, useContext } from 'react'
-import { CheckCircle, AlertCircle, Info, Vote, Star, StarOff } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { CheckCircle, AlertCircle, Info, Star } from 'lucide-react'
 
 interface PollOption {
   id: string
@@ -76,7 +76,35 @@ export default function RangeVoting({
     setError(null)
 
     try {
-      await onVote(ratings)
+      // Validate ratings before submission
+      const validRatings: { [optionId: string]: number } = {}
+      let totalRating = 0
+      
+      for (const [optionId, rating] of Object.entries(ratings)) {
+        if (options.some(option => option.id === optionId)) {
+          const validRating = Math.max(minRating, Math.min(maxRating, rating))
+          validRatings[optionId] = validRating
+          totalRating += validRating
+        }
+      }
+      
+      // Check if all options are rated
+      if (Object.keys(validRatings).length !== options.length) {
+        throw new Error('All options must be rated')
+      }
+      
+      // Track analytics with poll ID
+      if (typeof window !== 'undefined' && window.gtag) {
+        window.gtag('event', 'vote_submitted', {
+          poll_id: pollId,
+          ratings: validRatings,
+          voting_method: 'range',
+          average_rating: totalRating / options.length,
+          rated_options_count: Object.keys(validRatings).length
+        })
+      }
+      
+      await onVote(validRatings)
     } catch (err: any) {
       setError(err.message || 'Failed to submit vote')
     } finally {
@@ -198,7 +226,7 @@ export default function RangeVoting({
                         {isFilled ? (
                           <Star className="w-5 h-5 text-yellow-500 fill-current" />
                         ) : (
-                          <StarOff className="w-5 h-5 text-gray-300" />
+                          <Star className="w-5 h-5 text-gray-300" />
                         )}
                       </button>
                     )
@@ -212,7 +240,7 @@ export default function RangeVoting({
         {/* Instructions */}
         <div className="mt-6 p-4 bg-gray-50 rounded-lg">
           <div className="flex items-center space-x-2 mb-2">
-            <Vote className="w-5 h-5 text-gray-600" />
+            <Star className="w-5 h-5 text-gray-600" />
             <span className="font-medium text-gray-900">Voting Instructions</span>
           </div>
           <div className="text-sm text-gray-600 space-y-1">
@@ -242,7 +270,7 @@ export default function RangeVoting({
                 }
               `}
             >
-              <Vote className="w-5 h-5" />
+              <Star className="w-5 h-5" />
               <span>{isSubmitting ? 'Submitting Vote...' : 'Submit Vote'}</span>
             </button>
           )}

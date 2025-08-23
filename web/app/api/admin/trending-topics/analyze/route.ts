@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server';
 import { devLog } from '@/lib/logger';
 import { createClient } from '@/utils/supabase/server';
 import { cookies } from 'next/headers';
@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check admin permissions - RESTRICTED TO OWNER ONLY
-    const { data: userProfile, error: profileError } = await supabase
+    const { data: userProfile, error: _profileError } = await supabase
       .from('ia_users')
       .select('verification_tier')
       .eq('stable_id', user.id)
@@ -222,7 +222,7 @@ export async function POST(request: NextRequest) {
 }
 
 // GET /api/admin/trending-topics/analyze - Get available categories
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const cookieStore = await cookies();
     const supabase = createClient(cookieStore);
@@ -249,6 +249,14 @@ export async function GET(request: NextRequest) {
       .select('verification_tier')
       .eq('stable_id', user.id)
       .single();
+
+    if (profileError) {
+      devLog('Error fetching user profile:', profileError);
+      return NextResponse.json(
+        { error: 'Failed to verify user permissions' },
+        { status: 500 }
+      );
+    }
 
     if (!userProfile || !['T2', 'T3'].includes(userProfile.verification_tier)) {
       return NextResponse.json(

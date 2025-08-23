@@ -1,16 +1,16 @@
 'use client'
 
-import { motion } from 'framer-motion'
+import { motion } from 'framer-motion';
 import { 
-  Vote, Users, TrendingUp, Shield, Globe, 
-  ArrowRight, CheckCircle, Star, Zap, Heart,
-  BarChart3, MapPin, Clock, Target, Play
+  Shield, Globe, 
+  ArrowRight, Star, Zap,
+  Play
 } from 'lucide-react'
-import { DemographicVisualization, mockDemographicData } from '../../components/DemographicVisualization'
-import { BiasFreePromise, defaultPromises } from '../../components/BiasFreePromise'
-import { TierSystem, defaultTiers } from '../../components/TierSystem'
-import { TopicAnalysis } from '../../components/TopicAnalysis'
-import { FancyProgressRing } from '../../components/FancyCharts'
+import { DemographicVisualization } from '../../components/DemographicVisualization';
+import { BiasFreePromise, defaultPromises } from '../../components/BiasFreePromise';
+import { TierSystem, defaultTiers } from '../../components/TierSystem';
+import { TopicAnalysis } from '../../components/TopicAnalysis';
+
 
 export default function EnhancedLandingPage() {
   return (

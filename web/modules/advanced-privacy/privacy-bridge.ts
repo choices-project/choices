@@ -6,10 +6,10 @@
  * backward compatibility, and provides a unified interface.
  */
 
-import { isFeatureEnabled } from '../../lib/feature-flags'
+import { isFeatureEnabled } from '../../lib/feature-flags';
 import { devLog } from '@/lib/logger';
-import { DifferentialPrivacy, PrivacyBudgetManager, PrivateAnalytics } from './differential-privacy'
-import { ZeroKnowledgeProofs, ZKProofManager } from './zero-knowledge-proofs'
+import { DifferentialPrivacy, PrivacyBudgetManager, PrivateAnalytics } from './differential-privacy';
+import { ZKProofManager } from './zero-knowledge-proofs';
 
 export interface PrivacyBridgeConfig {
   enableBackwardCompatibility: boolean

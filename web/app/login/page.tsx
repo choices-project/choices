@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, Suspense, useEffect, useCallback, createContext, useContext } from 'react'
+import { useState, Suspense, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/utils/supabase/client'
@@ -51,24 +51,39 @@ function LoginFormContent() {
     setError(null)
     setMessage(null)
 
-    if (!supabase) {
-      setError('Authentication service not available. Please try again later.')
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email,
+          password,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        setError(data.message || 'Login failed. Please try again.')
+      } else {
+        setMessage('Logged in successfully! Redirecting...')
+        // Store tokens in cookies for middleware access
+        if (data.token) {
+          // Set auth token as HTTP-only cookie
+          document.cookie = `auth-token=${data.token}; path=/; max-age=3600; secure; samesite=strict`
+          // Store refresh token in localStorage for token refresh
+          localStorage.setItem('refresh-token', data.refreshToken)
+        }
+        router.push(redirectTo)
+      }
+    } catch (error) {
+      console.error('Login error:', error)
+      setError('Network error. Please try again.')
+    } finally {
       setLoading(false)
-      return
     }
-
-    const { error: signInError } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
-
-    if (signInError) {
-      setError(signInError.message)
-    } else {
-      setMessage('Logged in successfully! Redirecting...')
-      router.push(redirectTo)
-    }
-    setLoading(false)
   }
 
   const handleOAuthLogin = async (provider: 'google' | 'github') => {
@@ -275,7 +290,7 @@ function LoginFormContent() {
         </div>
 
         <p className="mt-6 text-center text-sm text-gray-600">
-          Don&apos;t have an account?{' '}
+          Don't have an account?{' '}
           <Link href="/register" className="text-blue-600 hover:underline">
             Sign up
           </Link>

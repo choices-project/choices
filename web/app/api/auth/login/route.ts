@@ -1,9 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server';
 import { devLog } from '@/lib/logger';
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
-import { createClient } from '@supabase/supabase-js'
+import { createClient } from '@supabase/supabase-js';
 import speakeasy from 'speakeasy'
+import { handleError, getUserMessage, getHttpStatus, ValidationError, AuthenticationError } from '@/lib/error-handler';
 
 // Initialize Supabase client
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -14,20 +15,14 @@ const supabase = supabaseUrl && supabaseKey ? createClient(supabaseUrl, supabase
 export async function POST(request: NextRequest) {
   try {
     if (!supabase) {
-      return NextResponse.json(
-        { error: 'Authentication service not configured' },
-        { status: 503 }
-      );
+      throw new Error('Authentication service not configured')
     }
 
     const { email, password: userPassword, twoFactorCode } = await request.json()
 
     // Validate input
     if (!email || !userPassword) {
-      return NextResponse.json(
-        { code: 'MISSING_FIELDS', message: 'Email and password are required' },
-        { status: 400 }
-      )
+      throw new ValidationError('Email and password are required')
     }
 
     // Find user by email
@@ -39,37 +34,25 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (userError || !user) {
-      return NextResponse.json(
-        { code: 'INVALID_CREDENTIALS', message: 'Invalid email or password' },
-        { status: 401 }
-      )
+      throw new AuthenticationError('Invalid email or password')
     }
 
     // Verify password
     const isPasswordValid = await bcrypt.compare(userPassword, user.password_hash)
     if (!isPasswordValid) {
-      return NextResponse.json(
-        { code: 'INVALID_CREDENTIALS', message: 'Invalid email or password' },
-        { status: 401 }
-      )
+      throw new AuthenticationError('Invalid email or password')
     }
 
     // Check if 2FA is required
     if (user.two_factor_enabled) {
       if (!twoFactorCode) {
-        return NextResponse.json(
-          { code: '2FA_REQUIRED', message: 'Two-factor authentication code is required' },
-          { status: 401 }
-        )
+        throw new AuthenticationError('Two-factor authentication code is required')
       }
 
       // Verify 2FA code (implement TOTP verification here)
       const is2FAValid = await verifyTwoFactorCode(supabase, user.id, twoFactorCode)
       if (!is2FAValid) {
-        return NextResponse.json(
-          { code: 'INVALID_2FA', message: 'Invalid two-factor authentication code' },
-          { status: 401 }
-        )
+        throw new AuthenticationError('Invalid two-factor authentication code')
       }
     }
 
@@ -78,10 +61,7 @@ export async function POST(request: NextRequest) {
     const jwtRefreshSecret = process.env.JWT_REFRESH_SECRET;
 
     if (!jwtSecret || !jwtRefreshSecret) {
-      return NextResponse.json(
-        { error: 'JWT configuration not available' },
-        { status: 503 }
-      );
+      throw new Error('JWT configuration not available')
     }
 
     // Generate JWT token
@@ -141,10 +121,11 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     devLog('Login error:', error)
-    return NextResponse.json(
-      { code: 'INTERNAL_ERROR', message: 'Internal server error' },
-      { status: 500 }
-    )
+    const appError = handleError(error as Error, { context: 'auth-login' })
+    const userMessage = getUserMessage(appError)
+    const statusCode = getHttpStatus(appError)
+    
+    return NextResponse.json({ error: userMessage }, { status: statusCode })
   }
 }
 

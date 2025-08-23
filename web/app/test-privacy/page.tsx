@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { CreatePollForm, CreatePollData } from '@/components/polls/CreatePollForm';
 import { PrivacyLevelIndicator } from '@/components/privacy/PrivacyLevelIndicator';
-import { PrivacyLevel, HybridPrivacyManager } from '@/lib/hybrid-privacy';
+import { PrivacyLevel } from '@/lib/hybrid-privacy';
 import { devLog } from '@/lib/logger';
 
 interface TestPoll {
@@ -11,11 +11,11 @@ interface TestPoll {
   title: string;
   description: string;
   options: string[];
-  privacy_level: PrivacyLevel;
+  privacylevel: PrivacyLevel;
   category?: string;
   tags: string[];
-  total_votes: number;
-  created_at: string;
+  totalvotes: number;
+  createdat: string;
 }
 
 export default function TestPrivacyPage() {
@@ -43,15 +43,15 @@ export default function TestPrivacyPage() {
       
       // Add the new poll to our list
       const newPoll: TestPoll = {
-        id: result.poll.poll_id,
+        id: result.poll.pollid,
         title: result.poll.title,
         description: result.poll.description,
         options: result.poll.options,
-        privacy_level: result.poll.privacy_level,
+        privacylevel: result.poll.privacylevel,
         category: result.poll.category,
         tags: result.poll.tags,
-        total_votes: 0,
-        created_at: new Date().toISOString()
+        totalvotes: 0,
+        createdat: new Date().toISOString()
       };
 
       setPolls(prev => [newPoll, ...prev]);
@@ -78,7 +78,7 @@ export default function TestPrivacyPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           choice: voteChoice,
-          privacy_level: votePrivacyLevel
+          privacylevel: votePrivacyLevel
         })
       });
 
@@ -92,7 +92,7 @@ export default function TestPrivacyPage() {
       // Update poll vote count
       setPolls(prev => prev.map(poll => 
         poll.id === pollId 
-          ? { ...poll, total_votes: poll.total_votes + 1 }
+          ? { ...poll, totalvotes: poll.totalvotes + 1 }
           : poll
       ));
 
@@ -101,20 +101,14 @@ export default function TestPrivacyPage() {
       setVotePrivacyLevel('public');
       
       devLog('Vote submitted successfully:', result);
-      alert(`Vote submitted successfully! Response time: ${result.response_time}ms`);
+      alert(`Vote submitted successfully! Response time: ${result.responsetime}ms`);
     } catch (error) {
       devLog('Error submitting vote:', error);
       alert(`Failed to submit vote: ${error instanceof Error ? error instanceof Error ? error.message : "Unknown error" : 'Unknown error'}`);
     }
   };
 
-  const getRecommendedPrivacyLevel = (pollData: CreatePollData) => {
-    return HybridPrivacyManager.getRecommendedPrivacyLevel({
-      title: pollData.title,
-      description: pollData.description,
-      category: pollData.category
-    });
-  };
+
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
@@ -174,14 +168,14 @@ export default function TestPrivacyPage() {
                       <p className="text-gray-600 mb-2">{poll.description}</p>
                     )}
                     <div className="flex items-center gap-2 mb-2">
-                      <PrivacyLevelIndicator level={poll.privacy_level} size="sm" />
+                      <PrivacyLevelIndicator level={poll.privacylevel} size="sm" />
                       {poll.category && (
                         <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs">
                           {poll.category}
                         </span>
                       )}
                       <span className="text-sm text-gray-500">
-                        {poll.total_votes} votes
+                        {poll.totalvotes} votes
                       </span>
                     </div>
                     {poll.tags.length > 0 && (

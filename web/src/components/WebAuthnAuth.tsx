@@ -1,11 +1,11 @@
 'use client'
 
-import { useState, useEffect, useCallback, createContext, useContext } from 'react'
+import { useState } from 'react'
 import { devLog } from '@/lib/logger';
 import { Shield, Key, CheckCircle, AlertCircle } from 'lucide-react'
 
 interface WebAuthnAuthProps {
-  onAuthenticated: (userStableId: string, sessionToken: string) => void
+  onAuthenticated: (_userStableId: string, _sessionToken: string) => void
 }
 
 export default function WebAuthnAuth({ onAuthenticated }: WebAuthnAuthProps) {
@@ -33,7 +33,7 @@ export default function WebAuthnAuth({ onAuthenticated }: WebAuthnAuthProps) {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          user_stable_id: userStableId,
+          userstableid: userStableId,
           email: email || undefined,
         }),
       })
@@ -61,7 +61,7 @@ export default function WebAuthnAuth({ onAuthenticated }: WebAuthnAuthProps) {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          user_stable_id: userStableId,
+          userstableid: userStableId,
           session: beginData.session,
           response: {
             id: credential.id,
@@ -110,7 +110,7 @@ export default function WebAuthnAuth({ onAuthenticated }: WebAuthnAuthProps) {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          user_stable_id: userStableId,
+          userstableid: userStableId,
         }),
       })
 
@@ -137,7 +137,7 @@ export default function WebAuthnAuth({ onAuthenticated }: WebAuthnAuthProps) {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          user_stable_id: userStableId,
+          userstableid: userStableId,
           session: beginData.session,
           response: {
             id: assertion.id,
@@ -161,7 +161,7 @@ export default function WebAuthnAuth({ onAuthenticated }: WebAuthnAuthProps) {
       setStep('success')
       
       setTimeout(() => {
-        onAuthenticated(userStableId, finishData.session_token)
+        onAuthenticated(userStableId, finishData.sessiontoken)
       }, 2000)
 
     } catch (error) {

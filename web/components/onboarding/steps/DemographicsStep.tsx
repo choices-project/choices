@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useEffect, useCallback, createContext, useContext } from 'react'
-import { Shield, Users, Eye } from 'lucide-react'
+import { useState } from 'react'
+import { Shield, Users } from 'lucide-react'
+import { useOnboardingContext } from '../OnboardingFlow'
 
 interface DemographicsStepProps {
   data: any
@@ -12,11 +13,16 @@ interface DemographicsStepProps {
 
 export default function DemographicsStep({ data, onUpdate, onNext, onBack }: DemographicsStepProps) {
   const [demographics, setDemographics] = useState(data.demographics || {})
+  const { updateData } = useOnboardingContext()
 
   const handleDemographicChange = (field: string, value: string | undefined) => {
     const newDemographics = { ...demographics, [field]: value }
     setDemographics(newDemographics)
-    onUpdate({ demographics: newDemographics })
+    
+    // Update both local state and context - the updates parameter is used here
+    const updates = { demographics: newDemographics }
+    onUpdate(updates)
+    updateData({ demographics: newDemographics })
   }
 
   const demographicFields = [

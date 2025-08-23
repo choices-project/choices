@@ -2,16 +2,14 @@
 
 import React, { useState, useRef, useEffect } from 'react'
 import { devLog } from '@/lib/logger'
-import { getFeedbackTracker, FeedbackContext } from '@/lib/feedback-tracker'
+import { getFeedbackTracker } from '@/lib/feedback-tracker'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
   MessageCircle, 
   X, 
   Bug, 
   Lightbulb, 
-  Heart, 
   Camera, 
-  Send,
   CheckCircle,
   Star,
   Smile,
@@ -21,7 +19,7 @@ import {
   Zap,
   Shield,
   Accessibility,
-  TrendingUp
+  Upload
 } from 'lucide-react'
 
 interface FeedbackData {
@@ -56,7 +54,7 @@ const EnhancedFeedbackWidget: React.FC = () => {
       ...prev,
       userJourney
     }))
-  }, [])
+  }, [feedbackTracker])
 
   const handleOpen = () => {
     setIsOpen(true)
@@ -71,9 +69,9 @@ const EnhancedFeedbackWidget: React.FC = () => {
     
     // Track analytics
     if (typeof window !== 'undefined' && window.gtag) {
-      window.gtag('event', 'feedback_widget_opened', {
+      window.gtag('event', 'feedbackwidgetopened', {
         page: window.location.pathname,
-        session_id: userJourney.sessionId
+        sessionid: userJourney.sessionId
       })
     }
   }
@@ -111,6 +109,24 @@ const EnhancedFeedbackWidget: React.FC = () => {
       setCapturingScreenshot(false)
     }
     setStep('success')
+  }
+
+  const handleFileUpload = () => {
+    fileInputRef.current?.click()
+  }
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (file) {
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        setFeedback(prev => ({
+          ...prev,
+          screenshot: e.target?.result as string
+        }))
+      }
+      reader.readAsDataURL(file)
+    }
   }
 
   const handleSubmit = async () => {
@@ -156,8 +172,8 @@ const EnhancedFeedbackWidget: React.FC = () => {
         
         // Track successful submission
         if (typeof window !== 'undefined' && window.gtag) {
-          window.gtag('event', 'feedback_submitted', {
-            feedback_type: feedback.type,
+          window.gtag('event', 'feedbacksubmitted', {
+            feedbacktype: feedback.type,
             sentiment: feedback.sentiment,
             page: currentUserJourney.currentPage
           })
@@ -379,6 +395,22 @@ const EnhancedFeedbackWidget: React.FC = () => {
                         </button>
                         
                         <button
+                          onClick={handleFileUpload}
+                          className="w-full p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-400 transition-colors"
+                        >
+                          <Upload className="w-8 h-8 mx-auto mb-2 text-gray-400" />
+                          <span className="text-sm text-gray-600">Upload Screenshot</span>
+                        </button>
+                        
+                        <input
+                          ref={fileInputRef}
+                          type="file"
+                          accept="image/*"
+                          onChange={handleFileChange}
+                          className="hidden"
+                        />
+                        
+                        <button
                           onClick={handleSubmit}
                           disabled={isSubmitting}
                           className="w-full p-3 text-sm text-gray-600 hover:text-gray-800 disabled:opacity-50"
@@ -396,6 +428,18 @@ const EnhancedFeedbackWidget: React.FC = () => {
                       animate={{ opacity: 1, scale: 1 }}
                       className="text-center py-8"
                     >
+                      {showSuccess && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg"
+                        >
+                          <div className="flex items-center justify-center gap-2 text-green-700">
+                            <CheckCircle className="w-4 h-4" />
+                            <span className="text-sm font-medium">Feedback submitted successfully!</span>
+                          </div>
+                        </motion.div>
+                      )}
                       <motion.div
                         initial={{ scale: 0 }}
                         animate={{ scale: 1 }}

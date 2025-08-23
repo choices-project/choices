@@ -1,45 +1,37 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import {
-  Search,
-  Filter,
   Download,
   MessageSquare,
   Eye,
-  CheckCircle,
-  Clock,
   AlertCircle,
-  Star,
-  Calendar,
-  User,
-  Tag,
   Github
 } from 'lucide-react';
-import { FeedbackList } from '@/components/admin/feedback/FeedbackList';
-import { FeedbackFilters } from '@/components/admin/feedback/FeedbackFilters';
-import { FeedbackStats } from '@/components/admin/feedback/FeedbackStats';
-import { FeedbackDetailModal } from '@/components/admin/feedback/FeedbackDetailModal';
-import { IssueGenerationPanel } from '@/components/admin/feedback/IssueGenerationPanel';
+import { FeedbackList } from './FeedbackList';
+import { FeedbackFilters } from './FeedbackFilters';
+import { FeedbackStats } from './FeedbackStats';
+import { FeedbackDetailModal } from './FeedbackDetailModal';
+import { IssueGenerationPanel } from './IssueGenerationPanel';
 import { devLog } from '@/lib/logger';
 
 interface Feedback {
   id: string;
-  user_id: string | null;
+  userid: string | null;
   type: string;
   title: string;
   description: string;
   sentiment: string;
   screenshot: string | null;
-  user_journey: any;
+  userjourney: any;
   status: string;
   priority: string;
   tags: string[];
-  ai_analysis: any;
+  aianalysis: any;
   metadata: any;
-  created_at: string;
-  updated_at: string;
+  createdat: string;
+  updatedat: string;
 }
 
 export default function AdminFeedbackPage() {

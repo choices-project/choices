@@ -1,9 +1,13 @@
 'use client'
 
+export const dynamic = 'force-dynamic'
+export const runtime = 'edge'
+
 import { useAuth } from '@/contexts/AuthContext'
 import { devLog } from '@/lib/logger';
 import { useRouter } from 'next/navigation'
-import { useEffect, useState, useCallback, createContext, useContext } from 'react'
+import Image from 'next/image'
+import { useEffect, useState, useCallback } from 'react'
 import { createClient } from '@supabase/supabase-js'
 import { 
   ArrowLeft, 
@@ -25,7 +29,7 @@ interface AccountSettings {
   twoFactorEnabled: boolean
 }
 
-export default function AccountSettingsPage() {
+function AccountSettingsContent() {
   const { user, loading, signOut } = useAuth()
   const router = useRouter()
   
@@ -105,7 +109,7 @@ export default function AccountSettingsPage() {
     } finally {
       setIsLoading(false)
     }
-  }, [user])
+  }, [user, supabase])
 
   useEffect(() => {
     if (!loading && !user) {
@@ -117,7 +121,7 @@ export default function AccountSettingsPage() {
     if (user) {
       loadAccountSettings()
     }
-  }, [user, loadAccountSettings])
+  }, [user, loadAccountSettings, supabase])
 
   const handlePasswordChange = async () => {
     if (passwordData.newPassword !== passwordData.confirmPassword) {
@@ -609,9 +613,11 @@ export default function AccountSettingsPage() {
                     </p>
                     {twoFactorData.qrCode && (
                       <div className="inline-block p-4 bg-white border border-gray-300 rounded-lg">
-                        <img 
+                        <Image 
                           src={twoFactorData.qrCode} 
                           alt="2FA QR Code" 
+                          width={224}
+                          height={224}
                           className="w-32 h-32 sm:w-48 sm:h-48 md:w-56 md:h-56"
                         />
                       </div>
@@ -782,5 +788,9 @@ export default function AccountSettingsPage() {
       </div>
     </div>
   )
+}
+
+export default function AccountSettingsPage() {
+  return <AccountSettingsContent />
 }
 

@@ -1,34 +1,29 @@
 'use client'
 
-import { useState, useEffect, useCallback, createContext, useContext } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { 
   Smartphone, 
-  Wifi, 
   WifiOff, 
   Shield, 
   Zap, 
   Download, 
   RefreshCw,
-  Vote,
   Users,
   BarChart3,
   Lock,
   Globe,
   CheckCircle,
   AlertCircle,
-  Settings,
   Bell,
   Fingerprint,
   Database,
   Network,
   Cpu,
   HardDrive,
-  Smartphone as Mobile,
   Star,
-  Award,
   Target,
-  TrendingUp
+  Settings
 } from 'lucide-react'
 import { useFeatureFlag } from '../../hooks/useFeatureFlags'
 import { usePWAUtils } from '../../hooks/usePWAUtils'
@@ -36,7 +31,7 @@ import { PWAFeaturesShowcase, PWAStatus } from '../../components/PWAComponents'
 
 export default function PWAFeaturesPage() {
   const { enabled: pwaEnabled, flag: pwaFlag } = useFeatureFlag('pwa')
-  const { utils: pwaUtils, loading: utilsLoading, error: utilsError } = usePWAUtils()
+  const { utils: pwaUtils, loading: utilsLoading } = usePWAUtils()
   
   const [deviceFingerprint, setDeviceFingerprint] = useState<any>(null)
   const [pwaStatus, setPwaStatus] = useState<any>(null)

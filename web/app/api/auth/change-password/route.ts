@@ -1,49 +1,47 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { devLog } from '@/lib/logger';
-import { createClient } from '@/utils/supabase/server'
 import { cookies } from 'next/headers'
+import { createClient } from '@/utils/supabase/server'
 import bcrypt from 'bcryptjs'
+import { devLog } from '@/lib/logger'
+import { 
+  ValidationError, 
+  AuthenticationError, 
+  NotFoundError, 
+  handleError, 
+  getUserMessage, 
+  getHttpStatus 
+} from '@/lib/error-handler'
 
 export const dynamic = 'force-dynamic'
 
 export async function POST(request: NextRequest) {
   try {
-    const { currentPassword, newPassword } = await request.json()
-    
+    const body = await request.json()
+    const { currentPassword, newPassword } = body
+
+    // Validate input
     if (!currentPassword || !newPassword) {
-      return NextResponse.json(
-        { error: 'Current password and new password are required' },
-        { status: 400 }
-      )
+      throw new ValidationError('Current password and new password are required')
     }
 
     // Validate new password strength
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/
     if (!passwordRegex.test(newPassword)) {
-      return NextResponse.json(
-        { error: 'New password must be at least 8 characters with uppercase, lowercase, number, and special character' },
-        { status: 400 }
-      )
+      throw new ValidationError('New password must be at least 8 characters with uppercase, lowercase, number, and special character')
     }
 
     const cookieStore = await cookies()
     const supabase = createClient(cookieStore)
     
     if (!supabase) {
-      return NextResponse.json(
-        { error: 'Supabase not configured' },
-        { status: 500 }
-      )
+      throw new Error('Supabase not configured')
     }
 
     // Get current authenticated user
     const { data: { user }, error: userError } = await supabase.auth.getUser()
     
     if (userError || !user) {
-      return NextResponse.json(
-        { error: 'User not authenticated' },
-        { status: 401 }
-      )
+      throw new AuthenticationError('User not authenticated')
     }
 
     // Get user from ia_users table to verify current password
@@ -54,19 +52,13 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (iaError || !iaUser) {
-      return NextResponse.json(
-        { error: 'User not found in system' },
-        { status: 404 }
-      )
+      throw new NotFoundError('User')
     }
 
     // Verify current password
     const isCurrentPasswordValid = await bcrypt.compare(currentPassword, iaUser.password_hash)
     if (!isCurrentPasswordValid) {
-      return NextResponse.json(
-        { error: 'Current password is incorrect' },
-        { status: 401 }
-      )
+      throw new AuthenticationError('Current password is incorrect')
     }
 
     // Hash new password
@@ -74,7 +66,7 @@ export async function POST(request: NextRequest) {
     const newHashedPassword = await bcrypt.hash(newPassword, saltRounds)
 
     // Update password in ia_users table
-    const { data: updatedUser, error: updateError } = await supabase
+    const { error: updateError } = await supabase
       .from('ia_users')
       .update({ 
         password_hash: newHashedPassword,
@@ -84,14 +76,11 @@ export async function POST(request: NextRequest) {
 
     if (updateError) {
       devLog('Error updating password:', updateError)
-      return NextResponse.json(
-        { error: 'Failed to update password' },
-        { status: 500 }
-      )
+      throw new Error('Failed to update password')
     }
 
     // Update password in Supabase Auth
-    const { data: authUser, error: authUpdateError } = await supabase.auth.updateUser({
+    const { error: authUpdateError } = await supabase.auth.updateUser({
       password: newPassword
     })
 
@@ -107,10 +96,13 @@ export async function POST(request: NextRequest) {
     })
 
   } catch (error) {
-    devLog('Error in change password:', error)
+    const appError = handleError(error as Error, { context: 'change-password' })
+    const userMessage = getUserMessage(appError)
+    const statusCode = getHttpStatus(appError)
+    
     return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
+      { error: userMessage },
+      { status: statusCode }
     )
   }
 }
