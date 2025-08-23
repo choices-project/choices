@@ -92,17 +92,36 @@ export default function RankedChoiceVoting({
     setError(null)
 
     try {
+      // Validate rankings before submission
+      const validRankings: { [optionId: string]: number } = {}
+      const usedRanks = new Set<number>()
+      
+      for (const [optionId, rank] of Object.entries(rankings)) {
+        if (options.some(option => option.id === optionId) && rank > 0) {
+          if (usedRanks.has(rank)) {
+            throw new Error('Duplicate ranks detected')
+          }
+          validRankings[optionId] = rank
+          usedRanks.add(rank)
+        }
+      }
+      
+      // Ensure all options are ranked
+      if (Object.keys(validRankings).length !== options.length) {
+        throw new Error('All options must be ranked')
+      }
+      
       // Track analytics with poll ID
       if (typeof window !== 'undefined' && window.gtag) {
         window.gtag('event', 'vote_submitted', {
           poll_id: pollId,
-          rankings: rankings,
+          rankings: validRankings,
           voting_method: 'ranked_choice',
-          ranked_options_count: rankedOptions.length
+          ranked_options_count: Object.keys(validRankings).length
         })
       }
       
-      await onVote(rankings)
+      await onVote(validRankings)
     } catch (err: any) {
       setError(err.message || 'Failed to submit vote')
     } finally {
@@ -191,9 +210,9 @@ export default function RankedChoiceVoting({
       {/* Voting Interface */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {options.map((option: any, index: any) => (
+          {options.map((option: any, index: number) => (
             <div
-              key={option.id}
+              key={`${option.id}-${index}`}
               onClick={() => handleRankClick(option.id)}
               className={`
                 relative p-4 border-2 rounded-lg cursor-pointer transition-all duration-200
