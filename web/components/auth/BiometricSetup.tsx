@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback, createContext, useContext } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -14,6 +14,28 @@ import {
   hasBiometricCredentials
 } from '@/lib/webauthn'
 import { devLog } from '@/lib/logger'
+
+// Context for sharing biometric setup state
+const BiometricSetupContext = createContext<{
+  isSupported: boolean | null;
+  isAvailable: boolean | null;
+  hasCredentials: boolean | null;
+  isRegistering: boolean;
+  error: string | null;
+  success: boolean;
+}>({
+  isSupported: null,
+  isAvailable: null,
+  hasCredentials: null,
+  isRegistering: false,
+  error: null,
+  success: false
+});
+
+// Hook to use biometric setup context
+export function useBiometricSetupContext() {
+  return useContext(BiometricSetupContext);
+}
 
 interface BiometricSetupProps {
   userId: string
@@ -34,7 +56,7 @@ export default function BiometricSetup({ userId, username, onSuccess, onError }:
     checkBiometricSupport()
   }, [])
 
-  const checkBiometricSupport = async () => {
+  const checkBiometricSupport = useCallback(async () => {
     try {
       const supported = isWebAuthnSupported()
       setIsSupported(supported)
@@ -50,7 +72,7 @@ export default function BiometricSetup({ userId, username, onSuccess, onError }:
           // Check for existing credentials to provide better user feedback
           if (hasCreds) {
             const existingCreds = await getUserBiometricCredentials()
-            devLog('Existing biometric credentials found:', existingCreds.length)
+            devLog('Existing biometric credentials found:', existingCreds.credentials?.length || 0)
           }
         }
       }
@@ -58,7 +80,7 @@ export default function BiometricSetup({ userId, username, onSuccess, onError }:
       devLog('Error checking biometric support:', error)
       setError('Failed to check biometric support')
     }
-  }
+  }, [])
 
   const handleRegister = async () => {
     setIsRegistering(true)
