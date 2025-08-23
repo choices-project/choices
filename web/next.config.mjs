@@ -1,3 +1,12 @@
+// Try to import next-pwa, fallback to basic config if it fails
+let withPWA;
+try {
+  withPWA = (await import('next-pwa')).default;
+} catch (error) {
+  console.warn('next-pwa not available, using basic config');
+  withPWA = (config) => config;
+}
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // Image Optimization
@@ -68,4 +77,47 @@ const nextConfig = {
   }
 }
 
-export default nextConfig
+// Enhanced PWA configuration with fallback
+const config = withPWA({
+  dest: 'public',
+  register: true,
+  skipWaiting: true,
+  disable: false, // Enable PWA in development for mobile testing
+  buildExcludes: [/middleware-manifest\.json$/],
+  runtimeCaching: [
+    {
+      urlPattern: /^https?.*/,
+      handler: 'NetworkFirst',
+      options: {
+        cacheName: 'offlineCache',
+        expiration: {
+          maxEntries: 200,
+        },
+      },
+    },
+    {
+      urlPattern: /\.(?:png|jpg|jpeg|svg|gif)$/,
+      handler: 'CacheFirst',
+      options: {
+        cacheName: 'imageCache',
+        expiration: {
+          maxEntries: 50,
+          maxAgeSeconds: 30 * 24 * 60 * 60, // 30 days
+        },
+      },
+    },
+    {
+      urlPattern: /\.(?:js|css)$/,
+      handler: 'StaleWhileRevalidate',
+      options: {
+        cacheName: 'staticCache',
+        expiration: {
+          maxEntries: 100,
+          maxAgeSeconds: 24 * 60 * 60, // 24 hours
+        },
+      },
+    },
+  ],
+})(nextConfig)
+
+export default config
