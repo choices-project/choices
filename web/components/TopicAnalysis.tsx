@@ -108,6 +108,8 @@ const TopicContext = createContext<{
   updateData: (newData: TopicData) => {
     // Update the context data when new data is provided
     devLog('Topic analysis data updated:', newData.question)
+    // In a real implementation, this would update the context state
+    // For now, we log the update for debugging purposes
   }
 })
 
@@ -129,10 +131,28 @@ export function TopicAnalysis({
   const [chartType, setChartType] = useState<'donut' | 'bar'>('donut')
   const [showFilters, setShowFilters] = useState(false)
 
+  const getActiveData = useCallback(() => {
+    const colors = ['#3b82f6', '#10b981', '#8b5cf6', '#f59e0b', '#ef4444', '#06b6d4', '#84cc16']
+    const breakdown = data.breakdowns[activeBreakdown as keyof typeof data.breakdowns]
+    
+    return breakdown.map((item: any, index: any) => {
+      const key = Object.keys(item)[0] as keyof typeof item
+      const name = String(item[key])
+      const value = showYes ? item.yes : item.no
+      const color = showYes ? colors[index % colors.length] : '#ef4444' // Red for No
+      
+      return {
+        name,
+        value,
+        color
+      }
+    })
+  }, [activeBreakdown, showYes, data])
+
   // Cache data processing to prevent unnecessary re-renders
   const processedData = useCallback(() => {
     return getActiveData()
-  }, [activeBreakdown, showYes, data])
+  }, [getActiveData])
 
   const chartData = processedData()
 
@@ -159,23 +179,7 @@ export function TopicAnalysis({
     { id: 'urbanRural', label: 'Urban/Rural', icon: Building2, color: '#84cc16' }
   ]
 
-  const getActiveData = () => {
-    const colors = ['#3b82f6', '#10b981', '#8b5cf6', '#f59e0b', '#ef4444', '#06b6d4', '#84cc16']
-    const breakdown = data.breakdowns[activeBreakdown as keyof typeof data.breakdowns]
-    
-    return breakdown.map((item: any, index: any) => {
-      const key = Object.keys(item)[0] as keyof typeof item
-      const name = String(item[key])
-      const value = showYes ? item.yes : item.no
-      const color = showYes ? colors[index % colors.length] : '#ef4444' // Red for No
-      
-      return {
-        name,
-        value,
-        color
-      }
-    })
-  }
+
 
   const getBreakdownLabel = () => {
     switch (activeBreakdown) {
