@@ -8,6 +8,7 @@ import {
 } from 'lucide-react'
 import { FancyDonutChart } from './FancyCharts'
 import { useDemographics } from '../hooks/useDemographics'
+import { devLog } from '@/lib/logger'
 
 // Context for sharing demographic data
 const DemographicContext = createContext<{
@@ -78,14 +79,14 @@ export function DemographicVisualization({
   useEffect(() => {
     if (loading) {
       // Could add loading indicators or analytics tracking here
-      console.log('Loading demographic data...')
+      devLog('Loading demographic data...')
     }
   }, [loading])
 
   // Effect to handle error state
   useEffect(() => {
     if (error) {
-      console.error('Error loading demographic data:', error)
+      devLog('Error loading demographic data:', error)
       // Could add error handling or fallback logic here
     }
   }, [error])
