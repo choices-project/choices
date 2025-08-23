@@ -1,7 +1,9 @@
 {
   "version": 2,
   "framework": "nextjs",
-  "rootDirectory": "web",
+  "buildCommand": "cd web && npm run build",
+  "installCommand": "cd web && npm install",
+  "outputDirectory": "web/.next",
   "functions": {
     "app/api/**/*.ts": {
       "maxDuration": 30
