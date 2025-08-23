@@ -72,16 +72,23 @@ export const PrivacyLevelIndicator: React.FC<PrivacyLevelIndicatorProps> = ({
 
   return (
     <div className={`inline-flex items-center gap-1 px-2 py-1 rounded-full border ${getColorClasses()} ${sizeClasses[size]} ${className}`}>
-      <span className="text-lg leading-none">{getEmoji()}</span>
-      <span className="font-medium">{description.title}</span>
-      {showTooltip && (
-        <div className="group relative">
-          <Info className={`${iconSizes[size]} text-gray-400 cursor-help`} />
-          <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
-            {description.description}
-            <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
+      {showTooltip ? (
+        <>
+          {getIcon()}
+          <span className="font-medium">{description.title}</span>
+          <div className="group relative">
+            <Info className={`${iconSizes[size]} text-gray-400 cursor-help`} />
+            <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
+              {description.description}
+              <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
+            </div>
           </div>
-        </div>
+        </>
+      ) : (
+        <>
+          <span className="text-lg leading-none">{getEmoji()}</span>
+          <span className="font-medium">{description.title}</span>
+        </>
       )}
     </div>
   );

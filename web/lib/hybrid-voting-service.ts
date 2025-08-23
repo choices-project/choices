@@ -4,6 +4,7 @@
 import { createClient } from '@/utils/supabase/server';
 import { cookies } from 'next/headers';
 import { PrivacyLevel } from './hybrid-privacy'
+import { devLog } from '@/lib/logger'
 
 export interface VoteRequest {
   pollId: string;
@@ -90,6 +91,9 @@ export class HybridVotingService {
   async submitVote(request: VoteRequest): Promise<VoteResponse> {
     const startTime = Date.now();
     const { pollId, choice, userId } = request;
+
+    // Log vote attempt for analytics
+    devLog('Vote submission attempt:', { pollId, choice, userId, privacyLevel: request.privacyLevel });
 
     // Validate request
     const validation = await this.validateVoteRequest(request);
