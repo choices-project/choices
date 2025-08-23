@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { motion } from 'framer-motion';
 import { 
   Vote, Users, BarChart3, Shield, Zap, 
@@ -24,6 +25,9 @@ interface TierSystemProps {
 }
 
 export function TierSystem({ tiers, currentTier = 0 }: TierSystemProps) {
+  const [showComparison, setShowComparison] = useState(false)
+  const [showAnalytics, setShowAnalytics] = useState(false)
+
   return (
     <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-100">
       {/* Header */}
@@ -37,13 +41,31 @@ export function TierSystem({ tiers, currentTier = 0 }: TierSystemProps) {
           Choose Your Level of Engagement
         </motion.h2>
         <motion.p 
-          className="text-lg text-gray-600 max-w-3xl mx-auto"
+          className="text-lg text-gray-600 max-w-3xl mx-auto mb-6"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
         >
           Start free, upgrade when you're ready. No pressure, no hidden fees.
         </motion.p>
+        
+        {/* Action Buttons */}
+        <div className="flex items-center justify-center gap-4">
+          <button
+            onClick={() => setShowComparison(!showComparison)}
+            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+          >
+            <BarChart3 className="w-4 h-4" />
+            Compare Tiers
+          </button>
+          <button
+            onClick={() => setShowAnalytics(!showAnalytics)}
+            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
+          >
+            <Zap className="w-4 h-4" />
+            View Analytics
+          </button>
+        </div>
       </div>
 
       {/* Tiers Grid */}
@@ -157,6 +179,65 @@ export function TierSystem({ tiers, currentTier = 0 }: TierSystemProps) {
           </motion.div>
         ))}
       </div>
+
+      {/* Comparison Section */}
+      {showComparison && (
+        <motion.div
+          className="mb-8 p-6 bg-gray-50 rounded-xl border border-gray-200"
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: 'auto' }}
+          exit={{ opacity: 0, height: 0 }}
+        >
+          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+            <BarChart3 className="w-5 h-5" />
+            Tier Comparison
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {tiers.map((tier: any) => (
+              <div key={tier.level} className="p-4 bg-white rounded-lg border">
+                <h4 className="font-medium text-gray-900 mb-2">{tier.name}</h4>
+                <ul className="space-y-1 text-sm text-gray-600">
+                  {tier.features.map((feature: any, index: any) => (
+                    <li key={index} className="flex items-center gap-2">
+                      <CheckCircle className="w-3 h-3 text-green-500" />
+                      {feature}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+      )}
+
+      {/* Analytics Section */}
+      {showAnalytics && (
+        <motion.div
+          className="mb-8 p-6 bg-blue-50 rounded-xl border border-blue-200"
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: 'auto' }}
+          exit={{ opacity: 0, height: 0 }}
+        >
+          <h3 className="text-lg font-semibold text-blue-900 mb-4 flex items-center gap-2">
+            <Zap className="w-5 h-5" />
+            Usage Analytics
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="p-4 bg-white rounded-lg border border-blue-200">
+              <div className="text-2xl font-bold text-blue-600">2,847</div>
+              <div className="text-sm text-blue-700">Active Users</div>
+            </div>
+            <div className="p-4 bg-white rounded-lg border border-blue-200">
+              <div className="text-2xl font-bold text-blue-600">15,392</div>
+              <div className="text-sm text-blue-700">Polls Created</div>
+            </div>
+            <div className="p-4 bg-white rounded-lg border border-blue-200">
+              <div className="text-2xl font-bold text-blue-600">98.7%</div>
+              <div className="text-sm text-blue-700">Satisfaction Rate</div>
+            </div>
+          </div>
+        </motion.div>
+      )}
 
       {/* Trust Message */}
       <motion.div
