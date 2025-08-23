@@ -121,6 +121,8 @@ export function TopicAnalysis({
   const [showYes, setShowYes] = useState(true)
   const [loading, setLoading] = useState(false)
   const [insights, setInsights] = useState<string[]>([])
+  const [chartType, setChartType] = useState<'donut' | 'bar'>('donut')
+  const [showFilters, setShowFilters] = useState(false)
 
   // Cache data processing to prevent unnecessary re-renders
   const processedData = useCallback(() => {
@@ -290,6 +292,41 @@ export function TopicAnalysis({
         </div>
       </div>
 
+      {/* Chart Controls */}
+      <div className="flex justify-center gap-4 mb-6">
+        <button
+          onClick={() => setShowFilters(!showFilters)}
+          className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+        >
+          <Filter className="h-4 w-4" />
+          Filters
+        </button>
+        <div className="flex bg-gray-100 rounded-lg p-1">
+          <button
+            onClick={() => setChartType('donut')}
+            className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
+              chartType === 'donut'
+                ? 'bg-blue-500 text-white shadow-md'
+                : 'text-gray-600 hover:text-gray-800'
+            }`}
+          >
+            <Target className="h-4 w-4" />
+            Donut
+          </button>
+          <button
+            onClick={() => setChartType('bar')}
+            className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
+              chartType === 'bar'
+                ? 'bg-blue-500 text-white shadow-md'
+                : 'text-gray-600 hover:text-gray-800'
+            }`}
+          >
+            <BarChart3 className="h-4 w-4" />
+            Bar
+          </button>
+        </div>
+      </div>
+
       {/* Chart Display */}
       <motion.div
         key={activeBreakdown}
@@ -304,12 +341,20 @@ export function TopicAnalysis({
           </h3>
         </div>
         <div className="flex justify-center">
-          <FancyDonutChart
-            data={chartData}
-            size={300}
-            strokeWidth={25}
-            title={`${getBreakdownLabel()} Breakdown`}
-          />
+          {chartType === 'donut' ? (
+            <FancyDonutChart
+              data={chartData}
+              size={300}
+              strokeWidth={25}
+              title={`${getBreakdownLabel()} Breakdown`}
+            />
+          ) : (
+            <FancyBarChart
+              data={chartData}
+              height={300}
+              title={`${getBreakdownLabel()} Breakdown`}
+            />
+          )}
         </div>
       </motion.div>
 
