@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Search, Star, Clock, Users, Plus, Eye, BookOpen } from 'lucide-react';
+import { devLog } from '@/lib/logger';
 
 const TEMPLATECATEGORIES: TemplateCategory[] = [
   { id: 'general', name: 'General', description: 'General purpose polls', icon: '📊', color: 'blue', templateCount: 12 },
@@ -236,7 +237,7 @@ export default function PollTemplatesPage() {
   };
 
   const previewTemplate = (template: PollTemplate) => {
-    console.log('Preview template:', template);
+    devLog('Preview template:', template);
   };
 
   const getDifficultyColor = (difficulty: string) => {

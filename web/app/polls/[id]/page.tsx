@@ -11,6 +11,7 @@ import RangeVoting from '@/components/voting/RangeVoting'
 import QuadraticVoting from '@/components/voting/QuadraticVoting'
 import PollResults from '@/components/polls/PollResults'
 import PollShare from '@/components/polls/PollShare'
+import { devLog } from '@/lib/logger'
 
 type ViewMode = 'voting' | 'results' | 'share' | 'settings'
 type VotingMethod = 'single' | 'ranked' | 'approval' | 'range' | 'quadratic'
@@ -60,7 +61,7 @@ export default function PollPage() {
 
   const loadPoll = useCallback(async () => {
     try {
-      console.log('Loading poll:', pollId)
+      devLog('Loading poll:', pollId)
       setIsLoading(true)
       setError(null)
       
@@ -106,8 +107,8 @@ export default function PollPage() {
       
       setPoll(poll)
     } catch (error) {
-      console.error('Error loading poll:', error)
-      setError(error instanceof Error ? error instanceof Error ? error.message : "Unknown error" : 'Failed to load poll')
+      devLog('Error loading poll:', error)
+      setError(error instanceof Error ? error.message : 'Failed to load poll')
     } finally {
       setIsLoading(false)
     }
@@ -129,7 +130,7 @@ export default function PollPage() {
         }
       }
     } catch (error) {
-      console.error('Error checking user vote:', error)
+      devLog('Error checking user vote:', error)
       // Don't show error to user for vote check
     }
   }, [pollId, user])

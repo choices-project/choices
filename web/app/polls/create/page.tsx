@@ -10,6 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { ArrowLeft, ArrowRight, Plus, X, CheckCircle, AlertCircle } from 'lucide-react';
+import { devLog } from '@/lib/logger';
 
 const CATEGORIES: Array<{ id: PollCategory; name: string; description: string; icon: string }> = [
   { id: 'general', name: 'General', description: 'General purpose polls', icon: '📊' },
@@ -49,11 +50,11 @@ export default function CreatePollPage() {
     setLoading(true);
     try {
       // TODO: Implement actual poll creation API call
-      console.log('Creating poll:', wizardState.data);
+      devLog('Creating poll:', wizardState.data);
       await new Promise(resolve => setTimeout(resolve, 2000)); // Simulate API call
       alert('Poll created successfully!');
     } catch (error) {
-      console.error('Error creating poll:', error);
+      devLog('Error creating poll:', error);
       alert('Failed to create poll. Please try again.');
     } finally {
       setLoading(false);
