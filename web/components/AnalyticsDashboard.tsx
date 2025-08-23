@@ -626,8 +626,48 @@ function TrendsView({ data }: { data: AnalyticsData }) {
     <div className="space-y-8">
       <div className="bg-white rounded-xl shadow-sm border p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Voting Trends</h3>
-        <div className="h-64 bg-gray-50 rounded-lg flex items-center justify-center">
-          <p className="text-gray-500">Chart visualization will be implemented here</p>
+        <div className="space-y-6">
+          {/* Daily Trends */}
+          <div>
+            <h4 className="text-md font-medium text-gray-700 mb-3">Daily Activity</h4>
+            <div className="space-y-2">
+              {data.trends.daily.slice(-7).map((day: any, index: any) => (
+                <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <span className="text-sm text-gray-600">{day.date}</span>
+                  <div className="flex items-center space-x-4">
+                    <span className="text-sm text-gray-900">{day.votes} votes</span>
+                    <span className="text-sm text-gray-500">{day.users} users</span>
+                    <span className="text-sm text-gray-500">{day.polls} polls</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+          
+          {/* Weekly Trends */}
+          <div>
+            <h4 className="text-md font-medium text-gray-700 mb-3">Weekly Summary</h4>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="p-4 bg-blue-50 rounded-lg">
+                <div className="text-2xl font-bold text-blue-600">
+                  {data.trends.weekly.reduce((sum: any, week: any) => sum + week.votes, 0)}
+                </div>
+                <div className="text-sm text-blue-700">Total Votes</div>
+              </div>
+              <div className="p-4 bg-green-50 rounded-lg">
+                <div className="text-2xl font-bold text-green-600">
+                  {data.trends.weekly.reduce((sum: any, week: any) => sum + week.users, 0)}
+                </div>
+                <div className="text-sm text-green-700">Total Users</div>
+              </div>
+              <div className="p-4 bg-purple-50 rounded-lg">
+                <div className="text-2xl font-bold text-purple-600">
+                  {data.trends.weekly.reduce((sum: any, week: any) => sum + week.polls, 0)}
+                </div>
+                <div className="text-sm text-purple-700">Total Polls</div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -804,6 +844,30 @@ function AdvancedView({ data }: { data: AnalyticsData }) {
         <p className="text-gray-600 mb-4">
           Advanced analytics features including predictive modeling, statistical analysis, and AI-powered insights are available when the AI features flag is enabled.
         </p>
+        
+        {/* Data Summary */}
+        <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+          <h4 className="font-medium text-gray-900 mb-2">Data Summary</h4>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+            <div>
+              <span className="text-gray-600">Total Polls:</span>
+              <span className="ml-2 font-medium">{data.overview.totalPolls}</span>
+            </div>
+            <div>
+              <span className="text-gray-600">Active Users:</span>
+              <span className="ml-2 font-medium">{data.engagement.activeUsers}</span>
+            </div>
+            <div>
+              <span className="text-gray-600">Avg Session:</span>
+              <span className="ml-2 font-medium">{data.engagement.sessionDuration.toFixed(1)}m</span>
+            </div>
+            <div>
+              <span className="text-gray-600">Data Points:</span>
+              <span className="ml-2 font-medium">{data.privacy.dataCollected}</span>
+            </div>
+          </div>
+        </div>
+        
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="p-4 bg-blue-50 rounded-lg">
             <h4 className="font-medium text-blue-900 mb-2">Predictive Analytics</h4>
