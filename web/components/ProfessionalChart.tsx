@@ -105,10 +105,14 @@ export function ProfessionalChart({
             key={item.name}
             variants={itemVariants}
             className="group"
+            onMouseEnter={() => setHoveredItem(item.name)}
+            onMouseLeave={() => setHoveredItem(null)}
           >
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-3">
-                <span className="text-sm font-medium text-gray-700 min-w-0 flex-1">
+                <span className={`text-sm font-medium min-w-0 flex-1 ${
+                  hoveredItem === item.name ? 'text-blue-600 font-semibold' : 'text-gray-700'
+                }`}>
                   {item.name}
                 </span>
                 {showTrends && (
@@ -199,9 +203,13 @@ export function ProfessionalChart({
           key={item.name}
           variants={itemVariants}
           className="space-y-2"
+          onMouseEnter={() => setHoveredItem(item.name)}
+          onMouseLeave={() => setHoveredItem(null)}
         >
           <div className="flex items-center justify-between">
-            <span className="text-sm font-medium text-gray-700">{item.name}</span>
+            <span className={`text-sm font-medium ${
+              hoveredItem === item.name ? 'text-blue-600 font-semibold' : 'text-gray-700'
+            }`}>{item.name}</span>
             <span className="text-sm font-bold text-gray-900">{item.value}%</span>
           </div>
           <div className="relative">
