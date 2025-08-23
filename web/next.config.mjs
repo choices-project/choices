@@ -14,6 +14,32 @@ const nextConfig = {
   // Performance Optimizations
   experimental: {
     optimizePackageImports: ['lucide-react'],
+    // Optimize webpack performance
+    webpackBuildWorker: true,
+    // Reduce memory usage
+    memoryBasedWorkers: true,
+  },
+  
+  // Webpack optimization
+  webpack: (config, { dev, isServer }) => {
+    // Optimize for production builds
+    if (!dev && !isServer) {
+      config.optimization = {
+        ...config.optimization,
+        splitChunks: {
+          chunks: 'all',
+          cacheGroups: {
+            vendor: {
+              test: /[\\/]node_modules[\\/]/,
+              name: 'vendors',
+              chunks: 'all',
+            },
+          },
+        },
+      }
+    }
+    
+    return config
   },
   
   // Enable proper error checking for development
