@@ -198,11 +198,14 @@ export const useTrendingTopics = () => {
       if (query.data === mockTrendingTopics) {
         updateActivityFeed(mockActivityFeed as any);
       }
+      
+      // Invalidate related queries when trending topics update
+      queryClient.invalidateQueries({ queryKey: ['activity-feed'] });
     }
     if (query.error) {
       setLoading('topics', false);
     }
-  }, [query.data, query.error, updateTrendingTopics, setLoading, updateActivityFeed]);
+  }, [query.data, query.error, updateTrendingTopics, setLoading, updateActivityFeed, queryClient]);
 
   return query;
 };
@@ -221,11 +224,14 @@ export const useGeneratedPolls = () => {
     if (query.data) {
       updateGeneratedPolls(query.data);
       setLoading('polls', false);
+      
+      // Invalidate related queries when generated polls update
+      queryClient.invalidateQueries({ queryKey: ['system-metrics'] });
     }
     if (query.error) {
       setLoading('polls', false);
     }
-  }, [query.data, query.error, updateGeneratedPolls, setLoading]);
+  }, [query.data, query.error, updateGeneratedPolls, setLoading, queryClient]);
 
   return query;
 };
