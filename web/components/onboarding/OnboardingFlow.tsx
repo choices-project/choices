@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback, createContext, useContext, Suspense, useMemo } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { CheckCircle } from 'lucide-react'
 import { createClient } from '@/utils/supabase/client'
 import WelcomeStep from './steps/WelcomeStep'
 import AuthStep from './steps/AuthStep'
@@ -68,8 +67,12 @@ const OnboardingContext = createContext<{
       allowAnalytics: false
     }
   },
-  updateData: () => {},
-  setCurrentStep: () => {},
+  updateData: (_updates: Partial<OnboardingData>) => {
+    // No-op function for context default
+  },
+  setCurrentStep: (_step: OnboardingStep) => {
+    // No-op function for context default
+  },
   isLoading: false,
   error: null
 });

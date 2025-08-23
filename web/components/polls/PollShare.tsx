@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, createContext, useContext } from 'react'
+import { useState } from 'react'
 import { devLog } from '@/lib/logger';
 import { Share2, Copy, Link, Twitter, Facebook, Linkedin, Mail, QrCode, Download } from 'lucide-react'
 
@@ -30,6 +30,13 @@ export default function PollShare({ pollId, poll }: PollShareProps) {
     } catch (error) {
       devLog('Failed to copy link:', error)
     }
+  }
+
+  const handleDownloadQR = () => {
+    // Implement QR code download functionality
+    const canvas = document.createElement('canvas')
+    // Generate QR code and download
+    devLog('Downloading QR code for:', pollUrl)
   }
 
   const handleNativeShare = async () => {
@@ -171,6 +178,22 @@ export default function PollShare({ pollId, poll }: PollShareProps) {
             <p className="mt-2 text-sm text-gray-600">
               Scan to open poll on mobile device
             </p>
+            <div className="mt-4 flex justify-center space-x-3">
+              <button
+                onClick={handleDownloadQR}
+                className="flex items-center space-x-2 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+              >
+                <Download className="w-4 h-4" />
+                <span>Download QR</span>
+              </button>
+              <button
+                onClick={handleCopyLink}
+                className="flex items-center space-x-2 px-3 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm"
+              >
+                <Link className="w-4 h-4" />
+                <span>Copy Link</span>
+              </button>
+            </div>
           </div>
         )}
       </div>

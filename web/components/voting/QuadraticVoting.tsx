@@ -94,18 +94,33 @@ export default function QuadraticVoting({
     setError(null)
 
     try {
+      // Validate allocations before submission
+      const validAllocations: { [optionId: string]: number } = {}
+      let totalSpent = 0
+      
+      for (const [optionId, credits] of Object.entries(allocations)) {
+        if (options.some(option => option.id === optionId)) {
+          validAllocations[optionId] = Math.max(0, credits)
+          totalSpent += credits * credits // Quadratic cost
+        }
+      }
+      
+      if (totalSpent > totalCredits) {
+        throw new Error('Allocations exceed available credits')
+      }
+      
       // Track analytics with poll ID
       if (typeof window !== 'undefined' && window.gtag) {
         window.gtag('event', 'vote_submitted', {
           poll_id: pollId,
-          allocations: allocations,
+          allocations: validAllocations,
           voting_method: 'quadratic',
           total_allocated: totalAllocated,
-          total_spent: getTotalSpent()
+          total_spent: totalSpent
         })
       }
       
-      await onVote(allocations)
+      await onVote(validAllocations)
     } catch (err: any) {
       setError(err.message || 'Failed to submit vote')
     } finally {
