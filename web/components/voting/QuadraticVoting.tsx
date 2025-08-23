@@ -94,6 +94,17 @@ export default function QuadraticVoting({
     setError(null)
 
     try {
+      // Track analytics with poll ID
+      if (typeof window !== 'undefined' && window.gtag) {
+        window.gtag('event', 'vote_submitted', {
+          poll_id: pollId,
+          allocations: allocations,
+          voting_method: 'quadratic',
+          total_allocated: totalAllocated,
+          total_spent: getTotalSpent()
+        })
+      }
+      
       await onVote(allocations)
     } catch (err: any) {
       setError(err.message || 'Failed to submit vote')
