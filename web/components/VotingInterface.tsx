@@ -71,13 +71,16 @@ export function useVotingContext() {
 
 interface VotingInterfaceProps {
   poll: Poll;
+  // eslint-disable-next-line no-unused-vars
   onVote: (pollId: string, choice: number) => Promise<VoteResponse>;
+  // eslint-disable-next-line no-unused-vars
   onVerify: (voteId: string) => Promise<VerificationResponse>;
   isVoting?: boolean;
   hasVoted?: boolean;
   userVote?: number;
   verificationTier?: string;
   showResults?: boolean;
+  // eslint-disable-next-line no-unused-vars
   onVoteComplete?: (voteId: string) => void;
 }
 

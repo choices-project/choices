@@ -36,7 +36,9 @@ interface PollResults {
 
 interface PollCardProps {
   poll: Poll;
+  // eslint-disable-next-line no-unused-vars
   onVote?: (pollId: string, choice: number) => Promise<void>;
+  // eslint-disable-next-line no-unused-vars
   onViewDetails?: (pollId: string) => void;
   isVoted?: boolean;
   userVote?: number;

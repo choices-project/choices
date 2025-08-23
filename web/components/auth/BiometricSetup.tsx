@@ -41,6 +41,7 @@ interface BiometricSetupProps {
   userId: string
   username: string
   onSuccess?: () => void
+  // eslint-disable-next-line no-unused-vars
   onError?: (error: string) => void
 }
 

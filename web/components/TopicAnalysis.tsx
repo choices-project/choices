@@ -117,6 +117,7 @@ const TopicContext = createContext<{
     } else {
       devLog('Invalid newData received:', newData)
     }
+    // newData is used in the logging statements above
   }
 })
 

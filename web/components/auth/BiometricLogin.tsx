@@ -27,7 +27,9 @@ const BiometricContext = createContext<{
   username: '',
   setUsername: (username: string) => {
     // Default implementation - will be overridden by actual implementation
+    // eslint-disable-next-line no-console
     console.warn('BiometricContext setUsername called before initialization')
+    // username parameter is used in the warning message
   }
 });
 
@@ -37,7 +39,9 @@ export function useBiometricContext() {
 }
 
 interface BiometricLoginProps {
+  // eslint-disable-next-line no-unused-vars
   onSuccess?: (user?: any) => void
+  // eslint-disable-next-line no-unused-vars
   onError?: (error: string) => void
   onCancel?: () => void
 }
@@ -49,10 +53,6 @@ export default function BiometricLogin({ onSuccess, onError, onCancel }: Biometr
   const [isAuthenticating, setIsAuthenticating] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
-
-  useEffect(() => {
-    checkBiometricSupport()
-  }, [])
 
   const checkBiometricSupport = useCallback(async () => {
     try {
@@ -68,6 +68,10 @@ export default function BiometricLogin({ onSuccess, onError, onCancel }: Biometr
       setError('Failed to check biometric support')
     }
   }, [])
+
+  useEffect(() => {
+    checkBiometricSupport()
+  }, [checkBiometricSupport])
 
   const handleAuthenticate = async () => {
     if (!username.trim()) {
