@@ -24,8 +24,9 @@ export default function PrivacyStep({ data, onUpdate, onNext, onBack }: PrivacyS
     const newPrivacy = { ...privacy, [field]: value }
     setPrivacy(newPrivacy)
     
-    // Update both local state and context
-    onUpdate({ privacy: newPrivacy })
+    // Update both local state and context - the updates parameter is used here
+    const updates = { privacy: newPrivacy }
+    onUpdate(updates)
     updateData({ privacy: newPrivacy })
   }
 

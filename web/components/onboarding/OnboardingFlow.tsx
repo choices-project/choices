@@ -67,11 +67,13 @@ const OnboardingContext = createContext<{
       allowAnalytics: false
     }
   },
-  updateData: (_updates: Partial<OnboardingData>) => {
-    // No-op function for context default - will be overridden by actual implementation
+  updateData: (updates: Partial<OnboardingData>) => {
+    // Default implementation - will be overridden by actual implementation
+    console.warn('OnboardingContext updateData called before initialization')
   },
-  setCurrentStep: (_step: OnboardingStep) => {
-    // No-op function for context default - will be overridden by actual implementation
+  setCurrentStep: (step: OnboardingStep) => {
+    // Default implementation - will be overridden by actual implementation
+    console.warn('OnboardingContext setCurrentStep called before initialization')
   },
   isLoading: false,
   error: null
