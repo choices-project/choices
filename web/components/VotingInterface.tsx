@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, createContext, useContext } from 'react';
 import { 
   Vote, 
   CheckCircle2, 
@@ -49,6 +49,26 @@ interface VerificationResponse {
   merkleProof?: string[];
 }
 
+// Context for sharing voting state
+const VotingContext = createContext<{
+  poll: Poll;
+  selectedChoice: number | null;
+  setSelectedChoice: (choice: number | null) => void;
+  isVoting: boolean;
+  hasVoted: boolean;
+}>({
+  poll: {} as Poll,
+  selectedChoice: null,
+  setSelectedChoice: () => {},
+  isVoting: false,
+  hasVoted: false
+});
+
+// Hook to use voting context
+export function useVotingContext() {
+  return useContext(VotingContext);
+}
+
 interface VotingInterfaceProps {
   poll: Poll;
   onVote: (pollId: string, choice: number) => Promise<VoteResponse>;
@@ -82,21 +102,20 @@ export const VotingInterface: React.FC<VotingInterfaceProps> = ({
   const [verificationDetails, setVerificationDetails] = useState<any>(null);
   const [timeRemaining, setTimeRemaining] = useState<string>('');
 
-  // Calculate time remaining
-  useEffect(() => {
-    const updateTimeRemaining = () => {
-      const now = new Date();
-      const end = new Date(poll.endtime);
-      const diff = end.getTime() - now.getTime();
-      
-      if (diff <= 0) {
-        setTimeRemaining('Poll ended');
-        return;
-      }
-      
-      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+  // Calculate time remaining with useCallback for optimization
+  const updateTimeRemaining = useCallback(() => {
+    const now = new Date();
+    const end = new Date(poll.endtime);
+    const diff = end.getTime() - now.getTime();
+    
+    if (diff <= 0) {
+      setTimeRemaining('Poll ended');
+      return;
+    }
+    
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
       
       if (days > 0) {
         setTimeRemaining(`${days}d ${hours}h ${minutes}m left`);
@@ -105,13 +124,14 @@ export const VotingInterface: React.FC<VotingInterfaceProps> = ({
       } else {
         setTimeRemaining(`${minutes}m left`);
       }
-    };
+    }, [poll.endtime]);
 
+  // Use useEffect to call the memoized function
+  useEffect(() => {
     updateTimeRemaining();
     const interval = setInterval(updateTimeRemaining, 60000); // Update every minute
-
     return () => clearInterval(interval);
-  }, [poll.endtime]);
+  }, [updateTimeRemaining]);
 
   const handleVote = async () => {
     if (!selectedChoice || poll.status !== 'active') return;
