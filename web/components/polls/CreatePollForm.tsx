@@ -236,7 +236,6 @@ export const CreatePollForm: React.FC<CreatePollFormProps> = ({
             description: formData.description,
             category: formData.category
           }}
-          recommendedLevel={getRecommendedPrivacyLevel()}
         />
 
         {/* Voting Method */}

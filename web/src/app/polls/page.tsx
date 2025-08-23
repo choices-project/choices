@@ -54,8 +54,7 @@ export default function PollsPage() {
       // Log successful vote submission with vote data
       devLog('Vote submitted successfully:', {
         pollId,
-        voteId: voteData.vote_id,
-        auditReceipt: voteData.audit_receipt,
+        voteData,
         choice
       })
       

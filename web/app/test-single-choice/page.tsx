@@ -1,5 +1,8 @@
 'use client'
 
+export const dynamic = 'force-dynamic'
+export const runtime = 'edge'
+
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
@@ -40,7 +43,7 @@ const samplePoll = {
   ]
 }
 
-export default function TestSingleChoicePage() {
+function TestSingleChoiceContent() {
   const { user, loading } = useAuth()
   const router = useRouter()
   const [isVoting, setIsVoting] = useState(false)
@@ -205,4 +208,8 @@ export default function TestSingleChoicePage() {
       </div>
     </div>
   )
+}
+
+export default function TestSingleChoicePage() {
+  return <TestSingleChoiceContent />
 }
