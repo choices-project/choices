@@ -15,6 +15,19 @@ export default function ValuesStep({ data, onUpdate, onNext, onBack }: ValuesSte
   const [communityFocus, setCommunityFocus] = useState<string[]>(data.communityFocus || [])
   const [participationStyle, setParticipationStyle] = useState(data.participationStyle || 'observer')
 
+  // Sync component state with data changes
+  useEffect(() => {
+    if (data.primaryConcerns && data.primaryConcerns !== selectedConcerns) {
+      setSelectedConcerns(data.primaryConcerns)
+    }
+    if (data.communityFocus && data.communityFocus !== communityFocus) {
+      setCommunityFocus(data.communityFocus)
+    }
+    if (data.participationStyle && data.participationStyle !== participationStyle) {
+      setParticipationStyle(data.participationStyle)
+    }
+  }, [data.primaryConcerns, data.communityFocus, data.participationStyle, selectedConcerns, communityFocus, participationStyle])
+
   const handleConcernToggle = (concern: string) => {
     const newConcerns = selectedConcerns.includes(concern)
       ? selectedConcerns.filter(c => c !== concern)

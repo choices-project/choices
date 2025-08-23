@@ -148,7 +148,7 @@ function OnboardingFlowInner() {
     }
 
     checkAuthAndStep()
-  }, [searchParams, currentStep, supabase?.auth])
+  }, [searchParams, currentStep, supabase])
 
   // Step navigation handlers
   const handleNext = useCallback(() => {

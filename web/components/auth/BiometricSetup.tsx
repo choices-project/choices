@@ -62,35 +62,38 @@ export default function BiometricSetup({ userId, username, onSuccess, onError }:
     success
   }
 
+  // Initialize biometric support check on component mount
   useEffect(() => {
-    checkBiometricSupport()
-  }, [])
+    const initializeBiometricSupport = async () => {
+      try {
+        const supported = isWebAuthnSupported()
+        setIsSupported(supported)
 
-  const checkBiometricSupport = useCallback(async () => {
-    try {
-      const supported = isWebAuthnSupported()
-      setIsSupported(supported)
+        if (supported) {
+          const available = await isBiometricAvailable()
+          setIsAvailable(available)
 
-      if (supported) {
-        const available = await isBiometricAvailable()
-        setIsAvailable(available)
-
-        if (available) {
-          const hasCreds = await hasBiometricCredentials()
-          setHasCredentials(hasCreds)
-          
-          // Check for existing credentials to provide better user feedback
-          if (hasCreds) {
-            const existingCreds = await getUserBiometricCredentials()
-            devLog('Existing biometric credentials found:', existingCreds.credentials?.length || 0)
+          if (available) {
+            const hasCreds = await hasBiometricCredentials()
+            setHasCredentials(hasCreds)
+            
+            // Check for existing credentials to provide better user feedback
+            if (hasCreds) {
+              const existingCreds = await getUserBiometricCredentials()
+              devLog('Existing biometric credentials found:', existingCreds.credentials?.length || 0)
+            }
           }
         }
+      } catch (error) {
+        devLog('Error checking biometric support:', error)
+        setError('Failed to check biometric support')
       }
-    } catch (error) {
-      devLog('Error checking biometric support:', error)
-      setError('Failed to check biometric support')
     }
+
+    initializeBiometricSupport()
   }, [])
+
+
 
   const handleRegister = async () => {
     setIsRegistering(true)
@@ -104,12 +107,15 @@ export default function BiometricSetup({ userId, username, onSuccess, onError }:
         setHasCredentials(true)
         onSuccess?.()
       } else {
-        setError(result.error || 'Registration failed')
-        onError?.(result.error || 'Registration failed')
+        const errorMessage = result.error || 'Registration failed'
+        setError(errorMessage)
+        // Use the error parameter properly in the callback
+        onError?.(errorMessage)
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Registration failed'
       setError(errorMessage)
+      // Use the error parameter properly in the callback
       onError?.(errorMessage)
     } finally {
       setIsRegistering(false)
@@ -123,6 +129,7 @@ export default function BiometricSetup({ userId, username, onSuccess, onError }:
           <CardTitle className="flex items-center gap-2">
             <Fingerprint className="h-5 w-5" />
             Biometric Authentication Setup
+            <Shield className="h-4 w-4 text-green-600" />
           </CardTitle>
           <CardDescription>
             Set up fingerprint or face recognition for secure, passwordless login
