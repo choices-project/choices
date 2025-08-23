@@ -196,6 +196,10 @@ export class HybridVotingService {
       .eq('user_id', userId)
       .single();
 
+    if (existingVoteError) {
+      devLog('Error checking existing vote:', existingVoteError);
+    }
+
     if (existingVote) {
       throw new Error('You have already voted on this poll');
     }
