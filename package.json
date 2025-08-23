@@ -7,7 +7,8 @@
     "next": "cd web && npm run dev",
     "next:build": "cd web && npm run build",
     "next:start": "cd web && npm run start",
-    "vercel-build": "cd web && npm install && npm run build"
+    "vercel-build": "cd web && npm install && npm run build",
+    "postinstall": "cd web && npm install"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.55.0",
