@@ -1,5 +1,8 @@
 'use client'
 
+export const dynamic = 'force-dynamic'
+export const runtime = 'edge'
+
 import { useAuth } from '@/contexts/AuthContext'
 import { devLog } from '@/lib/logger';
 import { useRouter } from 'next/navigation'
@@ -26,7 +29,7 @@ interface AccountSettings {
   twoFactorEnabled: boolean
 }
 
-export default function AccountSettingsPage() {
+function AccountSettingsContent() {
   const { user, loading, signOut } = useAuth()
   const router = useRouter()
   
@@ -785,5 +788,9 @@ export default function AccountSettingsPage() {
       </div>
     </div>
   )
+}
+
+export default function AccountSettingsPage() {
+  return <AccountSettingsContent />
 }
 
