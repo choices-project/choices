@@ -810,6 +810,18 @@ export function generatePollOptions(topicAnalysis: TopicAnalysis): PollOption[] 
   // Generate options based on stakeholders
   const options: PollOption[] = [];
   
+  // Add stakeholder-specific options if stakeholders are identified
+  if (stakeholders && stakeholders.length > 0) {
+    stakeholders.forEach((stakeholder: any, index: any) => {
+      options.push({
+        id: `stakeholder_${index + 1}`,
+        text: `Represent ${stakeholder.name || stakeholder.type} interests`,
+        description: `Option representing ${stakeholder.name || stakeholder.type} perspective`,
+        metadata: { type: 'stakeholder', stakeholder: stakeholder.name || stakeholder.type }
+      });
+    });
+  }
+  
   // Add neutral/balanced options
   options.push({
     id: 'option_1',
@@ -851,6 +863,9 @@ export function assessPollQuality(poll: GeneratedPoll): QualityMetrics {
   // Bias assessment (simplified)
   const biasScore = 0.8; // Placeholder - would use NLP analysis
   
+  // Voting method appropriateness assessment
+  const methodAppropriateness = assessVotingMethodAppropriateness(votingMethod, options.length);
+  
   // Clarity assessment
   const clarityScore = title.length > 10 && title.length < 100 ? 0.9 : 0.6;
   
@@ -871,6 +886,24 @@ export function assessPollQuality(poll: GeneratedPoll): QualityMetrics {
     relevanceScore * 0.2 +
     controversyScore * 0.1
   );
+  
+  // Helper function to assess voting method appropriateness
+  function assessVotingMethodAppropriateness(method: string, optionCount: number): number {
+    switch (method) {
+      case 'single':
+        return optionCount >= 2 && optionCount <= 8 ? 0.9 : 0.6;
+      case 'ranked':
+        return optionCount >= 3 && optionCount <= 6 ? 0.9 : 0.7;
+      case 'approval':
+        return optionCount >= 2 && optionCount <= 10 ? 0.9 : 0.8;
+      case 'range':
+        return optionCount >= 2 && optionCount <= 8 ? 0.9 : 0.7;
+      case 'quadratic':
+        return optionCount >= 2 && optionCount <= 6 ? 0.9 : 0.6;
+      default:
+        return 0.7;
+    }
+  }
   
   return {
     id: '',
