@@ -14,16 +14,16 @@ interface Filters {
 
 interface FeedbackFiltersProps {
   filters: Filters;
-  onFiltersChange: (filters: Filters) => void;
+  onFiltersChange: (_newFilters: Filters) => void;
 }
 
 export const FeedbackFilters: React.FC<FeedbackFiltersProps> = ({ 
-  filters: _filters, 
+  filters, 
   onFiltersChange 
 }) => {
   const handleFilterChange = (key: keyof Filters, value: string) => {
     onFiltersChange({
-      ..._filters,
+      ...filters,
       [key]: value
     });
   };
@@ -39,7 +39,7 @@ export const FeedbackFilters: React.FC<FeedbackFiltersProps> = ({
     });
   };
 
-  const hasActiveFilters = Object.values(_filters).some(value => 
+  const hasActiveFilters = Object.values(filters).some(value => 
     value !== '' && value !== 'all'
   );
 
@@ -53,7 +53,7 @@ export const FeedbackFilters: React.FC<FeedbackFiltersProps> = ({
             <input
               type="text"
               placeholder="Search feedback..."
-              value={_filters.search}
+              value={filters.search}
               onChange={(e) => handleFilterChange('search', e.target.value)}
               className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
@@ -64,7 +64,7 @@ export const FeedbackFilters: React.FC<FeedbackFiltersProps> = ({
         <div className="flex flex-wrap gap-2">
           {/* Type Filter */}
           <select
-            value={_filters.type}
+            value={filters.type}
             onChange={(e) => handleFilterChange('type', e.target.value)}
             className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
@@ -77,7 +77,7 @@ export const FeedbackFilters: React.FC<FeedbackFiltersProps> = ({
 
           {/* Sentiment Filter */}
           <select
-            value={_filters.sentiment}
+            value={filters.sentiment}
             onChange={(e) => handleFilterChange('sentiment', e.target.value)}
             className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
@@ -89,7 +89,7 @@ export const FeedbackFilters: React.FC<FeedbackFiltersProps> = ({
 
           {/* Status Filter */}
           <select
-            value={_filters.status}
+            value={filters.status}
             onChange={(e) => handleFilterChange('status', e.target.value)}
             className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
@@ -102,7 +102,7 @@ export const FeedbackFilters: React.FC<FeedbackFiltersProps> = ({
 
           {/* Priority Filter */}
           <select
-            value={_filters.priority}
+            value={filters.priority}
             onChange={(e) => handleFilterChange('priority', e.target.value)}
             className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
@@ -115,7 +115,7 @@ export const FeedbackFilters: React.FC<FeedbackFiltersProps> = ({
 
           {/* Date Range Filter */}
           <select
-            value={_filters.dateRange}
+            value={filters.dateRange}
             onChange={(e) => handleFilterChange('dateRange', e.target.value)}
             className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
@@ -143,7 +143,7 @@ export const FeedbackFilters: React.FC<FeedbackFiltersProps> = ({
       {hasActiveFilters && (
         <div className="mt-4 pt-4 border-t border-gray-200">
           <div className="flex flex-wrap gap-2">
-            {Object.entries(_filters).map(([key, value]) => {
+            {Object.entries(filters).map(([key, value]) => {
               if (value && value !== 'all') {
                 return (
                   <span

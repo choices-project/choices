@@ -35,7 +35,7 @@ interface Feedback {
 interface FeedbackListProps {
   feedback: Feedback[];
   isLoading: boolean;
-  onFeedbackSelect: (feedback: Feedback) => void;
+  onFeedbackSelect: (_item: Feedback) => void;
   onStatusUpdate: (_feedbackId: string, _newStatus: string) => void;
 }
 
