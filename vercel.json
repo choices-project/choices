@@ -2,7 +2,7 @@
   "version": 2,
   "framework": "nextjs",
   "functions": {
-    "web/app/api/**/*.ts": {
+    "app/api/**/*.ts": {
       "maxDuration": 30
     }
   },
@@ -154,7 +154,7 @@
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "/web/app/api/$1"
+      "destination": "/app/api/$1"
     }
   ],
   "redirects": [
