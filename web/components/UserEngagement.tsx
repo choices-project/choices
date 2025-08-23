@@ -60,6 +60,7 @@ export const UserEngagement: React.FC<UserEngagementProps> = ({
 }) => {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [lastUpdate, setLastUpdate] = useState(new Date());
 
   // Update time every second
   useEffect(() => {
@@ -69,6 +70,17 @@ export const UserEngagement: React.FC<UserEngagementProps> = ({
 
     return () => clearInterval(interval);
   }, []);
+
+  // Live updates effect
+  useEffect(() => {
+    if (showLiveUpdates) {
+      const updateInterval = setInterval(() => {
+        setLastUpdate(new Date());
+      }, 30000); // Update every 30 seconds
+
+      return () => clearInterval(updateInterval);
+    }
+  }, [showLiveUpdates]);
 
   const formatNumber = (num: number) => {
     if (num >= 1000000) {
@@ -120,6 +132,12 @@ export const UserEngagement: React.FC<UserEngagementProps> = ({
             </div>
             <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
             <span className="text-sm text-gray-600">{formatTime(currentTime)} UTC</span>
+            {showLiveUpdates && (
+              <div className="flex items-center gap-1 text-xs text-gray-500">
+                <Clock className="w-3 h-3" />
+                <span>Updated: {formatTime(lastUpdate)}</span>
+              </div>
+            )}
           </div>
           
           <h2 className="text-3xl font-bold text-gray-900 mb-4">{title}</h2>
