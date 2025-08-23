@@ -319,8 +319,8 @@ export class HybridVotingService {
         tag: tokenData.tag
       };
     } catch (error) {
-      console.error('Error requesting blinded token:', error);
-      throw new Error(`Token request failed: ${error instanceof Error ? error instanceof Error ? error instanceof Error ? error.message : "Unknown error" : "Unknown error" : 'Unknown error'}`);
+      devLog('Error requesting blinded token:', error);
+      throw new Error(`Token request failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
@@ -354,8 +354,8 @@ export class HybridVotingService {
         auditReceipt: voteData.audit_receipt || `receipt_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
       };
     } catch (error) {
-      console.error('Error submitting vote to PO service:', error);
-      throw new Error(`Vote submission failed: ${error instanceof Error ? error instanceof Error ? error instanceof Error ? error.message : "Unknown error" : "Unknown error" : 'Unknown error'}`);
+      devLog('Error submitting vote to PO service:', error);
+      throw new Error(`Vote submission failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 }
