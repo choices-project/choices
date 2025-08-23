@@ -3,6 +3,7 @@
 import { useAuth } from '@/contexts/AuthContext'
 import { devLog } from '@/lib/logger';
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import { useEffect, useState, useCallback } from 'react'
 import { createClient } from '@supabase/supabase-js'
 import { 
@@ -609,9 +610,11 @@ export default function AccountSettingsPage() {
                     </p>
                     {twoFactorData.qrCode && (
                       <div className="inline-block p-4 bg-white border border-gray-300 rounded-lg">
-                        <img 
+                        <Image 
                           src={twoFactorData.qrCode} 
                           alt="2FA QR Code" 
+                          width={224}
+                          height={224}
                           className="w-32 h-32 sm:w-48 sm:h-48 md:w-56 md:h-56"
                         />
                       </div>
