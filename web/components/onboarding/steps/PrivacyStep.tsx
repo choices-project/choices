@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useEffect, useCallback, createContext, useContext } from 'react'
+import { useState } from 'react'
 import { Shield, Eye, Users, TrendingUp, Lock } from 'lucide-react'
+import { useOnboardingContext } from '../OnboardingFlow'
 
 interface PrivacyStepProps {
   data: any
@@ -17,11 +18,15 @@ export default function PrivacyStep({ data, onUpdate, onNext, onBack }: PrivacyS
     shareParticipation: false,
     allowAnalytics: false
   })
+  const { updateData } = useOnboardingContext()
 
   const handlePrivacyChange = (field: string, value: boolean) => {
     const newPrivacy = { ...privacy, [field]: value }
     setPrivacy(newPrivacy)
+    
+    // Update both local state and context
     onUpdate({ privacy: newPrivacy })
+    updateData({ privacy: newPrivacy })
   }
 
   const privacyOptions = [

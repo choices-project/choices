@@ -65,6 +65,15 @@ export default function ApprovalVoting({
     setError(null)
 
     try {
+      // Validate approvals before submission
+      const validApprovals = approvedOptions.filter(approval => 
+        options.some(option => option.id === approval)
+      )
+      
+      if (validApprovals.length !== approvedOptions.length) {
+        throw new Error('Some approved options are invalid')
+      }
+      
       // Track analytics with poll ID
       if (typeof window !== 'undefined' && window.gtag) {
         window.gtag('event', 'vote_submitted', {
@@ -75,7 +84,7 @@ export default function ApprovalVoting({
         })
       }
       
-      await onVote(approvedOptions)
+      await onVote(validApprovals)
     } catch (err: any) {
       setError(err.message || 'Failed to submit vote')
     } finally {

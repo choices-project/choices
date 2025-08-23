@@ -1,9 +1,10 @@
 'use client'
 
-import { useState, useEffect, useCallback, createContext, useContext } from 'react'
-import { Lock, Shield, Users } from 'lucide-react'
+import { useState } from 'react'
+import { Lock, Shield } from 'lucide-react'
 import { createClient } from '@/utils/supabase/client'
 import { devLog } from '@/lib/logger';
+import { useOnboardingContext } from '../OnboardingFlow'
 
 interface AuthStepProps {
   data: any
@@ -15,6 +16,7 @@ interface AuthStepProps {
 export default function AuthStep({ data, onUpdate, onNext, onBack }: AuthStepProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const { updateData } = useOnboardingContext()
 
   const supabase = createClient()
 
@@ -26,7 +28,11 @@ export default function AuthStep({ data, onUpdate, onNext, onBack }: AuthStepPro
       if (!supabase) {
         throw new Error('Authentication service not available')
       }
-      const { data, error } = await supabase.auth.signInWithOAuth({
+      
+      // Update onboarding data with auth method
+      updateData({ authMethod: provider })
+      
+      const { data: authData, error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
           redirectTo: `${window.location.origin}/onboarding?step=values`
@@ -38,7 +44,10 @@ export default function AuthStep({ data, onUpdate, onNext, onBack }: AuthStepPro
       }
 
       // Log OAuth initiation with provider data
-      devLog('OAuth initiated:', { provider, data })
+      devLog('OAuth initiated:', { provider, authData })
+      
+      // Update local data as well
+      onUpdate({ authMethod: provider, authData })
       
       // The user will be redirected to OAuth provider
       // When they return, they'll be authenticated
@@ -56,6 +65,10 @@ export default function AuthStep({ data, onUpdate, onNext, onBack }: AuthStepPro
     setError(null)
     
     try {
+      // Update onboarding data with auth method
+      updateData({ authMethod: 'email' })
+      onUpdate({ authMethod: 'email' })
+      
       // Redirect to login page with return to onboarding
       window.location.href = `/login?redirectTo=${encodeURIComponent('/onboarding?step=values')}`
     } catch (error: any) {

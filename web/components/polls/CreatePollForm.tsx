@@ -84,6 +84,11 @@ export const CreatePollForm: React.FC<CreatePollFormProps> = ({
     };
 
     try {
+      // Validate pollData before submission
+      if (!pollData.title || pollData.options.length < 2) {
+        throw new Error('Invalid poll data');
+      }
+      
       await onSubmit(pollData);
     } catch (error) {
       devLog('Error creating poll:', error);
