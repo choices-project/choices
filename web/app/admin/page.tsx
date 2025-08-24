@@ -10,17 +10,12 @@ import {
   Vote, 
   BarChart3, 
   Settings, 
-  Fingerprint, 
   Smartphone, 
-  TrendingUp,
   Activity,
-  Database,
   Lock,
   LogOut,
   Home,
   Plus,
-  Eye,
-  FileText,
   Zap
 } from 'lucide-react'
 
