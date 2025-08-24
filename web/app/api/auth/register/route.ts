@@ -1,143 +1,162 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { devLog } from '@/lib/logger';
-import bcrypt from 'bcryptjs'
-import jwt from 'jsonwebtoken'
-import { createClient } from '@supabase/supabase-js';
-import { handleError, getUserMessage, getHttpStatus, ValidationError, AuthenticationError, NotFoundError } from '@/lib/error-handler';
+import { NextRequest, NextResponse } from 'next/server'
+import { createClient } from '@/utils/supabase/server'
+import { cookies } from 'next/headers'
+import { rateLimit } from '@/lib/rate-limit'
 
-// Initialize Supabase client
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-const supabase = supabaseUrl && supabaseKey ? createClient(supabaseUrl, supabaseKey) : null;
+// Rate limiting: 3 registrations per hour per IP
+const limiter = rateLimit({
+  interval: 60 * 60 * 1000, // 1 hour
+  uniqueTokenPerInterval: 500,
+})
 
 export async function POST(request: NextRequest) {
   try {
-    devLog('Registration attempt for email:', request.body ? 'email provided' : 'no email')
+    // Rate limiting
+    const ip = request.ip || request.headers.get('x-forwarded-for') || 'unknown'
+    const { success } = await limiter.check(3, ip)
     
-    if (!supabase) {
-      throw new Error('Authentication service not configured')
+    if (!success) {
+      return NextResponse.json(
+        { message: 'Too many registration attempts. Please try again later.' },
+        { status: 429 }
+      )
     }
 
-    const { email, password: userPassword, twoFactorEnabled } = await request.json()
+    // Validate request
+    const body = await request.json()
+    const { email, password, username } = body
 
-    // Validate input
-    if (!email || !userPassword) {
-      throw new ValidationError('Email and password are required')
+    if (!email || !password) {
+      return NextResponse.json(
+        { message: 'Email and password are required' },
+        { status: 400 }
+      )
     }
 
     // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     if (!emailRegex.test(email)) {
-      throw new ValidationError('Invalid email format')
+      return NextResponse.json(
+        { message: 'Invalid email format' },
+        { status: 400 }
+      )
     }
 
     // Validate password strength
-    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/
-    if (!passwordRegex.test(userPassword)) {
-      throw new ValidationError('Password must be at least 8 characters with uppercase, lowercase, number, and special character')
+    if (password.length < 8) {
+      return NextResponse.json(
+        { message: 'Password must be at least 8 characters long' },
+        { status: 400 }
+      )
     }
+
+    // Check for common weak passwords
+    const weakPasswords = ['password', '123456', 'qwerty', 'admin', 'letmein']
+    if (weakPasswords.includes(password.toLowerCase())) {
+      return NextResponse.json(
+        { message: 'Password is too weak. Please choose a stronger password.' },
+        { status: 400 }
+      )
+    }
+
+    // Create Supabase client
+    const cookieStore = await cookies()
+    const supabase = createClient(cookieStore)
 
     // Check if user already exists
-    const { data: existingUser } = await supabase
-      .from('ia_users')
-      .select('id, email')
-      .eq('email', email.toLowerCase())
-      .single()
-
-    if (existingUser) {
-      throw new AuthenticationError('User with this email already exists')
-    }
-
-    // Hash password
-    const saltRounds = 12
-    const hashedPassword = await bcrypt.hash(userPassword, saltRounds)
-
-    // Generate stable ID
-    const stableId = `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
-
-    // Create user
-    const { data: user, error: createError } = await supabase
-      .from('ia_users')
-      .insert({
-        stable_id: stableId,
-        email: email.toLowerCase(),
-        password_hash: hashedPassword,
-        verification_tier: 'T0',
-        is_active: true,
-        two_factor_enabled: twoFactorEnabled || false,
-      })
-      .select()
-      .single()
-
-    if (createError) {
-      devLog('User creation error:', createError)
-      throw new NotFoundError('Failed to create user account')
-    }
-
-    // Check JWT secrets
-    const jwtSecret = process.env.JWT_SECRET;
-    const jwtRefreshSecret = process.env.JWT_REFRESH_SECRET;
-
-    if (!jwtSecret || !jwtRefreshSecret) {
-      throw new Error('JWT configuration not available')
-    }
-
-    // Generate JWT token
-    const token = jwt.sign(
-      {
-        userId: user.id,
-        email: user.email,
-        stableId: user.stable_id,
-        verificationTier: user.verification_tier,
-      },
-      jwtSecret,
-      { expiresIn: '1h' }
+    const { data: existingUser } = await supabase.auth.admin.getUserByEmail(
+      email.toLowerCase().trim()
     )
 
-    // Generate refresh token
-    const refreshToken = jwt.sign(
-      {
-        userId: user.id,
-        type: 'refresh',
-      },
-      jwtRefreshSecret,
-      { expiresIn: '7d' }
-    )
-
-    // Store refresh token
-    await supabase
-      .from('ia_refresh_tokens')
-      .insert({
-        user_id: user.id,
-        token_hash: await bcrypt.hash(refreshToken, 10),
-        expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-      })
-
-    // Return user data (without password)
-    const userResponse = {
-      id: user.id,
-      email: user.email,
-      stableId: user.stable_id,
-      verificationTier: user.verification_tier,
-      isActive: user.is_active,
-      createdAt: user.created_at,
-      updatedAt: user.updated_at,
+    if (existingUser.user) {
+      return NextResponse.json(
+        { message: 'User with this email already exists' },
+        { status: 409 }
+      )
     }
 
+    // Create new user
+    const { data, error } = await supabase.auth.signUp({
+      email: email.toLowerCase().trim(),
+      password,
+      options: {
+        data: {
+          username: username || email.split('@')[0],
+        },
+      },
+    })
+
+    if (error) {
+      console.error('Registration error:', error)
+      
+      // Handle specific Supabase errors
+      if (error.message.includes('Password should be at least')) {
+        return NextResponse.json(
+          { message: 'Password must be at least 6 characters long' },
+          { status: 400 }
+        )
+      }
+      
+      if (error.message.includes('Invalid email')) {
+        return NextResponse.json(
+          { message: 'Invalid email format' },
+          { status: 400 }
+        )
+      }
+
+      return NextResponse.json(
+        { message: 'Registration failed. Please try again.' },
+        { status: 500 }
+      )
+    }
+
+    if (!data.user) {
+      return NextResponse.json(
+        { message: 'Registration failed' },
+        { status: 500 }
+      )
+    }
+
+    // Create user profile
+    const { error: profileError } = await supabase
+      .from('user_profiles')
+      .insert({
+        user_id: data.user.id,
+        username: username || email.split('@')[0],
+        email: data.user.email,
+        trust_tier: 'T1', // Default trust tier
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+
+    if (profileError) {
+      console.error('Profile creation error:', profileError)
+      // Don't fail the registration, but log the error
+    }
+
+    // Log successful registration
+    console.info(`New user registration: ${data.user.id}`, {
+      email: data.user.email,
+      ip,
+      timestamp: new Date().toISOString(),
+    })
+
+    // Return success response
     return NextResponse.json({
-      user: userResponse,
-      token,
-      refreshToken,
-      expiresAt: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+      message: 'Registration successful. Please check your email to verify your account.',
+      user: {
+        id: data.user.id,
+        email: data.user.email,
+        username: username || email.split('@')[0],
+      },
     })
 
   } catch (error) {
-    devLog('Registration error:', error)
-    const appError = handleError(error as Error, { context: 'auth-register' })
-    const userMessage = getUserMessage(appError)
-    const statusCode = getHttpStatus(appError)
+    console.error('Registration API error:', error)
     
-    return NextResponse.json({ error: userMessage }, { status: statusCode })
+    return NextResponse.json(
+      { message: 'Internal server error' },
+      { status: 500 }
+    )
   }
 }

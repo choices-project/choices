@@ -5,6 +5,8 @@ import { Lock, Shield } from 'lucide-react'
 import { createClient } from '@/utils/supabase/client'
 import { devLog } from '@/lib/logger';
 import { useOnboardingContext } from '../OnboardingFlow'
+import SocialLoginButtons from '@/components/auth/SocialLoginButtons'
+import { OAuthProvider } from '@/types/auth'
 
 interface AuthStepProps {
   data: any
@@ -30,7 +32,7 @@ export default function AuthStep({ data, onUpdate, onNext, onBack }: AuthStepPro
 
   const supabase = createClient()
 
-  const handleSocialLogin = async (provider: 'google' | 'github') => {
+  const handleSocialLogin = async (provider: OAuthProvider) => {
     setIsLoading(true)
     setError(null)
     
@@ -39,11 +41,19 @@ export default function AuthStep({ data, onUpdate, onNext, onBack }: AuthStepPro
         throw new Error('Authentication service not available')
       }
       
+      // Map our OAuth providers to Supabase supported providers
+      const supabaseProvider = getSupabaseProvider(provider)
+      if (!supabaseProvider) {
+        setError(`OAuth provider ${provider} is not yet configured`)
+        setIsLoading(false)
+        return
+      }
+      
       // Update onboarding data with auth method
       updateData({ authMethod: provider })
       
       const { data: authData, error } = await supabase.auth.signInWithOAuth({
-        provider,
+        provider: supabaseProvider,
         options: {
           redirectTo: `${window.location.origin}/onboarding?step=values`
         }
@@ -71,6 +81,20 @@ export default function AuthStep({ data, onUpdate, onNext, onBack }: AuthStepPro
     }
   }
 
+  const getSupabaseProvider = (provider: OAuthProvider): 'google' | 'github' | 'facebook' | 'twitter' | 'linkedin' | 'discord' | null => {
+    const providerMap: Record<OAuthProvider, 'google' | 'github' | 'facebook' | 'twitter' | 'linkedin' | 'discord' | null> = {
+      google: 'google',
+      github: 'github',
+      facebook: 'facebook',
+      twitter: 'twitter',
+      linkedin: 'linkedin',
+      discord: 'discord',
+      instagram: 'facebook', // Instagram uses Facebook OAuth
+      tiktok: null // TikTok OAuth not yet supported by Supabase
+    }
+    return providerMap[provider]
+  }
+
   const handleEmailLogin = async () => {
     setIsLoading(true)
     setError(null)
@@ -92,29 +116,14 @@ export default function AuthStep({ data, onUpdate, onNext, onBack }: AuthStepPro
     }
   }
 
-  const authOptions = [
-    {
-      provider: 'google' as const,
-      label: 'Continue with Google',
-      description: 'Quick and secure sign-in',
-      icon: '🔍',
-      color: 'bg-white border-gray-300 hover:bg-gray-50 text-gray-900'
-    },
-    {
-      provider: 'github' as const,
-      label: 'Continue with GitHub',
-      description: 'For developers and tech enthusiasts',
-      icon: '🐙',
-      color: 'bg-gray-900 text-white hover:bg-gray-800'
-    },
-    {
-      provider: 'email' as const,
-      label: 'Continue with Email',
-      description: 'Traditional email and password',
-      icon: '✉️',
-      color: 'bg-blue-600 text-white hover:bg-blue-700'
-    }
-  ]
+  // Email option for traditional login
+  const emailOption = {
+    provider: 'email' as const,
+    label: 'Continue with Email',
+    description: 'Traditional email and password',
+    icon: '✉️',
+    color: 'bg-blue-600 text-white hover:bg-blue-700'
+  }
 
   return (
     <div className="space-y-8">
@@ -168,35 +177,34 @@ export default function AuthStep({ data, onUpdate, onNext, onBack }: AuthStepPro
 
       {/* Social login options */}
       <div className="space-y-4">
-        {authOptions.map((option: any) => (
-          <button
-            key={option.provider}
-            onClick={() => {
-              if (option.provider === 'email') {
-                handleEmailLogin()
-              } else {
-                handleSocialLogin(option.provider)
-              }
-            }}
-            disabled={isLoading}
-            className={`
-              w-full p-4 rounded-xl border-2 transition-all duration-200 flex items-center space-x-4
-              ${option.color}
-              ${isLoading ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-md'}
-            `}
-          >
-            <span className="text-2xl">{option.icon}</span>
-            <div className="text-left">
-              <div className="font-semibold">{option.label}</div>
-              <div className="text-sm opacity-75">{option.description}</div>
+        <SocialLoginButtons 
+          onProviderClick={handleSocialLogin}
+          redirectTo="/onboarding?step=values"
+          isLoading={isLoading}
+          className="mb-4"
+        />
+        
+        {/* Email option */}
+        <button
+          onClick={handleEmailLogin}
+          disabled={isLoading}
+          className={`
+            w-full p-4 rounded-xl border-2 transition-all duration-200 flex items-center space-x-4
+            ${emailOption.color}
+            ${isLoading ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-md'}
+          `}
+        >
+          <span className="text-2xl">{emailOption.icon}</span>
+          <div className="text-left">
+            <div className="font-semibold">{emailOption.label}</div>
+            <div className="text-sm opacity-75">{emailOption.description}</div>
+          </div>
+          {isLoading && (
+            <div className="ml-auto">
+              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-current"></div>
             </div>
-            {isLoading && (
-              <div className="ml-auto">
-                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-current"></div>
-              </div>
-            )}
-          </button>
-        ))}
+          )}
+        </button>
       </div>
 
       {/* Privacy commitment */}
