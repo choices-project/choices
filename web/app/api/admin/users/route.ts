@@ -1,60 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/utils/supabase/server'
-import { cookies } from 'next/headers'
-import { rateLimit } from '@/lib/rate-limit'
+import { withAuth, createRateLimitMiddleware, combineMiddleware } from '@/lib/auth-middleware'
 
 // Rate limiting: 100 requests per minute per IP
-const limiter = rateLimit({
-  interval: 60 * 1000, // 1 minute
-  uniqueTokenPerInterval: 500,
+const rateLimitMiddleware = createRateLimitMiddleware({
+  maxRequests: 100,
+  windowMs: 60 * 1000
 })
 
-export async function GET(request: NextRequest) {
+// Combined middleware: rate limiting + admin auth
+const middleware = combineMiddleware(rateLimitMiddleware)
+
+export const GET = withAuth(async (request: NextRequest, context) => {
   try {
-    // Rate limiting
-    const ip = request.ip || request.headers.get('x-forwarded-for') || 'unknown'
-    const { success } = await limiter.check(100, ip)
-    
-    if (!success) {
-      return NextResponse.json(
-        { message: 'Too many requests. Please try again later.' },
-        { status: 429 }
-      )
-    }
-
-    // Create Supabase client
-    const cookieStore = await cookies()
-    const supabase = createClient(cookieStore)
-
-    if (!supabase) {
-      return NextResponse.json(
-        { message: 'Authentication service not available' },
-        { status: 500 }
-      )
-    }
-
-    // Get current user session
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-
-    if (authError || !user) {
-      return NextResponse.json(
-        { message: 'Authentication required' },
-        { status: 401 }
-      )
-    }
-
-    // Check if user is admin
-    const { data: profile, error: profileError } = await supabase
-      .from('user_profiles')
-      .select('trust_tier')
-      .eq('user_id', user.id)
-      .single()
-
-    if (profileError || profile?.trust_tier !== 'T3') {
-      return NextResponse.json(
-        { message: 'Admin access required' },
-        { status: 403 }
-      )
+    // Apply rate limiting
+    const rateLimitResult = await middleware(request)
+    if (rateLimitResult) {
+      return rateLimitResult
     }
 
     // Get query parameters
@@ -65,7 +26,7 @@ export async function GET(request: NextRequest) {
     const trustTier = searchParams.get('trust_tier') || ''
 
     // Build query
-    let query = supabase
+    let query = context.supabase
       .from('user_profiles')
       .select(`
         user_id,
@@ -120,43 +81,14 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+}, { requireAdmin: true })
 
-export async function PUT(request: NextRequest) {
+export const PUT = withAuth(async (request: NextRequest, context) => {
   try {
-    // Create Supabase client
-    const cookieStore = await cookies()
-    const supabase = createClient(cookieStore)
-
-    if (!supabase) {
-      return NextResponse.json(
-        { message: 'Authentication service not available' },
-        { status: 500 }
-      )
-    }
-
-    // Get current user session
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-
-    if (authError || !user) {
-      return NextResponse.json(
-        { message: 'Authentication required' },
-        { status: 401 }
-      )
-    }
-
-    // Check if user is admin
-    const { data: profile, error: profileError } = await supabase
-      .from('user_profiles')
-      .select('trust_tier')
-      .eq('user_id', user.id)
-      .single()
-
-    if (profileError || profile?.trust_tier !== 'T3') {
-      return NextResponse.json(
-        { message: 'Admin access required' },
-        { status: 403 }
-      )
+    // Apply rate limiting
+    const rateLimitResult = await middleware(request)
+    if (rateLimitResult) {
+      return rateLimitResult
     }
 
     const body = await request.json()
@@ -187,7 +119,7 @@ export async function PUT(request: NextRequest) {
     }
 
     // Update user profile
-    const { error: updateError } = await supabase
+    const { error: updateError } = await context.supabase
       .from('user_profiles')
       .update({
         ...validUpdates,
@@ -215,4 +147,4 @@ export async function PUT(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+}, { requireAdmin: true })
