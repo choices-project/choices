@@ -171,7 +171,7 @@ function fixUnusedVariablesEffective(filePath) {
     }
 
     let content = fs.readFileSync(filePath, 'utf8');
-    let originalContent = content;
+    const originalContent = content;
     let changesMade = 0;
     
     // Apply each pattern

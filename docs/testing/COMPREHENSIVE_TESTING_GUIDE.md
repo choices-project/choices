@@ -1,9 +1,11 @@
 # 🧪 Comprehensive Testing Guide
 
 **Created**: 2025-08-20 22:48 EDT  
-**Last Updated**: 2025-08-20 23:00 EDT  
+**Last Updated**: 2025-08-24 15:57 EDT  
 **Status**: 🟢 **ACTIVE**  
 **Purpose**: Complete testing strategy and procedures for the Choices platform
+
+> **📅 IMPORTANT**: Always use the current system date when updating timestamps. Use `date` command to get the current date/time.
 
 ## 🎯 **Testing Overview**
 

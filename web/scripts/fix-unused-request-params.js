@@ -67,7 +67,7 @@ function main() {
   console.log('🔧 Fixing unused request parameters in API routes...\n');
   
   let fixedCount = 0;
-  let totalFiles = API_ROUTES.length;
+  const totalFiles = API_ROUTES.length;
   
   for (const filePath of API_ROUTES) {
     if (fixUnusedRequestParams(filePath)) {

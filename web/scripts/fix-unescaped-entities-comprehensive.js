@@ -248,7 +248,7 @@ function fixUnescapedEntitiesComprehensive(filePath) {
     }
 
     let content = fs.readFileSync(filePath, 'utf8');
-    let originalContent = content;
+    const originalContent = content;
     let changesMade = 0;
     
     // Apply each pattern
@@ -285,7 +285,7 @@ function main() {
   console.log(`Found ${tsxFiles.length} TypeScript/TSX files to process\n`);
   
   let fixedCount = 0;
-  let totalEntitiesFixed = 0;
+  const totalEntitiesFixed = 0;
   
   for (const filePath of tsxFiles) {
     if (fixUnescapedEntitiesComprehensive(filePath)) {
