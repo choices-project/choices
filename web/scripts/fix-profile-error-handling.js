@@ -83,7 +83,7 @@ function main() {
   console.log('🔧 Fixing profileError handling in admin API routes...\n');
   
   let fixedCount = 0;
-  let totalFiles = API_ROUTES.length;
+  const totalFiles = API_ROUTES.length;
   
   for (const filePath of API_ROUTES) {
     if (fixProfileErrorHandling(filePath)) {

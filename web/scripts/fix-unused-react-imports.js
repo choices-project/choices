@@ -31,7 +31,7 @@ function analyzeReactImports(content) {
   if (importMatch) {
     const importedItems = importMatch[1].split(',').map(item => item.trim());
     importedItems.forEach(item => {
-      if (imports.hasOwnProperty(item)) {
+      if (Object.prototype.hasOwnProperty.call(imports, item)) {
         imports[item] = true;
       }
     });
@@ -122,7 +122,7 @@ function main() {
   console.log('🔧 Fixing unused React imports...\n');
   
   let fixedCount = 0;
-  let totalFiles = FILES_TO_PROCESS.length;
+  const totalFiles = FILES_TO_PROCESS.length;
   
   for (const filePath of FILES_TO_PROCESS) {
     console.log(`Processing: ${filePath}`);

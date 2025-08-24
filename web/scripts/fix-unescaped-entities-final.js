@@ -220,7 +220,7 @@ function fixUnescapedEntitiesFinal(filePath) {
     }
 
     let content = fs.readFileSync(fullPath, 'utf8');
-    let originalContent = content;
+    const originalContent = content;
     let changesMade = 0;
     
     // Apply each pattern
@@ -254,7 +254,7 @@ function main() {
   console.log('🔧 Final fixing of unescaped HTML entities...\n');
   
   let fixedCount = 0;
-  let totalFiles = FILES_TO_PROCESS.length;
+  const totalFiles = FILES_TO_PROCESS.length;
   
   for (const filePath of FILES_TO_PROCESS) {
     console.log(`Processing: ${filePath}`);
