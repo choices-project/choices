@@ -4,8 +4,10 @@ import { useState, Suspense, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/utils/supabase/client'
-import { Eye, EyeOff, Mail, Lock, Github, Chrome, Fingerprint } from 'lucide-react'
+import { Eye, EyeOff, Mail, Lock, Fingerprint } from 'lucide-react'
 import { isWebAuthnSupported, isBiometricAvailable, authenticateBiometric } from '@/lib/webauthn'
+import SocialLoginButtons from '@/components/auth/SocialLoginButtons'
+import { OAuthProvider } from '@/types/auth'
 
 function LoginFormContent() {
   const [email, setEmail] = useState('')
@@ -86,7 +88,7 @@ function LoginFormContent() {
     }
   }
 
-  const handleOAuthLogin = async (provider: 'google' | 'github') => {
+  const handleOAuthLogin = async (provider: OAuthProvider) => {
     setLoading(true)
     setError(null)
     setMessage(null)
@@ -97,8 +99,16 @@ function LoginFormContent() {
       return
     }
 
+    // Map our OAuth providers to Supabase supported providers
+    const supabaseProvider = getSupabaseProvider(provider)
+    if (!supabaseProvider) {
+      setError(`OAuth provider ${provider} is not yet configured`)
+      setLoading(false)
+      return
+    }
+
     const { error: signInError } = await supabase.auth.signInWithOAuth({
-      provider,
+      provider: supabaseProvider,
       options: {
         redirectTo: `${window.location.origin}/auth/callback?redirectTo=${redirectTo}`,
       },
@@ -108,6 +118,20 @@ function LoginFormContent() {
       setError(signInError.message)
     }
     setLoading(false)
+  }
+
+  const getSupabaseProvider = (provider: OAuthProvider): 'google' | 'github' | 'facebook' | 'twitter' | 'linkedin' | 'discord' | null => {
+    const providerMap: Record<OAuthProvider, 'google' | 'github' | 'facebook' | 'twitter' | 'linkedin' | 'discord' | null> = {
+      google: 'google',
+      github: 'github',
+      facebook: 'facebook',
+      twitter: 'twitter',
+      linkedin: 'linkedin',
+      discord: 'discord',
+      instagram: 'facebook', // Instagram uses Facebook OAuth
+      tiktok: null // TikTok OAuth not yet supported by Supabase
+    }
+    return providerMap[provider]
   }
 
   const handleMagicLinkLogin = async (e: React.FormEvent) => {
@@ -218,26 +242,25 @@ function LoginFormContent() {
           </button>
         </form>
 
-        <div className="mt-6 text-center">
-          <p className="text-gray-600">Or continue with</p>
-          <div className="flex justify-center space-x-4 mt-4">
-            <button
-              onClick={() => handleOAuthLogin('google')}
-              className="p-3 border border-gray-300 rounded-full hover:bg-gray-50 transition duration-150 ease-in-out"
-              aria-label="Sign in with Google"
-              disabled={loading}
-            >
-              <Chrome size={24} className="text-red-500" />
-            </button>
-            <button
-              onClick={() => handleOAuthLogin('github')}
-              className="p-3 border border-gray-300 rounded-full hover:bg-gray-50 transition duration-150 ease-in-out"
-              aria-label="Sign in with GitHub"
-              disabled={loading}
-            >
-              <Github size={24} className="text-gray-800" />
-            </button>
-            {biometricAvailable && (
+        <div className="mt-6">
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-300" />
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-2 bg-white text-gray-500">Or continue with</span>
+            </div>
+          </div>
+          
+          <SocialLoginButtons 
+            onProviderClick={handleOAuthLogin}
+            redirectTo={redirectTo}
+            isLoading={loading}
+            className="mt-4"
+          />
+          
+          {biometricAvailable && (
+            <div className="mt-4 text-center">
               <button
                 onClick={handleBiometricLogin}
                 className="p-3 border border-gray-300 rounded-full hover:bg-gray-50 transition duration-150 ease-in-out"
@@ -247,10 +270,10 @@ function LoginFormContent() {
               >
                 <Fingerprint size={24} className="text-blue-600" />
               </button>
-            )}
-          </div>
+            </div>
+          )}
           {biometricSupported && !biometricAvailable && (
-            <p className="text-sm text-gray-500 mt-2">
+            <p className="text-sm text-gray-500 mt-2 text-center">
               Biometric authentication not available on this device
             </p>
           )}

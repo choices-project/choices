@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { createClient } from '@/utils/supabase/client'
 import { getAvailableProviders } from '@/lib/social-auth-config'
 import { OAuthProvider } from '@/types/auth'
 import { 
@@ -35,7 +34,6 @@ const iconMap = {
 
 export default function SocialLoginButtons({ 
   onProviderClick, 
-  redirectTo = '/dashboard',
   isLoading = false,
   className = ''
 }: SocialLoginButtonsProps) {
