@@ -50,6 +50,12 @@ function LoginFormContent() {
     setError(null)
     setMessage(null)
 
+    if (!supabase) {
+      setError('Authentication service not available. Please try again later.')
+      setLoading(false)
+      return
+    }
+
     try {
       // Use Supabase's built-in authentication
       const { data, error: signInError } = await supabase.auth.signInWithPassword({
