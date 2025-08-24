@@ -4,7 +4,7 @@ import { useState, Suspense, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/utils/supabase/client'
-import { Eye, EyeOff, Mail, Lock, Github, Chrome, Fingerprint, Shield, Settings } from 'lucide-react'
+import { Eye, EyeOff, Mail, Lock, Github, Chrome, Fingerprint } from 'lucide-react'
 import { isWebAuthnSupported, isBiometricAvailable, authenticateBiometric } from '@/lib/webauthn'
 
 function LoginFormContent() {
@@ -20,7 +20,8 @@ function LoginFormContent() {
   
   const router = useRouter()
   const searchParams = useSearchParams()
-  const redirectTo = searchParams.get('redirectTo') || '/dashboard'
+  // Use a smarter default redirect - let the auth callback decide
+  const redirectTo = searchParams.get('redirectTo') || '/'
   const supabase = createClient()
 
   // Check biometric support on component mount
@@ -50,39 +51,32 @@ function LoginFormContent() {
     setError(null)
     setMessage(null)
 
-    if (!supabase) {
-      setError('Authentication service not available. Please try again later.')
-      setLoading(false)
-      return
-    }
-
     try {
-      // Use Supabase's built-in authentication
-      const { data, error: signInError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email,
+          password,
+        }),
       })
 
-      if (signInError) {
-        setError(signInError.message)
-      } else if (data.user) {
-        setMessage('Logged in successfully! Redirecting...')
-        
-        // Check if user is admin and redirect accordingly
-        const { data: profile } = await supabase
-          .from('user_profiles')
-          .select('trust_tier')
-          .eq('user_id', data.user.id)
-          .single()
+      const data = await response.json()
 
-        // Redirect based on user role
-        if (profile?.trust_tier === 'T3') {
-          // Admin user - redirect to admin dashboard
-          router.push('/admin')
-        } else {
-          // Regular user - redirect to dashboard
-          router.push(redirectTo)
+      if (!response.ok) {
+        setError(data.message || 'Login failed. Please try again.')
+      } else {
+        setMessage('Logged in successfully! Redirecting...')
+        // Store tokens in cookies for middleware access
+        if (data.token) {
+          // Set auth token as HTTP-only cookie
+          document.cookie = `auth-token=${data.token}; path=/; max-age=3600; secure; samesite=strict`
+          // Store refresh token in localStorage for token refresh
+          localStorage.setItem('refresh-token', data.refreshToken)
         }
+        router.push(redirectTo)
       }
     } catch (error) {
       console.error('Login error:', error)
@@ -106,24 +100,52 @@ function LoginFormContent() {
     const { error: signInError } = await supabase.auth.signInWithOAuth({
       provider,
       options: {
-        redirectTo: `${window.location.origin}/auth/callback?redirectTo=${encodeURIComponent(redirectTo)}`
-      }
+        redirectTo: `${window.location.origin}/auth/callback?redirectTo=${redirectTo}`,
+      },
     })
 
     if (signInError) {
       setError(signInError.message)
-      setLoading(false)
     }
+    setLoading(false)
+  }
+
+  const handleMagicLinkLogin = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+    setError(null)
+    setMessage(null)
+
+    if (!supabase) {
+      setError('Authentication service not available. Please try again later.')
+      setLoading(false)
+      return
+    }
+
+    const { error: magicLinkError } = await supabase.auth.signInWithOtp({
+      email,
+      options: {
+        emailRedirectTo: `${window.location.origin}/auth/callback?redirectTo=${redirectTo}`,
+      },
+    })
+
+    if (magicLinkError) {
+      setError(magicLinkError.message)
+    } else {
+      setMessage('Check your email for the magic link!')
+    }
+    setLoading(false)
   }
 
   const handleBiometricLogin = async () => {
     if (!biometricUsername.trim()) {
-      setError('Please enter your email address')
+      setError('Please enter your email address for biometric login')
       return
     }
 
     setLoading(true)
     setError(null)
+    setMessage(null)
 
     try {
       const result = await authenticateBiometric(biometricUsername.trim())
@@ -145,180 +167,134 @@ function LoginFormContent() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center p-4">
       <div className="bg-white p-8 rounded-lg shadow-xl w-full max-w-md">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center gap-2 mb-4">
-            <Shield className="h-8 w-8 text-blue-600" />
-            <h1 className="text-2xl font-bold text-gray-900">Welcome Back</h1>
-          </div>
-          <p className="text-gray-600">Sign in to your Choices account</p>
-        </div>
+        <h2 className="text-3xl font-bold text-center text-gray-800 mb-6">Sign in to your account</h2>
+        {error && <p className="text-red-500 text-center mb-4">{error}</p>}
+        {message && <p className="text-green-500 text-center mb-4">{message}</p>}
 
-        {/* Error/Success Messages */}
-        {error && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
-            <p className="text-red-600 text-sm">{error}</p>
-          </div>
-        )}
-        
-        {message && (
-          <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-md">
-            <p className="text-green-600 text-sm">{message}</p>
-          </div>
-        )}
-
-        {/* Biometric Login Section */}
-        {biometricSupported && biometricAvailable && (
-          <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-            <div className="flex items-center gap-2 mb-3">
-              <Fingerprint className="h-5 w-5 text-blue-600" />
-              <h3 className="font-semibold text-blue-900">Biometric Login</h3>
-            </div>
-            <div className="space-y-3">
-              <input
-                type="email"
-                placeholder="Enter your email"
-                value={biometricUsername}
-                onChange={(e) => setBiometricUsername(e.target.value)}
-                className="w-full px-3 py-2 border border-blue-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              <button
-                onClick={handleBiometricLogin}
-                disabled={loading}
-                className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-              >
-                <Fingerprint className="h-4 w-4" />
-                {loading ? 'Authenticating...' : 'Login with Biometrics'}
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Divider */}
-        <div className="relative mb-6">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-gray-300" />
-          </div>
-          <div className="relative flex justify-center text-sm">
-            <span className="px-2 bg-white text-gray-500">Or continue with</span>
-          </div>
-        </div>
-
-        {/* Email/Password Login Form */}
         <form onSubmit={handleEmailLogin} className="space-y-4">
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-              Email Address
-            </label>
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">Email</label>
             <div className="relative">
-              <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <input
-                id="email"
                 type="email"
+                id="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Enter your email"
+                className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                placeholder="you@example.com"
               />
+              <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
             </div>
           </div>
-
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-              Password
-            </label>
+            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">Password</label>
             <div className="relative">
-              <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <input
-                id="password"
                 type={showPassword ? 'text' : 'password'}
+                id="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Enter your password"
+                className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                placeholder="••••••••"
               />
+              <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
               >
-                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </div>
           </div>
-
           <button
             type="submit"
+            className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-150 ease-in-out"
             disabled={loading}
-            className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading ? 'Signing in...' : 'Sign In'}
+            {loading ? 'Signing In...' : 'Sign In'}
           </button>
         </form>
 
-        {/* OAuth Buttons */}
-        <div className="mt-6 space-y-3">
+        <div className="mt-6 text-center">
+          <p className="text-gray-600">Or continue with</p>
+          <div className="flex justify-center space-x-4 mt-4">
+            <button
+              onClick={() => handleOAuthLogin('google')}
+              className="p-3 border border-gray-300 rounded-full hover:bg-gray-50 transition duration-150 ease-in-out"
+              aria-label="Sign in with Google"
+              disabled={loading}
+            >
+              <Chrome size={24} className="text-red-500" />
+            </button>
+            <button
+              onClick={() => handleOAuthLogin('github')}
+              className="p-3 border border-gray-300 rounded-full hover:bg-gray-50 transition duration-150 ease-in-out"
+              aria-label="Sign in with GitHub"
+              disabled={loading}
+            >
+              <Github size={24} className="text-gray-800" />
+            </button>
+            {biometricAvailable && (
+              <button
+                onClick={handleBiometricLogin}
+                className="p-3 border border-gray-300 rounded-full hover:bg-gray-50 transition duration-150 ease-in-out"
+                aria-label="Sign in with biometric authentication"
+                disabled={loading}
+                title="Use fingerprint, Face ID, or other biometric authentication"
+              >
+                <Fingerprint size={24} className="text-blue-600" />
+              </button>
+            )}
+          </div>
+          {biometricSupported && !biometricAvailable && (
+            <p className="text-sm text-gray-500 mt-2">
+              Biometric authentication not available on this device
+            </p>
+          )}
+        </div>
+
+        {/* Biometric Login Section */}
+        {biometricAvailable && (
+          <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-md">
+            <h3 className="text-sm font-medium text-blue-800 mb-2">Biometric Login</h3>
+            <div className="flex space-x-2">
+              <input
+                type="email"
+                value={biometricUsername}
+                onChange={(e) => setBiometricUsername(e.target.value)}
+                placeholder="Enter your email"
+                className="flex-1 px-3 py-2 border border-blue-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-sm"
+              />
+              <button
+                onClick={handleBiometricLogin}
+                disabled={loading || !biometricUsername.trim()}
+                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+              >
+                <Fingerprint className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+        )}
+
+        <div className="mt-6 text-center">
           <button
-            onClick={() => handleOAuthLogin('google')}
+            onClick={handleMagicLinkLogin}
+            className="text-blue-600 hover:underline text-sm"
             disabled={loading}
-            className="w-full bg-white border border-gray-300 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
-            <Chrome className="h-4 w-4" />
-            Continue with Google
-          </button>
-          
-          <button
-            onClick={() => handleOAuthLogin('github')}
-            disabled={loading}
-            className="w-full bg-gray-900 text-white py-2 px-4 rounded-md hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-          >
-            <Github className="h-4 w-4" />
-            Continue with GitHub
+            Forgot password or want a magic link?
           </button>
         </div>
 
-        {/* Links */}
-        <div className="mt-6 text-center space-y-2">
-          <Link href="/forgot-password" className="text-sm text-blue-600 hover:text-blue-500">
-            Forgot your password?
+        <p className="mt-6 text-center text-sm text-gray-600">
+          Don't have an account?{' '}
+          <Link href="/register" className="text-blue-600 hover:underline">
+            Sign up
           </Link>
-          <div className="text-sm text-gray-600">
-            Don't have an account?{' '}
-            <Link href="/register" className="text-blue-600 hover:text-blue-500">
-              Sign up
-            </Link>
-          </div>
-        </div>
-
-        {/* Admin Quick Links */}
-        <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-          <div className="flex items-center gap-2 mb-3">
-            <Settings className="h-4 w-4 text-gray-600" />
-            <h4 className="text-sm font-medium text-gray-700">Admin Quick Access</h4>
-          </div>
-          <div className="space-y-2">
-            <Link 
-              href="/auth/biometric-setup" 
-              className="block text-sm text-blue-600 hover:text-blue-500"
-            >
-              Set up biometric authentication
-            </Link>
-            <Link 
-              href="/admin" 
-              className="block text-sm text-blue-600 hover:text-blue-500"
-            >
-              Admin dashboard
-            </Link>
-            <Link 
-              href="/pwa-features" 
-              className="block text-sm text-blue-600 hover:text-blue-500"
-            >
-              PWA features & testing
-            </Link>
-          </div>
-        </div>
+        </p>
       </div>
     </div>
   )
@@ -326,14 +302,7 @@ function LoginFormContent() {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-2 text-gray-600">Loading...</p>
-        </div>
-      </div>
-    }>
+    <Suspense fallback={<div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">Loading...</div>}>
       <LoginFormContent />
     </Suspense>
   )
