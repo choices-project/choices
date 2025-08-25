@@ -57,7 +57,7 @@ export const GET = withAuth(async (request: NextRequest, context) => {
 
     // Add admin-only information if user is admin
     if (context.user.trust_tier === 'T3') {
-      response.adminInfo = {
+      (response as any).adminInfo = {
         databaseSize: 'N/A', // Would need special permissions
         connectionPool: poolMetrics,
         lastBackup: 'N/A', // Would need special permissions
@@ -111,7 +111,7 @@ export async function POST(_request: NextRequest) {
 
     switch (action) {
       case 'clear_metrics':
-        queryMonitor.clearMetrics();
+        queryMonitor.reset();
         return NextResponse.json({
           status: 'success',
           message: 'Performance metrics cleared',
@@ -128,11 +128,12 @@ export async function POST(_request: NextRequest) {
         });
 
       case 'get_performance_report':
+        const stats = queryMonitor.getStats();
         const report = {
-          averageQueryTime: queryMonitor.getAverageQueryTime(),
-          errorRate: queryMonitor.getErrorRate(),
+          averageQueryTime: stats.averageQueryTime,
+          errorRate: 0, // Not tracked in current implementation
           slowQueries: queryMonitor.getSlowQueries(),
-          totalQueries: queryMonitor.getSlowQueries(0).length
+          totalQueries: stats.totalQueries
         };
         
         return NextResponse.json({

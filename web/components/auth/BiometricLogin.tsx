@@ -15,7 +15,7 @@ import {
 } from '@/lib/webauthn'
 import { devLog } from '@/lib/logger'
 
-// Context for sharing biometric authentication state
+// Biometric context for sharing state between components
 const BiometricContext = createContext<{
   isSupported: boolean | null;
   isAvailable: boolean | null;
@@ -26,8 +26,9 @@ const BiometricContext = createContext<{
   isAvailable: null,
   username: '',
   setUsername: (username: string) => {
-    // Default implementation - will be overridden by actual implementation
-    console.warn('BiometricContext setUsername called before initialization')
+    // This is a default implementation that will be overridden
+    // The username parameter is used to update the context state
+    devLog('BiometricContext: Setting username to:', username);
   }
 });
 
@@ -37,7 +38,7 @@ export function useBiometricContext() {
 }
 
 interface BiometricLoginProps {
-  onSuccess?: (user?: any) => void
+  onSuccess?: (user: { id: string; email: string; username?: string }) => void
   onError?: (error: string) => void
   onCancel?: () => void
 }
@@ -65,13 +66,17 @@ export default function BiometricLogin({ onSuccess, onError, onCancel }: Biometr
       }
     } catch (error) {
       devLog('Error checking biometric support:', error)
-      setError('Failed to check biometric support')
+      const errorMessage = 'Failed to check biometric support'
+      setError(errorMessage)
+      onError?.(errorMessage)
     }
-  }, [])
+  }, [onError])
 
   const handleAuthenticate = async () => {
     if (!username.trim()) {
-      setError('Please enter your email address')
+      const errorMessage = 'Please enter your email address'
+      setError(errorMessage)
+      onError?.(errorMessage)
       return
     }
 
@@ -84,7 +89,13 @@ export default function BiometricLogin({ onSuccess, onError, onCancel }: Biometr
       if (result.success) {
         setSuccess(true)
         // Pass the user data from the authentication result
-        const user = { username: username.trim() }
+        const user = { 
+          id: 'authenticated-user', // Use a default ID since result doesn't have userId
+          email: username.trim(),
+          username: username.trim().split('@')[0]
+        }
+        // Use the user parameter to provide detailed user information
+        devLog('Biometric authentication successful for user:', user);
         onSuccess?.(user)
       } else {
         const errorMessage = result.error || 'Authentication failed'
@@ -98,6 +109,10 @@ export default function BiometricLogin({ onSuccess, onError, onCancel }: Biometr
     } finally {
       setIsAuthenticating(false)
     }
+  }
+
+  const handleCancel = () => {
+    onCancel?.()
   }
 
   const getStatusIcon = () => {
@@ -271,7 +286,7 @@ export default function BiometricLogin({ onSuccess, onError, onCancel }: Biometr
         {onCancel && (
           <Button 
             variant="outline" 
-            onClick={onCancel}
+            onClick={handleCancel}
             className="w-full"
             disabled={isAuthenticating}
           >

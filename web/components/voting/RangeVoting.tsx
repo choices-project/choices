@@ -14,10 +14,10 @@ interface RangeVotingProps {
   title: string
   description?: string
   options: PollOption[]
-  onVote: (ratings: { [optionId: string]: number }) => Promise<void>
+  onVote: (pollId: string, ratings: Record<string, number>) => Promise<void>
   isVoting: boolean
   hasVoted?: boolean
-  userVote?: { [optionId: string]: number }
+  userVote?: Record<string, number>
   minRating?: number
   maxRating?: number
 }
@@ -104,7 +104,7 @@ export default function RangeVoting({
         })
       }
       
-      await onVote(validRatings)
+      await onVote(pollId, validRatings)
     } catch (err: any) {
       setError(err.message || 'Failed to submit vote')
     } finally {

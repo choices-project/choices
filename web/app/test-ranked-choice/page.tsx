@@ -48,7 +48,7 @@ function TestRankedChoiceContent() {
   const router = useRouter()
   const [isVoting, setIsVoting] = useState(false)
   const [hasVoted, setHasVoted] = useState(false)
-  const [userVote, setUserVote] = useState<{ [optionId: string]: number } | undefined>(undefined)
+  const [userVote, setUserVote] = useState<string[] | undefined>(undefined)
 
   useEffect(() => {
     if (!loading && !user) {
@@ -56,19 +56,19 @@ function TestRankedChoiceContent() {
     }
   }, [user, loading, router])
 
-  const handleVote = async (rankings: { [optionId: string]: number }) => {
+  const handleVote = async (pollId: string, rankings: string[]) => {
     setIsVoting(true)
     
     try {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000))
       
-      devLog('Vote submitted:', rankings)
+      devLog('Vote submitted:', { pollId, rankings })
       setUserVote(rankings)
       setHasVoted(true)
       
       // In a real implementation, this would call the API
-      // const response = await fetch(`/api/polls/${samplePoll.id}/vote`, {
+      // const response = await fetch(`/api/polls/${pollId}/vote`, {
       //   method: 'POST',
       //   headers: { 'Content-Type': 'application/json' },
       //   body: JSON.stringify({ rankings, votingMethod: 'ranked' })

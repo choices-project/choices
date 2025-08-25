@@ -6,34 +6,15 @@
  */
 
 import { createClient } from '@supabase/supabase-js'
+import { logger } from './logger'
 
 // Database configuration with connection pooling
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 
-// Connection pool configuration
-const poolConfig = {
-  pool: {
-    min: 2,
-    max: 10,
-    idleTimeoutMillis: 30000,
-    connectionTimeoutMillis: 2000,
-    acquireTimeoutMillis: 30000,
-    reapIntervalMillis: 1000,
-    createRetryIntervalMillis: 200,
-  },
-  db: {
-    host: new URL(supabaseUrl).hostname,
-    port: 5432,
-    database: 'postgres',
-    ssl: true,
-  }
-}
-
 // Create optimized Supabase client with connection pooling
 export const createOptimizedClient = () => {
   return createClient(supabaseUrl, supabaseKey, {
-    db: poolConfig,
     auth: {
       persistSession: true,
       autoRefreshToken: true,
@@ -67,7 +48,7 @@ class QueryMonitor {
 
     if (duration > this.slowQueryThreshold) {
       existing.slowQueries++
-      console.warn(`Slow query detected (${duration}ms):`, normalizedSql.substring(0, 200))
+      logger.warn('Slow query detected', { duration, sql: normalizedSql.substring(0, 200) })
     }
 
     this.queries.set(normalizedSql, existing)
@@ -267,7 +248,7 @@ export class QueryOptimizer {
     
     // Calculate date range
     const now = new Date()
-    let startDate = new Date()
+    const startDate = new Date()
     
     switch (period) {
       case '7d':
@@ -431,21 +412,27 @@ export function withPerformanceMonitoring<T extends any[], R>(
     const startTime = Date.now()
     
     try {
+      // Log operation start with args context
+      logger.debug(`Performance: Starting ${operationName}`, {
+        argsCount: args.length,
+        argsTypes: args.map(arg => typeof arg)
+      });
+      
       const result = await fn(...args)
       const duration = Date.now() - startTime
       
       // Log performance metrics
-      console.log(`Performance: ${operationName} completed in ${duration}ms`)
+      logger.info(`Performance: ${operationName} completed in ${duration}ms`)
       
       // Record slow operations
       if (duration > 1000) {
-        console.warn(`Slow operation detected: ${operationName} took ${duration}ms`)
+        logger.warn(`Slow operation detected: ${operationName} took ${duration}ms`)
       }
       
       return result
     } catch (error) {
       const duration = Date.now() - startTime
-      console.error(`Performance: ${operationName} failed after ${duration}ms:`, error)
+      logger.error(`Performance: ${operationName} failed after ${duration}ms`, error instanceof Error ? error : undefined)
       throw error
     }
   }
@@ -492,11 +479,11 @@ export class ConnectionPoolManager {
     const utilizationRate = (activeConnections / totalConnections) * 100
 
     if (utilizationRate > 80) {
-      console.warn(`High connection pool utilization: ${utilizationRate.toFixed(1)}%`)
+      logger.warn(`High connection pool utilization: ${utilizationRate.toFixed(1)}%`)
     }
 
     if (this.metrics.waitingConnections > 0) {
-      console.warn(`Connection pool has ${this.metrics.waitingConnections} waiting connections`)
+      logger.warn(`Connection pool has ${this.metrics.waitingConnections} waiting connections`)
     }
   }
 

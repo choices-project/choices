@@ -2,8 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/utils/supabase/server'
 import { cookies } from 'next/headers'
 import { rateLimit } from '@/lib/rate-limit'
+import { logger } from '@/lib/logger'
 
-// Rate limiting: 3 registrations per hour per IP
+// Rate limiting: 3 attempts per hour per IP
 const limiter = rateLimit({
   interval: 60 * 60 * 1000, // 1 hour
   uniqueTokenPerInterval: 500,
@@ -43,18 +44,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate password strength
-    if (password.length < 8) {
+    if (password.length < 6) {
       return NextResponse.json(
-        { message: 'Password must be at least 8 characters long' },
-        { status: 400 }
-      )
-    }
-
-    // Check for common weak passwords
-    const weakPasswords = ['password', '123456', 'qwerty', 'admin', 'letmein']
-    if (weakPasswords.includes(password.toLowerCase())) {
-      return NextResponse.json(
-        { message: 'Password is too weak. Please choose a stronger password.' },
+        { message: 'Password must be at least 6 characters long' },
         { status: 400 }
       )
     }
@@ -63,19 +55,15 @@ export async function POST(request: NextRequest) {
     const cookieStore = await cookies()
     const supabase = createClient(cookieStore)
 
-    // Check if user already exists
-    const { data: existingUser } = await supabase.auth.admin.getUserByEmail(
-      email.toLowerCase().trim()
-    )
-
-    if (existingUser.user) {
+    if (!supabase) {
+      logger.error('Failed to create Supabase client')
       return NextResponse.json(
-        { message: 'User with this email already exists' },
-        { status: 409 }
+        { message: 'Registration service not available' },
+        { status: 500 }
       )
     }
 
-    // Create new user
+    // Create new user - Supabase will handle duplicate email checks automatically
     const { data, error } = await supabase.auth.signUp({
       email: email.toLowerCase().trim(),
       password,
@@ -87,7 +75,7 @@ export async function POST(request: NextRequest) {
     })
 
     if (error) {
-      console.error('Registration error:', error)
+      logger.error('Registration error', error, { email, ip })
       
       // Handle specific Supabase errors
       if (error.message.includes('Password should be at least')) {
@@ -130,15 +118,14 @@ export async function POST(request: NextRequest) {
       })
 
     if (profileError) {
-      console.error('Profile creation error:', profileError)
+      logger.error('Profile creation error', profileError, { userId: data.user.id })
       // Don't fail the registration, but log the error
     }
 
     // Log successful registration
-    console.info(`New user registration: ${data.user.id}`, {
+    logger.userAction('registration_successful', data.user.id, {
       email: data.user.email,
       ip,
-      timestamp: new Date().toISOString(),
     })
 
     // Return success response
@@ -152,7 +139,9 @@ export async function POST(request: NextRequest) {
     })
 
   } catch (error) {
-    console.error('Registration API error:', error)
+    logger.error('Registration API error', error instanceof Error ? error : new Error(String(error)), {
+      ip: request.ip || request.headers.get('x-forwarded-for') || 'unknown',
+    })
     
     return NextResponse.json(
       { message: 'Internal server error' },

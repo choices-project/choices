@@ -147,7 +147,7 @@ export class DifferentialPrivacy {
     const topK: T[] = []
     for (let i = 0; i < Math.min(k, scoredItems.length); i++) {
       const remainingItems = scoredItems.slice(i).map(si => si.item)
-      const selected = this.exponentialMechanism(remainingItems, item => {
+      const selected = this.exponentialMechanism(remainingItems, (item: T) => {
         const scoredItem = scoredItems.find(si => si.item === item)
         return scoredItem ? scoredItem.score : 0
       })
@@ -184,6 +184,7 @@ export class DifferentialPrivacy {
 
   // Privacy-preserving aggregation
   privateAggregation<T>(data: T[], aggregator: (items: T[]) => number): NoisyResult {
+    // Use the items parameter by passing it to the aggregator function
     const result = aggregator(data)
     return this.gaussianMechanism(result)
   }

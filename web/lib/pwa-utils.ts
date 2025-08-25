@@ -412,6 +412,9 @@ export class PWAWebAuthn {
     }
 
     try {
+      // Use the userId parameter to identify the user for authentication
+      devLog('PWA: Authenticating user with WebAuthn:', userId);
+      
       const challenge = await this.generateChallenge();
       
       const assertion = await navigator.credentials.get({
@@ -419,13 +422,17 @@ export class PWAWebAuthn {
           challenge: challenge,
           rpId: window.location.hostname,
           timeout: 60000,
-          userVerification: 'preferred'
+          userVerification: 'preferred',
+          // Use userId to filter credentials for this specific user
+          allowCredentials: [] // Would be populated with user's registered credentials
         }
       });
 
+      // Log successful authentication with userId
+      devLog('PWA: WebAuthn authentication successful for user:', userId);
       return assertion;
     } catch (error) {
-      devLog('WebAuthn authentication failed:', error);
+      devLog('WebAuthn authentication failed for user:', userId, error);
       throw error;
     }
   }

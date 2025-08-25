@@ -11,7 +11,7 @@ const rateLimitMiddleware = createRateLimitMiddleware({
 // Combined middleware: rate limiting + admin auth
 const middleware = combineMiddleware(rateLimitMiddleware)
 
-export const GET = withAuth(async (request: NextRequest, context) => {
+export const GET = withAuth(async (request: NextRequest, _context) => {
   try {
     // Apply rate limiting
     const rateLimitResult = await middleware(request)

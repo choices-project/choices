@@ -14,7 +14,7 @@ interface ApprovalVotingProps {
   title: string
   description?: string
   options: PollOption[]
-  onVote: (approvals: string[]) => Promise<void>
+  onVote: (pollId: string, approvals: string[]) => Promise<void>
   isVoting: boolean
   hasVoted?: boolean
   userVote?: string[]
@@ -84,7 +84,7 @@ export default function ApprovalVoting({
         })
       }
       
-      await onVote(validApprovals)
+      await onVote(pollId, validApprovals)
     } catch (err: any) {
       setError(err.message || 'Failed to submit vote')
     } finally {

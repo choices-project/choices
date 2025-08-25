@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/utils/supabase/server'
 import { cookies } from 'next/headers'
+import { logger } from './logger'
+import { devLog } from './logger'
 
 export interface AuthUser {
   id: string
@@ -15,8 +17,8 @@ export interface AuthContext {
 }
 
 export type AuthMiddleware = (
-  request: NextRequest,
-  context: AuthContext
+  _request: NextRequest,
+  _context: AuthContext
 ) => Promise<NextResponse | null>
 
 export type TrustTier = 'T1' | 'T2' | 'T3'
@@ -37,7 +39,7 @@ export function createAuthMiddleware(options: {
     allowPublic = false
   } = options
 
-  return async (request: NextRequest): Promise<NextResponse | null> => {
+  return async (_request: NextRequest): Promise<NextResponse | null> => {
     try {
       // Create Supabase client
       const cookieStore = await cookies()
@@ -81,7 +83,7 @@ export function createAuthMiddleware(options: {
         .single()
 
       if (profileError) {
-        console.error('Profile lookup error:', profileError)
+        logger.error('Profile lookup error', profileError, { userId: user.id })
         return NextResponse.json(
           { message: 'User profile not found' },
           { status: 404 }
@@ -126,7 +128,7 @@ export function createAuthMiddleware(options: {
       return null
 
     } catch (error) {
-      console.error('Auth middleware error:', error)
+      logger.error('Auth middleware error', error instanceof Error ? error : new Error(String(error)))
       return NextResponse.json(
         { message: 'Authentication failed' },
         { status: 500 }
@@ -184,6 +186,9 @@ export function withAuth(
       supabase
     }
 
+    // Use the request and context parameters to provide detailed information to the handler
+    devLog('Auth middleware: Processing request for user:', context.user.id, 'with trust tier:', context.user.trust_tier, 'method:', request.method, 'path:', request.nextUrl.pathname);
+    
     return handler(request, context)
   }
 }
@@ -217,6 +222,7 @@ export function createRateLimitMiddleware(options: {
         resetTime: now + windowMs
       })
     } else if (current.count >= maxRequests) {
+      devLog('Rate limit exceeded for:', key, 'requests:', current.count, 'limit:', maxRequests);
       return NextResponse.json(
         { message: 'Too many requests. Please try again later.' },
         { status: 429 }
@@ -271,17 +277,6 @@ export function createCorsMiddleware(options: {
 }
 
 /**
- * Security headers middleware
- */
-export function createSecurityHeadersMiddleware() {
-  return async (request: NextRequest): Promise<NextResponse | null> => {
-    // This would be applied to responses, not requests
-    // In Next.js, you'd typically handle this in middleware.ts
-    return null
-  }
-}
-
-/**
  * Combine multiple middleware functions
  */
 export function combineMiddleware(...middlewares: ((request: NextRequest) => Promise<NextResponse | null>)[]) {
@@ -327,7 +322,7 @@ export async function getUserFromRequest(request: NextRequest): Promise<AuthUser
       username: profile?.username
     }
   } catch (error) {
-    console.error('Error getting user from request:', error)
+    logger.error('Error getting user from request', error instanceof Error ? error : new Error(String(error)))
     return null
   }
 }

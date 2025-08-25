@@ -36,18 +36,21 @@ class Logger {
 
   debug(message: string, context?: LogContext): void {
     if (this.shouldLog(LogLevel.DEBUG)) {
+      // eslint-disable-next-line no-console
       console.debug(this.formatMessage('DEBUG', message, context));
     }
   }
 
   info(message: string, context?: LogContext): void {
     if (this.shouldLog(LogLevel.INFO)) {
+      // eslint-disable-next-line no-console
       console.info(this.formatMessage('INFO', message, context));
     }
   }
 
   warn(message: string, context?: LogContext): void {
     if (this.shouldLog(LogLevel.WARN)) {
+      // eslint-disable-next-line no-console
       console.warn(this.formatMessage('WARN', message, context));
     }
   }
@@ -59,6 +62,7 @@ class Logger {
         error: error?.message,
         stack: error?.stack
       };
+      // eslint-disable-next-line no-console
       console.error(this.formatMessage('ERROR', message, errorContext));
     }
   }
@@ -124,6 +128,7 @@ export const logPerformance = (operation: string, duration: number, context?: Lo
 // Development-only logging (replaces console.log)
 export const devLog = (message: string, ...args: any[]) => {
   if (process.env.NODE_ENV === 'development') {
+    // eslint-disable-next-line no-console
     console.log(`[DEV] ${message}`, ...args);
   }
 };
