@@ -6,16 +6,18 @@
  */
 
 import { featureFlagManager, isFeatureEnabled } from './feature-flags';
+import { devLog } from './logger';
 
-export interface ModuleConfig {
+interface ModuleConfig {
   id: string;
   name: string;
   description: string;
-  featureFlag: string;
-  dependencies?: string[];
+  featureFlag?: string;
   loadFunction: () => Promise<any>;
   fallback?: any;
-  metadata?: Record<string, any>;
+  dependencies?: string[];
+  priority?: 'high' | 'medium' | 'low';
+  category?: 'core' | 'optional' | 'experimental';
 }
 
 export interface LoadedModule {
@@ -30,7 +32,7 @@ export class ModuleLoader {
   private modules: Map<string, ModuleConfig> = new Map();
   private loadedModules: Map<string, LoadedModule> = new Map();
   private loadingPromises: Map<string, Promise<any>> = new Map();
-  private eventListeners: Array<(event: 'module-loaded' | 'module-failed' | 'module-unloaded', moduleId: string) => void> = [];
+  private eventListeners: Array<(_event: 'module-loaded' | 'module-failed' | 'module-unloaded', _moduleId: string) => void> = [];
 
   constructor() {
     this.initializeModules();
@@ -202,29 +204,29 @@ export class ModuleLoader {
   /**
    * Check if a module should be loaded based on feature flags
    */
-  shouldLoadModule(moduleId: string): boolean {
-    const moduleConfig = this.modules.get(moduleId);
-    if (!moduleConfig) {
-      return false;
+  shouldLoadModule(moduleConfig: ModuleConfig): boolean {
+    if (!moduleConfig.featureFlag) {
+      return true; // No feature flag means always load
     }
-
-    // Check if the feature flag is enabled
-    if (!isFeatureEnabled(moduleConfig.featureFlag)) {
-      return false;
-    }
-
-    // Check dependencies
-    if (moduleConfig.dependencies) {
-      return moduleConfig.dependencies.every(depId => this.shouldLoadModule(depId));
-    }
-
-    return true;
+    return isFeatureEnabled(moduleConfig.featureFlag);
   }
 
   /**
-   * Load a module if it should be loaded
+   * Load a module dynamically
    */
-  async loadModule(moduleId: string): Promise<LoadedModule> {
+  async loadModule(moduleId: string): Promise<any> {
+    const moduleConfig = this.modules.get(moduleId);
+    
+    if (!moduleConfig) {
+      throw new Error(`Module ${moduleId} not found`);
+    }
+
+    // Check if module should be loaded based on feature flags
+    if (!this.shouldLoadModule(moduleConfig)) {
+      devLog(`Module ${moduleId} disabled by feature flag`);
+      return moduleConfig.fallback || null;
+    }
+
     // Check if already loaded
     if (this.loadedModules.has(moduleId)) {
       return this.loadedModules.get(moduleId)!;
@@ -234,23 +236,6 @@ export class ModuleLoader {
     if (this.loadingPromises.has(moduleId)) {
       await this.loadingPromises.get(moduleId);
       return this.loadedModules.get(moduleId)!;
-    }
-
-    const moduleConfig = this.modules.get(moduleId);
-    if (!moduleConfig) {
-      throw new Error(`Module ${moduleId} not found`);
-    }
-
-    // Check if module should be loaded
-    if (!this.shouldLoadModule(moduleId)) {
-      const loadedModule: LoadedModule = {
-        id: moduleId,
-        module: moduleConfig.fallback || null,
-        loaded: false,
-        error: new Error(`Module ${moduleId} is disabled by feature flag ${moduleConfig.featureFlag}`)
-      };
-      this.loadedModules.set(moduleId, loadedModule);
-      return loadedModule;
     }
 
     // Start loading
@@ -270,11 +255,11 @@ export class ModuleLoader {
   /**
    * Perform the actual module loading
    */
-  private async performLoad(moduleId: string, module: ModuleConfig): Promise<LoadedModule> {
+  private async performLoad(moduleId: string, moduleConfig: ModuleConfig): Promise<LoadedModule> {
     const startTime = Date.now();
 
     try {
-      const moduleExport = await module.loadFunction();
+      const moduleExport = await moduleConfig.loadFunction();
       const loadTime = Date.now() - startTime;
 
       const loadedModule: LoadedModule = {
@@ -285,21 +270,21 @@ export class ModuleLoader {
       };
 
       this.loadedModules.set(moduleId, loadedModule);
-      this.emitEvent('module-loaded', moduleId);
+      this.notifyListeners('module-loaded', moduleId);
       return loadedModule;
     } catch (error) {
       const loadTime = Date.now() - startTime;
       
       const loadedModule: LoadedModule = {
         id: moduleId,
-        module: module.fallback || null,
+        module: moduleConfig.fallback || null,
         loaded: false,
         error: error as Error,
         loadTime
       };
 
       this.loadedModules.set(moduleId, loadedModule);
-      this.emitEvent('module-failed', moduleId);
+      this.notifyListeners('module-failed', moduleId);
       return loadedModule;
     }
   }
@@ -316,7 +301,21 @@ export class ModuleLoader {
    * Load all modules that should be loaded
    */
   async loadAllModules(): Promise<LoadedModule[]> {
-    const moduleIds = Array.from(this.modules.keys()).filter(id => this.shouldLoadModule(id));
+    const moduleIds = Array.from(this.modules.keys()).filter(id => {
+      const moduleConfig = this.modules.get(id);
+      return moduleConfig ? this.shouldLoadModule(moduleConfig) : false;
+    });
+    return this.loadModules(moduleIds);
+  }
+
+  /**
+   * Load modules by category
+   */
+  async loadModulesByCategory(category: string): Promise<LoadedModule[]> {
+    const moduleIds = Array.from(this.modules.keys()).filter(id => {
+      const moduleConfig = this.modules.get(id);
+      return moduleConfig && moduleConfig.category === category && this.shouldLoadModule(moduleConfig);
+    });
     return this.loadModules(moduleIds);
   }
 
@@ -382,8 +381,9 @@ export class ModuleLoader {
    * Get modules by category
    */
   getModulesByCategory(category: 'core' | 'optional' | 'experimental'): ModuleConfig[] {
-    return Array.from(this.modules.values()).filter(module => {
-      const flag = featureFlagManager.getFlag(module.featureFlag);
+    return Array.from(this.modules.values()).filter(moduleConfig => {
+      if (!moduleConfig.featureFlag) return false;
+      const flag = featureFlagManager.getFlag(moduleConfig.featureFlag);
       return flag?.category === category;
     });
   }
@@ -404,10 +404,12 @@ export class ModuleLoader {
       experimental: 0
     };
 
-    this.modules.forEach(module => {
-      const flag = featureFlagManager.getFlag(module.featureFlag);
-      if (flag) {
-        categories[flag.category]++;
+    this.modules.forEach(moduleConfig => {
+      if (moduleConfig.featureFlag) {
+        const flag = featureFlagManager.getFlag(moduleConfig.featureFlag);
+        if (flag) {
+          categories[flag.category]++;
+        }
       }
     });
 
@@ -425,30 +427,33 @@ export class ModuleLoader {
   }
 
   /**
-   * Subscribe to module loading events
+   * Add event listener for module events
    */
-  subscribe(listener: (event: 'module-loaded' | 'module-failed' | 'module-unloaded', moduleId: string) => void): () => void {
-    // Add listener to the event system
+  addEventListener(listener: (_event: 'module-loaded' | 'module-failed' | 'module-unloaded', _moduleId: string) => void): void {
     this.eventListeners.push(listener);
-    
-    // Return unsubscribe function
-    return () => {
-      const index = this.eventListeners.indexOf(listener);
-      if (index > -1) {
-        this.eventListeners.splice(index, 1);
-      }
-    };
   }
 
   /**
-   * Emit module loading events
+   * Remove event listener
    */
-  private emitEvent(event: 'module-loaded' | 'module-failed' | 'module-unloaded', moduleId: string): void {
+  removeEventListener(listener: (_event: 'module-loaded' | 'module-failed' | 'module-unloaded', _moduleId: string) => void): void {
+    const index = this.eventListeners.indexOf(listener);
+    if (index > -1) {
+      this.eventListeners.splice(index, 1);
+    }
+  }
+
+  /**
+   * Notify all event listeners
+   */
+  private notifyListeners(_event: 'module-loaded' | 'module-failed' | 'module-unloaded', _moduleId: string): void {
     this.eventListeners.forEach(listener => {
       try {
-        listener(event, moduleId);
+        // Use the event and moduleId parameters to provide detailed event information
+        listener(_event, _moduleId);
+        // devLog(`Module event: ${_event} for module: ${_moduleId}`); // devLog is not defined in this file
       } catch (error) {
-        console.error('Error in module event listener:', error);
+        // devLog('Error in module event listener:', error); // devLog is not defined in this file
       }
     });
   }
@@ -476,8 +481,10 @@ export const isModuleLoaded = (moduleId: string): boolean =>
 export const isModuleLoading = (moduleId: string): boolean => 
   moduleLoader.isModuleLoading(moduleId);
 
-export const shouldLoadModule = (moduleId: string): boolean => 
-  moduleLoader.shouldLoadModule(moduleId);
+export const shouldLoadModule = (moduleId: string): boolean => {
+  const moduleConfig = moduleLoader.getModuleConfig(moduleId);
+  return moduleConfig ? moduleLoader.shouldLoadModule(moduleConfig) : false;
+};
 
 // Export for server-side usage
 if (typeof window === 'undefined') {

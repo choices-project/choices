@@ -14,10 +14,10 @@ interface RankedChoiceVotingProps {
   title: string
   description?: string
   options: PollOption[]
-  onVote: (rankings: { [optionId: string]: number }) => Promise<void>
+  onVote: (pollId: string, rankings: string[]) => Promise<void>
   isVoting: boolean
   hasVoted?: boolean
-  userVote?: { [optionId: string]: number }
+  userVote?: string[]
 }
 
 export default function RankedChoiceVoting({
@@ -37,8 +37,13 @@ export default function RankedChoiceVoting({
 
   // Initialize rankings from user's previous vote or empty
   useEffect(() => {
-    if (userVote) {
-      setRankings(userVote)
+    if (userVote && userVote.length > 0) {
+      // Convert string array to rankings object
+      const rankingsFromVote: { [optionId: string]: number } = {}
+      userVote.forEach((optionId, index) => {
+        rankingsFromVote[optionId] = index + 1
+      })
+      setRankings(rankingsFromVote)
     } else {
       const initialRankings: { [optionId: string]: number } = {}
       options.forEach(option => {
@@ -121,7 +126,7 @@ export default function RankedChoiceVoting({
         })
       }
       
-      await onVote(validRankings)
+      await onVote(pollId, Object.keys(validRankings))
     } catch (err: any) {
       setError(err.message || 'Failed to submit vote')
     } finally {

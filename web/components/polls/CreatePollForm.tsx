@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { devLog } from '@/lib/logger';
-import { Plus, X, Save, AlertCircle } from 'lucide-react';
+import { Plus, X, Save, AlertCircle, Shield } from 'lucide-react';
 import { PrivacyLevelSelector } from '../privacy/PrivacyLevelSelector';
 import { PrivacyLevel, HybridPrivacyManager } from '@/lib/hybrid-privacy';
 
@@ -145,6 +145,11 @@ export const CreatePollForm: React.FC<CreatePollFormProps> = ({
     });
   };
 
+  const handlePrivacyRecommendation = () => {
+    const recommendedLevel = getRecommendedPrivacyLevel();
+    setFormData(prev => ({ ...prev, privacylevel: recommendedLevel }));
+  };
+
   return (
     <div className="bg-white rounded-lg shadow-lg p-6 max-w-2xl mx-auto">
       <div className="flex items-center justify-between mb-6">
@@ -228,15 +233,30 @@ export const CreatePollForm: React.FC<CreatePollFormProps> = ({
         </div>
 
         {/* Privacy Level */}
-        <PrivacyLevelSelector
-          value={formData.privacylevel}
-          onChange={(level) => setFormData(prev => ({ ...prev, privacylevel: level }))}
-          pollData={{
-            title: formData.title,
-            description: formData.description,
-            category: formData.category
-          }}
-        />
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <label className="block text-sm font-medium text-gray-700">
+              Privacy Level
+            </label>
+            <button
+              type="button"
+              onClick={handlePrivacyRecommendation}
+              className="text-sm text-blue-600 hover:text-blue-700 flex items-center gap-1"
+            >
+              <Shield className="h-4 w-4" />
+              Get Recommendation
+            </button>
+          </div>
+          <PrivacyLevelSelector
+            value={formData.privacylevel}
+            onChange={(level) => setFormData(prev => ({ ...prev, privacylevel: level }))}
+            pollData={{
+              title: formData.title,
+              description: formData.description,
+              category: formData.category
+            }}
+          />
+        </div>
 
         {/* Voting Method */}
         <div>

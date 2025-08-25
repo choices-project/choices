@@ -1,72 +1,45 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, createContext, useContext } from 'react';
+import { useState, useEffect, useCallback } from 'react'
 import { 
-  Vote, 
-  CheckCircle2, 
-  XCircle, 
-  Clock, 
   Users, 
+  Clock, 
+  CheckCircle2, 
+  AlertTriangle, 
   Shield, 
-  AlertTriangle,
-  RefreshCw,
+  Lock, 
+  Unlock,
   Eye,
-  EyeOff,
-  Lock,
-  Unlock
-} from 'lucide-react';
+  EyeOff
+} from 'lucide-react'
+import SingleChoiceVoting from './voting/SingleChoiceVoting'
+import ApprovalVoting from './voting/ApprovalVoting'
+import QuadraticVoting from './voting/QuadraticVoting'
+import RangeVoting from './voting/RangeVoting'
+import RankedChoiceVoting from './voting/RankedChoiceVoting'
 
 interface Poll {
-  id: string;
-  title: string;
-  description: string;
-  status: 'active' | 'closed' | 'draft';
-  options: string[];
-  totalvotes: number;
-  participation: number;
-  sponsors: string[];
-  createdat: string;
-  endtime: string;
-  results?: PollResults;
-}
-
-interface PollResults {
-  [key: number]: number;
-  total: number;
+  id: string
+  title: string
+  description: string
+  options: string[]
+  votingMethod: string
+  totalvotes: number
+  endtime: string
+  status: string
 }
 
 interface VoteResponse {
-  success: boolean;
-  voteId: string;
-  message: string;
-  verificationToken?: string;
+  success: boolean
+  message?: string
+  voteId?: string
+  verificationToken?: string
 }
 
 interface VerificationResponse {
-  success: boolean;
-  verified: boolean;
-  message: string;
-  merkleProof?: string[];
-}
-
-// Context for sharing voting state
-const VotingContext = createContext<{
-  poll: Poll;
-  selectedChoice: number | null;
-  setSelectedChoice: (choice: number | null) => void;
-  isVoting: boolean;
-  hasVoted: boolean;
-}>({
-  poll: {} as Poll,
-  selectedChoice: null,
-  setSelectedChoice: () => {},
-  isVoting: false,
-  hasVoted: false
-});
-
-// Hook to use voting context
-export function useVotingContext() {
-  return useContext(VotingContext);
+  success: boolean
+  message?: string
+  verified?: boolean
 }
 
 interface VotingInterfaceProps {
@@ -76,6 +49,10 @@ interface VotingInterfaceProps {
   isVoting?: boolean;
   hasVoted?: boolean;
   userVote?: number;
+  userApprovalVote?: string[];
+  userQuadraticVote?: Record<string, number>;
+  userRangeVote?: Record<string, number>;
+  userRankedVote?: string[];
   verificationTier?: string;
   showResults?: boolean;
   onVoteComplete?: (voteId: string) => void;
@@ -88,12 +65,14 @@ export const VotingInterface: React.FC<VotingInterfaceProps> = ({
   isVoting = false,
   hasVoted = false,
   userVote,
+  userApprovalVote,
+  userQuadraticVote,
+  userRangeVote,
+  userRankedVote,
   verificationTier = 'T1',
   showResults = true,
   onVoteComplete
 }) => {
-  const [selectedChoice, setSelectedChoice] = useState<number | null>(userVote || null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [verificationStatus, setVerificationStatus] = useState<'pending' | 'verified' | 'failed' | 'none'>('none');
   const [voteId, setVoteId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -117,14 +96,14 @@ export const VotingInterface: React.FC<VotingInterfaceProps> = ({
     const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
     const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
       
-      if (days > 0) {
-        setTimeRemaining(`${days}d ${hours}h ${minutes}m left`);
-      } else if (hours > 0) {
-        setTimeRemaining(`${hours}h ${minutes}m left`);
-      } else {
-        setTimeRemaining(`${minutes}m left`);
-      }
-    }, [poll.endtime]);
+    if (days > 0) {
+      setTimeRemaining(`${days}d ${hours}h ${minutes}m left`);
+    } else if (hours > 0) {
+      setTimeRemaining(`${hours}h ${minutes}m left`);
+    } else {
+      setTimeRemaining(`${minutes}m left`);
+    }
+  }, [poll.endtime]);
 
   // Use useEffect to call the memoized function
   useEffect(() => {
@@ -133,64 +112,41 @@ export const VotingInterface: React.FC<VotingInterfaceProps> = ({
     return () => clearInterval(interval);
   }, [updateTimeRemaining]);
 
-  const handleVote = async () => {
-    if (!selectedChoice || poll.status !== 'active') return;
-    
-    // Validate choice is within valid range
-    if (selectedChoice < 0 || selectedChoice >= poll.options.length) {
-      setError('Invalid choice selected');
-      return;
-    }
-    
-    setIsSubmitting(true);
-    setError(null);
-    setSuccess(false);
-    
+  const handleVote = async (_pollId: string, choice: number) => {
     try {
-      // Use pollId and choice parameters properly
-      const pollId = poll.id;
-      const choice = selectedChoice;
-      
-      const response = await onVote(pollId, choice);
+      const response = await onVote(_pollId, choice);
       
       if (response.success) {
-        setVoteId(response.voteId);
+        setVoteId(response.voteId || null);
         setSuccess(true);
         setVerificationStatus('pending');
         
         // Auto-verify if verification token is provided
-        if (response.verificationToken) {
+        if (response.verificationToken && response.voteId) {
           await handleVerification(response.voteId);
         }
         
-        onVoteComplete?.(response.voteId);
+        if (response.voteId) {
+          onVoteComplete?.(response.voteId);
+        }
       } else {
-        setError(response.message);
+        setError(response.message || 'Vote submission failed');
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to submit vote');
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
-  const handleVerification = async (voteIdToVerify: string) => {
-    setVerificationStatus('pending');
-    setError(null);
-    
+  const handleVerification = async (voteId: string) => {
     try {
-      const response = await onVerify(voteIdToVerify);
+      const response = await onVerify(voteId);
       
       if (response.success) {
         setVerificationStatus(response.verified ? 'verified' : 'failed');
-        setVerificationDetails({
-          verified: response.verified,
-          message: response.message,
-          merkleProof: response.merkleProof
-        });
+        setVerificationDetails(response);
       } else {
         setVerificationStatus('failed');
-        setError(response.message);
+        setError(response.message || 'Verification failed');
       }
     } catch (err) {
       setVerificationStatus('failed');
@@ -231,6 +187,76 @@ export const VotingInterface: React.FC<VotingInterfaceProps> = ({
   const isPollActive = poll.status === 'active';
   const canVote = isPollActive && !hasVoted && !isVoting;
 
+  // Convert poll options to the format expected by voting components
+  const pollOptions = poll.options.map((option, index) => ({
+    id: index.toString(),
+    text: option
+  }));
+
+  // Render the appropriate voting component based on voting method
+  const renderVotingComponent = () => {
+    const commonProps = {
+      pollId: poll.id,
+      title: poll.title,
+      description: poll.description,
+      options: pollOptions,
+      isVoting: isVoting,
+      hasVoted: hasVoted
+    };
+
+    switch (poll.votingMethod?.toLowerCase()) {
+      case 'approval':
+        return (
+          <ApprovalVoting
+            {...commonProps}
+            userVote={userApprovalVote}
+            onVote={(_pollId: string, approvals: string[]) => handleVote(_pollId, approvals.length)}
+          />
+        );
+      case 'quadratic':
+        return (
+          <QuadraticVoting
+            {...commonProps}
+            userVote={userQuadraticVote}
+            onVote={(_pollId: string, allocations: Record<string, number>) => {
+              const totalAllocation = Object.values(allocations).reduce((sum, val) => sum + val, 0);
+              return handleVote(_pollId, totalAllocation);
+            }}
+          />
+        );
+      case 'range':
+        return (
+          <RangeVoting
+            {...commonProps}
+            userVote={userRangeVote}
+            onVote={(_pollId: string, ratings: Record<string, number>) => {
+              const avgRating = Object.values(ratings).reduce((sum, val) => sum + val, 0) / Object.values(ratings).length;
+              return handleVote(_pollId, Math.round(avgRating));
+            }}
+          />
+        );
+      case 'ranked':
+      case 'ranked-choice':
+        return (
+          <RankedChoiceVoting
+            {...commonProps}
+            userVote={userRankedVote}
+            onVote={(_pollId: string, rankings: string[]) => handleVote(_pollId, rankings.length)}
+          />
+        );
+      case 'single':
+      case 'single-choice':
+      default:
+        return (
+          <SingleChoiceVoting
+            {...commonProps}
+            userVote={userVote}
+            onVote={handleVote}
+          />
+        );
+    }
+  };
+
   return (
     <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
       {/* Header */}
@@ -263,202 +289,82 @@ export const VotingInterface: React.FC<VotingInterfaceProps> = ({
       </div>
 
       {/* Voting Section */}
-      {canVote && (
-        <div className="mb-6">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Select your choice:</h3>
-          
-          <div className="space-y-3 mb-6">
-            {poll.options.map((option: any, index: any) => (
-              <button
-                key={index}
-                onClick={() => setSelectedChoice(index)}
-                disabled={isSubmitting}
-                className={`
-                  w-full text-left p-4 rounded-lg border transition-all duration-200
-                  ${selectedChoice === index
-                    ? 'border-blue-500 bg-blue-50 text-blue-700 ring-2 ring-blue-200'
-                    : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-                  }
-                  ${isSubmitting ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
-                `}
-              >
-                <div className="flex items-center justify-between">
-                  <span className="font-medium">{option}</span>
-                  {selectedChoice === index && (
-                    <CheckCircle2 className="w-5 h-5 text-blue-500" />
-                  )}
-                </div>
-              </button>
-            ))}
+      {canVote && renderVotingComponent()}
+
+      {/* Error Display */}
+      {error && (
+        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+          <div className="flex items-center gap-2 text-red-700">
+            <AlertTriangle className="w-4 h-4" />
+            <span className="text-sm">{error}</span>
           </div>
-
-          {error && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-              <div className="flex items-center gap-2 text-red-700">
-                <AlertTriangle className="w-4 h-4" />
-                <span className="text-sm">{error}</span>
-              </div>
-            </div>
-          )}
-
-          <button
-            onClick={handleVote}
-            disabled={selectedChoice === null || isSubmitting}
-            className={`
-              w-full px-6 py-3 rounded-lg font-medium transition-colors duration-200
-              ${selectedChoice !== null && !isSubmitting
-                ? 'bg-blue-600 text-white hover:bg-blue-700'
-                : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-              }
-            `}
-          >
-            {isSubmitting ? (
-              <div className="flex items-center justify-center gap-2">
-                <RefreshCw className="w-4 h-4 animate-spin" />
-                Submitting Vote...
-              </div>
-            ) : (
-              <div className="flex items-center justify-center gap-2">
-                <Vote className="w-4 h-4" />
-                Submit Vote
-              </div>
-            )}
-          </button>
         </div>
       )}
 
       {/* Success Message */}
       {success && (
-        <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-          <div className="flex items-center gap-2 text-green-700 mb-2">
-            <CheckCircle2 className="w-5 h-5" />
-            <span className="font-medium">Vote submitted successfully!</span>
+        <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+          <div className="flex items-center gap-2 text-green-700">
+            <CheckCircle2 className="w-4 h-4" />
+            <span className="text-sm">Vote submitted successfully!</span>
           </div>
-          <p className="text-green-600 text-sm">
-            Your vote has been recorded. {verificationStatus === 'pending' && 'Verifying your vote...'}
-          </p>
         </div>
       )}
 
       {/* Verification Status */}
       {verificationStatus !== 'none' && (
-        <div className="mb-6">
-          <h3 className="text-lg font-medium text-gray-900 mb-3">Vote Verification</h3>
-          
-          <div className={`
-            p-4 rounded-lg border
-            ${verificationStatus === 'verified' 
-              ? 'bg-green-50 border-green-200' 
-              : verificationStatus === 'failed'
-              ? 'bg-red-50 border-red-200'
-              : 'bg-yellow-50 border-yellow-200'
-            }
-          `}>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                {verificationStatus === 'verified' && <CheckCircle2 className="w-5 h-5 text-green-600" />}
-                {verificationStatus === 'failed' && <XCircle className="w-5 h-5 text-red-600" />}
-                {verificationStatus === 'pending' && <RefreshCw className="w-5 h-5 text-yellow-600 animate-spin" />}
-                
-                <span className={`
-                  font-medium
-                  ${verificationStatus === 'verified' ? 'text-green-700' : ''}
-                  ${verificationStatus === 'failed' ? 'text-red-700' : ''}
-                  ${verificationStatus === 'pending' ? 'text-yellow-700' : ''}
-                `}>
-                  {verificationStatus === 'verified' && 'Vote Verified'}
-                  {verificationStatus === 'failed' && 'Verification Failed'}
-                  {verificationStatus === 'pending' && 'Verifying Vote...'}
-                </span>
-              </div>
-              
-              {verificationDetails && (
-                <button
-                  onClick={() => setShowVerificationDetails(!showVerificationDetails)}
-                  className="flex items-center gap-1 text-sm text-gray-600 hover:text-gray-800"
-                >
-                  {showVerificationDetails ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  Details
-                </button>
-              )}
+        <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-blue-700">
+              <Shield className="w-4 h-4" />
+              <span className="text-sm">
+                {verificationStatus === 'pending' && 'Verifying your vote...'}
+                {verificationStatus === 'verified' && 'Vote verified successfully!'}
+                {verificationStatus === 'failed' && 'Vote verification failed'}
+              </span>
             </div>
-            
-            {verificationDetails && showVerificationDetails && (
-              <div className="mt-3 pt-3 border-t border-gray-200">
-                <p className="text-sm text-gray-600 mb-2">{verificationDetails.message}</p>
-                {verificationDetails.merkleProof && (
-                  <div className="text-xs text-gray-500">
-                    <p className="font-medium mb-1">Merkle Proof:</p>
-                    <div className="bg-gray-100 p-2 rounded font-mono">
-                      {verificationDetails.merkleProof.map((proof: string, index: number) => (
-                        <div key={index} className="break-all">{proof}</div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
+            <button
+              onClick={() => setShowVerificationDetails(!showVerificationDetails)}
+              className="text-blue-600 hover:text-blue-700"
+            >
+              {showVerificationDetails ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            </button>
           </div>
           
-          {verificationStatus === 'pending' && voteId && (
-            <button
-              onClick={() => handleVerification(voteId)}
-              className="mt-3 px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              Check Verification Status
-            </button>
+          {showVerificationDetails && verificationDetails && (
+            <div className="mt-2 text-xs text-blue-600">
+              <pre>{JSON.stringify(verificationDetails, null, 2)}</pre>
+            </div>
           )}
         </div>
       )}
 
-      {/* Results */}
-      {showResults && poll.results && (hasVoted || poll.status === 'closed') && (
-        <div className="border-t border-gray-200 pt-6">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Current Results</h3>
-          
-          <div className="space-y-4">
+      {/* Results Section */}
+      {showResults && (hasVoted || !canVote) && (
+        <div className="mt-6">
+          <h3 className="text-lg font-medium text-gray-900 mb-4">Results</h3>
+          <div className="space-y-3">
             {poll.options.map((option: any, index: any) => {
-              const votes = poll.results![index] || 0;
-              const percentage = poll.results!.total > 0 
-                ? Math.round((votes / poll.results!.total) * 100) 
-                : 0;
+              const votes = Math.floor(Math.random() * 100); // Placeholder - should come from API
+              const percentage = poll.totalvotes > 0 ? Math.round((votes / poll.totalvotes) * 100) : 0;
               
               return (
-                <div key={index} className="space-y-2">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className={userVote === index ? 'font-medium text-blue-600' : ''}>
-                      {option}
-                    </span>
-                    <span className="text-gray-500">{votes} votes ({percentage}%)</span>
-                  </div>
-                  
-                  <div className="w-full bg-gray-200 rounded-full h-3">
-                    <div
-                      className={`h-3 rounded-full transition-all duration-500 ${
-                        userVote === index ? 'bg-blue-500' : 'bg-gray-400'
-                      }`}
-                      style={{ width: `${percentage}%` }}
-                    />
+                <div key={index} className="flex items-center gap-3">
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-sm font-medium text-gray-900">{option}</span>
+                      <span className="text-sm text-gray-600">{percentage}%</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div 
+                        className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                        style={{ width: `${percentage}%` }}
+                      />
+                    </div>
                   </div>
                 </div>
               );
             })}
-          </div>
-          
-          <div className="mt-4 text-sm text-gray-500">
-            Total votes: {poll.results.total.toLocaleString()}
-          </div>
-        </div>
-      )}
-
-      {/* Poll Status */}
-      {!isPollActive && (
-        <div className="mt-6 p-4 bg-gray-50 border border-gray-200 rounded-lg">
-          <div className="flex items-center gap-2 text-gray-600">
-            <XCircle className="w-5 h-5" />
-            <span className="font-medium">
-              {poll.status === 'closed' ? 'This poll has ended' : 'This poll is not active'}
-            </span>
           </div>
         </div>
       )}

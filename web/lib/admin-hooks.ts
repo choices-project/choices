@@ -272,10 +272,11 @@ export const useApproveTopic = () => {
       });
     },
     onError: (error) => {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to approve the trending topic.'
       addNotification({
         type: 'error',
         title: 'Approval Failed',
-        message: 'Failed to approve the trending topic.',
+        message: errorMessage,
       });
     },
   });
@@ -294,10 +295,11 @@ export const useRejectTopic = () => {
       });
     },
     onError: (error) => {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to reject the trending topic.'
       addNotification({
         type: 'error',
         title: 'Rejection Failed',
-        message: 'Failed to reject the trending topic.',
+        message: errorMessage,
       });
     },
   });
@@ -316,10 +318,11 @@ export const useApprovePoll = () => {
       });
     },
     onError: (error) => {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to approve the generated poll.'
       addNotification({
         type: 'error',
         title: 'Approval Failed',
-        message: 'Failed to approve the generated poll.',
+        message: errorMessage,
       });
     },
   });
@@ -338,10 +341,11 @@ export const useRejectPoll = () => {
       });
     },
     onError: (error) => {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to reject the generated poll.'
       addNotification({
         type: 'error',
         title: 'Rejection Failed',
-        message: 'Failed to reject the generated poll.',
+        message: errorMessage,
       });
     },
   });
@@ -362,10 +366,11 @@ export const useAnalyzeTrendingTopics = () => {
       });
     },
     onError: (error) => {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to analyze trending topics.'
       addNotification({
         type: 'error',
         title: 'Analysis Failed',
-        message: 'Failed to analyze trending topics.',
+        message: errorMessage,
       });
     },
   });
@@ -407,10 +412,11 @@ export const useCreateBreakingNews = () => {
       });
     },
     onError: (error) => {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to create breaking news story.'
       addNotification({
         type: 'error',
         title: 'Creation Failed',
-        message: 'Failed to create breaking news story.',
+        message: errorMessage,
       });
     },
   });
@@ -431,10 +437,11 @@ export const useGeneratePollContext = () => {
       });
     },
     onError: (error) => {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to generate poll context.'
       addNotification({
         type: 'error',
         title: 'Generation Failed',
-        message: 'Failed to generate poll context.',
+        message: errorMessage,
       });
     },
   });

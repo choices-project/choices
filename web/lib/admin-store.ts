@@ -34,11 +34,16 @@ export interface SystemMetrics {
 
 export interface ActivityItem {
   id: string;
-  type: 'topic_created' | 'poll_generated' | 'poll_approved' | 'system_alert';
+  type: 'topic_created' | 'topic_updated' | 'poll_created' | 'poll_updated' | 'poll_generated' | 'poll_approved' | 'system_alert';
   title: string;
   description: string;
   timestamp: string;
   severity?: 'info' | 'warning' | 'error';
+  metadata?: {
+    topicId?: string;
+    pollId?: string;
+    updates?: Partial<TrendingTopic> | Partial<GeneratedPoll>;
+  };
 }
 
 export interface Notification {
@@ -167,18 +172,29 @@ export const useAdminStore = create<AdminStore>()(
             id: crypto.randomUUID(),
             type: 'topic_created' as const,
             title: 'New Trending Topic',
-            description: `"${topic.title}" was detected as trending`,
+            description: `Topic "${topic.title}" was created`,
             timestamp: new Date().toISOString(),
-            severity: 'info' as const,
+            metadata: { topicId: topic.id }
           },
-          ...state.activityFeed,
-        ].slice(0, 50), // Keep only last 50 activities
+          ...state.activityFeed
+        ].slice(0, 50) // Keep only last 50 activities
       })),
       
       updateTopic: (id: string, updates: Partial<TrendingTopic>) => set((state) => ({
         trendingTopics: state.trendingTopics.map(topic =>
           topic.id === id ? { ...topic, ...updates } : topic
         ),
+        activityFeed: [
+          {
+            id: crypto.randomUUID(),
+            type: 'topic_updated' as const,
+            title: 'Trending Topic Updated',
+            description: `Topic "${updates.title || 'Unknown'}" was updated`,
+            timestamp: new Date().toISOString(),
+            metadata: { topicId: id, updates }
+          },
+          ...state.activityFeed
+        ].slice(0, 50)
       })),
       
       addPoll: (poll: GeneratedPoll) => set((state) => ({
@@ -186,25 +202,36 @@ export const useAdminStore = create<AdminStore>()(
         activityFeed: [
           {
             id: crypto.randomUUID(),
-            type: 'poll_generated' as const,
-            title: 'New Poll Generated',
-            description: `"${poll.title}" was generated from trending topic`,
+            type: 'poll_created' as const,
+            title: 'New Generated Poll',
+            description: `Poll "${poll.title}" was created`,
             timestamp: new Date().toISOString(),
-            severity: 'info' as const,
+            metadata: { pollId: poll.id }
           },
-          ...state.activityFeed,
-        ].slice(0, 50),
+          ...state.activityFeed
+        ].slice(0, 50)
       })),
       
       updatePoll: (id: string, updates: Partial<GeneratedPoll>) => set((state) => ({
         generatedPolls: state.generatedPolls.map(poll =>
           poll.id === id ? { ...poll, ...updates } : poll
         ),
+        activityFeed: [
+          {
+            id: crypto.randomUUID(),
+            type: 'poll_updated' as const,
+            title: 'Generated Poll Updated',
+            description: `Poll "${updates.title || 'Unknown'}" was updated`,
+            timestamp: new Date().toISOString(),
+            metadata: { pollId: id, updates }
+          },
+          ...state.activityFeed
+        ].slice(0, 50)
       })),
       
       addActivity: (activity: ActivityItem) => set((state) => ({
-        activityFeed: [activity, ...state.activityFeed].slice(0, 50),
-      })),
+        activityFeed: [activity, ...state.activityFeed].slice(0, 50)
+      }))
     }),
     {
       name: 'admin-store',

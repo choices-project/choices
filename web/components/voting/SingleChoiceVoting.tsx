@@ -14,10 +14,10 @@ interface SingleChoiceVotingProps {
   title: string
   description?: string
   options: PollOption[]
-  onVote: (choice: string) => Promise<void>
+  onVote: (pollId: string, choice: number) => Promise<void>
   isVoting: boolean
   hasVoted?: boolean
-  userVote?: string
+  userVote?: number
 }
 
 export default function SingleChoiceVoting({
@@ -30,29 +30,29 @@ export default function SingleChoiceVoting({
   hasVoted = false,
   userVote
 }: SingleChoiceVotingProps) {
-  const [selectedOption, setSelectedOption] = useState<string>('')
+  const [selectedOption, setSelectedOption] = useState<number | null>(userVote || null)
   const [error, setError] = useState<string | null>(null)
   const [showExplanation, setShowExplanation] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   // Initialize from user's previous vote
   useEffect(() => {
-    if (userVote) {
+    if (userVote !== undefined) {
       setSelectedOption(userVote)
     }
   }, [userVote])
 
-  const handleOptionSelect = (optionId: string) => {
+  const handleOptionSelect = (optionIndex: number) => {
     if (hasVoted || isVoting) return
     
     setError(null)
-    setSelectedOption(optionId)
+    setSelectedOption(optionIndex)
   }
 
   const handleSubmit = async () => {
     if (hasVoted || isVoting) return
 
-    if (!selectedOption) {
+    if (selectedOption === null) {
       setError('Please select an option to vote')
       return
     }
@@ -70,7 +70,8 @@ export default function SingleChoiceVoting({
         })
       }
       
-      await onVote(selectedOption)
+      // Use the pollId and choice parameters properly
+      await onVote(pollId, selectedOption)
     } catch (err: any) {
       setError(err.message || 'Failed to submit vote')
     } finally {
@@ -137,17 +138,17 @@ export default function SingleChoiceVoting({
       {/* Voting Interface */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
         <div className="space-y-3">
-          {options.map((option: any) => (
+          {options.map((option: any, index: number) => (
             <div
               key={option.id}
-              onClick={() => handleOptionSelect(option.id)}
+              onClick={() => handleOptionSelect(index)}
               className={`
                 relative p-4 border-2 rounded-lg cursor-pointer transition-all duration-200
                 ${isDisabled 
                   ? 'cursor-not-allowed opacity-60' 
                   : 'hover:border-blue-300 hover:bg-blue-50'
                 }
-                ${selectedOption === option.id 
+                ${selectedOption === index 
                   ? 'border-blue-500 bg-blue-50' 
                   : 'border-gray-200'
                 }
@@ -158,13 +159,13 @@ export default function SingleChoiceVoting({
                 <div className="flex-shrink-0 mt-1">
                   <div className={`
                     w-5 h-5 rounded-full border-2 flex items-center justify-center
-                    ${selectedOption === option.id
+                    ${selectedOption === index
                       ? 'border-blue-500 bg-blue-500'
                       : 'border-gray-300 bg-white'
                     }
                     transition-all duration-200
                   `}>
-                    {selectedOption === option.id && (
+                    {selectedOption === index && (
                       <div className="w-2 h-2 bg-white rounded-full" />
                     )}
                   </div>
@@ -179,7 +180,7 @@ export default function SingleChoiceVoting({
                 </div>
 
                 {/* Selection Indicator */}
-                {selectedOption === option.id && (
+                {selectedOption === index && (
                   <div className="flex-shrink-0">
                     <CheckCircle className="w-5 h-5 text-blue-500" />
                   </div>
@@ -213,10 +214,10 @@ export default function SingleChoiceVoting({
           ) : (
             <button
               onClick={handleSubmit}
-              disabled={isDisabled || !selectedOption}
+              disabled={isDisabled || selectedOption === null}
               className={`
                 flex items-center space-x-2 px-8 py-3 rounded-lg font-medium transition-colors
-                ${isDisabled || !selectedOption
+                ${isDisabled || selectedOption === null
                   ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                   : 'bg-blue-600 text-white hover:bg-blue-700'
                 }
@@ -229,11 +230,11 @@ export default function SingleChoiceVoting({
         </div>
 
         {/* Selection Summary */}
-        {selectedOption && !hasVoted && (
+        {selectedOption !== null && !hasVoted && (
           <div className="mt-4 text-center">
             <div className="text-sm text-gray-600">
               Selected: <span className="font-medium text-blue-600">
-                {options.find(opt => opt.id === selectedOption)?.text}
+                {options.find((opt, idx) => idx === selectedOption)?.text}
               </span>
             </div>
           </div>

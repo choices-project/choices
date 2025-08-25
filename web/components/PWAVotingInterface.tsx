@@ -33,7 +33,7 @@ interface Poll {
 
 interface PWAVotingInterfaceProps {
   poll: Poll
-  onVote: (choice: number) => Promise<void> | void
+  onVote: (pollId: string, choice: number) => Promise<void> | void
   showResults?: boolean
   offlineMode?: boolean
 }
@@ -95,9 +95,8 @@ export function PWAVotingInterface({
         devLog('PWA: Vote stored offline')
       }
 
-      // Call the parent vote handler with validated choice
-      // The choice parameter is used here to pass the validated vote choice
-      await onVote(choice)
+      // Call the parent vote handler with pollId and validated choice
+      await onVote(poll.id, choice)
       setHasVoted(true)
       
       // Track analytics

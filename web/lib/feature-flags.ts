@@ -313,20 +313,21 @@ export class FeatureFlagManager {
    * Notify all listeners of flag changes
    */
   private notifyListeners(): void {
+    const currentFlags = new Map(this.flags);
     this.listeners.forEach(listener => {
       try {
-        listener(new Map(this.flags));
-              } catch (error) {
-          if (process.env.NODE_ENV === 'development') {
-            // Use devLog for consistent logging
-            if (typeof window !== 'undefined' && window.gtag) {
-              window.gtag('event', 'feature_flag_error', {
-                error_message: error instanceof Error ? error.message : 'Unknown error',
-                timestamp: new Date().toISOString()
-              });
-            }
+        listener(currentFlags);
+      } catch (error) {
+        if (process.env.NODE_ENV === 'development') {
+          // Use devLog for consistent logging
+          if (typeof window !== 'undefined' && window.gtag) {
+            window.gtag('event', 'feature_flag_error', {
+              error_message: error instanceof Error ? error.message : 'Unknown error',
+              timestamp: new Date().toISOString()
+            });
           }
         }
+      }
     });
   }
 

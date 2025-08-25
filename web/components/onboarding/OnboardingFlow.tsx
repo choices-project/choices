@@ -15,7 +15,7 @@ export type OnboardingStep = 'welcome' | 'auth' | 'values' | 'demographics' | 'p
 
 interface OnboardingData {
   // Auth data
-  authMethod?: 'google' | 'github' | 'email'
+  authMethod?: 'google' | 'github' | 'facebook' | 'twitter' | 'linkedin' | 'discord' | 'instagram' | 'tiktok' | 'email'
   user?: any
   
   // Profile data
@@ -67,12 +67,14 @@ const OnboardingContext = createContext<{
       allowAnalytics: false
     }
   },
-  updateData: (updates: Partial<OnboardingData>) => {
-    // Default implementation - will be overridden by actual implementation
+  updateData: (_updates: Partial<OnboardingData>) => {
+    // This is a default implementation that will be overridden
+    // The underscore prefix indicates this parameter is intentionally unused in the default context
     console.warn('OnboardingContext updateData called before initialization')
   },
-  setCurrentStep: (step: OnboardingStep) => {
-    // Default implementation - will be overridden by actual implementation
+  setCurrentStep: (_step: OnboardingStep) => {
+    // This is a default implementation that will be overridden
+    // The underscore prefix indicates this parameter is intentionally unused in the default context
     console.warn('OnboardingContext setCurrentStep called before initialization')
   },
   isLoading: false,

@@ -48,7 +48,7 @@ function TestSingleChoiceContent() {
   const router = useRouter()
   const [isVoting, setIsVoting] = useState(false)
   const [hasVoted, setHasVoted] = useState(false)
-  const [userVote, setUserVote] = useState<string | undefined>(undefined)
+  const [userVote, setUserVote] = useState<number | undefined>(undefined)
 
   useEffect(() => {
     if (!loading && !user) {
@@ -56,19 +56,19 @@ function TestSingleChoiceContent() {
     }
   }, [user, loading, router])
 
-  const handleVote = async (choice: string) => {
+  const handleVote = async (pollId: string, choice: number) => {
     setIsVoting(true)
     
     try {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000))
       
-      devLog('Vote submitted:', choice)
+      devLog('Vote submitted:', { pollId, choice })
       setUserVote(choice)
       setHasVoted(true)
       
       // In a real implementation, this would call the API
-      // const response = await fetch(`/api/polls/${samplePoll.id}/vote`, {
+      // const response = await fetch(`/api/polls/${pollId}/vote`, {
       //   method: 'POST',
       //   headers: { 'Content-Type': 'application/json' },
       //   body: JSON.stringify({ choice, votingMethod: 'single' })

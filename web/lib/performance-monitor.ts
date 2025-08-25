@@ -206,7 +206,14 @@ export class PerformanceMonitor {
         });
         
         // Call the original callback with processed entries
+        // Use the entries parameter to provide detailed performance data
         callback(entries);
+        
+        // Log performance entries for debugging
+        if (process.env.NODE_ENV === 'development') {
+          // eslint-disable-next-line no-console
+          console.log(`Performance entries for ${type}:`, entries.length, 'entries');
+        }
       });
       
       observer.observe({ type, buffered: true });

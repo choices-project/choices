@@ -14,10 +14,10 @@ interface QuadraticVotingProps {
   title: string
   description?: string
   options: PollOption[]
-  onVote: (allocations: { [optionId: string]: number }) => Promise<void>
+  onVote: (pollId: string, allocations: Record<string, number>) => Promise<void>
   isVoting: boolean
   hasVoted?: boolean
-  userVote?: { [optionId: string]: number }
+  userVote?: Record<string, number>
   totalCredits?: number
 }
 
@@ -120,7 +120,7 @@ export default function QuadraticVoting({
         })
       }
       
-      await onVote(validAllocations)
+      await onVote(pollId, validAllocations)
     } catch (err: any) {
       setError(err.message || 'Failed to submit vote')
     } finally {

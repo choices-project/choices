@@ -82,6 +82,34 @@ export class NotFoundError extends ApplicationError {
   }
 }
 
+export class RateLimitError extends ApplicationError {
+  constructor(message: string = 'Rate limit exceeded', code?: string) {
+    super(ErrorType.RATE_LIMIT, message, code);
+    this.name = 'RateLimitError';
+  }
+}
+
+export class NetworkError extends ApplicationError {
+  constructor(message: string = 'Network error occurred', code?: string) {
+    super(ErrorType.NETWORK, message, code);
+    this.name = 'NetworkError';
+  }
+}
+
+export class DatabaseError extends ApplicationError {
+  constructor(message: string = 'Database error occurred', code?: string) {
+    super(ErrorType.DATABASE, message, code);
+    this.name = 'DatabaseError';
+  }
+}
+
+export class InternalError extends ApplicationError {
+  constructor(message: string = 'Internal server error', code?: string) {
+    super(ErrorType.INTERNAL, message, code);
+    this.name = 'InternalError';
+  }
+}
+
 // Error handler class
 export class ErrorHandler {
   private static instance: ErrorHandler;
@@ -93,6 +121,39 @@ export class ErrorHandler {
       ErrorHandler.instance = new ErrorHandler();
     }
     return ErrorHandler.instance;
+  }
+
+  // Create specific error types using the enums
+  createValidationError(message: string, details?: any, code?: string): ValidationError {
+    return new ValidationError(message, details, code);
+  }
+
+  createAuthenticationError(message?: string, code?: string): AuthenticationError {
+    return new AuthenticationError(message, code);
+  }
+
+  createAuthorizationError(message?: string, code?: string): AuthorizationError {
+    return new AuthorizationError(message, code);
+  }
+
+  createNotFoundError(resource: string, code?: string): NotFoundError {
+    return new NotFoundError(resource, code);
+  }
+
+  createRateLimitError(message?: string, code?: string): RateLimitError {
+    return new RateLimitError(message, code);
+  }
+
+  createNetworkError(message?: string, code?: string): NetworkError {
+    return new NetworkError(message, code);
+  }
+
+  createDatabaseError(message?: string, code?: string): DatabaseError {
+    return new DatabaseError(message, code);
+  }
+
+  createInternalError(message?: string, code?: string): InternalError {
+    return new InternalError(message, code);
   }
 
   // Handle and log errors
@@ -112,79 +173,57 @@ export class ErrorHandler {
     } else {
       appError = {
         type: ErrorType.UNKNOWN,
-        message: error.message || 'An unexpected error occurred',
+        message: error.message,
         timestamp: new Date(),
-        details: {
-          originalError: error.name,
-          stack: error.stack
-        }
+        details: context
       };
     }
 
-    // Log the error
-    devLog('Error handled:', appError.message, {
-      type: appError.type,
-      code: appError.code,
-      context
-    });
-
+    // Log error with proper context
+    this.logError(appError, context);
+    
     return appError;
   }
 
-  // Convert to user-friendly message
-  getUserMessage(error: AppError): string {
+  // Private logging method
+  private logError(error: AppError, context?: any): void {
+    const logData = {
+      type: error.type,
+      message: error.message,
+      code: error.code,
+      timestamp: error.timestamp.toISOString(),
+      userId: error.userId,
+      requestId: error.requestId,
+      context
+    };
+
     switch (error.type) {
       case ErrorType.VALIDATION:
-        return 'Please check your input and try again.';
+        devLog('Validation Error:', logData);
+        break;
       case ErrorType.AUTHENTICATION:
-        return 'Please log in to continue.';
+        devLog('Authentication Error:', logData);
+        break;
       case ErrorType.AUTHORIZATION:
-        return 'You don\'t have permission to perform this action.';
+        devLog('Authorization Error:', logData);
+        break;
       case ErrorType.NOT_FOUND:
-        return 'The requested resource was not found.';
+        devLog('Not Found Error:', logData);
+        break;
       case ErrorType.RATE_LIMIT:
-        return 'Too many requests. Please try again later.';
+        devLog('Rate Limit Error:', logData);
+        break;
       case ErrorType.NETWORK:
-        return 'Network error. Please check your connection and try again.';
+        devLog('Network Error:', logData);
+        break;
       case ErrorType.DATABASE:
-        return 'Database error. Please try again later.';
+        devLog('Database Error:', logData);
+        break;
       case ErrorType.INTERNAL:
-        return 'An internal error occurred. Please try again later.';
+        devLog('Internal Error:', logData);
+        break;
       default:
-        return 'An unexpected error occurred. Please try again.';
-    }
-  }
-
-  // Check if error is retryable
-  isRetryable(error: AppError): boolean {
-    return [
-      ErrorType.NETWORK,
-      ErrorType.RATE_LIMIT,
-      ErrorType.DATABASE
-    ].includes(error.type);
-  }
-
-  // Get HTTP status code for error
-  getHttpStatus(error: AppError): number {
-    switch (error.type) {
-      case ErrorType.VALIDATION:
-        return 400;
-      case ErrorType.AUTHENTICATION:
-        return 401;
-      case ErrorType.AUTHORIZATION:
-        return 403;
-      case ErrorType.NOT_FOUND:
-        return 404;
-      case ErrorType.RATE_LIMIT:
-        return 429;
-      case ErrorType.NETWORK:
-        return 503;
-      case ErrorType.DATABASE:
-        return 500;
-      case ErrorType.INTERNAL:
-        return 500;
-      default:
-        return 500;
+        devLog('Unknown Error:', logData);
     }
   }
 }
@@ -197,15 +236,57 @@ export const handleError = (error: Error | ApplicationError, context?: any) => {
 };
 
 export const getUserMessage = (error: AppError) => {
-  return errorHandler.getUserMessage(error);
+  switch (error.type) {
+    case ErrorType.VALIDATION:
+      return 'Please check your input and try again.';
+    case ErrorType.AUTHENTICATION:
+      return 'Please log in to continue.';
+    case ErrorType.AUTHORIZATION:
+      return 'You don\'t have permission to perform this action.';
+    case ErrorType.NOT_FOUND:
+      return 'The requested resource was not found.';
+    case ErrorType.RATE_LIMIT:
+      return 'Too many requests. Please try again later.';
+    case ErrorType.NETWORK:
+      return 'Network error. Please check your connection and try again.';
+    case ErrorType.DATABASE:
+      return 'Database error. Please try again later.';
+    case ErrorType.INTERNAL:
+      return 'An internal error occurred. Please try again later.';
+    default:
+      return 'An unexpected error occurred. Please try again.';
+  }
 };
 
-export const isRetryable = (error: AppError) => {
-  return errorHandler.isRetryable(error);
+export const isRetryable = (error: AppError): boolean => {
+  return [
+    ErrorType.NETWORK,
+    ErrorType.RATE_LIMIT,
+    ErrorType.DATABASE
+  ].includes(error.type);
 };
 
-export const getHttpStatus = (error: AppError) => {
-  return errorHandler.getHttpStatus(error);
+export const getHttpStatus = (error: AppError): number => {
+  switch (error.type) {
+    case ErrorType.VALIDATION:
+      return 400;
+    case ErrorType.AUTHENTICATION:
+      return 401;
+    case ErrorType.AUTHORIZATION:
+      return 403;
+    case ErrorType.NOT_FOUND:
+      return 404;
+    case ErrorType.RATE_LIMIT:
+      return 429;
+    case ErrorType.NETWORK:
+      return 503;
+    case ErrorType.DATABASE:
+      return 500;
+    case ErrorType.INTERNAL:
+      return 500;
+    default:
+      return 500;
+  }
 };
 
 // Async error wrapper
@@ -217,7 +298,11 @@ export const withErrorHandling = <T extends any[], R>(
     try {
       return await fn(...args);
     } catch (error) {
-      const appError = handleError(error as Error, { context, args });
+      const appError = handleError(error as Error, { 
+        context, 
+        argsCount: args.length,
+        argsTypes: args.map(arg => typeof arg)
+      });
       throw appError;
     }
   };

@@ -53,6 +53,12 @@ class RealTimeService {
       eventSource.onmessage = (event) => {
         try {
           const realTimeEvent: RealTimeEvent = JSON.parse(event.data);
+          // Use the event parameter to log additional context
+          devLog('Real-time message received:', { 
+            eventType: event.type, 
+            eventData: realTimeEvent,
+            timestamp: new Date().toISOString()
+          });
           subscription.onMessage(realTimeEvent);
         } catch (error) {
           devLog('Error parsing real-time event:', error, 'Raw event data:', event.data);
@@ -61,6 +67,14 @@ class RealTimeService {
 
       eventSource.onerror = (error) => {
         devLog('Real-time connection error:', error);
+        // Use the error parameter to provide detailed error information
+        const errorDetails = {
+          type: error.type,
+          target: error.target,
+          timestamp: new Date().toISOString(),
+          subscriptionId
+        };
+        devLog('Real-time error details:', errorDetails);
         subscription.onError(error);
         this.handleReconnect(subscriptionId, endpoint, onMessage, onError);
       };

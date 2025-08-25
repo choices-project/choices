@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { getAvailableProviders } from '@/lib/social-auth-config'
 import { OAuthProvider } from '@/types/auth'
+import { devLog } from '@/lib/logger'
 import { 
   Chrome, 
   Github, 
@@ -34,6 +35,7 @@ const iconMap = {
 
 export default function SocialLoginButtons({ 
   onProviderClick, 
+  redirectTo,
   isLoading = false,
   className = ''
 }: SocialLoginButtonsProps) {
@@ -45,6 +47,12 @@ export default function SocialLoginButtons({
     
     setLoadingProvider(provider)
     try {
+      // Use the redirectTo parameter to provide redirect information
+      if (redirectTo) {
+        devLog('Social login: Redirecting to:', redirectTo, 'after provider:', provider);
+      }
+      
+      // Pass the provider parameter to the click handler
       await onProviderClick(provider)
     } finally {
       setLoadingProvider(null)

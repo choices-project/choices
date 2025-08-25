@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/utils/supabase/server'
 import { cookies } from 'next/headers'
 import { rateLimit } from '@/lib/rate-limit'
+import { logger } from '@/lib/logger'
 
 // Rate limiting: 10 attempts per hour per IP
 const limiter = rateLimit({
@@ -17,11 +18,12 @@ export async function POST(request: NextRequest) {
     
     if (!success) {
       return NextResponse.json(
-        { message: 'Too many biometric login attempts. Please try again later.' },
+        { message: 'Too many biometric authentication attempts. Please try again later.' },
         { status: 429 }
       )
     }
 
+    // Validate request
     const body = await request.json()
     const { email } = body
 
@@ -32,11 +34,21 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(email)) {
+      return NextResponse.json(
+        { message: 'Invalid email format' },
+        { status: 400 }
+      )
+    }
+
     // Create Supabase client
     const cookieStore = await cookies()
     const supabase = createClient(cookieStore)
 
     if (!supabase) {
+      logger.error('Failed to create Supabase client')
       return NextResponse.json(
         { message: 'Authentication service not available' },
         { status: 500 }
@@ -47,6 +59,7 @@ export async function POST(request: NextRequest) {
     const { data: { users }, error: userError } = await supabase.auth.admin.listUsers()
     
     if (userError) {
+      logger.error('User lookup failed', userError, { email })
       return NextResponse.json(
         { message: 'User lookup failed' },
         { status: 500 }
@@ -56,40 +69,48 @@ export async function POST(request: NextRequest) {
     const user = users.find(u => u.email?.toLowerCase() === email.toLowerCase())
     
     if (!user) {
+      logger.warn('Biometric authentication attempt for non-existent user', { email, ip })
       return NextResponse.json(
         { message: 'User not found' },
         { status: 404 }
       )
     }
 
-    // Check if user has biometric credentials
+    // Check for existing WebAuthn credentials
     const { data: credentials, error: credentialError } = await supabase
       .from('webauthn_credentials')
       .select('credential_id')
       .eq('user_id', user.id)
 
-    if (credentialError || !credentials || credentials.length === 0) {
+    if (credentialError) {
+      logger.error('Failed to fetch WebAuthn credentials', credentialError, { userId: user.id })
       return NextResponse.json(
-        { message: 'No biometric credentials found for this user' },
+        { message: 'Failed to check biometric credentials' },
+        { status: 500 }
+      )
+    }
+
+    if (!credentials || credentials.length === 0) {
+      return NextResponse.json(
+        { message: 'No biometric credentials found. Please set up biometric authentication first.' },
         { status: 404 }
       )
     }
 
     // Generate challenge for authentication
-    const challenge = crypto.getRandomValues(new Uint8Array(32))
-    const challengeBase64 = Buffer.from(challenge).toString('base64')
-
-    // Store challenge in user's profile
+    const challenge = crypto.randomUUID()
+    
+    // Store challenge in user profile
     const { error: updateError } = await supabase
       .from('user_profiles')
       .update({
-        webauthn_challenge: challengeBase64,
+        webauthn_challenge: challenge,
         updated_at: new Date().toISOString(),
       })
       .eq('user_id', user.id)
 
     if (updateError) {
-      console.error('Failed to store authentication challenge:', updateError)
+      logger.error('Failed to store WebAuthn challenge', updateError, { userId: user.id })
       return NextResponse.json(
         { message: 'Failed to initiate biometric authentication' },
         { status: 500 }
@@ -97,25 +118,17 @@ export async function POST(request: NextRequest) {
     }
 
     // Return authentication options
-    const options = {
-      challenge: challengeBase64,
-      rpId: process.env.NEXT_PUBLIC_VERCEL_URL 
-        ? process.env.NEXT_PUBLIC_VERCEL_URL.replace('https://', '') 
-        : 'localhost',
-      allowCredentials: credentials.map(cred => ({
-        id: cred.credential_id,
-        type: 'public-key',
-      })),
-      userVerification: 'preferred',
-      timeout: 60000,
-    }
-
     return NextResponse.json({
-      options,
+      challenge,
+      rpId: process.env.NEXT_PUBLIC_SUPABASE_URL?.replace('https://', '').replace('http://', '') || 'localhost',
+      userVerification: 'preferred',
+      timeout: 60000, // 60 seconds
     })
 
   } catch (error) {
-    console.error('WebAuthn authentication error:', error)
+    logger.error('WebAuthn authentication initiation error', error instanceof Error ? error : new Error(String(error)), {
+      ip: request.ip || request.headers.get('x-forwarded-for') || 'unknown',
+    })
     
     return NextResponse.json(
       { message: 'Failed to initiate biometric authentication' },
@@ -126,12 +139,24 @@ export async function POST(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
-    const body = await request.json()
-    const { credential, email } = body
-
-    if (!credential || !email) {
+    // Rate limiting
+    const ip = request.ip || request.headers.get('x-forwarded-for') || 'unknown'
+    const { success } = await limiter.check(10, ip)
+    
+    if (!success) {
       return NextResponse.json(
-        { message: 'Credential and email are required' },
+        { message: 'Too many biometric authentication attempts. Please try again later.' },
+        { status: 429 }
+      )
+    }
+
+    // Validate request
+    const body = await request.json()
+    const { email, credential } = body
+
+    if (!email || !credential) {
+      return NextResponse.json(
+        { message: 'Email and credential are required' },
         { status: 400 }
       )
     }
@@ -141,6 +166,7 @@ export async function PUT(request: NextRequest) {
     const supabase = createClient(cookieStore)
 
     if (!supabase) {
+      logger.error('Failed to create Supabase client')
       return NextResponse.json(
         { message: 'Authentication service not available' },
         { status: 500 }
@@ -151,6 +177,7 @@ export async function PUT(request: NextRequest) {
     const { data: { users }, error: userError } = await supabase.auth.admin.listUsers()
     
     if (userError) {
+      logger.error('User lookup failed', userError, { email })
       return NextResponse.json(
         { message: 'User lookup failed' },
         { status: 500 }
@@ -160,6 +187,7 @@ export async function PUT(request: NextRequest) {
     const user = users.find(u => u.email?.toLowerCase() === email.toLowerCase())
     
     if (!user) {
+      logger.warn('Biometric authentication attempt for non-existent user', { email, ip })
       return NextResponse.json(
         { message: 'User not found' },
         { status: 404 }
@@ -174,6 +202,7 @@ export async function PUT(request: NextRequest) {
       .single()
 
     if (profileError || !profile?.webauthn_challenge) {
+      logger.warn('No pending biometric authentication found', { userId: user.id })
       return NextResponse.json(
         { message: 'No pending biometric authentication found' },
         { status: 400 }
@@ -189,6 +218,7 @@ export async function PUT(request: NextRequest) {
       .single()
 
     if (credentialError || !storedCredential) {
+      logger.warn('Invalid biometric credential', { userId: user.id, credentialId: credential.id })
       return NextResponse.json(
         { message: 'Invalid biometric credential' },
         { status: 401 }
@@ -198,6 +228,7 @@ export async function PUT(request: NextRequest) {
     // For now, just verify the credential ID matches
     // In production, you'd want to properly verify the WebAuthn assertion
     if (storedCredential.credential_id !== credential.id) {
+      logger.warn('Biometric verification failed - credential mismatch', { userId: user.id })
       return NextResponse.json(
         { message: 'Biometric verification failed' },
         { status: 401 }
@@ -221,10 +252,10 @@ export async function PUT(request: NextRequest) {
       .single()
 
     // Log successful biometric login
-    console.info(`Successful biometric login for user: ${user.id}`, {
+    logger.userAction('biometric_login_successful', user.id, {
       email: user.email,
       trust_tier: userProfile?.trust_tier,
-      timestamp: new Date().toISOString(),
+      ip,
     })
 
     return NextResponse.json({
@@ -238,7 +269,9 @@ export async function PUT(request: NextRequest) {
     })
 
   } catch (error) {
-    console.error('WebAuthn verification error:', error)
+    logger.error('WebAuthn verification error', error instanceof Error ? error : new Error(String(error)), {
+      ip: request.ip || request.headers.get('x-forwarded-for') || 'unknown',
+    })
     
     return NextResponse.json(
       { message: 'Failed to verify biometric authentication' },

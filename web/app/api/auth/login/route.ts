@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/utils/supabase/server'
 import { cookies } from 'next/headers'
 import { rateLimit } from '@/lib/rate-limit'
+import { logger } from '@/lib/logger'
 
 // Rate limiting: 5 attempts per minute per IP
 const limiter = rateLimit({
@@ -46,6 +47,14 @@ export async function POST(request: NextRequest) {
     const cookieStore = await cookies()
     const supabase = createClient(cookieStore)
 
+    if (!supabase) {
+      logger.error('Failed to create Supabase client')
+      return NextResponse.json(
+        { message: 'Authentication service not available' },
+        { status: 500 }
+      )
+    }
+
     // Attempt authentication
     const { data, error } = await supabase.auth.signInWithPassword({
       email: email.toLowerCase().trim(),
@@ -54,10 +63,10 @@ export async function POST(request: NextRequest) {
 
     if (error) {
       // Log failed login attempt for security monitoring
-      console.warn(`Failed login attempt for email: ${email}`, {
+      logger.warn('Failed login attempt', {
+        email,
         error: error.message,
         ip,
-        timestamp: new Date().toISOString(),
       })
 
       return NextResponse.json(
@@ -81,11 +90,10 @@ export async function POST(request: NextRequest) {
       .single()
 
     // Log successful login
-    console.info(`Successful login for user: ${data.user.id}`, {
+    logger.userAction('login_successful', data.user.id, {
       email: data.user.email,
       trust_tier: profile?.trust_tier,
       ip,
-      timestamp: new Date().toISOString(),
     })
 
     // Return success response with user info
@@ -101,7 +109,9 @@ export async function POST(request: NextRequest) {
     })
 
   } catch (error) {
-    console.error('Login API error:', error)
+    logger.error('Login API error', error instanceof Error ? error : new Error(String(error)), {
+      ip: request.ip || request.headers.get('x-forwarded-for') || 'unknown',
+    })
     
     return NextResponse.json(
       { message: 'Internal server error' },
