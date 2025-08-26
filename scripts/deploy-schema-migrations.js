@@ -49,6 +49,12 @@ const MIGRATIONS = [
     name: 'device-flow-hardening',
     description: 'Device Flow Hardening - Hashed codes and telemetry',
     file: 'scripts/migrations/004-device-flow-hardening.sql'
+  },
+  {
+    id: '005',
+    name: 'dpop-functions',
+    description: 'DPoP Database Functions - Secure token binding and WebAuthn functions',
+    file: 'scripts/migrations/005-dpop-functions.sql'
   }
 ];
 
