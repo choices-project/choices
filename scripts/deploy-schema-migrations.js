@@ -58,6 +58,12 @@ const MIGRATIONS = [
     name: 'dpop-functions',
     description: 'DPoP Database Functions - Secure token binding and WebAuthn functions',
     file: 'scripts/migrations/005-dpop-functions.sql'
+  },
+  {
+    id: '006',
+    name: 'fix-user-profiles-table',
+    description: 'Fix user_profiles table structure - Add missing columns for registration',
+    file: 'scripts/migrations/006-fix-user-profiles-table.sql'
   }
 ];
 
