@@ -684,3 +684,4 @@ COMMENT ON FUNCTION get_rls_statistics() IS 'Get RLS policy statistics';
 -- Migration completed successfully
 -- Standardized RLS policies using auth.uid() consistently across all tables
 
+

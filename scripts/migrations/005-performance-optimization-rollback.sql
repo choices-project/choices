@@ -73,3 +73,4 @@ DROP TABLE IF EXISTS performance_metrics;
 -- All performance optimization tables and functions have been removed
 -- The database is back to the state before Week 6 migration
 
+

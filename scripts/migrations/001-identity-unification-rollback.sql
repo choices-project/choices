@@ -89,3 +89,4 @@ ALTER TABLE user_sessions DROP CONSTRAINT IF EXISTS fk_user_sessions_user;
 -- Note: You may need to manually restore original foreign key constraints
 -- based on your specific original schema configuration
 
+

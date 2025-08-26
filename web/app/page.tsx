@@ -1,6 +1,8 @@
 'use client';
 
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { useAuth } from '@/contexts/AuthContext'
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -11,12 +13,75 @@ import {
   CheckCircle, 
   TrendingUp,
   Clock,
-  Lock
+  Lock,
+  Users,
+  BarChart3,
+  ArrowRight
 } from 'lucide-react'
 
+interface TrendingPoll {
+  id: string
+  title: string
+  description: string
+  options: Array<{
+    id: string
+    text: string
+    votes: number
+    percentage: number
+  }>
+  totalVotes: number
+  timeRemaining: string
+  category: string
+  isActive: boolean
+}
+
 export default function HomePage() {
-  // Mock trending poll data - in production this would come from the database
-  const trendingPoll = {
+  const { user } = useAuth()
+  const [trendingPolls, setTrendingPolls] = useState<TrendingPoll[]>([])
+  const [loading, setLoading] = useState(true)
+  const [stats, setStats] = useState({
+    totalPolls: 0,
+    totalVotes: 0,
+    activeUsers: 0
+  })
+
+  useEffect(() => {
+    loadTrendingPolls()
+    loadStats()
+  }, [])
+
+  const loadTrendingPolls = async () => {
+    try {
+      setLoading(true)
+      const response = await fetch('/api/polls/trending?limit=3')
+      if (response.ok) {
+        const data = await response.json()
+        setTrendingPolls(data.polls || [])
+      } else {
+        // Fallback to mock data if API fails
+        setTrendingPolls([getMockTrendingPoll()])
+      }
+    } catch (error) {
+      console.error('Error loading trending polls:', error)
+      setTrendingPolls([getMockTrendingPoll()])
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const loadStats = async () => {
+    try {
+      const response = await fetch('/api/stats/public')
+      if (response.ok) {
+        const data = await response.json()
+        setStats(data)
+      }
+    } catch (error) {
+      console.error('Error loading stats:', error)
+    }
+  }
+
+  const getMockTrendingPoll = (): TrendingPoll => ({
     id: 'trending-1',
     title: 'What\'s your preferred way to stay informed about current events?',
     description: 'Help us understand how people prefer to consume news and stay updated in today\'s digital age.',
@@ -29,7 +94,20 @@ export default function HomePage() {
     ],
     totalVotes: 2985,
     timeRemaining: '2 days left',
-    category: 'Technology & Media'
+    category: 'Technology & Media',
+    isActive: true
+  })
+
+  // If user is authenticated, redirect to dashboard
+  if (user) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Redirecting to dashboard...</p>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -67,11 +145,36 @@ export default function HomePage() {
                 Modern Auth
               </Badge>
             </div>
+
+            {/* Platform Stats */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12">
+              <div className="bg-white/80 backdrop-blur-sm rounded-lg p-6 border border-white/20">
+                <div className="flex items-center justify-center gap-2 mb-2">
+                  <Vote className="h-6 w-6 text-blue-600" />
+                  <span className="text-2xl font-bold text-gray-900">{stats.totalPolls.toLocaleString()}</span>
+                </div>
+                <p className="text-sm text-gray-600">Active Polls</p>
+              </div>
+              <div className="bg-white/80 backdrop-blur-sm rounded-lg p-6 border border-white/20">
+                <div className="flex items-center justify-center gap-2 mb-2">
+                  <BarChart3 className="h-6 w-6 text-green-600" />
+                  <span className="text-2xl font-bold text-gray-900">{stats.totalVotes.toLocaleString()}</span>
+                </div>
+                <p className="text-sm text-gray-600">Total Votes</p>
+              </div>
+              <div className="bg-white/80 backdrop-blur-sm rounded-lg p-6 border border-white/20">
+                <div className="flex items-center justify-center gap-2 mb-2">
+                  <Users className="h-6 w-6 text-purple-600" />
+                  <span className="text-2xl font-bold text-gray-900">{stats.activeUsers.toLocaleString()}</span>
+                </div>
+                <p className="text-sm text-gray-600">Active Users</p>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Trending Poll Section */}
+      {/* Trending Polls Section */}
       <section className="py-16 bg-white">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
@@ -84,64 +187,101 @@ export default function HomePage() {
             </p>
           </div>
 
-          <div className="max-w-4xl mx-auto">
-            <Card className="border-0 shadow-xl hover:shadow-2xl transition-shadow">
-              <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-3">
-                      <Badge variant="outline" className="text-orange-600 border-orange-200">
-                        <TrendingUp className="h-3 w-3 mr-1" />
-                        Trending
-                      </Badge>
-                      <Badge variant="secondary" className="text-sm">
-                        {trendingPoll.category}
-                      </Badge>
-                    </div>
-                    <CardTitle className="text-2xl mb-2">{trendingPoll.title}</CardTitle>
-                    <CardDescription className="text-base">
-                      {trendingPoll.description}
-                    </CardDescription>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm text-gray-500">
-                    <Clock className="h-4 w-4" />
-                    <span>{trendingPoll.timeRemaining}</span>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {trendingPoll.options.map((option: any) => (
-                    <div key={option.id} className="relative">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="font-medium text-gray-900">{option.text}</span>
-                        <span className="text-sm text-gray-600">{option.percentage}%</span>
+          <div className="max-w-6xl mx-auto">
+            {loading ? (
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {[1, 2, 3].map((i) => (
+                  <Card key={i} className="border-0 shadow-xl">
+                    <CardHeader>
+                      <div className="animate-pulse">
+                        <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                        <div className="h-6 bg-gray-200 rounded w-full mb-2"></div>
+                        <div className="h-4 bg-gray-200 rounded w-1/2"></div>
                       </div>
-                      <div className="w-full bg-gray-200 rounded-full h-3">
-                        <div 
-                          className="bg-gradient-to-r from-blue-500 to-indigo-600 h-3 rounded-full transition-all duration-500"
-                          style={{ width: `${option.percentage}%` }}
-                        ></div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        {[1, 2, 3].map((j) => (
+                          <div key={j} className="animate-pulse">
+                            <div className="h-3 bg-gray-200 rounded w-full"></div>
+                          </div>
+                        ))}
                       </div>
-                      <div className="flex justify-between text-xs text-gray-500 mt-1">
-                        <span>{option.votes.toLocaleString()} votes</span>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {trendingPolls.map((poll) => (
+                  <Card key={poll.id} className="border-0 shadow-xl hover:shadow-2xl transition-shadow">
+                    <CardHeader>
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3 mb-3">
+                            <Badge variant="outline" className="text-orange-600 border-orange-200">
+                              <TrendingUp className="h-3 w-3 mr-1" />
+                              Trending
+                            </Badge>
+                            <Badge variant="secondary" className="text-sm">
+                              {poll.category}
+                            </Badge>
+                          </div>
+                          <CardTitle className="text-lg mb-2 line-clamp-2">{poll.title}</CardTitle>
+                          <CardDescription className="text-sm line-clamp-2">
+                            {poll.description}
+                          </CardDescription>
+                        </div>
+                        <div className="flex items-center gap-2 text-sm text-gray-500">
+                          <Clock className="h-4 w-4" />
+                          <span>{poll.timeRemaining}</span>
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-                
-                <div className="mt-6 pt-6 border-t border-gray-200">
-                  <div className="flex items-center justify-between">
-                    <div className="text-sm text-gray-600">
-                      <span className="font-medium">{trendingPoll.totalVotes.toLocaleString()}</span> total votes
-                    </div>
-                    <Button asChild variant="outline" size="sm">
-                      <Link href={`/polls/${trendingPoll.id}`}>View Full Poll</Link>
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        {poll.options.slice(0, 3).map((option) => (
+                          <div key={option.id} className="relative">
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="font-medium text-gray-900 text-sm line-clamp-1">{option.text}</span>
+                              <span className="text-xs text-gray-600">{option.percentage}%</span>
+                            </div>
+                            <div className="w-full bg-gray-200 rounded-full h-2">
+                              <div 
+                                className="bg-gradient-to-r from-blue-500 to-indigo-600 h-2 rounded-full transition-all duration-500"
+                                style={{ width: `${option.percentage}%` }}
+                              ></div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      
+                      <div className="mt-4 pt-4 border-t border-gray-200">
+                        <div className="flex items-center justify-between">
+                          <div className="text-sm text-gray-600">
+                            <span className="font-medium">{poll.totalVotes.toLocaleString()}</span> votes
+                          </div>
+                          <Button asChild variant="outline" size="sm">
+                            <Link href={`/polls/${poll.id}`} className="flex items-center gap-1">
+                              View Poll
+                              <ArrowRight className="h-3 w-3" />
+                            </Link>
+                          </Button>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+
+            {/* Call to Action */}
+            <div className="text-center mt-12">
+              <p className="text-gray-600 mb-4">Want to see more polls and participate?</p>
+              <Button asChild size="lg" className="text-lg px-8 py-3">
+                <Link href="/register">Join Choices Today</Link>
+              </Button>
+            </div>
           </div>
         </div>
       </section>
@@ -201,26 +341,26 @@ export default function HomePage() {
                 </div>
                 <CardTitle>Modern Authentication</CardTitle>
                 <CardDescription>
-                  Secure login with biometric authentication and traditional methods
+                  Secure login with biometric authentication and social login options
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <ul className="space-y-2 text-sm text-gray-600">
                   <li className="flex items-center gap-2">
                     <CheckCircle className="h-4 w-4 text-green-500" />
-                    Biometric login (fingerprint, face)
+                    Biometric login
                   </li>
                   <li className="flex items-center gap-2">
                     <CheckCircle className="h-4 w-4 text-green-500" />
-                    Email & password
+                    Social login
                   </li>
                   <li className="flex items-center gap-2">
                     <CheckCircle className="h-4 w-4 text-green-500" />
-                    Trust scoring
+                    Device flow auth
                   </li>
                   <li className="flex items-center gap-2">
                     <CheckCircle className="h-4 w-4 text-green-500" />
-                    Device security
+                    Multi-factor security
                   </li>
                 </ul>
               </CardContent>
@@ -234,7 +374,7 @@ export default function HomePage() {
                 </div>
                 <CardTitle>Privacy Protection</CardTitle>
                 <CardDescription>
-                  Your data is protected with encryption and privacy controls
+                  Your data is protected with advanced privacy controls and encryption
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -245,15 +385,15 @@ export default function HomePage() {
                   </li>
                   <li className="flex items-center gap-2">
                     <CheckCircle className="h-4 w-4 text-green-500" />
-                    Data export & deletion
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 text-green-500" />
                     Privacy controls
                   </li>
                   <li className="flex items-center gap-2">
                     <CheckCircle className="h-4 w-4 text-green-500" />
-                    Compliance ready
+                    GDPR compliant
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4 text-green-500" />
+                    Data minimization
                   </li>
                 </ul>
               </CardContent>
@@ -262,60 +402,15 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* How It Works */}
-      <section className="py-20 bg-white">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">
-              How It Works
-            </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Simple steps to secure voting and participation
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="text-center">
-              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-2xl font-bold text-blue-600">1</span>
-              </div>
-              <h3 className="text-xl font-semibold mb-2">Create Account</h3>
-              <p className="text-gray-600">
-                Sign up with email and optionally set up biometric authentication for enhanced security
-              </p>
-            </div>
-            
-            <div className="text-center">
-              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-2xl font-bold text-green-600">2</span>
-              </div>
-              <h3 className="text-xl font-semibold mb-2">Participate</h3>
-              <p className="text-gray-600">
-                Vote on polls or create your own. All votes are secure and verified
-              </p>
-            </div>
-            
-            <div className="text-center">
-              <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-2xl font-bold text-purple-600">3</span>
-              </div>
-              <h3 className="text-xl font-semibold mb-2">Track Results</h3>
-              <p className="text-gray-600">
-                View real-time results and analytics. Your privacy is always protected
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="py-20 bg-gradient-to-r from-blue-600 to-indigo-600">
+      {/* Final CTA Section */}
+      <section className="py-20 bg-gradient-to-r from-blue-600 to-purple-600">
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-4xl font-bold text-white mb-4">
-            Ready to Get Started?
+            Ready to Start Voting?
           </h2>
           <p className="text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
-            Join users who trust Choices Platform for secure, private voting.
+            Join thousands of users who are already making their voices heard. 
+            Create your first poll in minutes.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button asChild size="lg" variant="secondary" className="text-lg px-8 py-3">
@@ -327,50 +422,6 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-
-      {/* Footer */}
-      <footer className="bg-gray-900 text-white py-12">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            <div>
-              <h3 className="text-lg font-semibold mb-4">Choices Platform</h3>
-              <p className="text-gray-400 text-sm">
-                Secure voting with modern authentication and privacy protection.
-              </p>
-            </div>
-            <div>
-              <h4 className="font-semibold mb-4">Platform</h4>
-              <ul className="space-y-2 text-sm text-gray-400">
-                <li><Link href="/register" className="hover:text-white">Sign Up</Link></li>
-                <li><Link href="/login" className="hover:text-white">Sign In</Link></li>
-                <li><Link href="/polls" className="hover:text-white">Browse Polls</Link></li>
-                <li><Link href="/create-poll" className="hover:text-white">Create Poll</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-semibold mb-4">Legal</h4>
-              <ul className="space-y-2 text-sm text-gray-400">
-                <li><Link href="/privacy" className="hover:text-white">Privacy Policy</Link></li>
-                <li><Link href="/terms" className="hover:text-white">Terms of Service</Link></li>
-                <li><Link href="/compliance" className="hover:text-white">Legal Compliance</Link></li>
-                <li><Link href="/biometric" className="hover:text-white">Biometric Policy</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-semibold mb-4">Support</h4>
-              <ul className="space-y-2 text-sm text-gray-400">
-                <li><Link href="/help" className="hover:text-white">Help Center</Link></li>
-                <li><Link href="/contact" className="hover:text-white">Contact Us</Link></li>
-                <li><Link href="/security" className="hover:text-white">Security</Link></li>
-                <li><Link href="/status" className="hover:text-white">System Status</Link></li>
-              </ul>
-            </div>
-          </div>
-          <div className="border-t border-gray-800 mt-8 pt-8 text-center text-sm text-gray-400">
-            <p>&copy; 2024 Choices Platform. All rights reserved. Built with privacy in mind.</p>
-          </div>
-        </div>
-      </footer>
     </div>
   )
 }

@@ -63,3 +63,4 @@ DROP TABLE IF EXISTS device_flows_v2;
 -- All device flow hardening tables and functions have been removed
 -- The original device_flows table remains unchanged
 
+

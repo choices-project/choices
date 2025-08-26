@@ -33,16 +33,21 @@ export default function CompleteStep({ data, onComplete, onBack, isLoading = fal
       {/* Success message */}
       <div className="text-center space-y-4">
         <div className="flex justify-center">
-          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
-            <CheckCircle className="w-8 h-8 text-green-600" />
+          <div className="w-20 h-20 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center animate-bounce shadow-lg">
+            <CheckCircle className="w-10 h-10 text-white" />
           </div>
         </div>
-        <h2 className="text-3xl font-bold text-gray-900">
+        <h2 className="text-3xl font-bold text-gray-900 animate-fade-in">
           Welcome to Choices!
         </h2>
-        <p className="text-gray-600">
+        <p className="text-gray-600 animate-fade-in-delay">
           You&apos;re all set up and ready to make your voice heard.
         </p>
+        
+        {/* Achievement celebration */}
+        <div className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-6 py-3 rounded-full inline-block animate-pulse">
+          🎉 Onboarding Complete! +50 points earned
+        </div>
       </div>
 
       {/* Profile summary */}

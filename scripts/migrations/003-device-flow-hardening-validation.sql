@@ -355,3 +355,4 @@ END $$;
 -- Validation completed successfully
 SELECT 'Device Flow Hardening Migration Validation: PASSED' as status;
 
+

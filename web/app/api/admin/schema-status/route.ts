@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
     const schemaStatus = await checkSchemaStatus()
     return NextResponse.json(schemaStatus)
   } catch (error) {
-    logger.error('Error checking schema status', { error: error instanceof Error ? error.message : 'Unknown error' })
+    logger.error('Error checking schema status', error instanceof Error ? error : new Error('Unknown error'))
     return NextResponse.json(
       { error: 'Failed to check schema status' },
       { status: 500 }
@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid action' }, { status: 400 })
     }
   } catch (error) {
-    logger.error('Error with cache refresh action', { error: error instanceof Error ? error.message : 'Unknown error' })
+    logger.error('Error with cache refresh action', error instanceof Error ? error : new Error('Unknown error'))
     return NextResponse.json(
       { error: 'Failed to perform cache refresh action' },
       { status: 500 }
@@ -141,7 +141,7 @@ async function checkSchemaStatus() {
       recommendations: getRecommendations(schemaStatus, userProfilesError, insertError)
     }
   } catch (error) {
-    logger.error('Error checking schema status', { error: error instanceof Error ? error.message : 'Unknown error' })
+    logger.error('Error checking schema status', error instanceof Error ? error : new Error('Unknown error'))
     return {
       timestamp: new Date().toISOString(),
       responseTime: Date.now() - startTime,
@@ -198,7 +198,7 @@ async function attemptCacheRefresh() {
       statusAfterRefresh
     }
   } catch (error) {
-    logger.error('Error attempting cache refresh', { error: error instanceof Error ? error.message : 'Unknown error' })
+    logger.error('Error attempting cache refresh', error instanceof Error ? error : new Error('Unknown error'))
     return {
       success: false,
       message: 'Cache refresh failed',

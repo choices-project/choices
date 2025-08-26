@@ -446,3 +446,4 @@ END $$;
 -- Validation completed successfully
 SELECT 'RLS Correctness Migration Validation: PASSED' as status;
 
+

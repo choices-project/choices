@@ -80,3 +80,4 @@ DROP TABLE IF EXISTS user_sessions_v2;
 -- All token/session safety tables and functions have been removed
 -- The original user_sessions table remains unchanged
 
+

@@ -64,6 +64,18 @@ const MIGRATIONS = [
     name: 'fix-user-profiles-table',
     description: 'Fix user_profiles table structure - Add missing columns for registration',
     file: 'scripts/migrations/006-fix-user-profiles-table.sql'
+  },
+  {
+    id: '007',
+    name: 'create-site-messages-table',
+    description: 'Create site_messages table for managing site-wide announcements and feedback requests',
+    file: 'scripts/migrations/007-create-site-messages-table.sql'
+  },
+  {
+    id: '008',
+    name: 'enhanced-onboarding',
+    description: 'Enhanced onboarding system with privacy preferences and progress tracking',
+    file: 'scripts/migrations/008-enhanced-onboarding.sql'
   }
 ];
 
