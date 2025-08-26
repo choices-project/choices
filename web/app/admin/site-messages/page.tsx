@@ -6,8 +6,6 @@ import {
   Plus, 
   Edit, 
   Trash2, 
-  Eye, 
-  EyeOff,
   AlertCircle,
   Info,
   CheckCircle,
@@ -62,7 +60,6 @@ export default function SiteMessagesPage() {
       setLoading(true)
       const response = await fetch('/api/admin/site-messages?includeInactive=true', {
         headers: {
-          'Authorization': 'Bearer admin-access',
           'Content-Type': 'application/json'
         }
       })
@@ -96,7 +93,6 @@ export default function SiteMessagesPage() {
       const response = await fetch(url, {
         method,
         headers: {
-          'Authorization': 'Bearer admin-access',
           'Content-Type': 'application/json'
         },
         body: JSON.stringify(body)
@@ -119,10 +115,7 @@ export default function SiteMessagesPage() {
 
     try {
       const response = await fetch(`/api/admin/site-messages?id=${id}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': 'Bearer admin-access'
-        }
+        method: 'DELETE'
       })
 
       if (response.ok) {

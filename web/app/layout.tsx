@@ -6,7 +6,7 @@ import EnhancedFeedbackWidget from '../components/EnhancedFeedbackWidget'
 import SiteMessages from '../components/SiteMessages'
 import GlobalNavigation from '../components/GlobalNavigation'
 import ClientOnly from '../components/ClientOnly'
-// Removed old Supabase-based AuthProvider - using custom auth system instead
+import { AuthProvider } from '../contexts/AuthContext'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -50,36 +50,32 @@ export default function RootLayout({
         <meta name="msapplication-tileImage" content="/favicon.ico" />
       </head>
       <body className={inter.className}>
-        {/* Global Navigation */}
         <ClientOnly>
-          <GlobalNavigation />
+          <AuthProvider>
+            {/* Global Navigation */}
+            <GlobalNavigation />
+            
+            {/* Site Messages - Display below navigation */}
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
+              <SiteMessages />
+            </div>
+            
+            {children}
+            
+            {/* PWA Components - Only render on client side */}
+            <PWAInstallPrompt />
+            <OfflineIndicator />
+            <PWAUpdatePrompt />
+            
+            {/* Enhanced Feedback Widget - Only render on client side */}
+            <EnhancedFeedbackWidget />
+            
+            {/* Hidden elements for PWA functionality */}
+            <div id="install-pwa" style={{ display: 'none' }} />
+            <div id="update-pwa" style={{ display: 'none' }} />
+            <div id="offline-indicator" style={{ display: 'none' }} />
+          </AuthProvider>
         </ClientOnly>
-        
-        {/* Site Messages - Display below navigation */}
-        <ClientOnly>
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
-            <SiteMessages />
-          </div>
-        </ClientOnly>
-        
-        {children}
-        
-        {/* PWA Components - Only render on client side */}
-        <ClientOnly>
-          <PWAInstallPrompt />
-          <OfflineIndicator />
-          <PWAUpdatePrompt />
-        </ClientOnly>
-        
-        {/* Enhanced Feedback Widget - Only render on client side */}
-        <ClientOnly>
-          <EnhancedFeedbackWidget />
-        </ClientOnly>
-        
-        {/* Hidden elements for PWA functionality */}
-        <div id="install-pwa" style={{ display: 'none' }} />
-        <div id="update-pwa" style={{ display: 'none' }} />
-        <div id="offline-indicator" style={{ display: 'none' }} />
       </body>
     </html>
   )

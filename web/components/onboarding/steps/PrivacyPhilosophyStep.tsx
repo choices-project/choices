@@ -1,11 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import React, { useState } from 'react'
 import { Shield, Eye, EyeOff, Lock, Users, BarChart3, CheckCircle, ArrowRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Slider } from '@/components/ui/slider'
 
 interface PrivacyPhilosophyStepProps {
   data: any
@@ -240,7 +239,7 @@ export default function PrivacyPhilosophyStep({ data, onUpdate, onNext, onBack }
                   
                   {/* Tooltip */}
                   <div className="absolute opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none bg-gray-900 text-white text-xs rounded py-1 px-2 -mt-8 transform -translate-x-1/2 left-1/2 z-50">
-                    {config.tooltip || config.description}
+                    {config.description}
                     <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900" />
                   </div>
                 </button>

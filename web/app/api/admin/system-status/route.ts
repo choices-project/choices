@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(systemStatus)
   } catch (error) {
-    logger.error('Error fetching system status', { error: error instanceof Error ? error.message : String(error) })
+    logger.error('Error fetching system status', error instanceof Error ? error : new Error(String(error)))
     return NextResponse.json(
       { error: 'Failed to fetch system status' },
       { status: 500 }
@@ -108,7 +108,7 @@ async function createSystemFeedback(systemStatus: any) {
       })
     }
   } catch (error) {
-    logger.error('Error creating system feedback', { error: error instanceof Error ? error.message : 'Unknown error' })
+    logger.error('Error creating system feedback', error instanceof Error ? error : new Error('Unknown error'))
   }
 }
 
@@ -139,7 +139,7 @@ async function getSystemStatus() {
       health: healthMetrics
     }
   } catch (error) {
-    logger.error('Error getting system status', { error: error instanceof Error ? error.message : String(error) })
+    logger.error('Error getting system status', error instanceof Error ? error : new Error(String(error)))
     throw error
   }
 }
@@ -187,7 +187,7 @@ async function getDatabaseStatus() {
       schemaError: userProfilesError?.message || null
     }
   } catch (error) {
-    logger.error('Error getting database status', { error: error instanceof Error ? error.message : 'Unknown error' })
+    logger.error('Error getting database status', error instanceof Error ? error : new Error('Unknown error'))
     return {
       schemaStatus: 'error',
       connectionStatus: 'error',
@@ -228,7 +228,7 @@ async function getUserStats() {
       lastRegistration: recentUsers?.[0]?.created_at || null
     }
   } catch (error) {
-    logger.error('Error getting user stats', { error: error instanceof Error ? error.message : 'Unknown error' })
+    logger.error('Error getting user stats', error instanceof Error ? error : new Error('Unknown error'))
     return {
       totalUsers: 0,
       recentUsers: [],
@@ -270,7 +270,7 @@ async function getPollStats() {
       recentPolls: recentPolls || []
     }
   } catch (error) {
-    logger.error('Error getting poll stats', { error: error instanceof Error ? error.message : 'Unknown error' })
+    logger.error('Error getting poll stats', error instanceof Error ? error : new Error('Unknown error'))
     return {
       totalPolls: 0,
       activePolls: 0,
@@ -322,7 +322,7 @@ async function getHealthMetrics() {
       lastCheck: new Date().toISOString()
     }
   } catch (error) {
-    logger.error('Error getting health metrics', { error: error instanceof Error ? error.message : 'Unknown error' })
+    logger.error('Error getting health metrics', error instanceof Error ? error : new Error('Unknown error'))
     return {
       systemHealth: 'critical' as const,
       healthScore: 0,
