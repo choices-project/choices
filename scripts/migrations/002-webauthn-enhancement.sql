@@ -74,8 +74,8 @@ BEGIN
     SET clone_detected = TRUE,
         updated_at = NOW()
     WHERE user_id = p_user_id AND credential_id = p_credential_id;
-    
-    RETURN TRUE;
+  
+  RETURN TRUE;
   END IF;
   
   RETURN FALSE;

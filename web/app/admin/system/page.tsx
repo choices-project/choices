@@ -62,6 +62,13 @@ interface SystemConfig {
     rateLimitEnabled: boolean;
     rateLimitRequests: number;
   };
+  database: {
+    schemaStatus: 'refreshed' | 'pending' | 'error';
+    lastMigration: string;
+    tableCount: number;
+    connectionStatus: 'connected' | 'disconnected' | 'error';
+    cacheRefreshTime: string;
+  };
   notifications: {
     emailNotifications: boolean;
     pushNotifications: boolean;
@@ -110,7 +117,12 @@ export default function SystemSettingsPage() {
           name: 'choicesdb',
           user: 'choicesuser',
           maxConnections: 100,
-          backupFrequency: 'daily'
+          backupFrequency: 'daily',
+          schemaStatus: 'pending' as const,
+          lastMigration: '2025-08-26T02:42:56',
+          tableCount: 10,
+          connectionStatus: 'connected' as const,
+          cacheRefreshTime: '2025-08-26T02:42:56'
         },
         performance: {
           cacheEnabled: true,
@@ -629,6 +641,82 @@ export default function SystemSettingsPage() {
                     <option value="weekly">Weekly</option>
                     <option value="monthly">Monthly</option>
                   </select>
+                </div>
+              </div>
+              
+              {/* Database Status Monitoring */}
+              <div className="mt-8 p-6 bg-gray-50 rounded-lg">
+                <h4 className="text-lg font-medium text-gray-900 mb-4">Database Status</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className="bg-white p-4 rounded-lg border">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium text-gray-700">Schema Status</span>
+                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                        config?.database.schemaStatus === 'refreshed' 
+                          ? 'bg-green-100 text-green-800' 
+                          : config?.database.schemaStatus === 'pending'
+                          ? 'bg-yellow-100 text-yellow-800'
+                          : 'bg-red-100 text-red-800'
+                      }`}>
+                        {config?.database.schemaStatus || 'Unknown'}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-white p-4 rounded-lg border">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium text-gray-700">Connection</span>
+                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                        config?.database.connectionStatus === 'connected' 
+                          ? 'bg-green-100 text-green-800' 
+                          : 'bg-red-100 text-red-800'
+                      }`}>
+                        {config?.database.connectionStatus || 'Unknown'}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-white p-4 rounded-lg border">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium text-gray-700">Tables</span>
+                      <span className="text-sm text-gray-900">{config?.database.tableCount || 0}</span>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-white p-4 rounded-lg border">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium text-gray-700">Last Migration</span>
+                      <span className="text-sm text-gray-900">{config?.database.lastMigration || 'Unknown'}</span>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-white p-4 rounded-lg border">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium text-gray-700">Cache Refresh</span>
+                      <span className="text-sm text-gray-900">{config?.database.cacheRefreshTime || 'Unknown'}</span>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="mt-4 flex space-x-3">
+                  <button
+                    onClick={() => {
+                      // Add schema status check functionality
+                      console.log('Checking schema status...');
+                    }}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                  >
+                    Check Schema Status
+                  </button>
+                  <button
+                    onClick={() => {
+                      // Add manual cache refresh functionality
+                      console.log('Manual cache refresh...');
+                    }}
+                    className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+                  >
+                    Refresh Cache
+                  </button>
                 </div>
               </div>
             </div>
