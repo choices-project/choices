@@ -98,7 +98,7 @@ export default function BiometricLogin({ onSuccess, onError, onCancel }: Biometr
         devLog('Biometric authentication successful for user:', user);
         onSuccess?.(user)
       } else {
-        const errorMessage = result.error || 'Authentication failed'
+        const errorMessage = result.error?.message || 'Authentication failed'
         setError(errorMessage)
         onError?.(errorMessage)
       }

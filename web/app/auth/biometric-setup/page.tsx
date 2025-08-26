@@ -63,7 +63,8 @@ function BiometricSetupContent() {
         // Redirect to complete registration with email
         router.push(`/auth/complete-registration?username=${encodeURIComponent(username)}&email=${encodeURIComponent(email)}&redirectTo=${encodeURIComponent(redirectTo)}`)
       } else {
-        setError(result.error || 'Biometric registration failed')
+        const errorMessage = result.error?.message || 'Biometric registration failed'
+        setError(errorMessage)
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error'

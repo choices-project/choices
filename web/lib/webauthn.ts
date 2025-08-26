@@ -1,6 +1,16 @@
 /**
  * WebAuthn Utility Functions
- * Comprehensive biometric authentication utilities for the Choices platform
+ * Enhanced biometric authentication utilities for the Choices platform
+ * 
+ * Features:
+ * - Comprehensive error handling and recovery
+ * - Cross-device passkey support
+ * - Multiple credential management
+ * - Analytics and monitoring
+ * 
+ * @author Choices Platform
+ * @version 2.0.0
+ * @since 2024-12-27
  */
 
 import { devLog } from './logger';
@@ -19,6 +29,38 @@ const WEBAUTHN_CONFIG = {
     { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-384' },
     { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-512' }
   ]
+}
+
+// Error types for better handling
+export enum WebAuthnErrorType {
+  NOT_SUPPORTED = 'NOT_SUPPORTED',
+  NOT_AVAILABLE = 'NOT_AVAILABLE',
+  USER_CANCELLED = 'USER_CANCELLED',
+  INVALID_RESPONSE = 'INVALID_RESPONSE',
+  SECURITY_ERROR = 'SECURITY_ERROR',
+  NETWORK_ERROR = 'NETWORK_ERROR',
+  TIMEOUT = 'TIMEOUT',
+  UNKNOWN = 'UNKNOWN'
+}
+
+export interface WebAuthnError {
+  type: WebAuthnErrorType;
+  message: string;
+  code?: string;
+  recoverable: boolean;
+  suggestedAction?: string;
+}
+
+export interface WebAuthnResult {
+  success: boolean;
+  credential?: PublicKeyCredential;
+  error?: WebAuthnError;
+  analytics?: {
+    method: string;
+    duration: number;
+    deviceType: string;
+    browser: string;
+  };
 }
 
 // Convert ArrayBuffer to Base64
@@ -70,6 +112,115 @@ export async function isBiometricAvailable(): Promise<boolean> {
   }
 }
 
+// Get device and browser information
+export function getDeviceInfo(): { deviceType: string; browser: string; platform: string } {
+  const userAgent = navigator.userAgent;
+  
+  let deviceType = 'unknown';
+  let browser = 'unknown';
+  let platform = 'unknown';
+
+  // Detect device type
+  if (/iPhone|iPad|iPod/.test(userAgent)) {
+    deviceType = 'ios';
+  } else if (/Android/.test(userAgent)) {
+    deviceType = 'android';
+  } else if (/Windows/.test(userAgent)) {
+    deviceType = 'windows';
+  } else if (/Mac/.test(userAgent)) {
+    deviceType = 'macos';
+  } else if (/Linux/.test(userAgent)) {
+    deviceType = 'linux';
+  }
+
+  // Detect browser
+  if (/Chrome/.test(userAgent) && !/Edge/.test(userAgent)) {
+    browser = 'chrome';
+  } else if (/Firefox/.test(userAgent)) {
+    browser = 'firefox';
+  } else if (/Safari/.test(userAgent) && !/Chrome/.test(userAgent)) {
+    browser = 'safari';
+  } else if (/Edge/.test(userAgent)) {
+    browser = 'edge';
+  }
+
+  // Detect platform
+  if (/iPhone|iPad|iPod|Mac/.test(userAgent)) {
+    platform = 'apple';
+  } else if (/Android/.test(userAgent)) {
+    platform = 'google';
+  } else if (/Windows/.test(userAgent)) {
+    platform = 'microsoft';
+  }
+
+  return { deviceType, browser, platform };
+}
+
+// Enhanced error handling
+export function handleWebAuthnError(error: any): WebAuthnError {
+  const errorMessage = error.message || error.name || 'Unknown error';
+  
+  // Handle specific error types
+  if (error.name === 'NotAllowedError') {
+    return {
+      type: WebAuthnErrorType.USER_CANCELLED,
+      message: 'Authentication was cancelled by the user',
+      code: error.name,
+      recoverable: true,
+      suggestedAction: 'Try again or use an alternative authentication method'
+    };
+  }
+  
+  if (error.name === 'SecurityError') {
+    return {
+      type: WebAuthnErrorType.SECURITY_ERROR,
+      message: 'Security error occurred during authentication',
+      code: error.name,
+      recoverable: false,
+      suggestedAction: 'Please contact support if this persists'
+    };
+  }
+  
+  if (error.name === 'InvalidStateError') {
+    return {
+      type: WebAuthnErrorType.INVALID_RESPONSE,
+      message: 'Invalid authentication state',
+      code: error.name,
+      recoverable: true,
+      suggestedAction: 'Please try again'
+    };
+  }
+  
+  if (error.name === 'NotSupportedError') {
+    return {
+      type: WebAuthnErrorType.NOT_SUPPORTED,
+      message: 'Biometric authentication is not supported on this device',
+      code: error.name,
+      recoverable: false,
+      suggestedAction: 'Use password authentication instead'
+    };
+  }
+  
+  if (error.name === 'AbortError') {
+    return {
+      type: WebAuthnErrorType.TIMEOUT,
+      message: 'Authentication timed out',
+      code: error.name,
+      recoverable: true,
+      suggestedAction: 'Please try again'
+    };
+  }
+  
+  // Default error
+  return {
+    type: WebAuthnErrorType.UNKNOWN,
+    message: errorMessage,
+    code: error.name,
+    recoverable: true,
+    suggestedAction: 'Please try again or contact support'
+  };
+}
+
 // Get authenticator type from credential
 export function getAuthenticatorType(credential: PublicKeyCredential): string {
   if (!credential.authenticatorAttachment) {
@@ -91,358 +242,365 @@ export function getAuthenticatorType(credential: PublicKeyCredential): string {
   }
 }
 
-// WebAuthn Registration
-export async function registerBiometric(userId: string, username: string): Promise<{
-  success: boolean
-  credential?: PublicKeyCredential
-  error?: string
-}> {
+// Enhanced WebAuthn Registration
+export async function registerBiometric(userId: string, username: string): Promise<WebAuthnResult> {
+  const startTime = Date.now();
+  const deviceInfo = getDeviceInfo();
+  
   try {
-    devLog('Starting biometric registration for user:', username)
-
-    // Check WebAuthn support
     if (!isWebAuthnSupported()) {
-      return { success: false, error: 'WebAuthn not supported' }
+      return {
+        success: false,
+        error: {
+          type: WebAuthnErrorType.NOT_SUPPORTED,
+          message: 'WebAuthn is not supported in this browser',
+          recoverable: false,
+          suggestedAction: 'Please use a modern browser that supports biometric authentication'
+        },
+        analytics: {
+          method: 'registration',
+          duration: Date.now() - startTime,
+          deviceType: deviceInfo.deviceType,
+          browser: deviceInfo.browser
+        }
+      };
     }
 
     // Check biometric availability
-    const biometricAvailable = await isBiometricAvailable()
+    const biometricAvailable = await isBiometricAvailable();
     if (!biometricAvailable) {
-      return { success: false, error: 'Biometric authentication not available' }
+      return {
+        success: false,
+        error: {
+          type: WebAuthnErrorType.NOT_AVAILABLE,
+          message: 'Biometric authentication is not available on this device',
+          recoverable: false,
+          suggestedAction: 'Please use password authentication or try on a different device'
+        },
+        analytics: {
+          method: 'registration',
+          duration: Date.now() - startTime,
+          deviceType: deviceInfo.deviceType,
+          browser: deviceInfo.browser
+        }
+      };
     }
 
-    // Get registration challenge from server
-    const challengeResponse = await fetch('/api/auth/webauthn/register', {
+    // Get challenge from server
+    const challengeResponse = await fetch('/api/auth/webauthn/challenge', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId, username })
-    })
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        userId,
+        username,
+        deviceInfo
+      }),
+    });
 
     if (!challengeResponse.ok) {
-      const error = await challengeResponse.text()
-      return { success: false, error: `Failed to get challenge: ${error}` }
+      throw new Error('Failed to get challenge from server');
     }
 
-    const challengeData = await challengeResponse.json()
+    const challengeData = await challengeResponse.json();
+    const { challenge, rpId, user } = challengeData;
 
-    // Create credentials
+    // Convert challenge from base64 to ArrayBuffer
+    const challengeBuffer = base64ToArrayBuffer(challenge);
+
+    // Create credential options
+    const publicKeyOptions: PublicKeyCredentialCreationOptions = {
+      challenge: challengeBuffer,
+      rp: {
+        name: WEBAUTHN_CONFIG.rpName,
+        id: rpId,
+      },
+      user: {
+        id: base64ToArrayBuffer(user.id),
+        name: user.name,
+        displayName: user.displayName,
+      },
+      pubKeyCredParams: WEBAUTHN_CONFIG.algorithms.map(alg => ({
+        type: 'public-key',
+        alg: alg.name === 'ECDSA' ? -7 : -257, // ECDSA or RSA
+      })),
+      authenticatorSelection: {
+        authenticatorAttachment: 'platform',
+        userVerification: 'required',
+        residentKey: 'preferred',
+      },
+      attestation: 'none',
+      timeout: WEBAUTHN_CONFIG.timeout,
+    };
+
+    // Create credential
     const credential = await navigator.credentials.create({
-      publicKey: {
-        challenge: base64ToArrayBuffer(challengeData.challenge),
-        rp: {
-          name: WEBAUTHN_CONFIG.rpName,
-          id: WEBAUTHN_CONFIG.rpId
-        },
-        user: {
-          id: base64ToArrayBuffer(challengeData.userId),
-          name: username,
-          displayName: username
-        },
-        pubKeyCredParams: [
-          { alg: -7, type: 'public-key' },   // ES256
-          { alg: -257, type: 'public-key' }, // RS256
-          { alg: -37, type: 'public-key' },  // PS256
-          { alg: -35, type: 'public-key' }   // ES384
-        ],
-        authenticatorSelection: {
-          authenticatorAttachment: 'platform', // Built-in authenticator
-          userVerification: 'required',
-          requireResidentKey: false
-        },
-        attestation: 'direct',
-        timeout: WEBAUTHN_CONFIG.timeout
-      }
-    }) as PublicKeyCredential
+      publicKey: publicKeyOptions,
+    }) as PublicKeyCredential;
 
     if (!credential) {
-      return { success: false, error: 'Failed to create credential' }
+      throw new Error('Failed to create credential');
     }
-
-    devLog('Credential created successfully:', {
-      id: credential.id,
-      type: credential.type,
-      authenticatorAttachment: (credential as any).authenticatorAttachment
-    })
 
     // Send credential to server
+    const attestationResponse = credential.response as AuthenticatorAttestationResponse;
+    const registrationData = {
+      id: credential.id,
+      rawId: arrayBufferToBase64(credential.rawId),
+      type: credential.type,
+      response: {
+        attestationObject: arrayBufferToBase64(attestationResponse.attestationObject),
+        clientDataJSON: arrayBufferToBase64(attestationResponse.clientDataJSON),
+      },
+      authenticatorType: getAuthenticatorType(credential),
+      deviceInfo
+    };
+
     const registrationResponse = await fetch('/api/auth/webauthn/register', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        credential: {
-          id: credential.id,
-          type: credential.type,
-          rawId: arrayBufferToBase64(credential.rawId),
-          response: {
-            attestationObject: arrayBufferToBase64((credential.response as AuthenticatorAttestationResponse).attestationObject),
-            clientDataJSON: arrayBufferToBase64((credential.response as AuthenticatorAttestationResponse).clientDataJSON)
-          }
-        },
-        challenge: challengeData
-      })
-    })
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(registrationData),
+    });
 
     if (!registrationResponse.ok) {
-      const error = await registrationResponse.text()
-      return { success: false, error: `Registration failed: ${error}` }
+      const errorData = await registrationResponse.json();
+      throw new Error(errorData.message || 'Registration failed');
     }
 
-    const result = await registrationResponse.json()
-    
-    if (result.success) {
-      devLog('Biometric registration completed successfully')
-      return { success: true, credential }
-    } else {
-      return { success: false, error: result.error || 'Registration failed' }
-    }
+    return {
+      success: true,
+      credential,
+      analytics: {
+        method: 'registration',
+        duration: Date.now() - startTime,
+        deviceType: deviceInfo.deviceType,
+        browser: deviceInfo.browser
+      }
+    };
 
   } catch (error) {
-    devLog('Error during biometric registration:', error)
-    return { 
-      success: false, 
-      error: error instanceof Error ? error instanceof Error ? error.message : "Unknown error" : 'Unknown error during registration' 
-    }
+    const webAuthnError = handleWebAuthnError(error);
+    
+    return {
+      success: false,
+      error: webAuthnError,
+      analytics: {
+        method: 'registration',
+        duration: Date.now() - startTime,
+        deviceType: deviceInfo.deviceType,
+        browser: deviceInfo.browser
+      }
+    };
   }
 }
 
-// WebAuthn Authentication
-export async function authenticateBiometric(username: string): Promise<{
-  success: boolean
-  credential?: PublicKeyCredential
-  error?: string
-}> {
+// Enhanced WebAuthn Authentication
+export async function authenticateBiometric(username: string): Promise<WebAuthnResult> {
+  const startTime = Date.now();
+  const deviceInfo = getDeviceInfo();
+  
   try {
-    devLog('Starting biometric authentication for user:', username)
-
-    // Check WebAuthn support
     if (!isWebAuthnSupported()) {
-      return { success: false, error: 'WebAuthn not supported' }
+      return {
+        success: false,
+        error: {
+          type: WebAuthnErrorType.NOT_SUPPORTED,
+          message: 'WebAuthn is not supported in this browser',
+          recoverable: false,
+          suggestedAction: 'Please use a modern browser that supports biometric authentication'
+        },
+        analytics: {
+          method: 'authentication',
+          duration: Date.now() - startTime,
+          deviceType: deviceInfo.deviceType,
+          browser: deviceInfo.browser
+        }
+      };
     }
 
-    // Get authentication challenge from server
-    const challengeResponse = await fetch('/api/auth/webauthn/authenticate', {
+    // Get authentication options from server
+    const optionsResponse = await fetch('/api/auth/webauthn/authenticate', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username })
-    })
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        username,
+        deviceInfo
+      }),
+    });
 
-    if (!challengeResponse.ok) {
-      const error = await challengeResponse.text()
-      return { success: false, error: `Failed to get challenge: ${error}` }
+    if (!optionsResponse.ok) {
+      throw new Error('Failed to get authentication options');
     }
 
-    const challengeData = await challengeResponse.json()
+    const optionsData = await optionsResponse.json();
+    const { challenge, rpId, allowCredentials } = optionsData;
 
-    // Get credentials
+    // Convert challenge from base64 to ArrayBuffer
+    const challengeBuffer = base64ToArrayBuffer(challenge);
+
+    // Convert allowCredentials
+    const allowCredentialsArray = allowCredentials.map((cred: any) => ({
+      ...cred,
+      id: base64ToArrayBuffer(cred.id),
+    }));
+
+    // Create assertion options
+    const assertionOptions: PublicKeyCredentialRequestOptions = {
+      challenge: challengeBuffer,
+      rpId,
+      allowCredentials: allowCredentialsArray,
+      userVerification: 'required',
+      timeout: WEBAUTHN_CONFIG.timeout,
+    };
+
+    // Get credential
     const credential = await navigator.credentials.get({
-      publicKey: {
-        challenge: base64ToArrayBuffer(challengeData.challenge),
-        rpId: WEBAUTHN_CONFIG.rpId,
-        userVerification: 'required',
-        timeout: WEBAUTHN_CONFIG.timeout,
-        allowCredentials: challengeData.allowCredentials?.map((cred: any) => ({
-          id: base64ToArrayBuffer(cred.id),
-          type: cred.type,
-          transports: cred.transports
-        })) || []
-      }
-    }) as PublicKeyCredential
+      publicKey: assertionOptions,
+    }) as PublicKeyCredential;
 
     if (!credential) {
-      return { success: false, error: 'Authentication cancelled or failed' }
+      throw new Error('Failed to get credential');
     }
 
-    devLog('Credential retrieved successfully:', {
+    // Send assertion to server
+    const assertionResponse = credential.response as AuthenticatorAssertionResponse;
+    const assertionData = {
       id: credential.id,
-      type: credential.type
-    })
+      rawId: arrayBufferToBase64(credential.rawId),
+      type: credential.type,
+      response: {
+        authenticatorData: arrayBufferToBase64(assertionResponse.authenticatorData),
+        clientDataJSON: arrayBufferToBase64(assertionResponse.clientDataJSON),
+        signature: arrayBufferToBase64(assertionResponse.signature),
+        userHandle: assertionResponse.userHandle ? arrayBufferToBase64(assertionResponse.userHandle) : null,
+      },
+      deviceInfo
+    };
 
-    // Send credential to server for verification
-    const authenticationResponse = await fetch('/api/auth/webauthn/authenticate', {
+    const verificationResponse = await fetch('/api/auth/webauthn/verify', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        credential: {
-          id: credential.id,
-          type: credential.type,
-          rawId: arrayBufferToBase64(credential.rawId),
-          response: {
-            authenticatorData: arrayBufferToBase64((credential.response as AuthenticatorAssertionResponse).authenticatorData),
-            clientDataJSON: arrayBufferToBase64((credential.response as AuthenticatorAssertionResponse).clientDataJSON),
-            signature: arrayBufferToBase64((credential.response as AuthenticatorAssertionResponse).signature)
-          }
-        },
-        challenge: challengeData
-      })
-    })
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(assertionData),
+    });
 
-    if (!authenticationResponse.ok) {
-      const error = await authenticationResponse.text()
-      return { success: false, error: `Authentication failed: ${error}` }
+    if (!verificationResponse.ok) {
+      const errorData = await verificationResponse.json();
+      throw new Error(errorData.message || 'Authentication failed');
     }
 
-    const result = await authenticationResponse.json()
-    
-    if (result.success) {
-      devLog('Biometric authentication completed successfully')
-      return { success: true, credential }
-    } else {
-      return { success: false, error: result.error || 'Authentication failed' }
-    }
+    const result = await verificationResponse.json();
+
+    return {
+      success: true,
+      credential,
+      analytics: {
+        method: 'authentication',
+        duration: Date.now() - startTime,
+        deviceType: deviceInfo.deviceType,
+        browser: deviceInfo.browser
+      }
+    };
 
   } catch (error) {
-    devLog('Error during biometric authentication:', error)
-    return { 
-      success: false, 
-      error: error instanceof Error ? error instanceof Error ? error.message : "Unknown error" : 'Unknown error during authentication' 
-    }
+    const webAuthnError = handleWebAuthnError(error);
+    
+    return {
+      success: false,
+      error: webAuthnError,
+      analytics: {
+        method: 'authentication',
+        duration: Date.now() - startTime,
+        deviceType: deviceInfo.deviceType,
+        browser: deviceInfo.browser
+      }
+    };
   }
 }
 
-// Get user's biometric credentials
-export async function getUserBiometricCredentials(): Promise<{
-  success: boolean
-  credentials?: any[]
-  error?: string
+// Get user's registered credentials
+export async function getUserCredentials(userId: string): Promise<{
+  success: boolean;
+  credentials?: any[];
+  error?: string;
 }> {
   try {
-    const response = await fetch('/api/auth/webauthn/credentials')
+    const response = await fetch(`/api/auth/webauthn/credentials?userId=${userId}`);
     
     if (!response.ok) {
-      const error = await response.text()
-      return { success: false, error: `Failed to get credentials: ${error}` }
+      throw new Error('Failed to fetch credentials');
     }
-
-    const result = await response.json()
-    return { success: true, credentials: result.credentials }
-
+    
+    const data = await response.json();
+    return {
+      success: true,
+      credentials: data.credentials
+    };
   } catch (error) {
-    devLog('Error getting biometric credentials:', error)
-    return { 
-      success: false, 
-      error: error instanceof Error ? error instanceof Error ? error.message : "Unknown error" : 'Unknown error getting credentials' 
-    }
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error'
+    };
   }
 }
 
-// Delete biometric credential
-export async function deleteBiometricCredential(credentialId: string): Promise<{
-  success: boolean
-  error?: string
+// Remove a credential
+export async function removeCredential(credentialId: string): Promise<{
+  success: boolean;
+  error?: string;
 }> {
   try {
-    const response = await fetch('/api/auth/webauthn/credentials', {
+    const response = await fetch(`/api/auth/webauthn/credentials/${credentialId}`, {
       method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ credentialId })
-    })
-
-    if (!response.ok) {
-      const error = await response.text()
-      return { success: false, error: `Failed to delete credential: ${error}` }
-    }
-
-    const result = await response.json()
-    return { success: result.success }
-
-  } catch (error) {
-    devLog('Error deleting biometric credential:', error)
-    return { 
-      success: false, 
-      error: error instanceof Error ? error instanceof Error ? error.message : "Unknown error" : 'Unknown error deleting credential' 
-    }
-  }
-}
-
-// Get biometric trust score
-export async function getBiometricTrustScore(): Promise<{
-  success: boolean
-  trustScore?: number
-  error?: string
-}> {
-  try {
-    const response = await fetch('/api/auth/webauthn/trust-score')
+    });
     
     if (!response.ok) {
-      const error = await response.text()
-      return { success: false, error: `Failed to get trust score: ${error}` }
+      throw new Error('Failed to remove credential');
     }
-
-    const result = await response.json()
-    return { success: true, trustScore: result.trustScore }
-
+    
+    return { success: true };
   } catch (error) {
-    devLog('Error getting biometric trust score:', error)
-    return { 
-      success: false, 
-      error: error instanceof Error ? error instanceof Error ? error.message : "Unknown error" : 'Unknown error getting trust score' 
-    }
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error'
+    };
   }
 }
 
-// Get biometric authentication logs
-export async function getBiometricAuthLogs(limit: number = 10): Promise<{
-  success: boolean
-  logs?: any[]
-  error?: string
+// Generate QR code data for cross-device setup
+export async function generateQRCodeData(userId: string): Promise<{
+  success: boolean;
+  qrData?: string;
+  error?: string;
 }> {
   try {
-    const response = await fetch(`/api/auth/webauthn/logs?limit=${limit}`)
+    const response = await fetch('/api/auth/webauthn/qr-code', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ userId }),
+    });
     
     if (!response.ok) {
-      const error = await response.text()
-      return { success: false, error: `Failed to get logs: ${error}` }
+      throw new Error('Failed to generate QR code');
     }
-
-    const result = await response.json()
-    return { success: true, logs: result.logs }
-
+    
+    const data = await response.json();
+    return {
+      success: true,
+      qrData: data.qrData
+    };
   } catch (error) {
-    devLog('Error getting biometric auth logs:', error)
-    return { 
-      success: false, 
-      error: error instanceof Error ? error instanceof Error ? error.message : "Unknown error" : 'Unknown error getting logs' 
-    }
-  }
-}
-
-// Check if user has biometric credentials
-export async function hasBiometricCredentials(): Promise<boolean> {
-  const result = await getUserBiometricCredentials()
-  return result.success && (result.credentials?.length || 0) > 0
-}
-
-// Get device capabilities
-export function getDeviceCapabilities(): {
-  webauthnSupported: boolean
-  biometricAvailable: boolean
-  platformAuthenticator: boolean
-  crossPlatformAuthenticator: boolean
-} {
-  const webauthnSupported = isWebAuthnSupported()
-  
-  return {
-    webauthnSupported,
-    biometricAvailable: false, // Will be set by async check
-    platformAuthenticator: webauthnSupported,
-    crossPlatformAuthenticator: webauthnSupported
-  }
-}
-
-// Initialize biometric capabilities
-export async function initializeBiometricCapabilities(): Promise<{
-  webauthnSupported: boolean
-  biometricAvailable: boolean
-  platformAuthenticator: boolean
-  crossPlatformAuthenticator: boolean
-}> {
-  const webauthnSupported = isWebAuthnSupported()
-  const biometricAvailable = await isBiometricAvailable()
-  
-  return {
-    webauthnSupported,
-    biometricAvailable,
-    platformAuthenticator: webauthnSupported,
-    crossPlatformAuthenticator: webauthnSupported
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error'
+    };
   }
 }

@@ -1,22 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/utils/supabase/server'
 import { cookies } from 'next/headers'
-import { rateLimit } from '@/lib/rate-limit'
 import { logger } from '@/lib/logger'
-
-// Rate limiting: 3 attempts per hour per IP
-const limiter = rateLimit({
-  interval: 60 * 60 * 1000, // 1 hour
-  uniqueTokenPerInterval: 500,
-})
+import { rateLimiters } from '@/lib/rate-limit'
 
 export async function POST(request: NextRequest) {
   try {
-    // Rate limiting
-    const ip = request.ip || request.headers.get('x-forwarded-for') || 'unknown'
-    const { success } = await limiter.check(3, ip)
+    // Rate limiting: 5 registration attempts per hour per IP
+    const rateLimitResult = await rateLimiters.registration.check(request)
     
-    if (!success) {
+    if (!rateLimitResult.allowed) {
       return NextResponse.json(
         { message: 'Too many registration attempts. Please try again later.' },
         { status: 429 }
@@ -25,82 +18,116 @@ export async function POST(request: NextRequest) {
 
     // Validate request
     const body = await request.json()
-    const { email, password, username } = body
+    const { username, password, enableBiometric, enableDeviceFlow } = body
 
-    if (!email || !password) {
+    // Validate required fields
+    if (!username || !password) {
       return NextResponse.json(
-        { message: 'Email and password are required' },
+        { message: 'Username and password are required' },
         { status: 400 }
       )
     }
 
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (!emailRegex.test(email)) {
+    // Validate username format
+    if (username.length < 3 || username.length > 20) {
       return NextResponse.json(
-        { message: 'Invalid email format' },
+        { message: 'Username must be between 3 and 20 characters' },
+        { status: 400 }
+      )
+    }
+
+    if (!/^[a-zA-Z0-9_-]+$/.test(username)) {
+      return NextResponse.json(
+        { message: 'Username can only contain letters, numbers, underscores, and hyphens' },
         { status: 400 }
       )
     }
 
     // Validate password strength
-    if (password.length < 6) {
+    if (password.length < 8) {
       return NextResponse.json(
-        { message: 'Password must be at least 6 characters long' },
+        { message: 'Password must be at least 8 characters long' },
         { status: 400 }
       )
     }
 
-    // Create Supabase client
-    const cookieStore = await cookies()
-    const supabase = createClient(cookieStore)
-
-    if (!supabase) {
-      logger.error('Failed to create Supabase client')
+    // Check for common weak passwords
+    const weakPasswords = ['password', '123456', 'qwerty', 'admin', 'letmein']
+    if (weakPasswords.includes(password.toLowerCase())) {
       return NextResponse.json(
-        { message: 'Registration service not available' },
+        { message: 'Please choose a stronger password' },
+        { status: 400 }
+      )
+    }
+
+    // Validate authentication method
+    if (!enableBiometric && !enableDeviceFlow) {
+      return NextResponse.json(
+        { message: 'At least one authentication method must be enabled' },
+        { status: 400 }
+      )
+    }
+
+    const supabase = createClient(cookies())
+    if (!supabase) {
+      return NextResponse.json(
+        { message: 'Authentication service not available' },
         { status: 500 }
       )
     }
 
-    // Create new user - Supabase will handle duplicate email checks automatically
-    const { data, error } = await supabase.auth.signUp({
-      email: email.toLowerCase().trim(),
-      password,
+    // Check if username already exists
+    const { data: existingUser, error: checkError } = await supabase
+      .from('user_profiles')
+      .select('username')
+      .eq('username', username.toLowerCase())
+      .single()
+
+    if (checkError && checkError.code !== 'PGRST116') {
+      logger.error('Error checking username availability', new Error(checkError.message))
+      return NextResponse.json(
+        { message: 'Error checking username availability' },
+        { status: 500 }
+      )
+    }
+
+    if (existingUser) {
+      return NextResponse.json(
+        { message: 'Username already taken' },
+        { status: 409 }
+      )
+    }
+
+    // Create user with email (using username@choices.local as internal email)
+    const internalEmail = `${username.toLowerCase()}@choices.local`
+    
+    const { data: authData, error: signUpError } = await supabase.auth.signUp({
+      email: internalEmail,
+      password: password,
       options: {
         data: {
-          username: username || email.split('@')[0],
-        },
-      },
+          username: username.toLowerCase(),
+          display_name: username,
+          auth_methods: {
+            biometric: enableBiometric,
+            device_flow: enableDeviceFlow,
+            password: true
+          }
+        }
+      }
     })
 
-    if (error) {
-      logger.error('Registration error', error, { email, ip })
-      
-      // Handle specific Supabase errors
-      if (error.message.includes('Password should be at least')) {
-        return NextResponse.json(
-          { message: 'Password must be at least 6 characters long' },
-          { status: 400 }
-        )
-      }
-      
-      if (error.message.includes('Invalid email')) {
-        return NextResponse.json(
-          { message: 'Invalid email format' },
-          { status: 400 }
-        )
-      }
-
+    if (signUpError) {
+      logger.error('User registration failed', new Error(signUpError.message))
       return NextResponse.json(
-        { message: 'Registration failed. Please try again.' },
-        { status: 500 }
+        { message: signUpError.message },
+        { status: 400 }
       )
     }
 
-    if (!data.user) {
+    if (!authData.user) {
       return NextResponse.json(
-        { message: 'Registration failed' },
+        { message: 'Failed to create user account' },
         { status: 500 }
       )
     }
@@ -109,40 +136,56 @@ export async function POST(request: NextRequest) {
     const { error: profileError } = await supabase
       .from('user_profiles')
       .insert({
-        user_id: data.user.id,
-        username: username || email.split('@')[0],
-        email: data.user.email,
-        trust_tier: 'T1', // Default trust tier
+        id: authData.user.id,
+        username: username.toLowerCase(),
+        display_name: username,
+        email: internalEmail,
+        auth_methods: {
+          biometric: enableBiometric,
+          device_flow: enableDeviceFlow,
+          password: true
+        },
         created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
       })
 
     if (profileError) {
-      logger.error('Profile creation error', profileError, { userId: data.user.id })
-      // Don't fail the registration, but log the error
+      logger.error('User profile creation failed', new Error(profileError.message))
+      // Try to clean up the auth user if profile creation fails
+      await supabase.auth.admin.deleteUser(authData.user.id)
+      
+      return NextResponse.json(
+        { message: 'Failed to create user profile' },
+        { status: 500 }
+      )
     }
 
     // Log successful registration
-    logger.userAction('registration_successful', data.user.id, {
-      email: data.user.email,
-      ip,
+    logger.info('User registered successfully', {
+      userId: authData.user.id,
+      username: username.toLowerCase(),
+      ip: rateLimitResult.reputation?.ip || 'unknown',
+      authMethods: {
+        biometric: enableBiometric,
+        deviceFlow: enableDeviceFlow
+      }
     })
 
-    // Return success response
     return NextResponse.json({
-      message: 'Registration successful. Please check your email to verify your account.',
+      success: true,
+      message: 'Account created successfully',
       user: {
-        id: data.user.id,
-        email: data.user.email,
-        username: username || email.split('@')[0],
-      },
+        id: authData.user.id,
+        username: username.toLowerCase(),
+        authMethods: {
+          biometric: enableBiometric,
+          deviceFlow: enableDeviceFlow
+        }
+      }
     })
 
   } catch (error) {
-    logger.error('Registration API error', error instanceof Error ? error : new Error(String(error)), {
-      ip: request.ip || request.headers.get('x-forwarded-for') || 'unknown',
-    })
-    
+    logger.error('Registration API error', error instanceof Error ? error : new Error('Unknown error'))
     return NextResponse.json(
       { message: 'Internal server error' },
       { status: 500 }

@@ -4,13 +4,14 @@ import { useState, Suspense, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/utils/supabase/client'
-import { Eye, EyeOff, Mail, Lock, Fingerprint } from 'lucide-react'
+import { Eye, EyeOff, User, Lock, Fingerprint, Smartphone } from 'lucide-react'
 import { isWebAuthnSupported, isBiometricAvailable, authenticateBiometric } from '@/lib/webauthn'
 import SocialLoginButtons from '@/components/auth/SocialLoginButtons'
+import DeviceFlowAuth from '@/components/auth/DeviceFlowAuth'
 import { OAuthProvider } from '@/types/auth'
 
 function LoginFormContent() {
-  const [email, setEmail] = useState('')
+  const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -18,7 +19,8 @@ function LoginFormContent() {
   const [message, setMessage] = useState<string | null>(null)
   const [biometricSupported, setBiometricSupported] = useState<boolean | null>(null)
   const [biometricAvailable, setBiometricAvailable] = useState<boolean | null>(null)
-  const [biometricUsername, setBiometricUsername] = useState('')
+  const [showDeviceFlow, setShowDeviceFlow] = useState(false)
+  const [selectedProvider, setSelectedProvider] = useState<'google' | 'github'>('google')
   
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -47,7 +49,7 @@ function LoginFormContent() {
     checkBiometricSupport()
   }, [])
 
-  const handleEmailLogin = async (e: React.FormEvent) => {
+  const handleUsernameLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError(null)
@@ -60,7 +62,7 @@ function LoginFormContent() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          email,
+          username,
           password,
         }),
       })
@@ -146,8 +148,11 @@ function LoginFormContent() {
       return
     }
 
+    // For username-based system, we'll use the internal email format
+    const internalEmail = `${username.toLowerCase()}@choices.local`
+
     const { error: magicLinkError } = await supabase.auth.signInWithOtp({
-      email,
+      email: internalEmail,
       options: {
         emailRedirectTo: `${window.location.origin}/auth/callback?redirectTo=${redirectTo}`,
       },
@@ -162,8 +167,8 @@ function LoginFormContent() {
   }
 
   const handleBiometricLogin = async () => {
-    if (!biometricUsername.trim()) {
-      setError('Please enter your email address for biometric login')
+    if (!username.trim()) {
+      setError('Please enter your username for biometric login')
       return
     }
 
@@ -172,13 +177,14 @@ function LoginFormContent() {
     setMessage(null)
 
     try {
-      const result = await authenticateBiometric(biometricUsername.trim())
+      const result = await authenticateBiometric(username.trim())
       
       if (result.success) {
         setMessage('Biometric authentication successful! Redirecting...')
         router.push(redirectTo)
       } else {
-        setError(result.error || 'Biometric authentication failed')
+        const errorMessage = result.error?.message || 'Biometric authentication failed'
+        setError(errorMessage)
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error'
@@ -195,20 +201,20 @@ function LoginFormContent() {
         {error && <p className="text-red-500 text-center mb-4">{error}</p>}
         {message && <p className="text-green-500 text-center mb-4">{message}</p>}
 
-        <form onSubmit={handleEmailLogin} className="space-y-4">
+        <form onSubmit={handleUsernameLogin} className="space-y-4">
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+            <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">Username</label>
             <div className="relative">
               <input
-                type="email"
-                id="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                type="text"
+                id="username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value.toLowerCase())}
                 required
                 className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                placeholder="you@example.com"
+                placeholder="yourusername"
               />
-              <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+              <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
             </div>
           </div>
           <div>
@@ -283,22 +289,17 @@ function LoginFormContent() {
         {biometricAvailable && (
           <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-md">
             <h3 className="text-sm font-medium text-blue-800 mb-2">Biometric Login</h3>
-            <div className="flex space-x-2">
-              <input
-                type="email"
-                value={biometricUsername}
-                onChange={(e) => setBiometricUsername(e.target.value)}
-                placeholder="Enter your email"
-                className="flex-1 px-3 py-2 border border-blue-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-sm"
-              />
-              <button
-                onClick={handleBiometricLogin}
-                disabled={loading || !biometricUsername.trim()}
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
-              >
-                <Fingerprint className="h-4 w-4" />
-              </button>
-            </div>
+            <p className="text-sm text-blue-700 mb-2">
+              Use your fingerprint, Face ID, or other biometric authentication
+            </p>
+            <button
+              onClick={handleBiometricLogin}
+              disabled={loading || !username.trim()}
+              className="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm flex items-center justify-center gap-2"
+            >
+              <Fingerprint className="h-4 w-4" />
+              Sign in with Biometrics
+            </button>
           </div>
         )}
 

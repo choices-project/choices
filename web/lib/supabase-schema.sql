@@ -254,6 +254,34 @@ CREATE TABLE IF NOT EXISTS user_sessions (
   CONSTRAINT valid_session_expiry CHECK (expires_at > created_at)
 );
 
+-- Device Flows Table for OAuth 2.0 Device Authorization Grant
+CREATE TABLE IF NOT EXISTS device_flows (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  device_code VARCHAR(8) NOT NULL UNIQUE,
+  user_code VARCHAR(8) NOT NULL UNIQUE,
+  provider VARCHAR(20) NOT NULL CHECK (provider IN ('google', 'github', 'facebook', 'twitter', 'linkedin', 'discord')),
+  status VARCHAR(20) NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'completed', 'expired', 'error')),
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  client_ip INET,
+  redirect_to TEXT DEFAULT '/dashboard',
+  scopes TEXT[] DEFAULT '{}',
+  expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  completed_at TIMESTAMP WITH TIME ZONE,
+  
+  -- Indexes for performance
+  CONSTRAINT valid_device_flow_dates CHECK (expires_at > created_at),
+  CONSTRAINT valid_completion_dates CHECK (completed_at IS NULL OR completed_at >= created_at)
+);
+
+-- Indexes for device flows
+CREATE INDEX IF NOT EXISTS idx_device_flows_device_code ON device_flows(device_code);
+CREATE INDEX IF NOT EXISTS idx_device_flows_user_code ON device_flows(user_code);
+CREATE INDEX IF NOT EXISTS idx_device_flows_status ON device_flows(status);
+CREATE INDEX IF NOT EXISTS idx_device_flows_expires_at ON device_flows(expires_at);
+CREATE INDEX IF NOT EXISTS idx_device_flows_client_ip ON device_flows(client_ip);
+CREATE INDEX IF NOT EXISTS idx_device_flows_user_id ON device_flows(user_id);
+
 -- Create indexes for performance
 CREATE INDEX IF NOT EXISTS idx_user_profiles_user_id ON user_profiles(user_id);
 CREATE INDEX IF NOT EXISTS idx_user_profiles_email ON user_profiles(email);

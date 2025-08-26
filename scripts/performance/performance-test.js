@@ -465,3 +465,4 @@ performanceTest().then(success => {
   console.error('❌ Performance test failed:', error)
   process.exit(1)
 })
+

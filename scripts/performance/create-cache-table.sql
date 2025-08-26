@@ -231,3 +231,4 @@ COMMENT ON COLUMN cache.value IS 'Cached value (JSON or text)';
 COMMENT ON COLUMN cache.expires_at IS 'Expiration timestamp';
 COMMENT ON COLUMN cache.created_at IS 'When the cache entry was created';
 COMMENT ON COLUMN cache.updated_at IS 'When the cache entry was last updated';
+
