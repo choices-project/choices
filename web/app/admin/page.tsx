@@ -48,17 +48,49 @@ export default function AdminDashboard() {
   const loadAdminStats = async () => {
     try {
       setLoading(true)
-      // Mock stats for now - replace with actual API call
-      setStats({
-        totalUsers: 1247,
-        totalPolls: 89,
-        totalVotes: 2985,
-        activePolls: 12,
-        adminUsers: 3,
-        systemHealth: 'excellent'
+      
+      // Fetch real stats from API
+      const response = await fetch('/api/admin/system-status', {
+        headers: {
+          'Authorization': 'Bearer admin-access', // This should be replaced with real auth
+          'Content-Type': 'application/json'
+        }
       })
+      
+      if (response.ok) {
+        const systemData = await response.json()
+        
+        setStats({
+          totalUsers: systemData.users.totalUsers,
+          totalPolls: systemData.polls.totalPolls,
+          totalVotes: systemData.polls.totalVotes,
+          activePolls: systemData.polls.activePolls,
+          adminUsers: systemData.users.adminUsers,
+          systemHealth: systemData.health.systemHealth
+        })
+      } else {
+        console.error('Failed to fetch admin stats:', response.status)
+        // Fall back to mock data if API fails
+        setStats({
+          totalUsers: 0,
+          totalPolls: 0,
+          totalVotes: 0,
+          activePolls: 0,
+          adminUsers: 0,
+          systemHealth: 'warning'
+        })
+      }
     } catch (error) {
       console.error('Error loading admin stats:', error)
+      // Fall back to mock data if API fails
+      setStats({
+        totalUsers: 0,
+        totalPolls: 0,
+        totalVotes: 0,
+        activePolls: 0,
+        adminUsers: 0,
+        systemHealth: 'critical'
+      })
     } finally {
       setLoading(false)
     }
