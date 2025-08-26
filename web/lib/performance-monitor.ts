@@ -1,440 +1,680 @@
+/**
+ * Performance Monitoring System
+ * Integrates with database performance optimization tables and functions
+ */
+
+import { createClient } from '@supabase/supabase-js';
+
+// Types for performance monitoring
+export interface QueryPerformanceData {
+  queryHash: string;
+  querySignature: string;
+  queryType: 'SELECT' | 'INSERT' | 'UPDATE' | 'DELETE' | 'CREATE' | 'ALTER' | 'DROP';
+  executionTimeMs: number;
+  planningTimeMs?: number;
+  rowsAffected?: number;
+  rowsScanned?: number;
+  bufferReads?: number;
+  bufferHits?: number;
+  userId?: string;
+  sessionId?: string;
+  clientIp?: string;
+  userAgent?: string;
+}
+
+export interface IndexUsageData {
+  tableName: string;
+  indexName: string;
+  indexType: string;
+  scansTotal: number;
+  scansUserTuples: number;
+  scansSystemTuples: number;
+  tuplesRead: number;
+  tuplesFetched: number;
+  avgScanTimeMs?: number;
+}
+
+export interface ConnectionPoolData {
+  poolName: string;
+  poolType: 'database' | 'redis' | 'external';
+  totalConnections: number;
+  activeConnections: number;
+  idleConnections: number;
+  waitingConnections?: number;
+  connectionWaitTimeMs?: number;
+  avgConnectionTimeMs?: number;
+  connectionErrors?: number;
+}
+
+export interface CachePerformanceData {
+  cacheName: string;
+  cacheType: 'memory' | 'redis' | 'database' | 'cdn';
+  hitCount: number;
+  missCount: number;
+  avgResponseTimeMs?: number;
+  maxResponseTimeMs?: number;
+  minResponseTimeMs?: number;
+  memoryUsageBytes?: number;
+  memoryLimitBytes?: number;
+  evictionCount?: number;
+}
+
+export interface MaintenanceJobData {
+  jobName: string;
+  jobType: 'cleanup' | 'vacuum' | 'analyze' | 'reindex' | 'backup' | 'optimization';
+}
+
+export interface PerformanceRecommendation {
+  recommendationType: string;
+  recommendationText: string;
+  priority: 'high' | 'medium' | 'low';
+  estimatedImpact: number;
+  implementationEffort: 'low' | 'medium' | 'high';
+}
+
 export interface PerformanceMetrics {
-  // Core Web Vitals
-  fcp: number | null // First Contentful Paint
-  lcp: number | null // Largest Contentful Paint
-  fid: number | null // First Input Delay
-  cls: number | null // Cumulative Layout Shift
-  ttfb: number | null // Time to First Byte
-  
-  // Custom Metrics
-  pageLoadTime: number | null
-  domContentLoaded: number | null
-  resourceLoadTime: number | null
-  memoryUsage: number | null
-  networkSpeed: number | null
-  
-  // User Experience Metrics
-  timeToInteractive: number | null
-  firstMeaningfulPaint: number | null
-  speedIndex: number | null
-  
-  // Device & Browser Info
-  userAgent: string
-  deviceType: 'mobile' | 'tablet' | 'desktop'
-  connectionType: string | null
-  timestamp: number
+  metricType: string;
+  metricName: string;
+  metricValue: number;
+  metricUnit?: string;
+  tableName?: string;
+  indexName?: string;
+  queryHash?: string;
+  queryText?: string;
+  executionTimeMs?: number;
+  rowsAffected?: number;
+  rowsScanned?: number;
+  bufferReads?: number;
+  bufferHits?: number;
 }
 
-export interface PerformanceAlert {
-  type: 'warning' | 'error' | 'critical'
-  metric: string
-  value: number
-  threshold: number
-  message: string
-  timestamp: number
+// Performance monitoring configuration
+export interface PerformanceConfig {
+  enabled: boolean;
+  sampleRate: number; // 0.0 to 1.0
+  slowQueryThresholdMs: number;
+  maxLogEntries: number;
+  retentionDays: number;
+  autoCleanup: boolean;
+  alertThresholds: {
+    slowQueryMs: number;
+    lowCacheHitRate: number;
+    highConnectionUtilization: number;
+    lowIndexEfficiency: number;
+  };
 }
 
+// Default configuration
+const DEFAULT_CONFIG: PerformanceConfig = {
+  enabled: true,
+  sampleRate: 1.0,
+  slowQueryThresholdMs: 1000,
+  maxLogEntries: 10000,
+  retentionDays: 30,
+  autoCleanup: true,
+  alertThresholds: {
+    slowQueryMs: 5000,
+    lowCacheHitRate: 0.8,
+    highConnectionUtilization: 0.9,
+    lowIndexEfficiency: 0.5,
+  },
+};
+
+/**
+ * Performance Monitor Class
+ * Provides comprehensive performance monitoring and optimization
+ */
 export class PerformanceMonitor {
-  private metrics: PerformanceMetrics[] = []
-  private alerts: PerformanceAlert[] = []
-  private observers: Map<string, PerformanceObserver> = new Map()
-  private isInitialized = false
-  
-  // Performance thresholds
-  private thresholds = {
-    fcp: { good: 1800, poor: 3000 },
-    lcp: { good: 2500, poor: 4000 },
-    fid: { good: 100, poor: 300 },
-    cls: { good: 0.1, poor: 0.25 },
-    ttfb: { good: 800, poor: 1800 },
-    pageLoadTime: { good: 3000, poor: 5000 }
+  private supabase: ReturnType<typeof createClient>;
+  private config: PerformanceConfig;
+  private isInitialized = false;
+
+  constructor(config: Partial<PerformanceConfig> = {}) {
+    this.config = { ...DEFAULT_CONFIG, ...config };
+    this.supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
   }
 
-  constructor() {
-    if (typeof window === 'undefined') return
-    this.init()
-  }
+  /**
+   * Initialize the performance monitor
+   */
+  async initialize(): Promise<void> {
+    if (this.isInitialized) return;
 
-  private init() {
-    if (this.isInitialized) return
-    this.isInitialized = true
-
-    // Initialize Core Web Vitals observers
-    this.initCoreWebVitals()
-    
-    // Initialize custom metrics
-    this.initCustomMetrics()
-    
-    // Initialize memory monitoring
-    this.initMemoryMonitoring()
-    
-    // Initialize network monitoring
-    this.initNetworkMonitoring()
-    
-    // Listen for page visibility changes
-    this.initVisibilityMonitoring()
-    
-    // Start periodic monitoring
-    this.startPeriodicMonitoring()
-  }
-
-  private initCoreWebVitals() {
-    // First Contentful Paint
-    this.observeMetric('paint', (entries) => {
-      entries.forEach((entry: any) => {
-        if (entry.name === 'first-contentful-paint') {
-          this.recordMetric('fcp', entry.startTime)
-        }
-      })
-    })
-
-    // Largest Contentful Paint
-    this.observeMetric('largest-contentful-paint', (entries) => {
-      const lastEntry = entries[entries.length - 1]
-      if (lastEntry) {
-        this.recordMetric('lcp', lastEntry.startTime)
-      }
-    })
-
-    // First Input Delay
-    this.observeMetric('first-input', (entries) => {
-      entries.forEach((entry: any) => {
-        this.recordMetric('fid', entry.processingStart - entry.startTime)
-      })
-    })
-
-    // Cumulative Layout Shift
-    this.observeMetric('layout-shift', (entries) => {
-      let clsValue = 0
-      entries.forEach((entry: any) => {
-        if (!entry.hadRecentInput) {
-          clsValue += entry.value
-        }
-      })
-      this.recordMetric('cls', clsValue)
-    })
-  }
-
-  private initCustomMetrics() {
-    // Page Load Time
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', () => {
-        this.recordMetric('domContentLoaded', performance.now())
-      })
-    } else {
-      this.recordMetric('domContentLoaded', performance.now())
-    }
-
-    window.addEventListener('load', () => {
-      const loadTime = performance.now()
-      this.recordMetric('pageLoadTime', loadTime)
-      
-      // Calculate Time to Interactive
-      const navigationEntry = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming
-      if (navigationEntry) {
-        const tti = navigationEntry.loadEventEnd - navigationEntry.fetchStart
-        this.recordMetric('timeToInteractive', tti)
-      }
-    })
-
-    // Resource Load Time
-    this.observeMetric('resource', (entries) => {
-      entries.forEach((entry: any) => {
-        const loadTime = entry.responseEnd - entry.fetchStart
-        this.recordMetric('resourceLoadTime', loadTime)
-      })
-    })
-  }
-
-  private initMemoryMonitoring() {
-    if ('memory' in performance) {
-      const memory = (performance as any).memory
-      setInterval(() => {
-        const usedMemory = memory.usedJSHeapSize / 1024 / 1024 // MB
-        this.recordMetric('memoryUsage', usedMemory)
-      }, 5000)
-    }
-  }
-
-  private initNetworkMonitoring() {
-    if ('connection' in navigator) {
-      const connection = (navigator as any).connection
-      if (connection) {
-        this.recordMetric('networkSpeed', connection.downlink)
-        this.recordMetric('connectionType', connection.effectiveType)
-      }
-    }
-  }
-
-  private initVisibilityMonitoring() {
-    document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'visible') {
-        // Page became visible again - record performance
-        this.recordCurrentMetrics()
-      }
-    })
-  }
-
-  private startPeriodicMonitoring() {
-    // Record metrics every 10 seconds
-    setInterval(() => {
-      this.recordCurrentMetrics()
-    }, 10000)
-  }
-
-  private observeMetric(type: string, callback: (entries: PerformanceEntry[]) => void) {
     try {
-      const observer = new PerformanceObserver((list) => {
-        const entries = Array.from(list.getEntries())
-        
-        // Process each entry and record relevant metrics
-        entries.forEach(entry => {
-          if (entry.entryType === 'navigation') {
-            const navEntry = entry as PerformanceNavigationTiming;
-            this.recordMetric('pageLoadTime', navEntry.loadEventEnd - navEntry.loadEventStart);
-            this.recordMetric('domContentLoaded', navEntry.domContentLoadedEventEnd - navEntry.domContentLoadedEventStart);
-            this.recordMetric('ttfb', navEntry.responseStart - navEntry.requestStart);
-          } else if (entry.entryType === 'paint') {
-            const paintEntry = entry as PerformancePaintTiming;
-            if (paintEntry.name === 'first-contentful-paint') {
-              this.recordMetric('fcp', paintEntry.startTime);
-            }
-          } else if (entry.entryType === 'largest-contentful-paint') {
-            const lcpEntry = entry as PerformanceEntry;
-            this.recordMetric('lcp', lcpEntry.startTime);
-          }
-        });
-        
-        // Call the original callback with processed entries
-        // Use the entries parameter to provide detailed performance data
-        callback(entries);
-        
-        // Log performance entries for debugging
-        if (process.env.NODE_ENV === 'development') {
-          // eslint-disable-next-line no-console
-          console.log(`Performance entries for ${type}:`, entries.length, 'entries');
-        }
-      });
-      
-      observer.observe({ type, buffered: true });
-      this.observers.set(type, observer);
+      // Verify database connection and tables exist
+      const { error } = await this.supabase
+        .from('performance_metrics')
+        .select('count')
+        .limit(1);
+
+      if (error && !error.message.includes('does not exist')) {
+        throw new Error(`Performance monitoring tables not available: ${error.message}`);
+      }
+
+      this.isInitialized = true;
+      console.log('✅ Performance monitor initialized');
     } catch (error) {
-      if (process.env.NODE_ENV === 'development') {
-        // eslint-disable-next-line no-console
-        console.log(`PerformanceObserver for ${type} not supported:`, error);
-      }
+      console.error('❌ Failed to initialize performance monitor:', error);
+      throw error;
     }
   }
 
-  private recordMetric(key: keyof PerformanceMetrics, value: number | string | null) {
-    const currentMetrics = this.getCurrentMetrics()
-    
-    if (typeof value === 'number' && !isNaN(value)) {
-      (currentMetrics as any)[key] = value
-      
-      // Check thresholds and create alerts
-      this.checkThresholds(key, value)
-    } else if (typeof value === 'string') {
-      (currentMetrics as any)[key] = value
-    }
-  }
-
-  private recordCurrentMetrics() {
-    const metrics = this.getCurrentMetrics()
-    metrics.timestamp = Date.now()
-    
-    // Add device info
-    metrics.userAgent = navigator.userAgent
-    metrics.deviceType = this.getDeviceType()
-    
-    this.metrics.push(metrics)
-    
-    // Keep only last 100 metrics
-    if (this.metrics.length > 100) {
-      this.metrics = this.metrics.slice(-100)
-    }
-    
-    // Send to analytics if available
-    this.sendToAnalytics(metrics)
-  }
-
-  private getCurrentMetrics(): PerformanceMetrics {
-    return {
-      fcp: null,
-      lcp: null,
-      fid: null,
-      cls: null,
-      ttfb: null,
-      pageLoadTime: null,
-      domContentLoaded: null,
-      resourceLoadTime: null,
-      memoryUsage: null,
-      networkSpeed: null,
-      timeToInteractive: null,
-      firstMeaningfulPaint: null,
-      speedIndex: null,
-      userAgent: '',
-      deviceType: 'desktop',
-      connectionType: null,
-      timestamp: Date.now()
-    }
-  }
-
-  private getDeviceType(): 'mobile' | 'tablet' | 'desktop' {
-    const width = window.innerWidth
-    if (width < 768) return 'mobile'
-    if (width < 1024) return 'tablet'
-    return 'desktop'
-  }
-
-  private checkThresholds(metric: string, value: number) {
-    const threshold = this.thresholds[metric as keyof typeof this.thresholds]
-    if (!threshold) return
-
-    let alertType: 'warning' | 'error' | 'critical' | null = null
-    let message = ''
-
-    if (value > threshold.poor) {
-      alertType = 'critical'
-      message = `${metric.toUpperCase()} is critically slow: ${value}ms`
-    } else if (value > threshold.good) {
-      alertType = 'warning'
-      message = `${metric.toUpperCase()} is slower than optimal: ${value}ms`
+  /**
+   * Track query performance
+   */
+  async trackQueryPerformance(data: QueryPerformanceData): Promise<string | null> {
+    if (!this.config.enabled || Math.random() > this.config.sampleRate) {
+      return null;
     }
 
-    if (alertType) {
-      this.alerts.push({
-        type: alertType,
-        metric,
-        value,
-        threshold: threshold.good,
-        message,
-        timestamp: Date.now()
-      })
+    try {
+      await this.initialize();
 
-      // Keep only last 50 alerts
-      if (this.alerts.length > 50) {
-        this.alerts = this.alerts.slice(-50)
+      const { data: result, error } = await this.supabase.rpc('analyze_query_performance', {
+        p_query_hash: data.queryHash,
+        p_query_signature: data.querySignature,
+        p_query_type: data.queryType,
+        p_execution_time_ms: data.executionTimeMs,
+        p_planning_time_ms: data.planningTimeMs,
+        p_rows_affected: data.rowsAffected,
+        p_rows_scanned: data.rowsScanned,
+        p_buffer_reads: data.bufferReads,
+        p_buffer_hits: data.bufferHits,
+        p_user_id: data.userId,
+        p_session_id: data.sessionId,
+        p_client_ip: data.clientIp,
+        p_user_agent: data.userAgent,
+      });
+
+      if (error) {
+        console.error('Failed to track query performance:', error);
+        return null;
       }
 
-      // Log alert (dev only)
-      if (process.env.NODE_ENV === 'development') {
-        // eslint-disable-next-line no-console
-        console.log(`Performance Alert: ${message}`)
+      // Check for slow query alerts
+      if (data.executionTimeMs > this.config.alertThresholds.slowQueryMs) {
+        await this.alertSlowQuery(data);
       }
+
+      return result as string | null;
+    } catch (error) {
+      console.error('Error tracking query performance:', error);
+      return null;
     }
   }
 
-  private sendToAnalytics(metrics: PerformanceMetrics) {
-    // Send to Google Analytics if available
-    if (typeof window !== 'undefined' && window.gtag) {
-      window.gtag('event', 'performance_metrics', {
-        fcp: metrics.fcp,
-        lcp: metrics.lcp,
-        fid: metrics.fid,
-        cls: metrics.cls,
-        page_load_time: metrics.pageLoadTime,
-        device_type: metrics.deviceType
-      })
-    }
+  /**
+   * Update index usage analytics
+   */
+  async updateIndexUsage(data: IndexUsageData): Promise<string | null> {
+    if (!this.config.enabled) return null;
 
-    // Send to custom analytics endpoint
-    fetch('/api/analytics/performance', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(metrics)
-    }).catch(() => {
-      // Silently fail if analytics endpoint doesn't exist
-    })
-  }
+    try {
+      await this.initialize();
 
-  // Public API
-  public getMetrics(): PerformanceMetrics[] {
-    return [...this.metrics]
-  }
+      const { data: result, error } = await this.supabase.rpc('update_index_usage_analytics', {
+        p_table_name: data.tableName,
+        p_index_name: data.indexName,
+        p_index_type: data.indexType,
+        p_scans_total: data.scansTotal,
+        p_scans_user_tuples: data.scansUserTuples,
+        p_scans_system_tuples: data.scansSystemTuples,
+        p_tuples_read: data.tuplesRead,
+        p_tuples_fetched: data.tuplesFetched,
+        p_avg_scan_time_ms: data.avgScanTimeMs,
+      });
 
-  public getAlerts(): PerformanceAlert[] {
-    return [...this.alerts]
-  }
+      if (error) {
+        console.error('Failed to update index usage:', error);
+        return null;
+      }
 
-  public getLatestMetrics(): PerformanceMetrics | null {
-    return this.metrics.length > 0 ? this.metrics[this.metrics.length - 1] : null
-  }
+      // Check for low efficiency alerts
+      const efficiency = data.tuplesRead > 0 ? data.tuplesFetched / data.tuplesRead : 1;
+      if (efficiency < this.config.alertThresholds.lowIndexEfficiency) {
+        await this.alertLowIndexEfficiency(data, efficiency);
+      }
 
-  public getPerformanceScore(): number {
-    const latest = this.getLatestMetrics()
-    if (!latest) return 0
-
-    let score = 100
-    let factors = 0
-
-    // FCP scoring
-    if (latest.fcp) {
-      factors++
-      if (latest.fcp > this.thresholds.fcp.poor) score -= 30
-      else if (latest.fcp > this.thresholds.fcp.good) score -= 15
-    }
-
-    // LCP scoring
-    if (latest.lcp) {
-      factors++
-      if (latest.lcp > this.thresholds.lcp.poor) score -= 30
-      else if (latest.lcp > this.thresholds.lcp.good) score -= 15
-    }
-
-    // FID scoring
-    if (latest.fid) {
-      factors++
-      if (latest.fid > this.thresholds.fid.poor) score -= 20
-      else if (latest.fid > this.thresholds.fid.good) score -= 10
-    }
-
-    // CLS scoring
-    if (latest.cls) {
-      factors++
-      if (latest.cls > this.thresholds.cls.poor) score -= 20
-      else if (latest.cls > this.thresholds.cls.good) score -= 10
-    }
-
-    return factors > 0 ? Math.max(0, score / factors) : 100
-  }
-
-  public getPerformanceSummary() {
-    const latest = this.getLatestMetrics()
-    const score = this.getPerformanceScore()
-    const alerts = this.getAlerts()
-
-    return {
-      score,
-      grade: score >= 90 ? 'A' : score >= 80 ? 'B' : score >= 70 ? 'C' : score >= 60 ? 'D' : 'F',
-      latestMetrics: latest,
-      recentAlerts: alerts.slice(-10),
-      totalAlerts: alerts.length,
-      deviceType: latest?.deviceType || 'unknown'
+      return result as string | null;
+    } catch (error) {
+      console.error('Error updating index usage:', error);
+      return null;
     }
   }
 
-  public destroy() {
-    this.observers.forEach(observer => observer.disconnect())
-    this.observers.clear()
-    this.isInitialized = false
+  /**
+   * Update connection pool metrics
+   */
+  async updateConnectionPoolMetrics(data: ConnectionPoolData): Promise<string | null> {
+    if (!this.config.enabled) return null;
+
+    try {
+      await this.initialize();
+
+      const { data: result, error } = await this.supabase.rpc('update_connection_pool_metrics', {
+        p_pool_name: data.poolName,
+        p_pool_type: data.poolType,
+        p_total_connections: data.totalConnections,
+        p_active_connections: data.activeConnections,
+        p_idle_connections: data.idleConnections,
+        p_waiting_connections: data.waitingConnections,
+        p_connection_wait_time_ms: data.connectionWaitTimeMs,
+        p_avg_connection_time_ms: data.avgConnectionTimeMs,
+        p_connection_errors: data.connectionErrors,
+      });
+
+      if (error) {
+        console.error('Failed to update connection pool metrics:', error);
+        return null;
+      }
+
+      // Check for high utilization alerts
+      const utilization = data.totalConnections > 0 ? data.activeConnections / data.totalConnections : 0;
+      if (utilization > this.config.alertThresholds.highConnectionUtilization) {
+        await this.alertHighConnectionUtilization(data, utilization);
+      }
+
+      return result as string | null;
+    } catch (error) {
+      console.error('Error updating connection pool metrics:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Update cache performance metrics
+   */
+  async updateCachePerformance(data: CachePerformanceData): Promise<string | null> {
+    if (!this.config.enabled) return null;
+
+    try {
+      await this.initialize();
+
+      const { data: result, error } = await this.supabase.rpc('update_cache_performance_metrics', {
+        p_cache_name: data.cacheName,
+        p_cache_type: data.cacheType,
+        p_hit_count: data.hitCount,
+        p_miss_count: data.missCount,
+        p_avg_response_time_ms: data.avgResponseTimeMs,
+        p_max_response_time_ms: data.maxResponseTimeMs,
+        p_min_response_time_ms: data.minResponseTimeMs,
+        p_memory_usage_bytes: data.memoryUsageBytes,
+        p_memory_limit_bytes: data.memoryLimitBytes,
+        p_eviction_count: data.evictionCount,
+      });
+
+      if (error) {
+        console.error('Failed to update cache performance:', error);
+        return null;
+      }
+
+      // Check for low hit rate alerts
+      const hitRate = (data.hitCount + data.missCount) > 0 ? data.hitCount / (data.hitCount + data.missCount) : 0;
+      if (hitRate < this.config.alertThresholds.lowCacheHitRate) {
+        await this.alertLowCacheHitRate(data, hitRate);
+      }
+
+      return result as string | null;
+    } catch (error) {
+      console.error('Error updating cache performance:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Run maintenance job
+   */
+  async runMaintenanceJob(data: MaintenanceJobData): Promise<string | null> {
+    if (!this.config.enabled) return null;
+
+    try {
+      await this.initialize();
+
+      const { data: result, error } = await this.supabase.rpc('run_maintenance_job', {
+        p_job_name: data.jobName,
+        p_job_type: data.jobType,
+      });
+
+      if (error) {
+        console.error('Failed to run maintenance job:', error);
+        return null;
+      }
+
+      return result as string | null;
+    } catch (error) {
+      console.error('Error running maintenance job:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Get performance recommendations
+   */
+  async getPerformanceRecommendations(): Promise<PerformanceRecommendation[]> {
+    if (!this.config.enabled) return [];
+
+    try {
+      await this.initialize();
+
+      const { data, error } = await this.supabase.rpc('get_performance_recommendations');
+
+      if (error) {
+        console.error('Failed to get performance recommendations:', error);
+        return [];
+      }
+
+      return (data as PerformanceRecommendation[]) || [];
+    } catch (error) {
+      console.error('Error getting performance recommendations:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Cleanup old performance data
+   */
+  async cleanupPerformanceData(): Promise<number> {
+    if (!this.config.enabled) return 0;
+
+    try {
+      await this.initialize();
+
+      const { data, error } = await this.supabase.rpc('cleanup_performance_data');
+
+      if (error) {
+        console.error('Failed to cleanup performance data:', error);
+        return 0;
+      }
+
+      return (data as number) || 0;
+    } catch (error) {
+      console.error('Error cleaning up performance data:', error);
+      return 0;
+    }
+  }
+
+  /**
+   * Add custom performance metric
+   */
+  async addPerformanceMetric(metric: PerformanceMetrics): Promise<string | null> {
+    if (!this.config.enabled) return null;
+
+    try {
+      await this.initialize();
+
+      const { data, error } = await this.supabase
+        .from('performance_metrics')
+        .insert({
+          metric_type: metric.metricType,
+          metric_name: metric.metricName,
+          metric_value: metric.metricValue,
+          metric_unit: metric.metricUnit,
+          table_name: metric.tableName,
+          index_name: metric.indexName,
+          query_hash: metric.queryHash,
+          query_text: metric.queryText,
+          execution_time_ms: metric.executionTimeMs,
+          rows_affected: metric.rowsAffected,
+          rows_scanned: metric.rowsScanned,
+          buffer_reads: metric.bufferReads,
+          buffer_hits: metric.bufferHits,
+        })
+        .select('id')
+        .single();
+
+      if (error) {
+        console.error('Failed to add performance metric:', error);
+        return null;
+      }
+
+      return (data?.id as string) || null;
+    } catch (error) {
+      console.error('Error adding performance metric:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Get performance statistics
+   */
+  async getPerformanceStats(timeRange: '1h' | '24h' | '7d' | '30d' = '24h') {
+    if (!this.config.enabled) return null;
+
+    try {
+      await this.initialize();
+
+      const timeFilter = this.getTimeFilter(timeRange);
+
+      // Get query performance stats
+      const { data: queryStats, error: queryError } = await this.supabase
+        .from('query_performance_log')
+        .select('execution_time_ms, rows_affected, rows_scanned')
+        .gte('created_at', timeFilter);
+
+      if (queryError) {
+        console.error('Failed to get query stats:', queryError);
+        return null;
+      }
+
+      // Get cache performance stats
+      const { data: cacheStats, error: cacheError } = await this.supabase
+        .from('cache_performance_log')
+        .select('hit_rate, avg_response_time_ms, memory_usage_percent')
+        .gte('updated_at', timeFilter);
+
+      if (cacheError) {
+        console.error('Failed to get cache stats:', cacheError);
+        return null;
+      }
+
+      // Calculate statistics
+      const stats = {
+        queryPerformance: {
+          totalQueries: queryStats?.length || 0,
+          avgExecutionTime: this.calculateAverage(queryStats, 'execution_time_ms'),
+          slowQueries: queryStats?.filter(q => (q.execution_time_ms as number) > this.config.slowQueryThresholdMs).length || 0,
+          totalRowsAffected: queryStats?.reduce((sum, q) => sum + ((q.rows_affected as number) || 0), 0) || 0,
+        },
+        cachePerformance: {
+          avgHitRate: this.calculateAverage(cacheStats, 'hit_rate'),
+          avgResponseTime: this.calculateAverage(cacheStats, 'avg_response_time_ms'),
+          avgMemoryUsage: this.calculateAverage(cacheStats, 'memory_usage_percent'),
+        },
+        recommendations: await this.getPerformanceRecommendations(),
+      };
+
+      return stats;
+    } catch (error) {
+      console.error('Error getting performance stats:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Schedule automated maintenance
+   */
+  async scheduleMaintenance(): Promise<void> {
+    if (!this.config.enabled || !this.config.autoCleanup) return;
+
+    try {
+      // Run cleanup job
+      await this.runMaintenanceJob({
+        jobName: 'automated_cleanup',
+        jobType: 'cleanup',
+      });
+
+      // Run analyze job
+      await this.runMaintenanceJob({
+        jobName: 'automated_analyze',
+        jobType: 'analyze',
+      });
+
+      console.log('✅ Automated maintenance completed');
+    } catch (error) {
+      console.error('❌ Automated maintenance failed:', error);
+    }
+  }
+
+  // Private helper methods
+
+  private getTimeFilter(timeRange: string): string {
+    const now = new Date();
+    switch (timeRange) {
+      case '1h':
+        return new Date(now.getTime() - 60 * 60 * 1000).toISOString();
+      case '24h':
+        return new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
+      case '7d':
+        return new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
+      case '30d':
+        return new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
+      default:
+        return new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
+    }
+  }
+
+  private calculateAverage(data: any[], field: string): number {
+    if (!data || data.length === 0) return 0;
+    const sum = data.reduce((acc, item) => acc + ((item[field] as number) || 0), 0);
+    return sum / data.length;
+  }
+
+  private async alertSlowQuery(data: QueryPerformanceData): Promise<void> {
+    console.warn(`🚨 Slow query detected: ${data.querySignature} (${data.executionTimeMs}ms)`);
+    // In production, this would send to your alerting system
+  }
+
+  private async alertLowIndexEfficiency(data: IndexUsageData, efficiency: number): Promise<void> {
+    console.warn(`🚨 Low index efficiency: ${data.indexName} on ${data.tableName} (${(efficiency * 100).toFixed(1)}%)`);
+    // In production, this would send to your alerting system
+  }
+
+  private async alertHighConnectionUtilization(data: ConnectionPoolData, utilization: number): Promise<void> {
+    console.warn(`🚨 High connection utilization: ${data.poolName} (${(utilization * 100).toFixed(1)}%)`);
+    // In production, this would send to your alerting system
+  }
+
+  private async alertLowCacheHitRate(data: CachePerformanceData, hitRate: number): Promise<void> {
+    console.warn(`🚨 Low cache hit rate: ${data.cacheName} (${(hitRate * 100).toFixed(1)}%)`);
+    // In production, this would send to your alerting system
   }
 }
 
-// Global instance
-let performanceMonitor: PerformanceMonitor | null = null
+// Global performance monitor instance
+export const performanceMonitor = new PerformanceMonitor();
 
-export const getPerformanceMonitor = (): PerformanceMonitor => {
-  if (!performanceMonitor) {
-    performanceMonitor = new PerformanceMonitor()
+// Helper functions for easy integration
+
+/**
+ * Track query performance with automatic timing
+ */
+export async function trackQuery<T>(
+  queryFn: () => Promise<T>,
+  queryHash: string,
+  querySignature: string,
+  queryType: QueryPerformanceData['queryType'] = 'SELECT',
+  context?: Partial<QueryPerformanceData>
+): Promise<T> {
+  const startTime = Date.now();
+  
+  try {
+    const result = await queryFn();
+    const executionTime = Date.now() - startTime;
+    
+    await performanceMonitor.trackQueryPerformance({
+      queryHash,
+      querySignature,
+      queryType,
+      executionTimeMs: executionTime,
+      ...context,
+    });
+    
+    return result;
+  } catch (error) {
+    const executionTime = Date.now() - startTime;
+    
+    await performanceMonitor.trackQueryPerformance({
+      queryHash,
+      querySignature,
+      queryType,
+      executionTimeMs: executionTime,
+      ...context,
+    });
+    
+    throw error;
   }
-  return performanceMonitor
 }
 
-// Auto-initialize when module is imported (only in browser)
-if (typeof window !== 'undefined') {
-  // Use setTimeout to ensure this runs after the module is fully loaded
-  setTimeout(() => {
-    getPerformanceMonitor()
-  }, 0)
+/**
+ * Track cache performance
+ */
+export async function trackCache<T>(
+  cacheFn: () => Promise<T>,
+  cacheName: string,
+  cacheType: CachePerformanceData['cacheType'] = 'memory',
+  context?: Partial<CachePerformanceData>
+): Promise<T> {
+  const startTime = Date.now();
+  
+  try {
+    const result = await cacheFn();
+    const responseTime = Date.now() - startTime;
+    
+    await performanceMonitor.updateCachePerformance({
+      cacheName,
+      cacheType,
+      hitCount: 1,
+      missCount: 0,
+      avgResponseTimeMs: responseTime,
+      ...context,
+    });
+    
+    return result;
+  } catch (error) {
+    const responseTime = Date.now() - startTime;
+    
+    await performanceMonitor.updateCachePerformance({
+      cacheName,
+      cacheType,
+      hitCount: 0,
+      missCount: 1,
+      avgResponseTimeMs: responseTime,
+      ...context,
+    });
+    
+    throw error;
+  }
 }
+
+/**
+ * Initialize performance monitoring
+ */
+export async function initializePerformanceMonitoring(config?: Partial<PerformanceConfig>): Promise<void> {
+  if (config) {
+    Object.assign(performanceMonitor, config);
+  }
+  
+  await performanceMonitor.initialize();
+  
+  // Schedule automated maintenance
+  await performanceMonitor.scheduleMaintenance();
+}
+
+/**
+ * Get performance recommendations
+ */
+export async function getPerformanceRecommendations(): Promise<PerformanceRecommendation[]> {
+  return performanceMonitor.getPerformanceRecommendations();
+}
+
+/**
+ * Get performance statistics
+ */
+export async function getPerformanceStats(timeRange?: '1h' | '24h' | '7d' | '30d') {
+  return performanceMonitor.getPerformanceStats(timeRange);
+}
+
+export default performanceMonitor;

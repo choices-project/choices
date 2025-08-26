@@ -1,21 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/utils/supabase/server'
 import { cookies } from 'next/headers'
-import { rateLimit } from '@/lib/rate-limit'
-
-// Rate limiting: 10 attempts per hour per IP
-const limiter = rateLimit({
-  interval: 60 * 60 * 1000, // 1 hour
-  uniqueTokenPerInterval: 500,
-})
+import { rateLimiters } from '@/lib/rate-limit'
 
 export async function POST(request: NextRequest) {
   try {
-    // Rate limiting
-    const ip = request.ip || request.headers.get('x-forwarded-for') || 'unknown'
-    const { success } = await limiter.check(10, ip)
+    // Rate limiting: 10 attempts per hour per IP
+    const rateLimitResult = await rateLimiters.biometric.check(request)
     
-    if (!success) {
+    if (!rateLimitResult.allowed) {
       return NextResponse.json(
         { message: 'Too many biometric setup attempts. Please try again later.' },
         { status: 429 }

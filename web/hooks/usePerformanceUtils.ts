@@ -19,10 +19,10 @@ export function usePerformanceUtils() {
         setError(null)
         
         // Dynamic imports - only loaded on client side
-        const performanceModule = await import('../lib/performance-monitor')
+        const performanceModule = await import('../lib/performance-monitor-simple')
         
         setUtils({
-          performanceMonitor: performanceModule.getPerformanceMonitor
+          performanceMonitor: performanceModule.simplePerformanceMonitor
         })
       } catch (err) {
         devLog('Error loading performance utils:', err)

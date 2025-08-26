@@ -1,22 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/utils/supabase/server'
 import { cookies } from 'next/headers'
-import { rateLimit } from '@/lib/rate-limit'
 import { logger } from '@/lib/logger'
-
-// Rate limiting: 5 attempts per minute per IP
-const limiter = rateLimit({
-  interval: 60 * 1000, // 1 minute
-  uniqueTokenPerInterval: 500,
-})
+import { rateLimiters } from '@/lib/rate-limit'
 
 export async function POST(request: NextRequest) {
   try {
-    // Rate limiting
-    const ip = request.ip || request.headers.get('x-forwarded-for') || 'unknown'
-    const { success } = await limiter.check(5, ip)
+    // Rate limiting: 10 login attempts per 15 minutes per IP
+    const rateLimitResult = await rateLimiters.auth.check(request)
     
-    if (!success) {
+    if (!rateLimitResult.allowed) {
       return NextResponse.json(
         { message: 'Too many login attempts. Please try again later.' },
         { status: 429 }
@@ -25,94 +18,112 @@ export async function POST(request: NextRequest) {
 
     // Validate request
     const body = await request.json()
-    const { email, password } = body
+    const { username, password } = body
 
-    if (!email || !password) {
+    // Validate required fields
+    if (!username || !password) {
       return NextResponse.json(
-        { message: 'Email and password are required' },
+        { message: 'Username and password are required' },
         { status: 400 }
       )
     }
 
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (!emailRegex.test(email)) {
+    // Validate username format
+    if (!/^[a-zA-Z0-9_-]+$/.test(username)) {
       return NextResponse.json(
-        { message: 'Invalid email format' },
+        { message: 'Invalid username format' },
         { status: 400 }
       )
     }
 
-    // Create Supabase client
-    const cookieStore = await cookies()
-    const supabase = createClient(cookieStore)
-
+    const supabase = createClient(cookies())
     if (!supabase) {
-      logger.error('Failed to create Supabase client')
       return NextResponse.json(
         { message: 'Authentication service not available' },
         { status: 500 }
       )
     }
 
-    // Attempt authentication
+    // Convert username to internal email format
+    const internalEmail = `${username.toLowerCase()}@choices.local`
+
+    // Attempt to sign in
     const { data, error } = await supabase.auth.signInWithPassword({
-      email: email.toLowerCase().trim(),
-      password,
+      email: internalEmail,
+      password: password,
     })
 
     if (error) {
-      // Log failed login attempt for security monitoring
-      logger.warn('Failed login attempt', {
-        email,
-        error: error.message,
-        ip,
+      logger.warn('Login failed', {
+        username: username.toLowerCase(),
+        ip: rateLimitResult.reputation?.ip || 'unknown',
+        error: error.message
       })
 
+      // Handle specific error cases
+      if (error.message.includes('Invalid login credentials')) {
+        return NextResponse.json(
+          { message: 'Invalid username or password' },
+          { status: 401 }
+        )
+      }
+
+      if (error.message.includes('Email not confirmed')) {
+        return NextResponse.json(
+          { message: 'Account not verified. Please check your email.' },
+          { status: 401 }
+        )
+      }
+
       return NextResponse.json(
-        { message: 'Invalid email or password' },
+        { message: error.message },
         { status: 401 }
       )
     }
 
     if (!data.user) {
       return NextResponse.json(
-        { message: 'Authentication failed' },
-        { status: 401 }
+        { message: 'Login failed' },
+        { status: 500 }
       )
     }
 
-    // Get user profile for role-based redirect
-    const { data: profile } = await supabase
+    // Get user profile
+    const { data: profile, error: profileError } = await supabase
       .from('user_profiles')
-      .select('trust_tier, username')
-      .eq('user_id', data.user.id)
+      .select('*')
+      .eq('id', data.user.id)
       .single()
 
+    if (profileError) {
+      logger.error('Failed to fetch user profile', new Error(profileError.message))
+      // Don't fail the login, but log the error
+    }
+
     // Log successful login
-    logger.userAction('login_successful', data.user.id, {
-      email: data.user.email,
-      trust_tier: profile?.trust_tier,
-      ip,
+    logger.info('User logged in successfully', {
+      userId: data.user.id,
+      username: username.toLowerCase(),
+      ip: rateLimitResult.reputation?.ip || 'unknown',
+      authMethod: 'password'
     })
 
-    // Return success response with user info
+    // Return success response with user data
     return NextResponse.json({
+      success: true,
       message: 'Login successful',
       user: {
         id: data.user.id,
+        username: profile?.username || username.toLowerCase(),
+        displayName: profile?.display_name || username,
         email: data.user.email,
-        trust_tier: profile?.trust_tier || 'T1',
-        username: profile?.username,
+        authMethods: profile?.auth_methods || {}
       },
-      session: data.session,
+      session: data.session
     })
 
   } catch (error) {
-    logger.error('Login API error', error instanceof Error ? error : new Error(String(error)), {
-      ip: request.ip || request.headers.get('x-forwarded-for') || 'unknown',
-    })
-    
+    logger.error('Login API error', error instanceof Error ? error : new Error('Unknown error'))
     return NextResponse.json(
       { message: 'Internal server error' },
       { status: 500 }

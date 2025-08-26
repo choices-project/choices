@@ -1,22 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/utils/supabase/server'
 import { cookies } from 'next/headers'
-import { rateLimit } from '@/lib/rate-limit'
+import { rateLimiters } from '@/lib/rate-limit'
 import { logger } from '@/lib/logger'
-
-// Rate limiting: 10 attempts per hour per IP
-const limiter = rateLimit({
-  interval: 60 * 60 * 1000, // 1 hour
-  uniqueTokenPerInterval: 500,
-})
 
 export async function POST(request: NextRequest) {
   try {
-    // Rate limiting
-    const ip = request.ip || request.headers.get('x-forwarded-for') || 'unknown'
-    const { success } = await limiter.check(10, ip)
+    // Rate limiting: 10 attempts per hour per IP
+    const rateLimitResult = await rateLimiters.biometric.check(request)
     
-    if (!success) {
+    if (!rateLimitResult.allowed) {
       return NextResponse.json(
         { message: 'Too many biometric authentication attempts. Please try again later.' },
         { status: 429 }
@@ -69,7 +62,10 @@ export async function POST(request: NextRequest) {
     const user = users.find(u => u.email?.toLowerCase() === email.toLowerCase())
     
     if (!user) {
-      logger.warn('Biometric authentication attempt for non-existent user', { email, ip })
+      logger.warn('Biometric authentication attempt for non-existent user', { 
+        email, 
+        ip: rateLimitResult.reputation?.ip || 'unknown' 
+      })
       return NextResponse.json(
         { message: 'User not found' },
         { status: 404 }
@@ -139,11 +135,10 @@ export async function POST(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
-    // Rate limiting
-    const ip = request.ip || request.headers.get('x-forwarded-for') || 'unknown'
-    const { success } = await limiter.check(10, ip)
+    // Rate limiting: 10 attempts per hour per IP
+    const rateLimitResult = await rateLimiters.biometric.check(request)
     
-    if (!success) {
+    if (!rateLimitResult.allowed) {
       return NextResponse.json(
         { message: 'Too many biometric authentication attempts. Please try again later.' },
         { status: 429 }
@@ -187,7 +182,10 @@ export async function PUT(request: NextRequest) {
     const user = users.find(u => u.email?.toLowerCase() === email.toLowerCase())
     
     if (!user) {
-      logger.warn('Biometric authentication attempt for non-existent user', { email, ip })
+      logger.warn('Biometric authentication attempt for non-existent user', { 
+        email, 
+        ip: rateLimitResult.reputation?.ip || 'unknown' 
+      })
       return NextResponse.json(
         { message: 'User not found' },
         { status: 404 }
@@ -255,7 +253,7 @@ export async function PUT(request: NextRequest) {
     logger.userAction('biometric_login_successful', user.id, {
       email: user.email,
       trust_tier: userProfile?.trust_tier,
-      ip,
+      ip: rateLimitResult.reputation?.ip || 'unknown',
     })
 
     return NextResponse.json({

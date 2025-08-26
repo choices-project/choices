@@ -6,12 +6,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Fingerprint, Shield, CheckCircle, XCircle, AlertTriangle } from 'lucide-react'
-import { 
-  registerBiometric, 
+import {
+  registerBiometric,
   isWebAuthnSupported, 
   isBiometricAvailable,
-  getUserBiometricCredentials,
-  hasBiometricCredentials
+  getUserCredentials
 } from '@/lib/webauthn'
 import { devLog } from '@/lib/logger'
 
@@ -78,12 +77,12 @@ export default function BiometricSetup({ userId, username, onSuccess, onError }:
           setIsAvailable(available)
 
           if (available) {
-            const hasCreds = await hasBiometricCredentials()
+            // Check for existing credentials to provide better user feedback
+            const existingCreds = await getUserCredentials(userId)
+            const hasCreds = existingCreds.success && (existingCreds.credentials?.length || 0) > 0
             setHasCredentials(hasCreds)
             
-            // Check for existing credentials to provide better user feedback
             if (hasCreds) {
-              const existingCreds = await getUserBiometricCredentials()
               devLog('Existing biometric credentials found:', existingCreds.credentials?.length || 0)
             }
           }
@@ -111,7 +110,7 @@ export default function BiometricSetup({ userId, username, onSuccess, onError }:
         setHasCredentials(true)
         onSuccess?.()
       } else {
-        const errorMessage = result.error || 'Registration failed'
+        const errorMessage = result.error?.message || 'Registration failed'
         setError(errorMessage)
         // Use the error parameter properly in the callback
         onError?.(errorMessage)
