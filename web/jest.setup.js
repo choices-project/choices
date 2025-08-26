@@ -22,8 +22,17 @@ if (typeof global.atob === 'undefined') {
 
 // Set test environment variables
 process.env.NODE_ENV = 'test'
-process.env.NEXT_PUBLIC_SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://test.supabase.co'
-process.env.SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || 'test-key'
+
+// Load actual environment variables for tests
+require('dotenv').config({ path: '.env.local' })
+
+// Only set defaults if not already set
+if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
+  process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://test.supabase.co'
+}
+if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+  process.env.SUPABASE_SERVICE_ROLE_KEY = 'test-key'
+}
 
 // Increase timeout for database operations
 jest.setTimeout(30000)

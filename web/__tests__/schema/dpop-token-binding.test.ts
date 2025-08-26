@@ -73,7 +73,8 @@ describe('DPoP Token Binding', () => {
 
     it('should calculate JKT correctly from JWK', async () => {
       const keyPair = await generateDPoPKeyPair()
-      const calculatedJkt = await calculateJKT(keyPair.publicKey)
+      const publicKeyJwk = await crypto.subtle.exportKey('jwk', keyPair.publicKey)
+      const calculatedJkt = await calculateJKT(publicKeyJwk)
       
       expect(calculatedJkt).toBe(keyPair.jkt)
     })
