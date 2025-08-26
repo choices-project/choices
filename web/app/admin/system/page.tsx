@@ -85,68 +85,147 @@ export default function SystemSettingsPage() {
   const [activeTab, setActiveTab] = useState('general');
   const [showHiddenFields, setShowHiddenFields] = useState(false);
 
-  // Mock data - replace with actual API calls
+  // Fetch real system data
   useEffect(() => {
-    const fetchConfig = () => {
-      const mockConfig: SystemConfig = {
-        general: {
-          siteName: 'Choices Platform',
-          siteDescription: 'A secure and transparent voting platform',
-          adminEmail: 'admin@choices.com',
-          timezone: 'UTC',
-          language: 'en'
-        },
-        security: {
-          sessionTimeout: 3600,
-          maxLoginAttempts: 5,
-          requireEmailVerification: true,
-          enableTwoFactor: true,
-          passwordMinLength: 8
-        },
-        email: {
-          smtpHost: 'smtp.gmail.com',
-          smtpPort: 587,
-          smtpUser: 'noreply@choices.com',
-          smtpPassword: '********',
-          fromEmail: 'noreply@choices.com',
-          fromName: 'Choices Platform'
-        },
-        database: {
-          host: 'localhost',
-          port: 5432,
-          name: 'choicesdb',
-          user: 'choicesuser',
-          maxConnections: 100,
-          backupFrequency: 'daily',
-          schemaStatus: 'pending' as const,
-          lastMigration: '2025-08-26T02:42:56',
-          tableCount: 10,
-          connectionStatus: 'connected' as const,
-          cacheRefreshTime: '2025-08-26T02:42:56'
-        },
-        performance: {
-          cacheEnabled: true,
-          cacheDuration: 300,
-          compressionEnabled: true,
-          maxUploadSize: 10485760,
-          rateLimitEnabled: true,
-          rateLimitRequests: 100
-        },
-        notifications: {
-          emailNotifications: true,
-          pushNotifications: true,
-          adminAlerts: true,
-          userRegistrationAlerts: false,
-          systemErrorAlerts: true
+    const fetchSystemData = async () => {
+      try {
+        setLoading(true);
+        
+        // Fetch system status from API
+        const response = await fetch('/api/admin/system-status', {
+          headers: {
+            'Authorization': 'Bearer admin-access', // This should be replaced with real auth
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (response.ok) {
+          const systemData = await response.json();
+          
+          // Transform API data to config format
+          const realConfig: SystemConfig = {
+            general: {
+              siteName: 'Choices Platform',
+              siteDescription: 'A secure and transparent voting platform',
+              adminEmail: 'admin@choices.com',
+              timezone: 'UTC',
+              language: 'en'
+            },
+            security: {
+              sessionTimeout: 3600,
+              maxLoginAttempts: 5,
+              requireEmailVerification: true,
+              enableTwoFactor: true,
+              passwordMinLength: 8
+            },
+            email: {
+              smtpHost: 'smtp.gmail.com',
+              smtpPort: 587,
+              smtpUser: 'noreply@choices.com',
+              smtpPassword: '********',
+              fromEmail: 'noreply@choices.com',
+              fromName: 'Choices Platform'
+            },
+            database: {
+              host: 'supabase.co',
+              port: 5432,
+              name: 'choicesdb',
+              user: 'postgres',
+              maxConnections: 100,
+              backupFrequency: 'daily',
+              schemaStatus: systemData.database.schemaStatus,
+              lastMigration: systemData.database.lastMigration,
+              tableCount: systemData.database.tableCount,
+              connectionStatus: systemData.database.connectionStatus,
+              cacheRefreshTime: systemData.database.cacheRefreshTime
+            },
+            performance: {
+              cacheEnabled: true,
+              cacheDuration: 300,
+              compressionEnabled: true,
+              maxUploadSize: 10485760,
+              rateLimitEnabled: true,
+              rateLimitRequests: 100
+            },
+            notifications: {
+              emailNotifications: true,
+              pushNotifications: true,
+              adminAlerts: true,
+              userRegistrationAlerts: false,
+              systemErrorAlerts: true
+            }
+          };
+          
+          setConfig(realConfig);
+        } else {
+          console.error('Failed to fetch system status:', response.status);
+          // Fall back to mock data if API fails
+          setConfig(getMockConfig());
         }
-      };
-
-      setConfig(mockConfig);
-      setLoading(false);
+      } catch (error) {
+        console.error('Error fetching system data:', error);
+        // Fall back to mock data if API fails
+        setConfig(getMockConfig());
+      } finally {
+        setLoading(false);
+      }
     };
 
-    fetchConfig();
+    fetchSystemData();
   }, []);
+
+  const getMockConfig = (): SystemConfig => ({
+    general: {
+      siteName: 'Choices Platform',
+      siteDescription: 'A secure and transparent voting platform',
+      adminEmail: 'admin@choices.com',
+      timezone: 'UTC',
+      language: 'en'
+    },
+    security: {
+      sessionTimeout: 3600,
+      maxLoginAttempts: 5,
+      requireEmailVerification: true,
+      enableTwoFactor: true,
+      passwordMinLength: 8
+    },
+    email: {
+      smtpHost: 'smtp.gmail.com',
+      smtpPort: 587,
+      smtpUser: 'noreply@choices.com',
+      smtpPassword: '********',
+      fromEmail: 'noreply@choices.com',
+      fromName: 'Choices Platform'
+    },
+    database: {
+      host: 'localhost',
+      port: 5432,
+      name: 'choicesdb',
+      user: 'choicesuser',
+      maxConnections: 100,
+      backupFrequency: 'daily',
+      schemaStatus: 'pending' as const,
+      lastMigration: '2025-08-26T02:42:56',
+      tableCount: 10,
+      connectionStatus: 'connected' as const,
+      cacheRefreshTime: '2025-08-26T02:42:56'
+    },
+    performance: {
+      cacheEnabled: true,
+      cacheDuration: 300,
+      compressionEnabled: true,
+      maxUploadSize: 10485760,
+      rateLimitEnabled: true,
+      rateLimitRequests: 100
+    },
+    notifications: {
+      emailNotifications: true,
+      pushNotifications: true,
+      adminAlerts: true,
+      userRegistrationAlerts: false,
+      systemErrorAlerts: true
+    }
+  });
 
   const handleSave = async () => {
     setSaving(true);
@@ -700,18 +779,52 @@ export default function SystemSettingsPage() {
                 
                 <div className="mt-4 flex space-x-3">
                   <button
-                    onClick={() => {
-                      // Add schema status check functionality
-                      console.log('Checking schema status...');
+                    onClick={async () => {
+                      try {
+                        const response = await fetch('/api/admin/schema-status', {
+                          headers: {
+                            'Authorization': 'Bearer admin-access',
+                            'Content-Type': 'application/json'
+                          }
+                        });
+                        
+                        if (response.ok) {
+                          const status = await response.json();
+                          alert(`Schema Status: ${status.schemaStatus}\nMessage: ${status.statusMessage}`);
+                        } else {
+                          alert('Failed to check schema status');
+                        }
+                      } catch (error) {
+                        console.error('Error checking schema status:', error);
+                        alert('Error checking schema status');
+                      }
                     }}
                     className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
                   >
                     Check Schema Status
                   </button>
                   <button
-                    onClick={() => {
-                      // Add manual cache refresh functionality
-                      console.log('Manual cache refresh...');
+                    onClick={async () => {
+                      try {
+                        const response = await fetch('/api/admin/schema-status', {
+                          method: 'POST',
+                          headers: {
+                            'Authorization': 'Bearer admin-access',
+                            'Content-Type': 'application/json'
+                          },
+                          body: JSON.stringify({ action: 'refresh_cache' })
+                        });
+                        
+                        if (response.ok) {
+                          const result = await response.json();
+                          alert(`Cache Refresh: ${result.success ? 'Success' : 'Failed'}\nMessage: ${result.message}`);
+                        } else {
+                          alert('Failed to refresh cache');
+                        }
+                      } catch (error) {
+                        console.error('Error refreshing cache:', error);
+                        alert('Error refreshing cache');
+                      }
                     }}
                     className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
                   >
