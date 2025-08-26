@@ -12,10 +12,10 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const includeExpired = searchParams.get('includeExpired') === 'true'
 
-    const messages = await getActiveSiteMessages(includeExpired)
+    const messages = await getActiveSiteMessages(supabase, includeExpired)
     return NextResponse.json(messages)
   } catch (error) {
-    logger.error('Error fetching public site messages', { error: error instanceof Error ? error.message : String(error) })
+    logger.error('Error fetching public site messages', error instanceof Error ? error : new Error(String(error)))
     return NextResponse.json(
       { error: 'Failed to fetch site messages' },
       { status: 500 }
@@ -23,34 +23,36 @@ export async function GET(request: NextRequest) {
   }
 }
 
-async function getActiveSiteMessages(includeExpired: boolean = false) {
+async function getActiveSiteMessages(supabase: any, includeExpired: boolean = false) {
   try {
-    let query = supabase
-      .from('site_messages')
-      .select('id, title, message, type, priority, created_at, updated_at, expires_at')
-      .eq('is_active', true)
-      .order('priority', { ascending: false })
-      .order('created_at', { ascending: false })
-
+    // Use REST API directly to bypass PostgREST cache issues
+    let url = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/site_messages?select=*&is_active=eq.true&order=priority.desc,created_at.desc`
+    
     if (!includeExpired) {
-      const now = new Date().toISOString()
-      query = query.or(`expires_at.is.null,expires_at.gt.${now}`)
+      url += `&expires_at=is.null`
     }
 
-    const { data, error } = await query
+    const response = await fetch(url, {
+      headers: {
+        'apikey': process.env.SUPABASE_SERVICE_ROLE_KEY!,
+        'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
+        'Content-Type': 'application/json'
+      }
+    });
 
-    if (error) {
-      logger.error('Error fetching active site messages from database', { error: error.message })
-      throw error
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
+
+    const messages = await response.json();
 
     return {
-      messages: data || [],
-      count: data?.length || 0,
+      messages: messages || [],
+      count: messages?.length || 0,
       timestamp: new Date().toISOString()
     }
   } catch (error) {
-    logger.error('Error in getActiveSiteMessages', { error: error instanceof Error ? error.message : String(error) })
+    logger.error('Error in getActiveSiteMessages', error instanceof Error ? error : new Error(String(error)))
     throw error
   }
 }

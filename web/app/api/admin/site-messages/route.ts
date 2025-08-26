@@ -1,29 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { withAuth, AuthContext } from '@/lib/auth-middleware'
 import { logger } from '@/lib/logger'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
-
-export async function GET(request: NextRequest) {
+export const GET = withAuth(async (request: NextRequest, context: AuthContext) => {
   try {
     logger.info('Admin site messages GET request', { 
       ip: request.headers.get('x-forwarded-for') || 'unknown',
-      userAgent: request.headers.get('user-agent') || 'unknown'
+      userAgent: request.headers.get('user-agent') || 'unknown',
+      userId: context.user.id
     })
-
-    // Check if user is authenticated and has admin access
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
 
     const { searchParams } = new URL(request.url)
     const includeInactive = searchParams.get('includeInactive') === 'true'
 
-    const messages = await getSiteMessages(includeInactive)
+    const messages = await getSiteMessages(context.supabase, includeInactive)
     return NextResponse.json(messages)
   } catch (error) {
     logger.error('Error fetching site messages', error instanceof Error ? error : new Error(String(error)))
@@ -32,20 +22,15 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+}, { requireAdmin: true })
 
-export async function POST(request: NextRequest) {
+export const POST = withAuth(async (request: NextRequest, context: AuthContext) => {
   try {
     logger.info('Admin site messages POST request', { 
       ip: request.headers.get('x-forwarded-for') || 'unknown',
-      userAgent: request.headers.get('user-agent') || 'unknown'
+      userAgent: request.headers.get('user-agent') || 'unknown',
+      userId: context.user.id
     })
-
-    // Check if user is authenticated and has admin access
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
 
     const body = await request.json()
     const { title, message, type, priority, isActive, expiresAt } = body
@@ -58,7 +43,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const newMessage = await createSiteMessage({
+    const newMessage = await createSiteMessage(context.supabase, {
       title,
       message,
       type,
@@ -75,20 +60,15 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+}, { requireAdmin: true })
 
-export async function PUT(request: NextRequest) {
+export const PUT = withAuth(async (request: NextRequest, context: AuthContext) => {
   try {
     logger.info('Admin site messages PUT request', { 
       ip: request.headers.get('x-forwarded-for') || 'unknown',
-      userAgent: request.headers.get('user-agent') || 'unknown'
+      userAgent: request.headers.get('user-agent') || 'unknown',
+      userId: context.user.id
     })
-
-    // Check if user is authenticated and has admin access
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
 
     const body = await request.json()
     const { id, title, message, type, priority, isActive, expiresAt } = body
@@ -100,7 +80,7 @@ export async function PUT(request: NextRequest) {
       )
     }
 
-    const updatedMessage = await updateSiteMessage(id, {
+    const updatedMessage = await updateSiteMessage(context.supabase, id, {
       title,
       message,
       type,
@@ -117,20 +97,15 @@ export async function PUT(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+}, { requireAdmin: true })
 
-export async function DELETE(request: NextRequest) {
+export const DELETE = withAuth(async (request: NextRequest, context: AuthContext) => {
   try {
     logger.info('Admin site messages DELETE request', { 
       ip: request.headers.get('x-forwarded-for') || 'unknown',
-      userAgent: request.headers.get('user-agent') || 'unknown'
+      userAgent: request.headers.get('user-agent') || 'unknown',
+      userId: context.user.id
     })
-
-    // Check if user is authenticated and has admin access
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
 
     const { searchParams } = new URL(request.url)
     const id = searchParams.get('id')
@@ -142,7 +117,7 @@ export async function DELETE(request: NextRequest) {
       )
     }
 
-    await deleteSiteMessage(id)
+    await deleteSiteMessage(context.supabase, id)
     return NextResponse.json({ success: true })
   } catch (error) {
     logger.error('Error deleting site message', error instanceof Error ? error : new Error(String(error)))
@@ -151,30 +126,35 @@ export async function DELETE(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+}, { requireAdmin: true })
 
-async function getSiteMessages(includeInactive: boolean = false) {
+async function getSiteMessages(supabase: any, includeInactive: boolean = false) {
   try {
-    let query = supabase
-      .from('site_messages')
-      .select('*')
-      .order('created_at', { ascending: false })
-
+    // Use REST API directly to bypass PostgREST cache issues
+    let url = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/site_messages?select=*&order=created_at.desc`
+    
     if (!includeInactive) {
-      query = query.eq('is_active', true)
+      url += `&is_active=eq.true`
     }
 
-    const { data, error } = await query
+    const response = await fetch(url, {
+      headers: {
+        'apikey': process.env.SUPABASE_SERVICE_ROLE_KEY!,
+        'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
+        'Content-Type': 'application/json'
+      }
+    });
 
-    if (error) {
-      logger.error('Error fetching site messages from database', new Error(error.message))
-      throw error
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
+
+    const messages = await response.json();
 
     return {
-      messages: data || [],
-      count: data?.length || 0,
-      activeCount: data?.filter(m => m.is_active).length || 0
+      messages: messages || [],
+      count: messages?.length || 0,
+      activeCount: messages?.filter((m: any) => m.is_active).length || 0
     }
   } catch (error) {
     logger.error('Error in getSiteMessages', error instanceof Error ? error : new Error(String(error)))
@@ -182,7 +162,7 @@ async function getSiteMessages(includeInactive: boolean = false) {
   }
 }
 
-async function createSiteMessage(messageData: {
+async function createSiteMessage(supabase: any, messageData: {
   title: string
   message: string
   type: string
@@ -224,7 +204,7 @@ async function createSiteMessage(messageData: {
   }
 }
 
-async function updateSiteMessage(id: string, updateData: {
+async function updateSiteMessage(supabase: any, id: string, updateData: {
   title?: string
   message?: string
   type?: string
@@ -269,7 +249,7 @@ async function updateSiteMessage(id: string, updateData: {
   }
 }
 
-async function deleteSiteMessage(id: string) {
+async function deleteSiteMessage(supabase: any, id: string) {
   try {
     const { error } = await supabase
       .from('site_messages')
@@ -277,13 +257,13 @@ async function deleteSiteMessage(id: string) {
       .eq('id', id)
 
     if (error) {
-      logger.error('Error deleting site message from database', { error: error.message })
+      logger.error('Error deleting site message from database', new Error(error.message))
       throw error
     }
 
     logger.info('Site message deleted successfully', { id })
   } catch (error) {
-    logger.error('Error in deleteSiteMessage', { error: error instanceof Error ? error.message : String(error) })
+    logger.error('Error in deleteSiteMessage', error instanceof Error ? error : new Error(String(error)))
     throw error
   }
 }

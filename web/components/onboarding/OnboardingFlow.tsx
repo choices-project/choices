@@ -196,6 +196,8 @@ function OnboardingFlowInner() {
             <Suspense fallback={<div>Loading...</div>}>
               {currentStep === 'welcome' && (
                 <WelcomeStep 
+                  data={onboardingData}
+                  onUpdate={updateData}
                   onNext={handleNext}
                 />
               )}
