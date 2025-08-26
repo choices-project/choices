@@ -219,7 +219,7 @@ async function createSiteMessage(messageData: {
 
     return data
   } catch (error) {
-    logger.error('Error in createSiteMessage', { error: error instanceof Error ? error.message : String(error) })
+    logger.error('Error in createSiteMessage', error instanceof Error ? error : new Error(String(error)))
     throw error
   }
 }
@@ -252,7 +252,7 @@ async function updateSiteMessage(id: string, updateData: {
       .single()
 
     if (error) {
-      logger.error('Error updating site message in database', { error: error.message })
+      logger.error('Error updating site message in database', new Error(error.message))
       throw error
     }
 
@@ -264,7 +264,7 @@ async function updateSiteMessage(id: string, updateData: {
 
     return data
   } catch (error) {
-    logger.error('Error in updateSiteMessage', { error: error instanceof Error ? error.message : String(error) })
+    logger.error('Error in updateSiteMessage', error instanceof Error ? error : new Error(String(error)))
     throw error
   }
 }
