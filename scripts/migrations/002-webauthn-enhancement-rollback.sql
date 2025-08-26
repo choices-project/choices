@@ -65,3 +65,4 @@ DROP TABLE IF EXISTS webauthn_credentials_v2;
 -- All WebAuthn enhancement tables and functions have been removed
 -- The original webauthn_credentials table remains unchanged
 
+

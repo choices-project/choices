@@ -3,6 +3,8 @@ import { Inter } from 'next/font/google';
 import './globals.css'
 import { PWAInstallPrompt, OfflineIndicator, PWAUpdatePrompt } from '../components/PWAComponents';
 import EnhancedFeedbackWidget from '../components/EnhancedFeedbackWidget'
+import SiteMessages from '../components/SiteMessages'
+import GlobalNavigation from '../components/GlobalNavigation'
 import ClientOnly from '../components/ClientOnly'
 // Removed old Supabase-based AuthProvider - using custom auth system instead
 
@@ -48,6 +50,18 @@ export default function RootLayout({
         <meta name="msapplication-tileImage" content="/favicon.ico" />
       </head>
       <body className={inter.className}>
+        {/* Global Navigation */}
+        <ClientOnly>
+          <GlobalNavigation />
+        </ClientOnly>
+        
+        {/* Site Messages - Display below navigation */}
+        <ClientOnly>
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
+            <SiteMessages />
+          </div>
+        </ClientOnly>
+        
         {children}
         
         {/* PWA Components - Only render on client side */}

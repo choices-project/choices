@@ -53,6 +53,11 @@ interface SystemConfig {
     user: string;
     maxConnections: number;
     backupFrequency: string;
+    schemaStatus: 'refreshed' | 'pending' | 'error';
+    lastMigration: string;
+    tableCount: number;
+    connectionStatus: 'connected' | 'disconnected' | 'error';
+    cacheRefreshTime: string;
   };
   performance: {
     cacheEnabled: boolean;
@@ -61,13 +66,6 @@ interface SystemConfig {
     maxUploadSize: number;
     rateLimitEnabled: boolean;
     rateLimitRequests: number;
-  };
-  database: {
-    schemaStatus: 'refreshed' | 'pending' | 'error';
-    lastMigration: string;
-    tableCount: number;
-    connectionStatus: 'connected' | 'disconnected' | 'error';
-    cacheRefreshTime: string;
   };
   notifications: {
     emailNotifications: boolean;

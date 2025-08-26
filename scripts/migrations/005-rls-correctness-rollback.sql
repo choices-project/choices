@@ -146,3 +146,4 @@ DROP FUNCTION IF EXISTS get_rls_statistics();
 -- Tables remain with RLS enabled but no policies (blocking all access)
 -- Original RLS policies would need to be manually recreated
 
+

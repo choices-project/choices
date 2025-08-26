@@ -16,7 +16,8 @@ import {
   LogOut,
   Home,
   Plus,
-  Zap
+  Zap,
+  MessageSquare
 } from 'lucide-react'
 
 interface AdminStats {
@@ -330,6 +331,29 @@ export default function AdminDashboard() {
               </Link>
             </div>
           </div>
+
+          {/* Site Messages */}
+          <div className="bg-white rounded-lg border border-gray-200 p-6">
+            <div className="flex items-center space-x-3 mb-4">
+              <MessageSquare className="h-6 w-6 text-indigo-600" />
+              <h3 className="text-lg font-semibold text-gray-900">Site Messages</h3>
+            </div>
+            <p className="text-gray-600 mb-4">Manage site-wide announcements and feedback requests</p>
+            <div className="space-y-2">
+              <Link 
+                href="/admin/site-messages" 
+                className="block text-sm text-blue-600 hover:text-blue-500"
+              >
+                Manage messages
+              </Link>
+              <Link 
+                href="/admin/feedback" 
+                className="block text-sm text-blue-600 hover:text-blue-500"
+              >
+                View feedback
+              </Link>
+            </div>
+          </div>
         </div>
 
         {/* Quick Actions */}
@@ -358,6 +382,14 @@ export default function AdminDashboard() {
             >
               <Zap className="h-5 w-5 text-purple-600" />
               <span className="text-purple-900">Test PWA</span>
+            </Link>
+            
+            <Link 
+              href="/admin/site-messages"
+              className="flex items-center space-x-2 p-3 bg-indigo-50 rounded-lg hover:bg-indigo-100 transition-colors"
+            >
+              <MessageSquare className="h-5 w-5 text-indigo-600" />
+              <span className="text-indigo-900">Site Messages</span>
             </Link>
             
             <Link 

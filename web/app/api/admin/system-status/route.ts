@@ -23,13 +23,92 @@ export async function GET(request: NextRequest) {
     // Get system status data
     const systemStatus = await getSystemStatus()
 
+    // Create feedback for critical issues
+    await createSystemFeedback(systemStatus)
+
     return NextResponse.json(systemStatus)
   } catch (error) {
-    logger.error('Error fetching system status', { error: error instanceof Error ? error.message : 'Unknown error' })
+    logger.error('Error fetching system status', { error: error instanceof Error ? error.message : String(error) })
     return NextResponse.json(
       { error: 'Failed to fetch system status' },
       { status: 500 }
     )
+  }
+}
+
+async function createSystemFeedback(systemStatus: any) {
+  try {
+    const issues = []
+    
+    // Check for schema cache issues
+    if (systemStatus.database.schemaStatus === 'pending') {
+      issues.push({
+        type: 'system',
+        title: 'Schema Cache Pending Refresh',
+        description: `Database schema cache needs refresh. Last migration: ${systemStatus.database.lastMigration}. This may affect user registration functionality.`,
+        priority: 'high',
+        tags: ['database', 'schema', 'cache', 'registration']
+      })
+    }
+    
+    // Check for connection issues
+    if (systemStatus.database.connectionStatus === 'error') {
+      issues.push({
+        type: 'system',
+        title: 'Database Connection Error',
+        description: `Database connection is failing. Error: ${systemStatus.database.schemaError || 'Unknown error'}`,
+        priority: 'critical',
+        tags: ['database', 'connection', 'critical']
+      })
+    }
+    
+    // Check for system health issues
+    if (systemStatus.health.systemHealth === 'critical') {
+      issues.push({
+        type: 'system',
+        title: 'System Health Critical',
+        description: `System health is critical. Health score: ${systemStatus.health.healthScore}. Issues: ${systemStatus.health.healthFactors.join(', ')}`,
+        priority: 'critical',
+        tags: ['system', 'health', 'critical']
+      })
+    } else if (systemStatus.health.systemHealth === 'warning') {
+      issues.push({
+        type: 'system',
+        title: 'System Health Warning',
+        description: `System health is degraded. Health score: ${systemStatus.health.healthScore}. Issues: ${systemStatus.health.healthFactors.join(', ')}`,
+        priority: 'medium',
+        tags: ['system', 'health', 'warning']
+      })
+    }
+    
+    // Create feedback entries for each issue
+    for (const issue of issues) {
+      await supabase
+        .from('feedback')
+        .insert({
+          type: issue.type,
+          title: issue.title,
+          description: issue.description,
+          priority: issue.priority,
+          tags: issue.tags,
+          status: 'open',
+          sentiment: 'negative',
+          metadata: {
+            source: 'admin-dashboard',
+            systemStatus: systemStatus,
+            timestamp: new Date().toISOString()
+          }
+        })
+    }
+    
+    if (issues.length > 0) {
+      logger.info('Created system feedback for issues', { 
+        issueCount: issues.length,
+        issues: issues.map(i => i.title)
+      })
+    }
+  } catch (error) {
+    logger.error('Error creating system feedback', { error: error instanceof Error ? error.message : 'Unknown error' })
   }
 }
 
@@ -60,7 +139,7 @@ async function getSystemStatus() {
       health: healthMetrics
     }
   } catch (error) {
-    logger.error('Error getting system status', { error: error instanceof Error ? error.message : 'Unknown error' })
+    logger.error('Error getting system status', { error: error instanceof Error ? error.message : String(error) })
     throw error
   }
 }

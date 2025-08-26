@@ -362,3 +362,4 @@ CREATE TRIGGER audit_webauthn_credentials
   AFTER INSERT OR UPDATE OR DELETE ON webauthn_credentials
   FOR EACH ROW EXECUTE FUNCTION log_audit_event();
 
+

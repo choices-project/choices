@@ -1,315 +1,218 @@
-# 🛠️ Scripts Directory - Usage Guide
+# Scripts Directory
 
-**Created**: 2025-01-27  
-**Last Updated**: 2025-01-27 (Updated with script organization)  
-**Purpose**: Centralized script management and usage guide
+**Status: PRODUCTION READY**  
+**Last Updated: August 26, 2025**
 
-## 📁 **Directory Structure**
+## 🎯 **Overview**
 
-```
-scripts/
-├── essential/           # Core project scripts
-├── database/           # Database and Supabase scripts
-├── security/           # Security and admin scripts
-├── testing/            # Testing and validation scripts
-├── ci/                 # CI/CD and monitoring scripts
-├── cleanup/            # Cleanup and maintenance scripts
-├── archive/            # Archived/outdated scripts
-├── email-templates/    # Email template configurations
-└── README.md           # This file
-```
+This directory contains essential scripts for managing the Choices platform deployment, database operations, and system maintenance.
 
-## 🎯 **Essential Scripts** (`essential/`)
+## 📁 **Current Script Structure**
 
-### **Documentation & Project Management**
-- **`remind-documentation-update.js`** - Documentation update reminders
-  ```bash
-  # Show reminder
-  node scripts/essential/remind-documentation-update.js
-  
-  # Check documentation health
-  node scripts/essential/remind-documentation-update.js --check
-  ```
+### **Core Production Scripts**
+- `deploy-schema-migrations.js` - Main migration deployment script
+- `check-schema-status.js` - Database schema validation
+- `README.md` - This documentation
 
-- **`assess-project-status.js`** - Comprehensive project assessment
-  ```bash
-  node scripts/essential/assess-project-status.js
-  ```
+### **Directory Structure**
+- `migrations/` - Migration SQL files
+- `database/` - Database utilities
+- `security/` - Security scripts
+- `performance/` - Performance scripts
+- `quality/` - Quality assurance scripts
+- `essential/` - Essential utilities
+- `email-templates/` - Email templates
+- `archive/` - Archived scripts (historical)
 
-## 🗄️ **Database Scripts** (`database/`)
+## 🚀 **Core Scripts**
 
-### **Health & Monitoring**
-- **`check-supabase-health.js`** - Database health check
-  ```bash
-  node scripts/database/check-supabase-health.js
-  ```
+### **deploy-schema-migrations.js**
+**Purpose**: Deploy database schema migrations to production
 
-- **`check_supabase_auth.js`** - Auth verification
-  ```bash
-  node scripts/database/check_supabase_auth.js
-  ```
-
-- **`verify_supabase_config.js`** - Config verification
-  ```bash
-  node scripts/database/verify_supabase_config.js
-  ```
-
-### **Optimization & Fixes**
-- **`fix-supabase-issues.js`** - Comprehensive Supabase fixes
-  ```bash
-  node scripts/database/fix-supabase-issues.js
-  ```
-
-- **`optimize-supabase-usage.js`** - Query optimization
-  ```bash
-  node scripts/database/optimize-supabase-usage.js
-  ```
-
-- **`fix-supabase-warnings.js`** - Warning resolution
-  ```bash
-  node scripts/database/fix-supabase-warnings.js
-  ```
-
-### **Database Deployment**
-- **`deploy-poll-narrative-database.js`** - Poll narrative database setup
-- **`deploy-media-bias-database.js`** - Media bias database setup
-- **`deploy-breaking-news-database.js`** - Breaking news database setup
-- **`deploy-automated-polls-database.js`** - Automated polls database setup
-
-### **Utilities**
-- **`get-ia-tokens-columns.js`** - IA tokens column inspection
-
-## 🔒 **Security Scripts** (`security/`)
-
-### **Setup & Configuration**
-- **`security-database-setup.js`** - Security database setup
-  ```bash
-  node scripts/security/security-database-setup.js
-  ```
-
-- **`deploy-ia-tokens-and-security.js`** - IA tokens and security deployment
-  ```bash
-  node scripts/security/deploy-ia-tokens-and-security.js
-  ```
-
-- **`setup-admin-config.js`** - Admin configuration setup
-  ```bash
-  node scripts/security/setup-admin-config.js
-  ```
-
-### **Admin Management**
-- **`set-admin-user.js`** - Set admin user
-  ```bash
-  node scripts/security/set-admin-user.js
-  ```
-
-- **`check-admin-status.js`** - Check admin status
-  ```bash
-  node scripts/security/check-admin-status.js
-  ```
-
-- **`remove-ia-user.js`** - Remove IA user
-  ```bash
-  node scripts/security/remove-ia-user.js
-  ```
-
-### **Validation**
-- **`verify-privacy-system.js`** - Privacy system verification
-  ```bash
-  node scripts/security/verify-privacy-system.js
-  ```
-
-- **`validate-security.js`** - Security validation
-  ```bash
-  node scripts/security/validate-security.js
-  ```
-
-## 🧪 **Testing Scripts** (`testing/`)
-
-### **End-to-End Testing**
-- **`test-complete-flow.js`** - Complete flow testing
-  ```bash
-  node scripts/testing/test-complete-flow.js
-  ```
-
-- **`test-auth-flow.js`** - Authentication flow testing
-  ```bash
-  node scripts/testing/test-auth-flow.js
-  ```
-
-- **`test-environment-and-database.js`** - Environment and database testing
-  ```bash
-  node scripts/testing/test-environment-and-database.js
-  ```
-
-### **Feature Testing**
-- **`test-breaking-news-backend.js`** - Breaking news backend testing
-  ```bash
-  node scripts/testing/test-breaking-news-backend.js
-  ```
-
-- **`analyze-feedback-submission.js`** - Feedback submission analysis
-  ```bash
-  node scripts/testing/analyze-feedback-submission.js
-  ```
-
-## 🚀 **CI/CD Scripts** (`ci/`)
-
-### **Monitoring & Deployment**
-- **`setup-ci-monitoring.sh`** - CI monitoring setup
-  ```bash
-  ./scripts/ci/setup-ci-monitoring.sh
-  ```
-
-- **`monitor-ci.sh`** - CI monitoring
-  ```bash
-  ./scripts/ci/monitor-ci.sh
-  ```
-
-- **`push-and-monitor.sh`** - Push and monitor deployment
-  ```bash
-  ./scripts/ci/push-and-monitor.sh
-  ```
-
-## 🧹 **Cleanup Scripts** (`cleanup/`)
-
-### **Data Management**
-- **`clear-database.js`** - Clear database (development)
-  ```bash
-  node scripts/cleanup/clear-database.js
-  ```
-
-- **`cleanup-test-users.js`** - Clean up test users
-  ```bash
-  node scripts/cleanup/cleanup-test-users.js
-  ```
-
-- **`check-duplicate-users.js`** - Check for duplicate users
-  ```bash
-  node scripts/cleanup/check-duplicate-users.js
-  ```
-
-## 📧 **Email Templates** (`email-templates/`)
-
-Email template configurations and settings.
-
-## 📚 **Archive** (`archive/`)
-
-Contains outdated, redundant, or one-time use scripts that have been superseded by newer versions.
-
-## 🎯 **Common Workflows**
-
-### **Daily Development**
+**Usage**:
 ```bash
-# 1. Check project status
-node scripts/essential/assess-project-status.js
+# Deploy all migrations
+node scripts/deploy-schema-migrations.js
 
-# 2. Verify database health
-node scripts/database/check-supabase-health.js
+# Deploy specific migration
+node scripts/deploy-schema-migrations.js --migration=008
 
-# 3. Run tests
-node scripts/testing/test-complete-flow.js
+# Dry run (no changes)
+node scripts/deploy-schema-migrations.js --dry-run
 ```
 
-### **Before Deployment**
+**Features**:
+- Automated migration deployment
+- Migration validation
+- Rollback support
+- Dry run capability
+- Error handling and logging
+
+### **check-schema-status.js**
+**Purpose**: Validate database schema and connection status
+
+**Usage**:
 ```bash
-# 1. Validate security
-node scripts/security/validate-security.js
-
-# 2. Check admin status
-node scripts/security/check-admin-status.js
-
-# 3. Monitor CI
-./scripts/ci/monitor-ci.sh
+# Check schema status
+node scripts/check-schema-status.js
 ```
 
-### **After Changes**
-```bash
-# 1. Update documentation
-node scripts/essential/remind-documentation-update.js
+**Features**:
+- Database connection validation
+- Schema verification
+- Table accessibility check
+- RLS policy validation
+- Performance metrics
 
-# 2. Check for duplicates
-node scripts/cleanup/check-duplicate-users.js
+## 🗄️ **Database Operations**
 
-# 3. Assess project status
-node scripts/essential/assess-project-status.js
-```
+### **Migration Management**
+All database migrations are stored in the `migrations/` directory and deployed using the main migration script.
 
-## 🔧 **Script Development Guidelines**
+**Migration Files**:
+- `001-identity-unification.sql` - User identity management
+- `002-webauthn-enhancement.sql` - Biometric authentication
+- `003-dpop-token-binding.sql` - Security token binding
+- `004-device-flow-hardening.sql` - Device authentication
+- `005-performance-optimization.sql` - Performance improvements
+- `006-fix-user-profiles-table.sql` - User profile fixes
+- `007-create-site-messages-table.sql` - Admin messaging
+- `008-enhanced-onboarding.sql` - Onboarding system
 
-### **✅ Best Practices**
-- Use descriptive names
-- Include proper error handling
-- Add usage documentation
-- Follow consistent formatting
-- Include logging for debugging
+### **Database Utilities**
+The `database/` directory contains utilities for:
+- Database backup and restore
+- Data validation
+- Performance optimization
+- Schema analysis
 
-### **📝 Script Template**
-```javascript
-#!/usr/bin/env node
+## 🔒 **Security Scripts**
 
-/**
- * Script Name
- * 
- * Description of what this script does
- * 
- * Usage: node scripts/category/script-name.js [options]
- */
+The `security/` directory contains scripts for:
+- Security audits
+- Vulnerability scanning
+- Access control management
+- Security monitoring
 
-const fs = require('fs');
-const path = require('path');
+## ⚡ **Performance Scripts**
 
-async function main() {
-  try {
-    // Script logic here
-    console.log('✅ Script completed successfully');
-  } catch (error) {
-    console.error('❌ Script failed:', error);
-    process.exit(1);
-  }
-}
+The `performance/` directory contains scripts for:
+- Performance monitoring
+- Load testing
+- Optimization analysis
+- Benchmarking
 
-if (require.main === module) {
-  main();
-}
+## 🎯 **Quality Assurance**
 
-module.exports = { main };
-```
+The `quality/` directory contains scripts for:
+- Code quality checks
+- Testing automation
+- Quality metrics
+- Standards compliance
 
-## 🚨 **Important Notes**
+## 📧 **Email Templates**
 
-### **Environment Variables**
-Most scripts require proper environment variables to be set:
-- `NEXT_PUBLIC_SUPABASE_URL`
-- `SUPABASE_SERVICE_ROLE_KEY`
-- Other project-specific variables
+The `email-templates/` directory contains:
+- Authentication emails
+- Notification templates
+- Marketing communications
+- System alerts
 
-### **Permissions**
-Some scripts require specific permissions or admin access:
-- Database modification scripts
-- Security configuration scripts
-- Admin user management scripts
+## 📚 **Archive**
 
-### **Backup**
-Always backup data before running destructive scripts:
-- Database clearing scripts
-- User removal scripts
-- Schema modification scripts
+The `archive/` directory contains historical scripts organized by category:
 
-## 📊 **Script Health Monitoring**
+### **redundant-migrations/**
+- Old individual migration scripts (001-006)
+- Superseded by unified migration system
 
-### **Regular Checks**
-- Run `node scripts/essential/assess-project-status.js` weekly
-- Check `node scripts/database/check-supabase-health.js` daily
-- Monitor `node scripts/security/validate-security.js` before deployments
+### **completed-work/**
+- Completed utility scripts
+- Resolved issues and fixes
+- Historical maintenance scripts
 
-### **Maintenance**
-- Review archived scripts quarterly
-- Update script documentation when features change
-- Test scripts after major updates
+### **outdated-utilities/**
+- Superseded utility scripts
+- Old deployment methods
+- Deprecated functionality
+
+## 🛠️ **Usage Guidelines**
+
+### **Before Running Scripts**
+1. **Environment Setup**: Ensure all environment variables are configured
+2. **Database Access**: Verify database connection and permissions
+3. **Backup**: Create database backup before major operations
+4. **Testing**: Test scripts in development environment first
+
+### **Script Execution**
+1. **Production Safety**: Always use `--dry-run` for testing
+2. **Error Handling**: Monitor script output for errors
+3. **Logging**: Check logs for detailed execution information
+4. **Validation**: Verify results after script execution
+
+### **Best Practices**
+- **Version Control**: All scripts are version controlled
+- **Documentation**: Scripts include inline documentation
+- **Error Handling**: Comprehensive error handling and logging
+- **Security**: Scripts follow security best practices
+
+## 🔧 **Development**
+
+### **Adding New Scripts**
+1. **Purpose**: Clearly define script purpose and functionality
+2. **Documentation**: Include comprehensive documentation
+3. **Testing**: Test thoroughly before deployment
+4. **Integration**: Integrate with existing script ecosystem
+
+### **Script Standards**
+- **Error Handling**: Comprehensive error handling
+- **Logging**: Detailed logging for debugging
+- **Validation**: Input validation and verification
+- **Security**: Security-conscious implementation
+
+## 📊 **Monitoring**
+
+### **Script Execution**
+- **Success Metrics**: Track successful executions
+- **Error Rates**: Monitor error frequencies
+- **Performance**: Track execution times
+- **Dependencies**: Monitor script dependencies
+
+### **System Health**
+- **Database Status**: Monitor database health
+- **Migration Status**: Track migration deployments
+- **Security Status**: Monitor security compliance
+- **Performance Status**: Track system performance
+
+## 🎯 **Troubleshooting**
+
+### **Common Issues**
+1. **Database Connection**: Verify connection settings
+2. **Permissions**: Check database permissions
+3. **Environment Variables**: Validate configuration
+4. **Dependencies**: Check script dependencies
+
+### **Debugging**
+1. **Logs**: Check script execution logs
+2. **Dry Run**: Use dry run mode for testing
+3. **Validation**: Run validation scripts
+4. **Documentation**: Review script documentation
+
+## 📚 **Additional Resources**
+
+### **Documentation**
+- [Production Ready Status](../docs/PRODUCTION_READY_STATUS.md)
+- [Deployment Guide](../docs/DEPLOYMENT_GUIDE.md)
+- [Database Security & Schema](../docs/DATABASE_SECURITY_AND_SCHEMA.md)
+
+### **Support**
+- **Script Issues**: Check script documentation
+- **Database Issues**: Review database documentation
+- **Deployment Issues**: Consult deployment guide
+- **Security Issues**: Review security documentation
 
 ---
 
-**Status**: 📚 **Essential Reference**  
-**Created**: 2025-01-27  
-**Last Updated**: 2025-01-27 (Updated with script organization)
+**Last Updated: August 26, 2025**  
+**Status: PRODUCTION READY**  
+**Next Review: After deployment**
