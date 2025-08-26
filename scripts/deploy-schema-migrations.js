@@ -7,6 +7,9 @@
  * Usage: node scripts/deploy-schema-migrations.js [--dry-run] [--migration=001]
  */
 
+// Load environment variables
+require('dotenv').config({ path: '.env.local' });
+
 const { createClient } = require('@supabase/supabase-js');
 const fs = require('fs').promises;
 const path = require('path');
