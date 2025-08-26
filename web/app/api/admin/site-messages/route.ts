@@ -145,7 +145,7 @@ export async function DELETE(request: NextRequest) {
     await deleteSiteMessage(id)
     return NextResponse.json({ success: true })
   } catch (error) {
-    logger.error('Error deleting site message', { error: error instanceof Error ? error.message : String(error) })
+    logger.error('Error deleting site message', error instanceof Error ? error : new Error(String(error)))
     return NextResponse.json(
       { error: 'Failed to delete site message' },
       { status: 500 }
@@ -167,7 +167,7 @@ async function getSiteMessages(includeInactive: boolean = false) {
     const { data, error } = await query
 
     if (error) {
-      logger.error('Error fetching site messages from database', { error: error.message })
+      logger.error('Error fetching site messages from database', new Error(error.message))
       throw error
     }
 
@@ -177,7 +177,7 @@ async function getSiteMessages(includeInactive: boolean = false) {
       activeCount: data?.filter(m => m.is_active).length || 0
     }
   } catch (error) {
-    logger.error('Error in getSiteMessages', { error: error instanceof Error ? error.message : String(error) })
+    logger.error('Error in getSiteMessages', error instanceof Error ? error : new Error(String(error)))
     throw error
   }
 }
@@ -207,7 +207,7 @@ async function createSiteMessage(messageData: {
       .single()
 
     if (error) {
-      logger.error('Error creating site message in database', { error: error.message })
+      logger.error('Error creating site message in database', new Error(error.message))
       throw error
     }
 
