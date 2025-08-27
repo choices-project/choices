@@ -1,7 +1,7 @@
 # 🔌 **API Documentation**
 
-**Last Updated**: December 27, 2024  
-**Version**: 1.0.0  
+**Last Updated**: August 26, 2025  
+**Version**: 2.0.0 - IA/PO Implementation  
 **Base URL**: `https://your-domain.com/api`
 
 ## 🎯 **Overview**
@@ -10,7 +10,12 @@ The Choices platform provides a comprehensive REST API for voting, user manageme
 
 ## 🔐 **Authentication**
 
+### **IA/PO Authentication System**
+The platform now uses **IA/PO (Identity Authentication/Progressive Onboarding)**, a biometric-first, username-based, email-optional authentication system.
+
 ### **Authentication Methods**
+- **IA/PO Registration**: Username-based with optional email/password
+- **WebAuthn Biometric**: Fingerprint, Face ID, Windows Hello, Touch ID
 - **JWT Tokens**: Bearer token authentication
 - **Session Cookies**: Automatic session management
 - **API Keys**: For service-to-service communication
@@ -60,8 +65,40 @@ X-API-Key: <api_key> (for service endpoints)
 
 ## 🔐 **Authentication Endpoints**
 
-### **POST /api/auth/register**
-Register a new user account.
+### **POST /api/auth/register-ia** ⭐ **NEW - IA/PO Registration**
+Register a new user account using the IA/PO system.
+
+**Request Body:**
+```json
+{
+  "username": "string (required, 3-20 chars)",
+  "password": "string (optional, min 8 chars)",
+  "email": "string (optional, valid email)",
+  "enableBiometric": "boolean (optional)",
+  "enableDeviceFlow": "boolean (optional)"
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Account created successfully",
+  "user": {
+    "id": "uuid",
+    "stableId": "string",
+    "username": "string",
+    "authMethods": {
+      "biometric": "boolean",
+      "deviceFlow": "boolean", 
+      "password": "boolean"
+    }
+  }
+}
+```
+
+### **POST /api/auth/register** (Legacy)
+Register a new user account using the legacy Supabase auth system.
 
 **Request Body:**
 ```json

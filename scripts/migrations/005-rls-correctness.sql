@@ -685,3 +685,4 @@ COMMENT ON FUNCTION get_rls_statistics() IS 'Get RLS policy statistics';
 -- Standardized RLS policies using auth.uid() consistently across all tables
 
 
+

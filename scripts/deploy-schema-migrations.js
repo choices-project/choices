@@ -76,6 +76,12 @@ const MIGRATIONS = [
     name: 'enhanced-onboarding',
     description: 'Enhanced onboarding system with privacy preferences and progress tracking',
     file: 'scripts/migrations/008-enhanced-onboarding.sql'
+  },
+  {
+    id: '009',
+    name: 'fix-ia-po-onboarding',
+    description: 'Fix IA/PO Onboarding Support - Add missing onboarding columns to IA/PO user_profiles table',
+    file: 'scripts/migrations/009-fix-ia-po-onboarding.sql'
   }
 ];
 

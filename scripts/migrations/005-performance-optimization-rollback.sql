@@ -74,3 +74,4 @@ DROP TABLE IF EXISTS performance_metrics;
 -- The database is back to the state before Week 6 migration
 
 
+

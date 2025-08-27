@@ -64,3 +64,4 @@ DROP TABLE IF EXISTS device_flows_v2;
 -- The original device_flows table remains unchanged
 
 
+
