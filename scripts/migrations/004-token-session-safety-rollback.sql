@@ -81,3 +81,4 @@ DROP TABLE IF EXISTS user_sessions_v2;
 -- The original user_sessions table remains unchanged
 
 
+

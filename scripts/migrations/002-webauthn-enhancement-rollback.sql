@@ -66,3 +66,4 @@ DROP TABLE IF EXISTS webauthn_credentials_v2;
 -- The original webauthn_credentials table remains unchanged
 
 
+

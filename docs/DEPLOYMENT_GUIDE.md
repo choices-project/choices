@@ -1,8 +1,8 @@
 # Deployment Guide
 
-**Status: PRODUCTION READY**  
+**Status: PRODUCTION READY - IA/PO IMPLEMENTATION COMPLETE**  
 **Last Updated: August 26, 2025**  
-**Version: 2.0.0**
+**Version: 2.1.0**
 
 ## 🚀 **Production Deployment Guide**
 
@@ -20,6 +20,7 @@ This guide covers the complete deployment process for the Choices platform to pr
 ### ✅ **Database Schema**
 - [x] All migrations deployed successfully
 - [x] Database schema validated
+- [x] IA/PO system (`ia_users` table) configured
 - [x] Row Level Security policies active
 - [x] Audit logging configured
 - [x] Backup system operational
@@ -74,9 +75,9 @@ DATABASE_URL=your_database_url
 ### **Supabase Configuration**
 
 #### **Authentication Settings**
-1. **Enable Email Auth** - Configure email templates
-2. **Enable Social Providers** - Google, GitHub, etc.
-3. **Enable WebAuthn** - Biometric authentication
+1. **Enable IA/PO System** - Biometric-first, username-based authentication
+2. **Enable WebAuthn** - Biometric authentication (fingerprint, Face ID, Windows Hello, Touch ID)
+3. **Enable Social Providers** - Google, GitHub, etc. (optional)
 4. **Configure Redirect URLs** - Production domain
 5. **Set Session Duration** - Recommended: 24 hours
 

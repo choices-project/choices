@@ -90,3 +90,4 @@ ALTER TABLE user_sessions DROP CONSTRAINT IF EXISTS fk_user_sessions_user;
 -- based on your specific original schema configuration
 
 
+
