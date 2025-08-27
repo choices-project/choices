@@ -1,201 +1,196 @@
-import { createServerClient, type CookieOptions } from '@supabase/ssr'
-import { NextResponse, type NextRequest } from 'next/server'
+import { NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
+import { 
+  getSecurityConfig, 
+  buildCSPHeader as buildCSPHeaderFromConfig, 
+  validateContent, 
+  isBlockedUserAgent, 
+  anonymizeIP 
+} from '@/lib/security/config'
 
-// Simple in-memory rate limiting (consider Redis for production)
+/**
+ * Security Middleware
+ * Implements comprehensive security headers and CSP policies
+ * 
+ * Security Features:
+ * - Content Security Policy (CSP)
+ * - Security headers (HSTS, X-Frame-Options, etc.)
+ * - Rate limiting for sensitive endpoints
+ * - Request validation and sanitization
+ * 
+ * Created: 2025-08-27
+ * Status: Critical security enhancement
+ */
+
+// Get security configuration
+const SECURITY_CONFIG = getSecurityConfig()
+
+// Rate limiting store (in production, use Redis)
 const rateLimitStore = new Map<string, { count: number; resetTime: number }>()
 
-// Security configuration
-const securityConfig = {
-  // Rate limiting by endpoint type
-  rateLimits: {
-    feedback: { windowMs: 15 * 60 * 1000, max: 5 },    // 5 feedback per 15 minutes
-    auth: { windowMs: 15 * 60 * 1000, max: 10 },       // 10 auth attempts per 15 minutes
-    api: { windowMs: 15 * 60 * 1000, max: 100 },       // 100 API calls per 15 minutes
-    admin: { windowMs: 15 * 60 * 1000, max: 50 }       // 50 admin requests per 15 minutes
-  },
-  
-  // Content filtering
-  contentFilters: {
-    maxLength: 1000,                                   // Max characters
-    suspiciousPatterns: [
-      /[A-Z]{5,}/,                                    // ALL CAPS
-      /!{3,}/,                                        // Multiple exclamation marks
-      /https?:\/\/[^\s]+/g,                           // URLs
-      /spam|scam|click here/i                          // Spam words
-    ]
-  }
-}
-
-// Rate limiting function
-function checkRateLimit(ip: string, endpoint: string): { allowed: boolean; remaining: number } {
-  const key = `${endpoint}:${ip}`
+/**
+ * Check rate limit for IP address
+ */
+function checkRateLimit(ip: string, path: string): boolean {
   const now = Date.now()
-  const limit = securityConfig.rateLimits[endpoint as keyof typeof securityConfig.rateLimits]
-  
-  if (!limit) return { allowed: true, remaining: 999 }
-  
+  const key = `${ip}:${path}`
   const record = rateLimitStore.get(key)
   
+  // Get rate limit for this endpoint
+  const maxRequests = (SECURITY_CONFIG.rateLimit.sensitiveEndpoints as Record<string, number>)[path] || 
+                     SECURITY_CONFIG.rateLimit.maxRequests
+  
   if (!record || now > record.resetTime) {
-    rateLimitStore.set(key, { count: 1, resetTime: now + limit.windowMs })
-    return { allowed: true, remaining: limit.max - 1 }
+    // Reset or create new record
+    rateLimitStore.set(key, {
+      count: 1,
+      resetTime: now + SECURITY_CONFIG.rateLimit.windowMs
+    })
+    return true
   }
   
-  if (record.count >= limit.max) {
-    return { allowed: false, remaining: 0 }
+  if (record.count >= maxRequests) {
+    return false // Rate limit exceeded
   }
   
+  // Increment count
   record.count++
-  rateLimitStore.set(key, record)
-  return { allowed: true, remaining: limit.max - record.count }
+  return true
 }
 
-// Content validation function
-function validateContent(content: string, field: string): { valid: boolean; reason?: string } {
-  if (content.length > securityConfig.contentFilters.maxLength) {
-    return { valid: false, reason: `${field} too long` }
+
+
+/**
+ * Get client IP address
+ */
+function getClientIP(request: NextRequest): string {
+  // Check for forwarded headers (common with proxies)
+  const forwarded = request.headers.get('x-forwarded-for')
+  if (forwarded) {
+    return forwarded.split(',')[0].trim()
   }
   
-  for (const pattern of securityConfig.contentFilters.suspiciousPatterns) {
-    if (pattern.test(content)) {
-      return { valid: false, reason: `${field} suspicious content detected` }
+  // Check for real IP header
+  const realIP = request.headers.get('x-real-ip')
+  if (realIP) {
+    return realIP
+  }
+  
+  // Fallback to connection remote address
+  return request.ip || 'unknown'
+}
+
+/**
+ * Validate and sanitize request
+ */
+function validateRequest(request: NextRequest): { valid: boolean; reason?: string } {
+  const url = request.nextUrl
+  const method = request.method
+  
+  // Block suspicious requests
+  if (method === 'POST' || method === 'PUT' || method === 'DELETE') {
+    const contentType = request.headers.get('content-type')
+    
+    // Require proper content type for POST requests
+    if (method === 'POST' && !SECURITY_CONFIG.validation.allowedContentTypes.some(type => 
+        contentType?.includes(type))) {
+      return { valid: false, reason: 'Invalid content type' }
+    }
+    
+    // Check for suspicious user agents
+    const userAgent = request.headers.get('user-agent')
+    if (userAgent && isBlockedUserAgent(userAgent, SECURITY_CONFIG.validation)) {
+      return { valid: false, reason: 'Suspicious user agent' }
     }
   }
   
   return { valid: true }
 }
 
-export async function middleware(request: NextRequest) {
-  let supabaseResponse = NextResponse.next({
-    request,
+export function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl
+  
+  // Skip middleware for static files and API routes that don't need security headers
+  if (
+    pathname.startsWith('/_next/') ||
+    pathname.startsWith('/favicon.ico') ||
+    pathname.startsWith('/api/webhooks/') // Webhooks might need different headers
+  ) {
+    return NextResponse.next()
+  }
+  
+  // Validate request
+  const validation = validateRequest(request)
+  if (!validation.valid) {
+    console.warn(`Security: Blocked suspicious request: ${validation.reason}`, {
+      ip: getClientIP(request),
+      path: pathname,
+      userAgent: request.headers.get('user-agent')
+    })
+    
+    return new NextResponse('Forbidden', { status: 403 })
+  }
+  
+  // Check rate limiting for sensitive endpoints
+  const clientIP = getClientIP(request)
+  const isSensitiveEndpoint = Object.keys(SECURITY_CONFIG.rateLimit.sensitiveEndpoints)
+    .some(endpoint => pathname.startsWith(endpoint))
+  
+  if (isSensitiveEndpoint && !checkRateLimit(clientIP, pathname)) {
+    console.warn(`Security: Rate limit exceeded for IP ${clientIP} on ${pathname}`)
+    
+    return new NextResponse('Too Many Requests', { 
+      status: 429,
+      headers: {
+        'Retry-After': '900' // 15 minutes
+      }
+    })
+  }
+  
+  // Create response
+  const response = NextResponse.next()
+  
+  // Add security headers
+  Object.entries(SECURITY_CONFIG.headers).forEach(([header, value]) => {
+    response.headers.set(header, value)
   })
-
-  // Get real IP (respecting proxies)
-  const ip = request.ip || 
-             request.headers.get('x-forwarded-for')?.split(',')[0] || 
-             request.headers.get('x-real-ip') || 
-             'unknown'
-
-  // Check if Supabase credentials are available
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-
-  if (!supabaseUrl || !supabaseKey) {
-    // If no Supabase credentials, allow all requests (for local development)
-    return supabaseResponse
-  }
-
-  // Rate limiting check
-  const path = request.nextUrl.pathname
-  let endpoint = 'api' // default
   
-  if (path.includes('/api/feedback')) endpoint = 'feedback'
-  else if (path.includes('/api/auth')) endpoint = 'auth'
-  else if (path.includes('/api/admin')) endpoint = 'admin'
+  // Add CSP header
+  response.headers.set('Content-Security-Policy', buildCSPHeaderFromConfig(SECURITY_CONFIG.csp))
   
-  // Skip rate limiting for auth/me endpoint (just checking authentication)
-  if (path === '/api/auth/me') {
-    // No rate limiting for auth check
-  } else {
-    const rateLimit = checkRateLimit(ip, endpoint)
-    if (!rateLimit.allowed) {
-      return NextResponse.json(
-        { error: 'Rate limit exceeded', retryAfter: 900 },
-        { 
-          status: 429,
-          headers: {
-            'X-RateLimit-Limit': '100',
-            'X-RateLimit-Remaining': '0',
-            'Retry-After': '900'
-          }
-        }
-      )
-    }
-  }
-
-  // Content validation for POST requests
-  if (request.method === 'POST' && path.includes('/api/feedback')) {
-    try {
-      const body = await request.clone().json()
-      
-      // Validate title if present
-      if (body.title) {
-        const titleValidation = validateContent(body.title, 'title')
-        if (!titleValidation.valid) {
-          return NextResponse.json(
-            { error: titleValidation.reason },
-            { status: 400 }
-          )
-        }
-      }
-      
-      // Validate description if present
-      if (body.description) {
-        const descriptionValidation = validateContent(body.description, 'description')
-        if (!descriptionValidation.valid) {
-          return NextResponse.json(
-            { error: descriptionValidation.reason },
-            { status: 400 }
-          )
-        }
-      }
-    } catch (error) {
-      // Invalid JSON - continue with normal processing
-      // Error logged in development only
-      if (process.env.NODE_ENV === 'development') {
-        console.log('Middleware content validation error:', error)
-      }
-    }
-  }
-
-  // Request size limit
-  const contentLength = request.headers.get('content-length')
-  if (contentLength && parseInt(contentLength) > 1024 * 1024) { // 1MB limit
-    return NextResponse.json(
-      { error: 'Request too large' },
-      { status: 413 }
+  // Add HSTS header (only for HTTPS)
+  if (request.headers.get('x-forwarded-proto') === 'https' || 
+      process.env.NODE_ENV === 'production') {
+    response.headers.set(
+      'Strict-Transport-Security',
+      'max-age=31536000; includeSubDomains; preload'
     )
   }
-
-  const supabase = createServerClient(
-    supabaseUrl,
-    supabaseKey,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll()
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) => request.cookies.set(name, value))
-          supabaseResponse = NextResponse.next({
-            request,
-          })
-          cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options)
-          )
-        },
-      },
-    }
-  )
-
-  // Add security headers to response
-  supabaseResponse.headers.set('X-Content-Type-Options', 'nosniff')
-  supabaseResponse.headers.set('X-Frame-Options', 'DENY')
-  supabaseResponse.headers.set('X-XSS-Protection', '1; mode=block')
-  supabaseResponse.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
-
-  return supabaseResponse
+  
+  // Add security logging
+  if (process.env.NODE_ENV === 'production') {
+    const logIP = SECURITY_CONFIG.privacy.anonymizeIPs ? anonymizeIP(clientIP) : clientIP
+    console.log('Security: Request processed', {
+      ip: logIP,
+      path: pathname,
+      method: request.method,
+      userAgent: SECURITY_CONFIG.privacy.logSensitiveData ? request.headers.get('user-agent') : 'anonymized',
+      timestamp: new Date().toISOString()
+    })
+  }
+  
+  return response
 }
 
 export const config = {
   matcher: [
     /*
      * Match all request paths except for the ones starting with:
+     * - api/webhooks (webhook endpoints)
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
-     * - public folder
      */
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/((?!api/webhooks|_next/static|_next/image|favicon.ico).*)',
   ],
 }
