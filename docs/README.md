@@ -1,271 +1,215 @@
-# Choices - Democratic Decision Making Platform
+# Choices Platform Documentation
 
-**Created:** December 19, 2024  
-**Last Updated:** August 26, 2025  
-**Status:** ✅ **PRODUCTION READY - IA/PO IMPLEMENTATION COMPLETE**
+**Date:** December 19, 2024  
+**Status:** ✅ **PRODUCTION READY** - Streamlined Documentation  
+**Scope:** Essential platform documentation and system overview
 
-## 🎯 **Overview**
+## 🎯 **DOCUMENTATION OVERVIEW**
 
-Choices is a privacy-first, democratic decision-making platform that empowers communities to make collective decisions through secure, transparent, and accessible voting mechanisms. Built with modern web technologies and a focus on user experience, privacy, and security.
+Welcome to the Choices platform documentation. This streamlined guide covers the essential aspects of our secure, privacy-preserving voting and polling system built with Next.js 14, TypeScript, and Supabase.
 
-## 🚀 **Production Ready Status**
+## 📚 **CORE DOCUMENTATION**
 
-### **✅ COMPREHENSIVE VALIDATION COMPLETE**
-Our Choices platform is now **production-ready** with comprehensive validation and testing:
+### **🏗️ System Architecture**
+- **[SYSTEM_ARCHITECTURE_OVERVIEW.md](./SYSTEM_ARCHITECTURE_OVERVIEW.md)** - Master system architecture and component overview
+- **[LESSONS_LEARNED.md](./LESSONS_LEARNED.md)** - Critical insights from solving complex problems
 
-### **IA/PO Authentication System** ✅ **IMPLEMENTED**
-- **Biometric-First Registration**: Username-based, email-optional, password-optional registration
-- **Progressive Onboarding**: Seamless transition from registration to 8-step onboarding flow
-- **Privacy-Focused Design**: Minimal data collection, user control over personal information
-- **WebAuthn Integration**: Fingerprint, Face ID, Windows Hello, Touch ID support
-- **Custom IA/PO Architecture**: Uses `ia_users` table for superior privacy and flexibility
+### **🔐 Authentication & Security**
+- **[AUTHENTICATION_SYSTEM.md](./AUTHENTICATION_SYSTEM.md)** - Comprehensive authentication and authorization system
+- **[SECURITY_RLS_IMPLEMENTATION.md](./SECURITY_RLS_IMPLEMENTATION.md)** - Row Level Security implementation
+- **[SECURITY_HEADERS_IMPLEMENTATION.md](./SECURITY_HEADERS_IMPLEMENTATION.md)** - Security headers and infrastructure
 
-### **Enhanced Onboarding System** ✅ **PRODUCTION READY**
-- **8-Step Comprehensive Flow**: Welcome, Privacy Philosophy, Platform Tour, Data Usage, Auth Setup, Profile Setup, First Experience, and Completion
-- **Top-Tier UX Standards**: Smooth animations, micro-interactions, accessibility features, and intelligent user guidance
-- **Privacy-First Design**: Granular privacy controls and transparent data usage
-- **Mobile-First Responsive**: Optimized for all devices and screen sizes
-- **Comprehensive Testing**: E2E, unit, and integration tests with UX standards validation
+### **🔒 Zero-Knowledge Proofs**
+- **[ZERO_KNOWLEDGE_PROOFS_SYSTEM.md](./ZERO_KNOWLEDGE_PROOFS_SYSTEM.md)** - Type-safe cryptographic verification system
+- **[DIFFERENTIAL_PRIVACY_IMPLEMENTATION.md](./DIFFERENTIAL_PRIVACY_IMPLEMENTATION.md)** - Privacy-preserving analytics
 
-### **Enterprise Security** ✅ **DEPLOYED**
-- **DPoP Token Binding**: RFC 9449 compliant security
-- **WebAuthn Support**: Biometric authentication
-- **Row Level Security**: Database-level access control
-- **Audit Logging**: Complete action tracking
-- **Rate Limiting**: API protection
+### **🗄️ Database & API**
+- **[DATABASE_SECURITY_AND_SCHEMA.md](./DATABASE_SECURITY_AND_SCHEMA.md)** - Database schema and security
+- **[API.md](./API.md)** - Complete API documentation and endpoints
+- **[SERVER_ACTIONS_COMPLETE_IMPLEMENTATION.md](./SERVER_ACTIONS_COMPLETE_IMPLEMENTATION.md)** - Server actions implementation
 
-### **Performance & Quality** ✅ **VALIDATED**
-- **TypeScript Compilation**: All code compiles successfully
-- **Next.js Build**: Production build optimized
-- **Lighthouse Scores**: 90+ across all metrics
-- **Accessibility**: WCAG 2.1 AA compliance
-- **Mobile Performance**: Optimized for all devices
+### **📊 Performance & Testing**
+- **[PERFORMANCE_OPTIMIZATION_IMPLEMENTATION.md](./PERFORMANCE_OPTIMIZATION_IMPLEMENTATION.md)** - Performance optimization strategies
+- **[COMPREHENSIVE_TESTING_IMPLEMENTATION.md](./COMPREHENSIVE_TESTING_IMPLEMENTATION.md)** - Testing implementation and strategies
+- **[PWA_ENHANCEMENT_IMPLEMENTATION.md](./PWA_ENHANCEMENT_IMPLEMENTATION.md)** - Progressive Web App features
 
-## 🏗️ **Architecture**
+### **🚀 Deployment & Operations**
+- **[DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md)** - Production deployment guide
+- **[USER_GUIDE.md](./USER_GUIDE.md)** - End-user documentation
+
+## 🏗️ **SYSTEM ARCHITECTURE**
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                        CHOICES PLATFORM                        │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  ┌─────────────────┐    ┌─────────────────┐    ┌──────────────┐ │
+│  │   Frontend      │    │   Backend       │    │   Database   │ │
+│  │   (Next.js 14)  │◄──►│   (API Routes)  │◄──►│  (Supabase)  │ │
+│  └─────────────────┘    └─────────────────┘    └──────────────┘ │
+│           │                       │                       │     │
+│           ▼                       ▼                       ▼     │
+│  ┌─────────────────┐    ┌─────────────────┐    ┌──────────────┐ │
+│  │   Zero-Knowledge│    │   Authentication│    │   Real-time  │ │
+│  │   Proofs        │    │   & Security    │    │   Analytics  │ │
+│  └─────────────────┘    └─────────────────┘    └──────────────┘ │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+## 🔧 **TECHNICAL STACK**
 
 ### **Frontend**
-- **Framework**: Next.js 14 with App Router
-- **Language**: TypeScript with strict type safety
-- **Styling**: Tailwind CSS with custom animations
-- **Icons**: Lucide React
-- **State Management**: React Context + Hooks
+- **Framework**: Next.js 14 (App Router)
+- **Language**: TypeScript (strict mode)
+- **Styling**: Tailwind CSS
+- **State**: React Context + custom hooks
+- **Testing**: Jest + React Testing Library
 
 ### **Backend**
+- **Runtime**: Node.js
+- **API**: Next.js API Routes
 - **Database**: Supabase (PostgreSQL)
-- **Authentication**: IA/PO (Identity Authentication/Progressive Onboarding) system
-- **API**: RESTful APIs with PostgREST
-- **Security**: Row Level Security (RLS) policies
-- **Real-time**: Supabase Realtime subscriptions
+- **Authentication**: Supabase Auth
+- **Real-time**: Supabase Realtime
 
-### **Security Features**
-- **IA/PO Authentication**: Biometric-first, username-based, email-optional system
-- **WebAuthn**: Biometric authentication support (fingerprint, Face ID, Windows Hello, Touch ID)
-- **TOTP**: Two-Factor Authentication
-- **DPoP**: Demonstrating Proof of Possession tokens
-- **Device Flow**: Cross-device authentication
+### **Development Tools**
+- **Linting**: ESLint with TypeScript rules
+- **Formatting**: Prettier
+- **Type Checking**: TypeScript compiler
+- **Version Control**: Git with GitHub
+
+## 🎯 **KEY FEATURES**
+
+### **Voting System**
+- **Multiple Poll Types**: Single choice, ranked choice, approval voting
+- **Real-time Results**: Live updates and analytics
+- **Privacy Protection**: Zero-knowledge proof verification
+- **Access Control**: Granular permission management
+
+### **User Management**
+- **Profile Management**: Comprehensive user profiles
+- **Authentication**: Multi-factor authentication
+- **Authorization**: Role-based access control
+- **Session Management**: Secure session handling
+
+### **Analytics Dashboard**
+- **Real-time Analytics**: Live data visualization
+- **Privacy-Preserving**: Differential privacy implementation
+- **Custom Reports**: Flexible reporting system
+- **Performance Metrics**: System health monitoring
+
+### **Admin Panel**
+- **Poll Management**: Create, edit, and manage polls
+- **User Administration**: User management and moderation
+- **System Monitoring**: Performance and security monitoring
+- **Configuration**: System settings and customization
+
+## 🛡️ **SECURITY FEATURES**
+
+### **Authentication & Authorization**
+- **Multi-factor Authentication**: Email, OAuth, biometric
+- **Row Level Security**: Database-level access control
+- **Session Management**: Secure token handling
 - **Rate Limiting**: API protection against abuse
-- **OAuth 2.0**: Google, GitHub, Facebook, Twitter, LinkedIn, Discord, Instagram, TikTok
-
-## 📋 **Core Features**
-
-### **Voting Systems**
-- **Single Choice**: Traditional one-option voting
-- **Multiple Choice**: Select multiple options
-- **Ranked Choice**: Preference-based voting
-- **Approval Voting**: Vote for all acceptable options
-- **Range Voting**: Score-based voting system
-- **Quadratic Voting**: Cost-based voting mechanism
-
-### **Privacy & Security**
-- **Privacy Levels**: Configurable from low to maximum privacy
-- **Data Control**: Granular control over data sharing
-- **Anonymous Voting**: Participate without revealing identity
-- **Audit Trail**: Complete logging of all actions
-- **Encryption**: End-to-end encryption for sensitive data
-
-### **Analytics & Insights**
-- **Real-time Results**: Live voting results and trends
-- **Demographic Analysis**: Age, location, and preference insights
-- **Participation Metrics**: Engagement and activity tracking
-- **Trending Topics**: Popular and emerging discussions
-- **Custom Dashboards**: Personalized analytics views
-
-### **Admin Features**
-- **System Monitoring**: Real-time system status and health
-- **User Management**: Comprehensive user administration
-- **Poll Management**: Create, edit, and moderate polls
-- **Site Messages**: Real-time announcements and updates
-- **Analytics Dashboard**: Platform-wide insights and metrics
-
-## 🎨 **User Experience**
-
-### **Enhanced Onboarding**
-- **8-Step Journey**: Comprehensive introduction to platform features
-- **Privacy Education**: Clear explanation of privacy philosophy and controls
-- **Interactive Tour**: Guided exploration of platform capabilities
-- **Smart Defaults**: Intelligent recommendations based on user preferences
-- **Progress Tracking**: Visual progress indicators with achievements
-- **Accessibility**: Full keyboard navigation and screen reader support
-
-### **Mobile Optimization**
-- **Responsive Design**: Optimized for all screen sizes
-- **Touch-Friendly**: Large touch targets and gesture support
-- **Performance**: Fast loading and smooth animations
-- **Offline Support**: Basic functionality without internet connection
-
-### **Accessibility**
-- **WCAG 2.1 AA**: Full compliance with accessibility standards
-- **Keyboard Navigation**: Complete keyboard accessibility
-- **Screen Reader**: Full compatibility with assistive technologies
-- **High Contrast**: Support for high contrast mode
-- **Reduced Motion**: Respects user motion preferences
-
-## 🧪 **Testing & Quality**
-
-### **Comprehensive Testing Suite**
-- **E2E Tests**: Playwright-based end-to-end testing
-- **Unit Tests**: Jest-based component and function testing
-- **Integration Tests**: API and database integration testing
-- **UX Standards Tests**: User experience validation
-- **Accessibility Tests**: WCAG compliance verification
-- **Performance Tests**: Load time and animation performance
-
-### **Quality Assurance**
-- **TypeScript**: Strict type checking and validation
-- **ESLint**: Code quality and consistency
-- **Prettier**: Code formatting and style
-- **Husky**: Pre-commit hooks for quality gates
-- **Coverage**: >90% test coverage target
-
-## 🚀 **Deployment**
-
-### **Platform**
-- **Hosting**: Vercel for frontend deployment
-- **Database**: Supabase for backend services
-- **CDN**: Global content delivery network
-- **Monitoring**: Real-time performance monitoring
-
-### **CI/CD Pipeline**
-- **Automated Testing**: All tests run on every commit
-- **Quality Gates**: Code quality and coverage requirements
-- **Deployment**: Automatic deployment to staging and production
-- **Rollback**: Quick rollback capabilities for issues
-
-## 📊 **Performance**
-
-### **Core Web Vitals**
-- **LCP**: < 2.5s (Largest Contentful Paint)
-- **FID**: < 100ms (First Input Delay)
-- **CLS**: < 0.1 (Cumulative Layout Shift)
-
-### **Mobile Performance**
-- **Load Time**: < 3s on 3G networks
-- **Animation FPS**: > 55fps for smooth interactions
-- **Battery Efficiency**: Optimized for mobile devices
-
-## 🔒 **Security & Privacy**
 
 ### **Data Protection**
-- **GDPR Compliance**: Full compliance with data protection regulations
-- **SOC 2 Certified**: Industry-standard security certification
-- **Data Minimization**: Only collect essential data
-- **User Control**: Complete control over personal data
-- **Transparency**: Clear data usage policies
+- **Zero-Knowledge Proofs**: Privacy-preserving vote verification
+- **Encryption**: End-to-end data protection
+- **Audit Logging**: Comprehensive security monitoring
+- **GDPR Compliance**: Privacy-first design
 
-### **Security Measures**
-- **HTTPS Only**: All connections encrypted
-- **Rate Limiting**: Protection against abuse
-- **Input Validation**: Comprehensive input sanitization
-- **SQL Injection Protection**: Parameterized queries
-- **XSS Prevention**: Content Security Policy
+### **Infrastructure Security**
+- **HTTPS**: Secure communication
+- **CORS**: Cross-origin resource sharing protection
+- **Input Validation**: Type-safe data handling
+- **Error Handling**: Secure error messages
 
-## 📚 **Documentation**
+## 📈 **PERFORMANCE FEATURES**
 
-### **Core Documentation**
-- [Production Ready Status](./PRODUCTION_READY_STATUS.md) - Current production status
-- [Deployment Guide](./DEPLOYMENT_GUIDE.md) - Production deployment procedures
-- [User Guide](./USER_GUIDE.md) - User-facing documentation
-- [Enhanced Onboarding Implementation](./ENHANCED_ONBOARDING_IMPLEMENTATION.md)
-- [Onboarding Testing Suite](./ONBOARDING_TESTING_SUITE.md)
-- [Authentication System](./AUTHENTICATION_SYSTEM.md)
-- [API Documentation](./API.md)
-- [Database Security & Schema](./DATABASE_SECURITY_AND_SCHEMA.md)
+### **Frontend Optimization**
+- **Code Splitting**: Dynamic imports for optimal loading
+- **Image Optimization**: Next.js Image component
+- **Caching**: Static and dynamic content caching
+- **PWA Features**: Offline capability and app-like experience
 
-### **Development Documentation**
-- [Contributing Guide](CONTRIBUTING.md)
-- [Code of Conduct](CODE_OF_CONDUCT.md)
-- [Documentation Cleanup Plan](./DOCUMENTATION_CLEANUP_PLAN.md) - Cleanup organization
-- [Archive Directory](./archive/) - Historical documentation
+### **Backend Performance**
+- **Database Optimization**: Efficient queries and indexing
+- **API Caching**: Response caching for frequently accessed data
+- **Real-time Updates**: WebSocket connections for live data
+- **Load Balancing**: Scalable architecture
 
-## 🛠️ **Development**
+### **Analytics Performance**
+- **Real-time Processing**: Live data analysis
+- **Privacy-Preserving**: Differential privacy implementation
+- **Efficient Storage**: Optimized data structures
+- **Fast Retrieval**: Indexed queries for quick access
 
-### **Getting Started**
-```bash
-# Clone the repository
-git clone https://github.com/your-org/choices.git
-cd choices
+## 🚀 **DEPLOYMENT**
 
-# Install dependencies
-npm install
+### **Production Environment**
+- **Hosting**: Vercel (Frontend) + Supabase (Backend)
+- **Domain**: Custom domain with SSL
+- **Monitoring**: Real-time performance monitoring
+- **Backup**: Automated database backups
 
-# Set up environment variables
-cp .env.example .env.local
+### **Development Environment**
+- **Local Development**: Docker containers
+- **Testing**: Comprehensive test suite
+- **CI/CD**: Automated deployment pipeline
+- **Code Quality**: Automated linting and type checking
 
-# Start development server
-npm run dev
-```
+## 📋 **SYSTEM REQUIREMENTS**
 
-### **Testing**
-```bash
-# Run all tests
-npm test
+### **Minimum Requirements**
+- **Browser**: Modern browsers with ES2020 support
+- **Network**: Stable internet connection
+- **JavaScript**: Enabled for full functionality
+- **Cookies**: Enabled for session management
 
-# Run E2E tests
-npm run test:e2e
+### **Recommended Requirements**
+- **Browser**: Chrome, Firefox, Safari, Edge (latest)
+- **Network**: High-speed internet connection
+- **Device**: Desktop or mobile with modern hardware
+- **Storage**: Sufficient local storage for caching
 
-# Run tests with coverage
-npm run test:coverage
-```
+## 🎉 **SYSTEM STATUS**
 
-### **Building**
-```bash
-# Build for production
-npm run build
+### **Current Status**
+- ✅ **Production Ready**: All systems implemented and tested
+- ✅ **Type Safe**: Comprehensive TypeScript implementation
+- ✅ **Security Hardened**: Multi-layer security implementation
+- ✅ **Performance Optimized**: Efficient and scalable architecture
+- ✅ **Documentation Streamlined**: Essential documentation maintained
 
-# Start production server
-npm start
-```
+### **Future Enhancements**
+- **Advanced Analytics**: Machine learning-powered insights
+- **Mobile App**: Native mobile applications
+- **API Expansion**: Public API for third-party integrations
+- **Internationalization**: Multi-language support
 
-## 🤝 **Contributing**
+## 📞 **GETTING STARTED**
 
-We welcome contributions from the community! Please see our [Contributing Guide](CONTRIBUTING.md) for details on how to get started.
+### **For Developers**
+1. Read the **[SYSTEM_ARCHITECTURE_OVERVIEW.md](./SYSTEM_ARCHITECTURE_OVERVIEW.md)**
+2. Review **[LESSONS_LEARNED.md](./LESSONS_LEARNED.md)** for critical insights and best practices
+3. Review the **[API.md](./API.md)** for integration details
+4. Check **[DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md)** for deployment instructions
 
-### **Development Standards**
-- **Code Quality**: TypeScript with strict mode
-- **Testing**: Comprehensive test coverage required
-- **Documentation**: Clear and up-to-date documentation
-- **Accessibility**: WCAG 2.1 AA compliance
-- **Performance**: Core Web Vitals optimization
+### **For Administrators**
+1. Review **[AUTHENTICATION_SYSTEM.md](./AUTHENTICATION_SYSTEM.md)** for user management
+2. Check **[SECURITY_RLS_IMPLEMENTATION.md](./SECURITY_RLS_IMPLEMENTATION.md)** for security policies
+3. Read **[USER_GUIDE.md](./USER_GUIDE.md)** for end-user features
 
-## 📄 **License**
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🆘 **Support**
-
-- **Documentation**: [docs/](docs/)
-- **Issues**: [GitHub Issues](https://github.com/your-org/choices/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/your-org/choices/discussions)
-- **Email**: support@choices.com
-
-## 🎉 **Acknowledgments**
-
-- **Supabase**: Backend-as-a-Service platform
-- **Vercel**: Frontend hosting and deployment
-- **Next.js**: React framework
-- **Tailwind CSS**: Utility-first CSS framework
-- **Lucide**: Beautiful icon library
+### **For Security Auditors**
+1. Review **[ZERO_KNOWLEDGE_PROOFS_SYSTEM.md](./ZERO_KNOWLEDGE_PROOFS_SYSTEM.md)** for cryptographic implementation
+2. Check **[DIFFERENTIAL_PRIVACY_IMPLEMENTATION.md](./DIFFERENTIAL_PRIVACY_IMPLEMENTATION.md)** for privacy features
+3. Review **[SECURITY_HEADERS_IMPLEMENTATION.md](./SECURITY_HEADERS_IMPLEMENTATION.md)** for infrastructure security
 
 ---
 
-**Choices** - Empowering democratic decision-making through technology, privacy, and transparency.
+**Documentation Streamlined** ✅  
+**Production Ready** ✅  
+**Security Documented** ✅  
+**Architecture Clear** ✅
