@@ -1,4 +1,5 @@
 import { NextRequest } from 'next/server';
+import { logger } from '@/lib/logger';
 import jwt from 'jsonwebtoken'
 
 export interface JWTPayload {
@@ -30,14 +31,14 @@ export function verifyAuthToken(token: string): JWTPayload | null {
   try {
     const jwtSecret = process.env.JWT_SECRET
     if (!jwtSecret) {
-      console.error('JWT_SECRET not configured')
+      logger.error('JWT_SECRET not configured')
       return null
     }
 
     const decoded = jwt.verify(token, jwtSecret) as JWTPayload
     return decoded
   } catch (error) {
-    console.error('JWT verification failed:', error)
+    logger.error('JWT verification failed:', error)
     return null
   }
 }

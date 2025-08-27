@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 /**
  * Offline Outbox System for PWA
  * Enables offline voting with automatic background sync
@@ -81,7 +82,7 @@ export class OfflineOutbox {
       const stored = localStorage.getItem(this.STORAGE_KEY)
       return stored ? JSON.parse(stored) : []
     } catch (error) {
-      console.error('Failed to get offline outbox:', error)
+      logger.error('Failed to get offline outbox:', error)
       return []
     }
   }
@@ -221,7 +222,7 @@ export class OfflineOutbox {
   private scheduleSync(): void {
     setTimeout(() => {
       this.syncVotes().catch(error => {
-        console.error('Background sync failed:', error)
+        logger.error('Background sync failed:', error)
       })
     }, this.SYNC_INTERVAL)
   }
@@ -240,7 +241,7 @@ export class OfflineOutbox {
     try {
       localStorage.setItem(this.STORAGE_KEY, JSON.stringify(outbox))
     } catch (error) {
-      console.error('Failed to save offline outbox:', error)
+      logger.error('Failed to save offline outbox:', error)
     }
   }
 
@@ -251,7 +252,7 @@ export class OfflineOutbox {
     try {
       localStorage.removeItem(this.STORAGE_KEY)
     } catch (error) {
-      console.error('Failed to clear offline outbox:', error)
+      logger.error('Failed to clear offline outbox:', error)
     }
   }
 
@@ -283,10 +284,10 @@ export const offlineOutbox = new OfflineOutbox()
 export function initializeOfflineOutbox(): void {
   // Listen for online/offline events
   window.addEventListener('online', () => {
-    console.log('Connection restored, syncing offline votes...')
+    logger.info('Connection restored, syncing offline votes...')
     offlineOutbox.syncVotes().then(result => {
       if (result.syncedCount > 0) {
-        console.log(`Synced ${result.syncedCount} offline votes`)
+        logger.info(`Synced ${result.syncedCount} offline votes`)
         // Trigger UI update
         window.dispatchEvent(new CustomEvent('offlineVotesSynced', { detail: result }))
       }
@@ -294,13 +295,13 @@ export function initializeOfflineOutbox(): void {
   })
 
   window.addEventListener('offline', () => {
-    console.log('Connection lost, votes will be stored offline')
+    logger.info('Connection lost, votes will be stored offline')
   })
 
   // Initial sync check
   if (navigator.onLine) {
     offlineOutbox.syncVotes().catch(error => {
-      console.error('Initial sync failed:', error)
+      logger.error('Initial sync failed:', error)
     })
   }
 }

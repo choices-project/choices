@@ -4,6 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { logger } from '@/lib/logger';
 import { createClient } from '@supabase/supabase-js';
 
 export interface DPoPValidationResult {
@@ -72,7 +73,7 @@ export function withDPoP(handler: Function) {
       // Continue with the original handler
       return handler(request, context);
     } catch (error) {
-      console.error('DPoP middleware error:', error);
+      logger.error('DPoP middleware error:', error);
       return NextResponse.json(
         { error: 'DPoP validation failed' },
         { status: 401 }
@@ -102,13 +103,13 @@ async function validateDPoPBinding(
     });
 
     if (error) {
-      console.error('DPoP validation error:', error);
+      logger.error('DPoP validation error:', error);
       return false;
     }
 
     return data === true;
   } catch (error) {
-    console.error('DPoP validation error:', error);
+    logger.error('DPoP validation error:', error);
     return false;
   }
 }
@@ -125,7 +126,7 @@ export function extractDPoPProof(request: NextRequest) {
   try {
     return JSON.parse(dpopHeader);
   } catch (error) {
-    console.error('Failed to parse DPoP proof:', error);
+    logger.error('Failed to parse DPoP proof:', error);
     return null;
   }
 }

@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
+import { logger } from '@/lib/logger';
 import { 
   AlertCircle, 
   Info, 
@@ -67,7 +68,7 @@ export default function SiteMessages({
       }
     } catch (err) {
       setError('Failed to load messages')
-      console.error('Error fetching site messages:', err)
+      logger.error('Error fetching site messages:', err)
     } finally {
       setLoading(false)
     }

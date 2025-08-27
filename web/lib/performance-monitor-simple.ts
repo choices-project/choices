@@ -4,6 +4,7 @@
  */
 
 import { createClient } from '@supabase/supabase-js';
+import { logger } from '@/lib/logger';
 
 // Basic types for performance monitoring
 export interface QueryPerformanceData {
@@ -110,9 +111,9 @@ export class SimplePerformanceMonitor {
       }
 
       this.isInitialized = true;
-      console.log('✅ Performance monitor initialized');
+      logger.info('✅ Performance monitor initialized');
     } catch (error) {
-      console.error('❌ Failed to initialize performance monitor:', error);
+      logger.error('❌ Failed to initialize performance monitor:', error);
       throw error;
     }
   }
@@ -145,18 +146,18 @@ export class SimplePerformanceMonitor {
       });
 
       if (error) {
-        console.error('Failed to track query performance:', error);
+        logger.error('Failed to track query performance:', error);
         return null;
       }
 
       // Check for slow query alerts
       if (data.executionTimeMs > this.config.alertThresholds.slowQueryMs) {
-        console.warn(`🚨 Slow query detected: ${data.querySignature} (${data.executionTimeMs}ms)`);
+        logger.warn(`🚨 Slow query detected: ${data.querySignature} (${data.executionTimeMs}ms)`);
       }
 
       return result as string | null;
     } catch (error) {
-      console.error('Error tracking query performance:', error);
+      logger.error('Error tracking query performance:', error);
       return null;
     }
   }
@@ -184,19 +185,19 @@ export class SimplePerformanceMonitor {
       });
 
       if (error) {
-        console.error('Failed to update cache performance:', error);
+        logger.error('Failed to update cache performance:', error);
         return null;
       }
 
       // Check for low hit rate alerts
       const hitRate = (data.hitCount + data.missCount) > 0 ? data.hitCount / (data.hitCount + data.missCount) : 0;
       if (hitRate < this.config.alertThresholds.lowCacheHitRate) {
-        console.warn(`🚨 Low cache hit rate: ${data.cacheName} (${(hitRate * 100).toFixed(1)}%)`);
+        logger.warn(`🚨 Low cache hit rate: ${data.cacheName} (${(hitRate * 100).toFixed(1)}%)`);
       }
 
       return result as string | null;
     } catch (error) {
-      console.error('Error updating cache performance:', error);
+      logger.error('Error updating cache performance:', error);
       return null;
     }
   }
@@ -216,13 +217,13 @@ export class SimplePerformanceMonitor {
       });
 
       if (error) {
-        console.error('Failed to run maintenance job:', error);
+        logger.error('Failed to run maintenance job:', error);
         return null;
       }
 
       return result as string | null;
     } catch (error) {
-      console.error('Error running maintenance job:', error);
+      logger.error('Error running maintenance job:', error);
       return null;
     }
   }
@@ -239,13 +240,13 @@ export class SimplePerformanceMonitor {
       const { data, error } = await this.supabase.rpc('get_performance_recommendations');
 
       if (error) {
-        console.error('Failed to get performance recommendations:', error);
+        logger.error('Failed to get performance recommendations:', error);
         return [];
       }
 
       return (data as PerformanceRecommendation[]) || [];
     } catch (error) {
-      console.error('Error getting performance recommendations:', error);
+      logger.error('Error getting performance recommendations:', error);
       return [];
     }
   }
@@ -262,13 +263,13 @@ export class SimplePerformanceMonitor {
       const { data, error } = await this.supabase.rpc('cleanup_performance_data');
 
       if (error) {
-        console.error('Failed to cleanup performance data:', error);
+        logger.error('Failed to cleanup performance data:', error);
         return 0;
       }
 
       return (data as number) || 0;
     } catch (error) {
-      console.error('Error cleaning up performance data:', error);
+      logger.error('Error cleaning up performance data:', error);
       return 0;
     }
   }
@@ -291,7 +292,7 @@ export class SimplePerformanceMonitor {
         .gte('created_at', timeFilter);
 
       if (queryError) {
-        console.error('Failed to get query stats:', queryError);
+        logger.error('Failed to get query stats:', queryError);
         return null;
       }
 
@@ -302,7 +303,7 @@ export class SimplePerformanceMonitor {
         .gte('updated_at', timeFilter);
 
       if (cacheError) {
-        console.error('Failed to get cache stats:', cacheError);
+        logger.error('Failed to get cache stats:', cacheError);
         return null;
       }
 
@@ -324,7 +325,7 @@ export class SimplePerformanceMonitor {
 
       return stats;
     } catch (error) {
-      console.error('Error getting performance stats:', error);
+      logger.error('Error getting performance stats:', error);
       return null;
     }
   }
@@ -342,9 +343,9 @@ export class SimplePerformanceMonitor {
       // Run analyze job
       await this.runMaintenanceJob('automated_analyze', 'analyze');
 
-      console.log('✅ Automated maintenance completed');
+      logger.info('✅ Automated maintenance completed');
     } catch (error) {
-      console.error('❌ Automated maintenance failed:', error);
+      logger.error('❌ Automated maintenance failed:', error);
     }
   }
 

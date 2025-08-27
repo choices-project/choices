@@ -1,38 +1,80 @@
-// Jest setup file
-// This file runs before each test
+require('@testing-library/jest-dom');
 
-// Mock crypto for Node.js environment
-if (typeof global.crypto === 'undefined') {
-  const { webcrypto } = require('crypto')
-  global.crypto = webcrypto
-}
+// Mock Next.js router
+jest.mock('next/router', () => ({
+  useRouter() {
+    return {
+      route: '/',
+      pathname: '/',
+      query: {},
+      asPath: '/',
+      push: jest.fn(),
+      pop: jest.fn(),
+      reload: jest.fn(),
+      back: jest.fn(),
+      prefetch: jest.fn().mockResolvedValue(undefined),
+      beforePopState: jest.fn(),
+      events: {
+        on: jest.fn(),
+        off: jest.fn(),
+        emit: jest.fn(),
+      },
+      isFallback: false,
+    };
+  },
+}));
 
-// Mock TextEncoder/TextDecoder for Node.js environment
-if (typeof global.TextEncoder === 'undefined') {
-  const { TextEncoder, TextDecoder } = require('util')
-  global.TextEncoder = TextEncoder
-  global.TextDecoder = TextDecoder
-}
+// Mock Next.js image component
+jest.mock('next/image', () => ({
+  __esModule: true,
+  default: function MockImage(props) {
+    return require('react').createElement('img', props);
+  },
+}));
 
-// Mock atob/btoa for Node.js environment
-if (typeof global.atob === 'undefined') {
-  global.atob = (str) => Buffer.from(str, 'base64').toString('binary')
-  global.btoa = (str) => Buffer.from(str, 'binary').toString('base64')
-}
+// Mock window.matchMedia
+Object.defineProperty(window, 'matchMedia', {
+  writable: true,
+  value: jest.fn().mockImplementation(query => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addListener: jest.fn(), // deprecated
+    removeListener: jest.fn(), // deprecated
+    addEventListener: jest.fn(),
+    removeEventListener: jest.fn(),
+    dispatchEvent: jest.fn(),
+  })),
+});
 
-// Set test environment variables
-process.env.NODE_ENV = 'test'
+// Mock ResizeObserver
+global.ResizeObserver = jest.fn().mockImplementation(() => ({
+  observe: jest.fn(),
+  unobserve: jest.fn(),
+  disconnect: jest.fn(),
+}));
 
-// Load actual environment variables for tests
-require('dotenv').config({ path: '.env.local' })
+// Mock IntersectionObserver
+global.IntersectionObserver = jest.fn().mockImplementation(() => ({
+  observe: jest.fn(),
+  unobserve: jest.fn(),
+  disconnect: jest.fn(),
+}));
 
-// Only set defaults if not already set
-if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
-  process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://test.supabase.co'
-}
-if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
-  process.env.SUPABASE_SERVICE_ROLE_KEY = 'test-key'
-}
+// Suppress console warnings in tests
+const originalWarn = console.warn;
+beforeAll(() => {
+  console.warn = (...args) => {
+    if (
+      typeof args[0] === 'string' &&
+      args[0].includes('Warning: ReactDOM.render is deprecated')
+    ) {
+      return;
+    }
+    originalWarn.call(console, ...args);
+  };
+});
 
-// Increase timeout for database operations
-jest.setTimeout(30000)
+afterAll(() => {
+  console.warn = originalWarn;
+});

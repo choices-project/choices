@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useRef, useCallback } from 'react'
+import Image from 'next/image';
 import { imageOptimization } from '@/lib/performance/component-optimization'
 
 interface OptimizedImageProps {
@@ -178,7 +179,7 @@ export default function OptimizedImage({
     <div className="optimized-image-container">
       {/* Placeholder */}
       {!isLoaded && placeholder && (
-        <img
+        <Image
           src={placeholder}
           alt=""
           className="optimized-image-placeholder"
@@ -192,14 +193,14 @@ export default function OptimizedImage({
             filter: 'blur(10px)',
             transform: 'scale(1.1)'
           }}
-        />
+         width={1} height={1} />
       )}
 
       {/* Main image */}
-      <img
+      <Image
         ref={imgRef}
         {...optimizedProps}
-      />
+       alt="" width={1} height={1} />
 
       {/* Loading indicator */}
       {!isLoaded && !isError && (
@@ -313,9 +314,11 @@ export function OptimizedBackgroundImage({
     >
       {/* Hidden image for loading detection */}
       {currentSrc && (
-        <img
+        <Image
           src={currentSrc}
           alt=""
+          width={1}
+          height={1}
           style={{ display: 'none' }}
           onLoad={() => setIsLoaded(true)}
         />
@@ -396,7 +399,7 @@ export function OptimizedPicture({
       )}
 
       {/* Fallback image */}
-      <img
+      <Image
         src={src}
         alt={alt}
         width={width}

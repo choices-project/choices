@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
+import { logger } from '@/lib/logger';
 import { 
   MessageSquare, 
   Plus, 
@@ -68,10 +69,10 @@ export default function SiteMessagesPage() {
         const data = await response.json()
         setMessages(data.messages || [])
       } else {
-        console.error('Failed to fetch messages:', response.status)
+        logger.error('Failed to fetch messages:', response.status)
       }
     } catch (error) {
-      console.error('Error fetching messages:', error)
+      logger.error('Error fetching messages:', error)
     } finally {
       setLoading(false)
     }
@@ -103,10 +104,10 @@ export default function SiteMessagesPage() {
         resetForm()
         setShowForm(false)
       } else {
-        console.error('Failed to save message:', response.status)
+        logger.error('Failed to save message:', response.status)
       }
     } catch (error) {
-      console.error('Error saving message:', error)
+      logger.error('Error saving message:', error)
     }
   }
 
@@ -121,10 +122,10 @@ export default function SiteMessagesPage() {
       if (response.ok) {
         await fetchMessages()
       } else {
-        console.error('Failed to delete message:', response.status)
+        logger.error('Failed to delete message:', response.status)
       }
     } catch (error) {
-      console.error('Error deleting message:', error)
+      logger.error('Error deleting message:', error)
     }
   }
 

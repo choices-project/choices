@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { logger } from '@/lib/logger';
 import {
   Github,
   Plus,
@@ -87,7 +88,7 @@ export const IssueGenerationPanel: React.FC<IssueGenerationPanelProps> = ({
         throw new Error('Failed to generate issue');
       }
     } catch (error) {
-      console.error('Error generating issue:', error);
+      logger.error('Error generating issue:', error);
     } finally {
       setIsGenerating(false);
     }
@@ -113,7 +114,7 @@ export const IssueGenerationPanel: React.FC<IssueGenerationPanelProps> = ({
         throw new Error('Failed to generate issues');
       }
     } catch (error) {
-      console.error('Error generating issues:', error);
+      logger.error('Error generating issues:', error);
     } finally {
       setIsGenerating(false);
     }

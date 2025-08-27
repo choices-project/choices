@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { logger } from '@/lib/logger';
 import { createClient } from '@/utils/supabase/server'
 import { cookies } from 'next/headers'
 import { rateLimiters } from '@/lib/rate-limit'
@@ -50,7 +51,7 @@ export async function POST(request: NextRequest) {
       .eq('user_id', user.id)
 
     if (updateError) {
-      console.error('Failed to store WebAuthn challenge:', updateError)
+      logger.error('Failed to store WebAuthn challenge:', updateError)
       return NextResponse.json(
         { message: 'Failed to setup biometric authentication' },
         { status: 500 }
@@ -88,7 +89,7 @@ export async function POST(request: NextRequest) {
     })
 
   } catch (error) {
-    console.error('WebAuthn registration error:', error)
+    logger.error('WebAuthn registration error:', error)
     
     return NextResponse.json(
       { message: 'Failed to setup biometric authentication' },
@@ -157,7 +158,7 @@ export async function PUT(request: NextRequest) {
       })
 
     if (credentialError) {
-      console.error('Failed to store credential:', credentialError)
+      logger.error('Failed to store credential:', credentialError)
       return NextResponse.json(
         { message: 'Failed to save biometric credential' },
         { status: 500 }
@@ -178,7 +179,7 @@ export async function PUT(request: NextRequest) {
     })
 
   } catch (error) {
-    console.error('WebAuthn verification error:', error)
+    logger.error('WebAuthn verification error:', error)
     
     return NextResponse.json(
       { message: 'Failed to verify biometric setup' },

@@ -1,9 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { logger } from '@/lib/logger';
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { Eye, EyeOff, User, Lock, Fingerprint, Smartphone, CheckCircle2, AlertCircle } from 'lucide-react'
+import { Eye, EyeOff, User, Lock, Fingerprint, CheckCircle2, AlertCircle } from 'lucide-react'
 import { clientSession } from '@/lib/client-session'
 
 export default function LoginPage() {
@@ -36,7 +37,7 @@ export default function LoginPage() {
           setBiometricAvailable(true)
         }
       } catch (error) {
-        console.error('Error checking biometric support:', error)
+        logger.error('Error checking biometric support:', error)
         setBiometricSupported(false)
         setBiometricAvailable(false)
       }
@@ -73,7 +74,7 @@ export default function LoginPage() {
         setError(result.error || 'Login failed. Please try again.')
       }
     } catch (error) {
-      console.error('Login error:', error)
+      logger.error('Login error:', error)
       setError('Network error. Please try again.')
     } finally {
       setLoading(false)
@@ -107,7 +108,7 @@ export default function LoginPage() {
         }, 1000)
       }
     } catch (error) {
-      console.error('Biometric login error:', error)
+      logger.error('Biometric login error:', error)
       setError('Biometric authentication failed. Please try again.')
     } finally {
       setLoading(false)

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { logger } from '@/lib/logger';
 import { offlineOutbox, initializeOfflineOutbox } from '@/lib/pwa/offline-outbox'
 
 interface BeforeInstallPromptEvent extends Event {
@@ -114,7 +115,7 @@ export default function PWAInstaller() {
       }))
       setShowOfflineStatus(stats.pending > 0)
     } catch (error) {
-      console.error('Failed to check offline votes:', error)
+      logger.error('Failed to check offline votes:', error)
     }
   }
 
@@ -129,12 +130,12 @@ export default function PWAInstaller() {
       const { outcome } = await deferredPrompt.userChoice
       
       if (outcome === 'accepted') {
-        console.log('User accepted the install prompt')
+        logger.info('User accepted the install prompt')
       } else {
-        console.log('User dismissed the install prompt')
+        logger.info('User dismissed the install prompt')
       }
     } catch (error) {
-      console.error('Installation failed:', error)
+      logger.error('Installation failed:', error)
     } finally {
       setDeferredPrompt(null)
       setShowInstallPrompt(false)
@@ -152,7 +153,7 @@ export default function PWAInstaller() {
       }
       checkOfflineVotes()
     } catch (error) {
-      console.error('Failed to sync offline votes:', error)
+      logger.error('Failed to sync offline votes:', error)
       showNotification('Sync failed', 'Please try again when you have a stable connection.')
     }
   }

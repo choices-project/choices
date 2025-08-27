@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { logger } from '@/lib/logger'
 import { clearSessionToken } from '@/lib/session'
 
-export async function POST(request: NextRequest) {
+export async function POST(_request: NextRequest) {
   try {
     clearSessionToken()
     

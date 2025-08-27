@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 /**
  * Browser detection and compatibility utilities
  */
@@ -105,7 +106,7 @@ export function navigateTo(url: string, strategy?: 'server' | 'client' | 'hybrid
   const browser = detectBrowser()
   const redirectStrategy = strategy || getRedirectStrategy()
 
-  console.log('🔍 Browser navigation:', {
+  logger.info('🔍 Browser navigation:', {
     browser: browser.name,
     version: browser.version,
     isMobile: browser.isMobile,

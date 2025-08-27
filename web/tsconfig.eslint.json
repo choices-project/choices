@@ -1,0 +1,5 @@
+{
+  "extends": "./tsconfig.json",
+  "include": ["app/**/*", "components/**/*", "lib/**/*", "hooks/**/*", "contexts/**/*", "types/**/*"],
+  "exclude": ["node_modules", ".next", "dist", "out", "build", "e2e", "test-results", "playwright-report"]
+}

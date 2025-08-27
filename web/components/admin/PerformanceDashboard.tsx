@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { logger } from '@/lib/logger';
 import { optimizedPollService, type PerformanceMetrics } from '@/lib/performance/optimized-poll-service'
 
 interface PerformanceDashboardProps {
@@ -33,7 +34,7 @@ export default function PerformanceDashboard({ refreshInterval = 30000 }: Perfor
       const stats = optimizedPollService.getCacheStats()
       setCacheStats(stats)
     } catch (err) {
-      console.warn('Failed to load cache stats:', err)
+      logger.warn('Failed to load cache stats:', err)
     }
   }, [])
 

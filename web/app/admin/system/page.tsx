@@ -7,6 +7,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { logger } from '@/lib/logger';
 import { 
   Settings, 
   Save, 
@@ -156,12 +157,12 @@ export default function SystemSettingsPage() {
           
           setConfig(realConfig);
         } else {
-          console.error('Failed to fetch system status:', response.status);
+          logger.error('Failed to fetch system status:', response.status);
           // Fall back to mock data if API fails
           setConfig(getMockConfig());
         }
       } catch (error) {
-        console.error('Error fetching system data:', error);
+        logger.error('Error fetching system data:', error);
         // Fall back to mock data if API fails
         setConfig(getMockConfig());
       } finally {
@@ -793,7 +794,7 @@ export default function SystemSettingsPage() {
                           alert('Failed to check schema status');
                         }
                       } catch (error) {
-                        console.error('Error checking schema status:', error);
+                        logger.error('Error checking schema status:', error);
                         alert('Error checking schema status');
                       }
                     }}
@@ -820,7 +821,7 @@ export default function SystemSettingsPage() {
                           alert('Failed to refresh cache');
                         }
                       } catch (error) {
-                        console.error('Error refreshing cache:', error);
+                        logger.error('Error refreshing cache:', error);
                         alert('Error refreshing cache');
                       }
                     }}

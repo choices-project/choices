@@ -173,8 +173,18 @@ const withPWA = require('next-pwa')({
 const nextConfig = {
   // Performance optimizations
   experimental: {
+    // Enable CSS optimization
     optimizeCss: true,
-    optimizePackageImports: ['@supabase/supabase-js', 'lucide-react', 'react-hook-form'],
+    // Enable package imports optimization
+    optimizePackageImports: [
+      '@supabase/supabase-js',
+      'lucide-react',
+      'react-hook-form',
+      'zod',
+      'clsx',
+      'tailwind-merge'
+    ],
+    // Enable turbo for faster builds
     turbo: {
       rules: {
         '*.svg': {
@@ -262,9 +272,7 @@ const nextConfig = {
     // Module resolution optimizations
     config.resolve.alias = {
       ...config.resolve.alias,
-      '@': require('path').resolve(__dirname, './'),
-      'react': require.resolve('react'),
-      'react-dom': require.resolve('react-dom')
+      '@': require('path').resolve(__dirname, './')
     }
 
     // Performance hints
@@ -376,32 +384,7 @@ const nextConfig = {
   // Asset prefix
   assetPrefix: process.env.NODE_ENV === 'production' ? '' : '',
 
-  // Experimental features
-  experimental: {
-    ...nextConfig.experimental,
-    // Enable modern JavaScript features
-    modern: true,
-    // Enable CSS optimization
-    optimizeCss: true,
-    // Enable package imports optimization
-    optimizePackageImports: [
-      '@supabase/supabase-js',
-      'lucide-react',
-      'react-hook-form',
-      'zod',
-      'clsx',
-      'tailwind-merge'
-    ],
-    // Enable turbo for faster builds
-    turbo: {
-      rules: {
-        '*.svg': {
-          loaders: ['@svgr/webpack'],
-          as: '*.js'
-        }
-      }
-    }
-  }
+
 }
 
 module.exports = withPWA(nextConfig)

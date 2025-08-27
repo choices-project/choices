@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { logger } from '@/lib/logger';
 import { differentialPrivacy, type PrivateQueryResult } from '@/lib/privacy/differential-privacy'
 
 interface PollOption {
@@ -44,7 +45,7 @@ export default function PrivatePollResults({ poll, userId, onPrivacyBudgetExceed
       const privateResults = await differentialPrivacy.getPrivatePollResults(poll.id, userId)
       setResults(privateResults)
     } catch (error) {
-      console.error('Failed to load private results:', error)
+      logger.error('Failed to load private results:', error)
       
       if (error instanceof Error && error.message.includes('Privacy budget exceeded')) {
         setError('Privacy budget exceeded. Please try again later.')
@@ -62,7 +63,7 @@ export default function PrivatePollResults({ poll, userId, onPrivacyBudgetExceed
       const budget = await differentialPrivacy.getPrivacyBudget(userId)
       setPrivacyBudget(budget)
     } catch (error) {
-      console.error('Failed to load privacy budget:', error)
+      logger.error('Failed to load privacy budget:', error)
     }
   }
 

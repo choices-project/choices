@@ -181,7 +181,7 @@ export default function PollPage() {
         throw new Error(result.message || 'Failed to submit vote')
       }
     } catch (error: any) {
-      console.error('Error submitting vote:', error)
+      logger.error('Error submitting vote:', error)
       setError(error instanceof Error ? error.message : 'Failed to submit vote')
     } finally {
       setIsVoting(false)

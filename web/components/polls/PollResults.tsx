@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { logger } from '@/lib/logger';
 import { BarChart3, TrendingUp, Users, Share2, Download } from 'lucide-react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
 
@@ -89,7 +90,7 @@ export default function PollResults({ pollId }: PollResultsProps) {
       
       setPoll(poll)
     } catch (error) {
-      console.error('Error loading poll results:', error)
+      logger.error('Error loading poll results:', error)
       setError(error instanceof Error ? error instanceof Error ? error.message : "Unknown error" : 'Failed to load poll results')
     } finally {
       setLoading(false)
