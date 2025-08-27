@@ -101,8 +101,8 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Get user profile
-    const { data: profile, error: profileError } = await supabase
+    // Get user profile (for future use)
+    const { error: profileError } = await supabase
       .from('user_profiles')
       .select('*')
       .eq('user_id', user.stable_id)

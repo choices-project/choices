@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { logger } from '@/lib/logger';
 import { withAuth, createRateLimitMiddleware, combineMiddleware } from '@/lib/auth-middleware'
 
 export const dynamic = 'force-dynamic'
@@ -58,7 +59,7 @@ export const GET = withAuth(async (request: NextRequest, context) => {
     const { data: users, error, count } = await query
 
     if (error) {
-      console.error('Error fetching users:', error)
+      logger.error('Error fetching users:', error)
       return NextResponse.json(
         { message: 'Failed to fetch users' },
         { status: 500 }
@@ -76,7 +77,7 @@ export const GET = withAuth(async (request: NextRequest, context) => {
     })
 
   } catch (error) {
-    console.error('Admin users API error:', error)
+    logger.error('Admin users API error:', error)
     
     return NextResponse.json(
       { message: 'Internal server error' },
@@ -130,7 +131,7 @@ export const PUT = withAuth(async (request: NextRequest, context) => {
       .eq('user_id', userId)
 
     if (updateError) {
-      console.error('Error updating user:', updateError)
+      logger.error('Error updating user:', updateError)
       return NextResponse.json(
         { message: 'Failed to update user' },
         { status: 500 }
@@ -142,7 +143,7 @@ export const PUT = withAuth(async (request: NextRequest, context) => {
     })
 
   } catch (error) {
-    console.error('Admin user update error:', error)
+    logger.error('Admin user update error:', error)
     
     return NextResponse.json(
       { message: 'Internal server error' },

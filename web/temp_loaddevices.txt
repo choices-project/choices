@@ -1,0 +1,26 @@
+  const loadDevices = async () => {
+    try {
+      setLoading(true)
+      setError('')
+      
+      const result = await getUserCredentials(userId)
+      
+      if (result.success && result.credentials) {
+        setDevices(result.credentials.map((cred: any) => ({
+          id: cred.id,
+          name: cred.name || getDeviceName(cred.deviceInfo),
+          type: cred.deviceInfo?.deviceType || 'unknown',
+          lastUsed: cred.lastUsed || 'Never',
+          isCurrent: cred.isCurrent || false,
+          authenticatorType: cred.authenticatorType || 'unknown'
+        })))
+      } else {
+        setError(result.error || 'Failed to load devices')
+      }
+    } catch (err) {
+      setError('Failed to load devices')
+    } finally {
+      setLoading(false)
+    }
+  }
+

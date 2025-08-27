@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { logger } from '@/lib/logger';
 import { withAuth, createRateLimitMiddleware, combineMiddleware } from '@/lib/auth-middleware'
 import { queryOptimizer, connectionPoolManager, queryMonitor, withPerformanceMonitoring } from '@/lib/database-optimizer'
 
@@ -74,7 +75,7 @@ export const GET = withAuth(async (request: NextRequest, context) => {
     return NextResponse.json(response, { status: statusCode })
 
   } catch (error) {
-    console.error('Database health check error:', error)
+    logger.error('Database health check error:', error)
     
     return NextResponse.json({
       status: 'unhealthy',

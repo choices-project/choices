@@ -10,6 +10,7 @@
  */
 
 import { createHash } from 'crypto'
+import { logger } from '@/lib/logger';
 
 export interface DPoPKeyPair {
   publicKey: CryptoKey
@@ -149,7 +150,7 @@ export async function verifyDPoPProof(
     
     return proof.jkt === expectedJkt
   } catch (error) {
-    console.error('DPoP proof verification failed:', error)
+    logger.error('DPoP proof verification failed:', error)
     return false
   }
 }
@@ -214,7 +215,7 @@ async function verifyJWT(jwt: string, publicKey: CryptoKey): Promise<boolean> {
       data
     )
   } catch (error) {
-    console.error('JWT verification failed:', error)
+    logger.error('JWT verification failed:', error)
     return false
   }
 }

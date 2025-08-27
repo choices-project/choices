@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, Suspense } from 'react'
+import { logger } from '@/lib/logger';
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Fingerprint, Shield, CheckCircle, XCircle, AlertTriangle, ArrowLeft } from 'lucide-react'
 import { 
@@ -36,7 +37,7 @@ function BiometricSetupContent() {
         setIsAvailable(available)
       }
     } catch (error) {
-      console.error('Error checking biometric support:', error)
+      logger.error('Error checking biometric support:', error)
       setError('Failed to check biometric support')
     }
   }

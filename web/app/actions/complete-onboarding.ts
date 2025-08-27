@@ -10,7 +10,6 @@ import {
   type ServerActionContext
 } from '@/lib/auth/server-actions'
 import { 
-  verifySessionToken,
   rotateSessionToken,
   setSessionCookie 
 } from '@/lib/auth/session-cookies'

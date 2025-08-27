@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 /**
  * Logger utility for development and production environments
  * Provides structured logging with environment-aware output
@@ -37,7 +38,7 @@ class Logger {
   debug(message: string, context?: LogContext): void {
     if (this.shouldLog(LogLevel.DEBUG)) {
       // eslint-disable-next-line no-console
-      console.debug(this.formatMessage('DEBUG', message, context));
+      logger.debug(this.formatMessage('DEBUG', message, context));
     }
   }
 
@@ -51,7 +52,7 @@ class Logger {
   warn(message: string, context?: LogContext): void {
     if (this.shouldLog(LogLevel.WARN)) {
       // eslint-disable-next-line no-console
-      console.warn(this.formatMessage('WARN', message, context));
+      logger.warn(this.formatMessage('WARN', message, context));
     }
   }
 
@@ -63,7 +64,7 @@ class Logger {
         stack: error?.stack
       };
       // eslint-disable-next-line no-console
-      console.error(this.formatMessage('ERROR', message, errorContext));
+      logger.error(this.formatMessage('ERROR', message, errorContext));
     }
   }
 
@@ -125,10 +126,10 @@ export const logPerformance = (operation: string, duration: number, context?: Lo
   logger.performance(operation, duration, context);
 };
 
-// Development-only logging (replaces console.log)
+// Development-only logging (replaces logger.info)
 export const devLog = (message: string, ...args: any[]) => {
   if (process.env.NODE_ENV === 'development') {
     // eslint-disable-next-line no-console
-    console.log(`[DEV] ${message}`, ...args);
+    logger.info(`[DEV] ${message}`, ...args);
   }
 };

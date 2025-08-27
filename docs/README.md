@@ -13,6 +13,7 @@ Welcome to the Choices platform documentation. This streamlined guide covers the
 ### **🏗️ System Architecture**
 - **[SYSTEM_ARCHITECTURE_OVERVIEW.md](./SYSTEM_ARCHITECTURE_OVERVIEW.md)** - Master system architecture and component overview
 - **[LESSONS_LEARNED.md](./LESSONS_LEARNED.md)** - Critical insights from solving complex problems
+- **[LINTING_ISSUES_ASSESSMENT.md](./LINTING_ISSUES_ASSESSMENT.md)** - Comprehensive assessment for fixing linting issues
 
 ### **🔐 Authentication & Security**
 - **[AUTHENTICATION_SYSTEM.md](./AUTHENTICATION_SYSTEM.md)** - Comprehensive authentication and authorization system

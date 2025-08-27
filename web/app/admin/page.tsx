@@ -1,6 +1,7 @@
 'use client'
 
 import { useAuth } from '@/hooks/useAuth'
+import { logger } from '@/lib/logger';
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
@@ -70,7 +71,7 @@ export default function AdminDashboard() {
           systemHealth: systemData.health.systemHealth
         })
       } else {
-        console.error('Failed to fetch admin stats:', response.status)
+        logger.error('Failed to fetch admin stats:', response.status)
         // Fall back to mock data if API fails
         setStats({
           totalUsers: 0,
@@ -82,7 +83,7 @@ export default function AdminDashboard() {
         })
       }
     } catch (error) {
-      console.error('Error loading admin stats:', error)
+      logger.error('Error loading admin stats:', error)
       // Fall back to mock data if API fails
       setStats({
         totalUsers: 0,

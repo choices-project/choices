@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { logger } from '@/lib/logger';
 import { vote } from '@/app/actions/vote'
 import { offlineOutbox } from '@/lib/pwa/offline-outbox'
 
@@ -41,7 +42,7 @@ export default function EnhancedVoteForm({ poll, onVoteSubmitted, onVoteError }:
         const pending = await offlineOutbox.hasPendingVotes(poll.id)
         setHasPendingVotes(pending)
       } catch (error) {
-        console.error('Failed to check pending votes:', error)
+        logger.error('Failed to check pending votes:', error)
       }
     }
 
@@ -106,7 +107,7 @@ export default function EnhancedVoteForm({ poll, onVoteSubmitted, onVoteError }:
         onVoteSubmitted?.(result)
       }
     } catch (error) {
-      console.error('Vote submission failed:', error)
+      logger.error('Vote submission failed:', error)
       onVoteError?.(error instanceof Error ? error.message : 'Failed to submit vote')
     } finally {
       setIsSubmitting(false)

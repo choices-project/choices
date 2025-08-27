@@ -1,4 +1,5 @@
 import { ApiAuthManager } from './api';
+import { logger } from '@/lib/logger';
 import { devLog } from './logger';
 
 // Types
@@ -470,7 +471,7 @@ class PollService {
         is_mock: false
       })) || [];
     } catch (error) {
-      console.error('Error fetching polls from API:', error);
+      logger.error('Error fetching polls from API:', error);
       return [];
     }
   }
@@ -505,7 +506,7 @@ class PollService {
         is_mock: false
       };
     } catch (error) {
-      console.error('Error fetching poll from API:', error);
+      logger.error('Error fetching poll from API:', error);
       return null;
     }
   }
@@ -535,7 +536,7 @@ class PollService {
       
       devLog('Poll saved to API successfully');
     } catch (error) {
-      console.error('Error saving poll to API:', error);
+      logger.error('Error saving poll to API:', error);
       throw error;
     }
   }
@@ -566,7 +567,7 @@ class PollService {
         message: result.message || 'Vote submitted successfully!'
       };
     } catch (error) {
-      console.error('Error submitting vote to API:', error);
+      logger.error('Error submitting vote to API:', error);
       throw error;
     }
   }

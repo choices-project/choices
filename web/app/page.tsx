@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react'
+import { logger } from '@/lib/logger';
 import Link from 'next/link'
 import { useAuth } from '@/contexts/AuthContext'
 import { Button } from '@/components/ui/button';
@@ -57,7 +58,7 @@ export default function HomePage() {
         setTrendingPolls([getMockTrendingPoll()])
       }
     } catch (error) {
-      console.error('Error loading trending polls:', error)
+      logger.error('Error loading trending polls:', error)
       setTrendingPolls([getMockTrendingPoll()])
     } finally {
       setLoading(false)
@@ -72,7 +73,7 @@ export default function HomePage() {
         setStats(data)
       }
     } catch (error) {
-      console.error('Error loading stats:', error)
+      logger.error('Error loading stats:', error)
     }
   }, [])
 

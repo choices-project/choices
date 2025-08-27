@@ -1,96 +1,161 @@
-'use server'
+'use server';
 
-import { createClient } from '@supabase/supabase-js'
-import { v4 as uuidv4 } from 'uuid'
-import { logger } from '@/lib/logger'
-import { z } from 'zod'
-import { 
-  createSecureServerAction,
-  secureRedirect,
-  validateFormData,
-  UsernameSchema,
-  EmailSchema,
-  type ServerActionContext
-} from '@/lib/auth/server-actions'
+import { createClient } from '@supabase/supabase-js';
+import { z } from 'zod';
+import { headers } from 'next/headers';
+import { redirect } from 'next/navigation';
+import { v4 as uuidv4 } from 'uuid';
+
+import { logger } from '@/lib/logger';
+import { TypeGuardError } from '@/lib/types/guards';
+import { logSecurityEvent } from '@/lib/auth/server-actions';
+import { setSessionCookie, rotateSessionToken } from '@/lib/auth/session-cookies';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+);
 
-// Validation schema
-const RegisterSchema = z.object({
-  username: UsernameSchema,
-  email: EmailSchema,
-})
+// Import the existing ServerActionContext type
+import { ServerActionContext } from '@/lib/auth/server-actions';
 
-// Enhanced registration action with security features
-export const register = createSecureServerAction(
-  async (formData: FormData, context: ServerActionContext) => {
-    // Validate form data
-    const validatedData = validateFormData(formData, RegisterSchema)
-    
-    // Check for existing user
-    const { data: existingUser } = await supabase
-      .from('ia_users')
-      .select('stable_id')
-      .eq('username', validatedData.username.toLowerCase())
-      .single()
+const RegisterForm = z.object({
+  email: z.string().email('Invalid email'),
+  username: z
+    .string()
+    .min(3, 'Username too short')
+    .max(20, 'Username too long')
+    .regex(/^[a-z0-9_]+$/i, 'Alphanumeric/underscore only'),
+  name: z.string().min(1, 'Required').max(80, 'Too long'),
+});
 
-    if (existingUser) {
-      throw new Error('Username already taken')
+export async function register(
+  formData: FormData,
+  context: ServerActionContext
+): Promise<{ ok: true } | { ok: false; error: string; fieldErrors?: Record<string, string> }> {
+  try {
+    // ---- context usage (security + provenance) ----
+    const h = headers();
+    const ip = context.ipAddress ?? h.get('x-forwarded-for') ?? null;
+    const ua = context.userAgent ?? h.get('user-agent') ?? null;
+
+    // No authenticated caller should be registering a new account
+    if (context.userId) {
+      logger.warn('Registration attempt from authenticated user', {
+        userId: context.userId,
+      });
+      return { ok: false, error: 'Already authenticated' };
     }
 
-    // Create user
-    const stableId = uuidv4()
+    // ---- validate input ----
+    const payload = {
+      email: String(formData.get('email') ?? ''),
+      username: String(formData.get('username') ?? ''),
+      name: String(formData.get('name') ?? ''),
+    };
+    const data = RegisterForm.parse(payload);
+
+    // ---- idempotent user creation ----
+    const stableId = uuidv4();
     
+    // Check for existing user by email
+    const { data: existingUser } = await supabase
+      .from('user_profiles')
+      .select('user_id, username')
+      .eq('email', data.email.toLowerCase())
+      .single();
+
+    if (existingUser) {
+      logger.warn('Registration attempt with existing email', { email: data.email });
+      return { ok: false, error: 'Email already registered' };
+    }
+
+    // Check for existing username
+    const { data: existingUsername } = await supabase
+      .from('user_profiles')
+      .select('user_id')
+      .eq('username', data.username.toLowerCase())
+      .single();
+
+    if (existingUsername) {
+      logger.warn('Registration attempt with existing username', { username: data.username });
+      return { ok: false, error: 'Username already taken' };
+    }
+
+    // Create user in ia_users table
     const { error: iaUserError } = await supabase
       .from('ia_users')
       .insert({
         stable_id: stableId,
-        email: validatedData.email?.toLowerCase() || `${validatedData.username.toLowerCase()}@choices-platform.vercel.app`,
-        password_hash: null,
+        email: data.email.toLowerCase(),
+        password_hash: null, // Will be set up later
         verification_tier: 'T0',
         is_active: true,
         two_factor_enabled: false,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
-      })
+      });
 
     if (iaUserError) {
-      logger.error('Failed to create IA user', iaUserError)
-      throw new Error('Failed to create user')
+      logger.error('Failed to create IA user', new Error(iaUserError.message));
+      return { ok: false, error: 'Failed to create user account' };
     }
 
+    // Create user profile
     const { error: profileError } = await supabase
       .from('user_profiles')
       .insert({
         user_id: stableId,
-        username: validatedData.username.toLowerCase(),
-        email: validatedData.email?.toLowerCase() || null,
+        username: data.username.toLowerCase(),
+        email: data.email.toLowerCase(),
+        display_name: data.name,
         onboarding_completed: false,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
-      })
+      });
 
     if (profileError) {
-      logger.error('Failed to create user profile', profileError)
-      throw new Error('Failed to create user profile')
+      logger.error('Failed to create user profile', new Error(profileError.message));
+      return { ok: false, error: 'Failed to create user profile' };
     }
 
-    logger.info('User registered successfully', { 
-      username: validatedData.username.toLowerCase(), 
-      stableId 
-    })
-    
-    // Secure redirect with session management
-    secureRedirect('/onboarding')
-  },
-  {
-    idempotency: { namespace: 'registration' },
-    sessionRotation: true,
-    validation: RegisterSchema,
-    rateLimit: { endpoint: '/register', maxRequests: 5 }
+    // ---- session issuance ----
+    const sessionToken = rotateSessionToken(stableId, 'user', stableId);
+
+    // Set secure session cookie
+    setSessionCookie(sessionToken, {
+      maxAge: 60 * 60 * 24 * 7, // 1 week
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax'
+    });
+
+    // ---- audit ----
+    logSecurityEvent('USER_REGISTERED', {
+      userId: stableId,
+      email: data.email,
+      username: data.username,
+      ip,
+      ua,
+    }, context);
+
+    // ---- navigate via Server Actions redirect (no client race conditions) ----
+    redirect('/onboarding');
+  } catch (err) {
+    if (err instanceof TypeGuardError) {
+      logger.warn('Register type validation failed', { error: err.message });
+      return { ok: false, error: `Invalid input: ${err.message}` };
+    }
+    if (err instanceof z.ZodError) {
+      const fieldErrors = err.issues.reduce((acc, issue) => {
+        acc[issue.path.join('.')] = issue.message;
+        return acc;
+      }, {} as Record<string, string>);
+      
+      logger.warn('Register validation failed', { fieldErrors });
+      return { ok: false, error: 'Validation failed', fieldErrors };
+    }
+    logger.error('Register action failed', err instanceof Error ? err : new Error(String(err)));
+    return { ok: false, error: 'Registration failed' };
   }
-)
+}
 

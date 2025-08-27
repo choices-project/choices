@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { logger } from '@/lib/logger';
 import { useRouter } from 'next/navigation'
 import { 
   Smartphone, 
@@ -162,7 +163,7 @@ export default function DeviceFlowAuth({
         }
 
       } catch (err) {
-        console.error('Polling error:', err)
+        logger.error('Polling error:', err)
         // Don't stop polling on network errors, just log them
       }
     }, interval * 1000)
@@ -178,7 +179,7 @@ export default function DeviceFlowAuth({
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     } catch (err) {
-      console.error('Failed to copy:', err)
+      logger.error('Failed to copy:', err)
     }
   }
 

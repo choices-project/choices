@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback, useMemo } from 'react'
+import { logger } from '@/lib/logger';
 import { optimizedPollService, type OptimizedPollResult, type PollOptionResult } from '@/lib/performance/optimized-poll-service'
 import { differentialPrivacy } from '@/lib/privacy/differential-privacy'
 
@@ -69,7 +70,7 @@ export default function OptimizedPollResults({
       const stats = optimizedPollService.getCacheStats()
       setCacheStats(stats)
     } catch (err) {
-      console.warn('Failed to load cache stats:', err)
+      logger.warn('Failed to load cache stats:', err)
     }
   }, [])
 

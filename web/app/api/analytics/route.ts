@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { logger } from '@/lib/logger';
 import { withAuth, createRateLimitMiddleware, combineMiddleware } from '@/lib/auth-middleware'
 import { queryOptimizer, withPerformanceMonitoring } from '@/lib/database-optimizer'
 
@@ -43,7 +44,7 @@ export const GET = withAuth(async (request: NextRequest, _context) => {
     })
 
   } catch (error) {
-    console.error('Analytics API error:', error)
+    logger.error('Analytics API error:', error)
     
     return NextResponse.json(
       { message: 'Internal server error' },

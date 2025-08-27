@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { logger } from '@/lib/logger';
 import { 
   X, 
   MessageSquare, 
@@ -115,7 +116,7 @@ export const FeedbackDetailModal: React.FC<FeedbackDetailModalProps> = ({
       setAdminResponse('');
       // You could add a success notification here
     } catch (error) {
-      console.error('Error submitting response:', error);
+      logger.error('Error submitting response:', error);
     } finally {
       setIsSubmitting(false);
     }

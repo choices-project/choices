@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, Suspense } from 'react'
+import { logger } from '@/lib/logger';
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/utils/supabase/client'
 import { CheckCircle2, AlertCircle, Loader2 } from 'lucide-react'
@@ -37,6 +38,9 @@ function DeviceFlowCompleteContent() {
 
         setUserCode(userCodeParam)
         setUserId(session.user.id)
+        
+        // Log the device flow completion for debugging
+        logger.info('Device flow completion initiated:', { userCode: userCodeParam, userId: session.user.id })
 
         // Complete the device flow
         const response = await fetch('/api/auth/device-flow/complete', {

@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 /**
  * Client-Side Session Management
  * Handles authentication state and session management on the client side
@@ -30,11 +31,11 @@ class ClientSessionManager {
 
   private async initializeSession() {
     try {
-      console.log('Client session: Initializing session...')
+      logger.info('Client session: Initializing session...')
       
       // Only run on client side
       if (typeof window === 'undefined') {
-        console.log('Client session: Skipping initialization on server side')
+        logger.info('Client session: Skipping initialization on server side')
         this.loading = false
         return
       }
@@ -47,20 +48,20 @@ class ClientSessionManager {
         },
       })
 
-      console.log('Client session: Response status:', response.status)
+      logger.info('Client session: Response status:', response.status)
 
       if (response.ok) {
         const userData = await response.json()
-        console.log('Client session: User data received:', userData.username)
+        logger.info('Client session: User data received:', userData.username)
         this.user = userData
         this.notifyListeners(userData)
       } else {
-        console.log('Client session: No valid session found')
+        logger.info('Client session: No valid session found')
         this.user = null
         this.notifyListeners(null)
       }
     } catch (error) {
-      console.error('Client session: Failed to initialize session:', error)
+      logger.error('Client session: Failed to initialize session:', error)
       this.user = null
       this.notifyListeners(null)
     } finally {
@@ -102,7 +103,7 @@ class ClientSessionManager {
         return { success: false, error: data.message || 'Login failed' }
       }
     } catch (error) {
-      console.error('Login error:', error)
+      logger.error('Login error:', error)
       return { success: false, error: 'Network error' }
     }
   }
@@ -114,7 +115,7 @@ class ClientSessionManager {
         credentials: 'include',
       })
     } catch (error) {
-      console.error('Logout error:', error)
+      logger.error('Logout error:', error)
     } finally {
       this.user = null
       this.notifyListeners(null)
@@ -147,7 +148,7 @@ class ClientSessionManager {
         return { success: false, error: data.message || 'Registration failed' }
       }
     } catch (error) {
-      console.error('Registration error:', error)
+      logger.error('Registration error:', error)
       return { success: false, error: 'Network error' }
     }
   }
@@ -165,7 +166,7 @@ class ClientSessionManager {
   }
 
   public async refreshSession(): Promise<void> {
-    console.log('Client session: Refreshing session...')
+    logger.info('Client session: Refreshing session...')
     await this.initializeSession()
   }
 }

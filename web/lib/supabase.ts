@@ -10,6 +10,7 @@
  */
 
 import { createClient, SupabaseClient } from '@supabase/supabase-js'
+import { logger } from '@/lib/logger';
 import { logger } from './logger'
 
 // Environment validation
@@ -497,8 +498,8 @@ export const db = {
       
       if (dbError) {
         // Fallback to console if database logging fails
-        console.error('Failed to log error to database:', dbError)
-        console.error('Original error:', error)
+        logger.error('Failed to log error to database:', dbError)
+        logger.error('Original error:', error)
       }
     }
   }
