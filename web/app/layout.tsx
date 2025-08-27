@@ -8,6 +8,7 @@ import GlobalNavigation from '../components/GlobalNavigation'
 import ClientOnly from '../components/ClientOnly'
 import { AuthProvider } from '../contexts/AuthContext'
 
+
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
@@ -69,6 +70,9 @@ export default function RootLayout({
             
             {/* Enhanced Feedback Widget - Only render on client side */}
             <EnhancedFeedbackWidget />
+            
+            {/* Navigation Logger - Only in development */}
+            {/* <NavLogger /> */}
             
             {/* Hidden elements for PWA functionality */}
             <div id="install-pwa" style={{ display: 'none' }} />

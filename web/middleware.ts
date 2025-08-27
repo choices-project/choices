@@ -93,19 +93,24 @@ export async function middleware(request: NextRequest) {
   else if (path.includes('/api/auth')) endpoint = 'auth'
   else if (path.includes('/api/admin')) endpoint = 'admin'
   
-  const rateLimit = checkRateLimit(ip, endpoint)
-  if (!rateLimit.allowed) {
-    return NextResponse.json(
-      { error: 'Rate limit exceeded', retryAfter: 900 },
-      { 
-        status: 429,
-        headers: {
-          'X-RateLimit-Limit': '100',
-          'X-RateLimit-Remaining': rateLimit.remaining.toString(),
-          'Retry-After': '900'
+  // Skip rate limiting for auth/me endpoint (just checking authentication)
+  if (path === '/api/auth/me') {
+    // No rate limiting for auth check
+  } else {
+    const rateLimit = checkRateLimit(ip, endpoint)
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded', retryAfter: 900 },
+        { 
+          status: 429,
+          headers: {
+            'X-RateLimit-Limit': '100',
+            'X-RateLimit-Remaining': '0',
+            'Retry-After': '900'
+          }
         }
-      }
-    )
+      )
+    }
   }
 
   // Content validation for POST requests
@@ -173,60 +178,11 @@ export async function middleware(request: NextRequest) {
     }
   )
 
-  // IMPORTANT: Avoid writing any logic between createServerClient and
-  // supabase.auth.getUser(). A simple mistake could make it very hard to debug
-  // issues with users being randomly logged out.
-
-  // Check for custom auth token in cookies or headers
-  const authToken = request.cookies.get('auth-token')?.value || 
-                   request.headers.get('authorization')?.replace('Bearer ', '')
-  
-  let isAuthenticated = false
-  let user = null
-  
-  if (authToken) {
-    try {
-      // Verify JWT token
-      const jwt = require('jsonwebtoken')
-      const jwtSecret = process.env.JWT_SECRET
-      
-      if (jwtSecret) {
-        const decoded = jwt.verify(authToken, jwtSecret)
-        isAuthenticated = true
-        user = decoded
-      }
-    } catch (error) {
-      // Token is invalid or expired
-      isAuthenticated = false
-      user = null
-    }
-  }
-
-  // Define protected routes
-  const protectedRoutes = ['/dashboard', '/profile', '/create-poll', '/admin']
-  const authRoutes = ['/login', '/register']
-  const isProtectedRoute = protectedRoutes.some(route => request.nextUrl.pathname.startsWith(route))
-  const isAuthRoute = authRoutes.some(route => request.nextUrl.pathname.startsWith(route))
-
-  // Redirect logic
-  if (isProtectedRoute && !isAuthenticated) {
-    // Redirect to login if accessing protected route without authentication
-    const redirectUrl = new URL('/login', request.url)
-    redirectUrl.searchParams.set('redirectTo', request.nextUrl.pathname)
-    return NextResponse.redirect(redirectUrl)
-  }
-
-  if (isAuthRoute && isAuthenticated) {
-    // Redirect to dashboard if accessing auth routes while authenticated
-    return NextResponse.redirect(new URL('/dashboard', request.url))
-  }
-
   // Add security headers to response
-  supabaseResponse.headers.set('X-RateLimit-Limit', '100')
-  supabaseResponse.headers.set('X-RateLimit-Remaining', rateLimit.remaining.toString())
   supabaseResponse.headers.set('X-Content-Type-Options', 'nosniff')
   supabaseResponse.headers.set('X-Frame-Options', 'DENY')
   supabaseResponse.headers.set('X-XSS-Protection', '1; mode=block')
+  supabaseResponse.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
 
   return supabaseResponse
 }

@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { withAuth, createRateLimitMiddleware, combineMiddleware } from '@/lib/auth-middleware'
 import { queryOptimizer, withPerformanceMonitoring } from '@/lib/database-optimizer'
 
+export const dynamic = 'force-dynamic'
+
 // Rate limiting: 60 requests per minute per IP
 const rateLimitMiddleware = createRateLimitMiddleware({
   maxRequests: 60,
