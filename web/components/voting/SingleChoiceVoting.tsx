@@ -14,7 +14,7 @@ interface SingleChoiceVotingProps {
   title: string
   description?: string
   options: PollOption[]
-  onVote: (pollId: string, choice: number) => Promise<void>
+  onVote: (choice: number) => Promise<void>
   isVoting: boolean
   hasVoted?: boolean
   userVote?: number
@@ -70,8 +70,8 @@ export default function SingleChoiceVoting({
         })
       }
       
-      // Use the pollId and choice parameters properly
-      await onVote(pollId, selectedOption)
+      // Use the choice parameter properly
+      await onVote(selectedOption)
     } catch (err: any) {
       setError(err.message || 'Failed to submit vote')
     } finally {

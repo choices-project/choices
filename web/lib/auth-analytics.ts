@@ -14,8 +14,7 @@
  * @since 2024-12-27
  */
 
-import { devLog } from './logger'
-import { getDeviceInfo } from './webauthn'
+import { logger } from './logger'
 
 // Analytics event types
 export enum AuthEventType {
@@ -100,12 +99,11 @@ export interface AuthPerformanceMetrics {
 
 // Security metrics
 export interface SecurityMetrics {
+  totalEvents: number
   suspiciousActivityCount: number
   rateLimitViolations: number
   accountLockouts: number
-  failedLoginAttempts: number
-  uniqueIPs: number
-  uniqueDevices: number
+  failedAttempts: number
   riskScoreDistribution: {
     low: number
     medium: number
@@ -113,44 +111,43 @@ export interface SecurityMetrics {
   }
 }
 
-// Biometric adoption metrics
+// Biometric metrics
 export interface BiometricMetrics {
-  totalUsers: number
-  biometricEnabledUsers: number
-  adoptionRate: number
+  totalSetupAttempts: number
   setupSuccessRate: number
+  totalAuthAttempts: number
   authSuccessRate: number
   deviceBreakdown: Record<string, number>
   browserBreakdown: Record<string, number>
   platformBreakdown: Record<string, number>
 }
 
-// Analytics service class
+// Analytics context for tracking
+export interface AuthContext {
+  userId?: string
+  ipAddress?: string
+  userAgent?: string
+  deviceInfo?: {
+    deviceType: string
+    browser: string
+    platform: string
+  }
+}
+
+// Main analytics service
 export class AuthAnalytics {
   private events: AuthEvent[] = []
   private performanceMetrics: AuthPerformanceMetrics
   private securityMetrics: SecurityMetrics
   private biometricMetrics: BiometricMetrics
-  private alertThresholds: {
-    errorRate: number
-    suspiciousActivity: number
-    rateLimitViolations: number
+  private alertThresholds = {
+    errorRate: 0.1, // 10%
+    suspiciousActivity: 5,
+    rateLimitViolations: 10
   }
 
   constructor() {
-    this.performanceMetrics = this.initializePerformanceMetrics()
-    this.securityMetrics = this.initializeSecurityMetrics()
-    this.biometricMetrics = this.initializeBiometricMetrics()
-    this.alertThresholds = {
-      errorRate: 0.05, // 5%
-      suspiciousActivity: 10, // 10 events per hour
-      rateLimitViolations: 50 // 50 violations per hour
-    }
-  }
-
-  // Initialize metrics
-  private initializePerformanceMetrics(): AuthPerformanceMetrics {
-    return {
+    this.performanceMetrics = {
       totalRequests: 0,
       successRate: 0,
       averageResponseTime: 0,
@@ -159,30 +156,20 @@ export class AuthAnalytics {
       errorRate: 0,
       methodBreakdown: {} as Record<AuthMethod, any>
     }
-  }
 
-  private initializeSecurityMetrics(): SecurityMetrics {
-    return {
+    this.securityMetrics = {
+      totalEvents: 0,
       suspiciousActivityCount: 0,
       rateLimitViolations: 0,
       accountLockouts: 0,
-      failedLoginAttempts: 0,
-      uniqueIPs: 0,
-      uniqueDevices: 0,
-      riskScoreDistribution: {
-        low: 0,
-        medium: 0,
-        high: 0
-      }
+      failedAttempts: 0,
+      riskScoreDistribution: { low: 0, medium: 0, high: 0 }
     }
-  }
 
-  private initializeBiometricMetrics(): BiometricMetrics {
-    return {
-      totalUsers: 0,
-      biometricEnabledUsers: 0,
-      adoptionRate: 0,
+    this.biometricMetrics = {
+      totalSetupAttempts: 0,
       setupSuccessRate: 0,
+      totalAuthAttempts: 0,
       authSuccessRate: 0,
       deviceBreakdown: {},
       browserBreakdown: {},
@@ -191,175 +178,257 @@ export class AuthAnalytics {
   }
 
   // Track authentication event
-  async trackEvent(eventData: Omit<AuthEvent, 'id' | 'timestamp'>): Promise<void> {
+  async trackAuthEvent(
+    eventType: AuthEventType,
+    authMethod: AuthMethod,
+    success: boolean,
+    context: AuthContext,
+    options: {
+      duration?: number
+      errorCode?: string
+      errorMessage?: string
+      riskScore?: number
+      metadata?: Record<string, any>
+    } = {}
+  ): Promise<void> {
     const event: AuthEvent = {
-      ...eventData,
       id: this.generateEventId(),
-      timestamp: new Date()
+      userId: context.userId,
+      eventType,
+      authMethod,
+      success,
+      timestamp: new Date(),
+      duration: options.duration,
+      ipAddress: context.ipAddress || 'unknown',
+      userAgent: context.userAgent || 'unknown',
+      deviceInfo: context.deviceInfo || {
+        deviceType: 'unknown',
+        browser: 'unknown',
+        platform: 'unknown'
+      },
+      errorCode: options.errorCode,
+      errorMessage: options.errorMessage,
+      riskScore: options.riskScore,
+      metadata: options.metadata
     }
 
-    // Add to events array
+    // Add to events
     this.events.push(event)
 
     // Update metrics
-    this.updatePerformanceMetrics(event)
-    this.updateSecurityMetrics(event)
-    this.updateBiometricMetrics(event)
+    this.updateMetrics(event)
 
     // Check for alerts
     await this.checkAlerts(event)
 
-    // Log event
-    devLog('Auth analytics event:', {
-      eventType: event.eventType,
-      success: event.success,
-      authMethod: event.authMethod,
-      duration: event.duration,
-      riskScore: event.riskScore
+    // Log the event
+    logger.info('Auth event tracked', {
+      eventType,
+      authMethod,
+      success,
+      userId: context.userId,
+      duration: options.duration,
+      riskScore: options.riskScore
     })
 
-    // In production, send to external analytics service
+    // Send to external service in production
     await this.sendToExternalService(event)
+  }
+
+  // Convenience methods for common events
+  async trackRegistrationAttempt(context: AuthContext, metadata?: Record<string, any>): Promise<void> {
+    await this.trackAuthEvent(AuthEventType.REGISTRATION_ATTEMPT, AuthMethod.PASSWORD, false, context, { metadata })
+  }
+
+  async trackRegistrationSuccess(context: AuthContext, duration?: number): Promise<void> {
+    await this.trackAuthEvent(AuthEventType.REGISTRATION_SUCCESS, AuthMethod.PASSWORD, true, context, { duration })
+  }
+
+  async trackRegistrationFailure(context: AuthContext, errorCode: string, errorMessage: string): Promise<void> {
+    await this.trackAuthEvent(AuthEventType.REGISTRATION_FAILURE, AuthMethod.PASSWORD, false, context, { errorCode, errorMessage })
+  }
+
+  async trackLoginAttempt(context: AuthContext, authMethod: AuthMethod, metadata?: Record<string, any>): Promise<void> {
+    await this.trackAuthEvent(AuthEventType.LOGIN_ATTEMPT, authMethod, false, context, { metadata })
+  }
+
+  async trackLoginSuccess(context: AuthContext, authMethod: AuthMethod, duration?: number): Promise<void> {
+    await this.trackAuthEvent(AuthEventType.LOGIN_SUCCESS, authMethod, true, context, { duration })
+  }
+
+  async trackLoginFailure(context: AuthContext, authMethod: AuthMethod, errorCode: string, errorMessage: string): Promise<void> {
+    await this.trackAuthEvent(AuthEventType.LOGIN_FAILURE, authMethod, false, context, { errorCode, errorMessage })
+  }
+
+  async trackBiometricSetupAttempt(context: AuthContext): Promise<void> {
+    await this.trackAuthEvent(AuthEventType.BIOMETRIC_SETUP_ATTEMPT, AuthMethod.BIOMETRIC, false, context)
+  }
+
+  async trackBiometricSetupSuccess(context: AuthContext, duration?: number): Promise<void> {
+    await this.trackAuthEvent(AuthEventType.BIOMETRIC_SETUP_SUCCESS, AuthMethod.BIOMETRIC, true, context, { duration })
+  }
+
+  async trackBiometricSetupFailure(context: AuthContext, errorCode: string, errorMessage: string): Promise<void> {
+    await this.trackAuthEvent(AuthEventType.BIOMETRIC_SETUP_FAILURE, AuthMethod.BIOMETRIC, false, context, { errorCode, errorMessage })
+  }
+
+  async trackBiometricAuthAttempt(context: AuthContext): Promise<void> {
+    await this.trackAuthEvent(AuthEventType.BIOMETRIC_AUTH_ATTEMPT, AuthMethod.BIOMETRIC, false, context)
+  }
+
+  async trackBiometricAuthSuccess(context: AuthContext, duration?: number): Promise<void> {
+    await this.trackAuthEvent(AuthEventType.BIOMETRIC_AUTH_SUCCESS, AuthMethod.BIOMETRIC, true, context, { duration })
+  }
+
+  async trackBiometricAuthFailure(context: AuthContext, errorCode: string, errorMessage: string): Promise<void> {
+    await this.trackAuthEvent(AuthEventType.BIOMETRIC_AUTH_FAILURE, AuthMethod.BIOMETRIC, false, context, { errorCode, errorMessage })
+  }
+
+  async trackDeviceFlowAttempt(context: AuthContext): Promise<void> {
+    await this.trackAuthEvent(AuthEventType.DEVICE_FLOW_ATTEMPT, AuthMethod.DEVICE_FLOW, false, context)
+  }
+
+  async trackDeviceFlowSuccess(context: AuthContext, duration?: number): Promise<void> {
+    await this.trackAuthEvent(AuthEventType.DEVICE_FLOW_SUCCESS, AuthMethod.DEVICE_FLOW, true, context, { duration })
+  }
+
+  async trackDeviceFlowFailure(context: AuthContext, errorCode: string, errorMessage: string): Promise<void> {
+    await this.trackAuthEvent(AuthEventType.DEVICE_FLOW_FAILURE, AuthMethod.DEVICE_FLOW, false, context, { errorCode, errorMessage })
+  }
+
+  async trackPasswordResetAttempt(context: AuthContext): Promise<void> {
+    await this.trackAuthEvent(AuthEventType.PASSWORD_RESET_ATTEMPT, AuthMethod.PASSWORD, false, context)
+  }
+
+  async trackPasswordResetSuccess(context: AuthContext, duration?: number): Promise<void> {
+    await this.trackAuthEvent(AuthEventType.PASSWORD_RESET_SUCCESS, AuthMethod.PASSWORD, true, context, { duration })
+  }
+
+  async trackPasswordResetFailure(context: AuthContext, errorCode: string, errorMessage: string): Promise<void> {
+    await this.trackAuthEvent(AuthEventType.PASSWORD_RESET_FAILURE, AuthMethod.PASSWORD, false, context, { errorCode, errorMessage })
+  }
+
+  async trackAccountLockout(context: AuthContext, reason: string): Promise<void> {
+    await this.trackAuthEvent(AuthEventType.ACCOUNT_LOCKOUT, AuthMethod.PASSWORD, false, context, { 
+      errorMessage: reason,
+      riskScore: 100 
+    })
+  }
+
+  async trackSuspiciousActivity(context: AuthContext, activity: string, riskScore: number): Promise<void> {
+    await this.trackAuthEvent(AuthEventType.SUSPICIOUS_ACTIVITY, AuthMethod.PASSWORD, false, context, { 
+      errorMessage: activity,
+      riskScore 
+    })
+  }
+
+  async trackRateLimitExceeded(context: AuthContext, limit: string): Promise<void> {
+    await this.trackAuthEvent(AuthEventType.RATE_LIMIT_EXCEEDED, AuthMethod.PASSWORD, false, context, { 
+      errorMessage: `Rate limit exceeded: ${limit}`,
+      riskScore: 75 
+    })
   }
 
   // Generate unique event ID
   private generateEventId(): string {
-    return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+    return `auth_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
   }
 
-  // Update performance metrics
-  private updatePerformanceMetrics(event: AuthEvent): void {
-    const metrics = this.performanceMetrics
-
-    // Update total requests
-    metrics.totalRequests++
-
-    // Update success rate
-    const successfulRequests = this.events.filter(e => e.success).length
-    metrics.successRate = successfulRequests / metrics.totalRequests
-
-    // Update response times
-    if (event.duration) {
-      const responseTimes = this.events
-        .filter(e => e.duration)
-        .map(e => e.duration!)
-        .sort((a, b) => a - b)
-
-      if (responseTimes.length > 0) {
-        metrics.averageResponseTime = responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length
-        metrics.p95ResponseTime = responseTimes[Math.floor(responseTimes.length * 0.95)]
-        metrics.p99ResponseTime = responseTimes[Math.floor(responseTimes.length * 0.99)]
-      }
+  // Update metrics based on event
+  private updateMetrics(event: AuthEvent): void {
+    // Update performance metrics
+    this.performanceMetrics.totalRequests++
+    
+    if (event.success) {
+      const successCount = this.events.filter(e => e.success).length
+      this.performanceMetrics.successRate = successCount / this.performanceMetrics.totalRequests
+    } else {
+      this.performanceMetrics.errorRate = 1 - this.performanceMetrics.successRate
     }
 
-    // Update error rate
-    const failedRequests = this.events.filter(e => !e.success).length
-    metrics.errorRate = failedRequests / metrics.totalRequests
+    if (event.duration) {
+      const durations = this.events.filter(e => e.duration).map(e => e.duration!)
+      this.performanceMetrics.averageResponseTime = durations.reduce((a, b) => a + b, 0) / durations.length
+      
+      // Calculate percentiles
+      const sortedDurations = durations.sort((a, b) => a - b)
+      const p95Index = Math.floor(sortedDurations.length * 0.95)
+      const p99Index = Math.floor(sortedDurations.length * 0.99)
+      this.performanceMetrics.p95ResponseTime = sortedDurations[p95Index] || 0
+      this.performanceMetrics.p99ResponseTime = sortedDurations[p99Index] || 0
+    }
 
     // Update method breakdown
     if (event.authMethod) {
-      if (!metrics.methodBreakdown[event.authMethod]) {
-        metrics.methodBreakdown[event.authMethod] = {
-          count: 0,
-          successRate: 0,
-          averageTime: 0
-        }
+      if (!this.performanceMetrics.methodBreakdown[event.authMethod]) {
+        this.performanceMetrics.methodBreakdown[event.authMethod] = { count: 0, successRate: 0, averageTime: 0 }
       }
-
-      const methodMetrics = metrics.methodBreakdown[event.authMethod]
-      methodMetrics.count++
+      this.performanceMetrics.methodBreakdown[event.authMethod].count++
       
       const methodEvents = this.events.filter(e => e.authMethod === event.authMethod)
       const methodSuccesses = methodEvents.filter(e => e.success).length
-      methodMetrics.successRate = methodSuccesses / methodEvents.length
-
-      const methodTimes = methodEvents.filter(e => e.duration).map(e => e.duration!)
-      if (methodTimes.length > 0) {
-        methodMetrics.averageTime = methodTimes.reduce((a, b) => a + b, 0) / methodTimes.length
+      this.performanceMetrics.methodBreakdown[event.authMethod].successRate = methodSuccesses / methodEvents.length
+      
+      const methodDurations = methodEvents.filter(e => e.duration).map(e => e.duration!)
+      if (methodDurations.length > 0) {
+        this.performanceMetrics.methodBreakdown[event.authMethod].averageTime = methodDurations.reduce((a, b) => a + b, 0) / methodDurations.length
       }
     }
-  }
 
-  // Update security metrics
-  private updateSecurityMetrics(event: AuthEvent): void {
-    const metrics = this.securityMetrics
-
-    // Update suspicious activity
+    // Update security metrics
+    this.securityMetrics.totalEvents++
+    
     if (event.eventType === AuthEventType.SUSPICIOUS_ACTIVITY) {
-      metrics.suspiciousActivityCount++
+      this.securityMetrics.suspiciousActivityCount++
     }
-
-    // Update rate limit violations
+    
     if (event.eventType === AuthEventType.RATE_LIMIT_EXCEEDED) {
-      metrics.rateLimitViolations++
+      this.securityMetrics.rateLimitViolations++
     }
-
-    // Update account lockouts
+    
     if (event.eventType === AuthEventType.ACCOUNT_LOCKOUT) {
-      metrics.accountLockouts++
+      this.securityMetrics.accountLockouts++
+    }
+    
+    if (!event.success) {
+      this.securityMetrics.failedAttempts++
     }
 
-    // Update failed login attempts
-    if (event.eventType === AuthEventType.LOGIN_FAILURE) {
-      metrics.failedLoginAttempts++
+    if (event.riskScore) {
+      if (event.riskScore < 30) this.securityMetrics.riskScoreDistribution.low++
+      else if (event.riskScore < 70) this.securityMetrics.riskScoreDistribution.medium++
+      else this.securityMetrics.riskScoreDistribution.high++
     }
 
-    // Update unique IPs and devices
-    const uniqueIPs = new Set(this.events.map(e => e.ipAddress)).size
-    const uniqueDevices = new Set(this.events.map(e => e.deviceInfo.deviceType)).size
-    metrics.uniqueIPs = uniqueIPs
-    metrics.uniqueDevices = uniqueDevices
-
-    // Update risk score distribution
-    if (event.riskScore !== undefined) {
-      if (event.riskScore < 30) {
-        metrics.riskScoreDistribution.low++
-      } else if (event.riskScore < 70) {
-        metrics.riskScoreDistribution.medium++
-      } else {
-        metrics.riskScoreDistribution.high++
+    // Update biometric metrics
+    if (event.authMethod === AuthMethod.BIOMETRIC) {
+      if (event.eventType === AuthEventType.BIOMETRIC_SETUP_ATTEMPT) {
+        this.biometricMetrics.totalSetupAttempts++
       }
-    }
-  }
+      
+      if (event.eventType === AuthEventType.BIOMETRIC_AUTH_ATTEMPT) {
+        this.biometricMetrics.totalAuthAttempts++
+      }
 
-  // Update biometric metrics
-  private updateBiometricMetrics(event: AuthEvent): void {
-    const metrics = this.biometricMetrics
+      const setupEvents = this.events.filter(e => e.eventType === AuthEventType.BIOMETRIC_SETUP_ATTEMPT || e.eventType === AuthEventType.BIOMETRIC_SETUP_SUCCESS)
+      const setupSuccesses = setupEvents.filter(e => e.eventType === AuthEventType.BIOMETRIC_SETUP_SUCCESS).length
+      this.biometricMetrics.setupSuccessRate = setupSuccesses / setupEvents.length
 
-    // Update biometric setup metrics
-    if (event.eventType === AuthEventType.BIOMETRIC_SETUP_ATTEMPT) {
-      metrics.totalUsers++
-    }
+      const authEvents = this.events.filter(e => e.eventType === AuthEventType.BIOMETRIC_AUTH_ATTEMPT || e.eventType === AuthEventType.BIOMETRIC_AUTH_SUCCESS)
+      const authSuccesses = authEvents.filter(e => e.eventType === AuthEventType.BIOMETRIC_AUTH_SUCCESS).length
+      this.biometricMetrics.authSuccessRate = authSuccesses / authEvents.length
 
-    if (event.eventType === AuthEventType.BIOMETRIC_SETUP_SUCCESS) {
-      metrics.biometricEnabledUsers++
-      metrics.adoptionRate = metrics.biometricEnabledUsers / metrics.totalUsers
-    }
+      // Update device breakdown
+      if (event.deviceInfo) {
+        const deviceType = event.deviceInfo.deviceType
+        this.biometricMetrics.deviceBreakdown[deviceType] = (this.biometricMetrics.deviceBreakdown[deviceType] || 0) + 1
 
-    // Update setup success rate
-    const setupAttempts = this.events.filter(e => e.eventType === AuthEventType.BIOMETRIC_SETUP_ATTEMPT).length
-    const setupSuccesses = this.events.filter(e => e.eventType === AuthEventType.BIOMETRIC_SETUP_SUCCESS).length
-    if (setupAttempts > 0) {
-      metrics.setupSuccessRate = setupSuccesses / setupAttempts
-    }
+        const browser = event.deviceInfo.browser
+        this.biometricMetrics.browserBreakdown[browser] = (this.biometricMetrics.browserBreakdown[browser] || 0) + 1
 
-    // Update auth success rate
-    const authAttempts = this.events.filter(e => e.eventType === AuthEventType.BIOMETRIC_AUTH_ATTEMPT).length
-    const authSuccesses = this.events.filter(e => e.eventType === AuthEventType.BIOMETRIC_AUTH_SUCCESS).length
-    if (authAttempts > 0) {
-      metrics.authSuccessRate = authSuccesses / authAttempts
-    }
-
-    // Update device breakdown
-    if (event.deviceInfo) {
-      const deviceType = event.deviceInfo.deviceType
-      metrics.deviceBreakdown[deviceType] = (metrics.deviceBreakdown[deviceType] || 0) + 1
-
-      const browser = event.deviceInfo.browser
-      metrics.browserBreakdown[browser] = (metrics.browserBreakdown[browser] || 0) + 1
-
-      const platform = event.deviceInfo.platform
-      metrics.platformBreakdown[platform] = (metrics.platformBreakdown[platform] || 0) + 1
+        const platform = event.deviceInfo.platform
+        this.biometricMetrics.platformBreakdown[platform] = (this.biometricMetrics.platformBreakdown[platform] || 0) + 1
+      }
     }
   }
 
@@ -388,9 +457,9 @@ export class AuthAnalytics {
     }
   }
 
-  // Send alert (placeholder for production)
+  // Send alert
   private async sendAlert(alerts: string[]): Promise<void> {
-    devLog('Security alert:', alerts)
+    logger.warn('Security alert:', { alerts })
     
     // In production, send to:
     // - Email/SMS notifications
@@ -399,7 +468,7 @@ export class AuthAnalytics {
     // - Incident response teams
   }
 
-  // Send to external analytics service (placeholder for production)
+  // Send to external analytics service
   private async sendToExternalService(event: AuthEvent): Promise<void> {
     // In production, send to:
     // - Google Analytics
@@ -449,96 +518,51 @@ export class AuthAnalytics {
 
   // Get events by time range
   getEventsByTimeRange(start: Date, end: Date): AuthEvent[] {
-    return this.events.filter(e => 
-      e.timestamp >= start && e.timestamp <= end
-    )
+    return this.events.filter(e => e.timestamp >= start && e.timestamp <= end)
+  }
+
+  // Get events by auth method
+  getEventsByAuthMethod(authMethod: AuthMethod, limit: number = 100): AuthEvent[] {
+    return this.events
+      .filter(e => e.authMethod === authMethod)
+      .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
+      .slice(0, limit)
   }
 
   // Clear old events (for memory management)
-  clearOldEvents(maxAge: number = 30 * 24 * 60 * 60 * 1000): void { // 30 days
-    const cutoff = new Date(Date.now() - maxAge)
-    this.events = this.events.filter(e => e.timestamp > cutoff)
+  clearOldEvents(olderThan: Date): void {
+    this.events = this.events.filter(e => e.timestamp > olderThan)
   }
 
-  // Export data for external analysis
-  exportData(): {
-    events: AuthEvent[]
-    performanceMetrics: AuthPerformanceMetrics
-    securityMetrics: SecurityMetrics
-    biometricMetrics: BiometricMetrics
-  } {
-    return {
-      events: [...this.events],
-      performanceMetrics: this.getPerformanceMetrics(),
-      securityMetrics: this.getSecurityMetrics(),
-      biometricMetrics: this.getBiometricMetrics()
-    }
+  // Export events for backup/analysis
+  exportEvents(): AuthEvent[] {
+    return [...this.events]
+  }
+
+  // Import events (for data migration)
+  importEvents(events: AuthEvent[]): void {
+    this.events.push(...events)
   }
 }
 
-// Global analytics instance
+// Singleton instance
 export const authAnalytics = new AuthAnalytics()
 
-// Helper functions for common tracking scenarios
-export const trackAuthEvent = {
-  // Registration events
-  registrationAttempt: (data: Omit<AuthEvent, 'eventType' | 'success'>) =>
-    authAnalytics.trackEvent({ ...data, eventType: AuthEventType.REGISTRATION_ATTEMPT, success: false }),
-
-  registrationSuccess: (data: Omit<AuthEvent, 'eventType' | 'success'>) =>
-    authAnalytics.trackEvent({ ...data, eventType: AuthEventType.REGISTRATION_SUCCESS, success: true }),
-
-  registrationFailure: (data: Omit<AuthEvent, 'eventType' | 'success'>) =>
-    authAnalytics.trackEvent({ ...data, eventType: AuthEventType.REGISTRATION_FAILURE, success: false }),
-
-  // Login events
-  loginAttempt: (data: Omit<AuthEvent, 'eventType' | 'success'>) =>
-    authAnalytics.trackEvent({ ...data, eventType: AuthEventType.LOGIN_ATTEMPT, success: false }),
-
-  loginSuccess: (data: Omit<AuthEvent, 'eventType' | 'success'>) =>
-    authAnalytics.trackEvent({ ...data, eventType: AuthEventType.LOGIN_SUCCESS, success: true }),
-
-  loginFailure: (data: Omit<AuthEvent, 'eventType' | 'success'>) =>
-    authAnalytics.trackEvent({ ...data, eventType: AuthEventType.LOGIN_FAILURE, success: false }),
-
-  // Biometric events
-  biometricSetupAttempt: (data: Omit<AuthEvent, 'eventType' | 'success'>) =>
-    authAnalytics.trackEvent({ ...data, eventType: AuthEventType.BIOMETRIC_SETUP_ATTEMPT, success: false }),
-
-  biometricSetupSuccess: (data: Omit<AuthEvent, 'eventType' | 'success'>) =>
-    authAnalytics.trackEvent({ ...data, eventType: AuthEventType.BIOMETRIC_SETUP_SUCCESS, success: true }),
-
-  biometricSetupFailure: (data: Omit<AuthEvent, 'eventType' | 'success'>) =>
-    authAnalytics.trackEvent({ ...data, eventType: AuthEventType.BIOMETRIC_SETUP_FAILURE, success: false }),
-
-  biometricAuthAttempt: (data: Omit<AuthEvent, 'eventType' | 'success'>) =>
-    authAnalytics.trackEvent({ ...data, eventType: AuthEventType.BIOMETRIC_AUTH_ATTEMPT, success: false }),
-
-  biometricAuthSuccess: (data: Omit<AuthEvent, 'eventType' | 'success'>) =>
-    authAnalytics.trackEvent({ ...data, eventType: AuthEventType.BIOMETRIC_AUTH_SUCCESS, success: true }),
-
-  biometricAuthFailure: (data: Omit<AuthEvent, 'eventType' | 'success'>) =>
-    authAnalytics.trackEvent({ ...data, eventType: AuthEventType.BIOMETRIC_AUTH_FAILURE, success: false }),
-
-  // Device flow events
-  deviceFlowAttempt: (data: Omit<AuthEvent, 'eventType' | 'success'>) =>
-    authAnalytics.trackEvent({ ...data, eventType: AuthEventType.DEVICE_FLOW_ATTEMPT, success: false }),
-
-  deviceFlowSuccess: (data: Omit<AuthEvent, 'eventType' | 'success'>) =>
-    authAnalytics.trackEvent({ ...data, eventType: AuthEventType.DEVICE_FLOW_SUCCESS, success: true }),
-
-  deviceFlowFailure: (data: Omit<AuthEvent, 'eventType' | 'success'>) =>
-    authAnalytics.trackEvent({ ...data, eventType: AuthEventType.DEVICE_FLOW_FAILURE, success: false }),
-
-  // Security events
-  suspiciousActivity: (data: Omit<AuthEvent, 'eventType' | 'success'>) =>
-    authAnalytics.trackEvent({ ...data, eventType: AuthEventType.SUSPICIOUS_ACTIVITY, success: false }),
-
-  rateLimitExceeded: (data: Omit<AuthEvent, 'eventType' | 'success'>) =>
-    authAnalytics.trackEvent({ ...data, eventType: AuthEventType.RATE_LIMIT_EXCEEDED, success: false }),
-
-  accountLockout: (data: Omit<AuthEvent, 'eventType' | 'success'>) =>
-    authAnalytics.trackEvent({ ...data, eventType: AuthEventType.ACCOUNT_LOCKOUT, success: false })
+// Convenience function for tracking events
+export function trackAuthEvent(
+  eventType: AuthEventType,
+  authMethod: AuthMethod,
+  success: boolean,
+  context: AuthContext,
+  options?: {
+    duration?: number
+    errorCode?: string
+    errorMessage?: string
+    riskScore?: number
+    metadata?: Record<string, any>
+  }
+): Promise<void> {
+  return authAnalytics.trackAuthEvent(eventType, authMethod, success, context, options)
 }
 
 

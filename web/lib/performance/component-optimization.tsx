@@ -38,7 +38,7 @@ class InlineErrorBoundary extends React.Component<
 }
 
 /** Memoized lazy wrapper (prevents re-wrapping on each render) */
-export function LazyOptimized<P>(props: LazyProps<P>) {
+export function LazyOptimized<P extends Record<string, unknown>>(props: LazyProps<P>) {
   const { loader, fallback, errorFallback } = props;
 
   const LazyComp = React.useMemo(() => React.lazy(loader), [loader]);
@@ -47,20 +47,20 @@ export function LazyOptimized<P>(props: LazyProps<P>) {
     <React.Suspense fallback={fallback ?? <div>Loading…</div>}>
       <InlineErrorBoundary fallback={errorFallback}>
         {/* eslint-disable-next-line react/jsx-props-no-spreading */}
-        <LazyComp {...(props.props as P)} />
+        <LazyComp {...props.props} />
       </InlineErrorBoundary>
     </React.Suspense>
   );
 }
 
 /** Convenience HOC for local lazy registration */
-export function withLazy<P>(loader: () => Promise<{ default: React.ComponentType<P> }>) {
+export function withLazy<P extends Record<string, unknown>>(loader: () => Promise<{ default: React.ComponentType<P> }>) {
   const LC = React.lazy(loader);
   return function LazyWrapped(props: P & { fallback?: React.ReactNode; errorFallback?: React.ReactNode | ((e: unknown) => React.ReactNode) }) {
-    const { fallback, errorFallback, ...rest } = props as Record<string, unknown>;
+    const { fallback, errorFallback, ...rest } = props;
     return (
       <React.Suspense fallback={fallback ?? <div>Loading…</div>}>
-        <InlineErrorBoundary fallback={errorFallback || undefined}>
+        <InlineErrorBoundary fallback={errorFallback}>
           {/* eslint-disable-next-line react/jsx-props-no-spreading */}
           <LC {...(rest as P)} />
         </InlineErrorBoundary>

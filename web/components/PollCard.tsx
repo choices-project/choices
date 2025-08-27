@@ -36,8 +36,8 @@ interface PollResults {
 
 interface PollCardProps {
   poll: Poll;
-  onVote?: (pollId: string, choice: number) => Promise<void>;
-  onViewDetails?: (pollId: string) => void;
+  onVote?: (choice: number) => Promise<void>;
+  onViewDetails?: () => void;
   isVoted?: boolean;
   userVote?: number;
   showVoteButton?: boolean;
@@ -82,8 +82,8 @@ export const PollCard: React.FC<PollCardProps> = ({
         });
       }
       
-      // The pollId and choice parameters are used here to pass validated data
-      await onVote(pollId, choice);
+      // The choice parameter is used here to pass validated data
+      await onVote(choice);
       
       // Track successful vote
       if (typeof window !== 'undefined' && window.gtag) {
