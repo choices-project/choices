@@ -1,26 +1,40 @@
 'use server'
 
-import { redirect } from 'next/navigation'
 import { createClient } from '@supabase/supabase-js'
-import jwt from 'jsonwebtoken'
-import { logger } from '@/lib/logger'
-import { cookies } from 'next/headers'
+import { z } from 'zod'
+import { 
+  createSecureServerAction,
+  secureRedirect,
+  validateFormData,
+  getAuthenticatedUser,
+  type ServerActionContext
+} from '@/lib/auth/server-actions'
+import { 
+  verifySessionToken,
+  rotateSessionToken,
+  setSessionCookie 
+} from '@/lib/auth/session-cookies'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
-export async function completeOnboarding(formData: FormData) {
-  try {
-    const sessionToken = cookies().get('choices_session')?.value
-    
-    if (!sessionToken) {
-      throw new Error('No session found')
-    }
+// Validation schema
+const OnboardingSchema = z.object({
+  notifications: z.string().transform(val => val === 'true'),
+  dataSharing: z.string().transform(val => val === 'true'),
+  theme: z.string().default('system')
+})
 
-    const decodedToken = jwt.verify(sessionToken, process.env.JWT_SECRET!) as any
-    const { stableId } = decodedToken
+// Enhanced onboarding completion action with security features
+export const completeOnboarding = createSecureServerAction(
+  async (formData: FormData, context: ServerActionContext) => {
+    // Get authenticated user
+    const user = await getAuthenticatedUser(context)
+    
+    // Validate form data
+    const validatedData = validateFormData(formData, OnboardingSchema)
 
     // Update user profile to mark onboarding as completed
     const { error: updateError } = await supabase
@@ -28,48 +42,40 @@ export async function completeOnboarding(formData: FormData) {
       .update({
         onboarding_completed: true,
         preferences: {
-          notifications: formData.get('notifications') === 'true',
-          dataSharing: formData.get('dataSharing') === 'true',
-          theme: formData.get('theme') || 'system'
+          notifications: validatedData.notifications,
+          dataSharing: validatedData.dataSharing,
+          theme: validatedData.theme
         },
         updated_at: new Date().toISOString()
       })
-      .eq('user_id', stableId)
+      .eq('user_id', user.userId)
 
     if (updateError) {
-      logger.error('Failed to complete onboarding', updateError)
       throw new Error('Failed to complete onboarding')
     }
 
-    // Create updated session token with onboarding completed
-    const updatedSessionToken = jwt.sign(
-      {
-        userId: decodedToken.userId,
-        stableId,
-        username: decodedToken.username,
-        onboardingCompleted: true,
-        iat: Math.floor(Date.now() / 1000),
-        exp: Math.floor(Date.now() / 1000) + (7 * 24 * 60 * 60)
-      },
-      process.env.JWT_SECRET!
+    // Rotate session token after privilege change (onboarding completion)
+    const newSessionToken = rotateSessionToken(
+      user.userId,
+      user.userRole,
+      user.userId
     )
 
-    // Set updated session cookie
-    cookies().set('choices_session', updatedSessionToken, {
-      httpOnly: true,
+    // Set secure session cookie
+    setSessionCookie(newSessionToken, {
+      maxAge: 60 * 60 * 24 * 7, // 1 week
       secure: process.env.NODE_ENV === 'production',
-      path: '/',
-      sameSite: 'lax',
-      maxAge: 7 * 24 * 60 * 60 // 7 days
+      sameSite: 'lax'
     })
 
-    logger.info('Onboarding completed successfully', { stableId })
-    
-    // Framework handles the redirect properly
-    redirect('/dashboard')
-  } catch (error) {
-    logger.error('Complete onboarding error', error instanceof Error ? error : new Error('Unknown error'))
-    throw error
+    // Secure redirect to dashboard
+    secureRedirect('/dashboard')
+  },
+  {
+    requireAuth: true,
+    sessionRotation: true,
+    validation: OnboardingSchema,
+    rateLimit: { endpoint: '/onboarding', maxRequests: 10 }
   }
-}
+)
 
