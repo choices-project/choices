@@ -26,7 +26,7 @@ interface PrivatePollResultsProps {
 }
 
 export default function PrivatePollResults({ poll, userId, onPrivacyBudgetExceeded }: PrivatePollResultsProps) {
-  const [results, setResults] = useState<PrivateQueryResult<{ optionId: string; count: number; percentage: number }[]>> | null>(null)
+  const [results, setResults] = useState<PrivateQueryResult<{ optionId: string; count: number; percentage: number }[]> | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [privacyBudget, setPrivacyBudget] = useState<number | null>(null)
