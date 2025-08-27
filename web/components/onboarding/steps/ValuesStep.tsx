@@ -4,8 +4,23 @@ import { useState, useEffect } from 'react'
 import { Heart, Users, Globe, TrendingUp } from 'lucide-react'
 
 interface ValuesStepProps {
-  data: any
-  onUpdate: (updates: any) => void
+  data: {
+    primaryConcerns?: string[]
+    communityFocus?: string[]
+    participationStyle?: string
+    valuesCompleted?: boolean
+  }
+  onUpdate: (updates: {
+    primaryConcerns?: string[]
+    communityFocus?: string[]
+    participationStyle?: string
+    valuesCompleted?: boolean
+    stepProgress?: {
+      currentStep: string
+      completedSteps: string[]
+      timeSpent: number
+    }
+  }) => void
   onNext: () => void
   onBack: () => void
 }

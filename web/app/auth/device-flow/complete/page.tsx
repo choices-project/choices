@@ -10,8 +10,6 @@ function DeviceFlowCompleteContent() {
   const [isLoading, setIsLoading] = useState(true)
   const [isSuccess, setIsSuccess] = useState(false)
   const [error, setError] = useState<string>('')
-  const [userCode, setUserCode] = useState<string>('')
-  const [userId, setUserId] = useState<string>('')
   
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -36,11 +34,7 @@ function DeviceFlowCompleteContent() {
           throw new Error('No user code provided')
         }
 
-        setUserCode(userCodeParam)
-        setUserId(session.user.id)
-        
-        // Log the device flow completion for debugging
-        logger.info('Device flow completion initiated:', { userCode: userCodeParam, userId: session.user.id })
+        // Device flow completion initiated
 
         // Complete the device flow
         const response = await fetch('/api/auth/device-flow/complete', {

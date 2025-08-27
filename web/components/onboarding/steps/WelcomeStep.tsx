@@ -6,25 +6,78 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
 interface WelcomeStepProps {
-  data: any
-  onUpdate: (updates: any) => void
+  data: {
+    welcomeStarted?: boolean
+    welcomeCompleted?: boolean
+    userPreferences?: {
+      theme?: string
+      language?: string
+    }
+  }
+  onUpdate: (updates: {
+    welcomeStarted?: boolean
+    welcomeCompleted?: boolean
+    userPreferences?: {
+      theme?: string
+      language?: string
+    }
+    stepProgress?: {
+      currentStep: string
+      completedSteps: string[]
+      timeSpent: number
+    }
+  }) => void
   onNext: () => void
 }
 
 export default function WelcomeStep({ data, onUpdate, onNext }: WelcomeStepProps) {
   const [currentSection, setCurrentSection] = useState<'welcome' | 'value' | 'preview'>('welcome')
   const [hasStarted, setHasStarted] = useState(false)
+  const [startTime] = useState(Date.now())
 
   useEffect(() => {
     // Start onboarding when component mounts
     if (!hasStarted) {
       setHasStarted(true)
-      onUpdate({ welcomeStarted: true })
+      const timeSpent = Date.now() - startTime
+      
+      onUpdate({ 
+        welcomeStarted: true,
+        stepProgress: {
+          currentStep: 'welcome',
+          completedSteps: [],
+          timeSpent
+        }
+      })
     }
-  }, [hasStarted, onUpdate])
+  }, [hasStarted, onUpdate, startTime])
+
+  // Track user preferences from data
+  useEffect(() => {
+    if (data.userPreferences) {
+      // Apply user preferences if they exist
+      const { theme, language } = data.userPreferences
+      if (theme) {
+        document.documentElement.setAttribute('data-theme', theme)
+      }
+      if (language) {
+        document.documentElement.setAttribute('lang', language)
+      }
+    }
+  }, [data.userPreferences])
 
   const handleGetStarted = () => {
-    onUpdate({ welcomeCompleted: true })
+    const timeSpent = Date.now() - startTime
+    const completedSteps = data.welcomeStarted ? ['welcome'] : []
+    
+    onUpdate({ 
+      welcomeCompleted: true,
+      stepProgress: {
+        currentStep: 'welcome',
+        completedSteps: [...completedSteps, 'welcome'],
+        timeSpent
+      }
+    })
     onNext()
   }
 

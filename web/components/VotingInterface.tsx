@@ -55,7 +55,7 @@ interface VotingInterfaceProps {
   userRankedVote?: string[];
   verificationTier?: string;
   showResults?: boolean;
-  onVoteComplete?: (voteId: string) => void;
+  onVoteComplete?: () => void;
 }
 
 export const VotingInterface: React.FC<VotingInterfaceProps> = ({
@@ -74,7 +74,6 @@ export const VotingInterface: React.FC<VotingInterfaceProps> = ({
   onVoteComplete
 }) => {
   const [verificationStatus, setVerificationStatus] = useState<'pending' | 'verified' | 'failed' | 'none'>('none');
-  const [voteId, setVoteId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [showVerificationDetails, setShowVerificationDetails] = useState(false);
@@ -112,12 +111,11 @@ export const VotingInterface: React.FC<VotingInterfaceProps> = ({
     return () => clearInterval(interval);
   }, [updateTimeRemaining]);
 
-  const handleVote = async (_pollId: string, choice: number) => {
+  const handleVote = async (choice: number) => {
     try {
-      const response = await onVote(_pollId, choice);
+      const response = await onVote(poll.id, choice);
       
       if (response.success) {
-        setVoteId(response.voteId || null);
         setSuccess(true);
         setVerificationStatus('pending');
         
@@ -127,7 +125,7 @@ export const VotingInterface: React.FC<VotingInterfaceProps> = ({
         }
         
         if (response.voteId) {
-          onVoteComplete?.(response.voteId);
+          onVoteComplete?.();
         }
       } else {
         setError(response.message || 'Vote submission failed');

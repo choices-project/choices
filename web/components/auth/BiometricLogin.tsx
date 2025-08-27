@@ -25,10 +25,9 @@ const BiometricContext = createContext<{
   isSupported: null,
   isAvailable: null,
   username: '',
-  setUsername: (username: string) => {
+  setUsername: () => {
     // This is a default implementation that will be overridden
-    // The username parameter is used to update the context state
-    devLog('BiometricContext: Setting username to:', username);
+    devLog('BiometricContext: Setting username');
   }
 });
 
@@ -53,7 +52,7 @@ export default function BiometricLogin({ onSuccess, onError, onCancel }: Biometr
 
   useEffect(() => {
     checkBiometricSupport()
-  }, [])
+  }, [checkBiometricSupport])
 
   const checkBiometricSupport = useCallback(async () => {
     try {
@@ -94,8 +93,8 @@ export default function BiometricLogin({ onSuccess, onError, onCancel }: Biometr
           email: username.trim(),
           username: username.trim().split('@')[0]
         }
-        // Use the user parameter to provide detailed user information
-        devLog('Biometric authentication successful for user:', user);
+        // Biometric authentication successful
+        devLog('Biometric authentication successful');
         onSuccess?.(user)
       } else {
         const errorMessage = result.error?.message || 'Authentication failed'
