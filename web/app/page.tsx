@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { useAuth } from '@/contexts/AuthContext'
 import { Button } from '@/components/ui/button';
@@ -45,12 +45,7 @@ export default function HomePage() {
     activeUsers: 0
   })
 
-  useEffect(() => {
-    loadTrendingPolls()
-    loadStats()
-  }, [])
-
-  const loadTrendingPolls = async () => {
+  const loadTrendingPolls = useCallback(async () => {
     try {
       setLoading(true)
       const response = await fetch('/api/polls/trending?limit=3')
@@ -67,9 +62,9 @@ export default function HomePage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
-  const loadStats = async () => {
+  const loadStats = useCallback(async () => {
     try {
       const response = await fetch('/api/stats/public')
       if (response.ok) {
@@ -79,7 +74,12 @@ export default function HomePage() {
     } catch (error) {
       console.error('Error loading stats:', error)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    loadTrendingPolls()
+    loadStats()
+  }, [loadTrendingPolls, loadStats])
 
   const getMockTrendingPoll = (): TrendingPoll => ({
     id: 'trending-1',

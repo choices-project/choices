@@ -363,3 +363,4 @@ CREATE TRIGGER audit_webauthn_credentials
   FOR EACH ROW EXECUTE FUNCTION log_audit_event();
 
 
+

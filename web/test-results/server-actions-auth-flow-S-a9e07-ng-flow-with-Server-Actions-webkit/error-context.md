@@ -1,0 +1,97 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - alert [ref=e2]
+  - banner [ref=e3]:
+    - generic [ref=e5]:
+      - link "Choices" [ref=e7]:
+        - /url: /
+        - img [ref=e9]
+        - heading "Choices" [level=1] [ref=e12]
+      - navigation [ref=e13]:
+        - link "Home Landing page and overview" [ref=e14]:
+          - /url: /
+          - img [ref=e15]
+          - generic [ref=e18]: Home
+          - generic: Landing page and overview
+        - link "PWA Features Mobile app experience" [ref=e19]:
+          - /url: /pwa-features
+          - img [ref=e20]
+          - generic [ref=e22]: PWA Features
+          - generic: Mobile app experience
+      - generic [ref=e23]:
+        - button [ref=e25] [cursor=pointer]:
+          - img [ref=e26] [cursor=pointer]
+        - button [ref=e29] [cursor=pointer]:
+          - img [ref=e30] [cursor=pointer]
+        - generic [ref=e34]:
+          - link "Sign In" [ref=e35]:
+            - /url: /login
+          - link "Get Started" [ref=e36]:
+            - /url: /register
+  - generic [ref=e38]:
+    - generic [ref=e40]:
+      - img [ref=e42]
+      - generic [ref=e44]:
+        - generic [ref=e45]:
+          - heading "System Maintenance" [level=3] [ref=e46]
+          - generic [ref=e47]:
+            - generic [ref=e48]: medium
+            - button "Dismiss message" [ref=e49] [cursor=pointer]:
+              - img [ref=e50] [cursor=pointer]
+        - paragraph [ref=e54]: We'll be performing maintenance on Sunday at 2 AM EST. Service may be briefly interrupted.
+        - generic [ref=e56]: 8/26/2025
+    - generic [ref=e58]:
+      - img [ref=e60]
+      - generic [ref=e63]:
+        - generic [ref=e64]:
+          - heading "New Features Coming" [level=3] [ref=e65]
+          - generic [ref=e66]:
+            - generic [ref=e67]: low
+            - button "Dismiss message" [ref=e68] [cursor=pointer]:
+              - img [ref=e69] [cursor=pointer]
+        - paragraph [ref=e73]: Stay tuned for exciting new features including real-time voting and mobile notifications!
+        - generic [ref=e75]: 8/26/2025
+    - generic [ref=e77]:
+      - img [ref=e79]
+      - generic [ref=e81]:
+        - generic [ref=e82]:
+          - heading "Welcome to Choices!" [level=3] [ref=e83]
+          - generic [ref=e84]:
+            - generic [ref=e85]: high
+            - button "Dismiss message" [ref=e86] [cursor=pointer]:
+              - img [ref=e87] [cursor=pointer]
+        - paragraph [ref=e91]: This is a new platform for creating and participating in polls. We'd love your feedback!
+        - generic [ref=e93]: 8/26/2025
+  - generic [ref=e95]:
+    - generic [ref=e96]:
+      - generic [ref=e97]:
+        - generic [ref=e100]: "1"
+        - generic [ref=e103]: "2"
+        - generic [ref=e106]: "3"
+        - generic [ref=e109]: "4"
+      - generic [ref=e110]:
+        - paragraph [ref=e112]: Welcome to Choices
+        - paragraph [ref=e114]: Privacy & Security
+        - paragraph [ref=e116]: Personalization
+        - paragraph [ref=e118]: You're All Set!
+    - generic [ref=e120]:
+      - img [ref=e122]
+      - heading "Welcome to Choices" [level=2] [ref=e125]
+      - paragraph [ref=e126]: We're excited to have you on board! Let's get to know you and set up your account so you can start making better decisions with the help of our community.
+      - generic [ref=e127]:
+        - heading "What you'll get:" [level=3] [ref=e128]
+        - list [ref=e129]:
+          - listitem [ref=e130]: • Access to community polls and discussions
+          - listitem [ref=e131]: • Personalized recommendations based on your interests
+          - listitem [ref=e132]: • Privacy-focused data handling
+          - listitem [ref=e133]: • Real-time insights and analytics
+    - generic [ref=e134]:
+      - button "Back" [disabled] [ref=e135]
+      - button "Next" [ref=e136] [cursor=pointer]:
+        - text: Next
+        - img [ref=e137] [cursor=pointer]
+  - button [ref=e139] [cursor=pointer]:
+    - img [ref=e140] [cursor=pointer]
+```

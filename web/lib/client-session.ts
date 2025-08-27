@@ -1,0 +1,200 @@
+/**
+ * Client-Side Session Management
+ * Handles authentication state and session management on the client side
+ */
+
+export interface ClientUser {
+  id: string
+  stableId: string
+  username: string
+  displayName?: string
+  email?: string
+  verificationTier: string
+  isActive: boolean
+  twoFactorEnabled: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+class ClientSessionManager {
+  private user: ClientUser | null = null
+  private loading = true
+  private listeners: Set<(user: ClientUser | null) => void> = new Set()
+
+  constructor() {
+    // Only initialize session on client side
+    if (typeof window !== 'undefined') {
+      this.initializeSession()
+    }
+  }
+
+  private async initializeSession() {
+    try {
+      console.log('Client session: Initializing session...')
+      
+      // Only run on client side
+      if (typeof window === 'undefined') {
+        console.log('Client session: Skipping initialization on server side')
+        this.loading = false
+        return
+      }
+      
+      const response = await fetch('/api/auth/me', {
+        method: 'GET',
+        credentials: 'include', // Ensure cookies are sent
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+
+      console.log('Client session: Response status:', response.status)
+
+      if (response.ok) {
+        const userData = await response.json()
+        console.log('Client session: User data received:', userData.username)
+        this.user = userData
+        this.notifyListeners(userData)
+      } else {
+        console.log('Client session: No valid session found')
+        this.user = null
+        this.notifyListeners(null)
+      }
+    } catch (error) {
+      console.error('Client session: Failed to initialize session:', error)
+      this.user = null
+      this.notifyListeners(null)
+    } finally {
+      this.loading = false
+    }
+  }
+
+  private notifyListeners(user: ClientUser | null) {
+    this.listeners.forEach(listener => listener(user))
+  }
+
+  public subscribe(listener: (user: ClientUser | null) => void) {
+    this.listeners.add(listener)
+    // Immediately call with current state
+    if (!this.loading) {
+      listener(this.user)
+    }
+    return () => this.listeners.delete(listener)
+  }
+
+  public async login(username: string, password: string): Promise<{ success: boolean; error?: string }> {
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ username, password }),
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        // Re-fetch user data to update session
+        await this.initializeSession()
+        return { success: true }
+      } else {
+        return { success: false, error: data.message || 'Login failed' }
+      }
+    } catch (error) {
+      console.error('Login error:', error)
+      return { success: false, error: 'Network error' }
+    }
+  }
+
+  public async logout(): Promise<void> {
+    try {
+      await fetch('/api/auth/logout', {
+        method: 'POST',
+        credentials: 'include',
+      })
+    } catch (error) {
+      console.error('Logout error:', error)
+    } finally {
+      this.user = null
+      this.notifyListeners(null)
+    }
+  }
+
+  public async register(userData: {
+    username: string
+    password?: string
+    enableBiometric?: boolean
+    enableDeviceFlow?: boolean
+  }): Promise<{ success: boolean; error?: string }> {
+    try {
+      const response = await fetch('/api/auth/register-ia', {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(userData),
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        // Re-fetch user data to update session
+        await this.initializeSession()
+        return { success: true }
+      } else {
+        return { success: false, error: data.message || 'Registration failed' }
+      }
+    } catch (error) {
+      console.error('Registration error:', error)
+      return { success: false, error: 'Network error' }
+    }
+  }
+
+  public getUser(): ClientUser | null {
+    return this.user
+  }
+
+  public isLoading(): boolean {
+    return this.loading
+  }
+
+  public isAuthenticated(): boolean {
+    return this.user !== null
+  }
+
+  public async refreshSession(): Promise<void> {
+    console.log('Client session: Refreshing session...')
+    await this.initializeSession()
+  }
+}
+
+// Create singleton instance
+let clientSessionInstance: ClientSessionManager | null = null
+
+export function getClientSession(): ClientSessionManager {
+  if (typeof window === 'undefined') {
+    // Return a mock instance for server-side rendering
+    return {
+      user: null,
+      loading: true,
+      listeners: new Set(),
+      subscribe: () => () => {},
+      login: async () => ({ success: false, error: 'Server side' }),
+      logout: async () => {},
+      register: async () => ({ success: false, error: 'Server side' }),
+      getUser: () => null,
+      isLoading: () => true,
+      isAuthenticated: () => false,
+      refreshSession: async () => {}
+    } as any
+  }
+  
+  if (!clientSessionInstance) {
+    clientSessionInstance = new ClientSessionManager()
+  }
+  return clientSessionInstance
+}
+
+export const clientSession = getClientSession()

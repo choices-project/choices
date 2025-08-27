@@ -1,0 +1,97 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - alert [ref=e2]
+  - banner [ref=e3]:
+    - generic [ref=e5]:
+      - link "Choices" [ref=e7] [cursor=pointer]:
+        - /url: /
+        - img [ref=e9] [cursor=pointer]
+        - heading "Choices" [level=1] [ref=e13] [cursor=pointer]
+      - navigation [ref=e14]:
+        - link "Home Landing page and overview" [ref=e15] [cursor=pointer]:
+          - /url: /
+          - img [ref=e16] [cursor=pointer]
+          - generic [ref=e19] [cursor=pointer]: Home
+          - generic: Landing page and overview
+        - link "PWA Features Mobile app experience" [ref=e20] [cursor=pointer]:
+          - /url: /pwa-features
+          - img [ref=e21] [cursor=pointer]
+          - generic [ref=e24] [cursor=pointer]: PWA Features
+          - generic: Mobile app experience
+      - generic [ref=e25]:
+        - button [ref=e27] [cursor=pointer]:
+          - img [ref=e28] [cursor=pointer]
+        - button [ref=e31] [cursor=pointer]:
+          - img [ref=e32] [cursor=pointer]
+        - generic [ref=e36]:
+          - link "Sign In" [ref=e37] [cursor=pointer]:
+            - /url: /login
+          - link "Get Started" [ref=e38] [cursor=pointer]:
+            - /url: /register
+  - generic [ref=e40]:
+    - generic [ref=e42]:
+      - img [ref=e44]
+      - generic [ref=e48]:
+        - generic [ref=e49]:
+          - heading "System Maintenance" [level=3] [ref=e50]
+          - generic [ref=e51]:
+            - generic [ref=e52]: medium
+            - button "Dismiss message" [ref=e53] [cursor=pointer]:
+              - img [ref=e54] [cursor=pointer]
+        - paragraph [ref=e58]: We'll be performing maintenance on Sunday at 2 AM EST. Service may be briefly interrupted.
+        - generic [ref=e60]: 8/26/2025
+    - generic [ref=e62]:
+      - img [ref=e64]
+      - generic [ref=e67]:
+        - generic [ref=e68]:
+          - heading "New Features Coming" [level=3] [ref=e69]
+          - generic [ref=e70]:
+            - generic [ref=e71]: low
+            - button "Dismiss message" [ref=e72] [cursor=pointer]:
+              - img [ref=e73] [cursor=pointer]
+        - paragraph [ref=e77]: Stay tuned for exciting new features including real-time voting and mobile notifications!
+        - generic [ref=e79]: 8/26/2025
+    - generic [ref=e81]:
+      - img [ref=e83]
+      - generic [ref=e85]:
+        - generic [ref=e86]:
+          - heading "Welcome to Choices!" [level=3] [ref=e87]
+          - generic [ref=e88]:
+            - generic [ref=e89]: high
+            - button "Dismiss message" [ref=e90] [cursor=pointer]:
+              - img [ref=e91] [cursor=pointer]
+        - paragraph [ref=e95]: This is a new platform for creating and participating in polls. We'd love your feedback!
+        - generic [ref=e97]: 8/26/2025
+  - generic [ref=e99]:
+    - generic [ref=e100]:
+      - generic [ref=e101]:
+        - generic [ref=e104]: "1"
+        - generic [ref=e107]: "2"
+        - generic [ref=e110]: "3"
+        - generic [ref=e113]: "4"
+      - generic [ref=e114]:
+        - paragraph [ref=e116]: Welcome to Choices
+        - paragraph [ref=e118]: Privacy & Security
+        - paragraph [ref=e120]: Personalization
+        - paragraph [ref=e122]: You're All Set!
+    - generic [ref=e124]:
+      - img [ref=e126]
+      - heading "Welcome to Choices" [level=2] [ref=e129]
+      - paragraph [ref=e130]: We're excited to have you on board! Let's get to know you and set up your account so you can start making better decisions with the help of our community.
+      - generic [ref=e131]:
+        - heading "What you'll get:" [level=3] [ref=e132]
+        - list [ref=e133]:
+          - listitem [ref=e134]: • Access to community polls and discussions
+          - listitem [ref=e135]: • Personalized recommendations based on your interests
+          - listitem [ref=e136]: • Privacy-focused data handling
+          - listitem [ref=e137]: • Real-time insights and analytics
+    - generic [ref=e138]:
+      - button "Back" [disabled] [ref=e139]
+      - button "Next" [ref=e140] [cursor=pointer]:
+        - text: Next
+        - img [ref=e141] [cursor=pointer]
+  - button [ref=e144] [cursor=pointer]:
+    - img [ref=e145] [cursor=pointer]
+```

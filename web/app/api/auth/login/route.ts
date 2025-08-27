@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/utils/supabase/server'
-import { cookies } from 'next/headers'
+import { createClient } from '@supabase/supabase-js'
 import { logger } from '@/lib/logger'
 import { rateLimiters } from '@/lib/rate-limit'
+import bcrypt from 'bcryptjs'
+import { createSessionToken, setSessionToken, SessionUser } from '@/lib/session'
 
 export async function POST(request: NextRequest) {
   try {
@@ -36,55 +37,67 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const supabase = createClient(cookies())
-    if (!supabase) {
-      return NextResponse.json(
-        { message: 'Authentication service not available' },
-        { status: 500 }
-      )
-    }
+    // Use service role for authentication
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      }
+    )
 
-    // Convert username to internal email format
-    const internalEmail = `${username.toLowerCase()}@choices.local`
+    // Find user in ia_users table
+    const { data: user, error: userError } = await supabase
+      .from('ia_users')
+      .select('*')
+      .eq('stable_id', username.toLowerCase())
+      .single()
 
-    // Attempt to sign in
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email: internalEmail,
-      password: password,
-    })
-
-    if (error) {
-      logger.warn('Login failed', {
+    if (userError || !user) {
+      logger.warn('Login failed - user not found', {
         username: username.toLowerCase(),
         ip: rateLimitResult.reputation?.ip || 'unknown',
-        error: error.message
+        error: userError?.message || 'User not found'
       })
-
-      // Handle specific error cases
-      if (error.message.includes('Invalid login credentials')) {
-        return NextResponse.json(
-          { message: 'Invalid username or password' },
-          { status: 401 }
-        )
-      }
-
-      if (error.message.includes('Email not confirmed')) {
-        return NextResponse.json(
-          { message: 'Account not verified. Please check your email.' },
-          { status: 401 }
-        )
-      }
-
       return NextResponse.json(
-        { message: error.message },
+        { message: 'Invalid username or password' },
         { status: 401 }
       )
     }
 
-    if (!data.user) {
+    // Check if user has a password
+    if (!user.password_hash) {
+      logger.warn('Login failed - no password set', {
+        username: username.toLowerCase(),
+        ip: rateLimitResult.reputation?.ip || 'unknown'
+      })
       return NextResponse.json(
-        { message: 'Login failed' },
-        { status: 500 }
+        { message: 'This account does not have a password set. Please use biometric authentication.' },
+        { status: 401 }
+      )
+    }
+
+    // Verify password
+    const passwordValid = await bcrypt.compare(password, user.password_hash)
+    if (!passwordValid) {
+      logger.warn('Login failed - invalid password', {
+        username: username.toLowerCase(),
+        ip: rateLimitResult.reputation?.ip || 'unknown'
+      })
+      return NextResponse.json(
+        { message: 'Invalid username or password' },
+        { status: 401 }
+      )
+    }
+
+    // Check if user is active
+    if (!user.is_active) {
+      return NextResponse.json(
+        { message: 'Account is deactivated' },
+        { status: 401 }
       )
     }
 
@@ -92,7 +105,7 @@ export async function POST(request: NextRequest) {
     const { data: profile, error: profileError } = await supabase
       .from('user_profiles')
       .select('*')
-      .eq('id', data.user.id)
+      .eq('user_id', user.stable_id)
       .single()
 
     if (profileError) {
@@ -100,9 +113,26 @@ export async function POST(request: NextRequest) {
       // Don't fail the login, but log the error
     }
 
+    // Create session user object
+    const sessionUser: SessionUser = {
+      id: user.id,
+      stableId: user.stable_id,
+      username: user.stable_id,
+      email: user.email,
+      verificationTier: user.verification_tier,
+      isActive: user.is_active,
+      twoFactorEnabled: user.two_factor_enabled,
+      createdAt: user.created_at,
+      updatedAt: user.updated_at
+    }
+
+    // Create session token
+    const sessionToken = createSessionToken(sessionUser)
+    setSessionToken(sessionToken)
+
     // Log successful login
     logger.info('User logged in successfully', {
-      userId: data.user.id,
+      userId: user.id,
       username: username.toLowerCase(),
       ip: rateLimitResult.reputation?.ip || 'unknown',
       authMethod: 'password'
@@ -112,14 +142,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       message: 'Login successful',
-      user: {
-        id: data.user.id,
-        username: profile?.username || username.toLowerCase(),
-        displayName: profile?.display_name || username,
-        email: data.user.email,
-        authMethods: profile?.auth_methods || {}
-      },
-      session: data.session
+      user: sessionUser
     })
 
   } catch (error) {

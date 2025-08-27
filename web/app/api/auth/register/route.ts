@@ -60,13 +60,13 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Validate authentication method
-    if (!enableBiometric && !enableDeviceFlow) {
-      return NextResponse.json(
-        { message: 'At least one authentication method must be enabled' },
-        { status: 400 }
-      )
-    }
+    // Make authentication methods optional - users can register with just password
+    // if (!enableBiometric && !enableDeviceFlow) {
+    //   return NextResponse.json(
+    //     { message: 'At least one authentication method must be enabled' },
+    //     { status: 400 }
+    //   )
+    // }
 
     const supabase = createClient(cookies())
     if (!supabase) {
@@ -98,8 +98,8 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Create user with email (using username@choices.local as internal email)
-    const internalEmail = `${username.toLowerCase()}@choices.local`
+    // Create user with email (using username@choices-platform.vercel.app as internal email)
+    const internalEmail = `${username.toLowerCase()}@choices-platform.vercel.app`
     
     const { data: authData, error: signUpError } = await supabase.auth.signUp({
       email: internalEmail,
@@ -136,7 +136,7 @@ export async function POST(request: NextRequest) {
     const { error: profileError } = await supabase
       .from('user_profiles')
       .insert({
-        id: authData.user.id,
+        user_id: authData.user.id,
         username: username.toLowerCase(),
         display_name: username,
         email: internalEmail,
