@@ -77,7 +77,9 @@ export const GET = withAuth(async (request: NextRequest, context) => {
     })
 
   } catch (error) {
-    logger.error('Admin users API error:', error)
+    // narrow 'unknown' → Error
+    const err = error instanceof Error ? error : new Error(String(error));
+    logger.error('Admin users API error:', err)
     
     return NextResponse.json(
       { message: 'Internal server error' },
@@ -143,7 +145,9 @@ export const PUT = withAuth(async (request: NextRequest, context) => {
     })
 
   } catch (error) {
-    logger.error('Admin user update error:', error)
+    // narrow 'unknown' → Error
+    const err = error instanceof Error ? error : new Error(String(error));
+    logger.error('Admin user update error:', err)
     
     return NextResponse.json(
       { message: 'Internal server error' },

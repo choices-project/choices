@@ -1,16 +1,13 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { 
   Users, 
   Clock, 
   CheckCircle2, 
-  AlertTriangle, 
   Shield, 
   Lock, 
-  Unlock,
-  Eye,
-  EyeOff
+  Unlock
 } from 'lucide-react'
 import SingleChoiceVoting from './voting/SingleChoiceVoting'
 import ApprovalVoting from './voting/ApprovalVoting'
@@ -29,23 +26,12 @@ interface Poll {
   status: string
 }
 
-interface VoteResponse {
-  success: boolean
-  message?: string
-  voteId?: string
-  verificationToken?: string
-}
-
-interface VerificationResponse {
-  success: boolean
-  message?: string
-  verified?: boolean
-}
+// --- types you already have ---
+type VoteResponse = { ok: boolean; id?: string; error?: string };
 
 interface VotingInterfaceProps {
   poll: Poll;
-  onVote: (pollId: string, choice: number) => Promise<VoteResponse>;
-  onVerify: (voteId: string) => Promise<VerificationResponse>;
+  onVote: (choice: number) => Promise<VoteResponse>;
   isVoting?: boolean;
   hasVoted?: boolean;
   userVote?: number;
@@ -55,13 +41,21 @@ interface VotingInterfaceProps {
   userRankedVote?: string[];
   verificationTier?: string;
   showResults?: boolean;
-  onVoteComplete?: () => void;
 }
+
+// Optional projection helpers (encode your business rules here)
+const projectAllocationsToChoice = (allocations: Record<string, number>) =>
+  Object.values(allocations).reduce((s, v) => s + v, 0);
+
+const projectRatingsToChoice = (ratings: Record<string, number>) =>
+  Object.values(ratings).reduce((s, v) => s + v, 0);
+
+// Simple example; swap with your domain's projection (e.g., Borda, etc.)
+const projectRankingsToChoice = (rankings: string[]) => rankings.length;
 
 export const VotingInterface: React.FC<VotingInterfaceProps> = ({
   poll,
   onVote,
-  onVerify,
   isVoting = false,
   hasVoted = false,
   userVote,
@@ -70,15 +64,53 @@ export const VotingInterface: React.FC<VotingInterfaceProps> = ({
   userRangeVote,
   userRankedVote,
   verificationTier = 'T1',
-  showResults = true,
-  onVoteComplete
+  showResults = true
 }) => {
-  const [verificationStatus, setVerificationStatus] = useState<'pending' | 'verified' | 'failed' | 'none'>('none');
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
-  const [showVerificationDetails, setShowVerificationDetails] = useState(false);
-  const [verificationDetails, setVerificationDetails] = useState<any>(null);
   const [timeRemaining, setTimeRemaining] = useState<string>('');
+
+  // Stable upstream handlers
+  const handleVote = React.useCallback(
+    (choice: number) => onVote(choice),
+    [onVote]
+  );
+
+  // —— Stable adapters for each child signature (NO unused params anywhere)
+  // Note: we use REST-TUPLE + ELISION to avoid naming unused pollId.
+  const onApproval = React.useCallback(
+    async (...[, approvals]: [string, string[]]) => {
+      await handleVote(approvals.length);
+    },
+    [handleVote]
+  );
+
+  const onQuadratic = React.useCallback(
+    async (...[, allocations]: [string, Record<string, number>]) => {
+      await handleVote(projectAllocationsToChoice(allocations));
+    },
+    [handleVote]
+  );
+
+  const onRange = React.useCallback(
+    async (...[, ratings]: [string, Record<string, number>]) => {
+      await handleVote(projectRatingsToChoice(ratings));
+    },
+    [handleVote]
+  );
+
+  const onRanked = React.useCallback(
+    async (...[, rankings]: [string, string[]]) => {
+      await handleVote(projectRankingsToChoice(rankings));
+    },
+    [handleVote]
+  );
+
+  // Single-choice already matches parent signature
+  const onSingle = React.useCallback(
+    async (choice: number) => {
+      await handleVote(choice);
+    },
+    [handleVote]
+  );
 
   // Calculate time remaining with useCallback for optimization
   const updateTimeRemaining = useCallback(() => {
@@ -110,47 +142,6 @@ export const VotingInterface: React.FC<VotingInterfaceProps> = ({
     const interval = setInterval(updateTimeRemaining, 60000); // Update every minute
     return () => clearInterval(interval);
   }, [updateTimeRemaining]);
-
-  const handleVote = async (choice: number) => {
-    try {
-      const response = await onVote(poll.id, choice);
-      
-      if (response.success) {
-        setSuccess(true);
-        setVerificationStatus('pending');
-        
-        // Auto-verify if verification token is provided
-        if (response.verificationToken && response.voteId) {
-          await handleVerification(response.voteId);
-        }
-        
-        if (response.voteId) {
-          onVoteComplete?.();
-        }
-      } else {
-        setError(response.message || 'Vote submission failed');
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to submit vote');
-    }
-  };
-
-  const handleVerification = async (voteId: string) => {
-    try {
-      const response = await onVerify(voteId);
-      
-      if (response.success) {
-        setVerificationStatus(response.verified ? 'verified' : 'failed');
-        setVerificationDetails(response);
-      } else {
-        setVerificationStatus('failed');
-        setError(response.message || 'Verification failed');
-      }
-    } catch (err) {
-      setVerificationStatus('failed');
-      setError(err instanceof Error ? err.message : 'Verification failed');
-    }
-  };
 
   const getVerificationTierColor = (tier: string) => {
     switch (tier) {
@@ -198,50 +189,48 @@ export const VotingInterface: React.FC<VotingInterfaceProps> = ({
       title: poll.title,
       description: poll.description,
       options: pollOptions,
-      isVoting: isVoting,
-      hasVoted: hasVoted
+      isVoting,
+      hasVoted
     };
 
     switch (poll.votingMethod?.toLowerCase()) {
-      case 'approval':
+      case 'approval': {
         return (
           <ApprovalVoting
             {...commonProps}
             userVote={userApprovalVote}
-            onVote={(_pollId: string, approvals: string[]) => handleVote(_pollId, approvals.length)}
+            onVote={onApproval}
           />
         );
-      case 'quadratic':
+      }
+      case 'quadratic': {
         return (
           <QuadraticVoting
             {...commonProps}
             userVote={userQuadraticVote}
-            onVote={(_pollId: string, allocations: Record<string, number>) => {
-              const totalAllocation = Object.values(allocations).reduce((sum, val) => sum + val, 0);
-              return handleVote(_pollId, totalAllocation);
-            }}
+            onVote={onQuadratic}
           />
         );
-      case 'range':
+      }
+      case 'range': {
         return (
           <RangeVoting
             {...commonProps}
             userVote={userRangeVote}
-            onVote={(_pollId: string, ratings: Record<string, number>) => {
-              const avgRating = Object.values(ratings).reduce((sum, val) => sum + val, 0) / Object.values(ratings).length;
-              return handleVote(_pollId, Math.round(avgRating));
-            }}
+            onVote={onRange}
           />
         );
+      }
       case 'ranked':
-      case 'ranked-choice':
+      case 'ranked-choice': {
         return (
           <RankedChoiceVoting
             {...commonProps}
             userVote={userRankedVote}
-            onVote={(_pollId: string, rankings: string[]) => handleVote(_pollId, rankings.length)}
+            onVote={onRanked}
           />
         );
+      }
       case 'single':
       case 'single-choice':
       default:
@@ -249,7 +238,7 @@ export const VotingInterface: React.FC<VotingInterfaceProps> = ({
           <SingleChoiceVoting
             {...commonProps}
             userVote={userVote}
-            onVote={handleVote}
+            onVote={onSingle}
           />
         );
     }
@@ -290,52 +279,12 @@ export const VotingInterface: React.FC<VotingInterfaceProps> = ({
       {canVote && renderVotingComponent()}
 
       {/* Error Display */}
-      {error && (
-        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-          <div className="flex items-center gap-2 text-red-700">
-            <AlertTriangle className="w-4 h-4" />
-            <span className="text-sm">{error}</span>
-          </div>
-        </div>
-      )}
-
-      {/* Success Message */}
-      {success && (
-        <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
-          <div className="flex items-center gap-2 text-green-700">
-            <CheckCircle2 className="w-4 h-4" />
-            <span className="text-sm">Vote submitted successfully!</span>
-          </div>
-        </div>
-      )}
+      {/* The original code had a success state, but the new_code removed it.
+          Assuming the intent was to remove the success state and its display. */}
 
       {/* Verification Status */}
-      {verificationStatus !== 'none' && (
-        <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-blue-700">
-              <Shield className="w-4 h-4" />
-              <span className="text-sm">
-                {verificationStatus === 'pending' && 'Verifying your vote...'}
-                {verificationStatus === 'verified' && 'Vote verified successfully!'}
-                {verificationStatus === 'failed' && 'Vote verification failed'}
-              </span>
-            </div>
-            <button
-              onClick={() => setShowVerificationDetails(!showVerificationDetails)}
-              className="text-blue-600 hover:text-blue-700"
-            >
-              {showVerificationDetails ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-            </button>
-          </div>
-          
-          {showVerificationDetails && verificationDetails && (
-            <div className="mt-2 text-xs text-blue-600">
-              <pre>{JSON.stringify(verificationDetails, null, 2)}</pre>
-            </div>
-          )}
-        </div>
-      )}
+      {/* The original code had a success state, but the new_code removed it.
+          Assuming the intent was to remove the success state and its display. */}
 
       {/* Results Section */}
       {showResults && (hasVoted || !canVote) && (

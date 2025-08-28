@@ -1,21 +1,16 @@
-import { useCallback, useEffect, useMemo } from 'react';
-
 /**
- * Safe hooks utilities that make dependency intent explicit
- * Helps prevent missing dependency warnings and makes code more maintainable
+ * React Hook Utilities
+ * 
+ * Note: These utility functions have been removed in favor of direct React hook usage
+ * to maintain proper dependency tracking and ESLint compliance.
+ * 
+ * Use React hooks directly in your components with explicit dependency arrays:
+ * - useCallback(fn, [dep1, dep2])
+ * - useMemo(() => value, [dep1, dep2])
+ * - useEffect(() => { effect }, [dep1, dep2])
+ * 
+ * This approach provides better maintainability and prevents dependency-related bugs.
  */
 
-export const useSafeCallback = <T extends (...args: unknown[]) => unknown>(
-  fn: T, 
-  deps: unknown[]
-) => useCallback(fn, deps);
-
-export const useSafeMemo = <T>(
-  fn: () => T, 
-  deps: unknown[]
-) => useMemo(fn, deps);
-
-export const useSafeEffect = (
-  fn: () => void | (() => void), 
-  deps: unknown[]
-) => useEffect(fn, deps);
+// Export empty object to maintain module structure
+export const safeHooks = {};

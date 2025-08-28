@@ -20,7 +20,7 @@ const BiometricContext = createContext<{
   isSupported: boolean | null;
   isAvailable: boolean | null;
   username: string;
-  setUsername: (username: string) => void;
+  setUsername: () => void;
 }>({
   isSupported: null,
   isAvailable: null,
@@ -37,8 +37,8 @@ export function useBiometricContext() {
 }
 
 interface BiometricLoginProps {
-  onSuccess?: (user: { id: string; email: string; username?: string }) => void
-  onError?: (error: string) => void
+  onSuccess?: (_user?: { id: string; email: string; username: string }) => void
+  onError?: () => void
   onCancel?: () => void
 }
 
@@ -49,10 +49,6 @@ export default function BiometricLogin({ onSuccess, onError, onCancel }: Biometr
   const [isAuthenticating, setIsAuthenticating] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
-
-  useEffect(() => {
-    checkBiometricSupport()
-  }, [checkBiometricSupport])
 
   const checkBiometricSupport = useCallback(async () => {
     try {
@@ -67,15 +63,19 @@ export default function BiometricLogin({ onSuccess, onError, onCancel }: Biometr
       devLog('Error checking biometric support:', error)
       const errorMessage = 'Failed to check biometric support'
       setError(errorMessage)
-      onError?.(errorMessage)
+      onError?.()
     }
   }, [onError])
+
+  useEffect(() => {
+    checkBiometricSupport()
+  }, [checkBiometricSupport])
 
   const handleAuthenticate = async () => {
     if (!username.trim()) {
       const errorMessage = 'Please enter your email address'
       setError(errorMessage)
-      onError?.(errorMessage)
+      onError?.()
       return
     }
 
@@ -99,12 +99,12 @@ export default function BiometricLogin({ onSuccess, onError, onCancel }: Biometr
       } else {
         const errorMessage = result.error?.message || 'Authentication failed'
         setError(errorMessage)
-        onError?.(errorMessage)
+        onError?.()
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error'
       setError(errorMessage)
-      onError?.(errorMessage)
+      onError?.()
     } finally {
       setIsAuthenticating(false)
     }

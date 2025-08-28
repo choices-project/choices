@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { logger } from '@/lib/logger';
 import { differentialPrivacy, type PrivateQueryResult } from '@/lib/privacy/differential-privacy'
 
@@ -32,12 +32,7 @@ export default function PrivatePollResults({ poll, userId, onPrivacyBudgetExceed
   const [error, setError] = useState<string | null>(null)
   const [privacyBudget, setPrivacyBudget] = useState<number | null>(null)
 
-  useEffect(() => {
-    loadResults()
-    loadPrivacyBudget()
-  }, [poll.id, userId])
-
-  const loadResults = async () => {
+  const loadResults = useCallback(async () => {
     try {
       setLoading(true)
       setError(null)
@@ -45,7 +40,8 @@ export default function PrivatePollResults({ poll, userId, onPrivacyBudgetExceed
       const privateResults = await differentialPrivacy.getPrivatePollResults(poll.id, userId)
       setResults(privateResults)
     } catch (error) {
-      logger.error('Failed to load private results:', error)
+      const err = error instanceof Error ? error : new Error(String(error))
+      logger.error('Failed to load private results:', err)
       
       if (error instanceof Error && error.message.includes('Privacy budget exceeded')) {
         setError('Privacy budget exceeded. Please try again later.')
@@ -56,19 +52,25 @@ export default function PrivatePollResults({ poll, userId, onPrivacyBudgetExceed
     } finally {
       setLoading(false)
     }
-  }
+  }, [poll.id, userId, onPrivacyBudgetExceeded])
 
-  const loadPrivacyBudget = async () => {
+  const loadPrivacyBudget = useCallback(async () => {
     try {
       const budget = await differentialPrivacy.getPrivacyBudget(userId)
       setPrivacyBudget(budget)
     } catch (error) {
-      logger.error('Failed to load privacy budget:', error)
+      const err = error instanceof Error ? error : new Error(String(error))
+      logger.error('Failed to load privacy budget:', err)
     }
-  }
+  }, [userId])
+
+  useEffect(() => {
+    loadResults()
+    loadPrivacyBudget()
+  }, [loadResults, loadPrivacyBudget])
 
   const formatPrivacyGuarantee = (guarantee: string) => {
-    return guarantee.replace(/\(ε=([^,]+), δ=([^)]+)\)/, (match, epsilon, delta) => {
+    return guarantee.replace(/\(ε=([^,]+), δ=([^)]+)\)/, (_, epsilon, delta) => {
       return `(ε=${parseFloat(epsilon).toFixed(2)}, δ=${parseFloat(delta).toExponential(2)})`
     })
   }

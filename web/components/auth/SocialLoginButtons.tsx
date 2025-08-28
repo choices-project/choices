@@ -15,8 +15,10 @@ import {
   Video 
 } from 'lucide-react'
 
+type OnProviderClick = (...[, provider]: [OAuthProvider, OAuthProvider]) => Promise<void>;
+
 interface SocialLoginButtonsProps {
-  onProviderClick: (provider: OAuthProvider) => Promise<void>
+  onProviderClick: OnProviderClick
   redirectTo?: string
   isLoading?: boolean
   className?: string
@@ -53,7 +55,7 @@ export default function SocialLoginButtons({
       }
       
       // Pass the provider parameter to the click handler
-      await onProviderClick(provider)
+      await onProviderClick(provider, provider)
     } finally {
       setLoadingProvider(null)
     }

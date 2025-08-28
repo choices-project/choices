@@ -1,0 +1,190 @@
+
+> lint
+> next lint
+
+
+./app/actions/logout.ts
+13:10  Warning: 'formData' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./app/admin/analytics/page.tsx
+143:33  Warning: 'any' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./app/admin/audit/page.tsx
+242:33  Warning: 'any' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./app/admin/breaking-news/BreakingNewsPage.tsx
+273:42  Warning: 'any' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./app/admin/charts/BasicCharts.tsx
+123:24  Warning: 'entry' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./app/admin/feature-flags/page.tsx
+37:35  Warning: 'any' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./app/admin/generated-polls/GeneratedPollsPage.tsx
+140:33  Warning: 'any' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./app/admin/polls/page.tsx
+245:33  Warning: 'any' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./app/admin/system/page.tsx
+261:33  Warning: 'any' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./app/admin/trending-topics/TrendingTopicsPage.tsx
+166:33  Warning: 'any' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./app/admin/users/page.tsx
+201:33  Warning: 'any' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./app/api/admin/breaking-news/[id]/poll-context/route.ts
+11:3  Warning: 'request' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+131:3  Warning: 'request' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./app/api/admin/feedback/[id]/generate-issue/route.ts
+10:3  Warning: 'request' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./app/api/admin/generated-polls/[id]/approve/route.ts
+11:3  Warning: 'request' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./app/api/admin/site-messages/route.ts
+131:32  Warning: 'supabase' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./app/api/polls/[id]/results/route.ts
+10:3  Warning: 'request' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+43:38  Warning: 'option' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./app/api/polls/[id]/route.ts
+9:3  Warning: 'request' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./app/api/polls/route.ts
+50:42  Warning: 'option' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./app/api/site-messages/route.ts
+28:38  Warning: 'supabase' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./app/dashboard/page.tsx
+22:12  Warning: 'error' is defined but never used. Allowed unused caught errors must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./components/HeroSection.tsx
+265:50  Warning: 'any' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./components/auth/DeviceFlowAuth.tsx
+123:8  Warning: React Hook useCallback has a missing dependency: 'startPolling'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./components/auth/DeviceList.tsx
+65:14  Warning: 'err' is defined but never used. Allowed unused caught errors must match /^_/u.  @typescript-eslint/no-unused-vars
+127:14  Warning: 'err' is defined but never used. Allowed unused caught errors must match /^_/u.  @typescript-eslint/no-unused-vars
+144:14  Warning: 'err' is defined but never used. Allowed unused caught errors must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./components/polls/CreatePollForm.tsx
+111:39  Warning: 'any' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./components/polls/PollResults.tsx
+252:69  Warning: 'entry' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./components/polls/PrivatePollResults.tsx
+73:59  Warning: 'match' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./components/privacy/PrivacyLevelIndicator.tsx
+100:3  Warning: 'showTooltip' is assigned a value but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./lib/api.ts
+48:14  Warning: 'error' is defined but never used. Allowed unused caught errors must match /^_/u.  @typescript-eslint/no-unused-vars
+84:5  Warning: 'url' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+104:16  Warning: 'error' is defined but never used. Allowed unused caught errors must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./lib/auth/server-actions.ts
+244:9  Warning: 'key' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+248:9  Warning: 'maxRequests' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./lib/auth-analytics.ts
+436:29  Warning: 'event' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./lib/auth-middleware.ts
+42:17  Warning: 'request' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+42:39  Warning: 'context' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+152:39  Warning: 'authContext' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+297:42  Warning: 'request' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./lib/auth.ts
+270:14  Warning: 'error' is defined but never used. Allowed unused caught errors must match /^_/u.  @typescript-eslint/no-unused-vars
+342:20  Warning: 'error' is defined but never used. Allowed unused caught errors must match /^_/u.  @typescript-eslint/no-unused-vars
+493:14  Warning: 'error' is defined but never used. Allowed unused caught errors must match /^_/u.  @typescript-eslint/no-unused-vars
+517:14  Warning: 'error' is defined but never used. Allowed unused caught errors must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./lib/browser-utils.ts
+65:72  Warning: 'isMobile' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./lib/database-optimizer.ts
+343:14  Warning: 'error' is defined but never used. Allowed unused caught errors must match /^_/u.  @typescript-eslint/no-unused-vars
+360:14  Warning: 'error' is defined but never used. Allowed unused caught errors must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./lib/github-issue-integration.ts
+515:26  Warning: 'type' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./lib/hooks/usePollWizard.ts
+6:3  Warning: 'PollCategory' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+8:3  Warning: 'StepValidation' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./lib/media-bias-analysis.ts
+655:52  Warning: 'ourPoll' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+728:40  Warning: 'mediaPoll' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+808:28  Warning: 'id' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./lib/module-loader.ts
+455:16  Warning: 'error' is defined but never used. Allowed unused caught errors must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./lib/performance/component-optimization.tsx
+75:3  Warning: 'componentName' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+81:13  Warning: 'duration' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+106:31  Warning: 'componentName' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+110:11  Warning: 'duration' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+122:10  Warning: React Hook useCallback received a function whose dependencies are unknown. Pass an inline function instead.  react-hooks/exhaustive-deps
+130:10  Warning: React Hook useMemo received a function whose dependencies are unknown. Pass an inline function instead.  react-hooks/exhaustive-deps
+
+./lib/poll-narrative-system.ts
+375:45  Warning: 'userId' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./lib/privacy/differential-privacy.ts
+479:33  Warning: 'epsilon' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./lib/pwa-auth-integration.ts
+428:14  Warning: 'error' is defined but never used. Allowed unused caught errors must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./lib/react/safeHooks.ts
+11:6  Warning: React Hook useCallback received a function whose dependencies are unknown. Pass an inline function instead.  react-hooks/exhaustive-deps
+16:6  Warning: React Hook useMemo received a function whose dependencies are unknown. Pass an inline function instead.  react-hooks/exhaustive-deps
+21:6  Warning: React Hook useEffect received a function whose dependencies are unknown. Pass an inline function instead.  react-hooks/exhaustive-deps
+
+./lib/real-time-service.ts
+269:33  Warning: 'subscription' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./lib/session.ts
+56:12  Warning: 'error' is defined but never used. Allowed unused caught errors must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./lib/supabase-performance.ts
+263:18  Warning: 'table' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+277:18  Warning: 'table' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+291:18  Warning: 'table' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+443:14  Warning: 'T' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+460:15  Warning: 'optimized' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+473:15  Warning: 'optimized' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./lib/webauthn.ts
+498:11  Warning: 'result' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./lib/zero-knowledge-proofs.ts
+78:14  Warning: 'error' is defined but never used. Allowed unused caught errors must match /^_/u.  @typescript-eslint/no-unused-vars
+123:14  Warning: 'error' is defined but never used. Allowed unused caught errors must match /^_/u.  @typescript-eslint/no-unused-vars
+166:14  Warning: 'error' is defined but never used. Allowed unused caught errors must match /^_/u.  @typescript-eslint/no-unused-vars
+209:14  Warning: 'error' is defined but never used. Allowed unused caught errors must match /^_/u.  @typescript-eslint/no-unused-vars
+254:14  Warning: 'error' is defined but never used. Allowed unused caught errors must match /^_/u.  @typescript-eslint/no-unused-vars
+296:14  Warning: 'error' is defined but never used. Allowed unused caught errors must match /^_/u.  @typescript-eslint/no-unused-vars
+415:48  Warning: 'commitment' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+419:53  Warning: 'commitment' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+449:14  Warning: 'error' is defined but never used. Allowed unused caught errors must match /^_/u.  @typescript-eslint/no-unused-vars
+484:14  Warning: 'error' is defined but never used. Allowed unused caught errors must match /^_/u.  @typescript-eslint/no-unused-vars
+596:38  Warning: 'pollId' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+621:14  Warning: 'error' is defined but never used. Allowed unused caught errors must match /^_/u.  @typescript-eslint/no-unused-vars
+
+info  - Need to disable some ESLint rules? Learn more here: https://nextjs.org/docs/basic-features/eslint#disabling-rules

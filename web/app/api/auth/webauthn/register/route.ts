@@ -89,7 +89,9 @@ export async function POST(request: NextRequest) {
     })
 
   } catch (error) {
-    logger.error('WebAuthn registration error:', error)
+    // narrow 'unknown' → Error
+    const err = error instanceof Error ? error : new Error(String(error));
+    logger.error('WebAuthn registration error:', err);
     
     return NextResponse.json(
       { message: 'Failed to setup biometric authentication' },
@@ -179,7 +181,9 @@ export async function PUT(request: NextRequest) {
     })
 
   } catch (error) {
-    logger.error('WebAuthn verification error:', error)
+    // narrow 'unknown' → Error
+    const err = error instanceof Error ? error : new Error(String(error));
+    logger.error('WebAuthn verification error:', err);
     
     return NextResponse.json(
       { message: 'Failed to verify biometric setup' },

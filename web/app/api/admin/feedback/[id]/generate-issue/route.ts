@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
 import { cookies } from 'next/headers';
 import { devLog } from '@/lib/logger';
@@ -7,7 +7,7 @@ import { GitHubIssueIntegration } from '@/lib/github-issue-integration';
 export const dynamic = 'force-dynamic';
 
 export async function POST(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {

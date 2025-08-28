@@ -337,7 +337,7 @@ export class PrivateAnalytics {
 
   private calculateEngagementScore(data: any[]): number {
     // Simplified engagement score
-    return data.length > 0 ? data.reduce((sum: any, item: any) => sum + (item.engagement || 0), 0) / data.length : 0
+    return data.length > 0 ? data.reduce((sum, item) => sum + (item.engagement || 0), 0) / data.length : 0
   }
 
   private calculateRetentionRate(data: any[]): number {

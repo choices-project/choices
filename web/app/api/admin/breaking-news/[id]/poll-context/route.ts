@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic';
 
 // POST /api/admin/breaking-news/[id]/poll-context - Generate poll context from breaking news story
 export async function POST(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
@@ -128,7 +128,7 @@ export async function POST(
 
 // GET /api/admin/breaking-news/[id]/poll-context - Get existing poll context for a story
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {

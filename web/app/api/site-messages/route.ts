@@ -1,20 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
 import { logger } from '@/lib/logger'
 
 export const dynamic = 'force-dynamic'
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
     const includeExpired = searchParams.get('includeExpired') === 'true'
 
-    const messages = await getActiveSiteMessages(supabase, includeExpired)
+    const messages = await getActiveSiteMessages(includeExpired)
     return NextResponse.json(messages)
   } catch (error) {
     logger.error('Error fetching public site messages', error instanceof Error ? error : new Error(String(error)))
@@ -25,7 +19,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-async function getActiveSiteMessages(supabase: any, includeExpired: boolean = false) {
+async function getActiveSiteMessages(includeExpired: boolean = false) {
   try {
     // Use REST API directly to bypass PostgREST cache issues
     let url = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/site_messages?select=*&is_active=eq.true&order=priority.desc,created_at.desc`

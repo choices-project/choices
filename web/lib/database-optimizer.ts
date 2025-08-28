@@ -340,7 +340,7 @@ export class QueryOptimizer {
       if (cached && new Date(cached.expires_at) > new Date()) {
         return JSON.parse(cached.value)
       }
-    } catch (error) {
+    } catch (_error) {
       // Cache miss or error
     }
     return null
@@ -357,7 +357,7 @@ export class QueryOptimizer {
           value: JSON.stringify(value),
           expires_at: expiresAt
         })
-    } catch (error) {
+    } catch (_error) {
       // Cache set failed, continue without caching
     }
   }

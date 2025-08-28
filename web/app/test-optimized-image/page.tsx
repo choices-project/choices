@@ -89,7 +89,8 @@ export default function TestOptimizedImagePage() {
               // Test accessibility features
               const images = document.querySelectorAll('[data-testid="optimized-image"]')
               images.forEach((img, index) => {
-                logger.info(`Image ${index + 1} alt text:`, img.getAttribute('aria-label'))
+                const ariaLabel = img.getAttribute('aria-label')
+                logger.info(`Image ${index + 1} alt text:`, { ariaLabel: ariaLabel || 'none' })
               })
             }}
           >

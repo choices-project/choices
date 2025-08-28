@@ -7,13 +7,13 @@ interface ValuesStepProps {
   data: {
     primaryConcerns?: string[]
     communityFocus?: string[]
-    participationStyle?: string
+    participationStyle?: 'observer' | 'contributor' | 'leader'
     valuesCompleted?: boolean
   }
-  onUpdate: (updates: {
+  onUpdate: (_updates: {
     primaryConcerns?: string[]
     communityFocus?: string[]
-    participationStyle?: string
+    participationStyle?: 'observer' | 'contributor' | 'leader'
     valuesCompleted?: boolean
     stepProgress?: {
       currentStep: string
@@ -63,7 +63,7 @@ export default function ValuesStep({ data, onUpdate, onNext, onBack }: ValuesSte
     onUpdate({ communityFocus: newFocus })
   }
 
-  const handleParticipationChange = (style: string) => {
+  const handleParticipationChange = (style: 'observer' | 'contributor' | 'leader') => {
     setParticipationStyle(style)
     onUpdate({ participationStyle: style })
   }

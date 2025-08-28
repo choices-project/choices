@@ -9,7 +9,7 @@
  * @since 2024-12-27
  */
 
-import { createHash } from 'crypto'
+
 import { logger } from '@/lib/logger';
 
 export interface DPoPKeyPair {

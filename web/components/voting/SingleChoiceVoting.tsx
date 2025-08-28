@@ -234,7 +234,7 @@ export default function SingleChoiceVoting({
           <div className="mt-4 text-center">
             <div className="text-sm text-gray-600">
               Selected: <span className="font-medium text-blue-600">
-                {options.find((opt, idx) => idx === selectedOption)?.text}
+                {options.find((_, idx) => idx === selectedOption)?.text}
               </span>
             </div>
           </div>

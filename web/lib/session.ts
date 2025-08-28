@@ -53,7 +53,7 @@ export function createSessionToken(user: SessionUser): string {
 export function verifySessionToken(token: string): JWTPayload | null {
   try {
     return jwt.verify(token, JWT_SECRET) as JWTPayload
-  } catch (error) {
+  } catch (_error) {
     return null
   }
 }

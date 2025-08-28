@@ -4,21 +4,20 @@ import { useState } from 'react'
 import { Shield, Mail, Key, ArrowRight, ArrowLeft, CheckCircle, AlertCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { createClient } from '@/utils/supabase/client'
 
 interface AuthSetupStepProps {
   data: any
-  onUpdate: (updates: any) => void
+  onUpdate: (_updates: any) => void
   onNext: () => void
   onBack: () => void
 }
 
 type AuthMethod = 'email' | 'social' | 'anonymous' | 'skip'
 
-export default function AuthSetupStep({ data, onUpdate, onNext, onBack }: AuthSetupStepProps) {
+export default function AuthSetupStep({ data, onUpdate, onNext }: AuthSetupStepProps) {
   const [authMethod, setAuthMethod] = useState<AuthMethod>(data.authMethod || 'email')
   const [email, setEmail] = useState(data.email || '')
   const [isLoading, setIsLoading] = useState(false)
@@ -101,13 +100,7 @@ export default function AuthSetupStep({ data, onUpdate, onNext, onBack }: AuthSe
     setSuccess(true)
   }
 
-  const handleSkip = () => {
-    onUpdate({ 
-      authMethod: 'skip',
-      authSetupCompleted: true 
-    })
-    onNext()
-  }
+
 
   const handleNext = () => {
     if (success || authMethod === 'skip') {

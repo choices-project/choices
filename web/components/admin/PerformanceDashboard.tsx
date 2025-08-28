@@ -34,7 +34,7 @@ export default function PerformanceDashboard({ refreshInterval = 30000 }: Perfor
       const stats = optimizedPollService.getCacheStats()
       setCacheStats(stats)
     } catch (err) {
-      logger.warn('Failed to load cache stats:', err)
+      logger.warn('Failed to load cache stats:', { error: err })
     }
   }, [])
 

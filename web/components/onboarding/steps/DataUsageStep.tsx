@@ -9,26 +9,21 @@ import { Label } from '@/components/ui/label'
 
 interface DataUsageStepProps {
   data: any
-  onUpdate: (updates: any) => void
+  onUpdate: () => void
   onNext: () => void
   onBack: () => void
 }
 
 type DataSharingLevel = 'none' | 'analytics_only' | 'research' | 'full'
 
-export default function DataUsageStep({ data, onUpdate, onNext, onBack }: DataUsageStepProps) {
+export default function DataUsageStep({ data, onUpdate, onNext }: DataUsageStepProps) {
   const [dataSharingLevel, setDataSharingLevel] = useState<DataSharingLevel>(data.dataSharing || 'analytics_only')
   const [allowContact, setAllowContact] = useState(data.allowContact || false)
   const [allowResearch, setAllowResearch] = useState(data.allowResearch || false)
   const [currentSection, setCurrentSection] = useState<'overview' | 'controls' | 'preview'>('overview')
 
   const handleNext = () => {
-    onUpdate({
-      dataSharing: dataSharingLevel,
-      allowContact,
-      allowResearch,
-      dataUsageCompleted: true
-    })
+    onUpdate()
     onNext()
   }
 

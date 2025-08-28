@@ -1,313 +1,313 @@
-'use client'
+'use client';
 
-import { useState, useEffect, useCallback, createContext, useContext } from 'react'
-import { useSearchParams, useRouter } from 'next/navigation'
-import { createClient } from '@/utils/supabase/client'
-import { devLog } from '@/lib/logger'
-import WelcomeStep from './steps/WelcomeStep'
-import PrivacyPhilosophyStep from './steps/PrivacyPhilosophyStep'
-import PlatformTourStep from './steps/PlatformTourStep'
-import DataUsageStep from './steps/DataUsageStep'
-import AuthSetupStep from './steps/AuthSetupStep'
-import ProfileSetupStep from './steps/ProfileSetupStep'
-import FirstExperienceStep from './steps/FirstExperienceStep'
-import CompleteStep from './steps/CompleteStep'
-import ProgressIndicator from './components/ProgressIndicator'
+import * as React from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
+import { createClient } from '@/utils/supabase/client';
+import { devLog } from '@/lib/logger';
 
-export type OnboardingStep = 
-  | 'welcome' 
-  | 'privacy-philosophy' 
-  | 'platform-tour' 
-  | 'data-usage' 
-  | 'auth-setup' 
-  | 'profile-setup' 
-  | 'first-experience' 
-  | 'complete'
+import type {
+  StepId,
+  StepDataMap,
+  StepSlug,
+  OnboardingDataHybrid,
+  OnStepUpdate,
+  OnGenericUpdate,
+} from './types';
 
-interface OnboardingData {
-  // User data
-  user?: any
-  displayName?: string
-  avatar?: string
-  
-  // Privacy preferences
-  privacyLevel?: 'low' | 'medium' | 'high' | 'maximum'
-  profileVisibility?: 'public' | 'private' | 'friends_only' | 'anonymous'
-  dataSharing?: 'none' | 'analytics_only' | 'research' | 'full'
-  
-  // Platform preferences
-  notificationPreferences?: {
-    email: boolean
-    push: boolean
-    sms: boolean
-  }
-  
-  // Progress tracking
-  completedSteps: OnboardingStep[]
-  stepData: Record<string, any>
-  
-  // Completion flags
-  privacyPhilosophyCompleted?: boolean
-  platformTourCompleted?: boolean
-  dataUsageCompleted?: boolean
-  authSetupCompleted?: boolean
-  profileSetupCompleted?: boolean
-  firstExperienceCompleted?: boolean
-}
+import {
+  toSlug,
+  DEFAULT_STEP_ORDER,
+} from './types';
+
+// Step components (swap to your real ones)
+import WelcomeStep from './steps/WelcomeStep';
+import PrivacyPhilosophyStep from './steps/PrivacyPhilosophyStep';
+import PlatformTourStep from './steps/PlatformTourStep';
+import DataUsageStep from './steps/DataUsageStep';
+import AuthSetupStep from './steps/AuthSetupStep';
+import ProfileSetupStep from './steps/ProfileSetupStep';
+import FirstExperienceStep from './steps/FirstExperienceStep';
+import CompleteStep from './steps/CompleteStep';
+import ProgressIndicator from './components/ProgressIndicator';
+
+const INITIAL_STATE: OnboardingDataHybrid = {
+  completedSteps: [],
+  stepData: {},
+};
+
+// UI/URL order uses slugs exclusively
+const STEP_ORDER = DEFAULT_STEP_ORDER;
+
+const OnboardingContext = React.createContext<OnboardingContextType | undefined>(undefined);
 
 interface OnboardingContextType {
-  data: OnboardingData
-  updateData: (updates: Partial<OnboardingData>) => void
-  currentStep: OnboardingStep
-  setCurrentStep: (step: OnboardingStep) => void
-  isLoading: boolean
-  error: string | null
-  startOnboarding: () => Promise<void>
-  updateOnboardingStep: (step: OnboardingStep, stepData?: any) => Promise<void>
-  completeOnboarding: () => Promise<void>
+  data: OnboardingDataHybrid;
+  updateData: OnGenericUpdate;
+  updateStepData: <K extends StepId>(key: K) => OnStepUpdate<K>;
+  currentStep: StepSlug;
+  setCurrentStep: (step: StepSlug) => void;
+  isLoading: boolean;
+  error: string | null;
+  startOnboarding: () => Promise<void>;
+  updateOnboardingStep: (step: StepSlug, stepData?: Record<string, unknown>) => Promise<void>;
+  completeOnboarding: () => Promise<void>;
 }
-
-const OnboardingContext = createContext<OnboardingContextType | undefined>(undefined)
 
 export function useOnboardingContext() {
-  const context = useContext(OnboardingContext)
-  if (!context) {
-    throw new Error('useOnboardingContext must be used within OnboardingProvider')
-  }
-  return context
+  const ctx = React.useContext(OnboardingContext);
+  if (!ctx) throw new Error('useOnboardingContext must be used within OnboardingProvider');
+  return ctx;
 }
 
-const stepOrder: OnboardingStep[] = [
-  'welcome',
-  'privacy-philosophy',
-  'platform-tour',
-  'data-usage',
-  'auth-setup',
-  'profile-setup',
-  'first-experience',
-  'complete'
-]
-
 function EnhancedOnboardingFlowInner() {
-  const [currentStep, setCurrentStep] = useState<OnboardingStep>('welcome')
-  const [data, setData] = useState<OnboardingData>({
-    completedSteps: [],
-    stepData: {}
-  })
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  
-  const searchParams = useSearchParams()
-  const router = useRouter()
-  const supabase = createClient()
+  const [currentStep, setCurrentStep] = React.useState<StepSlug>('welcome');
+  const [data, setData] = React.useState<OnboardingDataHybrid>(INITIAL_STATE);
+  const [isLoading, setIsLoading] = React.useState(true);
+  const [error, setError] = React.useState<string | null>(null);
 
-  const updateData = useCallback((updates: Partial<OnboardingData>) => {
-    setData(prev => ({ ...prev, ...updates }))
-  }, [])
+  const searchParams = useSearchParams();
+  const router = useRouter();
 
-  const startOnboarding = useCallback(async () => {
+  /** Mirror important fields into legacy top-level properties (back-compat) */
+  const bridgeToLegacy = React.useCallback(
+    <K extends StepId>(key: K, patch: Partial<StepDataMap[K]>): Partial<OnboardingDataHybrid> => {
+      switch (key) {
+        case 'profile': {
+          const out: Partial<OnboardingDataHybrid> = {};
+          if ('displayName' in patch && patch.displayName !== undefined) {
+            out.displayName = String(patch.displayName);
+          }
+          if ('profileSetupCompleted' in patch && patch.profileSetupCompleted !== undefined) {
+            out.profileSetupCompleted = !!patch.profileSetupCompleted;
+            out.completedSteps = maybePushCompleted(data.completedSteps, toSlug('profile'));
+          }
+          return out;
+        }
+        case 'privacyPhilosophy': {
+          const out: Partial<OnboardingDataHybrid> = {};
+          if ('privacyPhilosophyCompleted' in patch && patch.privacyPhilosophyCompleted !== undefined) {
+            out.privacyPhilosophyCompleted = !!patch.privacyPhilosophyCompleted;
+            out.completedSteps = maybePushCompleted(data.completedSteps, toSlug('privacyPhilosophy'));
+          }
+          if ('privacyLevel' in patch && patch.privacyLevel !== undefined) {
+            out.privacyLevel = patch.privacyLevel;
+          }
+          if ('profileVisibility' in patch && patch.profileVisibility !== undefined) {
+            out.profileVisibility = patch.profileVisibility;
+          }
+          if ('dataSharing' in patch && patch.dataSharing !== undefined) {
+            out.dataSharing = patch.dataSharing;
+          }
+          return out;
+        }
+        case 'platformTour': {
+          const out: Partial<OnboardingDataHybrid> = {};
+          if ('platformTourCompleted' in patch && patch.platformTourCompleted !== undefined) {
+            out.platformTourCompleted = !!patch.platformTourCompleted;
+            out.completedSteps = maybePushCompleted(data.completedSteps, toSlug('platformTour'));
+          }
+          return out;
+        }
+        case 'dataUsage': {
+          const out: Partial<OnboardingDataHybrid> = {};
+          if ('dataUsageCompleted' in patch && patch.dataUsageCompleted !== undefined) {
+            out.dataUsageCompleted = !!patch.dataUsageCompleted;
+            out.completedSteps = maybePushCompleted(data.completedSteps, toSlug('dataUsage'));
+          }
+          return out;
+        }
+        case 'firstExperience': {
+          const out: Partial<OnboardingDataHybrid> = {};
+          if ('firstExperienceCompleted' in patch && patch.firstExperienceCompleted !== undefined) {
+            out.firstExperienceCompleted = !!patch.firstExperienceCompleted;
+            out.completedSteps = maybePushCompleted(data.completedSteps, toSlug('firstExperience'));
+          }
+          return out;
+        }
+        case 'auth': {
+          const out: Partial<OnboardingDataHybrid> = {};
+          if ('authCompleted' in patch && patch.authCompleted !== undefined) {
+            out.authSetupCompleted = !!patch.authCompleted;
+            out.completedSteps = maybePushCompleted(data.completedSteps, toSlug('auth'));
+          }
+          return out;
+        }
+        case 'privacy': {
+          const out: Partial<OnboardingDataHybrid> = {};
+          if ('privacyCompleted' in patch && patch.privacyCompleted !== undefined) {
+            out.completedSteps = maybePushCompleted(data.completedSteps, toSlug('privacy'));
+          }
+          return out;
+        }
+        default:
+          return {};
+      }
+    },
+    [data.completedSteps]
+  );
+
+  /** New, type-safe step updater: onStepUpdate={updateStepData('privacyPhilosophy')} */
+  const updateStepData = React.useCallback(
+    <K extends StepId>(key: K): OnStepUpdate<K> =>
+      (...args) => {
+        const patch = args[0];
+        setData(prev => {
+          const next: OnboardingDataHybrid = {
+            ...prev,
+            [key]: { ...(prev[key] as StepDataMap[K] | undefined), ...patch },
+          };
+          const legacy = bridgeToLegacy(key, patch);
+          return { ...next, ...legacy };
+        });
+      },
+    [bridgeToLegacy]
+  );
+
+  /** Legacy-friendly updater for flat/old fields */
+  const updateData: OnGenericUpdate = React.useCallback(
+    (...args) => {
+      const patch = args[0];
+      setData(prev => ({ ...prev, ...patch }));
+    },
+    []
+  );
+
+  const startOnboarding = React.useCallback(async () => {
     try {
       const response = await fetch('/api/onboarding/progress', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ step: 'welcome', action: 'start' })
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to start onboarding')
-      }
-
-      devLog('Onboarding started successfully')
+        body: JSON.stringify({ step: 'welcome', action: 'start' }),
+      });
+      if (!response.ok) throw new Error('Failed to start onboarding');
+      devLog('Onboarding started successfully');
     } catch (error) {
-      devLog('Error starting onboarding:', error)
-      setError('Failed to start onboarding')
+      devLog('Error starting onboarding:', error);
+      setError('Failed to start onboarding');
     }
-  }, [])
+  }, []);
 
-  const updateOnboardingStep = useCallback(async (step: OnboardingStep, stepData?: any) => {
-    try {
-      const response = await fetch('/api/onboarding/progress', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          step, 
-          action: 'update',
-          data: stepData || {}
-        })
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to update onboarding step')
-      }
-
-      // Update local state
-      setData(prev => ({
-        ...prev,
-        completedSteps: [...new Set([...prev.completedSteps, step])],
-        stepData: { ...prev.stepData, [step]: stepData }
-      }))
-
-      devLog(`Onboarding step ${step} updated successfully`)
-    } catch (error) {
-      devLog('Error updating onboarding step:', error)
-      setError('Failed to update onboarding progress')
-    }
-  }, [])
-
-  const completeOnboarding = useCallback(async () => {
-    try {
-      const response = await fetch('/api/onboarding/progress', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ step: 'complete', action: 'complete' })
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to complete onboarding')
-      }
-
-      devLog('Onboarding completed successfully')
-      router.push('/dashboard')
-    } catch (error) {
-      devLog('Error completing onboarding:', error)
-      setError('Failed to complete onboarding')
-    }
-  }, [router])
-
-  // Check authentication status and handle step from URL
-  useEffect(() => {
-    const checkAuthAndStep = async () => {
+  const updateOnboardingStep = React.useCallback(
+    async (step: StepSlug, stepData?: Record<string, unknown>) => {
       try {
-        setIsLoading(true)
-        setError(null)
+        const response = await fetch('/api/onboarding/progress', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            step,
+            action: 'update',
+            data: stepData || {},
+          }),
+        });
+        if (!response.ok) throw new Error('Failed to update onboarding step');
 
-        // Check URL step parameter
-        const stepParam = searchParams.get('step')
-        if (stepParam && stepOrder.includes(stepParam as OnboardingStep)) {
-          setCurrentStep(stepParam as OnboardingStep)
+        setData(prev => ({
+          ...prev,
+          completedSteps: [...new Set([...prev.completedSteps, step])],
+          stepData: { ...prev.stepData, [step]: stepData },
+        }));
+
+        devLog(`Onboarding step ${step} updated successfully`);
+      } catch (error) {
+        devLog('Error updating onboarding step:', error);
+        setError('Failed to update onboarding progress');
+      }
+    },
+    []
+  );
+
+  const completeOnboarding = React.useCallback(async () => {
+    try {
+      const response = await fetch('/api/onboarding/progress', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ step: 'complete', action: 'complete' }),
+      });
+      if (!response.ok) throw new Error('Failed to complete onboarding');
+
+      devLog('Onboarding completed successfully');
+      router.push('/dashboard');
+    } catch (error) {
+      devLog('Error completing onboarding:', error);
+      setError('Failed to complete onboarding');
+    }
+  }, [router]);
+
+  // Init: auth + URL step
+  React.useEffect(() => {
+    const run = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+
+        const stepParam = searchParams.get('step') as StepSlug | null;
+        if (stepParam && STEP_ORDER.includes(stepParam)) {
+          setCurrentStep(stepParam);
         }
 
-        // Check if user is authenticated
-        if (!supabase) {
-          throw new Error('Authentication service not available')
-        }
-
-        const { data: { user }, error: userError } = await supabase.auth.getUser()
-        
+        const { data: auth, error: userError } = await createClient().auth.getUser();
+        const user = auth?.user;
         if (user && !userError) {
-          // User is authenticated, update data
           setData(prev => ({
             ...prev,
             user,
-            displayName: user.user_metadata?.fullname || user.email?.split('@')[0],
-            avatar: user.user_metadata?.avatarurl
-          }))
-          
-          // Load existing onboarding progress
-          const progressResponse = await fetch('/api/onboarding/progress')
-          if (progressResponse.ok) {
-            const progressData = await progressResponse.json()
-            if (progressData.progress) {
-              setData(prev => ({
-                ...prev,
-                completedSteps: progressData.progress.completed_steps || [],
-                stepData: progressData.progress.step_data || {}
-              }))
-              
-              // Set current step from progress
-              if (progressData.progress.current_step && stepOrder.includes(progressData.progress.current_step)) {
-                setCurrentStep(progressData.progress.current_step)
-              }
-            }
-          }
-
-          // Load privacy preferences
-          const preferencesResponse = await fetch('/api/privacy/preferences')
-          if (preferencesResponse.ok) {
-            const preferencesData = await preferencesResponse.json()
-            if (preferencesData.preferences) {
-              setData(prev => ({
-                ...prev,
-                privacyLevel: preferencesData.preferences.data_sharing_level === 'none' ? 'maximum' :
-                              preferencesData.preferences.data_sharing_level === 'analytics_only' ? 'high' :
-                              preferencesData.preferences.data_sharing_level === 'research' ? 'medium' : 'low',
-                profileVisibility: preferencesData.preferences.profile_visibility,
-                dataSharing: preferencesData.preferences.data_sharing_level,
-                notificationPreferences: preferencesData.preferences.notification_preferences
-              }))
-            }
-          }
-        } else if (currentStep !== 'welcome' && currentStep !== 'auth-setup') {
-          // User is not authenticated but trying to access protected steps
-          setCurrentStep('auth-setup')
+            displayName: user.user_metadata?.full_name || user.email?.split('@')[0] || '',
+            avatar: user.user_metadata?.avatar_url || '',
+          }));
         }
-      } catch (error) {
-        devLog('Error checking auth status:', error)
-        setError('Failed to check authentication status')
+
+        // Load persisted onboarding progress (optional)
+        try {
+          const response = await fetch('/api/onboarding/progress');
+          if (response.ok) {
+            const progress = (await response.json()) as Partial<OnboardingDataHybrid>;
+            setData(prev => ({ ...prev, ...progress }));
+          }
+        } catch (progressError) {
+          devLog('Could not load onboarding progress:', progressError);
+        }
+      } catch (e) {
+        devLog('Error initializing onboarding:', e);
+        setError('Failed to initialize onboarding');
       } finally {
-        setIsLoading(false)
+        setIsLoading(false);
       }
-    }
+    };
+    run();
+  }, [searchParams]);
 
-    checkAuthAndStep()
-  }, [searchParams, currentStep, supabase])
+  const goTo = (step: StepSlug) => {
+    setCurrentStep(step);
+    router.push(`/onboarding?step=${step}`);
+  };
 
-  // Step navigation handlers
-  const handleNext = useCallback(async () => {
-    const currentIndex = stepOrder.indexOf(currentStep)
-    if (currentIndex < stepOrder.length - 1) {
-      const nextStep = stepOrder[currentIndex + 1]
-      
-      // Update onboarding progress
-      await updateOnboardingStep(currentStep, data.stepData[currentStep])
-      
-      // Update URL
-      router.push(`/onboarding?step=${nextStep}`)
-      setCurrentStep(nextStep)
-    }
-  }, [currentStep, data.stepData, updateOnboardingStep, router])
+  const handleNext = () => {
+    const i = STEP_ORDER.indexOf(currentStep);
+    if (i >= 0 && i < STEP_ORDER.length - 1) goTo(STEP_ORDER[i + 1]);
+  };
 
-  const handleBack = useCallback(() => {
-    const currentIndex = stepOrder.indexOf(currentStep)
-    if (currentIndex > 0) {
-      const prevStep = stepOrder[currentIndex - 1]
-      router.push(`/onboarding?step=${prevStep}`)
-      setCurrentStep(prevStep)
-    }
-  }, [currentStep, router])
+  const handleBack = () => {
+    const i = STEP_ORDER.indexOf(currentStep);
+    if (i > 0) goTo(STEP_ORDER[i - 1]);
+  };
 
-  const handleComplete = useCallback(async () => {
-    await updateOnboardingStep(currentStep, data.stepData[currentStep])
-    await completeOnboarding()
-  }, [currentStep, data.stepData, updateOnboardingStep, completeOnboarding])
-
-  const contextValue: OnboardingContextType = {
+  const ctx: OnboardingContextType = {
     data,
     updateData,
+    updateStepData,
     currentStep,
-    setCurrentStep,
+    setCurrentStep: goTo,
     isLoading,
     error,
     startOnboarding,
     updateOnboardingStep,
-    completeOnboarding
-  }
+    completeOnboarding,
+  };
 
-  if (isLoading) {
+  if (error && !isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading your onboarding experience...</p>
-        </div>
-      </div>
-    )
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
-        <div className="text-center max-w-md mx-auto">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="max-w-md mx-auto text-center">
           <div className="bg-red-50 border border-red-200 rounded-lg p-6">
             <h2 className="text-xl font-semibold text-red-900 mb-2">Something went wrong</h2>
             <p className="text-red-700 mb-4">{error}</p>
@@ -320,86 +320,90 @@ function EnhancedOnboardingFlowInner() {
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   return (
-    <OnboardingContext.Provider value={contextValue}>
+    <OnboardingContext.Provider value={ctx}>
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-        {/* Progress Indicator */}
         <ProgressIndicator currentStep={currentStep} completedSteps={data.completedSteps} />
-        
-        {/* Step Content */}
         <div className="container mx-auto px-4 py-8">
           {currentStep === 'welcome' && (
-            <WelcomeStep 
-              data={data}
-              onUpdate={updateData}
+            <WelcomeStep
+              data={data.welcome}
+              onStepUpdate={updateStepData('welcome')}
               onNext={handleNext}
             />
           )}
           {currentStep === 'privacy-philosophy' && (
-            <PrivacyPhilosophyStep 
-              data={data}
-              onUpdate={updateData}
+            <PrivacyPhilosophyStep
+              data={data.privacyPhilosophy}
+              onStepUpdate={updateStepData('privacyPhilosophy')}
               onNext={handleNext}
               onBack={handleBack}
             />
           )}
           {currentStep === 'platform-tour' && (
-            <PlatformTourStep 
-              data={data}
-              onUpdate={updateData}
+            <PlatformTourStep
+              data={data.platformTour}
+              onUpdate={updateStepData('platformTour')}
               onNext={handleNext}
               onBack={handleBack}
             />
           )}
           {currentStep === 'data-usage' && (
-            <DataUsageStep 
-              data={data}
-              onUpdate={updateData}
+            <DataUsageStep
+              data={data.dataUsage}
+              onUpdate={updateStepData('dataUsage')}
               onNext={handleNext}
               onBack={handleBack}
             />
           )}
           {currentStep === 'auth-setup' && (
-            <AuthSetupStep 
-              data={data}
-              onUpdate={updateData}
+            <AuthSetupStep
+              data={data.auth}
+              onUpdate={updateStepData('auth')}
               onNext={handleNext}
               onBack={handleBack}
             />
           )}
           {currentStep === 'profile-setup' && (
-            <ProfileSetupStep 
-              data={data}
-              onUpdate={updateData}
+            <ProfileSetupStep
+              data={data.profile}
+              onUpdate={updateStepData('profile')}
               onNext={handleNext}
               onBack={handleBack}
             />
           )}
           {currentStep === 'first-experience' && (
-            <FirstExperienceStep 
-              data={data}
-              onUpdate={updateData}
+            <FirstExperienceStep
+              data={data.firstExperience}
+              onUpdate={updateStepData('firstExperience')}
               onNext={handleNext}
               onBack={handleBack}
             />
           )}
           {currentStep === 'complete' && (
-            <CompleteStep 
+            <CompleteStep
               data={data}
-              onComplete={handleComplete}
+              onComplete={completeOnboarding}
               onBack={handleBack}
             />
           )}
         </div>
       </div>
     </OnboardingContext.Provider>
-  )
+  );
+}
+
+/** Helpers */
+
+function maybePushCompleted(list: OnboardingDataHybrid['completedSteps'], step: StepSlug) {
+  const curr = Array.isArray(list) ? list : [];
+  return curr.includes(step) ? curr : [...curr, step];
 }
 
 export default function EnhancedOnboardingFlow() {
-  return <EnhancedOnboardingFlowInner />
+  return <EnhancedOnboardingFlowInner />;
 }
 

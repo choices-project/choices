@@ -10,7 +10,7 @@ import {
 
 // Enhanced logout action with security features
 export const logout = createSecureServerAction(
-  async (formData: FormData, context: ServerActionContext) => {
+  async (context: ServerActionContext) => {
     // Get authenticated user for logging
     const user = await getAuthenticatedUser(context)
     

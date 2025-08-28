@@ -15,8 +15,8 @@ import {
 interface DeviceFlowAuthProps {
   provider: 'google' | 'github' | 'facebook' | 'twitter' | 'linkedin' | 'discord'
   redirectTo?: string
-  onSuccess?: (user: any) => void
-  onError?: (error: string) => void
+  onSuccess?: () => void
+  onError?: () => void
   className?: string
 }
 
@@ -73,6 +73,56 @@ export default function DeviceFlowAuth({
     return () => clearInterval(timer)
   }, [deviceFlowData, timeRemaining])
 
+  const startPolling = useCallback((deviceCode: string, interval: number) => {
+    setIsPolling(true)
+    
+    const intervalId = setInterval(async () => {
+      try {
+        const response = await fetch('/api/auth/device-flow/verify', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ deviceCode }),
+        })
+
+        const data = await response.json()
+
+        if (data.success && data.session) {
+          clearInterval(intervalId)
+          setPollingInterval(null)
+          setIsPolling(false)
+          setIsSuccess(true)
+          
+          // Call success callback
+          onSuccess?.()
+          
+          // Redirect after a short delay
+          setTimeout(() => {
+            router.push(redirectTo)
+          }, 1500)
+          
+          return
+        }
+
+        // Continue polling if not successful
+        if (data.error && data.error !== 'Device flow still pending') {
+          clearInterval(intervalId)
+          setPollingInterval(null)
+          setIsPolling(false)
+          setError(data.error)
+        }
+
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : String(err)
+        logger.error('Polling error:', new Error(errorMessage))
+        // Don't stop polling on network errors, just log them
+      }
+    }, interval * 1000)
+
+    setPollingInterval(intervalId)
+  }, [onSuccess, router, redirectTo])
+
   const startDeviceFlow = useCallback(async () => {
     setIsLoading(true)
     setError('')
@@ -116,60 +166,11 @@ export default function DeviceFlowAuth({
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to start device flow'
       setError(errorMessage)
-      onError?.(errorMessage)
+              onError?.()
     } finally {
       setIsLoading(false)
     }
-  }, [provider, redirectTo, onError])
-
-  const startPolling = useCallback((deviceCode: string, interval: number) => {
-    setIsPolling(true)
-    
-    const intervalId = setInterval(async () => {
-      try {
-        const response = await fetch('/api/auth/device-flow/verify', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ deviceCode }),
-        })
-
-        const data = await response.json()
-
-        if (data.success && data.session) {
-          clearInterval(intervalId)
-          setPollingInterval(null)
-          setIsPolling(false)
-          setIsSuccess(true)
-          
-          // Call success callback
-          onSuccess?.(data.session.user)
-          
-          // Redirect after a short delay
-          setTimeout(() => {
-            router.push(redirectTo)
-          }, 1500)
-          
-          return
-        }
-
-        // Continue polling if not successful
-        if (data.error && data.error !== 'Device flow still pending') {
-          clearInterval(intervalId)
-          setPollingInterval(null)
-          setIsPolling(false)
-          setError(data.error)
-        }
-
-      } catch (err) {
-        logger.error('Polling error:', err)
-        // Don't stop polling on network errors, just log them
-      }
-    }, interval * 1000)
-
-    setPollingInterval(intervalId)
-  }, [onSuccess, router, redirectTo])
+  }, [provider, redirectTo, onError, startPolling])
 
   const copyToClipboard = async () => {
     if (!deviceFlowData) return
@@ -179,7 +180,8 @@ export default function DeviceFlowAuth({
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     } catch (err) {
-      logger.error('Failed to copy:', err)
+      const errorMessage = err instanceof Error ? err.message : String(err)
+      logger.error('Failed to copy:', new Error(errorMessage))
     }
   }
 

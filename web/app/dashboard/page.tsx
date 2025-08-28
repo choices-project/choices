@@ -20,6 +20,8 @@ async function getUserFromCookies() {
     const decodedToken = jwt.verify(sessionToken, process.env.JWT_SECRET!) as any
     return decodedToken
   } catch (error) {
+    // Token verification failed - likely expired or invalid
+    console.error('Token verification failed:', error instanceof Error ? error : new Error(String(error)));
     return null
   }
 }

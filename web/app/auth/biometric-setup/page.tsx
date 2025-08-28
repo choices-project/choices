@@ -37,7 +37,9 @@ function BiometricSetupContent() {
         setIsAvailable(available)
       }
     } catch (error) {
-      logger.error('Error checking biometric support:', error)
+      // narrow 'unknown' → Error
+      const err = error instanceof Error ? error : new Error(String(error));
+      logger.error('Error checking biometric support:', err);
       setError('Failed to check biometric support')
     }
   }

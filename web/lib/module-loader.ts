@@ -32,7 +32,7 @@ export class ModuleLoader {
   private modules: Map<string, ModuleConfig> = new Map();
   private loadedModules: Map<string, LoadedModule> = new Map();
   private loadingPromises: Map<string, Promise<any>> = new Map();
-  private eventListeners: Array<(_event: 'module-loaded' | 'module-failed' | 'module-unloaded', _moduleId: string) => void> = [];
+  private eventListeners: Array<() => void> = [];
 
   constructor() {
     this.initializeModules();
@@ -270,7 +270,7 @@ export class ModuleLoader {
       };
 
       this.loadedModules.set(moduleId, loadedModule);
-      this.notifyListeners('module-loaded', moduleId);
+              this.notifyListeners();
       return loadedModule;
     } catch (error) {
       const loadTime = Date.now() - startTime;
@@ -284,7 +284,7 @@ export class ModuleLoader {
       };
 
       this.loadedModules.set(moduleId, loadedModule);
-      this.notifyListeners('module-failed', moduleId);
+              this.notifyListeners();
       return loadedModule;
     }
   }
@@ -429,14 +429,14 @@ export class ModuleLoader {
   /**
    * Add event listener for module events
    */
-  addEventListener(listener: (_event: 'module-loaded' | 'module-failed' | 'module-unloaded', _moduleId: string) => void): void {
+  addEventListener(listener: () => void): void {
     this.eventListeners.push(listener);
   }
 
   /**
    * Remove event listener
    */
-  removeEventListener(listener: (_event: 'module-loaded' | 'module-failed' | 'module-unloaded', _moduleId: string) => void): void {
+  removeEventListener(listener: () => void): void {
     const index = this.eventListeners.indexOf(listener);
     if (index > -1) {
       this.eventListeners.splice(index, 1);
@@ -446,13 +446,13 @@ export class ModuleLoader {
   /**
    * Notify all event listeners
    */
-  private notifyListeners(_event: 'module-loaded' | 'module-failed' | 'module-unloaded', _moduleId: string): void {
+  private notifyListeners(): void {
     this.eventListeners.forEach(listener => {
       try {
-        // Use the event and moduleId parameters to provide detailed event information
-        listener(_event, _moduleId);
-        // devLog(`Module event: ${_event} for module: ${_moduleId}`); // devLog is not defined in this file
-      } catch (error) {
+        // Notify listeners of module event
+        listener();
+        // devLog(`Module event: ${event} for module: ${moduleId}`); // devLog is not defined in this file
+      } catch (_error) {
         // devLog('Error in module event listener:', error); // devLog is not defined in this file
       }
     });

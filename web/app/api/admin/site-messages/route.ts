@@ -128,7 +128,7 @@ export const DELETE = withAuth(async (request: NextRequest, context: AuthContext
   }
 }, { requireAdmin: true })
 
-async function getSiteMessages(supabase: any, includeInactive: boolean = false) {
+async function getSiteMessages(includeInactive: boolean = false) {
   try {
     // Use REST API directly to bypass PostgREST cache issues
     let url = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/site_messages?select=*&order=created_at.desc`

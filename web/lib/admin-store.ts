@@ -132,7 +132,7 @@ export const useAdminStore = create<AdminStore>()(
         const currentState = get();
         const newState = !currentState.sidebarCollapsed;
         
-        set((state) => ({ 
+        set(() => ({ 
           sidebarCollapsed: newState 
         }));
         
@@ -173,7 +173,7 @@ export const useAdminStore = create<AdminStore>()(
           ].slice(0, 10), // Keep only last 10 notifications
         }));
         
-        // Log notification creation for monitoring
+                  // Log notification creation for monitoring
         logger.info('Admin notification created', { 
           action: 'add_notification', 
           type: notification.type,
@@ -226,8 +226,6 @@ export const useAdminStore = create<AdminStore>()(
       
       // Data Actions
       updateTrendingTopics: (topics: TrendingTopic[]) => {
-        const currentState = get();
-        
         set({ trendingTopics: topics });
         
         // Log topics update for monitoring
@@ -248,8 +246,6 @@ export const useAdminStore = create<AdminStore>()(
       },
       
       updateGeneratedPolls: (polls: GeneratedPoll[]) => {
-        const currentState = get();
-        
         set({ generatedPolls: polls });
         
         // Log polls update for monitoring

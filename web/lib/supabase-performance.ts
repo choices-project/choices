@@ -267,6 +267,7 @@ export class QueryOptimizer {
       : ''
 
     return {
+      table,
       select: selectFields,
       where: whereClause,
       optimized: true
@@ -274,7 +275,7 @@ export class QueryOptimizer {
   }
 
   // Optimize INSERT queries with batch operations
-  optimizeInsert(table: string, data: any[]) {
+  optimizeInsert(_table: string, data: any[]) {
     if (data.length === 1) {
       return { single: true, data: data[0] }
     }
@@ -293,6 +294,7 @@ export class QueryOptimizer {
     const whereFields = Object.keys(conditions)
 
     return {
+      table,
       updateFields,
       whereFields,
       optimized: true
@@ -440,7 +442,7 @@ export class OptimizedSupabaseClient {
   }
 
   // Optimized table operations
-  async from<T = any>(table: string) {
+  async from<_T = any>(table: string) {
     return {
       select: async (fields: string[] = ['*'], cacheKey?: string) => {
         const optimized = queryOptimizer.optimizeSelect(table, fields)
@@ -465,7 +467,7 @@ export class OptimizedSupabaseClient {
             const result = await this.client.from(table).insert(data)
             return result
           },
-          cacheKey
+          cacheKey || `insert:${table}:${optimized.batch ? 'batch' : 'single'}`
         )
       },
 
@@ -484,7 +486,7 @@ export class OptimizedSupabaseClient {
             const result = await query
             return result
           },
-          cacheKey
+          cacheKey || `update:${table}:${optimized.updateFields.length}`
         )
       },
 

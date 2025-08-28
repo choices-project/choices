@@ -652,7 +652,7 @@ export class MediaBiasAnalysisService {
     };
   }
 
-  private analyzeDifferences(mediaPoll: MediaPoll, ourPoll: any, comparison: any): any {
+  private analyzeDifferences(mediaPoll: MediaPoll, _ourPoll: any, comparison: any): any {
     const propagandaIndicators = this.identifyPropagandaIndicators(mediaPoll, comparison);
     const biasScore = comparison.biasDetection.overallBias;
     const manipulationTechniques = comparison.biasDetection.propagandaTechniques;
@@ -725,7 +725,7 @@ export class MediaBiasAnalysisService {
     return commonWords.length / Math.max(words1.length, words2.length);
   }
 
-  private identifyPropagandaIndicators(mediaPoll: MediaPoll, comparison: any): string[] {
+  private identifyPropagandaIndicators(_mediaPoll: MediaPoll, comparison: any): string[] {
     const indicators: string[] = [];
 
     if (comparison.questionAlignment < 0.7) {
@@ -805,7 +805,7 @@ export class MediaBiasAnalysisService {
     return data ? this.mapMediaPollFromDB(data) : null;
   }
 
-  private async getOurPoll(id: string): Promise<any> {
+  private async getOurPoll(_id: string): Promise<any> {
     // This would fetch from our polls table
     return null;
   }

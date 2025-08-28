@@ -36,8 +36,10 @@ export default function LoginPage() {
           // In a real implementation, you would check for existing credentials
           setBiometricAvailable(true)
         }
-      } catch (error) {
-        logger.error('Error checking biometric support:', error)
+          } catch (error) {
+      // narrow 'unknown' → Error
+      const err = error instanceof Error ? error : new Error(String(error));
+      logger.error('Error checking biometric support:', err)
         setBiometricSupported(false)
         setBiometricAvailable(false)
       }
@@ -74,7 +76,9 @@ export default function LoginPage() {
         setError(result.error || 'Login failed. Please try again.')
       }
     } catch (error) {
-      logger.error('Login error:', error)
+      // narrow 'unknown' → Error
+      const err = error instanceof Error ? error : new Error(String(error));
+      logger.error('Login error:', err)
       setError('Network error. Please try again.')
     } finally {
       setLoading(false)
@@ -108,7 +112,9 @@ export default function LoginPage() {
         }, 1000)
       }
     } catch (error) {
-      logger.error('Biometric login error:', error)
+      // narrow 'unknown' → Error
+      const err = error instanceof Error ? error : new Error(String(error));
+      logger.error('Biometric login error:', err)
       setError('Biometric authentication failed. Please try again.')
     } finally {
       setLoading(false)

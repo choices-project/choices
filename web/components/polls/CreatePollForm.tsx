@@ -108,7 +108,7 @@ export const CreatePollForm: React.FC<CreatePollFormProps> = ({
     if (formData.options.length > 2) {
       setFormData(prev => ({
         ...prev,
-        options: prev.options.filter((any, i: any) => i !== index)
+        options: prev.options.filter((_, i: any) => i !== index)
       }));
     }
   };

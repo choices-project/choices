@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect, Suspense } from 'react'
-import { logger } from '@/lib/logger';
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/utils/supabase/client'
 import { CheckCircle2, AlertCircle, Loader2 } from 'lucide-react'

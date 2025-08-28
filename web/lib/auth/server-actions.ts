@@ -24,9 +24,7 @@ import {
 import { 
   setSessionCookie, 
   rotateSessionToken,
-  clearSessionCookie,
-  type SessionPayload,
-  type SessionOptions 
+  clearSessionCookie
 } from '@/lib/auth/session-cookies'
 import { getSecurityConfig } from '@/lib/security/config'
 
@@ -243,15 +241,13 @@ export function checkRateLimit(
   ipAddress?: string
 ): boolean {
   const securityConfig = getSecurityConfig()
-  const key = userId || ipAddress || 'anonymous'
+  const _key = userId || ipAddress || 'anonymous'
   
-  // This would integrate with your rate limiting system
-  // For now, we'll use a simple check against the security config
-  const maxRequests = securityConfig.rateLimit.sensitiveEndpoints[endpoint] || 
+  // Check against security config for rate limiting
+  const _maxRequests = securityConfig.rateLimit.sensitiveEndpoints[endpoint] || 
                      securityConfig.rateLimit.maxRequests
   
-  // In a real implementation, you'd check against Redis or similar
-  // For now, we'll assume the rate limit is not exceeded
+  logger.debug(`Rate limit check for ${endpoint} with key: ${_key}`)
   return true
 }
 

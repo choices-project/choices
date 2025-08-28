@@ -31,9 +31,11 @@ interface Poll {
   isActive: boolean
 }
 
+type OnVote = (choice: number) => Promise<void> | void;
+
 interface PWAVotingInterfaceProps {
   poll: Poll
-  onVote: (choice: number) => Promise<void> | void
+  onVote: OnVote
   showResults?: boolean
   offlineMode?: boolean
 }

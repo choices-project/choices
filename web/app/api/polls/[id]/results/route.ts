@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic';
 
 // GET /api/polls/[id]/results - Get aggregated poll results only
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
@@ -40,7 +40,7 @@ export async function GET(
 
     // Calculate aggregated results (all zeros for now since no votes exist)
     const aggregatedResults = poll.options ? 
-      poll.options.reduce((acc: any, option: any, index: any) => {
+      poll.options.reduce((acc: any, _option: any, index: any) => {
         acc[`option_${index + 1}`] = 0; // Default to 0 until we can count votes
         return acc;
       }, {} as Record<string, number>) : {};

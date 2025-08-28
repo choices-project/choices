@@ -17,12 +17,12 @@ type LazyProps<P> = {
 
 /** Minimal, local error boundary (replace with your shared one if you have it) */
 class InlineErrorBoundary extends React.Component<
-  { fallback?: React.ReactNode | ((e: unknown) => React.ReactNode); children: React.ReactNode },
+  { fallback?: React.ReactNode | ((_e: unknown) => React.ReactNode); children: React.ReactNode },
   { error: unknown }
 > {
   state = { error: null as unknown };
   static getDerivedStateFromError(error: unknown) { return { error }; }
-  componentDidCatch(error: unknown) {
+  componentDidCatch(_error: unknown) {
     // optional: route through your logger here
     // logger.error('Lazy component crashed', { error });
   }
@@ -30,7 +30,7 @@ class InlineErrorBoundary extends React.Component<
     const { error } = this.state;
     if (error) {
       const { fallback } = this.props;
-      if (typeof fallback === 'function') return (fallback as (e: unknown) => React.ReactNode)(error);
+      if (typeof fallback === 'function') return (fallback as (_e: unknown) => React.ReactNode)(error);
       return fallback ?? <div role="alert">Something went wrong.</div>;
     }
     return this.props.children;
@@ -72,13 +72,13 @@ export function withLazy<P extends Record<string, unknown>>(loader: () => Promis
 /** Performance tracking wrapper */
 export function withPerformanceTracking<P extends Record<string, unknown>>(
   WrappedComponent: React.ComponentType<P>,
-  componentName: string
+  _componentName: string
 ) {
   return function PerformanceTrackedComponent(props: P) {
-    const startTime = React.useRef(Date.now());
-    
     React.useEffect(() => {
-      const duration = Date.now() - startTime.current;
+      // Performance tracking disabled - uncomment to enable logging
+      // const startTime = Date.now();
+      // const duration = Date.now() - startTime;
       // logger.debug('Component render performance', { componentName, duration });
     });
 
@@ -103,29 +103,23 @@ export function createMemoizedComponent<P extends Record<string, unknown>>(
 }
 
 /** Performance tracker component */
-function PerformanceTracker({ componentName, children }: { componentName: string; children: React.ReactNode }) {
-  const startTime = React.useRef(Date.now());
-  
+function PerformanceTracker({ componentName: _componentName, children }: { componentName: string; children: React.ReactNode }) {
   React.useEffect(() => {
-    const duration = Date.now() - startTime.current;
+    // Performance tracking disabled - uncomment to enable logging
+    // const startTime = Date.now();
+    // const duration = Date.now() - startTime;
     // logger.debug('Component render performance', { componentName, duration });
   });
 
   return <>{children}</>;
 }
 
-/** Hook for creating memoized callbacks with dependency tracking */
-export function useMemoizedCallback<T extends (...args: any[]) => any>(
-  callback: T,
-  deps: React.DependencyList
-): T {
-  return React.useCallback(callback, deps);
-}
-
-/** Hook for creating memoized values with dependency tracking */
-export function useMemoizedValue<T>(
-  factory: () => T,
-  deps: React.DependencyList
-): T {
-  return React.useMemo(factory, deps);
-}
+/**
+ * Performance optimization utilities
+ * 
+ * Note: These utilities have been removed in favor of direct React hook usage
+ * to maintain proper dependency tracking and ESLint compliance.
+ * 
+ * Use React.useCallback and React.useMemo directly in your components
+ * with explicit dependency arrays for better maintainability.
+ */

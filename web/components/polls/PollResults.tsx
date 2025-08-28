@@ -249,7 +249,7 @@ export default function PollResults({ pollId }: PollResultsProps) {
                   paddingAngle={5}
                   dataKey="value"
                 >
-                  {Object.entries(poll.demographics.ageGroups).map((entry, index: any) => (
+                  {Object.entries(poll.demographics.ageGroups).map((_, index: any) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>

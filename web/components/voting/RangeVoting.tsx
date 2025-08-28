@@ -14,7 +14,7 @@ interface RangeVotingProps {
   title: string
   description?: string
   options: PollOption[]
-  onVote: (pollId: string, ratings: Record<string, number>) => Promise<void>
+  onVote: (...[, ratings]: [string, Record<string, number>]) => Promise<void>
   isVoting: boolean
   hasVoted?: boolean
   userVote?: Record<string, number>

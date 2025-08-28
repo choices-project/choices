@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { User, Eye, EyeOff, ArrowRight, ArrowLeft, CheckCircle } from 'lucide-react'
+import { User, Eye, ArrowRight, ArrowLeft, CheckCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -10,14 +10,20 @@ import { Label } from '@/components/ui/label'
 
 interface ProfileSetupStepProps {
   data: any
-  onUpdate: (updates: any) => void
+  onUpdate: (updates: {
+    displayName?: string
+    profileVisibility?: string
+    emailNotifications?: boolean
+    pushNotifications?: boolean
+    profileSetupCompleted?: boolean
+  }) => void
   onNext: () => void
   onBack: () => void
 }
 
 type ProfileVisibility = 'public' | 'private' | 'friends_only' | 'anonymous'
 
-export default function ProfileSetupStep({ data, onUpdate, onNext, onBack }: ProfileSetupStepProps) {
+export default function ProfileSetupStep({ data, onUpdate, onNext }: ProfileSetupStepProps) {
   const [displayName, setDisplayName] = useState(data.displayName || '')
   const [profileVisibility, setProfileVisibility] = useState<ProfileVisibility>(data.profileVisibility || 'public')
   const [emailNotifications, setEmailNotifications] = useState(data.emailNotifications !== false)

@@ -71,7 +71,7 @@ export default function AdminDashboard() {
           systemHealth: systemData.health.systemHealth
         })
       } else {
-        logger.error('Failed to fetch admin stats:', response.status)
+        logger.error('Failed to fetch admin stats:', new Error(`HTTP ${response.status}`))
         // Fall back to mock data if API fails
         setStats({
           totalUsers: 0,
@@ -83,7 +83,9 @@ export default function AdminDashboard() {
         })
       }
     } catch (error) {
-      logger.error('Error loading admin stats:', error)
+      // narrow 'unknown' → Error
+      const err = error instanceof Error ? error : new Error(String(error));
+      logger.error('Error loading admin stats:', err)
       // Fall back to mock data if API fails
       setStats({
         totalUsers: 0,

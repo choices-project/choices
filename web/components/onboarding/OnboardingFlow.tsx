@@ -23,10 +23,19 @@ interface OnboardingData {
   avatar?: string
   bio?: string
   
+  // Welcome step data
+  welcomeStarted?: boolean
+  welcomeCompleted?: boolean
+  userPreferences?: {
+    theme?: string
+    language?: string
+  }
+  
   // Values & interests
   primaryConcerns: string[]
   communityFocus: string[]
   participationStyle: 'observer' | 'contributor' | 'leader'
+  valuesCompleted?: boolean
   
   // Demographics (optional)
   demographics: {
@@ -35,6 +44,7 @@ interface OnboardingData {
     employment?: string
     incomeRange?: string
   }
+  demographicsCompleted?: boolean
   
   // Privacy settings
   privacy: {
@@ -43,13 +53,17 @@ interface OnboardingData {
     shareParticipation: boolean
     allowAnalytics: boolean
   }
+  privacyCompleted?: boolean
+  
+  // Auth step data
+  authCompleted?: boolean
 }
 
 // Create context for sharing onboarding state
 const OnboardingContext = createContext<{
   currentStep: OnboardingStep;
   onboardingData: OnboardingData;
-  updateData: (updates: Partial<OnboardingData>) => void;
+  updateData: (_updates: Partial<OnboardingData>) => void;
   setCurrentStep: (step: OnboardingStep) => void;
   isLoading: boolean;
   error: string | null;
@@ -70,12 +84,12 @@ const OnboardingContext = createContext<{
   updateData: (_updates: Partial<OnboardingData>) => {
     // This is a default implementation that will be overridden
     // The underscore prefix indicates this parameter is intentionally unused in the default context
-    logger.warn('OnboardingContext updateData called before initialization')
+    devLog('OnboardingContext updateData called before initialization')
   },
   setCurrentStep: (_step: OnboardingStep) => {
     // This is a default implementation that will be overridden
     // The underscore prefix indicates this parameter is intentionally unused in the default context
-    logger.warn('OnboardingContext setCurrentStep called before initialization')
+    devLog('OnboardingContext setCurrentStep called before initialization')
   },
   isLoading: false,
   error: null
@@ -107,8 +121,8 @@ function OnboardingFlowInner() {
   const supabase = useMemo(() => createClient(), [])
 
   // Use useCallback for the updateData function to prevent unnecessary re-renders
-  const updateData = useCallback((updates: Partial<OnboardingData>) => {
-    setOnboardingData(prev => ({ ...prev, ...updates }))
+  const updateData = useCallback((_updates: Partial<OnboardingData>) => {
+    setOnboardingData(prev => ({ ...prev, ..._updates }))
   }, [])
 
   // Check authentication status and handle step from URL
@@ -196,8 +210,12 @@ function OnboardingFlowInner() {
             <Suspense fallback={<div>Loading...</div>}>
               {currentStep === 'welcome' && (
                 <WelcomeStep 
-                  data={onboardingData}
-                  onUpdate={updateData}
+                  data={{
+                    welcomeStarted: onboardingData.welcomeStarted || false,
+                    welcomeCompleted: onboardingData.welcomeCompleted || false,
+                    userPreferences: onboardingData.userPreferences || {}
+                  }}
+                  onUpdate={(updates) => updateData({ ...updates })}
                   onNext={handleNext}
                 />
               )}

@@ -69,10 +69,12 @@ export default function SiteMessagesPage() {
         const data = await response.json()
         setMessages(data.messages || [])
       } else {
-        logger.error('Failed to fetch messages:', response.status)
+        logger.error('Failed to fetch messages:', new Error(`HTTP ${response.status}`))
       }
     } catch (error) {
-      logger.error('Error fetching messages:', error)
+      // narrow 'unknown' → Error
+      const err = error instanceof Error ? error : new Error(String(error));
+      logger.error('Error fetching messages:', err)
     } finally {
       setLoading(false)
     }
@@ -104,10 +106,12 @@ export default function SiteMessagesPage() {
         resetForm()
         setShowForm(false)
       } else {
-        logger.error('Failed to save message:', response.status)
+        logger.error('Failed to save message:', new Error(`HTTP ${response.status}`))
       }
     } catch (error) {
-      logger.error('Error saving message:', error)
+      // narrow 'unknown' → Error
+      const err = error instanceof Error ? error : new Error(String(error));
+      logger.error('Error saving message:', err)
     }
   }
 
@@ -122,10 +126,12 @@ export default function SiteMessagesPage() {
       if (response.ok) {
         await fetchMessages()
       } else {
-        logger.error('Failed to delete message:', response.status)
+        logger.error('Failed to delete message:', new Error(`HTTP ${response.status}`))
       }
     } catch (error) {
-      logger.error('Error deleting message:', error)
+      // narrow 'unknown' → Error
+      const err = error instanceof Error ? error : new Error(String(error));
+      logger.error('Error deleting message:', err)
     }
   }
 

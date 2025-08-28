@@ -14,7 +14,7 @@ interface RankedChoiceVotingProps {
   title: string
   description?: string
   options: PollOption[]
-  onVote: (pollId: string, rankings: string[]) => Promise<void>
+  onVote: (...[, rankings]: [string, string[]]) => Promise<void>
   isVoting: boolean
   hasVoted?: boolean
   userVote?: string[]

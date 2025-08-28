@@ -3,9 +3,7 @@ import {
   PollWizardState, 
   PollWizardData, 
   PollSettings, 
-  PollCategory,
-  PollTemplate,
-  StepValidation 
+  PollTemplate
 } from '../types/poll-templates';
 
 const DEFAULT_SETTINGS: PollSettings = {

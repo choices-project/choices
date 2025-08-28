@@ -163,7 +163,7 @@ export const TrendingTopicsPage: React.FC = () => {
         
         {isLoading ? (
           <div className="space-y-4">
-            {[...Array(5)].map((any, i: any) => (
+            {[...Array(5)].map((_, i: any) => (
               <div key={i} className="animate-pulse">
                 <div className="h-16 bg-gray-200 rounded"></div>
               </div>

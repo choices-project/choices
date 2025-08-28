@@ -44,7 +44,9 @@ export const GET = withAuth(async (request: NextRequest, _context) => {
     })
 
   } catch (error) {
-    logger.error('Analytics API error:', error)
+    // narrow 'unknown' → Error
+    const err = error instanceof Error ? error : new Error(String(error));
+    logger.error('Analytics API error:', err)
     
     return NextResponse.json(
       { message: 'Internal server error' },

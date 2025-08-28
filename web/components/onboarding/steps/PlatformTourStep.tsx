@@ -1,21 +1,21 @@
 'use client'
 
 import { useState } from 'react'
-import { Vote, BarChart3, Users, Settings, ArrowRight, ArrowLeft, Play, Eye, Shield } from 'lucide-react'
+import { Vote, BarChart3, Users, Settings, ArrowRight, ArrowLeft, Eye, Shield } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 
 interface PlatformTourStepProps {
   data: any
-  onUpdate: (updates: any) => void
+  onUpdate: (_updates: any) => void
   onNext: () => void
   onBack: () => void
 }
 
 type TourSection = 'overview' | 'polls' | 'voting' | 'results' | 'analytics'
 
-export default function PlatformTourStep({ data, onUpdate, onNext, onBack }: PlatformTourStepProps) {
+export default function PlatformTourStep({ onUpdate, onNext }: PlatformTourStepProps) {
   const [currentSection, setCurrentSection] = useState<TourSection>('overview')
   const [completedSections, setCompletedSections] = useState<TourSection[]>([])
 

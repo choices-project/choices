@@ -372,7 +372,7 @@ export class PollNarrativeService {
     }
   }
 
-  async voteOnCommunityFact(factId: string, userId: string, voteType: 'helpful' | 'notHelpful' | 'verified' | 'disputed'): Promise<boolean> {
+  async voteOnCommunityFact(factId: string, _userId: string, voteType: 'helpful' | 'notHelpful' | 'verified' | 'disputed'): Promise<boolean> {
     try {
       // Get current fact
       if (!this.supabase) { throw new Error('Supabase client not available'); }

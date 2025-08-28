@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { logger } from '@/lib/logger';
 import { TypeGuardError, assertIsRecord } from '@/lib/types/guards';
-import { createClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
 type TableShape = { table: string; columns: string[] };
 
@@ -11,7 +11,7 @@ const REQUIRED: TableShape[] = [
   { table: 'user_profiles', columns: ['id', 'email', 'username'] },
 ];
 
-async function getColumns(supabase: ReturnType<typeof createClient>, table: string): Promise<string[]> {
+async function getColumns(supabase: SupabaseClient, table: string): Promise<string[]> {
   const { data, error } = await supabase
     .from('information_schema.columns')
     .select('column_name')

@@ -495,7 +495,8 @@ export async function authenticateBiometric(username: string): Promise<WebAuthnR
       throw new Error(errorData.message || 'Authentication failed');
     }
 
-    const result = await verificationResponse.json();
+    // Verify the response was successful
+    await verificationResponse.json();
 
     return {
       success: true,

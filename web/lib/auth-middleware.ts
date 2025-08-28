@@ -16,9 +16,11 @@ export interface AuthContext {
   supabase: any
 }
 
+
+
 export type AuthMiddleware = (
-  _request: NextRequest,
-  _context: AuthContext
+  request: NextRequest,
+  context?: AuthContext
 ) => Promise<NextResponse | null>
 
 export type TrustTier = 'T1' | 'T2' | 'T3'
@@ -39,7 +41,7 @@ export function createAuthMiddleware(options: {
     allowPublic = false
   } = options
 
-  return async (_request: NextRequest): Promise<NextResponse | null> => {
+  return async (_request: NextRequest, _context?: AuthContext): Promise<NextResponse | null> => {
     try {
       // Create Supabase client
       const cookieStore = await cookies()
@@ -294,7 +296,7 @@ export function combineMiddleware(...middlewares: ((request: NextRequest) => Pro
 /**
  * Utility function to get user from request
  */
-export async function getUserFromRequest(request: NextRequest): Promise<AuthUser | null> {
+export async function getUserFromRequest(_request: NextRequest): Promise<AuthUser | null> {
   try {
     const cookieStore = await cookies()
     const supabase = createClient(cookieStore)

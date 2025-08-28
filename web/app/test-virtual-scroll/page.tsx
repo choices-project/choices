@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { logger } from '@/lib/logger';
-import VirtualScroll from '@/components/performance/VirtualScroll'
+import { VirtualScrollWithSearch } from '@/components/performance/VirtualScroll'
 
 export default function TestVirtualScrollPage() {
   const [testData, setTestData] = useState<any[]>([])
@@ -24,12 +24,10 @@ export default function TestVirtualScrollPage() {
 
   const handleSearchChange = (value: string) => {
     setSearchQuery(value)
-    logger.info('Search query:', value)
+    logger.info('Search query:', { query: value })
   }
 
-  const handleLoadMore = () => {
-    logger.info('Loading more items...')
-  }
+
 
   const virtualScrollProps = {
     containerHeight: 400,
@@ -55,12 +53,16 @@ export default function TestVirtualScrollPage() {
 
       {/* Virtual scroll container */}
       <div className="bg-white rounded-lg shadow p-6">
-        <VirtualScroll
+        <VirtualScrollWithSearch
           items={testData}
-          virtualScrollProps={virtualScrollProps}
+          {...virtualScrollProps}
+          searchTerm={searchQuery}
+          searchFilter={(item: any, term: string) => 
+            item.title.toLowerCase().includes(term.toLowerCase()) ||
+            item.description.toLowerCase().includes(term.toLowerCase())
+          }
           onSearchChange={handleSearchChange}
-          onLoadMore={handleLoadMore}
-          renderItem={(item) => (
+          renderItem={(item: any) => (
             <div
               key={item.id}
               data-testid="virtual-scroll-item"
