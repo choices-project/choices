@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react'
 import Image from 'next/image';
-import { imageOptimization } from '@/lib/performance/component-optimization'
 
 interface OptimizedImageProps {
   src: string
@@ -54,8 +53,8 @@ export default function OptimizedImage({
 
     // Check if browser supports WebP
     const supportsWebP = typeof window !== 'undefined' && 
-      window.createImageBitmap && 
-      window.fetch
+      typeof window.createImageBitmap === 'function' && 
+      typeof window.fetch === 'function'
 
     if (!supportsWebP) return originalSrc
 
@@ -161,8 +160,8 @@ export default function OptimizedImage({
     height,
     sizes: generateSizes(),
     srcSet: generateResponsiveSrcSet(src),
-    loading: priority ? 'eager' : 'lazy',
-    decoding: 'async',
+          loading: priority ? 'eager' as const : 'lazy' as const,
+      decoding: 'async' as const,
     onLoad: handleLoad,
     onError: handleError,
     onClick,
@@ -405,7 +404,7 @@ export function OptimizedPicture({
         width={width}
         height={height}
         loading="lazy"
-        decoding="async"
+        decoding={"async" as "async"}
         onLoad={() => {
           setIsLoaded(true)
           onLoad?.()
@@ -422,9 +421,4 @@ export function OptimizedPicture({
   )
 }
 
-// Export all components
-export {
-  OptimizedImage,
-  OptimizedBackgroundImage,
-  OptimizedPicture
-}
+// All components are already exported individually above

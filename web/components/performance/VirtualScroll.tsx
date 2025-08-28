@@ -1,7 +1,7 @@
 'use client'
 
-import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
-import { performanceUtils } from '@/lib/performance/component-optimization'
+import React, { useState, useEffect, useRef, useCallback, useMemo, forwardRef, useImperativeHandle } from 'react'
+import { performanceUtils } from '@/lib/performance'
 
 interface VirtualScrollProps<T> {
   items: T[]
@@ -11,10 +11,18 @@ interface VirtualScrollProps<T> {
   overscan?: number
   className?: string
   onScroll?: (scrollTop: number) => void
-  onVisibleItemsChange?: (visibleItems: T[]) => void
+  onVisibleItemsChange?: () => void
 }
 
-export default function VirtualScroll<T>({
+interface VirtualScrollRef {
+  scrollToItem: (index: number) => void
+  scrollToTop: () => void
+  scrollToBottom: () => void
+  scrollTop: number
+  totalHeight: number
+}
+
+const VirtualScroll = forwardRef<VirtualScrollRef, VirtualScrollProps<any>>(<T,>({
   items,
   itemHeight,
   containerHeight,
@@ -23,59 +31,68 @@ export default function VirtualScroll<T>({
   className = '',
   onScroll,
   onVisibleItemsChange
-}: VirtualScrollProps<T>) {
+}: VirtualScrollProps<T>, ref: React.Ref<VirtualScrollRef>) => {
   const [scrollTop, setScrollTop] = useState(0)
   const containerRef = useRef<HTMLDivElement>(null)
   const scrollElementRef = useRef<HTMLDivElement>(null)
 
+  // Memoize expensive config extracted from props
+  const vs = useMemo(() => ({
+    itemHeight,
+    containerHeight,
+    overscan,
+    itemsLength: items.length
+  }), [itemHeight, containerHeight, overscan, items.length])
+
   // Calculate visible items using performance utilities
   const visibleItems = useMemo(() => {
-    const { startIndex, endIndex, offsetY } = performanceUtils.virtualScroll.getVisibleItems(
-      items.length,
-      itemHeight,
-      containerHeight,
-      scrollTop
+    const { startIndex, endIndex } = performanceUtils.virtualScroll.getVisibleItems(
+      items,
+      vs.itemHeight,
+      vs.containerHeight,
+      scrollTop,
+      vs.overscan
     )
 
-    // Add overscan
-    const overscanStart = Math.max(0, startIndex - overscan)
-    const overscanEnd = Math.min(items.length, endIndex + overscan)
-
     return {
-      startIndex: overscanStart,
-      endIndex: overscanEnd,
-      offsetY: overscanStart * itemHeight,
-      visibleItems: items.slice(overscanStart, overscanEnd)
+      startIndex,
+      endIndex,
+      offsetY: startIndex * vs.itemHeight,
+      visibleItems: items.slice(startIndex, endIndex)
     }
-  }, [items, itemHeight, containerHeight, scrollTop, overscan])
+  }, [items, vs, scrollTop])
 
   // Calculate total height
   const totalHeight = useMemo(() => {
-    return performanceUtils.virtualScroll.getTotalHeight(items.length, itemHeight)
-  }, [items.length, itemHeight])
+    return performanceUtils.virtualScroll.getTotalHeight(vs.itemsLength, vs.itemHeight)
+  }, [vs.itemsLength, vs.itemHeight])
 
-  // Handle scroll events with throttling
-  const handleScroll = useCallback(
-    performanceUtils.throttle((event: React.UIEvent<HTMLDivElement>) => {
-      const scrollTop = event.currentTarget.scrollTop
+  // Memoize/debounce scroll handler once per relevant inputs
+  const debouncedScroll = useMemo(() => {
+    return performanceUtils.throttle((scrollTop: number) => {
       setScrollTop(scrollTop)
       onScroll?.(scrollTop)
-    }, 16), // 60fps throttling
-    [onScroll]
-  )
+    }, 16) // 60fps throttling
+  }, [onScroll])
+
+  // Stable callback that only calls the memoized function
+  const handleScroll = useCallback((event: React.UIEvent<HTMLDivElement>) => {
+    const scrollTop = event.currentTarget.scrollTop
+    debouncedScroll(scrollTop)
+  }, [debouncedScroll])
 
   // Notify parent of visible items change
   useEffect(() => {
-    onVisibleItemsChange?.(visibleItems.visibleItems)
+    onVisibleItemsChange?.()
   }, [visibleItems.visibleItems, onVisibleItemsChange])
 
   // Scroll to specific item
   const scrollToItem = useCallback((index: number) => {
     if (containerRef.current) {
-      const scrollTop = index * itemHeight
+      const scrollTop = index * vs.itemHeight
       containerRef.current.scrollTop = scrollTop
     }
-  }, [itemHeight])
+  }, [vs.itemHeight])
 
   // Scroll to top
   const scrollToTop = useCallback(() => {
@@ -87,29 +104,25 @@ export default function VirtualScroll<T>({
   // Scroll to bottom
   const scrollToBottom = useCallback(() => {
     if (containerRef.current) {
-      containerRef.current.scrollTop = totalHeight - containerHeight
+      containerRef.current.scrollTop = totalHeight - vs.containerHeight
     }
-  }, [totalHeight, containerHeight])
+  }, [totalHeight, vs.containerHeight])
 
   // Expose scroll methods
-  React.useImperativeHandle(
-    React.useRef(),
-    () => ({
-      scrollToItem,
-      scrollToTop,
-      scrollToBottom,
-      scrollTop,
-      totalHeight
-    }),
-    [scrollToItem, scrollToTop, scrollToBottom, scrollTop, totalHeight]
-  )
+  useImperativeHandle(ref, () => ({
+    scrollToItem,
+    scrollToTop,
+    scrollToBottom,
+    scrollTop,
+    totalHeight
+  }), [scrollToItem, scrollToTop, scrollToBottom, scrollTop, totalHeight])
 
   return (
     <div
       ref={containerRef}
       className={`virtual-scroll-container ${className}`}
       style={{
-        height: containerHeight,
+        height: vs.containerHeight,
         overflow: 'auto',
         position: 'relative'
       }}
@@ -138,7 +151,7 @@ export default function VirtualScroll<T>({
               <div
                 key={actualIndex}
                 style={{
-                  height: itemHeight,
+                  height: vs.itemHeight,
                   position: 'relative'
                 }}
               >
@@ -150,7 +163,9 @@ export default function VirtualScroll<T>({
       </div>
     </div>
   )
-}
+})
+
+VirtualScroll.displayName = 'VirtualScroll'
 
 // Optimized list item component
 interface VirtualListItemProps {
@@ -162,7 +177,7 @@ interface VirtualListItemProps {
   onMouseLeave?: () => void
 }
 
-export const VirtualListItem = React.memo(function VirtualListItem({
+const VirtualListItem = React.memo(function VirtualListItem({
   children,
   height,
   className = '',
@@ -198,7 +213,7 @@ interface VirtualScrollWithSearchProps<T> extends VirtualScrollProps<T> {
   onSearchChange?: (searchTerm: string) => void
 }
 
-export function VirtualScrollWithSearch<T>({
+function VirtualScrollWithSearch<T>({
   items,
   searchTerm,
   searchFilter,
@@ -212,13 +227,17 @@ export function VirtualScrollWithSearch<T>({
     return items.filter(item => searchFilter(item, searchTerm))
   }, [items, searchTerm, searchFilter])
 
-  // Debounced search handler
-  const handleSearchChange = useCallback(
-    performanceUtils.debounce((value: string) => {
+  // Memoize/debounce search handler once per relevant inputs
+  const debouncedSearch = useMemo(() => {
+    return performanceUtils.debounce((value: string) => {
       onSearchChange?.(value)
-    }, 300),
-    [onSearchChange]
-  )
+    }, 300)
+  }, [onSearchChange])
+
+  // Stable callback that only calls the memoized function
+  const handleSearchChange = useCallback((value: string) => {
+    debouncedSearch(value)
+  }, [debouncedSearch])
 
   return (
     <div className="virtual-scroll-with-search">
@@ -255,7 +274,7 @@ interface VirtualScrollWithInfiniteProps<T> extends VirtualScrollProps<T> {
   loadingComponent?: React.ReactNode
 }
 
-export function VirtualScrollWithInfinite<T>({
+function VirtualScrollWithInfinite<T>({
   items,
   hasMore,
   isLoading,
@@ -266,15 +285,21 @@ export function VirtualScrollWithInfinite<T>({
 }: VirtualScrollWithInfiniteProps<T>) {
   const [isNearBottom, setIsNearBottom] = useState(false)
 
+  // Memoize expensive config extracted from props
+  const vs = useMemo(() => ({
+    itemHeight: virtualScrollProps.itemHeight,
+    containerHeight: virtualScrollProps.containerHeight,
+    itemsLength: items.length
+  }), [virtualScrollProps.itemHeight, virtualScrollProps.containerHeight, items.length])
+
   // Check if near bottom
   const checkNearBottom = useCallback((scrollTop: number) => {
-    const { containerHeight } = virtualScrollProps
-    const totalHeight = performanceUtils.virtualScroll.getTotalHeight(items.length, virtualScrollProps.itemHeight)
+    const totalHeight = performanceUtils.virtualScroll.getTotalHeight(vs.itemsLength, vs.itemHeight)
     const threshold = 100 // pixels from bottom
 
-    const nearBottom = scrollTop + containerHeight >= totalHeight - threshold
+    const nearBottom = scrollTop + vs.containerHeight >= totalHeight - threshold
     setIsNearBottom(nearBottom)
-  }, [items.length, virtualScrollProps.itemHeight, virtualScrollProps.containerHeight])
+  }, [vs])
 
   // Handle scroll with bottom detection
   const handleScroll = useCallback((scrollTop: number) => {
@@ -293,6 +318,7 @@ export function VirtualScrollWithInfinite<T>({
     <div className="virtual-scroll-with-infinite">
       <VirtualScroll
         {...virtualScrollProps}
+        items={items}
         onScroll={handleScroll}
       />
       
@@ -318,3 +344,8 @@ export {
   VirtualScrollWithSearch,
   VirtualScrollWithInfinite
 }
+
+// Default export for backward compatibility
+export default VirtualScroll
+
+

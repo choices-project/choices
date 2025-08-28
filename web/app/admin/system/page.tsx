@@ -157,12 +157,14 @@ export default function SystemSettingsPage() {
           
           setConfig(realConfig);
         } else {
-          logger.error('Failed to fetch system status:', response.status);
+          logger.error('Failed to fetch system status:', new Error(`HTTP ${response.status}`));
           // Fall back to mock data if API fails
           setConfig(getMockConfig());
         }
       } catch (error) {
-        logger.error('Error fetching system data:', error);
+        // narrow 'unknown' → Error
+        const err = error instanceof Error ? error : new Error(String(error));
+        logger.error('Error fetching system data:', err);
         // Fall back to mock data if API fails
         setConfig(getMockConfig());
       } finally {
@@ -256,7 +258,7 @@ export default function SystemSettingsPage() {
           <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
           <div className="h-10 bg-gray-200 rounded mb-6"></div>
           <div className="space-y-4">
-            {[...Array(5)].map((any, i: any) => (
+            {[...Array(5)].map((_, i: any) => (
               <div key={i} className="h-16 bg-gray-200 rounded"></div>
             ))}
           </div>
@@ -794,7 +796,9 @@ export default function SystemSettingsPage() {
                           alert('Failed to check schema status');
                         }
                       } catch (error) {
-                        logger.error('Error checking schema status:', error);
+                        // narrow 'unknown' → Error
+                        const err = error instanceof Error ? error : new Error(String(error));
+                        logger.error('Error checking schema status:', err);
                         alert('Error checking schema status');
                       }
                     }}
@@ -821,7 +825,9 @@ export default function SystemSettingsPage() {
                           alert('Failed to refresh cache');
                         }
                       } catch (error) {
-                        logger.error('Error refreshing cache:', error);
+                        // narrow 'unknown' → Error
+                        const err = error instanceof Error ? error : new Error(String(error));
+                        logger.error('Error refreshing cache:', err);
                         alert('Error refreshing cache');
                       }
                     }}

@@ -101,22 +101,17 @@ const TopicContext = createContext<{
   data: TopicData;
   insights: string[];
   loading: boolean;
-  updateData: (newData: TopicData) => void;
+  updateData: () => void;
 }>({
   data: sampleTopicData,
   insights: [],
   loading: false,
-  updateData: (newData: TopicData) => {
+  updateData: () => {
     // Update the context data when new data is provided
-    devLog('Topic analysis data updated:', newData.question)
-    // Validate newData before processing
-    if (newData && newData.question && newData.breakdowns) {
-      // In a real implementation, this would update the context state
-      // For now, we log the update for debugging purposes
-      devLog('Valid newData received with breakdowns:', Object.keys(newData.breakdowns))
-    } else {
-      devLog('Invalid newData received:', newData)
-    }
+    devLog('Topic analysis data updated')
+    // In a real implementation, this would update the context state
+    // For now, we log the update for debugging purposes
+    devLog('Context update requested')
   }
 })
 
@@ -204,9 +199,9 @@ export function TopicAnalysis({
       data,
       insights,
       loading,
-      updateData: (newData: TopicData) => {
+      updateData: () => {
         // This would update the context data in a real implementation
-        devLog('Topic analysis data updated:', newData.question)
+        devLog('Topic analysis data updated:', data.question)
       }
     }}>
       <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-100">

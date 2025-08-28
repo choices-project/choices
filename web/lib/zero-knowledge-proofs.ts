@@ -75,7 +75,7 @@ export class ZeroKnowledgeProofs {
         confidence: isValid ? 1.0 : 0.0,
         timestamp: Date.now()
       }
-    } catch (error) {
+    } catch (_error) {
       return {
         isValid: false,
         confidence: 0.0,
@@ -120,7 +120,7 @@ export class ZeroKnowledgeProofs {
         confidence: isValid ? 0.95 : 0.0,
         timestamp: Date.now()
       }
-    } catch (error) {
+    } catch (_error) {
       return {
         isValid: false,
         confidence: 0.0,
@@ -163,7 +163,7 @@ export class ZeroKnowledgeProofs {
         confidence: isValid ? 0.9 : 0.0,
         timestamp: Date.now()
       }
-    } catch (error) {
+    } catch (_error) {
       return {
         isValid: false,
         confidence: 0.0,
@@ -206,7 +206,7 @@ export class ZeroKnowledgeProofs {
         confidence: isValid ? 0.95 : 0.0,
         timestamp: Date.now()
       }
-    } catch (error) {
+    } catch (_error) {
       return {
         isValid: false,
         confidence: 0.0,
@@ -251,7 +251,7 @@ export class ZeroKnowledgeProofs {
         confidence: isValid ? 0.98 : 0.0,
         timestamp: Date.now()
       }
-    } catch (error) {
+    } catch (_error) {
       return {
         isValid: false,
         confidence: 0.0,
@@ -293,7 +293,7 @@ export class ZeroKnowledgeProofs {
         confidence: isValid ? 0.92 : 0.0,
         timestamp: Date.now()
       }
-    } catch (error) {
+    } catch (_error) {
       return {
         isValid: false,
         confidence: 0.0,
@@ -413,10 +413,18 @@ export class ZeroKnowledgeProofs {
 
   // Simplified verification methods
   private verifyRangeProofInternal(proof: any, commitment: string, min: number, max: number): boolean {
+    // Verify commitment is valid before checking range
+    if (!commitment || commitment.trim() === '') {
+      return false;
+    }
     return proof.type === 'range' && proof.value >= min && proof.value <= max
   }
 
   private verifyMembershipProofInternal(proof: any, commitment: string, setCommitments: string[]): boolean {
+    // Verify commitment is valid before checking membership
+    if (!commitment || commitment.trim() === '') {
+      return false;
+    }
     return proof.type === 'membership' && setCommitments.length === proof.setSize
   }
 
@@ -446,7 +454,7 @@ export class ZeroKnowledgeProofs {
       const hash2 = this.hashCommitment(commitment2);
       
       return hash1 === hash2 && proofData.verified === true;
-    } catch (error) {
+    } catch (_error) {
       return false;
     }
   }
@@ -481,7 +489,7 @@ export class ZeroKnowledgeProofs {
       }
       
       return proofData.verified === true;
-    } catch (error) {
+    } catch (_error) {
       return false;
     }
   }
@@ -552,12 +560,14 @@ export class ZeroKnowledgeProofs {
       
       return true;
     } catch (error) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Vote validation failed:', err);
       // Log validation error
       if (typeof window !== 'undefined' && window.gtag) {
         window.gtag('event', 'vote_validation_error', {
           poll_id: pollId,
           choice: choice,
-          error: error instanceof Error ? error.message : 'Unknown error',
+          error: err.message,
           timestamp: new Date().toISOString()
         });
       }
@@ -589,7 +599,9 @@ export class ZeroKnowledgeProofs {
       
       return mockPollConfig;
     } catch (error) {
-      throw new Error(`Failed to fetch poll configuration: ${error}`);
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Failed to fetch poll configuration:', err);
+      throw new Error(`Failed to fetch poll configuration: ${err.message}`);
     }
   }
 
@@ -603,6 +615,11 @@ export class ZeroKnowledgeProofs {
     // - Age restrictions
     
     try {
+      // Validate pollId format
+      if (!pollId || pollId.trim() === '') {
+        return { canVote: false, reason: 'Invalid poll ID' };
+      }
+      
       // For now, simulate eligibility check
       // In production, this would be:
       // const { data: { user } } = await supabase.auth.getUser();
@@ -618,7 +635,7 @@ export class ZeroKnowledgeProofs {
       };
       
       return mockEligibility;
-    } catch (error) {
+    } catch (_error) {
       return { canVote: false, reason: 'Failed to check eligibility' };
     }
   }

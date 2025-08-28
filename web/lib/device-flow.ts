@@ -16,7 +16,7 @@
  * @since 2024-12-27
  */
 
-import { createClient } from '@/utils/supabase/client'
+
 import { createClient as createServerClient } from '@/utils/supabase/server'
 import { cookies } from 'next/headers'
 import { logger } from '@/lib/logger'

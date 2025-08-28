@@ -116,7 +116,9 @@ export const FeedbackDetailModal: React.FC<FeedbackDetailModalProps> = ({
       setAdminResponse('');
       // You could add a success notification here
     } catch (error) {
-      logger.error('Error submitting response:', error);
+      // narrow 'unknown' → Error
+      const err = error instanceof Error ? error : new Error(String(error));
+      logger.error('Error submitting response', err);
     } finally {
       setIsSubmitting(false);
     }

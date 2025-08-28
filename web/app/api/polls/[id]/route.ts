@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { devLog } from '@/lib/logger';
 import { createClient } from '@/utils/supabase/server';
 import { cookies } from 'next/headers';
@@ -6,7 +6,6 @@ import { cookies } from 'next/headers';
 export const dynamic = 'force-dynamic';
 
 export async function GET(
-  request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {

@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic';
 
 // POST /api/admin/generated-polls/[id]/approve
 export async function POST(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {

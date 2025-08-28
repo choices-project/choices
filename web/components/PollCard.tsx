@@ -36,7 +36,7 @@ interface PollResults {
 
 interface PollCardProps {
   poll: Poll;
-  onVote?: (choice: number) => Promise<void>;
+  onVote?: () => Promise<void>;
   onViewDetails?: () => void;
   isVoted?: boolean;
   userVote?: number;
@@ -83,7 +83,7 @@ export const PollCard: React.FC<PollCardProps> = ({
       }
       
       // The choice parameter is used here to pass validated data
-      await onVote(choice);
+      await onVote();
       
       // Track successful vote
       if (typeof window !== 'undefined' && window.gtag) {

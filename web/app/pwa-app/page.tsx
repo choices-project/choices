@@ -326,7 +326,7 @@ export default function PWAAppPage() {
                 <div key={poll.id} className="bg-white rounded-lg border border-gray-200 overflow-hidden">
                   <PWAVotingInterface
                     poll={poll}
-                    onVote={(pollId, choice) => handleVote(pollId, choice)}
+                    onVote={(choice) => handleVote(poll.id, choice)}
                     showResults={true}
                     offlineMode={!isOnline}
                   />

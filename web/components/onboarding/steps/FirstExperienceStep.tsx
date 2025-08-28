@@ -1,21 +1,20 @@
 'use client'
 
 import { useState } from 'react'
-import { Vote, BarChart3, Users, ArrowRight, ArrowLeft, CheckCircle, Play, Eye } from 'lucide-react'
+import { Vote, BarChart3, Users, ArrowRight, ArrowLeft, CheckCircle, Eye } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
 
 interface FirstExperienceStepProps {
   data: any
-  onUpdate: (updates: any) => void
+  onUpdate: () => void
   onNext: () => void
   onBack: () => void
 }
 
 type ExperienceSection = 'overview' | 'demo-poll' | 'voting' | 'results' | 'complete'
 
-export default function FirstExperienceStep({ data, onUpdate, onNext, onBack }: FirstExperienceStepProps) {
+export default function FirstExperienceStep({ onUpdate, onNext }: FirstExperienceStepProps) {
   const [currentSection, setCurrentSection] = useState<ExperienceSection>('overview')
   const [selectedOption, setSelectedOption] = useState<string | null>(null)
   const [hasVoted, setHasVoted] = useState(false)
@@ -34,15 +33,12 @@ export default function FirstExperienceStep({ data, onUpdate, onNext, onBack }: 
   const handleVote = () => {
     if (selectedOption) {
       setHasVoted(true)
-      onUpdate({ 
-        firstVote: selectedOption,
-        firstExperienceCompleted: true 
-      })
+      onUpdate()
     }
   }
 
   const handleNext = () => {
-    onUpdate({ firstExperienceCompleted: true })
+    onUpdate()
     onNext()
   }
 

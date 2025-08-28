@@ -267,7 +267,7 @@ export class AuthService {
         return enabled
       }
       return false
-    } catch (error) {
+    } catch (_error) {
       return false
     }
   }
@@ -339,7 +339,7 @@ export class AuthService {
           try {
             await this.refreshToken()
             return this.getCurrentUser()
-          } catch (error) {
+          } catch (_error) {
             this.clearSession()
             return null
           }
@@ -351,7 +351,8 @@ export class AuthService {
       this.storeUser(user)
       return user
     } catch (error) {
-      devLog('Get current user error:', error)
+      const err = error instanceof Error ? error : new Error(String(error));
+      devLog('Get current user error:', err)
       return null
     }
   }
@@ -490,7 +491,8 @@ export class AuthService {
       const payload = JSON.parse(atob(token.split('.')[1]))
       const expiresAt = new Date(payload.exp * 1000)
       return expiresAt > new Date()
-    } catch (error) {
+    } catch (_error) {
+      // Token parsing failed - likely malformed or invalid
       return false
     }
   }
@@ -515,6 +517,8 @@ export class AuthService {
     try {
       return JSON.parse(userStr)
     } catch (error) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      devLog('Error parsing stored user:', err);
       return null
     }
   }

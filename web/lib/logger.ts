@@ -1,4 +1,7 @@
-import { logger } from '@/lib/logger';
+/**
+ * Logger utility for development and production environments
+ * Provides structured logging with environment-aware output
+ */
 /**
  * Logger utility for development and production environments
  * Provides structured logging with environment-aware output
@@ -38,7 +41,7 @@ class Logger {
   debug(message: string, context?: LogContext): void {
     if (this.shouldLog(LogLevel.DEBUG)) {
       // eslint-disable-next-line no-console
-      logger.debug(this.formatMessage('DEBUG', message, context));
+      console.debug(this.formatMessage('DEBUG', message, context));
     }
   }
 
@@ -52,7 +55,7 @@ class Logger {
   warn(message: string, context?: LogContext): void {
     if (this.shouldLog(LogLevel.WARN)) {
       // eslint-disable-next-line no-console
-      logger.warn(this.formatMessage('WARN', message, context));
+      console.warn(this.formatMessage('WARN', message, context));
     }
   }
 
@@ -64,7 +67,7 @@ class Logger {
         stack: error?.stack
       };
       // eslint-disable-next-line no-console
-      logger.error(this.formatMessage('ERROR', message, errorContext));
+      console.error(this.formatMessage('ERROR', message, errorContext));
     }
   }
 

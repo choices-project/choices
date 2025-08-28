@@ -88,7 +88,9 @@ export const IssueGenerationPanel: React.FC<IssueGenerationPanelProps> = ({
         throw new Error('Failed to generate issue');
       }
     } catch (error) {
-      logger.error('Error generating issue:', error);
+      // narrow 'unknown' → Error
+      const err = error instanceof Error ? error : new Error(String(error));
+      logger.error('Error generating issue:', err);
     } finally {
       setIsGenerating(false);
     }
@@ -114,7 +116,9 @@ export const IssueGenerationPanel: React.FC<IssueGenerationPanelProps> = ({
         throw new Error('Failed to generate issues');
       }
     } catch (error) {
-      logger.error('Error generating issues:', error);
+      // narrow 'unknown' → Error
+      const err = error instanceof Error ? error : new Error(String(error));
+      logger.error('Error generating issues:', err);
     } finally {
       setIsGenerating(false);
     }

@@ -14,10 +14,10 @@ interface QuadraticVotingProps {
   title: string
   description?: string
   options: PollOption[]
-  onVote: (pollId: string, allocations: Record<string, number>) => Promise<void>
+  onVote: (pollId: string, allocations: { [optionId: string]: number }) => Promise<void>
   isVoting: boolean
   hasVoted?: boolean
-  userVote?: Record<string, number>
+  userVote?: { [optionId: string]: number }
   totalCredits?: number
 }
 

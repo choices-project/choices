@@ -75,7 +75,9 @@ export const GET = withAuth(async (request: NextRequest, context) => {
     return NextResponse.json(response, { status: statusCode })
 
   } catch (error) {
-    logger.error('Database health check error:', error)
+    // narrow 'unknown' → Error
+    const err = error instanceof Error ? error : new Error(String(error));
+    logger.error('Database health check error:', err);
     
     return NextResponse.json({
       status: 'unhealthy',

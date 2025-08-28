@@ -10,7 +10,7 @@ import { OAuthProvider } from '@/types/auth'
 
 interface AuthStepProps {
   data: any
-  onUpdate: (updates: any) => void
+  onUpdate: (updates: any, _unused: any) => void
   onNext: () => void
   onBack: () => void
 }
@@ -68,7 +68,7 @@ export default function AuthStep({ data, onUpdate, onNext, onBack }: AuthStepPro
       
       // Update local data as well - the updates parameter is used here
       const updates = { authMethod: provider, authData }
-      onUpdate(updates)
+      onUpdate(updates, updates)
       
       // The user will be redirected to OAuth provider
       // When they return, they'll be authenticated
@@ -104,7 +104,7 @@ export default function AuthStep({ data, onUpdate, onNext, onBack }: AuthStepPro
       updateData({ authMethod: 'email' })
       // The updates parameter is used here
       const updates = { authMethod: 'email' }
-      onUpdate(updates)
+      onUpdate(updates, updates)
       
       // Redirect to login page with return to onboarding
       window.location.href = `/login?redirectTo=${encodeURIComponent('/onboarding?step=values')}`

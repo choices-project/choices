@@ -196,3 +196,66 @@ export const withDbPerformanceTracking = <T extends any[], R>(
     });
   };
 };
+
+// Performance utilities for components
+export const performanceUtils = {
+  // Throttle function to limit execution frequency
+  throttle: <T extends (...args: any[]) => any>(
+    func: T,
+    delay: number
+  ): T => {
+    let lastCall = 0;
+    return ((...args: any[]) => {
+      const now = Date.now();
+      if (now - lastCall >= delay) {
+        lastCall = now;
+        return func(...args);
+      }
+    }) as T;
+  },
+
+  // Debounce function to delay execution until after a pause
+  debounce: <T extends (...args: any[]) => any>(
+    func: T,
+    delay: number
+  ): T => {
+    let timeoutId: NodeJS.Timeout;
+    return ((...args: any[]) => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => func(...args), delay);
+    }) as T;
+  },
+
+  // Virtual scroll utilities
+  virtualScroll: {
+    // Calculate total height for virtual scrolling
+    getTotalHeight: (itemCount: number, itemHeight: number): number => {
+      return itemCount * itemHeight;
+    },
+
+    // Calculate visible items for virtual scrolling
+    getVisibleItems: (
+      items: any[],
+      itemHeight: number,
+      containerHeight: number,
+      scrollTop: number,
+      overscan: number = 5
+    ) => {
+      const startIndex = Math.max(0, Math.floor(scrollTop / itemHeight) - overscan);
+      const endIndex = Math.min(
+        items.length,
+        Math.ceil((scrollTop + containerHeight) / itemHeight) + overscan
+      );
+      
+      const visibleItems = items.slice(startIndex, endIndex);
+      const offsetY = startIndex * itemHeight;
+      
+      return {
+        visibleItems,
+        startIndex,
+        endIndex,
+        offsetY
+      };
+    }
+  }
+};

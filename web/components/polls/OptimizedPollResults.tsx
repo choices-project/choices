@@ -2,15 +2,14 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { logger } from '@/lib/logger';
-import { optimizedPollService, type OptimizedPollResult, type PollOptionResult } from '@/lib/performance/optimized-poll-service'
-import { differentialPrivacy } from '@/lib/privacy/differential-privacy'
+import { optimizedPollService, type OptimizedPollResult } from '@/lib/performance/optimized-poll-service'
 
 interface OptimizedPollResultsProps {
   pollId: string
   userId?: string
   includePrivate?: boolean
-  onResultsLoaded?: (results: OptimizedPollResult) => void
-  onError?: (error: string) => void
+  onResultsLoaded?: () => void
+  onError?: () => void
   showPerformanceMetrics?: boolean
 }
 
@@ -54,11 +53,11 @@ export default function OptimizedPollResults({
         timestamp: new Date().toISOString()
       })
 
-      onResultsLoaded?.(pollResults)
+      onResultsLoaded?.()
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to load poll results'
       setError(errorMessage)
-      onError?.(errorMessage)
+      onError?.()
     } finally {
       setLoading(false)
     }
@@ -70,7 +69,8 @@ export default function OptimizedPollResults({
       const stats = optimizedPollService.getCacheStats()
       setCacheStats(stats)
     } catch (err) {
-      logger.warn('Failed to load cache stats:', err)
+      const error = err instanceof Error ? err : new Error(String(err))
+      logger.warn('Failed to load cache stats:', error)
     }
   }, [])
 
@@ -104,7 +104,7 @@ export default function OptimizedPollResults({
     
     const config = statusConfig[results.pollStatus]
     return config
-  }, [results?.pollStatus])
+  }, [results])
 
   // Handle refresh
   const handleRefresh = useCallback(async () => {

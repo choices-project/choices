@@ -62,7 +62,7 @@ export function detectBrowser(): BrowserInfo {
 /**
  * Determine if browser supports server redirects reliably
  */
-function determineServerRedirectSupport(name: string, version: string, isMobile: boolean): boolean {
+function determineServerRedirectSupport(name: string, version: string, _isMobile: boolean): boolean {
   const versionNum = parseInt(version, 10)
 
   switch (name) {

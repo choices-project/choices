@@ -433,7 +433,7 @@ export class AuthAnalytics {
   }
 
   // Check for security alerts
-  private async checkAlerts(event: AuthEvent): Promise<void> {
+  private async checkAlerts(_event: AuthEvent): Promise<void> {
     const alerts: string[] = []
 
     // Check error rate
@@ -476,6 +476,19 @@ export class AuthAnalytics {
     // - Amplitude
     // - Custom analytics platform
     // - Data warehouse
+    
+    // Log the event for external service integration
+    logger.info('Sending auth event to external service', {
+      eventId: event.id,
+      eventType: event.eventType,
+      authMethod: event.authMethod,
+      success: event.success,
+      userId: event.userId,
+      timestamp: event.timestamp.toISOString()
+    })
+    
+    // TODO: Implement actual external service integration
+    // await analyticsService.track(event)
   }
 
   // Get performance metrics

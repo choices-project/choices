@@ -512,7 +512,7 @@ class GitHubIssueIntegration {
     return `repo:${this.config.owner}/${this.config.repo} ${keywords.join(' ')}`;
   }
 
-  private selectTemplate(type: string, intent: string): string {
+  private selectTemplate(_type: string, intent: string): string {
     if (intent === 'bug') return 'bug-report';
     if (intent === 'feature') return 'feature-request';
     if (intent === 'improvement') return 'improvement';

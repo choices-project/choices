@@ -120,7 +120,7 @@ function TestSingleChoiceContent() {
           title={samplePoll.title}
           description={samplePoll.description}
           options={samplePoll.options}
-          onVote={handleVote}
+          onVote={(choice) => handleVote(samplePoll.id, choice)}
           isVoting={isVoting}
           hasVoted={hasVoted}
           userVote={userVote}

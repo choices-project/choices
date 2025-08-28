@@ -31,7 +31,7 @@ export interface PollWizardStep {
 export interface WizardStepOption {
   id: string;
   label: string;
-  value: any;
+  value: string | number | boolean;
   description?: string;
   icon?: string;
   isDefault?: boolean;
@@ -42,7 +42,7 @@ export interface StepValidation {
   minLength?: number;
   maxLength?: number;
   pattern?: string;
-  custom?: (value: any) => boolean | string;
+  custom?: (value: string | number | boolean) => boolean | string;
 }
 
 export interface PollSettings {

@@ -483,9 +483,10 @@ export const privacyUtils = {
     delete sanitized.email
     delete sanitized.ipAddress
     
-    // Add noise to numeric values
+    // Add noise to numeric values using the provided epsilon
     if (typeof sanitized.count === 'number') {
-      sanitized.count = Math.max(0, differentialPrivacy.addLaplaceNoise(sanitized.count))
+      const noiseScale = privacyUtils.calculateNoiseScale(1, epsilon)
+      sanitized.count = Math.max(0, differentialPrivacy.addLaplaceNoise(sanitized.count, noiseScale))
     }
     
     return sanitized

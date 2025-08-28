@@ -1,9 +1,17 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { Smartphone, Monitor, Tablet, X, QrCode, Trash2 } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
+import { 
+  Smartphone, 
+  Monitor, 
+  Tablet, 
+  Trash2, 
+  Plus, 
+  QrCode,
+  CheckCircle2,
+  AlertCircle,
+  Loader2
+} from 'lucide-react'
 import { getUserCredentials, removeCredential, generateQRCodeData } from '@/lib/webauthn'
 
 interface Device {
@@ -17,11 +25,17 @@ interface Device {
 
 interface DeviceListProps {
   userId: string
+  onAddDevice: () => void
+  onDeviceRemoved: () => void
   className?: string
-  onDeviceRemoved?: () => void
 }
 
-export default function DeviceList({ userId, className = '', onDeviceRemoved }: DeviceListProps) {
+export default function DeviceList({ 
+  userId, 
+  onAddDevice, 
+  onDeviceRemoved, 
+  className = '' 
+}: DeviceListProps) {
   const [devices, setDevices] = useState<Device[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string>('')
@@ -49,6 +63,8 @@ export default function DeviceList({ userId, className = '', onDeviceRemoved }: 
         setError(result.error || 'Failed to load devices')
       }
     } catch (err) {
+      const error = err instanceof Error ? err : new Error(String(err));
+      console.error('Failed to load devices:', error);
       setError('Failed to load devices')
     } finally {
       setLoading(false)
@@ -106,11 +122,13 @@ export default function DeviceList({ userId, className = '', onDeviceRemoved }: 
       
       if (result.success) {
         setDevices(devices.filter(d => d.id !== deviceId))
-        onDeviceRemoved?.()
+        onDeviceRemoved()
       } else {
         setError(result.error || 'Failed to remove device')
       }
     } catch (err) {
+      const error = err instanceof Error ? err : new Error(String(err));
+      console.error('Failed to remove device:', error);
       setError('Failed to remove device')
     } finally {
       setRemovingDevice(null)
@@ -128,44 +146,22 @@ export default function DeviceList({ userId, className = '', onDeviceRemoved }: 
         setError(result.error || 'Failed to generate QR code')
       }
     } catch (err) {
+      const error = err instanceof Error ? err : new Error(String(err));
+      console.error('Failed to generate QR code:', error);
       setError('Failed to generate QR code')
     }
   }
 
-  const handleHideQRCode = () => {
-    setShowQRCode(null)
-    setQrCodeData('')
+  const handleAddDevice = () => {
+    onAddDevice()
   }
 
   if (loading) {
     return (
       <div className={`space-y-4 ${className}`}>
-        <div className="animate-pulse">
-          <div className="h-4 bg-gray-200 rounded w-1/4 mb-4"></div>
-          <div className="space-y-3">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="h-20 bg-gray-200 rounded"></div>
-            ))}
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  if (error) {
-    return (
-      <div className={`space-y-4 ${className}`}>
-        <div className="text-red-600 bg-red-50 p-4 rounded-lg">
-          <p className="font-semibold">Error loading devices</p>
-          <p className="text-sm">{error}</p>
-          <Button 
-            onClick={loadDevices} 
-            variant="outline" 
-            size="sm" 
-            className="mt-2"
-          >
-            Try Again
-          </Button>
+        <div data-testid="loading-indicator" className="flex items-center justify-center py-8">
+          <Loader2 className="w-6 h-6 text-blue-600 animate-spin" />
+          <span className="ml-2 text-gray-600">Loading devices...</span>
         </div>
       </div>
     )
@@ -173,104 +169,168 @@ export default function DeviceList({ userId, className = '', onDeviceRemoved }: 
 
   return (
     <div className={`space-y-4 ${className}`}>
+      {/* Header */}
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold text-gray-900">Trusted Devices</h2>
-        <Button 
-          onClick={loadDevices} 
-          variant="outline" 
-          size="sm"
+        <h3 className="text-lg font-medium text-gray-900">Your Devices</h3>
+        <button
+          onClick={handleAddDevice}
+          className="flex items-center space-x-2 px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
         >
-          Refresh
-        </Button>
+          <Plus className="w-4 h-4" />
+          <span>Add Device</span>
+        </button>
       </div>
 
-      {devices.length === 0 ? (
-        <Card>
-          <CardContent className="p-6 text-center">
-            <div className="text-gray-500 mb-4">
-              <Smartphone className="w-12 h-12 mx-auto mb-2" />
-              <p>No trusted devices found</p>
-              <p className="text-sm">Add a device to enable biometric sign-in</p>
-            </div>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="space-y-3">
-          {devices.map((device) => (
-            <Card key={device.id} className="relative">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <div className="text-gray-600">
-                      {getDeviceIcon(device)}
-                    </div>
-                    <div>
-                      <div className="font-medium text-gray-900">
-                        {device.name}
-                        {device.isCurrent && (
-                          <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
-                            Current
-                          </span>
-                        )}
-                      </div>
-                      <div className="text-sm text-gray-500">
-                        {device.authenticatorType} • Last used: {device.lastUsed}
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center space-x-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleShowQRCode(device.id)}
-                      disabled={showQRCode === device.id}
-                    >
-                      <QrCode className="w-4 h-4" />
-                    </Button>
-                    
-                    {!device.isCurrent && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleRemoveDevice(device.id)}
-                        disabled={removingDevice === device.id}
-                        className="text-red-600 hover:text-red-700"
-                      >
-                        {removingDevice === device.id ? (
-                          <div className="w-4 h-4 border-2 border-red-600 border-t-transparent rounded-full animate-spin" />
-                        ) : (
-                          <Trash2 className="w-4 h-4" />
-                        )}
-                      </Button>
-                    )}
-                  </div>
-                </div>
+             {/* Error Message */}
+       {error && (
+         <div data-testid="error-message" className="bg-red-50 border border-red-200 rounded-md p-3">
+           <div className="flex items-center space-x-2">
+             <AlertCircle className="w-5 h-5 text-red-600" />
+             <span className="text-sm text-red-700">{error}</span>
+           </div>
+         </div>
+       )}
 
-                {showQRCode === device.id && (
-                  <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-                    <div className="flex items-center justify-between mb-2">
-                      <h4 className="font-medium text-gray-900">QR Code for {device.name}</h4>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={handleHideQRCode}
-                      >
-                        <X className="w-4 h-4" />
-                      </Button>
-                    </div>
-                    <div className="bg-white p-4 rounded border">
-                      <div className="text-center text-sm text-gray-600">
-                        QR Code data: {qrCodeData}
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+             {/* Device List */}
+       {devices.length === 0 ? (
+         <div data-testid="empty-state" className="text-center py-8">
+           <Smartphone className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+           <h4 className="text-lg font-medium text-gray-900 mb-2">No devices found</h4>
+           <p className="text-gray-600 mb-4">
+             You haven't set up biometric authentication on any devices yet.
+           </p>
+           <button
+             data-testid="add-device-button"
+             onClick={handleAddDevice}
+             className="inline-flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+           >
+             <Plus className="w-4 h-4" />
+             <span>Set up your first device</span>
+           </button>
+         </div>
+       ) : (
+         <div className="space-y-3">
+           {devices.map((device) => (
+             <div
+               key={device.id}
+               data-testid="device-item"
+               className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors"
+             >
+                               <div className="flex items-center justify-between">
+                   <div className="flex items-center space-x-3">
+                     <div className="flex-shrink-0">
+                       <div data-testid="device-icon">
+                         {getDeviceIcon(device)}
+                       </div>
+                     </div>
+                     <div>
+                       <div className="flex items-center space-x-2">
+                         <h4 data-testid="device-name" className="text-sm font-medium text-gray-900">
+                           {device.name}
+                         </h4>
+                         {device.isCurrent && (
+                           <span data-testid="current-badge" className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                             Current
+                           </span>
+                         )}
+                       </div>
+                       <p className="text-sm text-gray-500">
+                         {device.authenticatorType} • Last used {device.lastUsed}
+                       </p>
+                     </div>
+                   </div>
+                
+                                 <div className="flex items-center space-x-2">
+                   {/* QR Code Button */}
+                   <button
+                     data-testid="qr-code-button"
+                     onClick={() => handleShowQRCode(device.id)}
+                     className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
+                     title="Show QR code for setup"
+                   >
+                     <QrCode className="w-4 h-4" />
+                   </button>
+                   
+                   {/* Remove Button */}
+                   {!device.isCurrent && (
+                     <button
+                       data-testid="remove-button"
+                       onClick={() => handleRemoveDevice(device.id)}
+                       disabled={removingDevice === device.id}
+                       className="p-2 text-gray-400 hover:text-red-600 transition-colors disabled:opacity-50"
+                       title="Remove device"
+                     >
+                       {removingDevice === device.id ? (
+                         <Loader2 className="w-4 h-4 animate-spin" />
+                       ) : (
+                         <Trash2 className="w-4 h-4" />
+                       )}
+                     </button>
+                   )}
+                 </div>
+              </div>
+            </div>
           ))}
         </div>
       )}
+
+             {/* QR Code Modal */}
+       {showQRCode && (
+         <div data-testid="qr-code-modal" className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+           <div className="bg-white rounded-lg p-6 max-w-sm w-full mx-4">
+             <div className="text-center">
+               <h3 className="text-lg font-medium text-gray-900 mb-4">
+                 Add Another Device
+               </h3>
+               <p className="text-sm text-gray-600 mb-4">
+                 Scan this QR code with your other device to set up biometric authentication.
+               </p>
+               
+               {/* QR Code Display */}
+               <div className="bg-gray-100 rounded-lg p-4 mb-4">
+                 <div data-testid="qr-code-data" className="text-xs font-mono break-all text-gray-600">
+                   {qrCodeData}
+                 </div>
+               </div>
+               
+               <div className="flex space-x-3">
+                 <button
+                   data-testid="close-modal"
+                   onClick={() => setShowQRCode(null)}
+                   className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors"
+                 >
+                   Close
+                 </button>
+                 <button
+                   data-testid="copy-qr-code"
+                   onClick={() => {
+                     navigator.clipboard.writeText(qrCodeData)
+                     // Show success message
+                   }}
+                   className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                 >
+                   Copy Code
+                 </button>
+               </div>
+             </div>
+           </div>
+         </div>
+       )}
+
+      {/* Help Text */}
+      <div className="bg-blue-50 border border-blue-200 rounded-md p-3">
+        <div className="flex items-start space-x-2">
+          <CheckCircle2 className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
+          <div>
+            <h4 className="text-sm font-medium text-blue-900 mb-1">
+              Multiple devices supported
+            </h4>
+            <p className="text-sm text-blue-700">
+              You can use biometric authentication on multiple devices. Each device will have its own secure credentials.
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
   )
 }

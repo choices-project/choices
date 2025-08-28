@@ -97,7 +97,6 @@ export const PrivacyLevelIndicator: React.FC<PrivacyLevelIndicatorProps> = ({
 // Compact version for small spaces
 export const CompactPrivacyIndicator: React.FC<Omit<PrivacyLevelIndicatorProps, 'size'>> = ({
   level,
-  showTooltip = false,
   className = ''
 }) => {
   const getEmoji = () => {

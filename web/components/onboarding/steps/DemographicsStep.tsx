@@ -6,7 +6,7 @@ import { useOnboardingContext } from '../OnboardingFlow'
 
 interface DemographicsStepProps {
   data: any
-  onUpdate: (updates: any) => void
+  onUpdate: (updates: any, _unused: any) => void
   onNext: () => void
   onBack: () => void
 }
@@ -21,7 +21,7 @@ export default function DemographicsStep({ data, onUpdate, onNext, onBack }: Dem
     
     // Update both local state and context - the updates parameter is used here
     const updates = { demographics: newDemographics }
-    onUpdate(updates)
+    onUpdate(updates, updates)
     updateData({ demographics: newDemographics })
   }
 

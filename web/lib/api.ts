@@ -45,7 +45,7 @@ export class ApiAuthManager {
     try {
       const payload = JSON.parse(atob(token.split('.')[1]))
       expiresAt = payload.exp * 1000
-    } catch (error) {
+    } catch (_error) {
       return null
     }
 
@@ -84,6 +84,11 @@ export class ApiAuthManager {
     url: string,
     options: RequestInit = {}
   ): Promise<ApiRequest> {
+    // Validate URL format
+    if (!url || typeof url !== 'string') {
+      throw new AuthError('INVALID_URL', 'Valid URL is required')
+    }
+    
     const authContext = await this.getAuthContext()
     
     if (!authContext) {
@@ -102,6 +107,8 @@ export class ApiAuthManager {
         authContext.token = updatedContext.token
         authContext.user = updatedContext.user
       } catch (error) {
+        const err = error instanceof Error ? error : new Error(String(error));
+        console.error('Token refresh failed:', err);
         throw new AuthError('REFRESH_FAILED', 'Failed to refresh authentication')
       }
     }

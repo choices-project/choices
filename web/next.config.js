@@ -1,172 +1,32 @@
 const withPWA = require('next-pwa')({
   dest: 'public',
+  // Disable SW in dev, enable in prod
+  disable: process.env.NODE_ENV === 'development',
   register: true,
   skipWaiting: true,
-  disable: process.env.NODE_ENV === 'development',
+
+  // Keep runtimeCaching VERY simple; bad shapes trigger the "properties" error
   runtimeCaching: [
     {
-      urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
+      urlPattern: /^https:\/\/fonts\.(?:gstatic|googleapis)\.com\/.*/i,
       handler: 'CacheFirst',
       options: {
-        cacheName: 'google-fonts-cache',
-        expiration: {
-          maxEntries: 10,
-          maxAgeSeconds: 60 * 60 * 24 * 365 // 1 year
-        },
-        cacheKeyWillBeUsed: async ({ request }) => {
-          return `${request.url}`
-        }
-      }
+        cacheName: 'google-fonts',
+        expiration: { maxEntries: 20, maxAgeSeconds: 60 * 60 * 24 * 365 },
+      },
     },
     {
-      urlPattern: /^https:\/\/fonts\.gstatic\.com\/.*/i,
-      handler: 'CacheFirst',
-      options: {
-        cacheName: 'gstatic-fonts-cache',
-        expiration: {
-          maxEntries: 10,
-          maxAgeSeconds: 60 * 60 * 24 * 365 // 1 year
-        }
-      }
-    },
-    {
-      urlPattern: /\.(?:eot|otf|ttc|ttf|woff|woff2|font.css)$/i,
+      urlPattern: /\.(?:png|jpg|jpeg|gif|webp|svg|ico)$/i,
       handler: 'StaleWhileRevalidate',
       options: {
-        cacheName: 'static-font-assets',
-        expiration: {
-          maxEntries: 4,
-          maxAgeSeconds: 7 * 24 * 60 * 60 // 7 days
-        }
-      }
+        cacheName: 'static-images',
+        expiration: { maxEntries: 128, maxAgeSeconds: 60 * 60 * 24 * 30 },
+      },
     },
-    {
-      urlPattern: /\.(?:jpg|jpeg|gif|png|svg|ico|webp)$/i,
-      handler: 'StaleWhileRevalidate',
-      options: {
-        cacheName: 'static-image-assets',
-        expiration: {
-          maxEntries: 64,
-          maxAgeSeconds: 24 * 60 * 60 // 24 hours
-        }
-      }
-    },
-    {
-      urlPattern: /\/_next\/image\?url=.+$/i,
-      handler: 'StaleWhileRevalidate',
-      options: {
-        cacheName: 'next-image',
-        expiration: {
-          maxEntries: 64,
-          maxAgeSeconds: 24 * 60 * 60 // 24 hours
-        }
-      }
-    },
-    {
-      urlPattern: /\.(?:mp3|wav|ogg)$/i,
-      handler: 'CacheFirst',
-      options: {
-        rangeRequests: true,
-        cacheName: 'static-audio-assets',
-        expiration: {
-          maxEntries: 32,
-          maxAgeSeconds: 24 * 60 * 60 // 24 hours
-        }
-      }
-    },
-    {
-      urlPattern: /\.(?:mp4)$/i,
-      handler: 'CacheFirst',
-      options: {
-        rangeRequests: true,
-        cacheName: 'static-video-assets',
-        expiration: {
-          maxEntries: 32,
-          maxAgeSeconds: 24 * 60 * 60 // 24 hours
-        }
-      }
-    },
-    {
-      urlPattern: /\.(?:js)$/i,
-      handler: 'StaleWhileRevalidate',
-      options: {
-        cacheName: 'static-js-assets',
-        expiration: {
-          maxEntries: 32,
-          maxAgeSeconds: 24 * 60 * 60 // 24 hours
-        }
-      }
-    },
-    {
-      urlPattern: /\.(?:css|less)$/i,
-      handler: 'StaleWhileRevalidate',
-      options: {
-        cacheName: 'static-style-assets',
-        expiration: {
-          maxEntries: 32,
-          maxAgeSeconds: 24 * 60 * 60 // 24 hours
-        }
-      }
-    },
-    {
-      urlPattern: /\/_next\/static\/chunks\/.+$/i,
-      handler: 'StaleWhileRevalidate',
-      options: {
-        cacheName: 'next-static-chunks',
-        expiration: {
-          maxEntries: 32,
-          maxAgeSeconds: 24 * 60 * 60 // 24 hours
-        }
-      }
-    },
-    {
-      urlPattern: /\/_next\/static\/.+$/i,
-      handler: 'CacheFirst',
-      options: {
-        cacheName: 'next-static-assets',
-        expiration: {
-          maxEntries: 32,
-          maxAgeSeconds: 24 * 60 * 60 // 24 hours
-        }
-      }
-    },
-    {
-      urlPattern: /\/_next\/image\?url=.+$/i,
-      handler: 'StaleWhileRevalidate',
-      options: {
-        cacheName: 'next-image',
-        expiration: {
-          maxEntries: 64,
-          maxAgeSeconds: 24 * 60 * 60 // 24 hours
-        }
-      }
-    },
-    {
-      urlPattern: /\/api\/.*$/i,
-      handler: 'NetworkFirst',
-      method: 'GET',
-      options: {
-        cacheName: 'apis',
-        expiration: {
-          maxEntries: 16,
-          maxAgeSeconds: 24 * 60 * 60 // 24 hours
-        },
-        networkTimeoutSeconds: 10
-      }
-    },
-    {
-      urlPattern: /.*/i,
-      handler: 'NetworkFirst',
-      options: {
-        cacheName: 'others',
-        expiration: {
-          maxEntries: 32,
-          maxAgeSeconds: 24 * 60 * 60 // 24 hours
-        },
-        networkTimeoutSeconds: 10
-      }
-    }
-  ]
+  ],
+
+  // Useful to avoid SW picking up Next internals
+  buildExcludes: [/middleware-manifest\.json$/],
 })
 
 /** @type {import('next').NextConfig} */
@@ -179,6 +39,8 @@ const nextConfig = {
     optimizePackageImports: [
       '@supabase/supabase-js',
       'lucide-react',
+      'date-fns',
+      'lodash-es',
       'react-hook-form',
       'zod',
       'clsx',

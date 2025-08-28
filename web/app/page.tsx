@@ -58,7 +58,9 @@ export default function HomePage() {
         setTrendingPolls([getMockTrendingPoll()])
       }
     } catch (error) {
-      logger.error('Error loading trending polls:', error)
+      // narrow 'unknown' → Error
+      const err = error instanceof Error ? error : new Error(String(error));
+      logger.error('Error loading trending polls:', err)
       setTrendingPolls([getMockTrendingPoll()])
     } finally {
       setLoading(false)
@@ -73,7 +75,9 @@ export default function HomePage() {
         setStats(data)
       }
     } catch (error) {
-      logger.error('Error loading stats:', error)
+      // narrow 'unknown' → Error
+      const err = error instanceof Error ? error : new Error(String(error));
+      logger.error('Error loading stats:', err)
     }
   }, [])
 

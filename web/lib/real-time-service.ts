@@ -14,12 +14,15 @@ export interface RealTimeEvent {
   userId?: string;
 }
 
+// Define callback types with rest-tuple pattern
+type RTHandler<T> = (...args: [T]) => void;
+
 export interface RealTimeSubscription {
   id: string;
   eventSource: EventSource;
   isActive: boolean;
-  onMessage: (event: RealTimeEvent) => void;
-  onError: (error: Event) => void;
+  onMessage: RTHandler<RealTimeEvent>;
+  onError: RTHandler<Event>;
 }
 
 class RealTimeService {
@@ -45,8 +48,18 @@ class RealTimeService {
         id: subscriptionId,
         eventSource,
         isActive: true,
-        onMessage,
-        onError: onError || this.handleDefaultError
+        onMessage: (...args) => {
+          const [event] = args;
+          onMessage(event);
+        },
+        onError: (...args) => {
+          const [error] = args;
+          if (onError) {
+            onError(error);
+          } else {
+            this.handleDefaultError(error);
+          }
+        }
       };
 
       // Set up event listeners
@@ -76,7 +89,7 @@ class RealTimeService {
         };
         devLog('Real-time error details:', errorDetails);
         subscription.onError(error);
-        this.handleReconnect(subscriptionId, endpoint, onMessage, onError);
+        this.handleReconnect(subscriptionId, endpoint, onMessage);
       };
 
       eventSource.onopen = () => {
@@ -115,15 +128,15 @@ class RealTimeService {
    */
   subscribeToPollUpdates(
     pollId: string,
-    onUpdate: (data: any) => void,
-    onError?: (error: Event) => void
+    onUpdate: (event: RealTimeEvent) => void
   ): string {
     const endpoint = `/api/polls/${pollId}/updates`;
-    const wrappedOnUpdate = (event: RealTimeEvent) => {
+    const wrappedOnUpdate = (...args: [RealTimeEvent]) => {
+      const [event] = args;
       devLog(`Poll update received for ${pollId}:`, event);
-      onUpdate(event.data || event);
+      onUpdate(event);
     };
-    return this.subscribe(endpoint, wrappedOnUpdate, onError);
+    return this.subscribe(endpoint, wrappedOnUpdate);
   }
 
   /**
@@ -131,45 +144,45 @@ class RealTimeService {
    */
   subscribeToUserActivity(
     userId: string,
-    onUpdate: (data: any) => void,
-    onError?: (error: Event) => void
+    onUpdate: (event: RealTimeEvent) => void
   ): string {
     const endpoint = `/api/user/${userId}/activity`;
-    const wrappedOnUpdate = (event: RealTimeEvent) => {
+    const wrappedOnUpdate = (...args: [RealTimeEvent]) => {
+      const [event] = args;
       devLog(`User activity update received for ${userId}:`, event);
-      onUpdate(event.data || event);
+      onUpdate(event);
     };
-    return this.subscribe(endpoint, wrappedOnUpdate, onError);
+    return this.subscribe(endpoint, wrappedOnUpdate);
   }
 
   /**
    * Subscribe to admin dashboard updates
    */
   subscribeToAdminUpdates(
-    onUpdate: (data: any) => void,
-    onError?: (error: Event) => void
+    onUpdate: (event: RealTimeEvent) => void
   ): string {
     const endpoint = '/api/admin/updates';
-    const wrappedOnUpdate = (event: RealTimeEvent) => {
+    const wrappedOnUpdate = (...args: [RealTimeEvent]) => {
+      const [event] = args;
       devLog('Admin dashboard update received:', event);
-      onUpdate(event.data || event);
+      onUpdate(event);
     };
-    return this.subscribe(endpoint, wrappedOnUpdate, onError);
+    return this.subscribe(endpoint, wrappedOnUpdate);
   }
 
   /**
    * Subscribe to feedback updates
    */
   subscribeToFeedbackUpdates(
-    onUpdate: (data: any) => void,
-    onError?: (error: Event) => void
+    onUpdate: (event: RealTimeEvent) => void
   ): string {
     const endpoint = '/api/feedback/updates';
-    const wrappedOnUpdate = (event: RealTimeEvent) => {
+    const wrappedOnUpdate = (...args: [RealTimeEvent]) => {
+      const [event] = args;
       devLog('Feedback update received:', event);
-      onUpdate(event.data || event);
+      onUpdate(event);
     };
-    return this.subscribe(endpoint, wrappedOnUpdate, onError);
+    return this.subscribe(endpoint, wrappedOnUpdate);
   }
 
   /**
@@ -178,8 +191,7 @@ class RealTimeService {
   private handleReconnect(
     subscriptionId: string,
     endpoint: string,
-    onMessage: (event: RealTimeEvent) => void,
-    onError?: (error: Event) => void
+    onMessage: (...args: [RealTimeEvent]) => void
   ) {
     const attempts = this.reconnectAttempts.get(subscriptionId) || 0;
     
@@ -220,7 +232,7 @@ class RealTimeService {
 
           newEventSource.onerror = (error) => {
             subscription.onError(error);
-            this.handleReconnect(subscriptionId, endpoint, onMessage, onError);
+            this.handleReconnect(subscriptionId, endpoint, onMessage);
           };
 
           newEventSource.onopen = () => {
@@ -229,7 +241,7 @@ class RealTimeService {
           };
         } catch (error) {
           devLog('Error reconnecting:', error);
-          this.handleReconnect(subscriptionId, endpoint, onMessage, onError);
+          this.handleReconnect(subscriptionId, endpoint, onMessage);
         }
       }
     }, delay);
@@ -264,6 +276,9 @@ class RealTimeService {
    */
   closeAll(): void {
     this.subscriptions.forEach((subscription: any, id: any) => {
+      if (subscription.isActive) {
+        subscription.eventSource.close();
+      }
       this.unsubscribe(id);
     });
   }

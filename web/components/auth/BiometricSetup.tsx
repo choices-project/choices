@@ -40,7 +40,7 @@ interface BiometricSetupProps {
   userId: string
   username: string
   onSuccess?: () => void
-  onError?: (error: string) => void
+  onError?: () => void
 }
 
 export default function BiometricSetup({ userId, username, onSuccess, onError }: BiometricSetupProps) {
@@ -94,7 +94,7 @@ export default function BiometricSetup({ userId, username, onSuccess, onError }:
     }
 
     initializeBiometricSupport()
-  }, [])
+  }, [userId])
 
 
 
@@ -113,13 +113,13 @@ export default function BiometricSetup({ userId, username, onSuccess, onError }:
         const errorMessage = result.error?.message || 'Registration failed'
         setError(errorMessage)
         // Use the error parameter properly in the callback
-        onError?.(errorMessage)
+        onError?.()
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Registration failed'
       setError(errorMessage)
       // Use the error parameter properly in the callback
-      onError?.(errorMessage)
+      onError?.()
     } finally {
       setIsRegistering(false)
     }
