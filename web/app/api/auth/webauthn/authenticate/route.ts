@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create Supabase client
-    const cookieStore = await cookies()
+    const cookieStore = cookies()
     const supabase = getSupabaseServerClient()
 
     if (!supabase) {
@@ -159,7 +159,7 @@ export async function PUT(request: NextRequest) {
     }
 
     // Create Supabase client
-    const cookieStore = await cookies()
+    const cookieStore = cookies()
     const supabase = getSupabaseServerClient()
 
     if (!supabase) {

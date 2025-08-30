@@ -106,7 +106,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get Supabase client
-    const cookieStore = await cookies()
+    const cookieStore = cookies()
     const supabase = getSupabaseServerClient()
     
     if (!supabase) {
@@ -265,7 +265,7 @@ export async function GET(request: NextRequest) {
     const offset = parseInt(searchParams.get('offset') || '0')
 
     // Get Supabase client
-    const cookieStore = await cookies()
+    const cookieStore = cookies()
     const supabase = getSupabaseServerClient()
 
     if (!supabase) {

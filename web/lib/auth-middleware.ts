@@ -44,7 +44,7 @@ export function createAuthMiddleware(options: {
   return async (_request: NextRequest, _context?: AuthContext): Promise<NextResponse | null> => {
     try {
       // Create Supabase client
-      const cookieStore = await cookies()
+      const cookieStore = cookies()
       const supabase = getSupabaseServerClient()
 
       if (!supabase) {
@@ -161,7 +161,7 @@ export function withAuth(
     }
 
     // Get user context for the handler
-    const cookieStore = await cookies()
+    const cookieStore = cookies()
     const supabase = getSupabaseServerClient()
     
     if (!supabase) {
@@ -300,7 +300,7 @@ export function combineMiddleware(...middlewares: ((request: NextRequest) => Pro
  */
 export async function getUserFromRequest(_request: NextRequest): Promise<AuthUser | null> {
   try {
-    const cookieStore = await cookies()
+    const cookieStore = cookies()
     const supabase = getSupabaseServerClient()
     
     if (!supabase) {

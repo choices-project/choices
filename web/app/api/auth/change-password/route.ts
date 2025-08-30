@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
       throw new ValidationError('New password must be at least 8 characters with uppercase, lowercase, number, and special character')
     }
 
-    const cookieStore = await cookies()
+    const cookieStore = cookies()
     const supabase = getSupabaseServerClient()
     
     if (!supabase) {

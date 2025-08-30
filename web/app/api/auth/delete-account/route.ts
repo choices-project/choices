@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
       throw new ValidationError('Password is required to delete account')
     }
 
-    const cookieStore = await cookies()
+    const cookieStore = cookies()
     const supabase = getSupabaseServerClient()
     
     if (!supabase) {

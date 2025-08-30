@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
       throw new ValidationError('Email is required')
     }
 
-    const cookieStore = await cookies()
+    const cookieStore = cookies()
     const supabase = getSupabaseServerClient()
     
     if (!supabase) {

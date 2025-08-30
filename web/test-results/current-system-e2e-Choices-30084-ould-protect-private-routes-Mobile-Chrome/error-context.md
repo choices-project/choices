@@ -1,0 +1,73 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - alert [ref=e2]
+  - generic [ref=e4]:
+    - generic [ref=e6]:
+      - img [ref=e8]
+      - generic [ref=e10]:
+        - generic [ref=e11]:
+          - heading "System Maintenance" [level=3] [ref=e12]
+          - generic [ref=e13]:
+            - generic [ref=e14]: medium
+            - button "Dismiss message" [ref=e15] [cursor=pointer]:
+              - img [ref=e16] [cursor=pointer]
+        - paragraph [ref=e20]: We'll be performing maintenance on Sunday at 2 AM EST. Service may be briefly interrupted.
+        - generic [ref=e22]: 8/26/2025
+    - generic [ref=e24]:
+      - img [ref=e26]
+      - generic [ref=e29]:
+        - generic [ref=e30]:
+          - heading "New Features Coming" [level=3] [ref=e31]
+          - generic [ref=e32]:
+            - generic [ref=e33]: low
+            - button "Dismiss message" [ref=e34] [cursor=pointer]:
+              - img [ref=e35] [cursor=pointer]
+        - paragraph [ref=e39]: Stay tuned for exciting new features including real-time voting and mobile notifications!
+        - generic [ref=e41]: 8/26/2025
+    - generic [ref=e43]:
+      - img [ref=e45]
+      - generic [ref=e47]:
+        - generic [ref=e48]:
+          - heading "Welcome to Choices!" [level=3] [ref=e49]
+          - generic [ref=e50]:
+            - generic [ref=e51]: high
+            - button "Dismiss message" [ref=e52] [cursor=pointer]:
+              - img [ref=e53] [cursor=pointer]
+        - paragraph [ref=e57]: This is a new platform for creating and participating in polls. We'd love your feedback!
+        - generic [ref=e59]: 8/26/2025
+  - generic [ref=e61]:
+    - generic [ref=e62]:
+      - heading "Sign in to your account" [level=2] [ref=e63]
+      - paragraph [ref=e64]: Welcome back to Choices
+    - generic [ref=e65]:
+      - generic [ref=e66]:
+        - generic [ref=e67]:
+          - generic [ref=e68]: Username
+          - generic [ref=e69]:
+            - textbox "Username" [ref=e70]
+            - img [ref=e71]
+        - generic [ref=e74]:
+          - generic [ref=e75]: Password (if you have one)
+          - generic [ref=e76]:
+            - textbox "Password (if you have one)" [ref=e77]
+            - img [ref=e78]
+            - button [ref=e81] [cursor=pointer]:
+              - img [ref=e82] [cursor=pointer]
+          - paragraph [ref=e85]: If you don't have a password, you can use biometric authentication
+      - generic [ref=e86]:
+        - generic [ref=e91]: Or continue with
+        - button "Sign in with biometric" [ref=e92] [cursor=pointer]:
+          - img [ref=e93] [cursor=pointer]
+          - text: Sign in with biometric
+      - button "Sign In" [disabled] [ref=e102]
+    - generic [ref=e103]:
+      - paragraph [ref=e104]:
+        - text: Don't have an account?
+        - link "Create one" [ref=e105] [cursor=pointer]:
+          - /url: /register
+      - paragraph [ref=e106]: Forgot your username? Contact support for assistance.
+  - button [ref=e107] [cursor=pointer]:
+    - img [ref=e108] [cursor=pointer]
+```

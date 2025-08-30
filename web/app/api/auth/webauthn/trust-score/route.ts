@@ -9,7 +9,7 @@ export const dynamic = 'force-dynamic'
 export async function GET(_request: NextRequest) {
   try {
     // Get Supabase client
-    const cookieStore = await cookies()
+    const cookieStore = cookies()
     const supabase = getSupabaseServerClient()
     
     if (!supabase) {
@@ -138,7 +138,7 @@ export async function GET(_request: NextRequest) {
 export async function POST(_request: NextRequest) {
   try {
     // Get Supabase client
-    const cookieStore = await cookies()
+    const cookieStore = cookies()
     const supabase = getSupabaseServerClient()
     
     if (!supabase) {
