@@ -279,7 +279,8 @@ export class DeviceFlowManager {
       const supabase = getSupabaseServerClient()
       if (!supabase) return
 
-      await supabase
+      const supabaseClient = await supabase
+      await supabaseClient
         .from('device_flows')
         .update({ status: 'expired' } as any)
         .eq('device_code', deviceCode as any)
@@ -298,7 +299,8 @@ export class DeviceFlowManager {
       const supabase = getSupabaseServerClient()
       if (!supabase) return []
 
-      const { data: flows } = await supabase
+      const supabaseClient = await supabase
+      const { data: flows } = await supabaseClient
         .from('device_flows')
         .select('*')
         .eq('client_ip', clientIp as any)
@@ -346,7 +348,8 @@ export class DeviceFlowManager {
       const supabase = getSupabaseServerClient()
       if (!supabase) return
 
-      const { error } = await supabase
+      const supabaseClient = await supabase
+      const { error } = await supabaseClient
         .from('device_flows')
         .delete()
         .lt('expires_at', new Date().toISOString())
