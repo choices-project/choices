@@ -3,7 +3,6 @@
  * Integrates with database performance optimization tables and functions
  */
 
-import { createClient } from '@supabase/supabase-js';
 import { logger } from '@/lib/logger';
 
 // Types for performance monitoring
@@ -126,12 +125,18 @@ const DEFAULT_CONFIG: PerformanceConfig = {
  * Provides comprehensive performance monitoring and optimization
  */
 export class PerformanceMonitor {
-  private supabase: ReturnType<typeof createClient>;
+  private supabase: any; // Will be initialized in constructor
   private config: PerformanceConfig;
   private isInitialized = false;
 
   constructor(config: Partial<PerformanceConfig> = {}) {
     this.config = { ...DEFAULT_CONFIG, ...config };
+    // Initialize supabase in constructor using dynamic import
+    this.initializeSupabase();
+  }
+
+  private async initializeSupabase() {
+    const { createClient } = await import('@supabase/supabase-js');
     this.supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -476,8 +481,8 @@ export class PerformanceMonitor {
         queryPerformance: {
           totalQueries: queryStats?.length || 0,
           avgExecutionTime: this.calculateAverage(queryStats, 'execution_time_ms'),
-          slowQueries: queryStats?.filter(q => (q.execution_time_ms as number) > this.config.slowQueryThresholdMs).length || 0,
-          totalRowsAffected: queryStats?.reduce((sum, q) => sum + ((q.rows_affected as number) || 0), 0) || 0,
+          slowQueries: queryStats?.filter((q: any) => (q.execution_time_ms as number) > this.config.slowQueryThresholdMs).length || 0,
+          totalRowsAffected: queryStats?.reduce((sum: number, q: any) => sum + ((q.rows_affected as number) || 0), 0) || 0,
         },
         cachePerformance: {
           avgHitRate: this.calculateAverage(cacheStats, 'hit_rate'),

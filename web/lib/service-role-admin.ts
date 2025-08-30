@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { devLog } from '@/lib/logger';
-import { createClient } from '@supabase/supabase-js';
 
 /**
  * Service Role Admin Middleware
@@ -18,7 +17,8 @@ export async function serviceRoleAdminAuth(request: NextRequest) {
       userAgent: request.headers.get('user-agent')
     });
 
-    // Create service role client
+    // Create service role client using dynamic import
+    const { createClient } = await import('@supabase/supabase-js');
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!

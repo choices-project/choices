@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { logger } from '@/lib/logger';
 import { TypeGuardError, assertIsRecord } from '@/lib/types/guards';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
-import { SupabaseClient } from '@supabase/supabase-js';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
 type TableShape = { table: string; columns: string[] };
 
