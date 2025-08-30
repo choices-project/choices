@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { createClient } from '@/utils/supabase/client';
+import { getSupabaseBrowserClient } from '@/utils/supabase/client';
 import { devLog } from '@/lib/logger';
 
 import type {
@@ -89,13 +89,13 @@ function EnhancedOnboardingFlowInner() {
             out.privacyPhilosophyCompleted = !!patch.privacyPhilosophyCompleted;
             out.completedSteps = maybePushCompleted(data.completedSteps, toSlug('privacyPhilosophy'));
           }
-          if ('privacyLevel' in patch && patch.privacyLevel !== undefined) {
+          if ('privacyLevel' in patch && patch.privacyLevel !== undefined && patch.privacyLevel !== null && typeof patch.privacyLevel === 'string') {
             out.privacyLevel = patch.privacyLevel;
           }
-          if ('profileVisibility' in patch && patch.profileVisibility !== undefined) {
+          if ('profileVisibility' in patch && patch.profileVisibility !== undefined && patch.profileVisibility !== null && typeof patch.profileVisibility === 'string') {
             out.profileVisibility = patch.profileVisibility;
           }
-          if ('dataSharing' in patch && patch.dataSharing !== undefined) {
+          if ('dataSharing' in patch && patch.dataSharing !== undefined && patch.dataSharing !== null && typeof patch.dataSharing === 'string') {
             out.dataSharing = patch.dataSharing;
           }
           return out;
@@ -245,7 +245,11 @@ function EnhancedOnboardingFlowInner() {
           setCurrentStep(stepParam);
         }
 
-        const { data: auth, error: userError } = await createClient().auth.getUser();
+        const client = getSupabaseBrowserClient();
+        if (!client) {
+          throw new Error('Failed to create Supabase client');
+        }
+        const { data: auth, error: userError } = await client.auth.getUser();
         const user = auth?.user;
         if (user && !userError) {
           setData(prev => ({
@@ -354,7 +358,7 @@ function EnhancedOnboardingFlowInner() {
           {currentStep === 'data-usage' && (
             <DataUsageStep
               data={data.dataUsage}
-              onUpdate={updateStepData('dataUsage')}
+              onUpdate={() => updateStepData('dataUsage')({ dataUsageCompleted: true })}
               onNext={handleNext}
               onBack={handleBack}
             />
@@ -378,7 +382,7 @@ function EnhancedOnboardingFlowInner() {
           {currentStep === 'first-experience' && (
             <FirstExperienceStep
               data={data.firstExperience}
-              onUpdate={updateStepData('firstExperience')}
+              onUpdate={() => updateStepData('firstExperience')({ firstExperienceCompleted: true })}
               onNext={handleNext}
               onBack={handleBack}
             />

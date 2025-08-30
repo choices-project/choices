@@ -1,7 +1,7 @@
 // Media Bias Analysis & Poll Origin Tracking System
 // Detects propaganda and bias by comparing mainstream media polls with real public opinion
 
-import { createClient } from '@/utils/supabase/server';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 import { devLog } from '@/lib/logger';
 import { cookies } from 'next/headers';
 
@@ -523,7 +523,7 @@ export class MediaBiasAnalysisService {
 
   constructor() {
     const cookieStore = cookies();
-    this.supabase = createClient(cookieStore);
+    this.supabase = getSupabaseServerClient();
   }
 
   async trackMediaPoll(poll: Omit<MediaPoll, 'id' | 'createdAt' | 'updatedAt'>): Promise<MediaPoll | null> {
@@ -545,7 +545,7 @@ export class MediaBiasAnalysisService {
           bias_analysis: biasAnalysis,
           bias_indicators: biasIndicators,
           fact_check: factCheck
-        }])
+        }] as any)
         .select()
         .single();
 
@@ -576,7 +576,7 @@ export class MediaBiasAnalysisService {
           our_poll_id: ourPollId,
           comparison,
           analysis
-        }])
+        }] as any)
         .select()
         .single();
 
@@ -798,7 +798,7 @@ export class MediaBiasAnalysisService {
     const { data, error } = await this.supabase
       .from('media_polls')
       .select('id, source_id, title, content, created_at')
-      .eq('id', id)
+              .eq('id', id as any)
       .single();
 
     if (error) return null;

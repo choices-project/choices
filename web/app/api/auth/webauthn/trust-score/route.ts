@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
-import { createClient } from '@/utils/supabase/server';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 import { devLog } from '@/lib/logger';
+import { cookies } from 'next/headers';
 
 export const dynamic = 'force-dynamic'
 
@@ -10,7 +10,7 @@ export async function GET(_request: NextRequest) {
   try {
     // Get Supabase client
     const cookieStore = await cookies()
-    const supabase = createClient(cookieStore)
+    const supabase = getSupabaseServerClient()
     
     if (!supabase) {
       return NextResponse.json(
@@ -19,8 +19,10 @@ export async function GET(_request: NextRequest) {
       )
     }
 
+    const supabaseClient = await supabase
+
     // Get current user
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    const { data: { user }, error: userError } = await supabaseClient.auth.getUser()
     
     if (userError || !user) {
       return NextResponse.json(
@@ -30,7 +32,7 @@ export async function GET(_request: NextRequest) {
     }
 
     // Get user's biometric trust score
-    const { data: trustScore, error: trustScoreError } = await supabase
+    const { data: trustScore, error: trustScoreError } = await supabaseClient
       .from('biometric_trust_scores')
       .select(`
         overall_score,
@@ -40,7 +42,7 @@ export async function GET(_request: NextRequest) {
         location_score,
         last_calculated_at
       `)
-      .eq('user_id', user.id)
+      .eq('user_id', String(user.id) as any)
       .single()
 
     if (trustScoreError && trustScoreError.code !== 'PGRST116') {
@@ -54,7 +56,7 @@ export async function GET(_request: NextRequest) {
 
     // If no trust score exists, calculate it
     if (!trustScore) {
-      const { data: _calculatedScore, error: calculateError } = await supabase
+      const { data: _calculatedScore, error: calculateError } = await supabaseClient
         .rpc('calculate_biometric_trust_score', { p_user_id: user.id })
 
       if (calculateError) {
@@ -66,7 +68,7 @@ export async function GET(_request: NextRequest) {
       }
 
       // Get the calculated score
-      const { data: newTrustScore } = await supabase
+      const { data: newTrustScore } = await supabaseClient
         .from('biometric_trust_scores')
         .select(`
           overall_score,
@@ -76,10 +78,10 @@ export async function GET(_request: NextRequest) {
           location_score,
           last_calculated_at
         `)
-        .eq('user_id', user.id)
+        .eq('user_id', String(user.id) as any)
         .single()
 
-      if (newTrustScore) {
+      if (newTrustScore && 'overall_score' in newTrustScore) {
         devLog('Calculated new trust score for user:', user.id, 'Score:', newTrustScore.overall_score)
         
         return NextResponse.json({
@@ -94,7 +96,7 @@ export async function GET(_request: NextRequest) {
           lastCalculated: newTrustScore.last_calculated_at
         })
       }
-    } else {
+    } else if (trustScore && 'overall_score' in trustScore) {
       devLog('Retrieved trust score for user:', user.id, 'Score:', trustScore.overall_score)
       
       return NextResponse.json({
@@ -137,7 +139,7 @@ export async function POST(_request: NextRequest) {
   try {
     // Get Supabase client
     const cookieStore = await cookies()
-    const supabase = createClient(cookieStore)
+    const supabase = getSupabaseServerClient()
     
     if (!supabase) {
       return NextResponse.json(
@@ -146,8 +148,10 @@ export async function POST(_request: NextRequest) {
       )
     }
 
+    const supabaseClient = await supabase
+
     // Get current user
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    const { data: { user }, error: userError } = await supabaseClient.auth.getUser()
     
     if (userError || !user) {
       return NextResponse.json(
@@ -157,7 +161,7 @@ export async function POST(_request: NextRequest) {
     }
 
     // Recalculate trust score
-    const { data: calculatedScore, error: calculateError } = await supabase
+    const { data: calculatedScore, error: calculateError } = await supabaseClient
       .rpc('calculate_biometric_trust_score', { p_user_id: user.id })
 
     if (calculateError) {
@@ -169,7 +173,7 @@ export async function POST(_request: NextRequest) {
     }
 
     // Get the updated trust score
-    const { data: trustScore } = await supabase
+    const { data: trustScore } = await supabaseClient
       .from('biometric_trust_scores')
       .select(`
         overall_score,
@@ -179,7 +183,7 @@ export async function POST(_request: NextRequest) {
         location_score,
         last_calculated_at
       `)
-      .eq('user_id', user.id)
+      .eq('user_id', String(user.id) as any)
       .single()
 
     devLog('Recalculated trust score for user:', user.id, 'New score:', calculatedScore)
@@ -187,13 +191,13 @@ export async function POST(_request: NextRequest) {
     return NextResponse.json({
       success: true,
       trustScore: calculatedScore,
-      breakdown: trustScore ? {
+      breakdown: trustScore && 'base_score' in trustScore ? {
         baseScore: trustScore.base_score,
         deviceConsistencyScore: trustScore.device_consistency_score,
         behaviorScore: trustScore.behavior_score,
         locationScore: trustScore.location_score
       } : null,
-      lastCalculated: trustScore?.last_calculated_at || new Date().toISOString()
+      lastCalculated: trustScore && 'last_calculated_at' in trustScore ? trustScore.last_calculated_at : new Date().toISOString()
     })
 
   } catch (error) {

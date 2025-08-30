@@ -1,12 +1,10 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/utils/supabase/server';
-import { cookies } from 'next/headers';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 import { handleError, getUserMessage, getHttpStatus } from '@/lib/error-handler';
 
 export async function GET() {
   try {
-    const cookieStore = await cookies();
-    const supabase = createClient(cookieStore);
+    const supabase = getSupabaseServerClient();
     
     // Check if Supabase is configured
     const supabaseConfigured = !!(process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY);
@@ -33,8 +31,9 @@ export async function GET() {
       });
     }
     
-    // Test the connection
-    const { error } = await supabase.from('ia_users').select('count').limit(1);
+               // Test the connection
+           const supabaseClient = await supabase;
+           const { error } = await supabaseClient.from('ia_users').select('count').limit(1);
     
     return NextResponse.json({
       status: {

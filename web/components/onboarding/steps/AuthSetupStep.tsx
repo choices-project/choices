@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { createClient } from '@/utils/supabase/client'
+import { getSupabaseBrowserClient } from '@/utils/supabase/client'
 
 interface AuthSetupStepProps {
   data: any
@@ -25,7 +25,7 @@ export default function AuthSetupStep({ data, onUpdate, onNext }: AuthSetupStepP
   const [success, setSuccess] = useState(false)
   const [currentSection, setCurrentSection] = useState<'overview' | 'setup' | 'complete'>('overview')
 
-  const supabase = createClient()
+  const supabase = getSupabaseBrowserClient()
 
   const handleEmailSignup = async () => {
     if (!email) {

@@ -1,6 +1,6 @@
 'use server'
 
-import { createClient } from '@supabase/supabase-js'
+import { getSupabaseServerClient } from '@/utils/supabase/server'
 import { z } from 'zod'
 import { v4 as uuidv4 } from 'uuid'
 import { 
@@ -11,10 +11,7 @@ import {
   type ServerActionContext
 } from '@/lib/auth/server-actions'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+
 
 // Validation schema for voting
 const VoteSchema = z.object({
@@ -28,14 +25,19 @@ const VoteSchema = z.object({
 // Enhanced voting action with security features
 export const vote = createSecureServerAction(
   async (formData: FormData, context: ServerActionContext) => {
+    const supabase = getSupabaseServerClient();
+    
     // Get authenticated user
     const user = await getAuthenticatedUser(context)
     
     // Validate form data
     const validatedData = validateFormData(formData, VoteSchema)
 
+    // Get Supabase client
+    const supabaseClient = await supabase
+
     // Check if poll exists and is active
-    const { data: poll, error: pollError } = await supabase
+    const { data: poll, error: pollError } = await supabaseClient
       .from('polls')
       .select('id, owner_id, type, visibility, end_date, allow_multiple_votes')
       .eq('id', validatedData.pollId)
@@ -52,7 +54,7 @@ export const vote = createSecureServerAction(
 
     // Check if user has already voted (unless multiple votes are allowed)
     if (!poll.allow_multiple_votes) {
-      const { data: existingVote } = await supabase
+      const { data: existingVote } = await supabaseClient
         .from('votes')
         .select('id')
         .eq('poll_id', validatedData.pollId)
@@ -65,7 +67,7 @@ export const vote = createSecureServerAction(
     }
 
     // Validate that all option IDs belong to this poll
-    const { data: pollOptions, error: optionsError } = await supabase
+    const { data: pollOptions, error: optionsError } = await supabaseClient
       .from('poll_options')
       .select('id')
       .eq('poll_id', validatedData.pollId)
@@ -89,7 +91,7 @@ export const vote = createSecureServerAction(
       created_at: new Date().toISOString()
     }))
 
-    const { error: voteError } = await supabase
+    const { error: voteError } = await supabaseClient
       .from('votes')
       .insert(voteData)
 

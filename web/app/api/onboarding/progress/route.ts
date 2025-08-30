@@ -1,28 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/utils/supabase/server'
+import { getSupabaseServerClient } from '@/utils/supabase/server'
 import { devLog } from '@/lib/logger'
 import { cookies } from 'next/headers'
 
 export async function GET(_request: NextRequest) {
   try {
-    const cookieStore = cookies()
-    const supabase = createClient(cookieStore)
+    const supabase = getSupabaseServerClient()
     
     if (!supabase) {
       return NextResponse.json({ error: 'Database connection failed' }, { status: 500 })
     }
     
+    const supabaseClient = await supabase;
+    
     // Get current user
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    const { data: { user }, error: userError } = await supabaseClient.auth.getUser()
     if (userError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     // Get onboarding progress
-    const { data: progress, error: progressError } = await supabase
+    const { data: progress, error: progressError } = await supabaseClient
       .from('onboarding_progress')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('user_id', String(user.id) as any)
       .single()
 
     if (progressError && progressError.code !== 'PGRST116') {
@@ -31,10 +32,10 @@ export async function GET(_request: NextRequest) {
     }
 
     // Get user profile for additional onboarding data
-    const { data: profile, error: profileError } = await supabase
+    const { data: profile, error: profileError } = await supabaseClient
       .from('user_profiles')
       .select('onboarding_completed, onboarding_step, privacy_level, profile_visibility, data_sharing_preferences')
-      .eq('user_id', user.id)
+      .eq('user_id', String(user.id) as any)
       .single()
 
     if (profileError && profileError.code !== 'PGRST116') {
@@ -68,15 +69,16 @@ export async function GET(_request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const cookieStore = cookies()
-    const supabase = createClient(cookieStore)
+    const supabase = getSupabaseServerClient()
     
     if (!supabase) {
       return NextResponse.json({ error: 'Database connection failed' }, { status: 500 })
     }
     
+    const supabaseClient = await supabase;
+    
     // Get current user
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    const { data: { user }, error: userError } = await supabaseClient.auth.getUser()
     if (userError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -93,12 +95,12 @@ export async function POST(request: NextRequest) {
     switch (action) {
       case 'start':
         // Start onboarding
-        result = await supabase.rpc('start_onboarding', { p_user_id: user.id })
+        result = await supabaseClient.rpc('start_onboarding', { p_user_id: user.id })
         break
 
       case 'update':
         // Update onboarding step
-        result = await supabase.rpc('update_onboarding_step', { 
+        result = await supabaseClient.rpc('update_onboarding_step', { 
           p_user_id: user.id, 
           p_step: step, 
           p_data: data || {} 
@@ -107,7 +109,7 @@ export async function POST(request: NextRequest) {
 
       case 'complete':
         // Complete onboarding
-        result = await supabase.rpc('complete_onboarding', { p_user_id: user.id })
+        result = await supabaseClient.rpc('complete_onboarding', { p_user_id: user.id })
         break
 
       default:
@@ -120,10 +122,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Get updated progress
-    const { data: updatedProgress, error: progressError } = await supabase
+    const { data: updatedProgress, error: progressError } = await supabaseClient
       .from('onboarding_progress')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('user_id', String(user.id) as any)
       .single()
 
     if (progressError && progressError.code !== 'PGRST116') {

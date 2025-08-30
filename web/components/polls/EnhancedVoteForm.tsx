@@ -42,7 +42,7 @@ export default function EnhancedVoteForm({ poll, onVoteSubmitted, onVoteError }:
         const pending = await offlineOutbox.hasPendingVotes(poll.id)
         setHasPendingVotes(pending)
       } catch (error) {
-        logger.error('Failed to check pending votes:', error)
+        logger.error('Failed to check pending votes:', error instanceof Error ? error : new Error(String(error)))
       }
     }
 
@@ -107,7 +107,7 @@ export default function EnhancedVoteForm({ poll, onVoteSubmitted, onVoteError }:
         onVoteSubmitted?.(result)
       }
     } catch (error) {
-      logger.error('Vote submission failed:', error)
+      logger.error('Vote submission failed:', error instanceof Error ? error : new Error(String(error)))
       onVoteError?.(error instanceof Error ? error.message : 'Failed to submit vote')
     } finally {
       setIsSubmitting(false)

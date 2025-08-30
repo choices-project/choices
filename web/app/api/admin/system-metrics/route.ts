@@ -1,33 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { devLog } from '@/lib/logger';
-import { createClient } from '@supabase/supabase-js';
-
-// Create Supabase client with proper error handling
-function createSupabaseClient() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  
-  if (!supabaseUrl || !supabaseKey) {
-    throw new Error('Supabase environment variables are not configured');
-  }
-  
-  return createClient(supabaseUrl, supabaseKey);
-}
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 export async function GET(_request: NextRequest) {
   try {
-    // Create Supabase client
-    const supabase = createSupabaseClient();
+    const supabase = getSupabaseServerClient();
+    
+    // Get Supabase client
+    const supabaseClient = await supabase;
+    
+    if (!supabaseClient) {
+      return NextResponse.json(
+        { error: 'Supabase client not available' },
+        { status: 500 }
+      );
+    }
     
     // Fetch real metrics from database
     const [topicsResult, pollsResult] = await Promise.all([
-      supabase.from('trending_topics').select('id, processing_status'),
-      supabase.from('generated_polls').select('id, status')
+      supabaseClient.from('trending_topics').select('id, processing_status'),
+      supabaseClient.from('generated_polls').select('id, status')
     ]);
 
     const totalTopics = topicsResult.data?.length || 0;
     const totalPolls = pollsResult.data?.length || 0;
-    const activePolls = pollsResult.data?.filter(poll => poll.status === 'active').length || 0;
+    const activePolls = pollsResult.data?.filter(poll => poll && 'status' in poll && poll.status === 'active').length || 0;
 
     const metrics = {
       total_topics: totalTopics,

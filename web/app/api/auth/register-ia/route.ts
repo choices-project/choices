@@ -1,18 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { getSupabaseServerClient } from '@/utils/supabase/server'
+import { cookies } from 'next/headers'
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import { v4 as uuidv4 } from 'uuid'
 import { logger } from '@/lib/logger'
 import { setSessionTokenInResponse } from '@/lib/session'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
-
 export async function POST(req: NextRequest) {
   try {
+    const supabase = getSupabaseServerClient();
+    
+    if (!supabase) {
+      return NextResponse.json(
+        { error: 'Supabase client not available' },
+        { status: 500 }
+      );
+    }
     let username: string
     let email: string | undefined
     let password: string | undefined
@@ -46,11 +50,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Username can only contain letters, numbers, underscores, and hyphens' }, { status: 400 })
     }
 
+    const supabaseClient = await supabase
+
     // Check if username already exists
-    const { data: existingUser } = await supabase
+    const { data: existingUser } = await supabaseClient
       .from('ia_users')
       .select('stable_id')
-      .eq('username', username.toLowerCase())
+      .eq('username', username.toLowerCase() as any)
       .single()
 
     if (existingUser) {
@@ -67,7 +73,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Create user in ia_users table
-    const { error: iaUserError } = await supabase
+    const { error: iaUserError } = await supabaseClient
       .from('ia_users')
       .insert({
         stable_id: stableId,
@@ -78,7 +84,7 @@ export async function POST(req: NextRequest) {
         two_factor_enabled: false,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
-      })
+      } as any)
 
     if (iaUserError) {
       logger.error('Failed to create IA user', iaUserError)
@@ -86,7 +92,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Create user profile
-    const { error: profileError } = await supabase
+    const { error: profileError } = await supabaseClient
       .from('user_profiles')
       .insert({
         user_id: stableId,
@@ -95,7 +101,7 @@ export async function POST(req: NextRequest) {
         onboarding_completed: false,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
-      })
+      } as any)
 
     if (profileError) {
       logger.error('Failed to create user profile', profileError)

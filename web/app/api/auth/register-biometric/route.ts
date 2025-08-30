@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/utils/supabase/server'
+import { getSupabaseServerClient } from '@/utils/supabase/server'
 import { cookies } from 'next/headers'
 import { logger } from '@/lib/logger'
 import { rateLimiters } from '@/lib/rate-limit'
@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const supabase = createClient(cookies())
+    const supabase = getSupabaseServerClient()
     if (!supabase) {
       return NextResponse.json(
         { message: 'Authentication service not available' },
@@ -51,8 +51,10 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    const supabaseClient = await supabase
+
     // Check if username already exists
-    const { data: existingUser, error: checkError } = await supabase
+    const { data: existingUser, error: checkError } = await supabaseClient
       .from('user_profiles')
       .select('username')
       .eq('username', username.toLowerCase())
@@ -77,7 +79,7 @@ export async function POST(request: NextRequest) {
     const userId = crypto.randomUUID()
 
     // Create user profile directly (no email required for biometric-first)
-    const { error: profileError } = await supabase
+    const { error: profileError } = await supabaseClient
       .from('user_profiles')
       .insert({
         user_id: userId,
@@ -90,7 +92,7 @@ export async function POST(request: NextRequest) {
         },
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
-      })
+      } as any)
 
     if (profileError) {
       logger.error('User profile creation failed', new Error(profileError.message))
@@ -101,7 +103,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Store biometric credentials
-    const { error: credentialError } = await supabase
+    const { error: credentialError } = await supabaseClient
       .from('webauthn_credentials')
       .insert({
         id: credentialId,
@@ -110,12 +112,12 @@ export async function POST(request: NextRequest) {
         sign_count: 0,
         created_at: new Date().toISOString(),
         last_used_at: new Date().toISOString()
-      })
+      } as any)
 
     if (credentialError) {
       logger.error('Biometric credential storage failed', new Error(credentialError.message))
       // Clean up the user profile
-      await supabase.from('user_profiles').delete().eq('id', userId)
+      await supabaseClient.from('user_profiles').delete().eq('id', userId as any)
       return NextResponse.json(
         { message: 'Failed to store biometric credentials' },
         { status: 500 }

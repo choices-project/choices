@@ -1,6 +1,6 @@
 'use server'
 
-import { createClient } from '@supabase/supabase-js'
+import { getSupabaseServerClient } from '@/utils/supabase/server'
 import { z } from 'zod'
 import { 
   createSecureServerAction,
@@ -14,10 +14,7 @@ import {
   setSessionCookie 
 } from '@/lib/auth/session-cookies'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+
 
 // Validation schema
 const OnboardingSchema = z.object({
@@ -29,14 +26,19 @@ const OnboardingSchema = z.object({
 // Enhanced onboarding completion action with security features
 export const completeOnboarding = createSecureServerAction(
   async (formData: FormData, context: ServerActionContext) => {
+    const supabase = getSupabaseServerClient();
+    
     // Get authenticated user
     const user = await getAuthenticatedUser(context)
     
     // Validate form data
     const validatedData = validateFormData(formData, OnboardingSchema)
 
+    // Get Supabase client
+    const supabaseClient = await supabase
+
     // Update user profile to mark onboarding as completed
-    const { error: updateError } = await supabase
+    const { error: updateError } = await supabaseClient
       .from('user_profiles')
       .update({
         onboarding_completed: true,

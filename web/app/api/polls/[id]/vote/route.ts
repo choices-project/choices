@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
-import { createClient } from '@/utils/supabase/server'
+import { getSupabaseServerClient } from '@/utils/supabase/server'
 import { devLog } from '@/lib/logger'
 import { getCurrentUser } from '@/lib/auth-utils'
 import { HybridVotingService } from '@/lib/hybrid-voting-service'
@@ -29,8 +29,7 @@ export async function POST(
       throw new ValidationError('Poll ID is required')
     }
 
-    const cookieStore = await cookies()
-    const supabase = createClient(cookieStore)
+    const supabase = await getSupabaseServerClient()
     
     if (!supabase) {
       throw new Error('Supabase client not available')
@@ -42,14 +41,16 @@ export async function POST(
       throw new AuthenticationError('Authentication required to vote')
     }
 
+    const supabaseClient = supabase;
+    
     // Verify user is active
-    const { data: userProfile } = await supabase
+    const { data: userProfile } = await supabaseClient
       .from('ia_users')
       .select('is_active')
-      .eq('stable_id', user.userId)
+      .eq('stable_id', user.userId as any)
       .single()
 
-    if (!userProfile || !userProfile.is_active) {
+    if (!userProfile || !('is_active' in userProfile) || !userProfile.is_active) {
       throw new AuthenticationError('Active account required to vote')
     }
 
@@ -113,8 +114,7 @@ export async function GET(
       throw new ValidationError('Poll ID is required')
     }
 
-    const cookieStore = await cookies()
-    const supabase = createClient(cookieStore)
+    const supabase = await getSupabaseServerClient()
     
     if (!supabase) {
       throw new Error('Supabase client not available')
@@ -133,8 +133,8 @@ export async function GET(
     const { data: existingVote } = await supabase
       .from('po_votes')
       .select('id')
-      .eq('poll_id', pollId)
-      .eq('user_id', user.userId)
+      .eq('poll_id', pollId as any)
+      .eq('user_id', user.userId as any)
       .single()
 
     return NextResponse.json({

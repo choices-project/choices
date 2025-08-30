@@ -79,7 +79,7 @@ export class OptimizedPollService {
       })
 
       if (error) {
-        logger.error('Failed to get optimized poll results', { pollId, userId, error: error.message })
+        logger.error('Failed to get optimized poll results', error instanceof Error ? error : new Error(String(error)), { pollId, userId })
         throw new Error('Failed to fetch poll results')
       }
 
@@ -222,7 +222,7 @@ export class OptimizedPollService {
         .single()
 
       if (error) {
-        logger.error('Failed to get poll results summary', { pollId, error })
+        logger.error('Failed to get poll results summary', error instanceof Error ? error : new Error(String(error)), { pollId })
         throw new Error('Failed to fetch poll summary')
       }
 
@@ -239,7 +239,7 @@ export class OptimizedPollService {
       
       return data
     } catch (error) {
-      logger.error('Error in getPollResultsSummary', { pollId, error })
+      logger.error('Error in getPollResultsSummary', error instanceof Error ? error : new Error(String(error)), { pollId })
       throw error
     }
   }
@@ -254,13 +254,13 @@ export class OptimizedPollService {
       })
 
       if (error) {
-        logger.error('Failed to get performance stats', { hoursBack, error })
+        logger.error('Failed to get performance stats', error instanceof Error ? error : new Error(String(error)), { hoursBack })
         throw new Error('Failed to fetch performance statistics')
       }
 
       return data as PerformanceMetrics[]
     } catch (error) {
-      logger.error('Error in getPerformanceStats', { hoursBack, error })
+      logger.error('Error in getPerformanceStats', error instanceof Error ? error : new Error(String(error)), { hoursBack })
       throw error
     }
   }
@@ -282,7 +282,7 @@ export class OptimizedPollService {
         context: context
       })
     } catch (error) {
-      logger.error('Failed to record performance metric', { metricName, metricValue, error })
+      logger.error('Failed to record performance metric', error instanceof Error ? error : new Error(String(error)), { metricName, metricValue })
     }
   }
 
@@ -294,7 +294,7 @@ export class OptimizedPollService {
       const { error } = await supabase.rpc('refresh_poll_materialized_views')
       
       if (error) {
-        logger.error('Failed to refresh materialized views', { error })
+        logger.error('Failed to refresh materialized views', error instanceof Error ? error : new Error(String(error)))
         throw new Error('Failed to refresh materialized views')
       }
 
@@ -303,7 +303,7 @@ export class OptimizedPollService {
       
       logger.info('Materialized views refreshed successfully')
     } catch (error) {
-      logger.error('Error in refreshMaterializedViews', { error })
+      logger.error('Error in refreshMaterializedViews', error instanceof Error ? error : new Error(String(error)))
       throw error
     }
   }
@@ -316,13 +316,13 @@ export class OptimizedPollService {
       const { error } = await supabase.rpc('perform_database_maintenance')
       
       if (error) {
-        logger.error('Failed to perform database maintenance', { error })
+        logger.error('Failed to perform database maintenance', error instanceof Error ? error : new Error(String(error)))
         throw new Error('Failed to perform database maintenance')
       }
 
       logger.info('Database maintenance completed successfully')
     } catch (error) {
-      logger.error('Error in performDatabaseMaintenance', { error })
+      logger.error('Error in performDatabaseMaintenance', error instanceof Error ? error : new Error(String(error)))
       throw error
     }
   }
@@ -377,7 +377,7 @@ export class OptimizedPollService {
       
       logger.info('Frequently accessed data preloaded successfully')
     } catch (error) {
-      logger.error('Error preloading frequently accessed data', { error })
+      logger.error('Error preloading frequently accessed data', error instanceof Error ? error : new Error(String(error)))
     }
   }
 }
@@ -416,7 +416,7 @@ export const pollPerformanceUtils = {
         `${operationName}_time`,
         endTime - startTime,
         'ms',
-        { ...context, success: false, error: error.message }
+        { ...context, success: false, error: error instanceof Error ? error.message : String(error) }
       )
       
       throw error

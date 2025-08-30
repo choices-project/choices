@@ -1,16 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { getSupabaseServerClient } from '@/utils/supabase/server'
+import { cookies } from 'next/headers'
 import jwt from 'jsonwebtoken'
 import { logger } from '@/lib/logger'
 import { setSessionTokenInResponse } from '@/lib/session'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
-
 export async function POST(req: NextRequest) {
   try {
+    const supabase = getSupabaseServerClient();
+    
+    if (!supabase) {
+      return NextResponse.json(
+        { error: 'Supabase client not available' },
+        { status: 500 }
+      );
+    }
     // Get current user from session
     const sessionToken = req.cookies.get('choices_session')?.value
     
@@ -47,13 +51,14 @@ export async function POST(req: NextRequest) {
     }
 
     // Update user profile to mark onboarding as completed
-    const { error: updateError } = await supabase
+    const supabaseClient = await supabase;
+    const { error: updateError } = await supabaseClient
       .from('user_profiles')
       .update({
         onboarding_completed: true,
         preferences: preferences,
         updated_at: new Date().toISOString()
-      })
+      } as any)
       .eq('user_id', stableId)
 
     if (updateError) {

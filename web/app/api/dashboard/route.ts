@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { devLog } from '@/lib/logger';
-import { createClient } from '@/utils/supabase/server'
+import { getSupabaseServerClient } from '@/utils/supabase/server'
 import { getCurrentUser } from '@/lib/auth-utils'
 import { cookies } from 'next/headers'
 
@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
   try {
     // Get Supabase client
     const cookieStore = await cookies()
-    const supabase = createClient(cookieStore)
+    const supabase = getSupabaseServerClient()
     
     if (!supabase) {
       return NextResponse.json(

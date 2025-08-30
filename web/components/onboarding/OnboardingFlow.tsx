@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, createContext, useContext, Suspense, useMemo } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { createClient } from '@/utils/supabase/client'
+import { getSupabaseBrowserClient } from '@/utils/supabase/client'
 import WelcomeStep from './steps/WelcomeStep'
 import AuthStep from './steps/AuthStep'
 import ValuesStep from './steps/ValuesStep'
@@ -118,7 +118,7 @@ function OnboardingFlowInner() {
   })
   
   const searchParams = useSearchParams()
-  const supabase = useMemo(() => createClient(), [])
+  const supabase = useMemo(() => getSupabaseBrowserClient(), [])
 
   // Use useCallback for the updateData function to prevent unnecessary re-renders
   const updateData = useCallback((_updates: Partial<OnboardingData>) => {
@@ -211,11 +211,9 @@ function OnboardingFlowInner() {
               {currentStep === 'welcome' && (
                 <WelcomeStep 
                   data={{
-                    welcomeStarted: onboardingData.welcomeStarted || false,
-                    welcomeCompleted: onboardingData.welcomeCompleted || false,
-                    userPreferences: onboardingData.userPreferences || {}
+                    welcomeStarted: onboardingData.welcomeStarted || false
                   }}
-                  onUpdate={(updates) => updateData({ ...updates })}
+                  onStepUpdate={(updates) => updateData({ ...updates })}
                   onNext={handleNext}
                 />
               )}

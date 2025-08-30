@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { devLog } from '@/lib/logger';
-import { createClient } from '@/utils/supabase/server';
-import { cookies } from 'next/headers';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 import { AutomatedPollsService } from '@/lib/automated-polls';
 
 export const dynamic = 'force-dynamic';
@@ -9,10 +8,12 @@ export const dynamic = 'force-dynamic';
 // GET /api/admin/generated-polls
 export async function GET(request: NextRequest) {
   try {
-    const cookieStore = await cookies();
-    const supabase = createClient(cookieStore);
+    const supabase = getSupabaseServerClient();
     
-    if (!supabase) {
+    // Get Supabase client
+    const supabaseClient = await supabase;
+    
+    if (!supabaseClient) {
       return NextResponse.json(
         { error: 'Supabase client not available' },
         { status: 500 }
@@ -32,7 +33,7 @@ export async function GET(request: NextRequest) {
     const minQualityScore = parseFloat(searchParams.get('minQualityScore') || '0');
 
     // Fetch real data from database
-    const { data: polls, error } = await supabase
+    const { data: polls, error } = await supabaseClient
       .from('generated_polls').select('id, title, description, status, created_at, updated_at, topic_id, options, voting_method, category, tags, quality_score, approved_by, approved_at, topic_analysis, quality_metrics, generation_metadata')
       .order('created_at', { ascending: false })
       .limit(limit);
@@ -46,51 +47,55 @@ export async function GET(request: NextRequest) {
     }
 
     // Transform database data to match expected format
-    const transformedPolls = polls?.map(poll => ({
-      id: poll.id,
-      topicId: poll.topic_id,
-      title: poll.title,
-      description: poll.description,
-      options: poll.options,
-      votingMethod: poll.voting_method,
-      category: poll.category,
-      tags: poll.tags,
-      qualityScore: poll.quality_score,
-      status: poll.status,
-      approvedBy: poll.approved_by,
-      approvedAt: poll.approved_at,
-      topicAnalysis: poll.topic_analysis,
-      qualityMetrics: poll.quality_metrics,
-      generationMetadata: poll.generation_metadata,
-      createdAt: poll.created_at,
-      updatedAt: poll.updated_at
-    })) || [];
+    const transformedPolls = polls?.map(poll => {
+      if (!poll || !('id' in poll)) return null;
+      return {
+        id: poll.id,
+        topicId: poll.topic_id,
+        title: poll.title,
+        description: poll.description,
+        options: poll.options,
+        votingMethod: poll.voting_method,
+        category: poll.category,
+        tags: poll.tags,
+        qualityScore: poll.quality_score,
+        status: poll.status,
+        approvedBy: poll.approved_by,
+        approvedAt: poll.approved_at,
+        topicAnalysis: poll.topic_analysis,
+        qualityMetrics: poll.quality_metrics,
+        generationMetadata: poll.generation_metadata,
+        createdAt: poll.created_at,
+        updatedAt: poll.updated_at
+      };
+    }).filter(Boolean) || [];
 
     // Apply additional filters
     let filteredPolls = transformedPolls;
     
     if (category) {
-      filteredPolls = filteredPolls.filter(poll => poll.category === category);
+      filteredPolls = filteredPolls.filter(poll => poll && poll.category === category);
     }
 
     if (votingMethod) {
-      filteredPolls = filteredPolls.filter(poll => poll.votingMethod === votingMethod);
+      filteredPolls = filteredPolls.filter(poll => poll && poll.votingMethod === votingMethod);
     }
 
     if (minQualityScore > 0) {
-      filteredPolls = filteredPolls.filter(poll => poll.qualityScore >= minQualityScore);
+      filteredPolls = filteredPolls.filter(poll => poll && poll.qualityScore >= minQualityScore);
     }
 
     // Get quality metrics for each poll
     const pollsWithMetrics = await Promise.all(
       filteredPolls.map(async (poll) => {
+        if (!poll) return null;
         const metrics = await service.getQualityMetrics(poll.id);
         return {
           ...poll,
           qualityMetrics: metrics
         };
       })
-    );
+    ).then(results => results.filter(Boolean));
 
     return NextResponse.json({
       success: true,
@@ -117,8 +122,7 @@ export async function GET(request: NextRequest) {
 // POST /api/admin/generated-polls
 export async function POST(request: NextRequest) {
   try {
-    const cookieStore = await cookies();
-    const supabase = createClient(cookieStore);
+    const supabase = getSupabaseServerClient();
     
     if (!supabase) {
       return NextResponse.json(

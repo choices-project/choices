@@ -1,7 +1,7 @@
 // Real-time News Service for Trending Awareness
 // Focuses on gathering reputable data and presenting it as breaking news stories
 
-import { createClient } from '@/utils/supabase/server';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 import { devLog } from '@/lib/logger';
 import { cookies } from 'next/headers';
 
@@ -412,7 +412,7 @@ export class RealTimeNewsService {
 
   constructor() {
     const cookieStore = cookies();
-    this.supabase = createClient(cookieStore);
+    this.supabase = getSupabaseServerClient();
   }
 
   // ============================================================================
@@ -443,7 +443,7 @@ export class RealTimeNewsService {
       const { data, error } = await this.supabase
         .from('breaking_news')
         .select('id, title, content, source, created_at')
-        .eq('id', id)
+        .eq('id', id as any)
         .single();
 
       if (error) throw error;
@@ -483,7 +483,7 @@ export class RealTimeNewsService {
       const { data, error } = await this.supabase
         .from('news_sources')
         .select('id, title, content, source, created_at')
-        .eq('is_active', true)
+        .eq('is_active', true as any)
         .order('reliability', { ascending: false });
 
       if (error) throw error;
@@ -501,7 +501,7 @@ export class RealTimeNewsService {
       const { data, error } = await this.supabase
         .from('news_sources')
         .update(this.mapNewsSourceToDB(updates))
-        .eq('id', id)
+        .eq('id', id as any)
         .select()
         .single();
 

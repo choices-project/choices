@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
-import { createClient } from '@/utils/supabase/server';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 import { devLog } from '@/lib/logger';
+import { cookies } from 'next/headers';
 
 export const dynamic = 'force-dynamic'
 
@@ -107,7 +107,7 @@ export async function POST(request: NextRequest) {
 
     // Get Supabase client
     const cookieStore = await cookies()
-    const supabase = createClient(cookieStore)
+    const supabase = getSupabaseServerClient()
     
     if (!supabase) {
       devLog('Supabase not configured - using mock response')
@@ -118,8 +118,10 @@ export async function POST(request: NextRequest) {
       })
     }
 
+    const supabaseClient = await supabase;
+    
     // Get current user (if authenticated)
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    const { data: { user }, error: userError } = await supabaseClient.auth.getUser()
     
     if (userError) {
       devLog('Could not get user, proceeding with anonymous feedback:', userError.message)
@@ -128,10 +130,10 @@ export async function POST(request: NextRequest) {
     // Check daily feedback limit for authenticated users
     if (user?.id) {
       const today = new Date().toISOString().split('T')[0]
-      const { count } = await supabase
+      const { count } = await supabaseClient
         .from('feedback')
         .select('id', { count: 'exact', head: true })
-        .eq('user_id', user.id)
+        .eq('user_id', String(user.id) as any)
         .gte('created_at', today)
       
       if (count && count >= 10) {
@@ -184,9 +186,9 @@ export async function POST(request: NextRequest) {
     })
 
     // Insert feedback into database
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
       .from('feedback')
-      .insert([feedbackData])
+      .insert([feedbackData] as any)
       .select()
 
     if (error) {
@@ -235,7 +237,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       message: 'Enhanced feedback submitted successfully',
-      feedback_id: data?.[0]?.id,
+      feedback_id: data && !('error' in data) && data[0] && 'id' in data[0] ? data[0].id : null,
       context: {
         sessionId: userJourney?.sessionId,
         deviceInfo: userJourney?.deviceInfo,
@@ -264,7 +266,7 @@ export async function GET(request: NextRequest) {
 
     // Get Supabase client
     const cookieStore = await cookies()
-    const supabase = createClient(cookieStore)
+    const supabase = getSupabaseServerClient()
 
     if (!supabase) {
       devLog('Supabase not configured - using mock response')
@@ -275,22 +277,24 @@ export async function GET(request: NextRequest) {
       })
     }
 
-    let query = supabase
+    const supabaseClient = await supabase;
+    
+    let query = supabaseClient
       .from('feedback')
       .select('id, user_id, type, title, description, sentiment, created_at, updated_at, user_journey, metadata, ai_analysis')
       .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1)
 
     if (status) {
-      query = query.eq('status', status)
+      query = query.eq('status', status as any)
     }
 
     if (type) {
-      query = query.eq('type', type)
+      query = query.eq('type', type as any)
     }
 
     if (sentiment) {
-      query = query.eq('sentiment', sentiment)
+      query = query.eq('sentiment', sentiment as any)
     }
 
     const { data, error } = await query
@@ -322,8 +326,15 @@ export async function GET(request: NextRequest) {
     }
 
     // Process feedback data for better display
-    const processedFeedback = data?.map(item => ({
-      ...item,
+    const processedFeedback = data && !('error' in data) ? (data as any[]).map(item => ({
+      id: item.id,
+      user_id: item.user_id,
+      type: item.type,
+      content: item.content,
+      sentiment: item.sentiment,
+      status: item.status,
+      created_at: item.created_at,
+      updated_at: item.updated_at,
       userJourney: item.user_journey,
       metadata: item.metadata,
       aiAnalysis: item.ai_analysis,
@@ -335,7 +346,7 @@ export async function GET(request: NextRequest) {
       timeOnPage: item.user_journey?.timeOnPage,
       errorCount: item.user_journey?.errors?.length || 0,
       sessionId: item.user_journey?.sessionId
-    })) || []
+    })) : []
 
     return NextResponse.json({
       success: true,

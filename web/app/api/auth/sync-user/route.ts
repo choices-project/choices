@@ -1,22 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { devLog } from '@/lib/logger';
-import { createClient } from '@/utils/supabase/server';
-import { cookies } from 'next/headers';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 import { handleError, getUserMessage, getHttpStatus, AuthenticationError } from '@/lib/error-handler';
+import { cookies } from 'next/headers';
 
 export const dynamic = 'force-dynamic'
 
 export async function POST(_request: NextRequest) {
   try {
     const cookieStore = await cookies()
-    const supabase = createClient(cookieStore)
+    const supabase = getSupabaseServerClient()
     
     if (!supabase) {
       throw new Error('Supabase not configured')
     }
 
+    const supabaseClient = await supabase
+
     // Get current authenticated user from Supabase Auth
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    const { data: { user }, error: userError } = await supabaseClient.auth.getUser()
     
     if (userError || !user) {
       throw new AuthenticationError('User not authenticated')
@@ -29,10 +31,10 @@ export async function POST(_request: NextRequest) {
     })
 
     // Check if user already exists in ia_users table
-    const { data: existingUser, error: checkError } = await supabase
+    const { data: existingUser, error: checkError } = await supabaseClient
       .from('ia_users')
       .select('id, stable_id, email, verification_tier, is_active')
-      .eq('stable_id', user.id)
+      .eq('stable_id', String(user.id) as any)
       .single()
 
     if (checkError && checkError.code !== 'PGRST116') {
@@ -40,7 +42,7 @@ export async function POST(_request: NextRequest) {
       throw new Error('Database error')
     }
 
-    if (existingUser) {
+    if (existingUser && !('error' in existingUser)) {
       devLog('User already exists in ia_users table')
       return NextResponse.json({
         success: true,
@@ -56,7 +58,7 @@ export async function POST(_request: NextRequest) {
     }
 
     // Create user in ia_users table
-    const { data: newUser, error: createError } = await supabase
+    const { data: newUser, error: createError } = await supabaseClient
       .from('ia_users')
       .insert({
         stable_id: user.id,
@@ -65,7 +67,7 @@ export async function POST(_request: NextRequest) {
         is_active: true,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
-      })
+      } as any)
       .select()
       .single()
 
@@ -80,11 +82,11 @@ export async function POST(_request: NextRequest) {
       success: true,
       message: 'User synced successfully',
       user: {
-        id: newUser.id,
-        stable_id: newUser.stable_id,
-        email: newUser.email,
-        verification_tier: newUser.verification_tier,
-        is_active: newUser.is_active
+        id: (newUser as any).id,
+        stable_id: (newUser as any).stable_id,
+        email: (newUser as any).email,
+        verification_tier: (newUser as any).verification_tier,
+        is_active: (newUser as any).is_active
       }
     })
 

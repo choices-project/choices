@@ -1,6 +1,5 @@
 'use server'
 
-import { createClient } from '@supabase/supabase-js'
 import { z } from 'zod'
 import { 
   createSecureServerAction,
@@ -13,11 +12,7 @@ import {
   rotateSessionToken,
   setSessionCookie 
 } from '@/lib/auth/session-cookies'
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+import { getSupabaseServerClient } from '@/utils/supabase/server'
 
 // Validation schema
 const LoginSchema = z.object({
@@ -28,11 +23,16 @@ const LoginSchema = z.object({
 // Enhanced login action with security features
 export const login = createSecureServerAction(
   async (formData: FormData, context: ServerActionContext) => {
+    const supabase = getSupabaseServerClient();
+    
     // Validate form data
     const validatedData = validateFormData(formData, LoginSchema)
     
+    // Get Supabase client
+    const supabaseClient = await supabase
+    
     // Get user by username
-    const { data: userProfile, error: profileError } = await supabase
+    const { data: userProfile, error: profileError } = await supabaseClient
       .from('user_profiles')
       .select('user_id, username, onboarding_completed')
       .eq('username', validatedData.username.toLowerCase())
@@ -43,7 +43,7 @@ export const login = createSecureServerAction(
     }
 
     // Get user authentication data
-    const { data: userAuth, error: authError } = await supabase
+    const { data: userAuth, error: authError } = await supabaseClient
       .from('ia_users')
       .select('stable_id, password_hash, is_active, verification_tier')
       .eq('stable_id', userProfile.user_id)

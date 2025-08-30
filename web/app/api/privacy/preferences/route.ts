@@ -1,12 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/utils/supabase/server'
+import { getSupabaseServerClient } from '@/utils/supabase/server'
 import { devLog } from '@/lib/logger'
 import { cookies } from 'next/headers'
 
 export async function GET(_request: NextRequest) {
   try {
-    const cookieStore = cookies()
-    const supabase = createClient(cookieStore)
+    const supabase = await getSupabaseServerClient()
     
     if (!supabase) {
       return NextResponse.json({ error: 'Database connection failed' }, { status: 500 })
@@ -22,7 +21,7 @@ export async function GET(_request: NextRequest) {
     const { data: preferences, error: preferencesError } = await supabase
       .from('user_privacy_preferences')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('user_id', String(user.id) as any)
       .single()
 
     if (preferencesError && preferencesError.code !== 'PGRST116') {
@@ -57,7 +56,7 @@ export async function GET(_request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const cookieStore = cookies()
-    const supabase = createClient(cookieStore)
+    const supabase = await getSupabaseServerClient()
     
     if (!supabase) {
       return NextResponse.json({ error: 'Database connection failed' }, { status: 500 })
@@ -100,7 +99,7 @@ export async function POST(request: NextRequest) {
 
     // Update privacy preferences using the database function
     const result = await supabase.rpc('update_privacy_preferences', {
-      p_user_id: user.id,
+      p_user_id: String(user.id) as any,
       p_profile_visibility: profile_visibility,
       p_data_sharing_level: data_sharing_level,
       p_allow_contact: allow_contact,
@@ -130,7 +129,7 @@ export async function POST(request: NextRequest) {
       const { error: profileError } = await supabase
         .from('user_profiles')
         .update(profileUpdates)
-        .eq('user_id', user.id)
+        .eq('user_id', String(user.id) as any)
 
       if (profileError) {
         devLog('Error updating user profile:', profileError)
@@ -141,7 +140,7 @@ export async function POST(request: NextRequest) {
     const { data: updatedPreferences, error: fetchError } = await supabase
       .from('user_privacy_preferences')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('user_id', String(user.id) as any)
       .single()
 
     if (fetchError && fetchError.code !== 'PGRST116') {

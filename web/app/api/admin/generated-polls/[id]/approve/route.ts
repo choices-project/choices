@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { devLog } from '@/lib/logger';
-import { createClient } from '@/utils/supabase/server';
-import { cookies } from 'next/headers';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 import { AutomatedPollsService } from '@/lib/automated-polls';
 
 export const dynamic = 'force-dynamic';
@@ -13,10 +12,12 @@ export async function POST(
 ) {
   try {
     const pollId = params.id;
-    const cookieStore = await cookies();
-    const supabase = createClient(cookieStore);
+    const supabase = getSupabaseServerClient();
     
-    if (!supabase) {
+    // Get Supabase client
+    const supabaseClient = await supabase;
+    
+    if (!supabaseClient) {
       return NextResponse.json(
         { error: 'Supabase client not available' },
         { status: 500 }
@@ -24,7 +25,7 @@ export async function POST(
     }
 
     // Check authentication
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
     if (userError || !user) {
       return NextResponse.json(
         { error: 'Authentication required' },
@@ -33,10 +34,10 @@ export async function POST(
     }
 
     // Check admin permissions - RESTRICTED TO OWNER ONLY
-    const { data: userProfile, error: _profileError } = await supabase
+    const { data: userProfile, error: _profileError } = await supabaseClient
       .from('ia_users')
       .select('verification_tier')
-      .eq('stable_id', user.id)
+      .eq('stable_id', String(user.id) as any)
       .single();
 
     // Owner check using environment variable
@@ -95,7 +96,7 @@ export async function POST(
     // Integrate with main poll system
     // Create a regular poll in the po_polls table
     try {
-      const { data: mainPoll, error: mainPollError } = await supabase
+      const { data: mainPoll, error: mainPollError } = await supabaseClient
         .from('po_polls')
         .insert([{
           poll_id: `auto_${pollId}`,
@@ -112,7 +113,7 @@ export async function POST(
           participation_rate: 0,
           sponsors: [],
           created_at: new Date().toISOString()
-        }])
+        } as any])
         .select()
         .single();
 
@@ -125,7 +126,7 @@ export async function POST(
       await service.updateGeneratedPoll(pollId, {
         generationMetadata: {
           ...poll.generationMetadata,
-          mainPollId: mainPoll?.poll_id,
+          mainPollId: mainPoll && 'poll_id' in mainPoll ? mainPoll.poll_id : undefined,
           integratedAt: new Date().toISOString()
         }
       });

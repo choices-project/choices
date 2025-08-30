@@ -13,7 +13,7 @@ export const GET = withAuth(async (request: NextRequest, context: AuthContext) =
     const { searchParams } = new URL(request.url)
     const includeInactive = searchParams.get('includeInactive') === 'true'
 
-    const messages = await getSiteMessages(context.supabase, includeInactive)
+    const messages = await getSiteMessages(includeInactive)
     return NextResponse.json(messages)
   } catch (error) {
     logger.error('Error fetching site messages', error instanceof Error ? error : new Error(String(error)))

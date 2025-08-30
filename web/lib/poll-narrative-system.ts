@@ -1,7 +1,7 @@
 // Poll Narrative System - Story-Driven Polls with Verified Information
 // Each poll becomes an educational narrative with community-moderated facts
 
-import { createClient } from '@/utils/supabase/server';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 import { devLog } from '@/lib/logger';
 import { cookies } from 'next/headers';
 
@@ -294,7 +294,7 @@ export class PollNarrativeService {
 
   constructor() {
     const cookieStore = cookies();
-    this.supabase = createClient(cookieStore);
+    this.supabase = getSupabaseServerClient();
   }
 
   async createNarrative(narrative: Omit<PollNarrative, 'id' | 'createdAt' | 'updatedAt' | 'lastModeratedAt'>): Promise<PollNarrative | null> {
@@ -308,7 +308,7 @@ export class PollNarrativeService {
             ...narrative.moderation,
             status: 'draft'
           }
-        }])
+        }] as any)
         .select()
         .single();
 
@@ -330,7 +330,7 @@ export class PollNarrativeService {
           ...fact,
           narrative_id: narrativeId,
           last_verified: new Date()
-        }])
+        }] as any)
         .select()
         .single();
 
@@ -359,7 +359,7 @@ export class PollNarrativeService {
             verified: 0,
             disputed: 0
           }
-        }])
+        }] as any)
         .select()
         .single();
 
@@ -379,22 +379,25 @@ export class PollNarrativeService {
       const { data: fact, error: fetchError } = await this.supabase
         .from('community_facts')
         .select('votes')
-        .eq('id', factId)
+        .eq('id', factId as any)
         .single();
 
       if (fetchError) throw fetchError;
 
       // Update votes
+      if (!fact || 'error' in fact) {
+        throw new Error('Failed to fetch fact data');
+      }
       const updatedVotes = {
-        ...fact.votes,
-        [voteType]: fact.votes[voteType] + 1
+        ...(fact as any).votes,
+        [voteType]: (fact as any).votes[voteType] + 1
       };
 
       if (!this.supabase) { throw new Error('Supabase client not available'); }
       const { error: updateError } = await this.supabase
         .from('community_facts')
-        .update({ votes: updatedVotes })
-        .eq('id', factId);
+        .update({ votes: updatedVotes } as any)
+        .eq('id', factId as any);
 
       if (updateError) throw updateError;
 
@@ -420,7 +423,7 @@ export class PollNarrativeService {
           timestamp: new Date(),
           priority: action.priority,
           follow_up_required: action.followUpRequired
-        }]);
+        }] as any);
 
       if (actionError) throw actionError;
 
@@ -437,8 +440,8 @@ export class PollNarrativeService {
             notes: action.reason
           },
           last_moderated_at: new Date()
-        })
-        .eq('id', narrativeId);
+        } as any)
+        .eq('id', narrativeId as any);
 
       if (updateError) throw updateError;
 
@@ -462,7 +465,7 @@ export class PollNarrativeService {
           priority: 'medium',
           status: 'pending',
           created_at: new Date()
-        }])
+        }] as any)
         .select()
         .single();
 
@@ -488,7 +491,7 @@ export class PollNarrativeService {
           timeline (*),
           stakeholders (*)
         `)
-        .eq('id', narrativeId)
+        .eq('id', narrativeId as any)
         .single();
 
       if (error) throw error;
@@ -514,16 +517,16 @@ export class PollNarrativeService {
         .or(`title.ilike.%${query}%,summary.ilike.%${query}%,full_story.ilike.%${query}%`);
 
       if (filters?.category) {
-        queryBuilder = queryBuilder.eq('context->geographicScope', filters.category);
+        queryBuilder = queryBuilder.eq('context->geographicScope', filters.category as any);
       }
       if (filters?.timeSensitivity) {
-        queryBuilder = queryBuilder.eq('context->timeSensitivity', filters.timeSensitivity);
+        queryBuilder = queryBuilder.eq('context->timeSensitivity', filters.timeSensitivity as any);
       }
       if (filters?.complexity) {
-        queryBuilder = queryBuilder.eq('context->complexity', filters.complexity);
+        queryBuilder = queryBuilder.eq('context->complexity', filters.complexity as any);
       }
       if (filters?.status) {
-        queryBuilder = queryBuilder.eq('moderation->status', filters.status);
+        queryBuilder = queryBuilder.eq('moderation->status', filters.status as any);
       }
 
       const { data, error } = await queryBuilder;

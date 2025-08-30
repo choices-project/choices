@@ -24,7 +24,7 @@ interface Poll {
 interface VotingInterfaceProps {
   poll: Poll;
   onVote: OnVote;
-  onVerify: OnVerify;
+  onVerify?: OnVerify;
   isVoting?: boolean;
   hasVoted?: boolean;
   userVote?: number;
@@ -51,7 +51,6 @@ export default function VotingInterface({
   const [timeRemaining, setTimeRemaining] = useState<string>('');
 
   const handleVote = useCallback((n: number) => onVote(n), [onVote]);
-  const handleVerify = useCallback((id: string) => onVerify(id), [onVerify]);
 
   // Stable adapters for each child signature (NO unused params anywhere)
   const onApproval = useCallback(
@@ -84,7 +83,12 @@ export default function VotingInterface({
     [handleVote]
   );
 
-  const onSingle = handleVote;
+  const onSingle = useCallback(
+    async (choice: number) => {
+      await handleVote(choice);
+    },
+    [handleVote]
+  );
 
   // Calculate time remaining with useCallback for optimization
   const updateTimeRemaining = useCallback(() => {
@@ -159,7 +163,6 @@ export default function VotingInterface({
             description={poll.description}
             options={poll.options}
             onVote={onApproval}
-            onVerify={handleVerify}
             isVoting={isVoting}
             hasVoted={hasVoted}
             userVote={userApprovalVote}
@@ -173,7 +176,6 @@ export default function VotingInterface({
             description={poll.description}
             options={poll.options}
             onVote={onQuadratic}
-            onVerify={handleVerify}
             isVoting={isVoting}
             hasVoted={hasVoted}
             userVote={userQuadraticVote}
@@ -187,7 +189,6 @@ export default function VotingInterface({
             description={poll.description}
             options={poll.options}
             onVote={onRange}
-            onVerify={handleVerify}
             isVoting={isVoting}
             hasVoted={hasVoted}
             userVote={userRangeVote}
@@ -201,7 +202,6 @@ export default function VotingInterface({
             description={poll.description}
             options={poll.options}
             onVote={onRanked}
-            onVerify={handleVerify}
             isVoting={isVoting}
             hasVoted={hasVoted}
             userVote={userRankedVote}
@@ -215,7 +215,6 @@ export default function VotingInterface({
             description={poll.description}
             options={poll.options}
             onVote={onSingle}
-            onVerify={handleVerify}
             isVoting={isVoting}
             hasVoted={hasVoted}
             userVote={userVote}

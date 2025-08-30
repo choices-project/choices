@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/utils/supabase/server'
+import { getSupabaseServerClient } from '@/utils/supabase/server'
 import { cookies } from 'next/headers'
 import { logger } from '@/lib/logger'
 import { rateLimiters } from '@/lib/rate-limit'
@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
     //   )
     // }
 
-    const supabase = createClient(cookies())
+    const supabase = getSupabaseServerClient()
     if (!supabase) {
       return NextResponse.json(
         { message: 'Authentication service not available' },
@@ -76,8 +76,10 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    const supabaseClient = await supabase
+
     // Check if username already exists
-    const { data: existingUser, error: checkError } = await supabase
+    const { data: existingUser, error: checkError } = await supabaseClient
       .from('user_profiles')
       .select('username')
       .eq('username', username.toLowerCase())
@@ -101,7 +103,7 @@ export async function POST(request: NextRequest) {
     // Create user with email (using username@choices-platform.vercel.app as internal email)
     const internalEmail = `${username.toLowerCase()}@choices-platform.vercel.app`
     
-    const { data: authData, error: signUpError } = await supabase.auth.signUp({
+    const { data: authData, error: signUpError } = await supabaseClient.auth.signUp({
       email: internalEmail,
       password: password,
       options: {
@@ -133,7 +135,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create user profile
-    const { error: profileError } = await supabase
+    const { error: profileError } = await supabaseClient
       .from('user_profiles')
       .insert({
         user_id: authData.user.id,
@@ -147,12 +149,12 @@ export async function POST(request: NextRequest) {
         },
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
-      })
+      } as any)
 
     if (profileError) {
       logger.error('User profile creation failed', new Error(profileError.message))
       // Try to clean up the auth user if profile creation fails
-      await supabase.auth.admin.deleteUser(authData.user.id)
+      await supabaseClient.auth.admin.deleteUser(authData.user.id)
       
       return NextResponse.json(
         { message: 'Failed to create user profile' },

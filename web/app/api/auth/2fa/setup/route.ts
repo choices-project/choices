@@ -2,27 +2,26 @@ import { NextRequest, NextResponse } from 'next/server';
 import { devLog } from '@/lib/logger';
 import speakeasy from 'speakeasy'
 import qrcode from 'qrcode'
-import { createClient } from '@supabase/supabase-js';
-
-// Initialize Supabase client
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-const supabase = supabaseUrl && supabaseKey ? createClient(supabaseUrl, supabaseKey) : null;
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 export async function POST(request: NextRequest) {
   try {
+    const supabase = getSupabaseServerClient();
+    
     if (!supabase) {
       return NextResponse.json(
-        { error: 'Authentication service not configured' },
-        { status: 503 }
+        { error: 'Supabase client not available' },
+        { status: 500 }
       );
     }
 
     const { action, code } = await request.json()
 
+    // Get Supabase client
+    const supabaseClient = await supabase;
+
     // Check authentication
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
     if (userError || !user) {
       return NextResponse.json(
         { error: 'Authentication required' },
@@ -57,13 +56,13 @@ export async function POST(request: NextRequest) {
 
       // Get the temporary secret from the user's session or storage
       // For now, we'll use a simple approach - in production, you'd store this securely
-      const { data: tempSecret } = await supabase
+      const { data: tempSecret } = await supabaseClient
         .from('ia_users')
         .select('two_factor_temp_secret')
-        .eq('id', user.id)
+        .eq('id', String(user.id) as any)
         .single()
 
-      if (!tempSecret?.two_factor_temp_secret) {
+      if (!tempSecret || !('two_factor_temp_secret' in tempSecret) || !tempSecret.two_factor_temp_secret) {
         return NextResponse.json(
           { error: 'No pending 2FA setup found' },
           { status: 400 }
@@ -86,14 +85,14 @@ export async function POST(request: NextRequest) {
       }
 
       // Enable 2FA for the user
-      await supabase
+      await supabaseClient
         .from('ia_users')
         .update({
           two_factor_enabled: true,
           two_factor_secret: tempSecret.two_factor_temp_secret,
           two_factor_temp_secret: null
-        })
-        .eq('id', user.id)
+        } as any)
+        .eq('id', String(user.id) as any)
 
       return NextResponse.json({
         success: true,
@@ -110,13 +109,13 @@ export async function POST(request: NextRequest) {
       }
 
       // Get user's current 2FA secret
-      const { data: userData } = await supabase
+      const { data: userData } = await supabaseClient
         .from('ia_users')
         .select('two_factor_secret')
-        .eq('id', user.id)
+        .eq('id', String(user.id) as any)
         .single()
 
-      if (!userData?.two_factor_secret) {
+      if (!userData || !('two_factor_secret' in userData) || !userData.two_factor_secret) {
         return NextResponse.json(
           { error: 'Two-factor authentication not enabled' },
           { status: 400 }
@@ -139,14 +138,14 @@ export async function POST(request: NextRequest) {
       }
 
       // Disable 2FA
-      await supabase
+      await supabaseClient
         .from('ia_users')
         .update({
           two_factor_enabled: false,
           two_factor_secret: null,
           two_factor_temp_secret: null
-        })
-        .eq('id', user.id)
+        } as any)
+        .eq('id', String(user.id) as any)
 
       return NextResponse.json({
         success: true,

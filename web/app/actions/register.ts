@@ -1,6 +1,5 @@
 'use server';
 
-import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
@@ -10,11 +9,7 @@ import { logger } from '@/lib/logger';
 import { TypeGuardError } from '@/lib/types/guards';
 import { logSecurityEvent } from '@/lib/auth/server-actions';
 import { setSessionCookie, rotateSessionToken } from '@/lib/auth/session-cookies';
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 // Import the existing ServerActionContext type
 import { ServerActionContext } from '@/lib/auth/server-actions';
@@ -34,6 +29,8 @@ export async function register(
   context: ServerActionContext
 ): Promise<{ ok: true } | { ok: false; error: string; fieldErrors?: Record<string, string> }> {
   try {
+    const supabase = getSupabaseServerClient();
+    
     // ---- context usage (security + provenance) ----
     const h = headers();
     const ip = context.ipAddress ?? h.get('x-forwarded-for') ?? null;
@@ -58,8 +55,11 @@ export async function register(
     // ---- idempotent user creation ----
     const stableId = uuidv4();
     
+    // Get Supabase client
+    const supabaseClient = await supabase
+    
     // Check for existing user by email
-    const { data: existingUser } = await supabase
+    const { data: existingUser } = await supabaseClient
       .from('user_profiles')
       .select('user_id, username')
       .eq('email', data.email.toLowerCase())
@@ -71,7 +71,7 @@ export async function register(
     }
 
     // Check for existing username
-    const { data: existingUsername } = await supabase
+    const { data: existingUsername } = await supabaseClient
       .from('user_profiles')
       .select('user_id')
       .eq('username', data.username.toLowerCase())
@@ -83,7 +83,7 @@ export async function register(
     }
 
     // Create user in ia_users table
-    const { error: iaUserError } = await supabase
+    const { error: iaUserError } = await supabaseClient
       .from('ia_users')
       .insert({
         stable_id: stableId,
@@ -102,7 +102,7 @@ export async function register(
     }
 
     // Create user profile
-    const { error: profileError } = await supabase
+    const { error: profileError } = await supabaseClient
       .from('user_profiles')
       .insert({
         user_id: stableId,

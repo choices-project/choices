@@ -48,7 +48,7 @@ class ClientSessionManager {
         },
       })
 
-      logger.info('Client session: Response status:', response.status)
+      logger.info('Client session: Response status', { status: response.status })
 
       if (response.ok) {
         const userData = await response.json()
@@ -61,7 +61,7 @@ class ClientSessionManager {
         this.notifyListeners(null)
       }
     } catch (error) {
-      logger.error('Client session: Failed to initialize session:', error)
+      logger.error('Client session: Failed to initialize session:', error instanceof Error ? error : new Error(String(error)))
       this.user = null
       this.notifyListeners(null)
     } finally {
@@ -103,7 +103,7 @@ class ClientSessionManager {
         return { success: false, error: data.message || 'Login failed' }
       }
     } catch (error) {
-      logger.error('Login error:', error)
+      logger.error('Login error:', error instanceof Error ? error : new Error(String(error)))
       return { success: false, error: 'Network error' }
     }
   }
@@ -115,7 +115,7 @@ class ClientSessionManager {
         credentials: 'include',
       })
     } catch (error) {
-      logger.error('Logout error:', error)
+      logger.error('Logout error:', error instanceof Error ? error : new Error(String(error)))
     } finally {
       this.user = null
       this.notifyListeners(null)
@@ -148,7 +148,7 @@ class ClientSessionManager {
         return { success: false, error: data.message || 'Registration failed' }
       }
     } catch (error) {
-      logger.error('Registration error:', error)
+      logger.error('Registration error:', error instanceof Error ? error : new Error(String(error)))
       return { success: false, error: 'Network error' }
     }
   }

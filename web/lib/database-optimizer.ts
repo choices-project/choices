@@ -5,27 +5,13 @@
  * This includes query optimization, connection management, and performance monitoring.
  */
 
-import { createClient } from '@supabase/supabase-js'
 import { logger } from './logger'
-
-// Database configuration with connection pooling
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
+import { getSupabaseServerClient } from '@/utils/supabase/server'
 
 // Create optimized Supabase client with connection pooling
-export const createOptimizedClient = () => {
-  return createClient(supabaseUrl, supabaseKey, {
-    auth: {
-      persistSession: true,
-      autoRefreshToken: true,
-      detectSessionInUrl: true
-    },
-    global: {
-      headers: {
-        'X-Client-Info': 'choices-platform-optimized'
-      }
-    }
-  })
+export const createOptimizedClient = async () => {
+  const client = await getSupabaseServerClient()
+  return client
 }
 
 // Query performance monitoring

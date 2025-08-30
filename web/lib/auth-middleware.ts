@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/utils/supabase/server'
+import { getSupabaseServerClient } from '@/utils/supabase/server'
 import { cookies } from 'next/headers'
 import { logger } from './logger'
 import { devLog } from './logger'
@@ -45,7 +45,7 @@ export function createAuthMiddleware(options: {
     try {
       // Create Supabase client
       const cookieStore = await cookies()
-      const supabase = createClient(cookieStore)
+      const supabase = getSupabaseServerClient()
 
       if (!supabase) {
         return NextResponse.json(
@@ -55,7 +55,8 @@ export function createAuthMiddleware(options: {
       }
 
       // Get current user session
-      const { data: { user }, error: authError } = await supabase.auth.getUser()
+      const supabaseClient = await supabase;
+      const { data: { user }, error: authError } = await supabaseClient.auth.getUser()
 
       // Handle unauthenticated requests
       if (authError || !user) {
@@ -78,10 +79,10 @@ export function createAuthMiddleware(options: {
       }
 
       // Get user profile
-      const { data: profile, error: profileError } = await supabase
+      const { data: profile, error: profileError } = await supabaseClient
         .from('user_profiles')
         .select('trust_tier, username')
-        .eq('user_id', user.id)
+        .eq('user_id', String(user.id) as any)
         .single()
 
       if (profileError) {
@@ -95,8 +96,8 @@ export function createAuthMiddleware(options: {
       const authUser: AuthUser = {
         id: user.id,
         email: user.email || '',
-        trust_tier: profile?.trust_tier || 'T1',
-        username: profile?.username
+        trust_tier: profile && !('error' in profile) ? (profile as any).trust_tier || 'T1' : 'T1',
+        username: profile && !('error' in profile) ? (profile as any).username : undefined
       }
 
       // Check admin requirement
@@ -161,7 +162,7 @@ export function withAuth(
 
     // Get user context for the handler
     const cookieStore = await cookies()
-    const supabase = createClient(cookieStore)
+    const supabase = getSupabaseServerClient()
     
     if (!supabase) {
       return NextResponse.json(
@@ -170,20 +171,21 @@ export function withAuth(
       )
     }
     
-    const { data: { user } } = await supabase.auth.getUser()
+    const supabaseClient = await supabase;
+    const { data: { user } } = await supabaseClient.auth.getUser()
     
-    const { data: profile } = await supabase
+    const { data: profile } = await supabaseClient
       .from('user_profiles')
       .select('trust_tier, username')
-      .eq('user_id', user!.id)
+      .eq('user_id', String(user!.id) as any)
       .single()
 
     const context: AuthContext = {
       user: {
         id: user!.id,
         email: user!.email || '',
-        trust_tier: profile?.trust_tier || 'T1',
-        username: profile?.username
+        trust_tier: profile && !('error' in profile) ? (profile as any).trust_tier || 'T1' : 'T1',
+        username: profile && !('error' in profile) ? (profile as any).username : undefined
       },
       supabase
     }
@@ -299,29 +301,30 @@ export function combineMiddleware(...middlewares: ((request: NextRequest) => Pro
 export async function getUserFromRequest(_request: NextRequest): Promise<AuthUser | null> {
   try {
     const cookieStore = await cookies()
-    const supabase = createClient(cookieStore)
+    const supabase = getSupabaseServerClient()
     
     if (!supabase) {
       return null
     }
     
-    const { data: { user }, error } = await supabase.auth.getUser()
+    const supabaseClient = await supabase;
+    const { data: { user }, error } = await supabaseClient.auth.getUser()
     
     if (error || !user) {
       return null
     }
 
-    const { data: profile } = await supabase
+    const { data: profile } = await supabaseClient
       .from('user_profiles')
       .select('trust_tier, username')
-      .eq('user_id', user.id)
+      .eq('user_id', String(user.id) as any)
       .single()
 
     return {
       id: user.id,
       email: user.email || '',
-      trust_tier: profile?.trust_tier || 'T1',
-      username: profile?.username
+      trust_tier: profile && !('error' in profile) ? (profile as any).trust_tier || 'T1' : 'T1',
+      username: profile && !('error' in profile) ? (profile as any).username : undefined
     }
   } catch (error) {
     logger.error('Error getting user from request', error instanceof Error ? error : new Error(String(error)))

@@ -1,7 +1,6 @@
-import { createClient } from '@/utils/supabase/server';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 import { devLog } from '@/lib/logger';
 import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
 
 export const dynamic = 'force-dynamic'
 
@@ -17,20 +16,15 @@ export async function GET(request: Request) {
     )
   }
 
-  const cookieStore = await cookies()
-  const supabase = createClient(cookieStore)
-  
-  if (!supabase) {
-    return NextResponse.redirect(
-      `${origin}/login?error=${encodeURIComponent('Authentication service not available')}`
-    )
-  }
+  const supabase = getSupabaseServerClient()
 
   try {
+    const supabaseClient = await supabase;
+    
     // Handle different verification types
     if (type === 'signup' || type === 'email') {
       // Verify email for signup
-      const { data, error } = await supabase.auth.verifyOtp({
+      const { data, error } = await supabaseClient.auth.verifyOtp({
         token_hash: token,
         type: 'signup'
       })
@@ -48,7 +42,7 @@ export async function GET(request: Request) {
       }
     } else {
       // Try to exchange the token for a session
-      const { data, error } = await supabase.auth.exchangeCodeForSession(token)
+      const { data, error } = await supabaseClient.auth.exchangeCodeForSession(token)
       
       if (error) {
         devLog('Token exchange error:', error)

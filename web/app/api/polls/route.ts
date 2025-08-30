@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { devLog } from '@/lib/logger';
-import { createClient } from '@/utils/supabase/server';
-import { cookies } from 'next/headers';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 import { getCurrentUser } from '@/lib/auth-utils';
 
 export const dynamic = 'force-dynamic';
@@ -9,8 +8,7 @@ export const dynamic = 'force-dynamic';
 // GET /api/polls - Get active polls with aggregated results only
 export async function GET(request: NextRequest) {
   try {
-    const cookieStore = await cookies();
-    const supabase = createClient(cookieStore);
+    const supabase = getSupabaseServerClient();
     
     if (!supabase) {
       return NextResponse.json(
@@ -28,10 +26,11 @@ export async function GET(request: NextRequest) {
 
     try {
       devLog('Fetching active polls from po_polls table...');
-      const { data: directPolls, error: directError } = await supabase
+      const supabaseClient = await supabase;
+      const { data: directPolls, error: directError } = await supabaseClient
         .from('po_polls')
         .select('poll_id, title, total_votes, participation_rate, options, status')
-        .eq('status', 'active')
+        .eq('status', 'active' as any)
         .limit(limit);
 
       if (directError) {
@@ -41,7 +40,15 @@ export async function GET(request: NextRequest) {
       devLog('Found polls:', directPolls?.length || 0);
 
       // Manually aggregate results (temporary solution)
-      polls = directPolls?.map(poll => ({
+      polls = directPolls && !('error' in directPolls) ? directPolls.filter(poll => 
+        poll && 
+        'poll_id' in poll && 
+        'title' in poll && 
+        'total_votes' in poll && 
+        'participation_rate' in poll && 
+        'options' in poll && 
+        'status' in poll
+      ).map(poll => ({
         poll_id: poll.poll_id,
         title: poll.title,
         total_votes: poll.total_votes || 0,
@@ -52,7 +59,7 @@ export async function GET(request: NextRequest) {
             return acc;
           }, {}) : {},
         status: poll.status
-      })) || [];
+      })) : [];
     } catch (fallbackError) {
       devLog('Error fetching polls:', fallbackError);
       return NextResponse.json(
@@ -92,8 +99,7 @@ export async function GET(request: NextRequest) {
 // POST /api/polls - Create new poll (authenticated users only)
 export async function POST(request: NextRequest) {
   try {
-    const cookieStore = await cookies();
-    const supabase = createClient(cookieStore);
+    const supabase = await getSupabaseServerClient();
     
     if (!supabase) {
       return NextResponse.json(
@@ -115,10 +121,10 @@ export async function POST(request: NextRequest) {
     const { data: userProfile } = await supabase
       .from('ia_users')
       .select('is_active')
-      .eq('stable_id', user.userId)
+      .eq('stable_id', user.userId as any)
       .single();
 
-    if (!userProfile || !userProfile.is_active) {
+    if (!userProfile || !('is_active' in userProfile) || !userProfile.is_active) {
       return NextResponse.json(
         { error: 'Active account required to create polls' },
         { status: 403 }
@@ -161,7 +167,7 @@ export async function POST(request: NextRequest) {
         created_by: user.userId,
         total_votes: 0,
         participation_rate: 0.0
-      })
+      } as any)
       .select()
       .single();
 
@@ -174,17 +180,17 @@ export async function POST(request: NextRequest) {
     }
 
     // Return sanitized poll data (no sensitive information)
-    const sanitizedPoll = {
-      poll_id: poll.poll_id,
-      title: poll.title,
-      description: poll.description,
-      options: poll.options,
-      voting_method: poll.voting_method,
-      status: poll.status,
-      total_votes: poll.total_votes,
-      participation_rate: poll.participation_rate,
-      created_at: poll.created_at
-    };
+    const sanitizedPoll = poll && !('error' in poll) ? {
+      poll_id: (poll as any).poll_id,
+      title: (poll as any).title,
+      description: (poll as any).description,
+      options: (poll as any).options,
+      voting_method: (poll as any).voting_method,
+      status: (poll as any).status,
+      total_votes: (poll as any).total_votes,
+      participation_rate: (poll as any).participation_rate,
+      created_at: (poll as any).created_at
+    } : null;
 
     return NextResponse.json({
       success: true,

@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { devLog } from '@/lib/logger';
-import { createClient } from '@/utils/supabase/server';
-import { cookies } from 'next/headers';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
@@ -11,8 +10,7 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const cookieStore = await cookies();
-    const supabase = createClient(cookieStore);
+    const supabase = getSupabaseServerClient();
     
     if (!supabase) {
       return NextResponse.json(
@@ -22,13 +20,14 @@ export async function GET(
     }
 
     const pollId = params.id;
+    const supabaseClient = await supabase;
 
     // Fetch poll data and calculate aggregated results
-    const { data: poll, error: pollError } = await supabase
+    const { data: poll, error: pollError } = await supabaseClient
       .from('po_polls')
       .select('poll_id, title, options, total_votes, participation_rate, status')
-      .eq('poll_id', pollId)
-      .eq('status', 'active')
+      .eq('poll_id', pollId as any)
+      .eq('status', 'active' as any)
       .single();
 
     if (pollError || !poll) {
@@ -39,14 +38,14 @@ export async function GET(
     }
 
     // Calculate aggregated results (all zeros for now since no votes exist)
-    const aggregatedResults = poll.options ? 
+    const aggregatedResults = poll && !('error' in poll) && poll.options ? 
       poll.options.reduce((acc: any, _option: any, index: any) => {
         acc[`option_${index + 1}`] = 0; // Default to 0 until we can count votes
         return acc;
       }, {} as Record<string, number>) : {};
 
     // Additional security: ensure no sensitive data is returned
-    const sanitizedResults = {
+    const sanitizedResults = poll && !('error' in poll) ? {
       poll_id: poll.poll_id,
       title: poll.title,
       total_votes: poll.total_votes || 0,
@@ -55,6 +54,14 @@ export async function GET(
       // Only include safe, public fields
       status: 'active',
       message: 'Aggregated results only - no individual vote data'
+    } : {
+      poll_id: pollId,
+      title: 'Unknown',
+      total_votes: 0,
+      participation_rate: 0,
+      aggregated_results: {},
+      status: 'error',
+      message: 'Poll data not available'
     };
 
     return NextResponse.json({

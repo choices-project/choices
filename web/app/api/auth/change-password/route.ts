@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
-import { createClient } from '@/utils/supabase/server'
+import { getSupabaseServerClient } from '@/utils/supabase/server'
 import bcrypt from 'bcryptjs'
 import { devLog } from '@/lib/logger'
 import { 
@@ -31,24 +31,26 @@ export async function POST(request: NextRequest) {
     }
 
     const cookieStore = await cookies()
-    const supabase = createClient(cookieStore)
+    const supabase = getSupabaseServerClient()
     
     if (!supabase) {
       throw new Error('Supabase not configured')
     }
 
+    const supabaseClient = await supabase
+
     // Get current authenticated user
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    const { data: { user }, error: userError } = await supabaseClient.auth.getUser()
     
     if (userError || !user) {
       throw new AuthenticationError('User not authenticated')
     }
 
     // Get user from ia_users table to verify current password
-    const { data: iaUser, error: iaError } = await supabase
+    const { data: iaUser, error: iaError } = await supabaseClient
       .from('ia_users')
       .select('id, email, verification_tier, created_at, updated_at, display_name, avatar_url, bio, stable_id, is_active, password_hash')
-      .eq('stable_id', user.id)
+      .eq('stable_id', String(user.id) as any)
       .single()
 
     if (iaError || !iaUser) {
@@ -56,6 +58,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify current password
+    if (!iaUser || !('password_hash' in iaUser) || !iaUser.password_hash) {
+      throw new AuthenticationError('User password hash not found')
+    }
     const isCurrentPasswordValid = await bcrypt.compare(currentPassword, iaUser.password_hash)
     if (!isCurrentPasswordValid) {
       throw new AuthenticationError('Current password is incorrect')
@@ -66,13 +71,13 @@ export async function POST(request: NextRequest) {
     const newHashedPassword = await bcrypt.hash(newPassword, saltRounds)
 
     // Update password in ia_users table
-    const { error: updateError } = await supabase
+    const { error: updateError } = await supabaseClient
       .from('ia_users')
       .update({ 
         password_hash: newHashedPassword,
         updated_at: new Date().toISOString()
-      })
-      .eq('stable_id', user.id)
+      } as any)
+      .eq('stable_id', String(user.id) as any)
 
     if (updateError) {
       devLog('Error updating password:', updateError)
@@ -80,7 +85,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Update password in Supabase Auth
-    const { error: authUpdateError } = await supabase.auth.updateUser({
+    const { error: authUpdateError } = await supabaseClient.auth.updateUser({
       password: newPassword
     })
 
