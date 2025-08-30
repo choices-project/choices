@@ -4,6 +4,8 @@ import { cookies as _cookies } from 'next/headers'
 import { logger } from '@/lib/logger'
 import { rateLimiters } from '@/lib/rate-limit'
 
+export const dynamic = 'force-dynamic'
+
 export async function POST(request: NextRequest) {
   try {
     // Rate limiting: 5 registration attempts per hour per IP
