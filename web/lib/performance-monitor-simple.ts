@@ -127,7 +127,8 @@ export class SimplePerformanceMonitor {
     try {
       await this.initialize();
 
-      const { data: result, error } = await this.supabase.rpc('analyze_query_performance', {
+      const supabaseClient = await this.supabase;
+      const { data: result, error } = await supabaseClient.rpc('analyze_query_performance', {
         p_query_hash: data.queryHash,
         p_query_signature: data.querySignature,
         p_query_type: data.queryType,
@@ -169,7 +170,8 @@ export class SimplePerformanceMonitor {
     try {
       await this.initialize();
 
-      const { data: result, error } = await this.supabase.rpc('update_cache_performance_metrics', {
+      const supabaseClient = await this.supabase;
+      const { data: result, error } = await supabaseClient.rpc('update_cache_performance_metrics', {
         p_cache_name: data.cacheName,
         p_cache_type: data.cacheType,
         p_hit_count: data.hitCount,
@@ -209,7 +211,8 @@ export class SimplePerformanceMonitor {
     try {
       await this.initialize();
 
-      const { data: result, error } = await this.supabase.rpc('run_maintenance_job', {
+      const supabaseClient = await this.supabase;
+      const { data: result, error } = await supabaseClient.rpc('run_maintenance_job', {
         p_job_name: jobName,
         p_job_type: jobType,
       });
@@ -235,7 +238,8 @@ export class SimplePerformanceMonitor {
     try {
       await this.initialize();
 
-      const { data, error } = await this.supabase.rpc('get_performance_recommendations');
+      const supabaseClient = await this.supabase;
+      const { data, error } = await supabaseClient.rpc('get_performance_recommendations');
 
       if (error) {
         logger.error('Failed to get performance recommendations:', error);
@@ -258,7 +262,8 @@ export class SimplePerformanceMonitor {
     try {
       await this.initialize();
 
-      const { data, error } = await this.supabase.rpc('cleanup_performance_data');
+      const supabaseClient = await this.supabase;
+      const { data, error } = await supabaseClient.rpc('cleanup_performance_data');
 
       if (error) {
         logger.error('Failed to cleanup performance data:', error);
@@ -283,8 +288,10 @@ export class SimplePerformanceMonitor {
 
       const timeFilter = this.getTimeFilter(timeRange);
 
+      const supabaseClient = await this.supabase;
+      
       // Get query performance stats
-      const { data: queryStats, error: queryError } = await this.supabase
+      const { data: queryStats, error: queryError } = await supabaseClient
         .from('query_performance_log')
         .select('execution_time_ms, rows_affected, rows_scanned')
         .gte('created_at', timeFilter);
@@ -295,7 +302,7 @@ export class SimplePerformanceMonitor {
       }
 
       // Get cache performance stats
-      const { data: cacheStats, error: cacheError } = await this.supabase
+      const { data: cacheStats, error: cacheError } = await supabaseClient
         .from('cache_performance_log')
         .select('hit_rate, avg_response_time_ms, memory_usage_percent')
         .gte('updated_at', timeFilter);
