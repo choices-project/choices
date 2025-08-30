@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseServerClient } from '@/utils/supabase/server'
-import { cookies } from 'next/headers'
+import { cookies as _cookies } from 'next/headers'
 import jwt from 'jsonwebtoken'
 import { logger } from '@/lib/logger'
 import { setSessionTokenInResponse } from '@/lib/session'

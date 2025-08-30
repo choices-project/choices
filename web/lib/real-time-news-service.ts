@@ -3,8 +3,6 @@
 
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 import { devLog } from '@/lib/logger';
-import { cookies } from 'next/headers';
-
 // ============================================================================
 // CORE INTERFACES
 // ============================================================================
@@ -411,7 +409,6 @@ export class RealTimeNewsService {
   private supabase;
 
   constructor() {
-    const cookieStore = cookies();
     this.supabase = getSupabaseServerClient();
   }
 

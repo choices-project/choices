@@ -2,8 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { devLog } from '@/lib/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 import { handleError, getUserMessage, getHttpStatus, ValidationError } from '@/lib/error-handler';
-import { cookies } from 'next/headers';
-
 export const dynamic = 'force-dynamic'
 
 export async function POST(request: NextRequest) {
@@ -14,7 +12,6 @@ export async function POST(request: NextRequest) {
       throw new ValidationError('Email is required')
     }
 
-    const cookieStore = cookies()
     const supabase = getSupabaseServerClient()
     
     if (!supabase) {

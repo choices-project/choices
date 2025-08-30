@@ -38,7 +38,7 @@ interface VotingInterfaceProps {
 export default function VotingInterface({ 
   poll, 
   onVote, 
-  onVerify,
+  onVerify: _onVerify,
   isVoting = false,
   hasVoted = false,
   userVote,

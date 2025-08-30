@@ -2,14 +2,13 @@ import { NextRequest, NextResponse } from 'next/server'
 import { devLog } from '@/lib/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server'
 import { getCurrentUser } from '@/lib/auth-utils'
-import { cookies } from 'next/headers'
+import { cookies as _cookies } from 'next/headers'
 
 export const dynamic = 'force-dynamic'
 
 export async function GET(request: NextRequest) {
   try {
     // Get Supabase client
-    const cookieStore = cookies()
     const supabase = getSupabaseServerClient()
     
     if (!supabase) {

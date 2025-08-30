@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 import { devLog } from '@/lib/logger';
-import { cookies } from 'next/headers';
-
 export const dynamic = 'force-dynamic'
 
 // Security configuration for feedback API
@@ -106,7 +104,6 @@ export async function POST(request: NextRequest) {
     }
 
     // Get Supabase client
-    const cookieStore = cookies()
     const supabase = getSupabaseServerClient()
     
     if (!supabase) {
@@ -265,7 +262,6 @@ export async function GET(request: NextRequest) {
     const offset = parseInt(searchParams.get('offset') || '0')
 
     // Get Supabase client
-    const cookieStore = cookies()
     const supabase = getSupabaseServerClient()
 
     if (!supabase) {
