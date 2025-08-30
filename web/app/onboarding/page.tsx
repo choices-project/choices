@@ -187,9 +187,7 @@ export default function OnboardingPage() {
               </ul>
             </div>
 
-
-
-            <form action={handleComplete} noValidate className="space-y-4">
+            <form action={handleComplete} noValidate className="space-y-4 mt-6">
               <input type="hidden" name="notifications" value={preferences.notifications.toString()} />
               <input type="hidden" name="dataSharing" value={preferences.dataSharing.toString()} />
               <input type="hidden" name="theme" value={preferences.theme} />
@@ -197,10 +195,8 @@ export default function OnboardingPage() {
                 type="submit"
                 className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-150 ease-in-out flex items-center justify-center"
               >
-                <>
-                  Get Started
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </>
+                Get Started
+                <ArrowRight className="ml-2 h-4 w-4" />
               </button>
             </form>
           </div>

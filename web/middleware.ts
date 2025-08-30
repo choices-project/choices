@@ -117,6 +117,10 @@ export function middleware(request: NextRequest) {
   if (
     pathname.startsWith('/_next/') ||
     pathname.startsWith('/favicon.ico') ||
+    pathname.startsWith('/manifest.json') ||
+    pathname.startsWith('/sw.js') ||
+    pathname.startsWith('/workbox-') ||
+    pathname.startsWith('/icons/') ||
     pathname.startsWith('/api/webhooks/') // Webhooks might need different headers
   ) {
     return NextResponse.next()
@@ -193,7 +197,11 @@ export const config = {
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
+     * - manifest.json (PWA manifest)
+     * - sw.js (service worker)
+     * - workbox-* (service worker files)
+     * - icons/ (PWA icons)
      */
-    '/((?!api/webhooks|_next/static|_next/image|favicon.ico).*)',
+    '/((?!api/webhooks|_next/static|_next/image|favicon.ico|manifest.json|sw.js|workbox-|icons/).*)',
   ],
 }

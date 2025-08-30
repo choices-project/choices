@@ -3,6 +3,8 @@ import { cookies } from 'next/headers'
 import jwt from 'jsonwebtoken'
 import { getSupabaseServerClient } from '@/utils/supabase/server'
 
+export const dynamic = 'force-dynamic'
+
 const supabase = getSupabaseServerClient()
 
 async function getUserFromCookies() {

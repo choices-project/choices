@@ -5,6 +5,8 @@ import jwt from 'jsonwebtoken'
 import { logger } from '@/lib/logger'
 import { setSessionTokenInResponse } from '@/lib/session'
 
+export const dynamic = 'force-dynamic'
+
 export async function POST(req: NextRequest) {
   try {
     const supabase = getSupabaseServerClient();
