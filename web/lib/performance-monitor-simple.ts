@@ -98,7 +98,8 @@ export class SimplePerformanceMonitor {
 
     try {
       // Verify database connection and tables exist
-      const { error } = await this.supabase
+      const supabaseClient = await this.supabase
+      const { error } = await supabaseClient
         .from('performance_metrics')
         .select('count')
         .limit(1);
