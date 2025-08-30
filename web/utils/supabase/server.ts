@@ -343,7 +343,7 @@ export async function getSupabaseServerClient() {
         },
         remove: (name: string, options: any) => {
           try {
-            cookieStore.delete(name, options)
+            cookieStore.delete(name)
           } catch (error) {
             // Ignore errors in RSC context
           }
