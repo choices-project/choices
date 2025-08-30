@@ -421,8 +421,8 @@ export class RealTimeNewsService {
 
   async getBreakingNews(limit: number = 10): Promise<BreakingNewsStory[]> {
     try {
-      if (!this.supabase) { throw new Error('Supabase client not available'); }
-      const { data, error } = await this.supabase
+      const supabaseClient = await this.supabase;
+      const { data, error } = await supabaseClient
         .from('breaking_news')
         .select('id, title, content, source, created_at')
         .order('created_at', { ascending: false })
@@ -439,8 +439,8 @@ export class RealTimeNewsService {
 
   async getBreakingNewsById(id: string): Promise<BreakingNewsStory | null> {
     try {
-      if (!this.supabase) { throw new Error('Supabase client not available'); }
-      const { data, error } = await this.supabase
+      const supabaseClient = await this.supabase;
+      const { data, error } = await supabaseClient
         .from('breaking_news')
         .select('id, title, content, source, created_at')
         .eq('id', id as any)
@@ -457,8 +457,8 @@ export class RealTimeNewsService {
 
   async createBreakingNews(story: Omit<BreakingNewsStory, 'id' | 'createdAt' | 'updatedAt'>): Promise<BreakingNewsStory | null> {
     try {
-      if (!this.supabase) { throw new Error('Supabase client not available'); }
-      const { data, error } = await this.supabase
+      const supabaseClient = await this.supabase;
+      const { data, error } = await supabaseClient
         .from('breaking_news')
         .insert([this.mapBreakingNewsToDB(story)])
         .select()
