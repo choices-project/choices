@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
-import { createClient } from '@/utils/supabase/server'
+import { getSupabaseServerClient } from '@/utils/supabase/server'
 import bcrypt from 'bcryptjs'
 import { devLog } from '@/lib/logger'
 import { 
@@ -25,24 +25,26 @@ export async function POST(request: NextRequest) {
     }
 
     const cookieStore = await cookies()
-    const supabase = createClient(cookieStore)
+    const supabase = getSupabaseServerClient()
     
     if (!supabase) {
       throw new Error('Supabase not configured')
     }
 
+    const supabaseClient = await supabase
+
     // Get current authenticated user
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    const { data: { user }, error: userError } = await supabaseClient.auth.getUser()
     
     if (userError || !user) {
       throw new AuthenticationError('User not authenticated')
     }
 
     // Get user from ia_users table to verify password
-    const { data: iaUser, error: iaError } = await supabase
+    const { data: iaUser, error: iaError } = await supabaseClient
       .from('ia_users')
       .select('id, stable_id, password_hash')
-      .eq('stable_id', user.id)
+      .eq('stable_id', String(user.id) as any)
       .single()
 
     if (iaError || !iaUser) {
@@ -50,6 +52,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify password
+    if (!iaUser || !('password_hash' in iaUser) || !iaUser.password_hash) {
+      throw new AuthenticationError('User password hash not found')
+    }
     const isPasswordValid = await bcrypt.compare(password, iaUser.password_hash)
     if (!isPasswordValid) {
       throw new AuthenticationError('Password is incorrect')
@@ -58,34 +63,34 @@ export async function POST(request: NextRequest) {
     // Delete user data from all tables
     try {
       // Delete user profile
-      await supabase
+      await supabaseClient
         .from('user_profiles')
         .delete()
-        .eq('user_id', user.id)
+        .eq('user_id', String(user.id) as any)
 
       // Delete refresh tokens
-      await supabase
+      await supabaseClient
         .from('ia_refresh_tokens')
         .delete()
         .eq('user_id', iaUser.id)
 
       // Delete votes (if any)
-      await supabase
+      await supabaseClient
         .from('po_votes')
         .delete()
-        .eq('user_id', user.id)
+        .eq('user_id', String(user.id) as any)
 
       // Delete polls created by user (if any)
-      await supabase
+      await supabaseClient
         .from('po_polls')
         .delete()
-        .eq('created_by', user.id)
+        .eq('created_by', String(user.id) as any)
 
       // Finally, delete the user from ia_users table
-      const { error: deleteError } = await supabase
+      const { error: deleteError } = await supabaseClient
         .from('ia_users')
         .delete()
-        .eq('stable_id', user.id)
+        .eq('stable_id', String(user.id) as any)
 
       if (deleteError) {
         devLog('Error deleting user from ia_users:', deleteError)
@@ -93,7 +98,7 @@ export async function POST(request: NextRequest) {
       }
 
       // Delete user from Supabase Auth
-      const { error: authDeleteError } = await supabase.auth.admin.deleteUser(user.id)
+      const { error: authDeleteError } = await supabaseClient.auth.admin.deleteUser(user.id)
       
       if (authDeleteError) {
         devLog('Error deleting user from Supabase Auth:', authDeleteError)
@@ -102,7 +107,7 @@ export async function POST(request: NextRequest) {
       }
 
       // Sign out the user
-      await supabase.auth.signOut()
+      await supabaseClient.auth.signOut()
 
       return NextResponse.json({
         success: true,

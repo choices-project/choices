@@ -1,17 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { devLog } from '@/lib/logger';
-import { createClient } from '@supabase/supabase-js';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 import { handleError, getUserMessage, getHttpStatus } from '@/lib/error-handler';
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
 
 export async function GET(_request: NextRequest) {
   try {
+    const supabase = getSupabaseServerClient();
+    
+    if (!supabase) {
+      return NextResponse.json(
+        { error: 'Supabase client not available' },
+        { status: 500 }
+      );
+    }
+
     // Fetch trending topics
-    const { data: trendingTopics, error: trendingError } = await supabase
+    const supabaseClient = await supabase;
+    const { data: trendingTopics, error: trendingError } = await supabaseClient
       .from('trending_topics')
       .select('id, topic, score, created_at, updated_at, title, description, source_name, category, trending_score, velocity, momentum, sentiment_score, metadata')
       .order('trending_score', { ascending: false })
@@ -25,10 +30,10 @@ export async function GET(_request: NextRequest) {
     // Fetch available polls (optional - if no polls exist, we'll still create trending polls)
     let polls: any[] = [];
     try {
-      const { data: pollsData, error: pollsError } = await supabase
+      const { data: pollsData, error: pollsError } = await supabaseClient
         .from('po_polls')
         .select('poll_id, title, total_votes, participation_rate, options, status')
-        .eq('status', 'active')
+        .eq('status', 'active' as any)
         .limit(10);
 
       if (pollsError) {

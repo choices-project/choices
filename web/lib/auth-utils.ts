@@ -38,7 +38,7 @@ export function verifyAuthToken(token: string): JWTPayload | null {
     const decoded = jwt.verify(token, jwtSecret) as JWTPayload
     return decoded
   } catch (error) {
-    logger.error('JWT verification failed:', error)
+    logger.error('JWT verification failed:', error instanceof Error ? error : new Error(String(error)))
     return null
   }
 }

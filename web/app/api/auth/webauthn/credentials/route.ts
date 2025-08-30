@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
-import { createClient } from '@/utils/supabase/server';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 import { devLog } from '@/lib/logger';
+import { cookies } from 'next/headers';
 
 export const dynamic = 'force-dynamic'
 
@@ -10,7 +10,7 @@ export async function GET(_request: NextRequest) {
   try {
     // Get Supabase client
     const cookieStore = await cookies()
-    const supabase = createClient(cookieStore)
+    const supabase = getSupabaseServerClient()
     
     if (!supabase) {
       return NextResponse.json(
@@ -19,8 +19,10 @@ export async function GET(_request: NextRequest) {
       )
     }
 
+    const supabaseClient = await supabase
+
     // Get current user
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    const { data: { user }, error: userError } = await supabaseClient.auth.getUser()
     
     if (userError || !user) {
       return NextResponse.json(
@@ -30,7 +32,7 @@ export async function GET(_request: NextRequest) {
     }
 
     // Get user's biometric credentials
-    const { data: credentials, error: credentialsError } = await supabase
+    const { data: credentials, error: credentialsError } = await supabaseClient
       .from('biometric_credentials')
       .select(`
         id,
@@ -44,7 +46,7 @@ export async function GET(_request: NextRequest) {
         created_at,
         last_used_at
       `)
-      .eq('user_id', user.id)
+      .eq('user_id', String(user.id) as any)
       .order('created_at', { ascending: false })
 
     if (credentialsError) {
@@ -56,7 +58,19 @@ export async function GET(_request: NextRequest) {
     }
 
     // Format credentials for response
-    const formattedCredentials = credentials?.map(cred => ({
+    const formattedCredentials = credentials?.filter(cred => 
+      cred && 
+      'id' in cred && 
+      'credential_id' in cred && 
+      'device_type' in cred && 
+      'authenticator_type' in cred && 
+      'sign_count' in cred && 
+      'backup_eligible' in cred && 
+      'backup_state' in cred && 
+      'user_agent' in cred && 
+      'created_at' in cred && 
+      'last_used_at' in cred
+    ).map(cred => ({
       id: cred.id,
       credentialId: cred.credential_id,
       deviceType: cred.device_type,
@@ -100,7 +114,7 @@ export async function DELETE(_request: NextRequest) {
 
     // Get Supabase client
     const cookieStore = await cookies()
-    const supabase = createClient(cookieStore)
+    const supabase = getSupabaseServerClient()
     
     if (!supabase) {
       return NextResponse.json(
@@ -109,8 +123,10 @@ export async function DELETE(_request: NextRequest) {
       )
     }
 
+    const supabaseClient = await supabase
+
     // Get current user
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    const { data: { user }, error: userError } = await supabaseClient.auth.getUser()
     
     if (userError || !user) {
       return NextResponse.json(
@@ -120,7 +136,7 @@ export async function DELETE(_request: NextRequest) {
     }
 
     // Verify the credential belongs to the user
-    const { data: credentialData, error: credentialError } = await supabase
+    const { data: credentialData, error: credentialError } = await supabaseClient
       .from('biometric_credentials')
       .select('id, user_id')
       .eq('credential_id', credentialId)
@@ -133,7 +149,7 @@ export async function DELETE(_request: NextRequest) {
       )
     }
 
-    if (credentialData.user_id !== user.id) {
+    if (!credentialData || !('user_id' in credentialData) || credentialData.user_id !== String(user.id)) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 403 }
@@ -141,7 +157,7 @@ export async function DELETE(_request: NextRequest) {
     }
 
     // Delete the credential
-    const { error: deleteError } = await supabase
+    const { error: deleteError } = await supabaseClient
       .from('biometric_credentials')
       .delete()
       .eq('credential_id', credentialId)

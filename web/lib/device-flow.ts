@@ -17,8 +17,7 @@
  */
 
 
-import { createClient as createServerClient } from '@/utils/supabase/server'
-import { cookies } from 'next/headers'
+import { getSupabaseServerClient } from '@/utils/supabase/server'
 import { logger } from '@/lib/logger'
 
 export interface DeviceFlowState {
@@ -89,7 +88,7 @@ export class DeviceFlowManager {
    */
   static async createDeviceFlow(request: DeviceFlowRequest): Promise<DeviceFlowResponse> {
     try {
-      const supabase = createServerClient(cookies())
+      const supabase = getSupabaseServerClient()
       if (!supabase) {
         throw new Error('Supabase client not available')
       }
@@ -115,7 +114,8 @@ export class DeviceFlowManager {
       const expiresAt = new Date(now.getTime() + this.EXPIRATION_MINUTES * 60 * 1000)
 
       // Store device flow in database
-      const { error: insertError } = await supabase
+      const supabaseClient = await supabase;
+      const { error: insertError } = await supabaseClient
         .from('device_flows')
         .insert({
           device_code: deviceCode,
@@ -126,7 +126,7 @@ export class DeviceFlowManager {
           client_ip: clientIp,
           redirect_to: request.redirectTo || '/dashboard',
           scopes: request.scopes || []
-        })
+        } as any)
 
       if (insertError) {
         logger.error('Failed to create device flow', new Error(insertError.message))
@@ -164,16 +164,18 @@ export class DeviceFlowManager {
    */
   static async verifyDeviceFlow(deviceCode: string): Promise<DeviceFlowVerification> {
     try {
-      const supabase = createServerClient(cookies())
+      const supabase = getSupabaseServerClient()
       if (!supabase) {
         throw new Error('Supabase client not available')
       }
 
+      const supabaseClient = await supabase;
+
       // Get device flow from database
-      const { data: deviceFlow, error: fetchError } = await supabase
+      const { data: deviceFlow, error: fetchError } = await supabaseClient
         .from('device_flows')
         .select('*')
-        .eq('device_code', deviceCode)
+        .eq('device_code', deviceCode as any)
         .single()
 
       if (fetchError || !deviceFlow) {
@@ -184,7 +186,7 @@ export class DeviceFlowManager {
       }
 
       // Check if expired
-      if (new Date() > new Date(deviceFlow.expires_at)) {
+      if (deviceFlow && !('error' in deviceFlow) && new Date() > new Date((deviceFlow as any).expires_at)) {
         await this.markDeviceFlowExpired(deviceCode)
         return {
           success: false,
@@ -193,9 +195,9 @@ export class DeviceFlowManager {
       }
 
       // Check if completed
-      if (deviceFlow.status === 'completed' && deviceFlow.user_id) {
+      if (deviceFlow && !('error' in deviceFlow) && (deviceFlow as any).status === 'completed' && (deviceFlow as any).user_id) {
         // Get user session
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+        const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession()
         
         if (sessionError || !session) {
           return {
@@ -207,13 +209,13 @@ export class DeviceFlowManager {
         // Log successful verification
         logger.info('Device flow verified successfully', {
           deviceCode,
-          userId: deviceFlow.user_id,
-          provider: deviceFlow.provider
+          userId: (deviceFlow as any).user_id,
+          provider: (deviceFlow as any).provider
         })
 
         return {
           success: true,
-          userId: deviceFlow.user_id,
+          userId: (deviceFlow as any).user_id,
           session
         }
       }
@@ -238,21 +240,22 @@ export class DeviceFlowManager {
    */
   static async completeDeviceFlow(userCode: string, userId: string): Promise<boolean> {
     try {
-      const supabase = createServerClient(cookies())
+      const supabase = getSupabaseServerClient()
       if (!supabase) {
         throw new Error('Supabase client not available')
       }
 
+      const supabaseClient = await supabase;
       // Update device flow status
-      const { error: updateError } = await supabase
+      const { error: updateError } = await supabaseClient
         .from('device_flows')
         .update({
           status: 'completed',
           user_id: userId,
           completed_at: new Date().toISOString()
-        })
-        .eq('user_code', userCode)
-        .eq('status', 'pending')
+        } as any)
+        .eq('user_code', userCode as any)
+        .eq('status', 'pending' as any)
 
       if (updateError) {
         logger.error('Failed to complete device flow', new Error(updateError.message))
@@ -273,14 +276,14 @@ export class DeviceFlowManager {
    */
   private static async markDeviceFlowExpired(deviceCode: string): Promise<void> {
     try {
-      const supabase = createServerClient(cookies())
+      const supabase = getSupabaseServerClient()
       if (!supabase) return
 
       await supabase
         .from('device_flows')
-        .update({ status: 'expired' })
-        .eq('device_code', deviceCode)
-        .eq('status', 'pending')
+        .update({ status: 'expired' } as any)
+        .eq('device_code', deviceCode as any)
+        .eq('status', 'pending' as any)
 
     } catch (error) {
       logger.error('Failed to mark device flow as expired', error instanceof Error ? error : new Error('Unknown error'))
@@ -292,14 +295,14 @@ export class DeviceFlowManager {
    */
   private static async getActiveFlowsForIP(clientIp: string): Promise<any[]> {
     try {
-      const supabase = createServerClient(cookies())
+      const supabase = getSupabaseServerClient()
       if (!supabase) return []
 
       const { data: flows } = await supabase
         .from('device_flows')
         .select('*')
-        .eq('client_ip', clientIp)
-        .eq('status', 'pending')
+        .eq('client_ip', clientIp as any)
+        .eq('status', 'pending' as any)
         .gte('expires_at', new Date().toISOString())
 
       return flows || []
@@ -340,7 +343,7 @@ export class DeviceFlowManager {
    */
   static async cleanupExpiredFlows(): Promise<void> {
     try {
-      const supabase = createServerClient(cookies())
+      const supabase = getSupabaseServerClient()
       if (!supabase) return
 
       const { error } = await supabase

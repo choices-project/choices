@@ -3,8 +3,8 @@
  * Core functionality without complex type issues
  */
 
-import { createClient } from '@supabase/supabase-js';
 import { logger } from '@/lib/logger';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 // Basic types for performance monitoring
 export interface QueryPerformanceData {
@@ -81,16 +81,13 @@ const DEFAULT_CONFIG: PerformanceConfig = {
  * Focuses on core functionality without complex type issues
  */
 export class SimplePerformanceMonitor {
-  private supabase: ReturnType<typeof createClient>;
+  private supabase: ReturnType<typeof getSupabaseServerClient>;
   private config: PerformanceConfig;
   private isInitialized = false;
 
   constructor(config: Partial<PerformanceConfig> = {}) {
     this.config = { ...DEFAULT_CONFIG, ...config };
-    this.supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
+    this.supabase = getSupabaseServerClient();
   }
 
   /**
@@ -113,7 +110,7 @@ export class SimplePerformanceMonitor {
       this.isInitialized = true;
       logger.info('✅ Performance monitor initialized');
     } catch (error) {
-      logger.error('❌ Failed to initialize performance monitor:', error);
+      logger.error('❌ Failed to initialize performance monitor:', error instanceof Error ? error : new Error(String(error)));
       throw error;
     }
   }
@@ -157,7 +154,7 @@ export class SimplePerformanceMonitor {
 
       return result as string | null;
     } catch (error) {
-      logger.error('Error tracking query performance:', error);
+      logger.error('Error tracking query performance:', error instanceof Error ? error : new Error(String(error)));
       return null;
     }
   }
@@ -197,7 +194,7 @@ export class SimplePerformanceMonitor {
 
       return result as string | null;
     } catch (error) {
-      logger.error('Error updating cache performance:', error);
+      logger.error('Error updating cache performance:', error instanceof Error ? error : new Error(String(error)));
       return null;
     }
   }
@@ -223,7 +220,7 @@ export class SimplePerformanceMonitor {
 
       return result as string | null;
     } catch (error) {
-      logger.error('Error running maintenance job:', error);
+      logger.error('Error running maintenance job:', error instanceof Error ? error : new Error(String(error)));
       return null;
     }
   }
@@ -246,7 +243,7 @@ export class SimplePerformanceMonitor {
 
       return (data as PerformanceRecommendation[]) || [];
     } catch (error) {
-      logger.error('Error getting performance recommendations:', error);
+      logger.error('Error getting performance recommendations:', error instanceof Error ? error : new Error(String(error)));
       return [];
     }
   }
@@ -269,7 +266,7 @@ export class SimplePerformanceMonitor {
 
       return (data as number) || 0;
     } catch (error) {
-      logger.error('Error cleaning up performance data:', error);
+      logger.error('Error cleaning up performance data:', error instanceof Error ? error : new Error(String(error)));
       return 0;
     }
   }
@@ -325,7 +322,7 @@ export class SimplePerformanceMonitor {
 
       return stats;
     } catch (error) {
-      logger.error('Error getting performance stats:', error);
+      logger.error('Error getting performance stats:', error instanceof Error ? error : new Error(String(error)));
       return null;
     }
   }
@@ -345,7 +342,7 @@ export class SimplePerformanceMonitor {
 
       logger.info('✅ Automated maintenance completed');
     } catch (error) {
-      logger.error('❌ Automated maintenance failed:', error);
+      logger.error('❌ Automated maintenance failed:', error instanceof Error ? error : new Error(String(error)));
     }
   }
 

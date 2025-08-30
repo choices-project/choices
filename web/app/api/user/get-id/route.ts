@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { devLog } from '@/lib/logger';
-import { createClient } from '@/utils/supabase/server';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 import { cookies } from 'next/headers';
 
 export const dynamic = 'force-dynamic';
@@ -8,8 +8,7 @@ export const dynamic = 'force-dynamic';
 // GET /api/user/get-id - Get current user ID (for security setup)
 export async function GET(_request: NextRequest) {
   try {
-    const cookieStore = await cookies();
-    const supabase = createClient(cookieStore);
+    const supabase = getSupabaseServerClient();
     
     if (!supabase) {
       return NextResponse.json(
@@ -18,7 +17,7 @@ export async function GET(_request: NextRequest) {
           debug: {
             hasUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
             hasKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-            cookies: cookieStore.getAll().map(c => c.name)
+            cookies: (await cookies().getAll()).map(c => c.name || 'unnamed')
           }
         },
         { status: 500 }
@@ -26,7 +25,8 @@ export async function GET(_request: NextRequest) {
     }
 
     // Check authentication
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    const supabaseClient = await supabase;
+    const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
     
     if (userError) {
       return NextResponse.json(
@@ -34,8 +34,8 @@ export async function GET(_request: NextRequest) {
           error: 'Authentication error',
           debug: {
             userError: userError.message,
-            cookies: cookieStore.getAll().map(c => c.name),
-            hasAuthCookies: cookieStore.getAll().some(c => c.name.includes('auth'))
+            cookies: (await cookies().getAll()).map(c => c.name || 'unnamed'),
+            hasAuthCookies: (await cookies().getAll()).some(c => c.name?.includes('auth'))
           }
         },
         { status: 401 }
@@ -47,8 +47,8 @@ export async function GET(_request: NextRequest) {
         { 
           error: 'Authentication required',
           debug: {
-            cookies: cookieStore.getAll().map(c => c.name),
-            hasAuthCookies: cookieStore.getAll().some(c => c.name.includes('auth')),
+            cookies: (await cookies().getAll()).map(c => c.name || 'unnamed'),
+            hasAuthCookies: (await cookies().getAll()).some(c => c.name?.includes('auth')),
             suggestion: 'Make sure you are logged in and try refreshing the page'
           }
         },
@@ -57,10 +57,10 @@ export async function GET(_request: NextRequest) {
     }
 
     // Get user profile from ia_users table
-    const { data: userProfile, error: _profileError } = await supabase
+    const { data: userProfile, error: _profileError } = await supabaseClient
       .from('ia_users')
       .select('stable_id, verification_tier, is_active')
-      .eq('stable_id', user.id)
+      .eq('stable_id', String(user.id) as any)
       .single();
 
     return NextResponse.json({
@@ -69,10 +69,10 @@ export async function GET(_request: NextRequest) {
         id: user.id,
         email: user.email,
         created_at: user.created_at,
-        profile: userProfile ? {
-          stable_id: userProfile.stable_id,
-          verification_tier: userProfile.verification_tier,
-          is_active: userProfile.is_active
+        profile: userProfile && !('error' in userProfile) ? {
+          stable_id: (userProfile as any).stable_id,
+          verification_tier: (userProfile as any).verification_tier,
+          is_active: (userProfile as any).is_active
         } : null
       },
       instructions: {

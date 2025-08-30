@@ -64,12 +64,12 @@ export function verifySessionToken(token: string): JWTPayload | null {
 export function getSessionToken(request?: NextRequest): string | null {
   if (request) {
     const cookie = request.cookies.get(SESSION_COOKIE_NAME)
-    logger.info('Session debug - reading from request, cookie found:', !!cookie)
+    logger.info('Session debug - reading from request, cookie found:', { cookieFound: !!cookie })
     return cookie?.value || null
   } else {
     const cookieStore = cookies()
     const cookie = cookieStore.get(SESSION_COOKIE_NAME)
-    logger.info('Session debug - reading from cookieStore, cookie found:', !!cookie)
+    logger.info('Session debug - reading from cookieStore, cookie found:', { cookieFound: !!cookie })
     return cookie?.value || null
   }
 }
@@ -87,7 +87,7 @@ export function setSessionToken(token: string): void {
     path: '/'
     // Don't set domain in development to avoid port conflicts
   })
-  logger.info('Session debug - cookie set:', SESSION_COOKIE_NAME)
+  logger.info('Session debug - cookie set:', { cookieName: SESSION_COOKIE_NAME })
 }
 
 /**
@@ -102,7 +102,7 @@ export function setSessionTokenInResponse(token: string, response: NextResponse)
     path: '/'
     // Don't set domain in development to avoid port conflicts
   })
-  logger.info('Session debug - cookie set in response:', SESSION_COOKIE_NAME)
+  logger.info('Session debug - cookie set in response:', { cookieName: SESSION_COOKIE_NAME })
   return response
 }
 
@@ -119,14 +119,14 @@ export function clearSessionToken(): void {
  */
 export async function getCurrentUser(request?: NextRequest): Promise<SessionUser | null> {
   const token = getSessionToken(request)
-  logger.info('Session debug - token found:', !!token)
+  logger.info('Session debug - token found:', { tokenFound: !!token })
   if (!token) {
     logger.info('Session debug - no token found')
     return null
   }
 
   const payload = verifySessionToken(token)
-  logger.info('Session debug - payload valid:', !!payload)
+  logger.info('Session debug - payload valid:', { payloadValid: !!payload })
   if (!payload) {
     logger.info('Session debug - invalid token')
     return null
@@ -153,7 +153,7 @@ export async function getCurrentUser(request?: NextRequest): Promise<SessionUser
       .single()
 
     if (error || !user) {
-      logger.info('Session debug - user not found in database:', error?.message)
+      logger.info('Session debug - user not found in database:', { errorMessage: error?.message })
       return null
     }
 
@@ -170,7 +170,7 @@ export async function getCurrentUser(request?: NextRequest): Promise<SessionUser
       updatedAt: user.updated_at
     }
   } catch (error) {
-    logger.error('Error fetching user from database:', error)
+    logger.error('Error fetching user from database:', error instanceof Error ? error : new Error(String(error)))
     return null
   }
 }

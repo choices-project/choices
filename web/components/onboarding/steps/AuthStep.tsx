@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { Lock, Shield } from 'lucide-react'
-import { createClient } from '@/utils/supabase/client'
+import { getSupabaseBrowserClient } from '@/utils/supabase/client'
 import { devLog } from '@/lib/logger';
 import { useOnboardingContext } from '../OnboardingFlow'
 import SocialLoginButtons from '@/components/auth/SocialLoginButtons'
@@ -30,7 +30,7 @@ export default function AuthStep({ data, onUpdate, onNext, onBack }: AuthStepPro
     }
   }, [data?.authMethod, authMethod])
 
-  const supabase = createClient()
+  const supabase = getSupabaseBrowserClient()
 
   const handleSocialLogin = async (provider: OAuthProvider) => {
     setIsLoading(true)

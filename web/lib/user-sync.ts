@@ -1,4 +1,4 @@
-import { createClient } from '@/utils/supabase/client';
+import { getSupabaseBrowserClient } from '@/utils/supabase/client';
 
 export interface UserSyncResult {
   success: boolean
@@ -14,7 +14,7 @@ export interface UserSyncResult {
  */
 export async function ensureUserSynced(): Promise<UserSyncResult> {
   try {
-    const supabase = createClient()
+    const supabase = getSupabaseBrowserClient()
     
     if (!supabase) {
       return {
@@ -107,7 +107,7 @@ export async function ensureUserSynced(): Promise<UserSyncResult> {
  */
 export async function getUserFromIaUsers(authUserId: string) {
   try {
-    const supabase = createClient()
+    const supabase = getSupabaseBrowserClient()
     
     if (!supabase) {
       return { data: null, error: 'Supabase client not available' }
@@ -133,7 +133,7 @@ export async function getUserFromIaUsers(authUserId: string) {
  */
 export async function hasUserProfile(authUserId: string) {
   try {
-    const supabase = createClient()
+    const supabase = getSupabaseBrowserClient()
     
     if (!supabase) {
       return { hasProfile: false, error: 'Supabase client not available' }

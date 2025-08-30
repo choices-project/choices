@@ -37,7 +37,7 @@ interface PollResults {
 interface PollCardProps {
   poll: Poll;
   onVote?: () => Promise<void>;
-  onViewDetails?: () => void;
+  onViewDetails?: (pollId: string) => void;
   isVoted?: boolean;
   userVote?: number;
   showVoteButton?: boolean;

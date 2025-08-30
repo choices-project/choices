@@ -1,15 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { devLog } from '@/lib/logger';
-import { createClient } from '@/utils/supabase/server';
-import { cookies } from 'next/headers';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 import { getMockDemographicsResponse } from '@/lib/mock-data';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(_request: NextRequest) {
   try {
-    const cookieStore = await cookies();
-    const supabase = createClient(cookieStore);
+    const supabase = getSupabaseServerClient();
     
     // If Supabase client is not available, return mock data
     if (!supabase) {
@@ -18,28 +16,30 @@ export async function GET(_request: NextRequest) {
     }
     
     try {
+      const supabaseClient = await supabase;
+      
       // Get total users
-      const { data: users, error: usersError } = await supabase
+      const { data: users, error: usersError } = await supabaseClient
         .from('ia_users')
         .select('id, email, verification_tier, created_at, updated_at, display_name, avatar_url, bio, stable_id, is_active')
-        .eq('is_active', true);
+        .eq('is_active', true as any);
 
       if (usersError) throw usersError;
 
       const totalUsers = users?.length || 0;
 
       // Get recent polls
-      const { data: polls, error: pollsError } = await supabase
+      const { data: polls, error: pollsError } = await supabaseClient
         .from('po_polls')
         .select('poll_id, title, total_votes, participation_rate, created_at')
-        .eq('status', 'active')
+        .eq('status', 'active' as any)
         .order('created_at', { ascending: false })
         .limit(5);
 
       if (pollsError) throw pollsError;
 
       // Get recent votes
-      const { data: votes, error: votesError } = await supabase
+      const { data: votes, error: votesError } = await supabaseClient
         .from('po_votes')
         .select('poll_id, voted_at')
         .gte('voted_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
@@ -51,8 +51,8 @@ export async function GET(_request: NextRequest) {
       // Generate demographics data with real user count
       const demographics = getMockDemographicsResponse();
       demographics.totalUsers = totalUsers;
-      demographics.recentPolls = polls || [];
-      demographics.recentVotes = votes || [];
+      demographics.recentPolls = polls && !('error' in polls) ? polls as any : [];
+      demographics.recentVotes = votes && !('error' in votes) ? votes as any : [];
 
       return NextResponse.json(demographics);
     } catch (error) {

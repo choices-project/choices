@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { devLog } from '@/lib/logger';
-import { createClient } from '@/utils/supabase/server';
-import { cookies } from 'next/headers';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 import { RealTimeNewsService } from '@/lib/real-time-news-service';
 
 export const dynamic = 'force-dynamic';
@@ -12,18 +11,13 @@ export async function POST(
   { params }: { params: { id: string } }
 ) {
   try {
-    const cookieStore = await cookies();
-    const supabase = createClient(cookieStore);
-    
-    if (!supabase) {
-      return NextResponse.json(
-        { error: 'Supabase client not available' },
-        { status: 500 }
-      );
-    }
+    const supabase = getSupabaseServerClient();
+
+    // Get Supabase client
+    const supabaseClient = await supabase;
 
     // Check authentication
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
     if (userError || !user) {
       return NextResponse.json(
         { error: 'Authentication required' },
@@ -32,10 +26,10 @@ export async function POST(
     }
 
     // Check admin permissions - RESTRICTED TO OWNER ONLY
-    const { data: userProfile, error: _profileError } = await supabase
+    const { data: userProfile, error: _profileError } = await supabaseClient
       .from('ia_users')
       .select('verification_tier')
-      .eq('stable_id', user.id)
+      .eq('stable_id', String(user.id) as any)
       .single();
 
     if (!userProfile) {
@@ -74,7 +68,7 @@ export async function POST(
     }
 
     // Store the poll context in the database
-    const { data: contextData, error: contextError } = await supabase
+    const { data: contextData, error: contextError } = await supabaseClient
       .from('poll_contexts')
       .insert([{
         story_id: storyId,
@@ -87,7 +81,7 @@ export async function POST(
         estimated_controversy: pollContext.estimatedControversy,
         time_to_live: pollContext.timeToLive,
         status: 'draft'
-      }])
+      }] as any)
       .select()
       .single();
 
@@ -103,9 +97,9 @@ export async function POST(
       success: true,
       pollContext: {
         ...pollContext,
-        id: contextData.id,
-        status: contextData.status,
-        createdAt: contextData.created_at
+        id: contextData && 'id' in contextData ? contextData.id : undefined,
+        status: contextData && 'status' in contextData ? contextData.status : undefined,
+        createdAt: contextData && 'created_at' in contextData ? contextData.created_at : undefined
       },
       story: {
         id: story.id,
@@ -132,10 +126,12 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const cookieStore = await cookies();
-    const supabase = createClient(cookieStore);
+    const supabase = getSupabaseServerClient();
     
-    if (!supabase) {
+    // Get Supabase client
+    const supabaseClient = await supabase;
+    
+    if (!supabaseClient) {
       return NextResponse.json(
         { error: 'Supabase client not available' },
         { status: 500 }
@@ -143,7 +139,7 @@ export async function GET(
     }
 
     // Check authentication
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
     if (userError || !user) {
       return NextResponse.json(
         { error: 'Authentication required' },
@@ -152,10 +148,10 @@ export async function GET(
     }
 
     // Check admin permissions
-    const { data: userProfile, error: profileError } = await supabase
+    const { data: userProfile, error: profileError } = await supabaseClient
       .from('ia_users')
       .select('verification_tier')
-      .eq('stable_id', user.id)
+      .eq('stable_id', String(user.id) as any)
       .single();
 
     if (profileError) {
@@ -166,7 +162,7 @@ export async function GET(
       );
     }
 
-    if (!userProfile || !['T2', 'T3'].includes(userProfile.verification_tier)) {
+    if (!userProfile || !userProfile || !('verification_tier' in userProfile) || !['T2', 'T3'].includes(userProfile.verification_tier)) {
       return NextResponse.json(
         { error: 'Insufficient permissions' },
         { status: 403 }
@@ -182,10 +178,10 @@ export async function GET(
     }
 
     // Get existing poll context
-    const { data: contextData, error: contextError } = await supabase
+    const { data: contextData, error: contextError } = await supabaseClient
       .from('poll_contexts')
       .select('id, email, verification_tier, created_at, updated_at, display_name, avatar_url, bio, stable_id, is_active')
-      .eq('story_id', storyId)
+      .eq('story_id', storyId as any)
       .order('created_at', { ascending: false })
       .limit(1)
       .single();

@@ -1,7 +1,7 @@
 const withPWA = require('next-pwa')({
   dest: 'public',
-  // Disable SW in dev, enable in prod
-  disable: process.env.NODE_ENV === 'development',
+  // Disable SW in dev, enable in prod, or when explicitly disabled
+  disable: process.env.NODE_ENV === 'development' || process.env.NEXT_DISABLE_PWA === '1',
   register: true,
   skipWaiting: true,
 
@@ -33,11 +33,23 @@ const withPWA = require('next-pwa')({
 const nextConfig = {
   // Performance optimizations
   experimental: {
+    // Make sure supabase packages are EXTERNAL in RSC/server,
+    // so Node resolves the proper entry (not the browser one).
+    serverComponentsExternalPackages: [
+      '@prisma/client',
+      '@supabase/ssr',
+      '@supabase/supabase-js',
+      '@supabase/postgrest-js',
+      '@supabase/realtime-js',
+      '@supabase/storage-js',
+      '@supabase/functions-js',
+      '@supabase/auth-js',
+    ],
     // Enable CSS optimization
     optimizeCss: true,
-    // Enable package imports optimization
+    // DO NOT list supabase packages here.
+    // If you're currently using optimizePackageImports, exclude them:
     optimizePackageImports: [
-      '@supabase/supabase-js',
       'lucide-react',
       'date-fns',
       'lodash-es',
@@ -45,6 +57,7 @@ const nextConfig = {
       'zod',
       'clsx',
       'tailwind-merge'
+      // intentionally NOT including any @supabase/*
     ],
     // Enable turbo for faster builds
     turbo: {
@@ -75,57 +88,83 @@ const nextConfig = {
 
   // Webpack optimizations
   webpack: (config, { dev, isServer }) => {
-    // Bundle analyzer (only in development)
-    if (dev && !isServer) {
-      const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer')
-      config.plugins.push(
-        new BundleAnalyzerPlugin({
-          analyzerMode: 'static',
-          openAnalyzer: false,
-          reportFilename: '../bundle-analyzer-report.html'
-        })
-      )
+    // Ensure Node conditions win over browser in server build
+    if (isServer) {
+      // Be explicit about condition priority:
+      config.resolve.conditionNames = [
+        'node',
+        'import',
+        'require',
+        'default',
+        'module',
+      ]
+      // And keep "browser" out of server resolution:
+      config.resolve.mainFields = ['module', 'main']
+      
+      // Defensive: don't fall back to browser polyfills for server build
+      config.resolve.fallback = { 
+        ...config.resolve.fallback, 
+        crypto: false, 
+        stream: false, 
+        buffer: false 
+      }
     }
 
-    // Tree shaking optimizations
-    config.optimization = {
-      ...config.optimization,
-      usedExports: true,
-      sideEffects: false,
-      splitChunks: {
-        chunks: 'all',
-        cacheGroups: {
-          // Vendor chunks
-          vendor: {
-            test: /[\\/]node_modules[\\/]/,
-            name: 'vendors',
-            chunks: 'all',
-            priority: 10,
-            enforce: true
-          },
-          // Supabase specific chunk
-          supabase: {
-            test: /[\\/]node_modules[\\/]@supabase[\\/]/,
-            name: 'supabase',
-            chunks: 'all',
-            priority: 20,
-            enforce: true
-          },
-          // React specific chunk
-          react: {
-            test: /[\\/]node_modules[\\/](react|react-dom)[\\/]/,
-            name: 'react',
-            chunks: 'all',
-            priority: 30,
-            enforce: true
-          },
-          // Common chunks
-          common: {
-            name: 'common',
-            minChunks: 2,
-            chunks: 'all',
-            priority: 5,
-            reuseExistingChunk: true
+    // Bundle analyzer (only in development and when explicitly requested)
+    if (dev && !isServer && process.env.ANALYZE === 'true') {
+      try {
+        const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer')
+        config.plugins.push(
+          new BundleAnalyzerPlugin({
+            analyzerMode: 'static',
+            openAnalyzer: false,
+            reportFilename: '../bundle-analyzer-report.html'
+          })
+        )
+      } catch (error) {
+        console.warn('Bundle analyzer not available:', error.message)
+      }
+    }
+
+    // Simplified optimization for development
+    if (!dev) {
+      config.optimization = {
+        ...config.optimization,
+        splitChunks: {
+          chunks: 'all',
+          cacheGroups: {
+            // Vendor chunks
+            vendor: {
+              test: /[\\/]node_modules[\\/]/,
+              name: 'vendors',
+              chunks: 'all',
+              priority: 10,
+              enforce: true
+            },
+            // Supabase specific chunk
+            supabase: {
+              test: /[\\/]node_modules[\\/]@supabase[\\/]/,
+              name: 'supabase',
+              chunks: 'all',
+              priority: 20,
+              enforce: true
+            },
+            // React specific chunk
+            react: {
+              test: /[\\/]node_modules[\\/](react|react-dom)[\\/]/,
+              name: 'react',
+              chunks: 'all',
+              priority: 30,
+              enforce: true
+            },
+            // Common chunks
+            common: {
+              name: 'common',
+              minChunks: 2,
+              chunks: 'all',
+              priority: 5,
+              reuseExistingChunk: true
+            }
           }
         }
       }

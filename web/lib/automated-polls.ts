@@ -1,9 +1,8 @@
 // Automated Trending Topics & Poll Generation Service
 // Core interfaces and service classes for the automated poll generation system
 
-import { createClient } from '@/utils/supabase/server';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 import { devLog } from '@/lib/logger';
-import { cookies } from 'next/headers';
 
 // ============================================================================
 // CORE INTERFACES
@@ -161,11 +160,13 @@ export interface PollRecommendation {
 // ============================================================================
 
 export class AutomatedPollsService {
-  private supabase!: ReturnType<typeof createClient>;
+  private supabase: ReturnType<typeof getSupabaseServerClient> | null = null;
 
-  constructor() {
-    const cookieStore = cookies();
-    this.supabase = createClient(cookieStore);
+  private async getSupabase() {
+    if (!this.supabase) {
+      this.supabase = getSupabaseServerClient() as any;
+    }
+    return this.supabase;
   }
 
   // ============================================================================
@@ -174,10 +175,11 @@ export class AutomatedPollsService {
 
   async getTrendingTopics(limit: number = 20): Promise<TrendingTopic[]> {
     try {
-      if (!this.supabase) {
+      const supabase = await this.getSupabase();
+      if (!supabase) {
         throw new Error('Supabase client not available')
       }
-      const { data, error } = await this.supabase
+      const { data, error } = await supabase
         .from('trending_topics')
         .select('id, topic, score, created_at, updated_at')
         .order('trending_score', { ascending: false })
@@ -194,13 +196,14 @@ export class AutomatedPollsService {
 
   async getTrendingTopicById(id: string): Promise<TrendingTopic | null> {
     try {
-      if (!this.supabase) {
+      const supabase = await this.getSupabase();
+      if (!supabase) {
         throw new Error('Supabase client not available')
       }
-      const { data, error } = await this.supabase
+      const { data, error } = await supabase
         .from('trending_topics')
         .select('id, topic, score, created_at, updated_at')
-        .eq('id', id)
+        .eq('id', id as any)
         .single();
 
       if (error) throw error;
@@ -214,10 +217,11 @@ export class AutomatedPollsService {
 
   async createTrendingTopic(topic: Omit<TrendingTopic, 'id' | 'createdAt' | 'updatedAt'>): Promise<TrendingTopic | null> {
     try {
-      if (!this.supabase) {
+      const supabase = await this.getSupabase();
+      if (!supabase) {
         throw new Error('Supabase client not available')
       }
-      const { data, error } = await this.supabase
+      const { data, error } = await supabase
         .from('trending_topics')
         .insert([this.mapTrendingTopicToDB(topic)])
         .select()
@@ -234,13 +238,14 @@ export class AutomatedPollsService {
 
   async updateTrendingTopic(id: string, updates: Partial<TrendingTopic>): Promise<TrendingTopic | null> {
     try {
-      if (!this.supabase) {
+      const supabase = await this.getSupabase();
+      if (!supabase) {
         throw new Error('Supabase client not available')
       }
-      const { data, error } = await this.supabase
+      const { data, error } = await supabase
         .from('trending_topics')
         .update(this.mapTrendingTopicToDB(updates))
-        .eq('id', id)
+        .eq('id', id as any)
         .select()
         .single();
 
@@ -259,17 +264,18 @@ export class AutomatedPollsService {
 
   async getGeneratedPolls(status?: GeneratedPoll['status'], limit: number = 20): Promise<GeneratedPoll[]> {
     try {
-      if (!this.supabase) {
+      const supabase = await this.getSupabase();
+      if (!supabase) {
         throw new Error('Supabase client not available')
       }
-      let query = this.supabase
+      let query = supabase
         .from('generated_polls')
         .select('id, topic, score, created_at, updated_at')
         .order('created_at', { ascending: false })
         .limit(limit);
 
       if (status) {
-        query = query.eq('status', status);
+        query = query.eq('status', status as any);
       }
 
       const { data, error } = await query;
@@ -285,13 +291,14 @@ export class AutomatedPollsService {
 
   async getGeneratedPollById(id: string): Promise<GeneratedPoll | null> {
     try {
-      if (!this.supabase) {
+      const supabase = await this.getSupabase();
+      if (!supabase) {
         throw new Error('Supabase client not available')
       }
-      const { data, error } = await this.supabase
+      const { data, error } = await supabase
         .from('generated_polls')
         .select('id, topic, score, created_at, updated_at')
-        .eq('id', id)
+        .eq('id', id as any)
         .single();
 
       if (error) throw error;
@@ -305,10 +312,11 @@ export class AutomatedPollsService {
 
   async createGeneratedPoll(poll: Omit<GeneratedPoll, 'id' | 'createdAt' | 'updatedAt'>): Promise<GeneratedPoll | null> {
     try {
-      if (!this.supabase) {
+      const supabase = await this.getSupabase();
+      if (!supabase) {
         throw new Error('Supabase client not available')
       }
-      const { data, error } = await this.supabase
+      const { data, error } = await supabase
         .from('generated_polls')
         .insert([this.mapGeneratedPollToDB(poll)])
         .select()
@@ -325,14 +333,14 @@ export class AutomatedPollsService {
 
   async updateGeneratedPoll(id: string, updates: Partial<GeneratedPoll>): Promise<GeneratedPoll | null> {
     try {
-
-      if (!this.supabase) {
+      const supabase = await this.getSupabase();
+      if (!supabase) {
         throw new Error('Supabase client not available')
       }
-            const { data, error } = await this.supabase
+      const { data, error } = await supabase
         .from('generated_polls')
         .update(this.mapGeneratedPollToDB(updates))
-        .eq('id', id)
+        .eq('id', id as any)
         .select()
         .single();
 
@@ -366,14 +374,14 @@ export class AutomatedPollsService {
 
   async getDataSources(): Promise<DataSource[]> {
     try {
-
-      if (!this.supabase) {
+      const supabase = await this.getSupabase();
+      if (!supabase) {
         throw new Error('Supabase client not available')
       }
-            const { data, error } = await this.supabase
+      const { data, error } = await supabase
         .from('data_sources')
         .select('id, topic, score, created_at, updated_at')
-        .eq('is_active', true)
+        .eq('is_active', true as any)
         .order('reliability', { ascending: false });
 
       if (error) throw error;
@@ -387,14 +395,14 @@ export class AutomatedPollsService {
 
   async updateDataSource(id: string, updates: Partial<DataSource>): Promise<DataSource | null> {
     try {
-
-      if (!this.supabase) {
+      const supabase = await this.getSupabase();
+      if (!supabase) {
         throw new Error('Supabase client not available')
       }
-            const { data, error } = await this.supabase
+      const { data, error } = await supabase
         .from('data_sources')
         .update(this.mapDataSourceToDB(updates))
-        .eq('id', id)
+        .eq('id', id as any)
         .select()
         .single();
 
@@ -413,14 +421,14 @@ export class AutomatedPollsService {
 
   async getQualityMetrics(pollId: string): Promise<QualityMetrics | null> {
     try {
-
-      if (!this.supabase) {
+      const supabase = await this.getSupabase();
+      if (!supabase) {
         throw new Error('Supabase client not available')
       }
-            const { data, error } = await this.supabase
+      const { data, error } = await supabase
         .from('quality_metrics')
         .select('id, topic, score, created_at, updated_at')
-        .eq('poll_id', pollId)
+        .eq('poll_id', pollId as any)
         .single();
 
       if (error) throw error;
@@ -434,11 +442,11 @@ export class AutomatedPollsService {
 
   async createQualityMetrics(metrics: Omit<QualityMetrics, 'id' | 'createdAt' | 'updatedAt'>): Promise<QualityMetrics | null> {
     try {
-
-      if (!this.supabase) {
+      const supabase = await this.getSupabase();
+      if (!supabase) {
         throw new Error('Supabase client not available')
       }
-            const { data, error } = await this.supabase
+      const { data, error } = await supabase
         .from('quality_metrics')
         .insert([this.mapQualityMetricsToDB(metrics)])
         .select()
@@ -459,15 +467,15 @@ export class AutomatedPollsService {
 
   async getSystemConfiguration(key: string): Promise<SystemConfiguration | null> {
     try {
-
-      if (!this.supabase) {
+      const supabase = await this.getSupabase();
+      if (!supabase) {
         throw new Error('Supabase client not available')
       }
-            const { data, error } = await this.supabase
+      const { data, error } = await supabase
         .from('system_configuration')
         .select('id, topic, score, created_at, updated_at')
-        .eq('key', key)
-        .eq('is_active', true)
+        .eq('key', key as any)
+        .eq('is_active', true as any)
         .single();
 
       if (error) throw error;
@@ -481,14 +489,14 @@ export class AutomatedPollsService {
 
   async updateSystemConfiguration(key: string, value: Record<string, any>): Promise<SystemConfiguration | null> {
     try {
-
-      if (!this.supabase) {
+      const supabase = await this.getSupabase();
+      if (!supabase) {
         throw new Error('Supabase client not available')
       }
-            const { data, error } = await this.supabase
+      const { data, error } = await supabase
         .from('system_configuration')
-        .update({ value })
-        .eq('key', key)
+        .update({ value } as any)
+        .eq('key', key as any)
         .select()
         .single();
 
@@ -675,16 +683,17 @@ export class AutomatedPollsService {
     const startTime = Date.now();
     
     try {
-      if (!this.supabase) {
+      const supabase = await this.getSupabase();
+      if (!supabase) {
         throw new Error('Supabase client not available')
       }
       devLog('Starting data source refresh...');
       
       // Get all active data sources
-      const { data: dataSources, error: sourcesError } = await this.supabase
+      const { data: dataSources, error: sourcesError } = await supabase
         .from('data_sources')
         .select('id, topic, score, created_at, updated_at')
-        .eq('is_active', true);
+        .eq('is_active', true as any);
 
       if (sourcesError) throw sourcesError;
 
@@ -697,7 +706,7 @@ export class AutomatedPollsService {
           const topicsFromSource = await this.refreshDataSource(source);
           newTopicsFound += topicsFromSource;
         } catch (error) {
-          devLog(`Error refreshing data source ${source.topic || 'Unknown'}:`, error);
+          devLog(`Error refreshing data source ${source && !('error' in source) ? (source as any).topic || 'Unknown' : 'Unknown'}:`, error);
           // Continue with other sources
         }
       }
@@ -731,7 +740,8 @@ export class AutomatedPollsService {
     // 3. Extract trending topics
     // 4. Store them in the database
     
-    if (!this.supabase) {
+    const supabase = await this.getSupabase();
+    if (!supabase) {
       throw new Error('Supabase client not available')
     }
     
@@ -744,12 +754,12 @@ export class AutomatedPollsService {
     const newTopicsCount = Math.floor(Math.random() * 5) + 1;
     
     // Update source's last updated timestamp
-    await this.supabase
+    await supabase
       .from('data_sources')
       .update({ 
         last_updated: new Date().toISOString(),
         success_rate: Math.random() * 0.2 + 0.8 // 80-100% success rate
-      })
+      } as any)
       .eq('id', source.id);
     
     return newTopicsCount;

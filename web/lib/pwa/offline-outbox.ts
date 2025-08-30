@@ -82,7 +82,7 @@ export class OfflineOutbox {
       const stored = localStorage.getItem(this.STORAGE_KEY)
       return stored ? JSON.parse(stored) : []
     } catch (error) {
-      logger.error('Failed to get offline outbox:', error)
+      logger.error('Failed to get offline outbox:', error instanceof Error ? error : new Error(String(error)))
       return []
     }
   }
@@ -241,7 +241,7 @@ export class OfflineOutbox {
     try {
       localStorage.setItem(this.STORAGE_KEY, JSON.stringify(outbox))
     } catch (error) {
-      logger.error('Failed to save offline outbox:', error)
+      logger.error('Failed to save offline outbox:', error instanceof Error ? error : new Error(String(error)))
     }
   }
 
@@ -252,7 +252,7 @@ export class OfflineOutbox {
     try {
       localStorage.removeItem(this.STORAGE_KEY)
     } catch (error) {
-      logger.error('Failed to clear offline outbox:', error)
+      logger.error('Failed to clear offline outbox:', error instanceof Error ? error : new Error(String(error)))
     }
   }
 

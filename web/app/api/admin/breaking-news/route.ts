@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { devLog } from '@/lib/logger';
-import { createClient } from '@/utils/supabase/server';
-import { cookies } from 'next/headers';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 import { RealTimeNewsService } from '@/lib/real-time-news-service';
 
 export const dynamic = 'force-dynamic';
@@ -9,10 +8,12 @@ export const dynamic = 'force-dynamic';
 // GET /api/admin/breaking-news - Get breaking news stories
 export async function GET(request: NextRequest) {
   try {
-    const cookieStore = await cookies();
-    const supabase = createClient(cookieStore);
+    const supabase = getSupabaseServerClient();
     
-    if (!supabase) {
+    // Get Supabase client
+    const supabaseClient = await supabase;
+    
+    if (!supabaseClient) {
       return NextResponse.json(
         { error: 'Supabase client not available' },
         { status: 500 }
@@ -20,7 +21,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Check authentication
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
     if (userError || !user) {
       return NextResponse.json(
         { error: 'Authentication required' },
@@ -29,10 +30,10 @@ export async function GET(request: NextRequest) {
     }
 
     // Check admin permissions - RESTRICTED TO OWNER ONLY
-    const { data: userProfile } = await supabase
+    const { data: userProfile } = await supabaseClient
       .from('ia_users')
       .select('verification_tier')
-      .eq('stable_id', user.id)
+      .eq('stable_id', String(user.id) as any)
       .single();
 
     if (!userProfile) {
@@ -82,10 +83,12 @@ export async function GET(request: NextRequest) {
 // POST /api/admin/breaking-news - Create new breaking news story
 export async function POST(request: NextRequest) {
   try {
-    const cookieStore = await cookies();
-    const supabase = createClient(cookieStore);
+    const supabase = getSupabaseServerClient();
     
-    if (!supabase) {
+    // Get Supabase client
+    const supabaseClient = await supabase;
+    
+    if (!supabaseClient) {
       return NextResponse.json(
         { error: 'Supabase client not available' },
         { status: 500 }
@@ -93,7 +96,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check authentication
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
     if (userError || !user) {
       return NextResponse.json(
         { error: 'Authentication required' },
@@ -102,10 +105,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Check admin permissions - RESTRICTED TO OWNER ONLY
-    const { data: userProfile } = await supabase
+    const { data: userProfile } = await supabaseClient
       .from('ia_users')
       .select('verification_tier')
-      .eq('stable_id', user.id)
+      .eq('stable_id', String(user.id) as any)
       .single();
 
     if (!userProfile) {

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { createClient } from '@/utils/supabase/client'
+import { getSupabaseBrowserClient } from '@/utils/supabase/client'
 import { CheckCircle2, AlertCircle, Loader2 } from 'lucide-react'
 
 function DeviceFlowCompleteContent() {
@@ -12,7 +12,7 @@ function DeviceFlowCompleteContent() {
   
   const router = useRouter()
   const searchParams = useSearchParams()
-  const supabase = createClient()
+  const supabase = getSupabaseBrowserClient()
 
   useEffect(() => {
     const completeDeviceFlow = async () => {

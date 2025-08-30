@@ -115,7 +115,7 @@ export default function PWAInstaller() {
       }))
       setShowOfflineStatus(stats.pending > 0)
     } catch (error) {
-      logger.error('Failed to check offline votes:', error)
+      logger.error('Failed to check offline votes:', error instanceof Error ? error : new Error(String(error)))
     }
   }
 
@@ -135,7 +135,7 @@ export default function PWAInstaller() {
         logger.info('User dismissed the install prompt')
       }
     } catch (error) {
-      logger.error('Installation failed:', error)
+      logger.error('Installation failed:', error instanceof Error ? error : new Error(String(error)))
     } finally {
       setDeferredPrompt(null)
       setShowInstallPrompt(false)
@@ -153,7 +153,7 @@ export default function PWAInstaller() {
       }
       checkOfflineVotes()
     } catch (error) {
-      logger.error('Failed to sync offline votes:', error)
+      logger.error('Failed to sync offline votes:', error instanceof Error ? error : new Error(String(error)))
       showNotification('Sync failed', 'Please try again when you have a stable connection.')
     }
   }

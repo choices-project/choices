@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { logger } from '@/lib/logger';
-import { createClient } from '@/utils/supabase/server'
+import { getSupabaseServerClient } from '@/utils/supabase/server'
 import { cookies } from 'next/headers'
 import { rateLimiters } from '@/lib/rate-limit'
 
@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
 
     // Create Supabase client
     const cookieStore = await cookies()
-    const supabase = createClient(cookieStore)
+    const supabase = getSupabaseServerClient()
 
     if (!supabase) {
       return NextResponse.json(
@@ -27,8 +27,10 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    const supabaseClient = await supabase
+
     // Get current user session
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    const { data: { user }, error: authError } = await supabaseClient.auth.getUser()
 
     if (authError || !user) {
       return NextResponse.json(
@@ -42,13 +44,13 @@ export async function POST(request: NextRequest) {
     const challengeBase64 = Buffer.from(challenge).toString('base64')
 
     // Store challenge in user's profile for verification
-    const { error: updateError } = await supabase
+    const { error: updateError } = await supabaseClient
       .from('user_profiles')
       .update({
         webauthn_challenge: challengeBase64,
         updated_at: new Date().toISOString(),
-      })
-      .eq('user_id', user.id)
+      } as any)
+      .eq('user_id', String(user.id) as any)
 
     if (updateError) {
       logger.error('Failed to store WebAuthn challenge:', updateError)
@@ -104,7 +106,7 @@ export async function PUT(request: NextRequest) {
   try {
     // Create Supabase client
     const cookieStore = await cookies()
-    const supabase = createClient(cookieStore)
+    const supabase = getSupabaseServerClient()
 
     if (!supabase) {
       return NextResponse.json(
@@ -113,8 +115,10 @@ export async function PUT(request: NextRequest) {
       )
     }
 
+    const supabaseClient = await supabase
+
     // Get current user session
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    const { data: { user }, error: authError } = await supabaseClient.auth.getUser()
 
     if (authError || !user) {
       return NextResponse.json(
@@ -134,13 +138,13 @@ export async function PUT(request: NextRequest) {
     }
 
     // Get stored challenge
-    const { data: profile, error: profileError } = await supabase
+    const { data: profile, error: profileError } = await supabaseClient
       .from('user_profiles')
       .select('webauthn_challenge')
-      .eq('user_id', user.id)
+      .eq('user_id', String(user.id) as any)
       .single()
 
-    if (profileError || !profile?.webauthn_challenge) {
+    if (profileError || !profile || !('webauthn_challenge' in profile) || !profile.webauthn_challenge) {
       return NextResponse.json(
         { message: 'No pending biometric setup found' },
         { status: 400 }
@@ -149,15 +153,15 @@ export async function PUT(request: NextRequest) {
 
     // For now, just store the credential without full verification
     // In production, you'd want to properly verify the WebAuthn response
-    const { error: credentialError } = await supabase
+    const { error: credentialError } = await supabaseClient
       .from('webauthn_credentials')
       .insert({
-        user_id: user.id,
+        user_id: String(user.id) as any,
         credential_id: credential.id,
         public_key: 'stored_key', // In production, store the actual public key
         counter: 0,
         created_at: new Date().toISOString(),
-      })
+      } as any)
 
     if (credentialError) {
       logger.error('Failed to store credential:', credentialError)
@@ -168,13 +172,13 @@ export async function PUT(request: NextRequest) {
     }
 
     // Clear challenge
-    await supabase
+    await supabaseClient
       .from('user_profiles')
       .update({
         webauthn_challenge: null,
         updated_at: new Date().toISOString(),
-      })
-      .eq('user_id', user.id)
+      } as any)
+      .eq('user_id', String(user.id) as any)
 
     return NextResponse.json({
       message: 'Biometric authentication setup successful',

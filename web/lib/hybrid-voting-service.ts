@@ -1,7 +1,7 @@
 // Hybrid Voting Service
 // This service handles voting across different privacy levels
 
-import { createClient } from '@/utils/supabase/server';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 import { cookies } from 'next/headers';
 import { PrivacyLevel } from './hybrid-privacy'
 import { devLog } from '@/lib/logger'
@@ -34,7 +34,7 @@ export class HybridVotingService {
   private supabase: any;
 
   constructor() {
-    this.supabase = createClient(cookies());
+    this.supabase = getSupabaseServerClient();
   }
 
   /**

@@ -1,4 +1,4 @@
-import { createClient } from '@/utils/supabase/server';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 import { devLog } from '@/lib/logger';
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
@@ -59,18 +59,11 @@ export async function GET(request: Request) {
   }
 
   if (code) {
-    const cookieStore = await cookies()
-    const supabase = createClient(cookieStore)
-    
-    if (!supabase) {
-      devLog('Supabase client not available in auth callback')
-      return NextResponse.redirect(
-        `${origin}/login?error=${encodeURIComponent('Authentication service not available')}`
-      )
-    }
+    const supabase = getSupabaseServerClient()
 
     try {
-      const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
+      const supabaseClient = await supabase;
+      const { data, error: exchangeError } = await supabaseClient.auth.exchangeCodeForSession(code)
       
       if (exchangeError) {
         devLog('Session exchange error:', exchangeError)

@@ -1,6 +1,5 @@
 'use server'
 
-import { createClient } from '@supabase/supabase-js'
 import { z } from 'zod'
 import { 
   createSecureServerAction,
@@ -10,11 +9,7 @@ import {
   validateFormData,
   type ServerActionContext
 } from '@/lib/auth/server-actions'
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+import { getSupabaseServerClient } from '@/utils/supabase/server'
 
 // Validation schema for system status updates
 const SystemStatusSchema = z.object({
@@ -26,6 +21,8 @@ const SystemStatusSchema = z.object({
 // Enhanced admin system status action with security features
 export const systemStatus = createSecureServerAction(
   async (formData: FormData, context: ServerActionContext) => {
+    const supabase = getSupabaseServerClient();
+    
     // Require admin access
     const admin = await requireAdmin(context)
     
@@ -33,20 +30,22 @@ export const systemStatus = createSecureServerAction(
     const validatedData = validateFormData(formData, SystemStatusSchema)
 
     try {
+      const supabaseClient = await supabase
+      
       switch (validatedData.action) {
         case 'get_status':
           // Get system status
-          const { data: systemConfig } = await supabase
+          const { data: systemConfig } = await supabaseClient
             .from('system_configuration')
             .select('*')
             .order('created_at', { ascending: false })
             .limit(10)
 
-          const { data: userCount } = await supabase
+          const { data: userCount } = await supabaseClient
             .from('user_profiles')
             .select('id', { count: 'exact' })
 
-          const { data: pollCount } = await supabase
+          const { data: pollCount } = await supabaseClient
             .from('polls')
             .select('id', { count: 'exact' })
 
@@ -75,7 +74,7 @@ export const systemStatus = createSecureServerAction(
           }
 
           // Update system configuration
-          const { error: updateError } = await supabase
+          const { error: updateError } = await supabaseClient
             .from('system_configuration')
             .insert({
               key: validatedData.configKey,

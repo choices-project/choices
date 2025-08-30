@@ -1,17 +1,16 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { devLog } from '@/lib/logger';
-import { createClient } from '@/utils/supabase/server';
-import { cookies } from 'next/headers';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(
+  _request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
     const pollId = params.id;
-    const cookieStore = await cookies();
-    const supabase = createClient(cookieStore);
+    const supabase = getSupabaseServerClient();
     
     if (!supabase) {
       return NextResponse.json(
@@ -20,15 +19,17 @@ export async function GET(
       );
     }
 
+    const supabaseClient = await supabase;
+    
     // Fetch poll data from po_polls table
-    const { data: poll, error } = await supabase
+    const { data: poll, error } = await supabaseClient
       .from('po_polls')
       .select('poll_id, title, description, options, total_votes, participation_rate, status, privacy_level, category, tags')
-      .eq('poll_id', pollId)
-      .eq('status', 'active')
+      .eq('poll_id', pollId as any)
+      .eq('status', 'active' as any)
       .single();
 
-    if (error || !poll) {
+    if (error || !poll || !('poll_id' in poll)) {
       return NextResponse.json(
         { error: 'Poll not found' },
         { status: 404 }

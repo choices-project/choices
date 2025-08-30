@@ -158,7 +158,7 @@ export class PerformanceMonitor {
       this.isInitialized = true;
       logger.info('✅ Performance monitor initialized');
     } catch (error) {
-      logger.error('❌ Failed to initialize performance monitor:', error);
+      logger.error('❌ Failed to initialize performance monitor:', error instanceof Error ? error : new Error(String(error)));
       throw error;
     }
   }
@@ -202,7 +202,7 @@ export class PerformanceMonitor {
 
       return result as string | null;
     } catch (error) {
-      logger.error('Error tracking query performance:', error);
+      logger.error('Error tracking query performance:', error instanceof Error ? error : new Error(String(error)));
       return null;
     }
   }
@@ -241,7 +241,7 @@ export class PerformanceMonitor {
 
       return result as string | null;
     } catch (error) {
-      logger.error('Error updating index usage:', error);
+      logger.error('Error updating index usage:', error instanceof Error ? error : new Error(String(error)));
       return null;
     }
   }
@@ -280,7 +280,7 @@ export class PerformanceMonitor {
 
       return result as string | null;
     } catch (error) {
-      logger.error('Error updating connection pool metrics:', error);
+      logger.error('Error updating connection pool metrics:', error instanceof Error ? error : new Error(String(error)));
       return null;
     }
   }
@@ -320,7 +320,7 @@ export class PerformanceMonitor {
 
       return result as string | null;
     } catch (error) {
-      logger.error('Error updating cache performance:', error);
+      logger.error('Error updating cache performance:', error instanceof Error ? error : new Error(String(error)));
       return null;
     }
   }
@@ -346,7 +346,7 @@ export class PerformanceMonitor {
 
       return result as string | null;
     } catch (error) {
-      logger.error('Error running maintenance job:', error);
+      logger.error('Error running maintenance job:', error instanceof Error ? error : new Error(String(error)));
       return null;
     }
   }
@@ -369,7 +369,7 @@ export class PerformanceMonitor {
 
       return (data as PerformanceRecommendation[]) || [];
     } catch (error) {
-      logger.error('Error getting performance recommendations:', error);
+      logger.error('Error getting performance recommendations:', error instanceof Error ? error : new Error(String(error)));
       return [];
     }
   }
@@ -392,7 +392,7 @@ export class PerformanceMonitor {
 
       return (data as number) || 0;
     } catch (error) {
-      logger.error('Error cleaning up performance data:', error);
+      logger.error('Error cleaning up performance data:', error instanceof Error ? error : new Error(String(error)));
       return 0;
     }
   }
@@ -433,7 +433,7 @@ export class PerformanceMonitor {
 
       return (data?.id as string) || null;
     } catch (error) {
-      logger.error('Error adding performance metric:', error);
+      logger.error('Error adding performance metric:', error instanceof Error ? error : new Error(String(error)));
       return null;
     }
   }
@@ -489,7 +489,7 @@ export class PerformanceMonitor {
 
       return stats;
     } catch (error) {
-      logger.error('Error getting performance stats:', error);
+      logger.error('Error getting performance stats:', error instanceof Error ? error : new Error(String(error)));
       return null;
     }
   }
@@ -515,7 +515,7 @@ export class PerformanceMonitor {
 
       logger.info('✅ Automated maintenance completed');
     } catch (error) {
-      logger.error('❌ Automated maintenance failed:', error);
+      logger.error('❌ Automated maintenance failed:', error instanceof Error ? error : new Error(String(error)));
     }
   }
 

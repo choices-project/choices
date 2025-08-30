@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { devLog } from '@/lib/logger';
-import { createClient } from '@/utils/supabase/server';
-import { cookies } from 'next/headers';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 import { AutomatedPollsService } from '@/lib/automated-polls';
 
 export const dynamic = 'force-dynamic';
@@ -9,10 +8,12 @@ export const dynamic = 'force-dynamic';
 // GET /api/admin/trending-topics
 export async function GET(request: NextRequest) {
   try {
-    const cookieStore = await cookies();
-    const supabase = createClient(cookieStore);
+    const supabase = getSupabaseServerClient();
     
-    if (!supabase) {
+    // Get Supabase client
+    const supabaseClient = await supabase;
+    
+    if (!supabaseClient) {
       return NextResponse.json(
         { error: 'Supabase client not available' },
         { status: 500 }
@@ -31,7 +32,7 @@ export async function GET(request: NextRequest) {
     const sourceType = searchParams.get('sourceType');
 
     // Fetch real data from database
-    const { data: topics, error } = await supabase
+    const { data: topics, error } = await supabaseClient
       .from('trending_topics').select('id, topic, score, created_at, updated_at, title, description, source_url, source_name, source_type, category, trending_score, velocity, momentum, sentiment_score, entities, metadata, processing_status, analysis_data')
       .order('created_at', { ascending: false })
       .limit(limit);
@@ -45,39 +46,42 @@ export async function GET(request: NextRequest) {
     }
 
     // Transform database data to match expected format
-    const transformedTopics = topics?.map(topic => ({
-      id: topic.id,
-      title: topic.title,
-      description: topic.description,
-      sourceUrl: topic.source_url,
-      sourceName: topic.source_name,
-      sourceType: topic.source_type,
-      category: topic.category,
-      trendingScore: topic.trending_score,
-      velocity: topic.velocity,
-      momentum: topic.momentum,
-      sentimentScore: topic.sentiment_score,
-      entities: topic.entities,
-      metadata: topic.metadata,
-      processingStatus: topic.processing_status,
-      analysisData: topic.analysis_data,
-      createdAt: topic.created_at,
-      updatedAt: topic.updated_at
-    })) || [];
+    const transformedTopics = topics?.map(topic => {
+      if (!topic || !('id' in topic)) return null;
+      return {
+        id: topic.id,
+        title: topic.title,
+        description: topic.description,
+        sourceUrl: topic.source_url,
+        sourceName: topic.source_name,
+        sourceType: topic.source_type,
+        category: topic.category,
+        trendingScore: topic.trending_score,
+        velocity: topic.velocity,
+        momentum: topic.momentum,
+        sentimentScore: topic.sentiment_score,
+        entities: topic.entities,
+        metadata: topic.metadata,
+        processingStatus: topic.processing_status,
+        analysisData: topic.analysis_data,
+        createdAt: topic.created_at,
+        updatedAt: topic.updated_at
+      };
+    }).filter(Boolean) || [];
 
         // Apply filters
     let filteredTopics = transformedTopics;
     
     if (status) {
-      filteredTopics = filteredTopics.filter(topic => topic.processingStatus === status);
+      filteredTopics = filteredTopics.filter(topic => topic && topic.processingStatus === status);
     }
     
     if (category) {
-      filteredTopics = filteredTopics.filter(topic => topic.category.includes(category));
+      filteredTopics = filteredTopics.filter(topic => topic && topic.category.includes(category));
     }
     
     if (sourceType) {
-      filteredTopics = filteredTopics.filter(topic => topic.sourceType === sourceType);
+      filteredTopics = filteredTopics.filter(topic => topic && topic.sourceType === sourceType);
     }
 
     return NextResponse.json({
@@ -104,8 +108,7 @@ export async function GET(request: NextRequest) {
 // POST /api/admin/trending-topics
 export async function POST(request: NextRequest) {
   try {
-    const cookieStore = await cookies();
-    const supabase = createClient(cookieStore);
+    const supabase = getSupabaseServerClient();
     
     if (!supabase) {
       return NextResponse.json(
@@ -200,8 +203,7 @@ export async function POST(request: NextRequest) {
 // PUT /api/admin/trending-topics/refresh
 export async function PUT(request: NextRequest) {
   try {
-    const cookieStore = await cookies();
-    const supabase = createClient(cookieStore);
+    const supabase = getSupabaseServerClient();
     
     if (!supabase) {
       return NextResponse.json(

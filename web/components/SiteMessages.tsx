@@ -68,7 +68,7 @@ export default function SiteMessages({
       }
     } catch (err) {
       setError('Failed to load messages')
-      logger.error('Error fetching site messages:', err)
+      logger.error('Error fetching site messages:', err instanceof Error ? err : new Error(String(err)))
     } finally {
       setLoading(false)
     }

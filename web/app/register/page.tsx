@@ -1,13 +1,10 @@
 import { redirect } from 'next/navigation'
-import { createClient } from '@supabase/supabase-js'
+import { getSupabaseServerClient } from '@/utils/supabase/server'
 import jwt from 'jsonwebtoken'
 import { v4 as uuidv4 } from 'uuid'
 import { logger } from '@/lib/logger'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+const supabase = getSupabaseServerClient()
 
 async function register(formData: FormData) {
   'use server'
@@ -28,10 +25,15 @@ async function register(formData: FormData) {
     }
 
     // Check for existing user
-    const { data: existingUser } = await supabase
+    if (!supabase) {
+      throw new Error('Supabase client not available')
+    }
+    
+    const supabaseClient = await supabase;
+    const { data: existingUser } = await supabaseClient
       .from('ia_users')
       .select('stable_id')
-      .eq('username', username.toLowerCase())
+      .eq('username', username.toLowerCase() as any)
       .single()
 
     if (existingUser) {
@@ -41,7 +43,7 @@ async function register(formData: FormData) {
     // Create user
     const stableId = uuidv4()
     
-    const { error: iaUserError } = await supabase
+    const { error: iaUserError } = await supabaseClient
       .from('ia_users')
       .insert({
         stable_id: stableId,
@@ -52,14 +54,14 @@ async function register(formData: FormData) {
         two_factor_enabled: false,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
-      })
+      } as any)
 
     if (iaUserError) {
       logger.error('Failed to create IA user', iaUserError)
       throw new Error('Failed to create user')
     }
 
-    const { error: profileError } = await supabase
+    const { error: profileError } = await supabaseClient
       .from('user_profiles')
       .insert({
         user_id: stableId,
@@ -68,7 +70,7 @@ async function register(formData: FormData) {
         onboarding_completed: false,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
-      })
+      } as any)
 
     if (profileError) {
       logger.error('Failed to create user profile', profileError)

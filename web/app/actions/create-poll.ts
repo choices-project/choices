@@ -1,6 +1,6 @@
 'use server'
 
-import { createClient } from '@supabase/supabase-js'
+import { getSupabaseServerClient } from '@/utils/supabase/server'
 import { z } from 'zod'
 import { v4 as uuidv4 } from 'uuid'
 import { 
@@ -12,10 +12,7 @@ import {
   type ServerActionContext
 } from '@/lib/auth/server-actions'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+
 
 // Validation schema for poll creation
 const CreatePollSchema = z.object({
@@ -40,11 +37,16 @@ const CreatePollSchema = z.object({
 // Enhanced poll creation action with security features
 export const createPoll = createSecureServerAction(
   async (formData: FormData, context: ServerActionContext) => {
+    const supabase = getSupabaseServerClient();
+    
     // Get authenticated user
     const user = await getAuthenticatedUser(context)
     
     // Validate form data
     const validatedData = validateFormData(formData, CreatePollSchema)
+
+    // Get Supabase client
+    const supabaseClient = await supabase
 
     // Sanitize inputs
     const sanitizedTitle = sanitizeInput(validatedData.title)
@@ -53,7 +55,7 @@ export const createPoll = createSecureServerAction(
 
     // Create poll
     const pollId = uuidv4()
-    const { error: pollError } = await supabase
+    const { error: pollError } = await supabaseClient
       .from('polls')
       .insert({
         id: pollId,
@@ -82,13 +84,13 @@ export const createPoll = createSecureServerAction(
       created_at: new Date().toISOString()
     }))
 
-    const { error: optionsError } = await supabase
+    const { error: optionsError } = await supabaseClient
       .from('poll_options')
       .insert(optionsData)
 
     if (optionsError) {
       // Clean up poll if options creation fails
-      await supabase.from('polls').delete().eq('id', pollId)
+      await supabaseClient.from('polls').delete().eq('id', pollId)
       throw new Error('Failed to create poll options')
     }
 

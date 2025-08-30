@@ -1,12 +1,9 @@
 import { redirect } from 'next/navigation'
 import { cookies } from 'next/headers'
 import jwt from 'jsonwebtoken'
-import { createClient } from '@supabase/supabase-js'
+import { getSupabaseServerClient } from '@/utils/supabase/server'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+const supabase = getSupabaseServerClient()
 
 async function getUserFromCookies() {
   const cookieStore = await cookies()
@@ -34,13 +31,18 @@ export default async function DashboardPage() {
   }
 
   // Check if user has completed onboarding
-  const { data: profile } = await supabase
+  if (!supabase) {
+    throw new Error('Supabase client not available')
+  }
+  
+  const supabaseClient = await supabase;
+  const { data: profile } = await supabaseClient
     .from('user_profiles')
     .select('onboarding_completed')
     .eq('user_id', user.stableId)
     .single()
 
-  if (!profile?.onboarding_completed) {
+  if (!profile || 'error' in profile || !profile.onboarding_completed) {
     redirect('/onboarding')
   }
 

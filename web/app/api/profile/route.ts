@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { devLog } from '@/lib/logger';
-import { createClient } from '@/utils/supabase/server';
-import { cookies } from 'next/headers';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 import { getCurrentUser } from '@/lib/auth-utils';
+import { cookies } from 'next/headers';
 
 export const dynamic = 'force-dynamic'
 
@@ -20,8 +20,7 @@ export async function POST(request: NextRequest) {
     } = body
 
     // Get Supabase client
-    const cookieStore = await cookies()
-    const supabase = createClient(cookieStore)
+    const supabase = await getSupabaseServerClient()
     
     if (!supabase) {
       return NextResponse.json(
@@ -68,7 +67,7 @@ export async function POST(request: NextRequest) {
     // Insert or update profile
     const { data, error } = await supabase
       .from('user_profiles')
-      .upsert([profileData], {
+      .upsert([profileData] as any, {
         onConflict: 'user_id',
         ignoreDuplicates: false
       })
@@ -82,7 +81,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    devLog('Profile created successfully:', data?.[0]?.id)
+    devLog('Profile created successfully:', data && !('error' in data) && data[0] && 'id' in data[0] ? data[0].id : 'unknown')
 
     return NextResponse.json({
       success: true,
@@ -102,8 +101,7 @@ export async function POST(request: NextRequest) {
 export async function GET(request: NextRequest) {
   try {
     // Get Supabase client
-    const cookieStore = await cookies()
-    const supabase = createClient(cookieStore)
+    const supabase = await getSupabaseServerClient()
     
     if (!supabase) {
       return NextResponse.json(
@@ -126,7 +124,7 @@ export async function GET(request: NextRequest) {
     const { data, error } = await supabase
       .from('user_profiles')
       .select('id, user_id, display_name, avatar_url, bio, created_at, updated_at')
-      .eq('user_id', user.userId)
+      .eq('user_id', String(user.userId) as any)
       .single()
 
     if (error && error.code !== 'PGRST116') {
@@ -157,8 +155,7 @@ export async function PUT(request: NextRequest) {
     const body = await request.json()
     
     // Get Supabase client
-    const cookieStore = await cookies()
-    const supabase = createClient(cookieStore)
+    const supabase = await getSupabaseServerClient()
     
     if (!supabase) {
       return NextResponse.json(
@@ -186,7 +183,7 @@ export async function PUT(request: NextRequest) {
     const { data, error } = await supabase
       .from('user_profiles')
       .update(updateData)
-      .eq('user_id', user.id)
+      .eq('user_id', String(user.id) as any)
       .select()
 
     if (error) {

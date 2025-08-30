@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { logger } from '@/lib/logger';
-import { createClient } from '@supabase/supabase-js';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 type CheckResult = {
   name: string;
@@ -34,28 +34,35 @@ export async function GET() {
     // This is a placeholder - implement proper admin auth for API routes
     // await requireAdmin(); // 401/403 if not admin
 
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
+    const supabase = getSupabaseServerClient();
+    
+    // Get Supabase client
+    const supabaseClient = await supabase;
+    
+    if (!supabaseClient) {
+      return NextResponse.json(
+        { error: 'Supabase client not available' },
+        { status: 500 }
+      );
+    }
 
     // ---- 1) Connection test ----
     const [connectionTest, connectionCheck] = await timed('db:connect', async () => {
-      const { data, error } = await supabase.from('pg_stat_activity').select('pid').limit(1);
+      const { data, error } = await supabaseClient.from('pg_stat_activity').select('pid').limit(1);
       if (error) throw error;
       return data;
     });
 
     // ---- 2) Migrations table exists ----
     const [migrationRows, migrationCheck] = await timed('db:migrations', async () => {
-      const { data, error } = await supabase.from('migrations').select('id, created_at').limit(1);
+      const { data, error } = await supabaseClient.from('migrations').select('id, created_at').limit(1);
       if (error) throw error;
       return data;
     });
 
     // ---- 3) Profiles table reachable ----
     const [userProfilesTest, profilesCheck] = await timed('db:user_profiles', async () => {
-      const { data, error } = await supabase.from('user_profiles').select('id').limit(1);
+      const { data, error } = await supabaseClient.from('user_profiles').select('id').limit(1);
       if (error) throw error;
       return data;
     });
@@ -63,7 +70,7 @@ export async function GET() {
     // ---- 4) Critical RLS policy sanity (example) ----
     const [rlsProbe, rlsCheck] = await timed('db:rls_probe', async () => {
       // Query a table that should be protected; ensure no rows come back without auth
-      const { data, error } = await supabase.from('votes').select('id').limit(1);
+      const { data, error } = await supabaseClient.from('votes').select('id').limit(1);
       if (error) throw error;
       // In a locked-down context, this might return 0 rows; we treat accessibility as success
       return data ?? [];

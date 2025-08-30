@@ -73,7 +73,7 @@ export function withDPoP(handler: Function) {
       // Continue with the original handler
       return handler(request, context);
     } catch (error) {
-      logger.error('DPoP middleware error:', error);
+      logger.error('DPoP middleware error:', error instanceof Error ? error : new Error(String(error)));
       return NextResponse.json(
         { error: 'DPoP validation failed' },
         { status: 401 }
@@ -109,7 +109,7 @@ async function validateDPoPBinding(
 
     return data === true;
   } catch (error) {
-    logger.error('DPoP validation error:', error);
+    logger.error('DPoP validation error:', error instanceof Error ? error : new Error(String(error)));
     return false;
   }
 }
@@ -126,7 +126,7 @@ export function extractDPoPProof(request: NextRequest) {
   try {
     return JSON.parse(dpopHeader);
   } catch (error) {
-    logger.error('Failed to parse DPoP proof:', error);
+    logger.error('Failed to parse DPoP proof:', error instanceof Error ? error : new Error(String(error)));
     return null;
   }
 }
@@ -171,6 +171,8 @@ export function validateDPoPProofStructure(proof: any): DPoPValidationResult {
     jti: proof.jti,
   };
 }
+
+
 
 
 

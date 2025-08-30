@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { devLog } from '@/lib/logger';
-import { createClient } from '@/utils/supabase/server';
-import { cookies } from 'next/headers';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 import { handleError, getUserMessage, getHttpStatus, ValidationError } from '@/lib/error-handler';
+import { cookies } from 'next/headers';
 
 export const dynamic = 'force-dynamic'
 
@@ -15,18 +15,20 @@ export async function POST(request: NextRequest) {
     }
 
     const cookieStore = await cookies()
-    const supabase = createClient(cookieStore)
+    const supabase = getSupabaseServerClient()
     
     if (!supabase) {
       throw new Error('Supabase not configured')
     }
 
+    const supabaseClient = await supabase
+
     // Check if user exists
-    const { data: user, error: userError } = await supabase
+    const { data: user, error: userError } = await supabaseClient
       .from('ia_users')
       .select('id, email')
       .eq('email', email.toLowerCase())
-      .eq('is_active', true)
+      .eq('is_active', true as any)
       .single()
 
     if (userError || !user) {
@@ -38,7 +40,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Use Supabase Auth's built-in password reset
-    const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
+    const { error: resetError } = await supabaseClient.auth.resetPasswordForEmail(email, {
       redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/reset-password`,
     })
 

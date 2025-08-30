@@ -10,11 +10,11 @@ const mockTrendingTopics: TrendingTopic[] = [
   {
     id: '1',
     title: 'Climate Change Policy',
+    description: 'Analysis of climate change policy impacts and public opinion',
     category: 'environment',
-    trend_score: 0.8,
-    status: 'pending',
+    trending_score: 0.8,
     created_at: new Date().toISOString(),
-    source: 'automated'
+    updated_at: new Date().toISOString()
   }
 ];
 
@@ -22,14 +22,12 @@ const mockGeneratedPolls: GeneratedPoll[] = [
   {
     id: '1',
     title: 'Should renewable energy be prioritized over fossil fuels?',
+    description: 'Public opinion on renewable energy policy priorities',
     options: ['Yes', 'No', 'Undecided'],
-    source_topic_id: '1',
-    status: 'pending',
+    category: 'environment',
+    status: 'draft',
     created_at: new Date().toISOString(),
-    metrics: {
-      total_votes: 0,
-      engagement_rate: 0.7
-    }
+    updated_at: new Date().toISOString()
   }
 ];
 
@@ -456,10 +454,7 @@ export const useRealTimeSubscriptions = () => {
     const adminSubscriptionId = realTimeService.subscribeToAdminUpdates(
       (data) => {
         // Handle admin updates
-        devLog('Admin real-time update:', data);
-      },
-      (error) => {
-        devLog('Admin real-time error:', error);
+        console.log('Admin real-time update:', data);
       }
     );
 
@@ -467,10 +462,7 @@ export const useRealTimeSubscriptions = () => {
     const feedbackSubscriptionId = realTimeService.subscribeToFeedbackUpdates(
       (data) => {
         // Handle feedback updates
-        devLog('Feedback real-time update:', data);
-      },
-      (error) => {
-        devLog('Feedback real-time error:', error);
+        console.log('Feedback real-time update:', data);
       }
     );
 

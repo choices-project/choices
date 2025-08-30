@@ -150,7 +150,7 @@ export async function verifyDPoPProof(
     
     return proof.jkt === expectedJkt
   } catch (error) {
-    logger.error('DPoP proof verification failed:', error)
+    logger.error('DPoP proof verification failed:', error instanceof Error ? error : new Error(String(error)))
     return false
   }
 }
@@ -215,7 +215,7 @@ async function verifyJWT(jwt: string, publicKey: CryptoKey): Promise<boolean> {
       data
     )
   } catch (error) {
-    logger.error('JWT verification failed:', error)
+    logger.error('JWT verification failed:', error instanceof Error ? error : new Error(String(error)))
     return false
   }
 }

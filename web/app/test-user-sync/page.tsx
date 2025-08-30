@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { devLog } from '@/lib/logger';
-import { createClient } from '@/utils/supabase/client'
+import { getSupabaseBrowserClient } from '@/utils/supabase/client'
 import { ensureUserSynced, getUserFromIaUsers, hasUserProfile } from '@/lib/user-sync'
 
 export default function TestUserSync() {
@@ -13,7 +13,7 @@ export default function TestUserSync() {
   const [syncResult, setSyncResult] = useState<any>(null)
   const [error, setError] = useState<string | null>(null)
 
-  const supabase = createClient()
+  const supabase = getSupabaseBrowserClient()
 
   const checkUserStatus = useCallback(async () => {
     setLoading(true)

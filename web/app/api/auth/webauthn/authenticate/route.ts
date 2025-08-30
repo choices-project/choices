@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/utils/supabase/server'
+import { getSupabaseServerClient } from '@/utils/supabase/server'
 import { cookies } from 'next/headers'
 import { rateLimiters } from '@/lib/rate-limit'
 import { logger } from '@/lib/logger'
@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
 
     // Create Supabase client
     const cookieStore = await cookies()
-    const supabase = createClient(cookieStore)
+    const supabase = getSupabaseServerClient()
 
     if (!supabase) {
       logger.error('Failed to create Supabase client')
@@ -48,8 +48,10 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    const supabaseClient = await supabase
+
     // Find user by email
-    const { data: { users }, error: userError } = await supabase.auth.admin.listUsers()
+    const { data: { users }, error: userError } = await supabaseClient.auth.admin.listUsers()
     
     if (userError) {
       logger.error('User lookup failed', userError, { email })
@@ -73,10 +75,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Check for existing WebAuthn credentials
-    const { data: credentials, error: credentialError } = await supabase
+    const { data: credentials, error: credentialError } = await supabaseClient
       .from('webauthn_credentials')
       .select('credential_id')
-      .eq('user_id', user.id)
+      .eq('user_id', String(user.id) as any)
 
     if (credentialError) {
       logger.error('Failed to fetch WebAuthn credentials', credentialError, { userId: user.id })
@@ -97,13 +99,13 @@ export async function POST(request: NextRequest) {
     const challenge = crypto.randomUUID()
     
     // Store challenge in user profile
-    const { error: updateError } = await supabase
+    const { error: updateError } = await supabaseClient
       .from('user_profiles')
       .update({
         webauthn_challenge: challenge,
         updated_at: new Date().toISOString(),
-      })
-      .eq('user_id', user.id)
+      } as any)
+      .eq('user_id', String(user.id) as any)
 
     if (updateError) {
       logger.error('Failed to store WebAuthn challenge', updateError, { userId: user.id })
@@ -158,7 +160,7 @@ export async function PUT(request: NextRequest) {
 
     // Create Supabase client
     const cookieStore = await cookies()
-    const supabase = createClient(cookieStore)
+    const supabase = getSupabaseServerClient()
 
     if (!supabase) {
       logger.error('Failed to create Supabase client')
@@ -168,8 +170,10 @@ export async function PUT(request: NextRequest) {
       )
     }
 
+    const supabaseClient = await supabase
+
     // Find user by email
-    const { data: { users }, error: userError } = await supabase.auth.admin.listUsers()
+    const { data: { users }, error: userError } = await supabaseClient.auth.admin.listUsers()
     
     if (userError) {
       logger.error('User lookup failed', userError, { email })
@@ -193,13 +197,13 @@ export async function PUT(request: NextRequest) {
     }
 
     // Get stored challenge
-    const { data: profile, error: profileError } = await supabase
+    const { data: profile, error: profileError } = await supabaseClient
       .from('user_profiles')
       .select('webauthn_challenge')
-      .eq('user_id', user.id)
+      .eq('user_id', String(user.id) as any)
       .single()
 
-    if (profileError || !profile?.webauthn_challenge) {
+    if (profileError || !profile || !('webauthn_challenge' in profile) || !profile.webauthn_challenge) {
       logger.warn('No pending biometric authentication found', { userId: user.id })
       return NextResponse.json(
         { message: 'No pending biometric authentication found' },
@@ -208,14 +212,14 @@ export async function PUT(request: NextRequest) {
     }
 
     // Verify credential exists
-    const { data: storedCredential, error: credentialError } = await supabase
+    const { data: storedCredential, error: credentialError } = await supabaseClient
       .from('webauthn_credentials')
       .select('credential_id')
-      .eq('user_id', user.id)
+      .eq('user_id', String(user.id) as any)
       .eq('credential_id', credential.id)
       .single()
 
-    if (credentialError || !storedCredential) {
+    if (credentialError || !storedCredential || !('credential_id' in storedCredential)) {
       logger.warn('Invalid biometric credential', { userId: user.id, credentialId: credential.id })
       return NextResponse.json(
         { message: 'Invalid biometric credential' },
@@ -234,25 +238,25 @@ export async function PUT(request: NextRequest) {
     }
 
     // Clear challenge
-    await supabase
+    await supabaseClient
       .from('user_profiles')
       .update({
         webauthn_challenge: null,
         updated_at: new Date().toISOString(),
-      })
-      .eq('user_id', user.id)
+      } as any)
+      .eq('user_id', String(user.id) as any)
 
     // Get user profile for role-based response
-    const { data: userProfile } = await supabase
+    const { data: userProfile } = await supabaseClient
       .from('user_profiles')
       .select('trust_tier, username')
-      .eq('user_id', user.id)
+      .eq('user_id', String(user.id) as any)
       .single()
 
     // Log successful biometric login
     logger.userAction('biometric_login_successful', user.id, {
       email: user.email,
-      trust_tier: userProfile?.trust_tier,
+      trust_tier: userProfile && 'trust_tier' in userProfile ? userProfile.trust_tier : 'T1',
       ip: rateLimitResult.reputation?.ip || 'unknown',
     })
 
@@ -261,8 +265,8 @@ export async function PUT(request: NextRequest) {
       user: {
         id: user.id,
         email: user.email,
-        trust_tier: userProfile?.trust_tier || 'T1',
-        username: userProfile?.username,
+        trust_tier: userProfile && 'trust_tier' in userProfile ? userProfile.trust_tier : 'T1',
+        username: userProfile && 'username' in userProfile ? userProfile.username : undefined,
       },
     })
 

@@ -471,7 +471,7 @@ class PollService {
         is_mock: false
       })) || [];
     } catch (error) {
-      logger.error('Error fetching polls from API:', error);
+      logger.error('Error fetching polls from API:', error instanceof Error ? error : new Error(String(error)));
       return [];
     }
   }
@@ -506,7 +506,7 @@ class PollService {
         is_mock: false
       };
     } catch (error) {
-      logger.error('Error fetching poll from API:', error);
+      logger.error('Error fetching poll from API:', error instanceof Error ? error : new Error(String(error)));
       return null;
     }
   }
@@ -536,7 +536,7 @@ class PollService {
       
       devLog('Poll saved to API successfully');
     } catch (error) {
-      logger.error('Error saving poll to API:', error);
+      logger.error('Error saving poll to API:', error instanceof Error ? error : new Error(String(error)));
       throw error;
     }
   }
@@ -567,7 +567,7 @@ class PollService {
         message: result.message || 'Vote submitted successfully!'
       };
     } catch (error) {
-      logger.error('Error submitting vote to API:', error);
+      logger.error('Error submitting vote to API:', error instanceof Error ? error : new Error(String(error)));
       throw error;
     }
   }

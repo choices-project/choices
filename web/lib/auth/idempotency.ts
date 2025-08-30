@@ -9,8 +9,8 @@
  * - Proper error handling and logging
  */
 
-import { createClient } from '@supabase/supabase-js'
 import { logger } from '@/lib/logger'
+import { getSupabaseServerClient } from '@/utils/supabase/server'
 
 export interface IdempotencyResult<T> {
   success: boolean
@@ -30,10 +30,14 @@ const DEFAULT_OPTIONS: Required<IdempotencyOptions> = {
 }
 
 // Initialize Supabase client for idempotency storage
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+let supabase: any = null
+
+const getSupabase = async () => {
+  if (!supabase) {
+    supabase = await getSupabaseServerClient()
+  }
+  return supabase
+}
 
 /**
  * Generate a unique idempotency key
@@ -60,7 +64,8 @@ export async function checkIdempotencyKey(
   const fullKey = createIdempotencyKey(key, opts.namespace)
 
   try {
-    const { data, error } = await supabase
+    const supabaseClient = await getSupabase()
+    const { data, error } = await supabaseClient
       .from('idempotency_keys')
       .select('*')
       .eq('key', fullKey)
@@ -95,7 +100,8 @@ export async function storeIdempotencyKey(
   const expiresAt = new Date(Date.now() + opts.ttl * 1000).toISOString()
 
   try {
-    const { error } = await supabase
+    const supabaseClient = await getSupabase()
+    const { error } = await supabaseClient
       .from('idempotency_keys')
       .insert({
         key: fullKey,

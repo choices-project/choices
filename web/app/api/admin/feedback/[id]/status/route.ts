@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/utils/supabase/server';
-import { cookies } from 'next/headers';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 import { devLog } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
@@ -10,10 +9,12 @@ export async function PATCH(
   { params }: { params: { id: string } }
 ) {
   try {
-    const cookieStore = await cookies();
-    const supabase = createClient(cookieStore);
+    const supabase = getSupabaseServerClient();
     
-    if (!supabase) {
+    // Get Supabase client
+    const supabaseClient = await supabase;
+    
+    if (!supabaseClient) {
       return NextResponse.json(
         { error: 'Supabase client not available' },
         { status: 500 }
@@ -21,7 +22,7 @@ export async function PATCH(
     }
 
     // Check authentication
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
     if (userError || !user) {
       return NextResponse.json(
         { error: 'Authentication required' },
@@ -30,10 +31,10 @@ export async function PATCH(
     }
 
     // Check admin permissions
-    const { data: userProfile, error: profileError } = await supabase
+    const { data: userProfile, error: profileError } = await supabaseClient
       .from('ia_users')
       .select('verification_tier')
-      .eq('stable_id', user.id)
+      .eq('stable_id', String(user.id) as any)
       .single();
 
     if (profileError) {
@@ -44,7 +45,7 @@ export async function PATCH(
       );
     }
 
-    if (!userProfile || !['T2', 'T3'].includes(userProfile.verification_tier)) {
+    if (!userProfile || !userProfile || !('verification_tier' in userProfile) || !['T2', 'T3'].includes(userProfile.verification_tier)) {
       return NextResponse.json(
         { error: 'Insufficient permissions' },
         { status: 403 }
@@ -79,13 +80,13 @@ export async function PATCH(
     }
 
     // Update feedback status
-    const { data: updatedFeedback, error: updateError } = await supabase
+    const { data: updatedFeedback, error: updateError } = await supabaseClient
       .from('feedback')
       .update({ 
         status: newStatus,
         updated_at: new Date().toISOString()
-      })
-      .eq('id', feedbackId)
+      } as any)
+      .eq('id', feedbackId as any)
       .select()
       .single();
 

@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { logger } from '@/lib/logger';
 import { TypeGuardError, assertIsRecord } from '@/lib/types/guards';
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
+import { SupabaseClient } from '@supabase/supabase-js';
 
 type TableShape = { table: string; columns: string[] };
 
@@ -39,10 +40,14 @@ export async function GET(req: NextRequest) {
     const url = new URL(req.url);
     const refresh = url.searchParams.get('refresh') === 'true';
 
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
+    const supabase = getSupabaseServerClient();
+    
+    if (!supabase) {
+      return NextResponse.json(
+        { error: 'Supabase client not available' },
+        { status: 500 }
+      );
+    }
 
     // Optional cache refresh path (e.g., warm schema cache)
     if (refresh) {
@@ -58,7 +63,7 @@ export async function GET(req: NextRequest) {
     }> = [];
 
     for (const shape of REQUIRED) {
-      const cols = await getColumns(supabase, shape.table);
+      const cols = await getColumns(supabase as any, shape.table);
       const present = shape.columns.filter((c) => cols.includes(c));
       const missing = shape.columns.filter((c) => !cols.includes(c));
       const ok = missing.length === 0;
