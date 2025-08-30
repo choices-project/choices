@@ -8,7 +8,7 @@ function* walk(dir) {
     const p = join(dir, name);
     const s = statSync(p);
     if (s.isDirectory()) yield* walk(p);
-    else if (s.isFile() && p.includes('/.next/server/')) yield p;
+    else if (s.isFile() && p.includes('/.next/server/') && !p.includes('/standalone/')) yield p;
   }
 }
 

@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "postbuild": "node web/scripts/check-server-bundle-for-browser-globals.mjs",
+    "postbuild": "node scripts/check-server-bundle-for-browser-globals.mjs",
     "start": "next start",
     "test": "jest",
     "test:watch": "jest --watch",

@@ -40,8 +40,8 @@ const nextConfig = {
       '@supabase/realtime-js',
       // ⚠️ DO NOT list '@supabase/supabase-js' here; keep that strictly client-side.
     ],
-    // Enable CSS optimization
-    optimizeCss: true,
+    // Disable CSS optimization to avoid critters dependency issues
+    optimizeCss: false,
     optimizePackageImports: [
       'lucide-react',
       'date-fns',
@@ -112,6 +112,60 @@ const nextConfig = {
     config.resolve.alias = {
       ...config.resolve.alias,
       '@': require('path').resolve(__dirname, './')
+    }
+
+    // Bundle size optimizations
+    if (!isServer) {
+      // Optimize bundle splitting
+      config.optimization = {
+        ...config.optimization,
+        splitChunks: {
+          chunks: 'all',
+          cacheGroups: {
+            // Vendor chunks - separate large libraries
+            vendor: {
+              test: /[\\/]node_modules[\\/]/,
+              name: 'vendors',
+              chunks: 'all',
+              priority: 10,
+              enforce: true,
+              maxSize: 244000, // ~250KB chunks
+            },
+            // React specific chunk
+            react: {
+              test: /[\\/]node_modules[\\/](react|react-dom)[\\/]/,
+              name: 'react',
+              chunks: 'all',
+              priority: 20,
+              enforce: true,
+            },
+            // Supabase specific chunk
+            supabase: {
+              test: /[\\/]node_modules[\\/]@supabase[\\/]/,
+              name: 'supabase',
+              chunks: 'all',
+              priority: 15,
+              enforce: true,
+            },
+            // Common chunks
+            common: {
+              name: 'common',
+              minChunks: 2,
+              chunks: 'all',
+              priority: 5,
+              reuseExistingChunk: true,
+            }
+          }
+        }
+      }
+
+      // Performance hints
+      config.performance = {
+        ...config.performance,
+        hints: 'warning',
+        maxEntrypointSize: 512000, // 500KB
+        maxAssetSize: 512000, // 500KB
+      }
     }
 
     return config
