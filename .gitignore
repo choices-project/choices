@@ -25,6 +25,15 @@ dist/
 .env.admin
 .env.*
 
+# Security and secrets
+*.key
+*.pem
+*.p12
+*.pfx
+secrets/
+credentials/
+*.secret
+
 # Go
 *.exe
 *.exe~
