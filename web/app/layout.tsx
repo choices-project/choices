@@ -8,7 +8,7 @@ import EnhancedFeedbackWidget from '../components/EnhancedFeedbackWidget'
 import SiteMessages from '../components/SiteMessages'
 
 import ClientOnly from '../components/ClientOnly'
-
+import { AuthProvider } from '../hooks/AuthProvider'
 
 
 const inter = Inter({ subsets: ['latin'] })
@@ -54,31 +54,33 @@ export default function RootLayout({
       </head>
       <body className={inter.className}>
         <ClientOnly>
-          {/* Global Navigation - Temporarily disabled */}
-          {/* <GlobalNavigation /> */}
-          
-          {/* Site Messages - Display below navigation */}
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
-            <SiteMessages />
-          </div>
-          
-          {children}
-          
-          {/* PWA Components - Only render on client side */}
-          <PWAInstallPrompt />
-          <OfflineIndicator />
-          <PWAUpdatePrompt />
-          
-          {/* Enhanced Feedback Widget - Only render on client side */}
-          <EnhancedFeedbackWidget />
-          
-          {/* Navigation Logger - Only in development */}
-          {/* <NavLogger /> */}
-          
-          {/* Hidden elements for PWA functionality */}
-          <div id="install-pwa" style={{ display: 'none' }} />
-          <div id="update-pwa" style={{ display: 'none' }} />
-          <div id="offline-indicator" style={{ display: 'none' }} />
+          <AuthProvider>
+            {/* Global Navigation - Temporarily disabled */}
+            {/* <GlobalNavigation /> */}
+            
+            {/* Site Messages - Display below navigation */}
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
+              <SiteMessages />
+            </div>
+            
+            {children}
+            
+            {/* PWA Components - Only render on client side */}
+            <PWAInstallPrompt />
+            <OfflineIndicator />
+            <PWAUpdatePrompt />
+            
+            {/* Enhanced Feedback Widget - Only render on client side */}
+            <EnhancedFeedbackWidget />
+            
+            {/* Navigation Logger - Only in development */}
+            {/* <NavLogger /> */}
+            
+            {/* Hidden elements for PWA functionality */}
+            <div id="install-pwa" style={{ display: 'none' }} />
+            <div id="update-pwa" style={{ display: 'none' }} />
+            <div id="offline-indicator" style={{ display: 'none' }} />
+          </AuthProvider>
         </ClientOnly>
       </body>
     </html>
