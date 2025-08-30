@@ -3,6 +3,8 @@ import { getSupabaseServerClient } from '@/utils/supabase/server'
 import { devLog } from '@/lib/logger'
 import { cookies as _cookies } from 'next/headers'
 
+export const dynamic = 'force-dynamic'
+
 export async function GET(_request: NextRequest) {
   try {
     const supabase = getSupabaseServerClient()
