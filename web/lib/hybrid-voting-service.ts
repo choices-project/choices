@@ -2,7 +2,6 @@
 // This service handles voting across different privacy levels
 
 import { getSupabaseServerClient } from '@/utils/supabase/server';
-import { cookies } from 'next/headers';
 import { PrivacyLevel } from './hybrid-privacy'
 import { devLog } from '@/lib/logger'
 

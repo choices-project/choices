@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { cookies } from 'next/headers'
+import { cookies as _cookies } from 'next/headers'
 import { getSupabaseServerClient } from '@/utils/supabase/server'
 import bcrypt from 'bcryptjs'
 import { devLog } from '@/lib/logger'
@@ -24,7 +24,6 @@ export async function POST(request: NextRequest) {
       throw new ValidationError('Password is required to delete account')
     }
 
-    const cookieStore = await cookies()
     const supabase = getSupabaseServerClient()
     
     if (!supabase) {

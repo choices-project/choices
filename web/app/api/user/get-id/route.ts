@@ -17,7 +17,7 @@ export async function GET(_request: NextRequest) {
           debug: {
             hasUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
             hasKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-            cookies: (await cookies().getAll()).map(c => c.name || 'unnamed')
+            cookies: (cookies().getAll()).map(c => c.name || 'unnamed')
           }
         },
         { status: 500 }
@@ -34,8 +34,8 @@ export async function GET(_request: NextRequest) {
           error: 'Authentication error',
           debug: {
             userError: userError.message,
-            cookies: (await cookies().getAll()).map(c => c.name || 'unnamed'),
-            hasAuthCookies: (await cookies().getAll()).some(c => c.name?.includes('auth'))
+            cookies: (cookies().getAll()).map(c => c.name || 'unnamed'),
+            hasAuthCookies: (cookies().getAll()).some(c => c.name?.includes('auth'))
           }
         },
         { status: 401 }
@@ -47,8 +47,8 @@ export async function GET(_request: NextRequest) {
         { 
           error: 'Authentication required',
           debug: {
-            cookies: (await cookies().getAll()).map(c => c.name || 'unnamed'),
-            hasAuthCookies: (await cookies().getAll()).some(c => c.name?.includes('auth')),
+            cookies: (cookies().getAll()).map(c => c.name || 'unnamed'),
+            hasAuthCookies: (cookies().getAll()).some(c => c.name?.includes('auth')),
             suggestion: 'Make sure you are logged in and try refreshing the page'
           }
         },
@@ -101,7 +101,7 @@ export async function GET(_request: NextRequest) {
         error: 'Internal server error',
         debug: {
           message: error instanceof Error ? error instanceof Error ? error.message : "Unknown error" : 'Unknown error',
-          cookies: (await cookies()).getAll().map(c => c.name)
+          cookies: (cookies()).getAll().map(c => c.name)
         }
       },
       { status: 500 }

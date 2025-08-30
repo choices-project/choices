@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { logger } from '@/lib/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
+export const dynamic = 'force-dynamic';
+
 type CheckResult = {
   name: string;
   ok: boolean;

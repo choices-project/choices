@@ -1,0 +1,196 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - alert [ref=e2]
+  - generic [ref=e4]:
+    - generic [ref=e6]:
+      - img [ref=e8]
+      - generic [ref=e10]:
+        - generic [ref=e11]:
+          - heading "System Maintenance" [level=3] [ref=e12]
+          - generic [ref=e13]:
+            - generic [ref=e14]: medium
+            - button "Dismiss message" [ref=e15] [cursor=pointer]:
+              - img [ref=e16] [cursor=pointer]
+        - paragraph [ref=e20]: We'll be performing maintenance on Sunday at 2 AM EST. Service may be briefly interrupted.
+        - generic [ref=e22]: 8/26/2025
+    - generic [ref=e24]:
+      - img [ref=e26]
+      - generic [ref=e29]:
+        - generic [ref=e30]:
+          - heading "New Features Coming" [level=3] [ref=e31]
+          - generic [ref=e32]:
+            - generic [ref=e33]: low
+            - button "Dismiss message" [ref=e34] [cursor=pointer]:
+              - img [ref=e35] [cursor=pointer]
+        - paragraph [ref=e39]: Stay tuned for exciting new features including real-time voting and mobile notifications!
+        - generic [ref=e41]: 8/26/2025
+    - generic [ref=e43]:
+      - img [ref=e45]
+      - generic [ref=e47]:
+        - generic [ref=e48]:
+          - heading "Welcome to Choices!" [level=3] [ref=e49]
+          - generic [ref=e50]:
+            - generic [ref=e51]: high
+            - button "Dismiss message" [ref=e52] [cursor=pointer]:
+              - img [ref=e53] [cursor=pointer]
+        - paragraph [ref=e57]: This is a new platform for creating and participating in polls. We'd love your feedback!
+        - generic [ref=e59]: 8/26/2025
+  - generic [ref=e60]:
+    - banner [ref=e61]:
+      - generic [ref=e63]:
+        - generic [ref=e64]:
+          - img [ref=e66]
+          - heading "Choices PWA" [level=1] [ref=e69]
+        - generic [ref=e70]:
+          - generic [ref=e72]:
+            - img [ref=e73]
+            - generic [ref=e77]: Online
+          - button "Get Started" [ref=e78] [cursor=pointer]
+    - main [ref=e79]:
+      - navigation [ref=e81]:
+        - button "Polls" [ref=e82] [cursor=pointer]:
+          - img [ref=e83] [cursor=pointer]
+          - generic [ref=e86] [cursor=pointer]: Polls
+        - button "Analytics" [ref=e87] [cursor=pointer]:
+          - img [ref=e88] [cursor=pointer]
+          - generic [ref=e90] [cursor=pointer]: Analytics
+        - button "PWA Features" [ref=e91] [cursor=pointer]:
+          - img [ref=e92] [cursor=pointer]
+          - generic [ref=e94] [cursor=pointer]: PWA Features
+        - button "Profile" [ref=e95] [cursor=pointer]:
+          - img [ref=e96] [cursor=pointer]
+          - generic [ref=e99] [cursor=pointer]: Profile
+      - generic [ref=e100]:
+        - generic [ref=e101]:
+          - generic [ref=e103]:
+            - img [ref=e104]
+            - generic [ref=e107]:
+              - paragraph [ref=e108]: Active Polls
+              - paragraph [ref=e109]: "3"
+          - generic [ref=e111]:
+            - img [ref=e112]
+            - generic [ref=e117]:
+              - paragraph [ref=e118]: Total Votes
+              - paragraph [ref=e119]: 3,706
+          - generic [ref=e121]:
+            - img [ref=e122]
+            - generic [ref=e125]:
+              - paragraph [ref=e126]: Your Trust Score
+              - paragraph [ref=e127]: 0%
+        - generic [ref=e128]:
+          - generic [ref=e130]:
+            - generic [ref=e133]:
+              - heading "What is the most important issue facing our community?" [level=3] [ref=e134]
+              - generic [ref=e135]:
+                - generic [ref=e136]:
+                  - img [ref=e137]
+                  - generic [ref=e142]: 1,247 votes
+                - generic [ref=e143]:
+                  - img [ref=e144]
+                  - generic [ref=e147]: 6d 23h
+                - generic [ref=e148]:
+                  - img [ref=e149]
+                  - generic [ref=e152]: Community
+            - generic [ref=e154]:
+              - button "Healthcare" [ref=e155] [cursor=pointer]:
+                - generic [ref=e157] [cursor=pointer]: Healthcare
+              - button "Education" [ref=e158] [cursor=pointer]:
+                - generic [ref=e160] [cursor=pointer]: Education
+              - button "Environment" [ref=e161] [cursor=pointer]:
+                - generic [ref=e163] [cursor=pointer]: Environment
+              - button "Economy" [ref=e164] [cursor=pointer]:
+                - generic [ref=e166] [cursor=pointer]: Economy
+            - generic [ref=e167]:
+              - heading "Results" [level=4] [ref=e168]
+              - generic [ref=e169]:
+                - generic [ref=e171]:
+                  - generic [ref=e172]: Healthcare
+                  - generic [ref=e173]: 456 votes (37%)
+                - generic [ref=e177]:
+                  - generic [ref=e178]: Education
+                  - generic [ref=e179]: 234 votes (19%)
+                - generic [ref=e183]:
+                  - generic [ref=e184]: Environment
+                  - generic [ref=e185]: 345 votes (28%)
+                - generic [ref=e189]:
+                  - generic [ref=e190]: Economy
+                  - generic [ref=e191]: 212 votes (17%)
+          - generic [ref=e195]:
+            - generic [ref=e198]:
+              - heading "How should we prioritize local infrastructure projects?" [level=3] [ref=e199]
+              - generic [ref=e200]:
+                - generic [ref=e201]:
+                  - img [ref=e202]
+                  - generic [ref=e207]: 892 votes
+                - generic [ref=e208]:
+                  - img [ref=e209]
+                  - generic [ref=e212]: 4d 23h
+                - generic [ref=e213]:
+                  - img [ref=e214]
+                  - generic [ref=e217]: Infrastructure
+            - generic [ref=e219]:
+              - button "Roads & Bridges" [ref=e220] [cursor=pointer]:
+                - generic [ref=e222] [cursor=pointer]: Roads & Bridges
+              - button "Public Transit" [ref=e223] [cursor=pointer]:
+                - generic [ref=e225] [cursor=pointer]: Public Transit
+              - button "Parks & Recreation" [ref=e226] [cursor=pointer]:
+                - generic [ref=e228] [cursor=pointer]: Parks & Recreation
+              - button "Utilities" [ref=e229] [cursor=pointer]:
+                - generic [ref=e231] [cursor=pointer]: Utilities
+            - generic [ref=e232]:
+              - heading "Results" [level=4] [ref=e233]
+              - generic [ref=e234]:
+                - generic [ref=e236]:
+                  - generic [ref=e237]: Roads & Bridges
+                  - generic [ref=e238]: 234 votes (26%)
+                - generic [ref=e242]:
+                  - generic [ref=e243]: Public Transit
+                  - generic [ref=e244]: 345 votes (39%)
+                - generic [ref=e248]:
+                  - generic [ref=e249]: Parks & Recreation
+                  - generic [ref=e250]: 178 votes (20%)
+                - generic [ref=e254]:
+                  - generic [ref=e255]: Utilities
+                  - generic [ref=e256]: 135 votes (15%)
+          - generic [ref=e260]:
+            - generic [ref=e263]:
+              - heading "Which environmental initiative should receive funding?" [level=3] [ref=e264]
+              - generic [ref=e265]:
+                - generic [ref=e266]:
+                  - img [ref=e267]
+                  - generic [ref=e272]: 1,567 votes
+                - generic [ref=e273]:
+                  - img [ref=e274]
+                  - generic [ref=e277]: 2d 23h
+                - generic [ref=e278]:
+                  - img [ref=e279]
+                  - generic [ref=e282]: Environment
+            - generic [ref=e284]:
+              - button "Renewable Energy" [ref=e285] [cursor=pointer]:
+                - generic [ref=e287] [cursor=pointer]: Renewable Energy
+              - button "Waste Reduction" [ref=e288] [cursor=pointer]:
+                - generic [ref=e290] [cursor=pointer]: Waste Reduction
+              - button "Green Spaces" [ref=e291] [cursor=pointer]:
+                - generic [ref=e293] [cursor=pointer]: Green Spaces
+              - button "Clean Water" [ref=e294] [cursor=pointer]:
+                - generic [ref=e296] [cursor=pointer]: Clean Water
+            - generic [ref=e297]:
+              - heading "Results" [level=4] [ref=e298]
+              - generic [ref=e299]:
+                - generic [ref=e301]:
+                  - generic [ref=e302]: Renewable Energy
+                  - generic [ref=e303]: 567 votes (36%)
+                - generic [ref=e307]:
+                  - generic [ref=e308]: Waste Reduction
+                  - generic [ref=e309]: 234 votes (15%)
+                - generic [ref=e313]:
+                  - generic [ref=e314]: Green Spaces
+                  - generic [ref=e315]: 456 votes (29%)
+                - generic [ref=e319]:
+                  - generic [ref=e320]: Clean Water
+                  - generic [ref=e321]: 310 votes (20%)
+  - button [ref=e324] [cursor=pointer]:
+    - img [ref=e325] [cursor=pointer]
+```

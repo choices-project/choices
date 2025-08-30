@@ -4,6 +4,8 @@ import { TypeGuardError, assertIsRecord } from '@/lib/types/guards';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
+export const dynamic = 'force-dynamic';
+
 type TableShape = { table: string; columns: string[] };
 
 const REQUIRED: TableShape[] = [

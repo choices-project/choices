@@ -1,15 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 import { devLog } from '@/lib/logger';
-import { cookies } from 'next/headers';
-
 export const dynamic = 'force-dynamic'
 
 // GET - Get user's biometric trust score
 export async function GET(_request: NextRequest) {
   try {
     // Get Supabase client
-    const cookieStore = await cookies()
     const supabase = getSupabaseServerClient()
     
     if (!supabase) {
@@ -138,7 +135,6 @@ export async function GET(_request: NextRequest) {
 export async function POST(_request: NextRequest) {
   try {
     // Get Supabase client
-    const cookieStore = await cookies()
     const supabase = getSupabaseServerClient()
     
     if (!supabase) {

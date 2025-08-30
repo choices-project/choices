@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseServerClient } from '@/utils/supabase/server'
 import { devLog } from '@/lib/logger'
-import { cookies } from 'next/headers'
+import { cookies as _cookies } from 'next/headers'
 
 export async function GET(_request: NextRequest) {
   try {
@@ -55,7 +55,6 @@ export async function GET(_request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const cookieStore = cookies()
     const supabase = await getSupabaseServerClient()
     
     if (!supabase) {

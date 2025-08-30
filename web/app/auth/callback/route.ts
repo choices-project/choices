@@ -1,8 +1,6 @@
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 import { devLog } from '@/lib/logger';
 import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
-
 export const dynamic = 'force-dynamic'
 
 // Helper function to determine the appropriate redirect destination

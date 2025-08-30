@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseServerClient } from '@/utils/supabase/server'
-import { cookies } from 'next/headers'
+import { cookies as _cookies } from 'next/headers'
 import { logger } from './logger'
 import { devLog } from './logger'
 
@@ -44,7 +44,6 @@ export function createAuthMiddleware(options: {
   return async (_request: NextRequest, _context?: AuthContext): Promise<NextResponse | null> => {
     try {
       // Create Supabase client
-      const cookieStore = await cookies()
       const supabase = getSupabaseServerClient()
 
       if (!supabase) {
@@ -161,7 +160,6 @@ export function withAuth(
     }
 
     // Get user context for the handler
-    const cookieStore = await cookies()
     const supabase = getSupabaseServerClient()
     
     if (!supabase) {
@@ -300,7 +298,6 @@ export function combineMiddleware(...middlewares: ((request: NextRequest) => Pro
  */
 export async function getUserFromRequest(_request: NextRequest): Promise<AuthUser | null> {
   try {
-    const cookieStore = await cookies()
     const supabase = getSupabaseServerClient()
     
     if (!supabase) {

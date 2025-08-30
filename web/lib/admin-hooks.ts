@@ -452,17 +452,17 @@ export const useRealTimeSubscriptions = () => {
   React.useEffect(() => {
     // Subscribe to admin updates
     const adminSubscriptionId = realTimeService.subscribeToAdminUpdates(
-      (data) => {
+      (_data) => {
         // Handle admin updates
-        console.log('Admin real-time update:', data);
+        // console.log('Admin real-time update:', data);
       }
     );
 
     // Subscribe to feedback updates
     const feedbackSubscriptionId = realTimeService.subscribeToFeedbackUpdates(
-      (data) => {
+      (_data) => {
         // Handle feedback updates
-        console.log('Feedback real-time update:', data);
+        // console.log('Feedback real-time update:', data);
       }
     );
 

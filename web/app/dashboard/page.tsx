@@ -6,7 +6,7 @@ import { getSupabaseServerClient } from '@/utils/supabase/server'
 const supabase = getSupabaseServerClient()
 
 async function getUserFromCookies() {
-  const cookieStore = await cookies()
+  const cookieStore = cookies()
   const sessionToken = cookieStore.get('choices_session')?.value
   
   if (!sessionToken) {

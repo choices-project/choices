@@ -1,86 +1,113 @@
 # Choices Platform
 
-**Status: ✅ PRODUCTION READY**  
-**Last Updated: August 30, 2025**  
-**Version: 2.2.0 - SSR Issues Completely Resolved**
+**A privacy-first, unbiased polling platform for democratic participation**
 
-## 🎉 Recent Achievement: SSR Issues Completely Resolved!
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Next.js](https://img.shields.io/badge/Next.js-14.2.31-black)](https://nextjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue)](https://www.typescriptlang.org/)
+[![Supabase](https://img.shields.io/badge/Supabase-Latest-green)](https://supabase.com/)
 
-**MISSION ACCOMPLISHED!** All Supabase SSR (Server-Side Rendering) issues have been completely resolved. The application now builds successfully with zero SSR errors and is ready for production deployment.
+## 🚀 **Status: DEPLOYMENT READY**
 
-### ✅ Current Status
-- **SSR Compatibility** - Zero `self is not defined` errors
-- **TypeScript Clean** - All compilation errors resolved
-- **Build Successful** - 100% build success rate
-- **Production Ready** - Can deploy immediately
+The Choices platform is now in a **clean, deployable state** with all critical SSR issues resolved. The application builds successfully, runs properly in development, and is ready for production deployment.
 
-## 🚀 Quick Start
+### ✅ **What's Working**
+- **Complete Build Process** - No blocking errors
+- **Next.js 14 SSR** - Fully compatible and working
+- **Authentication System** - Functional with Supabase
+- **API Routes** - All operational
+- **Development Environment** - Fully functional
+- **Testing Framework** - Comprehensive E2E coverage
+
+## 🎯 **Quick Start**
 
 ### Prerequisites
-- Node.js 18+
+- Node.js 18+ 
 - npm or yarn
-- Supabase project
+- Supabase account (for backend)
 
 ### Installation
 ```bash
+# Clone the repository
+git clone https://github.com/choices-project/choices.git
+cd choices
+
+# Install dependencies
 cd web
 npm install
-```
 
-### Development
-```bash
+# Set up environment variables
+cp .env.example .env.local
+# Edit .env.local with your Supabase credentials
+
+# Start development server
 npm run dev
 ```
 
-### Build
+### Build for Production
 ```bash
+# Build the application
 npm run build
+
+# Start production server
+npm start
 ```
 
-### Production
+## 🏗️ **Architecture**
+
+### Frontend
+- **Next.js 14.2.31** - React framework with App Router
+- **TypeScript** - Type-safe development
+- **Tailwind CSS** - Utility-first styling
+- **Supabase** - Backend-as-a-Service
+
+### Backend
+- **Supabase** - Database, authentication, and real-time features
+- **PostgreSQL** - Primary database
+- **Row Level Security (RLS)** - Data protection
+
+### Testing
+- **Playwright** - End-to-end testing
+- **Jest** - Unit testing framework
+- **TypeScript** - Type checking
+
+## 📁 **Project Structure**
+
+```
+choices/
+├── web/                    # Next.js frontend application
+│   ├── app/               # App Router pages and API routes
+│   ├── components/        # React components
+│   ├── lib/              # Utility libraries
+│   ├── utils/            # Helper functions
+│   └── tests/            # Test files
+├── docs/                 # Documentation
+├── scripts/              # Build and deployment scripts
+└── supabase/            # Database migrations and config
+```
+
+## 🔧 **Development**
+
+### Available Scripts
 ```bash
-npm run start
+# Development
+npm run dev              # Start development server
+npm run build            # Build for production
+npm run start            # Start production server
+
+# Testing
+npm run test             # Run unit tests
+npm run test:e2e         # Run end-to-end tests
+npm run test:coverage    # Generate test coverage
+
+# Code Quality
+npm run lint             # Run ESLint
+npm run type-check       # Run TypeScript checks
 ```
-
-## 🏗️ Architecture
-
-### Tech Stack
-- **Frontend**: Next.js 14.2.31 with App Router
-- **Backend**: Supabase (PostgreSQL, Auth, Real-time)
-- **Language**: TypeScript
-- **Styling**: Tailwind CSS
-- **Testing**: Jest, Playwright
-- **Deployment**: Vercel (recommended)
-
-### Key Features
-- **SSR Compatible** - Full server-side rendering support
-- **Authentication** - Supabase Auth with multiple providers
-- **Real-time** - Live updates and notifications
-- **Responsive** - Mobile-first design
-- **Accessible** - WCAG compliant
-- **Performance** - Optimized for speed
-
-## 📚 Documentation
-
-### Core Documentation
-- **[Project Status](./PROJECT_STATUS.md)** - Current project state and achievements
-- **[Deployment Guide](./DEPLOYMENT_GUIDE.md)** - Production deployment instructions
-- **[Changelog](./CHANGELOG.md)** - Complete change history
-- **[Achievement Summary](./ACHIEVEMENT_SUMMARY.md)** - SSR fix implementation details
-
-### Technical Documentation
-- **[API Documentation](./API.md)** - Complete API reference
-- **[Authentication System](./AUTHENTICATION_SYSTEM.md)** - Auth implementation details
-- **[Database Schema](./DATABASE_SECURITY_AND_SCHEMA.md)** - Database structure and security
-- **[System Architecture](./SYSTEM_ARCHITECTURE_OVERVIEW.md)** - High-level system design
-
-### User Documentation
-- **[User Guide](./USER_GUIDE.md)** - End-user documentation
-- **[Testing Guide](./testing/COMPREHENSIVE_TESTING_GUIDE.md)** - Testing procedures
-
-## 🔧 Configuration
 
 ### Environment Variables
+Create a `.env.local` file in the `web/` directory:
+
 ```env
 # Supabase Configuration
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
@@ -88,143 +115,76 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 
 # Application Configuration
-NODE_ENV=production
-NEXT_PUBLIC_APP_URL=https://your-domain.com
+NEXTAUTH_SECRET=your_nextauth_secret
+JWT_SECRET=your_jwt_secret
 ```
 
-### Supabase Setup
-1. Create a Supabase project
-2. Configure authentication providers
-3. Set up database schema
-4. Configure Row Level Security (RLS)
-5. Set environment variables
+## 🧪 **Testing**
 
-## 🚀 Deployment
+### Running Tests
+```bash
+# Unit tests
+npm run test
+
+# End-to-end tests
+npm run test:e2e
+
+# Test with UI
+npm run test:e2e:ui
+```
+
+### Test Coverage
+The project includes comprehensive testing:
+- **Unit Tests** - Component and utility testing
+- **E2E Tests** - Full user journey testing
+- **Integration Tests** - API and database testing
+
+## 🚀 **Deployment**
 
 ### Vercel (Recommended)
-1. Connect GitHub repository to Vercel
+1. Connect your GitHub repository to Vercel
 2. Configure environment variables
 3. Deploy automatically on push to main
 
 ### Manual Deployment
-1. Build the application: `npm run build`
-2. Start production server: `npm run start`
-3. Configure reverse proxy (nginx/Apache)
-
-### Docker Deployment
 ```bash
-docker build -t choices-platform .
-docker run -p 3000:3000 choices-platform
+# Build the application
+npm run build
+
+# Deploy to your preferred platform
+# (Vercel, Netlify, AWS, etc.)
 ```
 
-## 🧪 Testing
+## 📚 **Documentation**
 
-### Unit Tests
-```bash
-npm run test
-```
+- **[Project Status](./PROJECT_STATUS.md)** - Current development status
+- **[API Documentation](./API.md)** - API endpoints and usage
+- **[Authentication System](./AUTHENTICATION_SYSTEM.md)** - Auth implementation
+- **[Database Schema](./DATABASE_SECURITY_AND_SCHEMA.md)** - Database structure
+- **[Deployment Guide](./DEPLOYMENT_GUIDE.md)** - Deployment instructions
+- **[Testing Guide](./testing/COMPREHENSIVE_TESTING_GUIDE.md)** - Testing procedures
 
-### E2E Tests
-```bash
-npm run test:e2e
-```
+## 🤝 **Contributing**
 
-### Performance Tests
-```bash
-npm run build:analyze
-```
-
-## 📊 Performance
-
-### Build Metrics
-- **Bundle Size**: Optimized with code splitting
-- **Lighthouse Score**: 90+ across all metrics
-- **Core Web Vitals**: Excellent performance
-- **SSR Performance**: Zero performance impact
-
-### Optimization Features
-- **Code Splitting** - Automatic by Next.js
-- **Image Optimization** - Built-in Next.js Image component
-- **Lazy Loading** - Components loaded on demand
-- **Caching** - Static and API response caching
-
-## 🔒 Security
-
-### Security Features
-- **SSR Safe** - No client-side secrets
-- **Type Safety** - Full TypeScript coverage
-- **Input Validation** - All inputs validated
-- **Authentication** - Secure auth patterns
-- **Database Security** - Row Level Security (RLS)
-
-### Best Practices
-- Environment variables for secrets
-- HTTPS only in production
-- Content Security Policy (CSP)
-- Regular security audits
-
-## 🤝 Contributing
+We welcome contributions! Please see our [Contributing Guide](../CONTRIBUTING.md) for details.
 
 ### Development Workflow
-1. Create feature branch
-2. Make changes
-3. Run tests: `npm run test`
-4. Build check: `npm run build`
-5. Submit pull request
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests for new functionality
+5. Submit a pull request
 
-### Code Quality
-- TypeScript strict mode
-- ESLint configuration
-- Prettier formatting
-- Conventional commits
+## 📄 **License**
 
-## 📈 Monitoring
+This project is licensed under the MIT License - see the [LICENSE](../LICENSE) file for details.
 
-### Health Checks
-- Application health: `/api/health`
-- Database status: `/api/database-status`
-- Performance metrics: Built-in Next.js analytics
+## 🆘 **Support**
 
-### Error Tracking
-- Error boundaries implemented
-- Comprehensive logging
-- Performance monitoring
-
-## 🎯 Roadmap
-
-### Completed ✅
-- SSR compatibility implementation
-- Authentication system
-- Core voting functionality
-- Admin dashboard
-- Real-time features
-- Performance optimization
-
-### Future Enhancements
-- Advanced analytics
-- Mobile app
-- API rate limiting
-- Enhanced security features
-- Performance optimizations
-
-## 📞 Support
-
-### Documentation
-- Comprehensive documentation available
-- API reference included
-- Troubleshooting guides
-
-### Community
-- GitHub Issues for bug reports
-- Discord/Slack for support
-- Documentation for self-help
-
-## 📄 License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
+- **Issues** - [GitHub Issues](https://github.com/choices-project/choices/issues)
+- **Discussions** - [GitHub Discussions](https://github.com/choices-project/choices/discussions)
+- **Documentation** - [Project Docs](./)
 
 ---
 
-**Status: ✅ PRODUCTION READY - DEPLOYMENT READY**
-
-*This README reflects the current production-ready state as of August 30, 2025.*
+**Built with ❤️ for democratic participation**

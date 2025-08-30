@@ -2,8 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { devLog } from '@/lib/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 import { getCurrentUser } from '@/lib/auth-utils';
-import { cookies } from 'next/headers';
-
 export const dynamic = 'force-dynamic'
 
 export async function POST(request: NextRequest) {

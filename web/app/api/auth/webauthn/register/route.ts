@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { logger } from '@/lib/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server'
-import { cookies } from 'next/headers'
+import { cookies as _cookies } from 'next/headers'
 import { rateLimiters } from '@/lib/rate-limit'
 
 export async function POST(request: NextRequest) {
@@ -17,7 +17,6 @@ export async function POST(request: NextRequest) {
     }
 
     // Create Supabase client
-    const cookieStore = await cookies()
     const supabase = getSupabaseServerClient()
 
     if (!supabase) {
@@ -105,7 +104,6 @@ export async function POST(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   try {
     // Create Supabase client
-    const cookieStore = await cookies()
     const supabase = getSupabaseServerClient()
 
     if (!supabase) {

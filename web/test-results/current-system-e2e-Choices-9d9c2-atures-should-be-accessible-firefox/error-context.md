@@ -1,0 +1,126 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - alert [ref=e2]
+  - generic [ref=e4]:
+    - generic [ref=e6]:
+      - img [ref=e8]
+      - generic [ref=e12]:
+        - generic [ref=e13]:
+          - heading "System Maintenance" [level=3] [ref=e14]
+          - generic [ref=e15]:
+            - generic [ref=e16]: medium
+            - button "Dismiss message" [ref=e17] [cursor=pointer]:
+              - img [ref=e18] [cursor=pointer]
+        - paragraph [ref=e22]: We'll be performing maintenance on Sunday at 2 AM EST. Service may be briefly interrupted.
+        - generic [ref=e24]: 8/26/2025
+    - generic [ref=e26]:
+      - img [ref=e28]
+      - generic [ref=e31]:
+        - generic [ref=e32]:
+          - heading "New Features Coming" [level=3] [ref=e33]
+          - generic [ref=e34]:
+            - generic [ref=e35]: low
+            - button "Dismiss message" [ref=e36] [cursor=pointer]:
+              - img [ref=e37] [cursor=pointer]
+        - paragraph [ref=e41]: Stay tuned for exciting new features including real-time voting and mobile notifications!
+        - generic [ref=e43]: 8/26/2025
+    - generic [ref=e45]:
+      - img [ref=e47]
+      - generic [ref=e49]:
+        - generic [ref=e50]:
+          - heading "Welcome to Choices!" [level=3] [ref=e51]
+          - generic [ref=e52]:
+            - generic [ref=e53]: high
+            - button "Dismiss message" [ref=e54] [cursor=pointer]:
+              - img [ref=e55] [cursor=pointer]
+        - paragraph [ref=e59]: This is a new platform for creating and participating in polls. We'd love your feedback!
+        - generic [ref=e61]: 8/26/2025
+  - generic [ref=e62]:
+    - banner [ref=e63]:
+      - generic [ref=e65]:
+        - generic [ref=e66]:
+          - img [ref=e68]
+          - heading "Advanced Privacy & Security" [level=1] [ref=e70]
+        - button "Run Private Analysis" [ref=e72] [cursor=pointer]:
+          - img [ref=e73] [cursor=pointer]
+          - generic [ref=e82] [cursor=pointer]: Run Private Analysis
+    - main [ref=e83]:
+      - navigation [ref=e85]:
+        - button "Overview" [ref=e86] [cursor=pointer]:
+          - img [ref=e87] [cursor=pointer]
+          - generic [ref=e89] [cursor=pointer]: Overview
+        - button "Differential Privacy" [ref=e90] [cursor=pointer]:
+          - img [ref=e91] [cursor=pointer]
+          - generic [ref=e93] [cursor=pointer]: Differential Privacy
+        - button "Zero-Knowledge Proofs" [ref=e94] [cursor=pointer]:
+          - img [ref=e95] [cursor=pointer]
+          - generic [ref=e98] [cursor=pointer]: Zero-Knowledge Proofs
+        - button "Privacy Budget" [ref=e99] [cursor=pointer]:
+          - img [ref=e100] [cursor=pointer]
+          - generic [ref=e103] [cursor=pointer]: Privacy Budget
+        - button "Private Analytics" [ref=e104] [cursor=pointer]:
+          - img [ref=e105] [cursor=pointer]
+          - generic [ref=e110] [cursor=pointer]: Private Analytics
+        - button "Security" [ref=e111] [cursor=pointer]:
+          - img [ref=e112] [cursor=pointer]
+          - generic [ref=e115] [cursor=pointer]: Security
+      - generic [ref=e116]:
+        - generic [ref=e117]:
+          - generic [ref=e119]:
+            - img [ref=e120]
+            - generic [ref=e122]:
+              - paragraph [ref=e123]: Privacy Score
+              - paragraph [ref=e124]: 98%
+          - generic [ref=e126]:
+            - img [ref=e127]
+            - generic [ref=e130]:
+              - paragraph [ref=e131]: ZK Proofs
+              - paragraph [ref=e132]: "0"
+          - generic [ref=e134]:
+            - img [ref=e135]
+            - generic [ref=e138]:
+              - paragraph [ref=e139]: Privacy Budget
+              - paragraph [ref=e140]: 85%
+          - generic [ref=e142]:
+            - img [ref=e143]
+            - generic [ref=e152]:
+              - paragraph [ref=e153]: Private Analytics
+              - paragraph [ref=e154]: Inactive
+        - generic [ref=e155]:
+          - heading "Privacy Features" [level=3] [ref=e156]
+          - generic [ref=e157]:
+            - generic [ref=e158]:
+              - generic [ref=e159]:
+                - img [ref=e160]
+                - heading "Differential Privacy" [level=4] [ref=e163]
+              - paragraph [ref=e164]: Statistical analysis with mathematical privacy guarantees
+            - generic [ref=e165]:
+              - generic [ref=e166]:
+                - img [ref=e167]
+                - heading "Zero-Knowledge Proofs" [level=4] [ref=e170]
+              - paragraph [ref=e171]: Verification without revealing sensitive data
+            - generic [ref=e172]:
+              - generic [ref=e173]:
+                - img [ref=e174]
+                - heading "Privacy Budget" [level=4] [ref=e177]
+              - paragraph [ref=e178]: Controlled data usage with budget management
+            - generic [ref=e179]:
+              - generic [ref=e180]:
+                - img [ref=e181]
+                - heading "Private Analytics" [level=4] [ref=e184]
+              - paragraph [ref=e185]: Insights without compromising individual privacy
+            - generic [ref=e186]:
+              - generic [ref=e187]:
+                - img [ref=e188]
+                - heading "Encrypted Storage" [level=4] [ref=e191]
+              - paragraph [ref=e192]: Local data encryption with user control
+            - generic [ref=e193]:
+              - generic [ref=e194]:
+                - img [ref=e195]
+                - heading "WebAuthn" [level=4] [ref=e198]
+              - paragraph [ref=e199]: Device-based biometric authentication
+  - button [ref=e200] [cursor=pointer]:
+    - img [ref=e201] [cursor=pointer]
+```

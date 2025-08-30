@@ -1,295 +1,373 @@
 # Database Security and Schema Documentation
+**Created:** August 30, 2025  
+**Last Updated:** August 30, 2025  
+**Status:** 🔒 **SECURE AND COMPREHENSIVE**
 
-**Last Updated:** 2025-08-21  
-**Version:** 1.0  
-**Status:** Production Ready
+## 🎯 **Overview**
 
-## Overview
+This document provides comprehensive documentation of the Choices platform database schema, security implementation, and data protection measures. The platform uses Supabase (PostgreSQL) with Row Level Security (RLS) and comprehensive security enhancements.
 
-This document outlines the comprehensive database security setup, schema design, and Row Level Security (RLS) policies for the Choices platform. Our database uses Supabase PostgreSQL with custom authentication and strict security policies.
+## 🏗️ **Database Architecture**
 
-## Database Schema
+### **Technology Stack**
+- **Database**: PostgreSQL (via Supabase)
+- **Security**: Row Level Security (RLS)
+- **Authentication**: Supabase Auth
+- **Real-time**: Supabase Realtime
+- **Storage**: Supabase Storage
 
-### Core Tables
+### **Security Model**
+- **Multi-tenant**: Secure data isolation
+- **Role-based**: Granular access control
+- **Audit trails**: Complete operation logging
+- **Encryption**: Data at rest and in transit
 
-#### `ia_users` - Main User Table
+## 📊 **Database Schema**
+
+### **Core Tables**
+
+#### **1. ia_users**
 ```sql
 CREATE TABLE ia_users (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  stable_id TEXT UNIQUE NOT NULL,
-  email TEXT UNIQUE NOT NULL,
-  password_hash TEXT,
-  verification_tier TEXT DEFAULT 'T0' CHECK (verification_tier IN ('T0', 'T1', 'T2', 'T3')),
-  is_active BOOLEAN DEFAULT TRUE,
-  two_factor_enabled BOOLEAN DEFAULT FALSE,
-  two_factor_secret TEXT,
-  last_login_at TIMESTAMP WITH TIME ZONE,
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  username VARCHAR(50) UNIQUE NOT NULL,
+  email VARCHAR(255) UNIQUE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  trust_tier INTEGER DEFAULT 0,
+  is_active BOOLEAN DEFAULT true
 );
 ```
 
-**Purpose:** Central user authentication and authorization table  
-**Security:** RLS enabled with user-specific access policies
-
-#### `user_profiles` - User Profile Data
+#### **2. user_profiles**
 ```sql
 CREATE TABLE user_profiles (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  user_id TEXT NOT NULL REFERENCES ia_users(stable_id) ON DELETE CASCADE,
-  display_name TEXT,
-  avatar_url TEXT,
+  id UUID PRIMARY KEY REFERENCES ia_users(id) ON DELETE CASCADE,
+  display_name VARCHAR(100),
   bio TEXT,
+  avatar_url TEXT,
   preferences JSONB DEFAULT '{}',
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 ```
 
-**Purpose:** Extended user profile information  
-**Security:** RLS enabled, users can only access their own profiles
-
-#### `biometric_credentials` - WebAuthn Credentials
+#### **3. polls**
 ```sql
-CREATE TABLE biometric_credentials (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  user_id TEXT NOT NULL REFERENCES ia_users(stable_id) ON DELETE CASCADE,
-  credential_id TEXT UNIQUE NOT NULL,
-  device_type TEXT,
-  authenticator_type TEXT,
-  sign_count INTEGER DEFAULT 0,
-  last_used_at TIMESTAMP WITH TIME ZONE,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-```
-
-**Purpose:** Store WebAuthn biometric authentication credentials  
-**Security:** RLS enabled, users can only manage their own credentials
-
-#### `po_polls` - Polling System
-```sql
-CREATE TABLE po_polls (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  poll_id TEXT UNIQUE NOT NULL,
-  title TEXT NOT NULL,
+CREATE TABLE polls (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  title VARCHAR(200) NOT NULL,
   description TEXT,
+  creator_id UUID REFERENCES ia_users(id) ON DELETE CASCADE,
+  poll_type VARCHAR(50) DEFAULT 'single_choice',
   options JSONB NOT NULL,
-  created_by TEXT NOT NULL REFERENCES ia_users(stable_id) ON DELETE CASCADE,
+  is_public BOOLEAN DEFAULT true,
+  is_active BOOLEAN DEFAULT true,
+  expires_at TIMESTAMP WITH TIME ZONE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  start_time TIMESTAMP WITH TIME ZONE,
-  end_time TIMESTAMP WITH TIME ZONE,
-  status TEXT DEFAULT 'active' CHECK (status IN ('active', 'closed', 'draft')),
-  privacy_level TEXT DEFAULT 'public' CHECK (privacy_level IN ('public', 'private', 'restricted')),
-  voting_method TEXT DEFAULT 'single' CHECK (voting_method IN ('single', 'multiple', 'ranked')),
-  category TEXT,
-  user_id TEXT NOT NULL REFERENCES ia_users(stable_id) ON DELETE CASCADE
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 ```
 
-**Purpose:** Democratic polling system  
-**Security:** RLS enabled with public viewing and user-specific creation/editing
-
-#### `po_votes` - Voting Records
+#### **4. votes**
 ```sql
-CREATE TABLE po_votes (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  poll_id TEXT NOT NULL REFERENCES po_polls(poll_id) ON DELETE CASCADE,
-  user_id TEXT NOT NULL REFERENCES ia_users(stable_id) ON DELETE CASCADE,
-  vote_data JSONB NOT NULL,
+CREATE TABLE votes (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  poll_id UUID REFERENCES polls(id) ON DELETE CASCADE,
+  voter_id UUID REFERENCES ia_users(id) ON DELETE CASCADE,
+  selected_options JSONB NOT NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  UNIQUE(poll_id, user_id)
+  UNIQUE(poll_id, voter_id)
 );
 ```
 
-**Purpose:** Store user votes with privacy controls  
-**Security:** RLS enabled, users can only see their own votes
-
-### Authentication Tables
-
-#### `ia_tokens` - JWT Token Management
+#### **5. feedback**
 ```sql
-CREATE TABLE ia_tokens (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  user_stable_id TEXT NOT NULL REFERENCES ia_users(stable_id) ON DELETE CASCADE,
-  token_type TEXT NOT NULL CHECK (token_type IN ('access', 'refresh', 'reset')),
-  token_hash TEXT NOT NULL,
-  expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
+CREATE TABLE feedback (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES ia_users(id) ON DELETE SET NULL,
+  type VARCHAR(50) NOT NULL,
+  title VARCHAR(200) NOT NULL,
+  description TEXT NOT NULL,
+  sentiment VARCHAR(20),
+  status VARCHAR(20) DEFAULT 'pending',
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+```
+
+### **Security Tables**
+
+#### **6. security_audit_log**
+```sql
+CREATE TABLE security_audit_log (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES ia_users(id) ON DELETE SET NULL,
+  action VARCHAR(100) NOT NULL,
+  resource_type VARCHAR(50),
+  resource_id UUID,
+  ip_address INET,
+  user_agent TEXT,
+  metadata JSONB DEFAULT '{}',
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 ```
 
-**Purpose:** Secure token storage and management  
-**Security:** RLS enabled, users can only access their own tokens
-
-#### `webauthn_challenges` - Authentication Challenges
+#### **7. rate_limits**
 ```sql
-CREATE TABLE webauthn_challenges (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  user_id TEXT NOT NULL REFERENCES ia_users(stable_id) ON DELETE CASCADE,
-  challenge TEXT NOT NULL,
-  challenge_type TEXT NOT NULL CHECK (challenge_type IN ('registration', 'authentication')),
-  expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+CREATE TABLE rate_limits (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES ia_users(id) ON DELETE CASCADE,
+  endpoint VARCHAR(100) NOT NULL,
+  request_count INTEGER DEFAULT 1,
+  window_start TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  UNIQUE(user_id, endpoint, window_start)
 );
 ```
 
-**Purpose:** WebAuthn challenge-response security  
-**Security:** RLS enabled, users can only access their own challenges
+## 🔒 **Security Implementation**
 
-## Row Level Security (RLS) Policies
+### **Row Level Security (RLS)**
 
-### Security Principles
-
-1. **Principle of Least Privilege:** Users can only access their own data
-2. **Service Role Access:** Admin operations use service role with full access
-3. **Public Access:** Limited public access for democratic features
-4. **Cascade Security:** Related data inherits security policies
-
-### Policy Categories
-
-#### User-Specific Access
-- Users can only view, update, and delete their own data
-- JWT token validation ensures proper user identification
-- Foreign key relationships maintain data integrity
-
-#### Service Role Access
-- Admin operations bypass RLS using service role
-- Full access for system maintenance and user management
-- Secure credential management
-
-#### Public Access
-- Public polls are viewable by anyone
-- Democratic participation without authentication barriers
-- Privacy controls for sensitive poll data
-
-### Policy Examples
-
-#### ia_users Table
+#### **ia_users RLS Policies**
 ```sql
--- Users can only see their own data
-CREATE POLICY "Users can view own data" ON ia_users
-  FOR SELECT USING (auth.jwt() ->> 'userId' = id::text);
+-- Users can only read their own profile
+CREATE POLICY "Users can view own profile" ON ia_users
+  FOR SELECT USING (auth.uid() = id);
 
--- Users can update their own data
-CREATE POLICY "Users can update own data" ON ia_users
-  FOR UPDATE USING (auth.jwt() ->> 'userId' = id::text);
+-- Users can update their own profile
+CREATE POLICY "Users can update own profile" ON ia_users
+  FOR UPDATE USING (auth.uid() = id);
 
--- Service role can access all data
-CREATE POLICY "Service role full access" ON ia_users
-  FOR ALL USING (auth.role() = 'service_role');
+-- Only admins can delete users
+CREATE POLICY "Only admins can delete users" ON ia_users
+  FOR DELETE USING (
+    EXISTS (
+      SELECT 1 FROM ia_users 
+      WHERE id = auth.uid() AND trust_tier >= 2
+    )
+  );
 ```
 
-#### po_polls Table
+#### **polls RLS Policies**
 ```sql
 -- Anyone can view public polls
-CREATE POLICY "Anyone can view public polls" ON po_polls
-  FOR SELECT USING (privacy_level = 'public');
+CREATE POLICY "Anyone can view public polls" ON polls
+  FOR SELECT USING (is_public = true);
 
 -- Users can view their own polls
-CREATE POLICY "Users can view own polls" ON po_polls
-  FOR SELECT USING (auth.jwt() ->> 'userId' = user_id);
+CREATE POLICY "Users can view own polls" ON polls
+  FOR SELECT USING (creator_id = auth.uid());
 
 -- Users can create polls
-CREATE POLICY "Users can create polls" ON po_polls
-  FOR INSERT WITH CHECK (auth.jwt() ->> 'userId' = user_id);
+CREATE POLICY "Users can create polls" ON polls
+  FOR INSERT WITH CHECK (creator_id = auth.uid());
+
+-- Users can update their own polls
+CREATE POLICY "Users can update own polls" ON polls
+  FOR UPDATE USING (creator_id = auth.uid());
+
+-- Only admins can delete polls
+CREATE POLICY "Only admins can delete polls" ON polls
+  FOR DELETE USING (
+    EXISTS (
+      SELECT 1 FROM ia_users 
+      WHERE id = auth.uid() AND trust_tier >= 2
+    )
+  );
 ```
 
-## Security Features
+#### **votes RLS Policies**
+```sql
+-- Users can view votes on public polls
+CREATE POLICY "Users can view votes on public polls" ON votes
+  FOR SELECT USING (
+    EXISTS (
+      SELECT 1 FROM polls 
+      WHERE id = votes.poll_id AND is_public = true
+    )
+  );
 
-### Authentication System
-- **Custom JWT Tokens:** Secure token-based authentication
-- **Password Hashing:** bcrypt with salt rounds
-- **Two-Factor Authentication:** TOTP support
-- **Biometric Authentication:** WebAuthn integration
-- **Session Management:** Secure token storage and refresh
+-- Users can view their own votes
+CREATE POLICY "Users can view own votes" ON votes
+  FOR SELECT USING (voter_id = auth.uid());
 
-### Data Protection
-- **Encryption at Rest:** Supabase handles database encryption
-- **Encryption in Transit:** TLS/SSL for all connections
-- **Token Security:** JWT tokens with expiration and refresh
-- **Privacy Controls:** User-controlled data sharing
+-- Users can vote once per poll
+CREATE POLICY "Users can vote once per poll" ON votes
+  FOR INSERT WITH CHECK (voter_id = auth.uid());
 
-### Access Control
-- **Row Level Security:** Database-level access control
-- **Role-Based Access:** Service role and user roles
-- **Verification Tiers:** T0-T3 access levels
-- **Audit Trail:** Comprehensive logging of access
+-- Users cannot update or delete votes
+CREATE POLICY "No vote updates or deletions" ON votes
+  FOR ALL USING (false);
+```
 
-## Best Practices
+### **Security Constraints**
 
-### Database Operations
-1. **Always use RLS:** Never disable RLS in production
-2. **Service Role Only:** Use service role for admin operations
-3. **Parameterized Queries:** Prevent SQL injection
-4. **Connection Pooling:** Efficient resource management
+#### **Content Length Limits**
+```sql
+-- Feedback content limits
+ALTER TABLE feedback ADD CONSTRAINT feedback_title_length_check 
+  CHECK (char_length(title) <= 200);
 
-### Security Maintenance
-1. **Regular Audits:** Monthly security reviews
-2. **Policy Updates:** Keep RLS policies current
-3. **Token Rotation:** Regular JWT secret updates
-4. **Access Monitoring:** Track unusual access patterns
+ALTER TABLE feedback ADD CONSTRAINT feedback_description_length_check 
+  CHECK (char_length(description) <= 1000);
 
-### Development Guidelines
-1. **Test with RLS:** Always test with RLS enabled
-2. **Mock Authentication:** Use proper auth in tests
-3. **Error Handling:** Secure error messages
-4. **Documentation:** Keep security docs updated
+-- Poll content limits
+ALTER TABLE polls ADD CONSTRAINT polls_title_length_check 
+  CHECK (char_length(title) <= 200);
 
-## Monitoring and Alerts
+ALTER TABLE polls ADD CONSTRAINT polls_description_length_check 
+  CHECK (char_length(description) <= 2000);
+```
 
-### Security Monitoring
-- **Failed Authentication:** Track login attempts
-- **Policy Violations:** Monitor RLS policy failures
-- **Unusual Access:** Alert on suspicious patterns
-- **Token Abuse:** Monitor JWT token usage
+#### **Daily Submission Limits**
+```sql
+-- Function to check daily feedback limits
+CREATE OR REPLACE FUNCTION check_daily_feedback_limit()
+RETURNS TRIGGER AS $$
+BEGIN
+  -- Get user's trust tier
+  DECLARE
+    user_tier INTEGER;
+    daily_limit INTEGER;
+    current_count INTEGER;
+  BEGIN
+    SELECT trust_tier INTO user_tier 
+    FROM ia_users 
+    WHERE id = NEW.user_id;
+    
+    -- Set daily limits based on trust tier
+    CASE user_tier
+      WHEN 0 THEN daily_limit := 2;  -- Anonymous
+      WHEN 1 THEN daily_limit := 5;  -- Basic
+      WHEN 2 THEN daily_limit := 10; -- Admin
+      WHEN 3 THEN daily_limit := 20; -- Premium
+      ELSE daily_limit := 2;
+    END CASE;
+    
+    -- Count today's submissions
+    SELECT COUNT(*) INTO current_count
+    FROM feedback
+    WHERE user_id = NEW.user_id
+    AND created_at >= CURRENT_DATE;
+    
+    IF current_count >= daily_limit THEN
+      RAISE EXCEPTION 'Daily feedback limit exceeded for user tier %', user_tier;
+    END IF;
+    
+    RETURN NEW;
+  END;
+END;
+$$ LANGUAGE plpgsql;
 
-### Performance Monitoring
-- **Query Performance:** Monitor slow queries
-- **Connection Usage:** Track database connections
-- **Storage Growth:** Monitor table sizes
-- **Index Usage:** Optimize query performance
+-- Trigger to enforce daily limits
+CREATE TRIGGER enforce_daily_feedback_limit
+  BEFORE INSERT ON feedback
+  FOR EACH ROW
+  EXECUTE FUNCTION check_daily_feedback_limit();
+```
 
-## Compliance and Standards
+## 🛡️ **Security Enhancements**
 
-### Data Protection
-- **GDPR Compliance:** User data rights and deletion
-- **Privacy by Design:** Built-in privacy controls
-- **Data Minimization:** Only collect necessary data
-- **Consent Management:** User consent tracking
+### **Rate Limiting**
+The platform implements comprehensive rate limiting at multiple levels:
 
-### Security Standards
-- **OWASP Guidelines:** Follow security best practices
-- **NIST Framework:** Cybersecurity framework compliance
-- **ISO 27001:** Information security management
-- **SOC 2:** Service organization controls
+#### **API Rate Limits**
+```typescript
+const rateLimits = {
+  feedback: { windowMs: 15 * 60 * 1000, max: 5 },    // 5 feedback per 15 minutes
+  auth: { windowMs: 15 * 60 * 1000, max: 10 },       // 10 auth attempts per 15 minutes
+  api: { windowMs: 15 * 60 * 1000, max: 100 },       // 100 API calls per 15 minutes
+  admin: { windowMs: 15 * 60 * 1000, max: 50 }       // 50 admin requests per 15 minutes
+}
+```
 
-## Emergency Procedures
+#### **Content Filtering**
+Automatic detection and blocking of suspicious content:
+- **ALL CAPS Detection**: Blocks content with 5+ consecutive uppercase letters
+- **Excessive Punctuation**: Blocks content with 3+ consecutive exclamation marks
+- **Spam Words**: Blocks common spam phrases
+- **URL Filtering**: Limits URLs in content
+- **Length Limits**: Enforces maximum content lengths
 
-### Security Incidents
-1. **Immediate Response:** Isolate affected systems
-2. **Investigation:** Analyze security logs
-3. **Containment:** Prevent further damage
-4. **Recovery:** Restore secure state
-5. **Documentation:** Record incident details
+### **Security Headers**
+Comprehensive security headers for all routes:
+```json
+{
+  "X-Content-Type-Options": "nosniff",
+  "X-Frame-Options": "DENY",
+  "X-XSS-Protection": "1; mode=block",
+  "Referrer-Policy": "strict-origin-when-cross-origin",
+  "Strict-Transport-Security": "max-age=63072000; includeSubDomains; preload",
+  "Content-Security-Policy": "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' ws: wss: https:; frame-ancestors 'none'; base-uri 'self'; form-action 'self';"
+}
+```
 
-### Data Breach Response
-1. **Assessment:** Determine breach scope
-2. **Notification:** Inform affected users
-3. **Remediation:** Fix security vulnerabilities
-4. **Monitoring:** Enhanced security monitoring
-5. **Review:** Post-incident analysis
+### **Request Validation**
+- **Request Size Validation**: 1MB maximum request size
+- **Content Validation**: Enhanced validation for all submissions
+- **Security Metadata**: IP address and user agent tracking
+- **Input Sanitization**: Automatic sanitization of user inputs
 
-## Conclusion
+## 📊 **Performance Optimization**
 
-The Choices platform database is designed with security as a primary concern. Through comprehensive RLS policies, secure authentication, and proper access controls, we ensure that user data is protected while maintaining the democratic nature of the platform.
+### **Indexes**
+```sql
+-- Performance indexes for common queries
+CREATE INDEX idx_polls_creator_id ON polls(creator_id);
+CREATE INDEX idx_polls_is_public ON polls(is_public);
+CREATE INDEX idx_polls_created_at ON polls(created_at);
+CREATE INDEX idx_votes_poll_id ON votes(poll_id);
+CREATE INDEX idx_votes_voter_id ON votes(voter_id);
+CREATE INDEX idx_feedback_user_id ON feedback(user_id);
+CREATE INDEX idx_feedback_created_at ON feedback(created_at);
+CREATE INDEX idx_security_audit_log_user_id ON security_audit_log(user_id);
+CREATE INDEX idx_security_audit_log_created_at ON security_audit_log(created_at);
+```
 
-**Key Security Achievements:**
-- ✅ All tables have RLS enabled
-- ✅ User-specific access policies implemented
-- ✅ Service role access for admin operations
-- ✅ Public access for democratic features
-- ✅ Comprehensive audit trail
-- ✅ GDPR and privacy compliance
+### **Connection Pooling**
+- **Supabase Connection Pool**: Optimized for concurrent connections
+- **Query Optimization**: Efficient queries with proper indexing
+- **Caching Strategy**: Intelligent caching with TTL
 
-For questions or security concerns, please contact the development team or create a security issue in the project repository.
+## 🔍 **Monitoring and Auditing**
+
+### **Audit Logging**
+All security events are logged to `security_audit_log` table:
+- User actions and authentication events
+- Rate limit violations
+- Content filtering events
+- IP addresses and user agents
+- Resource access patterns
+
+### **Security Metrics**
+- **Rate Limit Violations**: Tracked and analyzed
+- **Content Filtering**: Logged security events
+- **IP Blocking**: Automatic blocking events
+- **Daily Limits**: User submission tracking
+
+## 🚀 **Deployment Security**
+
+### **Environment Security**
+- **Environment Variables**: All secrets stored securely
+- **Database Credentials**: Rotated regularly
+- **API Keys**: Limited scope and permissions
+- **SSL/TLS**: All connections encrypted
+
+### **Production Security**
+- **HTTPS Only**: All traffic encrypted
+- **Security Headers**: Comprehensive protection
+- **Rate Limiting**: Multi-layer protection
+- **Monitoring**: Real-time security monitoring
+
+## 📚 **Related Documentation**
+
+- **[Authentication System](./AUTHENTICATION_SYSTEM.md)** - Auth implementation details
+- **[API Documentation](./API.md)** - API endpoints and security
+- **[Deployment Guide](./DEPLOYMENT_GUIDE.md)** - Security deployment instructions
+- **[System Architecture](./SYSTEM_ARCHITECTURE_OVERVIEW.md)** - Overall system design
+
+---
+
+**This database security and schema documentation reflects the current secure, production-ready state of the Choices platform.**

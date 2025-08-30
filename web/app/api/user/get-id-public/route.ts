@@ -18,7 +18,7 @@ export async function GET(_request: NextRequest) {
           debug: {
             hasUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
             hasKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-            cookies: (await cookies().getAll()).map(c => c.name || 'unnamed')
+            cookies: (cookies().getAll()).map(c => c.name || 'unnamed')
           }
         },
         { status: 500 }
@@ -26,7 +26,7 @@ export async function GET(_request: NextRequest) {
     }
 
     // Get all cookies for debugging
-    const allCookies = await cookies().getAll();
+    const allCookies = cookies().getAll();
     const authCookies = allCookies.filter(c => c.name?.includes('auth') || c.name?.includes('supabase'));
 
     // Try to get user from session
@@ -115,7 +115,7 @@ export async function GET(_request: NextRequest) {
         error: 'Internal server error',
         debug: {
           message: error instanceof Error ? error instanceof Error ? error.message : "Unknown error" : 'Unknown error',
-          cookies: (await cookies()).getAll().map(c => c.name)
+          cookies: (cookies()).getAll().map(c => c.name)
         }
       },
       { status: 500 }
