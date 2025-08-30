@@ -479,8 +479,8 @@ export class RealTimeNewsService {
 
   async getNewsSources(): Promise<NewsSource[]> {
     try {
-      if (!this.supabase) { throw new Error('Supabase client not available'); }
-      const { data, error } = await this.supabase
+      const supabaseClient = await this.supabase;
+      const { data, error } = await supabaseClient
         .from('news_sources')
         .select('id, title, content, source, created_at')
         .eq('is_active', true as any)
@@ -497,8 +497,8 @@ export class RealTimeNewsService {
 
   async updateNewsSource(id: string, updates: Partial<NewsSource>): Promise<NewsSource | null> {
     try {
-      if (!this.supabase) { throw new Error('Supabase client not available'); }
-      const { data, error } = await this.supabase
+      const supabaseClient = await this.supabase;
+      const { data, error } = await supabaseClient
         .from('news_sources')
         .update(this.mapNewsSourceToDB(updates))
         .eq('id', id as any)

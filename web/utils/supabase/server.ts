@@ -323,7 +323,7 @@ const validateEnvironment = () => {
  * SSR-safe factory. No top-level import of supabase-js or ssr.
  * We dynamically import only at call time in Node.
  */
-export async function getSupabaseServerClient(): Promise<SupabaseClient<Database>> {
+export async function getSupabaseServerClient() {
   const env = validateEnvironment()
   const cookieStore = await cookies()
   const { createServerClient } = await import('@supabase/ssr') // dynamic!
@@ -334,11 +334,20 @@ export async function getSupabaseServerClient(): Promise<SupabaseClient<Database
     {
       cookies: {
         get: (name: string) => cookieStore.get(name)?.value,
-        set: (name: string, value: string, options: any) =>
-          // Next headers cookies are immutable at build; guard in RSC
-          cookieStore.set?.(name, value, options),
-        remove: (name: string, options: any) =>
-          cookieStore.delete?.(name, options),
+        set: (name: string, value: string, options: any) => {
+          try {
+            cookieStore.set(name, value, options)
+          } catch (error) {
+            // Ignore errors in RSC context
+          }
+        },
+        remove: (name: string, options: any) => {
+          try {
+            cookieStore.delete(name, options)
+          } catch (error) {
+            // Ignore errors in RSC context
+          }
+        },
       },
     },
   )
