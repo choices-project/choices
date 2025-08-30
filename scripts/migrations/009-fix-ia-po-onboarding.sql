@@ -16,3 +16,11 @@ CREATE INDEX IF NOT EXISTS idx_user_profiles_onboarding_ia ON user_profiles (onb
 -- Step 3: Update RLS policies if needed
 -- (RLS policies should already be in place for IA/PO system)
 
+
+
+
+
+
+
+
+
