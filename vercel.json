@@ -1,11 +1,11 @@
 {
   "version": 2,
   "framework": "nextjs",
-  "buildCommand": "npm run build",
+  "buildCommand": "cd web && npm install && npm run build",
   "installCommand": "npm install",
   "outputDirectory": "web/.next",
   "functions": {
-    "app/api/**/*.ts": {
+    "web/app/api/**/*.ts": {
       "maxDuration": 30
     }
   },
@@ -157,7 +157,7 @@
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "/app/api/$1"
+      "destination": "/web/app/api/$1"
     }
   ],
   "redirects": [
