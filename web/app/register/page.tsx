@@ -1,115 +1,53 @@
-import { redirect } from 'next/navigation'
-import { getSupabaseServerClient } from '@/utils/supabase/server'
-import jwt from 'jsonwebtoken'
-import { v4 as uuidv4 } from 'uuid'
-import { logger } from '@/lib/logger'
+'use client'
 
-const supabase = getSupabaseServerClient()
-
-async function register(formData: FormData) {
-  'use server'
-  
-  try {
-    const username = String(formData.get('username') ?? '')
-    const email = String(formData.get('email') ?? '')
-    
-    // Validation
-    if (!username || username.trim().length === 0) {
-      throw new Error('Username is required')
-    }
-    if (username.length > 20) {
-      throw new Error('Username must be 20 characters or less')
-    }
-    if (!/^[a-zA-Z0-9_-]+$/.test(username)) {
-      throw new Error('Username can only contain letters, numbers, underscores, and hyphens')
-    }
-
-    // Check for existing user
-    if (!supabase) {
-      throw new Error('Supabase client not available')
-    }
-    
-    const supabaseClient = await supabase;
-    const { data: existingUser } = await supabaseClient
-      .from('ia_users')
-      .select('stable_id')
-      .eq('username', username.toLowerCase() as any)
-      .single()
-
-    if (existingUser) {
-      throw new Error('Username already taken')
-    }
-
-    // Create user
-    const stableId = uuidv4()
-    
-    const { error: iaUserError } = await supabaseClient
-      .from('ia_users')
-      .insert({
-        stable_id: stableId,
-        email: email?.toLowerCase() || `${username.toLowerCase()}@choices-platform.vercel.app`,
-        password_hash: null,
-        verification_tier: 'T0',
-        is_active: true,
-        two_factor_enabled: false,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      } as any)
-
-    if (iaUserError) {
-      logger.error('Failed to create IA user', iaUserError)
-      throw new Error('Failed to create user')
-    }
-
-    const { error: profileError } = await supabaseClient
-      .from('user_profiles')
-      .insert({
-        user_id: stableId,
-        username: username.toLowerCase(),
-        email: email?.toLowerCase() || null,
-        onboarding_completed: false,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      } as any)
-
-    if (profileError) {
-      logger.error('Failed to create user profile', profileError)
-      throw new Error('Failed to create user profile')
-    }
-
-    // Create session token
-    const sessionToken = jwt.sign(
-      {
-        userId: stableId,
-        stableId,
-        username: username.toLowerCase(),
-        iat: Math.floor(Date.now() / 1000),
-        exp: Math.floor(Date.now() / 1000) + (7 * 24 * 60 * 60)
-      },
-      process.env.JWT_SECRET!
-    )
-
-    // Set session cookie using cookies() API
-    const { cookies } = await import('next/headers')
-    cookies().set('choices_session', sessionToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      path: '/',
-      sameSite: 'lax',
-      maxAge: 7 * 24 * 60 * 60 // 7 days
-    })
-
-    logger.info('User registered successfully', { username: username.toLowerCase(), stableId })
-    
-    // Framework handles the redirect properly
-    redirect('/onboarding')
-  } catch (error) {
-    logger.error('Registration error', error instanceof Error ? error : new Error('Unknown error'))
-    throw error
-  }
-}
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 
 export default function RegisterPage() {
+  const [formData, setFormData] = useState({
+    username: '',
+    email: ''
+  })
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+  const router = useRouter()
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+    setError('')
+
+    try {
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Registration failed')
+      }
+
+      // Registration successful, redirect to onboarding
+      router.push('/onboarding')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Registration failed')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData(prev => ({
+      ...prev,
+      [e.target.name]: e.target.value
+    }))
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
       <div className="max-w-md w-full space-y-8">
@@ -122,7 +60,13 @@ export default function RegisterPage() {
           </p>
         </div>
 
-        <form action={register} noValidate className="mt-8 space-y-6">
+        <form onSubmit={handleSubmit} noValidate className="mt-8 space-y-6">
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md">
+              {error}
+            </div>
+          )}
+
           <div className="space-y-4">
             <div>
               <label htmlFor="username" className="block text-sm font-medium text-gray-700">
@@ -134,6 +78,8 @@ export default function RegisterPage() {
                 type="text"
                 required
                 maxLength={20}
+                value={formData.username}
+                onChange={handleChange}
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                 placeholder="Choose a username"
               />
@@ -148,6 +94,8 @@ export default function RegisterPage() {
                 name="email"
                 type="email"
                 required
+                value={formData.email}
+                onChange={handleChange}
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                 placeholder="Enter your email"
               />
@@ -157,9 +105,10 @@ export default function RegisterPage() {
           <div>
             <button
               type="submit"
+              disabled={loading}
               className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Create account
+              {loading ? 'Creating account...' : 'Create account'}
             </button>
           </div>
 

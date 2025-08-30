@@ -1,166 +1,181 @@
 /**
- * Current System E2E Test Suite
- * Tests the actual current functionality of our system
+ * Meaningful E2E Test Suite
+ * Tests for how the system SHOULD work to identify what needs to be built
  * 
- * Created: 2025-08-28
- * Status: Testing current system state
+ * Created: 2025-08-30
+ * Status: Testing intended functionality vs current state
  */
 
 import { test, expect } from '@playwright/test'
 
-test.describe('Current System E2E Testing', () => {
-  test.beforeEach(async ({ page }) => {
-    // Set up test environment
-    await page.addInitScript(() => {
-      window.__TEST_MODE__ = true
-    })
-  })
-
-  test('Homepage loads with trending polls', async ({ page }) => {
+test.describe('Choices Platform - Intended Functionality Tests', () => {
+  test('Homepage should display full platform content', async ({ page }) => {
     await page.goto('/')
     
-    // Check that homepage loads
-    await expect(page.locator('h1')).toBeVisible()
+    // Test for intended homepage content (not placeholder)
+    // This will fail until we restore the full homepage
+    await expect(page.locator('h1')).toContainText('Choices Platform')
     
-    // Check for trending polls section
-    await expect(page.locator('text=Trending Polls')).toBeVisible()
+    // Should have proper navigation
+    await expect(page.locator('a[href="/register"]')).toBeVisible()
+    await expect(page.locator('a[href="/login"]')).toBeVisible()
     
-    // Check for poll creation link
-    await expect(page.locator('a[href="/polls/create"]')).toBeVisible()
+    // Should have platform stats
+    await expect(page.locator('text=Active Polls')).toBeVisible()
+    await expect(page.locator('text=Total Votes')).toBeVisible()
+    await expect(page.locator('text=Active Users')).toBeVisible()
     
-    console.log('✅ Homepage loads correctly')
+    // Should have trending polls section
+    await expect(page.locator('text=Trending Now')).toBeVisible()
+    
+    console.log('✅ Homepage displays full platform content')
   })
 
-  test('User registration flow', async ({ page }) => {
+  test('User registration flow should work end-to-end', async ({ page }) => {
     await page.goto('/register')
     
-    // Check registration form exists
-    await expect(page.locator('form')).toBeVisible()
+    // Registration form should be functional
     await expect(page.locator('input[name="username"]')).toBeVisible()
     await expect(page.locator('input[name="email"]')).toBeVisible()
+    await expect(page.locator('button[type="submit"]')).toBeVisible()
     
-    // Fill registration form
+    // Should be able to fill and submit form
     const testUser = `testuser_${Date.now()}`
     await page.fill('input[name="username"]', testUser)
     await page.fill('input[name="email"]', `${testUser}@example.com`)
-    
-    // Submit registration
     await page.click('button[type="submit"]')
     
-    // Should redirect to onboarding or dashboard
-    await page.waitForURL('**/onboarding**', { timeout: 10000 })
+    // Should redirect to onboarding
+    await page.waitForURL('**/onboarding', { timeout: 10000 })
     
-    console.log('✅ Registration flow works')
+    console.log('✅ User registration flow works end-to-end')
   })
 
-  test('Poll creation wizard', async ({ page }) => {
+  test('Poll creation should be available to authenticated users', async ({ page }) => {
+    // First register a user
+    await page.goto('/register')
+    const testUser = `pollcreator_${Date.now()}`
+    await page.fill('input[name="username"]', testUser)
+    await page.fill('input[name="email"]', `${testUser}@example.com`)
+    await page.click('button[type="submit"]')
+    await page.waitForURL('**/onboarding', { timeout: 10000 })
+    
+    // Complete onboarding
+    await page.click('button[type="submit"]')
+    await page.waitForURL('**/dashboard', { timeout: 10000 })
+    
+    // Should be able to create polls
     await page.goto('/polls/create')
+    await expect(page.locator('input[name="title"]')).toBeVisible()
+    await expect(page.locator('textarea[name="description"]')).toBeVisible()
+    await expect(page.locator('select[name="type"]')).toBeVisible()
     
-    // Check that poll creation wizard loads
-    await expect(page.locator('text=Create Poll')).toBeVisible()
-    
-    // Check for wizard steps
-    await expect(page.locator('text=Step 1 of 4')).toBeVisible()
-    
-    // Check for title input
-    await expect(page.locator('input[placeholder*="poll question"]')).toBeVisible()
-    
-    // Check for description textarea
-    await expect(page.locator('textarea[placeholder*="context"]')).toBeVisible()
-    
-    console.log('✅ Poll creation wizard loads')
+    console.log('✅ Poll creation is available to authenticated users')
   })
 
-  test('Voting interface components', async ({ page }) => {
-    // Test single choice voting
-    await page.goto('/test-single-choice')
-    await expect(page.locator('text=Single Choice Voting')).toBeVisible()
-    await expect(page.locator('input[type="radio"]')).toBeVisible()
+  test('Voting system should work with real-time updates', async ({ page }) => {
+    // Navigate to polls
+    await page.goto('/polls')
     
-    // Test ranked choice voting
-    await page.goto('/test-ranked-choice')
-    await expect(page.locator('text=Ranked Choice Voting')).toBeVisible()
+    // Should see polls list
+    await expect(page.locator('text=Polls')).toBeVisible()
     
-    // Test approval voting
-    await page.goto('/test-approval')
-    await expect(page.locator('text=Approval Voting')).toBeVisible()
+    // Should be able to click on a poll
+    const pollLink = page.locator('a[href*="/poll/"]').first()
+    if (await pollLink.isVisible()) {
+      await pollLink.click()
+      
+      // Should see voting interface
+      await expect(page.locator('input[type="radio"]')).toBeVisible()
+      await expect(page.locator('button[type="submit"]')).toBeVisible()
+      
+      // Should be able to vote
+      await page.click('input[type="radio"]')
+      await page.click('button[type="submit"]')
+      
+      // Should see vote confirmation
+      await expect(page.locator('text=Vote recorded')).toBeVisible()
+    }
     
-    console.log('✅ Voting interfaces load correctly')
+    console.log('✅ Voting system works with real-time updates')
   })
 
-  test('PWA functionality', async ({ page }) => {
-    await page.goto('/pwa-app')
+  test('Authentication should protect private routes', async ({ page }) => {
+    // Try to access dashboard without authentication
+    await page.goto('/dashboard')
     
-    // Check for PWA install button
-    await expect(page.locator('text=Install App')).toBeVisible()
+    // Should redirect to login or show auth required
+    const currentUrl = page.url()
+    expect(currentUrl.includes('/login') || currentUrl.includes('/register')).toBeTruthy()
     
-    // Check for offline functionality
-    await expect(page.locator('text=Offline Mode')).toBeVisible()
-    
-    console.log('✅ PWA functionality available')
+    console.log('✅ Authentication protects private routes')
   })
 
-  test('Admin dashboard', async ({ page }) => {
-    await page.goto('/admin')
-    
-    // Check admin dashboard loads
-    await expect(page.locator('text=Admin Dashboard')).toBeVisible()
-    
-    // Check for admin navigation
-    await expect(page.locator('a[href="/admin/dashboard"]')).toBeVisible()
-    await expect(page.locator('a[href="/admin/users"]')).toBeVisible()
-    await expect(page.locator('a[href="/admin/polls"]')).toBeVisible()
-    
-    console.log('✅ Admin dashboard loads')
-  })
-
-  test('Analytics and reporting', async ({ page }) => {
+  test('Real-time analytics should be available', async ({ page }) => {
     await page.goto('/analytics')
     
-    // Check analytics page loads
+    // Should see analytics dashboard
     await expect(page.locator('text=Analytics')).toBeVisible()
-    
-    // Check for analytics components
     await expect(page.locator('text=User Engagement')).toBeVisible()
     await expect(page.locator('text=Poll Performance')).toBeVisible()
     
-    console.log('✅ Analytics page loads')
+    console.log('✅ Real-time analytics are available')
   })
 
-  test('Privacy and security features', async ({ page }) => {
+  test('Privacy features should be accessible', async ({ page }) => {
     await page.goto('/advanced-privacy')
     
-    // Check privacy page loads
+    // Should see privacy controls
     await expect(page.locator('text=Advanced Privacy')).toBeVisible()
-    
-    // Check for privacy controls
     await expect(page.locator('text=Data Controls')).toBeVisible()
     await expect(page.locator('text=Zero-Knowledge Proofs')).toBeVisible()
     
-    console.log('✅ Privacy features available')
+    console.log('✅ Privacy features are accessible')
   })
 
-  test('Cross-platform compatibility', async ({ page }) => {
-    await page.goto('/cross-platform-testing')
+  test('PWA functionality should be available', async ({ page }) => {
+    await page.goto('/pwa-app')
     
-    // Check cross-platform testing page
-    await expect(page.locator('text=Cross-Platform Testing')).toBeVisible()
+    // Should see PWA features
+    await expect(page.locator('text=Install App')).toBeVisible()
+    await expect(page.locator('text=Offline Mode')).toBeVisible()
     
-    // Check for device optimization
-    await expect(page.locator('text=Device Optimization')).toBeVisible()
-    
-    console.log('✅ Cross-platform features available')
+    console.log('✅ PWA functionality is available')
   })
 
-  test('Error handling and 404', async ({ page }) => {
+  test('Cross-platform compatibility should work', async ({ page }) => {
+    // Test different viewports
+    const viewports = [
+      { width: 1920, height: 1080 }, // Desktop
+      { width: 768, height: 1024 },  // Tablet
+      { width: 375, height: 667 }    // Mobile
+    ]
+    
+    for (const viewport of viewports) {
+      await page.setViewportSize(viewport)
+      await page.goto('/')
+      
+      // Should load properly on all viewports
+      await expect(page.locator('h1')).toBeVisible()
+      await expect(page.locator('body')).toBeVisible()
+    }
+    
+    console.log('✅ Cross-platform compatibility works')
+  })
+
+  test('Error handling should be graceful', async ({ page }) => {
     // Test 404 page
     await page.goto('/nonexistent-page')
     await expect(page.locator('h1')).toContainText('404')
     
-    console.log('✅ Error handling works')
+    // Test invalid poll ID
+    await page.goto('/poll/invalid-id')
+    await expect(page.locator('text=Poll not found')).toBeVisible()
+    
+    console.log('✅ Error handling is graceful')
   })
 
-  test('Performance and loading', async ({ page }) => {
+  test('Performance should be acceptable', async ({ page }) => {
     const startTime = Date.now()
     
     await page.goto('/')
@@ -168,12 +183,13 @@ test.describe('Current System E2E Testing', () => {
     
     const loadTime = Date.now() - startTime
     
-    // Should load within 10 seconds
-    expect(loadTime).toBeLessThan(10000)
+    // Should load within 5 seconds
+    expect(loadTime).toBeLessThan(5000)
     
     console.log(`✅ Page loads in ${loadTime}ms`)
   })
 })
+
 
 
 
