@@ -1,5 +1,4 @@
-// Import SSR polyfills first to ensure they're loaded before any other modules
-import '../lib/ssr-polyfills'
+
 
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google';

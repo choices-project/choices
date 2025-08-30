@@ -8,154 +8,80 @@
  * without importing complex Node.js modules that cause build issues.
  */
 
-// Aggressive polyfill setup - run immediately
-// Polyfill for 'self' global - this is the main fix for the SSR error
-if (typeof globalThis.self === 'undefined') {
-  (globalThis as any).self = globalThis
-}
+// Aggressive SSR polyfills - run immediately
+// This file must be imported as early as possible in the application
 
-// Also ensure self is available on global for older modules
-if (typeof (global as any).self === 'undefined') {
-  (global as any).self = globalThis
-}
-
-// Only run additional polyfills in server environment
+// Ensure we're in a Node.js environment
 if (typeof window === 'undefined') {
-
-  // Polyfill for 'window' global
-  if (typeof globalThis.window === 'undefined') {
-    (globalThis as any).window = globalThis
+  // Define self as globalThis if it doesn't exist
+  if (typeof (globalThis as any).self === 'undefined') {
+    Object.defineProperty(globalThis, 'self', {
+      value: globalThis,
+      configurable: true,
+      enumerable: false,
+      writable: true,
+    });
   }
 
-  // Minimal document polyfill
-  if (typeof globalThis.document === 'undefined') {
-    (globalThis as any).document = {
-      createElement: () => ({}),
-      getElementById: () => null,
-      querySelector: () => null,
-      querySelectorAll: () => [],
-      addEventListener: () => {},
-      removeEventListener: () => {},
-      cookie: '',
-      location: {
-        href: '',
-        origin: '',
-        protocol: '',
-        host: '',
-        hostname: '',
-        port: '',
-        pathname: '',
-        search: '',
-        hash: '',
-        reload: () => {},
-        replace: () => {},
-        assign: () => {}
-      }
-    }
+  // Also ensure self is available on global for older modules
+  if (typeof (global as any).self === 'undefined') {
+    (global as any).self = globalThis;
   }
 
-  // Minimal navigator polyfill
-  if (typeof globalThis.navigator === 'undefined') {
-    (globalThis as any).navigator = {
-      userAgent: 'Node.js',
-      language: 'en-US',
-      languages: ['en-US'],
-      cookieEnabled: true,
-      onLine: true,
-      platform: 'Node.js',
-      vendor: 'Node.js'
-    }
+  // Define other browser globals that might be referenced
+  if (typeof (globalThis as any).window === 'undefined') {
+    Object.defineProperty(globalThis, 'window', {
+      value: undefined,
+      configurable: true,
+      enumerable: false,
+      writable: false,
+    });
   }
 
-  // Minimal location polyfill
-  if (typeof globalThis.location === 'undefined') {
-    (globalThis as any).location = {
-      href: '',
-      origin: '',
-      protocol: '',
-      host: '',
-      hostname: '',
-      port: '',
-      pathname: '',
-      search: '',
-      hash: '',
-      reload: () => {},
-      replace: () => {},
-      assign: () => {}
-    }
+  if (typeof (globalThis as any).document === 'undefined') {
+    Object.defineProperty(globalThis, 'document', {
+      value: undefined,
+      configurable: true,
+      enumerable: false,
+      writable: false,
+    });
   }
 
-  // Minimal localStorage polyfill
-  if (typeof globalThis.localStorage === 'undefined') {
+  // Define localStorage and sessionStorage as no-op objects
+  if (typeof (globalThis as any).localStorage === 'undefined') {
     (globalThis as any).localStorage = {
       getItem: () => null,
       setItem: () => {},
       removeItem: () => {},
       clear: () => {},
       key: () => null,
-      length: 0
-    }
+      length: 0,
+    };
   }
 
-  // Minimal sessionStorage polyfill
-  if (typeof globalThis.sessionStorage === 'undefined') {
+  if (typeof (globalThis as any).sessionStorage === 'undefined') {
     (globalThis as any).sessionStorage = {
       getItem: () => null,
       setItem: () => {},
       removeItem: () => {},
       clear: () => {},
       key: () => null,
-      length: 0
-    }
+      length: 0,
+    };
   }
 
-  // Minimal indexedDB polyfill
-  if (typeof globalThis.indexedDB === 'undefined') {
-    (globalThis as any).indexedDB = {
-      open: () => ({
-        result: null,
-        error: null,
-        onsuccess: null,
-        onerror: null,
-        onupgradeneeded: null
-      }),
-      deleteDatabase: () => ({
-        result: null,
-        error: null,
-        onsuccess: null,
-        onerror: null,
-        onblocked: null
-      })
-    }
+  // Define other browser APIs that might be referenced
+  if (typeof (globalThis as any).indexedDB === 'undefined') {
+    (globalThis as any).indexedDB = undefined;
   }
 
-  // Minimal crypto polyfill (if not already available)
-  if (typeof globalThis.crypto === 'undefined') {
-    ;(globalThis as any).crypto = {
-      getRandomValues: (array: any) => {
-        for (let i = 0; i < array.length; i++) {
-          array[i] = Math.floor(Math.random() * 256)
-        }
-        return array
-      },
-      subtle: {
-        generateKey: () => Promise.resolve({}),
-        sign: () => Promise.resolve(new ArrayBuffer(0)),
-        verify: () => Promise.resolve(true),
-        encrypt: () => Promise.resolve(new ArrayBuffer(0)),
-        decrypt: () => Promise.resolve(new ArrayBuffer(0)),
-        digest: () => Promise.resolve(new ArrayBuffer(0)),
-        importKey: () => Promise.resolve({}),
-        exportKey: () => Promise.resolve(new ArrayBuffer(0))
-      }
-    }
+  if (typeof (globalThis as any).crypto === 'undefined') {
+    (globalThis as any).crypto = require('crypto').webcrypto;
   }
 
-  // Minimal performance polyfill
-  if (typeof globalThis.performance === 'undefined') {
-    ;(globalThis as any).performance = {
+  if (typeof (globalThis as any).performance === 'undefined') {
+    (globalThis as any).performance = {
       now: () => Date.now(),
-      timeOrigin: Date.now(),
       mark: () => {},
       measure: () => {},
       getEntries: () => [],
@@ -163,145 +89,88 @@ if (typeof window === 'undefined') {
       getEntriesByType: () => [],
       clearMarks: () => {},
       clearMeasures: () => {},
-      clearResourceTimings: () => {}
-    }
+      clearResourceTimings: () => {},
+    };
   }
 
-  // Minimal queueMicrotask polyfill
-  if (typeof globalThis.queueMicrotask === 'undefined') {
-    ;(globalThis as any).queueMicrotask = (callback: () => void) => {
-      Promise.resolve().then(callback)
-    }
+  if (typeof (globalThis as any).queueMicrotask === 'undefined') {
+    (globalThis as any).queueMicrotask = (fn: () => void) => {
+      Promise.resolve().then(fn);
+    };
   }
 
-  // Minimal requestAnimationFrame polyfill
-  if (typeof globalThis.requestAnimationFrame === 'undefined') {
-    ;(globalThis as any).requestAnimationFrame = (callback: (timestamp: number) => void) => {
-      return setTimeout(() => callback(Date.now()), 16)
-    }
+  if (typeof (globalThis as any).requestAnimationFrame === 'undefined') {
+    (globalThis as any).requestAnimationFrame = (fn: () => void) => {
+      return setTimeout(fn, 16);
+    };
   }
 
-  // Minimal cancelAnimationFrame polyfill
-  if (typeof globalThis.cancelAnimationFrame === 'undefined') {
-    ;(globalThis as any).cancelAnimationFrame = (id: number) => {
-      clearTimeout(id)
-    }
+  if (typeof (globalThis as any).cancelAnimationFrame === 'undefined') {
+    (globalThis as any).cancelAnimationFrame = (id: number) => {
+      clearTimeout(id);
+    };
   }
 
-  // Minimal ResizeObserver polyfill
-  if (typeof globalThis.ResizeObserver === 'undefined') {
-    ;(globalThis as any).ResizeObserver = class ResizeObserver {
-      constructor(callback: any) {
-        this.callback = callback
-      }
+  // Define browser observer APIs
+  if (typeof (globalThis as any).ResizeObserver === 'undefined') {
+    (globalThis as any).ResizeObserver = class ResizeObserver {
+      constructor() {}
       observe() {}
       unobserve() {}
       disconnect() {}
-      private callback: any
-    }
+    };
   }
 
-  // Minimal IntersectionObserver polyfill
-  if (typeof globalThis.IntersectionObserver === 'undefined') {
-    ;(globalThis as any).IntersectionObserver = class IntersectionObserver {
-      constructor(callback: any) {
-        this.callback = callback
-      }
+  if (typeof (globalThis as any).IntersectionObserver === 'undefined') {
+    (globalThis as any).IntersectionObserver = class IntersectionObserver {
+      constructor() {}
       observe() {}
       unobserve() {}
       disconnect() {}
-      private callback: any
-    }
+    };
   }
 
-  // Minimal MutationObserver polyfill
-  if (typeof globalThis.MutationObserver === 'undefined') {
-    ;(globalThis as any).MutationObserver = class MutationObserver {
-      constructor(callback: any) {
-        this.callback = callback
-      }
+  if (typeof (globalThis as any).MutationObserver === 'undefined') {
+    (globalThis as any).MutationObserver = class MutationObserver {
+      constructor() {}
       observe() {}
       disconnect() {}
-      takeRecords() { return [] }
-      private callback: any
-    }
+      takeRecords() { return []; }
+    };
   }
 
-  // Minimal EventTarget polyfill
-  if (typeof globalThis.EventTarget === 'undefined') {
-    ;(globalThis as any).EventTarget = class EventTarget {
-      constructor() {
-        this.listeners = new Map()
-      }
-      addEventListener(type: string, listener: any) {
-        if (!this.listeners.has(type)) {
-          this.listeners.set(type, [])
-        }
-        this.listeners.get(type)!.push(listener)
-      }
-      removeEventListener(type: string, listener: any) {
-        const listeners = this.listeners.get(type)
-        if (listeners) {
-          const index = listeners.indexOf(listener)
-          if (index > -1) {
-            listeners.splice(index, 1)
-          }
-        }
-      }
-      dispatchEvent(event: any) {
-        const listeners = this.listeners.get(event.type)
-        if (listeners) {
-          listeners.forEach((listener: any) => listener(event))
-        }
-        return true
-      }
-      private listeners: Map<string, any[]>
-    }
+  // Define EventTarget and Event classes
+  if (typeof (globalThis as any).EventTarget === 'undefined') {
+    (globalThis as any).EventTarget = class EventTarget {
+      constructor() {}
+      addEventListener() {}
+      removeEventListener() {}
+      dispatchEvent() { return true; }
+    };
   }
 
-  // Minimal Event polyfill
-  if (typeof globalThis.Event === 'undefined') {
-    ;(globalThis as any).Event = class Event {
-      constructor(type: string, options?: any) {
-        this.type = type
-        this.target = null
-        this.currentTarget = null
-        this.eventPhase = 0
-        this.bubbles = options?.bubbles || false
-        this.cancelable = options?.cancelable || false
-        this.defaultPrevented = false
-        this.timeStamp = Date.now()
+  if (typeof (globalThis as any).Event === 'undefined') {
+    (globalThis as any).Event = class Event {
+      constructor(type: string) {
+        this.type = type;
       }
-      type: string
-      target: any
-      currentTarget: any
-      eventPhase: number
-      bubbles: boolean
-      cancelable: boolean
-      defaultPrevented: boolean
-      timeStamp: number
-      preventDefault() {
-        if (this.cancelable) {
-          this.defaultPrevented = true
-        }
-      }
+      type: string;
+      target: any = null;
+      currentTarget: any = null;
+      preventDefault() {}
       stopPropagation() {}
-      stopImmediatePropagation() {}
-    }
+    };
   }
 
-  // Minimal CustomEvent polyfill
-  if (typeof globalThis.CustomEvent === 'undefined') {
-    ;(globalThis as any).CustomEvent = class CustomEvent extends (globalThis as any).Event {
-      constructor(type: string, options?: any) {
-        super(type, options)
-        this.detail = options?.detail
+  if (typeof (globalThis as any).CustomEvent === 'undefined') {
+    (globalThis as any).CustomEvent = class CustomEvent extends (globalThis as any).Event {
+      constructor(type: string, detail?: any) {
+        super(type);
+        this.detail = detail;
       }
-      detail: any
-    }
+      detail: any;
+    };
   }
-
-  // SSR polyfills applied successfully
 }
 
 export {}

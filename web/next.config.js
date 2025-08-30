@@ -29,26 +29,19 @@ const withPWA = require('next-pwa')({
   buildExcludes: [/middleware-manifest\.json$/],
 })
 
+// @ts-check
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Performance optimizations
   experimental: {
-    // Make sure supabase packages are EXTERNAL in RSC/server,
-    // so Node resolves the proper entry (not the browser one).
+    // Next 14 way to opt packages out of RSC bundling (Node will require them at runtime)
     serverComponentsExternalPackages: [
-      '@prisma/client',
       '@supabase/ssr',
-      '@supabase/supabase-js',
-      '@supabase/postgrest-js',
       '@supabase/realtime-js',
-      '@supabase/storage-js',
-      '@supabase/functions-js',
-      '@supabase/auth-js',
+      // ⚠️ DO NOT list '@supabase/supabase-js' here; keep that strictly client-side.
     ],
     // Enable CSS optimization
     optimizeCss: true,
-    // DO NOT list supabase packages here.
-    // If you're currently using optimizePackageImports, exclude them:
     optimizePackageImports: [
       'lucide-react',
       'date-fns',
@@ -56,8 +49,7 @@ const nextConfig = {
       'react-hook-form',
       'zod',
       'clsx',
-      'tailwind-merge'
-      // intentionally NOT including any @supabase/*
+      'tailwind-merge',
     ],
     // Enable turbo for faster builds
     turbo: {
@@ -86,32 +78,22 @@ const nextConfig = {
     ]
   },
 
-  // Webpack optimizations
-  webpack: (config, { dev, isServer }) => {
-    // Ensure Node conditions win over browser in server build
+  webpack: (config, { isServer, webpack }) => {
     if (isServer) {
-      // Be explicit about condition priority:
-      config.resolve.conditionNames = [
-        'node',
-        'import',
-        'require',
-        'default',
-        'module',
-      ]
-      // And keep "browser" out of server resolution:
-      config.resolve.mainFields = ['module', 'main']
-      
-      // Defensive: don't fall back to browser polyfills for server build
-      config.resolve.fallback = { 
-        ...config.resolve.fallback, 
-        crypto: false, 
-        stream: false, 
-        buffer: false 
-      }
+      // ⛔️ Remove these lines if present in your current config:
+      // config.resolve.conditionNames = [...]
+      // config.resolve.mainFields = [...]
+      // config.resolve.fallback = { crypto:false, stream:false, buffer:false, ... }
+
+      // If you want a *temporary* guard, you can define `self` at compile time:
+      // (safer than patching the output with a custom plugin)
+      config.plugins.push(new webpack.DefinePlugin({ self: 'globalThis' }));
     }
 
+    // ⛔️ Remove any custom plugin that rewrites emitted bundles (e.g., webpack-self-fix.js).
+
     // Bundle analyzer (only in development and when explicitly requested)
-    if (dev && !isServer && process.env.ANALYZE === 'true') {
+    if (!isServer && process.env.ANALYZE === 'true') {
       try {
         const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer')
         config.plugins.push(
@@ -126,62 +108,10 @@ const nextConfig = {
       }
     }
 
-    // Simplified optimization for development
-    if (!dev) {
-      config.optimization = {
-        ...config.optimization,
-        splitChunks: {
-          chunks: 'all',
-          cacheGroups: {
-            // Vendor chunks
-            vendor: {
-              test: /[\\/]node_modules[\\/]/,
-              name: 'vendors',
-              chunks: 'all',
-              priority: 10,
-              enforce: true
-            },
-            // Supabase specific chunk
-            supabase: {
-              test: /[\\/]node_modules[\\/]@supabase[\\/]/,
-              name: 'supabase',
-              chunks: 'all',
-              priority: 20,
-              enforce: true
-            },
-            // React specific chunk
-            react: {
-              test: /[\\/]node_modules[\\/](react|react-dom)[\\/]/,
-              name: 'react',
-              chunks: 'all',
-              priority: 30,
-              enforce: true
-            },
-            // Common chunks
-            common: {
-              name: 'common',
-              minChunks: 2,
-              chunks: 'all',
-              priority: 5,
-              reuseExistingChunk: true
-            }
-          }
-        }
-      }
-    }
-
     // Module resolution optimizations
     config.resolve.alias = {
       ...config.resolve.alias,
       '@': require('path').resolve(__dirname, './')
-    }
-
-    // Performance hints
-    config.performance = {
-      ...config.performance,
-      hints: dev ? false : 'warning',
-      maxEntrypointSize: 512000,
-      maxAssetSize: 512000
     }
 
     return config

@@ -1,4 +1,4 @@
-import 'server-only'
+import 'server-only';                  // build-time guard
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
 
