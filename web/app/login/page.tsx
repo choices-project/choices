@@ -8,7 +8,7 @@ import { Eye, EyeOff, User, Lock, Fingerprint, CheckCircle2, AlertCircle } from 
 import { clientSession } from '@/lib/client-session'
 
 export default function LoginPage() {
-  const [username, setUsername] = useState('')
+  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -54,8 +54,8 @@ export default function LoginPage() {
     setError(null)
     setMessage(null)
 
-    if (!username.trim()) {
-      setError('Username is required')
+    if (!email.trim()) {
+      setError('Email is required')
       setLoading(false)
       return
     }
@@ -63,7 +63,7 @@ export default function LoginPage() {
     try {
       setMessage('Signing you in...')
       
-      const result = await clientSession.login(username.toLowerCase(), password || '')
+      const result = await clientSession.login(email.toLowerCase(), password || '')
 
       if (result.success) {
         setMessage('🎉 Login successful! Redirecting...')
@@ -93,11 +93,34 @@ export default function LoginPage() {
     try {
       setMessage('Authenticating with biometric...')
       
+      // Use WebAuthn to get available credentials
+      const credential = await navigator.credentials.get({
+        publicKey: {
+          challenge: new Uint8Array(32), // Simple challenge for now
+          rpId: window.location.hostname,
+          timeout: 60000,
+          userVerification: 'preferred',
+          allowCredentials: [] // Empty array means "any available credential"
+        }
+      }) as PublicKeyCredential
+
+      if (!credential) {
+        setError('No biometric credentials found. Please set up biometric authentication first.')
+        return
+      }
+
+      // Send credential to server for verification
       const response = await fetch('/api/auth/login-biometric', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-        }
+        },
+        body: JSON.stringify({
+          credentialId: credential.id,
+          authenticatorData: Array.from(new Uint8Array((credential.response as AuthenticatorAssertionResponse).authenticatorData)),
+          clientDataJSON: Array.from(new Uint8Array((credential.response as AuthenticatorAssertionResponse).clientDataJSON)),
+          signature: Array.from(new Uint8Array((credential.response as AuthenticatorAssertionResponse).signature))
+        })
       })
 
       const data = await response.json()
@@ -158,19 +181,19 @@ export default function LoginPage() {
 
           <div className="space-y-4">
             <div>
-              <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">
-                Username
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                Email
               </label>
               <div className="relative">
                 <input
-                  type="text"
-                  id="username"
-                  name="username"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value.toLowerCase())}
+                  type="email"
+                  id="email"
+                  name="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value.toLowerCase())}
                   required
                   className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="yourusername"
+                  placeholder="your@email.com"
                 />
                 <User className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
               </div>
@@ -219,22 +242,34 @@ export default function LoginPage() {
                 </div>
               </div>
 
-              <button
-                type="button"
-                onClick={handleBiometricLogin}
-                disabled={loading}
-                className="w-full flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <Fingerprint className="h-5 w-5 mr-2 text-blue-600" />
-                Sign in with biometric
-              </button>
+              <div className="space-y-2">
+                <button
+                  type="button"
+                  onClick={handleBiometricLogin}
+                  disabled={loading}
+                  className="w-full flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <Fingerprint className="h-5 w-5 mr-2 text-blue-600" />
+                  Sign in with biometric (email required)
+                </button>
+                
+                <button
+                  type="button"
+                  onClick={handleBiometricLogin}
+                  disabled={loading}
+                  className="w-full flex items-center justify-center px-4 py-2 border border-green-300 rounded-md shadow-sm bg-green-50 text-sm font-medium text-green-700 hover:bg-green-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <Fingerprint className="h-5 w-5 mr-2 text-green-600" />
+                  🔐 Biometric Only (no email needed)
+                </button>
+              </div>
             </div>
           )}
 
           <button
             type="submit"
             className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-150 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed"
-            disabled={loading || !username}
+            disabled={loading || !email}
           >
             {loading ? 'Signing In...' : 'Sign In'}
           </button>
@@ -248,7 +283,7 @@ export default function LoginPage() {
             </Link>
           </p>
           <p className="text-xs text-gray-500">
-            Forgot your username? Contact support for assistance.
+            Forgot your email? Use biometric-only authentication or contact support for assistance.
           </p>
         </div>
       </div>
