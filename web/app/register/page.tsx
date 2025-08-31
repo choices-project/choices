@@ -76,9 +76,9 @@ export default function RegisterPage() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
-          <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
+          <h1 className="mt-6 text-4xl font-extrabold text-gray-900">
             Create your account
-          </h2>
+          </h1>
           <p className="mt-2 text-sm text-gray-600">
             Join Choices and start making better decisions
           </p>

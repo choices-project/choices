@@ -4,6 +4,7 @@ import { getSupabaseServerClient } from '@/utils/supabase/server'
 import { devLog } from '@/lib/logger'
 import { getCurrentUser } from '@/lib/auth-utils'
 import { HybridVotingService } from '@/lib/hybrid-voting-service'
+import { AnalyticsService } from '@/lib/services/AnalyticsService'
 import { 
   ValidationError, 
   AuthenticationError, 
@@ -78,6 +79,15 @@ export async function POST(
         throw new NotFoundError('Poll not found')
       }
       throw new Error(response.message)
+    }
+
+    // Record analytics for the vote
+    try {
+      const analyticsService = AnalyticsService.getInstance()
+      await analyticsService.recordPollAnalytics(user.userId, pollId)
+    } catch (analyticsError) {
+      devLog('Analytics recording failed for vote:', analyticsError)
+      // Don't fail the vote if analytics fails
     }
 
     return NextResponse.json({
