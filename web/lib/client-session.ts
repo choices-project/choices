@@ -82,7 +82,7 @@ class ClientSessionManager {
     return () => this.listeners.delete(listener)
   }
 
-  public async login(username: string, password: string): Promise<{ success: boolean; error?: string }> {
+  public async login(email: string, password: string): Promise<{ success: boolean; error?: string }> {
     try {
       const response = await fetch('/api/auth/login', {
         method: 'POST',
@@ -90,7 +90,7 @@ class ClientSessionManager {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({ email, password }),
       })
 
       const data = await response.json()
