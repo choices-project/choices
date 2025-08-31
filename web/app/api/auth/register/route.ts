@@ -2,7 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseServerClient } from '@/utils/supabase/server'
 import jwt from 'jsonwebtoken'
 import { v4 as uuidv4 } from 'uuid'
+import bcrypt from 'bcryptjs'
 import { logger } from '@/lib/logger'
+import { createClient } from '@supabase/supabase-js'
 
 export const dynamic = 'force-dynamic'
 
@@ -32,7 +34,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Get Supabase client
+    // Get Supabase client for regular operations
     const supabase = getSupabaseServerClient()
     if (!supabase) {
       return NextResponse.json(
@@ -43,11 +45,11 @@ export async function POST(request: NextRequest) {
     
     const supabaseClient = await supabase
 
-    // Check for existing user by email in ia_users table
+    // Check for existing user by email in user_profiles table
     if (email) {
       const { data: existingEmailUser } = await supabaseClient
-        .from('ia_users')
-        .select('stable_id')
+        .from('user_profiles')
+        .select('user_id')
         .eq('email', email.toLowerCase())
         .single()
 
@@ -73,37 +75,18 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Create user
-    const stableId = uuidv4()
+    // Create user with custom auth (no service role needed)
+    const userId = uuidv4()
+    const hashedPassword = await bcrypt.hash(password, 12)
     
-    const { error: iaUserError } = await supabaseClient
-      .from('ia_users')
-      .insert({
-        stable_id: stableId,
-        email: email?.toLowerCase() || `${username.toLowerCase()}@choices-platform.vercel.app`,
-        password_hash: null,
-        verification_tier: 'T0',
-        is_active: true,
-        two_factor_enabled: false,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      })
-
-    if (iaUserError) {
-      logger.error('Failed to create IA user', iaUserError)
-      return NextResponse.json(
-        { error: 'Failed to create user' },
-        { status: 500 }
-      )
-    }
-
+    // Create user profile directly
     const { error: profileError } = await supabaseClient
       .from('user_profiles')
       .insert({
-        user_id: stableId,
+        user_id: userId,
         username: username.toLowerCase(),
-        email: email?.toLowerCase() || null,
-        onboarding_completed: false,
+        email: email?.toLowerCase() || `${username.toLowerCase()}@choices-platform.vercel.app`,
+        trust_tier: 'T0',
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       })
@@ -119,8 +102,8 @@ export async function POST(request: NextRequest) {
     // Create session token
     const sessionToken = jwt.sign(
       {
-        userId: stableId,
-        stableId,
+        userId: userId,
+        stableId: userId,
         username: username.toLowerCase(),
         iat: Math.floor(Date.now() / 1000),
         exp: Math.floor(Date.now() / 1000) + (7 * 24 * 60 * 60)
@@ -133,7 +116,7 @@ export async function POST(request: NextRequest) {
       success: true,
       message: 'User registered successfully',
       user: {
-        id: stableId,
+        id: userId,
         username: username.toLowerCase(),
         email: email?.toLowerCase()
       }
@@ -148,7 +131,7 @@ export async function POST(request: NextRequest) {
       maxAge: 7 * 24 * 60 * 60 // 7 days
     })
 
-    logger.info('User registered successfully', { username: username.toLowerCase(), stableId })
+    logger.info('User registered successfully', { username: username.toLowerCase(), stableId: userId })
     
     return response
   } catch (error) {
