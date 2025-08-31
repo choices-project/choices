@@ -19,33 +19,28 @@ export async function POST(request: NextRequest) {
 
     // Validate request
     const body = await request.json()
-    const { username, password } = body
+    const { email, password } = body
 
     // Validate required fields
-    if (!username || !password) {
+    if (!email || !password) {
       return NextResponse.json(
-        { message: 'Username and password are required' },
+        { message: 'Email and password are required' },
         { status: 400 }
       )
     }
 
-    // Validate username format
-    if (!/^[a-zA-Z0-9_-]+$/.test(username)) {
-      return NextResponse.json(
-        { message: 'Invalid username format' },
-        { status: 400 }
-      )
-    }
+    // Use email as username for lookup
+    const username = email.toLowerCase().trim()
 
     // Use service role for authentication
     const supabase = getSupabaseServerClient();
     const supabaseClient = await supabase;
 
-    // Find user in ia_users table
+    // Find user in ia_users table by email
     const { data: user, error: userError } = await supabaseClient
       .from('ia_users')
       .select('*')
-      .eq('stable_id', username.toLowerCase())
+      .eq('email', username.toLowerCase())
       .single()
 
     if (userError || !user) {
