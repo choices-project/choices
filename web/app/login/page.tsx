@@ -93,52 +93,110 @@ export default function LoginPage() {
     try {
       setMessage('Authenticating with biometric...')
       
-      // Use WebAuthn to get available credentials
-      const credential = await navigator.credentials.get({
-        publicKey: {
-          challenge: new Uint8Array(32), // Simple challenge for now
-          rpId: window.location.hostname,
-          timeout: 60000,
-          userVerification: 'preferred',
-          allowCredentials: [] // Empty array means "any available credential"
+      // First, get available credentials for this domain
+      const response = await fetch('/api/auth/webauthn/credentials', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
         }
-      }) as PublicKeyCredential
+      })
 
-      if (!credential) {
+      const credentialsData = await response.json()
+      
+      if (!response.ok) {
+        throw new Error(credentialsData.error || 'Failed to get biometric credentials')
+      }
+
+      if (!credentialsData.credentials || credentialsData.credentials.length === 0) {
         setError('No biometric credentials found. Please set up biometric authentication first.')
         return
       }
 
-      // Send credential to server for verification
-      const response = await fetch('/api/auth/login-biometric', {
+      // Get authentication options from server
+      const authResponse = await fetch('/api/auth/webauthn/authenticate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          credentialId: credential.id,
-          authenticatorData: Array.from(new Uint8Array((credential.response as AuthenticatorAssertionResponse).authenticatorData)),
-          clientDataJSON: Array.from(new Uint8Array((credential.response as AuthenticatorAssertionResponse).clientDataJSON)),
-          signature: Array.from(new Uint8Array((credential.response as AuthenticatorAssertionResponse).signature))
+          rpId: window.location.hostname
         })
       })
 
-      const data = await response.json()
-
-      if (!response.ok) {
-        setError(data.message || 'Biometric authentication failed.')
-      } else {
-        setMessage('🎉 Biometric authentication successful! Redirecting...')
-        
-        setTimeout(() => {
-          router.push(redirectTo)
-        }, 1000)
+      const authData = await authResponse.json()
+      
+      if (!authResponse.ok) {
+        throw new Error(authData.error || 'Failed to get authentication options')
       }
+
+      // Convert base64 challenge to ArrayBuffer
+      const challenge = Uint8Array.from(atob(authData.challenge), c => c.charCodeAt(0))
+      
+      // Convert credential IDs from base64 to ArrayBuffer
+      const allowCredentials = authData.allowCredentials.map((cred: any) => ({
+        id: Uint8Array.from(atob(cred.id), c => c.charCodeAt(0)),
+        type: 'public-key',
+        transports: cred.transports || ['internal']
+      }))
+
+      // Get credential from authenticator
+      const credential = await navigator.credentials.get({
+        publicKey: {
+          challenge: challenge,
+          rpId: authData.rpId,
+          allowCredentials: allowCredentials,
+          userVerification: 'preferred',
+          timeout: 60000
+        }
+      }) as PublicKeyCredential
+
+      if (!credential) {
+        throw new Error('Biometric authentication was cancelled or failed')
+      }
+
+      // Convert credential data to base64 for transmission
+      const assertionResponse = credential.response as AuthenticatorAssertionResponse
+      
+      const credentialData = {
+        id: credential.id,
+        type: credential.type,
+        rawId: Array.from(new Uint8Array(credential.rawId)),
+        response: {
+          authenticatorData: Array.from(new Uint8Array(assertionResponse.authenticatorData)),
+          clientDataJSON: Array.from(new Uint8Array(assertionResponse.clientDataJSON)),
+          signature: Array.from(new Uint8Array(assertionResponse.signature)),
+          userHandle: assertionResponse.userHandle ? Array.from(new Uint8Array(assertionResponse.userHandle)) : null
+        }
+      }
+
+      // Verify credential with server
+      const verifyResponse = await fetch('/api/auth/webauthn/authenticate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          credential: credentialData,
+          challenge: authData.challenge
+        })
+      })
+
+      const verifyData = await verifyResponse.json()
+
+      if (!verifyResponse.ok) {
+        throw new Error(verifyData.error || 'Biometric verification failed')
+      }
+
+      setMessage('🎉 Biometric authentication successful! Redirecting...')
+      
+      setTimeout(() => {
+        router.push(redirectTo)
+      }, 1000)
+
     } catch (error) {
-      // narrow 'unknown' → Error
       const err = error instanceof Error ? error : new Error(String(error));
       logger.error('Biometric login error:', err)
-      setError('Biometric authentication failed. Please try again.')
+      setError(err.message || 'Biometric authentication failed. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -242,27 +300,15 @@ export default function LoginPage() {
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <button
-                  type="button"
-                  onClick={handleBiometricLogin}
-                  disabled={loading}
-                  className="w-full flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <Fingerprint className="h-5 w-5 mr-2 text-blue-600" />
-                  Sign in with biometric (email required)
-                </button>
-                
-                <button
-                  type="button"
-                  onClick={handleBiometricLogin}
-                  disabled={loading}
-                  className="w-full flex items-center justify-center px-4 py-2 border border-green-300 rounded-md shadow-sm bg-green-50 text-sm font-medium text-green-700 hover:bg-green-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <Fingerprint className="h-5 w-5 mr-2 text-green-600" />
-                  🔐 Biometric Only (no email needed)
-                </button>
-              </div>
+              <button
+                type="button"
+                onClick={handleBiometricLogin}
+                disabled={loading}
+                className="w-full flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Fingerprint className="h-5 w-5 mr-2 text-blue-600" />
+                Sign in with biometric
+              </button>
             </div>
           )}
 
@@ -283,7 +329,7 @@ export default function LoginPage() {
             </Link>
           </p>
           <p className="text-xs text-gray-500">
-            Forgot your email? Use biometric-only authentication or contact support for assistance.
+            Forgot your email? Contact support for assistance.
           </p>
         </div>
       </div>

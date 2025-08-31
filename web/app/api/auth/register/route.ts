@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic'
 
 export async function POST(request: NextRequest) {
   try {
-    const { username, email } = await request.json()
+    const { username, email, password } = await request.json()
     
     // Validation
     if (!username || username.trim().length === 0) {
@@ -43,14 +43,30 @@ export async function POST(request: NextRequest) {
     
     const supabaseClient = await supabase
 
-    // Check for existing user
-    const { data: existingUser } = await supabaseClient
-      .from('ia_users')
-      .select('stable_id')
-      .eq('username', username.toLowerCase() as any)
+    // Check for existing user by email in ia_users table
+    if (email) {
+      const { data: existingEmailUser } = await supabaseClient
+        .from('ia_users')
+        .select('stable_id')
+        .eq('email', email.toLowerCase())
+        .single()
+
+      if (existingEmailUser) {
+        return NextResponse.json(
+          { error: 'Email already registered' },
+          { status: 409 }
+        )
+      }
+    }
+
+    // Check for existing username in user_profiles table
+    const { data: existingUsernameUser } = await supabaseClient
+      .from('user_profiles')
+      .select('user_id')
+      .eq('username', username.toLowerCase())
       .single()
 
-    if (existingUser) {
+    if (existingUsernameUser) {
       return NextResponse.json(
         { error: 'Username already taken' },
         { status: 409 }
@@ -71,7 +87,7 @@ export async function POST(request: NextRequest) {
         two_factor_enabled: false,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
-      } as any)
+      })
 
     if (iaUserError) {
       logger.error('Failed to create IA user', iaUserError)
@@ -90,7 +106,7 @@ export async function POST(request: NextRequest) {
         onboarding_completed: false,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
-      } as any)
+      })
 
     if (profileError) {
       logger.error('Failed to create user profile', profileError)
