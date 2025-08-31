@@ -82,6 +82,12 @@ const MIGRATIONS = [
     name: 'fix-ia-po-onboarding',
     description: 'Fix IA/PO Onboarding Support - Add missing onboarding columns to IA/PO user_profiles table',
     file: 'scripts/migrations/009-fix-ia-po-onboarding.sql'
+  },
+  {
+    id: '010',
+    name: 'webauthn-credentials',
+    description: 'WebAuthn Credentials Table - Add support for biometric authentication using WebAuthn',
+    file: 'scripts/migrations/006-webauthn-credentials.sql'
   }
 ];
 

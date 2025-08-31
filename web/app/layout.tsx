@@ -6,6 +6,7 @@ import './globals.css'
 import { PWAInstallPrompt, OfflineIndicator, PWAUpdatePrompt } from '../components/PWAComponents';
 import EnhancedFeedbackWidget from '../components/EnhancedFeedbackWidget'
 import SiteMessages from '../components/SiteMessages'
+import GlobalNavigation from '../components/GlobalNavigation'
 
 import ClientOnly from '../components/ClientOnly'
 import { AuthProvider } from '../hooks/AuthProvider'
@@ -55,8 +56,8 @@ export default function RootLayout({
       <body className={inter.className}>
         <ClientOnly>
           <AuthProvider>
-            {/* Global Navigation - Temporarily disabled */}
-            {/* <GlobalNavigation /> */}
+            {/* Global Navigation */}
+            <GlobalNavigation />
             
             {/* Site Messages - Display below navigation */}
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">

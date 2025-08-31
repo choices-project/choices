@@ -1,33 +1,60 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { logger } from '@/lib/logger'
-import { getCurrentUser } from '@/lib/session'
+import { NextRequest, NextResponse } from 'next/server';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
+import { devLog } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic'
 
 export async function GET(request: NextRequest) {
   try {
-    const user = await getCurrentUser(request)
+    const supabase = getSupabaseServerClient()
     
-    if (!user) {
-      const response = NextResponse.json(
-        { message: 'Not authenticated' },
-        { status: 401 }
+    if (!supabase) {
+      return NextResponse.json(
+        { error: 'Database connection not available' },
+        { status: 500 }
       )
-      response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate')
-      response.headers.set('Pragma', 'no-cache')
-      response.headers.set('Expires', '0')
-      return response
     }
 
-    const response = NextResponse.json(user)
-    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate')
-    response.headers.set('Pragma', 'no-cache')
-    response.headers.set('Expires', '0')
-    return response
+    const supabaseClient = await supabase
+
+    // Get current user session
+    const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession()
+    
+    if (sessionError || !session?.user) {
+      return NextResponse.json(
+        { error: 'Not authenticated' },
+        { status: 401 }
+      )
+    }
+
+    // Get user data from ia_users table
+    const { data: user, error: userError } = await supabaseClient
+      .from('ia_users')
+      .select('stable_id, email, verification_tier')
+      .eq('stable_id', session.user.id)
+      .single()
+
+    if (userError || !user) {
+      devLog('User not found in ia_users table:', session.user.id)
+      return NextResponse.json(
+        { error: 'User not found' },
+        { status: 404 }
+      )
+    }
+
+    return NextResponse.json({
+      success: true,
+      user: {
+        id: user.stable_id,
+        email: user.email,
+        verification_tier: user.verification_tier
+      }
+    })
+
   } catch (error) {
-    logger.error('Error getting user info', error as Error)
+    devLog('Error getting current user:', error)
     return NextResponse.json(
-      { message: 'Failed to get user information' },
+      { error: 'Internal server error' },
       { status: 500 }
     )
   }

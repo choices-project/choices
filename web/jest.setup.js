@@ -53,6 +53,19 @@ jest.mock('@supabase/supabase-js', () => ({
   }))
 }));
 
+// Mock auth service
+jest.mock('@/lib/auth', () => ({
+  getAuthService: jest.fn(() => ({
+    isAuthenticated: jest.fn().mockReturnValue(false),
+    getStoredUser: jest.fn().mockReturnValue(null),
+    getCurrentUser: jest.fn().mockResolvedValue(null),
+    login: jest.fn().mockResolvedValue({ user: null }),
+    register: jest.fn().mockResolvedValue({ user: null }),
+    logout: jest.fn().mockResolvedValue(),
+    refreshUser: jest.fn().mockResolvedValue(null),
+  }))
+}));
+
 // Mock Next.js router
 jest.mock('next/router', () => ({
   useRouter() {

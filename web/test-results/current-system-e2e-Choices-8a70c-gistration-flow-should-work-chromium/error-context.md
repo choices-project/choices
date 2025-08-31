@@ -1,0 +1,90 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - alert [ref=e2]
+  - navigation [ref=e3]:
+    - generic [ref=e5]:
+      - link "Choices" [ref=e7] [cursor=pointer]:
+        - /url: /
+        - img [ref=e8] [cursor=pointer]
+        - generic [ref=e10] [cursor=pointer]: Choices
+      - generic [ref=e11]:
+        - link "Home" [ref=e12] [cursor=pointer]:
+          - /url: /
+          - img [ref=e13] [cursor=pointer]
+          - generic [ref=e16] [cursor=pointer]: Home
+        - link "Polls" [ref=e17] [cursor=pointer]:
+          - /url: /polls
+          - img [ref=e18] [cursor=pointer]
+          - generic [ref=e21] [cursor=pointer]: Polls
+        - link "Dashboard" [ref=e22] [cursor=pointer]:
+          - /url: /dashboard
+          - img [ref=e23] [cursor=pointer]
+          - generic [ref=e25] [cursor=pointer]: Dashboard
+      - generic [ref=e27]:
+        - link "Sign In" [ref=e28] [cursor=pointer]:
+          - /url: /login
+        - link "Get Started" [ref=e29] [cursor=pointer]:
+          - /url: /register
+  - generic [ref=e31]:
+    - generic [ref=e33]:
+      - img [ref=e35]
+      - generic [ref=e37]:
+        - generic [ref=e38]:
+          - heading "System Maintenance" [level=3] [ref=e39]
+          - generic [ref=e40]:
+            - generic [ref=e41]: medium
+            - button "Dismiss message" [ref=e42] [cursor=pointer]:
+              - img [ref=e43] [cursor=pointer]
+        - paragraph [ref=e47]: We'll be performing maintenance on Sunday at 2 AM EST. Service may be briefly interrupted.
+        - generic [ref=e49]: 8/26/2025
+    - generic [ref=e51]:
+      - img [ref=e53]
+      - generic [ref=e56]:
+        - generic [ref=e57]:
+          - heading "New Features Coming" [level=3] [ref=e58]
+          - generic [ref=e59]:
+            - generic [ref=e60]: low
+            - button "Dismiss message" [ref=e61] [cursor=pointer]:
+              - img [ref=e62] [cursor=pointer]
+        - paragraph [ref=e66]: Stay tuned for exciting new features including real-time voting and mobile notifications!
+        - generic [ref=e68]: 8/26/2025
+    - generic [ref=e70]:
+      - img [ref=e72]
+      - generic [ref=e74]:
+        - generic [ref=e75]:
+          - heading "Welcome to Choices!" [level=3] [ref=e76]
+          - generic [ref=e77]:
+            - generic [ref=e78]: high
+            - button "Dismiss message" [ref=e79] [cursor=pointer]:
+              - img [ref=e80] [cursor=pointer]
+        - paragraph [ref=e84]: This is a new platform for creating and participating in polls. We'd love your feedback!
+        - generic [ref=e86]: 8/26/2025
+  - generic [ref=e88]:
+    - generic [ref=e89]:
+      - heading "Create your account" [level=2] [ref=e90]
+      - paragraph [ref=e91]: Join Choices and start making better decisions
+    - generic [ref=e92]:
+      - generic [ref=e93]: Username is required
+      - generic [ref=e94]:
+        - generic [ref=e95]:
+          - generic [ref=e96]: Username
+          - textbox "Username" [ref=e97]
+        - generic [ref=e98]:
+          - generic [ref=e99]: Email address
+          - textbox "Email address" [ref=e100]: testuser_1756613027273@example.com
+        - generic [ref=e101]:
+          - generic [ref=e102]: Password
+          - textbox "Password" [ref=e103]: testpassword123
+        - generic [ref=e104]:
+          - generic [ref=e105]: Confirm Password
+          - textbox "Confirm Password" [ref=e106]: testpassword123
+      - button "Create account" [ref=e108] [cursor=pointer]
+      - paragraph [ref=e110]:
+        - text: Already have an account?
+        - link "Sign in" [ref=e111] [cursor=pointer]:
+          - /url: /login
+  - button [ref=e112] [cursor=pointer]:
+    - img [ref=e113] [cursor=pointer]
+```

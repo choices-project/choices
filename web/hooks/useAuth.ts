@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useCallback, useState, createContext, useContext } from 'react'
+import { useEffect, useCallback, useState, createContext, useContext, useMemo } from 'react'
 import { LoginCredentials, RegisterData } from '@/types';
 import { devLog } from '@/lib/logger';
 import { getAuthService, User, AuthError } from '../lib/auth'
@@ -28,7 +28,7 @@ export function useAuth(): AuthState & AuthActions {
     error: null,
   })
 
-  const authService = getAuthService()
+  const authService = useMemo(() => getAuthService(), [])
 
   // Initialize authentication state
   useEffect(() => {
