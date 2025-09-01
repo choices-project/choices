@@ -1,11 +1,21 @@
 {
+  "name": "choices-monorepo",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*",
+    "web"
+  ],
   "engines": {
     "node": "20.x"
   },
   "scripts": {
-    "build": "cd web && npm install && npm run build",
+    "build": "npm run -ws build",
+    "dev": "npm run --workspace web dev",
+    "lint": "npm run -ws lint",
+    "typecheck": "npm run -ws typecheck",
+    "civics:dev": "npm run --workspace apps/ingest dev",
     "install": "cd web && npm install",
-    "dev": "cd web && npm run dev",
     "start": "cd web && npm run start",
     "next": "cd web && npm run dev",
     "next:build": "cd web && npm run build",
