@@ -1,0 +1,151 @@
+name: Checks
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, edited, ready_for_review]
+permissions:
+  contents: read
+  pull-requests: read
+concurrency:
+  group: pr-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+
+      - uses: dorny/paths-filter@v3
+        id: cf
+        with:
+          filters: |
+            code:
+              - 'apps/**'
+              - 'packages/**'
+              - 'infra/**'
+
+      - name: Short-circuit for docs-only PRs
+        if: steps.cf.outputs.code != 'true'
+        run: |
+          echo "Docs-only changes detected — skipping install/build."
+          exit 0
+
+      - name: Read policy
+        id: policy
+        run: |
+          echo "PR_AUTHOR=${{ github.event.pull_request.user.login }}" >> $GITHUB_OUTPUT
+          echo "PR_TITLE<<EOF" >> $GITHUB_OUTPUT
+          echo "${{ github.event.pull_request.title }}" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+          cat .github/agent-policy.json
+          OWNER=$(jq -r '.owner' .github/agent-policy.json)
+          if [ "${{ github.event.pull_request.user.login }}" = "$OWNER" ]; then
+            echo "ROLE=owner" >> $GITHUB_OUTPUT
+            echo "MAX_LOC=$(jq -r '.limits.owner.maxLoc' .github/agent-policy.json)" >> $GITHUB_OUTPUT
+            echo "MAX_HOT=$(jq -r '.limits.owner.maxHotFiles' .github/agent-policy.json)" >> $GITHUB_OUTPUT
+          else
+            echo "ROLE=ai" >> $GITHUB_OUTPUT
+            echo "MAX_LOC=$(jq -r '.limits.ai.maxLoc' .github/agent-policy.json)" >> $GITHUB_OUTPUT
+            echo "MAX_HOT=$(jq -r '.limits.ai.maxHotFiles' .github/agent-policy.json)" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Validate PR title pattern
+        run: |
+          title="${{ steps.policy.outputs.PR_TITLE }}"
+          echo "Title: $title"
+          echo "$title" | grep -Eq '^(feat|fix|chore|docs|refactor|test|perf)(\([a-z0-9\-]+\))?: .+ \[agent-[0-9]+\]$' || {
+            echo "::error::PR title must match: type(scope): summary [agent-N]"
+            exit 1
+          }
+
+      - name: Compute LOC
+        id: loc
+        run: |
+          base="${{ github.event.pull_request.base.sha }}"
+          head="${{ github.event.pull_request.head.sha }}"
+          CHANGED=$(git diff --numstat "$base...$head" | awk '{add+=$1;del+=$2} END {print add,del}')
+          ADDED=$(echo "$CHANGED" | awk '{print $1}')
+          DELETED=$(echo "$CHANGED" | awk '{print $2}')
+          TOTAL=$((ADDED+DELETED))
+          echo "TOTAL=$TOTAL" >> $GITHUB_OUTPUT
+          echo "Total LOC changed: $TOTAL"
+
+      - name: Enforce LOC and hot-file policy (AI vs Owner)
+        if: ${{ !contains(github.event.pull_request.labels.*.name, 'owner-fastlane') }}
+        run: |
+          MAX="${{ steps.policy.outputs.MAX_LOC }}"
+          TOTAL="${{ steps.loc.outputs.TOTAL }}"
+          if [ "$TOTAL" -gt "$MAX" ]; then
+            echo "::error::LOC $TOTAL exceeds max $MAX for role ${{ steps.policy.outputs.ROLE }}."
+            exit 1
+          fi
+          MAX_HOT="${{ steps.policy.outputs.MAX_HOT }}"
+          base="${{ github.event.pull_request.base.sha }}"
+          head="${{ github.event.pull_request.head.sha }}"
+          HOT=$(git diff --name-only "$base...$head" | grep -f .github/hot-files.txt || true)
+          if [ -n "$HOT" ]; then
+            COUNT=$(echo "$HOT" | wc -l)
+            echo "Hot files changed: $COUNT"
+            if [ "$COUNT" -gt "$MAX_HOT" ]; then
+              echo "::error::Changed $COUNT hot files; limit $MAX_HOT for role."
+              echo "$HOT"
+              exit 1
+            fi
+          fi
+
+      - name: Forbidden imports (server civics)
+        run: |
+          BAD=$(grep -R "@supabase/supabase-js" apps/ packages/ infra/ | grep -E "(apps/ingest|packages/civics-)" || true)
+          if [ -n "$BAD" ]; then
+            echo "::error::Forbidden import in civics server code:"
+            echo "$BAD"
+            exit 1
+          fi
+
+      - name: Write guard for civics schema (API)
+        run: |
+          base="${{ github.event.pull_request.base.sha }}"
+          head="${{ github.event.pull_request.head.sha }}"
+          FILES=$(git diff --name-only "$base...$head" -- 'apps/web/app/api/**' || true)
+          [ -z "$FILES" ] && exit 0
+          BAD=$(git diff "$base...$head" -- $FILES | grep -E 'INSERT INTO\s+civics\.|UPDATE\s+civics\.|DELETE FROM\s+civics\.|UPSERT\s+civics\.' || true)
+          if [ -n "$BAD" ]; then
+            echo "::error::Detected mutating SQL targeting civics.* inside API routes. Civics is read-only."
+            exit 1
+          fi
+
+      - name: Trust-tier policy check
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: node scripts/check-endpoints.mjs
+
+      - name: Collision warning (files touched by other open PRs)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          base="${{ github.event.pull_request.base.sha }}"
+          head="${{ github.event.pull_request.head.sha }}"
+          git diff --name-only "$base...$head" | sort > cur.txt
+          gh pr list --state open --json number,headRefName | jq -r '.[].number' | while read P; do
+            [ "$P" = "${{ github.event.pull_request.number }}" ] && continue
+            gh pr view "$P" --json files | jq -r '.files[].path' | sort > other.txt
+            while read -r F; do
+              if grep -qx "$F" other.txt; then
+                echo "::warning::File '$F' also modified by PR #$P"
+              fi
+            done < cur.txt
+          done
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install & typecheck (path-aware)
+        run: |
+          npm ci
+          npm run -s typecheck || npm run -s build
+
+      - name: Lint
+        run: npm run -s lint || true

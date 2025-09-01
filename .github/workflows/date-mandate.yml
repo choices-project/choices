@@ -1,0 +1,64 @@
+name: Date Mandate
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, edited, ready_for_review]
+jobs:
+  date-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - name: Resolve context
+        id: ctx
+        run: |
+          echo "TODAY=$(date -u +%F)" >> $GITHUB_OUTPUT
+          echo "PR_BODY<<EOF" >> $GITHUB_OUTPUT
+          echo "${{ github.event.pull_request.body }}" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+          echo "BASE=${{ github.event.pull_request.base.sha }}" >> $GITHUB_OUTPUT
+          echo "HEAD=${{ github.event.pull_request.head.sha }}" >> $GITHUB_OUTPUT
+          echo "LABELS=$(printf '%s\n' '${{ toJson(github.event.pull_request.labels) }}' | tr -d '\n')" >> $GITHUB_OUTPUT
+
+      - name: Waiver label?
+        id: waiver
+        run: |
+          if echo '${{ steps.ctx.outputs.LABELS }}' | grep -qi '"name":"date-waive"'; then
+            echo "WAIVED=true" >> $GITHUB_OUTPUT
+          else
+            echo "WAIVED=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: PR body must contain today's UTC date
+        if: steps.waiver.outputs.WAIVED == 'false'
+        run: |
+          TODAY='${{ steps.ctx.outputs.TODAY }}'
+          BODY="$(printf '%b' '${{ steps.ctx.outputs.PR_BODY }}')"
+          LINE=$(echo "$BODY" | grep -E '^\*\*Date:\*\*\s*[0-9]{4}-[0-9]{2}-[0-9]{2}$' || true)
+          [ -z "$LINE" ] && { echo "::error::Missing '**Date:** $TODAY' in PR body"; exit 1; }
+          DATE=$(echo "$LINE" | sed -E 's/^\*\*Date:\*\*\s*//')
+          [ "$DATE" != "$TODAY" ] && { echo "::error::PR date $DATE must equal today's UTC $TODAY"; exit 1; }
+
+      - name: Enforce Last Updated on changed docs
+        if: steps.waiver.outputs.WAIVED == 'false'
+        run: |
+          set -e
+          TODAY='${{ steps.ctx.outputs.TODAY }}'
+          BASE='${{ steps.ctx.outputs.BASE }}'
+          HEAD='${{ steps.ctx.outputs.HEAD }}'
+          CHANGED=$(git diff --name-only "$BASE...$HEAD")
+          TARGETS=$(echo "$CHANGED" | grep -E '\.(md|MD)$' | grep -E '^(README\.md$|PROJECT_.*\.md$|CHANGELOG\.md$|DEPLOYMENT_.*\.md$|API\.md$|DATABASE_.*\.md$|SYSTEM_.*\.md$|AUTHENTICATION_.*\.md$|TRUST_.*\.md$|docs/|CIVIC_.*\.md$|AI_.*\.md$|MISSING_.*\.md$|IMPLEMENTATION_.*\.md$|technical/|legal/)' || true)
+          [ -z "$TARGETS" ] && { echo "No markdown docs changed"; exit 0; }
+          FAIL=0
+          for FILE in $TARGETS; do
+            git diff --quiet "$BASE" "$HEAD" -- "$FILE" && continue
+            if ! grep -Eq '^(Created|Last Updated):\s*[0-9]{4}-[0-9]{2}-[0-9]{2}$' "$FILE"; then
+              echo "::error file=$FILE::Missing Created/Last Updated header with date"; FAIL=1; continue
+            fi
+            if grep -Eq '^Last Updated:\s*[0-9]{4}-[0-9]{2}-[0-9]{2}$' "$FILE"; then
+              D=$(grep -E '^Last Updated:\s*[0-9]{4}-[0-9]{2}-[0-9]{2}$' "$FILE" | tail -1 | sed -E 's/^Last Updated:\s*//')
+              [ "$D" != "$TODAY" ] && { echo "::error file=$FILE::Update 'Last Updated' to $TODAY"; FAIL=1; }
+            else
+              echo "::error file=$FILE::Add 'Last Updated: $TODAY' near top"; FAIL=1
+            fi
+          done
+          [ "$FAIL" -ne 0 ] && exit 1 || echo "Doc dates OK."

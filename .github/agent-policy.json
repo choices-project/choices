@@ -1,0 +1,13 @@
+{
+  "owner": "michaeltempesta",
+  "limits": {
+    "ai":   { "maxLoc": 600,  "maxHotFiles": 1 },
+    "owner":{ "maxLoc": 1000, "maxHotFiles": 3 }
+  },
+  "labels": {
+    "ai": "ai",
+    "ownerOk": "owner-ok",
+    "waiveDate": "date-waive",
+    "ownerFastlane": "owner-fastlane"
+  }
+}
