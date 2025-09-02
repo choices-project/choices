@@ -58,6 +58,10 @@ export async function register(
     // Get Supabase client
     const supabaseClient = await supabase
     
+    if (!supabaseClient) {
+      throw new Error('Supabase client not available')
+    }
+    
     // Check for existing user by email
     const { data: existingUser } = await supabaseClient
       .from('user_profiles')
