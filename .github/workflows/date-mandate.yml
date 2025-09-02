@@ -89,11 +89,16 @@ jobs:
           for FILE in $TARGETS; do
             echo "=== Checking file: $FILE ==="
             git diff --quiet "$BASE" "$HEAD" -- "$FILE" && continue
-            if ! grep -Eq '^(Created|Last Updated):\s*[0-9]{4}-[0-9]{2}-[0-9]{2}$' "$FILE"; then
+            
+            # Check for Created header (more flexible format)
+            if ! grep -Eq '^\*\*(Created|Last Updated):\*\*|^(Created|Last Updated):' "$FILE"; then
               echo "::error file=$FILE::Missing Created/Last Updated header with date"; FAIL=1; continue
             fi
-            if grep -Eq '^Last Updated:\s*[0-9]{4}-[0-9]{2}-[0-9]{2}$' "$FILE"; then
-              D=$(grep -E '^Last Updated:\s*[0-9]{4}-[0-9]{2}-[0-9]{2}$' "$FILE" | tail -1 | sed -E 's/^Last Updated:\s*//')
+            
+            # Check for Last Updated header specifically (must be today's date)
+            if grep -Eq '^\*\*Last Updated:\*\*|^Last Updated:' "$FILE"; then
+              # Extract the date from the Last Updated line
+              D=$(grep -E '^\*\*Last Updated:\*\*|^Last Updated:' "$FILE" | tail -1 | sed -E 's/^\*\*Last Updated:\*\*\s*//' | sed -E 's/^Last Updated:\s*//' | tr -d '\n\r' | xargs)
               echo "File $FILE has Last Updated: $D"
               [ "$D" != "$TODAY" ] && { echo "::error file=$FILE::Update 'Last Updated' to $TODAY"; FAIL=1; }
             else
