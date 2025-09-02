@@ -68,17 +68,33 @@ jobs:
           TODAY='${{ steps.ctx.outputs.TODAY }}'
           BASE='${{ steps.ctx.outputs.BASE }}'
           HEAD='${{ steps.ctx.outputs.HEAD }}'
-          CHANGED=$(git diff --name-only "$BASE...$HEAD")
+          
+          echo "=== DEBUG: Commit Range ==="
+          echo "BASE: $BASE"
+          echo "HEAD: $HEAD"
+          echo "TODAY: $TODAY"
+          
+          # Fix the git diff syntax - use two dots for range
+          CHANGED=$(git diff --name-only "$BASE..$HEAD")
+          echo "=== DEBUG: All Changed Files ==="
+          echo "$CHANGED"
+          
           TARGETS=$(echo "$CHANGED" | grep -E '\.(md|MD)$' | grep -E '^(README\.md$|PROJECT_.*\.md$|CHANGELOG\.md$|DEPLOYMENT_.*\.md$|API\.md$|DATABASE_.*\.md$|SYSTEM_.*\.md$|AUTHENTICATION_.*\.md$|TRUST_.*\.md$|docs/|CIVIC_.*\.md$|AI_.*\.md$|MISSING_.*\.md$|IMPLEMENTATION_.*\.md$|technical/|legal/)' || true)
+          
+          echo "=== DEBUG: Markdown Files to Check ==="
+          echo "$TARGETS"
+          
           [ -z "$TARGETS" ] && { echo "No markdown docs changed"; exit 0; }
           FAIL=0
           for FILE in $TARGETS; do
+            echo "=== Checking file: $FILE ==="
             git diff --quiet "$BASE" "$HEAD" -- "$FILE" && continue
             if ! grep -Eq '^(Created|Last Updated):\s*[0-9]{4}-[0-9]{2}-[0-9]{2}$' "$FILE"; then
               echo "::error file=$FILE::Missing Created/Last Updated header with date"; FAIL=1; continue
             fi
             if grep -Eq '^Last Updated:\s*[0-9]{4}-[0-9]{2}-[0-9]{2}$' "$FILE"; then
               D=$(grep -E '^Last Updated:\s*[0-9]{4}-[0-9]{2}-[0-9]{2}$' "$FILE" | tail -1 | sed -E 's/^Last Updated:\s*//')
+              echo "File $FILE has Last Updated: $D"
               [ "$D" != "$TODAY" ] && { echo "::error file=$FILE::Update 'Last Updated' to $TODAY"; FAIL=1; }
             else
               echo "::error file=$FILE::Add 'Last Updated: $TODAY' near top"; FAIL=1
