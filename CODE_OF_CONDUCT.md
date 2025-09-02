@@ -2,4 +2,4 @@
 This project follows the Contributor Covenant. Be respectful. No harassment. Disagreements are welcome; personal attacks are not.
 
 ---
-*Last Updated: August 23, 2025*
+*Last Updated: 2025-09-02*

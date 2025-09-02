@@ -5,7 +5,7 @@ title: Choices Platform
 # Choices: Candidate-forward, district-precise civic info
 
 Created: 2025-01-27
-Last Updated: 2025-01-27
+Last Updated: 2025-09-02
 
 **Mission:** give every voter a clear, local view of what their representatives *do*—recent votes, committees, and funding—while protecting privacy.
 
