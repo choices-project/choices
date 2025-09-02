@@ -48,6 +48,18 @@ jobs:
           echo "TODAY='$TODAY'"
           echo "DATE length: ${#DATE}"
           echo "TODAY length: ${#TODAY}"
+          echo "=== DEBUG: Hex Dump ==="
+          echo "DATE hex: $(echo -n "$DATE" | xxd -p)"
+          echo "TODAY hex: $(echo -n "$TODAY" | xxd -p)"
+          echo "=== DEBUG: End Hex Dump ==="
+          echo "=== DEBUG: String Comparison Test ==="
+          echo "Direct comparison: '$DATE' == '$TODAY'"
+          if [ "$DATE" = "$TODAY" ]; then
+            echo "Comparison result: TRUE (strings are equal)"
+          else
+            echo "Comparison result: FALSE (strings are NOT equal)"
+          fi
+          echo "=== DEBUG: End String Comparison Test ==="
           echo "=== DEBUG: End Date Comparison ==="
           [ "$DATE" != "$TODAY" ] && { echo "::error::PR date '$DATE' must equal today's UTC '$TODAY'"; exit 1; }
 
