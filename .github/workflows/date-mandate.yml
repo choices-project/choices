@@ -41,7 +41,7 @@ jobs:
           echo "=== DEBUG: End Pattern Search ==="
           LINE=$(echo "$BODY" | grep -E '^\*\*Date:\*\*\s*[0-9]{4}-[0-9]{2}-[0-9]{2}|^Date:\s*[0-9]{4}-[0-9]{2}-[0-9]{2}' || true)
           [ -z "$LINE" ] && { echo "::error::Missing '**Date:** $TODAY' or 'Date: $TODAY' in PR body"; exit 1; }
-          DATE=$(echo "$LINE" | sed -E 's/^\*\*Date:\*\*\s*//' | sed -E 's/^Date:\s*//')
+          DATE=$(echo "$LINE" | sed -E 's/^\*\*Date:\*\*\s*//' | sed -E 's/^Date:\s*//' | tr -d '\n\r' | xargs)
           [ "$DATE" != "$TODAY" ] && { echo "::error::PR date $DATE must equal today's UTC $TODAY"; exit 1; }
 
       - name: Enforce Last Updated on changed docs
