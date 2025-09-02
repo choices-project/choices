@@ -2,7 +2,7 @@
   "owner": "michaeltempesta",
   "limits": {
     "ai":   { "maxLoc": 600,  "maxHotFiles": 1 },
-    "owner":{ "maxLoc": 1000, "maxHotFiles": 3 }
+    "owner":{ "maxLoc": 999999, "maxHotFiles": 999 }
   },
   "labels": {
     "ai": "ai",
