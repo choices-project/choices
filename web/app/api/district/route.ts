@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { lookupAddress } from "../../../apps/ingest/connectors/civicinfo"; // adjust import if paths differ
+import { lookupAddress } from "@choices/ingest";
 
 export async function GET(req: NextRequest) {
   const url = new URL(req.url);

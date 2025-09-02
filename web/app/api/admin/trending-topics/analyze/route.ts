@@ -181,7 +181,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Store topics in database
-    const createdTopics = [];
+    const createdTopics: any[] = [];
     for (const topicData of topics) {
       const topic = await service.createTrendingTopic({
         ...topicData,

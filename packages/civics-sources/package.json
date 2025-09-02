@@ -1,0 +1,28 @@
+{
+  "name": "@choices/civics-sources",
+  "version": "0.0.1",
+  "type": "module",
+  "main": "src/index.js",
+  "types": "src/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./src/index.js",
+      "types": "./src/index.d.ts"
+    },
+    "./civicinfo": {
+      "import": "./src/civicinfo.js",
+      "types": "./src/civicinfo.d.ts"
+    },
+    "./propublica": {
+      "import": "./src/propublica.js",
+      "types": "./src/propublica.d.ts"
+    },
+    "./fec": {
+      "import": "./src/fec.js",
+      "types": "./src/fec.d.ts"
+    }
+  },
+  "dependencies": {
+    "zod": "^3.25.76"
+  }
+}

@@ -1,9 +1,9 @@
 {
-  "name": "@choices/civics-client",
+  "name": "@choices/ingest",
   "version": "0.0.1",
   "type": "module",
-  "main": "src/index.js",
-  "types": "src/index.d.ts",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
   "dependencies": {},
   "exports": {
     ".": "./src/index.ts"

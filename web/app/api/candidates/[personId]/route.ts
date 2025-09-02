@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { CandidateCardV1 } from "../../../../packages/civics-schemas/src/candidateCard";
-import { createCache } from "../../../../packages/civics-client/src/cache";
-import { getRecentVotesForMember } from "../../../../apps/ingest/connectors/propublica";
+import { CandidateCardV1 } from "@choices/civics-schemas";
+import { createCache } from "@choices/civics-client";
+import { getRecentVotesForMember } from "@choices/ingest";
 
 const cache = createCache();
 
