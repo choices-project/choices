@@ -42,7 +42,14 @@ jobs:
           LINE=$(echo "$BODY" | grep -E '^\*\*Date:\*\*\s*[0-9]{4}-[0-9]{2}-[0-9]{2}|^Date:\s*[0-9]{4}-[0-9]{2}-[0-9]{2}' || true)
           [ -z "$LINE" ] && { echo "::error::Missing '**Date:** $TODAY' or 'Date: $TODAY' in PR body"; exit 1; }
           DATE=$(echo "$LINE" | sed -E 's/^\*\*Date:\*\*\s*//' | sed -E 's/^Date:\s*//' | tr -d '\n\r' | xargs)
-          [ "$DATE" != "$TODAY" ] && { echo "::error::PR date $DATE must equal today's UTC $TODAY"; exit 1; }
+          echo "=== DEBUG: Date Comparison ==="
+          echo "LINE='$LINE'"
+          echo "DATE='$DATE'"
+          echo "TODAY='$TODAY'"
+          echo "DATE length: ${#DATE}"
+          echo "TODAY length: ${#TODAY}"
+          echo "=== DEBUG: End Date Comparison ==="
+          [ "$DATE" != "$TODAY" ] && { echo "::error::PR date '$DATE' must equal today's UTC '$TODAY'"; exit 1; }
 
       - name: Enforce Last Updated on changed docs
         if: steps.waiver.outputs.WAIVED == 'false'
