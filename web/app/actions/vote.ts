@@ -36,6 +36,10 @@ export const vote = createSecureServerAction(
     // Get Supabase client
     const supabaseClient = await supabase
 
+    if (!supabaseClient) {
+      throw new Error('Supabase client not available')
+    }
+
     // Check if poll exists and is active
     const { data: poll, error: pollError } = await supabaseClient
       .from('polls')
