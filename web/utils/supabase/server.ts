@@ -331,8 +331,8 @@ export async function getSupabaseServerClient() {
     cookieStore = cookies()
   } catch (error) {
     // During build time, cookies() might not be available
-    // Return a mock client that will be replaced at runtime
-    return null
+    // Throw an error to prevent build-time usage
+    throw new Error('getSupabaseServerClient() cannot be called during build time. Use it only in API routes and server components.')
   }
   
   const { createServerClient } = await import('@supabase/ssr') // dynamic!

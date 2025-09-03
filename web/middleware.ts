@@ -113,6 +113,22 @@ function validateRequest(request: NextRequest): { valid: boolean; reason?: strin
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
   
+  // MAINTENANCE MODE CHECK - This must be first!
+  if (process.env.NEXT_PUBLIC_MAINTENANCE === "1") {
+    return new NextResponse(
+      `<!doctype html><meta charset="utf-8">
+       <title>Maintenance</title>
+       <style>body{font-family:system-ui;margin:10vh auto;max-width:720px;padding:0 20px;text-align:center}</style>
+       <h1>We'll be right back</h1>
+       <p>The site is temporarily offline for maintenance.</p>
+       <p><small>Please check back soon.</small></p>`,
+      {
+        status: 503,
+        headers: { "Content-Type": "text/html; charset=utf-8" },
+      }
+    );
+  }
+  
   // Skip middleware for static files and API routes that don't need security headers
   if (
     pathname.startsWith('/_next/') ||
@@ -201,7 +217,8 @@ export const config = {
      * - sw.js (service worker)
      * - workbox-* (service worker files)
      * - icons/ (PWA icons)
+     * - api/health (health check endpoint - must work during maintenance)
      */
-    '/((?!api/webhooks|_next/static|_next/image|favicon.ico|manifest.json|sw.js|workbox-|icons/).*)',
+    '/((?!api/webhooks|_next/static|_next/image|favicon.ico|manifest.json|sw.js|workbox-|icons/|api/health).*)',
   ],
 }
