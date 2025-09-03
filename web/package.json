@@ -30,6 +30,10 @@
     "cleanup:fix": "node ../scripts/cleanup-code.js --fix"
   },
   "dependencies": {
+    "@choices/civics-client": "file:../packages/civics-client",
+    "@choices/civics-schemas": "file:../packages/civics-schemas",
+    "@choices/civics-sources": "file:../packages/civics-sources",
+    "@choices/ingest": "file:../apps/ingest",
     "@headlessui/react": "^2.2.7",
     "@heroicons/react": "^2.2.0",
     "@radix-ui/react-label": "^2.1.7",

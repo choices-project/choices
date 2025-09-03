@@ -15,6 +15,13 @@ export async function POST(
 
     // Get Supabase client
     const supabaseClient = await supabase;
+    
+    if (!supabaseClient) {
+      return NextResponse.json(
+        { error: 'Database connection not available' },
+        { status: 500 }
+      );
+    }
 
     // Check authentication
     const { data: { user }, error: userError } = await supabaseClient.auth.getUser();

@@ -48,6 +48,10 @@ export const createPoll = createSecureServerAction(
     // Get Supabase client
     const supabaseClient = await supabase
 
+    if (!supabaseClient) {
+      throw new Error('Supabase client not available')
+    }
+
     // Sanitize inputs
     const sanitizedTitle = sanitizeInput(validatedData.title)
     const sanitizedDescription = validatedData.description ? sanitizeInput(validatedData.description) : null
