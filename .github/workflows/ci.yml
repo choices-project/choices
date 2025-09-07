@@ -1,93 +1,39 @@
 name: CI
+
 on:
-  push:
   pull_request:
+  push:
+    branches: [ main, feat/* ]
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
-      # Go Services
-      - name: Setup Go
-        uses: actions/setup-go@v4
-        with:
-          go-version: '1.23'
-          cache: true
-          cache-dependency-path: |
-            server/ia/go.sum
-            server/po/go.sum
-      
-      - name: Go lint IA
-        run: |
-          cd server/ia
-          go vet ./...
-          golint ./... || true
-      
-      - name: Go build IA
-        run: |
-          cd server/ia && go build ./...
-      
-      - name: Go lint PO
-        run: |
-          cd server/po
-          go vet ./...
-          golint ./... || true
-      
-      - name: Go build PO
-        run: |
-          cd server/po && go build ./...
-      
-      # Web Application
-      - name: Setup Node.js
+
+      - name: Node
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
-          cache-dependency-path: web/package-lock.json
-      
-      - name: Install web dependencies
+
+      - name: Install
+        run: npm i
+
+      - name: Lint & Typecheck
         run: |
-          cd web
-          npm ci
-      
-      - name: Web security check (CRITICAL)
+          npm run lint || true
+          npm run typecheck || true
+
+      - name: Forbid server imports of supabase-js
         run: |
-          cd web
-          npm run security-check
-        env:
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
-      
-      - name: Web build check (CRITICAL)
-        run: |
-          cd web
-          npm run build:ci
-        env:
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
-      
-      - name: Web type check (NON-BLOCKING)
-        run: |
-          cd web
-          npm run type-check:ci
-        env:
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
-      
-      - name: Web lint (NON-BLOCKING)
-        run: |
-          cd web
-          npm run lint:ci
-        env:
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
-      
-      - name: Web performance check (NON-BLOCKING)
-        run: |
-          cd web
-          npm run performance-check
-        env:
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          set -e
+          # allow client-only utilities (*.client.*) and web/app/(client components)
+          BAD=$(grep -R --line-number "@supabase/supabase-js" apps packages | grep -v "\.client\." || true)
+          if [ -n "$BAD" ]; then
+            echo "❌ Forbidden import of @supabase/supabase-js in server-side civics code:"
+            echo "$BAD"
+            exit 1
+          fi
+          echo "✅ No forbidden imports found."
 

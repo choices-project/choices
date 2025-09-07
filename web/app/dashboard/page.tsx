@@ -8,19 +8,19 @@ export const dynamic = 'force-dynamic'
 const supabase = getSupabaseServerClient()
 
 async function getUserFromCookies() {
-  const cookieStore = cookies()
-  const sessionToken = cookieStore.get('choices_session')?.value
-  
-  if (!sessionToken) {
-    return null
-  }
-
   try {
+    const cookieStore = cookies()
+    const sessionToken = cookieStore.get('choices_session')?.value
+    
+    if (!sessionToken) {
+      return null
+    }
+
     const decodedToken = jwt.verify(sessionToken, process.env.JWT_SECRET!) as any
     return decodedToken
   } catch (error) {
-    // Token verification failed - likely expired or invalid
-    console.error('Token verification failed:', error instanceof Error ? error : new Error(String(error)));
+    // During build time, cookies() might not be available
+    // This is expected and will be handled at runtime
     return null
   }
 }
@@ -37,7 +37,13 @@ export default async function DashboardPage() {
     throw new Error('Supabase client not available')
   }
   
-  const supabaseClient = await supabase;
+  const supabaseClient = await supabase
+  if (!supabaseClient) {
+    // During build time, this might be null
+    // At runtime, it will be properly initialized
+    redirect('/login')
+  }
+  
   const { data: profile } = await supabaseClient
     .from('user_profiles')
     .select('onboarding_completed')

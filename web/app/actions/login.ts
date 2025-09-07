@@ -31,6 +31,10 @@ export const login = createSecureServerAction(
     // Get Supabase client
     const supabaseClient = await supabase
     
+    if (!supabaseClient) {
+      throw new Error('Supabase client not available')
+    }
+    
     // Get user by username
     const { data: userProfile, error: profileError } = await supabaseClient
       .from('user_profiles')

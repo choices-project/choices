@@ -1,0 +1,31 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "jsx": "react-jsx",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "baseUrl": ".",
+    "paths": {
+      "@choices/civics-schemas/*": ["packages/civics-schemas/src/*"],
+      "@choices/civics-client/*": ["packages/civics-client/src/*"],
+      "@choices/civics-sources/*": ["packages/civics-sources/src/*"]
+    },
+    "types": ["node"],
+    "allowJs": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true
+  },
+  "exclude": [
+    "node_modules",
+    "dist",
+    "build",
+    ".next",
+    "test-results",
+    "playwright-report"
+  ]
+}
