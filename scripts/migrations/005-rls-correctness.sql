@@ -694,3 +694,4 @@ COMMENT ON FUNCTION get_rls_statistics() IS 'Get RLS policy statistics';
 
 
 
+

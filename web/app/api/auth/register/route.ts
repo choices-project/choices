@@ -1,15 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseServerClient } from '@/utils/supabase/server'
-import jwt from 'jsonwebtoken'
 import { v4 as uuidv4 } from 'uuid'
 import bcrypt from 'bcryptjs'
 import { logger } from '@/lib/logger'
-import { createClient } from '@supabase/supabase-js'
+import { createEnhancedSession, type EnhancedSessionUser } from '@/lib/session-enhanced'
+import { 
+  validateCsrfProtection, 
+  createCsrfErrorResponse 
+} from '../_shared'
 
 export const dynamic = 'force-dynamic'
 
 export async function POST(request: NextRequest) {
   try {
+    // Validate CSRF protection for state-changing operation
+    if (!validateCsrfProtection(request)) {
+      return createCsrfErrorResponse()
+    }
+
     const { username, email, password } = await request.json()
     
     // Validation
@@ -99,17 +107,18 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Create session token
-    const sessionToken = jwt.sign(
-      {
-        userId: userId,
-        stableId: userId,
-        username: username.toLowerCase(),
-        iat: Math.floor(Date.now() / 1000),
-        exp: Math.floor(Date.now() / 1000) + (7 * 24 * 60 * 60)
-      },
-      process.env.JWT_SECRET!
-    )
+    // Create enhanced session user object
+    const sessionUser: EnhancedSessionUser = {
+      id: userId,
+      stableId: userId,
+      username: username.toLowerCase(),
+      tier: 'T0',
+      email: email?.toLowerCase(),
+      isActive: true,
+      twoFactorEnabled: false,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    }
 
     // Create response with success data
     const response = NextResponse.json({
@@ -118,18 +127,21 @@ export async function POST(request: NextRequest) {
       user: {
         id: userId,
         username: username.toLowerCase(),
-        email: email?.toLowerCase()
+        email: email?.toLowerCase(),
+        tier: 'T0'
       }
     })
 
-    // Set session cookie
-    response.cookies.set('choices_session', sessionToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      path: '/',
-      sameSite: 'lax',
-      maxAge: 7 * 24 * 60 * 60 // 7 days
-    })
+    // Create enhanced session with secure cookies
+    const sessionResult = createEnhancedSession(sessionUser, response)
+    
+    if (!sessionResult.success) {
+      logger.error('Failed to create enhanced session', new Error(sessionResult.error || 'Unknown error'))
+      return NextResponse.json(
+        { error: 'Failed to create session' },
+        { status: 500 }
+      )
+    }
 
     logger.info('User registered successfully', { username: username.toLowerCase(), stableId: userId })
     

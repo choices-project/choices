@@ -1,5 +1,6 @@
 # User Guide
 
+**Created:** 2025-09-02  
 **Status: PRODUCTION READY**  
 **Last Updated: 2025-09-02**  
 **Version: 2.0.0**

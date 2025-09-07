@@ -24,3 +24,4 @@ CREATE INDEX IF NOT EXISTS idx_user_profiles_onboarding_ia ON user_profiles (onb
 
 
 
+
