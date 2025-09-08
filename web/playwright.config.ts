@@ -41,6 +41,6 @@ export default defineConfig({
     command: 'NODE_ENV=production next build && NODE_ENV=production next start -p 3001',
     port: 3001,
     reuseExistingServer: !process.env.CI,
-    timeout: 120_000,
+    timeout: 120 * 1000,
   },
 })

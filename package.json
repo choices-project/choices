@@ -1,18 +1,26 @@
 {
+  "name": "choices-monorepo",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*",
+    "web"
+  ],
   "engines": {
-    "node": "20.x"
+    "node": "19"
   },
   "scripts": {
-    "build": "cd web && npm install && npm run build",
-    "install": "cd web && npm install",
-    "dev": "cd web && npm run dev",
+    "build": "npm run -ws build",
+    "dev": "npm run --workspace web dev",
+    "lint": "npm run -ws lint",
+    "typecheck": "npm run -ws typecheck",
+    "civics:dev": "npm run --workspace apps/ingest dev",
     "start": "cd web && npm run start",
     "next": "cd web && npm run dev",
     "next:build": "cd web && npm run build",
     "next:start": "cd web && npm run start",
-    "vercel-build": "cd web && npm install && npm run build",
-    "postinstall": "cd web && npm install",
-    "build:web": "cd web && npm install && npm run build"
+    "vercel-build": "cd web && npm run build",
+    "build:web": "cd web && npm run build"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.55.0",
@@ -31,7 +39,7 @@
   "devDependencies": {
     "@types/bcryptjs": "^3.0.0",
     "@types/jsonwebtoken": "^9.0.10",
-    "@types/minimatch": "^6.0.0",
+
     "@types/node": "^24.2.1",
     "@types/qrcode": "^1.5.5",
     "@types/react": "19.1.10",

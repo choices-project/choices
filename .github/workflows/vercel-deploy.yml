@@ -11,18 +11,17 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v3
     
     - name: Setup Node.js
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@v3
       with:
-        node-version: '20'
+        node-version: '19'
         cache: 'npm'
-        cache-dependency-path: web/package-lock.json
+        cache-dependency-path: package-lock.json
     
     - name: Install dependencies
       run: |
-        cd web
         npm ci
     
     - name: Run type check
@@ -30,24 +29,24 @@ jobs:
         cd web
         npm run type-check
       env:
-        NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
     
     - name: Run linting
       run: |
         cd web
         npm run lint:ci
       env:
-        NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
     
     - name: Build application
       run: |
         cd web
         CI=true npm run build
       env:
-        NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
     
     # DISABLED: Using Vercel's automatic deployment instead
     # This prevents deployments to the wrong project with personal names in domains

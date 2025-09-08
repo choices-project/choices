@@ -325,7 +325,16 @@ const validateEnvironment = () => {
  */
 export async function getSupabaseServerClient() {
   const env = validateEnvironment()
-  const cookieStore = cookies()
+  
+  let cookieStore
+  try {
+    cookieStore = cookies()
+  } catch (error) {
+    // During build time, cookies() might not be available
+    // Throw an error to prevent build-time usage
+    throw new Error('getSupabaseServerClient() cannot be called during build time. Use it only in API routes and server components.')
+  }
+  
   const { createServerClient } = await import('@supabase/ssr') // dynamic!
   
   return createServerClient<Database>(

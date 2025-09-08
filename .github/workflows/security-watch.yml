@@ -1,15 +1,42 @@
 name: Security Watch
+
 on:
   schedule:
-    - cron: "7 10 * * 3"  # Wednesdays
+    - cron: "0 2 * * *"  # Daily at 2 AM UTC
   workflow_dispatch:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  security-events: write
+
 jobs:
-  advisories:
+  dependency-audit:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Scan for advisories (OSV) for Go and npm
-        uses: google/osv-scanner-action@v1
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
         with:
-          scan-args: |
-            -r .
+          node-version: '19'
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        run: |
+          npm ci
+
+      - name: Run security audit
+        run: |
+          cd web
+          echo "Running npm security audit..."
+          npm audit --audit-level=high || {
+            echo "::error::High or critical vulnerabilities detected"
+            npm audit --json > audit-results.json
+            cat audit-results.json
+            exit 1
+          }
+          echo "✅ No high/critical vulnerabilities found"
