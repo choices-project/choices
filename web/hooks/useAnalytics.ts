@@ -2,57 +2,26 @@ import { useState, useEffect, useCallback, createContext, useContext } from 'rea
 import { devLog } from '@/lib/logger';
 import { useFeatureFlags } from './useFeatureFlags';
 import { isFeatureEnabled } from '../lib/feature-flags';
-import { PWAAnalytics } from '../lib/pwa-analytics';
 
 interface AnalyticsData {
-  overview: {
-    totalPolls: number;
-    activePolls: number;
-    totalVotes: number;
+  period: string;
+  summary: {
     totalUsers: number;
-    participationRate: number;
-    averageSessionDuration: number;
-    bounceRate: number;
-    conversionRate: number;
+    totalPolls: number;
+    totalVotes: number;
+    activeUsers: number;
+    newPolls: number;
+    newVotes: number;
   };
   trends: {
-    daily: Array<{ date: string; votes: number; users: number; polls: number }>;
-    weekly: Array<{ week: string; votes: number; users: number; polls: number }>;
-    monthly: Array<{ month: string; votes: number; users: number; polls: number }>;
+    userGrowth: Array<{ date: string; count: number }>;
+    pollActivity: Array<{ date: string; count: number }>;
+    voteActivity: Array<{ date: string; count: number }>;
   };
-  demographics: {
-    ageGroups: Record<string, number>;
-    geographicDistribution: Record<string, number>;
-    verificationTiers: Record<string, number>;
-    deviceTypes: Record<string, number>;
-    engagementLevels: Record<string, number>;
-  };
+  generatedAt: string;
   performance: {
-    loadTimes: Array<{ page: string; averageLoadTime: number; p95LoadTime: number }>;
-    errorRates: Array<{ endpoint: string; errorRate: number; totalRequests: number }>;
-    userExperience: {
-      firstContentfulPaint: number;
-      largestContentfulPaint: number;
-      cumulativeLayoutShift: number;
-    };
-  };
-  privacy: {
-    dataCollected: number;
-    dataShared: number;
-    anonymizationLevel: string;
-    encryptionEnabled: boolean;
-    userConsent: {
-      granted: number;
-      denied: number;
-      pending: number;
-    };
-  };
-  engagement: {
-    activeUsers: number;
-    returningUsers: number;
-    sessionDuration: number;
-    pagesPerSession: number;
-    featureUsage: Record<string, number>;
+    queryOptimized: boolean;
+    cacheEnabled: boolean;
   };
 }
 
@@ -127,10 +96,7 @@ export function useAnalytics(options: UseAnalyticsOptions = {}): UseAnalyticsRet
 
       const requestFilters = { ...filters, ...customFilters };
       const queryParams = new URLSearchParams({
-        type,
-        ...Object.fromEntries(
-          Object.entries(requestFilters).filter(([_, value]) => value !== undefined)
-        )
+        period: requestFilters.dateRange || '7d'
       });
 
       const response = await fetch(`/api/analytics?${queryParams}`);
@@ -141,11 +107,8 @@ export function useAnalytics(options: UseAnalyticsOptions = {}): UseAnalyticsRet
 
       const result = await response.json();
       
-      if (!result.success) {
-        throw new Error(result.error || 'Failed to fetch analytics data');
-      }
-
-      setData(result.data);
+      // The API returns the data directly, not wrapped in a success/error structure
+      setData(result);
       setLastUpdated(new Date());
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An error occurred';
@@ -193,7 +156,7 @@ export function useAnalytics(options: UseAnalyticsOptions = {}): UseAnalyticsRet
       const url = URL.createObjectURL(dataBlob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `analytics-${new Date().toISOString().split('T')[0]}.json`;
+      link.download = `analytics-${data.period}-${new Date().toISOString().split('T')[0]}.json`;
       link.click();
       URL.revokeObjectURL(url);
     } else if (format === 'csv') {
@@ -203,7 +166,7 @@ export function useAnalytics(options: UseAnalyticsOptions = {}): UseAnalyticsRet
       const url = URL.createObjectURL(dataBlob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `analytics-${new Date().toISOString().split('T')[0]}.csv`;
+      link.download = `analytics-${data.period}-${new Date().toISOString().split('T')[0]}.csv`;
       link.click();
       URL.revokeObjectURL(url);
     }
@@ -267,29 +230,29 @@ export function useAnalytics(options: UseAnalyticsOptions = {}): UseAnalyticsRet
 function convertToCSV(data: AnalyticsData): string {
   const lines: string[] = [];
   
-  // Overview section
+  // Summary section
   lines.push('Section,Metric,Value');
-  lines.push('Overview,Total Polls,' + data.overview.totalPolls);
-  lines.push('Overview,Active Polls,' + data.overview.activePolls);
-  lines.push('Overview,Total Votes,' + data.overview.totalVotes);
-  lines.push('Overview,Total Users,' + data.overview.totalUsers);
-  lines.push('Overview,Participation Rate,' + data.overview.participationRate + '%');
-  lines.push('Overview,Average Session Duration,' + data.overview.averageSessionDuration + ' min');
-  lines.push('Overview,Bounce Rate,' + data.overview.bounceRate + '%');
-  lines.push('Overview,Conversion Rate,' + data.overview.conversionRate + '%');
+  lines.push('Summary,Total Users,' + data.summary.totalUsers);
+  lines.push('Summary,Total Polls,' + data.summary.totalPolls);
+  lines.push('Summary,Total Votes,' + data.summary.totalVotes);
+  lines.push('Summary,Active Users,' + data.summary.activeUsers);
+  lines.push('Summary,New Polls,' + data.summary.newPolls);
+  lines.push('Summary,New Votes,' + data.summary.newVotes);
   
-  // Demographics section
-  Object.entries(data.demographics.ageGroups).forEach(([age, count]) => {
-    lines.push(`Demographics,Age ${age},${count}`);
+  // Trends section
+  lines.push('Trends,User Growth,');
+  data.trends.userGrowth.forEach(trend => {
+    lines.push(`Trends,User Growth ${trend.date},${trend.count}`);
   });
   
-  Object.entries(data.demographics.deviceTypes).forEach(([device, percentage]) => {
-    lines.push(`Demographics,Device ${device},${percentage}%`);
+  lines.push('Trends,Poll Activity,');
+  data.trends.pollActivity.forEach(trend => {
+    lines.push(`Trends,Poll Activity ${trend.date},${trend.count}`);
   });
   
-  // Performance section
-  data.performance.loadTimes.forEach(page => {
-    lines.push(`Performance,${page.page} Load Time,${page.averageLoadTime}ms`);
+  lines.push('Trends,Vote Activity,');
+  data.trends.voteActivity.forEach(trend => {
+    lines.push(`Trends,Vote Activity ${trend.date},${trend.count}`);
   });
   
   return lines.join('\n');
@@ -298,14 +261,15 @@ function convertToCSV(data: AnalyticsData): string {
 function generateReportSummary(data: AnalyticsData, type: string): string {
   switch (type) {
     case 'overview':
-      return `Platform Overview: ${data.overview.totalPolls} total polls with ${data.overview.totalVotes} votes from ${data.overview.totalUsers} users. Participation rate is ${data.overview.participationRate}%.`;
+      return `Platform Overview (${data.period}): ${data.summary.totalPolls} total polls with ${data.summary.totalVotes} votes from ${data.summary.totalUsers} users. ${data.summary.activeUsers} active users.`;
+    
+    case 'trends':
+      const totalUserGrowth = data.trends.userGrowth.reduce((sum, trend) => sum + trend.count, 0);
+      const totalPollActivity = data.trends.pollActivity.reduce((sum, trend) => sum + trend.count, 0);
+      return `Trends Summary (${data.period}): ${totalUserGrowth} new users, ${totalPollActivity} new polls.`;
     
     case 'performance':
-      const avgLoadTime = data.performance.loadTimes.reduce((sum: any, page: any) => sum + page.averageLoadTime, 0) / data.performance.loadTimes.length;
-      return `Performance Summary: Average page load time is ${avgLoadTime.toFixed(0)}ms. ${data.performance.loadTimes.length} pages monitored.`;
-    
-    case 'engagement':
-      return `Engagement Summary: ${data.engagement.activeUsers} active users with ${data.engagement.sessionDuration.toFixed(1)} minute average session duration.`;
+      return `Performance Summary: Query optimized: ${data.performance.queryOptimized}, Cache enabled: ${data.performance.cacheEnabled}.`;
     
     default:
       return `Analytics report generated for ${type} on ${new Date().toLocaleDateString()}.`;
@@ -317,24 +281,27 @@ function generateRecommendations(data: AnalyticsData, type: string): string[] {
   
   switch (type) {
     case 'overview':
-      if (data.overview.participationRate < 50) {
+      if (data.summary.totalVotes / data.summary.totalUsers < 2) {
         recommendations.push('Consider implementing engagement campaigns to increase participation rate');
       }
-      if (data.overview.bounceRate > 50) {
-        recommendations.push('High bounce rate detected - review landing page optimization');
+      if (data.summary.activeUsers / data.summary.totalUsers < 0.3) {
+        recommendations.push('Low active user ratio - review user engagement strategies');
+      }
+      break;
+    
+    case 'trends':
+      const recentUserGrowth = data.trends.userGrowth.slice(-7).reduce((sum, trend) => sum + trend.count, 0);
+      if (recentUserGrowth < 10) {
+        recommendations.push('Low recent user growth - consider marketing campaigns');
       }
       break;
     
     case 'performance':
-      const slowPages = data.performance.loadTimes.filter(page => page.averageLoadTime > 1000);
-      if (slowPages.length > 0) {
-        recommendations.push(`Optimize load times for: ${slowPages.map(p => p.page).join(', ')}`);
+      if (!data.performance.queryOptimized) {
+        recommendations.push('Enable query optimization for better performance');
       }
-      break;
-    
-    case 'engagement':
-      if (data.engagement.sessionDuration < 3) {
-        recommendations.push('Short session duration - consider improving content engagement');
+      if (!data.performance.cacheEnabled) {
+        recommendations.push('Enable caching for improved response times');
       }
       break;
   }
@@ -370,19 +337,6 @@ export function useTrendsAnalytics(options?: UseAnalyticsOptions) {
   };
 }
 
-export function useDemographicsAnalytics(options?: UseAnalyticsOptions) {
-  const analytics = useAnalytics(options);
-  
-  const fetchDemographics = useCallback(() => {
-    return analytics.fetchData('demographics');
-  }, [analytics.fetchData]);
-  
-  return {
-    ...analytics,
-    fetchDemographics
-  };
-}
-
 export function usePerformanceAnalytics(options?: UseAnalyticsOptions) {
   const analytics = useAnalytics(options);
   
@@ -393,44 +347,5 @@ export function usePerformanceAnalytics(options?: UseAnalyticsOptions) {
   return {
     ...analytics,
     fetchPerformance
-  };
-}
-
-export function usePrivacyAnalytics(options?: UseAnalyticsOptions) {
-  const analytics = useAnalytics(options);
-  
-  const fetchPrivacy = useCallback(() => {
-    return analytics.fetchData('privacy');
-  }, [analytics.fetchData]);
-  
-  return {
-    ...analytics,
-    fetchPrivacy
-  };
-}
-
-export function useEngagementAnalytics(options?: UseAnalyticsOptions) {
-  const analytics = useAnalytics(options);
-  
-  const fetchEngagement = useCallback(() => {
-    return analytics.fetchData('engagement');
-  }, [analytics.fetchData]);
-  
-  return {
-    ...analytics,
-    fetchEngagement
-  };
-}
-
-export function useAdvancedAnalytics(options?: UseAnalyticsOptions) {
-  const analytics = useAnalytics(options);
-  
-  const fetchAdvanced = useCallback(() => {
-    return analytics.fetchData('advanced');
-  }, [analytics.fetchData]);
-  
-  return {
-    ...analytics,
-    fetchAdvanced
   };
 }
