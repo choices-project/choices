@@ -16,12 +16,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: '19'
+          node-version: '22'
           cache: 'npm'
           cache-dependency-path: package-lock.json
 
@@ -31,7 +31,6 @@ jobs:
 
       - name: Run security audit
         run: |
-          cd web
           echo "Running npm security audit..."
           npm audit --audit-level=high || {
             echo "::error::High or critical vulnerabilities detected"
@@ -40,3 +39,10 @@ jobs:
             exit 1
           }
           echo "✅ No high/critical vulnerabilities found"
+      
+      - name: Dependency review
+        uses: actions/dependency-review-action@v4
+        if: github.event_name == 'pull_request'
+        with:
+          fail-on-severity: moderate
+          allow-licenses: MIT, Apache-2.0, BSD-2-Clause, BSD-3-Clause, ISC, Unlicense

@@ -10,14 +10,15 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js'
 import { createBrowserClient } from '@supabase/ssr'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
-import { logger } from './logger'
+import { logger, devLog } from './logger'
+import type { Database, UserProfileInsert, UserProfileUpdate, PollInsert, PollUpdate, VoteInsert } from '../types/database'
 
 // Environment validation
 const validateEnvironment = () => {
   const requiredVars = {
     NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
-    NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-    SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY
+    NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+    SUPABASE_SECRET_KEY: process.env.SUPABASE_SECRET_KEY
   }
 
   const missing = Object.entries(requiredVars)
@@ -31,168 +32,8 @@ const validateEnvironment = () => {
   return requiredVars
 }
 
-// Database schema types for type safety
-export interface Database {
-  public: {
-    Tables: {
-      user_profiles: {
-        Row: {
-          id: string
-          user_id: string
-          username: string
-          email: string
-          trust_tier: 'T0' | 'T1' | 'T2' | 'T3'
-          created_at: string
-          updated_at: string
-          avatar_url?: string
-          bio?: string
-          is_active: boolean
-        }
-        Insert: {
-          id?: string
-          user_id: string
-          username: string
-          email: string
-          trust_tier?: 'T0' | 'T1' | 'T2' | 'T3'
-          created_at?: string
-          updated_at?: string
-          avatar_url?: string
-          bio?: string
-          is_active?: boolean
-        }
-        Update: {
-          id?: string
-          user_id?: string
-          username?: string
-          email?: string
-          trust_tier?: 'T0' | 'T1' | 'T2' | 'T3'
-          created_at?: string
-          updated_at?: string
-          avatar_url?: string
-          bio?: string
-          is_active?: boolean
-        }
-      }
-      polls: {
-        Row: {
-          id: string
-          title: string
-          description: string
-          options: string[]
-          voting_method: 'single' | 'approval' | 'ranked' | 'quadratic' | 'range'
-          created_by: string
-          created_at: string
-          updated_at: string
-          start_time: string
-          end_time: string
-          status: 'draft' | 'active' | 'closed' | 'archived'
-          privacy_level: 'public' | 'private' | 'high-privacy'
-          total_votes: number
-          category?: string
-          tags?: string[]
-        }
-        Insert: {
-          id?: string
-          title: string
-          description: string
-          options: string[]
-          voting_method: 'single' | 'approval' | 'ranked' | 'quadratic' | 'range'
-          created_by: string
-          created_at?: string
-          updated_at?: string
-          start_time: string
-          end_time: string
-          status?: 'draft' | 'active' | 'closed' | 'archived'
-          privacy_level?: 'public' | 'private' | 'high-privacy'
-          total_votes?: number
-          category?: string
-          tags?: string[]
-        }
-        Update: {
-          id?: string
-          title?: string
-          description?: string
-          options?: string[]
-          voting_method?: 'single' | 'approval' | 'ranked' | 'quadratic' | 'range'
-          created_by?: string
-          created_at?: string
-          updated_at?: string
-          start_time?: string
-          end_time?: string
-          status?: 'draft' | 'active' | 'closed' | 'archived'
-          privacy_level?: 'public' | 'private' | 'high-privacy'
-          total_votes?: number
-          category?: string
-          tags?: string[]
-        }
-      }
-      votes: {
-        Row: {
-          id: string
-          poll_id: string
-          user_id: string
-          selected_options: string[]
-          created_at: string
-          updated_at: string
-          ip_address?: string
-          user_agent?: string
-        }
-        Insert: {
-          id?: string
-          poll_id: string
-          user_id: string
-          selected_options: string[]
-          created_at?: string
-          updated_at?: string
-          ip_address?: string
-          user_agent?: string
-        }
-        Update: {
-          id?: string
-          poll_id?: string
-          user_id?: string
-          selected_options?: string[]
-          created_at?: string
-          updated_at?: string
-          ip_address?: string
-          user_agent?: string
-        }
-      }
-      error_logs: {
-        Row: {
-          id: string
-          user_id?: string
-          error_type: string
-          error_message: string
-          stack_trace?: string
-          context?: any
-          created_at: string
-          severity: 'low' | 'medium' | 'high' | 'critical'
-        }
-        Insert: {
-          id?: string
-          user_id?: string
-          error_type: string
-          error_message: string
-          stack_trace?: string
-          context?: any
-          created_at?: string
-          severity?: 'low' | 'medium' | 'high' | 'critical'
-        }
-        Update: {
-          id?: string
-          user_id?: string
-          error_type?: string
-          error_message?: string
-          stack_trace?: string
-          context?: any
-          created_at?: string
-          severity?: 'low' | 'medium' | 'high' | 'critical'
-        }
-      }
-    }
-  }
-}
+// Database types are now imported from ../types/database.ts
+// This provides proper type safety for all Supabase operations
 
 /**
  * Create SSR-safe browser client
@@ -202,10 +43,10 @@ export const createBrowserClientSafe = (): SupabaseClient<Database> | null => {
   try {
     const env = validateEnvironment()
     
-    return createBrowserClient<Database>(
+    return createBrowserClient(
       env.NEXT_PUBLIC_SUPABASE_URL!,
-      env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    )
+      env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!
+    ) as unknown as SupabaseClient<Database>
   } catch (error) {
     logger.error('Failed to create browser client', error instanceof Error ? error : new Error(String(error)))
     return null
@@ -220,9 +61,9 @@ export const createServerClientSafe = (cookieStore: ReturnType<typeof cookies>):
   try {
     const env = validateEnvironment()
     
-    return createServerClient<Database>(
+    return createServerClient(
       env.NEXT_PUBLIC_SUPABASE_URL!,
-      env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
       {
         cookies: {
           getAll() {
@@ -240,7 +81,7 @@ export const createServerClientSafe = (cookieStore: ReturnType<typeof cookies>):
           },
         },
       }
-    )
+    ) as unknown as SupabaseClient<Database>
   } catch (error) {
     logger.error('Failed to create server client', error instanceof Error ? error : new Error(String(error)))
     return null
@@ -257,7 +98,7 @@ export const createServiceRoleClient = (): SupabaseClient<Database> | null => {
     
     return createClient<Database>(
       env.NEXT_PUBLIC_SUPABASE_URL!,
-      env.SUPABASE_SERVICE_ROLE_KEY!,
+      env.SUPABASE_SECRET_KEY!,
       {
         auth: {
           autoRefreshToken: false,
@@ -316,12 +157,15 @@ export const createSafeDbOperations = (client: SupabaseClient<Database> | null) 
   if (!client) {
     throw new Error('Supabase client not available')
   }
+  
+  // Use the client directly - Supabase will infer types from the database
+  const typedClient = client
 
   return {
     // User operations
     users: {
       async getById(userId: string) {
-        const { data, error } = await client
+        const { data, error } = await typedClient
           .from('user_profiles')
           .select('*')
           .eq('user_id', userId)
@@ -331,8 +175,8 @@ export const createSafeDbOperations = (client: SupabaseClient<Database> | null) 
         return data
       },
 
-      async create(user: Database['public']['Tables']['user_profiles']['Insert']) {
-        const { data, error } = await client
+      async create(user: UserProfileInsert) {
+        const { data, error } = await typedClient
           .from('user_profiles')
           .insert(user)
           .select()
@@ -342,8 +186,8 @@ export const createSafeDbOperations = (client: SupabaseClient<Database> | null) 
         return data
       },
 
-      async update(userId: string, updates: Database['public']['Tables']['user_profiles']['Update']) {
-        const { data, error } = await client
+      async update(userId: string, updates: UserProfileUpdate) {
+        const { data, error } = await typedClient
           .from('user_profiles')
           .update(updates)
           .eq('user_id', userId)
@@ -358,7 +202,7 @@ export const createSafeDbOperations = (client: SupabaseClient<Database> | null) 
     // Poll operations
     polls: {
       async getById(pollId: string) {
-        const { data, error } = await client
+        const { data, error } = await typedClient
           .from('polls')
           .select('*')
           .eq('id', pollId)
@@ -368,8 +212,8 @@ export const createSafeDbOperations = (client: SupabaseClient<Database> | null) 
         return data
       },
 
-      async create(poll: Database['public']['Tables']['polls']['Insert']) {
-        const { data, error } = await client
+      async create(poll: PollInsert) {
+        const { data, error } = await typedClient
           .from('polls')
           .insert(poll)
           .select()
@@ -379,8 +223,8 @@ export const createSafeDbOperations = (client: SupabaseClient<Database> | null) 
         return data
       },
 
-      async update(pollId: string, updates: Database['public']['Tables']['polls']['Update']) {
-        const { data, error } = await client
+      async update(pollId: string, updates: PollUpdate) {
+        const { data, error } = await typedClient
           .from('polls')
           .update(updates)
           .eq('id', pollId)
@@ -395,7 +239,7 @@ export const createSafeDbOperations = (client: SupabaseClient<Database> | null) 
     // Vote operations
     votes: {
       async getByPollId(pollId: string) {
-        const { data, error } = await client
+        const { data, error } = await typedClient
           .from('votes')
           .select('*')
           .eq('poll_id', pollId)
@@ -404,8 +248,8 @@ export const createSafeDbOperations = (client: SupabaseClient<Database> | null) 
         return data
       },
 
-      async create(vote: Database['public']['Tables']['votes']['Insert']) {
-        const { data, error } = await client
+      async create(vote: VoteInsert) {
+        const { data, error } = await typedClient
           .from('votes')
           .insert(vote)
           .select()
