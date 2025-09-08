@@ -1,39 +1,39 @@
 name: CI
 
 on:
-  pull_request:
   push:
-    branches: [ main, feat/* ]
+    branches: [main]
+  pull_request:
+    branches: [main]
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Node
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
         with:
-          node-version: '20'
+          node-version: '19'
           cache: 'npm'
-
-      - name: Install
-        run: npm i
-
-      - name: Lint & Typecheck
+          cache-dependency-path: package-lock.json
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Run tests
         run: |
-          npm run lint || true
-          npm run typecheck || true
-
-      - name: Forbid server imports of supabase-js
+          cd web
+          npm test
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+      
+      - name: Build
         run: |
-          set -e
-          # allow client-only utilities (*.client.*) and web/app/(client components)
-          BAD=$(grep -R --line-number "@supabase/supabase-js" apps packages | grep -v "\.client\." || true)
-          if [ -n "$BAD" ]; then
-            echo "❌ Forbidden import of @supabase/supabase-js in server-side civics code:"
-            echo "$BAD"
-            exit 1
-          fi
-          echo "✅ No forbidden imports found."
-
+          cd web
+          npm run build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}

@@ -2,7 +2,7 @@
   "name": "choice-web",
   "private": true,
   "engines": {
-    "node": ">=18.0.0"
+    "node": "19"
   },
   "scripts": {
     "dev": "next dev",
@@ -30,10 +30,10 @@
     "cleanup:fix": "node ../scripts/cleanup-code.js --fix"
   },
   "dependencies": {
-    "@choices/civics-client": "file:../packages/civics-client",
-    "@choices/civics-schemas": "file:../packages/civics-schemas",
-    "@choices/civics-sources": "file:../packages/civics-sources",
-    "@choices/ingest": "file:../apps/ingest",
+    "@choices/civics-client": "../packages/civics-client",
+    "@choices/civics-schemas": "../packages/civics-schemas",
+    "@choices/civics-sources": "../packages/civics-sources",
+    "@choices/ingest": "web/apps/ingest",
     "@headlessui/react": "^2.2.7",
     "@heroicons/react": "^2.2.0",
     "@radix-ui/react-label": "^2.1.7",

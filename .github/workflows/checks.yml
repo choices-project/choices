@@ -12,20 +12,19 @@ jobs:
   checks:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v3
         with: { fetch-depth: 0 }
 
-      - uses: dorny/paths-filter@v3
-        id: cf
-        with:
-          filters: |
-            code:
-              - 'apps/**'
-              - 'packages/**'
-              - 'infra/**'
+      - name: Check for code changes
+        run: |
+          if git diff --name-only HEAD~1 HEAD | grep -E '^(apps/|packages/|infra/)'; then
+            echo "CODE_CHANGED=true" >> $GITHUB_ENV
+          else
+            echo "CODE_CHANGED=false" >> $GITHUB_ENV
+          fi
 
       - name: Short-circuit for docs-only PRs
-        if: steps.cf.outputs.code != 'true'
+        if: env.CODE_CHANGED == 'false'
         run: |
           echo "Docs-only changes detected — skipping install/build."
           exit 0
@@ -139,10 +138,12 @@ jobs:
             done < cur.txt
           done
 
-      - uses: actions/setup-node@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
         with:
-          node-version: '20'
+          node-version: '19'
           cache: 'npm'
+          cache-dependency-path: 'package-lock.json'
 
       - name: Install & typecheck (path-aware)
         env:
