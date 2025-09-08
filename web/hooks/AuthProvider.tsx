@@ -1,14 +1,14 @@
 'use client'
 
 import { createContext, useContext, ReactNode } from 'react'
-import { useAuth, AuthState, AuthActions } from './useAuth'
+import { useSupabaseAuth, AuthState, AuthActions } from './useSupabaseAuth'
 
 interface AuthContextType extends AuthState, AuthActions {}
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const auth = useAuth()
+  const auth = useSupabaseAuth()
   
   return (
     <AuthContext.Provider value={auth}>
