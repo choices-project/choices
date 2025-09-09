@@ -7,7 +7,7 @@
  * @created September 9, 2025
  */
 
-import { supabase } from '../supabase/client';
+import { getSupabaseBrowserClient } from '../supabase/client';
 import { UserEncryption, EncryptionUtils } from './encryption';
 import { ConsentManager } from './consent';
 
@@ -29,10 +29,12 @@ export interface AnonymizationResult {
 export class PrivacyDataManager {
   private encryption: UserEncryption;
   private consentManager: ConsentManager;
+  private supabaseClient: any;
 
-  constructor() {
+  constructor(supabaseClient?: any) {
     this.encryption = new UserEncryption();
-    this.consentManager = new ConsentManager(supabase);
+    this.supabaseClient = supabaseClient || getSupabaseBrowserClient();
+    this.consentManager = new ConsentManager(this.supabaseClient);
   }
 
   /**
@@ -40,8 +42,8 @@ export class PrivacyDataManager {
    */
   async exportUserData(): Promise<UserDataExport | null> {
     try {
-      const { data, error } = await supabase.rpc('export_user_data', {
-        target_user_id: (await supabase.auth.getUser()).data.user?.id
+      const { data, error } = await this.supabaseClient.rpc('export_user_data', {
+        target_user_id: (await this.supabaseClient.auth.getUser()).data.user?.id
       });
 
       if (error) {
@@ -61,7 +63,7 @@ export class PrivacyDataManager {
    */
   async anonymizeUserData(): Promise<AnonymizationResult> {
     try {
-      const userId = (await supabase.auth.getUser()).data.user?.id;
+      const userId = (await this.supabaseClient.auth.getUser()).data.user?.id;
       if (!userId) {
         return {
           success: false,
@@ -70,7 +72,7 @@ export class PrivacyDataManager {
         };
       }
 
-      const { error } = await supabase.rpc('anonymize_user_data', {
+      const { error } = await this.supabaseClient.rpc('anonymize_user_data', {
         target_user_id: userId
       });
 
@@ -115,7 +117,7 @@ export class PrivacyDataManager {
     password: string
   ): Promise<boolean> {
     try {
-      const userId = (await supabase.auth.getUser()).data.user?.id;
+      const userId = (await this.supabaseClient.auth.getUser()).data.user?.id;
       if (!userId) {
         throw new Error('User not authenticated');
       }
@@ -144,7 +146,7 @@ export class PrivacyDataManager {
       if (['demographics', 'preferences', 'contact_info'].includes(dataType)) {
         updateData[`encrypted_${dataType}`] = encryptedDataBase64;
         
-        const { error } = await supabase
+        const { error } = await this.supabaseClient
           .from('user_profiles_encrypted')
           .upsert({
             user_id: userId,
@@ -156,7 +158,7 @@ export class PrivacyDataManager {
         // Store in private_user_data table
         updateData[`encrypted_${dataType}`] = encryptedDataBase64;
         
-        const { error } = await supabase
+        const { error } = await this.supabaseClient
           .from('private_user_data')
           .upsert({
             user_id: userId,
@@ -185,7 +187,7 @@ export class PrivacyDataManager {
     password: string
   ): Promise<any | null> {
     try {
-      const userId = (await supabase.auth.getUser()).data.user?.id;
+      const userId = (await this.supabaseClient.auth.getUser()).data.user?.id;
       if (!userId) {
         throw new Error('User not authenticated');
       }
@@ -196,7 +198,7 @@ export class PrivacyDataManager {
 
       // Retrieve encrypted data from appropriate table
       if (['demographics', 'preferences', 'contact_info'].includes(dataType)) {
-        const { data, error } = await supabase
+        const { data, error } = await this.supabaseClient
           .from('user_profiles_encrypted')
           .select(`encrypted_${dataType}, key_derivation_salt`)
           .eq('user_id', userId)
@@ -208,7 +210,7 @@ export class PrivacyDataManager {
         encryptedData = data[`encrypted_${dataType}`];
         salt = data.key_derivation_salt;
       } else {
-        const { data, error } = await supabase
+        const { data, error } = await this.supabaseClient
           .from('private_user_data')
           .select(`encrypted_${dataType}`)
           .eq('user_id', userId)
@@ -220,7 +222,7 @@ export class PrivacyDataManager {
         encryptedData = data[`encrypted_${dataType}`];
         
         // Get salt from user_profiles_encrypted
-        const { data: profileData } = await supabase
+        const { data: profileData } = await this.supabaseClient
           .from('user_profiles_encrypted')
           .select('key_derivation_salt')
           .eq('user_id', userId)
@@ -284,7 +286,7 @@ export class PrivacyDataManager {
       const educationBucket = this.getEducationBucket(demographicData.education);
 
       // Contribute to analytics
-      const { error } = await supabase.rpc('contribute_to_analytics', {
+      const { error } = await this.supabaseClient.rpc('contribute_to_analytics', {
         target_poll_id: pollId,
         target_age_bucket: ageBucket,
         target_region_bucket: regionBucket,
@@ -325,16 +327,16 @@ export class PrivacyDataManager {
       const consentSummary = await this.consentManager.getConsentSummary();
       
       // Check encryption status
-      const { data: profileData } = await supabase
+      const { data: profileData } = await this.supabaseClient
         .from('user_profiles_encrypted')
         .select('encrypted_demographics, encrypted_preferences, encrypted_contact_info')
-        .eq('user_id', (await supabase.auth.getUser()).data.user?.id)
+        .eq('user_id', (await this.supabaseClient.auth.getUser()).data.user?.id)
         .single();
 
-      const { data: privateData } = await supabase
+      const { data: privateData } = await this.supabaseClient
         .from('private_user_data')
         .select('encrypted_personal_info, encrypted_behavioral_data, encrypted_analytics_data')
-        .eq('user_id', (await supabase.auth.getUser()).data.user?.id)
+        .eq('user_id', (await this.supabaseClient.auth.getUser()).data.user?.id)
         .single();
 
       return {

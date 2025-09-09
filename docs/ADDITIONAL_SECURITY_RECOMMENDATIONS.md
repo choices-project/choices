@@ -322,7 +322,7 @@ export function createSecureSession(userId: string) {
 #### **Password Security**
 ```typescript
 // Strong password requirements
-const userPasswordValidation = z.string()
+const passwordSchema = z.string()
   .min(8, 'Password must be at least 8 characters')
   .regex(/[A-Z]/, 'Password must contain uppercase letter')
   .regex(/[a-z]/, 'Password must contain lowercase letter')

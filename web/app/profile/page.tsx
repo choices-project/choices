@@ -20,7 +20,7 @@ import {
   XCircle,
   Info
 } from 'lucide-react'
-import { devLog } from '@/lib/logger'
+import { logger } from '@/lib/logger'
 import BiometricSetup from '@/components/auth/BiometricSetup'
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
 
@@ -86,7 +86,7 @@ export default function ProfilePage() {
       }
 
     } catch (error) {
-      devLog('Error loading user data:', error)
+      logger.error('Error loading user data', error instanceof Error ? error : new Error(String(error)))
       setError('Failed to load user data')
     }
   }, [user, router])
@@ -125,7 +125,7 @@ export default function ProfilePage() {
       setShowExportConfirm(false)
 
     } catch (error) {
-      devLog('Error exporting data:', error)
+      logger.error('Error exporting data', error instanceof Error ? error : new Error(String(error)))
       setError('Failed to export data')
     } finally {
       setIsExporting(false)
@@ -159,7 +159,7 @@ export default function ProfilePage() {
       }
 
     } catch (error) {
-      devLog('Error deleting account:', error)
+      logger.error('Error deleting account', error instanceof Error ? error : new Error(String(error)))
       setError('Failed to delete account')
     } finally {
       setIsDeleting(false)
@@ -180,7 +180,7 @@ export default function ProfilePage() {
         setError('Failed to delete biometric credential')
       }
     } catch (error) {
-      devLog('Error deleting biometric credential:', error)
+      logger.error('Error deleting biometric credential', error instanceof Error ? error : new Error(String(error)))
       setError('Failed to delete biometric credential')
     }
   }

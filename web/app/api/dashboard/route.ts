@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { devLog } from '@/lib/logger';
+import { logger } from '@/lib/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server'
-import { getCurrentUser } from '@/lib/auth-utils'
-import { cookies as _cookies } from 'next/headers'
 
 export const dynamic = 'force-dynamic'
 
@@ -18,10 +16,12 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Get current user from JWT token
-    const user = getCurrentUser(request)
+    const supabaseClient = await supabase
+
+    // Get current user from Supabase Auth
+    const { data: { user }, error: authError } = await supabaseClient.auth.getUser()
     
-    if (!user) {
+    if (authError || !user) {
       return NextResponse.json(
         { error: 'User not authenticated' },
         { status: 401 }
@@ -29,27 +29,27 @@ export async function GET(request: NextRequest) {
     }
 
     // Get user-specific statistics
-    const userStats = await getUserStats(supabase, user.userId)
+    const userStats = await getUserStats(supabase, user.id)
     
     // Get general platform statistics
     const platformStats = await getPlatformStats(supabase)
 
     const dashboardData = {
       user: {
-        id: user.userId,
+        id: user.id,
         email: user.email,
         name: user.email?.split('@')[0]
       },
       stats: userStats,
       platform: platformStats,
-      recentActivity: await getRecentActivity(supabase, user.userId),
+      recentActivity: await getRecentActivity(supabase, user.id),
       polls: await getActivePolls(supabase)
     }
 
     return NextResponse.json(dashboardData)
 
   } catch (error) {
-    devLog('Dashboard API error:', error)
+    logger.error('Dashboard API error', error instanceof Error ? error : new Error(String(error)))
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -66,7 +66,7 @@ async function getUserStats(supabase: any, userId: string) {
       .eq('created_by', userId)
 
     if (pollsError) {
-      devLog('Error fetching created polls:', pollsError)
+      logger.error('Error fetching created polls', pollsError)
     }
 
     // Get votes cast by user
@@ -76,7 +76,7 @@ async function getUserStats(supabase: any, userId: string) {
       .eq('user_id', userId)
 
     if (votesError) {
-      devLog('Error fetching user votes:', votesError)
+      logger.error('Error fetching user votes', votesError)
     }
 
     // Get active polls count
@@ -86,7 +86,7 @@ async function getUserStats(supabase: any, userId: string) {
       .eq('status', 'active')
 
     if (activeError) {
-      devLog('Error fetching active polls:', activeError)
+      logger.error('Error fetching active polls', activeError)
     }
 
     // Calculate participation rate
@@ -102,7 +102,7 @@ async function getUserStats(supabase: any, userId: string) {
       averageVotesPerPoll: totalPolls > 0 ? Math.round((userVoteCount / totalPolls) * 10) / 10 : 0
     }
   } catch (error) {
-    devLog('Error calculating user stats:', error)
+    logger.error('Error calculating user stats', error instanceof Error ? error : new Error(String(error)))
     return {
       pollsCreated: 0,
       votesCast: 0,
@@ -121,7 +121,7 @@ async function getPlatformStats(supabase: any) {
       .select('id', { count: 'exact' })
 
     if (totalPollsError) {
-      devLog('Error fetching total polls:', totalPollsError)
+      logger.error('Error fetching total polls:', totalPollsError)
     }
 
     // Get total votes
@@ -130,7 +130,7 @@ async function getPlatformStats(supabase: any) {
       .select('id', { count: 'exact' })
 
     if (totalVotesError) {
-      devLog('Error fetching total votes:', totalVotesError)
+      logger.error('Error fetching total votes:', totalVotesError)
     }
 
     // Get total users (from user_profiles)
@@ -139,7 +139,7 @@ async function getPlatformStats(supabase: any) {
       .select('id', { count: 'exact' })
 
     if (totalUsersError) {
-      devLog('Error fetching total users:', totalUsersError)
+      logger.error('Error fetching total users:', totalUsersError)
     }
 
     // Get active polls
@@ -149,7 +149,7 @@ async function getPlatformStats(supabase: any) {
       .eq('status', 'active')
 
     if (activePollsError) {
-      devLog('Error fetching active polls:', activePollsError)
+      logger.error('Error fetching active polls:', activePollsError)
     }
 
     return {
@@ -160,7 +160,7 @@ async function getPlatformStats(supabase: any) {
       averageParticipation: totalPolls?.length > 0 ? Math.round((totalVotes?.length / totalPolls?.length) * 10) / 10 : 0
     }
   } catch (error) {
-    devLog('Error calculating platform stats:', error)
+    logger.error('Error calculating platform stats', error instanceof Error ? error : new Error(String(error)))
     return {
       totalPolls: 0,
       totalVotes: 0,
@@ -186,7 +186,7 @@ async function getRecentActivity(supabase: any, userId: string) {
       .limit(5)
 
     if (votesError) {
-      devLog('Error fetching recent votes:', votesError)
+      logger.error('Error fetching recent votes:', votesError)
       return []
     }
 
@@ -199,7 +199,7 @@ async function getRecentActivity(supabase: any, userId: string) {
       .limit(5)
 
     if (pollsError) {
-      devLog('Error fetching recent polls:', pollsError)
+      logger.error('Error fetching recent polls:', pollsError)
       return []
     }
 
@@ -227,7 +227,7 @@ async function getRecentActivity(supabase: any, userId: string) {
       .slice(0, 5)
 
   } catch (error) {
-    devLog('Error fetching recent activity:', error)
+    logger.error('Error fetching recent activity', error instanceof Error ? error : new Error(String(error)))
     return []
   }
 }
@@ -250,13 +250,13 @@ async function getActivePolls(supabase: any) {
       .limit(6)
 
     if (error) {
-      devLog('Error fetching active polls:', error)
+      logger.error('Error fetching active polls', error instanceof Error ? error : new Error(String(error)))
       return []
     }
 
     return polls || []
   } catch (error) {
-    devLog('Error fetching active polls:', error)
+    logger.error('Error fetching active polls', error instanceof Error ? error : new Error(String(error)))
     return []
   }
 }

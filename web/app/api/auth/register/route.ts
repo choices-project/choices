@@ -1,15 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseServerClient } from '@/utils/supabase/server'
-import { v4 as uuidv4 } from 'uuid'
-import bcrypt from 'bcryptjs'
 import { logger } from '@/lib/logger'
-import { createEnhancedSession, type EnhancedSessionUser } from '@/lib/session-enhanced'
+import { rateLimiters } from '@/lib/rate-limit'
 import { 
   validateCsrfProtection, 
   createCsrfErrorResponse 
 } from '../_shared'
-
-export const dynamic = 'force-dynamic'
 
 export async function POST(request: NextRequest) {
   try {
@@ -18,138 +14,128 @@ export async function POST(request: NextRequest) {
       return createCsrfErrorResponse()
     }
 
-    const { username, email, password } = await request.json()
+    // Rate limiting: 5 registration attempts per 15 minutes per IP
+    const rateLimitResult = await rateLimiters.auth.check(request)
     
-    // Validation
-    if (!username || username.trim().length === 0) {
+    if (!rateLimitResult.allowed) {
       return NextResponse.json(
-        { error: 'Username is required' },
-        { status: 400 }
+        { message: 'Too many registration attempts. Please try again later.' },
+        { status: 429 }
       )
     }
-    
-    if (username.length > 20) {
+
+    // Validate request
+    const body = await request.json()
+    const { email, password, username, display_name } = body
+
+    // Validate required fields
+    if (!email || !password || !username) {
       return NextResponse.json(
-        { error: 'Username must be 20 characters or less' },
-        { status: 400 }
-      )
-    }
-    
-    if (!/^[a-zA-Z0-9_-]+$/.test(username)) {
-      return NextResponse.json(
-        { error: 'Username can only contain letters, numbers, underscores, and hyphens' },
+        { message: 'Email, password, and username are required' },
         { status: 400 }
       )
     }
 
-    // Get Supabase client for regular operations
-    const supabase = getSupabaseServerClient()
-    if (!supabase) {
+    // Validate username format
+    if (!/^[a-zA-Z0-9_-]{3,20}$/.test(username)) {
       return NextResponse.json(
-        { error: 'Database connection not available' },
-        { status: 500 }
+        { message: 'Username must be 3-20 characters, letters, numbers, hyphens, and underscores only' },
+        { status: 400 }
       )
     }
-    
+
+    // Validate password strength
+    if (password.length < 8) {
+      return NextResponse.json(
+        { message: 'Password must be at least 8 characters long' },
+        { status: 400 }
+      )
+    }
+
+    // Use Supabase Auth for registration
+    const supabase = getSupabaseServerClient()
     const supabaseClient = await supabase
 
-    // Check for existing user by email in user_profiles table
-    if (email) {
-      const { data: existingEmailUser } = await supabaseClient
-        .from('user_profiles')
-        .select('user_id')
-        .eq('email', email.toLowerCase())
-        .single()
-
-      if (existingEmailUser) {
-        return NextResponse.json(
-          { error: 'Email already registered' },
-          { status: 409 }
-        )
-      }
-    }
-
-    // Check for existing username in user_profiles table
-    const { data: existingUsernameUser } = await supabaseClient
-      .from('user_profiles')
-      .select('user_id')
-      .eq('username', username.toLowerCase())
-      .single()
-
-    if (existingUsernameUser) {
-      return NextResponse.json(
-        { error: 'Username already taken' },
-        { status: 409 }
-      )
-    }
-
-    // Create user with custom auth (no service role needed)
-    const userId = uuidv4()
-    const hashedPassword = await bcrypt.hash(password, 12)
-    
-    // Create user profile directly
-    const { error: profileError } = await supabaseClient
-      .from('user_profiles')
-      .insert({
-        user_id: userId,
-        username: username.toLowerCase(),
-        email: email?.toLowerCase() || `${username.toLowerCase()}@choices-platform.vercel.app`,
-        trust_tier: 'T0',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      })
-
-    if (profileError) {
-      logger.error('Failed to create user profile', profileError)
-      return NextResponse.json(
-        { error: 'Failed to create user profile' },
-        { status: 500 }
-      )
-    }
-
-    // Create enhanced session user object
-    const sessionUser: EnhancedSessionUser = {
-      id: userId,
-      stableId: userId,
-      username: username.toLowerCase(),
-      tier: 'T0',
-      email: email?.toLowerCase(),
-      isActive: true,
-      twoFactorEnabled: false,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    }
-
-    // Create response with success data
-    const response = NextResponse.json({
-      success: true,
-      message: 'User registered successfully',
-      user: {
-        id: userId,
-        username: username.toLowerCase(),
-        email: email?.toLowerCase(),
-        tier: 'T0'
+    // Sign up with Supabase Auth
+    const { data: authData, error: authError } = await supabaseClient.auth.signUp({
+      email: email.toLowerCase().trim(),
+      password: password,
+      options: {
+        data: {
+          username: username,
+          display_name: display_name || username
+        }
       }
     })
 
-    // Create enhanced session with secure cookies
-    const sessionResult = createEnhancedSession(sessionUser, response)
-    
-    if (!sessionResult.success) {
-      logger.error('Failed to create enhanced session', new Error(sessionResult.error || 'Unknown error'))
+    if (authError || !authData.user) {
+      logger.warn('Registration failed', { email, username, error: authError?.message })
+      
+      // Handle specific Supabase errors
+      if (authError?.message.includes('already registered')) {
+        return NextResponse.json(
+          { message: 'An account with this email already exists' },
+          { status: 409 }
+        )
+      }
+      
       return NextResponse.json(
-        { error: 'Failed to create session' },
+        { message: 'Registration failed. Please try again.' },
+        { status: 400 }
+      )
+    }
+
+    // Create user profile
+    const { data: profile, error: profileError } = await supabaseClient
+      .from('user_profiles')
+      .insert({
+        user_id: authData.user.id,
+        username: username,
+        email: email.toLowerCase().trim(),
+        display_name: display_name || username,
+        trust_tier: 'T0',
+        is_active: true
+      })
+      .select()
+      .single()
+
+    if (profileError) {
+      logger.error('Failed to create user profile', profileError, { 
+        user_id: authData.user.id
+      })
+      
+      // If profile creation fails, we should clean up the auth user
+      await supabaseClient.auth.admin.deleteUser(authData.user.id)
+      
+      return NextResponse.json(
+        { message: 'Registration failed. Please try again.' },
         { status: 500 }
       )
     }
 
-    logger.info('User registered successfully', { username: username.toLowerCase(), stableId: userId })
-    
-    return response
+    logger.info('User registered successfully', { 
+      userId: authData.user.id, 
+      email: authData.user.email,
+      username: username 
+    })
+
+    return NextResponse.json({
+      success: true,
+      user: {
+        id: authData.user.id,
+        email: authData.user.email,
+        username: profile.username,
+        trust_tier: profile.trust_tier,
+        display_name: profile.display_name,
+        is_active: profile.is_active
+      },
+      message: 'Registration successful. Please check your email to verify your account.'
+    })
+
   } catch (error) {
-    logger.error('Registration error', error instanceof Error ? error : new Error('Unknown error'))
+    logger.error('Registration error', error instanceof Error ? error : new Error(String(error)))
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { message: 'Internal server error' },
       { status: 500 }
     )
   }

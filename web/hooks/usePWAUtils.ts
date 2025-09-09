@@ -23,16 +23,16 @@ export function usePWAUtils() {
         setError(null)
         
         // Dynamic imports - only loaded on client side
-        const [pwaAuthModule, pwaUtilsModule, pwaAnalyticsModule] = await Promise.all([
+        const [pwaAuthModule, pwaUtilsModule] = await Promise.all([
           import('../lib/pwa-auth-integration'),
           import('../lib/pwa-utils'),
-          import('../lib/pwa-analytics')
+          // import('../lib/pwa-analytics') // Archived PWA feature
         ])
         
         setUtils({
           pwaAuth: pwaAuthModule.pwaAuth,
           pwaManager: pwaUtilsModule.pwaManager,
-          pwaAnalytics: pwaAnalyticsModule.pwaAnalytics,
+          pwaAnalytics: null, // Archived PWA feature
           pwaWebAuthn: pwaUtilsModule.pwaWebAuthn,
           privacyStorage: pwaUtilsModule.privacyStorage
         })

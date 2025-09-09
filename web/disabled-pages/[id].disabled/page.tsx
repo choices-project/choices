@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { useAuth } from '../../hooks/useAuth'
+import { useSupabaseAuth } from '../../hooks/useSupabaseAuth'
 import { ArrowLeft, Share2, BarChart3, Settings, Users, Clock, TrendingUp } from 'lucide-react'
 import SingleChoiceVoting from '@/components/voting/SingleChoiceVoting'
 import RankedChoiceVoting from '@/components/voting/RankedChoiceVoting'
@@ -46,7 +46,7 @@ interface Poll {
 export default function PollPage() {
   const params = useParams()
   const router = useRouter()
-  const { user, isLoading: authLoading } = useAuth()
+  const { user, isLoading: authLoading } = useSupabaseAuth()
   
   const [poll, setPoll] = useState<Poll | null>(null)
   const [currentView, setCurrentView] = useState<ViewMode>('voting')

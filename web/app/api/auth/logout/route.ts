@@ -1,29 +1,34 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { getSupabaseServerClient } from '@/utils/supabase/server'
 import { logger } from '@/lib/logger'
-import { clearEnhancedSession } from '@/lib/session-enhanced'
-import { 
-  validateCsrfProtection, 
-  createCsrfErrorResponse 
-} from '../_shared'
 
 export async function POST(request: NextRequest) {
   try {
-    // Validate CSRF protection for state-changing operation
-    if (!validateCsrfProtection(request)) {
-      return createCsrfErrorResponse()
+    const supabase = getSupabaseServerClient()
+    const supabaseClient = await supabase
+
+    // Sign out with Supabase Auth
+    const { error } = await supabaseClient.auth.signOut()
+
+    if (error) {
+      logger.warn('Logout error', { error: error.message })
+      return NextResponse.json(
+        { message: 'Logout failed' },
+        { status: 500 }
+      )
     }
 
-    // Create response and clear all session cookies
-    const response = NextResponse.json({ message: 'Logged out successfully' })
-    clearEnhancedSession(response)
-    
-    logger.info('User logged out')
-    
-    return response
+    logger.info('User logged out successfully')
+
+    return NextResponse.json({
+      success: true,
+      message: 'Logged out successfully'
+    })
+
   } catch (error) {
-    logger.error('Error during logout', error as Error)
+    logger.error('Logout error', error instanceof Error ? error : new Error(String(error)))
     return NextResponse.json(
-      { message: 'Failed to logout' },
+      { message: 'Internal server error' },
       { status: 500 }
     )
   }

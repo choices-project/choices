@@ -3,7 +3,7 @@
 export const dynamic = 'force-dynamic'
 export const runtime = 'edge'
 
-import { useAuth } from '@/hooks/useAuth'
+import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
 import { devLog } from '@/lib/logger';
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
@@ -30,7 +30,7 @@ interface AccountSettings {
 }
 
 function AccountSettingsContent() {
-  const { user, isLoading: authLoading, logout } = useAuth()
+  const { user, isLoading: authLoading, signOut } = useSupabaseAuth()
   const router = useRouter()
   
   // Initialize Supabase client
@@ -184,7 +184,7 @@ function AccountSettingsContent() {
       if (response.ok) {
         setSuccess('Account deleted successfully. Redirecting...')
         setTimeout(() => {
-          logout()
+          signOut()
           router.push('/')
         }, 2000)
       } else {

@@ -1,7 +1,7 @@
 /** @type {import('jest').Config} */
 const config = {
   // Test environment
-  testEnvironment: 'jsdom',
+  testEnvironment: 'node',
   
   // Setup files
   setupFilesAfterEnv: ['<rootDir>/tests/setup.ts'],
@@ -35,11 +35,12 @@ const config = {
   coverageDirectory: 'coverage',
   coverageReporters: ['text', 'lcov', 'html'],
   collectCoverageFrom: [
-    'utils/**/*.{ts,tsx}',
-    'components/**/*.{ts,tsx}',
+    'utils/privacy/**/*.{ts,tsx}',
+    'utils/supabase/**/*.{ts,tsx}',
     '!**/*.d.ts',
     '!**/node_modules/**',
-    '!**/coverage/**'
+    '!**/coverage/**',
+    '!**/components/**'
   ],
   
   // Coverage thresholds

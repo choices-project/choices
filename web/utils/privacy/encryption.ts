@@ -116,14 +116,22 @@ export class UserEncryption {
 
   /**
    * Create a hash of the user's encryption key for verification
+   * Since we can't export the derived key, we'll create a hash based on the salt and key properties
    */
   async createKeyHash(): Promise<string> {
-    if (!this.userKey) {
+    if (!this.userKey || !this.salt) {
       throw new Error('User key not initialized');
     }
 
-    const exported = await crypto.subtle.exportKey('raw', this.userKey);
-    const hashBuffer = await crypto.subtle.digest('SHA-256', exported);
+    // Create a hash based on the salt and key algorithm info
+    const keyInfo = {
+      algorithm: 'AES-GCM',
+      length: 256,
+      salt: Array.from(this.salt)
+    };
+    
+    const keyInfoString = JSON.stringify(keyInfo);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(keyInfoString));
     const hashArray = new Uint8Array(hashBuffer);
     return Array.from(hashArray).map(b => b.toString(16).padStart(2, '0')).join('');
   }
@@ -202,12 +210,46 @@ export class PrivacyUtils {
    * Create regional buckets to protect location privacy
    */
   static createRegionBucket(location: string): string {
+    // Handle null/undefined values
+    if (!location || typeof location !== 'string') {
+      return 'region_other';
+    }
+    
     // Simple regional bucketing - can be made more sophisticated
     const region = location.toLowerCase();
-    if (region.includes('north') || region.includes('northeast')) return 'region_northeast';
-    if (region.includes('south') || region.includes('southeast')) return 'region_southeast';
-    if (region.includes('west') || region.includes('southwest')) return 'region_southwest';
-    if (region.includes('midwest') || region.includes('central')) return 'region_midwest';
+    
+    // Northeast states
+    if (region.includes('new york') || region.includes('massachusetts') || 
+        region.includes('connecticut') || region.includes('rhode island') ||
+        region.includes('vermont') || region.includes('new hampshire') ||
+        region.includes('maine') || region.includes('north') || 
+        region.includes('northeast')) return 'region_northeast';
+    
+    // Southeast states  
+    if (region.includes('florida') || region.includes('georgia') ||
+        region.includes('south carolina') || region.includes('north carolina') ||
+        region.includes('virginia') || region.includes('west virginia') ||
+        region.includes('kentucky') || region.includes('tennessee') ||
+        region.includes('alabama') || region.includes('mississippi') ||
+        region.includes('louisiana') || region.includes('arkansas') ||
+        region.includes('south') || region.includes('southeast')) return 'region_southeast';
+    
+    // Southwest states
+    if (region.includes('california') || region.includes('texas') ||
+        region.includes('arizona') || region.includes('new mexico') ||
+        region.includes('nevada') || region.includes('utah') ||
+        region.includes('colorado') || region.includes('west') || 
+        region.includes('southwest')) return 'region_southwest';
+    
+    // Midwest states
+    if (region.includes('illinois') || region.includes('ohio') ||
+        region.includes('michigan') || region.includes('indiana') ||
+        region.includes('wisconsin') || region.includes('minnesota') ||
+        region.includes('iowa') || region.includes('missouri') ||
+        region.includes('kansas') || region.includes('nebraska') ||
+        region.includes('north dakota') || region.includes('south dakota') ||
+        region.includes('midwest') || region.includes('central')) return 'region_midwest';
+    
     return 'region_other';
   }
 
@@ -215,6 +257,11 @@ export class PrivacyUtils {
    * Create education buckets
    */
   static createEducationBucket(education: string): string {
+    // Handle null/undefined values
+    if (!education || typeof education !== 'string') {
+      return 'education_other';
+    }
+    
     const edu = education.toLowerCase();
     if (edu.includes('high school') || edu.includes('secondary')) return 'education_high_school';
     if (edu.includes('associate') || edu.includes('2-year')) return 'education_associate';
