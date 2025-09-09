@@ -1,7 +1,7 @@
 # Choices Platform
 
 **Status:** 🚀 **PRODUCTION READY - Supabase Auth Complete**  
-**Last Updated:** 2025-09-09
+*Last Updated: 2025-09-09*
 
 A modern, democratic platform built with Next.js 14 and Supabase Auth, designed to provide secure, scalable voting and polling capabilities with a clean, maintainable architecture.
 

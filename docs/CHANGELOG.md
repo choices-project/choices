@@ -1,6 +1,6 @@
 # Changelog
 **Created:** August 30, 2025  
-**Last Updated:** 2025-09-09
+*Last Updated: 2025-09-09*
 
 All notable changes to the Choices platform will be documented in this file.
 
