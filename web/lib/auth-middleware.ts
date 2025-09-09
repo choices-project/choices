@@ -43,8 +43,8 @@ export function createAuthMiddleware(options: {
 
   return async (_request: NextRequest, _context?: AuthContext): Promise<NextResponse | null> => {
     try {
-      // Create Supabase client
-      const supabase = getSupabaseServerClient()
+      // Create Supabase client at runtime, not during build
+      const supabase = await getSupabaseServerClient()
 
       if (!supabase) {
         return NextResponse.json(
@@ -54,7 +54,7 @@ export function createAuthMiddleware(options: {
       }
 
       // Get current user session
-      const supabaseClient = await supabase;
+      const supabaseClient = supabase;
       const { data: { user }, error: authError } = await supabaseClient.auth.getUser()
 
       // Handle unauthenticated requests
@@ -159,8 +159,8 @@ export function withAuth(
       return authResult
     }
 
-    // Get user context for the handler
-    const supabase = getSupabaseServerClient()
+    // Get user context for the handler at runtime, not during build
+    const supabase = await getSupabaseServerClient()
     
     if (!supabase) {
       return NextResponse.json(
@@ -169,7 +169,7 @@ export function withAuth(
       )
     }
     
-    const supabaseClient = await supabase;
+    const supabaseClient = supabase;
     const { data: { user } } = await supabaseClient.auth.getUser()
     
     const { data: profile } = await supabaseClient
