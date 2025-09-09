@@ -1,7 +1,7 @@
 # Onboarding (Choices)
 
 Created: 2025-01-27
-Last Updated: September 9, 2025
+Last Updated: 2025-09-09
 
 ## Access
 - GitHub: request write access to `choices-project/choices`

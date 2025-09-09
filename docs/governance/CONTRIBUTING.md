@@ -1,4 +1,5 @@
 # Contributing
+*Last Updated: 2025-09-09*
 
 ## Security- and Privacy-Sensitive Changes
 - Discuss protocol/crypto changes via proposals in `specs/` and ADRs.
