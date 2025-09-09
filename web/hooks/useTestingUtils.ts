@@ -2,12 +2,16 @@
 
 import { useState, useEffect, useCallback, createContext, useContext } from 'react'
 import { devLog } from '@/lib/logger';
+import type { TestingSuite } from '../lib/testing-suite';
+import type { ComprehensiveTestingRunner } from '../lib/comprehensive-testing-runner';
+import type { CrossPlatformTesting } from '../lib/cross-platform-testing';
+import type { MobileCompatibilityTesting } from '../lib/mobile-compatibility-testing';
 
 interface TestingUtils {
-  testingSuite: any
-  comprehensiveTestingRunner: any
-  crossPlatformTesting: any
-  mobileCompatibilityTesting: any
+  testingSuite: TestingSuite
+  comprehensiveTestingRunner: ComprehensiveTestingRunner
+  crossPlatformTesting: CrossPlatformTesting
+  mobileCompatibilityTesting: MobileCompatibilityTesting
 }
 
 export function useTestingUtils() {
