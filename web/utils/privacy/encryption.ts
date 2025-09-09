@@ -38,7 +38,7 @@ export class UserEncryption {
     this.userKey = await crypto.subtle.deriveKey(
       {
         name: 'PBKDF2',
-        salt: salt,
+        salt: new Uint8Array(salt),
         iterations: 100000,
         hash: 'SHA-256'
       },
@@ -93,7 +93,7 @@ export class UserEncryption {
       }
 
       const decrypted = await crypto.subtle.decrypt(
-        { name: 'AES-GCM', iv: iv },
+        { name: 'AES-GCM', iv: new Uint8Array(iv) },
         this.userKey,
         encryptedData
       );

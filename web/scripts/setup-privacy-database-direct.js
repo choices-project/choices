@@ -160,3 +160,5 @@ async function setupPrivacyDatabase() {
 
 // Run the setup
 setupPrivacyDatabase().catch(console.error);
+
+

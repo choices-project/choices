@@ -173,3 +173,5 @@ async function runCompleteDatabaseSetup() {
 
 // Run the complete setup
 runCompleteDatabaseSetup()
+
+
