@@ -10,7 +10,8 @@
     "node": "22.19.0"
   },
   "scripts": {
-    "build": "cd web && next build",
+    "build": "npm run build:packages && cd web && next build",
+    "build:packages": "cd packages/civics-schemas && npm run build && cd ../civics-client && npm run build && cd ../../apps/ingest && npm run build && cd ../../packages/civics-sources && npm run build",
     "dev": "cd web && next dev",
     "start": "cd web && next start",
     "lint": "cd web && next lint",
