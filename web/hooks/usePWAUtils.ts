@@ -3,12 +3,17 @@
 import { useState, useEffect, useCallback, createContext, useContext } from 'react'
 import { devLog } from '@/lib/logger';
 
+// Import types from respective PWA modules
+import type { PWAAuth } from '../lib/pwa-auth-integration';
+import type { PWAManager, PWAWebAuthn, PrivacyStorage } from '../lib/pwa-utils';
+// import type { PWAAnalytics } from '../lib/pwa-analytics'; // Archived PWA feature
+
 interface PWAUtils {
-  pwaAuth: any
-  pwaManager: any
-  pwaAnalytics: any
-  pwaWebAuthn: any
-  privacyStorage: any
+  pwaAuth: PWAAuth;
+  pwaManager: PWAManager;
+  pwaAnalytics: null; // Archived PWA feature
+  pwaWebAuthn: PWAWebAuthn;
+  privacyStorage: PrivacyStorage;
 }
 
 export function usePWAUtils() {
