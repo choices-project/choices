@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { CandidateCardV1, CandidateCardV1Schema } from "@choices/civics-schemas";
-import { createCache } from "@choices/civics-client";
-import { getRecentVotesForMember } from "@choices/ingest";
+import { CandidateCardV1, CandidateCardV1Schema } from "../../../../lib/civics/schemas";
+import { createCache } from "../../../../lib/civics/client";
+import { getRecentVotesForMember } from "../../../../lib/civics/ingest";
 
 const cache = createCache();
 

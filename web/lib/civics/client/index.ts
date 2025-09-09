@@ -4,7 +4,7 @@
  * Client for accessing civics data with caching
  */
 
-import type { CandidateCardV1, Representative, Vote } from '../civics-schemas/src';
+import type { CandidateCardV1, Representative, Vote } from '../schemas';
 
 export interface CacheConfig {
   ttl: number; // Time to live in milliseconds
