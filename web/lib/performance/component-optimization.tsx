@@ -47,7 +47,7 @@ export function LazyOptimized<P extends Record<string, unknown>>(props: LazyProp
     <React.Suspense fallback={fallback ?? <div>Loading…</div>}>
       <InlineErrorBoundary fallback={errorFallback}>
         {/* eslint-disable-next-line react/jsx-props-no-spreading */}
-        <LazyComp {...(props.props as any)} />
+        <LazyComp {...(props.props as React.ComponentProps<typeof LazyComp>)} />
       </InlineErrorBoundary>
     </React.Suspense>
   );
