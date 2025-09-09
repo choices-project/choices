@@ -47,7 +47,7 @@ export function LazyOptimized<P extends Record<string, unknown>>(props: LazyProp
     <React.Suspense fallback={fallback ?? <div>Loading…</div>}>
       <InlineErrorBoundary fallback={errorFallback}>
         {/* eslint-disable-next-line react/jsx-props-no-spreading */}
-        <LazyComp {...(props.props as React.ComponentProps<typeof LazyComp>)} />
+        <LazyComp {...(props.props as any)} />
       </InlineErrorBoundary>
     </React.Suspense>
   );
@@ -62,7 +62,7 @@ export function withLazy<P extends Record<string, unknown>>(loader: () => Promis
       <React.Suspense fallback={fallback ?? <div>Loading…</div>}>
         <InlineErrorBoundary fallback={errorFallback}>
           {/* eslint-disable-next-line react/jsx-props-no-spreading */}
-          <LC {...(rest as React.ComponentProps<typeof LC>)} />
+          <LC {...(rest as any)} />
         </InlineErrorBoundary>
       </React.Suspense>
     );
@@ -96,7 +96,7 @@ export function createMemoizedComponent<P extends Record<string, unknown>>(
   return function PerformanceTrackedMemoizedComponent(props: P) {
     return (
       <PerformanceTracker componentName={componentName}>
-        <MemoizedComponent {...props} />
+        <MemoizedComponent {...(props as any)} />
       </PerformanceTracker>
     );
   };
