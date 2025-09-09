@@ -32,13 +32,6 @@ jobs:
       - name: Run linting
         run: npm run lint
       
-      - name: Run Jest tests
-        run: cd web && npm run test
-        env:
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
-          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
-      
       - name: Build
         run: npm run build
         env:

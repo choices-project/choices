@@ -34,10 +34,10 @@ export function useTestingUtils() {
         ])
         
         setUtils({
-          testingSuite: testingSuiteModule.testingSuite,
-          comprehensiveTestingRunner: comprehensiveTestingModule.comprehensiveTestingRunner,
-          crossPlatformTesting: crossPlatformModule.crossPlatformTesting,
-          mobileCompatibilityTesting: mobileModule.mobileCompatibilityTesting
+          testingSuite: testingSuiteModule.testingSuite!,
+          comprehensiveTestingRunner: comprehensiveTestingModule.comprehensiveTestingRunner!,
+          crossPlatformTesting: crossPlatformModule.crossPlatformTesting!,
+          mobileCompatibilityTesting: mobileModule.mobileCompatibilityTesting!
         })
       } catch (err) {
         devLog('Error loading testing utils:', err)
