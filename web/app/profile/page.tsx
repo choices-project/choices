@@ -20,9 +20,9 @@ import {
   XCircle,
   Info
 } from 'lucide-react'
-import { devLog } from '@/lib/logger'
+import { logger } from '@/lib/logger'
 import BiometricSetup from '@/components/auth/BiometricSetup'
-import { useAuth } from '@/hooks/useAuth'
+import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
 
 interface UserProfile {
   id: string
@@ -44,7 +44,7 @@ interface BiometricCredential {
 
 export default function ProfilePage() {
   const router = useRouter()
-  const { user, isLoading, logout } = useAuth()
+  const { user, isLoading, signOut } = useSupabaseAuth()
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [biometricCredentials, setBiometricCredentials] = useState<BiometricCredential[]>([])
   const [trustScore, setTrustScore] = useState<number | null>(null)
@@ -86,7 +86,7 @@ export default function ProfilePage() {
       }
 
     } catch (error) {
-      devLog('Error loading user data:', error)
+      logger.error('Error loading user data', error instanceof Error ? error : new Error(String(error)))
       setError('Failed to load user data')
     }
   }, [user, router])
@@ -125,7 +125,7 @@ export default function ProfilePage() {
       setShowExportConfirm(false)
 
     } catch (error) {
-      devLog('Error exporting data:', error)
+      logger.error('Error exporting data', error instanceof Error ? error : new Error(String(error)))
       setError('Failed to export data')
     } finally {
       setIsExporting(false)
@@ -148,7 +148,7 @@ export default function ProfilePage() {
       })
 
       if (response.ok) {
-        await logout()
+        await signOut()
         setSuccess('Account deleted successfully')
         setTimeout(() => {
           router.push('/')
@@ -159,7 +159,7 @@ export default function ProfilePage() {
       }
 
     } catch (error) {
-      devLog('Error deleting account:', error)
+      logger.error('Error deleting account', error instanceof Error ? error : new Error(String(error)))
       setError('Failed to delete account')
     } finally {
       setIsDeleting(false)
@@ -180,7 +180,7 @@ export default function ProfilePage() {
         setError('Failed to delete biometric credential')
       }
     } catch (error) {
-      devLog('Error deleting biometric credential:', error)
+      logger.error('Error deleting biometric credential', error instanceof Error ? error : new Error(String(error)))
       setError('Failed to delete biometric credential')
     }
   }
@@ -304,7 +304,7 @@ export default function ProfilePage() {
           <CardContent>
             <BiometricSetup 
               userId={user.id} 
-              username={user.email}
+              username={user.email || ''}
               onSuccess={loadUserData}
               onError={() => setError('Failed to setup biometric authentication')}
             />

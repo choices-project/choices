@@ -90,9 +90,11 @@ export function PWAVotingInterface({
           choice
         })
         
-        // Track offline action
-        pwaUtils.pwaAnalytics.trackOfflineAction()
-        pwaUtils.pwaAnalytics.trackFeatureUsage('offlinevote')
+        // Track offline action (PWA analytics is archived)
+        // if (pwaUtils.pwaAnalytics) {
+        //   pwaUtils.pwaAnalytics.trackOfflineAction()
+        //   pwaUtils.pwaAnalytics.trackFeatureUsage('offlinevote')
+        // }
         
         devLog('PWA: Vote stored offline')
       }
@@ -101,11 +103,11 @@ export function PWAVotingInterface({
       await onVote(choice)
       setHasVoted(true)
       
-      // Track analytics
-      if (pwaUtils) {
-        pwaUtils.pwaAnalytics.trackFeatureUsage('votecast')
-        pwaUtils.pwaAnalytics.trackDataCollection(1)
-      }
+      // Track analytics (PWA analytics is archived)
+      // if (pwaUtils && pwaUtils.pwaAnalytics) {
+      //   pwaUtils.pwaAnalytics.trackFeatureUsage('votecast')
+      //   pwaUtils.pwaAnalytics.trackDataCollection(1)
+      // }
     } catch (error) {
       devLog('Vote failed:', error)
     } finally {
@@ -326,15 +328,15 @@ export function PWAVotingInterface({
                       </span>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <div className={`w-2 h-2 rounded-full ${pwaUtils?.pwaManager.getPWAStatus().serviceWorker ? 'bg-green-500' : 'bg-red-500'}`} />
+                      <div className={`w-2 h-2 rounded-full ${pwaUtils?.pwaManager?.getPWAStatus()?.serviceWorker ? 'bg-green-500' : 'bg-red-500'}`} />
                       <span className="text-gray-600">
                         Service Worker
                       </span>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <div className={`w-2 h-2 rounded-full ${pwaUtils?.pwaManager.getPWAStatus().offlineVotes > 0 ? 'bg-orange-500' : 'bg-gray-300'}`} />
+                      <div className={`w-2 h-2 rounded-full ${(pwaUtils?.pwaManager?.getPWAStatus()?.offlineVotes ?? 0) > 0 ? 'bg-orange-500' : 'bg-gray-300'}`} />
                       <span className="text-gray-600">
-                        {pwaUtils?.pwaManager.getPWAStatus().offlineVotes} offline votes
+                        {pwaUtils?.pwaManager?.getPWAStatus()?.offlineVotes ?? 0} offline votes
                       </span>
                     </div>
                   </div>

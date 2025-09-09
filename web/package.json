@@ -2,7 +2,7 @@
   "name": "choice-web",
   "private": true,
   "engines": {
-    "node": "22.x"
+    "node": "22.19.0"
   },
   "scripts": {
     "dev": "next dev",
@@ -28,5 +28,7 @@
     "performance-check": "npm run lint -- --max-warnings=0 --rule 'no-unused-vars: error' || echo 'Performance warnings found (non-blocking)'",
     "cleanup:analyze": "node ../scripts/cleanup-code.js",
     "cleanup:fix": "node ../scripts/cleanup-code.js --fix"
-  }
+  },
+  "dependencies": {},
+  "devDependencies": {}
 }

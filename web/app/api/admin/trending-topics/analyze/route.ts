@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { devLog } from '@/lib/logger';
+import { logger } from '@/lib/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 import { AutomatedPollsService } from '@/lib/automated-polls';
 
@@ -214,7 +214,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    devLog('Error in topic analysis:', error);
+    logger.error('Error in topic analysis', error instanceof Error ? error : new Error(String(error)));
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -254,7 +254,7 @@ export async function GET(_request: NextRequest) {
       .single();
 
     if (profileError) {
-      devLog('Error fetching user profile:', profileError);
+      logger.error('Error fetching user profile:', profileError);
       return NextResponse.json(
         { error: 'Failed to verify user permissions' },
         { status: 500 }
@@ -315,7 +315,7 @@ export async function GET(_request: NextRequest) {
     });
 
   } catch (error) {
-    devLog('Error getting analysis categories:', error);
+    logger.error('Error getting analysis categories', error instanceof Error ? error : new Error(String(error)));
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
