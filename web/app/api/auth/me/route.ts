@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
-import { devLog } from '@/lib/logger';
+import { logger } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic'
 
@@ -27,17 +27,17 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Get user data from ia_users table
-    const { data: user, error: userError } = await supabaseClient
-      .from('ia_users')
-      .select('stable_id, email, verification_tier')
-      .eq('stable_id', session.user.id)
+    // Get user profile from user_profiles table
+    const { data: profile, error: profileError } = await supabaseClient
+      .from('user_profiles')
+      .select('username, email, trust_tier, display_name, avatar_url, bio, is_active')
+      .eq('user_id', session.user.id)
       .single()
 
-    if (userError || !user) {
-      devLog('User not found in ia_users table:', session.user.id)
+    if (profileError || !profile) {
+      logger.warn('User profile not found', { userId: session.user.id })
       return NextResponse.json(
-        { error: 'User not found' },
+        { error: 'User profile not found' },
         { status: 404 }
       )
     }
@@ -45,14 +45,19 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       user: {
-        id: user.stable_id,
-        email: user.email,
-        verification_tier: user.verification_tier
+        id: session.user.id,
+        email: session.user.email,
+        username: profile.username,
+        trust_tier: profile.trust_tier,
+        display_name: profile.display_name,
+        avatar_url: profile.avatar_url,
+        bio: profile.bio,
+        is_active: profile.is_active
       }
     })
 
   } catch (error) {
-    devLog('Error getting current user:', error)
+    logger.error('Error getting current user', error instanceof Error ? error : new Error(String(error)))
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

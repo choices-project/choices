@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { lookupAddress } from '@choices/civics-sources/civicinfo';
+import { lookupAddress } from '@choices/civics-sources';
 
 interface District {
   id: string;

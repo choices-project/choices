@@ -1,34 +1,3 @@
-const withPWA = require('next-pwa')({
-  dest: 'public',
-  // Disable SW in dev, enable in prod, or when explicitly disabled
-  disable: process.env.NODE_ENV === 'development' || process.env.NEXT_DISABLE_PWA === '1',
-  register: true,
-  skipWaiting: true,
-
-  // Keep runtimeCaching VERY simple; bad shapes trigger the "properties" error
-  runtimeCaching: [
-    {
-      urlPattern: /^https:\/\/fonts\.(?:gstatic|googleapis)\.com\/.*/i,
-      handler: 'CacheFirst',
-      options: {
-        cacheName: 'google-fonts',
-        expiration: { maxEntries: 20, maxAgeSeconds: 60 * 60 * 24 * 365 },
-      },
-    },
-    {
-      urlPattern: /\.(?:png|jpg|jpeg|gif|webp|svg|ico)$/i,
-      handler: 'StaleWhileRevalidate',
-      options: {
-        cacheName: 'static-images',
-        expiration: { maxEntries: 128, maxAgeSeconds: 60 * 60 * 24 * 30 },
-      },
-    },
-  ],
-
-  // Useful to avoid SW picking up Next internals
-  buildExcludes: [/middleware-manifest\.json$/],
-})
-
 // @ts-check
 
 /** @type {import('next').NextConfig} */
@@ -44,22 +13,9 @@ const nextConfig = {
     optimizeCss: false,
     optimizePackageImports: [
       'lucide-react',
-      'date-fns',
-      'lodash-es',
-      'react-hook-form',
-      'zod',
       'clsx',
       'tailwind-merge',
     ],
-    // Enable turbo for faster builds
-    turbo: {
-      rules: {
-        '*.svg': {
-          loaders: ['@svgr/webpack'],
-          as: '*.js'
-        }
-      }
-    }
   },
 
   // Image optimization
@@ -80,32 +36,8 @@ const nextConfig = {
 
   webpack: (config, { isServer, webpack }) => {
     if (isServer) {
-      // ⛔️ Remove these lines if present in your current config:
-      // config.resolve.conditionNames = [...]
-      // config.resolve.mainFields = [...]
-      // config.resolve.fallback = { crypto:false, stream:false, buffer:false, ... }
-
-      // If you want a *temporary* guard, you can define `self` at compile time:
-      // (safer than patching the output with a custom plugin)
+      // Define `self` at compile time for server-side compatibility
       config.plugins.push(new webpack.DefinePlugin({ self: 'globalThis' }));
-    }
-
-    // ⛔️ Remove any custom plugin that rewrites emitted bundles (e.g., webpack-self-fix.js).
-
-    // Bundle analyzer (only in development and when explicitly requested)
-    if (!isServer && process.env.ANALYZE === 'true') {
-      try {
-        const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer')
-        config.plugins.push(
-          new BundleAnalyzerPlugin({
-            analyzerMode: 'static',
-            openAnalyzer: false,
-            reportFilename: '../bundle-analyzer-report.html'
-          })
-        )
-      } catch (error) {
-        console.warn('Bundle analyzer not available:', error.message)
-      }
     }
 
     // Module resolution optimizations
@@ -242,11 +174,6 @@ const nextConfig = {
     ]
   },
 
-  // Environment variables
-  env: {
-    CUSTOM_KEY: process.env.CUSTOM_KEY
-  },
-
   // TypeScript configuration
   typescript: {
     ignoreBuildErrors: false
@@ -268,8 +195,6 @@ const nextConfig = {
 
   // Asset prefix
   assetPrefix: process.env.NODE_ENV === 'production' ? '' : '',
-
-
 }
 
-module.exports = withPWA(nextConfig)
+module.exports = nextConfig

@@ -1,22 +1,14 @@
 {
   "name": "@choices/civics-schemas",
-  "version": "0.0.1",
-  "type": "module",
+  "version": "1.0.0",
+  "description": "Civics data schemas for Choices platform",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
-    "dev": "tsc --watch",
-    "typecheck": "tsc --noEmit",
-    "lint": "echo 'No linting configured for civics-schemas'"
+    "dev": "tsc --watch"
   },
-  "dependencies": {
-    "zod": "^3.23.8"
-  },
-  "exports": {
-    ".": {
-      "import": "./dist/index.js",
-      "types": "./dist/index.d.ts"
-    }
+  "devDependencies": {
+    "typescript": "^5.0.0"
   }
 }

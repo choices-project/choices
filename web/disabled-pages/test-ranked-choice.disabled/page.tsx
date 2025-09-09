@@ -4,7 +4,7 @@ export const dynamic = 'force-dynamic'
 export const runtime = 'edge'
 
 import { useState, useEffect } from 'react'
-import { useAuth } from '@/hooks/useAuth'
+import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
 import { useRouter } from 'next/navigation'
 import RankedChoiceVoting from '@/components/voting/RankedChoiceVoting'
 import { devLog } from '@/lib/logger';
@@ -44,7 +44,7 @@ const samplePoll = {
 }
 
 function TestRankedChoiceContent() {
-  const { user, isLoading } = useAuth()
+  const { user, isLoading } = useSupabaseAuth()
   const router = useRouter()
   const [isVoting, setIsVoting] = useState(false)
   const [hasVoted, setHasVoted] = useState(false)
