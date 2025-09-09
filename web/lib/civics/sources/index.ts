@@ -4,4 +4,4 @@
  * Main export for civics data sources
  */
 
-export * from './civicinfo';
+export * from './civicinfo/index';

@@ -62,7 +62,7 @@ export function withLazy<P extends Record<string, unknown>>(loader: () => Promis
       <React.Suspense fallback={fallback ?? <div>Loading…</div>}>
         <InlineErrorBoundary fallback={errorFallback}>
           {/* eslint-disable-next-line react/jsx-props-no-spreading */}
-          <LC {...(rest as P)} />
+          <LC {...(rest as React.ComponentProps<typeof LC>)} />
         </InlineErrorBoundary>
       </React.Suspense>
     );
