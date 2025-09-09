@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { logger } from '@/lib/logger';
 import { withAuth, createRateLimitMiddleware, combineMiddleware } from '@/lib/auth-middleware'
-import { queryOptimizer, connectionPoolManager, queryMonitor, withPerformanceMonitoring } from '@/lib/database-optimizer'
+import { getQueryOptimizer, connectionPoolManager, queryMonitor, withPerformanceMonitoring } from '@/lib/database-optimizer'
 
 export const dynamic = 'force-dynamic';
 
@@ -23,6 +23,7 @@ export const GET = withAuth(async (request: NextRequest, context) => {
     }
 
     // Use optimized health check with performance monitoring
+    const queryOptimizer = await getQueryOptimizer()
     const getHealthOptimized = withPerformanceMonitoring(
       () => queryOptimizer.getDatabaseHealth(),
       'database_health_check'

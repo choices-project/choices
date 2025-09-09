@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { CandidateCardV1, CandidateCardV1Schema } from "@choices/civics-schemas";
-import { createCache } from "@choices/civics-client";
-import { getRecentVotesForMember } from "@choices/ingest";
+import { CandidateCardV1, CandidateCardV1Schema } from "../../../../lib/civics/schemas";
+import { createCache } from "../../../../lib/civics/client";
+import { getRecentVotesForMember } from "../../../../lib/civics/ingest";
 
 const cache = createCache();
 
@@ -20,11 +20,10 @@ function shapeStub(personId: string) {
 
 export async function GET(_: NextRequest, { params }: { params: { personId: string } }) {
   const key = `cc:v1:${params.personId}`;
-  const cached = await cache.get(key);
-  if (cached && typeof cached === 'string') {
-    const parsedCached = JSON.parse(cached);
+  const cached = cache.get(key);
+  if (cached) {
     // Validate cached data before returning
-    const validation = CandidateCardV1Schema.safeParse(parsedCached);
+    const validation = CandidateCardV1Schema.safeParse(cached);
     if (validation.success) {
       return NextResponse.json(validation.data);
     }
@@ -45,6 +44,6 @@ export async function GET(_: NextRequest, { params }: { params: { personId: stri
     }, { status: 500 });
   }
 
-  await cache.set(key, JSON.stringify(validation.data), 600);
+  cache.set(key, validation.data, 600000); // 10 minutes in milliseconds
   return NextResponse.json(validation.data);
 }

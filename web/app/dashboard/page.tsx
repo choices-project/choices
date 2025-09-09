@@ -5,8 +5,6 @@ import { getSupabaseServerClient } from '@/utils/supabase/server'
 
 export const dynamic = 'force-dynamic'
 
-const supabase = getSupabaseServerClient()
-
 async function getUserFromCookies() {
   try {
     const cookieStore = cookies()
@@ -32,12 +30,8 @@ export default async function DashboardPage() {
     redirect('/login')
   }
 
-  // Check if user has completed onboarding
-  if (!supabase) {
-    throw new Error('Supabase client not available')
-  }
-  
-  const supabaseClient = await supabase
+  // Get Supabase client at runtime, not during build
+  const supabaseClient = await getSupabaseServerClient()
   if (!supabaseClient) {
     // During build time, this might be null
     // At runtime, it will be properly initialized

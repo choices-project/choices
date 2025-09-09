@@ -184,8 +184,8 @@ const nextConfig = {
     ignoreDuringBuilds: false
   },
 
-  // Output configuration
-  output: 'standalone',
+  // Output configuration - removed standalone for Vercel compatibility
+  // output: 'standalone',
 
   // Trailing slash
   trailingSlash: false,
