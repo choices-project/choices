@@ -141,7 +141,7 @@ export default function BiometricSetupPage() {
         try {
           const isAvailable = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable()
           setIsSupported(isAvailable)
-        } catch (error) {
+        } catch (_error) {
           setIsSupported(false)
         }
       } else {

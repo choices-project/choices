@@ -57,12 +57,12 @@ export function createCache(config?: CacheConfig): CivicsCache {
 }
 
 // Stub implementations for now
-export async function getCandidate(id: string): Promise<CandidateCardV1 | null> {
+export async function getCandidate(_id: string): Promise<CandidateCardV1 | null> {
   // TODO: Implement actual API call
   return null;
 }
 
-export async function getRepresentative(district: string): Promise<Representative | null> {
+export async function getRepresentative(_district: string): Promise<Representative | null> {
   // TODO: Implement actual API call
   return null;
 }

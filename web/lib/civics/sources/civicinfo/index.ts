@@ -9,7 +9,7 @@ import type { AddressLookupResult } from '../../ingest/connectors/civicinfo';
 export async function lookupAddress(address: string): Promise<AddressLookupResult | null> {
   // TODO: Implement Google Civic Information API integration
   // This would typically call the Google Civic Information API
-  console.log('Civic info lookup for address:', address);
+  // TODO: Add proper logging when implementing Google Civic Information API
   
   // Stub implementation
   return {
@@ -21,13 +21,13 @@ export async function lookupAddress(address: string): Promise<AddressLookupResul
 
 export async function getElectionInfo(address: string): Promise<any> {
   // TODO: Implement election info lookup
-  console.log('Getting election info for address:', address);
+  // TODO: Add proper logging when implementing election info lookup
   return null;
 }
 
 export async function getVoterInfo(address: string): Promise<any> {
   // TODO: Implement voter info lookup
-  console.log('Getting voter info for address:', address);
+  // TODO: Add proper logging when implementing voter info lookup
   return null;
 }
 

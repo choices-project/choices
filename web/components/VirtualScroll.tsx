@@ -21,12 +21,12 @@ interface VirtualScrollProps {
   hasError?: boolean
 }
 
-interface VirtualScrollItem {
-  id: string
-  height: number
-  data: any
-  index: number
-}
+// interface VirtualScrollItem {
+//   id: string
+//   height: number
+//   data: any
+//   index: number
+// }
 
 export const VirtualScroll: React.FC<VirtualScrollProps> = ({
   items,
@@ -47,7 +47,7 @@ export const VirtualScroll: React.FC<VirtualScrollProps> = ({
 }) => {
   const [scrollTop, setScrollTop] = useState(0)
   const [searchTerm, setSearchTerm] = useState('')
-  const [visibleRange, setVisibleRange] = useState({ start: 0, end: 0 })
+  // const [visibleRange, setVisibleRange] = useState({ start: 0, end: 0 })
   const containerRef = useRef<HTMLDivElement>(null)
   const debouncedSearchTerm = useDebounce(searchTerm, 300)
 
@@ -72,9 +72,9 @@ export const VirtualScroll: React.FC<VirtualScrollProps> = ({
   const endIndex = Math.min(startIndex + visibleItemCount + 2, filteredItems.length)
 
   // Update visible range
-  useEffect(() => {
-    setVisibleRange({ start: startIndex, end: endIndex })
-  }, [startIndex, endIndex])
+  // useEffect(() => {
+  //   setVisibleRange({ start: startIndex, end: endIndex })
+  // }, [startIndex, endIndex])
 
   // Handle scroll events
   const handleScroll = useCallback((event: React.UIEvent<HTMLDivElement>) => {

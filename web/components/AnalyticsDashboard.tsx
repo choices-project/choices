@@ -190,7 +190,7 @@ export default function AnalyticsDashboard({
       });
 
       // Fetch data from multiple sources
-      const [dashboardResponse, pwaMetrics] = await Promise.all([
+      const [dashboardResponse] = await Promise.all([
         fetch(`/api/dashboard?${queryParams.toString()}`),
         // Promise.resolve(new PWAAnalytics().getMetrics()) // Archived PWA feature
         Promise.resolve({}) // Stub for archived PWA analytics

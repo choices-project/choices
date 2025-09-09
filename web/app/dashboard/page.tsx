@@ -16,7 +16,7 @@ async function getUserFromCookies() {
 
     const decodedToken = jwt.verify(sessionToken, process.env.JWT_SECRET!) as any
     return decodedToken
-  } catch (error) {
+  } catch (_error) {
     // During build time, cookies() might not be available
     // This is expected and will be handled at runtime
     return null

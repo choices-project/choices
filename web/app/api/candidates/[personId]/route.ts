@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { CandidateCardV1, CandidateCardV1Schema } from "../../../../lib/civics/schemas";
+import { CandidateCardV1Schema } from "../../../../lib/civics/schemas";
 import { createCache } from "../../../../lib/civics/client";
 import { getRecentVotesForMember } from "../../../../lib/civics/ingest";
 
