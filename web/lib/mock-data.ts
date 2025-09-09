@@ -22,14 +22,30 @@ export interface SystemMetrics {
   responseTime: string;
 }
 
+export interface Poll {
+  id: string;
+  question: string;
+  options: string[];
+  createdAt: string;
+  votes: number;
+}
+
+export interface Vote {
+  id: string;
+  pollId: string;
+  userId: string;
+  option: string;
+  votedAt: string;
+}
+
 export interface DemographicsData {
   ageDistribution: Array<{ age: string; count: number }>;
   locationDistribution: Array<{ location: string; count: number }>;
   engagementLevels: Array<{ level: string; count: number }>;
   lastUpdated: string;
   totalUsers: number;
-  recentPolls: any[];
-  recentVotes: any[];
+  recentPolls: Poll[];
+  recentVotes: Vote[];
 }
 
 export const mockActivityFeed: ActivityItem[] = [
