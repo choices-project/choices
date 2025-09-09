@@ -29,6 +29,16 @@
     "cleanup:analyze": "node ../scripts/cleanup-code.js",
     "cleanup:fix": "node ../scripts/cleanup-code.js --fix"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@choices/civics-schemas": "file:../packages/civics-schemas",
+    "@choices/civics-client": "file:../packages/civics-client", 
+    "@choices/ingest": "file:../apps/ingest",
+    "@supabase/ssr": "0.6.1",
+    "@supabase/supabase-js": "2.55.0",
+    "next": "14.2.32",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "zod": "^3.22.0"
+  },
   "devDependencies": {}
 }
