@@ -13,7 +13,7 @@ const config = {
   ],
   
   // Module name mapping for absolute imports
-  moduleNameMapping: {
+  moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/$1',
     '^@/utils/(.*)$': '<rootDir>/utils/$1',
     '^@/components/(.*)$': '<rootDir>/components/$1',
