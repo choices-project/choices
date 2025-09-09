@@ -21,15 +21,12 @@ function shapeStub(personId: string) {
 export async function GET(_: NextRequest, { params }: { params: { personId: string } }) {
   const key = `cc:v1:${params.personId}`;
   const cached = await cache.get(key);
-  if (cached) return NextResponse.json(JSON.parse(cached));
+  if (cached && typeof cached === 'string') return NextResponse.json(JSON.parse(cached));
 
   const base = shapeStub(params.personId);
   // attach stub votes
   const votes = await getRecentVotesForMember(params.personId);
-  const payload = { ...base, recentVotes: votes };
-
-  const parsed = CandidateCardV1.safeParse(payload);
-  if (!parsed.success) return NextResponse.json({ error: "Invalid card", issues: parsed.error.issues }, { status: 500 });
+  const payload: CandidateCardV1 = { ...base, recentVotes: votes };
 
   await cache.set(key, JSON.stringify(payload), 600);
   return NextResponse.json(payload);
