@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useAuth } from '@/hooks/useAuth'
+import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
 import { Button } from '@/components/ui/button'
 import { 
   Menu, 
@@ -19,7 +19,7 @@ import {
 export default function GlobalNavigation() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const pathname = usePathname()
-  const { user, logout } = useAuth()
+  const { user, signOut } = useSupabaseAuth()
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen)
@@ -31,7 +31,7 @@ export default function GlobalNavigation() {
 
   const handleLogout = async () => {
     try {
-      await logout()
+      await signOut()
       closeMobileMenu()
     } catch (error) {
       console.error('Logout failed:', error)

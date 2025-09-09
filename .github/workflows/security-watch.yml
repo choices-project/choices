@@ -4,7 +4,7 @@ on:
   schedule:
     - cron: "0 2 * * *"  # Daily at 2 AM UTC
   workflow_dispatch:
-  push:
+  pull_request:
     branches: [main]
 
 permissions:
@@ -12,7 +12,7 @@ permissions:
   security-events: write
 
 jobs:
-  dependency-audit:
+  security-audit:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -40,9 +40,16 @@ jobs:
           }
           echo "✅ No high/critical vulnerabilities found"
       
-      - name: Dependency review
-        uses: actions/dependency-review-action@v4
-        if: github.event_name == 'pull_request'
-        with:
-          fail-on-severity: moderate
-          allow-licenses: MIT, Apache-2.0, BSD-2-Clause, BSD-3-Clause, ISC, Unlicense
+      - name: Dependency review (disabled for private repo)
+        run: |
+          echo "⚠️  Dependency review disabled for private repositories"
+          echo "To enable: Go to Settings > Security > Code security and analysis"
+          echo "Enable 'Dependency graph' and 'Dependabot alerts'"
+          echo "Then uncomment the dependency-review-action step below"
+        
+      # - name: Dependency review
+      #   uses: actions/dependency-review-action@v4
+      #   if: github.event_name == 'pull_request' && github.repository_visibility == 'public'
+      #   with:
+      #     fail-on-severity: moderate
+      #     allow-licenses: MIT, Apache-2.0, BSD-2-Clause, BSD-3-Clause, ISC, Unlicense

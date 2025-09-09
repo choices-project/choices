@@ -1,147 +1,136 @@
-# Core Documentation Index
+# Documentation Index
 **Created:** August 30, 2025  
-**Last Updated:** December 31, 2024  
-**Status:** 📚 **STREAMLINED AND MAINTAINABLE**
+*Last Updated: 2025-09-09*  
+**Status:** 📚 **ORGANIZED AND MAINTAINABLE**
 
-## 🎯 **Core Documentation Strategy**
+## 🎯 **Documentation Organization**
 
-This index provides a streamlined guide to the **essential documentation** that should always be maintained for the Choices platform. We've organized documentation into core (always maintain) and reference (as needed) categories.
+This index provides a comprehensive guide to all documentation in the Choices platform. Documentation is organized into logical categories for easy navigation and maintenance.
 
-## 📋 **Core Documentation (Always Maintain)**
+## 📁 **Documentation Structure**
+
+### **Core Documentation (Root Level)**
+| Document | Purpose | Status |
+|----------|---------|--------|
+| **[README.md](./README.md)** | Main project documentation and overview | ✅ Current |
+| **[PROJECT_STATUS.md](./PROJECT_STATUS.md)** | Current development status and achievements | ✅ Current |
+| **[CHANGELOG.md](./CHANGELOG.md)** | Change history and version tracking | ✅ Current |
+| **[SETUP.md](./SETUP.md)** | Setup and installation guide | ✅ Current |
+| **[AUTHENTICATION_SYSTEM.md](./AUTHENTICATION_SYSTEM.md)** | Supabase Auth system documentation | ✅ Current |
+| **[DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md)** | Production deployment instructions | ✅ Current |
+| **[SYSTEM_ARCHITECTURE_OVERVIEW.md](./SYSTEM_ARCHITECTURE_OVERVIEW.md)** | High-level system design | ✅ Current |
+| **[DATABASE_SECURITY_AND_SCHEMA.md](./DATABASE_SECURITY_AND_SCHEMA.md)** | Database structure and security | ✅ Current |
+
+### **Development Documentation**
+| Document | Purpose | Status |
+|----------|---------|--------|
+| **[development/ONBOARDING.md](./development/ONBOARDING.md)** | Developer onboarding guide | ✅ Current |
+| **[development/DEVELOPER_CHEAT_SHEET.md](./development/DEVELOPER_CHEAT_SHEET.md)** | Useful commands and tools | ✅ Current |
+| **[testing/CURRENT_TESTING_GUIDE.md](./testing/CURRENT_TESTING_GUIDE.md)** | Current testing approach and philosophy | ✅ Current |
+| **[testing/COMPREHENSIVE_TESTING_GUIDE.md](./testing/COMPREHENSIVE_TESTING_GUIDE.md)** | Comprehensive testing documentation | ✅ Current |
+
+### **Technical Documentation**
+| Document | Purpose | Status |
+|----------|---------|--------|
+| **[technical/USER_GUIDE.md](./technical/USER_GUIDE.md)** | End-user documentation | ✅ Current |
+| **[technical/ZERO_KNOWLEDGE_PROOFS_SYSTEM.md](./technical/ZERO_KNOWLEDGE_PROOFS_SYSTEM.md)** | ZK proofs system documentation | ✅ Current |
+
+### **Governance & Legal**
+| Document | Purpose | Status |
+|----------|---------|--------|
+| **[governance/CODE_OF_CONDUCT.md](./governance/CODE_OF_CONDUCT.md)** | Code of conduct and community guidelines | ✅ Current |
+| **[governance/CONTRIBUTING.md](./governance/CONTRIBUTING.md)** | Contribution guidelines | ✅ Current |
+| **[governance/GOVERNANCE.md](./governance/GOVERNANCE.md)** | Project governance structure | ✅ Current |
+| **[governance/NEUTRALITY_POLICY.md](./governance/NEUTRALITY_POLICY.md)** | Platform neutrality policy | ✅ Current |
+| **[governance/TRANSPARENCY.md](./governance/TRANSPARENCY.md)** | Transparency policy | ✅ Current |
+| **[legal/PRIVACY_POLICY.md](./legal/PRIVACY_POLICY.md)** | Privacy policy | ✅ Current |
+| **[legal/TERMS_OF_SERVICE.md](./legal/TERMS_OF_SERVICE.md)** | Terms of service | ✅ Current |
+
+### **Security Documentation**
+| Document | Purpose | Status |
+|----------|---------|--------|
+| **[security/SECURITY.md](./security/SECURITY.md)** | Security overview and best practices | ✅ Current |
+| **[security/SECURE_EXAMPLE_PATTERNS.md](./security/SECURE_EXAMPLE_PATTERNS.md)** | Secure coding patterns and examples | ✅ Current |
+| **[security/SECURITY_REVIEW_FEEDBACK.md](./security/SECURITY_REVIEW_FEEDBACK.md)** | Security review feedback and improvements | ✅ Current |
+
+### **Project Summaries**
+| Document | Purpose | Status |
+|----------|---------|--------|
+| **[summaries/SUPABASE_AUTH_DEPLOYMENT_READY_SUMMARY.md](./summaries/SUPABASE_AUTH_DEPLOYMENT_READY_SUMMARY.md)** | Supabase Auth implementation summary | ✅ Current |
+| **[summaries/PROJECT_CLEANUP_COMPLETE.md](./summaries/PROJECT_CLEANUP_COMPLETE.md)** | Project cleanup summary | ✅ Current |
+| **[summaries/DOCUMENTATION_CLEANUP_SUMMARY.md](./summaries/DOCUMENTATION_CLEANUP_SUMMARY.md)** | Documentation cleanup summary | ✅ Current |
+
+### **Removed Features Documentation**
+| Document | Purpose | Status |
+|----------|---------|--------|
+| **[removed-features/custom-jwt-system.md](./removed-features/custom-jwt-system.md)** | Custom JWT system removal documentation | ✅ Current |
+| **[removed-features/device-flow-implementation.md](./removed-features/device-flow-implementation.md)** | Device flow implementation removal | ✅ Current |
+| **[removed-features/old-migration-system.md](./removed-features/old-migration-system.md)** | Old migration system removal | ✅ Current |
+| **[removed-features/webauthn-implementation.md](./removed-features/webauthn-implementation.md)** | WebAuthn implementation removal | ✅ Current |
+
+## 🎯 **Documentation Maintenance Strategy**
 
 ### **🔥 Critical Priority (Update Weekly)**
-| Document | Purpose | Maintenance |
-|----------|---------|-------------|
-| **[PROJECT_STATUS.md](./PROJECT_STATUS.md)** | Current development status and achievements | Weekly updates |
-| **[CHANGELOG.md](./CHANGELOG.md)** | Change history and version tracking | With each release |
-| **[README.md](./README.md)** | Detailed project documentation | As needed |
+- **PROJECT_STATUS.md** - Current development status
+- **CHANGELOG.md** - Change history
 
 ### **⚡ High Priority (Update Monthly)**
-| Document | Purpose | Maintenance |
-|----------|---------|-------------|
-| **[DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md)** | Production deployment instructions | Monthly review |
-| **[API.md](./API.md)** | API endpoints and usage | With API changes |
-| **[DATABASE_SECURITY_AND_SCHEMA.md](./DATABASE_SECURITY_AND_SCHEMA.md)** | Database structure and security | With schema changes |
-| **[TRUST_TIER_ANALYTICS_IMPLEMENTATION_PLAN.md](./TRUST_TIER_ANALYTICS_IMPLEMENTATION_PLAN.md)** | Trust tier analytics system implementation | With analytics changes |
+- **README.md** - Main project documentation
+- **DEPLOYMENT_GUIDE.md** - Deployment instructions
+- **AUTHENTICATION_SYSTEM.md** - Auth system documentation
 
 ### **📚 Medium Priority (Update Quarterly)**
-| Document | Purpose | Maintenance |
-|----------|---------|-------------|
-| **[SYSTEM_ARCHITECTURE_OVERVIEW.md](./SYSTEM_ARCHITECTURE_OVERVIEW.md)** | High-level system design | With major changes |
-| **[AUTHENTICATION_SYSTEM.md](./AUTHENTICATION_SYSTEM.md)** | Auth implementation details | With auth changes |
-| **[testing/COMPREHENSIVE_TESTING_GUIDE.md](./testing/COMPREHENSIVE_TESTING_GUIDE.md)** | Testing procedures | With test changes |
+- **SYSTEM_ARCHITECTURE_OVERVIEW.md** - System architecture
+- **DATABASE_SECURITY_AND_SCHEMA.md** - Database documentation
+- **development/ONBOARDING.md** - Developer onboarding
 
-### **📋 Low Priority (Update Annually)**
-| Document | Purpose | Maintenance |
-|----------|---------|-------------|
-| **[legal/PRIVACY_POLICY.md](./legal/PRIVACY_POLICY.md)** | Privacy policy | Annual review |
-| **[legal/TERMS_OF_SERVICE.md](./legal/TERMS_OF_SERVICE.md)** | Terms of service | Annual review |
+### **📖 Reference Priority (Update As Needed)**
+- **technical/** - Technical documentation
+- **governance/** - Governance and legal documents
+- **security/** - Security documentation
+- **summaries/** - Project summaries
+- **removed-features/** - Historical documentation
 
-## 📁 **Streamlined Documentation Structure**
+## 🚀 **Quick Navigation**
 
-```
-docs/
-├── README.md                                    # Detailed project docs
-├── PROJECT_STATUS.md                           # Current status
-├── DEPLOYMENT_GUIDE.md                         # Deployment instructions
-├── API.md                                      # API documentation
-├── DATABASE_SECURITY_AND_SCHEMA.md             # Database & security
-├── TRUST_TIER_ANALYTICS_IMPLEMENTATION_PLAN.md # Trust tier analytics system
-├── SYSTEM_ARCHITECTURE_OVERVIEW.md             # System design
-├── AUTHENTICATION_SYSTEM.md                    # Auth implementation
-├── CHANGELOG.md                                # Change history
-├── testing/
-│   └── COMPREHENSIVE_TESTING_GUIDE.md          # Testing procedures
-├── legal/
-│   ├── PRIVACY_POLICY.md                       # Privacy policy
-│   └── TERMS_OF_SERVICE.md                     # Terms of service
-├── technical/                                  # Technical reference
-│   ├── ZERO_KNOWLEDGE_PROOFS_SYSTEM.md         # Privacy features
-│   └── USER_GUIDE.md                           # User documentation
-└── archive/                                    # Historical documentation
-    ├── NEXT14_IMPLEMENTATION_PLAN.md
-    ├── SSR_FIX_IMPLEMENTATION_PLAN.md
-    ├── CURRENT_STATE_ANALYSIS.md
-    ├── ACHIEVEMENT_SUMMARY.md
-    ├── SNAPSHOT_SUMMARY.md
-    ├── ENHANCED_ONBOARDING_FLOW_IMPLEMENTATION_GUIDE.md
-    ├── END_TO_END_TESTING_PLAN.md
-    ├── LESSONS_LEARNED.md
-    └── SECURITY_ENHANCEMENT.md
-```
+### **For New Developers**
+1. Start with **[README.md](./README.md)** for project overview
+2. Follow **[development/ONBOARDING.md](./development/ONBOARDING.md)** for setup
+3. Check **[SETUP.md](./SETUP.md)** for detailed installation
+4. Review **[AUTHENTICATION_SYSTEM.md](./AUTHENTICATION_SYSTEM.md)** for auth understanding
 
-## 🎯 **Maintenance Guidelines**
+### **For Deployment**
+1. Review **[DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md)** for deployment steps
+2. Check **[summaries/SUPABASE_AUTH_DEPLOYMENT_READY_SUMMARY.md](./summaries/SUPABASE_AUTH_DEPLOYMENT_READY_SUMMARY.md)** for current status
+3. Verify **[PROJECT_STATUS.md](./PROJECT_STATUS.md)** for readiness
 
-### **Update Triggers**
-- **Code changes** → Update relevant technical docs
-- **New features** → Update API docs, changelog, project status
-- **Deployment changes** → Update deployment guide
-- **Security updates** → Update security documentation
-- **Breaking changes** → Update changelog and migration guides
-- **Analytics changes** → Update trust tier analytics plan
+### **For Contributors**
+1. Read **[governance/CONTRIBUTING.md](./governance/CONTRIBUTING.md)** for guidelines
+2. Review **[governance/CODE_OF_CONDUCT.md](./governance/CODE_OF_CONDUCT.md)** for standards
+3. Check **[development/DEVELOPER_CHEAT_SHEET.md](./development/DEVELOPER_CHEAT_SHEET.md)** for tools
 
-### **Quality Standards**
-- **Accuracy** - All docs must reflect actual implementation
-- **Completeness** - Core docs must cover all essential information
-- **Clarity** - Clear, concise, and accessible writing
-- **Consistency** - Consistent formatting and structure
+## 📋 **Documentation Standards**
 
-### **Review Schedule**
-- **Weekly**: PROJECT_STATUS.md and CHANGELOG.md
-- **Monthly**: DEPLOYMENT_GUIDE.md, API.md, DATABASE_SECURITY_AND_SCHEMA.md, TRUST_TIER_ANALYTICS_IMPLEMENTATION_PLAN.md
-- **Quarterly**: SYSTEM_ARCHITECTURE_OVERVIEW.md, AUTHENTICATION_SYSTEM.md, testing guide
-- **Annually**: Legal documents and major reorganization
+### **File Organization**
+- **Core docs** in root `docs/` directory
+- **Categorized docs** in appropriate subdirectories
+- **Consistent naming** with descriptive filenames
+- **Clear structure** with logical grouping
 
-## 📊 **Documentation Metrics**
+### **Content Standards**
+- **Current dates** for all documentation
+- **Accurate information** reflecting current system state
+- **Clear purpose** and scope for each document
+- **Regular updates** based on maintenance priority
 
-### **Current Status**
-- **Core Documents**: 11 essential documents
-- **Reference Documents**: 2 technical reference documents
-- **Archived Documents**: 9 historical documents
-- **Coverage**: 100% of essential systems documented
-- **Accuracy**: All docs reflect current implementation
+### **Quality Assurance**
+- **Regular review** of documentation accuracy
+- **Update tracking** with proper date stamps
+- **Link validation** to ensure all references work
+- **Consistent formatting** across all documents
 
-## 🚀 **Latest Achievements**
+---
 
-### **Production Ready Status (December 2024)**
-- ✅ **91% E2E Test Success Rate** achieved
-- ✅ **All core pages** implemented and functional
-- ✅ **Mobile responsive design** working perfectly
-- ✅ **Excellent performance** (1547ms load time)
-- ✅ **Clean code quality** with zero linting errors
-- ✅ **Comprehensive documentation** updated
-
-### **Trust Tier Analytics System (December 2024)**
-- ✅ **Comprehensive implementation plan** created
-- ✅ **Database schema design** for trust tiers T0-T3
-- ✅ **Analytics engine architecture** defined
-- ✅ **Frontend dashboard components** planned
-- ✅ **Integration strategy** with existing systems
-- ✅ **5-week implementation roadmap** established
-
-### **Authentication System (December 2024)**
-- ✅ **Email + Password** authentication working
-- ✅ **Email + Biometric** authentication implemented
-- ✅ **Biometric-only** authentication option available
-- ✅ **Login API fixes** for email/username field mapping
-- ✅ **Trust tier foundation** for future civics database
-
-## 🎯 **Next Steps**
-
-### **Immediate (Next 2 Weeks)**
-1. **Implement trust tier analytics** database schema
-2. **Deploy login authentication fixes** to production
-3. **Test biometric authentication** flows
-4. **Update API documentation** for new endpoints
-
-### **Short Term (Next Month)**
-1. **Complete trust tier analytics** implementation
-2. **Add analytics dashboard** to polls page
-3. **Implement user profile** trust tier tracking
-4. **Create trust tier overview** page
-
-### **Long Term (Next Quarter)**
-1. **Scale trust tier system** for millions of users
-2. **Begin civics database** foundation work
-3. **Implement advanced analytics** and insights
-4. **Prepare for representative-user** mapping system
+**Last Updated: September 9, 2025**  
+**Status: ORGANIZED AND MAINTAINABLE**  
+**Next Review: Monthly**

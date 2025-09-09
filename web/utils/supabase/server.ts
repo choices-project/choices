@@ -135,36 +135,174 @@ export interface Database {
           vote_data?: any
         }
       }
-      webauthn_credentials: {
+      // Privacy-first tables
+      user_consent: {
         Row: {
           id: string
           user_id: string
-          credential_id: string
-          public_key: string
-          sign_count: number
-          created_at: string
-          last_used_at?: string
-          is_active: boolean
+          consent_type: 'analytics' | 'demographics' | 'behavioral' | 'contact' | 'research' | 'marketing'
+          granted: boolean
+          granted_at: string
+          revoked_at?: string
+          consent_version: number
+          purpose: string
+          data_types: string[]
         }
         Insert: {
           id?: string
           user_id: string
-          credential_id: string
-          public_key: string
-          sign_count?: number
-          created_at?: string
-          last_used_at?: string
-          is_active?: boolean
+          consent_type: 'analytics' | 'demographics' | 'behavioral' | 'contact' | 'research' | 'marketing'
+          granted: boolean
+          granted_at?: string
+          revoked_at?: string
+          consent_version?: number
+          purpose: string
+          data_types?: string[]
         }
         Update: {
           id?: string
           user_id?: string
-          credential_id?: string
-          public_key?: string
-          sign_count?: number
+          consent_type?: 'analytics' | 'demographics' | 'behavioral' | 'contact' | 'research' | 'marketing'
+          granted?: boolean
+          granted_at?: string
+          revoked_at?: string
+          consent_version?: number
+          purpose?: string
+          data_types?: string[]
+        }
+      }
+      privacy_logs: {
+        Row: {
+          id: string
+          action: string
+          user_id_hash: string
+          created_at: string
+          metadata: any
+        }
+        Insert: {
+          id?: string
+          action: string
+          user_id_hash: string
           created_at?: string
-          last_used_at?: string
-          is_active?: boolean
+          metadata?: any
+        }
+        Update: {
+          id?: string
+          action?: string
+          user_id_hash?: string
+          created_at?: string
+          metadata?: any
+        }
+      }
+      user_profiles_encrypted: {
+        Row: {
+          id: string
+          user_id: string
+          username?: string
+          public_bio?: string
+          created_at: string
+          updated_at: string
+          encrypted_demographics?: string
+          encrypted_preferences?: string
+          encrypted_contact_info?: string
+          encryption_version: number
+          key_derivation_salt?: string
+          key_hash?: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          username?: string
+          public_bio?: string
+          created_at?: string
+          updated_at?: string
+          encrypted_demographics?: string
+          encrypted_preferences?: string
+          encrypted_contact_info?: string
+          encryption_version?: number
+          key_derivation_salt?: string
+          key_hash?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          username?: string
+          public_bio?: string
+          created_at?: string
+          updated_at?: string
+          encrypted_demographics?: string
+          encrypted_preferences?: string
+          encrypted_contact_info?: string
+          encryption_version?: number
+          key_derivation_salt?: string
+          key_hash?: string
+        }
+      }
+      private_user_data: {
+        Row: {
+          id: string
+          user_id: string
+          encrypted_personal_info?: string
+          encrypted_behavioral_data?: string
+          encrypted_analytics_data?: string
+          encryption_key_hash?: string
+          last_encrypted_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          encrypted_personal_info?: string
+          encrypted_behavioral_data?: string
+          encrypted_analytics_data?: string
+          encryption_key_hash?: string
+          last_encrypted_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          encrypted_personal_info?: string
+          encrypted_behavioral_data?: string
+          encrypted_analytics_data?: string
+          encryption_key_hash?: string
+          last_encrypted_at?: string
+        }
+      }
+      analytics_contributions: {
+        Row: {
+          id: string
+          poll_id: string
+          user_id: string
+          age_bucket?: string
+          region_bucket?: string
+          education_bucket?: string
+          vote_choice?: number
+          participation_time?: string
+          consent_granted: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          poll_id: string
+          user_id: string
+          age_bucket?: string
+          region_bucket?: string
+          education_bucket?: string
+          vote_choice?: number
+          participation_time?: string
+          consent_granted?: boolean
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          poll_id?: string
+          user_id?: string
+          age_bucket?: string
+          region_bucket?: string
+          education_bucket?: string
+          vote_choice?: number
+          participation_time?: string
+          consent_granted?: boolean
+          created_at?: string
         }
       }
       error_logs: {
@@ -199,100 +337,46 @@ export interface Database {
           severity?: 'low' | 'medium' | 'high' | 'critical'
         }
       }
-      ia_users: {
-        Row: {
-          id: string
-          stable_id: string
-          email: string
-          verification_tier: string
-          is_active: boolean
-          created_at: string
-          updated_at: string
-          display_name?: string
-          avatar_url?: string
-          bio?: string
-          password_hash?: string
-        }
-        Insert: {
-          id?: string
-          stable_id: string
-          email: string
-          verification_tier?: string
-          is_active?: boolean
-          created_at?: string
-          updated_at?: string
-          display_name?: string
-          avatar_url?: string
-          bio?: string
-          password_hash?: string
-        }
-        Update: {
-          id?: string
-          stable_id?: string
-          email?: string
-          verification_tier?: string
-          is_active?: boolean
-          created_at?: string
-          updated_at?: string
-          display_name?: string
-          avatar_url?: string
-          bio?: string
-          password_hash?: string
-        }
-      }
-      poll_contexts: {
-        Row: {
-          id: string
-          story_id: string
-          question: string
-          context: any
-          why_important: string
-          stakeholders: any
-          options: any
-          voting_method: string
-          estimated_controversy: number
-          time_to_live: number
-          status: string
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          story_id: string
-          question: string
-          context?: any
-          why_important: string
-          stakeholders?: any
-          options?: any
-          voting_method: string
-          estimated_controversy?: number
-          time_to_live?: number
-          status?: string
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          story_id?: string
-          question?: string
-          context?: any
-          why_important?: string
-          stakeholders?: any
-          options?: any
-          voting_method?: string
-          estimated_controversy?: number
-          time_to_live?: number
-          status?: string
-          created_at?: string
-          updated_at?: string
-        }
-      }
     }
     Views: {
-      [_ in never]: never
+      demographic_analytics: {
+        Row: {
+          poll_id: string
+          age_bucket: string
+          region_bucket: string
+          education_bucket: string
+          participant_count: number
+          average_choice: number
+          choice_variance: number
+          first_contribution: string
+          last_contribution: string
+        }
+      }
     }
     Functions: {
-      [_ in never]: never
+      anonymize_user_data: {
+        Args: {
+          target_user_id: string
+        }
+        Returns: void
+      }
+      export_user_data: {
+        Args: {
+          target_user_id: string
+        }
+        Returns: any
+      }
+      contribute_to_analytics: {
+        Args: {
+          target_poll_id: string
+          target_age_bucket: string
+          target_region_bucket: string
+          target_education_bucket: string
+          target_vote_choice: number
+          target_participation_time: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never
@@ -304,8 +388,8 @@ export interface Database {
 const validateEnvironment = () => {
   const requiredVars = {
     NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
-    NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-    SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY
+    NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+    SUPABASE_SECRET_KEY: process.env.SUPABASE_SECRET_KEY
   }
 
   const missing = Object.entries(requiredVars)
@@ -339,7 +423,7 @@ export async function getSupabaseServerClient() {
   
   return createServerClient<Database>(
     env.NEXT_PUBLIC_SUPABASE_URL!,
-    env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
     {
       cookies: {
         get: (name: string) => cookieStore.get(name)?.value,
@@ -367,4 +451,9 @@ export type DatabaseTypes = Database
 export type UserProfile = Database['public']['Tables']['user_profiles']['Row']
 export type Poll = Database['public']['Tables']['polls']['Row']
 export type Vote = Database['public']['Tables']['votes']['Row']
-export type WebAuthnCredential = Database['public']['Tables']['webauthn_credentials']['Row']
+export type UserConsent = Database['public']['Tables']['user_consent']['Row']
+export type PrivacyLog = Database['public']['Tables']['privacy_logs']['Row']
+export type UserProfileEncrypted = Database['public']['Tables']['user_profiles_encrypted']['Row']
+export type PrivateUserData = Database['public']['Tables']['private_user_data']['Row']
+export type AnalyticsContribution = Database['public']['Tables']['analytics_contributions']['Row']
+export type DemographicAnalytics = Database['public']['Views']['demographic_analytics']['Row']

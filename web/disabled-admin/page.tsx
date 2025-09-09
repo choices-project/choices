@@ -1,6 +1,6 @@
 'use client'
 
-import { useAuth } from '@/hooks/useAuth'
+import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
 import { logger } from '@/lib/logger';
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
@@ -31,7 +31,7 @@ interface AdminStats {
 }
 
 export default function AdminDashboard() {
-  const { user, isLoading, logout } = useAuth()
+  const { user, isLoading, signOut } = useSupabaseAuth()
   const router = useRouter()
   const [stats, setStats] = useState<AdminStats | null>(null)
   const [loading, setLoading] = useState(true)
@@ -101,7 +101,7 @@ export default function AdminDashboard() {
   }
 
   const handleLogout = async () => {
-    await logout()
+    await signOut()
     router.push('/login')
   }
 

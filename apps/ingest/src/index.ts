@@ -1,2 +1,2 @@
-export * from "../connectors/propublica";
-export * from "../connectors/civicinfo";
+export * from "./connectors/propublica";
+export * from "./connectors/civicinfo";

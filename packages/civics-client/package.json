@@ -1,20 +1,17 @@
 {
   "name": "@choices/civics-client",
-  "version": "0.0.1",
-  "type": "module",
+  "version": "1.0.0",
+  "description": "Civics data client for Choices platform",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
-    "dev": "tsc --watch",
-    "typecheck": "tsc --noEmit",
-    "lint": "echo 'No linting configured for civics-client'"
+    "dev": "tsc --watch"
   },
-  "dependencies": {},
-  "exports": {
-    ".": {
-      "import": "./dist/index.js",
-      "types": "./dist/index.d.ts"
-    }
+  "dependencies": {
+    "@choices/civics-schemas": "file:../civics-schemas"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
   }
 }

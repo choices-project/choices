@@ -2,8 +2,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseServerClient } from '@/utils/supabase/server'
 import { logger } from '@/lib/logger'
 import { rateLimiters } from '@/lib/rate-limit'
-import bcrypt from 'bcryptjs'
-import { createEnhancedSession, type EnhancedSessionUser } from '@/lib/session-enhanced'
 import { 
   validateCsrfProtection, 
   createCsrfErrorResponse 
@@ -38,128 +36,71 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Use email as username for lookup
-    const username = email.toLowerCase().trim()
+    // Use Supabase Auth for authentication
+    const supabase = getSupabaseServerClient()
+    const supabaseClient = await supabase
 
-    // Use service role for authentication
-    const supabase = getSupabaseServerClient();
-    const supabaseClient = await supabase;
+    // Sign in with Supabase Auth
+    const { data: authData, error: authError } = await supabaseClient.auth.signInWithPassword({
+      email: email.toLowerCase().trim(),
+      password: password
+    })
 
-    // Find user in ia_users table by email
-    const { data: user, error: userError } = await supabaseClient
-      .from('ia_users')
-      .select('*')
-      .eq('email', username.toLowerCase())
+    if (authError || !authData.user) {
+      logger.warn('Login failed', { email, error: authError?.message })
+      return NextResponse.json(
+        { message: 'Invalid email or password' },
+        { status: 401 }
+      )
+    }
+
+    // Get user profile
+    const { data: profile, error: profileError } = await supabaseClient
+      .from('user_profiles')
+      .select('username, trust_tier, display_name, avatar_url, bio, is_active')
+      .eq('user_id', authData.user.id)
       .single()
 
-    if (userError || !user) {
-      logger.warn('Login failed - user not found', {
-        username: username.toLowerCase(),
-        ip: rateLimitResult.reputation?.ip || 'unknown',
-        error: userError?.message || 'User not found'
-      })
+    if (profileError || !profile) {
+      logger.warn('User profile not found after login', { userId: authData.user.id })
       return NextResponse.json(
-        { message: 'Invalid username or password' },
-        { status: 401 }
-      )
-    }
-
-    // Check if user has a password
-    if (!user || !('password_hash' in user) || !user.password_hash) {
-      logger.warn('Login failed - no password set', {
-        username: username.toLowerCase(),
-        ip: rateLimitResult.reputation?.ip || 'unknown'
-      })
-      return NextResponse.json(
-        { message: 'This account does not have a password set. Please use biometric authentication.' },
-        { status: 401 }
-      )
-    }
-
-    // Type assertion to ensure user is the correct type
-    const userData = user as any
-
-    // Verify password
-    const passwordValid = await bcrypt.compare(password, userData.password_hash)
-    if (!passwordValid) {
-      logger.warn('Login failed - invalid password', {
-        username: username.toLowerCase(),
-        ip: rateLimitResult.reputation?.ip || 'unknown'
-      })
-      return NextResponse.json(
-        { message: 'Invalid username or password' },
-        { status: 401 }
+        { message: 'User profile not found' },
+        { status: 404 }
       )
     }
 
     // Check if user is active
-    if (!userData.is_active) {
+    if (!profile.is_active) {
+      logger.warn('Inactive user attempted login', { userId: authData.user.id })
       return NextResponse.json(
         { message: 'Account is deactivated' },
-        { status: 401 }
+        { status: 403 }
       )
     }
 
-    // Get user profile (for future use)
-    const { error: profileError } = await supabaseClient
-      .from('user_profiles')
-      .select('*')
-      .eq('user_id', userData.stable_id)
-      .single()
-
-    if (profileError) {
-      logger.error('Failed to fetch user profile', new Error(profileError.message))
-      // Don't fail the login, but log the error
-    }
-
-    // Create enhanced session user object
-    const sessionUser: EnhancedSessionUser = {
-      id: userData.id,
-      stableId: userData.stable_id,
-      username: userData.stable_id,
-      tier: userData.verification_tier as 'T0' | 'T1' | 'T2' | 'T3',
-      email: userData.email,
-      isActive: userData.is_active,
-      twoFactorEnabled: userData.two_factor_enabled,
-      createdAt: userData.created_at,
-      updatedAt: userData.updated_at
-    }
-
-    // Log successful login
-    logger.info('User logged in successfully', {
-      userId: userData.id,
-      username: username.toLowerCase(),
-      ip: rateLimitResult.reputation?.ip || 'unknown',
-      authMethod: 'password'
+    logger.info('User logged in successfully', { 
+      userId: authData.user.id, 
+      email: authData.user.email,
+      username: profile.username 
     })
 
-    // Create response with success data
-    const response = NextResponse.json({
+    return NextResponse.json({
       success: true,
-      message: 'Login successful',
       user: {
-        id: sessionUser.id,
-        stableId: sessionUser.stableId,
-        username: sessionUser.username,
-        tier: sessionUser.tier,
-      }
+        id: authData.user.id,
+        email: authData.user.email,
+        username: profile.username,
+        trust_tier: profile.trust_tier,
+        display_name: profile.display_name,
+        avatar_url: profile.avatar_url,
+        bio: profile.bio,
+        is_active: profile.is_active
+      },
+      session: authData.session
     })
-
-    // Create enhanced session with secure cookies
-    const sessionResult = createEnhancedSession(sessionUser, response)
-    
-    if (!sessionResult.success) {
-      logger.error('Failed to create enhanced session', new Error(sessionResult.error || 'Unknown error'))
-      return NextResponse.json(
-        { error: 'Failed to create session' },
-        { status: 500 }
-      )
-    }
-
-    return response
 
   } catch (error) {
-    logger.error('Login API error', error instanceof Error ? error : new Error('Unknown error'))
+    logger.error('Login error', error instanceof Error ? error : new Error(String(error)))
     return NextResponse.json(
       { message: 'Internal server error' },
       { status: 500 }

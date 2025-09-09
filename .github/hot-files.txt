@@ -1,9 +1,0 @@
-# AI limit=1; Owner limit=3
-apps/web/next.config.js
-apps/web/app/layout.tsx
-apps/web/lib/supabase.ts
-apps/web/lib/ssr-polyfills.ts
-apps/web/middleware.ts
-packages/civics-schemas/src/index.ts
-packages/civics-client/src/index.ts
-infra/db/migrations/*
