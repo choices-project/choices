@@ -102,7 +102,7 @@ export function DemographicVisualization({
   ]
 
   const getActiveData = () => {
-    const currentData = cachedData()
+    const currentData = cachedData() as DemographicData
     if (!currentData) return []
     
     const colors = ['#3b82f6', '#10b981', '#8b5cf6', '#f59e0b', '#ef4444', '#06b6d4', '#84cc16', '#f97316', '#ec4899', '#6366f1']

@@ -22,7 +22,7 @@ import {
 } from 'lucide-react'
 import { devLog } from '@/lib/logger'
 import BiometricSetup from '@/components/auth/BiometricSetup'
-import { useAuth } from '@/hooks/useAuth'
+import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
 
 interface UserProfile {
   id: string
@@ -44,7 +44,7 @@ interface BiometricCredential {
 
 export default function ProfilePage() {
   const router = useRouter()
-  const { user, isLoading, logout } = useAuth()
+  const { user, isLoading, signOut } = useSupabaseAuth()
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [biometricCredentials, setBiometricCredentials] = useState<BiometricCredential[]>([])
   const [trustScore, setTrustScore] = useState<number | null>(null)
@@ -148,7 +148,7 @@ export default function ProfilePage() {
       })
 
       if (response.ok) {
-        await logout()
+        await signOut()
         setSuccess('Account deleted successfully')
         setTimeout(() => {
           router.push('/')
@@ -304,7 +304,7 @@ export default function ProfilePage() {
           <CardContent>
             <BiometricSetup 
               userId={user.id} 
-              username={user.email}
+              username={user.email || ''}
               onSuccess={loadUserData}
               onError={() => setError('Failed to setup biometric authentication')}
             />
