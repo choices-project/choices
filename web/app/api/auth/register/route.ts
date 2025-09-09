@@ -104,8 +104,13 @@ export async function POST(request: NextRequest) {
         user_id: authData.user.id
       })
       
-      // If profile creation fails, we should clean up the auth user
-      await supabaseClient.auth.admin.deleteUser(authData.user.id)
+      // If profile creation fails, log the issue and rely on a secure backend cleanup process
+      // Cleanup of orphaned auth users should be handled by a secure backend process or database trigger
+      logger.warn('Orphaned auth user created - cleanup required', {
+        user_id: authData.user.id,
+        email: authData.user.email,
+        timestamp: new Date().toISOString()
+      })
       
       return NextResponse.json(
         { message: 'Registration failed. Please try again.' },
