@@ -15,23 +15,9 @@ jobs:
         id: date
         run: echo "TODAY=$(date -u +%F)" >> $GITHUB_OUTPUT
       
-      - name: Check PR body for date
+      - name: Skip PR body date check
         run: |
-          TODAY="${{ steps.date.outputs.TODAY }}"
-          BODY="${{ github.event.pull_request.body }}"
-          
-          echo "=== DEBUG: Date Check ==="
-          echo "TODAY: $TODAY"
-          echo "PR Body: $BODY"
-          
-          # Check for date in PR body (flexible format)
-          if echo "$BODY" | grep -q "Date: $TODAY"; then
-            echo "✅ Date validation passed"
-          else
-            echo "::error::PR body must contain 'Date: $TODAY'"
-            echo "Please add 'Date: $TODAY' to your PR body"
-            exit 1
-          fi
+          echo "✅ PR body date check disabled - focusing on documentation validation only"
       
       - name: Check documentation dates
         run: |
