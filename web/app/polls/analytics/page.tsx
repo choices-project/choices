@@ -14,7 +14,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { ArrowLeft, BarChart3, Users, Target, Award, Eye, Vote, Filter, Download, RefreshCw, AlertCircle } from 'lucide-react'
 
 // Utilities
-import { devLog } from '@/lib/logger'
+import { logger } from '@/lib/logger'
 import { cn } from '@/lib/utils'
 
 interface PollAnalytics {
@@ -91,7 +91,7 @@ export default function PollAnalyticsPage() {
         setSelectedPoll(data.analytics[0].pollid)
       }
     } catch (error) {
-      devLog('Error loading analytics:', error)
+      logger.error('Error loading analytics', error instanceof Error ? error : new Error(String(error)))
       setError('Failed to load analytics data')
     } finally {
       setIsLoading(false)
@@ -103,7 +103,7 @@ export default function PollAnalyticsPage() {
     try {
       await loadAnalytics()
     } catch (error) {
-      devLog('Error refreshing analytics:', error)
+      logger.error('Error refreshing analytics', error instanceof Error ? error : new Error(String(error)))
     } finally {
       setIsRefreshing(false)
     }
@@ -129,7 +129,7 @@ export default function PollAnalyticsPage() {
         document.body.removeChild(a)
       }
     } catch (error) {
-      devLog('Error exporting analytics:', error)
+      logger.error('Error exporting analytics', error instanceof Error ? error : new Error(String(error)))
     }
   }, [filters, selectedPoll])
 

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { devLog } from '@/lib/logger';
+import { logger } from '@/lib/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 import { RealTimeNewsService } from '@/lib/real-time-news-service';
 
@@ -93,7 +93,7 @@ export async function POST(
       .single();
 
     if (contextError) {
-      devLog('Error storing poll context:', contextError);
+      logger.error('Error storing poll context:', contextError);
       return NextResponse.json(
         { error: 'Failed to store poll context' },
         { status: 500 }
@@ -119,7 +119,7 @@ export async function POST(
     });
 
   } catch (error) {
-    devLog('Error generating poll context:', error);
+    logger.error('Error generating poll context', error instanceof Error ? error : new Error(String(error)));
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -162,7 +162,7 @@ export async function GET(
       .single();
 
     if (profileError) {
-      devLog('Error fetching user profile:', profileError);
+      logger.error('Error fetching user profile:', profileError);
       return NextResponse.json(
         { error: 'Failed to verify user permissions' },
         { status: 500 }
@@ -194,7 +194,7 @@ export async function GET(
       .single();
 
     if (contextError && contextError.code !== 'PGRST116') {
-      devLog('Error fetching poll context:', contextError);
+      logger.error('Error fetching poll context:', contextError);
       return NextResponse.json(
         { error: 'Failed to fetch poll context' },
         { status: 500 }
@@ -219,7 +219,7 @@ export async function GET(
     });
 
   } catch (error) {
-    devLog('Error fetching poll context:', error);
+    logger.error('Error fetching poll context', error instanceof Error ? error : new Error(String(error)));
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

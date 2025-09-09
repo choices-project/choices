@@ -1,6 +1,6 @@
 # Custom JWT System - Removed
 
-**Removed:** January 8, 2025  
+**Removed:** September 9, 2025  
 **Reason:** Replaced with Supabase Auth for consistency and security
 
 ## 🎯 **What It Touched**
