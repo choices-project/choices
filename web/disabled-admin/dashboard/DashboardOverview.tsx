@@ -36,8 +36,14 @@ export const DashboardOverview: React.FC = () => {
   });
 
   // Use mock chart data
-  const recentActivityData = mockChartData.recentActivity;
-  const topicCategoriesData = mockChartData.topicCategories;
+  const recentActivityData = mockChartData.recentActivity.map(item => ({
+    name: item.month,
+    value: item.count
+  }));
+  const topicCategoriesData = mockChartData.topicCategories.map(item => ({
+    name: item.category,
+    value: item.count
+  }));
 
   const getSystemHealthIcon = (health: string) => {
     switch (health) {

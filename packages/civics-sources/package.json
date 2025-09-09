@@ -1,34 +1,17 @@
 {
   "name": "@choices/civics-sources",
-  "version": "0.0.1",
-  "type": "module",
+  "version": "1.0.0",
+  "description": "Civics data sources for Choices platform",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
-    "dev": "tsc --watch",
-    "typecheck": "tsc --noEmit",
-    "lint": "echo 'No linting configured for civics-sources'"
+    "dev": "tsc --watch"
   },
   "dependencies": {
-    "zod": "^3.25.76"
+    "@choices/civics-schemas": "file:../civics-schemas"
   },
-  "exports": {
-    ".": {
-      "import": "./dist/index.js",
-      "types": "./dist/index.d.ts"
-    },
-    "./civicinfo": {
-      "import": "./dist/civicinfo.js",
-      "types": "./dist/civicinfo.d.ts"
-    },
-    "./propublica": {
-      "import": "./dist/propublica.js",
-      "types": "./dist/propublica.d.ts"
-    },
-    "./fec": {
-      "import": "./dist/fec.js",
-      "types": "./dist/fec.d.ts"
-    }
+  "devDependencies": {
+    "typescript": "^5.0.0"
   }
 }
