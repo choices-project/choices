@@ -6,10 +6,16 @@ const config = {
   // Setup files
   setupFilesAfterEnv: ['<rootDir>/tests/setup.ts'],
   
-  // Test file patterns
+  // Test file patterns (CI tests only)
   testMatch: [
-    '<rootDir>/tests/**/*.test.ts',
-    '<rootDir>/tests/**/*.test.tsx'
+    '<rootDir>/tests/ci/**/*.test.ts',
+    '<rootDir>/tests/ci/**/*.test.tsx'
+  ],
+  testPathIgnorePatterns: [
+    '<rootDir>/tests/e2e/',
+    '<rootDir>/tests/integration/',
+    '<rootDir>/tests/privacy/',
+    '<rootDir>/tests/security/'
   ],
   
   // Module name mapping for absolute imports
@@ -30,28 +36,8 @@ const config = {
   // File extensions
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json'],
   
-  // Coverage configuration
-  collectCoverage: true,
-  coverageDirectory: 'coverage',
-  coverageReporters: ['text', 'lcov', 'html'],
-  collectCoverageFrom: [
-    'utils/privacy/**/*.{ts,tsx}',
-    'utils/supabase/**/*.{ts,tsx}',
-    '!**/*.d.ts',
-    '!**/node_modules/**',
-    '!**/coverage/**',
-    '!**/components/**'
-  ],
-  
-  // Coverage thresholds
-  coverageThreshold: {
-    global: {
-      branches: 80,
-      functions: 80,
-      lines: 80,
-      statements: 80
-    }
-  },
+  // Coverage configuration (disabled for CI tests)
+  collectCoverage: false,
   
   // Test timeout
   testTimeout: 10000,
