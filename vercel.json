@@ -1,0 +1,11 @@
+{
+  "version": 2,
+  "buildCommand": "npm run build",
+  "installCommand": "npm install",
+  "outputDirectory": "web/.next",
+  "functions": {
+    "web/app/api/**/*.ts": {
+      "maxDuration": 30
+    }
+  }
+}
