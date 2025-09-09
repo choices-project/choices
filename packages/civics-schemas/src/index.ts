@@ -1,35 +1,41 @@
 /**
  * Civics Data Schemas
  * 
- * Type definitions for civics-related data structures
+ * Type definitions and validation schemas for civics-related data structures
  */
 
-export interface CandidateCardV1 {
-  id: string;
-  name: string;
-  party: string;
-  office: string;
-  district?: string;
-  state: string;
-  imageUrl?: string;
-  bio?: string;
-  website?: string;
-  socialMedia?: {
-    twitter?: string;
-    facebook?: string;
-    instagram?: string;
-  };
-  positions?: {
-    issue: string;
-    stance: string;
-    source?: string;
-  }[];
-  recentVotes?: {
-    bill: string;
-    vote: 'yes' | 'no' | 'abstain';
-    date: string;
-  }[];
-}
+import { z } from 'zod';
+
+// Zod schema for CandidateCardV1
+export const CandidateCardV1Schema = z.object({
+  id: z.string().min(1, "ID is required"),
+  name: z.string().min(1, "Name is required"),
+  party: z.string().min(1, "Party is required"),
+  office: z.string().min(1, "Office is required"),
+  district: z.string().optional(),
+  state: z.string().min(2, "State must be at least 2 characters").max(2, "State must be 2 characters"),
+  imageUrl: z.string().url("Invalid image URL").optional().or(z.literal("")),
+  bio: z.string().optional(),
+  website: z.string().url("Invalid website URL").optional().or(z.literal("")),
+  socialMedia: z.object({
+    twitter: z.string().optional(),
+    facebook: z.string().optional(),
+    instagram: z.string().optional(),
+  }).optional(),
+  positions: z.array(z.object({
+    issue: z.string().min(1, "Issue is required"),
+    stance: z.string().min(1, "Stance is required"),
+    source: z.string().optional(),
+  })).optional(),
+  recentVotes: z.array(z.object({
+    bill: z.string().min(1, "Bill is required"),
+    vote: z.enum(['yes', 'no', 'abstain']),
+    date: z.string().datetime("Invalid date format"),
+  })).optional(),
+});
+
+// TypeScript type derived from Zod schema
+export type CandidateCardV1 = z.infer<typeof CandidateCardV1Schema>;
 
 export interface District {
   id: string;

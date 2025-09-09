@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { CandidateCardV1 } from "@choices/civics-schemas";
+import { CandidateCardV1, CandidateCardV1Schema } from "@choices/civics-schemas";
 import { createCache } from "@choices/civics-client";
 import { getRecentVotesForMember } from "@choices/ingest";
 
@@ -21,13 +21,30 @@ function shapeStub(personId: string) {
 export async function GET(_: NextRequest, { params }: { params: { personId: string } }) {
   const key = `cc:v1:${params.personId}`;
   const cached = await cache.get(key);
-  if (cached && typeof cached === 'string') return NextResponse.json(JSON.parse(cached));
+  if (cached && typeof cached === 'string') {
+    const parsedCached = JSON.parse(cached);
+    // Validate cached data before returning
+    const validation = CandidateCardV1Schema.safeParse(parsedCached);
+    if (validation.success) {
+      return NextResponse.json(validation.data);
+    }
+    // If cached data is invalid, fall through to regenerate
+  }
 
   const base = shapeStub(params.personId);
   // attach stub votes
   const votes = await getRecentVotesForMember(params.personId);
-  const payload: CandidateCardV1 = { ...base, recentVotes: votes };
+  const payload = { ...base, recentVotes: votes };
 
-  await cache.set(key, JSON.stringify(payload), 600);
-  return NextResponse.json(payload);
+  // Validate the payload before caching and returning
+  const validation = CandidateCardV1Schema.safeParse(payload);
+  if (!validation.success) {
+    return NextResponse.json({ 
+      error: "Invalid candidate data", 
+      issues: validation.error.issues 
+    }, { status: 500 });
+  }
+
+  await cache.set(key, JSON.stringify(validation.data), 600);
+  return NextResponse.json(validation.data);
 }
