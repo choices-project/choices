@@ -943,7 +943,7 @@ export class MobileCompatibilityTesting {
     const hasStorageOptimizations = this.hasStorageOptimizations()
 
     // Calculate storage usage percentage if available
-    let storageUsage = null
+    let storageUsage: number | null = null
     if (storageQuota && storageQuota.usage && storageQuota.quota) {
       storageUsage = Math.round((storageQuota.usage / storageQuota.quota) * 100)
     }

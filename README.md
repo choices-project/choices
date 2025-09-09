@@ -1,193 +1,165 @@
 # Choices Platform
 
-**Status:** 🎉 **PRODUCTION READY - 91% E2E Test Success Rate with Trust Tier Analytics Foundation**
+**Status:** 🔄 **REBUILD IN PROGRESS - Phase 2 Complete**  
+**Branch:** `fix/auth-system-cleanup`  
+**Last Updated:** January 8, 2025
 
-A modern, democratic platform built with Next.js 14, designed to break the duopoly by creating user-centric, open candidate platforms. Features comprehensive authentication with biometric support and a foundation for trust tier analytics that will power a massive civics database connecting users with their representatives.
+A modern, democratic platform built with Next.js 14, designed to break the duopoly by creating user-centric, open candidate platforms. Currently undergoing a comprehensive rebuild to establish a clean, maintainable foundation.
 
-## 🚀 **Recent Improvements (Latest Release - December 2024)**
+## 🎯 **Current Status**
 
-### **🎯 Trust Tier Analytics Foundation**
-- **Comprehensive Implementation Plan** - Complete 5-week roadmap for trust tier system
-- **Database Schema Design** - Trust tiers T0-T3 with analytics tracking capabilities
-- **Analytics Engine Architecture** - Poll analytics with demographic insights framework
-- **Frontend Dashboard Components** - React components for trust tier visualization
-- **Future Civics Database Foundation** - Architecture ready for massive scale
+### **✅ Phase 1 Complete: Database Nuke**
+- **4 clean tables** created with Supabase Auth integration
+- **25+ complex tables** removed (84% reduction)
+- **Advanced auth features** safely archived (WebAuthn, Device Flow)
+- **RLS policies** enabled with proper type casting
 
-### **🔐 Enhanced Authentication System**
-- **Email + Password Authentication** - Traditional login working perfectly
-- **Email + Biometric Authentication** - Advanced security with biometric support
-- **Biometric-Only Authentication** - Experimental option for enhanced security
-- **Login API Fixes** - Resolved email/username field mapping issues
-- **Trust Tier Foundation** - Authentication levels ready for analytics
+### **✅ Phase 2 Complete: Code Cleanup**
+- **TypeScript interfaces** updated with proper type casting
+- **Logger integration** properly implemented
+- **Environment variables** updated to new Supabase format
+- **Custom JWT system** completely removed
+- **Documentation** cleaned and updated
 
-### **📊 Production Excellence**
-- **91% E2E Test Success Rate** - 10/11 tests passing with meaningful functionality testing
-- **All Core Pages Implemented** - Registration, Login, Onboarding, Profile, Polls, Dashboard, 404
-- **Mobile Responsive Design** - Perfect functionality across all devices
-- **Excellent Performance** - 1547ms load time, optimized for production
-- **Clean Code Quality** - Zero linting errors, best practices followed
-- **Comprehensive Error Handling** - Robust error management throughout
-
-## 🎯 **What's Working**
-
-### **Core Platform**
-- ✅ **User Registration & Authentication** - Email-based with biometric options
-- ✅ **Poll System** - Create, vote, and analyze polls with real-time results
-- ✅ **User Profiles** - Comprehensive profile management
-- ✅ **Dashboard** - User dashboard with activity tracking
-- ✅ **Mobile Responsive** - Perfect functionality across all devices
-- ✅ **Performance Optimized** - Fast loading and smooth interactions
-
-### **Trust Tier System**
-- ✅ **T0 (Basic)** - Email + password authentication
-- ✅ **T1 (Biometric)** - Email + biometric authentication
-- ✅ **T2 (Phone)** - Email + biometric + phone verification (planned)
-- ✅ **T3 (Identity)** - Full identity verification (planned)
-- ✅ **Analytics Foundation** - Database schema and architecture ready
-
-### **Technical Excellence**
-- ✅ **Next.js 14 App Router** - Modern React framework
-- ✅ **TypeScript** - Full type safety throughout
-- ✅ **Supabase Integration** - PostgreSQL database with real-time features
-- ✅ **E2E Testing** - 91% success rate with Playwright
-- ✅ **Vercel Deployment** - Production-ready hosting
-
-## 🏗️ **Architecture**
-
-### **Frontend**
-- **Next.js 14** - React framework with App Router
-- **TypeScript** - Type-safe development
-- **Tailwind CSS** - Utility-first styling
-- **Server Components** - Optimized rendering
-- **Client Components** - Interactive UI elements
-
-### **Backend**
-- **Supabase** - Backend-as-a-Service
-- **PostgreSQL** - Robust database
-- **Real-time Subscriptions** - Live data updates
-- **Row Level Security** - Comprehensive security
-- **JWT Authentication** - Secure session management
-
-### **Testing & Quality**
-- **Playwright** - E2E testing framework
-- **Jest** - Unit testing
-- **ESLint** - Code quality enforcement
-- **TypeScript** - Compile-time error checking
+### **🔄 Phase 3 In Progress: Rebuild**
+- **Clean API routes** implementation
+- **Trust tier system** proper integration
+- **End-to-end testing** verification
 
 ## 🚀 **Quick Start**
 
 ### **Prerequisites**
-- Node.js 18+ 
-- npm or yarn
+- Node.js 22.x
+- npm
 - Supabase account
 
-### **Installation**
+### **Setup**
 ```bash
 # Clone the repository
-git clone https://github.com/choices-project/choices.git
-cd choices/web
+git clone <repository-url>
+cd Choices
 
 # Install dependencies
 npm install
 
 # Set up environment variables
-cp .env.example .env.local
+cp env.example .env.local
 # Edit .env.local with your Supabase credentials
 
-# Run development server
+# Start development server
 npm run dev
 ```
 
-### **Testing**
+### **Environment Variables**
 ```bash
-# Run E2E tests
-npm run test:e2e
-
-# Run unit tests
-npm run test
-
-# Run linting
-npm run lint
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your_publishable_key
+SUPABASE_SECRET_KEY=your_secret_key
 ```
 
-### **Deployment**
-```bash
-# Build for production
-npm run build
+## 🏗️ **Architecture**
 
-# Deploy to Vercel
-npm run deploy
+### **Database Schema (Clean)**
+```
+user_profiles (linked to auth.users)
+├── id, user_id, username, email, trust_tier
+├── avatar_url, bio, is_active
+└── created_at, updated_at
+
+polls (linked to auth.users)
+├── id, title, description, options
+├── voting_method, created_by, status
+├── privacy_level, total_votes
+└── start_time, end_time
+
+votes (linked to auth.users)
+├── id, poll_id, user_id
+├── selected_options, ip_address
+└── user_agent, created_at
+
+error_logs (linked to auth.users)
+├── id, user_id, error_type
+├── error_message, stack_trace
+└── context, severity
 ```
 
-## 📊 **Trust Tier Analytics System**
+### **Technology Stack**
+- **Frontend:** Next.js 14, React, TypeScript
+- **Backend:** Supabase (Auth, Database, RLS)
+- **Styling:** Tailwind CSS
+- **Testing:** Jest, Playwright
+- **Deployment:** Vercel
 
-### **Vision**
-Break the duopoly by creating a user-centric platform for open candidates, with trust tiers serving as data quality indicators for the eventual civics database that will unite users with their representatives.
+## 📁 **Project Structure**
 
-### **Trust Tier Levels**
-- **T0 (Basic)**: Email + password authentication
-- **T1 (Biometric)**: Email + biometric authentication  
-- **T2 (Phone)**: Email + biometric + phone verification
-- **T3 (Identity)**: Full identity verification with government ID
+```
+├── web/                    # Next.js application
+│   ├── app/               # App router pages
+│   ├── components/        # React components
+│   ├── lib/               # Utilities and configurations
+│   ├── types/             # TypeScript type definitions
+│   └── archive/           # Archived features (WebAuthn, Device Flow)
+├── docs/                  # Documentation
+│   ├── removed-features/  # Documentation for removed features
+│   └── legal/             # Legal documents
+├── scripts/               # Utility scripts
+└── packages/              # Monorepo packages
+```
 
-### **Analytics Features**
-- **Unweighted Poll Results** - All votes remain equal regardless of trust tier
-- **Demographic Analysis** - Poll data analyzed by trust tier demographics
-- **Data Quality Metrics** - Trust tiers serve as data quality indicators
-- **Civics Database Foundation** - Architecture ready for massive scale
+## 🔧 **Development**
 
-## 🔮 **Future Roadmap**
+### **Available Scripts**
+```bash
+npm run dev          # Start development server
+npm run build        # Build for production
+npm run start        # Start production server
+npm run lint         # Run ESLint
+npm run typecheck    # Run TypeScript type checking
+npm run test         # Run tests
+npm run test:e2e     # Run end-to-end tests
+```
 
-### **Phase 1: Trust Tier Analytics Implementation (Next 5 Weeks)**
-1. **Week 1**: Database schema implementation
-2. **Week 2**: Backend analytics engine
-3. **Week 3**: Frontend dashboard components
-4. **Week 4**: Integration and testing
-5. **Week 5**: Documentation and deployment
+### **Code Quality**
+- **TypeScript:** Strict type checking enabled
+- **ESLint:** Configured with Next.js rules
+- **Prettier:** Code formatting
+- **Husky:** Pre-commit hooks
 
-### **Phase 2: Enhanced Features (Next Month)**
-1. **Advanced Poll Analytics** - Trust tier demographic analysis
-2. **User Profile Enhancement** - Trust tier tracking and display
-3. **Civic Engagement Features** - Foundation for civics database
-4. **Performance Optimization** - Scale for millions of users
+## 🔒 **Security**
 
-### **Phase 3: Civics Database Foundation (Next Quarter)**
-1. **Representative Mapping** - User-representative connections
-2. **Issue Tracking** - Cross-jurisdiction issue management
-3. **Direct Communication** - User-representative channels
-4. **Advanced Analytics** - Civic impact measurement
+- **Supabase Auth:** Built-in authentication and authorization
+- **RLS Policies:** Row-level security for data protection
+- **Environment Variables:** Secure configuration management
+- **Type Safety:** TypeScript for runtime safety
 
 ## 📚 **Documentation**
 
-- **[Project Status](./docs/PROJECT_STATUS.md)** - Current development status
-- **[API Documentation](./docs/API.md)** - API endpoints and usage
-- **[Trust Tier Analytics Plan](./docs/TRUST_TIER_ANALYTICS_IMPLEMENTATION_PLAN.md)** - Implementation roadmap
-- **[Testing Guide](./docs/testing/COMPREHENSIVE_TESTING_GUIDE.md)** - Testing procedures
-- **[Changelog](./docs/CHANGELOG.md)** - Version history and changes
+- **[Current Status](CURRENT_REBUILD_STATUS.md)** - Detailed project status
+- **[Rebuild Plan](COMPLETE_REBUILD_PLAN.md)** - Comprehensive rebuild strategy
+- **[Setup Guide](docs/SETUP.md)** - Development setup instructions
+- **[Deployment Guide](docs/DEPLOYMENT_GUIDE.md)** - Deployment instructions
+- **[Security Guide](SECURITY.md)** - Security overview
 
 ## 🤝 **Contributing**
 
-We welcome contributions! Please see our [Contributing Guidelines](./CONTRIBUTING.md) for details.
-
-### **Development Setup**
 1. Fork the repository
 2. Create a feature branch
 3. Make your changes
-4. Add tests for new functionality
-5. Ensure all tests pass
-6. Submit a pull request
+4. Run tests and linting
+5. Submit a pull request
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines.
 
 ## 📄 **License**
 
-This project is licensed under the MIT License - see the [LICENSE](./LICENSE) file for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🎉 **Acknowledgments**
+## 🆘 **Support**
 
-- **Next.js Team** - For the amazing React framework
-- **Supabase Team** - For the excellent backend platform
-- **Vercel Team** - For seamless deployment
-- **Playwright Team** - For comprehensive testing tools
+- **Issues:** [GitHub Issues](https://github.com/your-repo/issues)
+- **Discussions:** [GitHub Discussions](https://github.com/your-repo/discussions)
+- **Documentation:** [Project Documentation](docs/)
 
 ---
 
-**Built with ❤️ for a more democratic future.**
+**Status:** Ready for Phase 3 implementation with clean, maintainable foundation.

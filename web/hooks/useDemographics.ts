@@ -3,16 +3,21 @@ import { devLog } from '@/lib/logger';
 
 interface DemographicData {
   totalUsers: number
-  ageDistribution: { range: string; count: number; percentage: number }[]
-  geographicSpread: { state: string; count: number; percentage: number }[]
-  commonInterests: { interest: string; count: number; percentage: number }[]
-  topValues: { value: string; count: number; percentage: number }[]
-  educationLevels: { level: string; count: number; percentage: number }[]
-  incomeBrackets: { bracket: string; count: number; percentage: number }[]
-  urbanRural: { type: string; count: number; percentage: number }[]
-  recentPolls: any[]
-  recentVotes: any[]
-  lastUpdated: string
+  recentPolls: Array<{
+    poll_id: string
+    total_votes: number
+    participation_rate: number
+    created_at: string
+  }>
+  recentVotes: Array<{
+    poll_id: string
+    voted_at: string
+  }>
+  demographics: {
+    ageGroups: Array<{ name: string; value: number }>
+    locations: Array<{ name: string; value: number }>
+    interests: Array<{ name: string; value: number }>
+  }
 }
 
 export function useDemographics() {

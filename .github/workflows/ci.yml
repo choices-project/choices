@@ -1,93 +1,47 @@
 name: CI
+
 on:
   push:
+    branches: [main]
   pull_request:
+    branches: [main]
+
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       
-      # Go Services
-      - name: Setup Go
-        uses: actions/setup-go@v4
-        with:
-          go-version: '1.23'
-          cache: true
-          cache-dependency-path: |
-            server/ia/go.sum
-            server/po/go.sum
-      
-      - name: Go lint IA
-        run: |
-          cd server/ia
-          go vet ./...
-          golint ./... || true
-      
-      - name: Go build IA
-        run: |
-          cd server/ia && go build ./...
-      
-      - name: Go lint PO
-        run: |
-          cd server/po
-          go vet ./...
-          golint ./... || true
-      
-      - name: Go build PO
-        run: |
-          cd server/po && go build ./...
-      
-      # Web Application
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
-          cache-dependency-path: web/package-lock.json
+          cache-dependency-path: package-lock.json
       
-      - name: Install web dependencies
-        run: |
-          cd web
-          npm ci
+      - name: Install dependencies
+        run: npm ci
       
-      - name: Web security check (CRITICAL)
-        run: |
-          cd web
-          npm run security-check
+      - name: Run type check
+        run: npm run typecheck
         env:
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
       
-      - name: Web build check (CRITICAL)
-        run: |
-          cd web
-          npm run build:ci
-        env:
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+      - name: Run linting
+        run: npm run lint
       
-      - name: Web type check (NON-BLOCKING)
-        run: |
-          cd web
-          npm run type-check:ci
+      - name: Run tests
+        run: npm run test
         env:
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
       
-      - name: Web lint (NON-BLOCKING)
-        run: |
-          cd web
-          npm run lint:ci
+      - name: Build
+        run: npm run build
         env:
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
-      
-      - name: Web performance check (NON-BLOCKING)
-        run: |
-          cd web
-          npm run performance-check
-        env:
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
-
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}

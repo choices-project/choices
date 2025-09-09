@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { logger } from '@/lib/logger';
 import Link from 'next/link'
-import { useAuth } from '@/hooks/useAuth'
+import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -37,7 +37,7 @@ interface TrendingPoll {
 }
 
 export default function HomePage() {
-  const { user } = useAuth()
+  const { user } = useSupabaseAuth()
   const [trendingPolls, setTrendingPolls] = useState<TrendingPoll[]>([])
   const [loading, setLoading] = useState(true)
   const [stats, setStats] = useState({

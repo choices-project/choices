@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { useAuth } from '@/hooks/useAuth'
+import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
 
 // UI Components
 import { Button } from '@/components/ui/button'
@@ -53,7 +53,7 @@ interface AnalyticsFilters {
 
 export default function PollAnalyticsPage() {
   const router = useRouter()
-  const { user } = useAuth()
+  const { user } = useSupabaseAuth()
   
   const [analytics, setAnalytics] = useState<PollAnalytics[]>([])
   const [selectedPoll, setSelectedPoll] = useState<string>('')

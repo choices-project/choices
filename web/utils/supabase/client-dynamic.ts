@@ -332,3 +332,4 @@ export type Poll = Database['public']['Tables']['polls']['Row']
 export type Vote = Database['public']['Tables']['votes']['Row']
 export type WebAuthnCredential = Database['public']['Tables']['webauthn_credentials']['Row']
 
+

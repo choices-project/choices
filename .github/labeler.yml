@@ -1,0 +1,8 @@
+area:web:
+  - "apps/web/**"
+area:ingest:
+  - "apps/ingest/**"
+area:civics:
+  - "packages/civics-*/**"
+area:auth:
+  - "apps/web/app/(api|auth)/**"

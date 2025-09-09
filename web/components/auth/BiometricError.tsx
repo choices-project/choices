@@ -92,7 +92,7 @@ export default function BiometricError({
   }
 
   const getRecoveryOptions = () => {
-    const options = []
+    const options: any[] = []
 
     // Always show retry if recoverable
     if (error.recoverable) {

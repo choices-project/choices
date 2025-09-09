@@ -1,0 +1,82 @@
+name: Date Mandate
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, edited, ready_for_review]
+
+jobs:
+  date-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      
+      - name: Get current date
+        id: date
+        run: echo "TODAY=$(date -u +%F)" >> $GITHUB_OUTPUT
+      
+      - name: Check PR body for date
+        run: |
+          TODAY="${{ steps.date.outputs.TODAY }}"
+          BODY="${{ github.event.pull_request.body }}"
+          
+          echo "=== DEBUG: Date Check ==="
+          echo "TODAY: $TODAY"
+          echo "PR Body: $BODY"
+          
+          # Check for date in PR body (flexible format)
+          if echo "$BODY" | grep -q "Date: $TODAY"; then
+            echo "✅ Date validation passed"
+          else
+            echo "::error::PR body must contain 'Date: $TODAY'"
+            echo "Please add 'Date: $TODAY' to your PR body"
+            exit 1
+          fi
+      
+      - name: Check documentation dates
+        run: |
+          TODAY="${{ steps.date.outputs.TODAY }}"
+          BASE="${{ github.event.pull_request.base.sha }}"
+          HEAD="${{ github.event.pull_request.head.sha }}"
+          
+          echo "=== DEBUG: Documentation Check ==="
+          echo "TODAY: $TODAY"
+          echo "BASE: $BASE"
+          echo "HEAD: $HEAD"
+          
+          # Get changed markdown files
+          CHANGED=$(git diff --name-only "$BASE..$HEAD" | grep -E '\.(md|MD)$' || true)
+          
+          echo "Changed markdown files: $CHANGED"
+          
+          if [ -z "$CHANGED" ]; then
+            echo "No markdown files changed"
+            exit 0
+          fi
+          
+          # Check each changed file
+          FAIL=0
+          for FILE in $CHANGED; do
+            echo "=== Checking file: $FILE ==="
+            
+            # Check if file has Last Updated header
+            if grep -q "Last Updated:" "$FILE"; then
+              # Check if Last Updated date is today
+              if grep -q "Last Updated: $TODAY" "$FILE"; then
+                echo "✅ $FILE has correct Last Updated date"
+              else
+                echo "::error file=$FILE::Last Updated date must be $TODAY"
+                FAIL=1
+              fi
+            else
+              echo "::error file=$FILE::Missing 'Last Updated: $TODAY' header"
+              FAIL=1
+            fi
+          done
+          
+          if [ "$FAIL" -eq 1 ]; then
+            echo "::error::Documentation date validation failed"
+            exit 1
+          fi
+          
+          echo "✅ All documentation dates are correct"

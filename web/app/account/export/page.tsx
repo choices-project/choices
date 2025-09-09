@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { useAuth } from '@/hooks/useAuth'
+import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
 
 // UI Components
 import { Button } from '@/components/ui/button'
@@ -38,7 +38,7 @@ interface ExportHistory {
 
 export default function DataExportPage() {
   const router = useRouter()
-  const { user } = useAuth()
+  const { user } = useSupabaseAuth()
   
   const [exportOptions, setExportOptions] = useState<ExportOptions>({
     profile: true,
