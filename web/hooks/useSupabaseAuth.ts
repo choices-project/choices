@@ -39,7 +39,7 @@ export function useSupabaseAuth(): AuthState & AuthActions {
       setState(prev => ({
         ...prev,
         isLoading: false,
-        error: new AuthError('Client initialization failed', 'CLIENT_INIT_ERROR'),
+        error: new AuthError('Client initialization failed'),
       }))
       return
     }
@@ -78,7 +78,7 @@ export function useSupabaseAuth(): AuthState & AuthActions {
           session: null,
           isAuthenticated: false,
           isLoading: false,
-          error: error instanceof AuthError ? error : new AuthError('Session initialization failed', 'SESSION_INIT_ERROR'),
+          error: error instanceof AuthError ? error : new AuthError('Session initialization failed'),
         }))
       }
     }
@@ -143,7 +143,7 @@ export function useSupabaseAuth(): AuthState & AuthActions {
       setState(prev => ({
         ...prev,
         isLoading: false,
-        error: error instanceof AuthError ? error : new AuthError('Sign in failed', 'SIGN_IN_ERROR'),
+        error: error instanceof AuthError ? error : new AuthError('Sign in failed'),
       }))
       throw error
     }
@@ -189,7 +189,7 @@ export function useSupabaseAuth(): AuthState & AuthActions {
       setState(prev => ({
         ...prev,
         isLoading: false,
-        error: error instanceof AuthError ? error : new AuthError('Sign up failed', 'SIGN_UP_ERROR'),
+        error: error instanceof AuthError ? error : new AuthError('Sign up failed'),
       }))
       throw error
     }
@@ -229,7 +229,7 @@ export function useSupabaseAuth(): AuthState & AuthActions {
       setState(prev => ({
         ...prev,
         isLoading: false,
-        error: error instanceof AuthError ? error : new AuthError('Sign out failed', 'SIGN_OUT_ERROR'),
+        error: error instanceof AuthError ? error : new AuthError('Sign out failed'),
       }))
       throw error
     }
@@ -268,7 +268,7 @@ export function useSupabaseAuth(): AuthState & AuthActions {
       setState(prev => ({
         ...prev,
         isLoading: false,
-        error: error instanceof AuthError ? error : new AuthError('Reset password failed', 'RESET_PASSWORD_ERROR'),
+        error: error instanceof AuthError ? error : new AuthError('Reset password failed'),
       }))
       throw error
     }
@@ -298,7 +298,7 @@ export function useSupabaseAuth(): AuthState & AuthActions {
       setState(prev => ({
         ...prev,
         user: data.user,
-        session: data.session,
+        session: prev.session, // Keep existing session as updateUser doesn't return new session
         isLoading: false,
         error: null,
       }))
@@ -307,7 +307,7 @@ export function useSupabaseAuth(): AuthState & AuthActions {
       setState(prev => ({
         ...prev,
         isLoading: false,
-        error: error instanceof AuthError ? error : new AuthError('Update profile failed', 'UPDATE_PROFILE_ERROR'),
+        error: error instanceof AuthError ? error : new AuthError('Update profile failed'),
       }))
       throw error
     }

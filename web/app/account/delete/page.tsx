@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { useAuth } from '@/hooks/useAuth'
+import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
 
 // UI Components
 import { Button } from '@/components/ui/button'
@@ -55,7 +55,7 @@ interface DeletionStep {
 
 export default function AccountDeletionPage() {
   const router = useRouter()
-  const { user, logout } = useAuth()
+  const { user, signOut } = useSupabaseAuth()
   
   const [userData, setUserData] = useState<UserData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -201,7 +201,7 @@ export default function AccountDeletionPage() {
         )
 
         // Logout and redirect
-        await logout()
+        await signOut()
         router.push('/')
       } else {
         throw new Error('Failed to delete account')
@@ -212,7 +212,7 @@ export default function AccountDeletionPage() {
     } finally {
       setIsDeleting(false)
     }
-  }, [user, logout, router])
+  }, [user, signOut, router])
 
   const canDelete = deletionSteps.every(step => step.completed || !step.required)
 
