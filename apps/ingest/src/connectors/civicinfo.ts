@@ -1,4 +1,17 @@
-export async function lookupAddress(addr: string) {
+export interface AddressLookupResult {
+  normalizedAddress: string;
+  divisions: Array<{
+    id: string;
+    label: string;
+  }>;
+  posts: Array<{
+    id: string;
+    label: string;
+  }>;
+  officials: Array<any>; // fill later if needed
+}
+
+export async function lookupAddress(addr: string): Promise<AddressLookupResult> {
   // STUB: return PA federal districts only for now
   return {
     normalizedAddress: addr,
