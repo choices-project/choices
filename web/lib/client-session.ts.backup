@@ -18,18 +18,6 @@ export interface ClientUser {
 }
 
 class ClientSessionManager {
-  private getCsrfToken(): string | null {
-    if (typeof document === "undefined") return null
-    const cookies = document.cookie.split(";")
-    for (const cookie of cookies) {
-      const [name, value] = cookie.trim().split("=")
-      if (name === "choices_csrf") {
-        return decodeURIComponent(value)
-      }
-    }
-    return null
-  }
-
   private user: ClientUser | null = null
   private loading = true
   private listeners: Set<(user: ClientUser | null) => void> = new Set()
@@ -56,7 +44,6 @@ class ClientSessionManager {
         method: 'GET',
         credentials: 'include', // Ensure cookies are sent
         headers: {
-          "X-CSRF-Token": this.getCsrfToken() || "",
           'Content-Type': 'application/json',
         },
       })
@@ -101,7 +88,6 @@ class ClientSessionManager {
         method: 'POST',
         credentials: 'include',
         headers: {
-          "X-CSRF-Token": this.getCsrfToken() || "",
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ email, password }),
@@ -147,7 +133,6 @@ class ClientSessionManager {
         method: 'POST',
         credentials: 'include',
         headers: {
-          "X-CSRF-Token": this.getCsrfToken() || "",
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(userData),
