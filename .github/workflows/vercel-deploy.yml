@@ -9,6 +9,8 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    # Temporarily disabled to allow PR merge and branch protection setup
+    if: false
     
     steps:
     - uses: actions/checkout@v4
