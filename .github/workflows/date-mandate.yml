@@ -30,7 +30,7 @@ jobs:
           echo "BASE: $BASE"
           echo "HEAD: $HEAD"
           
-          # Get changed markdown files
+          # Get changed markdown files (only existing files)
           CHANGED=$(git diff --name-only "$BASE..$HEAD" | grep -E '\.(md|MD)$' || true)
           
           echo "Changed markdown files: $CHANGED"
@@ -40,10 +40,16 @@ jobs:
             exit 0
           fi
           
-          # Check each changed file
+          # Check each changed file (only if it exists)
           FAIL=0
           for FILE in $CHANGED; do
             echo "=== Checking file: $FILE ==="
+            
+            # Skip if file doesn't exist (was deleted)
+            if [ ! -f "$FILE" ]; then
+              echo "⏭️  Skipping deleted file: $FILE"
+              continue
+            fi
             
             # Check if file has Last Updated header
             if grep -q "Last Updated:" "$FILE"; then
