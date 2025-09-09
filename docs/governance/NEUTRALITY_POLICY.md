@@ -1,5 +1,7 @@
 # Neutrality Policy
 
+*Last Updated: 2025-09-09*
+
 **Purpose:** ensure no party can credibly claim partisan bias in operation, topic selection, weighting, or reporting.
 
 1. **Architecture neutrality**: IA and PO are separate deployable projects. The software enables anyone to run either role independently.
