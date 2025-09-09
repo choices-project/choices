@@ -2,10 +2,21 @@
   "name": "@choices/civics-schemas",
   "version": "0.0.1",
   "type": "module",
-  "main": "src/index.js",
-  "types": "src/index.d.ts",
-  "dependencies": { "zod": "^3.23.8" },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "typecheck": "tsc --noEmit",
+    "lint": "echo 'No linting configured for civics-schemas'"
+  },
+  "dependencies": {
+    "zod": "^3.23.8"
+  },
   "exports": {
-    ".": "./src/index.ts"
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
   }
 }
