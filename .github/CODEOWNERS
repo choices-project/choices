@@ -1,1 +1,10 @@
+# CODEOWNERS file for solo developer workflow
+# This file defines who owns which parts of the codebase
+
+# Global ownership - you own everything
 * @michaeltempesta
+
+# Specific areas (if you want to be more granular later)
+# /web/ @michaeltempesta
+# /.github/ @michaeltempesta
+# /docs/ @michaeltempesta
