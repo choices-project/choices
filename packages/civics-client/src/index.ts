@@ -35,7 +35,7 @@ export class CivicsCache {
     if (this.cache.size >= this.config.maxSize) {
       // Remove oldest item
       const oldestKey = this.cache.keys().next().value;
-      if (oldestKey) {
+      if (oldestKey !== undefined) {
         this.cache.delete(oldestKey);
       }
     }

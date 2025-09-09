@@ -6,10 +6,9 @@ const config = {
   // Setup files
   setupFilesAfterEnv: ['<rootDir>/tests/setup.ts'],
   
-  // Test file patterns (CI tests only)
+  // Test file patterns (no CI tests currently)
   testMatch: [
-    '<rootDir>/tests/ci/**/*.test.ts',
-    '<rootDir>/tests/ci/**/*.test.tsx'
+    // No CI tests configured - tests removed per user request
   ],
   testPathIgnorePatterns: [
     '<rootDir>/tests/e2e/',
