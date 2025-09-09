@@ -19,13 +19,14 @@ import {
   Info,
   Copy
 } from 'lucide-react'
-import { useTestingUtils } from '../../hooks/useTestingUtils'
+// import { useTestingUtils } from '../../hooks/useTestingUtils' // Archived feature
 
 // Import types separately to avoid SSR issues
 import type { ComprehensiveReport } from '../../lib/comprehensive-testing-runner'
 
 export default function ComprehensiveTestingPage() {
-  const { utils: testingUtils, loading: utilsLoading, error: utilsError } = useTestingUtils()
+  // const { utils: testingUtils, loading: utilsLoading, error: utilsError } = useTestingUtils() // Archived feature
+  const testingUtils = null, utilsLoading = false, utilsError = null
   const [isRunningTests, setIsRunningTests] = useState(false)
   const [report, setReport] = useState<ComprehensiveReport | null>(null)
   const [activeTab, setActiveTab] = useState('overview')

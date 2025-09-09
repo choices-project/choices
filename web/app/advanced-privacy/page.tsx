@@ -15,11 +15,12 @@ import {
   Gauge
 } from 'lucide-react'
 import { usePrivacyUtils } from '../../hooks/usePrivacyUtils'
-import { usePWAUtils } from '../../hooks/usePWAUtils'
+// import { usePWAUtils } from '../../hooks/usePWAUtils' // Archived feature
 
 export default function AdvancedPrivacyPage() {
   const { utils: privacyUtils, loading: privacyLoading, error: privacyError } = usePrivacyUtils()
-  const { utils: pwaUtils, loading: pwaLoading, error: pwaError } = usePWAUtils()
+  // const { utils: pwaUtils, loading: pwaLoading, error: pwaError } = usePWAUtils() // Archived feature
+  const pwaUtils = null, pwaLoading = false, pwaError = null
   const [activeTab, setActiveTab] = useState('overview')
   const [zkProofs, setZkProofs] = useState<any[]>([])
   const [privacyBudget, setPrivacyBudget] = useState<any>(null)

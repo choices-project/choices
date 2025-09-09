@@ -22,13 +22,14 @@ import {
   Shield as BrowserCompatibilityIcon,
   Eye as DeviceSpecificIcon
 } from 'lucide-react'
-import { useTestingUtils } from '../../hooks/useTestingUtils'
+// import { useTestingUtils } from '../../hooks/useTestingUtils' // Archived feature
 
 // Import types separately to avoid SSR issues
 import type { PlatformTestSuite, DeviceInfo, BrowserInfo } from '../../lib/cross-platform-testing'
 
 export default function CrossPlatformTestingPage() {
-  const { utils: testingUtils, loading: utilsLoading } = useTestingUtils()
+  // const { utils: testingUtils, loading: utilsLoading } = useTestingUtils() // Archived feature
+  const testingUtils = null, utilsLoading = false
   const [isRunningTests, setIsRunningTests] = useState(false)
   const [testSuites, setTestSuites] = useState<PlatformTestSuite[]>([])
   const [comprehensiveReport, setComprehensiveReport] = useState<any>(null)
