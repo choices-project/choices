@@ -3,10 +3,19 @@ import { getSupabaseServerClient } from '@/utils/supabase/server'
 import { logger } from '@/lib/logger'
 import { rateLimiters } from '@/lib/rate-limit'
 import bcrypt from 'bcryptjs'
-import { createSessionToken, setSessionToken, SessionUser } from '@/lib/session'
+import { createEnhancedSession, type EnhancedSessionUser } from '@/lib/session-enhanced'
+import { 
+  validateCsrfProtection, 
+  createCsrfErrorResponse 
+} from '../_shared'
 
 export async function POST(request: NextRequest) {
   try {
+    // Validate CSRF protection for state-changing operation
+    if (!validateCsrfProtection(request)) {
+      return createCsrfErrorResponse()
+    }
+
     // Rate limiting: 10 login attempts per 15 minutes per IP
     const rateLimitResult = await rateLimiters.auth.check(request)
     
@@ -103,22 +112,18 @@ export async function POST(request: NextRequest) {
       // Don't fail the login, but log the error
     }
 
-    // Create session user object
-    const sessionUser: SessionUser = {
+    // Create enhanced session user object
+    const sessionUser: EnhancedSessionUser = {
       id: userData.id,
       stableId: userData.stable_id,
       username: userData.stable_id,
+      tier: userData.verification_tier as 'T0' | 'T1' | 'T2' | 'T3',
       email: userData.email,
-      verificationTier: userData.verification_tier,
       isActive: userData.is_active,
       twoFactorEnabled: userData.two_factor_enabled,
       createdAt: userData.created_at,
       updatedAt: userData.updated_at
     }
-
-    // Create session token
-    const sessionToken = createSessionToken(sessionUser)
-    setSessionToken(sessionToken)
 
     // Log successful login
     logger.info('User logged in successfully', {
@@ -128,12 +133,30 @@ export async function POST(request: NextRequest) {
       authMethod: 'password'
     })
 
-    // Return success response with user data
-    return NextResponse.json({
+    // Create response with success data
+    const response = NextResponse.json({
       success: true,
       message: 'Login successful',
-      user: sessionUser
+      user: {
+        id: sessionUser.id,
+        stableId: sessionUser.stableId,
+        username: sessionUser.username,
+        tier: sessionUser.tier,
+      }
     })
+
+    // Create enhanced session with secure cookies
+    const sessionResult = createEnhancedSession(sessionUser, response)
+    
+    if (!sessionResult.success) {
+      logger.error('Failed to create enhanced session', new Error(sessionResult.error || 'Unknown error'))
+      return NextResponse.json(
+        { error: 'Failed to create session' },
+        { status: 500 }
+      )
+    }
+
+    return response
 
   } catch (error) {
     logger.error('Login API error', error instanceof Error ? error : new Error('Unknown error'))

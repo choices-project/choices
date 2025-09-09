@@ -32,6 +32,10 @@ export const systemStatus = createSecureServerAction(
     try {
       const supabaseClient = await supabase
       
+      if (!supabaseClient) {
+        throw new Error('Supabase client not available')
+      }
+      
       switch (validatedData.action) {
         case 'get_status':
           // Get system status

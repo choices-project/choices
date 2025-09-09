@@ -1,0 +1,23 @@
+name: Labels
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened, edited, ready_for_review]
+permissions:
+  pull-requests: write
+  contents: read
+jobs:
+  label:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/labeler@v5
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          configuration-path: .github/labeler.yml
+      - name: AI & owner-review labels
+        uses: actions-ecosystem/action-add-labels@v1
+        with:
+          labels: "owner-review"
+      - name: Label AI PRs by branch
+        if: startsWith(github.event.pull_request.head.ref, 'agent/')
+        uses: actions-ecosystem/action-add-labels@v1
+        with: { labels: "ai" }
