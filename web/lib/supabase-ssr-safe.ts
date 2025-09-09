@@ -17,7 +17,7 @@ import type { Database, UserProfileInsert, UserProfileUpdate, PollInsert, PollUp
 const validateEnvironment = () => {
   const requiredVars = {
     NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
-    NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+    NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     SUPABASE_SECRET_KEY: process.env.SUPABASE_SECRET_KEY
   }
 
@@ -45,7 +45,7 @@ export const createBrowserClientSafe = (): SupabaseClient<Database> | null => {
     
     return createBrowserClient(
       env.NEXT_PUBLIC_SUPABASE_URL!,
-      env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!
+      env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     ) as unknown as SupabaseClient<Database>
   } catch (error) {
     logger.error('Failed to create browser client', error instanceof Error ? error : new Error(String(error)))
@@ -63,7 +63,7 @@ export const createServerClientSafe = (cookieStore: ReturnType<typeof cookies>):
     
     return createServerClient(
       env.NEXT_PUBLIC_SUPABASE_URL!,
-      env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
+      env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       {
         cookies: {
           getAll() {
