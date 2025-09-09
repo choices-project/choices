@@ -1,43 +1,78 @@
-const nextJest = require('next/jest')
-
-const createJestConfig = nextJest({
-  // Provide the path to your Next.js app to load next.config.js and .env files
-  dir: './',
-})
-
-// Add any custom config to be passed to Jest
-const customJestConfig = {
-  setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
+/** @type {import('jest').Config} */
+const config = {
+  // Test environment
   testEnvironment: 'jsdom',
+  
+  // Setup files
+  setupFilesAfterEnv: ['<rootDir>/tests/setup.ts'],
+  
+  // Test file patterns
   testMatch: [
-    '<rootDir>/__tests__/**/*.test.ts',
-    '<rootDir>/__tests__/**/*.test.tsx'
+    '<rootDir>/tests/**/*.test.ts',
+    '<rootDir>/tests/**/*.test.tsx'
   ],
-  collectCoverageFrom: [
-    'lib/**/*.ts',
-    'components/**/*.tsx',
-    '!lib/**/*.d.ts',
-    '!**/*.config.js',
-    '!**/*.config.ts'
-  ],
-  moduleNameMapper: {
+  
+  // Module name mapping for absolute imports
+  moduleNameMapping: {
     '^@/(.*)$': '<rootDir>/$1',
+    '^@/utils/(.*)$': '<rootDir>/utils/$1',
+    '^@/components/(.*)$': '<rootDir>/components/$1',
+    '^@/tests/(.*)$': '<rootDir>/tests/$1'
   },
-  testTimeout: 30000, // 30 seconds for database tests
+  
+  // Transform files
+  transform: {
+    '^.+\\.(ts|tsx)$': ['ts-jest', {
+      tsconfig: 'tsconfig.json'
+    }]
+  },
+  
+  // File extensions
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json'],
+  
+  // Coverage configuration
+  collectCoverage: true,
+  coverageDirectory: 'coverage',
+  coverageReporters: ['text', 'lcov', 'html'],
+  collectCoverageFrom: [
+    'utils/**/*.{ts,tsx}',
+    'components/**/*.{ts,tsx}',
+    '!**/*.d.ts',
+    '!**/node_modules/**',
+    '!**/coverage/**'
+  ],
+  
+  // Coverage thresholds
+  coverageThreshold: {
+    global: {
+      branches: 80,
+      functions: 80,
+      lines: 80,
+      statements: 80
+    }
+  },
+  
+  // Test timeout
+  testTimeout: 10000,
+  
+  // Clear mocks between tests
+  clearMocks: true,
+  
+  // Restore mocks after each test
+  restoreMocks: true,
+  
+  // Verbose output
   verbose: true,
-  // Memory optimization
-  maxWorkers: 2, // Reduce worker count to prevent memory issues
-  workerIdleMemoryLimit: '512MB', // Limit memory per worker
-  // Performance optimization
-  cache: true,
-  cacheDirectory: '<rootDir>/.jest-cache',
-  // Test filtering - focus on working tests first
-  testPathIgnorePatterns: [
-    '/node_modules/',
-    '/archive/',
-    '/disabled/'
-  ]
-}
+  
+  // Error handling
+  errorOnDeprecated: true,
+  
+  // Global setup
+  globals: {
+    'ts-jest': {
+      useESM: true
+    }
+  }
+};
 
-// createJestConfig is exported this way to ensure that next/jest can load the Next.js config which is async
-module.exports = createJestConfig(customJestConfig)
+module.exports = config;
