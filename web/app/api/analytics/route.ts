@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { logger } from '@/lib/logger';
 import { withAuth, createRateLimitMiddleware, combineMiddleware } from '@/lib/auth-middleware'
-import { queryOptimizer, withPerformanceMonitoring } from '@/lib/database-optimizer'
+import { getQueryOptimizer, withPerformanceMonitoring } from '@/lib/database-optimizer'
 
 export const dynamic = 'force-dynamic'
 
@@ -27,6 +27,7 @@ export const GET = withAuth(async (request: NextRequest, _context) => {
     const period = searchParams.get('period') || '7d' // 7d, 30d, 90d, 1y
 
     // Use optimized analytics query with performance monitoring
+    const queryOptimizer = await getQueryOptimizer()
     const getAnalyticsOptimized = withPerformanceMonitoring(
       () => queryOptimizer.getAnalytics(period),
       'analytics_query'

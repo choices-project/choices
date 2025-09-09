@@ -491,6 +491,21 @@ export class ConnectionPoolManager {
 
 export const connectionPoolManager = new ConnectionPoolManager()
 
-// Export optimized client
-export const optimizedSupabase = createOptimizedClient()
-export const queryOptimizer = new QueryOptimizer(optimizedSupabase)
+// Export optimized client - lazy loaded to prevent build-time execution
+let _optimizedSupabase: any = null
+let _queryOptimizer: QueryOptimizer | null = null
+
+export const getOptimizedSupabase = async () => {
+  if (!_optimizedSupabase) {
+    _optimizedSupabase = await createOptimizedClient()
+  }
+  return _optimizedSupabase
+}
+
+export const getQueryOptimizer = async () => {
+  if (!_queryOptimizer) {
+    const supabase = await getOptimizedSupabase()
+    _queryOptimizer = new QueryOptimizer(supabase)
+  }
+  return _queryOptimizer
+}
