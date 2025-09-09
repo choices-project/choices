@@ -1,4 +1,5 @@
 # E2E Testing Guide
+*Last Updated: 2025-09-09*
 
 ## Supabase-Friendly Testing Philosophy
 
