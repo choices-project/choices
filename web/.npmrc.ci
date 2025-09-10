@@ -1,0 +1,7 @@
+ignore-scripts=true
+audit=true
+fund=false
+update-notifier=false
+save-exact=true
+prefer-offline=false
+engine-strict=true

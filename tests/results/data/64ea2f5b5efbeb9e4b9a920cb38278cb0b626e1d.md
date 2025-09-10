@@ -1,0 +1,63 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - alert [ref=e2]
+  - navigation [ref=e3]:
+    - generic [ref=e5]:
+      - link "Choices" [ref=e7] [cursor=pointer]:
+        - /url: /
+        - img [ref=e8] [cursor=pointer]
+        - generic [ref=e10] [cursor=pointer]: Choices
+      - generic [ref=e11]:
+        - link "Home" [ref=e12] [cursor=pointer]:
+          - /url: /
+          - img [ref=e13] [cursor=pointer]
+          - generic [ref=e16] [cursor=pointer]: Home
+        - link "Polls" [ref=e17] [cursor=pointer]:
+          - /url: /polls
+          - img [ref=e18] [cursor=pointer]
+          - generic [ref=e21] [cursor=pointer]: Polls
+        - link "Dashboard" [ref=e22] [cursor=pointer]:
+          - /url: /dashboard
+          - img [ref=e23] [cursor=pointer]
+          - generic [ref=e25] [cursor=pointer]: Dashboard
+      - generic [ref=e27]:
+        - link "Sign In" [ref=e28] [cursor=pointer]:
+          - /url: /login
+        - link "Get Started" [ref=e29] [cursor=pointer]:
+          - /url: /register
+  - generic [ref=e32]:
+    - generic [ref=e35]: "404"
+    - heading "Page Not Found" [level=1] [ref=e36]
+    - paragraph [ref=e37]: Sorry, we couldn't find the page you're looking for. It might have been moved, deleted, or you entered the wrong URL.
+    - generic [ref=e38]:
+      - link "Go to Homepage" [ref=e39] [cursor=pointer]:
+        - /url: /
+        - img [ref=e40] [cursor=pointer]
+        - text: Go to Homepage
+      - button "Go Back" [ref=e43] [cursor=pointer]:
+        - img [ref=e44] [cursor=pointer]
+        - text: Go Back
+    - generic [ref=e46]:
+      - heading "Popular Pages" [level=2] [ref=e47]
+      - generic [ref=e48]:
+        - link "Browse Polls" [ref=e49] [cursor=pointer]:
+          - /url: /polls
+          - img [ref=e50] [cursor=pointer]
+          - text: Browse Polls
+        - link "Sign In" [ref=e53] [cursor=pointer]:
+          - /url: /login
+          - img [ref=e54] [cursor=pointer]
+          - text: Sign In
+        - link "Create Account" [ref=e57] [cursor=pointer]:
+          - /url: /register
+          - img [ref=e58] [cursor=pointer]
+          - text: Create Account
+    - paragraph [ref=e62]:
+      - text: Still having trouble?
+      - link "Contact our support team" [ref=e63] [cursor=pointer]:
+        - /url: mailto:support@choices-platform.com
+  - button [ref=e64] [cursor=pointer]:
+    - img [ref=e65] [cursor=pointer]
+```
