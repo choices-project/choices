@@ -1,0 +1,47 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - alert [ref=e2]
+  - navigation [ref=e3]:
+    - generic [ref=e5]:
+      - link "Choices" [ref=e7] [cursor=pointer]:
+        - /url: /
+        - img [ref=e8] [cursor=pointer]
+        - generic [ref=e10] [cursor=pointer]: Choices
+      - button "Toggle mobile menu" [ref=e12] [cursor=pointer]:
+        - img [ref=e13] [cursor=pointer]
+  - generic [ref=e16]:
+    - generic [ref=e19]: "404"
+    - heading "Page Not Found" [level=1] [ref=e20]
+    - paragraph [ref=e21]: Sorry, we couldn't find the page you're looking for. It might have been moved, deleted, or you entered the wrong URL.
+    - generic [ref=e22]:
+      - link "Go to Homepage" [ref=e23] [cursor=pointer]:
+        - /url: /
+        - img [ref=e24] [cursor=pointer]
+        - text: Go to Homepage
+      - button "Go Back" [ref=e27] [cursor=pointer]:
+        - img [ref=e28] [cursor=pointer]
+        - text: Go Back
+    - generic [ref=e30]:
+      - heading "Popular Pages" [level=2] [ref=e31]
+      - generic [ref=e32]:
+        - link "Browse Polls" [ref=e33] [cursor=pointer]:
+          - /url: /polls
+          - img [ref=e34] [cursor=pointer]
+          - text: Browse Polls
+        - link "Sign In" [ref=e37] [cursor=pointer]:
+          - /url: /login
+          - img [ref=e38] [cursor=pointer]
+          - text: Sign In
+        - link "Create Account" [ref=e41] [cursor=pointer]:
+          - /url: /register
+          - img [ref=e42] [cursor=pointer]
+          - text: Create Account
+    - paragraph [ref=e46]:
+      - text: Still having trouble?
+      - link "Contact our support team" [ref=e47] [cursor=pointer]:
+        - /url: mailto:support@choices-platform.com
+  - button [ref=e48] [cursor=pointer]:
+    - img [ref=e49] [cursor=pointer]
+```

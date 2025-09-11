@@ -1,0 +1,509 @@
+<testsuites id="" name="" tests="50" failures="5" skipped="0" errors="0" time="123.272096">
+<testsuite name="privacy-features.test.ts" timestamp="2025-09-09T09:03:37.790Z" hostname="chromium" tests="10" failures="1" skipped="0" time="181.372" errors="0">
+<testcase name="Privacy Features E2E Tests › Privacy dashboard should be accessible to authenticated users" classname="privacy-features.test.ts" time="30.721">
+<failure message="privacy-features.test.ts:24:7 Privacy dashboard should be accessible to authenticated users" type="FAILURE">
+<![CDATA[  [chromium] › privacy-features.test.ts:24:7 › Privacy Features E2E Tests › Privacy dashboard should be accessible to authenticated users 
+
+    Error: expect(page).toHaveURL(expected) failed
+
+    Expected pattern: /.*login.*|.*auth.*/
+    Received string:  "http://127.0.0.1:3000/privacy"
+    Timeout: 10000ms
+
+    Call log:
+      - Expect "toHaveURL" with timeout 10000ms
+        13 × unexpected value "http://127.0.0.1:3000/privacy"
+
+
+      27 |     
+      28 |     // Should redirect to login if not authenticated
+    > 29 |     await expect(page).toHaveURL(/.*login.*|.*auth.*/)
+         |                        ^
+      30 |     
+      31 |     console.log('✅ Privacy dashboard properly protected - redirects to auth')
+      32 |   })
+        at /Users/alaughingkitsune/src/Choices/web/tests/e2e/privacy-features.test.ts:29:24
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/privacy-features-Privacy-F-7ab12-ible-to-authenticated-users-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/privacy-features-Privacy-F-7ab12-ible-to-authenticated-users-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/privacy-features-Privacy-F-7ab12-ible-to-authenticated-users-chromium/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|privacy-features-Privacy-F-7ab12-ible-to-authenticated-users-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|privacy-features-Privacy-F-7ab12-ible-to-authenticated-users-chromium/video.webm]]
+
+[[ATTACHMENT|privacy-features-Privacy-F-7ab12-ible-to-authenticated-users-chromium/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Privacy Features E2E Tests › Consent management should work for authenticated users" classname="privacy-features.test.ts" time="23.4">
+<system-out>
+<![CDATA[⚠️ Consent management UI not yet implemented
+]]>
+</system-out>
+</testcase>
+<testcase name="Privacy Features E2E Tests › Data export functionality should be accessible" classname="privacy-features.test.ts" time="23.217">
+<system-out>
+<![CDATA[⚠️ Data export UI not yet implemented
+]]>
+</system-out>
+</testcase>
+<testcase name="Privacy Features E2E Tests › Encryption utilities should be available in browser context" classname="privacy-features.test.ts" time="23.311">
+<system-out>
+<![CDATA[✅ Web Crypto API is available and functional
+]]>
+</system-out>
+</testcase>
+<testcase name="Privacy Features E2E Tests › Privacy-first architecture should be enforced" classname="privacy-features.test.ts" time="26.229">
+<system-out>
+<![CDATA[✅ Security headers present
+✅ No hardcoded secrets detected in client-side code
+]]>
+</system-out>
+</testcase>
+<testcase name="Privacy Features E2E Tests › User data should be properly encrypted in transit" classname="privacy-features.test.ts" time="23.372">
+<system-out>
+<![CDATA[⚠️ No Supabase requests detected (may not be implemented yet)
+]]>
+</system-out>
+</testcase>
+<testcase name="Privacy Features E2E Tests › Privacy dashboard should show user control options" classname="privacy-features.test.ts" time="6.851">
+<system-out>
+<![CDATA[✅ Privacy dashboard is properly protected
+]]>
+</system-out>
+</testcase>
+<testcase name="Privacy Features E2E Tests › Data anonymization should be accessible" classname="privacy-features.test.ts" time="7.277">
+<system-out>
+<![CDATA[⚠️ Data anonymization UI not yet implemented
+]]>
+</system-out>
+</testcase>
+<testcase name="Privacy Features E2E Tests › Consent preferences should persist across sessions" classname="privacy-features.test.ts" time="6.854">
+<system-out>
+<![CDATA[⚠️ Consent management UI not yet implemented
+]]>
+</system-out>
+</testcase>
+<testcase name="Privacy Features E2E Tests › Privacy policy and terms should be accessible" classname="privacy-features.test.ts" time="10.14">
+<system-out>
+<![CDATA[⚠️ Privacy policy page not yet implemented
+⚠️ Terms of service page not yet implemented
+]]>
+</system-out>
+</testcase>
+</testsuite>
+<testsuite name="privacy-features.test.ts" timestamp="2025-09-09T09:03:37.790Z" hostname="firefox" tests="10" failures="1" skipped="0" time="88.28" errors="0">
+<testcase name="Privacy Features E2E Tests › Privacy dashboard should be accessible to authenticated users" classname="privacy-features.test.ts" time="15.189">
+<failure message="privacy-features.test.ts:24:7 Privacy dashboard should be accessible to authenticated users" type="FAILURE">
+<![CDATA[  [firefox] › privacy-features.test.ts:24:7 › Privacy Features E2E Tests › Privacy dashboard should be accessible to authenticated users 
+
+    Error: expect(page).toHaveURL(expected) failed
+
+    Expected pattern: /.*login.*|.*auth.*/
+    Received string:  "http://127.0.0.1:3000/privacy"
+    Timeout: 10000ms
+
+    Call log:
+      - Expect "toHaveURL" with timeout 10000ms
+        13 × unexpected value "http://127.0.0.1:3000/privacy"
+
+
+      27 |     
+      28 |     // Should redirect to login if not authenticated
+    > 29 |     await expect(page).toHaveURL(/.*login.*|.*auth.*/)
+         |                        ^
+      30 |     
+      31 |     console.log('✅ Privacy dashboard properly protected - redirects to auth')
+      32 |   })
+        at /Users/alaughingkitsune/src/Choices/web/tests/e2e/privacy-features.test.ts:29:24
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/privacy-features-Privacy-F-7ab12-ible-to-authenticated-users-firefox/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/privacy-features-Privacy-F-7ab12-ible-to-authenticated-users-firefox/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/privacy-features-Privacy-F-7ab12-ible-to-authenticated-users-firefox/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|privacy-features-Privacy-F-7ab12-ible-to-authenticated-users-firefox/test-failed-1.png]]
+
+[[ATTACHMENT|privacy-features-Privacy-F-7ab12-ible-to-authenticated-users-firefox/video.webm]]
+
+[[ATTACHMENT|privacy-features-Privacy-F-7ab12-ible-to-authenticated-users-firefox/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Privacy Features E2E Tests › Consent management should work for authenticated users" classname="privacy-features.test.ts" time="10.925">
+<system-out>
+<![CDATA[⚠️ Consent management UI not yet implemented
+]]>
+</system-out>
+</testcase>
+<testcase name="Privacy Features E2E Tests › Data export functionality should be accessible" classname="privacy-features.test.ts" time="10.285">
+<system-out>
+<![CDATA[⚠️ Data export UI not yet implemented
+]]>
+</system-out>
+</testcase>
+<testcase name="Privacy Features E2E Tests › Encryption utilities should be available in browser context" classname="privacy-features.test.ts" time="7.593">
+<system-out>
+<![CDATA[✅ Web Crypto API is available and functional
+]]>
+</system-out>
+</testcase>
+<testcase name="Privacy Features E2E Tests › Privacy-first architecture should be enforced" classname="privacy-features.test.ts" time="11.374">
+<system-out>
+<![CDATA[✅ Security headers present
+✅ No hardcoded secrets detected in client-side code
+]]>
+</system-out>
+</testcase>
+<testcase name="Privacy Features E2E Tests › User data should be properly encrypted in transit" classname="privacy-features.test.ts" time="4.547">
+<system-out>
+<![CDATA[⚠️ No Supabase requests detected (may not be implemented yet)
+]]>
+</system-out>
+</testcase>
+<testcase name="Privacy Features E2E Tests › Privacy dashboard should show user control options" classname="privacy-features.test.ts" time="10.072">
+<system-out>
+<![CDATA[✅ Privacy dashboard is properly protected
+]]>
+</system-out>
+</testcase>
+<testcase name="Privacy Features E2E Tests › Data anonymization should be accessible" classname="privacy-features.test.ts" time="4.772">
+<system-out>
+<![CDATA[⚠️ Data anonymization UI not yet implemented
+]]>
+</system-out>
+</testcase>
+<testcase name="Privacy Features E2E Tests › Consent preferences should persist across sessions" classname="privacy-features.test.ts" time="6.093">
+<system-out>
+<![CDATA[⚠️ Consent management UI not yet implemented
+]]>
+</system-out>
+</testcase>
+<testcase name="Privacy Features E2E Tests › Privacy policy and terms should be accessible" classname="privacy-features.test.ts" time="7.43">
+<system-out>
+<![CDATA[⚠️ Privacy policy page not yet implemented
+⚠️ Terms of service page not yet implemented
+]]>
+</system-out>
+</testcase>
+</testsuite>
+<testsuite name="privacy-features.test.ts" timestamp="2025-09-09T09:03:37.790Z" hostname="webkit" tests="10" failures="1" skipped="0" time="68.987" errors="0">
+<testcase name="Privacy Features E2E Tests › Privacy dashboard should be accessible to authenticated users" classname="privacy-features.test.ts" time="20.116">
+<failure message="privacy-features.test.ts:24:7 Privacy dashboard should be accessible to authenticated users" type="FAILURE">
+<![CDATA[  [webkit] › privacy-features.test.ts:24:7 › Privacy Features E2E Tests › Privacy dashboard should be accessible to authenticated users 
+
+    Error: expect(page).toHaveURL(expected) failed
+
+    Expected pattern: /.*login.*|.*auth.*/
+    Received string:  "http://127.0.0.1:3000/privacy"
+    Timeout: 10000ms
+
+    Call log:
+      - Expect "toHaveURL" with timeout 10000ms
+        13 × unexpected value "http://127.0.0.1:3000/privacy"
+
+
+      27 |     
+      28 |     // Should redirect to login if not authenticated
+    > 29 |     await expect(page).toHaveURL(/.*login.*|.*auth.*/)
+         |                        ^
+      30 |     
+      31 |     console.log('✅ Privacy dashboard properly protected - redirects to auth')
+      32 |   })
+        at /Users/alaughingkitsune/src/Choices/web/tests/e2e/privacy-features.test.ts:29:24
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/privacy-features-Privacy-F-7ab12-ible-to-authenticated-users-webkit/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/privacy-features-Privacy-F-7ab12-ible-to-authenticated-users-webkit/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|privacy-features-Privacy-F-7ab12-ible-to-authenticated-users-webkit/test-failed-1.png]]
+
+[[ATTACHMENT|privacy-features-Privacy-F-7ab12-ible-to-authenticated-users-webkit/video.webm]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Privacy Features E2E Tests › Consent management should work for authenticated users" classname="privacy-features.test.ts" time="6.51">
+<system-out>
+<![CDATA[⚠️ Consent management UI not yet implemented
+]]>
+</system-out>
+</testcase>
+<testcase name="Privacy Features E2E Tests › Data export functionality should be accessible" classname="privacy-features.test.ts" time="6.534">
+<system-out>
+<![CDATA[⚠️ Data export UI not yet implemented
+]]>
+</system-out>
+</testcase>
+<testcase name="Privacy Features E2E Tests › Encryption utilities should be available in browser context" classname="privacy-features.test.ts" time="6.65">
+<system-out>
+<![CDATA[✅ Web Crypto API is available and functional
+]]>
+</system-out>
+</testcase>
+<testcase name="Privacy Features E2E Tests › Privacy-first architecture should be enforced" classname="privacy-features.test.ts" time="7.742">
+<system-out>
+<![CDATA[✅ Security headers present
+✅ No hardcoded secrets detected in client-side code
+]]>
+</system-out>
+</testcase>
+<testcase name="Privacy Features E2E Tests › User data should be properly encrypted in transit" classname="privacy-features.test.ts" time="7.007">
+<system-out>
+<![CDATA[⚠️ No Supabase requests detected (may not be implemented yet)
+]]>
+</system-out>
+</testcase>
+<testcase name="Privacy Features E2E Tests › Privacy dashboard should show user control options" classname="privacy-features.test.ts" time="3.483">
+<system-out>
+<![CDATA[✅ Privacy dashboard is properly protected
+]]>
+</system-out>
+</testcase>
+<testcase name="Privacy Features E2E Tests › Data anonymization should be accessible" classname="privacy-features.test.ts" time="3.533">
+<system-out>
+<![CDATA[⚠️ Data anonymization UI not yet implemented
+]]>
+</system-out>
+</testcase>
+<testcase name="Privacy Features E2E Tests › Consent preferences should persist across sessions" classname="privacy-features.test.ts" time="3.382">
+<system-out>
+<![CDATA[⚠️ Consent management UI not yet implemented
+]]>
+</system-out>
+</testcase>
+<testcase name="Privacy Features E2E Tests › Privacy policy and terms should be accessible" classname="privacy-features.test.ts" time="4.03">
+<system-out>
+<![CDATA[⚠️ Privacy policy page not yet implemented
+⚠️ Terms of service page not yet implemented
+]]>
+</system-out>
+</testcase>
+</testsuite>
+<testsuite name="privacy-features.test.ts" timestamp="2025-09-09T09:03:37.790Z" hostname="Mobile Chrome" tests="10" failures="1" skipped="0" time="53.162" errors="0">
+<testcase name="Privacy Features E2E Tests › Privacy dashboard should be accessible to authenticated users" classname="privacy-features.test.ts" time="12.232">
+<failure message="privacy-features.test.ts:24:7 Privacy dashboard should be accessible to authenticated users" type="FAILURE">
+<![CDATA[  [Mobile Chrome] › privacy-features.test.ts:24:7 › Privacy Features E2E Tests › Privacy dashboard should be accessible to authenticated users 
+
+    Error: expect(page).toHaveURL(expected) failed
+
+    Expected pattern: /.*login.*|.*auth.*/
+    Received string:  "http://127.0.0.1:3000/privacy"
+    Timeout: 10000ms
+
+    Call log:
+      - Expect "toHaveURL" with timeout 10000ms
+        13 × unexpected value "http://127.0.0.1:3000/privacy"
+
+
+      27 |     
+      28 |     // Should redirect to login if not authenticated
+    > 29 |     await expect(page).toHaveURL(/.*login.*|.*auth.*/)
+         |                        ^
+      30 |     
+      31 |     console.log('✅ Privacy dashboard properly protected - redirects to auth')
+      32 |   })
+        at /Users/alaughingkitsune/src/Choices/web/tests/e2e/privacy-features.test.ts:29:24
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/privacy-features-Privacy-F-7ab12-ible-to-authenticated-users-Mobile-Chrome/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/privacy-features-Privacy-F-7ab12-ible-to-authenticated-users-Mobile-Chrome/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/privacy-features-Privacy-F-7ab12-ible-to-authenticated-users-Mobile-Chrome/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|privacy-features-Privacy-F-7ab12-ible-to-authenticated-users-Mobile-Chrome/test-failed-1.png]]
+
+[[ATTACHMENT|privacy-features-Privacy-F-7ab12-ible-to-authenticated-users-Mobile-Chrome/video.webm]]
+
+[[ATTACHMENT|privacy-features-Privacy-F-7ab12-ible-to-authenticated-users-Mobile-Chrome/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Privacy Features E2E Tests › Consent management should work for authenticated users" classname="privacy-features.test.ts" time="3.794">
+<system-out>
+<![CDATA[⚠️ Consent management UI not yet implemented
+]]>
+</system-out>
+</testcase>
+<testcase name="Privacy Features E2E Tests › Data export functionality should be accessible" classname="privacy-features.test.ts" time="3.724">
+<system-out>
+<![CDATA[⚠️ Data export UI not yet implemented
+]]>
+</system-out>
+</testcase>
+<testcase name="Privacy Features E2E Tests › Encryption utilities should be available in browser context" classname="privacy-features.test.ts" time="4.31">
+<system-out>
+<![CDATA[✅ Web Crypto API is available and functional
+]]>
+</system-out>
+</testcase>
+<testcase name="Privacy Features E2E Tests › Privacy-first architecture should be enforced" classname="privacy-features.test.ts" time="7.102">
+<system-out>
+<![CDATA[✅ Security headers present
+✅ No hardcoded secrets detected in client-side code
+]]>
+</system-out>
+</testcase>
+<testcase name="Privacy Features E2E Tests › User data should be properly encrypted in transit" classname="privacy-features.test.ts" time="6.204">
+<system-out>
+<![CDATA[⚠️ No Supabase requests detected (may not be implemented yet)
+]]>
+</system-out>
+</testcase>
+<testcase name="Privacy Features E2E Tests › Privacy dashboard should show user control options" classname="privacy-features.test.ts" time="5.377">
+<system-out>
+<![CDATA[✅ Privacy dashboard is properly protected
+]]>
+</system-out>
+</testcase>
+<testcase name="Privacy Features E2E Tests › Data anonymization should be accessible" classname="privacy-features.test.ts" time="5.526">
+<system-out>
+<![CDATA[⚠️ Data anonymization UI not yet implemented
+]]>
+</system-out>
+</testcase>
+<testcase name="Privacy Features E2E Tests › Consent preferences should persist across sessions" classname="privacy-features.test.ts" time="2.188">
+<system-out>
+<![CDATA[⚠️ Consent management UI not yet implemented
+]]>
+</system-out>
+</testcase>
+<testcase name="Privacy Features E2E Tests › Privacy policy and terms should be accessible" classname="privacy-features.test.ts" time="2.705">
+<system-out>
+<![CDATA[⚠️ Privacy policy page not yet implemented
+⚠️ Terms of service page not yet implemented
+]]>
+</system-out>
+</testcase>
+</testsuite>
+<testsuite name="privacy-features.test.ts" timestamp="2025-09-09T09:03:37.790Z" hostname="Mobile Safari" tests="10" failures="1" skipped="0" time="47.548" errors="0">
+<testcase name="Privacy Features E2E Tests › Privacy dashboard should be accessible to authenticated users" classname="privacy-features.test.ts" time="15.091">
+<failure message="privacy-features.test.ts:24:7 Privacy dashboard should be accessible to authenticated users" type="FAILURE">
+<![CDATA[  [Mobile Safari] › privacy-features.test.ts:24:7 › Privacy Features E2E Tests › Privacy dashboard should be accessible to authenticated users 
+
+    Error: expect(page).toHaveURL(expected) failed
+
+    Expected pattern: /.*login.*|.*auth.*/
+    Received string:  "http://127.0.0.1:3000/privacy"
+    Timeout: 10000ms
+
+    Call log:
+      - Expect "toHaveURL" with timeout 10000ms
+        14 × unexpected value "http://127.0.0.1:3000/privacy"
+
+
+      27 |     
+      28 |     // Should redirect to login if not authenticated
+    > 29 |     await expect(page).toHaveURL(/.*login.*|.*auth.*/)
+         |                        ^
+      30 |     
+      31 |     console.log('✅ Privacy dashboard properly protected - redirects to auth')
+      32 |   })
+        at /Users/alaughingkitsune/src/Choices/web/tests/e2e/privacy-features.test.ts:29:24
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/privacy-features-Privacy-F-7ab12-ible-to-authenticated-users-Mobile-Safari/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/privacy-features-Privacy-F-7ab12-ible-to-authenticated-users-Mobile-Safari/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|privacy-features-Privacy-F-7ab12-ible-to-authenticated-users-Mobile-Safari/test-failed-1.png]]
+
+[[ATTACHMENT|privacy-features-Privacy-F-7ab12-ible-to-authenticated-users-Mobile-Safari/video.webm]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Privacy Features E2E Tests › Consent management should work for authenticated users" classname="privacy-features.test.ts" time="5.009">
+<system-out>
+<![CDATA[⚠️ Consent management UI not yet implemented
+]]>
+</system-out>
+</testcase>
+<testcase name="Privacy Features E2E Tests › Data export functionality should be accessible" classname="privacy-features.test.ts" time="4.727">
+<system-out>
+<![CDATA[⚠️ Data export UI not yet implemented
+]]>
+</system-out>
+</testcase>
+<testcase name="Privacy Features E2E Tests › Encryption utilities should be available in browser context" classname="privacy-features.test.ts" time="5.149">
+<system-out>
+<![CDATA[✅ Web Crypto API is available and functional
+]]>
+</system-out>
+</testcase>
+<testcase name="Privacy Features E2E Tests › Privacy-first architecture should be enforced" classname="privacy-features.test.ts" time="6.339">
+<system-out>
+<![CDATA[✅ Security headers present
+✅ No hardcoded secrets detected in client-side code
+]]>
+</system-out>
+</testcase>
+<testcase name="Privacy Features E2E Tests › User data should be properly encrypted in transit" classname="privacy-features.test.ts" time="2.351">
+<system-out>
+<![CDATA[⚠️ No Supabase requests detected (may not be implemented yet)
+]]>
+</system-out>
+</testcase>
+<testcase name="Privacy Features E2E Tests › Privacy dashboard should show user control options" classname="privacy-features.test.ts" time="2.224">
+<system-out>
+<![CDATA[✅ Privacy dashboard is properly protected
+]]>
+</system-out>
+</testcase>
+<testcase name="Privacy Features E2E Tests › Data anonymization should be accessible" classname="privacy-features.test.ts" time="2.299">
+<system-out>
+<![CDATA[⚠️ Data anonymization UI not yet implemented
+]]>
+</system-out>
+</testcase>
+<testcase name="Privacy Features E2E Tests › Consent preferences should persist across sessions" classname="privacy-features.test.ts" time="1.948">
+<system-out>
+<![CDATA[⚠️ Consent management UI not yet implemented
+]]>
+</system-out>
+</testcase>
+<testcase name="Privacy Features E2E Tests › Privacy policy and terms should be accessible" classname="privacy-features.test.ts" time="2.411">
+<system-out>
+<![CDATA[⚠️ Privacy policy page not yet implemented
+⚠️ Terms of service page not yet implemented
+]]>
+</system-out>
+</testcase>
+</testsuite>
+</testsuites>

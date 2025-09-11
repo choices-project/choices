@@ -1,0 +1,43 @@
+title = "Choices Platform GitLeaks Configuration"
+version = "8.18.2"
+description = "GitLeaks configuration for Choices platform security scanning"
+
+[extend]
+use-default = true
+
+[extend.regexes]
+"choices-specific" = '''(?i)(choices|supabase|vercel).*[=:]\s*['"]?[a-zA-Z0-9+/=]{20,}['"]?'''
+
+[allowlist]
+description = "Global allowlist"
+regexes = [
+  '''(?i)example.*[=:]\s*['"]?[a-zA-Z0-9+/=]{20,}['"]?''',
+  '''(?i)test.*[=:]\s*['"]?[a-zA-Z0-9+/=]{20,}['"]?''',
+  '''(?i)sample.*[=:]\s*['"]?[a-zA-Z0-9+/=]{20,}['"]?''',
+  '''(?i)demo.*[=:]\s*['"]?[a-zA-Z0-9+/=]{20,}['"]?''',
+]
+
+[allowlist.stops]
+  - "package-lock.json"
+  - "yarn.lock"
+  - "pnpm-lock.yaml"
+  - "*.min.js"
+  - "*.min.css"
+  - "node_modules/"
+  - ".next/"
+  - "dist/"
+  - "build/"
+
+[allowlist.commits]
+  - "commit-hash-here"  # Add specific commit hashes to allowlist if needed
+
+[allowlist.paths]
+  - "docs/**"
+  - "*.md"
+  - "*.txt"
+  - "*.json"
+  - "*.yml"
+  - "*.yaml"
+  - "*.toml"
+  - "*.config.js"
+  - "*.config.ts"

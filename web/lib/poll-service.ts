@@ -1,4 +1,3 @@
-import { ApiAuthManager } from './api';
 import { logger } from '@/lib/logger';
 import { devLog } from './logger';
 
@@ -231,10 +230,8 @@ const config = {
 };
 
 class PollService {
-  private authManager: ApiAuthManager;
-
   constructor() {
-    this.authManager = new ApiAuthManager();
+    // Removed IA/PO auth manager dependency
   }
 
   // Get all polls (mock + user-generated)
@@ -393,8 +390,8 @@ class PollService {
 
   // Get current user ID
   private async getCurrentUserId(): Promise<string> {
-    const authContext = await this.authManager.getAuthContext();
-    return authContext?.user?.id || 'anonymous';
+    // TODO: Implement with Supabase auth
+    return 'anonymous';
   }
 
   // Simulate mock vote
