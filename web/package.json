@@ -31,6 +31,7 @@
     "ci:install": "npm ci --ignore-scripts --userconfig .npmrc.ci",
     "audit:high": "npm audit --audit-level=high",
     "check:next-security": "node scripts/check-next-sec.js",
+    "test:security-headers": "node scripts/test-security-headers.js",
     "ci:verify": "npm run audit:high && npm run check:next-security"
   },
   "dependencies": {

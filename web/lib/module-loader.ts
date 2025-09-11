@@ -79,14 +79,15 @@ export class ModuleLoader {
     });
     */
 
-    this.registerModule({
-      id: 'api',
-      name: 'API Module',
-      description: 'API utilities and endpoints',
-      featureFlag: 'api',
-      loadFunction: () => import('./api'),
-      fallback: null
-    });
+    // API module removed - IA/PO dependencies eliminated
+    // this.registerModule({
+    //   id: 'api',
+    //   name: 'API Module',
+    //   description: 'API utilities and endpoints',
+    //   featureFlag: 'api',
+    //   loadFunction: () => import('./api'),
+    //   fallback: null
+    // });
 
     // UI module temporarily disabled - ui module not found
     /*
