@@ -1,0 +1,92 @@
+name: Web CI (Secure)
+
+on:
+  push:
+    paths: [ "web/**", ".github/workflows/web-ci.yml" ]
+  pull_request:
+    paths: [ "web/**", ".github/workflows/web-ci.yml" ]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: web-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: web
+    strategy:
+      matrix:
+        node: [ "22.x" ]
+    env:
+      # Safe fallbacks so forked PRs (no secrets) still compile without calling real services
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || 'https://example.supabase.co' }}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'fake-dev-key-for-ci-only' }}
+      SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY || 'dev-only-secret' }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      # Ensure CI uses the same npm you pinned in package.json ("npm@10.9.2")
+      - name: Use repo's npm version
+        run: npm i -g npm@10.9.2
+
+      - name: Clean workspace
+        run: rm -rf node_modules
+
+      - name: Deterministic install (scripts blocked)
+        run: npm run ci:install
+
+      - name: Lockfile unchanged
+        run: git diff --exit-code package-lock.json
+
+      - name: Debug Next.js version
+        run: node -e "console.log('Next.js version:', require('next/package.json').version)"
+
+      - name: Next.js security gate
+        run: npm run check:next-security
+
+      - name: Security audit (fail on high/critical)
+        run: npm run audit:high
+
+      - name: Server-only import test
+        run: |
+          echo "Checking for client-side PostgreSQL imports..."
+          set -e
+          shopt -s nullglob || true
+          # Only search if folders exist; ignore dynamic imports
+          for d in app components; do
+            if [ -d "$d" ]; then
+              if grep -R --include="*.ts" --include="*.tsx" -nE "^\s*import\s+.*\s+from\s+['\"]pg['\"]" "$d"; then
+                echo "::error::PostgreSQL static imports found in client code"
+                exit 1
+              fi
+            fi
+          done
+          echo "✅ No client-side PostgreSQL static imports found"
+
+      - name: Type check
+        run: npm run type-check
+
+      - name: Linting
+        run: npm run lint
+
+      - name: Build
+        run: npm run build
+
+      - name: OSV Scan (extra signal)
+        uses: google/osv-scanner-action@v1
+        with:
+          scan-args: |
+            -r .
