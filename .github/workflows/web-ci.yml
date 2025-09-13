@@ -79,11 +79,11 @@ jobs:
           done
           echo "✅ No client-side PostgreSQL static imports found"
 
-      - name: Type check
-        run: npm run type-check
+      - name: Type check (strict)
+        run: npm run type-check:strict
 
-      - name: Lint (warnings allowed)
-        run: npm run lint -- --max-warnings=9999
+      - name: Lint (strict mode - no unused variables)
+        run: npm run lint:strict
 
       - name: Build
         run: npm run build
