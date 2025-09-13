@@ -18,7 +18,7 @@ import { devLog } from './logger';
 // WebAuthn configuration
 const WEBAUTHN_CONFIG = {
   rpName: 'Choices Platform',
-  rpId: typeof window !== 'undefined' ? window.location.hostname : 'choices-platform.vercel.app',
+  rpId: typeof window !== 'undefined' ? (window.location?.hostname || 'choices-platform.vercel.app') : 'choices-platform.vercel.app',
   timeout: 60000, // 60 seconds
   challengeLength: 32,
   algorithms: [
@@ -114,7 +114,7 @@ export async function isBiometricAvailable(): Promise<boolean> {
 
 // Get device and browser information
 export function getDeviceInfo(): { deviceType: string; browser: string; platform: string } {
-  const userAgent = navigator.userAgent;
+  const userAgent = typeof navigator !== 'undefined' ? navigator.userAgent : 'unknown';
   
   let deviceType = 'unknown';
   let browser = 'unknown';
@@ -230,9 +230,9 @@ export function getAuthenticatorType(credential: PublicKeyCredential): string {
   // Try to detect authenticator type based on available information
   if (credential.authenticatorAttachment === 'platform') {
     // Platform authenticators are usually biometric
-    if (navigator.userAgent.includes('iPhone') || navigator.userAgent.includes('iPad')) {
+    if (typeof navigator !== 'undefined' && (navigator.userAgent.includes('iPhone') || navigator.userAgent.includes('iPad'))) {
       return 'face' // Face ID on iOS
-    } else if (navigator.userAgent.includes('Android')) {
+    } else if (typeof navigator !== 'undefined' && navigator.userAgent.includes('Android')) {
       return 'fingerprint' // Fingerprint on Android
     } else {
       return 'fingerprint' // Default to fingerprint
@@ -335,7 +335,7 @@ export async function registerBiometric(userId: string, username: string): Promi
     };
 
     // Create credential
-    const credential = await navigator.credentials.create({
+    const credential = await (typeof navigator !== 'undefined' ? navigator.credentials : null)?.create({
       publicKey: publicKeyOptions,
     }) as PublicKeyCredential;
 
@@ -459,7 +459,7 @@ export async function authenticateBiometric(username: string): Promise<WebAuthnR
     };
 
     // Get credential
-    const credential = await navigator.credentials.get({
+    const credential = await (typeof navigator !== 'undefined' ? navigator.credentials : null)?.get({
       publicKey: assertionOptions,
     }) as PublicKeyCredential;
 

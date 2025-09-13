@@ -10,7 +10,8 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js'
 import { createBrowserClient } from '@supabase/ssr'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
-import { logger, devLog } from './logger'
+import { logger } from './logger'
+import { isBrowser, isServer } from './ssr-safe'
 import type { Database, UserProfileInsert, UserProfileUpdate, PollInsert, PollUpdate, VoteInsert } from '../types/database'
 
 // Environment validation
@@ -40,6 +41,12 @@ const validateEnvironment = () => {
  * Uses @supabase/ssr for proper browser-side initialization
  */
 export const createBrowserClientSafe = (): SupabaseClient<Database> | null => {
+  // Only create browser client in browser environment
+  if (!isBrowser()) {
+    logger.warn('Attempted to create browser client in server environment')
+    return null
+  }
+
   try {
     const env = validateEnvironment()
     
@@ -58,6 +65,12 @@ export const createBrowserClientSafe = (): SupabaseClient<Database> | null => {
  * Uses @supabase/ssr for proper server-side initialization
  */
 export const createServerClientSafe = (cookieStore: ReturnType<typeof cookies>): SupabaseClient<Database> | null => {
+  // Only create server client in server environment
+  if (!isServer()) {
+    logger.warn('Attempted to create server client in browser environment')
+    return null
+  }
+
   try {
     const env = validateEnvironment()
     
@@ -126,7 +139,7 @@ export const createServiceRoleClient = (): SupabaseClient<Database> | null => {
  */
 export const getSupabaseClient = (): SupabaseClient<Database> | null => {
   // Check if we're in a browser environment
-  if (typeof window !== 'undefined') {
+  if (isBrowser()) {
     return createBrowserClientSafe()
   }
   

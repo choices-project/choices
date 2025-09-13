@@ -1,4 +1,5 @@
 import { logger } from '@/lib/logger';
+import { safeNavigate, safeReload } from '@/lib/ssr-safe';
 /**
  * Browser detection and compatibility utilities
  */
@@ -23,7 +24,7 @@ export function detectBrowser(): BrowserInfo {
     }
   }
 
-  const userAgent = navigator.userAgent
+  const userAgent = typeof navigator !== 'undefined' ? navigator.userAgent : 'unknown'
   const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent)
 
   // Detect browser type
@@ -116,20 +117,20 @@ export function navigateTo(url: string, strategy?: 'server' | 'client' | 'hybrid
 
   switch (redirectStrategy) {
     case 'server':
-      // Use window.location.href for server redirects
-      window.location.href = url
+      // Use safe navigation for server redirects
+      safeNavigate(url)
       break
     case 'client':
       // Use router for client-side navigation
       // This would need to be passed from the component
-      window.location.href = url
+      safeNavigate(url)
       break
     case 'hybrid':
       // Try server first, fallback to client
-      window.location.href = url
+      safeNavigate(url)
       break
     default:
-      window.location.href = url
+      safeNavigate(url)
   }
 }
 

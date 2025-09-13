@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Shield, Users } from 'lucide-react';
 import { Vote, ArrowRight, CheckCircle, Lock } from 'lucide-react'
 import Link from 'next/link'
+import { safeNavigate } from '@/lib/ssr-safe'
 
 export default function Home() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
@@ -114,7 +115,7 @@ export default function Home() {
                     You're logged in as: <span className="font-mono text-sm bg-gray-100 px-2 py-1 rounded">{userStableId}</span>
                   </p>
                   <button
-                    onClick={() => window.location.href = '/polls'}
+                    onClick={() => safeNavigate('/polls')}
                     className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-2 px-4 rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 flex items-center justify-center space-x-2"
                   >
                     <span>View Available Polls</span>

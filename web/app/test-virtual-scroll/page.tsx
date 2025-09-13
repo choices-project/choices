@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { logger } from '@/lib/logger';
 import { VirtualScrollWithSearch } from '@/components/performance/VirtualScroll'
+import { safeReload } from '@/lib/ssr-safe'
 
 export default function TestVirtualScrollPage() {
   const [testData, setTestData] = useState<any[]>([])
@@ -84,7 +85,7 @@ export default function TestVirtualScrollPage() {
           <button
             data-testid="refresh-data"
             className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-            onClick={() => window.location.reload()}
+            onClick={() => safeReload()}
           >
             Refresh Data
           </button>

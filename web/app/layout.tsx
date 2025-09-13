@@ -1,18 +1,15 @@
 
 
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google';
 import './globals.css'
 import { PWAInstallPrompt, OfflineIndicator, PWAUpdatePrompt } from '../components/PWAComponents';
 import EnhancedFeedbackWidget from '../components/EnhancedFeedbackWidget'
 import SiteMessages from '../components/SiteMessages'
 import GlobalNavigation from '../components/GlobalNavigation'
+import FontProvider from '../components/FontProvider'
 
 import ClientOnly from '../components/ClientOnly'
 import { AuthProvider } from '../hooks/AuthProvider'
-
-
-const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
   title: 'Choices - Democratic Polling Platform',
@@ -53,36 +50,38 @@ export default function RootLayout({
         <meta name="msapplication-TileColor" content="#3b82f6" />
         <meta name="msapplication-tileImage" content="/favicon.ico" />
       </head>
-      <body className={inter.className}>
-        <ClientOnly>
-          <AuthProvider>
-            {/* Global Navigation */}
-            <GlobalNavigation />
-            
-            {/* Site Messages - Display below navigation */}
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
-              <SiteMessages />
-            </div>
-            
-            {children}
-            
-            {/* PWA Components - Only render on client side */}
-            <PWAInstallPrompt />
-            <OfflineIndicator />
-            <PWAUpdatePrompt />
-            
-            {/* Enhanced Feedback Widget - Only render on client side */}
-            <EnhancedFeedbackWidget />
-            
-            {/* Navigation Logger - Only in development */}
-            {/* <NavLogger /> */}
-            
-            {/* Hidden elements for PWA functionality */}
-            <div id="install-pwa" style={{ display: 'none' }} />
-            <div id="update-pwa" style={{ display: 'none' }} />
-            <div id="offline-indicator" style={{ display: 'none' }} />
-          </AuthProvider>
-        </ClientOnly>
+      <body>
+        <FontProvider>
+          <ClientOnly>
+            <AuthProvider>
+              {/* Global Navigation */}
+              <GlobalNavigation />
+              
+              {/* Site Messages - Display below navigation */}
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
+                <SiteMessages />
+              </div>
+              
+              {children}
+              
+              {/* PWA Components - Only render on client side */}
+              <PWAInstallPrompt />
+              <OfflineIndicator />
+              <PWAUpdatePrompt />
+              
+              {/* Enhanced Feedback Widget - Only render on client side */}
+              <EnhancedFeedbackWidget />
+              
+              {/* Navigation Logger - Only in development */}
+              {/* <NavLogger /> */}
+              
+              {/* Hidden elements for PWA functionality */}
+              <div id="install-pwa" style={{ display: 'none' }} />
+              <div id="update-pwa" style={{ display: 'none' }} />
+              <div id="offline-indicator" style={{ display: 'none' }} />
+            </AuthProvider>
+          </ClientOnly>
+        </FontProvider>
       </body>
     </html>
   )

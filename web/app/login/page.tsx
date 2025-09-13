@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Eye, EyeOff, User, Lock, Fingerprint, CheckCircle2, AlertCircle } from 'lucide-react'
 import { clientSession } from '@/lib/client-session'
+import { safeBrowserAccess } from '@/lib/ssr-safe'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -26,9 +27,11 @@ export default function LoginPage() {
     const checkBiometricSupport = async () => {
       try {
         // Check if WebAuthn is supported
-        const supported = typeof window !== 'undefined' && 
+        const window = safeBrowserAccess.window()
+        const navigator = safeBrowserAccess.navigator()
+        const supported = !!(window && 
                          'PublicKeyCredential' in window &&
-                         'credentials' in navigator
+                         navigator && 'credentials' in navigator)
         setBiometricSupported(supported)
         
         if (supported) {
@@ -119,7 +122,7 @@ export default function LoginPage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          rpId: window.location.hostname
+          rpId: safeBrowserAccess.window()?.location?.hostname || 'localhost'
         })
       })
 
