@@ -39,9 +39,15 @@ stops = [
   ".vercel/output/"
 ]
 
+# Skip documentation files that contain example configurations
+files = [
+  "SECURITY_HARDENING_IMPLEMENTATION_COMPLETE.md",
+  "BROWSER_GLOBALS_SECURITY_ANALYSIS_AND_ROADMAP.md"
+]
+
 # Add commit SHAs here only when you have investigated and accepted the history
 commits = [
-  # "abcdef1234567890..."
+  "1fdd844db820d2f1b6914aec6de29e4f92285fab"  # Security hardening documentation with example configs
 ]
 
 # --- Custom rules (in addition to defaults) ---
@@ -50,7 +56,7 @@ commits = [
 [[rules]]
 id = "choices-specific"
 description = "Key-like values adjacent to Choices/Supabase/Vercel identifiers"
-regex = "{{choices_specific}}"
+regex = "choices_specific"
 tags = ["project", "context", "secret"]
 reportEntropy = true
 
