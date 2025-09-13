@@ -2,6 +2,7 @@ name: Web CI (Secure)
 
 on:
   push:
+
     paths: ["web/**", ".github/workflows/web-ci.yml"]
     paths-ignore: ["web/**/*.md", "web/**/docs/**"]
   pull_request:
@@ -65,6 +66,7 @@ jobs:
 
       - name: Server-only import test
         run: |
+
           echo "Checking for client-side PostgreSQL static imports..."
           set -e
           for d in app components; do
@@ -72,6 +74,7 @@ jobs:
             if grep -R --include="*.ts" --include="*.tsx" -nE "^\s*import\s+.*\s+from\s+['\"]pg['\"]" "$d"; then
               echo "::error::PostgreSQL static imports found in client code"
               exit 1
+
             fi
           done
           echo "✅ No client-side PostgreSQL static imports found"
@@ -80,6 +83,7 @@ jobs:
         run: npm run type-check
 
       - name: Lint
+
         run: npm run lint
 
       - name: Build

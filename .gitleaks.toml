@@ -5,6 +5,7 @@ description = "GitLeaks configuration for Choices platform security scanning"
 [extend]
 use-default = true
 
+
 # Reusable regexes
 [extend.regexes]
 choices_specific = '''(?i)(choices|supabase|vercel)[^=\n]{0,32}[=:]\s*['"]?[A-Za-z0-9_\-+/=]{20,}['"]?'''
@@ -61,3 +62,4 @@ regex = '''\b(sb_(publishable|secret)_[A-Za-z0-9]{16,})\b'''
 tags = ["supabase", "apikey", "secret"]
 
 # (Rely on GitLeaks' built-in JWT/API/generic-high-entropy rules for the rest)
+
