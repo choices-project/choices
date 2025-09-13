@@ -45,7 +45,7 @@ jobs:
             security-and-quality
             security-extended
           build-mode: none                     # avoid CodeQL autobuild for JS
-          source-root: web                     # monorepo hint
+          config-file: .github/codeql/config.yml
 
       - name: Install dependencies (scripts blocked)
         working-directory: web

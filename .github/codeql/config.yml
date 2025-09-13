@@ -1,0 +1,27 @@
+name: "Choices CodeQL"
+
+# Scan only source you actually own
+paths:
+  - web
+  # - scripts           # include if you keep runtime JS here
+  # - packages/**       # include if you have JS/TS packages
+
+# Ignore generated, vendored, and artifacts
+paths-ignore:
+  - '**/node_modules/**'
+  - '**/.next/**'
+  - '**/dist/**'
+  - '**/build/**'
+  - '**/.turbo/**'
+  - '**/.vercel/**'
+  - '**/coverage/**'
+  - '**/playwright-report/**'
+  - '**/__snapshots__/**'
+  - '**/__fixtures__/**'
+  - '**/fixtures/**'
+  - '**/*.min.js'
+  - '**/*.min.css'
+  - '**/storybook-static/**'
+  - '**/.vercel/output/**'
+  - '**/public/**'
+  - '**/static/**'
