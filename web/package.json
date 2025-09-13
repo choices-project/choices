@@ -1,13 +1,13 @@
 {
   "name": "choice-web",
   "private": true,
-  "engines": {
-    "node": ">=22.18 <23",
-    "npm": "10.9.3"
-  },
+"engines": {
+  "node": "22.19.x",
+  "npm": "10.9.3"
+},
+
   "scripts": {
-    "preinstall": "node -e \"const want='10.9.3';const got=require('child_process').execSync('npm -v').toString().trim();if(got!==want){console.error(`npm ${got} != ${want}`);process.exit(1)}\"",
-    "prepare": "husky",
+    "preinstall": "node -e \"const want='10.9.3';const got=require('child_process').execSync('npm -v').toString().trim();if(got!==want){console.error('npm '+got+' != '+want);process.exit(1)}\"",
     "dev": "next dev",
     "build": "next build",
     "postbuild": "node scripts/check-server-bundle-for-browser-globals.mjs",
