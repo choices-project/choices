@@ -23,7 +23,7 @@ export function detectBrowser(): BrowserInfo {
     }
   }
 
-  const userAgent = navigator.userAgent
+  const userAgent = typeof navigator !== 'undefined' ? navigator.userAgent : 'unknown'
   const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent)
 
   // Detect browser type

@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Image from 'next/image';
 import { logger } from '@/lib/logger';
 import OptimizedImage from '@/components/performance/OptimizedImage'
+import { safeReload, safeBrowserAccess } from '@/lib/ssr-safe'
 
 export default function TestOptimizedImagePage() {
   const [showModal, setShowModal] = useState(false)
@@ -77,7 +78,7 @@ export default function TestOptimizedImagePage() {
           <button
             data-testid="retry-button"
             className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-            onClick={() => window.location.reload()}
+            onClick={() => safeReload()}
           >
             Retry Loading
           </button>
@@ -87,11 +88,14 @@ export default function TestOptimizedImagePage() {
             className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
             onClick={() => {
               // Test accessibility features
-              const images = document.querySelectorAll('[data-testid="optimized-image"]')
-              images.forEach((img, index) => {
-                const ariaLabel = img.getAttribute('aria-label')
-                logger.info(`Image ${index + 1} alt text:`, { ariaLabel: ariaLabel || 'none' })
-              })
+              const doc = safeBrowserAccess.document()
+              if (doc) {
+                const images = doc.querySelectorAll('[data-testid="optimized-image"]')
+                images.forEach((img, index) => {
+                  const ariaLabel = img.getAttribute('aria-label')
+                  logger.info(`Image ${index + 1} alt text:`, { ariaLabel: ariaLabel || 'none' })
+                })
+              }
             }}
           >
             Test Accessibility
@@ -138,8 +142,11 @@ export default function TestOptimizedImagePage() {
                 <button
                   data-testid="copy-image-url"
                   onClick={() => {
-                    navigator.clipboard.writeText(selectedImage)
-                    logger.info('Image URL copied to clipboard')
+                    const nav = safeBrowserAccess.navigator()
+                    if (nav && nav.clipboard) {
+                      nav.clipboard.writeText(selectedImage)
+                      logger.info('Image URL copied to clipboard')
+                    }
                   }}
                   className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
                 >

@@ -11,6 +11,8 @@ const nextConfig = {
     ],
     // Disable CSS optimization to avoid critters dependency issues
     optimizeCss: false,
+    // Disable font optimization to prevent browser globals in server bundles
+    optimizeServerReact: false,
     optimizePackageImports: [
       'lucide-react',
       'clsx',
@@ -36,8 +38,24 @@ const nextConfig = {
 
   webpack: (config, { isServer, webpack }) => {
     if (isServer) {
-      // Define `self` at compile time for server-side compatibility
-      config.plugins.push(new webpack.DefinePlugin({ self: 'globalThis' }));
+      // Define browser globals as undefined for server-side compatibility
+      config.plugins.push(new webpack.DefinePlugin({ 
+        self: 'globalThis',
+        window: 'undefined',
+        document: 'undefined',
+        navigator: 'undefined',
+        localStorage: 'undefined',
+        sessionStorage: 'undefined',
+        location: 'undefined',
+        HTMLElement: 'undefined'
+      }));
+
+      // Exclude font optimization from server bundles
+      config.externals = config.externals || [];
+      config.externals.push({
+        'next/font': 'commonjs next/font',
+        'next/font/google': 'commonjs next/font/google'
+      });
     }
 
     // Module resolution optimizations
