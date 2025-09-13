@@ -19,7 +19,10 @@ regexes = [
   '''(?i)\b(example|sample|test|demo|fake|dummy|placeholder|not[_ -]?real|change[_ -]?me|set[_ -]?this)\b''',
   # CI fallback values we intentionally use
   '''fake-dev-key-for-ci-only''',
-  '''dev-only-secret'''
+  '''dev-only-secret''',
+  # Allow gitleaks configuration examples in documentation
+  '''choices_specific_placeholder''',
+  '''regex\s*=\s*["\']choices_specific_placeholder["\']'''
 ]
 
 # Skip huge/noisy/binary-ish files & build artifacts (but NOT docs/config!)
@@ -47,7 +50,8 @@ files = [
 
 # Add commit SHAs here only when you have investigated and accepted the history
 commits = [
-  "1fdd844db820d2f1b6914aec6de29e4f92285fab"  # Security hardening documentation with example configs
+  "1fdd844db820d2f1b6914aec6de29e4f92285fab",  # Security hardening documentation with example configs
+  "7bf92007b8b699616a6f663afa25a3c3c7c77bb4"   # Gitleaks configuration fix
 ]
 
 # --- Custom rules (in addition to defaults) ---

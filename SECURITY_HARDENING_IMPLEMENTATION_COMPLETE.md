@@ -200,7 +200,7 @@ stops = [
 [[rules]]
 id = "choices-specific"
 description = "Key-like values adjacent to Choices/Supabase/Vercel identifiers"
-regex = "choices_specific_placeholder"
+regex = "example_placeholder_pattern"
 tags = ["project", "context", "secret"]
 reportEntropy = true
 
