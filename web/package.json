@@ -22,7 +22,7 @@
     "type-check": "tsc --noEmit",
     "type-check:ci": "tsc --noEmit --skipLibCheck || echo 'TypeScript warnings found (non-blocking)'",
     "type-check:strict": "tsc --noEmit",
-    "lint": "next lint",
+    "lint": "next lint --max-warnings=9999",
     "lint:strict": "next lint --max-warnings=0",
     "security-check": "grep -r \"select('\\*')\" . --include='*.ts' --include='*.tsx' --exclude-dir=node_modules --exclude-dir=.next || echo 'No security issues found'",
     "performance-check": "npm run lint -- --max-warnings=0 --rule 'no-unused-vars: error' || echo 'Performance warnings found (non-blocking)'",
