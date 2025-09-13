@@ -117,7 +117,7 @@ export const useClientOnly = <T>(fn: () => T, fallback?: T): T | undefined => {
  */
 export const getUserAgent = (): string => {
   if (isBrowser() && navigator?.userAgent) {
-    return navigator.userAgent
+    return typeof navigator !== 'undefined' ? navigator.userAgent : 'unknown'
   }
   return 'unknown'
 }
@@ -275,7 +275,10 @@ export const safeNavigate = (url: string): boolean => {
   }
   
   try {
-    window.location.href = url
+    const window = safeBrowserAccess.window()
+    if (window) {
+      window.location.href = url
+    }
     return true
   } catch (error) {
     console.warn('Navigation failed:', error)
@@ -292,7 +295,10 @@ export const safeReload = (): boolean => {
   }
   
   try {
-    window.location.reload()
+    const window = safeBrowserAccess.window()
+    if (window) {
+      window.location.reload()
+    }
     return true
   } catch (error) {
     console.warn('Page reload failed:', error)

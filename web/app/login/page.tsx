@@ -122,7 +122,7 @@ export default function LoginPage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          rpId: window.location.hostname
+          rpId: safeBrowserAccess.window()?.location?.hostname || 'localhost'
         })
       })
 

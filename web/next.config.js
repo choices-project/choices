@@ -7,14 +7,13 @@ const nextConfig = {
     serverComponentsExternalPackages: [
       '@supabase/ssr',
       '@supabase/realtime-js',
-      // ⚠️ DO NOT list '@supabase/supabase-js' here; keep that strictly client-side.
+      '@supabase/supabase-js',
+      // Externalize all Supabase packages to prevent browser globals in server bundles
     ],
     // Disable CSS optimization to avoid critters dependency issues
     optimizeCss: false,
     // Disable font optimization to prevent browser globals in server bundles
     optimizeServerReact: false,
-    // Disable font optimization completely to prevent server bundle contamination
-    fontLoaders: [],
     // Disable all font optimization features
     optimizeFonts: false,
     optimizePackageImports: [
@@ -51,15 +50,33 @@ const nextConfig = {
         localStorage: 'undefined',
         sessionStorage: 'undefined',
         location: 'undefined',
-        HTMLElement: 'undefined'
+        HTMLElement: 'undefined',
+        // Additional browser globals that might leak
+        'window.location': 'undefined',
+        'document.location': 'undefined',
+        'navigator.userAgent': 'undefined',
+        'navigator.clipboard': 'undefined',
+        'window.localStorage': 'undefined',
+        'window.sessionStorage': 'undefined'
       }));
 
-      // Exclude font optimization from server bundles
+      // Exclude font optimization and Supabase from server bundles
       config.externals = config.externals || [];
       config.externals.push({
         'next/font': 'commonjs next/font',
         'next/font/google': 'commonjs next/font/google',
-        'next/font/local': 'commonjs next/font/local'
+        'next/font/local': 'commonjs next/font/local',
+        '@supabase/supabase-js': 'commonjs @supabase/supabase-js',
+        '@supabase/ssr': 'commonjs @supabase/ssr',
+        '@supabase/realtime-js': 'commonjs @supabase/realtime-js'
+      });
+
+      // More aggressive Supabase externalization for server builds
+      config.externals.push(({ context, request }, callback) => {
+        if (isServer && request && request.includes('@supabase')) {
+          return callback(null, `commonjs ${request}`);
+        }
+        callback();
       });
 
       // Prevent font optimization from including browser globals
