@@ -26,7 +26,7 @@ paths-ignore:
   - '**/public/**'
   - '**/static/**'
 
-# Query packs to run
-packs:
+# Query suites to run
+queries:
   - security-and-quality
   - security-extended
