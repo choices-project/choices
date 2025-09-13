@@ -1,12 +1,13 @@
 {
   "name": "choice-web",
   "private": true,
-  "engines": {
-    "node": ">=22.18 <23",
-    "npm": ">=10.9.3"
-  },
+"engines": {
+  "node": "22.19.x",
+  "npm": "10.9.3"
+},
+
   "scripts": {
-    "prepare": "husky install",
+    "preinstall": "node -e \"const want='10.9.3';const got=require('child_process').execSync('npm -v').toString().trim();if(got!==want){console.error('npm '+got+' != '+want);process.exit(1)}\"",
     "dev": "next dev",
     "build": "next build",
     "postbuild": "node scripts/check-server-bundle-for-browser-globals.mjs",
@@ -21,9 +22,12 @@
     "test:schema": "jest --testPathPattern=schema",
     "type-check": "tsc --noEmit",
     "type-check:ci": "tsc --noEmit --skipLibCheck || echo 'TypeScript warnings found (non-blocking)'",
-    "type-check:strict": "tsc --noEmit",
+    "type-check:strict": "tsc -p tsconfig.strict.json --noEmit",
     "lint": "next lint",
-    "lint:strict": "next lint --max-warnings=0",
+    "lint:strict": "eslint -c .eslintrc.strict.cjs . --max-warnings=0",
+    "lint:fix": "eslint . --fix",
+    "lint:strict:fix": "eslint -c .eslintrc.strict.cjs . --fix",
+    "lint:staged": "eslint --cache --max-warnings=0",
     "security-check": "grep -r \"select('\\*')\" . --include='*.ts' --include='*.tsx' --exclude-dir=node_modules --exclude-dir=.next || echo 'No security issues found'",
     "performance-check": "npm run lint -- --max-warnings=0 --rule 'no-unused-vars: error' || echo 'Performance warnings found (non-blocking)'",
     "cleanup:analyze": "node ../scripts/cleanup-code.js",
@@ -49,7 +53,6 @@
     "bcryptjs": "3.0.2",
     "class-variance-authority": "0.7.1",
     "clsx": "2.1.1",
-    "dotenv": "17.2.1",
     "framer-motion": "12.23.12",
     "jsonwebtoken": "9.0.2",
     "lucide-react": "0.539.0",
@@ -84,9 +87,12 @@
     "@typescript-eslint/eslint-plugin": "8.18.2",
     "@typescript-eslint/parser": "8.18.2",
     "autoprefixer": "10.4.21",
+    "dotenv": "17.2.1",
     "eslint": "8.57.1",
     "eslint-config-next": "14.2.32",
-    "husky": "^9.1.7",
+    "eslint-plugin-eslint-comments": "^3.2.0",
+    "eslint-plugin-unused-imports": "^4.2.0",
+    "husky": "9.1.7",
     "jest": "30.1.2",
     "jest-environment-jsdom": "30.1.2",
     "postcss": "8.5.6",

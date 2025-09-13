@@ -2,9 +2,13 @@ name: Web CI (Secure)
 
 on:
   push:
-    paths: [ "web/**", ".github/workflows/web-ci.yml" ]
+
+    paths: ["web/**", ".github/workflows/web-ci.yml"]
+    paths-ignore: ["web/**/*.md", "web/**/docs/**"]
   pull_request:
-    paths: [ "web/**", ".github/workflows/web-ci.yml" ]
+    paths: ["web/**", ".github/workflows/web-ci.yml"]
+    paths-ignore: ["web/**/*.md", "web/**/docs/**"]
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -62,25 +66,24 @@ jobs:
 
       - name: Server-only import test
         run: |
-          echo "Checking for client-side PostgreSQL imports..."
+
+          echo "Checking for client-side PostgreSQL static imports..."
           set -e
-          shopt -s nullglob || true
-          # Only search if folders exist; ignore dynamic imports
           for d in app components; do
-            if [ -d "$d" ]; then
-              if grep -R --include="*.ts" --include="*.tsx" -nE "^\s*import\s+.*\s+from\s+['\"]pg['\"]" "$d"; then
-                echo "::error::PostgreSQL static imports found in client code"
-                exit 1
-              fi
+            [ -d "$d" ] || continue
+            if grep -R --include="*.ts" --include="*.tsx" -nE "^\s*import\s+.*\s+from\s+['\"]pg['\"]" "$d"; then
+              echo "::error::PostgreSQL static imports found in client code"
+              exit 1
+
             fi
           done
           echo "✅ No client-side PostgreSQL static imports found"
 
-      - name: Type check
-        run: npm run type-check
+      - name: Type check (strict)
+        run: npm run type-check:strict
 
-      - name: Linting
-        run: npm run lint
+      - name: Lint (strict mode - no unused variables)
+        run: npm run lint:strict
 
       - name: Build
         run: npm run build

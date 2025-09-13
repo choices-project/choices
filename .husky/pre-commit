@@ -1,0 +1,2 @@
+# Always run the consolidated hook script from repo root
+bash scripts/precommit.sh

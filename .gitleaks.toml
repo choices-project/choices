@@ -5,39 +5,61 @@ description = "GitLeaks configuration for Choices platform security scanning"
 [extend]
 use-default = true
 
-[extend.regexes]
-"choices-specific" = '''(?i)(choices|supabase|vercel).*[=:]\s*['"]?[a-zA-Z0-9+/=]{20,}['"]?'''
 
+# Reusable regexes
+[extend.regexes]
+choices_specific = '''(?i)(choices|supabase|vercel)[^=\n]{0,32}[=:]\s*['"]?[A-Za-z0-9_\-+/=]{20,}['"]?'''
+
+# --- Global allowlist (tuned to avoid masking real secrets) ---
 [allowlist]
-description = "Global allowlist"
+description = "Global allowlist for known-safe examples and noisy artifacts"
+
+# Allow typical placeholders in examples across all file types
 regexes = [
-  '''(?i)example.*[=:]\s*['"]?[a-zA-Z0-9+/=]{20,}['"]?''',
-  '''(?i)test.*[=:]\s*['"]?[a-zA-Z0-9+/=]{20,}['"]?''',
-  '''(?i)sample.*[=:]\s*['"]?[a-zA-Z0-9+/=]{20,}['"]?''',
-  '''(?i)demo.*[=:]\s*['"]?[a-zA-Z0-9+/=]{20,}['"]?''',
+  '''(?i)\b(example|sample|test|demo|fake|dummy|placeholder|not[_ -]?real|change[_ -]?me|set[_ -]?this)\b''',
+  # CI fallback values we intentionally use
+  '''fake-dev-key-for-ci-only''',
+  '''dev-only-secret'''
 ]
 
-[allowlist.stops]
-  - "package-lock.json"
-  - "yarn.lock"
-  - "pnpm-lock.yaml"
-  - "*.min.js"
-  - "*.min.css"
-  - "node_modules/"
-  - ".next/"
-  - "dist/"
-  - "build/"
+# Skip huge/noisy/binary-ish files & build artifacts (but NOT docs/config!)
+stops = [
+  "package-lock.json",
+  "yarn.lock",
+  "pnpm-lock.yaml",
+  "*.min.js",
+  "*.min.css",
+  "node_modules/",
+  ".next/",
+  "dist/",
+  "build/",
+  "coverage/",
+  "playwright-report/",
+  "storybook-static/",
+  ".vercel/output/"
+]
 
-[allowlist.commits]
-  - "commit-hash-here"  # Add specific commit hashes to allowlist if needed
+# Add commit SHAs here only when you have investigated and accepted the history
+commits = [
+  # "abcdef1234567890..."
+]
 
-[allowlist.paths]
-  - "docs/**"
-  - "*.md"
-  - "*.txt"
-  - "*.json"
-  - "*.yml"
-  - "*.yaml"
-  - "*.toml"
-  - "*.config.js"
-  - "*.config.ts"
+# --- Custom rules (in addition to defaults) ---
+
+# 1) Project-context secret-ish values (names near 'choices/supabase/vercel')
+[[rules]]
+id = "choices-specific"
+description = "Key-like values adjacent to Choices/Supabase/Vercel identifiers"
+regex = "{{choices_specific}}"
+tags = ["project", "context", "secret"]
+reportEntropy = true
+
+# 2) Supabase keys (new prefixes)
+[[rules]]
+id = "supabase-new-format-key"
+description = "Supabase keys with sb_publishable_ / sb_secret_ prefixes"
+regex = '''\b(sb_(publishable|secret)_[A-Za-z0-9]{16,})\b'''
+tags = ["supabase", "apikey", "secret"]
+
+# (Rely on GitLeaks' built-in JWT/API/generic-high-entropy rules for the rest)
+

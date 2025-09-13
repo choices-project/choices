@@ -35,17 +35,16 @@ jobs:
           cache: 'npm'
           cache-dependency-path: web/package-lock.json
       - name: Use repo's npm version
-        run: npm i -g npm@10.9.2
+        run: |
+          NPM_VERSION=$(node -p "require('./web/package.json').packageManager.split('@')[1]")
+          npm i -g npm@$NPM_VERSION
 
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v3
         with:
           languages: javascript                # JS extractor covers TS too
-          queries: |
-            security-and-quality
-            security-extended
           build-mode: none                     # avoid CodeQL autobuild for JS
-          source-root: web                     # monorepo hint
+          config-file: .github/codeql/config.yml
 
       - name: Install dependencies (scripts blocked)
         working-directory: web

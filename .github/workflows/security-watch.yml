@@ -2,54 +2,40 @@ name: Security Watch
 
 on:
   schedule:
-    - cron: "0 2 * * *"  # Daily at 2 AM UTC
+    - cron: '0 2 * * *'   # Daily npm audit
+    - cron: '0 3 * * 1'   # Weekly OSV scan (Mondays)
   workflow_dispatch:
-  pull_request:
-    branches: [main]
 
 permissions:
   contents: read
-  security-events: write
 
 jobs:
-  security-audit:
+  npm-audit:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: '22'
-          cache: 'npm'
+          node-version: '22.x'
+          cache: npm
           cache-dependency-path: web/package-lock.json
+      - name: Use repo's npm version
+        run: npm i -g npm@10.9.3
+      - name: Install (scripts blocked)
+        working-directory: web
+        run: npm run ci:install
+      - name: Audit (high/critical)
+        working-directory: web
+        run: npm run audit:high
 
-      - name: Install dependencies
-        run: |
-          cd web && npm ci
-
-      - name: Run security audit
-        run: |
-          echo "Running npm security audit..."
-          cd web && npm audit --audit-level=high || {
-            echo "::error::High or critical vulnerabilities detected"
-            npm audit --json > audit-results.json
-            cat audit-results.json
-            exit 1
-          }
-          echo "✅ No high/critical vulnerabilities found"
-      
-      - name: Dependency review (disabled for private repo)
-        run: |
-          echo "⚠️  Dependency review disabled for private repositories"
-          echo "To enable: Go to Settings > Security > Code security and analysis"
-          echo "Enable 'Dependency graph' and 'Dependabot alerts'"
-          echo "Then uncomment the dependency-review-action step below"
-        
-      # - name: Dependency review
-      #   uses: actions/dependency-review-action@v4
-      #   if: github.event_name == 'pull_request' && github.repository_visibility == 'public'
-      #   with:
-      #     fail-on-severity: moderate
-      #     allow-licenses: MIT, Apache-2.0, BSD-2-Clause, BSD-3-Clause, ISC, Unlicense
+  osv-weekly:
+    runs-on: ubuntu-latest
+    if: github.event.schedule == '0 3 * * 1'
+    steps:
+      - uses: actions/checkout@v4
+      - name: OSV Scan
+        uses: google/osv-scanner-action@v1
+        with:
+          scan-args: |
+            -r .
