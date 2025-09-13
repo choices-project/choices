@@ -3,8 +3,8 @@ name: "Choices CodeQL"
 # Scan only source you actually own
 paths:
   - web
-  # - scripts           # include if you keep runtime JS here
-  # - packages/**       # include if you have JS/TS packages
+  - scripts           # include runtime JS/TS scripts
+  - packages/**       # include JS/TS packages
 
 # Ignore generated, vendored, and artifacts
 paths-ignore:
