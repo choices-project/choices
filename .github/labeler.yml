@@ -1,8 +1,8 @@
 area:web:
-  - "apps/web/**"
-area:ingest:
-  - "apps/ingest/**"
-area:civics:
-  - "packages/civics-*/**"
+  - "web/**"
 area:auth:
-  - "apps/web/app/(api|auth)/**"
+  - "web/app/(api|auth)/**"
+area:security:
+  - ".github/workflows/*security*"
+  - ".github/workflows/*codeql*"
+  - ".github/workflows/*gitleaks*"
