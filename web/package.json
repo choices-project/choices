@@ -3,9 +3,10 @@
   "private": true,
   "engines": {
     "node": ">=22.18 <23",
-    "npm": ">=10.9.3"
+    "npm": "10.9.3"
   },
   "scripts": {
+    "preinstall": "node -e \"const want='10.9.3';const got=require('child_process').execSync('npm -v').toString().trim();if(got!==want){console.error(`npm ${got} != ${want}`);process.exit(1)}\"",
     "prepare": "husky install",
     "dev": "next dev",
     "build": "next build",
@@ -49,7 +50,6 @@
     "bcryptjs": "3.0.2",
     "class-variance-authority": "0.7.1",
     "clsx": "2.1.1",
-    "dotenv": "17.2.1",
     "framer-motion": "12.23.12",
     "jsonwebtoken": "9.0.2",
     "lucide-react": "0.539.0",
@@ -84,9 +84,10 @@
     "@typescript-eslint/eslint-plugin": "8.18.2",
     "@typescript-eslint/parser": "8.18.2",
     "autoprefixer": "10.4.21",
+    "dotenv": "17.2.1",
     "eslint": "8.57.1",
     "eslint-config-next": "14.2.32",
-    "husky": "^9.1.7",
+    "husky": "9.1.7",
     "jest": "30.1.2",
     "jest-environment-jsdom": "30.1.2",
     "postcss": "8.5.6",
