@@ -25,3 +25,8 @@ paths-ignore:
   - '**/.vercel/output/**'
   - '**/public/**'
   - '**/static/**'
+
+# Query packs to run
+packs:
+  - security-and-quality
+  - security-extended
