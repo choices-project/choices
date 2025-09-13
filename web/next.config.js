@@ -13,6 +13,10 @@ const nextConfig = {
     optimizeCss: false,
     // Disable font optimization to prevent browser globals in server bundles
     optimizeServerReact: false,
+    // Disable font optimization completely to prevent server bundle contamination
+    fontLoaders: [],
+    // Disable all font optimization features
+    optimizeFonts: false,
     optimizePackageImports: [
       'lucide-react',
       'clsx',
@@ -54,7 +58,20 @@ const nextConfig = {
       config.externals = config.externals || [];
       config.externals.push({
         'next/font': 'commonjs next/font',
-        'next/font/google': 'commonjs next/font/google'
+        'next/font/google': 'commonjs next/font/google',
+        'next/font/local': 'commonjs next/font/local'
+      });
+
+      // Prevent font optimization from including browser globals
+      config.module.rules.push({
+        test: /\.(woff|woff2|eot|ttf|otf)$/,
+        use: {
+          loader: 'file-loader',
+          options: {
+            publicPath: '/_next/static/fonts/',
+            outputPath: 'static/fonts/',
+          },
+        },
       });
     }
 
