@@ -12,7 +12,7 @@ import {
   AlertCircle,
   Loader2
 } from 'lucide-react'
-import { getUserCredentials, removeCredential, generateQRCodeData } from '@/lib/webauthn'
+import { getUserCredentials, removeCredential, generateQRCodeData } from '@/features/webauthn/lib/webauthn'
 
 interface Device {
   id: string

@@ -18,6 +18,13 @@ dist/
 
 # Environment variables
 .env
+
+# Transient planning documentation
+docs/planning/temp-*.md
+docs/planning/draft-*.md
+docs/planning/notes-*.md
+docs/weekly-updates/draft-*.md
+docs/weekly-updates/temp-*.md
 .env.local
 .env.development.local
 .env.test.local

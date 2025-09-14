@@ -9,11 +9,7 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "baseUrl": ".",
-    "paths": {
-      "@choices/civics-schemas/*": ["packages/civics-schemas/src/*"],
-      "@choices/civics-client/*": ["packages/civics-client/src/*"],
-      "@choices/civics-sources/*": ["packages/civics-sources/src/*"]
-    },
+    "paths": {},
     "types": ["node"],
     "allowJs": true,
     "declaration": true,

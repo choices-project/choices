@@ -16,7 +16,7 @@ import {
   toggleFeature as _toggleFeature,
   getFeatureFlag as _getFeatureFlag,
   getAllFeatureFlags as _getAllFeatureFlags
-} from '../lib/feature-flags';
+} from '@/lib/feature-flags';
 
 export interface UseFeatureFlagsReturn {
   // Flag checking

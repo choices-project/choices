@@ -2,12 +2,17 @@ name: Web CI (Secure)
 
 on:
   push:
-
-    paths: ["web/**", ".github/workflows/web-ci.yml"]
-    paths-ignore: ["web/**/*.md", "web/**/docs/**"]
+    paths: 
+      - "web/**"
+      - ".github/workflows/web-ci.yml"
+      - "!web/**/*.md"
+      - "!web/**/docs/**"
   pull_request:
-    paths: ["web/**", ".github/workflows/web-ci.yml"]
-    paths-ignore: ["web/**/*.md", "web/**/docs/**"]
+    paths:
+      - "web/**"
+      - ".github/workflows/web-ci.yml"
+      - "!web/**/*.md"
+      - "!web/**/docs/**"
   workflow_dispatch:
 
 permissions:

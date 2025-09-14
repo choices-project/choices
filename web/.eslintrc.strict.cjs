@@ -2,6 +2,39 @@ module.exports = {
   extends: ['./.eslintrc.base.cjs'],
   plugins: ['eslint-comments'],
   overrides: [
+    // SERVER: everything under app/** except client components
+    {
+      files: [
+        "app/**/route.{ts,tsx}",
+        "app/**/layout.{ts,tsx}",
+        "app/**/page.{ts,tsx}",           // still server by default unless "use client"
+        "lib/**/{*,*.*}.{ts,tsx}",
+        "server/**/{*,*.*}.{ts,tsx}",
+        "utils/**/{*,*.*}.{ts,tsx}",
+      ],
+      excludedFiles: ["**/*client.{ts,tsx}", "**/*.client.{ts,tsx}", "**/components/**"], // exclude client components
+      rules: {
+        "no-restricted-globals": ["error",
+          "window","document","navigator","location","HTMLElement",
+          "localStorage","sessionStorage","Image","FileReader","MutationObserver",
+        ],
+        "no-restricted-syntax": [
+          "error",
+          { "selector": "MemberExpression[object.name='globalThis'][property.name='window']", "message": "No browser APIs on server" },
+          { "selector": "MemberExpression[object.name='window']", "message": "No direct window access on server - use '@/lib/ssr-safe'" },
+          { "selector": "MemberExpression[object.name='document']", "message": "No direct document access on server - use '@/lib/ssr-safe'" },
+          { "selector": "MemberExpression[object.name='navigator']", "message": "No direct navigator access on server - use '@/lib/ssr-safe'" }
+        ],
+        "no-restricted-imports": ["error", {
+          "paths": [
+            { "name": "@/lib/browser-utils", "message": "Use '@/lib/ssr-safe' exports instead for server-side code" }
+          ],
+          "patterns": [
+            { "group": ["*fontfaceobserver*", "*web-vitals*"], "message": "Client-only library used on server" }
+          ]
+        }]
+      }
+    },
     {
       files: ["**/*.{ts,tsx}"],
       parser: "@typescript-eslint/parser",

@@ -1,8 +1,8 @@
 # System Architecture Overview
-*Last Updated: 2025-09-09*
+*Last Updated: September 13, 2025*
 
-**Date:** September 9, 2025  
-**Status:** ✅ **PRODUCTION READY** - Supabase Auth Implementation Complete  
+**Date:** September 13, 2025  
+**Status:** ✅ **PRODUCTION READY** - Comprehensive Security & CI/CD Implementation Complete  
 **Scope:** Comprehensive system architecture and component overview
 
 ## 🎯 **SYSTEM OVERVIEW**
@@ -39,17 +39,19 @@ The Choices platform is a comprehensive voting and polling system with advanced 
 - **State Management**: React Context + custom hooks
 - **Styling**: Tailwind CSS with component library
 
-### **2. Authentication System** (`web/lib/auth/`)
+### **2. Authentication System** (`web/features/auth/`)
 - **Provider**: Supabase Auth
-- **Features**: Email/password, OAuth, biometric authentication
-- **Security**: Row Level Security (RLS) policies
-- **Session Management**: Secure token handling
+- **Features**: Email/password, OAuth (biometric WebAuthn disabled via feature flag)
+- **Security**: Row Level Security (RLS) policies, trust tier system (T1/T2/T3)
+- **Session Management**: Secure token handling with SSR-safe cookies
+- **Files**: `lib/auth.ts`, `lib/auth-middleware.ts`, `lib/server-actions.ts`, `pages/callback/route.ts`, `pages/verify/route.ts`
 
-### **3. Zero-Knowledge Proofs** (`web/lib/zero-knowledge-proofs.ts`)
-- **Cryptographic Operations**: Schnorr identification, range proofs, membership proofs
-- **Type Safety**: Comprehensive type guards with zero `any` types
-- **Database Integration**: Real-time poll validation
-- **WebCrypto**: SHA-256 commitments for data integrity
+### **3. Polling System** (`web/features/polls/`)
+- **Poll Types**: Single choice, multiple choice, approval voting, ranked choice
+- **Components**: `EnhancedVoteForm.tsx`, `PollResults.tsx`, `CreatePollForm.tsx`, `OptimizedPollResults.tsx`
+- **Pages**: Main polls page, create poll wizard, poll templates
+- **Features**: Offline voting support, real-time results, demographic analytics
+- **Files**: `pages/page.tsx`, `pages/create/page.tsx`, `pages/templates/page.tsx`, `components/`, `types/poll-templates.ts`
 
 ### **4. Database Layer** (`supabase/`)
 - **Provider**: Supabase (PostgreSQL)

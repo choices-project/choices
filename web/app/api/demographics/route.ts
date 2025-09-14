@@ -1,49 +1,40 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { devLog } from '@/lib/logger';
-import { getSupabaseServerClient } from '@/utils/supabase/server';
+import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { getMockDemographicsResponse } from '@/lib/mock-data';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(_request: NextRequest) {
   try {
-    const supabase = getSupabaseServerClient();
+    const supabase = createSupabaseServerClient();
     
-    // If Supabase client is not available, return mock data
-    if (!supabase) {
-      devLog('Supabase client not available, using mock data');
-      return NextResponse.json(getMockDemographicsResponse());
-    }
-    
-    try {
-      const supabaseClient = await supabase;
-      
-      // Get total users
-      const { data: users, error: usersError } = await supabaseClient
-        .from('ia_users')
-        .select('id, email, verification_tier, created_at, updated_at, display_name, avatar_url, bio, stable_id, is_active')
-        .eq('is_active', true as any);
+    // Get total users
+    const { data: users, error: usersError } = await supabase
+        .from('user_profiles')
+        .select('id, user_id, username, email, trust_tier, created_at, updated_at, avatar_url, bio, is_active')
+        .eq('is_active', true);
 
       if (usersError) throw usersError;
 
       const totalUsers = users?.length || 0;
 
       // Get recent polls
-      const { data: polls, error: pollsError } = await supabaseClient
-        .from('po_polls')
-        .select('poll_id, title, total_votes, participation_rate, created_at')
-        .eq('status', 'active' as any)
+      const { data: polls, error: pollsError } = await supabase
+        .from('polls')
+        .select('id, title, total_votes, created_at')
+        .eq('status', 'active')
         .order('created_at', { ascending: false })
         .limit(5);
 
       if (pollsError) throw pollsError;
 
       // Get recent votes
-      const { data: votes, error: votesError } = await supabaseClient
-        .from('po_votes')
-        .select('poll_id, voted_at')
-        .gte('voted_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
-        .order('voted_at', { ascending: false })
+      const { data: votes, error: votesError } = await supabase
+        .from('votes')
+        .select('poll_id, created_at')
+        .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
+        .order('created_at', { ascending: false })
         .limit(10);
 
       if (votesError) throw votesError;
@@ -51,18 +42,13 @@ export async function GET(_request: NextRequest) {
       // Generate demographics data with real user count
       const demographics = getMockDemographicsResponse();
       demographics.totalUsers = totalUsers;
-      demographics.recentPolls = polls && !('error' in polls) ? polls as any : [];
-      demographics.recentVotes = votes && !('error' in votes) ? votes as any : [];
+      demographics.recentPolls = polls || [];
+      demographics.recentVotes = votes || [];
 
       return NextResponse.json(demographics);
     } catch (error) {
-      devLog('Supabase error:', error);
-      // Fallback to mock data
+      devLog('Error in demographics API:', error);
+      // Always return mock data as final fallback
       return NextResponse.json(getMockDemographicsResponse());
     }
-  } catch (error) {
-    devLog('Error in demographics API:', error);
-    // Always return mock data as final fallback
-    return NextResponse.json(getMockDemographicsResponse());
-  }
 }

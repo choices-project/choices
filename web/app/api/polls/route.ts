@@ -21,16 +21,16 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '20');
     const _status = searchParams.get('status') || 'active';
 
-    // Fetch active polls from po_polls table
+    // Fetch active polls from polls table
     let polls;
 
     try {
-      devLog('Fetching active polls from po_polls table...');
+      devLog('Fetching active polls from polls table...');
       const supabaseClient = await supabase;
       const { data: directPolls, error: directError } = await supabaseClient
-        .from('po_polls')
-        .select('poll_id, title, total_votes, participation_rate, options, status')
-        .eq('status', 'active' as any)
+        .from('polls')
+        .select('id, title, total_votes, options, status')
+        .eq('status', 'active')
         .limit(limit);
 
       if (directError) {
@@ -42,17 +42,15 @@ export async function GET(request: NextRequest) {
       // Manually aggregate results (temporary solution)
       polls = directPolls && !('error' in directPolls) ? directPolls.filter(poll => 
         poll && 
-        'poll_id' in poll && 
+        'id' in poll && 
         'title' in poll && 
         'total_votes' in poll && 
-        'participation_rate' in poll && 
         'options' in poll && 
         'status' in poll
       ).map(poll => ({
-        poll_id: poll.poll_id,
+        id: poll.id,
         title: poll.title,
         total_votes: poll.total_votes || 0,
-        participation_rate: poll.participation_rate || 0,
         aggregated_results: poll.options ? 
           poll.options.reduce((acc: any, _option: any, _index: any) => {
             acc[`option_${_index + 1}`] = 0; // Default to 0 until we can count votes
@@ -119,9 +117,9 @@ export async function POST(request: NextRequest) {
 
     // Verify user is active
     const { data: userProfile } = await supabase
-      .from('ia_users')
+      .from('user_profiles')
       .select('is_active')
-      .eq('stable_id', user.userId as any)
+      .eq('user_id', user.userId as any)
       .single();
 
     if (!userProfile || !('is_active' in userProfile) || !userProfile.is_active) {
