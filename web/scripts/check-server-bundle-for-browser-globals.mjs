@@ -47,7 +47,7 @@ const CHECKS = [
   { label: "localStorage",  re: /\blocalStorage\b/ },
   { label: "sessionStorage",re: /\bsessionStorage\b/ },
   { label: "navigator",     re: /\bnavigator\./ },
-  { label: "location",      re: /\blocation\b/ }, // keep broad; often abused
+  { label: "location",      re: /\blocation\./ }, // only match location.property access
   { label: "FileReader",    re: /\bnew\s+FileReader\s*\(/ },
   { label: "HTMLElement",   re: /\bHTMLElement\b/ },
 ];

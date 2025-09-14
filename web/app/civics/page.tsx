@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { safeNavigate } from '@/lib/ssr-safe';
 
 interface District {
   id: string;
@@ -76,7 +77,7 @@ export default function CivicsPage() {
 
   const handleCandidateClick = (personId: string) => {
     // Navigate to candidate detail page
-    window.location.href = `/civics/candidates/${personId}`;
+    safeNavigate(`/civics/candidates/${personId}`);
   };
 
   return (

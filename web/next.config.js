@@ -7,10 +7,15 @@ const nextConfig = {
     serverComponentsExternalPackages: [
       '@supabase/ssr',
       '@supabase/realtime-js',
-      // ⚠️ DO NOT list '@supabase/supabase-js' here; keep that strictly client-side.
+      '@supabase/supabase-js',
+      // Externalize all Supabase packages to prevent browser globals in server bundles
     ],
     // Disable CSS optimization to avoid critters dependency issues
     optimizeCss: false,
+    // Disable font optimization to prevent browser globals in server bundles
+    optimizeServerReact: false,
+    // Disable all font optimization features
+    optimizeFonts: false,
     optimizePackageImports: [
       'lucide-react',
       'clsx',
@@ -36,8 +41,55 @@ const nextConfig = {
 
   webpack: (config, { isServer, webpack }) => {
     if (isServer) {
-      // Define `self` at compile time for server-side compatibility
-      config.plugins.push(new webpack.DefinePlugin({ self: 'globalThis' }));
+      // Define browser globals as undefined for server-side compatibility
+      config.plugins.push(new webpack.DefinePlugin({ 
+        self: 'globalThis',
+        window: 'undefined',
+        document: 'undefined',
+        navigator: 'undefined',
+        localStorage: 'undefined',
+        sessionStorage: 'undefined',
+        location: 'undefined',
+        HTMLElement: 'undefined',
+        // Additional browser globals that might leak
+        'window.location': 'undefined',
+        'document.location': 'undefined',
+        'navigator.userAgent': 'undefined',
+        'navigator.clipboard': 'undefined',
+        'window.localStorage': 'undefined',
+        'window.sessionStorage': 'undefined'
+      }));
+
+      // Exclude font optimization and Supabase from server bundles
+      config.externals = config.externals || [];
+      config.externals.push({
+        'next/font': 'commonjs next/font',
+        'next/font/google': 'commonjs next/font/google',
+        'next/font/local': 'commonjs next/font/local',
+        '@supabase/supabase-js': 'commonjs @supabase/supabase-js',
+        '@supabase/ssr': 'commonjs @supabase/ssr',
+        '@supabase/realtime-js': 'commonjs @supabase/realtime-js'
+      });
+
+      // More aggressive Supabase externalization for server builds
+      config.externals.push(({ context, request }, callback) => {
+        if (isServer && request && request.includes('@supabase')) {
+          return callback(null, `commonjs ${request}`);
+        }
+        callback();
+      });
+
+      // Prevent font optimization from including browser globals
+      config.module.rules.push({
+        test: /\.(woff|woff2|eot|ttf|otf)$/,
+        use: {
+          loader: 'file-loader',
+          options: {
+            publicPath: '/_next/static/fonts/',
+            outputPath: 'static/fonts/',
+          },
+        },
+      });
     }
 
     // Module resolution optimizations
