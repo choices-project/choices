@@ -10,6 +10,11 @@
     "noImplicitAny": false,
     "types": [],
     "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "exactOptionalPropertyTypes": true,
+    "moduleDetection": "force",
+    "verbatimModuleSyntax": true,
     "noEmit": true,
     "incremental": true,
     "module": "esnext",
@@ -23,129 +28,14 @@
       "@/*": [
         "./*"
       ],
-      "@/shared/core/*": [
-        "./shared/core/*"
-      ],
-      "@/features/*": [
-        "./features/*"
-      ],
-      "@/features/webauthn/*": [
-        "./features/webauthn/*"
-      ],
-      "@/features/pwa/*": [
-        "./features/pwa/*"
-      ],
-      "@/features/analytics/*": [
-        "./features/analytics/*"
-      ],
-      "@/features/civics/*": [
-        "./features/civics/*"
-      ],
-      "@/features/auth/*": [
-        "./features/auth/*"
-      ],
-      "@/features/polls/*": [
-        "./features/polls/*"
-      ],
-      "@/features/voting/*": [
-        "./features/voting/*"
-      ],
-      "@/features/testing/*": [
-        "./features/testing/*"
-      ],
-      "@/features/dashboard/*": [
-        "./features/dashboard/*"
-      ],
-      "@/features/landing/*": [
-        "./features/landing/*"
-      ],
-      "@/shared/*": [
-        "./shared/*"
-      ],
-      "@/shared/utils/*": [
-        "./shared/utils/*"
-      ],
       "@/lib/*": [
-        "./lib/*",
-        "./shared/utils/lib/*"
-      ],
-      "@/components/auth/*": [
-        "./features/webauthn/components/*"
-      ],
-      "@/lib/feedback-tracker": [
-        "./admin/lib/feedback-tracker"
-      ],
-      "@/lib/feature-flags": [
-        "./shared/lib/feature-flags"
-      ],
-      "@/lib/webauthn": [
-        "./features/webauthn/lib/webauthn"
-      ],
-      "@/lib/supabase-ssr-safe": [
-        "./shared/utils/lib/ssr-safe"
-      ],
-      "@/lib/auth/server-actions": [
-        "./features/auth/lib/server-actions"
-      ],
-      "@/lib/auth/session-cookies": [
-        "./features/auth/lib/session-cookies"
-      ],
-      "@/lib/real-time-news-service": [
-        "./shared/core/services/lib/real-time-news-service"
-      ],
-      "@/lib/types/guards": [
-        "./shared/utils/types/guards"
-      ],
-      "@/lib/auth-middleware": [
-        "./features/auth/lib/auth-middleware"
-      ],
-      "@/lib/services/AnalyticsService": [
-        "./shared/core/services/lib/AnalyticsService"
-      ],
-      "@/lib/device-flow": [
-        "./features/auth/lib/device-flow"
-      ],
-      "@/lib/database-optimizer": [
-        "./shared/core/database/lib/database-optimizer"
-      ],
-      "@/lib/rate-limit": [
-        "./shared/core/security/lib/rate-limit"
-      ],
-      "@/lib/auth-utils": [
-        "./features/auth/lib/auth-utils"
-      ],
-      "@/lib/hybrid-voting-service": [
-        "./shared/core/services/lib/hybrid-voting-service"
-      ],
-      "@/lib/supabase/server": [
-        "./utils/supabase/server"
+        "./lib/*"
       ],
       "@/utils/supabase/server": [
         "./utils/supabase/server"
       ],
-      "@/lib/auth": [
-        "./features/auth/lib/auth"
-      ],
-      "@/components/PWAComponents": [
-        "./features/pwa/components/PWAComponents"
-      ],
-      "@/lib/auth/idempotency": [
-        "./features/auth/lib/idempotency"
-      ],
-      "@/lib/security/config": [
-        "./shared/core/security/lib/config"
-      ],
-      "@/shared/modules/*": [
-        "./shared/modules/*"
-      ],
-      "@/admin/*": [
-        "./admin/*"
-      ],
-      "@/dev/*": [
-        "./dev/*"
-      ],
-      "@/disabled/*": [
-        "./disabled/*"
+      "@/lib/supabase/server": [
+        "./utils/supabase/server"
       ]
     },
     "plugins": [

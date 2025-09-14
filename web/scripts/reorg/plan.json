@@ -1,0 +1,241 @@
+{
+  "reorganization": {
+    "description": "Expert-refined reorganization plan for clean, maintainable architecture",
+    "version": "1.0.0",
+    "safety": {
+      "createBranch": true,
+      "backupBefore": true,
+      "dryRunFirst": true
+    },
+    "moves": [
+      {
+        "from": "shared/core/security/lib/config.ts",
+        "to": "lib/core/security/config.ts",
+        "reason": "Core security configuration"
+      },
+      {
+        "from": "shared/core/security/lib/rate-limit.ts",
+        "to": "lib/core/security/rate-limit.ts",
+        "reason": "Core rate limiting functionality"
+      },
+      {
+        "from": "shared/lib/feature-flags.ts",
+        "to": "lib/core/feature-flags.ts",
+        "reason": "Core feature flag system"
+      },
+      {
+        "from": "features/auth/lib/auth-middleware.ts",
+        "to": "lib/core/auth/middleware.ts",
+        "reason": "Core authentication middleware"
+      },
+      {
+        "from": "features/auth/lib/auth-utils.ts",
+        "to": "lib/core/auth/utils.ts",
+        "reason": "Core authentication utilities"
+      },
+      {
+        "from": "features/auth/lib/auth.ts",
+        "to": "lib/core/auth/auth.ts",
+        "reason": "Core authentication system"
+      },
+      {
+        "from": "features/auth/lib/server-actions.ts",
+        "to": "lib/core/auth/server-actions.ts",
+        "reason": "Core auth server actions"
+      },
+      {
+        "from": "features/auth/lib/session-cookies.ts",
+        "to": "lib/core/auth/session-cookies.ts",
+        "reason": "Core session management"
+      },
+      {
+        "from": "features/auth/lib/device-flow.ts",
+        "to": "lib/core/auth/device-flow.ts",
+        "reason": "Core device flow authentication"
+      },
+      {
+        "from": "features/auth/lib/idempotency.ts",
+        "to": "lib/core/auth/idempotency.ts",
+        "reason": "Core auth idempotency"
+      },
+      {
+        "from": "shared/core/services/lib/AnalyticsService.ts",
+        "to": "lib/core/services/analytics.ts",
+        "reason": "Core analytics service"
+      },
+      {
+        "from": "shared/core/services/lib/real-time-news-service.ts",
+        "to": "lib/core/services/real-time-news.ts",
+        "reason": "Core real-time news service"
+      },
+      {
+        "from": "shared/core/services/lib/hybrid-voting-service.ts",
+        "to": "lib/core/services/hybrid-voting.ts",
+        "reason": "Core hybrid voting service"
+      },
+      {
+        "from": "shared/core/database/lib/database-optimizer.ts",
+        "to": "lib/core/database/optimizer.ts",
+        "reason": "Core database optimization"
+      },
+      {
+        "from": "shared/utils/types/guards.ts",
+        "to": "lib/core/types/guards.ts",
+        "reason": "Core type guards"
+      },
+      {
+        "from": "admin/lib/feedback-tracker.ts",
+        "to": "lib/admin/feedback-tracker.ts",
+        "reason": "Admin feedback tracking"
+      },
+      {
+        "from": "admin/lib/admin-hooks.ts",
+        "to": "lib/admin/hooks.ts",
+        "reason": "Admin hooks"
+      },
+      {
+        "from": "admin/lib/admin-store.ts",
+        "to": "lib/admin/store.ts",
+        "reason": "Admin state management"
+      },
+      {
+        "from": "admin/lib/mock-data.ts",
+        "to": "lib/admin/mock-data.ts",
+        "reason": "Admin mock data"
+      },
+      {
+        "from": "admin/lib/real-time-service.ts",
+        "to": "lib/admin/real-time-service.ts",
+        "reason": "Admin real-time service"
+      },
+      {
+        "from": "features/webauthn/lib/webauthn.ts",
+        "to": "lib/shared/webauthn.ts",
+        "reason": "Shared WebAuthn functionality"
+      },
+      {
+        "from": "features/pwa/components/PWAComponents.tsx",
+        "to": "lib/shared/pwa-components.tsx",
+        "reason": "Shared PWA components"
+      },
+      {
+        "from": "features/pwa/lib/pwa-utils.ts",
+        "to": "lib/shared/pwa-utils.ts",
+        "reason": "Shared PWA utilities"
+      }
+    ],
+    "importUpdates": [
+      {
+        "pattern": "@/shared/core/security/lib/config",
+        "replacement": "@/lib/core/security/config"
+      },
+      {
+        "pattern": "@/shared/core/security/lib/rate-limit",
+        "replacement": "@/lib/core/security/rate-limit"
+      },
+      {
+        "pattern": "@/shared/lib/feature-flags",
+        "replacement": "@/lib/core/feature-flags"
+      },
+      {
+        "pattern": "@/features/auth/lib/auth-middleware",
+        "replacement": "@/lib/core/auth/middleware"
+      },
+      {
+        "pattern": "@/features/auth/lib/auth-utils",
+        "replacement": "@/lib/core/auth/utils"
+      },
+      {
+        "pattern": "@/features/auth/lib/auth",
+        "replacement": "@/lib/core/auth/auth"
+      },
+      {
+        "pattern": "@/features/auth/lib/server-actions",
+        "replacement": "@/lib/core/auth/server-actions"
+      },
+      {
+        "pattern": "@/features/auth/lib/session-cookies",
+        "replacement": "@/lib/core/auth/session-cookies"
+      },
+      {
+        "pattern": "@/features/auth/lib/device-flow",
+        "replacement": "@/lib/core/auth/device-flow"
+      },
+      {
+        "pattern": "@/features/auth/lib/idempotency",
+        "replacement": "@/lib/core/auth/idempotency"
+      },
+      {
+        "pattern": "@/lib/services/AnalyticsService",
+        "replacement": "@/lib/core/services/analytics"
+      },
+      {
+        "pattern": "@/lib/real-time-news-service",
+        "replacement": "@/lib/core/services/real-time-news"
+      },
+      {
+        "pattern": "@/lib/hybrid-voting-service",
+        "replacement": "@/lib/core/services/hybrid-voting"
+      },
+      {
+        "pattern": "@/lib/database-optimizer",
+        "replacement": "@/lib/core/database/optimizer"
+      },
+      {
+        "pattern": "@/lib/types/guards",
+        "replacement": "@/lib/core/types/guards"
+      },
+      {
+        "pattern": "@/lib/feedback-tracker",
+        "replacement": "@/lib/admin/feedback-tracker"
+      },
+      {
+        "pattern": "@/lib/webauthn",
+        "replacement": "@/lib/shared/webauthn"
+      },
+      {
+        "pattern": "@/components/PWAComponents",
+        "replacement": "@/lib/shared/pwa-components"
+      }
+    ],
+    "barrelExports": [
+      {
+        "file": "lib/index.ts",
+        "exports": [
+          "export * from './core'",
+          "export * from './admin'",
+          "export * from './shared'"
+        ]
+      },
+      {
+        "file": "lib/core/index.ts",
+        "exports": [
+          "export * from './auth'",
+          "export * from './security'",
+          "export * from './services'",
+          "export * from './database'",
+          "export * from './types'",
+          "export * from './feature-flags'"
+        ]
+      },
+      {
+        "file": "lib/admin/index.ts",
+        "exports": [
+          "export * from './feedback-tracker'",
+          "export * from './hooks'",
+          "export * from './store'",
+          "export * from './mock-data'",
+          "export * from './real-time-service'"
+        ]
+      },
+      {
+        "file": "lib/shared/index.ts",
+        "exports": [
+          "export * from './webauthn'",
+          "export * from './pwa-components'",
+          "export * from './pwa-utils'"
+        ]
+      }
+    ]
+  }
+}

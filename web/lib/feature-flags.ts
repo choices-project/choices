@@ -1,3 +1,8 @@
+// Production safeguard for temporary stub
+if (process.env.NODE_ENV === 'production') {
+  console.warn('[feature-flags] Using temporary stub in production. Replace with real impl.');
+}
+
 /**
  * Feature Flags
  * 

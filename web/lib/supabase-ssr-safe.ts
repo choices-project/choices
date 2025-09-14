@@ -1,3 +1,8 @@
+// Production safeguard for temporary stub
+if (process.env.NODE_ENV === 'production') {
+  console.warn('[supabase-ssr-safe] Using temporary stub in production. Replace with real impl.');
+}
+
 /**
  * SSR-Safe Supabase Client
  * 
