@@ -42,6 +42,7 @@ stops = [
   ".vercel/output/"
 ]
 
+
 # Skip documentation files that contain example configurations
 files = [
   "SECURITY_HARDENING_IMPLEMENTATION_COMPLETE.md",
@@ -60,7 +61,9 @@ commits = [
 [[rules]]
 id = "choices-specific"
 description = "Key-like values adjacent to Choices/Supabase/Vercel identifiers"
+
 regex = "choices_specific"
+
 tags = ["project", "context", "secret"]
 reportEntropy = true
 
