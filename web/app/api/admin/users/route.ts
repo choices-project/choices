@@ -1,25 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { logger } from '@/lib/logger';
-import { withAuth, createRateLimitMiddleware, combineMiddleware } from '@/lib/auth-middleware'
+import { requireAdminOr401 } from '@/lib/admin-auth';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 export const dynamic = 'force-dynamic'
 
-// Rate limiting: 100 requests per minute per IP
-const rateLimitMiddleware = createRateLimitMiddleware({
-  maxRequests: 100,
-  windowMs: 60 * 1000
-})
-
-// Combined middleware: rate limiting + admin auth
-const middleware = combineMiddleware(rateLimitMiddleware)
-
-export const GET = withAuth(async (request: NextRequest, context) => {
+export async function GET(request: NextRequest) {
+  // Single admin gate - returns 401 if not admin
+  const authGate = await requireAdminOr401()
+  if (authGate) return authGate
+  
   try {
-    // Apply rate limiting
-    const rateLimitResult = await middleware(request)
-    if (rateLimitResult) {
-      return rateLimitResult
-    }
+    const supabase = await getSupabaseServerClient();
 
     // Get query parameters
     const { searchParams } = new URL(request.url)
@@ -29,13 +21,13 @@ export const GET = withAuth(async (request: NextRequest, context) => {
     const trustTier = searchParams.get('trust_tier') || ''
 
     // Build query
-    let query = context.supabase
+    let query = supabase
       .from('user_profiles')
       .select(`
         user_id,
         username,
         email,
-        trust_tier,
+        is_admin,
         created_at,
         updated_at,
         last_login_at
@@ -47,8 +39,11 @@ export const GET = withAuth(async (request: NextRequest, context) => {
       query = query.or(`username.ilike.%${search}%,email.ilike.%${search}%`)
     }
 
-    if (trustTier) {
-      query = query.eq('trust_tier', trustTier)
+    // Filter by admin status instead of trust_tier
+    if (trustTier === 'admin') {
+      query = query.eq('is_admin', true)
+    } else if (trustTier === 'user') {
+      query = query.eq('is_admin', false)
     }
 
     // Apply pagination
@@ -86,15 +81,15 @@ export const GET = withAuth(async (request: NextRequest, context) => {
       { status: 500 }
     )
   }
-}, { requireAdmin: true })
+}
 
-export const PUT = withAuth(async (request: NextRequest, context) => {
+export async function PUT(request: NextRequest) {
+  // Single admin gate - returns 401 if not admin
+  const authGate = await requireAdminOr401()
+  if (authGate) return authGate
+  
   try {
-    // Apply rate limiting
-    const rateLimitResult = await middleware(request)
-    if (rateLimitResult) {
-      return rateLimitResult
-    }
+    const supabase = await getSupabaseServerClient();
 
     const body = await request.json()
     const { userId, updates } = body
@@ -107,7 +102,7 @@ export const PUT = withAuth(async (request: NextRequest, context) => {
     }
 
     // Validate updates
-    const allowedFields = ['trust_tier', 'username']
+    const allowedFields = ['is_admin', 'username']
     const validUpdates: any = {}
     
     for (const [key, value] of Object.entries(updates)) {
@@ -124,7 +119,7 @@ export const PUT = withAuth(async (request: NextRequest, context) => {
     }
 
     // Update user profile
-    const { error: updateError } = await context.supabase
+    const { error: updateError } = await supabase
       .from('user_profiles')
       .update({
         ...validUpdates,
@@ -154,4 +149,4 @@ export const PUT = withAuth(async (request: NextRequest, context) => {
       { status: 500 }
     )
   }
-}, { requireAdmin: true })
+}

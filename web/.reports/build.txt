@@ -1,0 +1,1299 @@
+ ⚠ Invalid next.config.js options detected: 
+ ⚠     Unrecognized key(s) in object: 'optimizeFonts' at "experimental"
+ ⚠ See more info here: https://nextjs.org/docs/messages/invalid-next-config
+  ▲ Next.js 14.2.32
+  - Environments: .env.local
+  - Experiments (use with caution):
+    · optimizeServerReact
+
+   Creating an optimized production build ...
+   Disabled SWC as replacement for Babel because of custom Babel configuration "babel.config.js" https://nextjs.org/docs/messages/swc-disabled
+ ⚠ Compiled with warnings
+
+./app/login/page.tsx
+Attempted import error: 'safeBrowserAccess' is not exported from '@/lib/ssr-safe' (imported as 'safeBrowserAccess').
+
+Import trace for requested module:
+./app/login/page.tsx
+
+./app/login/page.tsx
+Attempted import error: 'safeBrowserAccess' is not exported from '@/lib/ssr-safe' (imported as 'safeBrowserAccess').
+
+Import trace for requested module:
+./app/login/page.tsx
+
+./app/login/page.tsx
+Attempted import error: 'safeBrowserAccess' is not exported from '@/lib/ssr-safe' (imported as 'safeBrowserAccess').
+
+Import trace for requested module:
+./app/login/page.tsx
+
+./hooks/useFeatureFlags.ts
+Attempted import error: 'featureFlagManager' is not exported from '@/lib/feature-flags' (imported as 'featureFlagManager').
+
+Import trace for requested module:
+./hooks/useFeatureFlags.ts
+./hooks/useAnalytics.ts
+./app/analytics/page.tsx
+
+./hooks/useFeatureFlags.ts
+Attempted import error: 'featureFlagManager' is not exported from '@/lib/feature-flags' (imported as 'featureFlagManager').
+
+Import trace for requested module:
+./hooks/useFeatureFlags.ts
+./hooks/useAnalytics.ts
+./app/analytics/page.tsx
+
+./hooks/useFeatureFlags.ts
+Attempted import error: 'featureFlagManager' is not exported from '@/lib/feature-flags' (imported as 'featureFlagManager').
+
+Import trace for requested module:
+./hooks/useFeatureFlags.ts
+./hooks/useAnalytics.ts
+./app/analytics/page.tsx
+
+./hooks/useFeatureFlags.ts
+Attempted import error: 'featureFlagManager' is not exported from '@/lib/feature-flags' (imported as 'featureFlagManager').
+
+Import trace for requested module:
+./hooks/useFeatureFlags.ts
+./hooks/useAnalytics.ts
+./app/analytics/page.tsx
+
+./hooks/useFeatureFlags.ts
+Attempted import error: 'featureFlagManager' is not exported from '@/lib/feature-flags' (imported as 'featureFlagManager').
+
+Import trace for requested module:
+./hooks/useFeatureFlags.ts
+./hooks/useAnalytics.ts
+./app/analytics/page.tsx
+
+./hooks/useFeatureFlags.ts
+Attempted import error: 'featureFlagManager' is not exported from '@/lib/feature-flags' (imported as 'featureFlagManager').
+
+Import trace for requested module:
+./hooks/useFeatureFlags.ts
+./hooks/useAnalytics.ts
+./app/analytics/page.tsx
+
+./hooks/useFeatureFlags.ts
+Attempted import error: 'featureFlagManager' is not exported from '@/lib/feature-flags' (imported as 'featureFlagManager').
+
+Import trace for requested module:
+./hooks/useFeatureFlags.ts
+./hooks/useAnalytics.ts
+./app/analytics/page.tsx
+
+./hooks/useFeatureFlags.ts
+Attempted import error: 'featureFlagManager' is not exported from '@/lib/feature-flags' (imported as 'featureFlagManager').
+
+Import trace for requested module:
+./hooks/useFeatureFlags.ts
+./hooks/useAnalytics.ts
+./app/analytics/page.tsx
+
+./hooks/useFeatureFlags.ts
+Attempted import error: 'featureFlagManager' is not exported from '@/lib/feature-flags' (imported as 'featureFlagManager').
+
+Import trace for requested module:
+./hooks/useFeatureFlags.ts
+./hooks/useAnalytics.ts
+./app/analytics/page.tsx
+
+./hooks/useFeatureFlags.ts
+Attempted import error: 'featureFlagManager' is not exported from '@/lib/feature-flags' (imported as 'featureFlagManager').
+
+Import trace for requested module:
+./hooks/useFeatureFlags.ts
+./hooks/useAnalytics.ts
+./app/analytics/page.tsx
+
+./hooks/useFeatureFlags.ts
+Attempted import error: 'featureFlagManager' is not exported from '@/lib/feature-flags' (imported as 'featureFlagManager').
+
+Import trace for requested module:
+./hooks/useFeatureFlags.ts
+./hooks/useAnalytics.ts
+./app/analytics/page.tsx
+
+./hooks/useFeatureFlags.ts
+Attempted import error: 'featureFlagManager' is not exported from '@/lib/feature-flags' (imported as 'featureFlagManager').
+
+Import trace for requested module:
+./hooks/useFeatureFlags.ts
+./hooks/useAnalytics.ts
+./app/analytics/page.tsx
+
+./hooks/useFeatureFlags.ts
+Attempted import error: 'featureFlagManager' is not exported from '@/lib/feature-flags' (imported as 'featureFlagManager').
+
+Import trace for requested module:
+./hooks/useFeatureFlags.ts
+./hooks/useAnalytics.ts
+./app/analytics/page.tsx
+
+./hooks/useFeatureFlags.ts
+Attempted import error: 'featureFlagManager' is not exported from '@/lib/feature-flags' (imported as 'featureFlagManager').
+
+Import trace for requested module:
+./hooks/useFeatureFlags.ts
+./hooks/useAnalytics.ts
+./app/analytics/page.tsx
+
+./hooks/useFeatureFlags.ts
+Attempted import error: 'featureFlagManager' is not exported from '@/lib/feature-flags' (imported as 'featureFlagManager').
+
+Import trace for requested module:
+./hooks/useFeatureFlags.ts
+./hooks/useAnalytics.ts
+./app/analytics/page.tsx
+
+./hooks/useFeatureFlags.ts
+Attempted import error: 'enableFeature' is not exported from '@/lib/feature-flags' (imported as '_enableFeature').
+
+Import trace for requested module:
+./hooks/useFeatureFlags.ts
+./hooks/useAnalytics.ts
+./app/analytics/page.tsx
+
+./hooks/useFeatureFlags.ts
+Attempted import error: 'disableFeature' is not exported from '@/lib/feature-flags' (imported as '_disableFeature').
+
+Import trace for requested module:
+./hooks/useFeatureFlags.ts
+./hooks/useAnalytics.ts
+./app/analytics/page.tsx
+
+./hooks/useFeatureFlags.ts
+Attempted import error: 'toggleFeature' is not exported from '@/lib/feature-flags' (imported as '_toggleFeature').
+
+Import trace for requested module:
+./hooks/useFeatureFlags.ts
+./hooks/useAnalytics.ts
+./app/analytics/page.tsx
+
+./hooks/useFeatureFlags.ts
+Attempted import error: 'getFeatureFlag' is not exported from '@/lib/feature-flags' (imported as '_getFeatureFlag').
+
+Import trace for requested module:
+./hooks/useFeatureFlags.ts
+./hooks/useAnalytics.ts
+./app/analytics/page.tsx
+
+./hooks/useFeatureFlags.ts
+Attempted import error: 'getAllFeatureFlags' is not exported from '@/lib/feature-flags' (imported as '_getAllFeatureFlags').
+
+Import trace for requested module:
+./hooks/useFeatureFlags.ts
+./hooks/useAnalytics.ts
+./app/analytics/page.tsx
+
+./hooks/useSupabaseAuth.ts
+Attempted import error: 'createBrowserClientSafe' is not exported from '@/lib/supabase-ssr-safe' (imported as 'createBrowserClientSafe').
+
+Import trace for requested module:
+./hooks/useSupabaseAuth.ts
+./components/GlobalNavigation.tsx
+
+entrypoint size limit: The following entrypoint(s) combined asset size exceeds the recommended limit (500 KiB). This can impact web performance.
+Entrypoints:
+  main (1.13 MiB)
+      static/chunks/webpack-fa267c7a2b94ff56.js
+      static/chunks/react-7dff69360f18e456.js
+      static/chunks/vendors-9620f38d-d62e3b8ad31176ad.js
+      static/chunks/vendors-bc050c32-65b73ed3204b59ef.js
+      static/chunks/vendors-e9587ec5-8846dcb96e1867df.js
+      static/chunks/vendors-dfc0d3ba-4292ca8ad4adf556.js
+      static/chunks/vendors-d929e15b-0787b8916e4eae1d.js
+      static/chunks/vendors-7ec938a2-e5d428b25848fba9.js
+      static/chunks/vendors-b49fab05-82589a8b11dc3300.js
+      static/chunks/vendors-6b948b9f-6d11ffd215733fab.js
+      static/chunks/vendors-f05a72fc-46bac85ffe29b1b7.js
+      static/chunks/vendors-74690118-ae9b01d2cbe37ba5.js
+      static/chunks/vendors-45adea4d-bf68d2407b78078b.js
+      static/chunks/vendors-3d3a1b23-cb4738dc93116136.js
+      static/chunks/vendors-fc2d4738-107162946fef346d.js
+      static/chunks/vendors-4c7823de-36c207f4bc99e163.js
+      static/chunks/vendors-359a1f64-5792e9f519529ee7.js
+      static/chunks/vendors-70493527-a0fc5e1698ec9e84.js
+      static/chunks/vendors-118761f3-c0a62a0285c7e8bc.js
+      static/chunks/vendors-c1d059fa-62a6396754059e38.js
+      static/chunks/vendors-d7c15829-5d4f7f1216772fe5.js
+      static/chunks/vendors-cfb98476-403c4af1a8ae3ca0.js
+      static/chunks/vendors-a6f90180-57cd09c9a09179c3.js
+      static/chunks/vendors-d91c2bd6-fde636d6d4785e70.js
+      static/chunks/vendors-fa70753b-ef3106ceef867514.js
+      static/chunks/vendors-09e6b459-6a9a03c8d64b3e60.js
+      static/chunks/vendors-2f8e3928-bccc3bc2e4ceb60f.js
+      static/chunks/vendors-034d6e40-f7b1c1d8cf1059ca.js
+      static/chunks/vendors-5497cdea-607ef06d03ad9cbf.js
+      static/chunks/vendors-8cbd2506-7b83275312f21065.js
+      static/chunks/vendors-eb2fbf4c-7cefc3d1ac715d32.js
+      static/chunks/main-a624b6de7d384925.js
+  main-app (1 MiB)
+      static/chunks/webpack-fa267c7a2b94ff56.js
+      static/chunks/vendors-9620f38d-d62e3b8ad31176ad.js
+      static/chunks/vendors-bc050c32-65b73ed3204b59ef.js
+      static/chunks/vendors-e9587ec5-8846dcb96e1867df.js
+      static/chunks/vendors-dfc0d3ba-4292ca8ad4adf556.js
+      static/chunks/vendors-d929e15b-0787b8916e4eae1d.js
+      static/chunks/vendors-7ec938a2-e5d428b25848fba9.js
+      static/chunks/vendors-b49fab05-82589a8b11dc3300.js
+      static/chunks/vendors-6b948b9f-6d11ffd215733fab.js
+      static/chunks/vendors-f05a72fc-46bac85ffe29b1b7.js
+      static/chunks/vendors-74690118-ae9b01d2cbe37ba5.js
+      static/chunks/vendors-45adea4d-bf68d2407b78078b.js
+      static/chunks/vendors-3d3a1b23-cb4738dc93116136.js
+      static/chunks/vendors-fc2d4738-107162946fef346d.js
+      static/chunks/vendors-4c7823de-36c207f4bc99e163.js
+      static/chunks/vendors-359a1f64-5792e9f519529ee7.js
+      static/chunks/vendors-70493527-a0fc5e1698ec9e84.js
+      static/chunks/vendors-118761f3-c0a62a0285c7e8bc.js
+      static/chunks/vendors-c1d059fa-62a6396754059e38.js
+      static/chunks/vendors-d7c15829-5d4f7f1216772fe5.js
+      static/chunks/vendors-cfb98476-403c4af1a8ae3ca0.js
+      static/chunks/vendors-a6f90180-57cd09c9a09179c3.js
+      static/chunks/vendors-d91c2bd6-fde636d6d4785e70.js
+      static/chunks/vendors-fa70753b-ef3106ceef867514.js
+      static/chunks/vendors-09e6b459-6a9a03c8d64b3e60.js
+      static/chunks/vendors-2f8e3928-bccc3bc2e4ceb60f.js
+      static/chunks/vendors-034d6e40-f7b1c1d8cf1059ca.js
+      static/chunks/vendors-5497cdea-607ef06d03ad9cbf.js
+      static/chunks/vendors-8cbd2506-7b83275312f21065.js
+      static/chunks/vendors-eb2fbf4c-7cefc3d1ac715d32.js
+      static/chunks/main-app-bf39b3c64c7ff2c4.js
+  pages/_error (1 MiB)
+      static/chunks/vendors-9620f38d-d62e3b8ad31176ad.js
+      static/chunks/vendors-bc050c32-65b73ed3204b59ef.js
+      static/chunks/vendors-e9587ec5-8846dcb96e1867df.js
+      static/chunks/vendors-dfc0d3ba-4292ca8ad4adf556.js
+      static/chunks/vendors-d929e15b-0787b8916e4eae1d.js
+      static/chunks/vendors-7ec938a2-e5d428b25848fba9.js
+      static/chunks/vendors-b49fab05-82589a8b11dc3300.js
+      static/chunks/vendors-6b948b9f-6d11ffd215733fab.js
+      static/chunks/vendors-f05a72fc-46bac85ffe29b1b7.js
+      static/chunks/vendors-74690118-ae9b01d2cbe37ba5.js
+      static/chunks/vendors-45adea4d-bf68d2407b78078b.js
+      static/chunks/vendors-3d3a1b23-cb4738dc93116136.js
+      static/chunks/vendors-fc2d4738-107162946fef346d.js
+      static/chunks/vendors-4c7823de-36c207f4bc99e163.js
+      static/chunks/vendors-359a1f64-5792e9f519529ee7.js
+      static/chunks/vendors-70493527-a0fc5e1698ec9e84.js
+      static/chunks/vendors-118761f3-c0a62a0285c7e8bc.js
+      static/chunks/vendors-c1d059fa-62a6396754059e38.js
+      static/chunks/vendors-d7c15829-5d4f7f1216772fe5.js
+      static/chunks/vendors-cfb98476-403c4af1a8ae3ca0.js
+      static/chunks/vendors-a6f90180-57cd09c9a09179c3.js
+      static/chunks/vendors-d91c2bd6-fde636d6d4785e70.js
+      static/chunks/vendors-fa70753b-ef3106ceef867514.js
+      static/chunks/vendors-09e6b459-6a9a03c8d64b3e60.js
+      static/chunks/vendors-2f8e3928-bccc3bc2e4ceb60f.js
+      static/chunks/vendors-034d6e40-f7b1c1d8cf1059ca.js
+      static/chunks/vendors-5497cdea-607ef06d03ad9cbf.js
+      static/chunks/vendors-8cbd2506-7b83275312f21065.js
+      static/chunks/vendors-eb2fbf4c-7cefc3d1ac715d32.js
+      static/chunks/pages/_error-846f15fefb360d67.js
+  pages/_app (1 MiB)
+      static/chunks/vendors-9620f38d-d62e3b8ad31176ad.js
+      static/chunks/vendors-bc050c32-65b73ed3204b59ef.js
+      static/chunks/vendors-e9587ec5-8846dcb96e1867df.js
+      static/chunks/vendors-dfc0d3ba-4292ca8ad4adf556.js
+      static/chunks/vendors-d929e15b-0787b8916e4eae1d.js
+      static/chunks/vendors-7ec938a2-e5d428b25848fba9.js
+      static/chunks/vendors-b49fab05-82589a8b11dc3300.js
+      static/chunks/vendors-6b948b9f-6d11ffd215733fab.js
+      static/chunks/vendors-f05a72fc-46bac85ffe29b1b7.js
+      static/chunks/vendors-74690118-ae9b01d2cbe37ba5.js
+      static/chunks/vendors-45adea4d-bf68d2407b78078b.js
+      static/chunks/vendors-3d3a1b23-cb4738dc93116136.js
+      static/chunks/vendors-fc2d4738-107162946fef346d.js
+      static/chunks/vendors-4c7823de-36c207f4bc99e163.js
+      static/chunks/vendors-359a1f64-5792e9f519529ee7.js
+      static/chunks/vendors-70493527-a0fc5e1698ec9e84.js
+      static/chunks/vendors-118761f3-c0a62a0285c7e8bc.js
+      static/chunks/vendors-c1d059fa-62a6396754059e38.js
+      static/chunks/vendors-d7c15829-5d4f7f1216772fe5.js
+      static/chunks/vendors-cfb98476-403c4af1a8ae3ca0.js
+      static/chunks/vendors-a6f90180-57cd09c9a09179c3.js
+      static/chunks/vendors-d91c2bd6-fde636d6d4785e70.js
+      static/chunks/vendors-fa70753b-ef3106ceef867514.js
+      static/chunks/vendors-09e6b459-6a9a03c8d64b3e60.js
+      static/chunks/vendors-2f8e3928-bccc3bc2e4ceb60f.js
+      static/chunks/vendors-034d6e40-f7b1c1d8cf1059ca.js
+      static/chunks/vendors-5497cdea-607ef06d03ad9cbf.js
+      static/chunks/vendors-8cbd2506-7b83275312f21065.js
+      static/chunks/vendors-eb2fbf4c-7cefc3d1ac715d32.js
+      static/chunks/pages/_app-7416769672b4c44c.js
+  app/not-found (1 MiB)
+      static/chunks/vendors-9620f38d-d62e3b8ad31176ad.js
+      static/chunks/vendors-bc050c32-65b73ed3204b59ef.js
+      static/chunks/vendors-e9587ec5-8846dcb96e1867df.js
+      static/chunks/vendors-dfc0d3ba-4292ca8ad4adf556.js
+      static/chunks/vendors-d929e15b-0787b8916e4eae1d.js
+      static/chunks/vendors-7ec938a2-e5d428b25848fba9.js
+      static/chunks/vendors-b49fab05-82589a8b11dc3300.js
+      static/chunks/vendors-6b948b9f-6d11ffd215733fab.js
+      static/chunks/vendors-f05a72fc-46bac85ffe29b1b7.js
+      static/chunks/vendors-74690118-ae9b01d2cbe37ba5.js
+      static/chunks/vendors-45adea4d-bf68d2407b78078b.js
+      static/chunks/vendors-3d3a1b23-cb4738dc93116136.js
+      static/chunks/vendors-fc2d4738-107162946fef346d.js
+      static/chunks/vendors-4c7823de-36c207f4bc99e163.js
+      static/chunks/vendors-359a1f64-5792e9f519529ee7.js
+      static/chunks/vendors-70493527-a0fc5e1698ec9e84.js
+      static/chunks/vendors-118761f3-c0a62a0285c7e8bc.js
+      static/chunks/vendors-c1d059fa-62a6396754059e38.js
+      static/chunks/vendors-d7c15829-5d4f7f1216772fe5.js
+      static/chunks/vendors-cfb98476-403c4af1a8ae3ca0.js
+      static/chunks/vendors-a6f90180-57cd09c9a09179c3.js
+      static/chunks/vendors-d91c2bd6-fde636d6d4785e70.js
+      static/chunks/vendors-fa70753b-ef3106ceef867514.js
+      static/chunks/vendors-09e6b459-6a9a03c8d64b3e60.js
+      static/chunks/vendors-2f8e3928-bccc3bc2e4ceb60f.js
+      static/chunks/vendors-034d6e40-f7b1c1d8cf1059ca.js
+      static/chunks/vendors-5497cdea-607ef06d03ad9cbf.js
+      static/chunks/vendors-8cbd2506-7b83275312f21065.js
+      static/chunks/vendors-eb2fbf4c-7cefc3d1ac715d32.js
+      static/chunks/app/not-found-efd7e259a103acab.js
+  app/layout (1.16 MiB)
+      static/css/6f7dbab6b26be3b9.css
+      static/chunks/supabase-bcf87ace7246751a.js
+      static/chunks/vendors-9620f38d-d62e3b8ad31176ad.js
+      static/chunks/vendors-bc050c32-65b73ed3204b59ef.js
+      static/chunks/vendors-e9587ec5-8846dcb96e1867df.js
+      static/chunks/vendors-dfc0d3ba-4292ca8ad4adf556.js
+      static/chunks/vendors-d929e15b-0787b8916e4eae1d.js
+      static/chunks/vendors-7ec938a2-e5d428b25848fba9.js
+      static/chunks/vendors-b49fab05-82589a8b11dc3300.js
+      static/chunks/vendors-6b948b9f-6d11ffd215733fab.js
+      static/chunks/vendors-f05a72fc-46bac85ffe29b1b7.js
+      static/chunks/vendors-74690118-ae9b01d2cbe37ba5.js
+      static/chunks/vendors-45adea4d-bf68d2407b78078b.js
+      static/chunks/vendors-3d3a1b23-cb4738dc93116136.js
+      static/chunks/vendors-fc2d4738-107162946fef346d.js
+      static/chunks/vendors-4c7823de-36c207f4bc99e163.js
+      static/chunks/vendors-359a1f64-5792e9f519529ee7.js
+      static/chunks/vendors-70493527-a0fc5e1698ec9e84.js
+      static/chunks/vendors-118761f3-c0a62a0285c7e8bc.js
+      static/chunks/vendors-c1d059fa-62a6396754059e38.js
+      static/chunks/vendors-d7c15829-5d4f7f1216772fe5.js
+      static/chunks/vendors-cfb98476-403c4af1a8ae3ca0.js
+      static/chunks/vendors-a6f90180-57cd09c9a09179c3.js
+      static/chunks/vendors-d91c2bd6-fde636d6d4785e70.js
+      static/chunks/vendors-fa70753b-ef3106ceef867514.js
+      static/chunks/vendors-09e6b459-6a9a03c8d64b3e60.js
+      static/chunks/vendors-2f8e3928-bccc3bc2e4ceb60f.js
+      static/chunks/vendors-034d6e40-f7b1c1d8cf1059ca.js
+      static/chunks/vendors-5497cdea-607ef06d03ad9cbf.js
+      static/chunks/vendors-8cbd2506-7b83275312f21065.js
+      static/chunks/vendors-eb2fbf4c-7cefc3d1ac715d32.js
+      static/chunks/common-eb2a717cda58c7cf.js
+      static/chunks/app/layout-17457309de4397e5.js
+  app/account/delete/page (1.09 MiB)
+      static/chunks/supabase-bcf87ace7246751a.js
+      static/chunks/vendors-9620f38d-d62e3b8ad31176ad.js
+      static/chunks/vendors-bc050c32-65b73ed3204b59ef.js
+      static/chunks/vendors-e9587ec5-8846dcb96e1867df.js
+      static/chunks/vendors-dfc0d3ba-4292ca8ad4adf556.js
+      static/chunks/vendors-d929e15b-0787b8916e4eae1d.js
+      static/chunks/vendors-7ec938a2-e5d428b25848fba9.js
+      static/chunks/vendors-b49fab05-82589a8b11dc3300.js
+      static/chunks/vendors-6b948b9f-6d11ffd215733fab.js
+      static/chunks/vendors-f05a72fc-46bac85ffe29b1b7.js
+      static/chunks/vendors-74690118-ae9b01d2cbe37ba5.js
+      static/chunks/vendors-45adea4d-bf68d2407b78078b.js
+      static/chunks/vendors-3d3a1b23-cb4738dc93116136.js
+      static/chunks/vendors-fc2d4738-107162946fef346d.js
+      static/chunks/vendors-4c7823de-36c207f4bc99e163.js
+      static/chunks/vendors-359a1f64-5792e9f519529ee7.js
+      static/chunks/vendors-70493527-a0fc5e1698ec9e84.js
+      static/chunks/vendors-118761f3-c0a62a0285c7e8bc.js
+      static/chunks/vendors-c1d059fa-62a6396754059e38.js
+      static/chunks/vendors-d7c15829-5d4f7f1216772fe5.js
+      static/chunks/vendors-cfb98476-403c4af1a8ae3ca0.js
+      static/chunks/vendors-a6f90180-57cd09c9a09179c3.js
+      static/chunks/vendors-d91c2bd6-fde636d6d4785e70.js
+      static/chunks/vendors-fa70753b-ef3106ceef867514.js
+      static/chunks/vendors-09e6b459-6a9a03c8d64b3e60.js
+      static/chunks/vendors-2f8e3928-bccc3bc2e4ceb60f.js
+      static/chunks/vendors-034d6e40-f7b1c1d8cf1059ca.js
+      static/chunks/vendors-5497cdea-607ef06d03ad9cbf.js
+      static/chunks/vendors-8cbd2506-7b83275312f21065.js
+      static/chunks/vendors-eb2fbf4c-7cefc3d1ac715d32.js
+      static/chunks/common-eb2a717cda58c7cf.js
+      static/chunks/app/account/delete/page-2546d47c4e36600a.js
+  app/account/export/page (1.09 MiB)
+      static/chunks/supabase-bcf87ace7246751a.js
+      static/chunks/vendors-9620f38d-d62e3b8ad31176ad.js
+      static/chunks/vendors-bc050c32-65b73ed3204b59ef.js
+      static/chunks/vendors-e9587ec5-8846dcb96e1867df.js
+      static/chunks/vendors-dfc0d3ba-4292ca8ad4adf556.js
+      static/chunks/vendors-d929e15b-0787b8916e4eae1d.js
+      static/chunks/vendors-7ec938a2-e5d428b25848fba9.js
+      static/chunks/vendors-b49fab05-82589a8b11dc3300.js
+      static/chunks/vendors-6b948b9f-6d11ffd215733fab.js
+      static/chunks/vendors-f05a72fc-46bac85ffe29b1b7.js
+      static/chunks/vendors-74690118-ae9b01d2cbe37ba5.js
+      static/chunks/vendors-45adea4d-bf68d2407b78078b.js
+      static/chunks/vendors-3d3a1b23-cb4738dc93116136.js
+      static/chunks/vendors-fc2d4738-107162946fef346d.js
+      static/chunks/vendors-4c7823de-36c207f4bc99e163.js
+      static/chunks/vendors-359a1f64-5792e9f519529ee7.js
+      static/chunks/vendors-70493527-a0fc5e1698ec9e84.js
+      static/chunks/vendors-118761f3-c0a62a0285c7e8bc.js
+      static/chunks/vendors-c1d059fa-62a6396754059e38.js
+      static/chunks/vendors-d7c15829-5d4f7f1216772fe5.js
+      static/chunks/vendors-cfb98476-403c4af1a8ae3ca0.js
+      static/chunks/vendors-a6f90180-57cd09c9a09179c3.js
+      static/chunks/vendors-d91c2bd6-fde636d6d4785e70.js
+      static/chunks/vendors-fa70753b-ef3106ceef867514.js
+      static/chunks/vendors-09e6b459-6a9a03c8d64b3e60.js
+      static/chunks/vendors-2f8e3928-bccc3bc2e4ceb60f.js
+      static/chunks/vendors-034d6e40-f7b1c1d8cf1059ca.js
+      static/chunks/vendors-5497cdea-607ef06d03ad9cbf.js
+      static/chunks/vendors-8cbd2506-7b83275312f21065.js
+      static/chunks/vendors-eb2fbf4c-7cefc3d1ac715d32.js
+      static/chunks/common-eb2a717cda58c7cf.js
+      static/chunks/app/account/export/page-c9b2ad6cab758305.js
+  app/analytics/page (1.05 MiB)
+      static/chunks/vendors-9620f38d-d62e3b8ad31176ad.js
+      static/chunks/vendors-bc050c32-65b73ed3204b59ef.js
+      static/chunks/vendors-e9587ec5-8846dcb96e1867df.js
+      static/chunks/vendors-dfc0d3ba-4292ca8ad4adf556.js
+      static/chunks/vendors-d929e15b-0787b8916e4eae1d.js
+      static/chunks/vendors-7ec938a2-e5d428b25848fba9.js
+      static/chunks/vendors-b49fab05-82589a8b11dc3300.js
+      static/chunks/vendors-6b948b9f-6d11ffd215733fab.js
+      static/chunks/vendors-f05a72fc-46bac85ffe29b1b7.js
+      static/chunks/vendors-74690118-ae9b01d2cbe37ba5.js
+      static/chunks/vendors-45adea4d-bf68d2407b78078b.js
+      static/chunks/vendors-3d3a1b23-cb4738dc93116136.js
+      static/chunks/vendors-fc2d4738-107162946fef346d.js
+      static/chunks/vendors-4c7823de-36c207f4bc99e163.js
+      static/chunks/vendors-359a1f64-5792e9f519529ee7.js
+      static/chunks/vendors-70493527-a0fc5e1698ec9e84.js
+      static/chunks/vendors-118761f3-c0a62a0285c7e8bc.js
+      static/chunks/vendors-c1d059fa-62a6396754059e38.js
+      static/chunks/vendors-d7c15829-5d4f7f1216772fe5.js
+      static/chunks/vendors-cfb98476-403c4af1a8ae3ca0.js
+      static/chunks/vendors-a6f90180-57cd09c9a09179c3.js
+      static/chunks/vendors-d91c2bd6-fde636d6d4785e70.js
+      static/chunks/vendors-fa70753b-ef3106ceef867514.js
+      static/chunks/vendors-09e6b459-6a9a03c8d64b3e60.js
+      static/chunks/vendors-2f8e3928-bccc3bc2e4ceb60f.js
+      static/chunks/vendors-034d6e40-f7b1c1d8cf1059ca.js
+      static/chunks/vendors-5497cdea-607ef06d03ad9cbf.js
+      static/chunks/vendors-8cbd2506-7b83275312f21065.js
+      static/chunks/vendors-eb2fbf4c-7cefc3d1ac715d32.js
+      static/chunks/common-eb2a717cda58c7cf.js
+      static/chunks/app/analytics/page-9205f1f1f73e609b.js
+  app/auth/page (1.08 MiB)
+      static/chunks/supabase-bcf87ace7246751a.js
+      static/chunks/vendors-9620f38d-d62e3b8ad31176ad.js
+      static/chunks/vendors-bc050c32-65b73ed3204b59ef.js
+      static/chunks/vendors-e9587ec5-8846dcb96e1867df.js
+      static/chunks/vendors-dfc0d3ba-4292ca8ad4adf556.js
+      static/chunks/vendors-d929e15b-0787b8916e4eae1d.js
+      static/chunks/vendors-7ec938a2-e5d428b25848fba9.js
+      static/chunks/vendors-b49fab05-82589a8b11dc3300.js
+      static/chunks/vendors-6b948b9f-6d11ffd215733fab.js
+      static/chunks/vendors-f05a72fc-46bac85ffe29b1b7.js
+      static/chunks/vendors-74690118-ae9b01d2cbe37ba5.js
+      static/chunks/vendors-45adea4d-bf68d2407b78078b.js
+      static/chunks/vendors-3d3a1b23-cb4738dc93116136.js
+      static/chunks/vendors-fc2d4738-107162946fef346d.js
+      static/chunks/vendors-4c7823de-36c207f4bc99e163.js
+      static/chunks/vendors-359a1f64-5792e9f519529ee7.js
+      static/chunks/vendors-70493527-a0fc5e1698ec9e84.js
+      static/chunks/vendors-118761f3-c0a62a0285c7e8bc.js
+      static/chunks/vendors-c1d059fa-62a6396754059e38.js
+      static/chunks/vendors-d7c15829-5d4f7f1216772fe5.js
+      static/chunks/vendors-cfb98476-403c4af1a8ae3ca0.js
+      static/chunks/vendors-a6f90180-57cd09c9a09179c3.js
+      static/chunks/vendors-d91c2bd6-fde636d6d4785e70.js
+      static/chunks/vendors-fa70753b-ef3106ceef867514.js
+      static/chunks/vendors-09e6b459-6a9a03c8d64b3e60.js
+      static/chunks/vendors-2f8e3928-bccc3bc2e4ceb60f.js
+      static/chunks/vendors-034d6e40-f7b1c1d8cf1059ca.js
+      static/chunks/vendors-5497cdea-607ef06d03ad9cbf.js
+      static/chunks/vendors-8cbd2506-7b83275312f21065.js
+      static/chunks/vendors-eb2fbf4c-7cefc3d1ac715d32.js
+      static/chunks/common-eb2a717cda58c7cf.js
+      static/chunks/app/auth/page-2cd2f2aeb818fa9e.js
+  app/login/page (1.04 MiB)
+      static/chunks/vendors-9620f38d-d62e3b8ad31176ad.js
+      static/chunks/vendors-bc050c32-65b73ed3204b59ef.js
+      static/chunks/vendors-e9587ec5-8846dcb96e1867df.js
+      static/chunks/vendors-dfc0d3ba-4292ca8ad4adf556.js
+      static/chunks/vendors-d929e15b-0787b8916e4eae1d.js
+      static/chunks/vendors-7ec938a2-e5d428b25848fba9.js
+      static/chunks/vendors-b49fab05-82589a8b11dc3300.js
+      static/chunks/vendors-6b948b9f-6d11ffd215733fab.js
+      static/chunks/vendors-f05a72fc-46bac85ffe29b1b7.js
+      static/chunks/vendors-74690118-ae9b01d2cbe37ba5.js
+      static/chunks/vendors-45adea4d-bf68d2407b78078b.js
+      static/chunks/vendors-3d3a1b23-cb4738dc93116136.js
+      static/chunks/vendors-fc2d4738-107162946fef346d.js
+      static/chunks/vendors-4c7823de-36c207f4bc99e163.js
+      static/chunks/vendors-359a1f64-5792e9f519529ee7.js
+      static/chunks/vendors-70493527-a0fc5e1698ec9e84.js
+      static/chunks/vendors-118761f3-c0a62a0285c7e8bc.js
+      static/chunks/vendors-c1d059fa-62a6396754059e38.js
+      static/chunks/vendors-d7c15829-5d4f7f1216772fe5.js
+      static/chunks/vendors-cfb98476-403c4af1a8ae3ca0.js
+      static/chunks/vendors-a6f90180-57cd09c9a09179c3.js
+      static/chunks/vendors-d91c2bd6-fde636d6d4785e70.js
+      static/chunks/vendors-fa70753b-ef3106ceef867514.js
+      static/chunks/vendors-09e6b459-6a9a03c8d64b3e60.js
+      static/chunks/vendors-2f8e3928-bccc3bc2e4ceb60f.js
+      static/chunks/vendors-034d6e40-f7b1c1d8cf1059ca.js
+      static/chunks/vendors-5497cdea-607ef06d03ad9cbf.js
+      static/chunks/vendors-8cbd2506-7b83275312f21065.js
+      static/chunks/vendors-eb2fbf4c-7cefc3d1ac715d32.js
+      static/chunks/common-eb2a717cda58c7cf.js
+      static/chunks/app/login/page-535a96ba845fd4fb.js
+  app/onboarding/page (1.01 MiB)
+      static/chunks/vendors-9620f38d-d62e3b8ad31176ad.js
+      static/chunks/vendors-bc050c32-65b73ed3204b59ef.js
+      static/chunks/vendors-e9587ec5-8846dcb96e1867df.js
+      static/chunks/vendors-dfc0d3ba-4292ca8ad4adf556.js
+      static/chunks/vendors-d929e15b-0787b8916e4eae1d.js
+      static/chunks/vendors-7ec938a2-e5d428b25848fba9.js
+      static/chunks/vendors-b49fab05-82589a8b11dc3300.js
+      static/chunks/vendors-6b948b9f-6d11ffd215733fab.js
+      static/chunks/vendors-f05a72fc-46bac85ffe29b1b7.js
+      static/chunks/vendors-74690118-ae9b01d2cbe37ba5.js
+      static/chunks/vendors-45adea4d-bf68d2407b78078b.js
+      static/chunks/vendors-3d3a1b23-cb4738dc93116136.js
+      static/chunks/vendors-fc2d4738-107162946fef346d.js
+      static/chunks/vendors-4c7823de-36c207f4bc99e163.js
+      static/chunks/vendors-359a1f64-5792e9f519529ee7.js
+      static/chunks/vendors-70493527-a0fc5e1698ec9e84.js
+      static/chunks/vendors-118761f3-c0a62a0285c7e8bc.js
+      static/chunks/vendors-c1d059fa-62a6396754059e38.js
+      static/chunks/vendors-d7c15829-5d4f7f1216772fe5.js
+      static/chunks/vendors-cfb98476-403c4af1a8ae3ca0.js
+      static/chunks/vendors-a6f90180-57cd09c9a09179c3.js
+      static/chunks/vendors-d91c2bd6-fde636d6d4785e70.js
+      static/chunks/vendors-fa70753b-ef3106ceef867514.js
+      static/chunks/vendors-09e6b459-6a9a03c8d64b3e60.js
+      static/chunks/vendors-2f8e3928-bccc3bc2e4ceb60f.js
+      static/chunks/vendors-034d6e40-f7b1c1d8cf1059ca.js
+      static/chunks/vendors-5497cdea-607ef06d03ad9cbf.js
+      static/chunks/vendors-8cbd2506-7b83275312f21065.js
+      static/chunks/vendors-eb2fbf4c-7cefc3d1ac715d32.js
+      static/chunks/app/onboarding/page-c7ab9ed7dd8469c0.js
+  app/device-optimization/page (1.04 MiB)
+      static/chunks/vendors-9620f38d-d62e3b8ad31176ad.js
+      static/chunks/vendors-bc050c32-65b73ed3204b59ef.js
+      static/chunks/vendors-e9587ec5-8846dcb96e1867df.js
+      static/chunks/vendors-dfc0d3ba-4292ca8ad4adf556.js
+      static/chunks/vendors-d929e15b-0787b8916e4eae1d.js
+      static/chunks/vendors-7ec938a2-e5d428b25848fba9.js
+      static/chunks/vendors-b49fab05-82589a8b11dc3300.js
+      static/chunks/vendors-6b948b9f-6d11ffd215733fab.js
+      static/chunks/vendors-f05a72fc-46bac85ffe29b1b7.js
+      static/chunks/vendors-74690118-ae9b01d2cbe37ba5.js
+      static/chunks/vendors-45adea4d-bf68d2407b78078b.js
+      static/chunks/vendors-3d3a1b23-cb4738dc93116136.js
+      static/chunks/vendors-fc2d4738-107162946fef346d.js
+      static/chunks/vendors-4c7823de-36c207f4bc99e163.js
+      static/chunks/vendors-359a1f64-5792e9f519529ee7.js
+      static/chunks/vendors-70493527-a0fc5e1698ec9e84.js
+      static/chunks/vendors-118761f3-c0a62a0285c7e8bc.js
+      static/chunks/vendors-c1d059fa-62a6396754059e38.js
+      static/chunks/vendors-d7c15829-5d4f7f1216772fe5.js
+      static/chunks/vendors-cfb98476-403c4af1a8ae3ca0.js
+      static/chunks/vendors-a6f90180-57cd09c9a09179c3.js
+      static/chunks/vendors-d91c2bd6-fde636d6d4785e70.js
+      static/chunks/vendors-fa70753b-ef3106ceef867514.js
+      static/chunks/vendors-09e6b459-6a9a03c8d64b3e60.js
+      static/chunks/vendors-2f8e3928-bccc3bc2e4ceb60f.js
+      static/chunks/vendors-034d6e40-f7b1c1d8cf1059ca.js
+      static/chunks/vendors-5497cdea-607ef06d03ad9cbf.js
+      static/chunks/vendors-8cbd2506-7b83275312f21065.js
+      static/chunks/vendors-eb2fbf4c-7cefc3d1ac715d32.js
+      static/chunks/common-eb2a717cda58c7cf.js
+      static/chunks/app/device-optimization/page-f3f695b3a8ae7ad4.js
+  app/page (1.1 MiB)
+      static/chunks/supabase-bcf87ace7246751a.js
+      static/chunks/vendors-9620f38d-d62e3b8ad31176ad.js
+      static/chunks/vendors-bc050c32-65b73ed3204b59ef.js
+      static/chunks/vendors-e9587ec5-8846dcb96e1867df.js
+      static/chunks/vendors-dfc0d3ba-4292ca8ad4adf556.js
+      static/chunks/vendors-d929e15b-0787b8916e4eae1d.js
+      static/chunks/vendors-7ec938a2-e5d428b25848fba9.js
+      static/chunks/vendors-b49fab05-82589a8b11dc3300.js
+      static/chunks/vendors-6b948b9f-6d11ffd215733fab.js
+      static/chunks/vendors-f05a72fc-46bac85ffe29b1b7.js
+      static/chunks/vendors-74690118-ae9b01d2cbe37ba5.js
+      static/chunks/vendors-45adea4d-bf68d2407b78078b.js
+      static/chunks/vendors-3d3a1b23-cb4738dc93116136.js
+      static/chunks/vendors-fc2d4738-107162946fef346d.js
+      static/chunks/vendors-4c7823de-36c207f4bc99e163.js
+      static/chunks/vendors-359a1f64-5792e9f519529ee7.js
+      static/chunks/vendors-70493527-a0fc5e1698ec9e84.js
+      static/chunks/vendors-118761f3-c0a62a0285c7e8bc.js
+      static/chunks/vendors-c1d059fa-62a6396754059e38.js
+      static/chunks/vendors-d7c15829-5d4f7f1216772fe5.js
+      static/chunks/vendors-cfb98476-403c4af1a8ae3ca0.js
+      static/chunks/vendors-a6f90180-57cd09c9a09179c3.js
+      static/chunks/vendors-d91c2bd6-fde636d6d4785e70.js
+      static/chunks/vendors-fa70753b-ef3106ceef867514.js
+      static/chunks/vendors-09e6b459-6a9a03c8d64b3e60.js
+      static/chunks/vendors-2f8e3928-bccc3bc2e4ceb60f.js
+      static/chunks/vendors-034d6e40-f7b1c1d8cf1059ca.js
+      static/chunks/vendors-5497cdea-607ef06d03ad9cbf.js
+      static/chunks/vendors-8cbd2506-7b83275312f21065.js
+      static/chunks/vendors-eb2fbf4c-7cefc3d1ac715d32.js
+      static/chunks/common-eb2a717cda58c7cf.js
+      static/chunks/app/page-45cfece87522a582.js
+  app/polls/page (1.01 MiB)
+      static/chunks/vendors-9620f38d-d62e3b8ad31176ad.js
+      static/chunks/vendors-bc050c32-65b73ed3204b59ef.js
+      static/chunks/vendors-e9587ec5-8846dcb96e1867df.js
+      static/chunks/vendors-dfc0d3ba-4292ca8ad4adf556.js
+      static/chunks/vendors-d929e15b-0787b8916e4eae1d.js
+      static/chunks/vendors-7ec938a2-e5d428b25848fba9.js
+      static/chunks/vendors-b49fab05-82589a8b11dc3300.js
+      static/chunks/vendors-6b948b9f-6d11ffd215733fab.js
+      static/chunks/vendors-f05a72fc-46bac85ffe29b1b7.js
+      static/chunks/vendors-74690118-ae9b01d2cbe37ba5.js
+      static/chunks/vendors-45adea4d-bf68d2407b78078b.js
+      static/chunks/vendors-3d3a1b23-cb4738dc93116136.js
+      static/chunks/vendors-fc2d4738-107162946fef346d.js
+      static/chunks/vendors-4c7823de-36c207f4bc99e163.js
+      static/chunks/vendors-359a1f64-5792e9f519529ee7.js
+      static/chunks/vendors-70493527-a0fc5e1698ec9e84.js
+      static/chunks/vendors-118761f3-c0a62a0285c7e8bc.js
+      static/chunks/vendors-c1d059fa-62a6396754059e38.js
+      static/chunks/vendors-d7c15829-5d4f7f1216772fe5.js
+      static/chunks/vendors-cfb98476-403c4af1a8ae3ca0.js
+      static/chunks/vendors-a6f90180-57cd09c9a09179c3.js
+      static/chunks/vendors-d91c2bd6-fde636d6d4785e70.js
+      static/chunks/vendors-fa70753b-ef3106ceef867514.js
+      static/chunks/vendors-09e6b459-6a9a03c8d64b3e60.js
+      static/chunks/vendors-2f8e3928-bccc3bc2e4ceb60f.js
+      static/chunks/vendors-034d6e40-f7b1c1d8cf1059ca.js
+      static/chunks/vendors-5497cdea-607ef06d03ad9cbf.js
+      static/chunks/vendors-8cbd2506-7b83275312f21065.js
+      static/chunks/vendors-eb2fbf4c-7cefc3d1ac715d32.js
+      static/chunks/app/polls/page-e660e1e591bd0d43.js
+  app/simple/page (1.01 MiB)
+      static/chunks/vendors-9620f38d-d62e3b8ad31176ad.js
+      static/chunks/vendors-bc050c32-65b73ed3204b59ef.js
+      static/chunks/vendors-e9587ec5-8846dcb96e1867df.js
+      static/chunks/vendors-dfc0d3ba-4292ca8ad4adf556.js
+      static/chunks/vendors-d929e15b-0787b8916e4eae1d.js
+      static/chunks/vendors-7ec938a2-e5d428b25848fba9.js
+      static/chunks/vendors-b49fab05-82589a8b11dc3300.js
+      static/chunks/vendors-6b948b9f-6d11ffd215733fab.js
+      static/chunks/vendors-f05a72fc-46bac85ffe29b1b7.js
+      static/chunks/vendors-74690118-ae9b01d2cbe37ba5.js
+      static/chunks/vendors-45adea4d-bf68d2407b78078b.js
+      static/chunks/vendors-3d3a1b23-cb4738dc93116136.js
+      static/chunks/vendors-fc2d4738-107162946fef346d.js
+      static/chunks/vendors-4c7823de-36c207f4bc99e163.js
+      static/chunks/vendors-359a1f64-5792e9f519529ee7.js
+      static/chunks/vendors-70493527-a0fc5e1698ec9e84.js
+      static/chunks/vendors-118761f3-c0a62a0285c7e8bc.js
+      static/chunks/vendors-c1d059fa-62a6396754059e38.js
+      static/chunks/vendors-d7c15829-5d4f7f1216772fe5.js
+      static/chunks/vendors-cfb98476-403c4af1a8ae3ca0.js
+      static/chunks/vendors-a6f90180-57cd09c9a09179c3.js
+      static/chunks/vendors-d91c2bd6-fde636d6d4785e70.js
+      static/chunks/vendors-fa70753b-ef3106ceef867514.js
+      static/chunks/vendors-09e6b459-6a9a03c8d64b3e60.js
+      static/chunks/vendors-2f8e3928-bccc3bc2e4ceb60f.js
+      static/chunks/vendors-034d6e40-f7b1c1d8cf1059ca.js
+      static/chunks/vendors-5497cdea-607ef06d03ad9cbf.js
+      static/chunks/vendors-8cbd2506-7b83275312f21065.js
+      static/chunks/vendors-eb2fbf4c-7cefc3d1ac715d32.js
+      static/chunks/app/simple/page-3a3ca6b2961b4512.js
+  app/profile/biometric-setup/page (1.03 MiB)
+      static/chunks/vendors-9620f38d-d62e3b8ad31176ad.js
+      static/chunks/vendors-bc050c32-65b73ed3204b59ef.js
+      static/chunks/vendors-e9587ec5-8846dcb96e1867df.js
+      static/chunks/vendors-dfc0d3ba-4292ca8ad4adf556.js
+      static/chunks/vendors-d929e15b-0787b8916e4eae1d.js
+      static/chunks/vendors-7ec938a2-e5d428b25848fba9.js
+      static/chunks/vendors-b49fab05-82589a8b11dc3300.js
+      static/chunks/vendors-6b948b9f-6d11ffd215733fab.js
+      static/chunks/vendors-f05a72fc-46bac85ffe29b1b7.js
+      static/chunks/vendors-74690118-ae9b01d2cbe37ba5.js
+      static/chunks/vendors-45adea4d-bf68d2407b78078b.js
+      static/chunks/vendors-3d3a1b23-cb4738dc93116136.js
+      static/chunks/vendors-fc2d4738-107162946fef346d.js
+      static/chunks/vendors-4c7823de-36c207f4bc99e163.js
+      static/chunks/vendors-359a1f64-5792e9f519529ee7.js
+      static/chunks/vendors-70493527-a0fc5e1698ec9e84.js
+      static/chunks/vendors-118761f3-c0a62a0285c7e8bc.js
+      static/chunks/vendors-c1d059fa-62a6396754059e38.js
+      static/chunks/vendors-d7c15829-5d4f7f1216772fe5.js
+      static/chunks/vendors-cfb98476-403c4af1a8ae3ca0.js
+      static/chunks/vendors-a6f90180-57cd09c9a09179c3.js
+      static/chunks/vendors-d91c2bd6-fde636d6d4785e70.js
+      static/chunks/vendors-fa70753b-ef3106ceef867514.js
+      static/chunks/vendors-09e6b459-6a9a03c8d64b3e60.js
+      static/chunks/vendors-2f8e3928-bccc3bc2e4ceb60f.js
+      static/chunks/vendors-034d6e40-f7b1c1d8cf1059ca.js
+      static/chunks/vendors-5497cdea-607ef06d03ad9cbf.js
+      static/chunks/vendors-8cbd2506-7b83275312f21065.js
+      static/chunks/vendors-eb2fbf4c-7cefc3d1ac715d32.js
+      static/chunks/common-eb2a717cda58c7cf.js
+      static/chunks/app/profile/biometric-setup/page-06c5f2ffda5c6d44.js
+  app/profile/page (1.1 MiB)
+      static/chunks/supabase-bcf87ace7246751a.js
+      static/chunks/vendors-9620f38d-d62e3b8ad31176ad.js
+      static/chunks/vendors-bc050c32-65b73ed3204b59ef.js
+      static/chunks/vendors-e9587ec5-8846dcb96e1867df.js
+      static/chunks/vendors-dfc0d3ba-4292ca8ad4adf556.js
+      static/chunks/vendors-d929e15b-0787b8916e4eae1d.js
+      static/chunks/vendors-7ec938a2-e5d428b25848fba9.js
+      static/chunks/vendors-b49fab05-82589a8b11dc3300.js
+      static/chunks/vendors-6b948b9f-6d11ffd215733fab.js
+      static/chunks/vendors-f05a72fc-46bac85ffe29b1b7.js
+      static/chunks/vendors-74690118-ae9b01d2cbe37ba5.js
+      static/chunks/vendors-45adea4d-bf68d2407b78078b.js
+      static/chunks/vendors-3d3a1b23-cb4738dc93116136.js
+      static/chunks/vendors-fc2d4738-107162946fef346d.js
+      static/chunks/vendors-4c7823de-36c207f4bc99e163.js
+      static/chunks/vendors-359a1f64-5792e9f519529ee7.js
+      static/chunks/vendors-70493527-a0fc5e1698ec9e84.js
+      static/chunks/vendors-118761f3-c0a62a0285c7e8bc.js
+      static/chunks/vendors-c1d059fa-62a6396754059e38.js
+      static/chunks/vendors-d7c15829-5d4f7f1216772fe5.js
+      static/chunks/vendors-cfb98476-403c4af1a8ae3ca0.js
+      static/chunks/vendors-a6f90180-57cd09c9a09179c3.js
+      static/chunks/vendors-d91c2bd6-fde636d6d4785e70.js
+      static/chunks/vendors-fa70753b-ef3106ceef867514.js
+      static/chunks/vendors-09e6b459-6a9a03c8d64b3e60.js
+      static/chunks/vendors-2f8e3928-bccc3bc2e4ceb60f.js
+      static/chunks/vendors-034d6e40-f7b1c1d8cf1059ca.js
+      static/chunks/vendors-5497cdea-607ef06d03ad9cbf.js
+      static/chunks/vendors-8cbd2506-7b83275312f21065.js
+      static/chunks/vendors-eb2fbf4c-7cefc3d1ac715d32.js
+      static/chunks/common-eb2a717cda58c7cf.js
+      static/chunks/app/profile/page-6e0a8f0f41b134e2.js
+  app/admin/analytics/page (1.01 MiB)
+      static/chunks/vendors-9620f38d-d62e3b8ad31176ad.js
+      static/chunks/vendors-bc050c32-65b73ed3204b59ef.js
+      static/chunks/vendors-e9587ec5-8846dcb96e1867df.js
+      static/chunks/vendors-dfc0d3ba-4292ca8ad4adf556.js
+      static/chunks/vendors-d929e15b-0787b8916e4eae1d.js
+      static/chunks/vendors-7ec938a2-e5d428b25848fba9.js
+      static/chunks/vendors-b49fab05-82589a8b11dc3300.js
+      static/chunks/vendors-6b948b9f-6d11ffd215733fab.js
+      static/chunks/vendors-f05a72fc-46bac85ffe29b1b7.js
+      static/chunks/vendors-74690118-ae9b01d2cbe37ba5.js
+      static/chunks/vendors-45adea4d-bf68d2407b78078b.js
+      static/chunks/vendors-3d3a1b23-cb4738dc93116136.js
+      static/chunks/vendors-fc2d4738-107162946fef346d.js
+      static/chunks/vendors-4c7823de-36c207f4bc99e163.js
+      static/chunks/vendors-359a1f64-5792e9f519529ee7.js
+      static/chunks/vendors-70493527-a0fc5e1698ec9e84.js
+      static/chunks/vendors-118761f3-c0a62a0285c7e8bc.js
+      static/chunks/vendors-c1d059fa-62a6396754059e38.js
+      static/chunks/vendors-d7c15829-5d4f7f1216772fe5.js
+      static/chunks/vendors-cfb98476-403c4af1a8ae3ca0.js
+      static/chunks/vendors-a6f90180-57cd09c9a09179c3.js
+      static/chunks/vendors-d91c2bd6-fde636d6d4785e70.js
+      static/chunks/vendors-fa70753b-ef3106ceef867514.js
+      static/chunks/vendors-09e6b459-6a9a03c8d64b3e60.js
+      static/chunks/vendors-2f8e3928-bccc3bc2e4ceb60f.js
+      static/chunks/vendors-034d6e40-f7b1c1d8cf1059ca.js
+      static/chunks/vendors-5497cdea-607ef06d03ad9cbf.js
+      static/chunks/vendors-8cbd2506-7b83275312f21065.js
+      static/chunks/vendors-eb2fbf4c-7cefc3d1ac715d32.js
+      static/chunks/app/admin/analytics/page-4e5e449c430394df.js
+  app/admin/layout (1.03 MiB)
+      static/chunks/vendors-9620f38d-d62e3b8ad31176ad.js
+      static/chunks/vendors-bc050c32-65b73ed3204b59ef.js
+      static/chunks/vendors-e9587ec5-8846dcb96e1867df.js
+      static/chunks/vendors-dfc0d3ba-4292ca8ad4adf556.js
+      static/chunks/vendors-d929e15b-0787b8916e4eae1d.js
+      static/chunks/vendors-7ec938a2-e5d428b25848fba9.js
+      static/chunks/vendors-b49fab05-82589a8b11dc3300.js
+      static/chunks/vendors-6b948b9f-6d11ffd215733fab.js
+      static/chunks/vendors-f05a72fc-46bac85ffe29b1b7.js
+      static/chunks/vendors-74690118-ae9b01d2cbe37ba5.js
+      static/chunks/vendors-45adea4d-bf68d2407b78078b.js
+      static/chunks/vendors-3d3a1b23-cb4738dc93116136.js
+      static/chunks/vendors-fc2d4738-107162946fef346d.js
+      static/chunks/vendors-4c7823de-36c207f4bc99e163.js
+      static/chunks/vendors-359a1f64-5792e9f519529ee7.js
+      static/chunks/vendors-70493527-a0fc5e1698ec9e84.js
+      static/chunks/vendors-118761f3-c0a62a0285c7e8bc.js
+      static/chunks/vendors-c1d059fa-62a6396754059e38.js
+      static/chunks/vendors-d7c15829-5d4f7f1216772fe5.js
+      static/chunks/vendors-cfb98476-403c4af1a8ae3ca0.js
+      static/chunks/vendors-a6f90180-57cd09c9a09179c3.js
+      static/chunks/vendors-d91c2bd6-fde636d6d4785e70.js
+      static/chunks/vendors-fa70753b-ef3106ceef867514.js
+      static/chunks/vendors-09e6b459-6a9a03c8d64b3e60.js
+      static/chunks/vendors-2f8e3928-bccc3bc2e4ceb60f.js
+      static/chunks/vendors-034d6e40-f7b1c1d8cf1059ca.js
+      static/chunks/vendors-5497cdea-607ef06d03ad9cbf.js
+      static/chunks/vendors-8cbd2506-7b83275312f21065.js
+      static/chunks/vendors-eb2fbf4c-7cefc3d1ac715d32.js
+      static/chunks/common-eb2a717cda58c7cf.js
+      static/chunks/app/admin/layout-6bd86d368d1a0f2a.js
+  app/admin/system/page (1.05 MiB)
+      static/chunks/vendors-9620f38d-d62e3b8ad31176ad.js
+      static/chunks/vendors-bc050c32-65b73ed3204b59ef.js
+      static/chunks/vendors-e9587ec5-8846dcb96e1867df.js
+      static/chunks/vendors-dfc0d3ba-4292ca8ad4adf556.js
+      static/chunks/vendors-d929e15b-0787b8916e4eae1d.js
+      static/chunks/vendors-7ec938a2-e5d428b25848fba9.js
+      static/chunks/vendors-b49fab05-82589a8b11dc3300.js
+      static/chunks/vendors-6b948b9f-6d11ffd215733fab.js
+      static/chunks/vendors-f05a72fc-46bac85ffe29b1b7.js
+      static/chunks/vendors-74690118-ae9b01d2cbe37ba5.js
+      static/chunks/vendors-45adea4d-bf68d2407b78078b.js
+      static/chunks/vendors-3d3a1b23-cb4738dc93116136.js
+      static/chunks/vendors-fc2d4738-107162946fef346d.js
+      static/chunks/vendors-4c7823de-36c207f4bc99e163.js
+      static/chunks/vendors-359a1f64-5792e9f519529ee7.js
+      static/chunks/vendors-70493527-a0fc5e1698ec9e84.js
+      static/chunks/vendors-118761f3-c0a62a0285c7e8bc.js
+      static/chunks/vendors-c1d059fa-62a6396754059e38.js
+      static/chunks/vendors-d7c15829-5d4f7f1216772fe5.js
+      static/chunks/vendors-cfb98476-403c4af1a8ae3ca0.js
+      static/chunks/vendors-a6f90180-57cd09c9a09179c3.js
+      static/chunks/vendors-d91c2bd6-fde636d6d4785e70.js
+      static/chunks/vendors-fa70753b-ef3106ceef867514.js
+      static/chunks/vendors-09e6b459-6a9a03c8d64b3e60.js
+      static/chunks/vendors-2f8e3928-bccc3bc2e4ceb60f.js
+      static/chunks/vendors-034d6e40-f7b1c1d8cf1059ca.js
+      static/chunks/vendors-5497cdea-607ef06d03ad9cbf.js
+      static/chunks/vendors-8cbd2506-7b83275312f21065.js
+      static/chunks/vendors-eb2fbf4c-7cefc3d1ac715d32.js
+      static/chunks/common-eb2a717cda58c7cf.js
+      static/chunks/app/admin/system/page-4c79ad221d1e4fb6.js
+  app/admin/site-messages/page (1.04 MiB)
+      static/chunks/vendors-9620f38d-d62e3b8ad31176ad.js
+      static/chunks/vendors-bc050c32-65b73ed3204b59ef.js
+      static/chunks/vendors-e9587ec5-8846dcb96e1867df.js
+      static/chunks/vendors-dfc0d3ba-4292ca8ad4adf556.js
+      static/chunks/vendors-d929e15b-0787b8916e4eae1d.js
+      static/chunks/vendors-7ec938a2-e5d428b25848fba9.js
+      static/chunks/vendors-b49fab05-82589a8b11dc3300.js
+      static/chunks/vendors-6b948b9f-6d11ffd215733fab.js
+      static/chunks/vendors-f05a72fc-46bac85ffe29b1b7.js
+      static/chunks/vendors-74690118-ae9b01d2cbe37ba5.js
+      static/chunks/vendors-45adea4d-bf68d2407b78078b.js
+      static/chunks/vendors-3d3a1b23-cb4738dc93116136.js
+      static/chunks/vendors-fc2d4738-107162946fef346d.js
+      static/chunks/vendors-4c7823de-36c207f4bc99e163.js
+      static/chunks/vendors-359a1f64-5792e9f519529ee7.js
+      static/chunks/vendors-70493527-a0fc5e1698ec9e84.js
+      static/chunks/vendors-118761f3-c0a62a0285c7e8bc.js
+      static/chunks/vendors-c1d059fa-62a6396754059e38.js
+      static/chunks/vendors-d7c15829-5d4f7f1216772fe5.js
+      static/chunks/vendors-cfb98476-403c4af1a8ae3ca0.js
+      static/chunks/vendors-a6f90180-57cd09c9a09179c3.js
+      static/chunks/vendors-d91c2bd6-fde636d6d4785e70.js
+      static/chunks/vendors-fa70753b-ef3106ceef867514.js
+      static/chunks/vendors-09e6b459-6a9a03c8d64b3e60.js
+      static/chunks/vendors-2f8e3928-bccc3bc2e4ceb60f.js
+      static/chunks/vendors-034d6e40-f7b1c1d8cf1059ca.js
+      static/chunks/vendors-5497cdea-607ef06d03ad9cbf.js
+      static/chunks/vendors-8cbd2506-7b83275312f21065.js
+      static/chunks/vendors-eb2fbf4c-7cefc3d1ac715d32.js
+      static/chunks/common-eb2a717cda58c7cf.js
+      static/chunks/app/admin/site-messages/page-293c4619f4357c8f.js
+  app/admin/dashboard/page (1.03 MiB)
+      static/chunks/vendors-9620f38d-d62e3b8ad31176ad.js
+      static/chunks/vendors-bc050c32-65b73ed3204b59ef.js
+      static/chunks/vendors-e9587ec5-8846dcb96e1867df.js
+      static/chunks/vendors-dfc0d3ba-4292ca8ad4adf556.js
+      static/chunks/vendors-d929e15b-0787b8916e4eae1d.js
+      static/chunks/vendors-7ec938a2-e5d428b25848fba9.js
+      static/chunks/vendors-b49fab05-82589a8b11dc3300.js
+      static/chunks/vendors-6b948b9f-6d11ffd215733fab.js
+      static/chunks/vendors-f05a72fc-46bac85ffe29b1b7.js
+      static/chunks/vendors-74690118-ae9b01d2cbe37ba5.js
+      static/chunks/vendors-45adea4d-bf68d2407b78078b.js
+      static/chunks/vendors-3d3a1b23-cb4738dc93116136.js
+      static/chunks/vendors-fc2d4738-107162946fef346d.js
+      static/chunks/vendors-4c7823de-36c207f4bc99e163.js
+      static/chunks/vendors-359a1f64-5792e9f519529ee7.js
+      static/chunks/vendors-70493527-a0fc5e1698ec9e84.js
+      static/chunks/vendors-118761f3-c0a62a0285c7e8bc.js
+      static/chunks/vendors-c1d059fa-62a6396754059e38.js
+      static/chunks/vendors-d7c15829-5d4f7f1216772fe5.js
+      static/chunks/vendors-cfb98476-403c4af1a8ae3ca0.js
+      static/chunks/vendors-a6f90180-57cd09c9a09179c3.js
+      static/chunks/vendors-d91c2bd6-fde636d6d4785e70.js
+      static/chunks/vendors-fa70753b-ef3106ceef867514.js
+      static/chunks/vendors-09e6b459-6a9a03c8d64b3e60.js
+      static/chunks/vendors-2f8e3928-bccc3bc2e4ceb60f.js
+      static/chunks/vendors-034d6e40-f7b1c1d8cf1059ca.js
+      static/chunks/vendors-5497cdea-607ef06d03ad9cbf.js
+      static/chunks/vendors-8cbd2506-7b83275312f21065.js
+      static/chunks/vendors-eb2fbf4c-7cefc3d1ac715d32.js
+      static/chunks/common-eb2a717cda58c7cf.js
+      static/chunks/app/admin/dashboard/page-397db26a0458fab6.js
+  app/admin/feedback/page (1.06 MiB)
+      static/chunks/vendors-9620f38d-d62e3b8ad31176ad.js
+      static/chunks/vendors-bc050c32-65b73ed3204b59ef.js
+      static/chunks/vendors-e9587ec5-8846dcb96e1867df.js
+      static/chunks/vendors-dfc0d3ba-4292ca8ad4adf556.js
+      static/chunks/vendors-d929e15b-0787b8916e4eae1d.js
+      static/chunks/vendors-7ec938a2-e5d428b25848fba9.js
+      static/chunks/vendors-b49fab05-82589a8b11dc3300.js
+      static/chunks/vendors-6b948b9f-6d11ffd215733fab.js
+      static/chunks/vendors-f05a72fc-46bac85ffe29b1b7.js
+      static/chunks/vendors-74690118-ae9b01d2cbe37ba5.js
+      static/chunks/vendors-45adea4d-bf68d2407b78078b.js
+      static/chunks/vendors-3d3a1b23-cb4738dc93116136.js
+      static/chunks/vendors-fc2d4738-107162946fef346d.js
+      static/chunks/vendors-4c7823de-36c207f4bc99e163.js
+      static/chunks/vendors-359a1f64-5792e9f519529ee7.js
+      static/chunks/vendors-70493527-a0fc5e1698ec9e84.js
+      static/chunks/vendors-118761f3-c0a62a0285c7e8bc.js
+      static/chunks/vendors-c1d059fa-62a6396754059e38.js
+      static/chunks/vendors-d7c15829-5d4f7f1216772fe5.js
+      static/chunks/vendors-cfb98476-403c4af1a8ae3ca0.js
+      static/chunks/vendors-a6f90180-57cd09c9a09179c3.js
+      static/chunks/vendors-d91c2bd6-fde636d6d4785e70.js
+      static/chunks/vendors-fa70753b-ef3106ceef867514.js
+      static/chunks/vendors-09e6b459-6a9a03c8d64b3e60.js
+      static/chunks/vendors-2f8e3928-bccc3bc2e4ceb60f.js
+      static/chunks/vendors-034d6e40-f7b1c1d8cf1059ca.js
+      static/chunks/vendors-5497cdea-607ef06d03ad9cbf.js
+      static/chunks/vendors-8cbd2506-7b83275312f21065.js
+      static/chunks/vendors-eb2fbf4c-7cefc3d1ac715d32.js
+      static/chunks/common-eb2a717cda58c7cf.js
+      static/chunks/app/admin/feedback/page-7b80175e71e94604.js
+  app/admin/page (1.09 MiB)
+      static/chunks/supabase-bcf87ace7246751a.js
+      static/chunks/vendors-9620f38d-d62e3b8ad31176ad.js
+      static/chunks/vendors-bc050c32-65b73ed3204b59ef.js
+      static/chunks/vendors-e9587ec5-8846dcb96e1867df.js
+      static/chunks/vendors-dfc0d3ba-4292ca8ad4adf556.js
+      static/chunks/vendors-d929e15b-0787b8916e4eae1d.js
+      static/chunks/vendors-7ec938a2-e5d428b25848fba9.js
+      static/chunks/vendors-b49fab05-82589a8b11dc3300.js
+      static/chunks/vendors-6b948b9f-6d11ffd215733fab.js
+      static/chunks/vendors-f05a72fc-46bac85ffe29b1b7.js
+      static/chunks/vendors-74690118-ae9b01d2cbe37ba5.js
+      static/chunks/vendors-45adea4d-bf68d2407b78078b.js
+      static/chunks/vendors-3d3a1b23-cb4738dc93116136.js
+      static/chunks/vendors-fc2d4738-107162946fef346d.js
+      static/chunks/vendors-4c7823de-36c207f4bc99e163.js
+      static/chunks/vendors-359a1f64-5792e9f519529ee7.js
+      static/chunks/vendors-70493527-a0fc5e1698ec9e84.js
+      static/chunks/vendors-118761f3-c0a62a0285c7e8bc.js
+      static/chunks/vendors-c1d059fa-62a6396754059e38.js
+      static/chunks/vendors-d7c15829-5d4f7f1216772fe5.js
+      static/chunks/vendors-cfb98476-403c4af1a8ae3ca0.js
+      static/chunks/vendors-a6f90180-57cd09c9a09179c3.js
+      static/chunks/vendors-d91c2bd6-fde636d6d4785e70.js
+      static/chunks/vendors-fa70753b-ef3106ceef867514.js
+      static/chunks/vendors-09e6b459-6a9a03c8d64b3e60.js
+      static/chunks/vendors-2f8e3928-bccc3bc2e4ceb60f.js
+      static/chunks/vendors-034d6e40-f7b1c1d8cf1059ca.js
+      static/chunks/vendors-5497cdea-607ef06d03ad9cbf.js
+      static/chunks/vendors-8cbd2506-7b83275312f21065.js
+      static/chunks/vendors-eb2fbf4c-7cefc3d1ac715d32.js
+      static/chunks/common-eb2a717cda58c7cf.js
+      static/chunks/app/admin/page-1c4343c3548945b2.js
+  app/admin/users/page (1.04 MiB)
+      static/chunks/vendors-9620f38d-d62e3b8ad31176ad.js
+      static/chunks/vendors-bc050c32-65b73ed3204b59ef.js
+      static/chunks/vendors-e9587ec5-8846dcb96e1867df.js
+      static/chunks/vendors-dfc0d3ba-4292ca8ad4adf556.js
+      static/chunks/vendors-d929e15b-0787b8916e4eae1d.js
+      static/chunks/vendors-7ec938a2-e5d428b25848fba9.js
+      static/chunks/vendors-b49fab05-82589a8b11dc3300.js
+      static/chunks/vendors-6b948b9f-6d11ffd215733fab.js
+      static/chunks/vendors-f05a72fc-46bac85ffe29b1b7.js
+      static/chunks/vendors-74690118-ae9b01d2cbe37ba5.js
+      static/chunks/vendors-45adea4d-bf68d2407b78078b.js
+      static/chunks/vendors-3d3a1b23-cb4738dc93116136.js
+      static/chunks/vendors-fc2d4738-107162946fef346d.js
+      static/chunks/vendors-4c7823de-36c207f4bc99e163.js
+      static/chunks/vendors-359a1f64-5792e9f519529ee7.js
+      static/chunks/vendors-70493527-a0fc5e1698ec9e84.js
+      static/chunks/vendors-118761f3-c0a62a0285c7e8bc.js
+      static/chunks/vendors-c1d059fa-62a6396754059e38.js
+      static/chunks/vendors-d7c15829-5d4f7f1216772fe5.js
+      static/chunks/vendors-cfb98476-403c4af1a8ae3ca0.js
+      static/chunks/vendors-a6f90180-57cd09c9a09179c3.js
+      static/chunks/vendors-d91c2bd6-fde636d6d4785e70.js
+      static/chunks/vendors-fa70753b-ef3106ceef867514.js
+      static/chunks/vendors-09e6b459-6a9a03c8d64b3e60.js
+      static/chunks/vendors-2f8e3928-bccc3bc2e4ceb60f.js
+      static/chunks/vendors-034d6e40-f7b1c1d8cf1059ca.js
+      static/chunks/vendors-5497cdea-607ef06d03ad9cbf.js
+      static/chunks/vendors-8cbd2506-7b83275312f21065.js
+      static/chunks/vendors-eb2fbf4c-7cefc3d1ac715d32.js
+      static/chunks/common-eb2a717cda58c7cf.js
+      static/chunks/app/admin/users/page-885ae881510a1b97.js
+  app/admin/feedback/enhanced/page (1.04 MiB)
+      static/chunks/vendors-9620f38d-d62e3b8ad31176ad.js
+      static/chunks/vendors-bc050c32-65b73ed3204b59ef.js
+      static/chunks/vendors-e9587ec5-8846dcb96e1867df.js
+      static/chunks/vendors-dfc0d3ba-4292ca8ad4adf556.js
+      static/chunks/vendors-d929e15b-0787b8916e4eae1d.js
+      static/chunks/vendors-7ec938a2-e5d428b25848fba9.js
+      static/chunks/vendors-b49fab05-82589a8b11dc3300.js
+      static/chunks/vendors-6b948b9f-6d11ffd215733fab.js
+      static/chunks/vendors-f05a72fc-46bac85ffe29b1b7.js
+      static/chunks/vendors-74690118-ae9b01d2cbe37ba5.js
+      static/chunks/vendors-45adea4d-bf68d2407b78078b.js
+      static/chunks/vendors-3d3a1b23-cb4738dc93116136.js
+      static/chunks/vendors-fc2d4738-107162946fef346d.js
+      static/chunks/vendors-4c7823de-36c207f4bc99e163.js
+      static/chunks/vendors-359a1f64-5792e9f519529ee7.js
+      static/chunks/vendors-70493527-a0fc5e1698ec9e84.js
+      static/chunks/vendors-118761f3-c0a62a0285c7e8bc.js
+      static/chunks/vendors-c1d059fa-62a6396754059e38.js
+      static/chunks/vendors-d7c15829-5d4f7f1216772fe5.js
+      static/chunks/vendors-cfb98476-403c4af1a8ae3ca0.js
+      static/chunks/vendors-a6f90180-57cd09c9a09179c3.js
+      static/chunks/vendors-d91c2bd6-fde636d6d4785e70.js
+      static/chunks/vendors-fa70753b-ef3106ceef867514.js
+      static/chunks/vendors-09e6b459-6a9a03c8d64b3e60.js
+      static/chunks/vendors-2f8e3928-bccc3bc2e4ceb60f.js
+      static/chunks/vendors-034d6e40-f7b1c1d8cf1059ca.js
+      static/chunks/vendors-5497cdea-607ef06d03ad9cbf.js
+      static/chunks/vendors-8cbd2506-7b83275312f21065.js
+      static/chunks/vendors-eb2fbf4c-7cefc3d1ac715d32.js
+      static/chunks/common-eb2a717cda58c7cf.js
+      static/chunks/app/admin/feedback/enhanced/page-1283ee47ce41d087.js
+
+webpack performance recommendations: 
+You can limit the size of your bundles by using import() or require.ensure to lazy load some parts of your application.
+For more info visit https://webpack.js.org/guides/code-splitting/
+
+./app/login/page.tsx
+Attempted import error: 'safeBrowserAccess' is not exported from '@/lib/ssr-safe' (imported as 'safeBrowserAccess').
+
+Import trace for requested module:
+./app/login/page.tsx
+
+./app/login/page.tsx
+Attempted import error: 'safeBrowserAccess' is not exported from '@/lib/ssr-safe' (imported as 'safeBrowserAccess').
+
+Import trace for requested module:
+./app/login/page.tsx
+
+./app/login/page.tsx
+Attempted import error: 'safeBrowserAccess' is not exported from '@/lib/ssr-safe' (imported as 'safeBrowserAccess').
+
+Import trace for requested module:
+./app/login/page.tsx
+
+./hooks/useFeatureFlags.ts
+Attempted import error: 'featureFlagManager' is not exported from '@/lib/feature-flags' (imported as 'featureFlagManager').
+
+Import trace for requested module:
+./hooks/useFeatureFlags.ts
+./hooks/useAnalytics.ts
+./app/analytics/page.tsx
+
+./hooks/useFeatureFlags.ts
+Attempted import error: 'featureFlagManager' is not exported from '@/lib/feature-flags' (imported as 'featureFlagManager').
+
+Import trace for requested module:
+./hooks/useFeatureFlags.ts
+./hooks/useAnalytics.ts
+./app/analytics/page.tsx
+
+./hooks/useFeatureFlags.ts
+Attempted import error: 'featureFlagManager' is not exported from '@/lib/feature-flags' (imported as 'featureFlagManager').
+
+Import trace for requested module:
+./hooks/useFeatureFlags.ts
+./hooks/useAnalytics.ts
+./app/analytics/page.tsx
+
+./hooks/useFeatureFlags.ts
+Attempted import error: 'featureFlagManager' is not exported from '@/lib/feature-flags' (imported as 'featureFlagManager').
+
+Import trace for requested module:
+./hooks/useFeatureFlags.ts
+./hooks/useAnalytics.ts
+./app/analytics/page.tsx
+
+./hooks/useFeatureFlags.ts
+Attempted import error: 'featureFlagManager' is not exported from '@/lib/feature-flags' (imported as 'featureFlagManager').
+
+Import trace for requested module:
+./hooks/useFeatureFlags.ts
+./hooks/useAnalytics.ts
+./app/analytics/page.tsx
+
+./hooks/useFeatureFlags.ts
+Attempted import error: 'featureFlagManager' is not exported from '@/lib/feature-flags' (imported as 'featureFlagManager').
+
+Import trace for requested module:
+./hooks/useFeatureFlags.ts
+./hooks/useAnalytics.ts
+./app/analytics/page.tsx
+
+./hooks/useFeatureFlags.ts
+Attempted import error: 'featureFlagManager' is not exported from '@/lib/feature-flags' (imported as 'featureFlagManager').
+
+Import trace for requested module:
+./hooks/useFeatureFlags.ts
+./hooks/useAnalytics.ts
+./app/analytics/page.tsx
+
+./hooks/useFeatureFlags.ts
+Attempted import error: 'featureFlagManager' is not exported from '@/lib/feature-flags' (imported as 'featureFlagManager').
+
+Import trace for requested module:
+./hooks/useFeatureFlags.ts
+./hooks/useAnalytics.ts
+./app/analytics/page.tsx
+
+./hooks/useFeatureFlags.ts
+Attempted import error: 'featureFlagManager' is not exported from '@/lib/feature-flags' (imported as 'featureFlagManager').
+
+Import trace for requested module:
+./hooks/useFeatureFlags.ts
+./hooks/useAnalytics.ts
+./app/analytics/page.tsx
+
+./hooks/useFeatureFlags.ts
+Attempted import error: 'featureFlagManager' is not exported from '@/lib/feature-flags' (imported as 'featureFlagManager').
+
+Import trace for requested module:
+./hooks/useFeatureFlags.ts
+./hooks/useAnalytics.ts
+./app/analytics/page.tsx
+
+./hooks/useFeatureFlags.ts
+Attempted import error: 'featureFlagManager' is not exported from '@/lib/feature-flags' (imported as 'featureFlagManager').
+
+Import trace for requested module:
+./hooks/useFeatureFlags.ts
+./hooks/useAnalytics.ts
+./app/analytics/page.tsx
+
+./hooks/useFeatureFlags.ts
+Attempted import error: 'featureFlagManager' is not exported from '@/lib/feature-flags' (imported as 'featureFlagManager').
+
+Import trace for requested module:
+./hooks/useFeatureFlags.ts
+./hooks/useAnalytics.ts
+./app/analytics/page.tsx
+
+./hooks/useFeatureFlags.ts
+Attempted import error: 'featureFlagManager' is not exported from '@/lib/feature-flags' (imported as 'featureFlagManager').
+
+Import trace for requested module:
+./hooks/useFeatureFlags.ts
+./hooks/useAnalytics.ts
+./app/analytics/page.tsx
+
+./hooks/useFeatureFlags.ts
+Attempted import error: 'featureFlagManager' is not exported from '@/lib/feature-flags' (imported as 'featureFlagManager').
+
+Import trace for requested module:
+./hooks/useFeatureFlags.ts
+./hooks/useAnalytics.ts
+./app/analytics/page.tsx
+
+./hooks/useFeatureFlags.ts
+Attempted import error: 'featureFlagManager' is not exported from '@/lib/feature-flags' (imported as 'featureFlagManager').
+
+Import trace for requested module:
+./hooks/useFeatureFlags.ts
+./hooks/useAnalytics.ts
+./app/analytics/page.tsx
+
+./hooks/useFeatureFlags.ts
+Attempted import error: 'enableFeature' is not exported from '@/lib/feature-flags' (imported as '_enableFeature').
+
+Import trace for requested module:
+./hooks/useFeatureFlags.ts
+./hooks/useAnalytics.ts
+./app/analytics/page.tsx
+
+./hooks/useFeatureFlags.ts
+Attempted import error: 'disableFeature' is not exported from '@/lib/feature-flags' (imported as '_disableFeature').
+
+Import trace for requested module:
+./hooks/useFeatureFlags.ts
+./hooks/useAnalytics.ts
+./app/analytics/page.tsx
+
+./hooks/useFeatureFlags.ts
+Attempted import error: 'toggleFeature' is not exported from '@/lib/feature-flags' (imported as '_toggleFeature').
+
+Import trace for requested module:
+./hooks/useFeatureFlags.ts
+./hooks/useAnalytics.ts
+./app/analytics/page.tsx
+
+./hooks/useFeatureFlags.ts
+Attempted import error: 'getFeatureFlag' is not exported from '@/lib/feature-flags' (imported as '_getFeatureFlag').
+
+Import trace for requested module:
+./hooks/useFeatureFlags.ts
+./hooks/useAnalytics.ts
+./app/analytics/page.tsx
+
+./hooks/useFeatureFlags.ts
+Attempted import error: 'getAllFeatureFlags' is not exported from '@/lib/feature-flags' (imported as '_getAllFeatureFlags').
+
+Import trace for requested module:
+./hooks/useFeatureFlags.ts
+./hooks/useAnalytics.ts
+./app/analytics/page.tsx
+
+./hooks/useSupabaseAuth.ts
+Attempted import error: 'createBrowserClientSafe' is not exported from '@/lib/supabase-ssr-safe' (imported as 'createBrowserClientSafe').
+
+Import trace for requested module:
+./hooks/useSupabaseAuth.ts
+./app/page.tsx
+
+   Linting and checking validity of types ...
+
+./app/api/admin/feedback/route.ts
+14:9  Warning: 'adminUser' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./app/api/admin/simple-example/route.ts
+11:27  Warning: 'request' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./app/api/csp-report/route.ts
+55:31  Warning: 'request' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./app/api/dashboard/route.ts
+7:27  Warning: 'request' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./app/api/protected-example/route.ts
+28:11  Warning: 'body' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+45:12  Warning: 'e' is defined but never used. Allowed unused caught errors must match /^_/u.  @typescript-eslint/no-unused-vars
+72:12  Warning: 'e' is defined but never used. Allowed unused caught errors must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./app/profile/biometric-setup/page.tsx
+144:18  Warning: 'error' is defined but never used. Allowed unused caught errors must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./components/AnalyticsDashboard.tsx
+193:33  Warning: 'pwaMetrics' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+
+./components/VirtualScroll.tsx
+24:11  Warning: 'VirtualScrollItem' is defined but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+50:10  Warning: 'visibleRange' is assigned a value but never used. Allowed unused vars must match /^_/u.  @typescript-eslint/no-unused-vars
+58:32  Warning: 'index' is defined but never used. Allowed unused args must match /^_/u.  @typescript-eslint/no-unused-vars
+
+info  - Need to disable some ESLint rules? Learn more here: https://nextjs.org/docs/basic-features/eslint#disabling-rules
+Failed to compile.
+
+./app/api/admin/site-messages/route.ts:52:48
+Type error: Cannot find name 'context'.
+
+[0m [90m 50 |[39m     }[0m
+[0m [90m 51 |[39m[0m
+[0m[31m[1m>[22m[39m[90m 52 |[39m     [36mconst[39m newMessage [33m=[39m [36mawait[39m createSiteMessage(context[33m.[39msupabase[33m,[39m {[0m
+[0m [90m    |[39m                                                [31m[1m^[22m[39m[0m
+[0m [90m 53 |[39m       title[33m,[39m[0m
+[0m [90m 54 |[39m       message[33m,[39m[0m
+[0m [90m 55 |[39m       type[33m,[39m[0m
+Next.js build worker exited with code: 1 and signal: null

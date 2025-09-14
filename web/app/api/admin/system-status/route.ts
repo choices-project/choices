@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { logger } from '@/lib/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
+import { requireAdminOr401 } from '@/lib/admin-auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -32,9 +33,9 @@ async function timed<T>(name: string, fn: () => Promise<T>): Promise<[T | null, 
 
 export async function GET() {
   try {
-    // For API routes, we need to handle admin auth differently
-    // This is a placeholder - implement proper admin auth for API routes
-    // await requireAdmin(); // 401/403 if not admin
+    // Check admin access - returns 401 if not admin
+    const authGate = await requireAdminOr401()
+    if (authGate) return authGate
 
     const supabase = getSupabaseServerClient();
     

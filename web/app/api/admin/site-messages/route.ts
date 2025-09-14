@@ -1,13 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { withAuth, AuthContext } from '@/lib/auth-middleware'
+import { requireAdminOr401 } from '@/lib/admin-auth'
 import { logger } from '@/lib/logger'
 
-export const GET = withAuth(async (request: NextRequest, context: AuthContext) => {
+export async function GET(request: NextRequest) {
+  // Single admin gate - returns 401 if not admin
+  const authGate = await requireAdminOr401()
+  if (authGate) return authGate
+  
   try {
     logger.info('Admin site messages GET request', { 
       ip: request.headers.get('x-forwarded-for') || 'unknown',
-      userAgent: request.headers.get('user-agent') || 'unknown',
-      userId: context.user.id
+      userAgent: request.headers.get('user-agent') || 'unknown'
     })
 
     const { searchParams } = new URL(request.url)
@@ -22,14 +25,17 @@ export const GET = withAuth(async (request: NextRequest, context: AuthContext) =
       { status: 500 }
     )
   }
-}, { requireAdmin: true })
+}
 
-export const POST = withAuth(async (request: NextRequest, context: AuthContext) => {
+export async function POST(request: NextRequest) {
+  // Single admin gate - returns 401 if not admin
+  const authGate = await requireAdminOr401()
+  if (authGate) return authGate
+  
   try {
     logger.info('Admin site messages POST request', { 
       ip: request.headers.get('x-forwarded-for') || 'unknown',
-      userAgent: request.headers.get('user-agent') || 'unknown',
-      userId: context.user.id
+      userAgent: request.headers.get('user-agent') || 'unknown'
     })
 
     const body = await request.json()
@@ -60,14 +66,17 @@ export const POST = withAuth(async (request: NextRequest, context: AuthContext) 
       { status: 500 }
     )
   }
-}, { requireAdmin: true })
+}
 
-export const PUT = withAuth(async (request: NextRequest, context: AuthContext) => {
+export async function PUT(request: NextRequest) {
+  // Single admin gate - returns 401 if not admin
+  const authGate = await requireAdminOr401()
+  if (authGate) return authGate
+  
   try {
     logger.info('Admin site messages PUT request', { 
       ip: request.headers.get('x-forwarded-for') || 'unknown',
-      userAgent: request.headers.get('user-agent') || 'unknown',
-      userId: context.user.id
+      userAgent: request.headers.get('user-agent') || 'unknown'
     })
 
     const body = await request.json()
@@ -97,14 +106,17 @@ export const PUT = withAuth(async (request: NextRequest, context: AuthContext) =
       { status: 500 }
     )
   }
-}, { requireAdmin: true })
+}
 
-export const DELETE = withAuth(async (request: NextRequest, context: AuthContext) => {
+export async function DELETE(request: NextRequest) {
+  // Single admin gate - returns 401 if not admin
+  const authGate = await requireAdminOr401()
+  if (authGate) return authGate
+  
   try {
     logger.info('Admin site messages DELETE request', { 
       ip: request.headers.get('x-forwarded-for') || 'unknown',
-      userAgent: request.headers.get('user-agent') || 'unknown',
-      userId: context.user.id
+      userAgent: request.headers.get('user-agent') || 'unknown'
     })
 
     const { searchParams } = new URL(request.url)
@@ -126,7 +138,7 @@ export const DELETE = withAuth(async (request: NextRequest, context: AuthContext
       { status: 500 }
     )
   }
-}, { requireAdmin: true })
+}
 
 async function getSiteMessages(includeInactive: boolean = false) {
   try {

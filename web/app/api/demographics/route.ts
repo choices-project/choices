@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { devLog } from '@/lib/logger';
-import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 import { getMockDemographicsResponse } from '@/lib/mock-data';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(_request: NextRequest) {
   try {
-    const supabase = createSupabaseServerClient();
+    const supabase = await getSupabaseServerClient();
     
     // Get total users
     const { data: users, error: usersError } = await supabase
@@ -42,7 +42,13 @@ export async function GET(_request: NextRequest) {
       // Generate demographics data with real user count
       const demographics = getMockDemographicsResponse();
       demographics.totalUsers = totalUsers;
-      demographics.recentPolls = polls || [];
+      demographics.recentPolls = (polls || []).map(poll => ({
+        id: poll.id,
+        question: poll.title,
+        options: [],
+        createdAt: poll.created_at,
+        votes: poll.total_votes
+      }));
       demographics.recentVotes = votes || [];
 
       return NextResponse.json(demographics);

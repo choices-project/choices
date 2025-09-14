@@ -98,12 +98,18 @@ export function createAuthMiddleware(options: {
         username: profile && !('error' in profile) ? (profile as any).username : undefined
       }
 
-      // Check admin requirement
-      if (requireAdmin && authUser.trust_tier !== 'T3') {
-        return NextResponse.json(
-          { message: 'Admin access required' },
-          { status: 403 }
-        )
+      // Check admin requirement - rely on RLS policies for security
+      if (requireAdmin) {
+        // Use RLS function to check admin status
+        const { data: adminCheck, error: adminError } = await supabaseClient
+          .rpc('is_admin', { user_id: user.id })
+
+        if (adminError || !adminCheck) {
+          return NextResponse.json(
+            { message: 'Admin access required - insufficient privileges' },
+            { status: 403 }
+          )
+        }
       }
 
       // Check trust tier requirement
@@ -171,9 +177,13 @@ export function withAuth(
     const supabaseClient = supabase;
     const { data: { user } } = await supabaseClient.auth.getUser()
     
+    // Use RLS function to check admin status
+    const { data: isAdmin } = await supabaseClient
+      .rpc('is_admin', { user_id: user!.id })
+
     const { data: profile } = await supabaseClient
       .from('user_profiles')
-      .select('trust_tier, username')
+      .select('username')
       .eq('user_id', String(user!.id) as any)
       .single()
 
@@ -181,7 +191,7 @@ export function withAuth(
       user: {
         id: user!.id,
         email: user!.email || '',
-        trust_tier: profile && !('error' in profile) ? (profile as any).trust_tier || 'T1' : 'T1',
+        trust_tier: isAdmin ? 'T3' : 'T1',
         username: profile && !('error' in profile) ? (profile as any).username : undefined
       },
       supabase

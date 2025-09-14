@@ -1,72 +1,23 @@
 /** @type {import('jest').Config} */
-const config = {
-  // Test environment
-  testEnvironment: 'node',
-  
-  // Setup files
-  setupFilesAfterEnv: ['<rootDir>/tests/setup.ts'],
-  
-  // Test file patterns (no CI tests currently)
-  testMatch: [
-    // No CI tests configured - tests removed per user request
+module.exports = {
+  projects: [
+    '<rootDir>/jest.client.config.js',
+    '<rootDir>/jest.server.config.js'
   ],
-  testPathIgnorePatterns: [
-    '<rootDir>/tests/e2e/',
-    '<rootDir>/tests/integration/',
-    '<rootDir>/tests/privacy/',
-    '<rootDir>/tests/security/'
+  moduleNameMapper: { '^@/(.*)$': '<rootDir>/$1' },
+  collectCoverageFrom: [
+    'app/**/*.{ts,tsx}',
+    'components/**/*.{ts,tsx}',
+    'lib/**/*.{ts,tsx}',
+    'hooks/**/*.{ts,tsx}',
+    '!**/*.d.ts'
   ],
-  
-  // Exclude problematic test files from TypeScript compilation
-  transformIgnorePatterns: [
-    '<rootDir>/tests/e2e/',
-    '<rootDir>/tests/integration/',
-    '<rootDir>/tests/privacy/',
-    '<rootDir>/tests/security/'
-  ],
-  
-  // Module name mapping for absolute imports
-  moduleNameMapper: {
-    '^@/(.*)$': '<rootDir>/$1',
-    '^@/utils/(.*)$': '<rootDir>/utils/$1',
-    '^@/components/(.*)$': '<rootDir>/components/$1',
-    '^@/tests/(.*)$': '<rootDir>/tests/$1'
-  },
-  
-  // Transform files
-  transform: {
-    '^.+\\.(ts|tsx)$': ['ts-jest', {
-      tsconfig: 'tsconfig.json'
-    }]
-  },
-  
-  // File extensions
-  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json'],
-  
-  // Coverage configuration (disabled for CI tests)
-  collectCoverage: false,
-  
-  // Test timeout
-  testTimeout: 10000,
-  
-  // Clear mocks between tests
-  clearMocks: true,
-  
-  // Restore mocks after each test
-  restoreMocks: true,
-  
-  // Verbose output
-  verbose: true,
-  
-  // Error handling
-  errorOnDeprecated: true,
-  
-  // Global setup
-  globals: {
-    'ts-jest': {
-      useESM: true
-    }
+  coverageThreshold: { 
+    global: { 
+      lines: 80, 
+      functions: 80, 
+      branches: 70, 
+      statements: 80 
+    } 
   }
 };
-
-module.exports = config;

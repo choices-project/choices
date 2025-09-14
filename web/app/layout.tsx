@@ -2,7 +2,8 @@
 
 import type { Metadata } from 'next'
 import './globals.css'
-import { PWAInstallPrompt, OfflineIndicator, PWAUpdatePrompt } from '../components/PWAComponents';
+// PWA components disabled - feature flag is off
+// import { PWAInstallPrompt, OfflineIndicator, PWAUpdatePrompt } from '../features/pwa/components/PWAComponents';
 import EnhancedFeedbackWidget from '../components/EnhancedFeedbackWidget'
 import SiteMessages from '../components/SiteMessages'
 import GlobalNavigation from '../components/GlobalNavigation'
@@ -64,10 +65,10 @@ export default function RootLayout({
               
               {children}
               
-              {/* PWA Components - Only render on client side */}
-              <PWAInstallPrompt />
+              {/* PWA Components disabled - feature flag is off */}
+              {/* <PWAInstallPrompt />
               <OfflineIndicator />
-              <PWAUpdatePrompt />
+              <PWAUpdatePrompt /> */}
               
               {/* Enhanced Feedback Widget - Only render on client side */}
               <EnhancedFeedbackWidget />

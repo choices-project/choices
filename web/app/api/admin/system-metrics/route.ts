@@ -1,8 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { devLog } from '@/lib/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
+import { requireAdminOr401 } from '@/lib/admin-auth';
 
 export async function GET(_request: NextRequest) {
+  // Single admin gate - returns 401 if not admin
+  const authGate = await requireAdminOr401()
+  if (authGate) return authGate
+  
   try {
     const supabase = getSupabaseServerClient();
     

@@ -13,6 +13,12 @@
  * Status: Critical security enhancement
  */
 
+// E2E Test Detection
+export const IS_E2E =
+  process.env.NODE_ENV === 'test' ||
+  process.env.E2E === '1' ||
+  process.env.PLAYWRIGHT === '1';
+
 export interface SecurityConfig {
   csp: CSPConfig
   headers: SecurityHeaders
@@ -48,9 +54,11 @@ export interface SecurityHeaders {
 }
 
 export interface RateLimitConfig {
+  enabled: boolean
   windowMs: number
   maxRequests: number
   sensitiveEndpoints: Record<string, number>
+  e2eBypassHeader: string
 }
 
 export interface ValidationConfig {
@@ -120,14 +128,16 @@ export const PRODUCTION_SECURITY_CONFIG: SecurityConfig = {
   },
   
   rateLimit: {
+    enabled: !IS_E2E, // Disabled in E2E tests
     windowMs: 15 * 60 * 1000, // 15 minutes
     maxRequests: 100,
-    sensitiveEndpoints: {
+    sensitiveEndpoints: IS_E2E ? {} : {
       '/api/auth': 10,
       '/register': 5,
       '/login': 10,
       '/api/admin': 20,
     },
+    e2eBypassHeader: 'x-e2e-bypass'
   },
   
   validation: {

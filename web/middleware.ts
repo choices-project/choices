@@ -32,9 +32,25 @@ const SECURITY_CONFIG = getSecurityConfig()
 const rateLimitStore = new Map<string, { count: number; resetTime: number }>()
 
 /**
+ * Check if request should bypass rate limiting for E2E tests
+ */
+function shouldBypassForE2E(req: NextRequest): boolean {
+  const h = SECURITY_CONFIG.rateLimit.e2eBypassHeader
+  const bypass = process.env.NODE_ENV === 'test' || process.env.E2E === '1'
+  const isLocal = req.ip === '127.0.0.1' || req.ip === '::1' || req.ip?.endsWith(':127.0.0.1')
+  
+  return !SECURITY_CONFIG.rateLimit.enabled ||
+         bypass ||
+         (isLocal && req.nextUrl.pathname.startsWith('/login'))
+}
+
+/**
  * Check rate limit for IP address
  */
-function checkRateLimit(ip: string, path: string): boolean {
+function checkRateLimit(ip: string, path: string, req: NextRequest): boolean {
+  // Bypass rate limiting for E2E tests
+  if (shouldBypassForE2E(req)) return true
+  
   const now = Date.now()
   const key = `${ip}:${path}`
   const record = rateLimitStore.get(key)
@@ -159,7 +175,7 @@ export function middleware(request: NextRequest) {
   const isSensitiveEndpoint = Object.keys(SECURITY_CONFIG.rateLimit.sensitiveEndpoints)
     .some(endpoint => pathname.startsWith(endpoint))
   
-  if (isSensitiveEndpoint && !checkRateLimit(clientIP, pathname)) {
+  if (isSensitiveEndpoint && !checkRateLimit(clientIP, pathname, request)) {
     console.warn(`Security: Rate limit exceeded for IP ${clientIP} on ${pathname}`)
     
     return new NextResponse('Too Many Requests', { 

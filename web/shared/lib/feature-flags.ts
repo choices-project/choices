@@ -15,7 +15,7 @@ export const FEATURE_FLAGS = {
   WEBAUTHN: false,
   PWA: false,
   ANALYTICS: false,
-  ADMIN: false,
+  ADMIN: true, // Enable admin system
   
   // Experimental features
   EXPERIMENTAL_UI: false,

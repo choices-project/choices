@@ -9,7 +9,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { 
   Shield, 
-  Fingerprint, 
   Vote, 
   CheckCircle, 
   TrendingUp,
@@ -146,8 +145,8 @@ export default function HomePage() {
                 Secure & Private
               </Badge>
               <Badge variant="secondary" className="px-4 py-2 text-sm">
-                <Fingerprint className="h-4 w-4 mr-2" />
-                Modern Auth
+                <Lock className="h-4 w-4 mr-2" />
+                Secure Auth
               </Badge>
             </div>
 
@@ -342,18 +341,18 @@ export default function HomePage() {
             <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow">
               <CardHeader>
                 <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-4">
-                  <Fingerprint className="h-6 w-6 text-green-600" />
+                  <Lock className="h-6 w-6 text-green-600" />
                 </div>
-                <CardTitle>Modern Authentication</CardTitle>
+                <CardTitle>Secure Authentication</CardTitle>
                 <CardDescription>
-                  Secure login with biometric authentication and social login options
+                  Robust login system with secure password authentication
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <ul className="space-y-2 text-sm text-gray-600">
                   <li className="flex items-center gap-2">
                     <CheckCircle className="h-4 w-4 text-green-500" />
-                    Biometric login
+                    Secure password login
                   </li>
                   <li className="flex items-center gap-2">
                     <CheckCircle className="h-4 w-4 text-green-500" />

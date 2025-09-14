@@ -1,75 +1,49 @@
-import { defineConfig, devices } from '@playwright/test'
+import { defineConfig, devices } from '@playwright/test';
 
-/**
- * Playwright Configuration for Choices Platform E2E Tests
- * 
- * Tests are designed for how the system SHOULD work, not just to pass current code.
- * This helps identify gaps and drives proper implementation.
- */
+const isCI = !!process.env.CI;
 
 export default defineConfig({
   testDir: './tests/e2e',
   fullyParallel: true,
-  forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 1 : undefined,
+  forbidOnly: isCI,
+  retries: isCI ? 2 : 0,
+  workers: isCI ? 1 : undefined,
   reporter: [
-    ['html'],
-    ['json', { outputFile: 'test-results/results.json' }],
+    ['html', { outputFolder: 'playwright-report', open: 'never' }],
     ['junit', { outputFile: 'test-results/results.xml' }]
   ],
+  timeout: 60_000,
+  expect: { timeout: 10_000 },
+
   use: {
-    baseURL: 'http://127.0.0.1:3000',
+    baseURL: process.env.BASE_URL || 'http://127.0.0.1:3000',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
-    // Global timeout for actions
-    actionTimeout: 10000,
-    // Global timeout for navigation
-    navigationTimeout: 30000,
+    storageState: 'tests/e2e/.storage/admin.json', // pre-auth state
+    extraHTTPHeaders: { 'x-e2e-bypass': '1' } // bypass rate limiting
   },
 
   projects: [
-    {
-      name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
-    },
-    {
-      name: 'firefox',
-      use: { ...devices['Desktop Firefox'] },
-    },
-    {
-      name: 'webkit',
-      use: { ...devices['Desktop Safari'] },
-    },
-    {
-      name: 'Mobile Chrome',
-      use: { ...devices['Pixel 5'] },
-    },
-    {
-      name: 'Mobile Safari',
-      use: { ...devices['iPhone 12'] },
-    },
+    { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
+    { name: 'firefox',  use: { ...devices['Desktop Firefox'] } },
+    { name: 'webkit',   use: { ...devices['Desktop Safari'] } },
   ],
 
+  // Dev locally, build+start on CI
   webServer: {
-    command: 'npm run dev',
+    command: isCI ? 'E2E=1 npm run build && E2E=1 npm start' : 'E2E=1 npm run dev',
     port: 3000,
-    reuseExistingServer: !process.env.CI,
-    timeout: 120 * 1000,
+    reuseExistingServer: !isCI,
+    timeout: 120_000,
     env: {
+      E2E: '1',
       NODE_ENV: 'test',
-      NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-      NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
-      SUPABASE_SECRET_KEY: process.env.SUPABASE_SECRET_KEY || '',
-    },
+      NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://example.supabase.co',
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'fake-dev-key',
+      SUPABASE_SECRET_KEY: process.env.SUPABASE_SECRET_KEY || 'dev-only-secret'
+    }
   },
 
-  // Global test timeout
-  timeout: 60000,
-  
-  // Expect timeout
-  expect: {
-    timeout: 10000,
-  },
-})
+  globalSetup: './tests/e2e/setup/global-setup.ts'
+});

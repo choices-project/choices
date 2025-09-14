@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
-import { logger } from './logger';
+import { logger } from '../../shared/utils/lib/logger';
 
 // Types
 export interface Notification {

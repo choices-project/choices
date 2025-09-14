@@ -1,8 +1,8 @@
 // PWA Utilities for Choices Platform
 // Enhanced WebAuthn, offline functionality, and privacy features
 
-import { isFeatureEnabled } from './feature-flags'
-import { devLog } from '@/lib/logger';
+import { isFeatureEnabled } from '@/shared/lib/feature-flags'
+import { devLog } from '@/shared/utils/lib/logger';
 
 export interface PWAConfig {
   name: string;

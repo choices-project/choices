@@ -1,5 +1,5 @@
 import React from 'react';
-import { devLog } from '@/lib/logger';
+import { devLog } from '../../shared/utils/lib/logger';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAdminStore, TrendingTopic, GeneratedPoll, SystemMetrics } from './admin-store';
 import { mockActivityFeed } from './mock-data';
@@ -39,7 +39,8 @@ const mockSystemMetrics: SystemMetrics = {
   last_updated: new Date().toISOString()
 };
 
-import { BreakingNewsStory, PollContext } from './real-time-news-service';
+// Real-time news service disabled for now - using mock types
+import { BreakingNewsStory, PollContext } from './mock-data';
 
 // Remove duplicate devLog definition - using imported one from logger
 

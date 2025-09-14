@@ -14,7 +14,7 @@
  * @since 2024-12-27
  */
 
-import { devLog } from './logger'
+import { devLog } from '../../../utils/lib/logger'
 
 // Rate limit configuration
 export interface RateLimitConfig {

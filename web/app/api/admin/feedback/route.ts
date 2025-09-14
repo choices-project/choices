@@ -1,53 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
+import { requireAdminOr401, getAdminUser } from '@/lib/admin-auth';
 import { devLog } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
+  // Single admin gate - returns 401 if not admin
+  const authGate = await requireAdminOr401()
+  if (authGate) return authGate
+  
+  // Get admin user info
+  const adminUser = await getAdminUser()
+  
   try {
-    const supabase = getSupabaseServerClient();
     
     // Get Supabase client
-    const supabaseClient = await supabase;
-    
-    if (!supabaseClient) {
-      return NextResponse.json(
-        { error: 'Supabase client not available' },
-        { status: 500 }
-      );
-    }
-
-    // Check authentication
-    const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
-    if (userError || !user) {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      );
-    }
-
-    // Check admin permissions
-    const { data: userProfile, error: profileError } = await supabaseClient
-      .from('ia_users')
-      .select('verification_tier')
-      .eq('stable_id', String(user.id) as any)
-      .single();
-
-    if (profileError) {
-      devLog('Error fetching user profile:', profileError);
-      return NextResponse.json(
-        { error: 'Failed to verify user permissions' },
-        { status: 500 }
-      );
-    }
-
-    if (!userProfile || !userProfile || !('verification_tier' in userProfile) || !['T2', 'T3'].includes(userProfile.verification_tier)) {
-      return NextResponse.json(
-        { error: 'Insufficient permissions' },
-        { status: 403 }
-      );
-    }
+    const supabase = await getSupabaseServerClient();
 
     // Get query parameters
     const { searchParams } = new URL(request.url);
@@ -59,7 +28,7 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get('search') || '';
 
     // Build query
-    let query = supabaseClient
+    let query = supabase
       .from('feedback')
       .select('id, user_id, type, title, description, sentiment, created_at, updated_at, tags')
       .order('created_at', { ascending: false });

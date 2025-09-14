@@ -66,6 +66,7 @@
         "./shared/utils/*"
       ],
       "@/lib/*": [
+        "./lib/*",
         "./shared/utils/lib/*"
       ],
       "@/components/auth/*": [
@@ -117,6 +118,9 @@
         "./shared/core/services/lib/hybrid-voting-service"
       ],
       "@/lib/supabase/server": [
+        "./utils/supabase/server"
+      ],
+      "@/utils/supabase/server": [
         "./utils/supabase/server"
       ],
       "@/lib/auth": [
