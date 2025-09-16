@@ -217,7 +217,7 @@ See the [Deployment Guide](../deployment/README.md) for production deployment in
 
 ---
 
-**Last Updated:** December 15, 2024  
+**Last Updated:** 2025-09-16  
 **Version:** 1.0.0
 
 
