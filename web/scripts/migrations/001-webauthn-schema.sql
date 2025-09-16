@@ -138,3 +138,4 @@ COMMENT ON COLUMN webauthn_credentials.backup_eligible IS 'Whether the credentia
 COMMENT ON COLUMN webauthn_credentials.backup_state IS 'Whether the credential is currently backed up';
 
 
+
