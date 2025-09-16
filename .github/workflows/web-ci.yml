@@ -47,9 +47,9 @@ jobs:
           cache: npm
           cache-dependency-path: web/package-lock.json
 
-      # Ensure CI uses the same npm you pinned in package.json ("npm@10.9.2")
+      # Ensure CI uses the same npm you pinned in package.json ("npm@10.9.3")
       - name: Use repo's npm version
-        run: npm i -g npm@10.9.2
+        run: npm i -g npm@10.9.3
 
       - name: Clean workspace
         run: rm -rf node_modules
