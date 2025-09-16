@@ -1,0 +1,99 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  verify-aliases:
+    name: Verify Aliases
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '19'
+          cache: 'npm'
+      - name: Install dependencies
+        run: npm run ci:install
+      - name: Verify alias configuration
+        run: cd web && node scripts/verify-aliases.mjs
+
+  type-check:
+    name: Type Check (Strict)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '19'
+          cache: 'npm'
+      - name: Install dependencies
+        run: npm run ci:install
+      - name: Type check with strict settings
+        run: cd web && npx tsc --project tsconfig.strict.json --noEmit
+
+  lint:
+    name: ESLint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '19'
+          cache: 'npm'
+      - name: Install dependencies
+        run: npm run ci:install
+      - name: Run ESLint
+        run: cd web && npm run lint
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '19'
+          cache: 'npm'
+      - name: Install dependencies
+        run: npm run ci:install
+      - name: Build application
+        run: cd web && npm run build
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '19'
+          cache: 'npm'
+      - name: Install dependencies
+        run: npm run ci:install
+      - name: Run tests
+        run: cd web && npm run test:ci
+
+  e2e:
+    name: E2E Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '19'
+          cache: 'npm'
+      - name: Install dependencies
+        run: npm run ci:install
+      - name: Install Playwright browsers
+        run: cd web && npx playwright install --with-deps
+      - name: Run E2E tests
+        run: cd web && npm run test:e2e
+        env:
+          CI: true
+
+
+
