@@ -2,7 +2,7 @@
 
 import type { Metadata } from 'next'
 import './globals.css'
-import { PWAInstallPrompt, OfflineIndicator, PWAUpdatePrompt } from '../components/PWAComponents';
+import { PWAInstallPrompt, OfflineIndicator, PWAUpdatePrompt } from '../lib/shared/pwa-components';
 import EnhancedFeedbackWidget from '../components/EnhancedFeedbackWidget'
 import SiteMessages from '../components/SiteMessages'
 import GlobalNavigation from '../components/GlobalNavigation'

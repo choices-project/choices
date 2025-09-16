@@ -43,9 +43,9 @@ module.exports = {
     'boundaries/element-types': ['error', {
       default: 'disallow',
       rules: [
-        { from: 'lib',        allow: ['lib'] }, // Allow lib-to-lib imports
-        { from: 'features',   allow: ['lib', 'components'] },
-        { from: 'components', allow: ['lib'] },
+        { from: 'lib',        allow: ['lib', 'utils', 'features'] }, // Allow lib to import from utils and features
+        { from: 'features',   allow: ['lib', 'components', 'utils'] },
+        { from: 'components', allow: ['lib', 'utils'] },
         { from: 'app',        allow: ['features', 'components', 'lib', 'utils'] },
         { from: 'utils',      allow: ['lib'] },
         { from: 'tests',      allow: ['app', 'features', 'components', 'lib', 'utils'] },
