@@ -1,5 +1,7 @@
 # 🗳️ Choices Platform - Democratic Equalizer
 
+**Last Updated**: 2025-09-16
+
 **A privacy-first platform that levels the playing field for all candidates and exposes who's really bought off**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)

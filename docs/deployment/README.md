@@ -1,5 +1,7 @@
 # Deployment Guide
 
+**Last Updated**: 2025-09-16
+
 This guide covers deploying the Choices platform to production environments.
 
 ## 🚀 Production Deployment

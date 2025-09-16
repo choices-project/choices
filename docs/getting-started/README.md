@@ -1,5 +1,7 @@
 # Getting Started with Choices Platform
 
+**Last Updated**: 2025-09-16
+
 This guide will help you set up your development environment and get the Choices platform running locally.
 
 ## 📋 Prerequisites

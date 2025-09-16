@@ -1,5 +1,7 @@
 # Authentication System
 
+**Last Updated**: 2025-09-16
+
 > **Comprehensive guide to the Choices platform authentication system using WebAuthn and Supabase**
 
 ## 🔐 Authentication Overview

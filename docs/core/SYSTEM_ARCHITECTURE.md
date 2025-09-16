@@ -1,5 +1,7 @@
 # System Architecture
 
+**Last Updated**: 2025-09-16
+
 > **Comprehensive technical overview of the Choices platform architecture**
 
 ## 🏗️ Architecture Overview

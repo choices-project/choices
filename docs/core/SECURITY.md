@@ -1,5 +1,7 @@
 # Security Model
 
+**Last Updated**: 2025-09-16
+
 > **Comprehensive security policies, implementation, and best practices for the Choices platform**
 
 ## 🔒 Security Overview

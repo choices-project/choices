@@ -1,5 +1,7 @@
 # API Reference
 
+**Last Updated**: 2025-09-16
+
 This document provides a comprehensive reference for the Choices platform API endpoints.
 
 ## 🔗 Base URL
