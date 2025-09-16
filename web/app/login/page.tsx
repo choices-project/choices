@@ -7,7 +7,6 @@ import Link from 'next/link'
 import { Eye, EyeOff, User, Lock, Fingerprint, CheckCircle2, AlertCircle } from 'lucide-react'
 import { clientSession } from '@/lib/client-session'
 import { safeBrowserAccess } from '@/lib/ssr-safe'
-import { isFeatureEnabled } from '@/lib/core/feature-flags'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -23,14 +22,8 @@ export default function LoginPage() {
   const searchParams = useSearchParams()
   const redirectTo = searchParams.get('redirectTo') || '/dashboard'
 
-  // Check biometric support on component mount (only if WEBAUTHN feature is enabled)
+  // Check biometric support on component mount
   useEffect(() => {
-    if (!isFeatureEnabled('WEBAUTHN')) {
-      setBiometricSupported(false)
-      setBiometricAvailable(false)
-      return
-    }
-
     const checkBiometricSupport = async () => {
       try {
         // Check if WebAuthn is supported
@@ -46,10 +39,10 @@ export default function LoginPage() {
           // In a real implementation, you would check for existing credentials
           setBiometricAvailable(true)
         }
-      } catch (error) {
-        // narrow 'unknown' → Error
-        const err = error instanceof Error ? error : new Error(String(error));
-        logger.error('Error checking biometric support:', err)
+          } catch (error) {
+      // narrow 'unknown' → Error
+      const err = error instanceof Error ? error : new Error(String(error));
+      logger.error('Error checking biometric support:', err)
         setBiometricSupported(false)
         setBiometricAvailable(false)
       }
@@ -96,11 +89,6 @@ export default function LoginPage() {
   }
 
   const handleBiometricLogin = async () => {
-    if (!isFeatureEnabled('WEBAUTHN')) {
-      setError('Biometric authentication is not available')
-      return
-    }
-
     setLoading(true)
     setError(null)
     setMessage(null)
@@ -295,16 +283,14 @@ export default function LoginPage() {
                   {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 </button>
               </div>
-              {isFeatureEnabled('WEBAUTHN') && (
-                <p className="mt-1 text-xs text-gray-500">
-                  If you don't have a password, you can use biometric authentication
-                </p>
-              )}
+              <p className="mt-1 text-xs text-gray-500">
+                If you don't have a password, you can use biometric authentication
+              </p>
             </div>
           </div>
 
-          {/* Biometric Authentication - Only show if WEBAUTHN feature is enabled */}
-          {isFeatureEnabled('WEBAUTHN') && biometricSupported && biometricAvailable && (
+          {/* Biometric Authentication */}
+          {biometricSupported && biometricAvailable && (
             <div className="space-y-4">
               <div className="relative">
                 <div className="absolute inset-0 flex items-center">
