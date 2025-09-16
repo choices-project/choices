@@ -1,18 +1,10 @@
 {
   "name": "choice-web",
   "private": true,
-<<<<<<< HEAD
   "engines": {
     "node": "22.19.x",
     "npm": "10.9.3"
   },
-=======
-"engines": {
-  "node": "22.19.x",
-  "npm": "10.9.3"
-},
-
->>>>>>> origin/main
   "scripts": {
     "preinstall": "node -e \"const want='10.9.3';const got=require('child_process').execSync('npm -v').toString().trim();if(got!==want){console.error('npm '+got+' != '+want);process.exit(1)}\"",
     "dev": "next dev",
@@ -45,13 +37,7 @@
     "test:admin:security": "node scripts/test-admin.js security",
     "type-check:ci": "tsc --noEmit --skipLibCheck || echo 'TypeScript warnings found (non-blocking)'",
     "type-check:strict": "tsc -p tsconfig.strict.json --noEmit",
-<<<<<<< HEAD
     "lint:fix": "eslint -c .eslintrc.cjs . --fix",
-=======
-    "lint": "next lint",
-    "lint:strict": "eslint -c .eslintrc.strict.cjs . --max-warnings=0",
-    "lint:fix": "eslint . --fix",
->>>>>>> origin/main
     "lint:strict:fix": "eslint -c .eslintrc.strict.cjs . --fix",
     "lint:staged": "eslint --cache --max-warnings=0",
     "security-check": "grep -r \"select('\\*')\" . --include='*.ts' --include='*.tsx' --exclude-dir=node_modules --exclude-dir=.next || echo 'No security issues found'",
@@ -151,6 +137,7 @@
     "eslint-plugin-boundaries": "5.0.1",
     "eslint-plugin-eslint-comments": "3.2.0",
     "eslint-plugin-unused-imports": "4.2.0",
+    "husky": "9.1.7",
     "jest": "30.1.2",
     "jest-environment-jsdom": "30.1.2",
     "postcss": "8.5.6",
