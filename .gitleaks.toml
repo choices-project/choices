@@ -72,4 +72,3 @@ regex = '''\b(sb_(publishable|secret)_[A-Za-z0-9]{16,})\b'''
 tags = ["supabase", "apikey", "secret"]
 
 # (Rely on GitLeaks' built-in JWT/API/generic-high-entropy rules for the rest)
-
