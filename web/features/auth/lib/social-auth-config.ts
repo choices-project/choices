@@ -1,10 +1,10 @@
-import { SocialLoginOption } from '@/types/auth'
+import type { SocialLoginOption } from '@/lib/core/types'
 
 export const socialLoginOptions: SocialLoginOption[] = [
   {
     provider: 'google',
     label: 'Continue with Google',
-    description: 'Quick and secure sign-in',
+    description: 'Sign in with your Google account',
     icon: 'Chrome',
     color: '#4285F4',
     bgColor: 'bg-white',
@@ -16,7 +16,7 @@ export const socialLoginOptions: SocialLoginOption[] = [
   {
     provider: 'github',
     label: 'Continue with GitHub',
-    description: 'For developers and tech enthusiasts',
+    description: 'Sign in with your GitHub account',
     icon: 'Github',
     color: '#24292E',
     bgColor: 'bg-gray-900',
@@ -28,7 +28,7 @@ export const socialLoginOptions: SocialLoginOption[] = [
   {
     provider: 'facebook',
     label: 'Continue with Facebook',
-    description: 'Connect with friends and family',
+    description: 'Sign in with your Facebook account',
     icon: 'Facebook',
     color: '#1877F2',
     bgColor: 'bg-blue-600',
@@ -40,7 +40,7 @@ export const socialLoginOptions: SocialLoginOption[] = [
   {
     provider: 'twitter',
     label: 'Continue with X (Twitter)',
-    description: 'Stay connected with the world',
+    description: 'Sign in with your X (Twitter) account',
     icon: 'Twitter',
     color: '#1DA1F2',
     bgColor: 'bg-sky-500',
@@ -52,7 +52,7 @@ export const socialLoginOptions: SocialLoginOption[] = [
   {
     provider: 'linkedin',
     label: 'Continue with LinkedIn',
-    description: 'Professional networking',
+    description: 'Sign in with your LinkedIn account',
     icon: 'Linkedin',
     color: '#0A66C2',
     bgColor: 'bg-blue-700',
@@ -64,7 +64,7 @@ export const socialLoginOptions: SocialLoginOption[] = [
   {
     provider: 'discord',
     label: 'Continue with Discord',
-    description: 'Join the community',
+    description: 'Sign in with your Discord account',
     icon: 'MessageCircle',
     color: '#5865F2',
     bgColor: 'bg-indigo-600',
@@ -76,7 +76,7 @@ export const socialLoginOptions: SocialLoginOption[] = [
   {
     provider: 'instagram',
     label: 'Continue with Instagram',
-    description: 'Share your moments',
+    description: 'Sign in with your Instagram account',
     icon: 'Instagram',
     color: '#E4405F',
     bgColor: 'bg-gradient-to-r from-purple-500 to-pink-500',
@@ -88,7 +88,7 @@ export const socialLoginOptions: SocialLoginOption[] = [
   {
     provider: 'tiktok',
     label: 'Continue with TikTok',
-    description: 'Create and discover content',
+    description: 'Sign in with your TikTok account',
     icon: 'Video',
     color: '#000000',
     bgColor: 'bg-black',

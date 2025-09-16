@@ -20,7 +20,7 @@ import {
   CheckCircle,
   XCircle
 } from 'lucide-react';
-import { devLog } from '../../../shared/utils/lib/logger';
+import { devLog } from '@/lib/logger';
 
 interface User {
   id: string;

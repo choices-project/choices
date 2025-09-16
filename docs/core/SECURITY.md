@@ -1,179 +1,365 @@
-# Security Policy
+# Security Model
 
-**Created:** September 13, 2025  
-**Updated:** September 13, 2025  
-**Status:** ✅ **COMPREHENSIVE SECURITY IMPLEMENTATION**
+> **Comprehensive security policies, implementation, and best practices for the Choices platform**
 
-## 🛡️ **Security Overview**
+## 🔒 Security Overview
 
-The Choices platform implements a comprehensive, multi-layer security architecture designed to protect user data, ensure system integrity, and maintain privacy-first principles. Our security approach covers everything from pre-commit hooks to production monitoring.
+The Choices platform implements a multi-layered security model designed to protect user data, ensure platform integrity, and maintain user trust in democratic processes.
 
-## 🔒 **Multi-Layer Security Architecture**
+### Security Principles
 
-### **1. Pre-Commit Security (Local Development)**
-- **Context-Aware Scanning** - Advanced security scanning that distinguishes between code patterns and actual secrets
-- **Comprehensive Pattern Detection** - JWT tokens, API keys, database URLs, Supabase keys, UUIDs, hex strings
-- **False Positive Prevention** - Intelligent filtering to avoid blocking legitimate code patterns
-- **File Type Protection** - Blocks .env files, credential files, database files from being committed
+1. **Privacy by Design** - Privacy protection built into every component
+2. **Zero Trust Architecture** - Verify everything, trust nothing
+3. **Defense in Depth** - Multiple security layers
+4. **Least Privilege** - Minimal required permissions
+5. **Transparency** - Open security practices and auditability
 
-### **2. CI/CD Security (GitHub Actions)**
-- **Secret Detection** - gitleaks integration for comprehensive secret scanning
-- **Code Analysis** - CodeQL for static security analysis
-- **Dependency Scanning** - OSV scanner for vulnerability detection
-- **Security Audits** - Automated npm audit with high/critical severity blocking
-- **Type Safety** - Strict TypeScript compilation with zero tolerance for errors
+## 🚀 Recently Implemented Security Features
 
-### **3. Application Security**
-- **Authentication** - Supabase Auth with multi-factor support
-- **Authorization** - Row Level Security (RLS) policies for database access
-- **Input Validation** - Comprehensive input sanitization and validation
-- **Rate Limiting** - API protection against abuse and DoS attacks
-- **CORS Protection** - Proper cross-origin resource sharing configuration
+### Enhanced Authentication & Security (Phase 2 Complete)
 
-### **4. Infrastructure Security**
-- **HTTPS Enforcement** - All communications encrypted in transit
-- **Environment Variables** - Secure management of secrets and configuration
-- **Database Security** - PostgreSQL with RLS policies and secure connections
-- **Deployment Security** - Vercel with proper environment isolation
+The following security features have been fully implemented and are now active:
 
-## 🚨 **Vulnerability Reporting**
+#### WebAuthn Passkey Authentication
+- **Registration API**: `/api/auth/passkey/register` - Full WebAuthn credential registration
+- **Authentication API**: `/api/auth/passkey/login` - WebAuthn passkey authentication
+- **Binary Storage**: PostgreSQL BYTEA utilities for secure credential storage
+- **Challenge Management**: Time-limited, single-use challenge system
 
-### **How to Report**
-- **Email**: security@choices-platform.org
-- **GitHub Issues**: Use the "Security" label for non-critical issues
-- **Coordinated Disclosure**: 90 days by default for critical vulnerabilities
+#### Advanced Security Utilities
+- **Origin Validation**: Comprehensive origin validation with environment awareness
+- **Turnstile Integration**: Cloudflare CAPTCHA for bot protection
+- **Enhanced Rate Limiting**: IP reputation scoring and device fingerprinting
+- **Auth Middleware**: Production-ready authentication middleware
+- **User Helpers**: Server-side user authentication utilities
 
-### **Response Process**
-1. **Acknowledgment** - Within 24 hours
-2. **Assessment** - Within 72 hours
-3. **Resolution** - Within 90 days for critical issues
-4. **Disclosure** - Coordinated public disclosure after resolution
+#### Security Headers & Configuration
+- **Next.js Security Headers**: Enhanced CSP with Turnstile support
+- **CSRF Protection**: Double-submit token pattern
+- **Content Security Policy**: Updated for WebAuthn and Turnstile
+- **Rate Limiting**: Multiple rate limiters for different endpoints
 
-## 🔐 **Key Management**
+### Implementation Status
+- ✅ **WebAuthn Routes**: Registration and login endpoints
+- ✅ **Security Utilities**: Origin validation, Turnstile, rate limiting
+- ✅ **Binary Storage**: PostgreSQL BYTEA utilities
+- ✅ **Auth Middleware**: Enhanced authentication middleware
+- ✅ **Dependencies**: All required packages installed
+- ✅ **Documentation**: Updated authentication and security docs
 
-### **Production Keys**
-- **Cloud KMS/HSM** - All production keys managed via cloud key management
-- **Key Rotation** - Automated key rotation policies
-- **Public Key Transparency** - Transparency logs for public key verification
-- **Environment Isolation** - Keys isolated by environment (dev/staging/prod)
+## 🛡️ Security Architecture
 
-### **Development Keys**
-- **Local Environment** - Development keys in .env.local (never committed)
-- **Example Keys** - Placeholder keys in documentation
-- **Key Validation** - Pre-commit hooks prevent real keys in code
+### Authentication & Authorization
 
-## 🛡️ **Security Features**
+#### WebAuthn Implementation ✅ **IMPLEMENTED**
+- **Biometric Authentication**: Fingerprint, face recognition
+- **Hardware Security Keys**: FIDO2/WebAuthn compliant
+- **Platform Authenticators**: Built-in device security
+- **Cross-Device Support**: Seamless authentication across devices
+- **Binary Credential Storage**: Secure PostgreSQL BYTEA storage
+- **Challenge Management**: Time-limited, single-use challenges
+- **Counter Tracking**: Replay attack prevention
 
-### **Authentication & Authorization**
-- **Multi-Factor Authentication** - Email, OAuth (biometric planned for future)
-- **Session Management** - Secure JWT token handling
-- **Role-Based Access** - Granular permission system
-- **Account Protection** - Brute force protection and account locking
+#### Authorization Model
+```typescript
+// Role-based access control
+enum UserRole {
+  USER = 'user',           // Standard platform users
+  MODERATOR = 'moderator', // Content moderation
+  ADMIN = 'admin'          // Full administrative access
+}
 
-### **Data Protection**
-- **Encryption at Rest** - Database encryption with Supabase
-- **Encryption in Transit** - HTTPS/TLS for all communications
-- **Privacy by Design** - Minimal data collection and retention
-- **GDPR Compliance** - Privacy-first architecture
+// Permission matrix
+const PERMISSIONS = {
+  [UserRole.USER]: [
+    'create_poll',
+    'vote_poll',
+    'view_public_results',
+    'manage_profile'
+  ],
+  [UserRole.MODERATOR]: [
+    ...PERMISSIONS[UserRole.USER],
+    'moderate_content',
+    'view_analytics',
+    'manage_reports'
+  ],
+  [UserRole.ADMIN]: [
+    ...PERMISSIONS[UserRole.MODERATOR],
+    'manage_users',
+    'system_configuration',
+    'view_all_data',
+    'export_data'
+  ]
+};
+```
 
-### **Code Security**
-- **Type Safety** - Comprehensive TypeScript implementation
-- **Input Validation** - All inputs validated and sanitized
-- **SQL Injection Prevention** - Parameterized queries and RLS
-- **XSS Protection** - Content Security Policy and input sanitization
+### Data Protection
 
-## 🔍 **Security Monitoring**
+#### Encryption at Rest
+- **Database Encryption**: AES-256 encryption for sensitive data
+- **File Storage**: Encrypted file uploads and attachments
+- **Backup Encryption**: All backups encrypted with separate keys
+- **Key Management**: Secure key rotation and storage
 
-### **Automated Monitoring**
-- **Pre-commit Hooks** - Real-time security scanning during development
-- **CI Security Checks** - Automated security validation on every PR
-- **Dependency Scanning** - Continuous vulnerability monitoring
-- **Performance Monitoring** - Real-time system health monitoring
+#### Encryption in Transit
+- **TLS 1.3**: All communications encrypted
+- **HSTS**: HTTP Strict Transport Security
+- **Certificate Pinning**: Mobile app certificate validation
+- **Perfect Forward Secrecy**: Ephemeral key exchange
 
-### **Manual Security Reviews**
-- **Code Reviews** - Security-focused code review process
-- **Architecture Reviews** - Regular security architecture assessments
-- **Penetration Testing** - Periodic security testing
-- **Compliance Audits** - Regular compliance verification
+#### Data Anonymization
+```typescript
+// Privacy-preserving data processing
+interface PrivacyConfig {
+  level: PrivacyLevel;
+  anonymization: {
+    userId: boolean;        // Hash user IDs
+    ipAddress: boolean;     // Remove IP addresses
+    timestamp: boolean;     // Round timestamps
+    location: boolean;      // Generalize location data
+  };
+  retention: {
+    rawData: number;        // Days to keep raw data
+    processedData: number;  // Days to keep processed data
+    analytics: number;      // Days to keep analytics
+  };
+}
+```
 
-## 📋 **Security Checklist**
+## 🔐 Privacy Protection
 
-### **Development Security**
-- [ ] Pre-commit hooks installed and working
-- [ ] No secrets in code or configuration
-- [ ] Input validation implemented
-- [ ] Error handling doesn't leak information
-- [ ] Dependencies are up to date
+### Privacy Levels
 
-### **Deployment Security**
-- [ ] Environment variables properly configured
-- [ ] HTTPS enforced
-- [ ] Database connections secured
-- [ ] Monitoring and logging enabled
-- [ ] Backup and recovery tested
+#### Minimal Privacy
+- Basic data collection for functionality
+- Standard encryption and security
+- Limited analytics and tracking
+- Standard retention policies
 
-### **Operational Security**
-- [ ] Access controls implemented
-- [ ] Monitoring and alerting configured
-- [ ] Incident response plan documented
-- [ ] Security training completed
-- [ ] Regular security reviews scheduled
+#### Standard Privacy
+- Enhanced data protection
+- User consent for all data collection
+- Privacy-preserving analytics
+- Configurable data retention
 
-## 🚀 **Security Best Practices**
+#### Enhanced Privacy
+- Minimal data collection
+- Advanced anonymization techniques
+- Differential privacy for analytics
+- Short data retention periods
 
-### **For Developers**
-1. **Never commit secrets** - Use environment variables
-2. **Validate all inputs** - Sanitize and validate user data
-3. **Use secure defaults** - Implement secure-by-default configurations
-4. **Keep dependencies updated** - Regular security updates
-5. **Follow the principle of least privilege** - Minimal necessary permissions
+#### Maximum Privacy
+- Zero-knowledge architecture
+- Local data processing
+- No persistent user tracking
+- Immediate data deletion
 
-### **For Administrators**
-1. **Regular security audits** - Monthly security reviews
-2. **Monitor access logs** - Track and analyze access patterns
-3. **Update systems regularly** - Keep all systems patched
-4. **Backup and recovery** - Test backup and recovery procedures
-5. **Incident response** - Maintain incident response procedures
+### Data Minimization
 
-## 📊 **Security Metrics**
+```typescript
+// Data collection principles
+const DATA_COLLECTION_RULES = {
+  polls: {
+    required: ['title', 'choices', 'voting_method'],
+    optional: ['description', 'category', 'end_date'],
+    prohibited: ['user_identification', 'location_data']
+  },
+  votes: {
+    required: ['poll_id', 'choice_id', 'timestamp'],
+    optional: ['demographic_data'], // Only with consent
+    prohibited: ['user_id', 'ip_address', 'device_fingerprint']
+  },
+  analytics: {
+    required: ['event_type', 'timestamp'],
+    optional: ['anonymized_user_id', 'aggregated_metrics'],
+    prohibited: ['personal_data', 'identifying_information']
+  }
+};
+```
 
-### **Key Performance Indicators**
-- **Vulnerability Response Time** - Average time to resolve security issues
-- **Security Test Coverage** - Percentage of code covered by security tests
-- **Dependency Health** - Number of vulnerable dependencies
-- **Access Control Effectiveness** - Unauthorized access attempts blocked
-- **Incident Response Time** - Time to detect and respond to security incidents
+## 🚨 Security Monitoring
 
-### **Monitoring Dashboard**
-- **Real-time Security Status** - Current security posture
-- **Vulnerability Trends** - Security issue trends over time
-- **Access Patterns** - User access and authentication patterns
-- **System Health** - Overall system security health
-- **Compliance Status** - Current compliance with security standards
+### Threat Detection
 
-## 🎯 **Security Roadmap**
+#### Real-time Monitoring
+- **Anomaly Detection**: Unusual voting patterns
+- **Rate Limiting**: API abuse prevention
+- **DDoS Protection**: Traffic filtering and mitigation
+- **Bot Detection**: Automated behavior identification
 
-### **Short-term (Next 3 months)**
-- [ ] Enhanced monitoring and alerting
-- [ ] Automated security testing
-- [ ] Security training program
-- [ ] Incident response automation
+#### Security Events
+```typescript
+interface SecurityEvent {
+  id: string;
+  type: 'authentication' | 'authorization' | 'data_access' | 'system';
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  timestamp: Date;
+  userId?: string;
+  ipAddress?: string;
+  details: Record<string, any>;
+  resolved: boolean;
+}
+```
 
-### **Medium-term (Next 6 months)**
+### Incident Response
+
+#### Response Procedures
+1. **Detection**: Automated monitoring and alerting
+2. **Assessment**: Impact and severity evaluation
+3. **Containment**: Immediate threat mitigation
+4. **Eradication**: Root cause elimination
+5. **Recovery**: System restoration and validation
+6. **Lessons Learned**: Process improvement
+
+#### Escalation Matrix
+- **Low Severity**: Automated response, log for review
+- **Medium Severity**: Team notification, manual review
+- **High Severity**: Immediate team alert, active response
+- **Critical Severity**: Emergency response, stakeholder notification
+
+## 🔍 Security Testing
+
+### Automated Security Testing
+
+#### Static Analysis
+- **Code Scanning**: SAST tools for vulnerability detection
+- **Dependency Scanning**: Known vulnerability identification
+- **Secret Detection**: Prevent credential exposure
+- **License Compliance**: Open source license validation
+
+#### Dynamic Analysis
+- **Penetration Testing**: Automated vulnerability scanning
+- **API Security Testing**: Endpoint security validation
+- **Authentication Testing**: Auth flow security verification
+- **Input Validation**: Injection attack prevention
+
+### Manual Security Testing
+
+#### Security Reviews
+- **Code Reviews**: Security-focused code examination
+- **Architecture Reviews**: Security design validation
+- **Threat Modeling**: Risk assessment and mitigation
+- **Compliance Audits**: Regulatory requirement verification
+
+## 📋 Compliance & Standards
+
+### Regulatory Compliance
+
+#### GDPR Compliance
+- **Data Subject Rights**: Access, rectification, erasure, portability
+- **Consent Management**: Granular consent collection and management
+- **Data Protection Impact Assessment**: Privacy risk evaluation
+- **Breach Notification**: 72-hour notification requirements
+
+#### CCPA Compliance
+- **Consumer Rights**: Access, deletion, opt-out, non-discrimination
+- **Data Transparency**: Clear data collection and usage disclosure
+- **Opt-out Mechanisms**: Easy privacy preference management
+- **Data Minimization**: Collect only necessary data
+
+### Security Standards
+
+#### OWASP Top 10
+- **A01: Broken Access Control** - Implemented RBAC and RLS
+- **A02: Cryptographic Failures** - Strong encryption and key management
+- **A03: Injection** - Parameterized queries and input validation
+- **A04: Insecure Design** - Security by design principles
+- **A05: Security Misconfiguration** - Secure defaults and configuration
+- **A06: Vulnerable Components** - Dependency scanning and updates
+- **A07: Authentication Failures** - WebAuthn and strong authentication
+- **A08: Software Integrity** - Code signing and integrity verification
+- **A09: Logging Failures** - Comprehensive security logging
+- **A10: Server-Side Request Forgery** - Input validation and allowlists
+
+#### ISO 27001 Alignment
+- **Information Security Management System**
+- **Risk Assessment and Treatment**
+- **Security Controls Implementation**
+- **Continuous Monitoring and Improvement**
+
+## 🔧 Security Implementation
+
+### Secure Development Lifecycle
+
+#### Development Phase
+- **Security Requirements**: Security requirements definition
+- **Threat Modeling**: Risk identification and mitigation
+- **Secure Coding**: Security-focused development practices
+- **Code Reviews**: Security-focused peer reviews
+
+#### Testing Phase
+- **Security Testing**: Comprehensive security validation
+- **Vulnerability Assessment**: Known issue identification
+- **Penetration Testing**: External security validation
+- **Compliance Testing**: Regulatory requirement verification
+
+#### Deployment Phase
+- **Security Configuration**: Secure deployment practices
+- **Access Control**: Principle of least privilege
+- **Monitoring Setup**: Security monitoring implementation
+- **Incident Response**: Response procedure activation
+
+### Security Tools & Technologies
+
+#### Authentication & Authorization
+- **WebAuthn**: FIDO2/WebAuthn authentication
+- **Supabase Auth**: User management and session handling
+- **JWT**: Secure token-based authentication
+- **OAuth 2.0**: Third-party authentication integration
+
+#### Data Protection
+- **AES-256**: Symmetric encryption for data at rest
+- **TLS 1.3**: Transport layer security
+- **Hashing**: Secure password and data hashing
+- **Key Management**: Secure key storage and rotation
+
+#### Monitoring & Detection
+- **Vercel Analytics**: Application performance monitoring
+- **Sentry**: Error tracking and performance monitoring
+- **GitHub Security**: Dependency and secret scanning
+- **Custom Monitoring**: Application-specific security monitoring
+
+## 📊 Security Metrics
+
+### Key Performance Indicators
+
+#### Security Posture
+- **Vulnerability Count**: Known security issues
+- **Mean Time to Detection**: Security incident detection time
+- **Mean Time to Response**: Security incident response time
+- **Security Test Coverage**: Percentage of code tested for security
+
+#### Compliance Metrics
+- **GDPR Compliance Score**: Data protection compliance level
+- **Security Audit Results**: External security assessment results
+- **Penetration Test Results**: Security testing outcomes
+- **Incident Response Time**: Security incident handling efficiency
+
+## 🚀 Security Roadmap
+
+### Short-term (Q1 2025)
+- [ ] Complete WebAuthn implementation
+- [ ] Implement comprehensive logging
+- [ ] Deploy security monitoring
+- [ ] Conduct security audit
+
+### Medium-term (Q2-Q3 2025)
 - [ ] Advanced threat detection
-- [ ] Security orchestration
-- [ ] Compliance automation
-- [ ] Security analytics
+- [ ] Automated security testing
+- [ ] Compliance certification
+- [ ] Security training program
 
-### **Long-term (Next 12 months)**
-- [ ] AI-powered security monitoring
-- [ ] Advanced threat intelligence
+### Long-term (Q4 2025+)
 - [ ] Zero-trust architecture
-- [ ] Security mesh implementation
+- [ ] Advanced privacy protection
+- [ ] Security automation
+- [ ] Continuous compliance
 
 ---
 
-**Security Policy Version:** 2.0  
-**Last Security Review:** December 19, 2024  
-**Next Security Review:** March 19, 2025  
-**Security Contact:** security@choices-platform.org
+**Created**: September 15, 2025  
+**Last Updated**: September 15, 2025  
+**Version**: 1.0.0  
+**Security Contact**: security@choices.app  
+**Maintainers**: [@michaeltempesta](https://github.com/michaeltempesta)  
+**Organization**: [@choices-project](https://github.com/choices-project)

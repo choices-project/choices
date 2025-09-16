@@ -1,5 +1,5 @@
 import { logger } from '@/lib/logger';
-import { devLog } from './logger';
+import { devLog } from '@/lib/logger';
 
 // Types
 export interface Poll {

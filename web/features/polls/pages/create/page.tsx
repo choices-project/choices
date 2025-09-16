@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { usePollWizard } from '@/lib/hooks/usePollWizard';
-import { PollCategory } from '@/lib/types/poll-templates';
+import type { PollCategory } from '@/lib/types/poll-templates';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 // ... existing code ...

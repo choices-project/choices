@@ -6,10 +6,10 @@ import {
   ArrowRight, Star, Zap,
   Play
 } from 'lucide-react'
-import { DemographicVisualization } from '../../components/DemographicVisualization';
-import { BiasFreePromise, defaultPromises } from '../../components/BiasFreePromise';
-import { TierSystem, defaultTiers } from '../../components/TierSystem';
-import { TopicAnalysis } from '../../components/TopicAnalysis';
+import { DemographicVisualization } from '@/components/DemographicVisualization';
+import { BiasFreePromise, defaultPromises } from '@/components/BiasFreePromise';
+import { TierSystem, defaultTiers } from '@/components/TierSystem';
+import { TopicAnalysis } from '@/components/TopicAnalysis';
 
 
 export default function EnhancedLandingPage() {

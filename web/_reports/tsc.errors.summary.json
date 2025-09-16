@@ -1,0 +1,82 @@
+[
+  {
+    "code": "TS2339",
+    "count": 56,
+    "sample": "app/login/page.tsx"
+  },
+  {
+    "code": "TS2307",
+    "count": 55,
+    "sample": "disabled-pages/[id].disabled/page.tsx"
+  },
+  {
+    "code": "TS2322",
+    "count": 31,
+    "sample": "components/privacy/PrivacyLevelSelector.tsx"
+  },
+  {
+    "code": "TS2554",
+    "count": 28,
+    "sample": "app/api/database-status/route.ts"
+  },
+  {
+    "code": "TS7006",
+    "count": 22,
+    "sample": "disabled-pages/test-single-choice/page.tsx"
+  },
+  {
+    "code": "TS2367",
+    "count": 12,
+    "sample": "components/privacy/PrivacyLevelSelector.tsx"
+  },
+  {
+    "code": "TS2345",
+    "count": 11,
+    "sample": "components/privacy/PrivacyLevelSelector.tsx"
+  },
+  {
+    "code": "TS2305",
+    "count": 9,
+    "sample": "features/polls/components/OptimizedPollResults.tsx"
+  },
+  {
+    "code": "TS2532",
+    "count": 7,
+    "sample": "lib/performance/optimized-poll-service.ts"
+  },
+  {
+    "code": "TS2308",
+    "count": 4,
+    "sample": "lib/core/security/index.ts"
+  },
+  {
+    "code": "TS7053",
+    "count": 3,
+    "sample": "components/privacy/PrivacyLevelSelector.tsx"
+  },
+  {
+    "code": "TS2459",
+    "count": 1,
+    "sample": "features/civics/sources/civicinfo/index.ts"
+  },
+  {
+    "code": "TS2315",
+    "count": 1,
+    "sample": "features/polls/components/PrivatePollResults.tsx"
+  },
+  {
+    "code": "TS2551",
+    "count": 1,
+    "sample": "features/polls/components/PrivatePollResults.tsx"
+  },
+  {
+    "code": "TS2739",
+    "count": 1,
+    "sample": "hooks/useFeatureFlags.ts"
+  },
+  {
+    "code": "TS2743",
+    "count": 1,
+    "sample": "utils/supabase/__mocks__/server.ts"
+  }
+]

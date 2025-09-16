@@ -5,18 +5,19 @@
  * re-rendering when flags change.
  */
 
-import { useState, useEffect, useCallback, useMemo, createContext, useContext } from 'react';
-import { 
-  featureFlagManager, 
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import type { 
   FeatureFlag, 
-  FeatureFlagManager,
+  FeatureFlagManager} from '@/lib/core/feature-flags';
+import { 
+  featureFlagManager,
   isFeatureEnabled as _isFeatureEnabled,
   enableFeature as _enableFeature,
   disableFeature as _disableFeature,
   toggleFeature as _toggleFeature,
   getFeatureFlag as _getFeatureFlag,
   getAllFeatureFlags as _getAllFeatureFlags
-} from '@/lib/feature-flags';
+} from '@/lib/core/feature-flags';
 
 export interface UseFeatureFlagsReturn {
   // Flag checking

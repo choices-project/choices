@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react'
 import { devLog } from '@/lib/logger';
 import { BarChart3, Shield, CheckCircle, ArrowLeft, RefreshCw } from 'lucide-react'
 import Link from 'next/link'
-import { poApi, Poll, Tally, CommitmentLog } from '../../lib/api'
+import type { Poll, Tally, CommitmentLog } from '../../lib/api';
+import { poApi } from '../../lib/api'
 
 export default function ResultsPage() {
   const [polls, setPolls] = useState<Poll[]>([])

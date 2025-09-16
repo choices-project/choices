@@ -1,0 +1,2755 @@
+<testsuites id="" name="" tests="66" failures="58" skipped="0" errors="0" time="612.5983540000001">
+<testsuite name="admin-system.spec.ts" timestamp="2025-09-14T21:36:41.430Z" hostname="chromium" tests="18" failures="17" skipped="0" time="1017.819" errors="0">
+<testcase name="Admin System › Admin Authentication › should redirect non-admin users away from admin pages" classname="admin-system.spec.ts" time="27.927">
+<failure message="admin-system.spec.ts:20:9 should redirect non-admin users away from admin pages" type="FAILURE">
+<![CDATA[  [chromium] › admin-system.spec.ts:20:9 › Admin System › Admin Authentication › should redirect non-admin users away from admin pages 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator:  locator('text=Access Denied')
+    Expected: visible
+    Received: <element(s) not found>
+    Timeout:  10000ms
+
+    Call log:
+      - Expect "toBeVisible" with timeout 10000ms
+      - waiting for locator('text=Access Denied')
+
+
+      27 |       // If on admin page, should show access denied message
+      28 |       if (page.url().includes('/admin')) {
+    > 29 |         await expect(page.locator('text=Access Denied')).toBeVisible()
+         |                                                          ^
+      30 |       }
+      31 |     })
+      32 |
+        at /Users/alaughingkitsune/src/Choices/web/tests/e2e/admin-system.spec.ts:29:58
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/admin-system-Admin-System--74f07-users-away-from-admin-pages-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/admin-system-Admin-System--74f07-users-away-from-admin-pages-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/admin-system-Admin-System--74f07-users-away-from-admin-pages-chromium/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|admin-system-Admin-System--74f07-users-away-from-admin-pages-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|admin-system-Admin-System--74f07-users-away-from-admin-pages-chromium/video.webm]]
+
+[[ATTACHMENT|admin-system-Admin-System--74f07-users-away-from-admin-pages-chromium/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Admin System › Admin Authentication › should show admin access denied for regular users" classname="admin-system.spec.ts" time="64.21">
+<failure message="admin-system.spec.ts:33:9 should show admin access denied for regular users" type="FAILURE">
+<![CDATA[  [chromium] › admin-system.spec.ts:33:9 › Admin System › Admin Authentication › should show admin access denied for regular users 
+
+    Test timeout of 60000ms exceeded.
+
+    Error: page.fill: Test timeout of 60000ms exceeded.
+    Call log:
+      - waiting for locator('input[name="email"]')
+        - waiting for" http://127.0.0.1:3000/login" navigation to finish...
+        - navigated to "http://127.0.0.1:3000/login"
+
+
+      33 |     test('should show admin access denied for regular users', async ({ page }) => {
+      34 |       // Login as regular user (you'll need to set up test user)
+    > 35 |       await page.fill('input[name="email"]', 'regular@example.com')
+         |                  ^
+      36 |       await page.fill('input[name="password"]', 'password123')
+      37 |       await page.click('button[type="submit"]')
+      38 |       
+        at /Users/alaughingkitsune/src/Choices/web/tests/e2e/admin-system.spec.ts:35:18
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/admin-system-Admin-System--d8dc3-ss-denied-for-regular-users-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/admin-system-Admin-System--d8dc3-ss-denied-for-regular-users-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/admin-system-Admin-System--d8dc3-ss-denied-for-regular-users-chromium/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|admin-system-Admin-System--d8dc3-ss-denied-for-regular-users-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|admin-system-Admin-System--d8dc3-ss-denied-for-regular-users-chromium/video.webm]]
+
+[[ATTACHMENT|admin-system-Admin-System--d8dc3-ss-denied-for-regular-users-chromium/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Admin System › Admin Authentication › should allow admin users to access admin dashboard" classname="admin-system.spec.ts" time="64.269">
+<failure message="admin-system.spec.ts:49:9 should allow admin users to access admin dashboard" type="FAILURE">
+<![CDATA[  [chromium] › admin-system.spec.ts:49:9 › Admin System › Admin Authentication › should allow admin users to access admin dashboard 
+
+    Test timeout of 60000ms exceeded.
+
+    Error: page.fill: Test timeout of 60000ms exceeded.
+    Call log:
+      - waiting for locator('input[name="email"]')
+        - waiting for" http://127.0.0.1:3000/login" navigation to finish...
+        - navigated to "http://127.0.0.1:3000/login"
+
+
+      49 |     test('should allow admin users to access admin dashboard', async ({ page }) => {
+      50 |       // Login as admin user (you'll need to set up test admin user)
+    > 51 |       await page.fill('input[name="email"]', 'admin@example.com')
+         |                  ^
+      52 |       await page.fill('input[name="password"]', 'adminpassword')
+      53 |       await page.click('button[type="submit"]')
+      54 |       
+        at /Users/alaughingkitsune/src/Choices/web/tests/e2e/admin-system.spec.ts:51:18
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/admin-system-Admin-System--3b8fa-s-to-access-admin-dashboard-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/admin-system-Admin-System--3b8fa-s-to-access-admin-dashboard-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/admin-system-Admin-System--3b8fa-s-to-access-admin-dashboard-chromium/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|admin-system-Admin-System--3b8fa-s-to-access-admin-dashboard-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|admin-system-Admin-System--3b8fa-s-to-access-admin-dashboard-chromium/video.webm]]
+
+[[ATTACHMENT|admin-system-Admin-System--3b8fa-s-to-access-admin-dashboard-chromium/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Admin System › Admin Dashboard › should display admin dashboard with all sections" classname="admin-system.spec.ts" time="64.212">
+<failure message="admin-system.spec.ts:79:9 should display admin dashboard with all sections" type="FAILURE">
+<![CDATA[  [chromium] › admin-system.spec.ts:79:9 › Admin System › Admin Dashboard › should display admin dashboard with all sections 
+
+    Test timeout of 60000ms exceeded while running "beforeEach" hook.
+
+      66 |
+      67 |   test.describe('Admin Dashboard', () => {
+    > 68 |     test.beforeEach(async ({ page }) => {
+         |          ^
+      69 |       // Login as admin user
+      70 |       await page.fill('input[name="email"]', 'admin@example.com')
+      71 |       await page.fill('input[name="password"]', 'adminpassword')
+        at /Users/alaughingkitsune/src/Choices/web/tests/e2e/admin-system.spec.ts:68:10
+
+    Error: page.fill: Test timeout of 60000ms exceeded.
+    Call log:
+      - waiting for locator('input[name="email"]')
+        - waiting for" http://127.0.0.1:3000/login" navigation to finish...
+        - navigated to "http://127.0.0.1:3000/login"
+
+
+      68 |     test.beforeEach(async ({ page }) => {
+      69 |       // Login as admin user
+    > 70 |       await page.fill('input[name="email"]', 'admin@example.com')
+         |                  ^
+      71 |       await page.fill('input[name="password"]', 'adminpassword')
+      72 |       await page.click('button[type="submit"]')
+      73 |       await page.waitForURL(/\/dashboard|\/profile/)
+        at /Users/alaughingkitsune/src/Choices/web/tests/e2e/admin-system.spec.ts:70:18
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/admin-system-Admin-System--08692-dashboard-with-all-sections-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/admin-system-Admin-System--08692-dashboard-with-all-sections-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/admin-system-Admin-System--08692-dashboard-with-all-sections-chromium/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|admin-system-Admin-System--08692-dashboard-with-all-sections-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|admin-system-Admin-System--08692-dashboard-with-all-sections-chromium/video.webm]]
+
+[[ATTACHMENT|admin-system-Admin-System--08692-dashboard-with-all-sections-chromium/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Admin System › Admin Dashboard › should navigate between admin sections" classname="admin-system.spec.ts" time="64.261">
+<failure message="admin-system.spec.ts:93:9 should navigate between admin sections" type="FAILURE">
+<![CDATA[  [chromium] › admin-system.spec.ts:93:9 › Admin System › Admin Dashboard › should navigate between admin sections 
+
+    Test timeout of 60000ms exceeded while running "beforeEach" hook.
+
+      66 |
+      67 |   test.describe('Admin Dashboard', () => {
+    > 68 |     test.beforeEach(async ({ page }) => {
+         |          ^
+      69 |       // Login as admin user
+      70 |       await page.fill('input[name="email"]', 'admin@example.com')
+      71 |       await page.fill('input[name="password"]', 'adminpassword')
+        at /Users/alaughingkitsune/src/Choices/web/tests/e2e/admin-system.spec.ts:68:10
+
+    Error: page.fill: Test timeout of 60000ms exceeded.
+    Call log:
+      - waiting for locator('input[name="email"]')
+        - waiting for" http://127.0.0.1:3000/login" navigation to finish...
+        - navigated to "http://127.0.0.1:3000/login"
+
+
+      68 |     test.beforeEach(async ({ page }) => {
+      69 |       // Login as admin user
+    > 70 |       await page.fill('input[name="email"]', 'admin@example.com')
+         |                  ^
+      71 |       await page.fill('input[name="password"]', 'adminpassword')
+      72 |       await page.click('button[type="submit"]')
+      73 |       await page.waitForURL(/\/dashboard|\/profile/)
+        at /Users/alaughingkitsune/src/Choices/web/tests/e2e/admin-system.spec.ts:70:18
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/admin-system-Admin-System--65069-gate-between-admin-sections-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/admin-system-Admin-System--65069-gate-between-admin-sections-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/admin-system-Admin-System--65069-gate-between-admin-sections-chromium/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|admin-system-Admin-System--65069-gate-between-admin-sections-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|admin-system-Admin-System--65069-gate-between-admin-sections-chromium/video.webm]]
+
+[[ATTACHMENT|admin-system-Admin-System--65069-gate-between-admin-sections-chromium/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Admin System › Admin User Management › should display user management interface" classname="admin-system.spec.ts" time="64.238">
+<failure message="admin-system.spec.ts:131:9 should display user management interface" type="FAILURE">
+<![CDATA[  [chromium] › admin-system.spec.ts:131:9 › Admin System › Admin User Management › should display user management interface 
+
+    Test timeout of 60000ms exceeded while running "beforeEach" hook.
+
+      120 |
+      121 |   test.describe('Admin User Management', () => {
+    > 122 |     test.beforeEach(async ({ page }) => {
+          |          ^
+      123 |       // Login as admin and navigate to users page
+      124 |       await page.fill('input[name="email"]', 'admin@example.com')
+      125 |       await page.fill('input[name="password"]', 'adminpassword')
+        at /Users/alaughingkitsune/src/Choices/web/tests/e2e/admin-system.spec.ts:122:10
+
+    Error: page.fill: Test timeout of 60000ms exceeded.
+    Call log:
+      - waiting for locator('input[name="email"]')
+        - waiting for" http://127.0.0.1:3000/login" navigation to finish...
+        - navigated to "http://127.0.0.1:3000/login"
+
+
+      122 |     test.beforeEach(async ({ page }) => {
+      123 |       // Login as admin and navigate to users page
+    > 124 |       await page.fill('input[name="email"]', 'admin@example.com')
+          |                  ^
+      125 |       await page.fill('input[name="password"]', 'adminpassword')
+      126 |       await page.click('button[type="submit"]')
+      127 |       await page.waitForURL(/\/dashboard|\/profile/)
+        at /Users/alaughingkitsune/src/Choices/web/tests/e2e/admin-system.spec.ts:124:18
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/admin-system-Admin-System--6d642-y-user-management-interface-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/admin-system-Admin-System--6d642-y-user-management-interface-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/admin-system-Admin-System--6d642-y-user-management-interface-chromium/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|admin-system-Admin-System--6d642-y-user-management-interface-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|admin-system-Admin-System--6d642-y-user-management-interface-chromium/video.webm]]
+
+[[ATTACHMENT|admin-system-Admin-System--6d642-y-user-management-interface-chromium/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Admin System › Admin User Management › should allow admin to view user details" classname="admin-system.spec.ts" time="62.347">
+<failure message="admin-system.spec.ts:138:9 should allow admin to view user details" type="FAILURE">
+<![CDATA[  [chromium] › admin-system.spec.ts:138:9 › Admin System › Admin User Management › should allow admin to view user details 
+
+    Test timeout of 60000ms exceeded while running "beforeEach" hook.
+
+      120 |
+      121 |   test.describe('Admin User Management', () => {
+    > 122 |     test.beforeEach(async ({ page }) => {
+          |          ^
+      123 |       // Login as admin and navigate to users page
+      124 |       await page.fill('input[name="email"]', 'admin@example.com')
+      125 |       await page.fill('input[name="password"]', 'adminpassword')
+        at /Users/alaughingkitsune/src/Choices/web/tests/e2e/admin-system.spec.ts:122:10
+
+    Error: page.fill: Test timeout of 60000ms exceeded.
+    Call log:
+      - waiting for locator('input[name="email"]')
+
+
+      122 |     test.beforeEach(async ({ page }) => {
+      123 |       // Login as admin and navigate to users page
+    > 124 |       await page.fill('input[name="email"]', 'admin@example.com')
+          |                  ^
+      125 |       await page.fill('input[name="password"]', 'adminpassword')
+      126 |       await page.click('button[type="submit"]')
+      127 |       await page.waitForURL(/\/dashboard|\/profile/)
+        at /Users/alaughingkitsune/src/Choices/web/tests/e2e/admin-system.spec.ts:124:18
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/admin-system-Admin-System--fbd47--admin-to-view-user-details-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/admin-system-Admin-System--fbd47--admin-to-view-user-details-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/admin-system-Admin-System--fbd47--admin-to-view-user-details-chromium/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|admin-system-Admin-System--fbd47--admin-to-view-user-details-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|admin-system-Admin-System--fbd47--admin-to-view-user-details-chromium/video.webm]]
+
+[[ATTACHMENT|admin-system-Admin-System--fbd47--admin-to-view-user-details-chromium/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Admin System › Admin Feedback Management › should display feedback management interface" classname="admin-system.spec.ts" time="66.112">
+<failure message="admin-system.spec.ts:161:9 should display feedback management interface" type="FAILURE">
+<![CDATA[  [chromium] › admin-system.spec.ts:161:9 › Admin System › Admin Feedback Management › should display feedback management interface 
+
+    Test timeout of 60000ms exceeded while running "beforeEach" hook.
+
+      150 |
+      151 |   test.describe('Admin Feedback Management', () => {
+    > 152 |     test.beforeEach(async ({ page }) => {
+          |          ^
+      153 |       // Login as admin and navigate to feedback page
+      154 |       await page.fill('input[name="email"]', 'admin@example.com')
+      155 |       await page.fill('input[name="password"]', 'adminpassword')
+        at /Users/alaughingkitsune/src/Choices/web/tests/e2e/admin-system.spec.ts:152:10
+
+    Error: page.fill: Test timeout of 60000ms exceeded.
+    Call log:
+      - waiting for locator('input[name="email"]')
+
+
+      152 |     test.beforeEach(async ({ page }) => {
+      153 |       // Login as admin and navigate to feedback page
+    > 154 |       await page.fill('input[name="email"]', 'admin@example.com')
+          |                  ^
+      155 |       await page.fill('input[name="password"]', 'adminpassword')
+      156 |       await page.click('button[type="submit"]')
+      157 |       await page.waitForURL(/\/dashboard|\/profile/)
+        at /Users/alaughingkitsune/src/Choices/web/tests/e2e/admin-system.spec.ts:154:18
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/admin-system-Admin-System--38743-edback-management-interface-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/admin-system-Admin-System--38743-edback-management-interface-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/admin-system-Admin-System--38743-edback-management-interface-chromium/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|admin-system-Admin-System--38743-edback-management-interface-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|admin-system-Admin-System--38743-edback-management-interface-chromium/video.webm]]
+
+[[ATTACHMENT|admin-system-Admin-System--38743-edback-management-interface-chromium/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Admin System › Admin Feedback Management › should allow admin to filter feedback" classname="admin-system.spec.ts" time="66.194">
+<failure message="admin-system.spec.ts:168:9 should allow admin to filter feedback" type="FAILURE">
+<![CDATA[  [chromium] › admin-system.spec.ts:168:9 › Admin System › Admin Feedback Management › should allow admin to filter feedback 
+
+    Test timeout of 60000ms exceeded while running "beforeEach" hook.
+
+      150 |
+      151 |   test.describe('Admin Feedback Management', () => {
+    > 152 |     test.beforeEach(async ({ page }) => {
+          |          ^
+      153 |       // Login as admin and navigate to feedback page
+      154 |       await page.fill('input[name="email"]', 'admin@example.com')
+      155 |       await page.fill('input[name="password"]', 'adminpassword')
+        at /Users/alaughingkitsune/src/Choices/web/tests/e2e/admin-system.spec.ts:152:10
+
+    Error: page.fill: Test timeout of 60000ms exceeded.
+    Call log:
+      - waiting for locator('input[name="email"]')
+
+
+      152 |     test.beforeEach(async ({ page }) => {
+      153 |       // Login as admin and navigate to feedback page
+    > 154 |       await page.fill('input[name="email"]', 'admin@example.com')
+          |                  ^
+      155 |       await page.fill('input[name="password"]', 'adminpassword')
+      156 |       await page.click('button[type="submit"]')
+      157 |       await page.waitForURL(/\/dashboard|\/profile/)
+        at /Users/alaughingkitsune/src/Choices/web/tests/e2e/admin-system.spec.ts:154:18
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/admin-system-Admin-System--3ed6e-ow-admin-to-filter-feedback-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/admin-system-Admin-System--3ed6e-ow-admin-to-filter-feedback-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/admin-system-Admin-System--3ed6e-ow-admin-to-filter-feedback-chromium/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|admin-system-Admin-System--3ed6e-ow-admin-to-filter-feedback-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|admin-system-Admin-System--3ed6e-ow-admin-to-filter-feedback-chromium/video.webm]]
+
+[[ATTACHMENT|admin-system-Admin-System--3ed6e-ow-admin-to-filter-feedback-chromium/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Admin System › Admin Feedback Management › should allow admin to update feedback status" classname="admin-system.spec.ts" time="66.146">
+<failure message="admin-system.spec.ts:176:9 should allow admin to update feedback status" type="FAILURE">
+<![CDATA[  [chromium] › admin-system.spec.ts:176:9 › Admin System › Admin Feedback Management › should allow admin to update feedback status 
+
+    Test timeout of 60000ms exceeded while running "beforeEach" hook.
+
+      150 |
+      151 |   test.describe('Admin Feedback Management', () => {
+    > 152 |     test.beforeEach(async ({ page }) => {
+          |          ^
+      153 |       // Login as admin and navigate to feedback page
+      154 |       await page.fill('input[name="email"]', 'admin@example.com')
+      155 |       await page.fill('input[name="password"]', 'adminpassword')
+        at /Users/alaughingkitsune/src/Choices/web/tests/e2e/admin-system.spec.ts:152:10
+
+    Error: page.fill: Test timeout of 60000ms exceeded.
+    Call log:
+      - waiting for locator('input[name="email"]')
+
+
+      152 |     test.beforeEach(async ({ page }) => {
+      153 |       // Login as admin and navigate to feedback page
+    > 154 |       await page.fill('input[name="email"]', 'admin@example.com')
+          |                  ^
+      155 |       await page.fill('input[name="password"]', 'adminpassword')
+      156 |       await page.click('button[type="submit"]')
+      157 |       await page.waitForURL(/\/dashboard|\/profile/)
+        at /Users/alaughingkitsune/src/Choices/web/tests/e2e/admin-system.spec.ts:154:18
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/admin-system-Admin-System--9b20c-n-to-update-feedback-status-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/admin-system-Admin-System--9b20c-n-to-update-feedback-status-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/admin-system-Admin-System--9b20c-n-to-update-feedback-status-chromium/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|admin-system-Admin-System--9b20c-n-to-update-feedback-status-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|admin-system-Admin-System--9b20c-n-to-update-feedback-status-chromium/video.webm]]
+
+[[ATTACHMENT|admin-system-Admin-System--9b20c-n-to-update-feedback-status-chromium/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Admin System › Admin Analytics › should display analytics dashboard" classname="admin-system.spec.ts" time="66.131">
+<failure message="admin-system.spec.ts:198:9 should display analytics dashboard" type="FAILURE">
+<![CDATA[  [chromium] › admin-system.spec.ts:198:9 › Admin System › Admin Analytics › should display analytics dashboard 
+
+    Test timeout of 60000ms exceeded while running "beforeEach" hook.
+
+      187 |
+      188 |   test.describe('Admin Analytics', () => {
+    > 189 |     test.beforeEach(async ({ page }) => {
+          |          ^
+      190 |       // Login as admin and navigate to analytics page
+      191 |       await page.fill('input[name="email"]', 'admin@example.com')
+      192 |       await page.fill('input[name="password"]', 'adminpassword')
+        at /Users/alaughingkitsune/src/Choices/web/tests/e2e/admin-system.spec.ts:189:10
+
+    Error: page.fill: Test timeout of 60000ms exceeded.
+    Call log:
+      - waiting for locator('input[name="email"]')
+
+
+      189 |     test.beforeEach(async ({ page }) => {
+      190 |       // Login as admin and navigate to analytics page
+    > 191 |       await page.fill('input[name="email"]', 'admin@example.com')
+          |                  ^
+      192 |       await page.fill('input[name="password"]', 'adminpassword')
+      193 |       await page.click('button[type="submit"]')
+      194 |       await page.waitForURL(/\/dashboard|\/profile/)
+        at /Users/alaughingkitsune/src/Choices/web/tests/e2e/admin-system.spec.ts:191:18
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/admin-system-Admin-System--6a806-display-analytics-dashboard-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/admin-system-Admin-System--6a806-display-analytics-dashboard-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/admin-system-Admin-System--6a806-display-analytics-dashboard-chromium/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|admin-system-Admin-System--6a806-display-analytics-dashboard-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|admin-system-Admin-System--6a806-display-analytics-dashboard-chromium/video.webm]]
+
+[[ATTACHMENT|admin-system-Admin-System--6a806-display-analytics-dashboard-chromium/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Admin System › Admin Analytics › should show system metrics" classname="admin-system.spec.ts" time="66.092">
+<failure message="admin-system.spec.ts:205:9 should show system metrics" type="FAILURE">
+<![CDATA[  [chromium] › admin-system.spec.ts:205:9 › Admin System › Admin Analytics › should show system metrics 
+
+    Test timeout of 60000ms exceeded while running "beforeEach" hook.
+
+      187 |
+      188 |   test.describe('Admin Analytics', () => {
+    > 189 |     test.beforeEach(async ({ page }) => {
+          |          ^
+      190 |       // Login as admin and navigate to analytics page
+      191 |       await page.fill('input[name="email"]', 'admin@example.com')
+      192 |       await page.fill('input[name="password"]', 'adminpassword')
+        at /Users/alaughingkitsune/src/Choices/web/tests/e2e/admin-system.spec.ts:189:10
+
+    Error: page.fill: Test timeout of 60000ms exceeded.
+    Call log:
+      - waiting for locator('input[name="email"]')
+
+
+      189 |     test.beforeEach(async ({ page }) => {
+      190 |       // Login as admin and navigate to analytics page
+    > 191 |       await page.fill('input[name="email"]', 'admin@example.com')
+          |                  ^
+      192 |       await page.fill('input[name="password"]', 'adminpassword')
+      193 |       await page.click('button[type="submit"]')
+      194 |       await page.waitForURL(/\/dashboard|\/profile/)
+        at /Users/alaughingkitsune/src/Choices/web/tests/e2e/admin-system.spec.ts:191:18
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/admin-system-Admin-System--052a6--should-show-system-metrics-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/admin-system-Admin-System--052a6--should-show-system-metrics-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/admin-system-Admin-System--052a6--should-show-system-metrics-chromium/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|admin-system-Admin-System--052a6--should-show-system-metrics-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|admin-system-Admin-System--052a6--should-show-system-metrics-chromium/video.webm]]
+
+[[ATTACHMENT|admin-system-Admin-System--052a6--should-show-system-metrics-chromium/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Admin System › Admin System Monitoring › should display system monitoring interface" classname="admin-system.spec.ts" time="63.789">
+<failure message="admin-system.spec.ts:224:9 should display system monitoring interface" type="FAILURE">
+<![CDATA[  [chromium] › admin-system.spec.ts:224:9 › Admin System › Admin System Monitoring › should display system monitoring interface 
+
+    Test timeout of 60000ms exceeded while running "beforeEach" hook.
+
+      213 |
+      214 |   test.describe('Admin System Monitoring', () => {
+    > 215 |     test.beforeEach(async ({ page }) => {
+          |          ^
+      216 |       // Login as admin and navigate to system page
+      217 |       await page.fill('input[name="email"]', 'admin@example.com')
+      218 |       await page.fill('input[name="password"]', 'adminpassword')
+        at /Users/alaughingkitsune/src/Choices/web/tests/e2e/admin-system.spec.ts:215:10
+
+    Error: page.fill: Test timeout of 60000ms exceeded.
+    Call log:
+      - waiting for locator('input[name="email"]')
+
+
+      215 |     test.beforeEach(async ({ page }) => {
+      216 |       // Login as admin and navigate to system page
+    > 217 |       await page.fill('input[name="email"]', 'admin@example.com')
+          |                  ^
+      218 |       await page.fill('input[name="password"]', 'adminpassword')
+      219 |       await page.click('button[type="submit"]')
+      220 |       await page.waitForURL(/\/dashboard|\/profile/)
+        at /Users/alaughingkitsune/src/Choices/web/tests/e2e/admin-system.spec.ts:217:18
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/admin-system-Admin-System--50b72-system-monitoring-interface-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/admin-system-Admin-System--50b72-system-monitoring-interface-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/admin-system-Admin-System--50b72-system-monitoring-interface-chromium/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|admin-system-Admin-System--50b72-system-monitoring-interface-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|admin-system-Admin-System--50b72-system-monitoring-interface-chromium/video.webm]]
+
+[[ATTACHMENT|admin-system-Admin-System--50b72-system-monitoring-interface-chromium/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Admin System › Admin System Monitoring › should show system health metrics" classname="admin-system.spec.ts" time="64.174">
+<failure message="admin-system.spec.ts:231:9 should show system health metrics" type="FAILURE">
+<![CDATA[  [chromium] › admin-system.spec.ts:231:9 › Admin System › Admin System Monitoring › should show system health metrics 
+
+    Test timeout of 60000ms exceeded while running "beforeEach" hook.
+
+      213 |
+      214 |   test.describe('Admin System Monitoring', () => {
+    > 215 |     test.beforeEach(async ({ page }) => {
+          |          ^
+      216 |       // Login as admin and navigate to system page
+      217 |       await page.fill('input[name="email"]', 'admin@example.com')
+      218 |       await page.fill('input[name="password"]', 'adminpassword')
+        at /Users/alaughingkitsune/src/Choices/web/tests/e2e/admin-system.spec.ts:215:10
+
+    Error: page.fill: Test timeout of 60000ms exceeded.
+    Call log:
+      - waiting for locator('input[name="email"]')
+
+
+      215 |     test.beforeEach(async ({ page }) => {
+      216 |       // Login as admin and navigate to system page
+    > 217 |       await page.fill('input[name="email"]', 'admin@example.com')
+          |                  ^
+      218 |       await page.fill('input[name="password"]', 'adminpassword')
+      219 |       await page.click('button[type="submit"]')
+      220 |       await page.waitForURL(/\/dashboard|\/profile/)
+        at /Users/alaughingkitsune/src/Choices/web/tests/e2e/admin-system.spec.ts:217:18
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/admin-system-Admin-System--03120--show-system-health-metrics-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/admin-system-Admin-System--03120--show-system-health-metrics-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/admin-system-Admin-System--03120--show-system-health-metrics-chromium/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|admin-system-Admin-System--03120--show-system-health-metrics-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|admin-system-Admin-System--03120--show-system-health-metrics-chromium/video.webm]]
+
+[[ATTACHMENT|admin-system-Admin-System--03120--show-system-health-metrics-chromium/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Admin System › Admin Site Messages › should display site messages interface" classname="admin-system.spec.ts" time="64.17">
+<failure message="admin-system.spec.ts:250:9 should display site messages interface" type="FAILURE">
+<![CDATA[  [chromium] › admin-system.spec.ts:250:9 › Admin System › Admin Site Messages › should display site messages interface 
+
+    Test timeout of 60000ms exceeded while running "beforeEach" hook.
+
+      239 |
+      240 |   test.describe('Admin Site Messages', () => {
+    > 241 |     test.beforeEach(async ({ page }) => {
+          |          ^
+      242 |       // Login as admin and navigate to site messages page
+      243 |       await page.fill('input[name="email"]', 'admin@example.com')
+      244 |       await page.fill('input[name="password"]', 'adminpassword')
+        at /Users/alaughingkitsune/src/Choices/web/tests/e2e/admin-system.spec.ts:241:10
+
+    Error: page.fill: Test timeout of 60000ms exceeded.
+    Call log:
+      - waiting for locator('input[name="email"]')
+
+
+      241 |     test.beforeEach(async ({ page }) => {
+      242 |       // Login as admin and navigate to site messages page
+    > 243 |       await page.fill('input[name="email"]', 'admin@example.com')
+          |                  ^
+      244 |       await page.fill('input[name="password"]', 'adminpassword')
+      245 |       await page.click('button[type="submit"]')
+      246 |       await page.waitForURL(/\/dashboard|\/profile/)
+        at /Users/alaughingkitsune/src/Choices/web/tests/e2e/admin-system.spec.ts:243:18
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/admin-system-Admin-System--f9286-lay-site-messages-interface-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/admin-system-Admin-System--f9286-lay-site-messages-interface-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/admin-system-Admin-System--f9286-lay-site-messages-interface-chromium/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|admin-system-Admin-System--f9286-lay-site-messages-interface-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|admin-system-Admin-System--f9286-lay-site-messages-interface-chromium/video.webm]]
+
+[[ATTACHMENT|admin-system-Admin-System--f9286-lay-site-messages-interface-chromium/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Admin System › Admin Site Messages › should allow admin to create site messages" classname="admin-system.spec.ts" time="64.175">
+<failure message="admin-system.spec.ts:257:9 should allow admin to create site messages" type="FAILURE">
+<![CDATA[  [chromium] › admin-system.spec.ts:257:9 › Admin System › Admin Site Messages › should allow admin to create site messages 
+
+    Test timeout of 60000ms exceeded while running "beforeEach" hook.
+
+      239 |
+      240 |   test.describe('Admin Site Messages', () => {
+    > 241 |     test.beforeEach(async ({ page }) => {
+          |          ^
+      242 |       // Login as admin and navigate to site messages page
+      243 |       await page.fill('input[name="email"]', 'admin@example.com')
+      244 |       await page.fill('input[name="password"]', 'adminpassword')
+        at /Users/alaughingkitsune/src/Choices/web/tests/e2e/admin-system.spec.ts:241:10
+
+    Error: page.fill: Test timeout of 60000ms exceeded.
+    Call log:
+      - waiting for locator('input[name="email"]')
+
+
+      241 |     test.beforeEach(async ({ page }) => {
+      242 |       // Login as admin and navigate to site messages page
+    > 243 |       await page.fill('input[name="email"]', 'admin@example.com')
+          |                  ^
+      244 |       await page.fill('input[name="password"]', 'adminpassword')
+      245 |       await page.click('button[type="submit"]')
+      246 |       await page.waitForURL(/\/dashboard|\/profile/)
+        at /Users/alaughingkitsune/src/Choices/web/tests/e2e/admin-system.spec.ts:243:18
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/admin-system-Admin-System--47eb5-min-to-create-site-messages-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/admin-system-Admin-System--47eb5-min-to-create-site-messages-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/admin-system-Admin-System--47eb5-min-to-create-site-messages-chromium/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|admin-system-Admin-System--47eb5-min-to-create-site-messages-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|admin-system-Admin-System--47eb5-min-to-create-site-messages-chromium/video.webm]]
+
+[[ATTACHMENT|admin-system-Admin-System--47eb5-min-to-create-site-messages-chromium/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Admin System › Admin Security › should not expose admin API endpoints to non-admin users" classname="admin-system.spec.ts" time="4.758">
+</testcase>
+<testcase name="Admin System › Admin Security › should require authentication for all admin routes" classname="admin-system.spec.ts" time="14.614">
+<failure message="admin-system.spec.ts:289:9 should require authentication for all admin routes" type="FAILURE">
+<![CDATA[  [chromium] › admin-system.spec.ts:289:9 › Admin System › Admin Security › should require authentication for all admin routes 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator:  locator('text=Access Denied')
+    Expected: visible
+    Received: <element(s) not found>
+    Timeout:  10000ms
+
+    Call log:
+      - Expect "toBeVisible" with timeout 10000ms
+      - waiting for locator('text=Access Denied')
+
+
+      307 |         
+      308 |         if (currentUrl.includes('/admin')) {
+    > 309 |           await expect(page.locator('text=Access Denied')).toBeVisible()
+          |                                                            ^
+      310 |         }
+      311 |       }
+      312 |     })
+        at /Users/alaughingkitsune/src/Choices/web/tests/e2e/admin-system.spec.ts:309:60
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/admin-system-Admin-System--fc315-cation-for-all-admin-routes-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/admin-system-Admin-System--fc315-cation-for-all-admin-routes-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/admin-system-Admin-System--fc315-cation-for-all-admin-routes-chromium/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|admin-system-Admin-System--fc315-cation-for-all-admin-routes-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|admin-system-Admin-System--fc315-cation-for-all-admin-routes-chromium/video.webm]]
+
+[[ATTACHMENT|admin-system-Admin-System--fc315-cation-for-all-admin-routes-chromium/error-context.md]]
+]]>
+</system-out>
+</testcase>
+</testsuite>
+<testsuite name="rate-limit-bypass.spec.ts" timestamp="2025-09-14T21:36:41.430Z" hostname="chromium" tests="2" failures="2" skipped="0" time="23.62" errors="0">
+<testcase name="Rate Limiting Bypass › should bypass rate limiting with E2E header" classname="rate-limit-bypass.spec.ts" time="11.707">
+<failure message="rate-limit-bypass.spec.ts:9:7 should bypass rate limiting with E2E header" type="FAILURE">
+<![CDATA[  [chromium] › rate-limit-bypass.spec.ts:9:7 › Rate Limiting Bypass › should bypass rate limiting with E2E header 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator:  locator('input[name="email"]')
+    Expected: visible
+    Received: <element(s) not found>
+    Timeout:  10000ms
+
+    Call log:
+      - Expect "toBeVisible" with timeout 10000ms
+      - waiting for locator('input[name="email"]')
+
+
+      13 |       
+      14 |       // Should be able to access login page without rate limiting
+    > 15 |       await expect(page.locator('input[name="email"]')).toBeVisible()
+         |                                                         ^
+      16 |       
+      17 |       // Small delay to avoid overwhelming the server
+      18 |       await page.waitForTimeout(100)
+        at /Users/alaughingkitsune/src/Choices/web/tests/e2e/rate-limit-bypass.spec.ts:15:57
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/rate-limit-bypass-Rate-Lim-5f660-te-limiting-with-E2E-header-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/rate-limit-bypass-Rate-Lim-5f660-te-limiting-with-E2E-header-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/rate-limit-bypass-Rate-Lim-5f660-te-limiting-with-E2E-header-chromium/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|rate-limit-bypass-Rate-Lim-5f660-te-limiting-with-E2E-header-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|rate-limit-bypass-Rate-Lim-5f660-te-limiting-with-E2E-header-chromium/video.webm]]
+
+[[ATTACHMENT|rate-limit-bypass-Rate-Lim-5f660-te-limiting-with-E2E-header-chromium/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Rate Limiting Bypass › should show login form elements" classname="rate-limit-bypass.spec.ts" time="11.913">
+<failure message="rate-limit-bypass.spec.ts:22:7 should show login form elements" type="FAILURE">
+<![CDATA[  [chromium] › rate-limit-bypass.spec.ts:22:7 › Rate Limiting Bypass › should show login form elements 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator:  locator('input[name="email"]')
+    Expected: visible
+    Received: <element(s) not found>
+    Timeout:  10000ms
+
+    Call log:
+      - Expect "toBeVisible" with timeout 10000ms
+      - waiting for locator('input[name="email"]')
+
+
+      24 |     
+      25 |     // Verify login form elements exist
+    > 26 |     await expect(page.locator('input[name="email"]')).toBeVisible()
+         |                                                       ^
+      27 |     await expect(page.locator('input[name="password"]')).toBeVisible()
+      28 |     await expect(page.locator('button[type="submit"]')).toBeVisible()
+      29 |   })
+        at /Users/alaughingkitsune/src/Choices/web/tests/e2e/rate-limit-bypass.spec.ts:26:55
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/rate-limit-bypass-Rate-Lim-f477a-ld-show-login-form-elements-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/rate-limit-bypass-Rate-Lim-f477a-ld-show-login-form-elements-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/rate-limit-bypass-Rate-Lim-f477a-ld-show-login-form-elements-chromium/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|rate-limit-bypass-Rate-Lim-f477a-ld-show-login-form-elements-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|rate-limit-bypass-Rate-Lim-f477a-ld-show-login-form-elements-chromium/video.webm]]
+
+[[ATTACHMENT|rate-limit-bypass-Rate-Lim-f477a-ld-show-login-form-elements-chromium/error-context.md]]
+]]>
+</system-out>
+</testcase>
+</testsuite>
+<testsuite name="simple-bypass.spec.ts" timestamp="2025-09-14T21:36:41.430Z" hostname="chromium" tests="2" failures="0" skipped="0" time="13.619" errors="0">
+<testcase name="Rate Limiting Bypass › should access login page multiple times without rate limiting" classname="simple-bypass.spec.ts" time="11.782">
+</testcase>
+<testcase name="Rate Limiting Bypass › should access admin API without rate limiting" classname="simple-bypass.spec.ts" time="1.837">
+</testcase>
+</testsuite>
+<testsuite name="admin-system.spec.ts" timestamp="2025-09-14T21:36:41.430Z" hostname="firefox" tests="18" failures="17" skipped="0" time="942.24" errors="0">
+<testcase name="Admin System › Admin Authentication › should redirect non-admin users away from admin pages" classname="admin-system.spec.ts" time="14.65">
+<failure message="admin-system.spec.ts:20:9 should redirect non-admin users away from admin pages" type="FAILURE">
+<![CDATA[  [firefox] › admin-system.spec.ts:20:9 › Admin System › Admin Authentication › should redirect non-admin users away from admin pages 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator:  locator('text=Access Denied')
+    Expected: visible
+    Received: <element(s) not found>
+    Timeout:  10000ms
+
+    Call log:
+      - Expect "toBeVisible" with timeout 10000ms
+      - waiting for locator('text=Access Denied')
+
+
+      27 |       // If on admin page, should show access denied message
+      28 |       if (page.url().includes('/admin')) {
+    > 29 |         await expect(page.locator('text=Access Denied')).toBeVisible()
+         |                                                          ^
+      30 |       }
+      31 |     })
+      32 |
+        at /Users/alaughingkitsune/src/Choices/web/tests/e2e/admin-system.spec.ts:29:58
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/admin-system-Admin-System--74f07-users-away-from-admin-pages-firefox/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/admin-system-Admin-System--74f07-users-away-from-admin-pages-firefox/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/admin-system-Admin-System--74f07-users-away-from-admin-pages-firefox/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|admin-system-Admin-System--74f07-users-away-from-admin-pages-firefox/test-failed-1.png]]
+
+[[ATTACHMENT|admin-system-Admin-System--74f07-users-away-from-admin-pages-firefox/video.webm]]
+
+[[ATTACHMENT|admin-system-Admin-System--74f07-users-away-from-admin-pages-firefox/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Admin System › Admin Authentication › should show admin access denied for regular users" classname="admin-system.spec.ts" time="60.173">
+<failure message="admin-system.spec.ts:33:9 should show admin access denied for regular users" type="FAILURE">
+<![CDATA[  [firefox] › admin-system.spec.ts:33:9 › Admin System › Admin Authentication › should show admin access denied for regular users 
+
+    Test timeout of 60000ms exceeded.
+
+    Error: page.fill: Test timeout of 60000ms exceeded.
+    Call log:
+      - waiting for locator('input[name="email"]')
+
+
+      33 |     test('should show admin access denied for regular users', async ({ page }) => {
+      34 |       // Login as regular user (you'll need to set up test user)
+    > 35 |       await page.fill('input[name="email"]', 'regular@example.com')
+         |                  ^
+      36 |       await page.fill('input[name="password"]', 'password123')
+      37 |       await page.click('button[type="submit"]')
+      38 |       
+        at /Users/alaughingkitsune/src/Choices/web/tests/e2e/admin-system.spec.ts:35:18
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/admin-system-Admin-System--d8dc3-ss-denied-for-regular-users-firefox/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/admin-system-Admin-System--d8dc3-ss-denied-for-regular-users-firefox/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/admin-system-Admin-System--d8dc3-ss-denied-for-regular-users-firefox/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|admin-system-Admin-System--d8dc3-ss-denied-for-regular-users-firefox/test-failed-1.png]]
+
+[[ATTACHMENT|admin-system-Admin-System--d8dc3-ss-denied-for-regular-users-firefox/video.webm]]
+
+[[ATTACHMENT|admin-system-Admin-System--d8dc3-ss-denied-for-regular-users-firefox/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Admin System › Admin Authentication › should allow admin users to access admin dashboard" classname="admin-system.spec.ts" time="60.174">
+<failure message="admin-system.spec.ts:49:9 should allow admin users to access admin dashboard" type="FAILURE">
+<![CDATA[  [firefox] › admin-system.spec.ts:49:9 › Admin System › Admin Authentication › should allow admin users to access admin dashboard 
+
+    Test timeout of 60000ms exceeded.
+
+    Error: page.fill: Test timeout of 60000ms exceeded.
+    Call log:
+      - waiting for locator('input[name="email"]')
+
+
+      49 |     test('should allow admin users to access admin dashboard', async ({ page }) => {
+      50 |       // Login as admin user (you'll need to set up test admin user)
+    > 51 |       await page.fill('input[name="email"]', 'admin@example.com')
+         |                  ^
+      52 |       await page.fill('input[name="password"]', 'adminpassword')
+      53 |       await page.click('button[type="submit"]')
+      54 |       
+        at /Users/alaughingkitsune/src/Choices/web/tests/e2e/admin-system.spec.ts:51:18
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/admin-system-Admin-System--3b8fa-s-to-access-admin-dashboard-firefox/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/admin-system-Admin-System--3b8fa-s-to-access-admin-dashboard-firefox/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/admin-system-Admin-System--3b8fa-s-to-access-admin-dashboard-firefox/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|admin-system-Admin-System--3b8fa-s-to-access-admin-dashboard-firefox/test-failed-1.png]]
+
+[[ATTACHMENT|admin-system-Admin-System--3b8fa-s-to-access-admin-dashboard-firefox/video.webm]]
+
+[[ATTACHMENT|admin-system-Admin-System--3b8fa-s-to-access-admin-dashboard-firefox/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Admin System › Admin Dashboard › should display admin dashboard with all sections" classname="admin-system.spec.ts" time="60.604">
+<failure message="admin-system.spec.ts:79:9 should display admin dashboard with all sections" type="FAILURE">
+<![CDATA[  [firefox] › admin-system.spec.ts:79:9 › Admin System › Admin Dashboard › should display admin dashboard with all sections 
+
+    Test timeout of 60000ms exceeded while running "beforeEach" hook.
+
+      66 |
+      67 |   test.describe('Admin Dashboard', () => {
+    > 68 |     test.beforeEach(async ({ page }) => {
+         |          ^
+      69 |       // Login as admin user
+      70 |       await page.fill('input[name="email"]', 'admin@example.com')
+      71 |       await page.fill('input[name="password"]', 'adminpassword')
+        at /Users/alaughingkitsune/src/Choices/web/tests/e2e/admin-system.spec.ts:68:10
+
+    Error: page.fill: Test timeout of 60000ms exceeded.
+    Call log:
+      - waiting for locator('input[name="email"]')
+
+
+      68 |     test.beforeEach(async ({ page }) => {
+      69 |       // Login as admin user
+    > 70 |       await page.fill('input[name="email"]', 'admin@example.com')
+         |                  ^
+      71 |       await page.fill('input[name="password"]', 'adminpassword')
+      72 |       await page.click('button[type="submit"]')
+      73 |       await page.waitForURL(/\/dashboard|\/profile/)
+        at /Users/alaughingkitsune/src/Choices/web/tests/e2e/admin-system.spec.ts:70:18
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/admin-system-Admin-System--08692-dashboard-with-all-sections-firefox/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/admin-system-Admin-System--08692-dashboard-with-all-sections-firefox/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/admin-system-Admin-System--08692-dashboard-with-all-sections-firefox/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|admin-system-Admin-System--08692-dashboard-with-all-sections-firefox/test-failed-1.png]]
+
+[[ATTACHMENT|admin-system-Admin-System--08692-dashboard-with-all-sections-firefox/video.webm]]
+
+[[ATTACHMENT|admin-system-Admin-System--08692-dashboard-with-all-sections-firefox/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Admin System › Admin Dashboard › should navigate between admin sections" classname="admin-system.spec.ts" time="60.417">
+<failure message="admin-system.spec.ts:93:9 should navigate between admin sections" type="FAILURE">
+<![CDATA[  [firefox] › admin-system.spec.ts:93:9 › Admin System › Admin Dashboard › should navigate between admin sections 
+
+    Test timeout of 60000ms exceeded while running "beforeEach" hook.
+
+      66 |
+      67 |   test.describe('Admin Dashboard', () => {
+    > 68 |     test.beforeEach(async ({ page }) => {
+         |          ^
+      69 |       // Login as admin user
+      70 |       await page.fill('input[name="email"]', 'admin@example.com')
+      71 |       await page.fill('input[name="password"]', 'adminpassword')
+        at /Users/alaughingkitsune/src/Choices/web/tests/e2e/admin-system.spec.ts:68:10
+
+    Error: page.fill: Test timeout of 60000ms exceeded.
+    Call log:
+      - waiting for locator('input[name="email"]')
+
+
+      68 |     test.beforeEach(async ({ page }) => {
+      69 |       // Login as admin user
+    > 70 |       await page.fill('input[name="email"]', 'admin@example.com')
+         |                  ^
+      71 |       await page.fill('input[name="password"]', 'adminpassword')
+      72 |       await page.click('button[type="submit"]')
+      73 |       await page.waitForURL(/\/dashboard|\/profile/)
+        at /Users/alaughingkitsune/src/Choices/web/tests/e2e/admin-system.spec.ts:70:18
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/admin-system-Admin-System--65069-gate-between-admin-sections-firefox/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/admin-system-Admin-System--65069-gate-between-admin-sections-firefox/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/admin-system-Admin-System--65069-gate-between-admin-sections-firefox/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|admin-system-Admin-System--65069-gate-between-admin-sections-firefox/test-failed-1.png]]
+
+[[ATTACHMENT|admin-system-Admin-System--65069-gate-between-admin-sections-firefox/video.webm]]
+
+[[ATTACHMENT|admin-system-Admin-System--65069-gate-between-admin-sections-firefox/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Admin System › Admin User Management › should display user management interface" classname="admin-system.spec.ts" time="60.591">
+<failure message="admin-system.spec.ts:131:9 should display user management interface" type="FAILURE">
+<![CDATA[  [firefox] › admin-system.spec.ts:131:9 › Admin System › Admin User Management › should display user management interface 
+
+    Test timeout of 60000ms exceeded while running "beforeEach" hook.
+
+      120 |
+      121 |   test.describe('Admin User Management', () => {
+    > 122 |     test.beforeEach(async ({ page }) => {
+          |          ^
+      123 |       // Login as admin and navigate to users page
+      124 |       await page.fill('input[name="email"]', 'admin@example.com')
+      125 |       await page.fill('input[name="password"]', 'adminpassword')
+        at /Users/alaughingkitsune/src/Choices/web/tests/e2e/admin-system.spec.ts:122:10
+
+    Error: page.fill: Test timeout of 60000ms exceeded.
+    Call log:
+      - waiting for locator('input[name="email"]')
+
+
+      122 |     test.beforeEach(async ({ page }) => {
+      123 |       // Login as admin and navigate to users page
+    > 124 |       await page.fill('input[name="email"]', 'admin@example.com')
+          |                  ^
+      125 |       await page.fill('input[name="password"]', 'adminpassword')
+      126 |       await page.click('button[type="submit"]')
+      127 |       await page.waitForURL(/\/dashboard|\/profile/)
+        at /Users/alaughingkitsune/src/Choices/web/tests/e2e/admin-system.spec.ts:124:18
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/admin-system-Admin-System--6d642-y-user-management-interface-firefox/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/admin-system-Admin-System--6d642-y-user-management-interface-firefox/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/admin-system-Admin-System--6d642-y-user-management-interface-firefox/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|admin-system-Admin-System--6d642-y-user-management-interface-firefox/test-failed-1.png]]
+
+[[ATTACHMENT|admin-system-Admin-System--6d642-y-user-management-interface-firefox/video.webm]]
+
+[[ATTACHMENT|admin-system-Admin-System--6d642-y-user-management-interface-firefox/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Admin System › Admin User Management › should allow admin to view user details" classname="admin-system.spec.ts" time="60.442">
+<failure message="admin-system.spec.ts:138:9 should allow admin to view user details" type="FAILURE">
+<![CDATA[  [firefox] › admin-system.spec.ts:138:9 › Admin System › Admin User Management › should allow admin to view user details 
+
+    Test timeout of 60000ms exceeded while running "beforeEach" hook.
+
+      120 |
+      121 |   test.describe('Admin User Management', () => {
+    > 122 |     test.beforeEach(async ({ page }) => {
+          |          ^
+      123 |       // Login as admin and navigate to users page
+      124 |       await page.fill('input[name="email"]', 'admin@example.com')
+      125 |       await page.fill('input[name="password"]', 'adminpassword')
+        at /Users/alaughingkitsune/src/Choices/web/tests/e2e/admin-system.spec.ts:122:10
+
+    Error: page.fill: Test timeout of 60000ms exceeded.
+    Call log:
+      - waiting for locator('input[name="email"]')
+
+
+      122 |     test.beforeEach(async ({ page }) => {
+      123 |       // Login as admin and navigate to users page
+    > 124 |       await page.fill('input[name="email"]', 'admin@example.com')
+          |                  ^
+      125 |       await page.fill('input[name="password"]', 'adminpassword')
+      126 |       await page.click('button[type="submit"]')
+      127 |       await page.waitForURL(/\/dashboard|\/profile/)
+        at /Users/alaughingkitsune/src/Choices/web/tests/e2e/admin-system.spec.ts:124:18
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/admin-system-Admin-System--fbd47--admin-to-view-user-details-firefox/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/admin-system-Admin-System--fbd47--admin-to-view-user-details-firefox/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/admin-system-Admin-System--fbd47--admin-to-view-user-details-firefox/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|admin-system-Admin-System--fbd47--admin-to-view-user-details-firefox/test-failed-1.png]]
+
+[[ATTACHMENT|admin-system-Admin-System--fbd47--admin-to-view-user-details-firefox/video.webm]]
+
+[[ATTACHMENT|admin-system-Admin-System--fbd47--admin-to-view-user-details-firefox/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Admin System › Admin Feedback Management › should display feedback management interface" classname="admin-system.spec.ts" time="60.386">
+<failure message="admin-system.spec.ts:161:9 should display feedback management interface" type="FAILURE">
+<![CDATA[  [firefox] › admin-system.spec.ts:161:9 › Admin System › Admin Feedback Management › should display feedback management interface 
+
+    Test timeout of 60000ms exceeded while running "beforeEach" hook.
+
+      150 |
+      151 |   test.describe('Admin Feedback Management', () => {
+    > 152 |     test.beforeEach(async ({ page }) => {
+          |          ^
+      153 |       // Login as admin and navigate to feedback page
+      154 |       await page.fill('input[name="email"]', 'admin@example.com')
+      155 |       await page.fill('input[name="password"]', 'adminpassword')
+        at /Users/alaughingkitsune/src/Choices/web/tests/e2e/admin-system.spec.ts:152:10
+
+    Error: page.fill: Test timeout of 60000ms exceeded.
+    Call log:
+      - waiting for locator('input[name="email"]')
+
+
+      152 |     test.beforeEach(async ({ page }) => {
+      153 |       // Login as admin and navigate to feedback page
+    > 154 |       await page.fill('input[name="email"]', 'admin@example.com')
+          |                  ^
+      155 |       await page.fill('input[name="password"]', 'adminpassword')
+      156 |       await page.click('button[type="submit"]')
+      157 |       await page.waitForURL(/\/dashboard|\/profile/)
+        at /Users/alaughingkitsune/src/Choices/web/tests/e2e/admin-system.spec.ts:154:18
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/admin-system-Admin-System--38743-edback-management-interface-firefox/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/admin-system-Admin-System--38743-edback-management-interface-firefox/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/admin-system-Admin-System--38743-edback-management-interface-firefox/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|admin-system-Admin-System--38743-edback-management-interface-firefox/test-failed-1.png]]
+
+[[ATTACHMENT|admin-system-Admin-System--38743-edback-management-interface-firefox/video.webm]]
+
+[[ATTACHMENT|admin-system-Admin-System--38743-edback-management-interface-firefox/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Admin System › Admin Feedback Management › should allow admin to filter feedback" classname="admin-system.spec.ts" time="60.442">
+<failure message="admin-system.spec.ts:168:9 should allow admin to filter feedback" type="FAILURE">
+<![CDATA[  [firefox] › admin-system.spec.ts:168:9 › Admin System › Admin Feedback Management › should allow admin to filter feedback 
+
+    Test timeout of 60000ms exceeded while running "beforeEach" hook.
+
+      150 |
+      151 |   test.describe('Admin Feedback Management', () => {
+    > 152 |     test.beforeEach(async ({ page }) => {
+          |          ^
+      153 |       // Login as admin and navigate to feedback page
+      154 |       await page.fill('input[name="email"]', 'admin@example.com')
+      155 |       await page.fill('input[name="password"]', 'adminpassword')
+        at /Users/alaughingkitsune/src/Choices/web/tests/e2e/admin-system.spec.ts:152:10
+
+    Error: page.fill: Test timeout of 60000ms exceeded.
+    Call log:
+      - waiting for locator('input[name="email"]')
+
+
+      152 |     test.beforeEach(async ({ page }) => {
+      153 |       // Login as admin and navigate to feedback page
+    > 154 |       await page.fill('input[name="email"]', 'admin@example.com')
+          |                  ^
+      155 |       await page.fill('input[name="password"]', 'adminpassword')
+      156 |       await page.click('button[type="submit"]')
+      157 |       await page.waitForURL(/\/dashboard|\/profile/)
+        at /Users/alaughingkitsune/src/Choices/web/tests/e2e/admin-system.spec.ts:154:18
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/admin-system-Admin-System--3ed6e-ow-admin-to-filter-feedback-firefox/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/admin-system-Admin-System--3ed6e-ow-admin-to-filter-feedback-firefox/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/admin-system-Admin-System--3ed6e-ow-admin-to-filter-feedback-firefox/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|admin-system-Admin-System--3ed6e-ow-admin-to-filter-feedback-firefox/test-failed-1.png]]
+
+[[ATTACHMENT|admin-system-Admin-System--3ed6e-ow-admin-to-filter-feedback-firefox/video.webm]]
+
+[[ATTACHMENT|admin-system-Admin-System--3ed6e-ow-admin-to-filter-feedback-firefox/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Admin System › Admin Feedback Management › should allow admin to update feedback status" classname="admin-system.spec.ts" time="60.189">
+<failure message="admin-system.spec.ts:176:9 should allow admin to update feedback status" type="FAILURE">
+<![CDATA[  [firefox] › admin-system.spec.ts:176:9 › Admin System › Admin Feedback Management › should allow admin to update feedback status 
+
+    Test timeout of 60000ms exceeded while running "beforeEach" hook.
+
+      150 |
+      151 |   test.describe('Admin Feedback Management', () => {
+    > 152 |     test.beforeEach(async ({ page }) => {
+          |          ^
+      153 |       // Login as admin and navigate to feedback page
+      154 |       await page.fill('input[name="email"]', 'admin@example.com')
+      155 |       await page.fill('input[name="password"]', 'adminpassword')
+        at /Users/alaughingkitsune/src/Choices/web/tests/e2e/admin-system.spec.ts:152:10
+
+    Error: page.fill: Test timeout of 60000ms exceeded.
+    Call log:
+      - waiting for locator('input[name="email"]')
+
+
+      152 |     test.beforeEach(async ({ page }) => {
+      153 |       // Login as admin and navigate to feedback page
+    > 154 |       await page.fill('input[name="email"]', 'admin@example.com')
+          |                  ^
+      155 |       await page.fill('input[name="password"]', 'adminpassword')
+      156 |       await page.click('button[type="submit"]')
+      157 |       await page.waitForURL(/\/dashboard|\/profile/)
+        at /Users/alaughingkitsune/src/Choices/web/tests/e2e/admin-system.spec.ts:154:18
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/admin-system-Admin-System--9b20c-n-to-update-feedback-status-firefox/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/admin-system-Admin-System--9b20c-n-to-update-feedback-status-firefox/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/admin-system-Admin-System--9b20c-n-to-update-feedback-status-firefox/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|admin-system-Admin-System--9b20c-n-to-update-feedback-status-firefox/test-failed-1.png]]
+
+[[ATTACHMENT|admin-system-Admin-System--9b20c-n-to-update-feedback-status-firefox/video.webm]]
+
+[[ATTACHMENT|admin-system-Admin-System--9b20c-n-to-update-feedback-status-firefox/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Admin System › Admin Analytics › should display analytics dashboard" classname="admin-system.spec.ts" time="60.184">
+<failure message="admin-system.spec.ts:198:9 should display analytics dashboard" type="FAILURE">
+<![CDATA[  [firefox] › admin-system.spec.ts:198:9 › Admin System › Admin Analytics › should display analytics dashboard 
+
+    Test timeout of 60000ms exceeded while running "beforeEach" hook.
+
+      187 |
+      188 |   test.describe('Admin Analytics', () => {
+    > 189 |     test.beforeEach(async ({ page }) => {
+          |          ^
+      190 |       // Login as admin and navigate to analytics page
+      191 |       await page.fill('input[name="email"]', 'admin@example.com')
+      192 |       await page.fill('input[name="password"]', 'adminpassword')
+        at /Users/alaughingkitsune/src/Choices/web/tests/e2e/admin-system.spec.ts:189:10
+
+    Error: page.fill: Test timeout of 60000ms exceeded.
+    Call log:
+      - waiting for locator('input[name="email"]')
+
+
+      189 |     test.beforeEach(async ({ page }) => {
+      190 |       // Login as admin and navigate to analytics page
+    > 191 |       await page.fill('input[name="email"]', 'admin@example.com')
+          |                  ^
+      192 |       await page.fill('input[name="password"]', 'adminpassword')
+      193 |       await page.click('button[type="submit"]')
+      194 |       await page.waitForURL(/\/dashboard|\/profile/)
+        at /Users/alaughingkitsune/src/Choices/web/tests/e2e/admin-system.spec.ts:191:18
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/admin-system-Admin-System--6a806-display-analytics-dashboard-firefox/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/admin-system-Admin-System--6a806-display-analytics-dashboard-firefox/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/admin-system-Admin-System--6a806-display-analytics-dashboard-firefox/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|admin-system-Admin-System--6a806-display-analytics-dashboard-firefox/test-failed-1.png]]
+
+[[ATTACHMENT|admin-system-Admin-System--6a806-display-analytics-dashboard-firefox/video.webm]]
+
+[[ATTACHMENT|admin-system-Admin-System--6a806-display-analytics-dashboard-firefox/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Admin System › Admin Analytics › should show system metrics" classname="admin-system.spec.ts" time="60.275">
+<failure message="admin-system.spec.ts:205:9 should show system metrics" type="FAILURE">
+<![CDATA[  [firefox] › admin-system.spec.ts:205:9 › Admin System › Admin Analytics › should show system metrics 
+
+    Test timeout of 60000ms exceeded while running "beforeEach" hook.
+
+      187 |
+      188 |   test.describe('Admin Analytics', () => {
+    > 189 |     test.beforeEach(async ({ page }) => {
+          |          ^
+      190 |       // Login as admin and navigate to analytics page
+      191 |       await page.fill('input[name="email"]', 'admin@example.com')
+      192 |       await page.fill('input[name="password"]', 'adminpassword')
+        at /Users/alaughingkitsune/src/Choices/web/tests/e2e/admin-system.spec.ts:189:10
+
+    Error: page.fill: Test timeout of 60000ms exceeded.
+    Call log:
+      - waiting for locator('input[name="email"]')
+
+
+      189 |     test.beforeEach(async ({ page }) => {
+      190 |       // Login as admin and navigate to analytics page
+    > 191 |       await page.fill('input[name="email"]', 'admin@example.com')
+          |                  ^
+      192 |       await page.fill('input[name="password"]', 'adminpassword')
+      193 |       await page.click('button[type="submit"]')
+      194 |       await page.waitForURL(/\/dashboard|\/profile/)
+        at /Users/alaughingkitsune/src/Choices/web/tests/e2e/admin-system.spec.ts:191:18
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/admin-system-Admin-System--052a6--should-show-system-metrics-firefox/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/admin-system-Admin-System--052a6--should-show-system-metrics-firefox/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/admin-system-Admin-System--052a6--should-show-system-metrics-firefox/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|admin-system-Admin-System--052a6--should-show-system-metrics-firefox/test-failed-1.png]]
+
+[[ATTACHMENT|admin-system-Admin-System--052a6--should-show-system-metrics-firefox/video.webm]]
+
+[[ATTACHMENT|admin-system-Admin-System--052a6--should-show-system-metrics-firefox/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Admin System › Admin System Monitoring › should display system monitoring interface" classname="admin-system.spec.ts" time="60.189">
+<failure message="admin-system.spec.ts:224:9 should display system monitoring interface" type="FAILURE">
+<![CDATA[  [firefox] › admin-system.spec.ts:224:9 › Admin System › Admin System Monitoring › should display system monitoring interface 
+
+    Test timeout of 60000ms exceeded while running "beforeEach" hook.
+
+      213 |
+      214 |   test.describe('Admin System Monitoring', () => {
+    > 215 |     test.beforeEach(async ({ page }) => {
+          |          ^
+      216 |       // Login as admin and navigate to system page
+      217 |       await page.fill('input[name="email"]', 'admin@example.com')
+      218 |       await page.fill('input[name="password"]', 'adminpassword')
+        at /Users/alaughingkitsune/src/Choices/web/tests/e2e/admin-system.spec.ts:215:10
+
+    Error: page.fill: Test timeout of 60000ms exceeded.
+    Call log:
+      - waiting for locator('input[name="email"]')
+
+
+      215 |     test.beforeEach(async ({ page }) => {
+      216 |       // Login as admin and navigate to system page
+    > 217 |       await page.fill('input[name="email"]', 'admin@example.com')
+          |                  ^
+      218 |       await page.fill('input[name="password"]', 'adminpassword')
+      219 |       await page.click('button[type="submit"]')
+      220 |       await page.waitForURL(/\/dashboard|\/profile/)
+        at /Users/alaughingkitsune/src/Choices/web/tests/e2e/admin-system.spec.ts:217:18
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/admin-system-Admin-System--50b72-system-monitoring-interface-firefox/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/admin-system-Admin-System--50b72-system-monitoring-interface-firefox/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/admin-system-Admin-System--50b72-system-monitoring-interface-firefox/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|admin-system-Admin-System--50b72-system-monitoring-interface-firefox/test-failed-1.png]]
+
+[[ATTACHMENT|admin-system-Admin-System--50b72-system-monitoring-interface-firefox/video.webm]]
+
+[[ATTACHMENT|admin-system-Admin-System--50b72-system-monitoring-interface-firefox/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Admin System › Admin System Monitoring › should show system health metrics" classname="admin-system.spec.ts" time="60.342">
+<failure message="admin-system.spec.ts:231:9 should show system health metrics" type="FAILURE">
+<![CDATA[  [firefox] › admin-system.spec.ts:231:9 › Admin System › Admin System Monitoring › should show system health metrics 
+
+    Test timeout of 60000ms exceeded while running "beforeEach" hook.
+
+      213 |
+      214 |   test.describe('Admin System Monitoring', () => {
+    > 215 |     test.beforeEach(async ({ page }) => {
+          |          ^
+      216 |       // Login as admin and navigate to system page
+      217 |       await page.fill('input[name="email"]', 'admin@example.com')
+      218 |       await page.fill('input[name="password"]', 'adminpassword')
+        at /Users/alaughingkitsune/src/Choices/web/tests/e2e/admin-system.spec.ts:215:10
+
+    Error: page.fill: Test timeout of 60000ms exceeded.
+    Call log:
+      - waiting for locator('input[name="email"]')
+
+
+      215 |     test.beforeEach(async ({ page }) => {
+      216 |       // Login as admin and navigate to system page
+    > 217 |       await page.fill('input[name="email"]', 'admin@example.com')
+          |                  ^
+      218 |       await page.fill('input[name="password"]', 'adminpassword')
+      219 |       await page.click('button[type="submit"]')
+      220 |       await page.waitForURL(/\/dashboard|\/profile/)
+        at /Users/alaughingkitsune/src/Choices/web/tests/e2e/admin-system.spec.ts:217:18
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/admin-system-Admin-System--03120--show-system-health-metrics-firefox/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/admin-system-Admin-System--03120--show-system-health-metrics-firefox/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/admin-system-Admin-System--03120--show-system-health-metrics-firefox/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|admin-system-Admin-System--03120--show-system-health-metrics-firefox/test-failed-1.png]]
+
+[[ATTACHMENT|admin-system-Admin-System--03120--show-system-health-metrics-firefox/video.webm]]
+
+[[ATTACHMENT|admin-system-Admin-System--03120--show-system-health-metrics-firefox/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Admin System › Admin Site Messages › should display site messages interface" classname="admin-system.spec.ts" time="60.579">
+<failure message="admin-system.spec.ts:250:9 should display site messages interface" type="FAILURE">
+<![CDATA[  [firefox] › admin-system.spec.ts:250:9 › Admin System › Admin Site Messages › should display site messages interface 
+
+    Test timeout of 60000ms exceeded while running "beforeEach" hook.
+
+      239 |
+      240 |   test.describe('Admin Site Messages', () => {
+    > 241 |     test.beforeEach(async ({ page }) => {
+          |          ^
+      242 |       // Login as admin and navigate to site messages page
+      243 |       await page.fill('input[name="email"]', 'admin@example.com')
+      244 |       await page.fill('input[name="password"]', 'adminpassword')
+        at /Users/alaughingkitsune/src/Choices/web/tests/e2e/admin-system.spec.ts:241:10
+
+    Error: page.fill: Test timeout of 60000ms exceeded.
+    Call log:
+      - waiting for locator('input[name="email"]')
+
+
+      241 |     test.beforeEach(async ({ page }) => {
+      242 |       // Login as admin and navigate to site messages page
+    > 243 |       await page.fill('input[name="email"]', 'admin@example.com')
+          |                  ^
+      244 |       await page.fill('input[name="password"]', 'adminpassword')
+      245 |       await page.click('button[type="submit"]')
+      246 |       await page.waitForURL(/\/dashboard|\/profile/)
+        at /Users/alaughingkitsune/src/Choices/web/tests/e2e/admin-system.spec.ts:243:18
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/admin-system-Admin-System--f9286-lay-site-messages-interface-firefox/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/admin-system-Admin-System--f9286-lay-site-messages-interface-firefox/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/admin-system-Admin-System--f9286-lay-site-messages-interface-firefox/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|admin-system-Admin-System--f9286-lay-site-messages-interface-firefox/test-failed-1.png]]
+
+[[ATTACHMENT|admin-system-Admin-System--f9286-lay-site-messages-interface-firefox/video.webm]]
+
+[[ATTACHMENT|admin-system-Admin-System--f9286-lay-site-messages-interface-firefox/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Admin System › Admin Site Messages › should allow admin to create site messages" classname="admin-system.spec.ts" time="62.042">
+<failure message="admin-system.spec.ts:257:9 should allow admin to create site messages" type="FAILURE">
+<![CDATA[  [firefox] › admin-system.spec.ts:257:9 › Admin System › Admin Site Messages › should allow admin to create site messages 
+
+    Test timeout of 60000ms exceeded while running "beforeEach" hook.
+
+      239 |
+      240 |   test.describe('Admin Site Messages', () => {
+    > 241 |     test.beforeEach(async ({ page }) => {
+          |          ^
+      242 |       // Login as admin and navigate to site messages page
+      243 |       await page.fill('input[name="email"]', 'admin@example.com')
+      244 |       await page.fill('input[name="password"]', 'adminpassword')
+        at /Users/alaughingkitsune/src/Choices/web/tests/e2e/admin-system.spec.ts:241:10
+
+    Error: page.fill: Test timeout of 60000ms exceeded.
+    Call log:
+      - waiting for locator('input[name="email"]')
+
+
+      241 |     test.beforeEach(async ({ page }) => {
+      242 |       // Login as admin and navigate to site messages page
+    > 243 |       await page.fill('input[name="email"]', 'admin@example.com')
+          |                  ^
+      244 |       await page.fill('input[name="password"]', 'adminpassword')
+      245 |       await page.click('button[type="submit"]')
+      246 |       await page.waitForURL(/\/dashboard|\/profile/)
+        at /Users/alaughingkitsune/src/Choices/web/tests/e2e/admin-system.spec.ts:243:18
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/admin-system-Admin-System--47eb5-min-to-create-site-messages-firefox/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/admin-system-Admin-System--47eb5-min-to-create-site-messages-firefox/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/admin-system-Admin-System--47eb5-min-to-create-site-messages-firefox/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|admin-system-Admin-System--47eb5-min-to-create-site-messages-firefox/test-failed-1.png]]
+
+[[ATTACHMENT|admin-system-Admin-System--47eb5-min-to-create-site-messages-firefox/video.webm]]
+
+[[ATTACHMENT|admin-system-Admin-System--47eb5-min-to-create-site-messages-firefox/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Admin System › Admin Security › should not expose admin API endpoints to non-admin users" classname="admin-system.spec.ts" time="4.031">
+</testcase>
+<testcase name="Admin System › Admin Security › should require authentication for all admin routes" classname="admin-system.spec.ts" time="16.53">
+<failure message="admin-system.spec.ts:289:9 should require authentication for all admin routes" type="FAILURE">
+<![CDATA[  [firefox] › admin-system.spec.ts:289:9 › Admin System › Admin Security › should require authentication for all admin routes 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator:  locator('text=Access Denied')
+    Expected: visible
+    Received: <element(s) not found>
+    Timeout:  10000ms
+
+    Call log:
+      - Expect "toBeVisible" with timeout 10000ms
+      - waiting for locator('text=Access Denied')
+
+
+      307 |         
+      308 |         if (currentUrl.includes('/admin')) {
+    > 309 |           await expect(page.locator('text=Access Denied')).toBeVisible()
+          |                                                            ^
+      310 |         }
+      311 |       }
+      312 |     })
+        at /Users/alaughingkitsune/src/Choices/web/tests/e2e/admin-system.spec.ts:309:60
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/admin-system-Admin-System--fc315-cation-for-all-admin-routes-firefox/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/admin-system-Admin-System--fc315-cation-for-all-admin-routes-firefox/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/admin-system-Admin-System--fc315-cation-for-all-admin-routes-firefox/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|admin-system-Admin-System--fc315-cation-for-all-admin-routes-firefox/test-failed-1.png]]
+
+[[ATTACHMENT|admin-system-Admin-System--fc315-cation-for-all-admin-routes-firefox/video.webm]]
+
+[[ATTACHMENT|admin-system-Admin-System--fc315-cation-for-all-admin-routes-firefox/error-context.md]]
+]]>
+</system-out>
+</testcase>
+</testsuite>
+<testsuite name="rate-limit-bypass.spec.ts" timestamp="2025-09-14T21:36:41.430Z" hostname="firefox" tests="2" failures="2" skipped="0" time="26.645" errors="0">
+<testcase name="Rate Limiting Bypass › should bypass rate limiting with E2E header" classname="rate-limit-bypass.spec.ts" time="13.715">
+<failure message="rate-limit-bypass.spec.ts:9:7 should bypass rate limiting with E2E header" type="FAILURE">
+<![CDATA[  [firefox] › rate-limit-bypass.spec.ts:9:7 › Rate Limiting Bypass › should bypass rate limiting with E2E header 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator:  locator('input[name="email"]')
+    Expected: visible
+    Received: <element(s) not found>
+    Timeout:  10000ms
+
+    Call log:
+      - Expect "toBeVisible" with timeout 10000ms
+      - waiting for locator('input[name="email"]')
+
+
+      13 |       
+      14 |       // Should be able to access login page without rate limiting
+    > 15 |       await expect(page.locator('input[name="email"]')).toBeVisible()
+         |                                                         ^
+      16 |       
+      17 |       // Small delay to avoid overwhelming the server
+      18 |       await page.waitForTimeout(100)
+        at /Users/alaughingkitsune/src/Choices/web/tests/e2e/rate-limit-bypass.spec.ts:15:57
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/rate-limit-bypass-Rate-Lim-5f660-te-limiting-with-E2E-header-firefox/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/rate-limit-bypass-Rate-Lim-5f660-te-limiting-with-E2E-header-firefox/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/rate-limit-bypass-Rate-Lim-5f660-te-limiting-with-E2E-header-firefox/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|rate-limit-bypass-Rate-Lim-5f660-te-limiting-with-E2E-header-firefox/test-failed-1.png]]
+
+[[ATTACHMENT|rate-limit-bypass-Rate-Lim-5f660-te-limiting-with-E2E-header-firefox/video.webm]]
+
+[[ATTACHMENT|rate-limit-bypass-Rate-Lim-5f660-te-limiting-with-E2E-header-firefox/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Rate Limiting Bypass › should show login form elements" classname="rate-limit-bypass.spec.ts" time="12.93">
+<failure message="rate-limit-bypass.spec.ts:22:7 should show login form elements" type="FAILURE">
+<![CDATA[  [firefox] › rate-limit-bypass.spec.ts:22:7 › Rate Limiting Bypass › should show login form elements 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator:  locator('input[name="email"]')
+    Expected: visible
+    Received: <element(s) not found>
+    Timeout:  10000ms
+
+    Call log:
+      - Expect "toBeVisible" with timeout 10000ms
+      - waiting for locator('input[name="email"]')
+
+
+      24 |     
+      25 |     // Verify login form elements exist
+    > 26 |     await expect(page.locator('input[name="email"]')).toBeVisible()
+         |                                                       ^
+      27 |     await expect(page.locator('input[name="password"]')).toBeVisible()
+      28 |     await expect(page.locator('button[type="submit"]')).toBeVisible()
+      29 |   })
+        at /Users/alaughingkitsune/src/Choices/web/tests/e2e/rate-limit-bypass.spec.ts:26:55
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/rate-limit-bypass-Rate-Lim-f477a-ld-show-login-form-elements-firefox/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/rate-limit-bypass-Rate-Lim-f477a-ld-show-login-form-elements-firefox/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/rate-limit-bypass-Rate-Lim-f477a-ld-show-login-form-elements-firefox/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|rate-limit-bypass-Rate-Lim-f477a-ld-show-login-form-elements-firefox/test-failed-1.png]]
+
+[[ATTACHMENT|rate-limit-bypass-Rate-Lim-f477a-ld-show-login-form-elements-firefox/video.webm]]
+
+[[ATTACHMENT|rate-limit-bypass-Rate-Lim-f477a-ld-show-login-form-elements-firefox/error-context.md]]
+]]>
+</system-out>
+</testcase>
+</testsuite>
+<testsuite name="simple-bypass.spec.ts" timestamp="2025-09-14T21:36:41.430Z" hostname="firefox" tests="2" failures="1" skipped="0" time="79.523" errors="0">
+<testcase name="Rate Limiting Bypass › should access login page multiple times without rate limiting" classname="simple-bypass.spec.ts" time="65.071">
+<failure message="simple-bypass.spec.ts:8:7 should access login page multiple times without rate limiting" type="FAILURE">
+<![CDATA[  [firefox] › simple-bypass.spec.ts:8:7 › Rate Limiting Bypass › should access login page multiple times without rate limiting 
+
+    Test timeout of 60000ms exceeded.
+
+    Error: page.goto: Test timeout of 60000ms exceeded.
+    Call log:
+      - navigating to "http://127.0.0.1:3000/login", waiting until "load"
+
+
+       9 |     // Navigate to login page multiple times to test rate limiting
+      10 |     for (let i = 0; i < 15; i++) {
+    > 11 |       const response = await page.goto('/login')
+         |                                   ^
+      12 |       
+      13 |       // Should get a response (not rate limited)
+      14 |       expect(response?.status()).toBeLessThan(500)
+        at /Users/alaughingkitsune/src/Choices/web/tests/e2e/simple-bypass.spec.ts:11:35
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/simple-bypass-Rate-Limitin-ac366-times-without-rate-limiting-firefox/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/simple-bypass-Rate-Limitin-ac366-times-without-rate-limiting-firefox/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|simple-bypass-Rate-Limitin-ac366-times-without-rate-limiting-firefox/test-failed-1.png]]
+
+[[ATTACHMENT|simple-bypass-Rate-Limitin-ac366-times-without-rate-limiting-firefox/video.webm]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Rate Limiting Bypass › should access admin API without rate limiting" classname="simple-bypass.spec.ts" time="14.452">
+</testcase>
+</testsuite>
+<testsuite name="admin-system.spec.ts" timestamp="2025-09-14T21:36:41.430Z" hostname="webkit" tests="18" failures="17" skipped="0" time="1175.331" errors="0">
+<testcase name="Admin System › Admin Authentication › should redirect non-admin users away from admin pages" classname="admin-system.spec.ts" time="39.464">
+<failure message="admin-system.spec.ts:20:9 should redirect non-admin users away from admin pages" type="FAILURE">
+<![CDATA[  [webkit] › admin-system.spec.ts:20:9 › Admin System › Admin Authentication › should redirect non-admin users away from admin pages 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator:  locator('text=Access Denied')
+    Expected: visible
+    Received: <element(s) not found>
+    Timeout:  10000ms
+
+    Call log:
+      - Expect "toBeVisible" with timeout 10000ms
+      - waiting for locator('text=Access Denied')
+
+
+      27 |       // If on admin page, should show access denied message
+      28 |       if (page.url().includes('/admin')) {
+    > 29 |         await expect(page.locator('text=Access Denied')).toBeVisible()
+         |                                                          ^
+      30 |       }
+      31 |     })
+      32 |
+        at /Users/alaughingkitsune/src/Choices/web/tests/e2e/admin-system.spec.ts:29:58
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/admin-system-Admin-System--74f07-users-away-from-admin-pages-webkit/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/admin-system-Admin-System--74f07-users-away-from-admin-pages-webkit/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|admin-system-Admin-System--74f07-users-away-from-admin-pages-webkit/test-failed-1.png]]
+
+[[ATTACHMENT|admin-system-Admin-System--74f07-users-away-from-admin-pages-webkit/video.webm]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Admin System › Admin Authentication › should show admin access denied for regular users" classname="admin-system.spec.ts" time="102.658">
+<failure message="admin-system.spec.ts:33:9 should show admin access denied for regular users" type="FAILURE">
+<![CDATA[  [webkit] › admin-system.spec.ts:33:9 › Admin System › Admin Authentication › should show admin access denied for regular users 
+
+    Test timeout of 60000ms exceeded.
+
+    Error: page.fill: Test timeout of 60000ms exceeded.
+    Call log:
+      - waiting for locator('input[name="email"]')
+
+
+      33 |     test('should show admin access denied for regular users', async ({ page }) => {
+      34 |       // Login as regular user (you'll need to set up test user)
+    > 35 |       await page.fill('input[name="email"]', 'regular@example.com')
+         |                  ^
+      36 |       await page.fill('input[name="password"]', 'password123')
+      37 |       await page.click('button[type="submit"]')
+      38 |       
+        at /Users/alaughingkitsune/src/Choices/web/tests/e2e/admin-system.spec.ts:35:18
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/admin-system-Admin-System--d8dc3-ss-denied-for-regular-users-webkit/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/admin-system-Admin-System--d8dc3-ss-denied-for-regular-users-webkit/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|admin-system-Admin-System--d8dc3-ss-denied-for-regular-users-webkit/test-failed-1.png]]
+
+[[ATTACHMENT|admin-system-Admin-System--d8dc3-ss-denied-for-regular-users-webkit/video.webm]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Admin System › Admin Authentication › should allow admin users to access admin dashboard" classname="admin-system.spec.ts" time="97.76">
+<failure message="admin-system.spec.ts:49:9 should allow admin users to access admin dashboard" type="FAILURE">
+<![CDATA[  [webkit] › admin-system.spec.ts:49:9 › Admin System › Admin Authentication › should allow admin users to access admin dashboard 
+
+    Test timeout of 60000ms exceeded.
+
+    Error: page.fill: Test timeout of 60000ms exceeded.
+    Call log:
+      - waiting for locator('input[name="email"]')
+
+
+      49 |     test('should allow admin users to access admin dashboard', async ({ page }) => {
+      50 |       // Login as admin user (you'll need to set up test admin user)
+    > 51 |       await page.fill('input[name="email"]', 'admin@example.com')
+         |                  ^
+      52 |       await page.fill('input[name="password"]', 'adminpassword')
+      53 |       await page.click('button[type="submit"]')
+      54 |       
+        at /Users/alaughingkitsune/src/Choices/web/tests/e2e/admin-system.spec.ts:51:18
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/admin-system-Admin-System--3b8fa-s-to-access-admin-dashboard-webkit/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/admin-system-Admin-System--3b8fa-s-to-access-admin-dashboard-webkit/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|admin-system-Admin-System--3b8fa-s-to-access-admin-dashboard-webkit/test-failed-1.png]]
+
+[[ATTACHMENT|admin-system-Admin-System--3b8fa-s-to-access-admin-dashboard-webkit/video.webm]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Admin System › Admin Dashboard › should display admin dashboard with all sections" classname="admin-system.spec.ts" time="88.757">
+<failure message="admin-system.spec.ts:79:9 should display admin dashboard with all sections" type="FAILURE">
+<![CDATA[  [webkit] › admin-system.spec.ts:79:9 › Admin System › Admin Dashboard › should display admin dashboard with all sections 
+
+    Test timeout of 60000ms exceeded while running "beforeEach" hook.
+
+      66 |
+      67 |   test.describe('Admin Dashboard', () => {
+    > 68 |     test.beforeEach(async ({ page }) => {
+         |          ^
+      69 |       // Login as admin user
+      70 |       await page.fill('input[name="email"]', 'admin@example.com')
+      71 |       await page.fill('input[name="password"]', 'adminpassword')
+        at /Users/alaughingkitsune/src/Choices/web/tests/e2e/admin-system.spec.ts:68:10
+
+    Error: page.fill: Test timeout of 60000ms exceeded.
+    Call log:
+      - waiting for locator('input[name="email"]')
+
+
+      68 |     test.beforeEach(async ({ page }) => {
+      69 |       // Login as admin user
+    > 70 |       await page.fill('input[name="email"]', 'admin@example.com')
+         |                  ^
+      71 |       await page.fill('input[name="password"]', 'adminpassword')
+      72 |       await page.click('button[type="submit"]')
+      73 |       await page.waitForURL(/\/dashboard|\/profile/)
+        at /Users/alaughingkitsune/src/Choices/web/tests/e2e/admin-system.spec.ts:70:18
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/admin-system-Admin-System--08692-dashboard-with-all-sections-webkit/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/admin-system-Admin-System--08692-dashboard-with-all-sections-webkit/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|admin-system-Admin-System--08692-dashboard-with-all-sections-webkit/test-failed-1.png]]
+
+[[ATTACHMENT|admin-system-Admin-System--08692-dashboard-with-all-sections-webkit/video.webm]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Admin System › Admin Dashboard › should navigate between admin sections" classname="admin-system.spec.ts" time="87.852">
+<failure message="admin-system.spec.ts:93:9 should navigate between admin sections" type="FAILURE">
+<![CDATA[  [webkit] › admin-system.spec.ts:93:9 › Admin System › Admin Dashboard › should navigate between admin sections 
+
+    Test timeout of 60000ms exceeded while running "beforeEach" hook.
+
+      66 |
+      67 |   test.describe('Admin Dashboard', () => {
+    > 68 |     test.beforeEach(async ({ page }) => {
+         |          ^
+      69 |       // Login as admin user
+      70 |       await page.fill('input[name="email"]', 'admin@example.com')
+      71 |       await page.fill('input[name="password"]', 'adminpassword')
+        at /Users/alaughingkitsune/src/Choices/web/tests/e2e/admin-system.spec.ts:68:10
+
+    Error: page.fill: Test timeout of 60000ms exceeded.
+    Call log:
+      - waiting for locator('input[name="email"]')
+
+
+      68 |     test.beforeEach(async ({ page }) => {
+      69 |       // Login as admin user
+    > 70 |       await page.fill('input[name="email"]', 'admin@example.com')
+         |                  ^
+      71 |       await page.fill('input[name="password"]', 'adminpassword')
+      72 |       await page.click('button[type="submit"]')
+      73 |       await page.waitForURL(/\/dashboard|\/profile/)
+        at /Users/alaughingkitsune/src/Choices/web/tests/e2e/admin-system.spec.ts:70:18
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/admin-system-Admin-System--65069-gate-between-admin-sections-webkit/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/admin-system-Admin-System--65069-gate-between-admin-sections-webkit/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|admin-system-Admin-System--65069-gate-between-admin-sections-webkit/test-failed-1.png]]
+
+[[ATTACHMENT|admin-system-Admin-System--65069-gate-between-admin-sections-webkit/video.webm]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Admin System › Admin User Management › should display user management interface" classname="admin-system.spec.ts" time="80.942">
+<failure message="admin-system.spec.ts:131:9 should display user management interface" type="FAILURE">
+<![CDATA[  [webkit] › admin-system.spec.ts:131:9 › Admin System › Admin User Management › should display user management interface 
+
+    Test timeout of 60000ms exceeded while running "beforeEach" hook.
+
+      120 |
+      121 |   test.describe('Admin User Management', () => {
+    > 122 |     test.beforeEach(async ({ page }) => {
+          |          ^
+      123 |       // Login as admin and navigate to users page
+      124 |       await page.fill('input[name="email"]', 'admin@example.com')
+      125 |       await page.fill('input[name="password"]', 'adminpassword')
+        at /Users/alaughingkitsune/src/Choices/web/tests/e2e/admin-system.spec.ts:122:10
+
+    Error: page.fill: Test timeout of 60000ms exceeded.
+    Call log:
+      - waiting for locator('input[name="email"]')
+
+
+      122 |     test.beforeEach(async ({ page }) => {
+      123 |       // Login as admin and navigate to users page
+    > 124 |       await page.fill('input[name="email"]', 'admin@example.com')
+          |                  ^
+      125 |       await page.fill('input[name="password"]', 'adminpassword')
+      126 |       await page.click('button[type="submit"]')
+      127 |       await page.waitForURL(/\/dashboard|\/profile/)
+        at /Users/alaughingkitsune/src/Choices/web/tests/e2e/admin-system.spec.ts:124:18
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/admin-system-Admin-System--6d642-y-user-management-interface-webkit/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/admin-system-Admin-System--6d642-y-user-management-interface-webkit/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|admin-system-Admin-System--6d642-y-user-management-interface-webkit/test-failed-1.png]]
+
+[[ATTACHMENT|admin-system-Admin-System--6d642-y-user-management-interface-webkit/video.webm]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Admin System › Admin User Management › should allow admin to view user details" classname="admin-system.spec.ts" time="71.046">
+<failure message="admin-system.spec.ts:138:9 should allow admin to view user details" type="FAILURE">
+<![CDATA[  [webkit] › admin-system.spec.ts:138:9 › Admin System › Admin User Management › should allow admin to view user details 
+
+    Test timeout of 60000ms exceeded while running "beforeEach" hook.
+
+      120 |
+      121 |   test.describe('Admin User Management', () => {
+    > 122 |     test.beforeEach(async ({ page }) => {
+          |          ^
+      123 |       // Login as admin and navigate to users page
+      124 |       await page.fill('input[name="email"]', 'admin@example.com')
+      125 |       await page.fill('input[name="password"]', 'adminpassword')
+        at /Users/alaughingkitsune/src/Choices/web/tests/e2e/admin-system.spec.ts:122:10
+
+    Error: page.fill: Test timeout of 60000ms exceeded.
+    Call log:
+      - waiting for locator('input[name="email"]')
+
+
+      122 |     test.beforeEach(async ({ page }) => {
+      123 |       // Login as admin and navigate to users page
+    > 124 |       await page.fill('input[name="email"]', 'admin@example.com')
+          |                  ^
+      125 |       await page.fill('input[name="password"]', 'adminpassword')
+      126 |       await page.click('button[type="submit"]')
+      127 |       await page.waitForURL(/\/dashboard|\/profile/)
+        at /Users/alaughingkitsune/src/Choices/web/tests/e2e/admin-system.spec.ts:124:18
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/admin-system-Admin-System--fbd47--admin-to-view-user-details-webkit/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/admin-system-Admin-System--fbd47--admin-to-view-user-details-webkit/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|admin-system-Admin-System--fbd47--admin-to-view-user-details-webkit/test-failed-1.png]]
+
+[[ATTACHMENT|admin-system-Admin-System--fbd47--admin-to-view-user-details-webkit/video.webm]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Admin System › Admin Feedback Management › should display feedback management interface" classname="admin-system.spec.ts" time="61.248">
+<failure message="admin-system.spec.ts:161:9 should display feedback management interface" type="FAILURE">
+<![CDATA[  [webkit] › admin-system.spec.ts:161:9 › Admin System › Admin Feedback Management › should display feedback management interface 
+
+    Test timeout of 60000ms exceeded while running "beforeEach" hook.
+
+      150 |
+      151 |   test.describe('Admin Feedback Management', () => {
+    > 152 |     test.beforeEach(async ({ page }) => {
+          |          ^
+      153 |       // Login as admin and navigate to feedback page
+      154 |       await page.fill('input[name="email"]', 'admin@example.com')
+      155 |       await page.fill('input[name="password"]', 'adminpassword')
+        at /Users/alaughingkitsune/src/Choices/web/tests/e2e/admin-system.spec.ts:152:10
+
+    Error: page.fill: Test timeout of 60000ms exceeded.
+    Call log:
+      - waiting for locator('input[name="email"]')
+
+
+      152 |     test.beforeEach(async ({ page }) => {
+      153 |       // Login as admin and navigate to feedback page
+    > 154 |       await page.fill('input[name="email"]', 'admin@example.com')
+          |                  ^
+      155 |       await page.fill('input[name="password"]', 'adminpassword')
+      156 |       await page.click('button[type="submit"]')
+      157 |       await page.waitForURL(/\/dashboard|\/profile/)
+        at /Users/alaughingkitsune/src/Choices/web/tests/e2e/admin-system.spec.ts:154:18
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/admin-system-Admin-System--38743-edback-management-interface-webkit/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/admin-system-Admin-System--38743-edback-management-interface-webkit/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|admin-system-Admin-System--38743-edback-management-interface-webkit/test-failed-1.png]]
+
+[[ATTACHMENT|admin-system-Admin-System--38743-edback-management-interface-webkit/video.webm]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Admin System › Admin Feedback Management › should allow admin to filter feedback" classname="admin-system.spec.ts" time="61.355">
+<failure message="admin-system.spec.ts:168:9 should allow admin to filter feedback" type="FAILURE">
+<![CDATA[  [webkit] › admin-system.spec.ts:168:9 › Admin System › Admin Feedback Management › should allow admin to filter feedback 
+
+    Test timeout of 60000ms exceeded while running "beforeEach" hook.
+
+      150 |
+      151 |   test.describe('Admin Feedback Management', () => {
+    > 152 |     test.beforeEach(async ({ page }) => {
+          |          ^
+      153 |       // Login as admin and navigate to feedback page
+      154 |       await page.fill('input[name="email"]', 'admin@example.com')
+      155 |       await page.fill('input[name="password"]', 'adminpassword')
+        at /Users/alaughingkitsune/src/Choices/web/tests/e2e/admin-system.spec.ts:152:10
+
+    Error: page.fill: Test timeout of 60000ms exceeded.
+    Call log:
+      - waiting for locator('input[name="email"]')
+
+
+      152 |     test.beforeEach(async ({ page }) => {
+      153 |       // Login as admin and navigate to feedback page
+    > 154 |       await page.fill('input[name="email"]', 'admin@example.com')
+          |                  ^
+      155 |       await page.fill('input[name="password"]', 'adminpassword')
+      156 |       await page.click('button[type="submit"]')
+      157 |       await page.waitForURL(/\/dashboard|\/profile/)
+        at /Users/alaughingkitsune/src/Choices/web/tests/e2e/admin-system.spec.ts:154:18
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/admin-system-Admin-System--3ed6e-ow-admin-to-filter-feedback-webkit/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/admin-system-Admin-System--3ed6e-ow-admin-to-filter-feedback-webkit/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|admin-system-Admin-System--3ed6e-ow-admin-to-filter-feedback-webkit/test-failed-1.png]]
+
+[[ATTACHMENT|admin-system-Admin-System--3ed6e-ow-admin-to-filter-feedback-webkit/video.webm]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Admin System › Admin Feedback Management › should allow admin to update feedback status" classname="admin-system.spec.ts" time="61.841">
+<failure message="admin-system.spec.ts:176:9 should allow admin to update feedback status" type="FAILURE">
+<![CDATA[  [webkit] › admin-system.spec.ts:176:9 › Admin System › Admin Feedback Management › should allow admin to update feedback status 
+
+    Test timeout of 60000ms exceeded while running "beforeEach" hook.
+
+      150 |
+      151 |   test.describe('Admin Feedback Management', () => {
+    > 152 |     test.beforeEach(async ({ page }) => {
+          |          ^
+      153 |       // Login as admin and navigate to feedback page
+      154 |       await page.fill('input[name="email"]', 'admin@example.com')
+      155 |       await page.fill('input[name="password"]', 'adminpassword')
+        at /Users/alaughingkitsune/src/Choices/web/tests/e2e/admin-system.spec.ts:152:10
+
+    Error: page.fill: Test timeout of 60000ms exceeded.
+    Call log:
+      - waiting for locator('input[name="email"]')
+
+
+      152 |     test.beforeEach(async ({ page }) => {
+      153 |       // Login as admin and navigate to feedback page
+    > 154 |       await page.fill('input[name="email"]', 'admin@example.com')
+          |                  ^
+      155 |       await page.fill('input[name="password"]', 'adminpassword')
+      156 |       await page.click('button[type="submit"]')
+      157 |       await page.waitForURL(/\/dashboard|\/profile/)
+        at /Users/alaughingkitsune/src/Choices/web/tests/e2e/admin-system.spec.ts:154:18
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/admin-system-Admin-System--9b20c-n-to-update-feedback-status-webkit/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/admin-system-Admin-System--9b20c-n-to-update-feedback-status-webkit/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|admin-system-Admin-System--9b20c-n-to-update-feedback-status-webkit/test-failed-1.png]]
+
+[[ATTACHMENT|admin-system-Admin-System--9b20c-n-to-update-feedback-status-webkit/video.webm]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Admin System › Admin Analytics › should display analytics dashboard" classname="admin-system.spec.ts" time="61.748">
+<failure message="admin-system.spec.ts:198:9 should display analytics dashboard" type="FAILURE">
+<![CDATA[  [webkit] › admin-system.spec.ts:198:9 › Admin System › Admin Analytics › should display analytics dashboard 
+
+    Test timeout of 60000ms exceeded while running "beforeEach" hook.
+
+      187 |
+      188 |   test.describe('Admin Analytics', () => {
+    > 189 |     test.beforeEach(async ({ page }) => {
+          |          ^
+      190 |       // Login as admin and navigate to analytics page
+      191 |       await page.fill('input[name="email"]', 'admin@example.com')
+      192 |       await page.fill('input[name="password"]', 'adminpassword')
+        at /Users/alaughingkitsune/src/Choices/web/tests/e2e/admin-system.spec.ts:189:10
+
+    Error: page.fill: Test timeout of 60000ms exceeded.
+    Call log:
+      - waiting for locator('input[name="email"]')
+
+
+      189 |     test.beforeEach(async ({ page }) => {
+      190 |       // Login as admin and navigate to analytics page
+    > 191 |       await page.fill('input[name="email"]', 'admin@example.com')
+          |                  ^
+      192 |       await page.fill('input[name="password"]', 'adminpassword')
+      193 |       await page.click('button[type="submit"]')
+      194 |       await page.waitForURL(/\/dashboard|\/profile/)
+        at /Users/alaughingkitsune/src/Choices/web/tests/e2e/admin-system.spec.ts:191:18
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/admin-system-Admin-System--6a806-display-analytics-dashboard-webkit/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/admin-system-Admin-System--6a806-display-analytics-dashboard-webkit/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|admin-system-Admin-System--6a806-display-analytics-dashboard-webkit/test-failed-1.png]]
+
+[[ATTACHMENT|admin-system-Admin-System--6a806-display-analytics-dashboard-webkit/video.webm]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Admin System › Admin Analytics › should show system metrics" classname="admin-system.spec.ts" time="67.919">
+<failure message="admin-system.spec.ts:205:9 should show system metrics" type="FAILURE">
+<![CDATA[  [webkit] › admin-system.spec.ts:205:9 › Admin System › Admin Analytics › should show system metrics 
+
+    Test timeout of 60000ms exceeded while running "beforeEach" hook.
+
+      187 |
+      188 |   test.describe('Admin Analytics', () => {
+    > 189 |     test.beforeEach(async ({ page }) => {
+          |          ^
+      190 |       // Login as admin and navigate to analytics page
+      191 |       await page.fill('input[name="email"]', 'admin@example.com')
+      192 |       await page.fill('input[name="password"]', 'adminpassword')
+        at /Users/alaughingkitsune/src/Choices/web/tests/e2e/admin-system.spec.ts:189:10
+
+    Error: page.fill: Test timeout of 60000ms exceeded.
+    Call log:
+      - waiting for locator('input[name="email"]')
+
+
+      189 |     test.beforeEach(async ({ page }) => {
+      190 |       // Login as admin and navigate to analytics page
+    > 191 |       await page.fill('input[name="email"]', 'admin@example.com')
+          |                  ^
+      192 |       await page.fill('input[name="password"]', 'adminpassword')
+      193 |       await page.click('button[type="submit"]')
+      194 |       await page.waitForURL(/\/dashboard|\/profile/)
+        at /Users/alaughingkitsune/src/Choices/web/tests/e2e/admin-system.spec.ts:191:18
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/admin-system-Admin-System--052a6--should-show-system-metrics-webkit/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/admin-system-Admin-System--052a6--should-show-system-metrics-webkit/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|admin-system-Admin-System--052a6--should-show-system-metrics-webkit/test-failed-1.png]]
+
+[[ATTACHMENT|admin-system-Admin-System--052a6--should-show-system-metrics-webkit/video.webm]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Admin System › Admin System Monitoring › should display system monitoring interface" classname="admin-system.spec.ts" time="67.041">
+<failure message="admin-system.spec.ts:224:9 should display system monitoring interface" type="FAILURE">
+<![CDATA[  [webkit] › admin-system.spec.ts:224:9 › Admin System › Admin System Monitoring › should display system monitoring interface 
+
+    Test timeout of 60000ms exceeded while running "beforeEach" hook.
+
+      213 |
+      214 |   test.describe('Admin System Monitoring', () => {
+    > 215 |     test.beforeEach(async ({ page }) => {
+          |          ^
+      216 |       // Login as admin and navigate to system page
+      217 |       await page.fill('input[name="email"]', 'admin@example.com')
+      218 |       await page.fill('input[name="password"]', 'adminpassword')
+        at /Users/alaughingkitsune/src/Choices/web/tests/e2e/admin-system.spec.ts:215:10
+
+    Error: page.fill: Test timeout of 60000ms exceeded.
+    Call log:
+      - waiting for locator('input[name="email"]')
+
+
+      215 |     test.beforeEach(async ({ page }) => {
+      216 |       // Login as admin and navigate to system page
+    > 217 |       await page.fill('input[name="email"]', 'admin@example.com')
+          |                  ^
+      218 |       await page.fill('input[name="password"]', 'adminpassword')
+      219 |       await page.click('button[type="submit"]')
+      220 |       await page.waitForURL(/\/dashboard|\/profile/)
+        at /Users/alaughingkitsune/src/Choices/web/tests/e2e/admin-system.spec.ts:217:18
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/admin-system-Admin-System--50b72-system-monitoring-interface-webkit/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/admin-system-Admin-System--50b72-system-monitoring-interface-webkit/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|admin-system-Admin-System--50b72-system-monitoring-interface-webkit/test-failed-1.png]]
+
+[[ATTACHMENT|admin-system-Admin-System--50b72-system-monitoring-interface-webkit/video.webm]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Admin System › Admin System Monitoring › should show system health metrics" classname="admin-system.spec.ts" time="68.449">
+<failure message="admin-system.spec.ts:231:9 should show system health metrics" type="FAILURE">
+<![CDATA[  [webkit] › admin-system.spec.ts:231:9 › Admin System › Admin System Monitoring › should show system health metrics 
+
+    Test timeout of 60000ms exceeded while running "beforeEach" hook.
+
+      213 |
+      214 |   test.describe('Admin System Monitoring', () => {
+    > 215 |     test.beforeEach(async ({ page }) => {
+          |          ^
+      216 |       // Login as admin and navigate to system page
+      217 |       await page.fill('input[name="email"]', 'admin@example.com')
+      218 |       await page.fill('input[name="password"]', 'adminpassword')
+        at /Users/alaughingkitsune/src/Choices/web/tests/e2e/admin-system.spec.ts:215:10
+
+    Error: page.fill: Test timeout of 60000ms exceeded.
+    Call log:
+      - waiting for locator('input[name="email"]')
+
+
+      215 |     test.beforeEach(async ({ page }) => {
+      216 |       // Login as admin and navigate to system page
+    > 217 |       await page.fill('input[name="email"]', 'admin@example.com')
+          |                  ^
+      218 |       await page.fill('input[name="password"]', 'adminpassword')
+      219 |       await page.click('button[type="submit"]')
+      220 |       await page.waitForURL(/\/dashboard|\/profile/)
+        at /Users/alaughingkitsune/src/Choices/web/tests/e2e/admin-system.spec.ts:217:18
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/admin-system-Admin-System--03120--show-system-health-metrics-webkit/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/admin-system-Admin-System--03120--show-system-health-metrics-webkit/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|admin-system-Admin-System--03120--show-system-health-metrics-webkit/test-failed-1.png]]
+
+[[ATTACHMENT|admin-system-Admin-System--03120--show-system-health-metrics-webkit/video.webm]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Admin System › Admin Site Messages › should display site messages interface" classname="admin-system.spec.ts" time="68.097">
+<failure message="admin-system.spec.ts:250:9 should display site messages interface" type="FAILURE">
+<![CDATA[  [webkit] › admin-system.spec.ts:250:9 › Admin System › Admin Site Messages › should display site messages interface 
+
+    Test timeout of 60000ms exceeded while running "beforeEach" hook.
+
+      239 |
+      240 |   test.describe('Admin Site Messages', () => {
+    > 241 |     test.beforeEach(async ({ page }) => {
+          |          ^
+      242 |       // Login as admin and navigate to site messages page
+      243 |       await page.fill('input[name="email"]', 'admin@example.com')
+      244 |       await page.fill('input[name="password"]', 'adminpassword')
+        at /Users/alaughingkitsune/src/Choices/web/tests/e2e/admin-system.spec.ts:241:10
+
+    Error: page.fill: Test timeout of 60000ms exceeded.
+    Call log:
+      - waiting for locator('input[name="email"]')
+
+
+      241 |     test.beforeEach(async ({ page }) => {
+      242 |       // Login as admin and navigate to site messages page
+    > 243 |       await page.fill('input[name="email"]', 'admin@example.com')
+          |                  ^
+      244 |       await page.fill('input[name="password"]', 'adminpassword')
+      245 |       await page.click('button[type="submit"]')
+      246 |       await page.waitForURL(/\/dashboard|\/profile/)
+        at /Users/alaughingkitsune/src/Choices/web/tests/e2e/admin-system.spec.ts:243:18
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/admin-system-Admin-System--f9286-lay-site-messages-interface-webkit/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/admin-system-Admin-System--f9286-lay-site-messages-interface-webkit/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|admin-system-Admin-System--f9286-lay-site-messages-interface-webkit/test-failed-1.png]]
+
+[[ATTACHMENT|admin-system-Admin-System--f9286-lay-site-messages-interface-webkit/video.webm]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Admin System › Admin Site Messages › should allow admin to create site messages" classname="admin-system.spec.ts" time="63.017">
+<failure message="admin-system.spec.ts:257:9 should allow admin to create site messages" type="FAILURE">
+<![CDATA[  [webkit] › admin-system.spec.ts:257:9 › Admin System › Admin Site Messages › should allow admin to create site messages 
+
+    Test timeout of 60000ms exceeded while running "beforeEach" hook.
+
+      239 |
+      240 |   test.describe('Admin Site Messages', () => {
+    > 241 |     test.beforeEach(async ({ page }) => {
+          |          ^
+      242 |       // Login as admin and navigate to site messages page
+      243 |       await page.fill('input[name="email"]', 'admin@example.com')
+      244 |       await page.fill('input[name="password"]', 'adminpassword')
+        at /Users/alaughingkitsune/src/Choices/web/tests/e2e/admin-system.spec.ts:241:10
+
+    Error: page.fill: Test timeout of 60000ms exceeded.
+    Call log:
+      - waiting for locator('input[name="email"]')
+
+
+      241 |     test.beforeEach(async ({ page }) => {
+      242 |       // Login as admin and navigate to site messages page
+    > 243 |       await page.fill('input[name="email"]', 'admin@example.com')
+          |                  ^
+      244 |       await page.fill('input[name="password"]', 'adminpassword')
+      245 |       await page.click('button[type="submit"]')
+      246 |       await page.waitForURL(/\/dashboard|\/profile/)
+        at /Users/alaughingkitsune/src/Choices/web/tests/e2e/admin-system.spec.ts:243:18
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/admin-system-Admin-System--47eb5-min-to-create-site-messages-webkit/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/admin-system-Admin-System--47eb5-min-to-create-site-messages-webkit/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|admin-system-Admin-System--47eb5-min-to-create-site-messages-webkit/test-failed-1.png]]
+
+[[ATTACHMENT|admin-system-Admin-System--47eb5-min-to-create-site-messages-webkit/video.webm]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Admin System › Admin Security › should not expose admin API endpoints to non-admin users" classname="admin-system.spec.ts" time="8.839">
+</testcase>
+<testcase name="Admin System › Admin Security › should require authentication for all admin routes" classname="admin-system.spec.ts" time="17.298">
+<failure message="admin-system.spec.ts:289:9 should require authentication for all admin routes" type="FAILURE">
+<![CDATA[  [webkit] › admin-system.spec.ts:289:9 › Admin System › Admin Security › should require authentication for all admin routes 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator:  locator('text=Access Denied')
+    Expected: visible
+    Received: <element(s) not found>
+    Timeout:  10000ms
+
+    Call log:
+      - Expect "toBeVisible" with timeout 10000ms
+      - waiting for locator('text=Access Denied')
+
+
+      307 |         
+      308 |         if (currentUrl.includes('/admin')) {
+    > 309 |           await expect(page.locator('text=Access Denied')).toBeVisible()
+          |                                                            ^
+      310 |         }
+      311 |       }
+      312 |     })
+        at /Users/alaughingkitsune/src/Choices/web/tests/e2e/admin-system.spec.ts:309:60
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/admin-system-Admin-System--fc315-cation-for-all-admin-routes-webkit/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/admin-system-Admin-System--fc315-cation-for-all-admin-routes-webkit/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|admin-system-Admin-System--fc315-cation-for-all-admin-routes-webkit/test-failed-1.png]]
+
+[[ATTACHMENT|admin-system-Admin-System--fc315-cation-for-all-admin-routes-webkit/video.webm]]
+]]>
+</system-out>
+</testcase>
+</testsuite>
+<testsuite name="rate-limit-bypass.spec.ts" timestamp="2025-09-14T21:36:41.430Z" hostname="webkit" tests="2" failures="2" skipped="0" time="36.003" errors="0">
+<testcase name="Rate Limiting Bypass › should bypass rate limiting with E2E header" classname="rate-limit-bypass.spec.ts" time="18.65">
+<failure message="rate-limit-bypass.spec.ts:9:7 should bypass rate limiting with E2E header" type="FAILURE">
+<![CDATA[  [webkit] › rate-limit-bypass.spec.ts:9:7 › Rate Limiting Bypass › should bypass rate limiting with E2E header 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator:  locator('input[name="email"]')
+    Expected: visible
+    Received: <element(s) not found>
+    Timeout:  10000ms
+
+    Call log:
+      - Expect "toBeVisible" with timeout 10000ms
+      - waiting for locator('input[name="email"]')
+
+
+      13 |       
+      14 |       // Should be able to access login page without rate limiting
+    > 15 |       await expect(page.locator('input[name="email"]')).toBeVisible()
+         |                                                         ^
+      16 |       
+      17 |       // Small delay to avoid overwhelming the server
+      18 |       await page.waitForTimeout(100)
+        at /Users/alaughingkitsune/src/Choices/web/tests/e2e/rate-limit-bypass.spec.ts:15:57
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/rate-limit-bypass-Rate-Lim-5f660-te-limiting-with-E2E-header-webkit/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/rate-limit-bypass-Rate-Lim-5f660-te-limiting-with-E2E-header-webkit/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|rate-limit-bypass-Rate-Lim-5f660-te-limiting-with-E2E-header-webkit/test-failed-1.png]]
+
+[[ATTACHMENT|rate-limit-bypass-Rate-Lim-5f660-te-limiting-with-E2E-header-webkit/video.webm]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Rate Limiting Bypass › should show login form elements" classname="rate-limit-bypass.spec.ts" time="17.353">
+<failure message="rate-limit-bypass.spec.ts:22:7 should show login form elements" type="FAILURE">
+<![CDATA[  [webkit] › rate-limit-bypass.spec.ts:22:7 › Rate Limiting Bypass › should show login form elements 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator:  locator('input[name="email"]')
+    Expected: visible
+    Received: <element(s) not found>
+    Timeout:  10000ms
+
+    Call log:
+      - Expect "toBeVisible" with timeout 10000ms
+      - waiting for locator('input[name="email"]')
+
+
+      24 |     
+      25 |     // Verify login form elements exist
+    > 26 |     await expect(page.locator('input[name="email"]')).toBeVisible()
+         |                                                       ^
+      27 |     await expect(page.locator('input[name="password"]')).toBeVisible()
+      28 |     await expect(page.locator('button[type="submit"]')).toBeVisible()
+      29 |   })
+        at /Users/alaughingkitsune/src/Choices/web/tests/e2e/rate-limit-bypass.spec.ts:26:55
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/rate-limit-bypass-Rate-Lim-f477a-ld-show-login-form-elements-webkit/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/rate-limit-bypass-Rate-Lim-f477a-ld-show-login-form-elements-webkit/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|rate-limit-bypass-Rate-Lim-f477a-ld-show-login-form-elements-webkit/test-failed-1.png]]
+
+[[ATTACHMENT|rate-limit-bypass-Rate-Lim-f477a-ld-show-login-form-elements-webkit/video.webm]]
+]]>
+</system-out>
+</testcase>
+</testsuite>
+<testsuite name="simple-bypass.spec.ts" timestamp="2025-09-14T21:36:41.430Z" hostname="webkit" tests="2" failures="0" skipped="0" time="32.365" errors="0">
+<testcase name="Rate Limiting Bypass › should access login page multiple times without rate limiting" classname="simple-bypass.spec.ts" time="26.53">
+</testcase>
+<testcase name="Rate Limiting Bypass › should access admin API without rate limiting" classname="simple-bypass.spec.ts" time="5.835">
+</testcase>
+</testsuite>
+</testsuites>

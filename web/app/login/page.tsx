@@ -7,7 +7,7 @@ import Link from 'next/link'
 import { Eye, EyeOff, User, Lock, Fingerprint, CheckCircle2, AlertCircle } from 'lucide-react'
 import { clientSession } from '@/lib/client-session'
 import { safeBrowserAccess } from '@/lib/ssr-safe'
-import { isFeatureEnabled } from '@/shared/lib/feature-flags'
+import { isFeatureEnabled } from '@/lib/core/feature-flags'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')

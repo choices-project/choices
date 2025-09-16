@@ -1,30 +1,17 @@
-# macOS
-.DS_Store
-.AppleDouble
-.LSOverride
-
-# Node.js
+# Dependencies
 node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-.pnpm-debug.log*
 
-# Next.js
+# Production builds
 .next/
 out/
-build/
 dist/
+build/
 
 # Environment variables
 .env
-
-# Transient planning documentation
-docs/planning/temp-*.md
-docs/planning/draft-*.md
-docs/planning/notes-*.md
-docs/weekly-updates/draft-*.md
-docs/weekly-updates/temp-*.md
 .env.local
 .env.development.local
 .env.test.local
@@ -32,34 +19,21 @@ docs/weekly-updates/temp-*.md
 .env.admin
 .env.*
 
-# Security and secrets
-*.key
-*.pem
-*.p12
-*.pfx
-secrets/
-credentials/
-*.secret
-
-# Go
-*.exe
-*.exe~
-*.dll
-*.so
-*.dylib
-*.test
-*.out
-go.work
-# Compiled binaries
-po
-ia
-
-# IDE
+# IDE and editor files
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
 
 # Logs
 logs
@@ -74,10 +48,6 @@ pids
 # Coverage directory used by tools like istanbul
 coverage/
 *.lcov
-
-# Testing
-test-results/
-playwright-report/
 
 # nyc test coverage
 .nyc_output
@@ -115,11 +85,6 @@ jspm_packages/
 
 # Nuxt.js build / generate output
 .nuxt
-dist
-
-# Gatsby files
-.cache/
-public
 
 # Storybook build outputs
 .out
@@ -129,49 +94,27 @@ public
 tmp/
 temp/
 
-# Development artifacts (not needed in production)
-dev/
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
 
-# Database files (use environment variables instead)
-database/
-*.db
-*.sqlite
-*.sqlite3
+# Scratch directories for temporary files
+scratch/
+temp-files/
+experiments/
+playground/
 
-# Build artifacts
-*.tsbuildinfo
-.next/
-out/
-build/
-dist/
+# Test artifacts
+test-results/
+playwright-report/
+playwright/.cache/
 
-# Documentation files (consolidated into PROJECT_SUMMARY.md)
-AGENT_COORDINATION_SYSTEM*.md
-AI_STANDARDS.md
-ANALYTICS_SYSTEM_DOCUMENTATION.md
-CI_CD_MONITORING.md
-COMPREHENSIVE_SYSTEM_ANALYSIS.md
-DEVELOPMENT_PLAN.md
-FUNCTIONALITY_TESTING_PLAN.md
-MODULAR_TASK_BREAKDOWN.md
-PROPOSED_CHANGES_MASTER.md
-SETUP_MONITORING.md
-VERSION_CONTROL_STRATEGY.md
-FEEDBACK_SYSTEM_SETUP.md
-FEATURE_USER_FEEDBACK_README.md
-BRANCHING_SUMMARY.md
-BRANCHING_STRATEGY.md
-DEPLOYMENT_OPTIONS.md
-DEPLOYMENT_STATUS_REPORT.md
-PRIVACY_FIRST_PROFILE_SYSTEM.md
-PULL_REQUEST_COMPREHENSIVE_TESTING.md
-DEPLOYMENT_CHECKLIST.md
-DATABASE_UPGRADE.md
-TECHNICAL_IMPLEMENTATION.md
-PROJECT_STATUS.md
-FEATURE_SPEC.md
-PROJECT_ROADMAP.md
-TESTING_GUIDE.md
-PHASE*.md
-CONTEXT_TRACKER.md
-.vercel
+# Supabase
+supabase/.branches
+supabase/.temp

@@ -25,7 +25,7 @@ import {
   __resetClient,
   __setFromSingle,
   __setFromLimit,
-} from '@/utils/supabase/server';
+} from '@/utils/supabase/__mocks__/server';
 
 describe('Admin API Endpoints', () => {
   beforeEach(() => {
@@ -50,7 +50,7 @@ describe('Admin API Endpoints', () => {
       const { GET } = await import('@/app/api/admin/system-status/route');
       const res = await GET(new NextRequest('http://test.local/api/admin/system-status'));
       expect(res.status).toBe(200);
-      expect(requireAdminOr401).toHaveBeenCalled();
+      expect(requireAdminOr401).toHaveBeenCalledWith();
     });
 
     it('should return 401 for non-admin', async () => {
@@ -60,7 +60,7 @@ describe('Admin API Endpoints', () => {
       const { GET } = await import('@/app/api/admin/system-status/route');
       const res = await GET(new NextRequest('http://test.local/api/admin/system-status'));
       expect(res.status).toBe(401);
-      expect(requireAdminOr401).toHaveBeenCalled();
+      expect(requireAdminOr401).toHaveBeenCalledWith();
     });
   });
 

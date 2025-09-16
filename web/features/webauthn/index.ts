@@ -5,7 +5,7 @@
  * When disabled, it provides graceful fallbacks.
  */
 
-import { isFeatureEnabled } from '../../shared/lib/feature-flags';
+import { isFeatureEnabled } from '@/lib/core/feature-flags';
 
 // Re-export WebAuthn utilities only when feature is enabled
 export const WebAuthnUtils = isFeatureEnabled('WEBAUTHN') ? {

@@ -1,10 +1,10 @@
 import { useState, useCallback, useMemo } from 'react';
-import { 
+import type { 
   PollWizardState, 
   PollWizardData, 
   PollSettings, 
   PollTemplate
-} from '../types/poll-templates';
+} from '@/lib/types/poll-templates';
 
 const DEFAULT_SETTINGS: PollSettings = {
   allowMultipleVotes: false,
@@ -26,6 +26,10 @@ const DEFAULT_WIZARD_DATA: PollWizardData = {
   settings: DEFAULT_SETTINGS,
   category: 'general',
   tags: [],
+  privacyLevel: 'public',
+  allowMultipleVotes: false,
+  showResults: true,
+  isTemplate: false,
 };
 
 export const usePollWizard = (template?: PollTemplate) => {
@@ -35,7 +39,19 @@ export const usePollWizard = (template?: PollTemplate) => {
     isComplete: false,
     canProceed: false,
     canGoBack: false,
-    data: template ? { ...DEFAULT_WIZARD_DATA, template } : DEFAULT_WIZARD_DATA,
+    progress: 0,
+    data: template ? { 
+      ...DEFAULT_WIZARD_DATA, 
+      title: template.title,
+      description: template.description,
+      category: template.category,
+      options: template.options,
+      tags: template.tags,
+      privacyLevel: template.privacyLevel,
+      allowMultipleVotes: template.defaultSettings.allowMultipleVotes,
+      showResults: template.defaultSettings.showResults,
+      settings: template.defaultSettings
+    } : DEFAULT_WIZARD_DATA,
     errors: {},
     isLoading: false,
   });
@@ -289,7 +305,19 @@ export const usePollWizard = (template?: PollTemplate) => {
       isComplete: false,
       canProceed: false,
       canGoBack: false,
-      data: template ? { ...DEFAULT_WIZARD_DATA, template } : DEFAULT_WIZARD_DATA,
+      progress: 0,
+      data: template ? { 
+        ...DEFAULT_WIZARD_DATA, 
+        title: template.title,
+        description: template.description,
+        category: template.category,
+        options: template.options,
+        tags: template.tags,
+        privacyLevel: template.privacyLevel,
+        allowMultipleVotes: template.defaultSettings.allowMultipleVotes,
+        showResults: template.defaultSettings.showResults,
+        settings: template.defaultSettings
+      } : DEFAULT_WIZARD_DATA,
       errors: {},
       isLoading: false,
     });

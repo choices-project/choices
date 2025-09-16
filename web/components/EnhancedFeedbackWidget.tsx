@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react'
 import { devLog } from '@/lib/logger'
-import { getFeedbackTracker } from '@/lib/feedback-tracker'
+import { getFeedbackTracker } from '@/lib/admin/feedback-tracker'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
   MessageCircle, 

@@ -6,7 +6,7 @@
  * a clean API for components that depend on it.
  */
 
-import { isFeatureEnabled } from '@/shared/lib/feature-flags';
+import { isFeatureEnabled } from '@/lib/core/feature-flags';
 
 // Re-export PWA utilities conditionally
 export const getPWAUtils = () => {

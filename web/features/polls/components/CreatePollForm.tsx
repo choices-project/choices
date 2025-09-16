@@ -3,8 +3,8 @@
 import React, { useState } from 'react';
 import { devLog } from '@/lib/logger';
 import { Plus, X, Save, AlertCircle, Shield } from 'lucide-react';
-import { PrivacyLevelSelector } from '../privacy/PrivacyLevelSelector';
-import { PrivacyLevel, HybridPrivacyManager } from '@/lib/hybrid-privacy';
+import { PrivacyLevelSelector } from '@/components/privacy/PrivacyLevelSelector';
+import { PrivacyLevel, HybridPrivacyManager } from '@/lib/privacy/hybrid-privacy';
 
 interface CreatePollFormProps {
   onSubmit: (pollData: CreatePollData) => Promise<void>;
@@ -32,7 +32,7 @@ export const CreatePollForm: React.FC<CreatePollFormProps> = ({
     description: '',
     options: ['', ''],
     votingmethod: 'single',
-    privacylevel: 'public',
+    privacylevel: PrivacyLevel.STANDARD,
     category: '',
     tags: []
   });
@@ -141,7 +141,7 @@ export const CreatePollForm: React.FC<CreatePollFormProps> = ({
     return HybridPrivacyManager.getRecommendedPrivacyLevel({
       title: formData.title,
       description: formData.description,
-      category: formData.category
+      category: formData.category || 'general'
     });
   };
 
@@ -375,20 +375,20 @@ export const CreatePollForm: React.FC<CreatePollFormProps> = ({
         <div className="bg-blue-50 p-4 rounded-lg">
           <div className="flex items-start gap-2">
             <div className="text-blue-600">
-              {formData.privacylevel === 'public' && '🌐'}
-              {formData.privacylevel === 'private' && '🔒'}
-              {formData.privacylevel === 'high-privacy' && '🛡️'}
+              {formData.privacylevel === PrivacyLevel.MINIMAL && '🌐'}
+              {formData.privacylevel === PrivacyLevel.ENHANCED && '🔒'}
+              {formData.privacylevel === PrivacyLevel.MAXIMUM && '🛡️'}
             </div>
             <div className="text-sm text-blue-800">
               <p className="font-medium">
-                {formData.privacylevel === 'public' && 'Public Poll'}
-                {formData.privacylevel === 'private' && 'Private Poll'}
-                {formData.privacylevel === 'high-privacy' && 'High Privacy Poll'}
+                {formData.privacylevel === PrivacyLevel.MINIMAL && 'Public Poll'}
+                {formData.privacylevel === PrivacyLevel.ENHANCED && 'Private Poll'}
+                {formData.privacylevel === PrivacyLevel.MAXIMUM && 'High Privacy Poll'}
               </p>
               <p className="text-blue-600">
-                {formData.privacylevel === 'public' && 'Fast voting with basic privacy protection'}
-                {formData.privacylevel === 'private' && 'Enhanced privacy with user authentication'}
-                {formData.privacylevel === 'high-privacy' && 'Maximum privacy with cryptographic guarantees'}
+                {formData.privacylevel === PrivacyLevel.MINIMAL && 'Fast voting with basic privacy protection'}
+                {formData.privacylevel === PrivacyLevel.ENHANCED && 'Enhanced privacy with user authentication'}
+                {formData.privacylevel === PrivacyLevel.MAXIMUM && 'Maximum privacy with cryptographic guarantees'}
               </p>
             </div>
           </div>

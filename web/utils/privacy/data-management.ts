@@ -135,7 +135,7 @@ export class PrivacyDataManager {
       const saltBase64 = EncryptionUtils.uint8ArrayToBase64(encryptionResult.salt);
       const ivBase64 = EncryptionUtils.uint8ArrayToBase64(encryptionResult.iv);
 
-      let updateData: any = {
+      const updateData: any = {
         encryption_version: 1,
         key_derivation_salt: saltBase64,
         key_hash: keyHash,
@@ -194,7 +194,7 @@ export class PrivacyDataManager {
 
       let encryptedData: string | null = null;
       let salt: string | null = null;
-      let iv: string | null = null;
+      const iv: string | null = null;
 
       // Retrieve encrypted data from appropriate table
       if (['demographics', 'preferences', 'contact_info'].includes(dataType)) {

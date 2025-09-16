@@ -9,11 +9,12 @@ import {
   Lock, 
   Unlock
 } from 'lucide-react'
-import SingleChoiceVoting from './voting/SingleChoiceVoting'
-import ApprovalVoting from './voting/ApprovalVoting'
-import QuadraticVoting from './voting/QuadraticVoting'
-import RangeVoting from './voting/RangeVoting'
-import RankedChoiceVoting from './voting/RankedChoiceVoting'
+import SingleChoiceVoting from '@/features/voting/components/SingleChoiceVoting'
+import ApprovalVoting from '@/features/voting/components/ApprovalVoting'
+import QuadraticVoting from '@/features/voting/components/QuadraticVoting'
+import RangeVoting from '@/features/voting/components/RangeVoting'
+import RankedChoiceVoting from '@/features/voting/components/RankedChoiceVoting'
+import type { VoteResponse } from '@/lib/vote/types'
 
 interface Poll {
   id: string
@@ -27,8 +28,6 @@ interface Poll {
 }
 
 // --- types you already have ---
-type VoteResponse = { ok: boolean; id?: string; error?: string };
-
 interface VotingInterfaceProps {
   poll: Poll;
   onVote: (choice: number) => Promise<VoteResponse>;

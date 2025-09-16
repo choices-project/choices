@@ -31,7 +31,7 @@ async function timed<T>(name: string, fn: () => Promise<T>): Promise<[T | null, 
   }
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     // Check admin access - returns 401 if not admin
     const authGate = await requireAdminOr401()

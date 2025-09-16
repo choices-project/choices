@@ -28,7 +28,7 @@ const tableHandlers = new Map<
 // Default client shape your code expects.
 export const __client = {
   auth: {
-    getUser: jest.fn<SingleResult<{ id: string; email?: string }>>(),
+    getUser: jest.fn<Promise<{ data: { id: string; email?: string } | null; error: any | null }>, []>(),
   },
   from: jest.fn((table: string) => {
     const existing = tableHandlers.get(table);
@@ -68,6 +68,8 @@ export const __setFromLimit = <T>(table: string, data: T[] | null, error: any = 
   tableHandlers.set(table, { qb });
   return qb; // handy if you want to assert calls on select/limit later
 };
+
+// Additional exports for test compatibility - removed duplicates
 
 // This is the named export your code imports.
 export const getSupabaseServerClient = jest.fn(async () => __client);

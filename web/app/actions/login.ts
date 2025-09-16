@@ -7,11 +7,11 @@ import {
   validateFormData,
   logSecurityEvent,
   type ServerActionContext
-} from '@/lib/auth/server-actions'
+} from '@/lib/core/auth/server-actions'
 import { 
   rotateSessionToken,
   setSessionCookie 
-} from '@/lib/auth/session-cookies'
+} from '@/lib/core/auth/session-cookies'
 import { getSupabaseServerClient } from '@/utils/supabase/server'
 
 // Validation schema

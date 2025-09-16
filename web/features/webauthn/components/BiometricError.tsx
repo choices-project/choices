@@ -10,7 +10,8 @@ import {
   CheckCircle2,
   XCircle
 } from 'lucide-react'
-import { WebAuthnErrorType, WebAuthnError } from '@/lib/webauthn'
+import type { WebAuthnError } from '@/lib/shared/webauthn';
+import { WebAuthnErrorType } from '@/lib/shared/webauthn'
 
 interface BiometricErrorProps {
   error: WebAuthnError

@@ -1,0 +1,248 @@
+reorg-safety-2025-09-14T23-43-28-404Z
+4e51e0d52be3e94a749fe9f48d5a3fc88a09964c
+ M .gitignore
+ D ADMIN_ACTIVATION_PLAN.md
+ D ADMIN_SYSTEM_ACTIVATION_COMPLETE.md
+ D AGGRESSIVE_CLEANUP_COMPLETE.md
+ D CIVICS_INGEST_INTEGRATION_COMPLETE.md
+ D COMPREHENSIVE_AUTH_ANALYSIS_FOR_AI_REVIEW.md
+ D COMPREHENSIVE_BUILD_ISSUES_ANALYSIS.md
+ D COMPREHENSIVE_DEVELOPMENT_ROADMAP.md
+ D COMPREHENSIVE_DOCUMENTATION_UPDATE_PLAN.md
+ D COMPREHENSIVE_E2E_ANALYSIS_FOR_AI_REVIEW.md
+ D COMPREHENSIVE_FEATURE_AUDIT.md
+ D COMPREHENSIVE_PROJECT_STATUS_UPDATE.md
+ D COMPREHENSIVE_TESTING_SUITE_DOCUMENTATION.md
+ D DEPLOYMENT_SYSTEM_ANALYSIS.md
+ D DEPLOYMENT_SYSTEM_FINAL_CONFIGURATION.md
+ D DOCUMENTATION_ORGANIZATION_COMPLETE.md
+ D E2E_TEST_FAILURE_ANALYSIS.md
+ D EXPERT_IMPLEMENTATION_ROADMAP.md
+ D EXPERT_SUPPORT_PACK_INTEGRATION.md
+ D GITHUB_BRANCH_PROTECTION_SETUP.md
+ D NEXT_ACTIONS_ROADMAP.md
+ D OVERHAUL_SHOPPING_LIST.md
+ D PRECOMMIT_SYSTEM_DOCUMENTATION.md
+ D PRECOMMIT_SYSTEM_FIX_REQUIREMENTS.md
+ D SCRIPTS_CLEANUP_PLAN.md
+ D TESTING_IMPLEMENTATION_STATUS_AND_QUESTIONS.md
+ D TESTING_INFRASTRUCTURE_COMPLETE.md
+ D TESTING_MOCK_CONFIGURATION_ANALYSIS.md
+ D TEST_FAILURE_ANALYSIS_FOR_AI_REVIEW.md
+ D UNIFIED_AUTH_IMPLEMENTATION_SUMMARY.md
+ D VERCEL_DEPLOYMENT_CONFIGURATION_NEEDS.md
+ D overhaul-intake-report.md
+ M package.json
+ D web/.eslintrc.base.cjs
+ D web/.eslintrc.json
+ M web/.eslintrc.strict.cjs
+ D web/admin/lib/admin-hooks.ts
+ D web/admin/lib/admin-store.ts
+ D web/admin/lib/feedback-tracker.ts
+ D web/admin/lib/mock-data.ts
+ D web/admin/lib/real-time-service.ts
+ M web/app/actions/admin/system-status.ts
+ M web/app/actions/complete-onboarding.ts
+ M web/app/actions/create-poll.ts
+ M web/app/actions/login.ts
+ M web/app/actions/logout.ts
+ M web/app/actions/register.ts
+ M web/app/actions/vote.ts
+ M web/app/admin/dashboard/DashboardOverview.tsx
+ M web/app/admin/layout/Header.tsx
+ M web/app/admin/layout/Sidebar.tsx
+ M web/app/api/admin/breaking-news/[id]/poll-context/route.ts
+ M web/app/api/admin/breaking-news/route.ts
+ M web/app/api/admin/feedback/[id]/status/route.ts
+ M web/app/api/admin/feedback/export/route.ts
+ M web/app/api/admin/feedback/route.ts
+ M web/app/api/admin/schema-status/route.ts
+ M web/app/api/admin/simple-example/route.ts
+ M web/app/api/admin/site-messages/route.ts
+ M web/app/api/admin/system-metrics/route.ts
+ M web/app/api/admin/users/route.ts
+ M web/app/api/analytics/poll/[id]/route.ts
+ M web/app/api/analytics/route.ts
+ M web/app/api/analytics/summary/route.ts
+ M web/app/api/analytics/user/[id]/route.ts
+ M web/app/api/auth/_shared/cookies.ts
+ M web/app/api/auth/device-flow/complete/route.ts
+ M web/app/api/auth/device-flow/route.ts
+ M web/app/api/auth/device-flow/verify/route.ts
+ M web/app/api/auth/login/route.ts
+ M web/app/api/auth/logout/route.ts
+ M web/app/api/auth/me/route.ts
+ M web/app/api/auth/register-biometric/route.ts
+ M web/app/api/auth/register/route.ts
+ M web/app/api/auth/sync-user/route.ts
+ M web/app/api/auth/webauthn/authenticate/route.ts
+ M web/app/api/auth/webauthn/credentials/route.ts
+ M web/app/api/auth/webauthn/register/route.ts
+ M web/app/api/auth/webauthn/trust-score/route.ts
+ M web/app/api/csp-report/route.ts
+ M web/app/api/dashboard/route.ts
+ M web/app/api/database-health/route.ts
+ M web/app/api/demographics/route.ts
+ M web/app/api/feedback/route.ts
+ M web/app/api/onboarding/progress/route.ts
+ M web/app/api/polls/[id]/results/route.ts
+ M web/app/api/polls/[id]/route.ts
+ M web/app/api/polls/[id]/vote/route.ts
+ M web/app/api/polls/route.ts
+ M web/app/api/polls/trending/route.ts
+ M web/app/api/privacy/preferences/route.ts
+ M web/app/api/profile/route.ts
+ M web/app/api/protected-example/route.ts
+ M web/app/api/site-messages/route.ts
+ M web/app/api/trending-polls/route.ts
+ M web/app/api/user/complete-onboarding/route.ts
+ M web/app/api/user/get-id-public/route.ts
+ M web/app/api/user/get-id/route.ts
+ M web/app/api/user/preferences/route.ts
+ M web/app/login/page.tsx
+ M web/app/profile/page.tsx
+ M web/archive/auth/device-flow/api/complete/route.ts
+ M web/archive/auth/device-flow/api/route.ts
+ M web/archive/auth/device-flow/api/verify/route.ts
+ M web/archive/auth/webauthn/api/authenticate/route.ts
+ M web/archive/auth/webauthn/api/register/route.ts
+ M web/archive/auth/webauthn/api/trust-score/route.ts
+ M web/components/CreatePoll.tsx
+ M web/components/EnhancedFeedbackWidget.tsx
+ M web/components/FeatureWrapper.tsx
+ M web/components/ProfessionalChart.tsx
+ M web/components/VotingInterface.tsx
+ M web/components/admin/layout/Header.tsx
+ M web/components/admin/layout/Sidebar.tsx
+ M web/components/auth/DeviceList.tsx
+ M web/components/auth/SocialLoginButtons.tsx
+ M web/components/onboarding/steps/AuthStep.tsx
+ M web/components/performance/OptimizedImage.tsx
+ M web/components/performance/VirtualScroll.tsx
+ M web/components/privacy/PrivacyLevelIndicator.tsx
+ M web/components/privacy/PrivacyLevelSelector.tsx
+ M web/contexts/AuthContext.tsx
+ M web/disabled-pages/[id].disabled/page.tsx
+ D web/eslint.config.js
+ M web/features/analytics/index.ts
+ D web/features/auth/lib/auth-middleware.ts
+ D web/features/auth/lib/auth-utils.ts
+ D web/features/auth/lib/auth.ts
+ D web/features/auth/lib/device-flow.ts
+ M web/features/auth/lib/dpop-middleware.ts
+ D web/features/auth/lib/idempotency.ts
+ D web/features/auth/lib/server-actions.ts
+ M web/features/auth/lib/service-role-admin.ts
+ D web/features/auth/lib/session-cookies.ts
+ M web/features/auth/lib/social-auth-config.ts
+ D web/features/civics/api/candidates/[personId]/route.ts
+ D web/features/civics/api/candidates/route.ts
+ D web/features/civics/api/district/route.ts
+ D web/features/civics/api/ingest/route.ts
+ M web/features/civics/ingest/pipeline.ts
+ M web/features/polls/components/CreatePollForm.tsx
+ M web/features/polls/pages/create/page.tsx
+ M web/features/polls/pages/templates/page.tsx
+ D web/features/pwa/components/PWAComponents.tsx
+ M web/features/pwa/hooks/usePWAUtils.ts
+ M web/features/pwa/index.ts
+ D web/features/pwa/lib/pwa-utils.ts
+ M web/features/testing/pages/test-privacy/page.tsx
+ D web/features/webauthn/api/webauthn/authenticate/route.ts
+ D web/features/webauthn/api/webauthn/register/route.ts
+ D web/features/webauthn/api/webauthn/trust-score/route.ts
+ M web/features/webauthn/components/BiometricError.tsx
+ M web/features/webauthn/components/BiometricLogin.tsx
+ M web/features/webauthn/components/BiometricSetup.tsx
+ D web/features/webauthn/lib/webauthn.ts
+ M web/hooks/AuthProvider.tsx
+ M web/hooks/useAnalytics.ts
+ M web/hooks/useDemographics.ts
+ M web/hooks/useFeatureFlags.ts
+ M web/hooks/usePerformanceUtils.ts
+ M web/hooks/usePrivacyUtils.ts
+ M web/hooks/useSupabaseAuth.ts
+ M web/hooks/useTestingUtils.ts
+ M web/jest.client.config.js
+ M web/jest.server.config.js
+ M web/lib/ssr-safe.ts
+ M web/middleware.ts
+ M web/modules/advanced-privacy/hooks/usePrivacyUtils.ts
+ M web/modules/advanced-privacy/privacy-auditor.ts
+ M web/next.config.js
+ M web/package-lock.json
+ M web/package.json
+ D web/shared/core/security/lib/config.ts
+ D web/shared/core/security/lib/rate-limit.ts
+ D web/shared/core/services/lib/AnalyticsService.ts
+ D web/shared/core/services/lib/hybrid-voting-service.ts
+ D web/shared/core/services/lib/real-time-news-service.ts
+ D web/shared/lib/feature-flags.ts
+ M web/shared/utils/lib/browser-utils.ts
+ M web/shared/utils/lib/usePollWizard.ts
+ D web/shared/utils/types/guards.ts
+ M web/src/app/polls/page.tsx
+ M web/src/app/results/page.tsx
+ M web/test-session.js
+ M web/tests/e2e/setup/global-setup.ts
+ M web/tsconfig.json
+ M web/tsconfig.strict.json
+ M web/utils/privacy/data-management.ts
+ M web/utils/supabase/client-dynamic.ts
+ M web/utils/supabase/client-minimal.ts
+ M web/utils/supabase/middleware.ts
+ M web/utils/supabase/server.ts
+?? .github/BRANCH_PROTECTION.md
+?? .github/PULL_REQUEST_TEMPLATE.md
+?? .github/workflows/ci.yml
+?? .vercel/
+?? AUDIT_FINDINGS.md
+?? PROGRESS_SUMMARY.md
+?? ROADMAP_TO_GREEN_BUILD.md
+?? docs/adr-template.md
+?? web/.eslintrc.cjs
+?? web/.eslintrc.cjs.backup
+?? web/.eslintrc.strict.cjs.backup
+?? web/_reports/
+?? web/app/api/candidates/
+?? web/app/api/district/
+?? web/app/api/stats/
+?? web/app/test-privacy/
+?? web/database/PRIVACY_FIRST_COMPLETE_SETUP.sql
+?? web/database/PRIVACY_FIRST_FIXED_SETUP.sql
+?? web/database/clean-database-setup.sql
+?? web/database/fix-function-security.sql
+?? web/database/performance-optimization.sql
+?? web/database/polls_schema.sql
+?? web/database/privacy-first-schema.sql
+?? web/database/security-cleanup.sql
+?? web/dev/
+?? web/eslint/
+?? web/features/civics/server/
+?? web/features/webauthn/server/
+?? web/lib/admin/
+?? web/lib/civics/
+?? web/lib/client-session.ts
+?? web/lib/core/
+?? web/lib/error-handler.ts
+?? web/lib/hooks/
+?? web/lib/http.ts
+?? web/lib/index.ts
+?? web/lib/logger.ts
+?? web/lib/mock-data.ts
+?? web/lib/performance/
+?? web/lib/privacy/
+?? web/lib/services/
+?? web/lib/shared/
+?? web/lib/ssr-polyfills.ts
+?? web/lib/types/
+?? web/lib/utils.ts
+?? web/public/
+?? web/scripts/reorg/fix-all-imports.mjs
+?? web/scripts/reorg/fix-final-imports.mjs
+?? web/scripts/reorg/fix-remaining-imports.mjs
+?? web/scripts/reorg/update-imports.mjs
+?? web/scripts/triage/
+?? web/shared/core/database/
+?? web/tsconfig.base.json
+?? web/tsconfig.tsbuildinfo

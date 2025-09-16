@@ -2,7 +2,8 @@
 
 import React from 'react';
 import { Shield, Lock, Globe, Info } from 'lucide-react';
-import { PrivacyLevel, PRIVACY_DESCRIPTIONS } from '@/lib/hybrid-privacy';
+import { PrivacyLevel } from '@/lib/privacy/hybrid-privacy';
+import { PRIVACY_DESCRIPTIONS } from '@/lib/privacy/hybrid-privacy';
 
 interface PrivacyLevelIndicatorProps {
   level: PrivacyLevel;
@@ -33,11 +34,13 @@ export const PrivacyLevelIndicator: React.FC<PrivacyLevelIndicatorProps> = ({
 
   const getIcon = () => {
     switch (level) {
-      case 'public':
+      case PrivacyLevel.MINIMAL:
         return <Globe className={iconSizes[size]} />;
-      case 'private':
+      case PrivacyLevel.STANDARD:
         return <Lock className={iconSizes[size]} />;
-      case 'high-privacy':
+      case PrivacyLevel.ENHANCED:
+        return <Shield className={iconSizes[size]} />;
+      case PrivacyLevel.MAXIMUM:
         return <Shield className={iconSizes[size]} />;
       default:
         return <Globe className={iconSizes[size]} />;
@@ -46,11 +49,13 @@ export const PrivacyLevelIndicator: React.FC<PrivacyLevelIndicatorProps> = ({
 
   const getColorClasses = () => {
     switch (level) {
-      case 'public':
+      case PrivacyLevel.MINIMAL:
         return 'text-green-600 bg-green-100 border-green-200';
-      case 'private':
+      case PrivacyLevel.STANDARD:
         return 'text-blue-600 bg-blue-100 border-blue-200';
-      case 'high-privacy':
+      case PrivacyLevel.ENHANCED:
+        return 'text-orange-600 bg-orange-100 border-orange-200';
+      case PrivacyLevel.MAXIMUM:
         return 'text-purple-600 bg-purple-100 border-purple-200';
       default:
         return 'text-gray-600 bg-gray-100 border-gray-200';
@@ -59,11 +64,11 @@ export const PrivacyLevelIndicator: React.FC<PrivacyLevelIndicatorProps> = ({
 
   const getEmoji = () => {
     switch (level) {
-      case 'public':
+      case PrivacyLevel.MINIMAL:
         return '🌐';
-      case 'private':
+      case PrivacyLevel.STANDARD:
         return '🔒';
-      case 'high-privacy':
+      case PrivacyLevel.MAXIMUM:
         return '🛡️';
       default:
         return '🌐';
@@ -101,11 +106,11 @@ export const CompactPrivacyIndicator: React.FC<Omit<PrivacyLevelIndicatorProps, 
 }) => {
   const getEmoji = () => {
     switch (level) {
-      case 'public':
+      case PrivacyLevel.MINIMAL:
         return '🌐';
-      case 'private':
+      case PrivacyLevel.STANDARD:
         return '🔒';
-      case 'high-privacy':
+      case PrivacyLevel.MAXIMUM:
         return '🛡️';
       default:
         return '🌐';
@@ -114,11 +119,11 @@ export const CompactPrivacyIndicator: React.FC<Omit<PrivacyLevelIndicatorProps, 
 
   const getColorClasses = () => {
     switch (level) {
-      case 'public':
+      case PrivacyLevel.MINIMAL:
         return 'text-green-600';
-      case 'private':
+      case PrivacyLevel.STANDARD:
         return 'text-blue-600';
-      case 'high-privacy':
+      case PrivacyLevel.MAXIMUM:
         return 'text-purple-600';
       default:
         return 'text-gray-600';

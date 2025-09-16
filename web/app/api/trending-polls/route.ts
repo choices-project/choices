@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server';
 import { devLog } from '@/lib/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 import { handleError, getUserMessage, getHttpStatus } from '@/lib/error-handler';
@@ -91,7 +92,7 @@ export async function GET(_request: NextRequest) {
 
   } catch (error) {
     devLog('Error in trending polls API:', error);
-    const appError = handleError(error as Error, { context: 'trending-polls' })
+    const appError = handleError(error as Error)
     const userMessage = getUserMessage(appError)
     const statusCode = getHttpStatus(appError)
     

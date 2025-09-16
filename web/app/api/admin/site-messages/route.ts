@@ -1,6 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
 import { requireAdminOr401 } from '@/lib/admin-auth'
 import { logger } from '@/lib/logger'
+import { getSupabaseServerClient } from '@/utils/supabase/server'
 
 export async function GET(request: NextRequest) {
   // Single admin gate - returns 401 if not admin
@@ -49,7 +51,8 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const newMessage = await createSiteMessage(context.supabase, {
+    const supabase = await getSupabaseServerClient()
+    const newMessage = await createSiteMessage(supabase, {
       title,
       message,
       type,
@@ -89,7 +92,8 @@ export async function PUT(request: NextRequest) {
       )
     }
 
-    const updatedMessage = await updateSiteMessage(context.supabase, id, {
+    const supabase = await getSupabaseServerClient()
+    const updatedMessage = await updateSiteMessage(supabase, id, {
       title,
       message,
       type,
@@ -129,7 +133,8 @@ export async function DELETE(request: NextRequest) {
       )
     }
 
-    await deleteSiteMessage(context.supabase, id)
+    const supabase = await getSupabaseServerClient()
+    await deleteSiteMessage(supabase, id)
     return NextResponse.json({ success: true })
   } catch (error) {
     logger.error('Error deleting site message', error instanceof Error ? error : new Error(String(error)))

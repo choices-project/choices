@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useRef, useCallback, useMemo, forwardRef, useImperativeHandle } from 'react'
-import { performanceUtils } from '@/lib/performance'
+import { performanceUtils } from '@/lib/performance/performance'
 
 interface VirtualScrollProps<T> {
   items: T[]
@@ -46,12 +46,11 @@ const VirtualScroll = forwardRef<VirtualScrollRef, VirtualScrollProps<any>>(<T,>
 
   // Calculate visible items using performance utilities
   const visibleItems = useMemo(() => {
-    const { startIndex, endIndex } = performanceUtils.virtualScroll.getVisibleItems(
-      items,
-      vs.itemHeight,
-      vs.containerHeight,
+    const { startIndex, endIndex } = performanceUtils.virtualScroll.calculateVisibleRange(
       scrollTop,
-      vs.overscan
+      vs.containerHeight,
+      vs.itemHeight,
+      items.length
     )
 
     return {

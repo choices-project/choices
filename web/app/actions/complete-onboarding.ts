@@ -8,11 +8,11 @@ import {
   validateFormData,
   getAuthenticatedUser,
   type ServerActionContext
-} from '@/lib/auth/server-actions'
+} from '@/lib/core/auth/server-actions'
 import { 
   rotateSessionToken,
   setSessionCookie 
-} from '@/lib/auth/session-cookies'
+} from '@/lib/core/auth/session-cookies'
 
 
 

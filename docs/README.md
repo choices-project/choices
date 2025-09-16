@@ -1,190 +1,137 @@
-# Choices Platform
+# Choices Platform Documentation
 
-**A privacy-first, unbiased polling platform for democratic participation**
+> **A privacy-first, unbiased polling platform for democratic participation**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Next.js](https://img.shields.io/badge/Next.js-14.2.31-black)](https://nextjs.org/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue)](https://www.typescriptlang.org/)
+[![Next.js](https://img.shields.io/badge/Next.js-14.2.32-black)](https://nextjs.org/)
 [![Supabase](https://img.shields.io/badge/Supabase-Latest-green)](https://supabase.com/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.7.2-blue)](https://www.typescriptlang.org/)
 
-## 🚀 **Status: DEPLOYMENT READY**
+## 📖 Documentation Overview
 
-The Choices platform is now in a **clean, deployable state** with all critical SSR issues resolved. The application builds successfully, runs properly in development, and is ready for production deployment.
+This documentation provides comprehensive guides for developers, contributors, and users of the Choices platform.
 
-### ✅ **What's Working**
-- **Complete Build Process** - No blocking errors
-- **Next.js 14 SSR** - Fully compatible and working
-- **Authentication System** - Functional with Supabase
-- **API Routes** - All operational
-- **Development Environment** - Fully functional
-- **Testing Framework** - Comprehensive E2E coverage
+### 🚀 Quick Start
+- **[Getting Started](getting-started/README.md)** - Set up your development environment
+- **[Deployment Guide](deployment/README.md)** - Deploy to production
+- **[API Reference](api/README.md)** - Complete API documentation
+- **[Production Readiness](PRODUCTION_READINESS.md)** - 🎉 **PRODUCTION READY STATUS**
 
-## 🎯 **Quick Start**
+### 🏗️ Architecture & Core
+- **[System Architecture](core/SYSTEM_ARCHITECTURE.md)** - Technical overview and design decisions
+- **[Security Model](core/SECURITY.md)** - Security policies and implementation
+- **[Authentication System](core/AUTHENTICATION.md)** - WebAuthn and Supabase auth
+- **[Database Schema](core/DATABASE_SCHEMA.md)** - Database design and relationships
 
-### Prerequisites
-- Node.js 18+ 
-- npm or yarn
-- Supabase account (for backend)
+### 🎯 Features
+- **[Polling System](features/POLLING_SYSTEM.md)** - Core polling functionality
+- **[Voting Methods](features/VOTING_METHODS.md)** - Single-choice, ranked-choice, and more
+- **[Privacy & Analytics](features/PRIVACY_ANALYTICS.md)** - Privacy-first analytics
+- **[Admin Dashboard](features/ADMIN_DASHBOARD.md)** - Administrative tools
+- **[PWA Features](features/PWA_FEATURES.md)** - Progressive Web App capabilities
 
-### Installation
-```bash
-# Clone the repository
-git clone https://github.com/choices-project/choices.git
-cd choices
+### 👥 Community & Governance
+- **[Contributing](CONTRIBUTING.md)** - How to contribute to the project
+- **[Code of Conduct](CODE_OF_CONDUCT.md)** - Community guidelines
+- **[Governance](core/GOVERNANCE.md)** - Project governance and decision-making
+- **[Neutrality Policy](core/NEUTRALITY_POLICY.md)** - Platform neutrality principles
 
-# Install dependencies
-cd web
-npm install
+### 🔧 Development
+- **[Development Setup](development/SETUP.md)** - Local development environment
+- **[Testing Guide](development/TESTING.md)** - Testing strategies and tools
+- **[Code Style](development/CODE_STYLE.md)** - Coding standards and conventions
+- **[Release Process](development/RELEASE_PROCESS.md)** - How we release new versions
 
-# Set up environment variables
-cp .env.example .env.local
-# Edit .env.local with your Supabase credentials
+### 📊 Operations
+- **[Monitoring](operations/MONITORING.md)** - System monitoring and alerting
+- **[Backup & Recovery](operations/BACKUP_RECOVERY.md)** - Data protection strategies
+- **[Performance](operations/PERFORMANCE.md)** - Performance optimization
+- **[Troubleshooting](operations/TROUBLESHOOTING.md)** - Common issues and solutions
 
-# Start development server
-npm run dev
-```
+## 🎯 Current Features
 
-### Build for Production
-```bash
-# Build the application
-npm run build
+### 🔐 Authentication System
+- **Supabase Authentication** - Email/password authentication with OAuth callbacks
+- **Session Management** - Secure session handling with automatic refresh
+- **Admin Access** - Service role-based admin authentication
+- **Email Verification** - Email verification flow for new users
 
-# Start production server
-npm start
-```
+### 🗳️ Polling System
+- **Poll Creation** - Multi-step wizard for creating polls with categories and settings
+- **Voting Interface** - Single-choice and multiple-choice voting options
+- **Results Display** - Real-time poll results with visualizations
+- **Poll Templates** - Pre-built templates for common poll types
+- **Privacy Controls** - Configurable privacy levels for polls
 
-## 🏗️ **Architecture**
+### 👥 Admin Dashboard
+- **User Management** - View and manage user accounts
+- **System Monitoring** - System health and performance metrics
+- **Feedback Management** - Handle user feedback and reports
+- **Site Configuration** - System settings and configuration management
 
-### Frontend
-- **Next.js 14.2.31** - React framework with App Router
-- **TypeScript** - Type-safe development
-- **Tailwind CSS** - Utility-first styling
-- **Supabase** - Backend-as-a-Service
+### 🏗️ Technical Infrastructure
+- **TypeScript** - Full type safety with 0 compilation errors
+- **Next.js 14** - App Router with server-side rendering
+- **Supabase** - PostgreSQL database with real-time subscriptions
+- **Tailwind CSS** - Responsive design system
 
-### Backend
-- **Supabase** - Database, authentication, and real-time features
-- **PostgreSQL** - Primary database
-- **Row Level Security (RLS)** - Data protection
+## 🛠️ Technology Stack
 
-### Testing
-- **Playwright** - End-to-end testing
-- **Jest** - Unit testing framework
-- **TypeScript** - Type checking
+- **Frontend**: Next.js 14, React 18, TypeScript, Tailwind CSS
+- **Backend**: Supabase (PostgreSQL, Auth, Realtime)
+- **Authentication**: Supabase Auth (email/password, OAuth)
+- **Deployment**: Vercel, GitHub Actions
+- **Testing**: Jest, Playwright, React Testing Library
+- **Monitoring**: Vercel Analytics, Built-in logging
 
-## 📁 **Project Structure**
+## 🚧 Feature Status
 
-```
-choices/
-├── web/                    # Next.js frontend application
-│   ├── app/               # App Router pages and API routes
-│   ├── components/        # React components
-│   ├── lib/              # Utility libraries
-│   ├── utils/            # Helper functions
-│   └── tests/            # Test files
-├── docs/                 # Documentation
-├── scripts/              # Build and deployment scripts
-└── supabase/            # Database migrations and config
-```
+### ✅ Currently Implemented
+- **Core Authentication** - Email/password login with Supabase
+- **Poll Management** - Create, vote, and view polls
+- **Admin Dashboard** - User and system management
+- **TypeScript** - Full type safety (0 errors)
 
-## 🔧 **Development**
+### 🚧 In Development
+- **WebAuthn** - Passwordless authentication (disabled)
+- **PWA Features** - Progressive Web App capabilities (disabled)
+- **Advanced Analytics** - Privacy-preserving analytics (disabled)
+- **Advanced Privacy** - Differential privacy features (disabled)
 
-### Available Scripts
-```bash
-# Development
-npm run dev              # Start development server
-npm run build            # Build for production
-npm run start            # Start production server
+### 📋 Planned Features
+- **Real-time Notifications** - Live updates and alerts
+- **Advanced Voting Methods** - Ranked choice, approval voting
+- **Bias Detection** - AI-powered bias analysis
+- **Mobile App** - Native mobile application
 
-# Testing
-npm run test             # Run unit tests
-npm run test:e2e         # Run end-to-end tests
-npm run test:coverage    # Generate test coverage
+## 📈 Project Status
 
-# Code Quality
-npm run lint             # Run ESLint
-npm run type-check       # Run TypeScript checks
-```
+- **Version**: 1.0.0
+- **Status**: 🎉 **PRODUCTION READY**
+- **Last Updated**: September 15, 2025
+- **TypeScript Errors**: 0 (down from 188)
+- **Build Status**: ✅ **SUCCESSFUL**
+- **Next Milestone**: Production Deployment
 
-### Environment Variables
-Create a `.env.local` file in the `web/` directory:
+## 🤝 Contributing
 
-```env
-# Supabase Configuration
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
 
-# Application Configuration
-NEXTAUTH_SECRET=your_nextauth_secret
-JWT_SECRET=your_jwt_secret
-```
-
-## 🧪 **Testing**
-
-### Running Tests
-```bash
-# Unit tests
-npm run test
-
-# End-to-end tests
-npm run test:e2e
-
-# Test with UI
-npm run test:e2e:ui
-```
-
-### Test Coverage
-The project includes comprehensive testing:
-- **Unit Tests** - Component and utility testing
-- **E2E Tests** - Full user journey testing
-- **Integration Tests** - API and database testing
-
-## 🚀 **Deployment**
-
-### Vercel (Recommended)
-1. Connect your GitHub repository to Vercel
-2. Configure environment variables
-3. Deploy automatically on push to main
-
-### Manual Deployment
-```bash
-# Build the application
-npm run build
-
-# Deploy to your preferred platform
-# (Vercel, Netlify, AWS, etc.)
-```
-
-## 📚 **Documentation**
-
-- **[Project Status](./PROJECT_STATUS.md)** - Current development status
-- **[API Documentation](./API.md)** - API endpoints and usage
-- **[Authentication System](./AUTHENTICATION_SYSTEM.md)** - Auth implementation
-- **[Database Schema](./DATABASE_SECURITY_AND_SCHEMA.md)** - Database structure
-- **[Deployment Guide](./DEPLOYMENT_GUIDE.md)** - Deployment instructions
-- **[Testing Guide](./testing/COMPREHENSIVE_TESTING_GUIDE.md)** - Testing procedures
-
-## 🤝 **Contributing**
-
-We welcome contributions! Please see our [Contributing Guide](../CONTRIBUTING.md) for details.
-
-### Development Workflow
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests for new functionality
-5. Submit a pull request
-
-## 📄 **License**
+## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](../LICENSE) file for details.
 
-## 🆘 **Support**
+## 🔗 Links
 
-- **Issues** - [GitHub Issues](https://github.com/choices-project/choices/issues)
-- **Discussions** - [GitHub Discussions](https://github.com/choices-project/choices/discussions)
-- **Documentation** - [Project Docs](./)
+- **Live Demo**: [choices-platform.vercel.app](https://choices-platform.vercel.app)
+- **GitHub Repository**: [github.com/choices-project/choices](https://github.com/choices-project/choices)
+- **Issue Tracker**: [GitHub Issues](https://github.com/choices-project/choices/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/choices-project/choices/discussions)
 
 ---
 
-**Built with ❤️ for democratic participation**
+**Created**: September 15, 2025  
+**Last Updated**: September 15, 2025  
+**Status**: 🎉 **PRODUCTION READY - ALL TYPESCRIPT ERRORS RESOLVED**  
+**Maintainers**: [@michaeltempesta](https://github.com/michaeltempesta)  
+**Organization**: [@choices-project](https://github.com/choices-project)

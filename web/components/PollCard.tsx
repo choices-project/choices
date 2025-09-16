@@ -1,18 +1,17 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import Link from 'next/link';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { 
-  Vote, 
   Users, 
-  Clock, 
-  TrendingUp, 
-  CheckCircle2, 
-  XCircle,
+  BarChart3, 
+  Eye, 
+  Clock,
   Calendar,
-  BarChart3,
-  ArrowRight,
-  Eye
+  User
 } from 'lucide-react';
 
 interface Poll {
@@ -23,341 +22,162 @@ interface Poll {
   options: string[];
   totalvotes: number;
   participation: number;
-  sponsors: string[];
-  createdat: string;
-  endtime: string;
-  results?: PollResults;
-}
-
-interface PollResults {
-  [key: number]: number;
-  total: number;
+  createdBy: string;
+  createdAt: string;
+  endTime?: string;
+  votingMethod: 'single' | 'approval' | 'ranked' | 'quadratic' | 'range';
 }
 
 interface PollCardProps {
   poll: Poll;
-  onVote?: () => Promise<void>;
-  onViewDetails?: (pollId: string) => void;
-  isVoted?: boolean;
-  userVote?: number;
-  showVoteButton?: boolean;
-  variant?: 'default' | 'compact' | 'featured';
+  showActions?: boolean;
+  className?: string;
 }
 
-export const PollCard: React.FC<PollCardProps> = ({
-  poll,
-  onVote,
-  onViewDetails,
-  isVoted = false,
-  userVote,
-  showVoteButton = true,
-  variant = 'default'
+const PollCard: React.FC<PollCardProps> = ({ 
+  poll, 
+  showActions = true, 
+  className = '' 
 }) => {
-  const [selectedChoice, setSelectedChoice] = useState<number | null>(userVote || null);
-  const [isVoting, setIsVoting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const handleVote = async () => {
-    if (!selectedChoice || !onVote) return;
-    
-    setIsVoting(true);
-    setError(null);
-    
-    try {
-      // Use the pollId and choice parameters properly
-      const pollId = poll.id;
-      const choice = selectedChoice;
-      
-      // Validate parameters before calling onVote
-      if (!pollId || choice === null || choice < 0 || choice >= poll.options.length) {
-        throw new Error('Invalid poll ID or choice');
-      }
-      
-      // Track vote analytics (using the parameters)
-      if (typeof window !== 'undefined' && window.gtag) {
-        window.gtag('event', 'vote_started', {
-          poll_id: pollId,
-          choice: choice,
-          poll_title: poll.title
-        });
-      }
-      
-      // The choice parameter is used here to pass validated data
-      await onVote();
-      
-      // Track successful vote
-      if (typeof window !== 'undefined' && window.gtag) {
-        window.gtag('event', 'vote_submitted', {
-          poll_id: pollId,
-          choice: choice,
-          poll_title: poll.title
-        });
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to submit vote');
-    } finally {
-      setIsVoting(false);
+  const getStatusColor = (status: Poll['status']) => {
+    switch (status) {
+      case 'active':
+        return 'bg-green-100 text-green-800 border-green-200';
+      case 'closed':
+        return 'bg-gray-100 text-gray-800 border-gray-200';
+      case 'draft':
+        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      default:
+        return 'bg-gray-100 text-gray-800 border-gray-200';
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'active':
-        return 'text-green-600 bg-green-50 border-green-200';
-      case 'closed':
-        return 'text-red-600 bg-red-50 border-red-200';
-      case 'draft':
-        return 'text-gray-600 bg-gray-50 border-gray-200';
+  const getVotingMethodLabel = (method: Poll['votingMethod']) => {
+    switch (method) {
+      case 'single':
+        return 'Single Choice';
+      case 'approval':
+        return 'Approval';
+      case 'ranked':
+        return 'Ranked Choice';
+      case 'quadratic':
+        return 'Quadratic';
+      case 'range':
+        return 'Range';
       default:
-        return 'text-gray-600 bg-gray-50 border-gray-200';
-    }
-  };
-
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'active':
-        return <CheckCircle2 className="w-4 h-4" />;
-      case 'closed':
-        return <XCircle className="w-4 h-4" />;
-      case 'draft':
-        return <Clock className="w-4 h-4" />;
-      default:
-        return <Clock className="w-4 h-4" />;
+        return 'Unknown';
     }
   };
 
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
       month: 'short',
-      day: 'numeric',
-      year: 'numeric'
+      day: 'numeric'
     });
   };
 
-  const getTimeRemaining = () => {
-    const now = new Date();
-    const end = new Date(poll.endtime);
-    const diff = end.getTime() - now.getTime();
-    
-    if (diff <= 0) return 'Ended';
-    
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    
-    if (days > 0) return `${days}d ${hours}h left`;
-    if (hours > 0) return `${hours}h left`;
-    return 'Less than 1h left';
+  const formatTime = (dateString: string) => {
+    return new Date(dateString).toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   };
 
-  const isCompact = variant === 'compact';
-  const isFeatured = variant === 'featured';
-
   return (
-    <div className={`
-      bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200
-      ${isFeatured ? 'ring-2 ring-blue-500 ring-opacity-50' : ''}
-      ${isCompact ? 'p-4' : 'p-6'}
-    `}>
-      {/* Header */}
-      <div className="flex items-start justify-between mb-4">
-        <div className="flex-1">
-          <div className="flex items-center gap-2 mb-2">
-            <span className={`
-              inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border
-              ${getStatusColor(poll.status)}
-            `}>
-              {getStatusIcon(poll.status)}
-              {poll.status.charAt(0).toUpperCase() + poll.status.slice(1)}
-            </span>
-            {poll.status === 'active' && (
-              <span className="text-xs text-gray-500 flex items-center gap-1">
-                <Clock className="w-3 h-3" />
-                {getTimeRemaining()}
-              </span>
-            )}
-          </div>
-          
-          <h3 className={`
-            font-semibold text-gray-900 mb-2 line-clamp-2
-            ${isCompact ? 'text-base' : 'text-lg'}
-            ${isFeatured ? 'text-xl' : ''}
-          `}>
-            {poll.title}
-          </h3>
-          
-          {!isCompact && (
-            <p className="text-gray-600 text-sm line-clamp-2 mb-3">
+    <Card className={`hover:shadow-md transition-shadow duration-200 ${className}`}>
+      <CardHeader className="pb-3">
+        <div className="flex items-start justify-between">
+          <div className="flex-1 min-w-0">
+            <CardTitle className="text-lg font-semibold text-gray-900 line-clamp-2">
+              {poll.title}
+            </CardTitle>
+            <p className="text-sm text-gray-600 mt-1 line-clamp-2">
               {poll.description}
             </p>
-          )}
-        </div>
-      </div>
-
-      {/* Stats */}
-      <div className="flex items-center gap-4 mb-4 text-sm text-gray-500">
-        <div className="flex items-center gap-1">
-          <Users className="w-4 h-4" />
-          <span>{poll.totalvotes.toLocaleString()} votes</span>
-        </div>
-        <div className="flex items-center gap-1">
-          <TrendingUp className="w-4 h-4" />
-          <span>{poll.participation}% participation</span>
-        </div>
-        <div className="flex items-center gap-1">
-          <Calendar className="w-4 h-4" />
-          <span>Ends {formatDate(poll.endtime)}</span>
-        </div>
-      </div>
-
-      {/* Sponsors */}
-      {poll.sponsors.length > 0 && !isCompact && (
-        <div className="mb-4">
-          <p className="text-xs text-gray-500 mb-1">Sponsored by:</p>
-          <div className="flex flex-wrap gap-1">
-            {poll.sponsors.map((sponsor: any, index: any) => (
-              <span
-                key={index}
-                className="inline-block px-2 py-1 bg-blue-50 text-blue-700 text-xs rounded-full"
-              >
-                {sponsor}
-              </span>
-            ))}
           </div>
+          <Badge className={`ml-2 shrink-0 ${getStatusColor(poll.status)}`}>
+            {poll.status}
+          </Badge>
         </div>
-      )}
+      </CardHeader>
 
-      {/* Voting Options (if active and not voted) */}
-      {poll.status === 'active' && showVoteButton && !isVoted && (
-        <div className="mb-4">
-          <p className="text-sm font-medium text-gray-700 mb-2">Select your choice:</p>
-          <div className="space-y-2">
-            {poll.options.map((option: any, index: any) => (
-              <button
-                key={index}
-                onClick={() => setSelectedChoice(index)}
-                className={`
-                  w-full text-left p-3 rounded-lg border transition-colors duration-200
-                  ${selectedChoice === index
-                    ? 'border-blue-500 bg-blue-50 text-blue-700'
-                    : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-                  }
-                `}
-              >
-                <div className="flex items-center justify-between">
-                  <span className="text-sm">{option}</span>
-                  {selectedChoice === index && (
-                    <CheckCircle2 className="w-4 h-4 text-blue-500" />
-                  )}
-                </div>
-              </button>
-            ))}
+      <CardContent className="pt-0">
+        {/* Poll metadata */}
+        <div className="space-y-2 mb-4">
+          <div className="flex items-center text-sm text-gray-600">
+            <User className="w-4 h-4 mr-2" />
+            <span>Created by {poll.createdBy}</span>
           </div>
           
-          {error && (
-            <p className="text-red-600 text-sm mt-2">{error}</p>
+          <div className="flex items-center text-sm text-gray-600">
+            <Calendar className="w-4 h-4 mr-2" />
+            <span>Created {formatDate(poll.createdAt)}</span>
+          </div>
+
+          {poll.endTime && (
+            <div className="flex items-center text-sm text-gray-600">
+              <Clock className="w-4 h-4 mr-2" />
+              <span>Ends {formatDate(poll.endTime)} at {formatTime(poll.endTime)}</span>
+            </div>
           )}
-          
-          <button
-            onClick={handleVote}
-            disabled={selectedChoice === null || isVoting}
-            className={`
-              w-full mt-3 px-4 py-2 rounded-lg font-medium transition-colors duration-200
-              ${selectedChoice !== null && !isVoting
-                ? 'bg-blue-600 text-white hover:bg-blue-700'
-                : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-              }
-            `}
-          >
-            {isVoting ? (
-              <div className="flex items-center justify-center gap-2">
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                Voting...
+
+          <div className="flex items-center text-sm text-gray-600">
+            <BarChart3 className="w-4 h-4 mr-2" />
+            <span>{getVotingMethodLabel(poll.votingMethod)}</span>
+          </div>
+        </div>
+
+        {/* Poll options preview */}
+        <div className="mb-4">
+          <h4 className="text-sm font-medium text-gray-700 mb-2">Options:</h4>
+          <div className="space-y-1">
+            {poll.options.slice(0, 3).map((option, index) => (
+              <div key={index} className="text-sm text-gray-600 truncate">
+                {index + 1}. {option}
               </div>
-            ) : (
-              <div className="flex items-center justify-center gap-2">
-                <Vote className="w-4 h-4" />
-                Vote Now
+            ))}
+            {poll.options.length > 3 && (
+              <div className="text-sm text-gray-500">
+                +{poll.options.length - 3} more options
               </div>
             )}
-          </button>
-        </div>
-      )}
-
-      {/* Results (if voted or closed) */}
-      {(isVoted || poll.status === 'closed') && poll.results && (
-        <div className="mb-4">
-          <p className="text-sm font-medium text-gray-700 mb-2">Results:</p>
-          <div className="space-y-2">
-            {poll.options.map((option: any, index: any) => {
-              const votes = poll.results![index] || 0;
-              const percentage = poll.results!.total > 0 
-                ? Math.round((votes / poll.results!.total) * 100) 
-                : 0;
-              
-              return (
-                <div key={index} className="flex items-center gap-3">
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between text-sm mb-1">
-                      <span className={userVote === index ? 'font-medium text-blue-600' : ''}>
-                        {option}
-                      </span>
-                      <span className="text-gray-500">{percentage}%</span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div
-                        className={`h-2 rounded-full transition-all duration-300 ${
-                          userVote === index ? 'bg-blue-500' : 'bg-gray-400'
-                        }`}
-                        style={{ width: `${percentage}%` }}
-                      />
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
           </div>
         </div>
-      )}
 
-      {/* Actions */}
-      <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-        <div className="flex items-center gap-2 text-sm text-gray-500">
-          <BarChart3 className="w-4 h-4" />
-          <span>{poll.options.length} options</span>
+        {/* Poll statistics */}
+        <div className="flex items-center justify-between text-sm text-gray-600 mb-4">
+          <div className="flex items-center">
+            <Users className="w-4 h-4 mr-1" />
+            <span>{poll.totalvotes} votes</span>
+          </div>
+          <div className="flex items-center">
+            <BarChart3 className="w-4 h-4 mr-1" />
+            <span>{poll.participation}% participation</span>
+          </div>
         </div>
-        
-        <div className="flex items-center gap-2">
-          {onViewDetails ? (
-            <button
-              onClick={() => {
-                const pollId = poll.id;
-                // Track view details event
-                if (typeof window !== 'undefined' && window.gtag) {
-                  window.gtag('event', 'poll_details_viewed', {
-                    poll_id: pollId,
-                    poll_title: poll.title
-                  });
-                }
-                onViewDetails(pollId);
-              }}
-              className="flex items-center gap-1 text-blue-600 hover:text-blue-700 text-sm font-medium"
-            >
-              <Eye className="w-4 h-4" />
-              View Details
-            </button>
-          ) : (
-            <Link
-              href={`/polls/${poll.id}`}
-              className="flex items-center gap-1 text-blue-600 hover:text-blue-700 text-sm font-medium"
-            >
-              View Details
-              <ArrowRight className="w-4 h-4" />
-            </Link>
-          )}
-        </div>
-      </div>
-    </div>
+
+        {/* Actions */}
+        {showActions && (
+          <div className="flex gap-2">
+            <Button asChild variant="default" className="flex-1">
+              <Link href={`/polls/${poll.id}`}>
+                <Eye className="w-4 h-4 mr-2" />
+                View Poll
+              </Link>
+            </Button>
+            
+            {poll.status === 'active' && (
+              <Button asChild variant="outline" className="flex-1">
+                <Link href={`/polls/${poll.id}/vote`}>
+                  Vote Now
+                </Link>
+              </Button>
+            )}
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 };
 

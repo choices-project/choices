@@ -6,7 +6,7 @@ export const runtime = 'edge'
 import { useState, useEffect } from 'react'
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
 import { useRouter } from 'next/navigation'
-import RankedChoiceVoting from '@/components/voting/RankedChoiceVoting'
+import RankedChoiceVoting from '@/features/voting/components/RankedChoiceVoting'
 import { devLog } from '@/lib/logger';
 
 // Sample poll data for testing

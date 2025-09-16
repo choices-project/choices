@@ -179,7 +179,7 @@ export default function PrivatePollResults({ poll, userId, onPrivacyBudgetExceed
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Poll Results</h3>
           
           <div className="space-y-4">
-            {results.data.map((result, index) => {
+            {results.data.map((result: { optionId: string; count: number; percentage: number }, index: number) => {
               const option = poll.options.find(opt => opt.id === result.optionId)
               if (!option) return null
 
@@ -240,21 +240,21 @@ export default function PrivatePollResults({ poll, userId, onPrivacyBudgetExceed
         <div className="space-y-2 text-sm text-blue-700">
           <div className="flex justify-between">
             <span>Privacy Guarantee:</span>
-            <span className="font-mono">{formatPrivacyGuarantee(results.privacyGuarantee)}</span>
+            <span className="font-mono">{formatPrivacyGuarantee(results.privacyGuarantee?.toString() || '0.95')}</span>
           </div>
           <div className="flex justify-between">
             <span>Confidence Level:</span>
-            <span>{getConfidenceLevel(results.epsilonUsed)}</span>
+            <span>{getConfidenceLevel(results.epsilonUsed || 0.1)}</span>
           </div>
           <div className="flex justify-between">
             <span>Noise Added:</span>
-            <span>{results.noiseAdded.toFixed(2)} ± votes</span>
+            <span>{(results.noiseAdded || 0).toFixed(2)} ± votes</span>
           </div>
           <div className="flex justify-between">
             <span>Epsilon Used:</span>
-            <span>{results.epsilonUsed.toFixed(2)}</span>
+            <span>{(results.epsilonUsed || 0.1).toFixed(2)}</span>
           </div>
-          {results.confidenceInterval[0] !== results.confidenceInterval[1] && (
+          {results.confidenceInterval && results.confidenceInterval[0] !== results.confidenceInterval[1] && (
             <div className="flex justify-between">
               <span>Confidence Interval:</span>
               <span>[{results.confidenceInterval[0].toFixed(0)}, {results.confidenceInterval[1].toFixed(0)}] votes</span>

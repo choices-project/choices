@@ -14,7 +14,7 @@ import {
   Smartphone,
   Download
 } from 'lucide-react'
-import { useFeatureFlag } from '../hooks/useFeatureFlags'
+import { useFeatureFlags } from '../hooks/useFeatureFlags'
 import { usePWAUtils } from '../hooks/usePWAUtils'
 import { devLog } from '@/lib/logger';
 
@@ -46,7 +46,8 @@ export function PWAVotingInterface({
   showResults = false, 
   offlineMode = false 
 }: PWAVotingInterfaceProps) {
-  const { enabled: pwaEnabled } = useFeatureFlag('pwa')
+  const { isEnabled: pwaEnabled } = useFeatureFlags()
+  const pwaFeatureEnabled = pwaEnabled('PWA')
   const { utils: pwaUtils } = usePWAUtils()
   
   const [selectedChoice, setSelectedChoice] = useState<number | null>(null)
@@ -83,7 +84,7 @@ export function PWAVotingInterface({
     setSelectedChoice(choice)
 
     try {
-      if (pwaEnabled && pwaUtils && !isOnline) {
+      if (pwaFeatureEnabled && pwaUtils && !isOnline) {
         // Store offline vote
         await pwaUtils.pwaManager.storeOfflineVote({
           pollId: poll.id,
@@ -164,7 +165,7 @@ export function PWAVotingInterface({
           </div>
           
           {/* PWA Status Indicators */}
-          {pwaEnabled && (
+          {pwaFeatureEnabled && (
             <div className="flex items-center space-x-2">
               {offlineMode ? (
                 <div className="flex items-center space-x-1 text-orange-600">
@@ -217,7 +218,7 @@ export function PWAVotingInterface({
           </div>
 
           {/* PWA Features Info */}
-          {pwaEnabled && offlineMode && (
+          {pwaFeatureEnabled && offlineMode && (
             <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
               <div className="flex items-center space-x-2 text-blue-800">
                 <Download className="w-4 h-4" />
@@ -292,7 +293,7 @@ export function PWAVotingInterface({
       )}
 
       {/* PWA Features Toggle */}
-      {pwaEnabled && (
+      {pwaFeatureEnabled && (
         <div className="border-t border-gray-200">
           <button
             onClick={() => setShowPWAFeatures(!showPWAFeatures)}
@@ -328,15 +329,15 @@ export function PWAVotingInterface({
                       </span>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <div className={`w-2 h-2 rounded-full ${pwaUtils?.pwaManager?.getPWAStatus()?.serviceWorker ? 'bg-green-500' : 'bg-red-500'}`} />
+                      <div className={`w-2 h-2 rounded-full ${'serviceWorker' in navigator ? 'bg-green-500' : 'bg-red-500'}`} />
                       <span className="text-gray-600">
                         Service Worker
                       </span>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <div className={`w-2 h-2 rounded-full ${(pwaUtils?.pwaManager?.getPWAStatus()?.offlineVotes ?? 0) > 0 ? 'bg-orange-500' : 'bg-gray-300'}`} />
+                      <div className={`w-2 h-2 rounded-full ${(JSON.parse(localStorage.getItem('offlineVotes') || '[]').length) > 0 ? 'bg-orange-500' : 'bg-gray-300'}`} />
                       <span className="text-gray-600">
-                        {pwaUtils?.pwaManager?.getPWAStatus()?.offlineVotes ?? 0} offline votes
+                        {JSON.parse(localStorage.getItem('offlineVotes') || '[]').length} offline votes
                       </span>
                     </div>
                   </div>

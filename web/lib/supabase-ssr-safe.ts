@@ -11,7 +11,7 @@ if (process.env.NODE_ENV === 'production') {
  */
 
 import { createBrowserClient } from '@supabase/ssr'
-import type { Database } from './supabase/server'
+import type { Database } from '@/utils/supabase/server'
 
 /**
  * Create a Supabase client for browser environments

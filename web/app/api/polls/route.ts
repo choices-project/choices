@@ -1,7 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server';
 import { devLog } from '@/lib/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
-import { getCurrentUser } from '@/lib/auth-utils';
+import { getCurrentUser } from '@/lib/core/auth/utils';
 
 export const dynamic = 'force-dynamic';
 
@@ -68,11 +69,9 @@ export async function GET(request: NextRequest) {
 
     // Additional security: ensure no sensitive data is returned
     const sanitizedPolls = polls?.map(poll => ({
-      poll_id: poll.poll_id,
+      poll_id: poll.id,
       title: poll.title,
       total_votes: poll.total_votes,
-      participation_rate: poll.participation_rate,
-      aggregated_results: poll.aggregated_results,
       // Only include safe fields
       status: 'active', // Always show as active for public view
       created_at: new Date().toISOString(), // Generic timestamp

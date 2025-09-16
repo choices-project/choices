@@ -55,7 +55,7 @@ export async function GET() {
       }
     });
   } catch (error) {
-    const appError = handleError(error as Error, { context: 'database-status' })
+    const appError = handleError(error as Error)
     const userMessage = getUserMessage(appError)
     const statusCode = getHttpStatus(appError)
     

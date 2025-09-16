@@ -14,8 +14,7 @@ const nextConfig = {
     optimizeCss: false,
     // Disable font optimization to prevent browser globals in server bundles
     optimizeServerReact: false,
-    // Disable all font optimization features
-    optimizeFonts: false,
+    // Font optimization is disabled by default in Next.js 14+
     optimizePackageImports: [
       'lucide-react',
       'clsx',
@@ -176,6 +175,8 @@ const nextConfig = {
           "'unsafe-eval'", // Required for Next.js development
           'https://vercel.live', // Vercel preview
           'https://vercel.com', // Vercel analytics
+          'https://challenges.cloudflare.com', // Turnstile
+          'https://static.cloudflareinsights.com', // Cloudflare analytics
         ],
         'style-src': [
           "'self'",
@@ -199,6 +200,7 @@ const nextConfig = {
           'https://*.supabase.io',
           'https://vercel.live',
           'https://vitals.vercel-insights.com',
+          'https://challenges.cloudflare.com', // Turnstile
           'wss://*.supabase.co',
           'wss://*.supabase.io',
         ],
@@ -222,6 +224,7 @@ const nextConfig = {
           "'unsafe-eval'",
           'http://localhost:*',
           'https://vercel.live',
+          'https://challenges.cloudflare.com', // Turnstile
         ],
         'style-src': [
           "'self'",

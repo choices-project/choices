@@ -12,7 +12,7 @@ import {
   authenticateBiometric, 
   isWebAuthnSupported, 
   isBiometricAvailable
-} from '@/lib/webauthn'
+} from '@/lib/shared/webauthn'
 import { devLog } from '@/lib/logger'
 
 // Biometric context for sharing state between components

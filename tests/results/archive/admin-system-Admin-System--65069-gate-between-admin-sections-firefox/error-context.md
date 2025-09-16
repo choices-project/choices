@@ -1,0 +1,53 @@
+# Page snapshot
+
+```yaml
+- dialog "Unhandled Runtime Error" [ref=e3]:
+  - generic [ref=e4]:
+    - generic [ref=e5]:
+      - generic [ref=e6]:
+        - navigation [ref=e7]:
+          - button "previous" [disabled] [ref=e8]:
+            - img "previous" [ref=e9]
+          - button "next" [disabled] [ref=e11]:
+            - img "next" [ref=e12]
+          - generic [ref=e14]:
+            - generic [ref=e15]: "1"
+            - text: of
+            - generic [ref=e16]: "1"
+            - text: error
+          - generic [ref=e17]:
+            - generic "An outdated version detected (latest is 15.5.3), upgrade is highly recommended!" [ref=e19]: Next.js (14.2.32) is outdated
+            - link "(learn more)" [ref=e20] [cursor=pointer]:
+              - /url: https://nextjs.org/docs/messages/version-staleness
+        - button "Close" [ref=e21] [cursor=pointer]:
+          - img [ref=e23] [cursor=pointer]
+      - heading "Unhandled Runtime Error" [level=1] [ref=e26]
+      - paragraph [ref=e27]: "TypeError: _lib_supabase_ssr_safe__WEBPACK_IMPORTED_MODULE_1__.createBrowserClientSafe is not a function"
+    - generic [ref=e28]:
+      - heading "Source" [level=2] [ref=e29]
+      - generic [ref=e30]:
+        - link "hooks/useSupabaseAuth.ts (34:43) @ createBrowserClientSafe" [ref=e32] [cursor=pointer]:
+          - generic [ref=e33] [cursor=pointer]: hooks/useSupabaseAuth.ts (34:43) @ createBrowserClientSafe
+          - img [ref=e34] [cursor=pointer]
+        - generic [ref=e38]:
+          - generic [ref=e40]: 32 |
+          - generic [ref=e41]: "})"
+          - generic [ref=e43]: 33 |
+          - generic [ref=e44]: ">"
+          - generic [ref=e45]: 34 |
+          - generic [ref=e47]: const
+          - generic [ref=e48]: supabase
+          - generic [ref=e49]: =
+          - generic [ref=e50]: createBrowserClientSafe()
+          - generic [ref=e52]: "|"
+          - generic [ref=e54]: ^
+          - generic [ref=e56]: 35 |
+          - generic [ref=e58]: 36 |
+          - generic [ref=e60]: // Initialize authentication state
+          - generic [ref=e62]: 37 |
+          - generic [ref=e63]: useEffect(()
+          - generic [ref=e64]: =>
+          - generic [ref=e65]: "{"
+      - heading "Call Stack" [level=2] [ref=e66]
+      - button "Show collapsed frames" [ref=e67] [cursor=pointer]
+```

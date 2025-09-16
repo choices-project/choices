@@ -8,10 +8,12 @@ export type StepId =
   | 'auth'
   | 'demographics'
   | 'values'
+  | 'interestSelection'
   | 'firstExperience'
   | 'platformTour'
   | 'privacyPhilosophy'
-  | 'dataUsage';
+  | 'dataUsage'
+  | 'contribution';
 
 /** URL/UI slugs (kebab-case) */
 export type StepSlug =
@@ -21,10 +23,12 @@ export type StepSlug =
   | 'auth-setup'
   | 'demographics'
   | 'values'
+  | 'interest-selection'
   | 'first-experience'
   | 'platform-tour'
   | 'privacy-philosophy'
   | 'data-usage'
+  | 'contribution'
   | 'complete';
 
 /** Mapping between ids and slugs (single source of truth) */
@@ -35,10 +39,12 @@ export const STEP_ID_TO_SLUG: Record<StepId, StepSlug> = {
   auth: 'auth-setup',
   demographics: 'demographics',
   values: 'values',
+  interestSelection: 'interest-selection',
   firstExperience: 'first-experience',
   platformTour: 'platform-tour',
   privacyPhilosophy: 'privacy-philosophy',
   dataUsage: 'data-usage',
+  contribution: 'contribution',
 };
 
 export const STEP_SLUG_TO_ID: Record<StepSlug, StepId> = Object.fromEntries(
@@ -83,6 +89,11 @@ export interface StepDataMap {
 
   values: { valuesCompleted?: boolean };
 
+  interestSelection: {
+    selectedInterests?: string[];
+    interestSelectionCompleted?: boolean;
+  };
+
   firstExperience: {
     firstExperienceCompleted?: boolean;
     firstVote?: string;
@@ -98,6 +109,11 @@ export interface StepDataMap {
   };
 
   dataUsage: { dataUsageCompleted?: boolean };
+
+  contribution: {
+    contributionInterests?: string[];
+    contributionStepCompleted?: boolean;
+  };
 }
 
 /** Legacy structure (kept for back-compat) */
@@ -153,6 +169,7 @@ export const DEFAULT_STEP_ORDER: StepSlug[] = [
   'data-usage',
   'auth-setup',
   'profile-setup',
+  'interest-selection',
   'first-experience',
   'complete',
 ];
@@ -167,6 +184,8 @@ export const STEP_LABEL: Record<StepSlug, string> = {
   'profile-setup': 'Profile Setup',
   'demographics': 'Demographics',
   'values': 'Values',
+  'interest-selection': 'Your Interests',
+  'contribution': 'Contribution',
   'first-experience': 'First Experience',
   'complete': 'Complete',
 };

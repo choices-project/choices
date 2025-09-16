@@ -6,7 +6,6 @@
  */
 
 import type { 
-  AddressLookupResult, 
   DataSourceConfig, 
   IngestStatus, 
   DataQualityMetrics 

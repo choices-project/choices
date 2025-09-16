@@ -1,10 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { cookies as _cookies } from 'next/headers'
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
 import { getSupabaseServerClient } from '@/utils/supabase/server'
 import { devLog } from '@/lib/logger'
-import { getCurrentUser } from '@/lib/auth-utils'
-import { HybridVotingService } from '@/lib/hybrid-voting-service'
-import { AnalyticsService } from '@/lib/services/AnalyticsService'
+import { getCurrentUser } from '@/lib/core/auth/utils'
+import { HybridVotingService } from '@/lib/core/services/hybrid-voting'
+import { AnalyticsService } from '@/lib/core/services/analytics'
 import { 
   ValidationError, 
   AuthenticationError, 
@@ -101,7 +101,7 @@ export async function POST(
     })
 
   } catch (error) {
-    const appError = handleError(error as Error, { context: 'vote-submission' })
+    const appError = handleError(error as Error)
     const userMessage = getUserMessage(appError)
     const statusCode = getHttpStatus(appError)
     
@@ -153,7 +153,7 @@ export async function GET(
     })
 
   } catch (error) {
-    const appError = handleError(error as Error, { context: 'vote-status-check' })
+    const appError = handleError(error as Error)
     const userMessage = getUserMessage(appError)
     const statusCode = getHttpStatus(appError)
     

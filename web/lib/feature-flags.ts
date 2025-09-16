@@ -21,6 +21,7 @@ export const FEATURE_FLAGS = {
   PWA: false,
   ANALYTICS: false,
   ADMIN: true, // Enable admin system
+  ADVANCED_PRIVACY: false,
   
   // Experimental features
   EXPERIMENTAL_UI: false,
@@ -32,8 +33,24 @@ export type FeatureFlag = keyof typeof FEATURE_FLAGS;
 /**
  * Check if a feature is enabled
  */
-export function isFeatureEnabled(feature: FeatureFlag): boolean {
-  return FEATURE_FLAGS[feature];
+export function isFeatureEnabled(feature: FeatureFlag | string): boolean {
+  // Handle camelCase aliases
+  if (typeof feature === 'string') {
+    const normalizedFeature = feature.toLowerCase();
+    if (normalizedFeature === 'advancedprivacy') {
+      return FEATURE_FLAGS.ADVANCED_PRIVACY;
+    }
+    if (normalizedFeature === 'pwa') {
+      return FEATURE_FLAGS.PWA;
+    }
+    if (normalizedFeature === 'analytics') {
+      return FEATURE_FLAGS.ANALYTICS;
+    }
+    if (normalizedFeature === 'admin') {
+      return FEATURE_FLAGS.ADMIN;
+    }
+  }
+  return FEATURE_FLAGS[feature as FeatureFlag];
 }
 
 /**

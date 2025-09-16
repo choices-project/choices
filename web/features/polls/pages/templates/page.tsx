@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { PollTemplate, PollCategory, TemplateCategory } from '@/lib/types/poll-templates';
+import type { PollTemplate, PollCategory, TemplateCategory } from '@/lib/types/poll-templates';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -26,10 +26,15 @@ const SAMPLETEMPLATES: PollTemplate[] = [
   {
     id: '1',
     name: 'Team Meeting Preferences',
+    title: 'Team Meeting Preferences',
     description: 'Find the best time for team meetings that works for everyone',
     category: 'business',
-    difficulty: 'beginner',
+    options: ['Monday 9 AM', 'Tuesday 2 PM', 'Wednesday 10 AM', 'Thursday 3 PM'],
+    privacyLevel: 'private',
+    estimatedDuration: 5,
     estimatedTime: 5,
+    difficulty: 'beginner',
+    isPopular: true,
     tags: ['meeting', 'team', 'schedule'],
     isPublic: true,
     createdBy: 'system',
@@ -54,10 +59,15 @@ const SAMPLETEMPLATES: PollTemplate[] = [
   {
     id: '2',
     name: 'Product Feature Prioritization',
+    title: 'Product Feature Prioritization',
     description: 'Help prioritize which features to build next based on user preferences',
     category: 'technology',
-    difficulty: 'intermediate',
+    options: ['User Authentication', 'Real-time Chat', 'File Sharing', 'Analytics Dashboard'],
+    privacyLevel: 'public',
+    estimatedDuration: 8,
     estimatedTime: 8,
+    difficulty: 'intermediate',
+    isPopular: true,
     tags: ['product', 'features', 'prioritization'],
     isPublic: true,
     createdBy: 'system',
@@ -82,10 +92,15 @@ const SAMPLETEMPLATES: PollTemplate[] = [
   {
     id: '3',
     name: 'Event Planning Survey',
+    title: 'Event Planning Survey',
     description: 'Gather preferences for upcoming events and activities',
     category: 'social',
-    difficulty: 'beginner',
+    options: ['Outdoor BBQ', 'Indoor Party', 'Movie Night', 'Game Night'],
+    privacyLevel: 'public',
+    estimatedDuration: 3,
     estimatedTime: 3,
+    difficulty: 'beginner',
+    isPopular: true,
     tags: ['event', 'planning', 'social'],
     isPublic: true,
     createdBy: 'system',
@@ -110,10 +125,15 @@ const SAMPLETEMPLATES: PollTemplate[] = [
   {
     id: '4',
     name: 'Classroom Feedback',
+    title: 'Classroom Feedback',
     description: 'Collect student feedback on course content and teaching methods',
     category: 'education',
-    difficulty: 'intermediate',
+    options: ['Excellent', 'Good', 'Average', 'Needs Improvement'],
+    privacyLevel: 'private',
+    estimatedDuration: 6,
     estimatedTime: 6,
+    difficulty: 'intermediate',
+    isPopular: false,
     tags: ['education', 'feedback', 'classroom'],
     isPublic: true,
     createdBy: 'system',
@@ -138,10 +158,15 @@ const SAMPLETEMPLATES: PollTemplate[] = [
   {
     id: '5',
     name: 'Restaurant Choice',
+    title: 'Restaurant Choice',
     description: 'Decide where to eat with friends or colleagues',
     category: 'food',
-    difficulty: 'beginner',
+    options: ['Italian', 'Mexican', 'Asian', 'American'],
+    privacyLevel: 'public',
+    estimatedDuration: 2,
     estimatedTime: 2,
+    difficulty: 'beginner',
+    isPopular: true,
     tags: ['food', 'restaurant', 'choice'],
     isPublic: true,
     createdBy: 'system',
@@ -166,10 +191,15 @@ const SAMPLETEMPLATES: PollTemplate[] = [
   {
     id: '6',
     name: 'Project Timeline Estimation',
+    title: 'Project Timeline Estimation',
     description: 'Estimate project timelines and identify potential bottlenecks',
     category: 'business',
-    difficulty: 'advanced',
+    options: ['2 weeks', '1 month', '2 months', '3+ months'],
+    privacyLevel: 'private',
+    estimatedDuration: 12,
     estimatedTime: 12,
+    difficulty: 'advanced',
+    isPopular: false,
     tags: ['project', 'timeline', 'estimation'],
     isPublic: true,
     createdBy: 'system',
@@ -320,7 +350,7 @@ export default function PollTemplatesPage() {
             {TEMPLATECATEGORIES.map((category) => (
               <button
                 key={category.id}
-                onClick={() => setSelectedCategory(category.id)}
+                onClick={() => setSelectedCategory(category.id as PollCategory | 'all')}
                 className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
                   selectedCategory === category.id
                     ? 'bg-blue-600 text-white'

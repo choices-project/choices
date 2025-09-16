@@ -11,7 +11,7 @@ import {
   isWebAuthnSupported, 
   isBiometricAvailable,
   getUserCredentials
-} from '@/lib/webauthn'
+} from '@/lib/shared/webauthn'
 import { devLog } from '@/lib/logger'
 
 // Context for sharing biometric setup state

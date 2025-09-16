@@ -4,7 +4,7 @@
  * Integration with Google Civic Information API and other civic data sources
  */
 
-import type { AddressLookupResult } from '../../ingest/connectors/civicinfo';
+import type { AddressLookupResult } from '../../schemas';
 
 export async function lookupAddress(address: string): Promise<AddressLookupResult | null> {
   // TODO: Implement Google Civic Information API integration

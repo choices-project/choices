@@ -46,8 +46,15 @@ export default function ProfileSetupStep({ data, onUpdate, onNext }: ProfileSetu
       <div className="text-center space-y-4">
         <h2 className="text-3xl font-bold text-gray-900">Set Up Your Profile</h2>
         <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-          Customize your profile and notification preferences. You can always change these later.
+          Help us personalize your experience while keeping you in control. 
+          <strong> Everything is optional</strong> - you can skip any step or change settings later.
         </p>
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 max-w-2xl mx-auto">
+          <p className="text-sm text-blue-800">
+            <strong>Why we ask:</strong> Your profile helps us show you relevant candidates and issues, 
+            but we never share your personal information. Your privacy is protected with end-to-end encryption.
+          </p>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -136,11 +143,19 @@ export default function ProfileSetupStep({ data, onUpdate, onNext }: ProfileSetu
         </Card>
       </div>
 
-      <div className="text-center">
+      <div className="text-center space-y-3">
         <Button onClick={() => setCurrentSection('profile')} size="lg">
           Start Setup
           <ArrowRight className="ml-2 h-4 w-4" />
         </Button>
+        <div>
+          <button 
+            onClick={handleNext}
+            className="text-sm text-gray-500 hover:text-gray-700 underline"
+          >
+            Skip for now - I'll set this up later
+          </button>
+        </div>
       </div>
     </div>
   )
@@ -164,20 +179,31 @@ export default function ProfileSetupStep({ data, onUpdate, onNext }: ProfileSetu
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="space-y-2">
-            <Label htmlFor="displayName">Display Name</Label>
+            <Label htmlFor="displayName">Display Name (Optional)</Label>
             <Input
               id="displayName"
-              placeholder="Enter your display name"
+              placeholder="Enter your display name or leave blank"
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
             />
-            <p className="text-sm text-gray-600">
-              This is how other users will see you. You can use your real name or a pseudonym.
-            </p>
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
+              <p className="text-sm text-gray-700">
+                <strong>How we use this:</strong> Shows your name when you ask questions to candidates or comment on issues. 
+                You can use your real name, a pseudonym, or leave it blank to stay anonymous.
+              </p>
+            </div>
           </div>
 
           <div className="space-y-4">
-            <Label>Profile Visibility</Label>
+            <div>
+              <Label>Profile Visibility</Label>
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 mt-2">
+                <p className="text-sm text-gray-700">
+                  <strong>How we use this:</strong> Controls who can see your profile and activity. 
+                  Choose what feels comfortable for you - you can always change this later.
+                </p>
+              </div>
+            </div>
             <div className="space-y-3">
               <div className="flex items-center space-x-3 p-4 border rounded-lg hover:bg-gray-50 cursor-pointer"
                    onClick={() => setProfileVisibility('public')}>
@@ -295,11 +321,18 @@ export default function ProfileSetupStep({ data, onUpdate, onNext }: ProfileSetu
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="space-y-4">
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
+              <p className="text-sm text-gray-700">
+                <strong>Why we offer notifications:</strong> Stay updated on important political developments, 
+                candidate responses to your questions, and new features that help you participate in democracy.
+              </p>
+            </div>
+            
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
-                <Label>Email Notifications</Label>
+                <Label>Email Notifications (Optional)</Label>
                 <p className="text-sm text-gray-600">
-                  Receive updates about polls, results, and platform news via email
+                  Get updates about candidate responses, election news, and platform updates
                 </p>
               </div>
               <input
@@ -312,9 +345,9 @@ export default function ProfileSetupStep({ data, onUpdate, onNext }: ProfileSetu
 
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
-                <Label>Push Notifications</Label>
+                <Label>Browser Notifications (Optional)</Label>
                 <p className="text-sm text-gray-600">
-                  Get real-time notifications in your browser
+                  Get real-time alerts when candidates respond to your questions
                 </p>
               </div>
               <input
@@ -330,10 +363,11 @@ export default function ProfileSetupStep({ data, onUpdate, onNext }: ProfileSetu
             <div className="text-sm text-blue-800">
               <p className="font-medium mb-1">What you'll receive:</p>
               <ul className="space-y-1">
-                <li>• New polls from people you follow</li>
-                <li>• Results from polls you've participated in</li>
-                <li>• Important platform updates</li>
-                <li>• Research participation opportunities (if enabled)</li>
+                <li>• Responses from candidates to your questions</li>
+                <li>• Updates on campaign finance transparency</li>
+                <li>• New candidates in your area</li>
+                <li>• Important election deadlines and events</li>
+                <li>• Platform updates and new features</li>
               </ul>
             </div>
           </div>

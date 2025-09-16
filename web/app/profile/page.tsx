@@ -21,7 +21,7 @@ import {
   Info
 } from 'lucide-react'
 import { logger } from '@/lib/logger'
-import BiometricSetup from '@/components/auth/BiometricSetup'
+import BiometricSetup from '@/features/webauthn/components/BiometricSetup'
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
 
 interface UserProfile {

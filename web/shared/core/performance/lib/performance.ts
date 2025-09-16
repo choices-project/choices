@@ -4,7 +4,7 @@
  */
 
 import React from 'react';
-import { logger } from './logger';
+import { logger } from '@/lib/logger';
 
 export interface PerformanceMetric {
   name: string;

@@ -1,4 +1,5 @@
-import { chromium, FullConfig } from '@playwright/test';
+import type { FullConfig } from '@playwright/test';
+import { chromium } from '@playwright/test';
 import { execFileSync } from 'node:child_process';
 import path from 'node:path';
 import fs from 'fs';

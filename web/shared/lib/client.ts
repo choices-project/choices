@@ -13,8 +13,8 @@ if (typeof window === 'undefined') {
 }
 
 import { createBrowserClient } from '@supabase/ssr'
-import { logger } from '../logger'
-import type { Database } from '../../types/database'
+import { logger } from '@/lib/logger'
+import type { Database } from '@/types/database'
 
 /**
  * Create a client-side Supabase client

@@ -11,7 +11,8 @@ import {
   Info,
   ArrowLeft
 } from 'lucide-react';
-import { pollService, CreatePollRequest } from '../lib/poll-service';
+import type { CreatePollRequest } from '@/lib/services/poll-service';
+import { pollService } from '@/lib/services/poll-service';
 
 interface CreatePollProps {
   onPollCreated?: (_poll: any) => void;
@@ -122,7 +123,8 @@ export const CreatePoll: React.FC<CreatePollProps> = ({
       isPublic: true,
       allowComments: true,
       showResults: true,
-      requireVerification: false
+      requireVerification: false,
+      privacyLevel: 'public'
     },
     schedule: {
       startDate: new Date().toISOString().split('T')[0],
@@ -229,6 +231,7 @@ export const CreatePoll: React.FC<CreatePollProps> = ({
         description: enhancedFormData.description,
         category: enhancedFormData.category,
         options: enhancedFormData.options.map(option => option.text).filter(text => text.trim()),
+        privacyLevel: enhancedFormData.settings.privacyLevel || 'public',
         end_time: new Date(`${enhancedFormData.schedule.endDate}T${enhancedFormData.schedule.endTime}`).toISOString(),
         tags: enhancedFormData.settings.allowComments ? ['comments-enabled'] : [],
         sponsors: []

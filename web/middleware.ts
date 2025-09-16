@@ -6,10 +6,9 @@ import type { NextRequest } from 'next/server'
 import { 
   getSecurityConfig, 
   buildCSPHeader as buildCSPHeaderFromConfig, 
-  validateContent, 
   isBlockedUserAgent, 
   anonymizeIP 
-} from '@/lib/security/config'
+} from '@/lib/core/security/config'
 
 /**
  * Security Middleware
@@ -39,9 +38,11 @@ function shouldBypassForE2E(req: NextRequest): boolean {
   const bypass = process.env.NODE_ENV === 'test' || process.env.E2E === '1'
   const isLocal = req.ip === '127.0.0.1' || req.ip === '::1' || req.ip?.endsWith(':127.0.0.1')
   
-  return !SECURITY_CONFIG.rateLimit.enabled ||
+  const rateLimitEnabled = Boolean(SECURITY_CONFIG.rateLimit.enabled)
+  
+  return Boolean(!rateLimitEnabled ||
          bypass ||
-         (isLocal && req.nextUrl.pathname.startsWith('/login'))
+         (isLocal && req.nextUrl.pathname.startsWith('/login')))
 }
 
 /**

@@ -1,7 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server';
 import { logger } from '@/lib/logger';
-import { withAuth, createRateLimitMiddleware, combineMiddleware } from '@/lib/auth-middleware'
-import { getQueryOptimizer, connectionPoolManager, queryMonitor, withPerformanceMonitoring } from '@/lib/database-optimizer'
+import { withAuth, createRateLimitMiddleware, combineMiddleware } from '@/lib/core/auth/middleware'
+import { getQueryOptimizer, connectionPoolManager, queryMonitor, withPerformanceMonitoring } from '@/lib/core/database/optimizer'
 
 export const dynamic = 'force-dynamic';
 

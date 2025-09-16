@@ -19,7 +19,7 @@ import {
   __resetClient,
   __setFromSingle,
   __setRpcResult,
-} from '@/utils/supabase/server';
+} from '@/utils/supabase/__mocks__/server';
 
 describe('Admin Authentication', () => {
   beforeEach(() => {
@@ -33,7 +33,7 @@ describe('Admin Authentication', () => {
     it('returns true for admin user', async () => {
       // 1) user is signed in
       __client.auth.getUser.mockResolvedValue({
-        data: { user: { id: 'admin-user-id', email: 'admin@example.com' } },
+        data: { id: 'admin-user-id', email: 'admin@example.com' },
         error: null,
       });
 
@@ -49,7 +49,7 @@ describe('Admin Authentication', () => {
 
     it('returns false when not admin', async () => {
       __client.auth.getUser.mockResolvedValue({
-        data: { user: { id: 'u2' } },
+        data: { id: 'u2' },
         error: null,
       });
       __setRpcResult('is_admin', false);
@@ -58,14 +58,14 @@ describe('Admin Authentication', () => {
     });
 
     it('returns false when no user', async () => {
-      __client.auth.getUser.mockResolvedValue({ data: { user: null }, error: null });
+      __client.auth.getUser.mockResolvedValue({ data: null, error: null });
       await expect(isAdmin()).resolves.toBe(false);
     });
 
     it('should return false when auth error occurs', async () => {
       // Mock auth error
       __client.auth.getUser.mockResolvedValue({
-        data: { user: null },
+        data: null,
         error: new Error('Auth error')
       })
 
@@ -76,12 +76,12 @@ describe('Admin Authentication', () => {
     it('should return false when profile error occurs', async () => {
       // Mock authenticated user
       __client.auth.getUser.mockResolvedValue({
-        data: { user: { id: 'user-id' } },
+        data: { id: 'user-id' },
         error: null
       })
 
       // Mock profile error
-      const mockSelect = __client.from().select()
+      const mockSelect = __client.from('users').select()
       const mockEq = mockSelect.eq()
       mockEq.single.mockResolvedValue({
         data: null,
@@ -95,12 +95,12 @@ describe('Admin Authentication', () => {
     it('should return false when profile is null', async () => {
       // Mock authenticated user
       __client.auth.getUser.mockResolvedValue({
-        data: { user: { id: 'user-id' } },
+        data: { id: 'user-id' },
         error: null
       })
 
       // Mock null profile
-      const mockSelect = __client.from().select()
+      const mockSelect = __client.from('users').select()
       const mockEq = mockSelect.eq()
       mockEq.single.mockResolvedValue({
         data: null,
@@ -124,7 +124,7 @@ describe('Admin Authentication', () => {
     it('should not throw for admin user', async () => {
       // Mock admin user
       __client.auth.getUser.mockResolvedValue({
-        data: { user: { id: 'admin-user-id' } },
+        data: { id: 'admin-user-id' },
         error: null
       })
 
@@ -137,7 +137,7 @@ describe('Admin Authentication', () => {
     it('should throw for non-admin user', async () => {
       // Mock non-admin user
       __client.auth.getUser.mockResolvedValue({
-        data: { user: { id: 'regular-user-id' } },
+        data: { id: 'regular-user-id' },
         error: null
       })
 
@@ -150,7 +150,7 @@ describe('Admin Authentication', () => {
     it('should throw for unauthenticated user', async () => {
       // Mock unauthenticated user
       __client.auth.getUser.mockResolvedValue({
-        data: { user: null },
+        data: null,
         error: null
       })
 
@@ -164,7 +164,7 @@ describe('Admin Authentication', () => {
       
       // Mock admin user
       __client.auth.getUser.mockResolvedValue({
-        data: { user: mockUser },
+        data: mockUser,
         error: null
       })
 
@@ -180,7 +180,7 @@ describe('Admin Authentication', () => {
       
       // Mock non-admin user
       __client.auth.getUser.mockResolvedValue({
-        data: { user: mockUser },
+        data: mockUser,
         error: null
       })
 
@@ -194,7 +194,7 @@ describe('Admin Authentication', () => {
     it('should return null for unauthenticated user', async () => {
       // Mock unauthenticated user
       __client.auth.getUser.mockResolvedValue({
-        data: { user: null },
+        data: null,
         error: null
       })
 
@@ -209,7 +209,7 @@ describe('Admin Authentication', () => {
       
       // Mock admin user
       __client.auth.getUser.mockResolvedValue({
-        data: { user: mockUser },
+        data: mockUser,
         error: null
       })
 
@@ -225,7 +225,7 @@ describe('Admin Authentication', () => {
       
       // Mock non-admin user
       __client.auth.getUser.mockResolvedValue({
-        data: { user: mockUser },
+        data: mockUser,
         error: null
       })
 
@@ -238,7 +238,7 @@ describe('Admin Authentication', () => {
     it('should throw for unauthenticated user', async () => {
       // Mock unauthenticated user
       __client.auth.getUser.mockResolvedValue({
-        data: { user: null },
+        data: null,
         error: null
       })
 

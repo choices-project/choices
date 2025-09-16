@@ -9,7 +9,7 @@ import {
   logSecurityEvent,
   validateFormData,
   type ServerActionContext
-} from '@/lib/auth/server-actions'
+} from '@/lib/core/auth/server-actions'
 
 
 

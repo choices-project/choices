@@ -12,10 +12,10 @@ import {
   Clock
 } from 'lucide-react';
 import { MetricCard, BasicLineChart, BasicBarChart, ChartWrapper, ChartSkeleton } from '../charts/BasicCharts';
-import { useTrendingTopics, useGeneratedPolls, useSystemMetrics, useRealTimeSubscriptions } from '../../../admin/lib/admin-hooks';
-import { useAdminStore } from '../../../admin/lib/admin-store';
-import { mockChartData } from '../../../admin/lib/mock-data';
-import { devLog } from '../../../shared/utils/lib/logger';
+import { useTrendingTopics, useGeneratedPolls, useSystemMetrics, useRealTimeSubscriptions } from '@/lib/admin/hooks';
+import { useAdminStore } from '@/lib/admin/store';
+import { mockChartData } from '@/lib/admin/mock-data';
+import { devLog } from '@/lib/logger';
 
 export const DashboardOverview: React.FC = () => {
   const { activityFeed } = useAdminStore();

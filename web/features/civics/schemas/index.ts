@@ -59,6 +59,7 @@ export interface Representative {
     phone?: string;
     email?: string;
     address?: string;
+    website?: string;
   };
 }
 
@@ -135,7 +136,7 @@ export const IngestStatusSchema = z.object({
   recordsProcessed: z.number().nonnegative().default(0),
   recordsTotal: z.number().nonnegative().optional(),
   error: z.string().optional(),
-  metadata: z.record(z.any()).optional(),
+  metadata: z.record(z.string(), z.any()).optional(),
 });
 
 export type IngestStatus = z.infer<typeof IngestStatusSchema>;

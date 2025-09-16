@@ -82,10 +82,10 @@ export default function OptimizedPollResults({
 
   // Memoized sorted options for performance
   const sortedOptions = useMemo(() => {
-    if (!results?.options) return []
+    if (!results?.results) return []
     
-    return [...results.options].sort((a, b) => b.voteCount - a.voteCount)
-  }, [results?.options])
+    return [...results.results].sort((a, b) => (b.voteCount || b.votes) - (a.voteCount || a.votes))
+  }, [results?.results])
 
   // Memoized total votes for performance
   const totalVotes = useMemo(() => {
@@ -102,7 +102,7 @@ export default function OptimizedPollResults({
       ongoing: { label: 'Ongoing', color: 'text-blue-600', bgColor: 'bg-blue-50' }
     }
     
-    const config = statusConfig[results.pollStatus]
+    const config = statusConfig[results.pollStatus as keyof typeof statusConfig]
     return config
   }, [results])
 
@@ -222,7 +222,7 @@ export default function OptimizedPollResults({
             </span>
             {userId && (
               <span className="text-gray-600">
-                Budget: {results.privacyBudgetRemaining.toFixed(2)} ε
+                Budget: {results.privacyBudgetRemaining?.toFixed(2) || '0.00'} ε
               </span>
             )}
           </div>
@@ -254,21 +254,21 @@ export default function OptimizedPollResults({
         <h3 className="text-lg font-semibold text-gray-900">Results</h3>
         <div className="space-y-3">
           {sortedOptions.map((option) => (
-            <div key={option.optionId} className="bg-white border border-gray-200 rounded-lg p-4">
+            <div key={option.optionId || option.option} className="bg-white border border-gray-200 rounded-lg p-4">
               <div className="flex items-center justify-between mb-2">
-                <h4 className="font-medium text-gray-900">{option.label}</h4>
+                <h4 className="font-medium text-gray-900">{option.label || option.option}</h4>
                 <span className="text-sm text-gray-600">
-                  {option.voteCount} votes ({option.votePercentage.toFixed(1)}%)
+                  {option.voteCount || option.votes} votes ({(option.votePercentage || option.percentage).toFixed(1)}%)
                 </span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2">
                 <div
                   className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                  style={{ width: `${option.votePercentage}%` }}
+                  style={{ width: `${option.votePercentage || option.percentage}%` }}
                 ></div>
               </div>
               <div className="mt-2 text-xs text-gray-500">
-                {option.uniqueVoters} unique voters
+                {option.uniqueVoters || 0} unique voters
               </div>
             </div>
           ))}

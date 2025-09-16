@@ -404,7 +404,7 @@ export function OptimizedPicture({
         width={width}
         height={height}
         loading="lazy"
-        decoding={"async" as "async"}
+        decoding={"async" as const}
         onLoad={() => {
           setIsLoaded(true)
           onLoad?.()

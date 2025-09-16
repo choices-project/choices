@@ -1,6 +1,5 @@
 import { createServerClient } from '@supabase/ssr'
 import type { NextRequest, NextResponse } from 'next/server'
-import type { SupabaseClient } from '@supabase/supabase-js'
 
 // Database schema types for type safety
 export interface Database {

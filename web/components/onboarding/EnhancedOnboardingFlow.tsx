@@ -26,8 +26,10 @@ import PlatformTourStep from './steps/PlatformTourStep';
 import DataUsageStep from './steps/DataUsageStep';
 import AuthSetupStep from './steps/AuthSetupStep';
 import ProfileSetupStep from './steps/ProfileSetupStep';
+import InterestSelectionStep from './steps/InterestSelectionStep';
 import FirstExperienceStep from './steps/FirstExperienceStep';
 import CompleteStep from './steps/CompleteStep';
+import ContributionStep from './steps/ContributionStep';
 import ProgressIndicator from './components/ProgressIndicator';
 
 const INITIAL_STATE: OnboardingDataHybrid = {
@@ -375,6 +377,12 @@ function EnhancedOnboardingFlowInner() {
             <ProfileSetupStep
               data={data.profile}
               onUpdate={updateStepData('profile')}
+              onNext={handleNext}
+              onBack={handleBack}
+            />
+          )}
+          {currentStep === 'interest-selection' && (
+            <InterestSelectionStep
               onNext={handleNext}
               onBack={handleBack}
             />

@@ -5,7 +5,8 @@
  * Provides a clean way to wrap components or sections that depend on specific features.
  */
 
-import React, { ReactNode } from 'react';
+import type { ReactNode } from 'react';
+import React from 'react';
 import { useFeatureFlag, useFeatureFlagsBatch, useFeatureFlagWithDependencies, useFeatureFlags } from '../hooks/useFeatureFlags';
 
 export interface FeatureWrapperProps {

@@ -14,7 +14,7 @@
  * @since 2024-12-27
  */
 
-import { logger } from './logger'
+import { logger } from '@/lib/logger'
 
 // Analytics event types
 export enum AuthEventType {

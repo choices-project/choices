@@ -5,8 +5,8 @@
  * way to conditionally include functionality in the application.
  */
 
-import { featureFlagManager, isFeatureEnabled } from './feature-flags';
-import { devLog } from './logger';
+import { featureFlagManager, isFeatureEnabled } from '@/lib/core/feature-flags';
+import { devLog } from '@/lib/logger';
 
 interface ModuleConfig {
   id: string;
@@ -409,7 +409,7 @@ export class ModuleLoader {
       if (moduleConfig.featureFlag) {
         const flag = featureFlagManager.getFlag(moduleConfig.featureFlag);
         if (flag) {
-          categories[flag.category]++;
+          categories[flag.category as keyof typeof categories]++;
         }
       }
     });

@@ -1,280 +1,247 @@
-'use client'
+'use client';
 
-import { useState, useEffect, useCallback, createContext, useContext, Suspense, useMemo } from 'react'
-import { useSearchParams } from 'next/navigation'
-import { getSupabaseBrowserClient } from '@/utils/supabase/client'
-import WelcomeStep from './steps/WelcomeStep'
-import AuthStep from './steps/AuthStep'
-import ValuesStep from './steps/ValuesStep'
-import DemographicsStep from './steps/DemographicsStep'
-import PrivacyStep from './steps/PrivacyStep'
-import CompleteStep from './steps/CompleteStep'
-import { devLog } from '@/lib/logger';
+import React, { useState, createContext, useContext } from 'react';
+import { 
+  MapPin, 
+  Users, 
+  Shield, 
+  Heart, 
+  CheckCircle, 
+  ArrowRight,
+  Sparkles,
+  Target,
+  Zap
+} from 'lucide-react';
+import LocationInput from './LocationInput';
+import WelcomeStep from './steps/WelcomeStep';
+import InterestSelectionStep from './steps/InterestSelectionStep';
+import PrivacyStep from './steps/PrivacyStep';
+import CompleteStep from './steps/CompleteStep';
 
-export type OnboardingStep = 'welcome' | 'auth' | 'values' | 'demographics' | 'privacy' | 'complete'
-
-interface OnboardingData {
-  // Auth data
-  authMethod?: 'google' | 'github' | 'facebook' | 'twitter' | 'linkedin' | 'discord' | 'instagram' | 'tiktok' | 'email'
-  user?: any
-  
-  // Profile data
-  displayName?: string
-  avatar?: string
-  bio?: string
-  
-  // Welcome step data
-  welcomeStarted?: boolean
-  welcomeCompleted?: boolean
-  userPreferences?: {
-    theme?: string
-    language?: string
-  }
-  
-  // Values & interests
-  primaryConcerns: string[]
-  communityFocus: string[]
-  participationStyle: 'observer' | 'contributor' | 'leader'
-  valuesCompleted?: boolean
-  
-  // Demographics (optional)
-  demographics: {
-    ageRange?: string
-    education?: string
-    employment?: string
-    incomeRange?: string
-  }
-  demographicsCompleted?: boolean
-  
-  // Privacy settings
-  privacy: {
-    shareProfile: boolean
-    shareDemographics: boolean
-    shareParticipation: boolean
-    allowAnalytics: boolean
-  }
-  privacyCompleted?: boolean
-  
-  // Auth step data
-  authCompleted?: boolean
+// Onboarding Context
+interface OnboardingContextType {
+  userData: any;
+  setUserData: (updater: (prev: any) => any) => void;
+  currentStep: number;
+  setCurrentStep: (step: number) => void;
+  completedSteps: Set<string>;
+  setCompletedSteps: (updater: (prev: Set<string>) => Set<string>) => void;
+  updateData: (updates: any) => void;
 }
 
-// Create context for sharing onboarding state
-const OnboardingContext = createContext<{
-  currentStep: OnboardingStep;
-  onboardingData: OnboardingData;
-  updateData: (_updates: Partial<OnboardingData>) => void;
-  setCurrentStep: (step: OnboardingStep) => void;
-  isLoading: boolean;
-  error: string | null;
-}>({
-  currentStep: 'welcome',
-  onboardingData: {
-    primaryConcerns: [],
-    communityFocus: [],
-    participationStyle: 'observer',
-    demographics: {},
-    privacy: {
-      shareProfile: false,
-      shareDemographics: false,
-      shareParticipation: false,
-      allowAnalytics: false
-    }
-  },
-  updateData: (_updates: Partial<OnboardingData>) => {
-    // This is a default implementation that will be overridden
-    // The underscore prefix indicates this parameter is intentionally unused in the default context
-    devLog('OnboardingContext updateData called before initialization')
-  },
-  setCurrentStep: (_step: OnboardingStep) => {
-    // This is a default implementation that will be overridden
-    // The underscore prefix indicates this parameter is intentionally unused in the default context
-    devLog('OnboardingContext setCurrentStep called before initialization')
-  },
-  isLoading: false,
-  error: null
-});
+const OnboardingContext = createContext<OnboardingContextType | null>(null);
 
-// Hook to use onboarding context
-export function useOnboardingContext() {
-  return useContext(OnboardingContext);
-}
-
-function OnboardingFlowInner() {
-  const [currentStep, setCurrentStep] = useState<OnboardingStep>('welcome')
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [onboardingData, setOnboardingData] = useState<OnboardingData>({
-    primaryConcerns: [],
-    communityFocus: [],
-    participationStyle: 'observer',
-    demographics: {},
-    privacy: {
-      shareProfile: false,
-      shareDemographics: false,
-      shareParticipation: false,
-      allowAnalytics: false
-    }
-  })
-  
-  const searchParams = useSearchParams()
-  const supabase = useMemo(() => getSupabaseBrowserClient(), [])
-
-  // Use useCallback for the updateData function to prevent unnecessary re-renders
-  const updateData = useCallback((_updates: Partial<OnboardingData>) => {
-    setOnboardingData(prev => ({ ...prev, ..._updates }))
-  }, [])
-
-  // Check authentication status and handle step from URL
-  useEffect(() => {
-    const checkAuthAndStep = async () => {
-      try {
-        const stepParam = searchParams.get('step')
-        if (stepParam && ['auth', 'values', 'demographics', 'privacy', 'complete'].includes(stepParam)) {
-          setCurrentStep(stepParam as OnboardingStep)
-        }
-
-        // Check if user is authenticated
-        if (!supabase) {
-          throw new Error('Authentication service not available')
-        }
-        const { data: { user }, error: userError } = await supabase.auth.getUser()
-        
-        if (user && !userError) {
-          // User is authenticated, update data
-          setOnboardingData(prev => ({
-            ...prev,
-            user,
-            displayName: user.user_metadata?.fullname || user.email?.split('@')[0],
-            avatar: user.user_metadata?.avatarurl
-          }))
-          
-          // If we're on auth step and user is authenticated, move to values
-          if (currentStep === 'auth') {
-            setCurrentStep('values')
-          }
-        } else if (currentStep !== 'welcome' && currentStep !== 'auth') {
-          // User is not authenticated but trying to access protected steps
-          setCurrentStep('auth')
-        }
-      } catch (error) {
-        devLog('Error checking auth status:', error)
-        setError('Failed to check authentication status')
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    checkAuthAndStep()
-  }, [searchParams, currentStep, supabase])
-
-  // Step navigation handlers
-  const handleNext = useCallback(() => {
-    const stepOrder: OnboardingStep[] = ['welcome', 'auth', 'values', 'demographics', 'privacy', 'complete']
-    const currentIndex = stepOrder.indexOf(currentStep)
-    if (currentIndex < stepOrder.length - 1) {
-      setCurrentStep(stepOrder[currentIndex + 1])
-    }
-  }, [currentStep])
-
-  const handleBack = useCallback(() => {
-    const stepOrder: OnboardingStep[] = ['welcome', 'auth', 'values', 'demographics', 'privacy', 'complete']
-    const currentIndex = stepOrder.indexOf(currentStep)
-    if (currentIndex > 0) {
-      setCurrentStep(stepOrder[currentIndex - 1])
-    }
-  }, [currentStep])
-
-  const handleComplete = useCallback(() => {
-    // Handle onboarding completion
-    devLog('Onboarding completed:', onboardingData)
-    // Redirect to main app or dashboard
-    window.location.href = '/dashboard'
-  }, [onboardingData])
-
-  // Create context value
-  const contextValue = {
-    currentStep,
-    onboardingData,
-    updateData,
-    setCurrentStep,
-    isLoading,
-    error
+export const useOnboardingContext = () => {
+  const context = useContext(OnboardingContext);
+  if (!context) {
+    throw new Error('useOnboardingContext must be used within OnboardingFlow');
   }
+  return context;
+};
 
-  return (
-    <OnboardingContext.Provider value={contextValue}>
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-        <div className="container mx-auto px-4 py-8">
-          <div className="max-w-2xl mx-auto">
-            <Suspense fallback={<div>Loading...</div>}>
-              {currentStep === 'welcome' && (
-                <WelcomeStep 
-                  data={{
-                    welcomeStarted: onboardingData.welcomeStarted || false
-                  }}
-                  onStepUpdate={(updates) => updateData({ ...updates })}
-                  onNext={handleNext}
-                />
-              )}
-              {currentStep === 'auth' && (
-                <AuthStep 
-                  data={onboardingData}
-                  onUpdate={updateData}
-                  onNext={handleNext}
-                  onBack={handleBack}
-                />
-              )}
-              {currentStep === 'values' && (
-                <ValuesStep 
-                  data={onboardingData}
-                  onUpdate={updateData}
-                  onNext={handleNext}
-                  onBack={handleBack}
-                />
-              )}
-              {currentStep === 'demographics' && (
-                <DemographicsStep 
-                  data={onboardingData}
-                  onUpdate={updateData}
-                  onNext={handleNext}
-                  onBack={handleBack}
-                />
-              )}
-              {currentStep === 'privacy' && (
-                <PrivacyStep 
-                  data={onboardingData}
-                  onUpdate={updateData}
-                  onNext={handleNext}
-                  onBack={handleBack}
-                />
-              )}
-              {currentStep === 'complete' && (
-                <CompleteStep 
-                  data={onboardingData}
-                  onComplete={handleComplete}
-                  onBack={handleBack}
-                />
-              )}
-            </Suspense>
-          </div>
-        </div>
-      </div>
-    </OnboardingContext.Provider>
-  )
+interface OnboardingStep {
+  id: string;
+  title: string;
+  description: string;
+  icon: React.ReactNode;
+  component: React.ReactNode;
 }
 
 export default function OnboardingFlow() {
+  const [currentStep, setCurrentStep] = useState(0);
+  const [completedSteps, setCompletedSteps] = useState<Set<string>>(new Set());
+  const [userData, setUserData] = useState<any>({});
+
+  const updateData = (updates: any) => {
+    setUserData((prev: any) => ({ ...prev, ...updates }));
+  };
+
+  const steps: OnboardingStep[] = [
+    {
+      id: 'welcome',
+      title: 'Welcome to the Democratic Revolution! 🗳️',
+      description: 'We\'re leveling the playing field for all candidates',
+      icon: <Sparkles className="w-8 h-8" />,
+      component: <WelcomeStep onNext={() => nextStep()} />
+    },
+    {
+      id: 'location',
+      title: 'Find Your Local Candidates',
+      description: 'We\'ll show you everyone running in your area',
+      icon: <MapPin className="w-8 h-8" />,
+      component: (
+        <LocationInput
+          onLocationResolved={(jurisdictionIds) => {
+            setUserData((prev: any) => ({ ...prev, jurisdictionIds }));
+            completeStep('location');
+          }}
+          onError={(error) => console.error('Location error:', error)}
+        />
+      )
+    },
+    {
+      id: 'interests',
+      title: 'What Matters to You?',
+      description: 'Help us show you the most relevant candidates',
+      icon: <Target className="w-8 h-8" />,
+      component: <InterestSelectionStep onNext={() => nextStep()} onBack={() => prevStep()} />
+    },
+    {
+      id: 'privacy',
+      title: 'Your Privacy is Protected',
+      description: 'Learn how we keep your data safe',
+      icon: <Shield className="w-8 h-8" />,
+      component: <PrivacyStep data={userData} onUpdate={updateData} onNext={() => nextStep()} onBack={() => prevStep()} />
+    },
+    {
+      id: 'complete',
+      title: 'You\'re All Set! 🎉',
+      description: 'Ready to discover your candidates',
+      icon: <CheckCircle className="w-8 h-8" />,
+      component: <CompleteStep data={userData} onComplete={() => nextStep()} onBack={() => prevStep()} />
+    }
+  ];
+
+  const nextStep = () => {
+    if (currentStep < steps.length - 1) {
+      setCurrentStep(currentStep + 1);
+    }
+  };
+
+  const prevStep = () => {
+    if (currentStep > 0) {
+      setCurrentStep(currentStep - 1);
+    }
+  };
+
+  const completeStep = (stepId: string) => {
+    setCompletedSteps(prev => new Set([...prev, stepId]));
+    setTimeout(() => {
+      if (currentStep < steps.length - 1) {
+        setCurrentStep(currentStep + 1);
+      }
+    }, 1000);
+  };
+
+  const currentStepData = steps[currentStep];
+  const progress = ((currentStep + 1) / steps.length) * 100;
+
+  const contextValue: OnboardingContextType = {
+    userData,
+    setUserData,
+    currentStep,
+    setCurrentStep,
+    completedSteps,
+    setCompletedSteps,
+    updateData
+  };
+
   return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="text-gray-600">Loading your onboarding experience...</p>
+    <OnboardingContext.Provider value={contextValue}>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+      {/* Progress bar */}
+      <div className="fixed top-0 left-0 right-0 z-50">
+        <div className="h-1 bg-gray-200">
+          <div 
+            className="h-full bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-500 ease-out"
+            style={{ width: `${progress}%` }}
+          />
         </div>
       </div>
-    }>
-      <OnboardingFlowInner />
-    </Suspense>
-  )
+
+      {/* Header */}
+      <div className="pt-8 pb-4">
+        <div className="max-w-4xl mx-auto px-4">
+          <div className="text-center">
+            <div className="flex justify-center mb-4">
+              <div className="p-4 bg-white rounded-full shadow-lg">
+                {currentStepData.icon}
+              </div>
+            </div>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              {currentStepData.title}
+            </h1>
+            <p className="text-lg text-gray-600">
+              {currentStepData.description}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Step indicator */}
+      <div className="max-w-4xl mx-auto px-4 mb-8">
+        <div className="flex items-center justify-center space-x-4">
+          {steps.map((step, index) => (
+            <div key={step.id} className="flex items-center">
+              <div
+                className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-all duration-300 ${
+                  index <= currentStep
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-200 text-gray-500'
+                }`}
+              >
+                {completedSteps.has(step.id) ? (
+                  <CheckCircle className="w-5 h-5" />
+                ) : (
+                  index + 1
+                )}
+              </div>
+              {index < steps.length - 1 && (
+                <div
+                  className={`w-12 h-1 mx-2 transition-all duration-300 ${
+                    index < currentStep ? 'bg-blue-600' : 'bg-gray-200'
+                  }`}
+                />
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Step content */}
+      <div className="max-w-4xl mx-auto px-4">
+        <div className="bg-white rounded-2xl shadow-xl p-8">
+          {currentStepData.component}
+        </div>
+      </div>
+
+      {/* Fun facts */}
+      <div className="max-w-4xl mx-auto px-4 mt-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
+            <div className="flex items-center">
+              <Users className="w-8 h-8 text-blue-600 mr-3" />
+              <div>
+                <p className="font-semibold text-gray-900">10,000+ Voters</p>
+                <p className="text-sm text-gray-600">Already using our platform</p>
+              </div>
+            </div>
+          </div>
+          
+          <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
+            <div className="flex items-center">
+              <Shield className="w-8 h-8 text-green-600 mr-3" />
+              <div>
+                <p className="font-semibold text-gray-900">100% Private</p>
+                <p className="text-sm text-gray-600">Your data stays on your device</p>
+              </div>
+            </div>
+          </div>
+          
+          <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
+            <div className="flex items-center">
+              <Heart className="w-8 h-8 text-red-600 mr-3" />
+              <div>
+                <p className="font-semibold text-gray-900">Equal Access</p>
+                <p className="text-sm text-gray-600">All candidates get equal voice</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    </OnboardingContext.Provider>
+  );
 }
+
+// Step components are imported from separate files
