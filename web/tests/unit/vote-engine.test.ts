@@ -146,7 +146,7 @@ describe('VoteEngine', () => {
       const request: VoteRequest = {
         pollId: 'test-poll-123',
         userId: 'user-1',
-        voteData: {} as any,
+        voteData: {},
         privacyLevel: 'public'
       };
 
@@ -255,7 +255,7 @@ describe('VoteEngine', () => {
       // Mock a strategy to throw an error
       const mockStrategy = {
         getVotingMethod: () => 'single' as VotingMethod,
-        validateVote: jest.fn().mockRejectedValue(new Error('Strategy error') as any),
+        validateVote: jest.fn().mockRejectedValue(new Error('Strategy error')),
         processVote: jest.fn(),
         calculateResults: jest.fn(),
         getConfiguration: jest.fn()
@@ -334,11 +334,11 @@ describe('VoteEngine', () => {
         getVotingMethod: () => 'single' as VotingMethod,
         validateVote: jest.fn(),
         processVote: jest.fn(),
-        calculateResults: jest.fn().mockRejectedValue(new Error('Calculation error') as any),
+        calculateResults: jest.fn().mockRejectedValue(new Error('Calculation error')),
         getConfiguration: jest.fn()
       };
 
-      (engine as any).strategies.set('single', mockStrategy);
+      (engine as unknown as { strategies: Map<string, unknown> }).strategies.set('single', mockStrategy);
 
       const votes: VoteData[] = [{
         id: 'vote-1',
@@ -406,7 +406,7 @@ describe('VoteEngine', () => {
         privacyLevel: 'public'
       };
 
-      const validation = await engine.validateVote(request, null as any);
+      const validation = await engine.validateVote(request, null as unknown as Poll);
       
       expect(validation.isValid).toBe(false);
       expect(validation.error).toBe('Poll not found or not active');
@@ -416,7 +416,7 @@ describe('VoteEngine', () => {
       const request: VoteRequest = {
         pollId: 'test-poll-123',
         userId: 'user-1',
-        voteData: undefined as any,
+        voteData: undefined as unknown as VoteData,
         privacyLevel: 'public'
       };
 
@@ -429,7 +429,7 @@ describe('VoteEngine', () => {
     it('should handle malformed poll data', async () => {
       const malformedPoll = {
         ...mockPoll,
-        votingMethod: 'invalid' as any
+        votingMethod: 'invalid' as unknown as VotingMethod
       };
       
       const request: VoteRequest = {
