@@ -4,7 +4,7 @@
 
 export type PrivacyLevel = 'public' | 'private' | 'high-privacy';
 
-export interface PrivacyConfig {
+export type PrivacyConfig = {
   level: PrivacyLevel;
   requiresTokens: boolean;
   usesIA: boolean;
@@ -14,7 +14,7 @@ export interface PrivacyConfig {
   features: string[];
 }
 
-export interface PollPrivacySettings {
+export type PollPrivacySettings = {
   pollId: string;
   privacyLevel: PrivacyLevel;
   requiresAuthentication: boolean;

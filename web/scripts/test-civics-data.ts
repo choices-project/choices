@@ -20,7 +20,7 @@ async function testData() {
   if (divError) {
     console.error('❌ Divisions error:', divError);
   } else {
-    console.log(`✅ Divisions: ${divisions?.length || 0} records`);
+    console.log(`✅ Divisions: ${divisions.length || 0} records`);
     if (divisions && divisions.length > 0) {
       console.log('   Sample:', divisions[0]);
     }
@@ -35,7 +35,7 @@ async function testData() {
   if (repError) {
     console.error('❌ Representatives error:', repError);
   } else {
-    console.log(`✅ Representatives: ${reps?.length || 0} records`);
+    console.log(`✅ Representatives: ${reps.length || 0} records`);
     if (reps && reps.length > 0) {
       console.log('   Sample:', {
         name: reps[0].name,
@@ -57,7 +57,7 @@ async function testData() {
   if (caError) {
     console.error('❌ CA reps error:', caError);
   } else {
-    console.log(`✅ CA Federal Reps: ${caReps?.length || 0} records`);
+    console.log(`✅ CA Federal Reps: ${caReps.length || 0} records`);
     if (caReps && caReps.length > 0) {
       console.log('   Sample CA rep:', {
         name: caReps[0].name,
@@ -76,7 +76,7 @@ async function testData() {
   if (levelError) {
     console.error('❌ Level counts error:', levelError);
   } else {
-    const counts = levelCounts?.reduce((acc: any, rep: any) => {
+    const counts = levelCounts.reduce((acc: any, rep: any) => {
       acc[rep.level] = (acc[rep.level] || 0) + 1;
       return acc;
     }, {});

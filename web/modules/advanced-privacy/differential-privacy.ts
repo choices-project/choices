@@ -7,20 +7,20 @@
 
 import { isFeatureEnabled } from '../../lib/feature-flags'
 
-export interface PrivacyBudget {
+export type PrivacyBudget = {
   epsilon: number
   delta: number
   sensitivity: number
 }
 
-export interface NoisyResult {
+export type NoisyResult = {
   value: number
   noise: number
   privacyBudget: PrivacyBudget
   confidence: number
 }
 
-export interface PrivacyConfig {
+export type PrivacyConfig = {
   epsilon: number // Privacy parameter (lower = more private)
   delta: number // Failure probability
   sensitivity: number // Maximum change in output

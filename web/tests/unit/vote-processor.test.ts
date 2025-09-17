@@ -193,7 +193,7 @@ describe('VoteProcessor', () => {
 
     it('should handle Supabase client unavailable', async () => {
       // Mock Supabase client as unavailable
-      (require('@/utils/supabase/server').getSupabaseServerClient as jest.MockedFunction<() => Promise<any>>)
+      ((await import('@/utils/supabase/server')).getSupabaseServerClient as jest.MockedFunction<() => Promise<any>>)
         .mockResolvedValue(null);
 
       const result = await processor.processVote(mockVoteData);

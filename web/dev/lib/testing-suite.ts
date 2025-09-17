@@ -1,7 +1,7 @@
 // Comprehensive Testing Suite for Choices Platform MVP
 // Validates all core functionality before deployment
 
-export interface TestResult {
+export type TestResult = {
   testName: string
   category: string
   status: 'pass' | 'fail' | 'warning'
@@ -10,7 +10,7 @@ export interface TestResult {
   timestamp: number
 }
 
-export interface TestSuite {
+export type TestSuite = {
   name: string
   tests: TestResult[]
   summary: {
@@ -279,7 +279,7 @@ export class TestingSuite {
     const performanceMetrics = {
       responseTime,
       memoryUsage: (performance as any).memory?.usedJSHeapSize || 'N/A',
-      loadTime: performance.timing?.loadEventEnd - performance.timing?.navigationStart || 'N/A'
+      loadTime: performance.timing.loadEventEnd - performance.timing.navigationStart || 'N/A'
     }
 
     const isGoodPerformance = responseTime < 500

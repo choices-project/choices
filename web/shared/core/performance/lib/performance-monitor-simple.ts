@@ -7,7 +7,7 @@ import { logger } from '@/lib/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 // Basic types for performance monitoring
-export interface QueryPerformanceData {
+export type QueryPerformanceData = {
   queryHash: string;
   querySignature: string;
   queryType: 'SELECT' | 'INSERT' | 'UPDATE' | 'DELETE' | 'CREATE' | 'ALTER' | 'DROP';
@@ -23,7 +23,7 @@ export interface QueryPerformanceData {
   userAgent?: string;
 }
 
-export interface CachePerformanceData {
+export type CachePerformanceData = {
   cacheName: string;
   cacheType: 'memory' | 'redis' | 'database' | 'cdn';
   hitCount: number;
@@ -36,7 +36,7 @@ export interface CachePerformanceData {
   evictionCount?: number;
 }
 
-export interface PerformanceRecommendation {
+export type PerformanceRecommendation = {
   recommendationType: string;
   recommendationText: string;
   priority: 'high' | 'medium' | 'low';
@@ -45,7 +45,7 @@ export interface PerformanceRecommendation {
 }
 
 // Performance monitoring configuration
-export interface PerformanceConfig {
+export type PerformanceConfig = {
   enabled: boolean;
   sampleRate: number; // 0.0 to 1.0
   slowQueryThresholdMs: number;
@@ -315,10 +315,10 @@ export class SimplePerformanceMonitor {
       // Calculate statistics
       const stats = {
         queryPerformance: {
-          totalQueries: queryStats?.length || 0,
+          totalQueries: queryStats.length || 0,
           avgExecutionTime: this.calculateAverage(queryStats, 'execution_time_ms'),
-          slowQueries: queryStats?.filter((q: any) => (q.execution_time_ms as number) > this.config.slowQueryThresholdMs).length || 0,
-          totalRowsAffected: queryStats?.reduce((sum: number, q: any) => sum + ((q.rows_affected as number) || 0), 0) || 0,
+          slowQueries: queryStats.filter((q: any) => (q.execution_time_ms as number) > this.config.slowQueryThresholdMs).length || 0,
+          totalRowsAffected: queryStats.reduce((sum: number, q: any) => sum + ((q.rows_affected as number) || 0), 0) || 0,
         },
         cachePerformance: {
           avgHitRate: this.calculateAverage(cacheStats, 'hit_rate'),

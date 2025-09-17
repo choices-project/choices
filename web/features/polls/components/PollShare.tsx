@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { devLog } from '@/lib/logger';
 import { Share2, Copy, Link, Twitter, Facebook, Linkedin, Mail, QrCode, Download } from 'lucide-react'
 
-interface PollShareProps {
+type PollShareProps = {
   pollId: string
   poll?: any
 }

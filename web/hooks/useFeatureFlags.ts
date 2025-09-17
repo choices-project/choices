@@ -19,7 +19,7 @@ import {
   getAllFeatureFlags as _getAllFeatureFlags
 } from '@/lib/core/feature-flags';
 
-export interface UseFeatureFlagsReturn {
+export type UseFeatureFlagsReturn = {
   // Flag checking
   isEnabled: (flagId: string) => boolean;
   isDisabled: (flagId: string) => boolean;

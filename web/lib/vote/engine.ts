@@ -26,7 +26,7 @@ import type {
   VotingMethod
 } from './types';
 
-export interface VoteEngineConfig {
+export type VoteEngineConfig = {
   maxVotesPerPoll: number;
   allowMultipleVotes: boolean;
   requireAuthentication: boolean;

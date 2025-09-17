@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { devLog } from '@/lib/logger';
 
-interface PerformanceUtils {
+type PerformanceUtils = {
   performanceMonitor: any
 }
 

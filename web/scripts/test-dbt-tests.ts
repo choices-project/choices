@@ -35,7 +35,7 @@ async function testDbtTests() {
       } else {
         console.log('   ✅ Unique test working (no data to test)');
       }
-    } catch (error) {
+    } catch (_error) {
       console.log('   ✅ Unique test working (expected behavior)');
     }
 

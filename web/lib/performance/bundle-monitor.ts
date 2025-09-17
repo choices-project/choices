@@ -5,7 +5,7 @@
  * Integrates with webpack bundle analyzer and provides real-time monitoring.
  */
 
-interface BundleMetrics {
+type BundleMetrics = {
   name: string;
   size: number;
   gzipSize?: number;
@@ -14,14 +14,14 @@ interface BundleMetrics {
   timestamp: number;
 }
 
-interface BundleThresholds {
+type BundleThresholds = {
   maxBundleSize: number;
   maxChunkSize: number;
   warningBundleSize: number;
   warningChunkSize: number;
 }
 
-interface BundleAlert {
+type BundleAlert = {
   type: 'error' | 'warning' | 'info';
   message: string;
   bundle: string;

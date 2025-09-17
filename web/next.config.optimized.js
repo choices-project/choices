@@ -88,7 +88,7 @@ const nextConfig = {
       });
 
       // More aggressive Supabase externalization for server builds
-      config.externals.push(({ context, request }, callback) => {
+      config.externals.push(({ request }, callback) => {
         if (isServer && request && request.includes('@supabase')) {
           return callback(null, `commonjs ${request}`);
         }

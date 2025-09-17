@@ -8,7 +8,7 @@
 import React, { useState, useEffect } from 'react';
 import { performanceMetrics } from '@/lib/performance/performance-metrics';
 
-interface User {
+type User = {
   id: string;
   email: string;
   role: 'admin' | 'moderator' | 'user';
@@ -18,7 +18,7 @@ interface User {
   voteCount: number;
 }
 
-interface UserManagementProps {
+type UserManagementProps = {
   onUserUpdate?: (user: User) => void;
   onUserDelete?: (userId: string) => void;
 }

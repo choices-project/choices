@@ -1,6 +1,6 @@
 // app/api/v1/civics/by-state/route.ts
 // Versioned API endpoint for representatives by state with field selection
-import { NextRequest, NextResponse } from 'next/server';
+import { type NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(
@@ -8,7 +8,8 @@ const supabase = createClient(
   process.env.SUPABASE_SECRET_KEY!,
   { auth: { persistSession: false } }
 );
-
+// Force dynamic rendering since we use request.url
+export const dynamic = 'force-dynamic';
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -69,7 +70,7 @@ export async function GET(request: NextRequest) {
     // Process each representative
     const processedReps = await Promise.all(
       (reps || []).map(async (rep) => {
-        const response: any = {
+        const response: Record<string, unknown> = {
           id: rep.id,
           name: rep.name,
           office: rep.office,
@@ -140,7 +141,7 @@ export async function GET(request: NextRequest) {
     let finalResponse = processedReps;
     if (fields.length > 0) {
       finalResponse = processedReps.map(rep => {
-        const filtered: any = {};
+        const filtered: Record<string, unknown> = {};
         fields.forEach(field => {
           if (field in rep) {
             filtered[field] = rep[field];

@@ -4,13 +4,13 @@ import { Bar, Line, Pie } from '@/components/charts';
 // Color palette for charts
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
 
-interface ChartData {
+type ChartData = {
   name: string;
   value: number;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
-interface BasicLineChartProps {
+type BasicLineChartProps = {
   data: ChartData[];
   dataKey: string;
   title: string;
@@ -39,7 +39,7 @@ export const BasicLineChart: React.FC<BasicLineChartProps> = ({
   );
 };
 
-interface BasicBarChartProps {
+type BasicBarChartProps = {
   data: ChartData[];
   dataKey: string;
   title: string;
@@ -52,7 +52,7 @@ export const BasicBarChart: React.FC<BasicBarChartProps> = ({
   dataKey,
   title,
   height = 300,
-  color = '#00C49F',
+  color: _color = '#00C49F',
 }) => {
   return (
     <div className="w-full">
@@ -67,7 +67,7 @@ export const BasicBarChart: React.FC<BasicBarChartProps> = ({
   );
 };
 
-interface BasicPieChartProps {
+type BasicPieChartProps = {
   data: ChartData[];
   title: string;
   height?: number;
@@ -93,7 +93,7 @@ export const BasicPieChart: React.FC<BasicPieChartProps> = ({
 };
 
 // Metric card component for quick stats
-interface MetricCardProps {
+type MetricCardProps = {
   title: string;
   value: string | number;
   trend?: string;
@@ -124,8 +124,8 @@ export const MetricCard: React.FC<MetricCardProps> = ({
   };
 
   const getTrendColor = (trend: string) => {
-    if (trend?.includes('+')) return trendColorClasses.positive;
-    if (trend?.includes('-')) return trendColorClasses.negative;
+    if (trend.includes('+')) return trendColorClasses.positive;
+    if (trend.includes('-')) return trendColorClasses.negative;
     return trendColorClasses.neutral;
   };
 
@@ -148,7 +148,7 @@ export const MetricCard: React.FC<MetricCardProps> = ({
 };
 
 // Chart wrapper component for consistent styling
-interface ChartWrapperProps {
+type ChartWrapperProps = {
   title: string;
   children: React.ReactNode;
   className?: string;

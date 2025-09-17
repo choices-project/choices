@@ -57,7 +57,7 @@ export enum AuthMethod {
 }
 
 // Analytics event data
-export interface AuthEvent {
+export type AuthEvent = {
   id: string
   userId?: string
   eventType: AuthEventType
@@ -84,7 +84,7 @@ export interface AuthEvent {
 }
 
 // Performance metrics
-export interface AuthPerformanceMetrics {
+export type AuthPerformanceMetrics = {
   totalRequests: number
   successRate: number
   averageResponseTime: number
@@ -99,7 +99,7 @@ export interface AuthPerformanceMetrics {
 }
 
 // Security metrics
-export interface SecurityMetrics {
+export type SecurityMetrics = {
   totalEvents: number
   suspiciousActivityCount: number
   rateLimitViolations: number
@@ -113,7 +113,7 @@ export interface SecurityMetrics {
 }
 
 // Biometric metrics
-export interface BiometricMetrics {
+export type BiometricMetrics = {
   totalSetupAttempts: number
   setupSuccessRate: number
   totalAuthAttempts: number
@@ -124,7 +124,7 @@ export interface BiometricMetrics {
 }
 
 // Analytics context for tracking
-export interface AuthContext {
+export type AuthContext = {
   userId?: string
   ipAddress?: string
   userAgent?: string

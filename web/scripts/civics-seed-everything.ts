@@ -2,6 +2,8 @@
 import 'dotenv/config';
 import { createClient } from '@supabase/supabase-js';
 import assert from 'node:assert';
+import { has, toString, asArray } from '@/lib/util/guards';
+import { withOptional } from '@/lib/util/objects';
 
 // All 50 US states + DC
 const ALL_STATES = [
@@ -34,7 +36,7 @@ async function fetchGovTrackRoles(params: Record<string,string|number>) {
   Object.entries({ current: 'true', limit: 600, ...params }).forEach(([k,v]) => url.searchParams.set(k, String(v)));
   const res = await fetch(url.toString());
   if (!res.ok) throw new Error(`GovTrack ${res.status}`);
-  return res.json() as Promise<{ objects: any[] }>;
+  return res.json() as Promise<{ objects: unknown[] }>;
 }
 
 // Rate limiting for OpenStates API (50 requests/minute)
@@ -65,7 +67,7 @@ async function fetchOpenStatesPeople(state: string, chamber: 'upper'|'lower') {
     const errorText = await res.text();
     throw new Error(`OpenStates ${state}/${chamber} ${res.status}: ${errorText.slice(0, 200)}`);
   }
-  return res.json() as Promise<{ results: any[] }>;
+  return res.json() as Promise<{ results: unknown[] }>;
 }
 
 // --- Upsert helpers ---
@@ -79,7 +81,7 @@ async function upsertDivision(row: {
 
 async function upsertRep(row: {
   name: string; party?: string|null; office: string; level: string; jurisdiction: string;
-  ocd_division_id: string; contact?: any; raw_payload: any;
+  ocd_division_id: string; contact?: unknown; raw_payload: unknown;
 }) {
   // Determine data source and quality score based on level
   const dataSource = row.level === 'federal' ? 'govtrack_api' : 
@@ -255,7 +257,7 @@ async function civic(ocdId: string) {
   }>;
 }
 
-function flatten(office: { name: string; divisionId: string; officialIndices: number[] }, officials: any[]) {
+function flatten(office: { name: string; divisionId: string; officialIndices: number[] }, officials: unknown[]) {
   const out: Array<ReturnType<typeof makeRow>> = [];
   for (const i of office.officialIndices || []) {
     const o = officials[i] || {};
@@ -264,25 +266,26 @@ function flatten(office: { name: string; divisionId: string; officialIndices: nu
   return out;
 }
 
-function makeRow(officeName: string, divisionId: string, o: any) {
+function makeRow(officeName: string, divisionId: string, o: unknown) {
   return {
     office: officeName,
     ocd_division_id: divisionId,
-    name: o.name || 'Unknown',
-    party: o.party ?? null,
+    name: has(o, 'name') ? toString(o.name, 'Unknown') : 'Unknown',
+    party: has(o, 'party') ? toString(o.party) : null,
     contact: {
-      phone: o.phones?.[0] ?? null,
-      website: o.urls?.[0] ?? null,
-      email: o.emails?.[0] ?? null
+      phone: has(o, 'phones') ? asArray(o.phones)[0] ?? null : null,
+      website: has(o, 'urls') ? asArray(o.urls)[0] ?? null : null,
+      email: has(o, 'emails') ? asArray(o.emails)[0] ?? null : null
     },
     raw: o
   };
 }
 
-function dedupe(rows: any[]) {
+function dedupe(rows: unknown[]) {
   const seen = new Set<string>();
   return rows.filter(r => {
-    const k = `${r.office}|${r.name}`.toLowerCase();
+    if (!has(r, 'office') || !has(r, 'name')) return false;
+    const k = `${toString(r.office)}|${toString(r.name)}`.toLowerCase();
     if (seen.has(k)) return false;
     seen.add(k);
     return true;
@@ -319,26 +322,29 @@ async function seedSF() {
     name: 'San Francisco (City & County) — County' 
   });
 
-  let rows: any[] = [];
+  let rows: unknown[] = [];
   for (const data of packets) {
-    const offices = data.offices || [];
-    const officials = data.officials || [];
+    const offices = has(data, 'offices') ? asArray(data.offices) : [];
+    const officials = has(data, 'officials') ? asArray(data.officials) : [];
     for (const office of offices) {
-      rows.push(...flatten(office, officials));
+      if (has(office, 'name') && has(office, 'divisionId') && has(office, 'officialIndices')) {
+        rows.push(...flatten(office as { name: string; divisionId: string; officialIndices: number[] }, officials));
+      }
     }
   }
   rows = dedupe(rows);
 
   for (const r of rows) {
+    if (!has(r, 'name') || !has(r, 'office') || !has(r, 'ocd_division_id')) continue;
     await upsertRep({
-      name: r.name,
-      party: r.party,
-      office: r.office,
+      name: toString(r.name),
+      party: has(r, 'party') ? toString(r.party) : null,
+      office: toString(r.office),
       level: 'local',
       jurisdiction: 'San Francisco, CA',
-      ocd_division_id: r.ocd_division_id,
-      contact: r.contact,
-      raw_payload: { office: r.office, official: r.raw }
+      ocd_division_id: toString(r.ocd_division_id),
+      contact: has(r, 'contact') ? r.contact : undefined,
+      raw_payload: { office: toString(r.office), official: has(r, 'raw') ? r.raw : undefined }
     });
   }
 
@@ -364,7 +370,6 @@ async function run() {
   }
 
   let totalStates = 0;
-  let totalSF = 0;
 
   // Seed top 10 states
   for (const st of STATES_TO_PROCESS) {
@@ -380,7 +385,7 @@ async function run() {
   if (includeSF) {
     console.log('\n=== SF Local ===');
     await seedSF();
-    totalSF = 1;
+    // totalSF = 1; // Unused variable
   }
 
   console.log('\n🎉 All seeding complete!');

@@ -22,7 +22,7 @@ async function testSFData() {
   if (sfError) {
     console.error('❌ SF reps error:', sfError);
   } else {
-    console.log(`✅ SF Local Representatives: ${sfReps?.length || 0} records`);
+    console.log(`✅ SF Local Representatives: ${sfReps.length || 0} records`);
     
     if (sfReps && sfReps.length > 0) {
       console.log('\n📋 SF Local Officials:');
@@ -46,7 +46,7 @@ async function testSFData() {
   if (divError) {
     console.error('❌ SF divisions error:', divError);
   } else {
-    console.log(`✅ SF Divisions: ${sfDivs?.length || 0} records`);
+    console.log(`✅ SF Divisions: ${sfDivs.length || 0} records`);
     if (sfDivs && sfDivs.length > 0) {
       console.log('\n🏛️ SF Divisions:');
       sfDivs.forEach((div, index) => {
@@ -56,14 +56,14 @@ async function testSFData() {
   }
 
   // Test by office type
-  const { data: citywide, error: cityError } = await supabase
+  const { data: citywide, error: _cityError } = await supabase
     .from('civics_representatives')
     .select('*')
     .eq('level', 'local')
     .eq('jurisdiction', 'San Francisco, CA')
     .not('office', 'like', 'Supervisor%');
 
-  const { data: supervisors, error: supError } = await supabase
+  const { data: supervisors, error: _supError } = await supabase
     .from('civics_representatives')
     .select('*')
     .eq('level', 'local')

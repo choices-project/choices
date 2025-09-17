@@ -17,7 +17,7 @@ import {
   CheckCircle2
 } from 'lucide-react';
 
-interface CreatePollData {
+type CreatePollData = {
   title: string;
   description: string;
   category: string;

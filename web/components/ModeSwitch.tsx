@@ -1,3 +1,5 @@
+'use client';
+
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -12,7 +14,7 @@ import {
 
 export type ResultsMode = 'live' | 'baseline' | 'drift';
 
-interface ModeSwitchProps {
+type ModeSwitchProps = {
   mode: ResultsMode;
   onModeChange: (mode: ResultsMode) => void;
   hasBaseline?: boolean;

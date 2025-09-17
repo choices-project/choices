@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 
-interface ClientOnlyProps {
+type ClientOnlyProps = {
   children: React.ReactNode
   fallback?: React.ReactNode
 }

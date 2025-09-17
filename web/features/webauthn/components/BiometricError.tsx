@@ -13,7 +13,7 @@ import {
 import type { WebAuthnError } from '@/lib/shared/webauthn';
 import { WebAuthnErrorType } from '@/lib/shared/webauthn'
 
-interface BiometricErrorProps {
+type BiometricErrorProps = {
   error: WebAuthnError
   onRetry: () => void
   onFallback: () => void

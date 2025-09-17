@@ -13,7 +13,7 @@ import type {
 import { CivicInfoConnector } from './connectors/civicinfo';
 import { ProPublicaConnector } from './connectors/propublica';
 
-export interface IngestPipelineConfig {
+export type IngestPipelineConfig = {
   sources: DataSourceConfig[];
   batchSize: number;
   retryAttempts: number;

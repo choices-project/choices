@@ -11,7 +11,7 @@
 import { devLog } from '../logger';
 import { withOptional } from '../util/objects';
 
-export interface ParsedFeedback {
+export type ParsedFeedback = {
   id: string;
   type: 'interest_suggestion' | 'poll_suggestion' | 'demographic_suggestion' | 'general_feedback' | 'bug_report' | 'feature_request';
   category: 'interest' | 'demographic' | 'poll' | 'general' | 'bug' | 'feature';
@@ -35,14 +35,14 @@ export interface ParsedFeedback {
   };
 }
 
-export interface InterestSuggestion {
+export type InterestSuggestion = {
   type: 'interest' | 'demographic';
   text: string;
   userId?: string;
   timestamp: string;
 }
 
-export interface PollSuggestion {
+export type PollSuggestion = {
   title: string;
   description: string;
   category: string;
@@ -52,7 +52,7 @@ export interface PollSuggestion {
   createdAt: string;
 }
 
-export interface RawFeedbackItem {
+export type RawFeedbackItem = {
   type?: 'interest' | 'demographic' | 'poll' | 'general' | 'bug' | 'feature';
   text?: string;
   title?: string;

@@ -2,7 +2,7 @@ import { createServerClient } from '@supabase/ssr'
 import type { NextRequest, NextResponse } from 'next/server'
 
 // Database schema types for type safety
-export interface Database {
+export type Database = {
   public: {
     Tables: {
       user_profiles: {
@@ -107,7 +107,7 @@ export interface Database {
           verification_token?: string
           is_verified: boolean
           voting_method: 'single' | 'approval' | 'ranked' | 'quadratic' | 'range'
-          vote_data: any // JSON data for complex voting methods
+          vote_data: Record<string, unknown> // JSON data for complex voting methods
         }
         Insert: {
           id?: string
@@ -119,7 +119,7 @@ export interface Database {
           verification_token?: string
           is_verified?: boolean
           voting_method: 'single' | 'approval' | 'ranked' | 'quadratic' | 'range'
-          vote_data?: any
+          vote_data?: Record<string, unknown>
         }
         Update: {
           id?: string
@@ -131,7 +131,7 @@ export interface Database {
           verification_token?: string
           is_verified?: boolean
           voting_method?: 'single' | 'approval' | 'ranked' | 'quadratic' | 'range'
-          vote_data?: any
+          vote_data?: Record<string, unknown>
         }
       }
       webauthn_credentials: {
@@ -173,7 +173,7 @@ export interface Database {
           error_type: string
           error_message: string
           stack_trace?: string
-          context?: any
+          context?: Record<string, unknown>
           created_at: string
           severity: 'low' | 'medium' | 'high' | 'critical'
         }
@@ -183,7 +183,7 @@ export interface Database {
           error_type: string
           error_message: string
           stack_trace?: string
-          context?: any
+          context?: Record<string, unknown>
           created_at?: string
           severity?: 'low' | 'medium' | 'high' | 'critical'
         }
@@ -193,7 +193,7 @@ export interface Database {
           error_type?: string
           error_message?: string
           stack_trace?: string
-          context?: any
+          context?: Record<string, unknown>
           created_at?: string
           severity?: 'low' | 'medium' | 'high' | 'critical'
         }

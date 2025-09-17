@@ -12,7 +12,7 @@
 // GEOJSON TYPES (Local definitions)
 // ============================================================================
 
-export interface GeoJSONFeature {
+export type GeoJSONFeature = {
   type: 'Feature';
   geometry: {
     type: string;
@@ -25,7 +25,7 @@ export interface GeoJSONFeature {
 // FINANCIAL TRANSPARENCY TYPES
 // ============================================================================
 
-export interface FECContribution {
+export type FECContribution = {
   contributor_id: string;
   contributor_name: string;
   contributor_type: 'individual' | 'committee' | 'organization';
@@ -38,7 +38,7 @@ export interface FECContribution {
   influence_score?: number;
 }
 
-export interface FECExpenditure {
+export type FECExpenditure = {
   expenditure_id: string;
   payee_name: string;
   amount: number;
@@ -49,7 +49,7 @@ export interface FECExpenditure {
   election_cycle: string;
 }
 
-export interface CampaignFinanceSummary {
+export type CampaignFinanceSummary = {
   candidate_id: string;
   cycle: string;
   total_contributions: number;
@@ -66,7 +66,7 @@ export interface CampaignFinanceSummary {
   top_contributors: FECContribution[];
 }
 
-export interface IndustryContribution {
+export type IndustryContribution = {
   industry: string;
   amount: number;
   percentage: number;
@@ -74,7 +74,7 @@ export interface IndustryContribution {
   cycle: string;
 }
 
-export interface TopContributor {
+export type TopContributor = {
   name: string;
   amount: number;
   type: 'individual' | 'pac' | 'corporate' | 'union';
@@ -86,7 +86,7 @@ export interface TopContributor {
 // GEOGRAPHIC AND ELECTORAL TYPES
 // ============================================================================
 
-export interface ElectoralDistrict {
+export type ElectoralDistrict = {
   id: string;
   name: string;
   type: 'congressional' | 'state' | 'local';
@@ -96,7 +96,7 @@ export interface ElectoralDistrict {
   registered_voters: number;
 }
 
-export interface GovernmentOfficial {
+export type GovernmentOfficial = {
   id: string;
   name: string;
   title: string;
@@ -108,14 +108,14 @@ export interface GovernmentOfficial {
   contact_info: ContactInfo;
 }
 
-export interface ContactInfo {
+export type ContactInfo = {
   email?: string;
   phone?: string;
   website?: string;
   address?: Address;
 }
 
-export interface Address {
+export type Address = {
   street: string;
   city: string;
   state: string;
@@ -123,7 +123,7 @@ export interface Address {
   country: string;
 }
 
-export interface UserLocation {
+export type UserLocation = {
   zipCode?: string;
   address?: string;
   coordinates?: { lat: number; lng: number };
@@ -149,7 +149,7 @@ export interface UserLocation {
 // CIVICS DATA TYPES
 // ============================================================================
 
-export interface GovernmentAgency {
+export type GovernmentAgency = {
   id: string;
   name: string;
   type: 'federal' | 'state' | 'local';
@@ -159,7 +159,7 @@ export interface GovernmentAgency {
   contact_info: ContactInfo;
 }
 
-export interface Policy {
+export type Policy = {
   id: string;
   title: string;
   description: string;
@@ -171,7 +171,7 @@ export interface Policy {
   tags: string[];
 }
 
-export interface Legislation {
+export type Legislation = {
   id: string;
   title: string;
   bill_number: string;
@@ -185,14 +185,14 @@ export interface Legislation {
   last_action_date: Date;
 }
 
-export interface CivicEngagement {
+export type CivicEngagement = {
   user_id: string;
   actions: CivicAction[];
   total_score: number;
   last_updated: Date;
 }
 
-export interface CivicAction {
+export type CivicAction = {
   type: 'vote' | 'contact' | 'petition' | 'donation' | 'volunteer';
   description: string;
   date: Date;
@@ -205,7 +205,7 @@ export interface CivicAction {
 // ============================================================================
 
 // Google Civic API Types
-export interface GoogleCivicError {
+export type GoogleCivicError = {
   error: {
     code: number;
     message: string;
@@ -220,19 +220,19 @@ export interface GoogleCivicError {
   };
 }
 
-export interface GoogleCivicResponse<T> {
+export type GoogleCivicResponse<T> = {
   kind: string;
   etag: string;
   data: T;
   error?: GoogleCivicError;
 }
 
-export interface RepresentativeInfo {
+export type RepresentativeInfo = {
   offices: Office[];
   officials: Official[];
 }
 
-export interface Office {
+export type Office = {
   name: string;
   divisionId: string;
   levels: string[];
@@ -241,7 +241,7 @@ export interface Office {
   officialIndices: number[];
 }
 
-export interface Official {
+export type Official = {
   name: string;
   address: Address[];
   party: string;
@@ -252,18 +252,18 @@ export interface Official {
   channels: Channel[];
 }
 
-export interface Source {
+export type Source = {
   name: string;
   official: boolean;
 }
 
-export interface Channel {
+export type Channel = {
   type: string;
   id: string;
 }
 
 // FEC API Types
-export interface FECResponse<T> {
+export type FECResponse<T> = {
   results: T[];
   pagination: {
     page: number;
@@ -273,7 +273,7 @@ export interface FECResponse<T> {
   };
 }
 
-export interface FECError {
+export type FECError = {
   error: {
     code: string;
     message: string;
@@ -282,7 +282,7 @@ export interface FECError {
 }
 
 // Congress.gov API Types
-export interface CongressGovResponse<T> {
+export type CongressGovResponse<T> = {
   results: T[];
   pagination: {
     count: number;
@@ -291,7 +291,7 @@ export interface CongressGovResponse<T> {
   };
 }
 
-export interface Bill {
+export type Bill = {
   congress: number;
   bill_id: string;
   bill_type: string;
@@ -305,7 +305,7 @@ export interface Bill {
   latest_action: LatestAction;
 }
 
-export interface Sponsor {
+export type Sponsor = {
   bioguide_id: string;
   first_name: string;
   last_name: string;
@@ -313,7 +313,7 @@ export interface Sponsor {
   state: string;
 }
 
-export interface LatestAction {
+export type LatestAction = {
   action_date: string;
   text: string;
 }
@@ -322,7 +322,7 @@ export interface LatestAction {
 // VOTING AND ELECTORAL TYPES
 // ============================================================================
 
-export interface Vote {
+export type Vote = {
   id: string;
   bill_id: string;
   bill_title: string;
@@ -334,7 +334,7 @@ export interface Vote {
   constituent_alignment: number;
 }
 
-export interface VotingRecord {
+export type VotingRecord = {
   candidate_id: string;
   votes: Vote[];
   total_votes: number;
@@ -342,7 +342,7 @@ export interface VotingRecord {
   constituent_alignment: number;
 }
 
-export interface ElectoralRace {
+export type ElectoralRace = {
   race_id: string;
   office: string;
   jurisdiction: string;
@@ -362,7 +362,7 @@ export interface ElectoralRace {
   importance: 'high' | 'medium' | 'low';
 }
 
-export interface Representative {
+export type Representative = {
   id: string;
   name: string;
   party: string;
@@ -389,7 +389,7 @@ export interface Representative {
   };
 }
 
-export interface Candidate {
+export type Candidate = {
   id: string;
   name: string;
   party: string;
@@ -423,7 +423,7 @@ export interface Candidate {
   };
 }
 
-export interface Activity {
+export type Activity = {
   id: string;
   type: 'post' | 'response' | 'vote' | 'statement' | 'event';
   candidate_id: string;
@@ -442,7 +442,7 @@ export interface Activity {
 // ERROR HANDLING TYPES
 // ============================================================================
 
-export interface ApiError {
+export type ApiError = {
   message: string;
   statusCode: number;
   errorCode?: string;
@@ -450,7 +450,7 @@ export interface ApiError {
   timestamp: string;
 }
 
-export interface RetryConfig {
+export type RetryConfig = {
   maxAttempts: number;
   baseDelay: number;
   maxDelay: number;
@@ -458,7 +458,7 @@ export interface RetryConfig {
   retryableStatusCodes: number[];
 }
 
-export interface ErrorContext {
+export type ErrorContext = {
   operation: string;
   endpoint?: string;
   params?: Record<string, unknown>;
@@ -470,14 +470,14 @@ export interface ErrorContext {
 // UTILITY TYPES
 // ============================================================================
 
-export interface PaginationInfo {
+export type PaginationInfo = {
   page: number;
   per_page: number;
   total: number;
   total_pages: number;
 }
 
-export interface ApiResponse<T> {
+export type ApiResponse<T> = {
   data: T;
   pagination?: PaginationInfo;
   metadata: {
@@ -487,7 +487,7 @@ export interface ApiResponse<T> {
   };
 }
 
-export interface QualityMetrics {
+export type QualityMetrics = {
   completeness: number; // 0-1
   accuracy: number; // 0-1
   consistency: number; // 0-1
@@ -495,7 +495,7 @@ export interface QualityMetrics {
   overall: number; // 0-1
 }
 
-export interface DataSource {
+export type DataSource = {
   name: string;
   enabled: boolean;
   rate_limit: {
@@ -511,7 +511,7 @@ export interface DataSource {
 // ADDITIONAL TYPES FOR FINANCIAL TRANSPARENCY
 // ============================================================================
 
-export interface CorporateConnection {
+export type CorporateConnection = {
   company: string;
   industry: string;
   connection_type: 'donation' | 'employment' | 'board_member' | 'consultant';
@@ -520,7 +520,7 @@ export interface CorporateConnection {
   end_date?: string;
 }
 
-export interface IndustryInfluence {
+export type IndustryInfluence = {
   industry: string;
   total_contributions: number;
   influence_score: number;
@@ -528,7 +528,7 @@ export interface IndustryInfluence {
   policy_impact: string[];
 }
 
-export interface ConflictOfInterest {
+export type ConflictOfInterest = {
   issue: string;
   conflict_type: 'financial' | 'employment' | 'family' | 'business';
   description: string;
@@ -536,7 +536,7 @@ export interface ConflictOfInterest {
   disclosure: boolean;
 }
 
-export interface RevolvingDoorEntry {
+export type RevolvingDoorEntry = {
   position: string;
   agency: string;
   start_date: string;
@@ -544,7 +544,7 @@ export interface RevolvingDoorEntry {
   salary: number;
 }
 
-export interface PostGovernmentEmployment {
+export type PostGovernmentEmployment = {
   employer: string;
   position: string;
   start_date: string;

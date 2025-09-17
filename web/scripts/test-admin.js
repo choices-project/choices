@@ -9,8 +9,7 @@
  * 3. Security tests to ensure proper access control
  */
 
-const { execSync } = require('child_process');
-const path = require('path');
+import { execSync } from 'child_process';
 
 console.log('🧪 Admin System Test Runner');
 console.log('============================\n');
@@ -36,7 +35,7 @@ function runCommand(command, description) {
   log(`${colors.yellow}Command: ${command}${colors.reset}\n`);
   
   try {
-    const output = execSync(command, { 
+    execSync(command, { 
       stdio: 'inherit',
       cwd: process.cwd()
     });

@@ -10,19 +10,19 @@
 export type { Database } from '@/utils/supabase/server';
 
 // Common database utility types
-export interface DatabaseConfig {
+export type DatabaseConfig = {
   url: string;
   maxConnections?: number;
   ssl?: boolean;
 }
 
-export interface QueryResult<T = unknown> {
+export type QueryResult<T = unknown> = {
   data: T[];
   error?: string;
   count?: number;
 }
 
-export interface DatabaseError {
+export type DatabaseError = {
   code: string;
   message: string;
   details?: string;

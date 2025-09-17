@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { Shield, Eye, Users, TrendingUp, Lock } from 'lucide-react'
 import { useOnboardingContext } from '../OnboardingFlow'
 
-interface PrivacyStepProps {
+type PrivacyStepProps = {
   data: any
   onUpdate: (updates: any) => void
   onNext: () => void

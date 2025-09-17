@@ -382,7 +382,7 @@ describe('FinalizeManager', () => {
 
     it('should handle checksum generation error', async () => {
       // Mock snapshotChecksum to throw error
-      const { snapshotChecksum } = require('@/lib/audit/merkle-tree');
+      const { snapshotChecksum } = await import('@/lib/audit/merkle-tree');
       snapshotChecksum.mockImplementation(() => {
         throw new Error('Checksum error');
       });
@@ -411,7 +411,7 @@ describe('FinalizeManager', () => {
 
     it('should handle Merkle tree creation error', async () => {
       // Mock BallotVerificationManager to throw error
-      const { BallotVerificationManager } = require('@/lib/audit/merkle-tree');
+      const { BallotVerificationManager } = await import('@/lib/audit/merkle-tree');
       BallotVerificationManager.mockImplementation(() => {
         throw new Error('Merkle tree error');
       });

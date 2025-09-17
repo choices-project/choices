@@ -23,7 +23,6 @@ import type {
   StatusItemProps,
   NavigatorWithServiceWorker 
 } from '../../types/pwa'
-import type { BeforeInstallPromptEvent } from './pwa-utils'
 
 // PWA Install Prompt Component
 export function PWAInstallPrompt() {

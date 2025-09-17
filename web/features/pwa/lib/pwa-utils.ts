@@ -4,7 +4,7 @@
  * This module provides PWA-specific utility functions.
  */
 
-export interface PWAConfig {
+export type PWAConfig = {
   name: string;
   shortName: string;
   description: string;
@@ -103,10 +103,10 @@ export class PWAUtils {
   }
 }
 
-export interface BeforeInstallPromptEvent extends Event {
+export type BeforeInstallPromptEvent = {
   prompt(): Promise<void>;
   userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
-}
+} & Event
 
 declare global {
   interface WindowEventMap {

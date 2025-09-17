@@ -14,13 +14,13 @@ import {
 import type { CreatePollRequest } from '@/lib/services/poll-service';
 import { pollService } from '@/lib/services/poll-service';
 
-interface CreatePollProps {
+type CreatePollProps = {
   onPollCreated?: (_poll: any) => void;
   onCancel?: () => void;
   isOpen?: boolean;
 }
 
-interface VotingMethod {
+type VotingMethod = {
   type: 'single' | 'approval' | 'ranked' | 'range' | 'quadratic';
   name: string;
   description: string;

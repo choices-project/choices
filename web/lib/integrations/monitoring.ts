@@ -9,7 +9,7 @@ import { logger } from '../logger';
 import type { CacheStats } from './caching';
 import { withOptional } from '../util/objects';
 
-export interface IntegrationMetrics {
+export type IntegrationMetrics = {
   apiName: string;
   timestamp: Date;
   requests: {
@@ -44,7 +44,7 @@ export interface IntegrationMetrics {
   };
 }
 
-export interface AlertRule {
+export type AlertRule = {
   id: string;
   name: string;
   apiName: string;
@@ -57,7 +57,7 @@ export interface AlertRule {
   lastTriggered?: Date;
 }
 
-export interface Alert {
+export type Alert = {
   id: string;
   ruleId: string;
   apiName: string;
@@ -70,7 +70,7 @@ export interface Alert {
   resolved: boolean;
 }
 
-export interface HealthCheck {
+export type HealthCheck = {
   apiName: string;
   status: 'healthy' | 'degraded' | 'unhealthy';
   timestamp: Date;
@@ -486,7 +486,7 @@ export class IntegrationMonitor {
     let value: unknown = metrics;
     
     for (const part of parts) {
-      value = (value as Record<string, unknown>)?.[part];
+      value = (value as Record<string, unknown>)[part];
       if (value === undefined) return null;
     }
     

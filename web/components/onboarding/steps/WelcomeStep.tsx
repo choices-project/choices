@@ -2,7 +2,7 @@
 
 import type { StepDataMap, OnStepUpdate } from '../types';
 
-interface WelcomeStepProps {
+type WelcomeStepProps = {
   data?: StepDataMap['welcome'];
   onStepUpdate?: OnStepUpdate<'welcome'>;
   onNext?: () => void;

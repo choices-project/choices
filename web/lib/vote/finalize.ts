@@ -20,7 +20,7 @@
 import { IRVCalculator } from './irv-calculator';
 import { withOptional } from '../util/objects';
 import type { UserRanking } from './irv-calculator';
-import { MerkleTree, BallotVerificationManager, snapshotChecksum } from '../audit/merkle-tree';
+import { type MerkleTree, BallotVerificationManager, snapshotChecksum } from '../audit/merkle-tree';
 import { createHash } from 'crypto';
 import type {
   Poll,
@@ -38,7 +38,7 @@ import type {
 // FINALIZE POLL MANAGER
 // ============================================================================
 
-interface SupabaseVoteData {
+type SupabaseVoteData = {
   id: string;
   poll_id: string;
   user_id: string;
@@ -48,7 +48,7 @@ interface SupabaseVoteData {
   created_at: string;
 }
 
-interface SupabasePollData {
+type SupabasePollData = {
   id: string;
   title: string;
   description?: string;
@@ -61,7 +61,7 @@ interface SupabasePollData {
   updated_at: string;
 }
 
-interface SupabaseSnapshotData {
+type SupabaseSnapshotData = {
   id: string;
   poll_id: string;
   taken_at: string;
@@ -73,8 +73,18 @@ interface SupabaseSnapshotData {
 }
 
 // Simplified Supabase client interface to avoid complex query chain typing issues
-interface SupabaseClient {
-  from(table: string): any;
+type SupabaseQueryBuilder = {
+  select(columns?: string): SupabaseQueryBuilder;
+  eq(column: string, value: unknown): SupabaseQueryBuilder;
+  lte(column: string, value: string): SupabaseQueryBuilder;
+  gt(column: string, value: string): SupabaseQueryBuilder;
+  single(): Promise<{ data: unknown; error: { message: string } | null }>;
+  insert(data: Record<string, unknown>): SupabaseQueryBuilder;
+  update(data: Record<string, unknown>): SupabaseQueryBuilder;
+};
+
+type SupabaseClient = {
+  from(table: string): SupabaseQueryBuilder;
   channel(name: string): {
     send(message: { type: string; event: string; payload: Record<string, unknown> }): Promise<void>;
   };

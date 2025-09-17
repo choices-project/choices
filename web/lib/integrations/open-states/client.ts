@@ -11,7 +11,7 @@
 import { dev } from '@/lib/dev.logger';
 
 // Types for Open States API responses
-export interface OpenStatesState {
+export type OpenStatesState = {
   abbreviation: string;
   name: string;
   legislature_name: string;
@@ -35,7 +35,7 @@ export interface OpenStatesState {
   };
 }
 
-export interface OpenStatesLegislator {
+export type OpenStatesLegislator = {
   id: string;
   name: string;
   first_name: string;
@@ -74,7 +74,7 @@ export interface OpenStatesLegislator {
   updated_at: string;
 }
 
-export interface OpenStatesBill {
+export type OpenStatesBill = {
   id: string;
   title: string;
   chamber: string;
@@ -132,7 +132,7 @@ export interface OpenStatesBill {
   updated_at: string;
 }
 
-export interface OpenStatesVote {
+export type OpenStatesVote = {
   id: string;
   bill_id: string;
   chamber: string;
@@ -160,7 +160,7 @@ export interface OpenStatesVote {
   updated_at: string;
 }
 
-export interface OpenStatesCommittee {
+export type OpenStatesCommittee = {
   id: string;
   name: string;
   chamber: string;
@@ -180,7 +180,7 @@ export interface OpenStatesCommittee {
   updated_at: string;
 }
 
-export interface OpenStatesClientConfig {
+export type OpenStatesClientConfig = {
   apiKey: string;
   baseUrl?: string;
   rateLimit?: {

@@ -178,3 +178,4 @@ ORDER BY tablename, policyname;
 -- The 85 security issues related to RLS should now be resolved.
 
 
+

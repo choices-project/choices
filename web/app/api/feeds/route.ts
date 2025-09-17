@@ -5,7 +5,7 @@
  * Server never receives plaintext location data
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { type NextRequest, NextResponse } from 'next/server';
 import { ElectoralFeedService } from '@/lib/electoral/feed-service';
 import type { JurisdictionID } from '@/lib/privacy/location-resolver';
 import { logger } from '@/lib/logger';

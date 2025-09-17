@@ -7,7 +7,7 @@
 
 import { logger } from '@/lib/logger';
 
-export interface SLOTarget {
+export type SLOTarget = {
   target: string;
   measurement: string;
   alertThreshold: number;
@@ -15,7 +15,7 @@ export interface SLOTarget {
   unit: string;
 }
 
-export interface SLOTargets {
+export type SLOTargets = {
   snapshotJobCompletion: SLOTarget;
   realtimePublishLag: SLOTarget;
   irvRecompute: SLOTarget;
@@ -25,12 +25,12 @@ export interface SLOTargets {
   responseTime: SLOTarget;
 }
 
-export interface MetricBuffer {
+export type MetricBuffer = {
   measurements: Array<{ value: number; timestamp: number }>;
   maxSize: number;
 }
 
-export interface Alert {
+export type Alert = {
   id: string;
   severity: 'warning' | 'critical';
   slo: string;
@@ -43,7 +43,7 @@ export interface Alert {
   resolvedAt?: number;
 }
 
-export interface SLOMetrics {
+export type SLOMetrics = {
   sloName: string;
   currentValue: number;
   target: string;

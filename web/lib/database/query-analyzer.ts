@@ -6,13 +6,12 @@
  */
 
 import { logger } from '@/lib/logger';
-import { smartCache } from '@/lib/database/smart-cache';
 import { withOptional } from '@/lib/util/objects';
 
 /**
  * Query execution plan information
  */
-export interface QueryPlan {
+export type QueryPlan = {
   /** Unique identifier for this query plan */
   id: string;
   /** The SQL query */
@@ -40,7 +39,7 @@ export interface QueryPlan {
 /**
  * Query optimization suggestion
  */
-export interface QueryOptimization {
+export type QueryOptimization = {
   /** Type of optimization */
   type: 'index' | 'join' | 'filter' | 'limit' | 'select' | 'cache';
   /** Priority level (1-5, 5 being highest) */
@@ -58,7 +57,7 @@ export interface QueryOptimization {
 /**
  * Query performance metrics
  */
-export interface QueryMetrics {
+export type QueryMetrics = {
   /** Average execution time */
   averageExecutionTime: number;
   /** 95th percentile execution time */
@@ -76,7 +75,7 @@ export interface QueryMetrics {
 /**
  * Index recommendation
  */
-export interface IndexRecommendation {
+export type IndexRecommendation = {
   /** Table name */
   table: string;
   /** Column names for the index */

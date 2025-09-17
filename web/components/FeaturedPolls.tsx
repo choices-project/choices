@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 import PollCard from './PollCard';
 
-interface Poll {
+type Poll = {
   id: string;
   title: string;
   description: string;
@@ -26,12 +26,12 @@ interface Poll {
   tags?: string[];
 }
 
-interface PollResults {
+type PollResults = {
   [key: number]: number;
   total: number;
 }
 
-interface FeaturedPollsProps {
+type FeaturedPollsProps = {
   polls: Poll[];
   onVote?: (_pollId: string, _choice: number) => Promise<any>;
   onViewDetails?: (_pollId: string) => void;

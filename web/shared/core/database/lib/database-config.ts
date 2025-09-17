@@ -1,7 +1,6 @@
 // Database Configuration and Connection Management
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { createClient } from '@supabase/supabase-js';
-import { Pool } from 'pg';
 import { withOptional } from '../../../../lib/util/objects';
 
 // Environment detection
@@ -11,7 +10,7 @@ export const isBuildTime = isProduction && !process.env.VERCEL_URL
 export const isLocalDevelopment = isDevelopment && process.env.LOCAL_DATABASE === 'true'
 
 // Database configuration
-export interface DatabaseConfig {
+export type DatabaseConfig = {
   type: 'supabase' | 'postgres' | 'mock'
   url?: string
   enabled: boolean
@@ -97,14 +96,17 @@ export const createSupabaseClient = (): SupabaseClient | null => {
   })
 }
 
-// PostgreSQL client
-export const createPostgresClient = (): Pool | null => {
+// PostgreSQL client (server-only)
+export const createPostgresClient = async () => {
   const config = getDatabaseConfig()
   
   if (config.type !== 'postgres' || !config.url) {
     return null
   }
 
+  // Dynamic import to avoid bundling pg in client code
+  const { Pool } = await import('pg')
+  
   return new Pool({
     connectionString: config.url,
     ssl: isProduction ? { rejectUnauthorized: false } : false,
@@ -148,7 +150,7 @@ export const testDatabaseConnection = async () => {
   }
   
   if (config.type === 'postgres') {
-    const pool = createPostgresClient()
+    const pool = await createPostgresClient()
     if (!pool) return { success: false, error: 'PostgreSQL client not configured' }
     
     try {
@@ -166,5 +168,7 @@ export const testDatabaseConnection = async () => {
 
 // Export instances
 export const supabase = createSupabaseClient()
-export const postgresPool = createPostgresClient()
 export const dbConfig = getDatabaseConfig()
+
+// Note: postgresPool is now async and should be created when needed
+// Use createPostgresClient() instead of importing postgresPool

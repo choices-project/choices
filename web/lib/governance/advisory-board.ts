@@ -7,7 +7,7 @@
 
 import { devLog } from '../logger';
 
-export interface AdvisoryBoardMember {
+export type AdvisoryBoardMember = {
   id: string;
   name: string;
   expertise: string;
@@ -21,7 +21,7 @@ export interface AdvisoryBoardMember {
   publicProfile: boolean;
 }
 
-export interface MeetingInvite {
+export type MeetingInvite = {
   id: string;
   date: string;
   time: string;
@@ -34,7 +34,7 @@ export interface MeetingInvite {
   notes?: MeetingNotes;
 }
 
-export interface MeetingAgenda {
+export type MeetingAgenda = {
   id: string;
   title: string;
   items: AgendaItem[];
@@ -43,7 +43,7 @@ export interface MeetingAgenda {
   objectives: string[];
 }
 
-export interface AgendaItem {
+export type AgendaItem = {
   id: string;
   title: string;
   description: string;
@@ -53,7 +53,7 @@ export interface AgendaItem {
   materials?: string[];
 }
 
-export interface MeetingNotes {
+export type MeetingNotes = {
   id: string;
   meetingId: string;
   public: PublicMeetingNotes;
@@ -65,7 +65,7 @@ export interface MeetingNotes {
   timestamp: number;
 }
 
-export interface PublicMeetingNotes {
+export type PublicMeetingNotes = {
   summary: string;
   keyTopics: string[];
   decisions: PublicDecision[];
@@ -74,14 +74,14 @@ export interface PublicMeetingNotes {
   attendees?: { name: string; expertise: string; affiliation: string }[];
 }
 
-export interface PrivateMeetingNotes {
+export type PrivateMeetingNotes = {
   detailedDiscussion: string;
   confidentialMatters: string[];
   internalActionItems: ActionItem[];
   sensitiveDecisions: Decision[];
 }
 
-export interface PublicDecision {
+export type PublicDecision = {
   id: string;
   title: string;
   description: string;
@@ -90,7 +90,7 @@ export interface PublicDecision {
   implementation: string;
 }
 
-export interface PublicActionItem {
+export type PublicActionItem = {
   id: string;
   title: string;
   description: string;
@@ -99,7 +99,7 @@ export interface PublicActionItem {
   status: 'pending' | 'in-progress' | 'completed';
 }
 
-export interface ActionItem {
+export type ActionItem = {
   id: string;
   title: string;
   description: string;
@@ -110,7 +110,7 @@ export interface ActionItem {
   confidential: boolean;
 }
 
-export interface Decision {
+export type Decision = {
   id: string;
   title: string;
   description: string;
@@ -244,7 +244,7 @@ export class AdvisoryBoardManager {
    */
   static async recordMeetingNotes(meetingId: string, notes: MeetingNotes): Promise<void> {
     const manager = new AdvisoryBoardManager();
-    return await manager.recordMeetingNotesInstance(meetingId, notes);
+    await manager.recordMeetingNotesInstance(meetingId, notes);
   }
 
   /**

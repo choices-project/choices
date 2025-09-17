@@ -8,7 +8,7 @@ import { withOptional } from '@/lib/util/objects';
 // CORE INTERFACES
 // ============================================================================
 
-export interface PollNarrative {
+export type PollNarrative = {
   id: string;
   pollId: string;
   title: string;
@@ -27,7 +27,7 @@ export interface PollNarrative {
   lastModeratedAt: Date;
 }
 
-export interface StoryContext {
+export type StoryContext = {
   background: string;
   currentSituation: string;
   keyIssues: string[];
@@ -40,7 +40,7 @@ export interface StoryContext {
   socialImpact: number; // 0-1 scale
 }
 
-export interface VerifiedFact {
+export type VerifiedFact = {
   id: string;
   statement: string;
   category: 'fact' | 'statistic' | 'quote' | 'document' | 'event' | 'policy';
@@ -54,7 +54,7 @@ export interface VerifiedFact {
   controversy: number; // 0-1 scale
 }
 
-export interface FactSource {
+export type FactSource = {
   id: string;
   name: string;
   url: string;
@@ -65,7 +65,7 @@ export interface FactSource {
   accessibility: 'public' | 'restricted' | 'archived';
 }
 
-export interface FactChecker {
+export type FactChecker = {
   id: string;
   name: string;
   organization: string;
@@ -77,7 +77,7 @@ export interface FactChecker {
   dateChecked: Date;
 }
 
-export interface CommunityFact {
+export type CommunityFact = {
   id: string;
   statement: string;
   category: 'fact' | 'opinion' | 'anecdote' | 'question' | 'correction';
@@ -98,7 +98,7 @@ export interface CommunityFact {
   parentFact?: string; // If this is a response to another fact
 }
 
-export interface NarrativeSource {
+export type NarrativeSource = {
   id: string;
   title: string;
   url: string;
@@ -114,7 +114,7 @@ export interface NarrativeSource {
   communityRating: number; // 0-5 scale
 }
 
-export interface TimelineEvent {
+export type TimelineEvent = {
   id: string;
   date: Date;
   title: string;
@@ -126,7 +126,7 @@ export interface TimelineEvent {
   tags: string[];
 }
 
-export interface Stakeholder {
+export type Stakeholder = {
   id: string;
   name: string;
   type: 'individual' | 'organization' | 'government' | 'corporation' | 'group';
@@ -140,7 +140,7 @@ export interface Stakeholder {
   sources: string[];
 }
 
-export interface StakeholderStatement {
+export type StakeholderStatement = {
   id: string;
   quote: string;
   date: Date;
@@ -150,7 +150,7 @@ export interface StakeholderStatement {
   impact: number; // 0-1 scale
 }
 
-export interface ControversyAnalysis {
+export type ControversyAnalysis = {
   level: 'low' | 'medium' | 'high' | 'extreme';
   sources: string[];
   keyDisputes: Dispute[];
@@ -160,7 +160,7 @@ export interface ControversyAnalysis {
   publicSentiment: SentimentAnalysis;
 }
 
-export interface Dispute {
+export type Dispute = {
   id: string;
   topic: string;
   parties: string[];
@@ -170,7 +170,7 @@ export interface Dispute {
   impact: number; // 0-1 scale
 }
 
-export interface ExpertOpinion {
+export type ExpertOpinion = {
   id: string;
   expert: string;
   credentials: string;
@@ -180,7 +180,7 @@ export interface ExpertOpinion {
   sources: string[];
 }
 
-export interface SentimentAnalysis {
+export type SentimentAnalysis = {
   overall: 'positive' | 'negative' | 'neutral' | 'mixed';
   breakdown: {
     positive: number;
@@ -191,21 +191,21 @@ export interface SentimentAnalysis {
   demographics: Record<string, SentimentBreakdown>;
 }
 
-export interface SentimentTrend {
+export type SentimentTrend = {
   period: string;
   sentiment: 'positive' | 'negative' | 'neutral';
   intensity: number; // 0-1 scale
   factors: string[];
 }
 
-export interface SentimentBreakdown {
+export type SentimentBreakdown = {
   positive: number;
   negative: number;
   neutral: number;
   total: number;
 }
 
-export interface ModerationStatus {
+export type ModerationStatus = {
   status: 'draft' | 'pending_review' | 'approved' | 'rejected' | 'needs_revision';
   moderator: string;
   reviewedAt: Date;
@@ -221,7 +221,7 @@ export interface ModerationStatus {
 // COMMUNITY MODERATION SYSTEM
 // ============================================================================
 
-export interface ModerationAction {
+export type ModerationAction = {
   id: string;
   narrativeId: string;
   moderatorId: string;
@@ -233,7 +233,7 @@ export interface ModerationAction {
   followUpRequired: boolean;
 }
 
-export interface CommunityModerator {
+export type CommunityModerator = {
   id: string;
   userId: string;
   level: 'junior' | 'senior' | 'expert' | 'admin';
@@ -246,7 +246,7 @@ export interface CommunityModerator {
   status: 'active' | 'inactive' | 'suspended';
 }
 
-export interface ModerationQueue {
+export type ModerationQueue = {
   id: string;
   narrativeId: string;
   priority: 'low' | 'medium' | 'high' | 'urgent';
@@ -260,7 +260,7 @@ export interface ModerationQueue {
 // FACT VERIFICATION SYSTEM
 // ============================================================================
 
-export interface FactVerificationRequest {
+export type FactVerificationRequest = {
   id: string;
   factId: string;
   requesterId: string;
@@ -274,7 +274,7 @@ export interface FactVerificationRequest {
   result?: FactVerificationResult;
 }
 
-export interface FactVerificationResult {
+export type FactVerificationResult = {
   accuracy: 'true' | 'mostly_true' | 'mixed' | 'mostly_false' | 'false';
   confidence: number; // 0-1 scale
   explanation: string;

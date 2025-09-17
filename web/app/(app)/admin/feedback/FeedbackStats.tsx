@@ -10,7 +10,7 @@ import {
   Star
 } from 'lucide-react';
 
-interface Feedback {
+type Feedback = {
   id: string;
   type: string;
   sentiment: string;
@@ -19,7 +19,7 @@ interface Feedback {
   createdat: string;
 }
 
-interface FeedbackStatsProps {
+type FeedbackStatsProps = {
   feedback: Feedback[];
 }
 

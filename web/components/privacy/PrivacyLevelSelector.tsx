@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { Shield, Info, CheckCircle } from 'lucide-react';
 import { PrivacyLevel, HybridPrivacyManager, PRIVACY_DESCRIPTIONS } from '@/lib/privacy/hybrid-privacy';
 
-interface PrivacyLevelSelectorProps {
+type PrivacyLevelSelectorProps = {
   value: PrivacyLevel;
   onChange: (level: PrivacyLevel) => void;
   disabled?: boolean;

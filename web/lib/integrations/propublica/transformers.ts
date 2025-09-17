@@ -17,7 +17,7 @@ import type {
   CandidateCardV1 
 } from '../../../features/civics/schemas';
 
-export interface TransformedProPublicaMember extends Representative {
+export type TransformedProPublicaMember = {
   source: 'propublica';
   sourceId: string;
   bio?: string;
@@ -39,9 +39,9 @@ export interface TransformedProPublicaMember extends Representative {
     date: string;
     result: string;
   }>;
-}
+} & Representative
 
-export interface TransformedProPublicaBill {
+export type TransformedProPublicaBill = {
   id: string;
   title: string;
   shortTitle?: string;

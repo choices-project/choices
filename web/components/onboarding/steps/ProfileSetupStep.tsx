@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 
-interface ProfileSetupStepProps {
+type ProfileSetupStepProps = {
   data: any
   onUpdate: (updates: {
     displayName?: string

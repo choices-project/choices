@@ -11,7 +11,7 @@ import { getSupabaseBrowserClient } from '../supabase/client';
 import { UserEncryption, EncryptionUtils } from './encryption';
 import { ConsentManager } from './consent';
 
-export interface UserDataExport {
+export type UserDataExport = {
   profile: any;
   polls: any[];
   votes: any[];
@@ -20,7 +20,7 @@ export interface UserDataExport {
   exported_at: string;
 }
 
-export interface AnonymizationResult {
+export type AnonymizationResult = {
   success: boolean;
   message: string;
   anonymized_fields: string[];

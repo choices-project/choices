@@ -17,7 +17,7 @@ import {
   Monitor
 } from 'lucide-react'
 
-interface SiteMessage {
+type SiteMessage = {
   id: string
   title: string
   message: string
@@ -29,7 +29,7 @@ interface SiteMessage {
   updated_at: string
 }
 
-interface MessageFormData {
+type MessageFormData = {
   title: string
   message: string
   type: 'info' | 'warning' | 'success' | 'error' | 'feedback'

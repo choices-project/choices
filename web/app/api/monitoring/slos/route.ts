@@ -4,7 +4,7 @@
  * Provides Service Level Objective metrics and alerting information.
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { type NextRequest, NextResponse } from 'next/server';
 import { sloMonitor } from '@/lib/monitoring/slos';
 import { logger } from '@/lib/logger';
 

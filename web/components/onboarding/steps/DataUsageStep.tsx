@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Label } from '@/components/ui/label'
 
-interface DataUsageStepProps {
+type DataUsageStepProps = {
   data: any
   onUpdate: () => void
   onNext: () => void

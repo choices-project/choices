@@ -18,7 +18,7 @@ import {
   Send
 } from 'lucide-react'
 
-interface FeedbackData {
+type FeedbackData = {
   type: 'bug' | 'feature' | 'general'
   title: string
   description: string

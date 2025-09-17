@@ -11,14 +11,14 @@ import { devLog } from '@/lib/logger';
 import { DifferentialPrivacy, PrivacyBudgetManager, PrivateAnalytics } from './differential-privacy';
 import { ZKProofManager } from './zero-knowledge-proofs';
 
-export interface PrivacyBridgeConfig {
+export type PrivacyBridgeConfig = {
   enableBackwardCompatibility: boolean
   enableFeatureFlags: boolean
   enableLogging: boolean
   defaultPrivacyLevel: 'low' | 'medium' | 'high'
 }
 
-export interface PrivacyBridgeStatus {
+export type PrivacyBridgeStatus = {
   initialized: boolean
   enabled: boolean
   features: {

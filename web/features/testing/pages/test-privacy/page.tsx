@@ -7,7 +7,7 @@ import { PrivacyLevelIndicator } from '@/components/privacy/PrivacyLevelIndicato
 import { PrivacyLevel } from '@/lib/privacy/hybrid-privacy';
 import { devLog } from '@/lib/logger';
 
-interface TestPoll {
+type TestPoll = {
   id: string;
   title: string;
   description: string;

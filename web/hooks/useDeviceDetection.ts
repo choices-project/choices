@@ -4,7 +4,7 @@ import { devLog } from '@/lib/logger'
 // Types
 export type DeviceType = 'mobile' | 'tablet' | 'desktop' | 'tv'
 
-export interface DeviceInfo {
+export type DeviceInfo = {
   type: DeviceType
   os: string
   browser: string
@@ -15,7 +15,7 @@ export interface DeviceInfo {
   user_agent: string
 }
 
-export interface DeviceCapabilities {
+export type DeviceCapabilities = {
   offline_support: boolean
   push_notifications: boolean
   camera_access: boolean
@@ -26,7 +26,7 @@ export interface DeviceCapabilities {
   connection_type?: string
 }
 
-export interface OptimizationSettings {
+export type OptimizationSettings = {
   image_quality: 'low' | 'medium' | 'high'
   animation_enabled: boolean
   real_time_updates: boolean

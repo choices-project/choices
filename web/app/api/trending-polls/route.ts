@@ -29,12 +29,12 @@ export async function GET(_request: NextRequest) {
     }
 
     // Fetch available polls (optional - if no polls exist, we'll still create trending polls)
-    let polls: any[] = [];
+    let polls: unknown[] = [];
     try {
       const { data: pollsData, error: pollsError } = await supabaseClient
         .from('po_polls')
         .select('poll_id, title, total_votes, participation_rate, options, status')
-        .eq('status', 'active' as any)
+        .eq('status', 'active')
         .limit(10);
 
       if (pollsError) {
@@ -49,14 +49,14 @@ export async function GET(_request: NextRequest) {
     }
 
     // Create dynamic trending polls by combining trending topics with poll data
-    const trendingPolls = trendingTopics?.map((topic: any, _index: any) => {
+    const trendingPolls = trendingTopics.map((topic: Record<string, unknown>, _index: number) => {
       // Try to find a matching poll, or use the first available poll
-      const matchingPoll = polls?.find(poll => 
+      const matchingPoll = polls.find(poll => 
         poll.title.toLowerCase().includes(topic.category?.[0]?.toLowerCase() || '') ||
         poll.title.toLowerCase().includes('climate') ||
         poll.title.toLowerCase().includes('community') ||
         poll.title.toLowerCase().includes('election')
-      ) || polls?.[0];
+      ) || polls[0];
 
       // Generate dynamic poll options based on topic category
       const options = generateDynamicOptions(topic, matchingPoll);
@@ -103,7 +103,7 @@ export async function GET(_request: NextRequest) {
   }
 }
 
-function generateDynamicOptions(topic: any, _matchingPoll: any) {
+function generateDynamicOptions(topic: Record<string, unknown>, _matchingPoll: unknown) {
   const category = topic.category?.[0]?.toLowerCase() || 'general';
   
   const optionTexts: Record<string, string[]> = {
@@ -157,7 +157,7 @@ function generateDynamicOptions(topic: any, _matchingPoll: any) {
   // Generate realistic vote distribution
   const percentages = [35, 25, 20, 15, 5]; // Realistic distribution
   
-  return texts?.map((text: any, index: any) => ({
+  return texts?.map((text: string, index: number) => ({
     text,
     votes: percentages[index],
     color: colors[index],

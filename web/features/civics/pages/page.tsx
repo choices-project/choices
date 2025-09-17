@@ -3,12 +3,12 @@
 import { useState } from 'react';
 import { safeNavigate } from '@/lib/ssr-safe';
 
-interface District {
+type District = {
   id: string;
   label: string;
 }
 
-interface Candidate {
+type Candidate = {
   personId: string;
   name: string;
   party: string;

@@ -9,8 +9,8 @@
  */
 
 import { logger } from '../logger'
-import { RedisClient } from './redis-client'
-import { CacheStrategyManager } from './cache-strategies'
+import { type RedisClient } from './redis-client'
+import { type CacheStrategyManager } from './cache-strategies'
 import { withOptional } from '../util/objects'
 
 // Invalidation event types
@@ -26,7 +26,7 @@ export type InvalidationEvent =
   | 'error_logged'
 
 // Invalidation rule interface
-export interface InvalidationRule {
+export type InvalidationRule = {
   id: string
   event: InvalidationEvent
   patterns: string[]
@@ -37,7 +37,7 @@ export interface InvalidationRule {
 }
 
 // Invalidation result interface
-export interface InvalidationResult {
+export type InvalidationResult = {
   ruleId: string
   event: InvalidationEvent
   invalidatedKeys: number
@@ -48,7 +48,7 @@ export interface InvalidationResult {
 }
 
 // Cache dependency interface
-export interface CacheDependency {
+export type CacheDependency = {
   parentKey: string
   childKeys: string[]
   relationship: 'one-to-many' | 'many-to-one' | 'many-to-many'

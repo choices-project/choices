@@ -14,7 +14,7 @@ import {
 } from 'lucide-react'
 import { getUserCredentials, removeCredential, generateQRCodeData } from '@/lib/shared/webauthn'
 
-interface Device {
+type Device = {
   id: string
   name: string
   type: string
@@ -23,7 +23,7 @@ interface Device {
   authenticatorType: string
 }
 
-interface DeviceListProps {
+type DeviceListProps = {
   userId: string
   onAddDevice: () => void
   onDeviceRemoved: () => void

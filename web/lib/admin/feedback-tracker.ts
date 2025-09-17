@@ -6,7 +6,7 @@
 import { devLog } from '../logger'
 import { withOptional } from '../util/objects'
 
-export interface UserJourney {
+export type UserJourney = {
   // Current page context
   currentPage: string
   currentPath: string
@@ -61,7 +61,7 @@ export interface UserJourney {
   userId?: string
 }
 
-export interface FeedbackContext {
+export type FeedbackContext = {
   // Feedback metadata
   feedbackId: string
   timestamp: string
@@ -210,6 +210,9 @@ class FeedbackTracker {
   }
   
   private trackUserInteractions(): void {
+    // Only track interactions in browser environment
+    if (typeof document === 'undefined') return
+    
     // Track clicks, form submissions, etc.
     document.addEventListener('click', (event) => {
       const target = event.target as HTMLElement
@@ -308,10 +311,10 @@ class FeedbackTracker {
   public captureUserJourney(): UserJourney {
     return withOptional(
       {
-        currentPage: window.location.pathname,
-        currentPath: window.location.href,
-        pageTitle: document.title,
-        referrer: document.referrer,
+        currentPage: typeof window !== 'undefined' ? window.location.pathname : '',
+        currentPath: typeof window !== 'undefined' ? window.location.href : '',
+        pageTitle: typeof document !== 'undefined' ? document.title : '',
+        referrer: typeof document !== 'undefined' ? document.referrer : '',
         
         userAgent: navigator.userAgent,
         screenResolution: `${window.screen.width}x${window.screen.height}`,
@@ -359,9 +362,11 @@ class FeedbackTracker {
     if ('ResizeObserver' in window) features.push('resize-observer')
     
     // Check for specific app features
-    if (document.querySelector('[data-feature="polls"]')) features.push('polls')
-    if (document.querySelector('[data-feature="privacy"]')) features.push('privacy-controls')
-    if (document.querySelector('[data-feature="admin"]')) features.push('admin-panel')
+    if (typeof document !== 'undefined') {
+      if (document.querySelector('[data-feature="polls"]')) features.push('polls')
+      if (document.querySelector('[data-feature="privacy"]')) features.push('privacy-controls')
+      if (document.querySelector('[data-feature="admin"]')) features.push('admin-panel')
+    }
     
     return features
   }
@@ -369,20 +374,22 @@ class FeedbackTracker {
   private isUserAuthenticated(): boolean {
     // Check for authentication indicators
     return !!(
-      localStorage.getItem('supabase.auth.token') ||
-      document.querySelector('[data-auth="authenticated"]') ||
-      window.location.pathname.includes('/admin')
+      (typeof localStorage !== 'undefined' && localStorage.getItem('supabase.auth.token')) ||
+      (typeof document !== 'undefined' && document.querySelector('[data-auth="authenticated"]')) ||
+      (typeof window !== 'undefined' && window.location.pathname.includes('/admin'))
     )
   }
   
   private getUserRole(): string | undefined {
     // Extract user role from various sources
+    if (typeof document === 'undefined') return undefined
     const roleElement = document.querySelector('[data-user-role]')
     return roleElement?.getAttribute('data-user-role') || undefined
   }
   
   private getUserId(): string | undefined {
     // Extract user ID from various sources
+    if (typeof document === 'undefined') return undefined
     const userIdElement = document.querySelector('[data-user-id]')
     return userIdElement?.getAttribute('data-user-id') || undefined
   }

@@ -14,7 +14,7 @@ import {
   User
 } from 'lucide-react';
 
-interface Poll {
+type Poll = {
   id: string;
   title: string;
   description: string;
@@ -28,7 +28,7 @@ interface Poll {
   votingMethod: 'single' | 'approval' | 'ranked' | 'quadratic' | 'range';
 }
 
-interface PollCardProps {
+type PollCardProps = {
   poll: Poll;
   showActions?: boolean;
   className?: string;
@@ -70,7 +70,9 @@ const PollCard: React.FC<PollCardProps> = ({
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
+    const d = new Date(dateString);
+    if (Number.isNaN(d.getTime())) return '—';
+    return d.toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
       day: 'numeric'

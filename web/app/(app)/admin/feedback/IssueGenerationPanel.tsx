@@ -14,7 +14,7 @@ import {
   BarChart3
 } from 'lucide-react';
 
-interface Feedback {
+type Feedback = {
   id: string;
   title: string;
   description: string;
@@ -32,7 +32,7 @@ interface Feedback {
   };
 }
 
-interface IssueGenerationPanelProps {
+type IssueGenerationPanelProps = {
   feedback: Feedback[];
   onIssueGenerated: (_feedbackId: string, _issueData: any) => void;
   onBulkGenerate: (_feedbackIds: string[]) => void;

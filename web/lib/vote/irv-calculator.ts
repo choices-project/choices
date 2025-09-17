@@ -14,17 +14,16 @@
 
 import * as crypto from 'node:crypto';
 import { withOptional } from '../util/objects';
-import { isPresent, filterPresent } from '../util/clean';
-import { assertPresent } from '../util/guards';
+import { isPresent } from '../util/clean';
 
-export interface UserRanking {
+export type UserRanking = {
   pollId: string;
   userId: string;
   ranking: string[]; // ordered candidate ids, highest preference first
   createdAt: Date;
 }
 
-export interface IRVRound {
+export type IRVRound = {
   round: number;                 // round number (1-based)
   votes: Record<string, number>; // vote counts for each candidate
   eliminated?: string;           // single eliminated candidate (not array)
@@ -34,7 +33,7 @@ export interface IRVRound {
   exhausted?: number;            // ballots with no remaining choices this round
 }
 
-export interface RankedChoiceResults {
+export type RankedChoiceResults = {
   winner: string | null;
   rounds: IRVRound[];
   totalVotes: number;            // number of ballots (not exhausted count)
@@ -92,12 +91,19 @@ function pickFinalWinner(
   return sorted[0] ?? '';
 }
 
+export type Candidate = {
+  id: string;
+  name: string;
+  description?: string;
+  isWithdrawn?: boolean;
+};
+
 export class IRVCalculator {
   public readonly pollId: string;
-  public readonly candidates: Map<string, any>;
+  public readonly candidates: Map<string, Candidate>;
   private seed?: string;
 
-  constructor(pollId: string, candidates: any[] = [], seed?: string) {
+  constructor(pollId: string, candidates: Candidate[] = [], seed?: string) {
     this.pollId = pollId;
     this.candidates = new Map(candidates.map(c => [c.id, c]));
     this.seed = seed || pollId; // Use pollId as default seed for deterministic results

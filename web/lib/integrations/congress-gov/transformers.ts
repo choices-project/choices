@@ -7,7 +7,7 @@
 import type { CongressGovMember, CongressGovBill, CongressGovVote } from './client';
 import { withOptional } from '../../util/objects';
 
-export interface NormalizedRepresentative {
+export type NormalizedRepresentative = {
   id: string;
   name: string;
   firstName: string;
@@ -21,7 +21,7 @@ export interface NormalizedRepresentative {
   lastUpdated: string;
 }
 
-export interface NormalizedBill {
+export type NormalizedBill = {
   id: string;
   title: string;
   shortTitle?: string;
@@ -42,7 +42,7 @@ export interface NormalizedBill {
   lastUpdated: string;
 }
 
-export interface NormalizedVote {
+export type NormalizedVote = {
   id: string;
   billId?: string;
   chamber: 'house' | 'senate';

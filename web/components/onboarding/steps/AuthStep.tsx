@@ -8,7 +8,7 @@ import { useOnboardingContext } from '../OnboardingFlow'
 import SocialLoginButtons from '@/components/auth/SocialLoginButtons'
 import type { OAuthProvider } from '@/features/auth/types/auth'
 
-interface AuthStepProps {
+type AuthStepProps = {
   data: any
   onUpdate: (updates: any, _unused: any) => void
   onNext: () => void

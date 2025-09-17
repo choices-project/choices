@@ -7,14 +7,14 @@ import {
   XCircle, Heart
 } from 'lucide-react'
 
-interface Promise {
+type Promise = {
   icon: React.ReactNode;
   title: string;
   description: string;
   color: string;
 }
 
-interface BiasFreePromiseProps {
+type BiasFreePromiseProps = {
   title: string;
   promises: Promise[];
 }

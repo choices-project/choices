@@ -7,7 +7,7 @@
 
 import { devLog } from '../logger';
 
-export interface HashtagUsage {
+export type HashtagUsage = {
   hashtag: string;
   userId: string;
   timestamp: string;
@@ -19,7 +19,7 @@ export interface HashtagUsage {
   };
 }
 
-export interface TrendingHashtag {
+export type TrendingHashtag = {
   hashtag: string;
   usageCount: number;
   growthRate: number; // percentage change from previous period
@@ -29,7 +29,7 @@ export interface TrendingHashtag {
   trendingScore: number; // calculated score for ranking
 }
 
-export interface HashtagAnalytics {
+export type HashtagAnalytics = {
   totalHashtags: number;
   trendingHashtags: TrendingHashtag[];
   categoryBreakdown: Record<string, number>;

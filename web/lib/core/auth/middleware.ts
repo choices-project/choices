@@ -8,7 +8,7 @@
  * - Comprehensive error handling
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { type NextRequest, NextResponse } from 'next/server';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 import { devLog } from '@/lib/logger';
 import { requireTrustedOrigin } from '@/lib/http/origin';
@@ -19,24 +19,24 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 
 export type TrustTier = 'T1' | 'T2' | 'T3';
 
-export interface AuthUser {
+export type AuthUser = {
   id: string;
   email: string;
   trust_tier: TrustTier;
   username?: string | null;
 }
 
-export interface AuthContext {
+export type AuthContext = {
   user: AuthUser;
   supabase: SupabaseClient;
 }
 
-export interface UserProfile {
+export type UserProfile = {
   trust_tier: TrustTier;
   username?: string;
 }
 
-export interface AuthMiddlewareOptions {
+export type AuthMiddlewareOptions = {
   requireAuth?: boolean;
   requireTrustTier?: TrustTier;
   requireAdmin?: boolean;

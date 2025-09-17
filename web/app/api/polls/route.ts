@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
         throw directError;
       }
 
-      devLog('Found polls:', directPolls?.length || 0);
+      devLog('Found polls:', directPolls.length || 0);
 
       // Manually aggregate results (temporary solution)
       polls = directPolls && !('error' in directPolls) ? directPolls.filter(poll => 
@@ -68,7 +68,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Additional security: ensure no sensitive data is returned
-    const sanitizedPolls = polls?.map(poll => ({
+    const sanitizedPolls = polls.map(poll => ({
       poll_id: poll.id,
       title: poll.title,
       total_votes: poll.total_votes,

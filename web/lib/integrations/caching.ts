@@ -7,7 +7,7 @@
 
 import { logger } from '@/lib/logger';
 
-export interface CacheConfig {
+export type CacheConfig = {
   defaultTTL: number; // milliseconds
   maxSize: number; // maximum number of entries
   cleanupInterval: number; // milliseconds
@@ -15,7 +15,7 @@ export interface CacheConfig {
   enablePersistence: boolean;
 }
 
-export interface CacheEntry<T = unknown> {
+export type CacheEntry<T = unknown> = {
   key: string;
   data: T;
   timestamp: number;
@@ -26,7 +26,7 @@ export interface CacheEntry<T = unknown> {
   metadata?: Record<string, string | number | boolean>;
 }
 
-export interface CacheStats {
+export type CacheStats = {
   totalEntries: number;
   hitRate: number;
   missRate: number;
@@ -38,7 +38,7 @@ export interface CacheStats {
   newestEntry: number;
 }
 
-export interface CacheMetrics {
+export type CacheMetrics = {
   apiName: string;
   cacheHits: number;
   cacheMisses: number;

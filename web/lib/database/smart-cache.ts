@@ -7,14 +7,12 @@
  */
 
 import { logger } from '@/lib/logger';
-import { DatabaseSchemas } from '@/lib/validation/schemas';
 import { safeParse } from '@/lib/validation/validator';
-import type { UserProfile, Poll, Vote, AnalyticsData } from '@/lib/validation/schemas';
 
 /**
  * Cache entry with metadata for intelligent management
  */
-export interface SmartCacheEntry<T = unknown> {
+export type SmartCacheEntry<T = unknown> = {
   /** The cached data */
   data: T;
   /** Timestamp when cached */
@@ -38,7 +36,7 @@ export interface SmartCacheEntry<T = unknown> {
 /**
  * Cache statistics for monitoring and optimization
  */
-export interface CacheStats {
+export type CacheStats = {
   /** Total number of cache entries */
   totalEntries: number;
   /** Total cache size in bytes */
@@ -58,7 +56,7 @@ export interface CacheStats {
 /**
  * Query pattern analysis for intelligent caching
  */
-export interface QueryPattern {
+export type QueryPattern = {
   /** Normalized query pattern */
   pattern: string;
   /** Frequency of this pattern */
@@ -78,7 +76,7 @@ export interface QueryPattern {
 /**
  * Cache configuration for different data types
  */
-export interface CacheConfig {
+export type CacheConfig = {
   /** Default TTL for different data types */
   defaultTtl: {
     userProfiles: number;

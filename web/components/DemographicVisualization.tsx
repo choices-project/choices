@@ -21,7 +21,7 @@ const DemographicContext = createContext<{
   error: null
 })
 
-interface DemographicData {
+type DemographicData = {
   ageDistribution: { range: string; count: number; percentage: number }[];
   geographicSpread: { state: string; count: number; percentage: number }[];
   commonInterests: { interest: string; count: number; percentage: number }[];
@@ -31,7 +31,7 @@ interface DemographicData {
   urbanRural: { type: string; count: number; percentage: number }[];
 }
 
-interface DemographicVisualizationProps {
+type DemographicVisualizationProps = {
   data?: DemographicData;
   title: string;
   subtitle: string;

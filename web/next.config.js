@@ -1,7 +1,9 @@
 // @ts-check
-const withBundleAnalyzer = require('@next/bundle-analyzer')({
+import withBundleAnalyzer from '@next/bundle-analyzer';
+
+const bundleAnalyzer = withBundleAnalyzer({
   enabled: process.env.ANALYZE === 'true',
-})
+});
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -74,7 +76,7 @@ const nextConfig = {
       });
 
       // More aggressive Supabase externalization for server builds
-      config.externals.push(({ context, request }, callback) => {
+      config.externals.push(({ request }, callback) => {
         if (isServer && request && request.includes('@supabase')) {
           return callback(null, `commonjs ${request}`);
         }
@@ -97,7 +99,7 @@ const nextConfig = {
     // Module resolution optimizations
     config.resolve.alias = {
       ...config.resolve.alias,
-      '@': require('path').resolve(__dirname, './')
+      '@': new URL('./', import.meta.url).pathname
     }
 
     // Bundle size optimizations
@@ -468,4 +470,4 @@ const nextConfig = {
   assetPrefix: process.env.NODE_ENV === 'production' ? '' : '',
 }
 
-module.exports = withBundleAnalyzer(nextConfig)
+export default bundleAnalyzer(nextConfig);

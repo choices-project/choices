@@ -4,16 +4,16 @@ import { useState, useEffect } from 'react'
 import { logger } from '@/lib/logger';
 import { offlineOutbox, initializeOfflineOutbox } from '@/features/pwa/lib/offline-outbox'
 
-interface BeforeInstallPromptEvent extends Event {
+type BeforeInstallPromptEvent = {
   readonly platforms: string[]
   readonly userChoice: Promise<{
     outcome: 'accepted' | 'dismissed'
     platform: string
   }>
   prompt(): Promise<void>
-}
+} & Event
 
-interface PWAStatus {
+type PWAStatus = {
   isInstalled: boolean
   isInstallable: boolean
   isOnline: boolean

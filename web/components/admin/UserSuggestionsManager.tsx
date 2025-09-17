@@ -10,7 +10,7 @@ import {
   RefreshCw
 } from 'lucide-react';
 
-interface UserSuggestion {
+type UserSuggestion = {
   id: string;
   user_id: string;
   type: 'interest_suggestion' | 'demographic_suggestion' | 'poll_suggestion' | 'general_feedback';

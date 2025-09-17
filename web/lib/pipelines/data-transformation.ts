@@ -17,14 +17,14 @@ import type {
   TransformedProPublicaBill 
 } from '../integrations/propublica/transformers';
 
-export interface GovernmentLevel {
+export type GovernmentLevel = {
   level: 'federal' | 'state' | 'local';
   jurisdiction: string;
   offices: string[];
   priority: number;
 }
 
-export interface DataTarget {
+export type DataTarget = {
   id: string;
   name: string;
   level: 'federal' | 'state' | 'local';
@@ -35,7 +35,7 @@ export interface DataTarget {
   estimatedRecords: number;
 }
 
-export interface TransformationResult {
+export type TransformationResult = {
   source: string;
   level: 'federal' | 'state' | 'local';
   recordsProcessed: number;
@@ -49,7 +49,7 @@ export interface TransformationResult {
   };
 }
 
-export interface NormalizedRepresentative {
+export type NormalizedRepresentative = {
   id: string;
   name: string;
   party: string;
@@ -84,7 +84,7 @@ export interface NormalizedRepresentative {
   lastUpdated: string;
 }
 
-export interface NormalizedBill {
+export type NormalizedBill = {
   id: string;
   title: string;
   shortTitle?: string;

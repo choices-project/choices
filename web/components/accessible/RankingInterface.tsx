@@ -24,7 +24,7 @@ import { ScreenReaderSupport } from '../../lib/accessibility/screen-reader';
 // TYPES AND INTERFACES
 // ============================================================================
 
-export interface Candidate {
+export type Candidate = {
   id: string;
   name: string;
   bio: string;
@@ -38,7 +38,7 @@ export interface Candidate {
   };
 }
 
-export interface RankingState {
+export type RankingState = {
   rankings: string[];
   focusedIndex: number;
   isDragging: boolean;
@@ -46,7 +46,7 @@ export interface RankingState {
   validationWarnings: string[];
 }
 
-export interface RankingInterfaceProps {
+export type RankingInterfaceProps = {
   candidates: Candidate[];
   onRankingChange: (rankings: string[]) => void;
   onValidationChange: (isValid: boolean, errors: string[], warnings: string[]) => void;
@@ -462,7 +462,7 @@ export function AccessibleRankingInterface({
 // VALIDATION SECTION COMPONENT
 // ============================================================================
 
-interface ValidationSectionProps {
+type ValidationSectionProps = {
   errors: string[];
   warnings: string[];
   rankings: string[];

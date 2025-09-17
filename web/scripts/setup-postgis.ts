@@ -168,7 +168,7 @@ async function setupPostGIS() {
       } else {
         console.log('   ✅ PostGIS spatial index created successfully');
       }
-    } catch (err) {
+    } catch (_err) {
       console.log('   ⚠️  PostGIS spatial index not available');
     }
 

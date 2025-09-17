@@ -15,7 +15,7 @@ import {
 } from 'lucide-react'
 import { pwaManager, pwaWebAuthn, privacyStorage } from '../lib/pwa-utils'
 
-interface UserProfile {
+type UserProfile = {
   stableId: string
   pseudonym?: string
   trustTier: 'T0' | 'T1' | 'T2' | 'T3'
@@ -32,7 +32,7 @@ interface UserProfile {
   lastActivity: string
 }
 
-interface PWAUserProfileProps {
+type PWAUserProfileProps = {
   user?: UserProfile
   onUpdate?: (_profile: Partial<UserProfile>) => void
 }

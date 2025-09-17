@@ -46,7 +46,7 @@ async function main() {
     
     // Admin profile
     const { error: adminProfileError } = await admin.from('user_profiles').upsert({
-      user_id: adminUser?.user?.id || 'admin-user-id',
+      user_id: adminUser.user?.id || 'admin-user-id',
       email: 'admin@example.com',
       is_admin: true,
       is_active: true,
@@ -60,7 +60,7 @@ async function main() {
 
     // Regular user profile
     const { error: userProfileError } = await admin.from('user_profiles').upsert({
-      user_id: regularUser?.user?.id || 'regular-user-id',
+      user_id: regularUser.user?.id || 'regular-user-id',
       email: 'user@example.com',
       is_admin: false,
       is_active: true,

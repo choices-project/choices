@@ -11,7 +11,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { devLog } from '@/lib/logger';
 import { isFeatureEnabled } from '../../../lib/feature-flags'
 
-interface PrivacyUtils {
+type PrivacyUtils = {
   privacyBudgetManager: any
   privateAnalytics: any
   zkProofManager: any
@@ -19,7 +19,7 @@ interface PrivacyUtils {
   auditor: any
 }
 
-interface PrivacyStatus {
+type PrivacyStatus = {
   enabled: boolean
   initialized: boolean
   features: {

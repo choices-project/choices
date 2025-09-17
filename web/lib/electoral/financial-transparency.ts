@@ -11,12 +11,9 @@
 import { dev } from '../dev.logger';
 import { createUnifiedDataOrchestrator } from '../integrations/unified-orchestrator';
 import type {
-  UnifiedCampaignFinance,
-  UnifiedVote,
-  UnifiedRepresentative
+  UnifiedCampaignFinance
 } from '../integrations/unified-orchestrator';
 import type {
-  CampaignFinanceSummary,
   FECContribution,
   RevolvingDoorEntry,
   PostGovernmentEmployment,
@@ -25,13 +22,10 @@ import type {
   IndustryInfluence,
   ConflictOfInterest
 } from '../types/electoral';
-import { withOptional } from '../util/objects';
-import { upsertClean } from '../db/upsert';
-import { toFECMinimal, toFECContributions } from '../normalize/fec';
 import { mapLegacyToUnified } from '../util/property-mapping';
 
 // Financial transparency types
-export interface FinancialInfluenceDashboard {
+export type FinancialInfluenceDashboard = {
   candidateId: string;
   cycle: number;
   
@@ -71,7 +65,7 @@ export interface FinancialInfluenceDashboard {
   }>;
 }
 
-export interface BoughtOffIndicator {
+export type BoughtOffIndicator = {
   candidateId: string;
   
   // Red Flags
@@ -107,7 +101,7 @@ export interface BoughtOffIndicator {
   };
 }
 
-export interface InfluenceAnalysis {
+export type InfluenceAnalysis = {
   candidateId: string;
   issue: string;
   
@@ -133,7 +127,7 @@ export interface InfluenceAnalysis {
   lastUpdated: string;
 }
 
-export interface RevolvingDoorTracker {
+export type RevolvingDoorTracker = {
   candidateId: string;
   
   // Former Government Service
@@ -167,7 +161,7 @@ export interface RevolvingDoorTracker {
   };
 }
 
-export interface CorporateInfluenceMap {
+export type CorporateInfluenceMap = {
   candidateId: string;
   
   // Corporate Connections
@@ -319,7 +313,7 @@ export class FinancialTransparencySystem {
       const votes = await this.orchestrator.getVotingRecord(candidateId);
       const issueVotes = votes.filter(vote => 
         vote.billTitle?.toLowerCase().includes(issue.toLowerCase()) ||
-        vote.question?.toLowerCase().includes(issue.toLowerCase())
+        vote.question.toLowerCase().includes(issue.toLowerCase())
       );
 
       // Analyze industry contributions

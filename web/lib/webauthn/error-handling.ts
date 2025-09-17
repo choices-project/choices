@@ -43,7 +43,7 @@ export enum WebAuthnErrorType {
 /**
  * WebAuthn error details interface
  */
-export interface WebAuthnErrorDetails {
+export type WebAuthnErrorDetails = {
   [key: string]: unknown;
 }
 

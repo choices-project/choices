@@ -24,7 +24,7 @@ import { devLog } from '@/lib/logger';
 /**
  * WebAuthn credential data from database
  */
-export interface WebAuthnCredentialData {
+export type WebAuthnCredentialData = {
   credentialId: string;
   publicKey: string; // BYTEA format
   counter: number;
@@ -40,7 +40,7 @@ export interface WebAuthnCredentialData {
 /**
  * Verification result for registration
  */
-export interface RegistrationVerificationResult {
+export type RegistrationVerificationResult = {
   verified: boolean;
   credentialId: string;
   publicKey: ArrayBuffer;
@@ -56,7 +56,7 @@ export interface RegistrationVerificationResult {
 /**
  * Verification result for authentication
  */
-export interface AuthenticationVerificationResult {
+export type AuthenticationVerificationResult = {
   verified: boolean;
   credentialId: string;
   newCounter: number;

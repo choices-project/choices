@@ -11,7 +11,7 @@ import type {
   NormalizedBill 
 } from './data-transformation';
 
-export interface ValidationRule {
+export type ValidationRule = {
   name: string;
   description: string;
   severity: 'error' | 'warning' | 'info';
@@ -19,7 +19,7 @@ export interface ValidationRule {
   fixer?: (data: any) => any;
 }
 
-export interface ValidationResult {
+export type ValidationResult = {
   isValid: boolean;
   errors: ValidationError[];
   warnings: ValidationWarning[];
@@ -32,7 +32,7 @@ export interface ValidationResult {
   };
 }
 
-export interface ValidationError {
+export type ValidationError = {
   field: string;
   message: string;
   value: any;
@@ -40,21 +40,21 @@ export interface ValidationError {
   severity: 'error' | 'warning' | 'info';
 }
 
-export interface ValidationWarning {
+export type ValidationWarning = {
   field: string;
   message: string;
   value: any;
   suggestion: string;
 }
 
-export interface ValidationFix {
+export type ValidationFix = {
   field: string;
   originalValue: any;
   fixedValue: any;
   rule: string;
 }
 
-export interface DeduplicationResult {
+export type DeduplicationResult = {
   originalCount: number;
   uniqueCount: number;
   duplicates: Array<{
@@ -102,7 +102,7 @@ export class DataValidationPipeline {
       },
       fixer: (rep: NormalizedRepresentative) => ({
         ...rep,
-        name: rep.name?.trim().replace(/\s+/g, ' ')
+        name: rep.name.trim().replace(/\s+/g, ' ')
       })
     });
 

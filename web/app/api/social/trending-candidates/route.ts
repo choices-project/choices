@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { type NextRequest, NextResponse } from 'next/server';
 import { TrendingCandidateDetector } from '@/lib/social/social-discovery';
 import { devLog } from '@/lib/logger';
 import { handleError, getUserMessage, getHttpStatus } from '@/lib/error-handler';

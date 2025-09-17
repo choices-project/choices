@@ -2,7 +2,7 @@
 // Created: 2025-01-16
 // Purpose: Type definitions for Google Civic API integration
 
-export interface GoogleCivicElectionInfo {
+export type GoogleCivicElectionInfo = {
   kind: string;
   elections: Array<{
     id: string;
@@ -12,7 +12,7 @@ export interface GoogleCivicElectionInfo {
   }>;
 }
 
-export interface GoogleCivicVoterInfo {
+export type GoogleCivicVoterInfo = {
   kind: string;
   election: {
     id: string;
@@ -107,7 +107,7 @@ export interface GoogleCivicVoterInfo {
   }>;
 }
 
-export interface GoogleCivicErrorDetails {
+export type GoogleCivicErrorDetails = {
   code?: string;
   message?: string;
   status?: string;
@@ -120,7 +120,7 @@ export interface GoogleCivicErrorDetails {
   }>;
 }
 
-export interface RetryConfig {
+export type RetryConfig = {
   maxAttempts: number;
   baseDelay: number;
   maxDelay: number;
@@ -128,7 +128,7 @@ export interface RetryConfig {
   retryableStatusCodes: number[];
 }
 
-export interface ErrorContext {
+export type ErrorContext = {
   operation?: string;
   address?: string;
   electionId?: string;

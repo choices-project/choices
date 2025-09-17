@@ -23,7 +23,7 @@ const supabase = createClient(
 )
 
 // Privacy configuration
-export interface PrivacyConfig {
+export type PrivacyConfig = {
   epsilon: number // Privacy parameter (lower = more private)
   delta: number // Privacy parameter (typically 1e-5)
   kAnonymity: number // Minimum participants for result disclosure
@@ -43,7 +43,7 @@ export const DEFAULT_PRIVACY_CONFIG: PrivacyConfig = {
 }
 
 // Privacy ledger entry
-export interface PrivacyLedgerEntry {
+export type PrivacyLedgerEntry = {
   id: string
   userId: string
   pollId: string
@@ -56,7 +56,7 @@ export interface PrivacyLedgerEntry {
 }
 
 // Query result with privacy protection
-export interface PrivateQueryResult<T> {
+export type PrivateQueryResult<T> = {
   data: T
   epsilonUsed: number
   noiseAdded: number
@@ -117,7 +117,7 @@ export class DifferentialPrivacyManager {
       return 0
     }
 
-    const totalEpsilon = data?.reduce((sum, entry) => sum + entry.epsilon_used, 0) || 0
+    const totalEpsilon = data.reduce((sum, entry) => sum + entry.epsilon_used, 0) || 0
     return Math.max(0, this.config.maxEpsilonPerUser - totalEpsilon)
   }
 
@@ -190,12 +190,12 @@ export class DifferentialPrivacyManager {
 
     // Count votes per option
     const voteCounts = new Map<string, number>()
-    rawResults?.forEach(vote => {
+    rawResults.forEach(vote => {
       const count = voteCounts.get(vote.option_id) || 0
       voteCounts.set(vote.option_id, count + 1)
     })
 
-    const totalVotes = rawResults?.length || 0
+    const totalVotes = rawResults.length || 0
     const kAnonymitySatisfied = this.checkKAnonymity(totalVotes)
 
     // If k-anonymity not satisfied, return aggregated results only
@@ -393,7 +393,7 @@ export class DifferentialPrivacyManager {
       return []
     }
 
-    return data?.map(entry => ({
+    return data.map(entry => ({
       id: entry.id,
       userId: entry.user_id,
       pollId: entry.poll_id,
@@ -429,10 +429,10 @@ export class DifferentialPrivacyManager {
       }
     }
 
-    const totalQueries = data?.length || 0
-    const totalEpsilonUsed = data?.reduce((sum, entry) => sum + entry.epsilon_used, 0) || 0
-    const totalNoiseAdded = data?.reduce((sum, entry) => sum + entry.noise_added, 0) || 0
-    const kAnonymitySatisfiedCount = data?.filter(entry => entry.k_anonymity_satisfied).length || 0
+    const totalQueries = data.length || 0
+    const totalEpsilonUsed = data.reduce((sum, entry) => sum + entry.epsilon_used, 0) || 0
+    const totalNoiseAdded = data.reduce((sum, entry) => sum + entry.noise_added, 0) || 0
+    const kAnonymitySatisfiedCount = data.filter(entry => entry.k_anonymity_satisfied).length || 0
 
     return {
       totalQueries,

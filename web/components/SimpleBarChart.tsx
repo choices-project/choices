@@ -1,12 +1,12 @@
 'use client';
 
-interface ChartData {
+type ChartData = {
   name: string;
   value: number;
   color: string;
 }
 
-interface SimpleBarChartProps {
+type SimpleBarChartProps = {
   data: ChartData[];
   title: string;
   height?: number;

@@ -28,7 +28,7 @@ export async function GET(_request: NextRequest) {
 
     // Get all cookies for debugging
     const allCookies = cookies().getAll();
-    const authCookies = allCookies.filter(c => c.name?.includes('auth') || c.name?.includes('supabase'));
+    const authCookies = allCookies.filter(c => c.name.includes('auth') || c.name.includes('supabase'));
 
     // Try to get user from session
     const supabaseClient = await supabase;

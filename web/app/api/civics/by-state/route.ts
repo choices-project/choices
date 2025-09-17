@@ -1,6 +1,9 @@
 // web/app/api/civics/by-state/route.ts
-import { NextRequest, NextResponse } from 'next/server';
+import { type NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+
+// Force dynamic rendering since we use nextUrl.searchParams
+export const dynamic = 'force-dynamic';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -51,7 +54,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ 
       ok: true, 
       data: data || [],
-      count: data?.length || 0
+      count: data.length || 0
     });
   } catch (e: any) {
     console.error('API error:', e);

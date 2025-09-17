@@ -9,7 +9,7 @@
 import { logger } from '@/lib/logger';
 import { ApplicationError } from '@/lib/errors';
 
-export interface GovTrackConfig {
+export type GovTrackConfig = {
   baseUrl?: string;
   timeout?: number;
   retryAttempts?: number;
@@ -20,7 +20,7 @@ export interface GovTrackConfig {
   };
 }
 
-export interface GovTrackMember {
+export type GovTrackMember = {
   id: number;
   first_name: string;
   last_name: string;
@@ -55,7 +55,7 @@ export interface GovTrackMember {
   }>;
 }
 
-export interface GovTrackVote {
+export type GovTrackVote = {
   id: number;
   category: string;
   question: string;
@@ -88,7 +88,7 @@ export interface GovTrackVote {
   updated: string;
 }
 
-export interface GovTrackBill {
+export type GovTrackBill = {
   id: number;
   congress: number;
   bill_type: string;
@@ -129,7 +129,7 @@ export interface GovTrackBill {
   updated: string;
 }
 
-export interface GovTrackResponse<T> {
+export type GovTrackResponse<T> = {
   meta: {
     limit: number;
     offset: number;

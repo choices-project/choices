@@ -7,26 +7,26 @@
 
 import { isFeatureEnabled } from '../../lib/feature-flags';
 
-export interface ZKProof {
+export type ZKProof = {
   proof: string
   publicInputs: any
   verificationKey: string
   timestamp: number
 }
 
-export interface ZKStatement {
+export type ZKStatement = {
   statement: string
   witness: any
   publicInputs: any
 }
 
-export interface ZKVerificationResult {
+export type ZKVerificationResult = {
   isValid: boolean
   confidence: number
   timestamp: number
 }
 
-export interface Commitment {
+export type Commitment = {
   commitment: string
   randomness: string
   value: any
@@ -106,7 +106,7 @@ export class ZeroKnowledgeProofs {
         confidence: isValid ? 1.0 : 0.0,
         timestamp: Date.now()
       }
-    } catch (error) {
+    } catch (_error) {
       return {
         isValid: false,
         confidence: 0.0,
@@ -168,7 +168,7 @@ export class ZeroKnowledgeProofs {
         confidence: isValid ? 0.95 : 0.0,
         timestamp: Date.now()
       }
-    } catch (error) {
+    } catch (_error) {
       return {
         isValid: false,
         confidence: 0.0,
@@ -228,7 +228,7 @@ export class ZeroKnowledgeProofs {
         confidence: isValid ? 0.9 : 0.0,
         timestamp: Date.now()
       }
-    } catch (error) {
+    } catch (_error) {
       return {
         isValid: false,
         confidence: 0.0,
@@ -288,7 +288,7 @@ export class ZeroKnowledgeProofs {
         confidence: isValid ? 0.95 : 0.0,
         timestamp: Date.now()
       }
-    } catch (error) {
+    } catch (_error) {
       return {
         isValid: false,
         confidence: 0.0,
@@ -350,7 +350,7 @@ export class ZeroKnowledgeProofs {
         confidence: isValid ? 0.98 : 0.0,
         timestamp: Date.now()
       }
-    } catch (error) {
+    } catch (_error) {
       return {
         isValid: false,
         confidence: 0.0,
@@ -409,7 +409,7 @@ export class ZeroKnowledgeProofs {
         confidence: isValid ? 0.92 : 0.0,
         timestamp: Date.now()
       }
-    } catch (error) {
+    } catch (_error) {
       return {
         isValid: false,
         confidence: 0.0,
@@ -549,11 +549,11 @@ export class ZeroKnowledgeProofs {
     return proof.type === 'membership' && setCommitments.length === proof.setSize
   }
 
-  private verifyEqualityProofInternal(proof: any, commitment1: string, commitment2: string): boolean {
+  private verifyEqualityProofInternal(proof: any, _commitment1: string, _commitment2: string): boolean {
     return proof.type === 'equality'
   }
 
-  private verifyVoteProofInternal(proof: any, voteCommitment: string, pollCommitment: string): boolean {
+  private verifyVoteProofInternal(proof: any, _voteCommitment: string, _pollCommitment: string): boolean {
     return proof.type === 'vote'
   }
 }

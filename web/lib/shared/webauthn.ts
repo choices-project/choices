@@ -18,7 +18,7 @@ import { devLog } from '@/lib/logger';
 // WebAuthn configuration
 const WEBAUTHN_CONFIG = {
   rpName: 'Choices Platform',
-  rpId: typeof window !== 'undefined' ? (window.location?.hostname || 'choices-platform.vercel.app') : 'choices-platform.vercel.app',
+  rpId: typeof window !== 'undefined' ? (window.location.hostname || 'choices-platform.vercel.app') : 'choices-platform.vercel.app',
   timeout: 60000, // 60 seconds
   challengeLength: 32,
   algorithms: [
@@ -43,7 +43,7 @@ export enum WebAuthnErrorType {
   UNKNOWN = 'UNKNOWN'
 }
 
-export interface WebAuthnError {
+export type WebAuthnError = {
   type: WebAuthnErrorType;
   message: string;
   code?: string;
@@ -51,7 +51,7 @@ export interface WebAuthnError {
   suggestedAction?: string;
 }
 
-export interface WebAuthnResult {
+export type WebAuthnResult = {
   success: boolean;
   credential?: PublicKeyCredential;
   error?: WebAuthnError;

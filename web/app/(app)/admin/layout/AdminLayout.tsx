@@ -5,7 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
 
-interface AdminLayoutProps {
+type AdminLayoutProps = {
   children: React.ReactNode;
 }
 

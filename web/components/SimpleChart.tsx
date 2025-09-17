@@ -3,7 +3,7 @@
 import React from 'react';
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
 
-interface ChartDataPoint {
+type ChartDataPoint = {
   name: string;
   value: number;
   color: string;
@@ -12,7 +12,7 @@ interface ChartDataPoint {
   previousValue?: number;
 }
 
-interface SimpleChartProps {
+type SimpleChartProps = {
   data: ChartDataPoint[];
   title: string;
   subtitle?: string;

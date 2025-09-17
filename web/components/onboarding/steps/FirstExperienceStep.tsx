@@ -5,7 +5,7 @@ import { Vote, BarChart3, Users, ArrowRight, ArrowLeft, CheckCircle, Eye } from 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
-interface FirstExperienceStepProps {
+type FirstExperienceStepProps = {
   data: any
   onUpdate: () => void
   onNext: () => void

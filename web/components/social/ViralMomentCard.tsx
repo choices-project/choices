@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 import type { ViralMoment } from '@/lib/social/viral-detection';
 
-interface ViralMomentCardProps {
+type ViralMomentCardProps = {
   moment: ViralMoment;
   onShare?: (moment: ViralMoment) => void;
   onViewDetails?: (moment: ViralMoment) => void;

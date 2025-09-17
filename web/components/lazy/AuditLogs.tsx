@@ -5,7 +5,7 @@
 import React, { useState, useEffect } from 'react';
 import { performanceMetrics } from '@/lib/performance/performance-metrics';
 
-interface AuditLog {
+type AuditLog = {
   id: string;
   timestamp: string;
   user: string;

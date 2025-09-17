@@ -22,7 +22,7 @@
 // TYPES AND INTERFACES
 // ============================================================================
 
-export interface SecureKey {
+export type SecureKey = {
   id: string;
   key: CryptoKey;
   algorithm: string;
@@ -33,7 +33,7 @@ export interface SecureKey {
   version: number;
 }
 
-export interface WrappedKey {
+export type WrappedKey = {
   wrapped: string; // Base64 encoded wrapped key
   iv: number[]; // IV used for wrapping
   salt: number[]; // Salt used for key derivation
@@ -41,14 +41,14 @@ export interface WrappedKey {
   keyId: string;
 }
 
-export interface KeyRotationPolicy {
+export type KeyRotationPolicy = {
   rotationInterval: number; // milliseconds
   maxKeyAge: number; // milliseconds
   autoRotation: boolean;
   backupBeforeRotation: boolean;
 }
 
-export interface EncryptionResult {
+export type EncryptionResult = {
   ciphertext: string;
   iv: number[];
   keyId: string;
@@ -56,7 +56,7 @@ export interface EncryptionResult {
   timestamp: Date;
 }
 
-export interface DecryptionResult {
+export type DecryptionResult = {
   plaintext: string;
   keyId: string;
   algorithm: string;

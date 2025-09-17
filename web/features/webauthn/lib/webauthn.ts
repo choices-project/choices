@@ -5,26 +5,26 @@
  * This is a stub implementation to resolve import errors.
  */
 
-export interface WebAuthnCredential {
+export type WebAuthnCredential = {
   id: string;
   type: 'public-key';
   transports?: string[];
 }
 
 // Fix credential typing
-interface AuthenticatorAttestationResponse extends AuthenticatorResponse {
+type AuthenticatorAttestationResponse = {
   attestationObject: ArrayBuffer;
   clientDataJSON: ArrayBuffer;
-}
+} & AuthenticatorResponse
 
-interface AuthenticatorAssertionResponse extends AuthenticatorResponse {
+type AuthenticatorAssertionResponse = {
   authenticatorData: ArrayBuffer;
   clientDataJSON: ArrayBuffer;
   signature: ArrayBuffer;
   userHandle: ArrayBuffer | null;
-}
+} & AuthenticatorResponse
 
-export interface WebAuthnOptions {
+export type WebAuthnOptions = {
   challenge: string;
   timeout?: number;
   userVerification?: 'required' | 'preferred' | 'discouraged';

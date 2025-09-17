@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 import type { Candidate } from '@/lib/social/candidate-tools';
 
-interface EqualPlatformProfileProps {
+type EqualPlatformProfileProps = {
   candidate: Candidate;
   onPolicyClick?: (policy: string) => void;
   onContactClick?: (candidate: Candidate) => void;

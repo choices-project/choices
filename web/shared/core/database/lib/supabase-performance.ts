@@ -13,6 +13,12 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { createClient } from '@supabase/supabase-js'
 import { logger } from '@/lib/logger'
 
+// Type definitions for better type safety
+type CacheValue = Record<string, unknown> | unknown[] | string | number | boolean | null;
+type DatabaseRecord = Record<string, unknown>;
+type QueryConditions = Record<string, string | number | boolean | null>;
+type UpdateData = Record<string, unknown>;
+
 // Performance monitoring
 class PerformanceMonitor {
   private metrics: Map<string, {
@@ -79,7 +85,7 @@ export const performanceMonitor = new PerformanceMonitor()
 // Cache management
 class CacheManager {
   private cache: Map<string, {
-    value: any
+    value: CacheValue
     expiresAt: Date
     accessCount: number
     lastAccessed: Date
@@ -93,7 +99,7 @@ class CacheManager {
     this.defaultTTL = defaultTTL
   }
 
-  set(key: string, value: any, ttl: number = this.defaultTTL): void {
+  set(key: string, value: CacheValue, ttl: number = this.defaultTTL): void {
     // Clean expired entries
     this.cleanup()
 
@@ -110,7 +116,7 @@ class CacheManager {
     })
   }
 
-  get(key: string): any | null {
+  get(key: string): CacheValue | null {
     const entry = this.cache.get(key)
     
     if (!entry) return null
@@ -251,7 +257,7 @@ export const connectionPoolManager = new ConnectionPoolManager()
 // Query optimization utilities
 export class QueryOptimizer {
   private static instance: QueryOptimizer
-  private queryCache: Map<string, any> = new Map()
+  private queryCache: Map<string, CacheValue> = new Map()
 
   static getInstance(): QueryOptimizer {
     if (!QueryOptimizer.instance) {
@@ -261,7 +267,7 @@ export class QueryOptimizer {
   }
 
   // Optimize SELECT queries with proper field selection
-  optimizeSelect(table: string, fields: string[] = ['*'], conditions: Record<string, any> = {}) {
+  optimizeSelect(table: string, fields: string[] = ['*'], conditions: QueryConditions = {}) {
     const selectFields = fields.length > 0 ? fields.join(', ') : '*'
     const whereClause = Object.keys(conditions).length > 0 
       ? Object.entries(conditions).map(([key, value]) => `${key} = '${value}'`).join(' AND ')
@@ -276,7 +282,7 @@ export class QueryOptimizer {
   }
 
   // Optimize INSERT queries with batch operations
-  optimizeInsert(_table: string, data: any[]) {
+  optimizeInsert(_table: string, data: unknown[]) {
     if (data.length === 1) {
       return { single: true, data: data[0] }
     }
@@ -290,7 +296,7 @@ export class QueryOptimizer {
   }
 
   // Optimize UPDATE queries with selective updates
-  optimizeUpdate(table: string, updates: Record<string, any>, conditions: Record<string, any>) {
+  optimizeUpdate(table: string, updates: UpdateData, conditions: QueryConditions) {
     const updateFields = Object.keys(updates).filter(key => updates[key] !== undefined)
     const whereFields = Object.keys(conditions)
 
@@ -303,17 +309,17 @@ export class QueryOptimizer {
   }
 
   // Cache query results
-  cacheQuery(key: string, result: any, ttl: number = 300000): void {
+  cacheQuery(key: string, result: CacheValue, ttl: number = 300000): void {
     cacheManager.set(`query:${key}`, result, ttl)
   }
 
   // Get cached query result
-  getCachedQuery(key: string): any | null {
+  getCachedQuery(key: string): CacheValue | null {
     return cacheManager.get(`query:${key}`)
   }
 
   // Generate cache key for query
-  generateCacheKey(operation: string, table: string, params: any): string {
+  generateCacheKey(operation: string, table: string, params: unknown): string {
     return `${operation}:${table}:${JSON.stringify(params)}`
   }
 }
@@ -404,10 +410,10 @@ export class OptimizedSupabaseClient {
   // Optimized query execution with caching and monitoring
   async executeQuery<T>(
     operation: string,
-    queryFn: () => Promise<{ data: T | null; error: any }>,
+    queryFn: () => Promise<{ data: T | null; error: unknown }>,
     cacheKey?: string,
     cacheTTL?: number
-  ): Promise<{ data: T | null; error: any }> {
+  ): Promise<{ data: T | null; error: unknown }> {
     const startTime = Date.now()
 
     try {
@@ -416,7 +422,7 @@ export class OptimizedSupabaseClient {
         const cached = cacheManager.get(cacheKey)
         if (cached) {
           performanceMonitor.recordOperation(operation, Date.now() - startTime, true)
-          return { data: cached, error: null }
+          return { data: cached as T, error: null }
         }
       }
 
@@ -443,7 +449,7 @@ export class OptimizedSupabaseClient {
   }
 
   // Optimized table operations
-  async from<_T = any>(table: string) {
+  async from<T = DatabaseRecord>(table: string) {
     return {
       select: async (fields: string[] = ['*'], cacheKey?: string) => {
         const optimized = queryOptimizer.optimizeSelect(table, fields)
@@ -459,7 +465,7 @@ export class OptimizedSupabaseClient {
         )
       },
 
-      insert: async (data: any, cacheKey?: string) => {
+      insert: async (data: T | T[], cacheKey?: string) => {
         const optimized = queryOptimizer.optimizeInsert(table, Array.isArray(data) ? data : [data])
         
         return this.executeQuery(
@@ -472,7 +478,7 @@ export class OptimizedSupabaseClient {
         )
       },
 
-      update: async (updates: any, conditions: any, cacheKey?: string) => {
+      update: async (updates: UpdateData, conditions: QueryConditions, cacheKey?: string) => {
         const optimized = queryOptimizer.optimizeUpdate(table, updates, conditions)
         let query = this.client.from(table).update(updates)
         
@@ -491,7 +497,7 @@ export class OptimizedSupabaseClient {
         )
       },
 
-      delete: async (conditions: any, cacheKey?: string) => {
+      delete: async (conditions: QueryConditions, cacheKey?: string) => {
         let query = this.client.from(table).delete()
         
         // Apply conditions
@@ -562,7 +568,7 @@ export const createOptimizedSupabaseClient = (): OptimizedSupabaseClient => {
 export const optimizedSupabase = createOptimizedSupabaseClient()
 
 // Performance monitoring middleware
-export const withPerformanceMonitoring = <T extends any[], R>(
+export const withPerformanceMonitoring = <T extends unknown[], R>(
   operation: string,
   fn: (...args: T) => Promise<R>
 ) => {

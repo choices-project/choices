@@ -126,8 +126,8 @@ async function run() {
   assert(process.env.SUPABASE_SECRET_KEY, 'SUPABASE_SECRET_KEY required');
 
   let totalStates = 0;
-  let totalSenators = 0;
-  let totalReps = 0;
+  // const totalSenators = 0; // Unused variables
+  // const totalReps = 0;
 
   // Seed top 10 states
   for (const st of TOP10) {
