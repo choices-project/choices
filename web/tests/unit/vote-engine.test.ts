@@ -20,6 +20,14 @@ import type {
   VotingMethod 
 } from '@/lib/vote/types';
 
+type EngineStrategy = {
+  getVotingMethod(): VotingMethod;
+  validateVote(): Promise<void>;
+  processVote(): Promise<void>;
+  calculateResults(): Promise<unknown>;
+  getConfiguration(): unknown;
+};
+
 // Mock the logger
 jest.mock('@/lib/logger', () => ({
   devLog: jest.fn()
@@ -254,13 +262,13 @@ describe('VoteEngine', () => {
 
     it('should handle processing errors gracefully', async () => {
       // Mock a strategy to throw an error
-      const mockStrategy = {
-        getVotingMethod: () => 'single' as VotingMethod,
-        validateVote: jest.fn().mockRejectedValue(new Error('Strategy error')),
-        processVote: jest.fn(),
+      const mockStrategy: jest.Mocked<EngineStrategy> = {
+        getVotingMethod: jest.fn(() => 'single' as VotingMethod),
+        validateVote:     jest.fn(async () => { throw new Error('Strategy error'); }),
+        processVote:      jest.fn(),
         calculateResults: jest.fn(),
         getConfiguration: jest.fn(),
-      } as any;
+      };
 
       // Replace the strategy in the engine
       (engine as any).strategies.set('single', mockStrategy);
@@ -331,13 +339,13 @@ describe('VoteEngine', () => {
 
     it('should handle calculation errors gracefully', async () => {
       // Mock a strategy to throw an error during calculation
-      const mockStrategy2 = {
-        getVotingMethod: () => 'single' as VotingMethod,
-        validateVote: jest.fn(),
-        processVote: jest.fn(),
-        calculateResults: jest.fn().mockRejectedValue(new Error('Calculation error')),
+      const mockStrategy2: jest.Mocked<EngineStrategy> = {
+        getVotingMethod: jest.fn(() => 'single' as VotingMethod),
+        validateVote:     jest.fn(),
+        processVote:      jest.fn(),
+        calculateResults: jest.fn(async () => { throw new Error('Calculation error'); }),
         getConfiguration: jest.fn(),
-      } as any;
+      };
 
       (engine as unknown as { strategies: Map<string, unknown> }).strategies.set('single', mockStrategy2);
 
