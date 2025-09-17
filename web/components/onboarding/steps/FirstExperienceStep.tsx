@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
 type FirstExperienceStepProps = {
-  data: any
+  data: Record<string, unknown>
   onUpdate: () => void
   onNext: () => void
   onBack: () => void

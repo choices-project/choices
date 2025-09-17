@@ -83,7 +83,7 @@ export default function UserSuggestionsManager() {
         setSuggestions(prev => 
           prev.map(suggestion => 
             suggestion.id === id 
-              ? { ...suggestion, status: status as any }
+              ? { ...suggestion, status: status as 'pending' | 'approved' | 'rejected' | 'implemented' }
               : suggestion
           )
         );

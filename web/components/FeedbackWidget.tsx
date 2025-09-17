@@ -245,10 +245,10 @@ const FeedbackWidget: React.FC = () => {
                           { type: 'bug', label: 'Report a Bug', description: 'Something isn\'t working' },
                           { type: 'feature', label: 'Feature Request', description: 'I have an idea' },
                           { type: 'general', label: 'General Feedback', description: 'Thoughts or suggestions' }
-                        ].map((option: any) => (
+                        ].map((option: { type: 'bug' | 'feature' | 'general'; label: string; description: string }) => (
                           <motion.button
                             key={option.type}
-                            onClick={() => handleTypeSelect(option.type as any)}
+                            onClick={() => handleTypeSelect(option.type)}
                             className="w-full p-4 border border-gray-200 rounded-xl hover:border-blue-300 hover:bg-blue-50 transition-all duration-200 text-left group"
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
@@ -357,10 +357,10 @@ const FeedbackWidget: React.FC = () => {
                           { sentiment: 'positive', icon: <Smile className="w-8 h-8" />, label: 'Happy' },
                           { sentiment: 'neutral', icon: <Meh className="w-8 h-8" />, label: 'Okay' },
                           { sentiment: 'negative', icon: <Frown className="w-8 h-8" />, label: 'Frustrated' }
-                        ].map((option: any) => (
+                        ].map((option: { sentiment: 'positive' | 'negative' | 'neutral'; label: string; icon: React.ReactNode }) => (
                           <motion.button
                             key={option.sentiment}
-                            onClick={() => handleSentimentSelect(option.sentiment as any)}
+                            onClick={() => handleSentimentSelect(option.sentiment)}
                             className="p-4 border border-gray-200 rounded-xl hover:border-blue-300 hover:bg-blue-50 transition-all duration-200 text-center group"
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}

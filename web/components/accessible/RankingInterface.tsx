@@ -207,7 +207,7 @@ export function AccessibleRankingInterface({
   // ============================================================================
 
   const handleKeyboardNavigation = useCallback((event: React.KeyboardEvent, candidateId: string) => {
-    ScreenReaderSupport.handleKeyboardNavigation(event as any, {
+    ScreenReaderSupport.handleKeyboardNavigation(event.nativeEvent, {
       onArrowUp: () => moveCandidate(candidateId, 'up'),
       onArrowDown: () => moveCandidate(candidateId, 'down'),
       onEnter: () => toggleCandidateSelection(candidateId),

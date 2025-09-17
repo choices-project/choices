@@ -93,7 +93,7 @@ async function runTests(): Promise<TestResult[]> {
   
   // Test 3: Contact Information Availability
   try {
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('civics_contact_info')
       .select('count(*)');
     
@@ -105,10 +105,11 @@ async function runTests(): Promise<TestResult[]> {
         details: error
       });
     } else {
+      const contactCount = data?.[0]?.count || 0;
       results.push({
         test: 'Contact Information',
         status: 'PASS',
-        message: 'Contact information table available'
+        message: `Contact information table available with ${contactCount} records`
       });
     }
   } catch (error) {

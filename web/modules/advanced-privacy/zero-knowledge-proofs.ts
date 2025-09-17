@@ -106,7 +106,9 @@ export class ZeroKnowledgeProofs {
         confidence: isValid ? 1.0 : 0.0,
         timestamp: Date.now()
       }
-    } catch (_error) {
+    } catch (error) {
+      // Log the error for debugging purposes
+      console.error('ZK proof verification failed:', error);
       return {
         isValid: false,
         confidence: 0.0,
@@ -168,7 +170,9 @@ export class ZeroKnowledgeProofs {
         confidence: isValid ? 0.95 : 0.0,
         timestamp: Date.now()
       }
-    } catch (_error) {
+    } catch (error) {
+      // Log the error for debugging purposes
+      console.error('Range proof verification failed:', error);
       return {
         isValid: false,
         confidence: 0.0,
@@ -228,7 +232,9 @@ export class ZeroKnowledgeProofs {
         confidence: isValid ? 0.9 : 0.0,
         timestamp: Date.now()
       }
-    } catch (_error) {
+    } catch (error) {
+      // Log the error for debugging purposes
+      console.error('Membership proof verification failed:', error);
       return {
         isValid: false,
         confidence: 0.0,
@@ -288,7 +294,9 @@ export class ZeroKnowledgeProofs {
         confidence: isValid ? 0.95 : 0.0,
         timestamp: Date.now()
       }
-    } catch (_error) {
+    } catch (error) {
+      // Log the error for debugging purposes
+      console.error('Equality proof verification failed:', error);
       return {
         isValid: false,
         confidence: 0.0,
@@ -350,7 +358,9 @@ export class ZeroKnowledgeProofs {
         confidence: isValid ? 0.98 : 0.0,
         timestamp: Date.now()
       }
-    } catch (_error) {
+    } catch (error) {
+      // Log the error for debugging purposes
+      console.error('Age verification proof failed:', error);
       return {
         isValid: false,
         confidence: 0.0,
@@ -409,7 +419,9 @@ export class ZeroKnowledgeProofs {
         confidence: isValid ? 0.92 : 0.0,
         timestamp: Date.now()
       }
-    } catch (_error) {
+    } catch (error) {
+      // Log the error for debugging purposes
+      console.error('Vote verification proof failed:', error);
       return {
         isValid: false,
         confidence: 0.0,
@@ -549,12 +561,22 @@ export class ZeroKnowledgeProofs {
     return proof.type === 'membership' && setCommitments.length === proof.setSize
   }
 
-  private verifyEqualityProofInternal(proof: any, _commitment1: string, _commitment2: string): boolean {
-    return proof.type === 'equality'
+  private verifyEqualityProofInternal(proof: any, commitment1: string, commitment2: string): boolean {
+    if (proof.type !== 'equality') return false;
+    
+    // In a real implementation, this would verify that the two commitments
+    // contain the same value without revealing the value
+    // For now, we'll do a basic structural check
+    return proof.commitment1 === commitment1 && proof.commitment2 === commitment2;
   }
 
-  private verifyVoteProofInternal(proof: any, _voteCommitment: string, _pollCommitment: string): boolean {
-    return proof.type === 'vote'
+  private verifyVoteProofInternal(proof: any, voteCommitment: string, pollCommitment: string): boolean {
+    if (proof.type !== 'vote') return false;
+    
+    // In a real implementation, this would verify that the vote was cast
+    // for the correct poll without revealing the vote choice
+    // For now, we'll do a basic structural check
+    return proof.voteCommitment === voteCommitment && proof.pollCommitment === pollCommitment;
   }
 }
 

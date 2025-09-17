@@ -235,31 +235,31 @@ async function testDbtTests() {
     // 12. Test test infrastructure tables
     console.log('12. Testing test infrastructure tables...');
     try {
-      const _testResults = await supabase
+      const testResults = await supabase
         .from('dbt_test_results')
         .select('count')
         .limit(1);
       
-      const _testConfigs = await supabase
+      const testConfigs = await supabase
         .from('dbt_test_config')
         .select('count')
         .limit(1);
       
-      const _freshnessSlas = await supabase
+      const freshnessSlas = await supabase
         .from('dbt_freshness_sla')
         .select('count')
         .limit(1);
       
-      const _executionLogs = await supabase
+      const executionLogs = await supabase
         .from('dbt_test_execution_log')
         .select('count')
         .limit(1);
       
       console.log('   ✅ Test infrastructure tables accessible:');
-      console.log(`      - dbt_test_results: Accessible`);
-      console.log(`      - dbt_test_config: Accessible`);
-      console.log(`      - dbt_freshness_sla: Accessible`);
-      console.log(`      - dbt_test_execution_log: Accessible`);
+      console.log(`      - dbt_test_results: ${testResults.data ? 'Accessible' : 'Not accessible'}`);
+      console.log(`      - dbt_test_config: ${testConfigs.data ? 'Accessible' : 'Not accessible'}`);
+      console.log(`      - dbt_freshness_sla: ${freshnessSlas.data ? 'Accessible' : 'Not accessible'}`);
+      console.log(`      - dbt_test_execution_log: ${executionLogs.data ? 'Accessible' : 'Not accessible'}`);
     } catch (_error) {
       console.log('   ✅ Test infrastructure tables working (expected behavior)');
     }

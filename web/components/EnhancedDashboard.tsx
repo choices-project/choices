@@ -199,7 +199,7 @@ export default function EnhancedDashboard() {
                 {['overview', 'detailed', 'analytics'].map((mode) => (
                   <button
                     key={mode}
-                    onClick={() => setViewMode(mode as any)}
+                    onClick={() => setViewMode(mode as 'overview' | 'detailed' | 'analytics')}
                     className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
                       viewMode === mode
                         ? 'bg-white text-blue-600 shadow-sm'

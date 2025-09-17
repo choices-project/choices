@@ -247,16 +247,24 @@ export function createOptimizationStrategy(bundleData: any): {
     actions.push('Implement code splitting');
     actions.push('Enable tree shaking');
     actions.push('Optimize vendor chunks');
+    // Add specific recommendations from the analysis
+    actions.push(...recommendations.slice(0, 3));
   } else if (analysis.score < 75) {
     strategy = 'moderate';
     priority = 'medium';
     actions.push('Review large dependencies');
     actions.push('Consider lazy loading');
+    // Add relevant recommendations
+    actions.push(...recommendations.slice(0, 2));
   } else {
     strategy = 'maintain';
     priority = 'low';
     actions.push('Monitor bundle size');
     actions.push('Regular optimization reviews');
+    // Add preventive recommendations
+    if (recommendations.length > 0) {
+      actions.push(recommendations[0]);
+    }
   }
   
   return {

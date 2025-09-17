@@ -133,11 +133,12 @@ export class PrivacyDataManager {
       // Store encrypted data
       const encryptedDataBase64 = EncryptionUtils.arrayBufferToBase64(encryptionResult.encryptedData);
       const saltBase64 = EncryptionUtils.uint8ArrayToBase64(encryptionResult.salt);
-      const _ivBase64 = EncryptionUtils.uint8ArrayToBase64(encryptionResult.iv);
+      const ivBase64 = EncryptionUtils.uint8ArrayToBase64(encryptionResult.iv);
 
       const updateData: any = {
         encryption_version: 1,
         key_derivation_salt: saltBase64,
+        initialization_vector: ivBase64, // Store IV for decryption
         key_hash: keyHash,
         updated_at: new Date().toISOString()
       };
@@ -194,13 +195,13 @@ export class PrivacyDataManager {
 
       let encryptedData: string | null = null;
       let salt: string | null = null;
-      const _iv: string | null = null;
+      let iv: string | null = null;
 
       // Retrieve encrypted data from appropriate table
       if (['demographics', 'preferences', 'contact_info'].includes(dataType)) {
         const { data, error } = await this.supabaseClient
           .from('user_profiles_encrypted')
-          .select(`encrypted_${dataType}, key_derivation_salt`)
+          .select(`encrypted_${dataType}, key_derivation_salt, initialization_vector`)
           .eq('user_id', userId)
           .single();
 
