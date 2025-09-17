@@ -73,7 +73,7 @@ export class AnalyticsService {
         throw new Error('Failed to calculate trust tier score')
       }
 
-      const score = scoreResult || 0
+      const score = scoreResult ?? 0
 
       // Determine trust tier
       const { data: tierResult, error: tierError } = await supabase
@@ -212,10 +212,10 @@ export class AnalyticsService {
       }
 
       // Calculate engagement metrics
-      const total_polls_participated = analytics.length || 0
-      const total_votes_cast = analytics.length || 0
+      const total_polls_participated = analytics.length ?? 0
+      const total_votes_cast = analytics.length ?? 0
       const average_engagement_score = analytics.length > 0 
-        ? analytics.reduce((sum, a) => sum + (a.data_quality_score || 0), 0) / analytics.length
+        ? analytics.reduce((sum, a) => sum + (a.data_quality_score ?? 0), 0) / analytics.length
         : 0
 
       // Get current trust tier
@@ -231,7 +231,7 @@ export class AnalyticsService {
         .eq('stable_user_id', userId)
         .single()
 
-      const trustTierHistory = existingEntry?.trust_tier_history || []
+      const trustTierHistory = existingEntry?.trust_tier_history ?? []
       
       // Add new trust tier entry if changed
       if (!existingEntry || existingEntry.current_trust_tier !== trustTierScore.trust_tier) {
@@ -295,9 +295,9 @@ export class AnalyticsService {
 
       const trustTierCounts = tierDistribution?.reduce((acc, item) => {
         const tier = item.trust_tier as TrustTier
-        acc[tier] = (acc[tier] || 0) + 1
+        acc[tier] = (acc[tier] ?? 0) + 1
         return acc
-      }, {} as Record<TrustTier, number>) || { T0: 0, T1: 0, T2: 0, T3: 0 }
+      }, {} as Record<TrustTier, number>) ?? { T0: 0, T1: 0, T2: 0, T3: 0 }
 
       // Get average confidence level
       const { data: confidenceData } = await supabase
@@ -305,15 +305,15 @@ export class AnalyticsService {
         .select('confidence_level')
 
       const averageConfidenceLevel = confidenceData && confidenceData.length > 0
-        ? confidenceData.reduce((sum, item) => sum + (item.confidence_level || 0), 0) / confidenceData.length
+        ? confidenceData.reduce((sum, item) => sum + (item.confidence_level ?? 0), 0) / confidenceData.length
         : 0
 
       // Get data quality metrics
-      const highQuality = confidenceData?.filter(item => (item.confidence_level || 0) >= 0.8).length || 0
+      const highQuality = confidenceData?.filter(item => (item.confidence_level ?? 0) >= 0.8).length ?? 0
       const mediumQuality = confidenceData?.filter(item => 
-        (item.confidence_level || 0) >= 0.5 && (item.confidence_level || 0) < 0.8
-      ).length || 0
-      const lowQuality = confidenceData?.filter(item => (item.confidence_level || 0) < 0.5).length || 0
+        (item.confidence_level ?? 0) >= 0.5 && (item.confidence_level ?? 0) < 0.8
+      ).length ?? 0
+      const lowQuality = confidenceData?.filter(item => (item.confidence_level ?? 0) < 0.5).length ?? 0
 
       // Get engagement metrics
       const { data: civicEntries } = await supabase
@@ -321,19 +321,19 @@ export class AnalyticsService {
         .select('total_polls_participated, total_votes_cast')
 
       const activeUsers = civicEntries?.filter(entry => 
-        (entry.total_polls_participated || 0) > 0
-      ).length || 0
+        (entry.total_polls_participated ?? 0) > 0
+      ).length ?? 0
 
       const averagePollsParticipated = civicEntries && civicEntries.length > 0
-        ? civicEntries.reduce((sum, entry) => sum + (entry.total_polls_participated || 0), 0) / civicEntries.length
+        ? civicEntries.reduce((sum, entry) => sum + (entry.total_polls_participated ?? 0), 0) / civicEntries.length
         : 0
 
       const averageVotesCast = civicEntries && civicEntries.length > 0
-        ? civicEntries.reduce((sum, entry) => sum + (entry.total_votes_cast || 0), 0) / civicEntries.length
+        ? civicEntries.reduce((sum, entry) => sum + (entry.total_votes_cast ?? 0), 0) / civicEntries.length
         : 0
 
       return {
-        total_users: totalUsers || 0,
+        total_users: totalUsers ?? 0,
         trust_tier_distribution: trustTierCounts,
         average_confidence_level: averageConfidenceLevel,
         data_quality_metrics: {
@@ -386,19 +386,19 @@ export class AnalyticsService {
       }
 
       // Calculate metrics
-      const total_responses = analytics.length || 0
+      const total_responses = analytics.length ?? 0
       const data_quality_score = analytics.length > 0
-        ? analytics.reduce((sum, a) => sum + (a.data_quality_score || 0), 0) / analytics.length
+        ? analytics.reduce((sum, a) => sum + (a.data_quality_score ?? 0), 0) / analytics.length
         : 0
       const confidence_level = analytics.length > 0
-        ? analytics.reduce((sum, a) => sum + (a.confidence_level || 0), 0) / analytics.length
+        ? analytics.reduce((sum, a) => sum + (a.confidence_level ?? 0), 0) / analytics.length
         : 0
 
       // Calculate trust tier breakdown
       const trustTierBreakdown = analytics.reduce((acc, item) => {
-        acc[item.trust_tier] = (acc[item.trust_tier] || 0) + 1
+        acc[item.trust_tier] = (acc[item.trust_tier] ?? 0) + 1
         return acc
-      }, {} as Record<TrustTier, number>) || { T0: 0, T1: 0, T2: 0, T3: 0 }
+      }, {} as Record<TrustTier, number>) ?? { T0: 0, T1: 0, T2: 0, T3: 0 }
 
       return {
         poll_id: pollId,
@@ -466,10 +466,10 @@ export class AnalyticsService {
           identity_verified: trustTierScore.factors.identity_verified
         },
         engagement_metrics: {
-          total_polls_participated: civicEntry?.total_polls_participated || 0,
-          total_votes_cast: civicEntry?.total_votes_cast || 0,
-          average_engagement_score: civicEntry?.average_engagement_score || 0,
-          last_activity: latestAnalytics?.last_activity || new Date().toISOString()
+          total_polls_participated: civicEntry?.total_polls_participated ?? 0,
+          total_votes_cast: civicEntry?.total_votes_cast ?? 0,
+          average_engagement_score: civicEntry?.average_engagement_score ?? 0,
+          last_activity: latestAnalytics?.last_activity ?? new Date().toISOString()
         },
         demographic_data: {
           age_group: latestAnalytics?.age_group,
@@ -492,7 +492,7 @@ export class AnalyticsService {
   private async generateUserHash(userId: string): Promise<string> {
     // Simple hash generation - in production, use proper cryptographic hashing
     const encoder = new TextEncoder()
-    const data = encoder.encode(userId + process.env.ANALYTICS_SALT || 'default-salt')
+    const data = encoder.encode(userId + (process.env.ANALYTICS_SALT ?? 'default-salt'))
     const hashBuffer = await crypto.subtle.digest('SHA-256', data)
     const hashArray = Array.from(new Uint8Array(hashBuffer))
     return hashArray.map(b => b.toString(16).padStart(2, '0')).join('')

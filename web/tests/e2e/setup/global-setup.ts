@@ -8,7 +8,7 @@ import { config } from 'dotenv';
 // Load environment variables
 config({ path: '.env.local' });
 
-export default async function globalSetup(_config: FullConfig) {
+export default async function globalSetup() {
   console.log('🚀 Starting E2E global setup...');
   
   // 1) Seed test users

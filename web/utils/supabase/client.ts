@@ -401,10 +401,10 @@ export async function getSupabaseBrowserClient(): Promise<SupabaseClient<Databas
     
     // Use dynamic import to avoid SSR issues
     const { createBrowserClient } = await import('@supabase/ssr')
-    client = createBrowserClient(
+    client = createBrowserClient<Database>(
       supabaseUrl,
       supabaseKey,
-    ) as SupabaseClient<Database>
+    )
   }
   return client
 }

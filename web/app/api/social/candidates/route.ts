@@ -127,7 +127,7 @@ async function handleCreateCandidate(data: Record<string, unknown>) {
     );
   }
 
-  const candidate = await EqualPlatformProfileManager.createOrUpdateProfile(candidateData);
+  const candidate = await EqualPlatformProfileManager.createOrUpdateProfile(candidateData as any);
 
   return NextResponse.json({
     success: true,
@@ -148,7 +148,7 @@ async function handleUpdateCandidate(data: Record<string, unknown>) {
   }
 
   // Get existing candidate
-  const existingCandidate = await EqualPlatformProfileManager.getCandidateProfile(candidateId);
+  const existingCandidate = await EqualPlatformProfileManager.getCandidateProfile(candidateId as any);
   if (!existingCandidate) {
     return NextResponse.json(
       { success: false, error: 'Candidate not found' },
@@ -182,28 +182,28 @@ async function handleVerifyCandidate(data: Record<string, unknown>) {
 
   switch (verificationMethod) {
     case 'government-email':
-      if (!verificationData?.email) {
+      if (!verificationData || typeof verificationData !== 'object' || !('email' in verificationData)) {
         return NextResponse.json(
           { success: false, error: 'Government email is required' },
           { status: 400 }
         );
       }
       verificationResult = await CandidateVerificationSystem.verifyWithGovernmentEmail(
-        candidateId,
-        verificationData.email
+        candidateId as string,
+        (verificationData as { email: string }).email
       );
       break;
 
     case 'campaign-website':
-      if (!verificationData?.website) {
+      if (!verificationData || typeof verificationData !== 'object' || !('website' in verificationData)) {
         return NextResponse.json(
           { success: false, error: 'Campaign website URL is required' },
           { status: 400 }
         );
       }
       verificationResult = await CandidateVerificationSystem.verifyWithCampaignWebsite(
-        candidateId,
-        verificationData.website
+        candidateId as string,
+        (verificationData as { website: string }).website
       );
       break;
 
@@ -234,7 +234,7 @@ async function handleGetDashboard(data: Record<string, unknown>) {
     );
   }
 
-  const dashboardData = await CampaignDashboardManager.getDashboardData(candidateId);
+  const dashboardData = await CampaignDashboardManager.getDashboardData(candidateId as string);
 
   if (!dashboardData) {
     return NextResponse.json(

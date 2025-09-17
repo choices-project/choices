@@ -1,7 +1,7 @@
 // app/civics/page.tsx
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -52,7 +52,7 @@ export default function CivicsPage() {
     'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY'
   ];
 
-  const fetchRepresentatives = async (state: string, level: 'federal' | 'state' | 'local') => {
+  const fetchRepresentatives = useCallback(async (state: string, level: 'federal' | 'state' | 'local') => {
     try {
       setLoading(true);
       setError(null);
@@ -83,11 +83,11 @@ export default function CivicsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedCity]);
 
   useEffect(() => {
     fetchRepresentatives(selectedState, selectedLevel);
-  }, [selectedState, selectedLevel, selectedCity]);
+  }, [selectedState, selectedLevel, selectedCity, fetchRepresentatives]);
 
   const filteredRepresentatives = representatives.filter(rep =>
     rep.name.toLowerCase().includes(searchTerm.toLowerCase()) ||

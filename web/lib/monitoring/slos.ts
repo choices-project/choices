@@ -25,8 +25,8 @@ export type SLOTargets = {
   responseTime: SLOTarget;
 }
 
-export type MetricBuffer = {
-  measurements: Array<{ value: number; timestamp: number }>;
+export type MetricBufferType = {
+  measurements: { value: number; timestamp: number }[];
   maxSize: number;
 }
 
@@ -113,9 +113,9 @@ export const SLO_TARGETS: SLOTargets = {
 };
 
 export class SLOMonitor {
-  private metrics: Map<string, MetricBuffer> = new Map();
+  private metrics: Map<string, MetricBufferType> = new Map();
   private alerts: Map<string, Alert> = new Map();
-  private alertCallbacks: Array<(alert: Alert) => Promise<void>> = [];
+  private alertCallbacks: ((alert: Alert) => Promise<void>)[] = [];
 
   constructor() {
     this.initializeMetricBuffers();
@@ -137,7 +137,7 @@ export class SLOMonitor {
   /**
    * Check SLO compliance and trigger alerts if needed
    */
-  private async checkSLOCompliance(sloName: string, buffer: MetricBuffer): Promise<void> {
+  private async checkSLOCompliance(sloName: string, buffer: MetricBufferType): Promise<void> {
     const target = SLO_TARGETS[sloName as keyof SLOTargets];
     if (!target) {
       logger.warn(`Unknown SLO target: ${sloName}`);
@@ -356,7 +356,7 @@ export class SLOMonitor {
   /**
    * Get or create metric buffer
    */
-  private getOrCreateBuffer(sloName: string): MetricBuffer {
+  private getOrCreateBuffer(sloName: string): MetricBufferType {
     if (!this.metrics.has(sloName)) {
       this.metrics.set(sloName, new MetricBuffer(1000));
     }
@@ -368,7 +368,7 @@ export class SLOMonitor {
  * MetricBuffer implementation
  */
 export class MetricBuffer {
-  measurements: Array<{ value: number; timestamp: number }> = [];
+  measurements: { value: number; timestamp: number }[] = [];
   maxSize: number;
 
   constructor(maxSize: number) {

@@ -3,15 +3,15 @@
 
 export type ZKProof = {
   proof: string
-  publicInputs: unknown
+  publicInputs: Record<string, string | number | bigint>
   verificationKey: string
   timestamp: number
 }
 
 export type ZKStatement = {
   statement: string
-  witness: unknown
-  publicInputs: unknown
+  witness: Record<string, unknown>
+  publicInputs: Record<string, string | number | bigint>
 }
 
 export type ZKVerificationResult = {
@@ -23,7 +23,7 @@ export type ZKVerificationResult = {
 export type Commitment = {
   commitment: string
   randomness: string
-  value: any
+  value: unknown
 }
 
 export class ZeroKnowledgeProofs {
@@ -56,8 +56,8 @@ export class ZeroKnowledgeProofs {
   // Verify Schnorr identification
   verifySchnorr(proof: ZKProof): ZKVerificationResult {
     try {
-      const { R, s } = JSON.parse(proof.proof)
-      const { publicKey, challenge } = proof.publicInputs
+      const { R, s } = JSON.parse(proof.proof) as { R: string; s: string }
+      const { publicKey, challenge } = proof.publicInputs as { publicKey: string; challenge: string }
       
       const R_big = BigInt(R)
       const s_big = BigInt(s)
@@ -75,7 +75,7 @@ export class ZeroKnowledgeProofs {
         confidence: isValid ? 1.0 : 0.0,
         timestamp: Date.now()
       }
-    } catch (_error) {
+    } catch {
       return {
         isValid: false,
         confidence: 0.0,
@@ -99,8 +99,8 @@ export class ZeroKnowledgeProofs {
       }),
       publicInputs: {
         commitment: commitment.commitment,
-        min,
-        max
+        min: min.toString(),
+        max: max.toString()
       },
       verificationKey: this.generateVerificationKey(),
       timestamp: Date.now()
@@ -110,17 +110,22 @@ export class ZeroKnowledgeProofs {
   // Verify range proof
   verifyRangeProof(proof: ZKProof): ZKVerificationResult {
     try {
-      const { commitment, rangeProof, min, max } = JSON.parse(proof.proof)
+      const { commitment, rangeProof, min, max } = JSON.parse(proof.proof) as {
+        commitment: string;
+        rangeProof: unknown;
+        min: number;
+        max: number;
+      }
       
       // Simplified verification
-      const isValid = this.verifyRangeProofInternal(rangeProof, commitment, min, max)
+      const isValid = this.verifyRangeProofInternal(rangeProof as Record<string, unknown>, commitment, min, max)
       
       return {
         isValid,
         confidence: isValid ? 0.95 : 0.0,
         timestamp: Date.now()
       }
-    } catch (_error) {
+    } catch {
       return {
         isValid: false,
         confidence: 0.0,
@@ -130,7 +135,7 @@ export class ZeroKnowledgeProofs {
   }
 
   // Membership proof (prove value is in a set without revealing the value)
-  membershipProof(value: any, set: any[]): ZKProof {
+  membershipProof(value: unknown, set: unknown[]): ZKProof {
     const commitment = this.commitValue(value)
     const setCommitments = set.map(item => this.commitValue(item).commitment)
     
@@ -144,7 +149,7 @@ export class ZeroKnowledgeProofs {
       }),
       publicInputs: {
         commitment: commitment.commitment,
-        setCommitments
+        setCommitments: setCommitments.join(',')
       },
       verificationKey: this.generateVerificationKey(),
       timestamp: Date.now()
@@ -154,16 +159,20 @@ export class ZeroKnowledgeProofs {
   // Verify membership proof
   verifyMembershipProof(proof: ZKProof): ZKVerificationResult {
     try {
-      const { commitment, setCommitments, membershipProof } = JSON.parse(proof.proof)
+      const { commitment, setCommitments, membershipProof } = JSON.parse(proof.proof) as {
+        commitment: string;
+        setCommitments: string[];
+        membershipProof: unknown;
+      }
       
-      const isValid = this.verifyMembershipProofInternal(membershipProof, commitment, setCommitments)
+      const isValid = this.verifyMembershipProofInternal(membershipProof as Record<string, unknown>, commitment, setCommitments)
       
       return {
         isValid,
         confidence: isValid ? 0.9 : 0.0,
         timestamp: Date.now()
       }
-    } catch (_error) {
+    } catch {
       return {
         isValid: false,
         confidence: 0.0,
@@ -173,7 +182,7 @@ export class ZeroKnowledgeProofs {
   }
 
   // Equality proof (prove two commitments contain the same value)
-  equalityProof(value1: any, value2: any): ZKProof {
+  equalityProof(value1: unknown, value2: unknown): ZKProof {
     const commitment1 = this.commitValue(value1)
     const commitment2 = this.commitValue(value2)
     
@@ -197,16 +206,20 @@ export class ZeroKnowledgeProofs {
   // Verify equality proof
   verifyEqualityProof(proof: ZKProof): ZKVerificationResult {
     try {
-      const { commitment1, commitment2, equalityProof } = JSON.parse(proof.proof)
+      const { commitment1, commitment2, equalityProof } = JSON.parse(proof.proof) as {
+        commitment1: string;
+        commitment2: string;
+        equalityProof: unknown;
+      }
       
-      const isValid = this.verifyEqualityProofInternal(equalityProof, commitment1, commitment2)
+      const isValid = this.verifyEqualityProofInternal(equalityProof as Record<string, unknown>, commitment1, commitment2)
       
       return {
         isValid,
         confidence: isValid ? 0.95 : 0.0,
         timestamp: Date.now()
       }
-    } catch (_error) {
+    } catch {
       return {
         isValid: false,
         confidence: 0.0,
@@ -261,7 +274,7 @@ export class ZeroKnowledgeProofs {
   }
 
   // Vote verification proof (prove vote was cast without revealing the choice)
-  voteVerificationProof(vote: any, pollId: string): ZKProof {
+  voteVerificationProof(vote: unknown, pollId: string): ZKProof {
     const voteCommitment = this.commitValue(vote)
     const pollCommitment = this.commitValue(pollId)
     
@@ -284,16 +297,20 @@ export class ZeroKnowledgeProofs {
   // Verify vote proof
   verifyVoteProof(proof: ZKProof): ZKVerificationResult {
     try {
-      const { voteCommitment, pollCommitment, voteProof } = JSON.parse(proof.proof)
+      const { voteCommitment, pollCommitment, voteProof } = JSON.parse(proof.proof) as {
+        voteCommitment: string;
+        pollCommitment: string;
+        voteProof: unknown;
+      }
       
-      const isValid = this.verifyVoteProofInternal(voteProof, voteCommitment, pollCommitment)
+      const isValid = this.verifyVoteProofInternal(voteProof as Record<string, unknown>, voteCommitment, pollCommitment)
       
       return {
         isValid,
         confidence: isValid ? 0.92 : 0.0,
         timestamp: Date.now()
       }
-    } catch (_error) {
+    } catch {
       return {
         isValid: false,
         confidence: 0.0,
@@ -303,7 +320,7 @@ export class ZeroKnowledgeProofs {
   }
 
   // Commitment scheme
-  commitValue(value: any): Commitment {
+  commitValue(value: unknown): Commitment {
     const randomness = this.generateRandomBigInt()
     const valueHash = this.hashValue(value)
     const commitment = this.modPow(this.generator, valueHash) * this.modPow(this.generator, randomness) % this.prime
@@ -353,7 +370,7 @@ export class ZeroKnowledgeProofs {
     return result % (this.prime - BigInt(1))
   }
 
-  private hashValue(value: any): bigint {
+  private hashValue(value: unknown): bigint {
     const str = JSON.stringify(value)
     let hash = BigInt(0)
     
@@ -369,7 +386,7 @@ export class ZeroKnowledgeProofs {
   }
 
   // Simplified proof generation methods
-  private generateRangeProof(value: number, min: number, max: number): any {
+  private generateRangeProof(value: number, min: number, max: number): Record<string, unknown> {
     // Simplified implementation
     return {
       type: 'range',
@@ -380,7 +397,7 @@ export class ZeroKnowledgeProofs {
     }
   }
 
-  private generateMembershipProof(value: any, set: any[]): any {
+  private generateMembershipProof(value: unknown, set: unknown[]): Record<string, unknown> {
     // Simplified implementation
     return {
       type: 'membership',
@@ -390,7 +407,7 @@ export class ZeroKnowledgeProofs {
     }
   }
 
-  private generateEqualityProof(value1: any, value2: any): any {
+  private generateEqualityProof(value1: unknown, value2: unknown): Record<string, unknown> {
     // Simplified implementation
     return {
       type: 'equality',
@@ -398,7 +415,7 @@ export class ZeroKnowledgeProofs {
     }
   }
 
-  private generateVoteProof(vote: any, pollId: string): any {
+  private generateVoteProof(vote: unknown, pollId: string): Record<string, unknown> {
     // Simplified implementation
     return {
       type: 'vote',
@@ -413,23 +430,23 @@ export class ZeroKnowledgeProofs {
   }
 
   // Simplified verification methods
-  private verifyRangeProofInternal(proof: any, commitment: string, min: number, max: number): boolean {
+  private verifyRangeProofInternal(proof: Record<string, unknown>, commitment: string, min: number, max: number): boolean {
     // Verify commitment is valid before checking range
     if (!commitment || commitment.trim() === '') {
       return false;
     }
-    return proof.type === 'range' && proof.value >= min && proof.value <= max
+    return proof.type === 'range' && typeof proof.value === 'number' && proof.value >= min && proof.value <= max
   }
 
-  private verifyMembershipProofInternal(proof: any, commitment: string, setCommitments: string[]): boolean {
+  private verifyMembershipProofInternal(proof: Record<string, unknown>, commitment: string, setCommitments: string[]): boolean {
     // Verify commitment is valid before checking membership
     if (!commitment || commitment.trim() === '') {
       return false;
     }
-    return proof.type === 'membership' && setCommitments.length === proof.setSize
+    return proof.type === 'membership' && typeof proof.setSize === 'number' && setCommitments.length === proof.setSize
   }
 
-  private verifyEqualityProofInternal(proof: any, commitment1: string, commitment2: string): boolean {
+  private verifyEqualityProofInternal(proof: Record<string, unknown>, commitment1: string, commitment2: string): boolean {
     // Verify that both commitments are valid
     if (!commitment1 || !commitment2) {
       return false;
@@ -442,7 +459,7 @@ export class ZeroKnowledgeProofs {
     
     try {
       // Parse the proof data
-      const proofData = JSON.parse(proof.proof);
+      const proofData = JSON.parse(proof.proof as string);
       
       // Verify that commitments match the proof
       if (proofData.commitment1 !== commitment1 || proofData.commitment2 !== commitment2) {
@@ -455,12 +472,12 @@ export class ZeroKnowledgeProofs {
       const hash2 = this.hashCommitment(commitment2);
       
       return hash1 === hash2 && proofData.verified === true;
-    } catch (_error) {
+    } catch {
       return false;
     }
   }
 
-  private verifyVoteProofInternal(proof: any, voteCommitment: string, pollCommitment: string): boolean {
+  private verifyVoteProofInternal(proof: Record<string, unknown>, voteCommitment: string, pollCommitment: string): boolean {
     // Verify that both commitments are valid
     if (!voteCommitment || !pollCommitment) {
       return false;
@@ -473,7 +490,7 @@ export class ZeroKnowledgeProofs {
     
     try {
       // Parse the proof data
-      const proofData = JSON.parse(proof.proof);
+      const proofData = JSON.parse(proof.proof as string);
       
       // Verify that commitments match the proof
       if (proofData.voteCommitment !== voteCommitment || proofData.pollCommitment !== pollCommitment) {
@@ -490,7 +507,7 @@ export class ZeroKnowledgeProofs {
       }
       
       return proofData.verified === true;
-    } catch (_error) {
+    } catch {
       return false;
     }
   }
@@ -549,8 +566,8 @@ export class ZeroKnowledgeProofs {
       }
       
       // Log successful validation for debugging
-      if (typeof window !== 'undefined' && window.gtag) {
-        window.gtag('event', 'vote_validation_success', {
+      if (typeof window !== 'undefined' && 'gtag' in window) {
+        (window as any).gtag('event', 'vote_validation_success', {
           poll_id: pollId,
           choice: choice,
           poll_status: pollConfig.status,
@@ -564,8 +581,8 @@ export class ZeroKnowledgeProofs {
       const err = error instanceof Error ? error : new Error(String(error));
       console.error('Vote validation failed:', err);
       // Log validation error
-      if (typeof window !== 'undefined' && window.gtag) {
-        window.gtag('event', 'vote_validation_error', {
+      if (typeof window !== 'undefined' && 'gtag' in window) {
+        (window as any).gtag('event', 'vote_validation_error', {
           poll_id: pollId,
           choice: choice,
           error: err.message,
@@ -576,7 +593,15 @@ export class ZeroKnowledgeProofs {
     }
   }
 
-  private async fetchPollConfiguration(pollId: string): Promise<any> {
+  private async fetchPollConfiguration(pollId: string): Promise<{
+    id: string;
+    status: string;
+    endTime: Date;
+    options: string[];
+    votingMethod: string;
+    allowMultipleVotes: boolean;
+    requireAuthentication: boolean;
+  } | null> {
     // Implement actual database fetch
     // This would typically use Supabase or another database client
     try {
@@ -652,21 +677,21 @@ export class ZKProofManager {
   }
 
   // Create and store proof
-  createProof(type: string, data: any): string {
+  createProof(type: string, data: Record<string, unknown>): string {
     let proof: ZKProof
     
     switch (type) {
       case 'age':
-        proof = this.zk.ageVerificationProof(data.age, data.threshold)
+        proof = this.zk.ageVerificationProof(data.age as number, data.threshold as number)
         break
       case 'vote':
-        proof = this.zk.voteVerificationProof(data.vote, data.pollId)
+        proof = this.zk.voteVerificationProof(data.vote, data.pollId as string)
         break
       case 'range':
-        proof = this.zk.rangeProof(data.value, data.min, data.max)
+        proof = this.zk.rangeProof(data.value as number, data.min as number, data.max as number)
         break
       case 'membership':
-        proof = this.zk.membershipProof(data.value, data.set)
+        proof = this.zk.membershipProof(data.value, data.set as unknown[])
         break
       case 'equality':
         proof = this.zk.equalityProof(data.value1, data.value2)

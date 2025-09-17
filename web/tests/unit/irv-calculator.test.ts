@@ -108,7 +108,7 @@ describe('IRV Calculator', () => {
   });
 
   describe('Basic IRV Calculation', () => {
-    it('should calculate simple majority winner', async () => {
+    it('should calculate simple majority winner', () => {
       const simpleRankings: UserRanking[] = [
         {
           pollId: 'test-poll',
@@ -141,7 +141,7 @@ describe('IRV Calculator', () => {
       }
     });
 
-    it('should handle instant runoff elimination', async () => {
+    it('should handle instant runoff elimination', () => {
       const runoffRankings: UserRanking[] = [
         {
           pollId: 'test-poll',
@@ -175,7 +175,7 @@ describe('IRV Calculator', () => {
       expect(results.rounds.length).toBeGreaterThan(1);
     });
 
-    it('should handle empty rankings', async () => {
+    it('should handle empty rankings', () => {
       const results = calculator.calculateResults([]);
       
       expect(results.totalVotes).toBe(0);
@@ -320,7 +320,7 @@ describe('IRV Calculator', () => {
   });
 
   describe('Edge Cases', () => {
-    it('should handle single candidate', async () => {
+    it('should handle single candidate', () => {
       const singleCandidate = [{ id: 'A', name: 'Only Candidate' }];
       const singleCalculator = new IRVCalculator('test-poll', singleCandidate);
       
@@ -340,7 +340,7 @@ describe('IRV Calculator', () => {
       expect(results.rounds).toHaveLength(1);
     });
 
-    it('should handle two candidates', async () => {
+    it('should handle two candidates', () => {
       const twoCandidates = [
         { id: 'A', name: 'Candidate A' },
         { id: 'B', name: 'Candidate B' }
@@ -368,7 +368,7 @@ describe('IRV Calculator', () => {
       expect(results.rounds).toHaveLength(1);
     });
 
-    it('should handle all candidates tied', async () => {
+    it('should handle all candidates tied', () => {
       const rankings: UserRanking[] = [
         {
           pollId: 'test-poll',
@@ -397,7 +397,7 @@ describe('IRV Calculator', () => {
       expect(results.winner).toBeDefined();
     });
 
-    it('should handle rankings with missing candidates', async () => {
+    it('should handle rankings with missing candidates', () => {
       const incompleteRankings: UserRanking[] = [
         {
           pollId: 'test-poll',
@@ -419,7 +419,7 @@ describe('IRV Calculator', () => {
       expect(results.winner).toBeDefined();
     });
 
-    it('should handle rankings with extra candidates', async () => {
+    it('should handle rankings with extra candidates', () => {
       const extraRankings: UserRanking[] = [
         {
           pollId: 'test-poll',
@@ -441,7 +441,7 @@ describe('IRV Calculator', () => {
       expect(results.winner).toBeDefined();
     });
 
-    it('should handle duplicate rankings', async () => {
+    it('should handle duplicate rankings', () => {
       const duplicateRankings: UserRanking[] = [
         {
           pollId: 'test-poll',
@@ -465,7 +465,7 @@ describe('IRV Calculator', () => {
   });
 
   describe('Performance Tests', () => {
-    it('should handle large number of votes efficiently', async () => {
+    it('should handle large number of votes efficiently', () => {
       const largeRankings: UserRanking[] = [];
       
       // Generate 1000 votes
@@ -488,7 +488,7 @@ describe('IRV Calculator', () => {
       expect(duration).toBeLessThan(1000); // Should complete in under 1 second
     });
 
-    it('should handle large number of candidates efficiently', async () => {
+    it('should handle large number of candidates efficiently', () => {
       const manyCandidates: Candidate[] = Array.from({ length: 20 }, (_, i) => ({
         id: `candidate-${i}`,
         name: `Candidate ${i}`,
@@ -515,7 +515,7 @@ describe('IRV Calculator', () => {
   });
 
   describe('Deterministic Tie-Breaking', () => {
-    it('should produce consistent results for identical inputs', async () => {
+    it('should produce consistent results for identical inputs', () => {
       const rankings: UserRanking[] = [
         {
           pollId: 'test-poll',
@@ -544,7 +544,7 @@ describe('IRV Calculator', () => {
       expect(results1.rounds).toEqual(results2.rounds);
     });
 
-    it('should use poll-seeded hashing for tie-breaking', async () => {
+    it('should use poll-seeded hashing for tie-breaking', () => {
       const tiedRankings: UserRanking[] = [
         {
           pollId: 'test-poll',
@@ -573,7 +573,7 @@ describe('IRV Calculator', () => {
   });
 
   describe('Metadata and Audit Trail', () => {
-    it('should include comprehensive metadata', async () => {
+    it('should include comprehensive metadata', () => {
       const results = calculator.calculateResults(mockRankings);
       
       expect(results.metadata).toBeDefined();
@@ -582,7 +582,7 @@ describe('IRV Calculator', () => {
       expect(Array.isArray(results.metadata?.edgeCasesHandled)).toBe(true);
     });
 
-    it('should track tie breaks used', async () => {
+    it('should track tie breaks used', () => {
       const tiedRankings: UserRanking[] = [
         {
           pollId: 'test-poll',
@@ -603,7 +603,7 @@ describe('IRV Calculator', () => {
       expect(results.metadata?.tieBreaksUsed).toBeGreaterThanOrEqual(0);
     });
 
-    it('should track edge cases handled', async () => {
+    it('should track edge cases handled', () => {
       const results = calculator.calculateResults(mockRankings);
       
       expect(results.metadata?.edgeCasesHandled).toBeDefined();
@@ -612,7 +612,7 @@ describe('IRV Calculator', () => {
   });
 
   describe('Error Handling', () => {
-    it('should handle malformed rankings gracefully', async () => {
+    it('should handle malformed rankings gracefully', () => {
       const malformedRankings: UserRanking[] = [
         {
           pollId: 'test-poll',
@@ -628,7 +628,7 @@ describe('IRV Calculator', () => {
       expect(results.winner).toBeNull();
     });
 
-    it('should handle rankings with invalid candidate IDs', async () => {
+    it('should handle rankings with invalid candidate IDs', () => {
       const invalidRankings: UserRanking[] = [
         {
           pollId: 'test-poll',

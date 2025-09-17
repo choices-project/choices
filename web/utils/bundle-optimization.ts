@@ -235,7 +235,7 @@ export function createOptimizationStrategy(bundleData: any): {
   priority: 'high' | 'medium' | 'low';
 } {
   const analysis = analyzeBundleSize(bundleData);
-  const _recommendations = generateOptimizationRecommendations(bundleData);
+  const recommendations = generateOptimizationRecommendations(bundleData);
   
   let strategy = 'maintain';
   let priority: 'high' | 'medium' | 'low' = 'low';

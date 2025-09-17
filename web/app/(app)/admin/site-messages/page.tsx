@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { logger } from '@/lib/logger';
+import { withOptional } from '@/lib/util/objects';
 import { 
   MessageSquare, 
   Plus, 
@@ -90,7 +91,7 @@ export default function SiteMessagesPage() {
       
       const method = editingMessage ? 'PUT' : 'POST'
       const body = editingMessage 
-        ? { id: editingMessage.id, ...formData }
+        ? withOptional({ id: editingMessage.id }, formData)
         : formData
 
       const response = await fetch(url, {
@@ -379,7 +380,7 @@ export default function SiteMessagesPage() {
                     <input
                       type="text"
                       value={formData.title}
-                      onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                      onChange={(e) => setFormData(withOptional(formData, { title: e.target.value }))}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       required
                     />
@@ -391,7 +392,7 @@ export default function SiteMessagesPage() {
                     </label>
                     <textarea
                       value={formData.message}
-                      onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                      onChange={(e) => setFormData(withOptional(formData, { message: e.target.value }))}
                       rows={4}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       required
@@ -405,7 +406,7 @@ export default function SiteMessagesPage() {
                       </label>
                       <select
                         value={formData.type}
-                        onChange={(e) => setFormData({ ...formData, type: e.target.value as any })}
+                        onChange={(e) => setFormData(withOptional(formData, { type: e.target.value as any }))}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       >
                         <option value="info">Info</option>
@@ -422,7 +423,7 @@ export default function SiteMessagesPage() {
                       </label>
                       <select
                         value={formData.priority}
-                        onChange={(e) => setFormData({ ...formData, priority: e.target.value as any })}
+                        onChange={(e) => setFormData(withOptional(formData, { priority: e.target.value as any }))}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       >
                         <option value="low">Low</option>
@@ -440,7 +441,7 @@ export default function SiteMessagesPage() {
                     <input
                       type="datetime-local"
                       value={formData.expiresAt || ''}
-                      onChange={(e) => setFormData({ ...formData, expiresAt: e.target.value })}
+                      onChange={(e) => setFormData(withOptional(formData, { expiresAt: e.target.value }))}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
                   </div>
@@ -450,7 +451,7 @@ export default function SiteMessagesPage() {
                       type="checkbox"
                       id="isActive"
                       checked={formData.isActive}
-                      onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
+                      onChange={(e) => setFormData(withOptional(formData, { isActive: e.target.checked }))}
                       className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                     />
                     <label htmlFor="isActive" className="ml-2 text-sm text-gray-700">

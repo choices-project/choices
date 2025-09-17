@@ -1,5 +1,6 @@
 import 'server-only';                  // build-time guard
 import { cookies } from 'next/headers'
+import type { SupabaseClient } from '@supabase/supabase-js'
 
 // Database schema types for type safety
 export type Database = {
@@ -406,7 +407,7 @@ const validateEnvironment = () => {
  * SSR-safe factory. No top-level import of supabase-js or ssr.
  * We dynamically import only at call time in Node.
  */
-export async function getSupabaseServerClient() {
+export async function getSupabaseServerClient(): Promise<SupabaseClient<Database>> {
   const env = validateEnvironment()
   
   let cookieStore

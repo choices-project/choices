@@ -65,7 +65,7 @@ export function useSupabaseAuth(): AuthState & AuthActions {
 
         setState(prev => ({
           ...prev,
-          user: session?.user || null,
+          user: session?.user ?? null,
           session,
           isAuthenticated: !!session?.user,
           isLoading: false,
@@ -93,7 +93,7 @@ export function useSupabaseAuth(): AuthState & AuthActions {
         
         setState(prev => ({
           ...prev,
-          user: session?.user || null,
+          user: session?.user ?? null,
           session,
           isAuthenticated: !!session?.user,
           isLoading: false,

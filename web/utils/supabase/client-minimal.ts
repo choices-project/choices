@@ -305,21 +305,11 @@ export type Database = {
   }
 }
 
-// Type for Supabase client (we'll import this dynamically)
-export type SupabaseClient<_T = Database> = {
-  from: (table: string) => {
-    select: (columns?: string) => unknown
-    insert: (data: unknown) => unknown
-    update: (data: unknown) => unknown
-    delete: () => unknown
-    eq: (column: string, value: unknown) => unknown
-    single: () => Promise<{ data: unknown; error: unknown }>
-  }
-  auth: {
-    getUser: () => Promise<{ data: { user: unknown }; error: unknown }>
-    signOut: () => Promise<{ error: unknown }>
-  }
-}
+// Import the actual SupabaseClient type
+import type { SupabaseClient as ActualSupabaseClient } from '@supabase/supabase-js'
+
+// Re-export the actual type
+export type SupabaseClient<T = Database> = ActualSupabaseClient<T>
 
 let client: SupabaseClient<Database> | undefined
 
@@ -338,7 +328,7 @@ export async function getSupabaseBrowserClient(): Promise<SupabaseClient<Databas
     
     // Use dynamic import to avoid SSR issues
     const { createBrowserClient } = await import('@supabase/ssr')
-    client = createBrowserClient(
+    client = createBrowserClient<Database>(
       supabaseUrl,
       supabaseKey,
     )

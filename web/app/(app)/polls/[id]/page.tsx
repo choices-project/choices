@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -68,13 +68,7 @@ export default function PollPage() {
   const [resultsMode, setResultsMode] = useState<ResultsMode>('live');
   const [copied, setCopied] = useState(false);
 
-  useEffect(() => {
-    if (pollId) {
-      fetchPollData();
-    }
-  }, [pollId]);
-
-  const fetchPollData = async () => {
+  const fetchPollData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -105,7 +99,13 @@ export default function PollPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [pollId]);
+
+  useEffect(() => {
+    if (pollId) {
+      fetchPollData();
+    }
+  }, [pollId, fetchPollData]);
 
   const handleVote = async (choice: number): Promise<VoteResponse> => {
     if (!poll) {
@@ -134,7 +134,7 @@ export default function PollPage() {
       const result = await response.json();
       setHasVoted(true);
       // Refresh results
-      await fetchPollData();
+      void fetchPollData();
       
       return {
         success: true,

@@ -78,5 +78,5 @@ export async function isAuthenticated(): Promise<boolean> {
 // Helper for getting user ID
 export async function getUserId(): Promise<string | null> {
   const user = await getUser();
-  return user?.id || null;
+  return user?.id ?? null;
 }

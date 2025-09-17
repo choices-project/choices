@@ -36,7 +36,7 @@ export type GcRepresentatives = {
  */
 export type GcElectionInfo = {
   kind: string;
-  elections: Array<{
+  elections: {
     id: string;
     name: string;
     electionDay: string;
@@ -47,7 +47,7 @@ export type GcElectionInfo = {
       name: string;
       scope: string;
     };
-  }>;
+  }[];
 }
 
 /**
@@ -71,12 +71,12 @@ export type GcErrorDetails = {
   message?: string;
   status?: string;
   userMessage?: string;
-  details?: Array<{
+  details?: {
     '@type': string;
     reason: string;
     domain: string;
     metadata?: Record<string, unknown>;
-  }>;
+  }[];
 }
 
 /**

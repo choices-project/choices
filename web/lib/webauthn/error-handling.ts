@@ -66,7 +66,7 @@ export class WebAuthnError extends Error {
     this.name = 'WebAuthnError';
     this.type = type;
     this.statusCode = getStatusCodeForError(type);
-    this.userMessage = userMessage || getUserMessageForError(type);
+    this.userMessage = userMessage ?? getUserMessageForError(type);
     if (details) {
       this.details = details;
     }
@@ -297,7 +297,7 @@ export function handleWebAuthnError(error: unknown): {
       statusCode: error.statusCode,
       error: error.type,
       userMessage: error.userMessage,
-      ...(error.details ? { details: error.details } : {})
+      ...(error.details && { details: error.details })
     };
   }
   
@@ -307,7 +307,7 @@ export function handleWebAuthnError(error: unknown): {
       statusCode: webAuthnError.statusCode,
       error: webAuthnError.type,
       userMessage: webAuthnError.userMessage,
-      ...(webAuthnError.details ? { details: webAuthnError.details } : {})
+      ...(webAuthnError.details && { details: webAuthnError.details })
     };
   }
   

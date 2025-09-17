@@ -82,6 +82,10 @@ type SupabaseQueryBuilder = {
   single(): Promise<{ data: unknown; error: { message: string } | null }>;
   insert(data: Record<string, unknown>): SupabaseQueryBuilder;
   update(data: Record<string, unknown>): SupabaseQueryBuilder;
+  upsert(data: Record<string, unknown>, options?: { onConflict?: string }): SupabaseQueryBuilder;
+  then(onfulfilled?: (value: { data: unknown; error: unknown }) => void): Promise<{ data: unknown; error: unknown }>;
+  data: unknown;
+  error: unknown;
 };
 
 type SupabaseClient = {
@@ -215,18 +219,18 @@ export class FinalizePollManager {
 
   private async getPoll(pollId: string): Promise<Poll | null> {
     try {
-      const { data, error } = await this.supabaseClient
+      const result = await this.supabaseClient
         .from('polls')
         .select('*')
         .eq('id', pollId)
         .single();
 
-      if (error) {
-        logger.error('Error fetching poll:', error);
+      if (result.error) {
+        logger.error('Error fetching poll:', result.error);
         return null;
       }
 
-      const pollData = data as SupabasePollData;
+      const pollData = result.data as SupabasePollData;
       return withOptional(
         {
           id: pollData.id,
@@ -253,30 +257,30 @@ export class FinalizePollManager {
     try {
       // Only get ballots before close_at if close_at is set
       if (closeAt) {
-        const { data, error } = await this.supabaseClient
+        const result = await this.supabaseClient
           .from('votes')
           .select('*')
           .eq('poll_id', pollId)
           .lte('created_at', closeAt.toISOString());
         
-        if (error) {
-          logger.error('Error fetching official ballots:', error);
+        if (result.error) {
+          logger.error('Error fetching official ballots:', result.error);
           return [];
         }
-        return this.mapVoteDataToBallots(data || [], closeAt);
+        return this.mapVoteDataToBallots((result.data as SupabaseVoteData[]) || [], closeAt);
       }
 
-      const { data, error } = await this.supabaseClient
+      const result = await this.supabaseClient
         .from('votes')
         .select('*')
-        .eq('poll_id', pollId) as { data: SupabaseVoteData[] | null; error: { message: string } | null };
-
-      if (error) {
-        logger.error('Error fetching official ballots:', error);
+        .eq('poll_id', pollId);
+      
+      if (result.error) {
+        logger.error('Error fetching official ballots:', result.error);
         return [];
       }
 
-      return this.mapVoteDataToBallots(data || [], closeAt);
+      return this.mapVoteDataToBallots((result.data as SupabaseVoteData[]) || [], closeAt);
     } catch (error) {
       logger.error('Error in getOfficialBallots:', error);
       return [];
@@ -289,18 +293,18 @@ export class FinalizePollManager {
     }
 
     try {
-      const { data, error } = await this.supabaseClient
+      const result = await this.supabaseClient
         .from('votes')
         .select('*')
         .eq('poll_id', pollId)
         .gt('created_at', closeAt.toISOString());
 
-      if (error) {
-        logger.error('Error fetching post-close ballots:', error);
+      if (result.error) {
+        logger.error('Error fetching post-close ballots:', result.error);
         return [];
       }
 
-      return data.map((vote: SupabaseVoteData) => ({
+      return (result.data as SupabaseVoteData[])?.map((vote: SupabaseVoteData) => ({
         id: vote.id,
         pollId: vote.poll_id,
         userId: vote.user_id,
@@ -462,7 +466,7 @@ export class FinalizePollManager {
     merkleRoot: string;
   }): Promise<PollSnapshot> {
     try {
-      const { data, error } = await this.supabaseClient
+      const result = await this.supabaseClient
         .from('poll_snapshots')
         .insert({
           poll_id: snapshotData.pollId,
@@ -475,11 +479,11 @@ export class FinalizePollManager {
         .select()
         .single();
 
-      if (error) {
-        throw new Error(`Failed to create snapshot: ${error.message}`);
+      if (result.error) {
+        throw new Error(`Failed to create snapshot: ${result.error.message}`);
       }
 
-      const snapshotResult = data as SupabaseSnapshotData;
+      const snapshotResult = result.data as SupabaseSnapshotData;
       return withOptional(
         {
           id: snapshotResult.id,
@@ -512,7 +516,7 @@ export class FinalizePollManager {
         .eq('id', pollId);
 
       if (error) {
-        throw new Error(`Failed to update poll status: ${error.message}`);
+        throw new Error(`Failed to update poll status: ${(error as { message: string }).message}`);
       }
     } catch (error) {
       logger.error('Error updating poll status:', error);
@@ -726,7 +730,7 @@ export function getDefaultFinalizeOptions(): FinalizeOptions {
 export async function finalizePoll(pollId: string, options?: Partial<FinalizeOptions>): Promise<FinalizeResult> {
   // This would be called from an API endpoint or background job
   const manager = new FinalizePollManager({} as SupabaseClient); // TODO: Pass actual supabase client
-  const finalOptions = { ...getDefaultFinalizeOptions(), ...options };
+  const finalOptions = withOptional(getDefaultFinalizeOptions(), options ?? {});
   return manager.finalizePoll(pollId, finalOptions);
 }
 

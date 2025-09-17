@@ -17,7 +17,7 @@ export async function upsertClean<T extends object>(
   payload: T,
   options?: { onConflict?: string }
 ) {
-  const supabase = getSupabaseBrowserClient()
+  const supabase = await getSupabaseBrowserClient()
   const cleanPayload = stripUndefinedDeep(payload)
   
   if (options?.onConflict) {
@@ -34,7 +34,7 @@ export async function insertClean<T extends object>(
   table: string,
   payload: T
 ) {
-  const supabase = getSupabaseBrowserClient()
+  const supabase = await getSupabaseBrowserClient()
   const cleanPayload = stripUndefinedDeep(payload)
   return supabase.from(table).insert(cleanPayload)
 }
@@ -45,9 +45,9 @@ export async function insertClean<T extends object>(
 export async function updateClean<T extends object>(
   table: string,
   payload: T,
-  match: Record<string, any>
+  match: Record<string, unknown>
 ) {
-  const supabase = getSupabaseBrowserClient()
+  const supabase = await getSupabaseBrowserClient()
   const cleanPayload = stripUndefinedDeep(payload)
   
   let query = supabase.from(table).update(cleanPayload)

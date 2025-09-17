@@ -114,7 +114,7 @@ export function BiasFreePromise({ title, promises }: BiasFreePromiseProps) {
           <div>
             <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
               <XCircle className="h-5 w-5 text-red-600" />
-              What "Other" Sites Do
+              What &quot;Other&quot; Sites Do
             </h3>
             <ul className="space-y-2">
               <li className="flex items-center gap-2 text-sm text-gray-700">

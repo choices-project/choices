@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, Suspense } from 'react'
+import { useState, useEffect, Suspense, useCallback } from 'react'
 import { logger } from '@/lib/logger';
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
@@ -23,8 +23,7 @@ function LoginForm() {
   const redirectTo = searchParams.get('redirectTo') || '/dashboard'
 
   // Check biometric support on component mount
-  useEffect(() => {
-    const checkBiometricSupport = async () => {
+  const checkBiometricSupport = useCallback(async () => {
       try {
         // Check if WebAuthn is supported
         const window = safeBrowserAccess.window()
@@ -46,10 +45,11 @@ function LoginForm() {
         setBiometricSupported(false)
         setBiometricAvailable(false)
       }
-    }
+    }, [])
     
-    checkBiometricSupport()
-  }, [])
+    useEffect(() => {
+      checkBiometricSupport()
+    }, [checkBiometricSupport])
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -326,7 +326,7 @@ function LoginForm() {
 
         <div className="text-center space-y-2">
           <p className="text-sm text-gray-600">
-            Don't have an account?{' '}
+            Don&apos;t have an account?{' '}
             <Link href="/register" className="text-blue-600 hover:underline">
               Create one
             </Link>
