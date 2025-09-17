@@ -1,4 +1,5 @@
 # Civics Ingest: Current State & Research Needs
+**Last Updated**: 2025-09-17
 **Created:** September 16, 2025  
 **Purpose:** Research brief for AI to identify current data sources and fill gaps
 

@@ -1,4 +1,5 @@
 # Social Media Features Roadmap
+**Last Updated**: 2025-09-17
 
 **Project:** Choices - Democratic Engagement Platform  
 **Created:** December 19, 2024  

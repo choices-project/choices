@@ -1,4 +1,5 @@
 # Voting Engine Documentation
+**Last Updated**: 2025-09-17
 
 **Last Updated**: December 19, 2024
 

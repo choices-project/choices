@@ -1,6 +1,6 @@
 # Core Documentation
 
-**Last Updated**: 2025-09-16
+**Last Updated**: 2025-09-17
 
 This directory contains the core documentation for the Choices platform, including system architecture, governance, and essential policies.
 
