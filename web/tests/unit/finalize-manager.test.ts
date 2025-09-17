@@ -33,7 +33,11 @@ const mockSupabaseClient = {
     single: jest.fn().mockResolvedValue({ data: null, error: null }),
     then: jest.fn().mockResolvedValue({ data: [], error: null })
   })),
-  channel: jest.fn()
+  channel: jest.fn(() => ({
+    on: jest.fn().mockReturnThis(),
+    subscribe: jest.fn().mockReturnThis(),
+    unsubscribe: jest.fn().mockReturnThis()
+  }))
 };
 
 jest.mock('@/utils/supabase/server', () => ({

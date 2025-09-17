@@ -407,7 +407,7 @@ describe('VoteEngine', () => {
         privacyLevel: 'public'
       };
 
-      const validation = await engine.validateVote(request, null as unknown as Poll);
+      const validation = await engine.validateVote(request, null as unknown as PollData);
       
       expect(validation.isValid).toBe(false);
       expect(validation.error).toBe('Poll not found or not active');

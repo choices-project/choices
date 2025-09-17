@@ -21,10 +21,12 @@ class InlineErrorBoundary extends React.Component<
   { error: unknown }
 > {
   state = { error: null as unknown };
-  static getDerivedStateFromError(error: unknown) { return { error }; }
-  override componentDidCatch(_error: unknown, _errorInfo: React.ErrorInfo) {
-    // optional: route through your logger here
-    // logger.error('Lazy component crashed', { error });
+  static override getDerivedStateFromError(error: unknown) { return { error }; }
+  override componentDidCatch(error: unknown, errorInfo: React.ErrorInfo) {
+    // Route through our logger for error tracking
+    import('@/lib/logger').then(({ devLog }) => {
+      devLog.error('Lazy component crashed', { error, errorInfo });
+    });
   }
   override render() {
     const { error } = this.state;
