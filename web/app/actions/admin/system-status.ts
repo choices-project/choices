@@ -8,7 +8,7 @@ import {
   createSuccessResponse,
   validateFormData,
   type ServerActionContext
-} from '@/lib/auth/server-actions'
+} from '@/lib/core/auth/server-actions'
 import { getSupabaseServerClient } from '@/utils/supabase/server'
 
 // Validation schema for system status updates

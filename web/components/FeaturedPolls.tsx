@@ -224,11 +224,7 @@ export const FeaturedPolls: React.FC<FeaturedPollsProps> = ({
               <PollCard
                 key={poll.id}
                 poll={poll}
-                onVote={onVote ? () => onVote(poll.id, 0) : undefined}
-                onViewDetails={onViewDetails ? () => onViewDetails(poll.id) : undefined}
-                isVoted={userVotes[poll.id] !== undefined}
-                userVote={userVotes[poll.id]}
-                variant="default"
+                showActions={true}
               />
             ))}
           </div>

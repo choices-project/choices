@@ -112,43 +112,43 @@ export function DemographicVisualization({
         return currentData.ageDistribution.map((item: any, index: any) => ({
           name: item.range,
           value: item.percentage,
-          color: colors[index % colors.length]
+          color: colors[index % colors.length] ?? '#3b82f6'
         }))
       case 'location':
         return currentData.geographicSpread.slice(0, 10).map((item: any, index: any) => ({
           name: item.state,
           value: item.percentage,
-          color: colors[index % colors.length]
+          color: colors[index % colors.length] ?? '#3b82f6'
         }))
       case 'interests':
         return currentData.commonInterests.map((item: any, index: any) => ({
           name: item.interest,
           value: item.percentage,
-          color: colors[index % colors.length]
+          color: colors[index % colors.length] ?? '#3b82f6'
         }))
       case 'values':
         return currentData.topValues.map((item: any, index: any) => ({
           name: item.value,
           value: item.percentage,
-          color: colors[index % colors.length]
+          color: colors[index % colors.length] ?? '#3b82f6'
         }))
       case 'education':
         return currentData.educationLevels.map((item: any, index: any) => ({
           name: item.level,
           value: item.percentage,
-          color: colors[index % colors.length]
+          color: colors[index % colors.length] ?? '#3b82f6'
         }))
       case 'income':
         return currentData.incomeBrackets.map((item: any, index: any) => ({
           name: item.bracket,
           value: item.percentage,
-          color: colors[index % colors.length]
+          color: colors[index % colors.length] ?? '#3b82f6'
         }))
       case 'urban':
         return currentData.urbanRural.map((item: any, index: any) => ({
           name: item.type,
           value: item.percentage,
-          color: colors[index % colors.length]
+          color: colors[index % colors.length] ?? '#3b82f6'
         }))
       default:
         return []

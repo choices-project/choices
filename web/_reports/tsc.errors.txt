@@ -1,0 +1,260 @@
+app/api/database-status/route.ts(58,50): error TS2554: Expected 1 arguments, but got 2.
+app/login/page.tsx(76,42): error TS2339: Property 'login' does not exist on type '{ get: (key: string) => string | null; set: (key: string, value: string) => void; remove: (key: string) => void; clear: () => void; }'.
+components/CreatePoll.tsx(233,49): error TS2339: Property 'privacyLevel' does not exist on type '{ allowAbstention: boolean; requireAllRanks: boolean; minSelections: number; maxSelections: number; rangeMin: number; rangeMax: number; quadraticCredits: number; isPublic: boolean; allowComments: boolean; showResults: boolean; requireVerification: boolean; }'.
+components/performance/VirtualScroll.tsx(49,13): error TS2339: Property 'startIndex' does not exist on type 'T[]'.
+components/performance/VirtualScroll.tsx(49,25): error TS2339: Property 'endIndex' does not exist on type 'T[]'.
+components/performance/VirtualScroll.tsx(54,7): error TS2554: Expected 4 arguments, but got 5.
+components/privacy/PrivacyLevelIndicator.tsx(84,56): error TS2339: Property 'title' does not exist on type 'string'.
+components/privacy/PrivacyLevelIndicator.tsx(88,26): error TS2339: Property 'description' does not exist on type 'string'.
+components/privacy/PrivacyLevelIndicator.tsx(95,54): error TS2339: Property 'title' does not exist on type 'string'.
+components/privacy/PrivacyLevelIndicator.tsx(134,102): error TS2339: Property 'description' does not exist on type 'string'.
+components/privacy/PrivacyLevelSelector.tsx(30,55): error TS2345: Argument of type '{ title: string; description: string; category?: string | undefined; }' is not assignable to parameter of type '{ title: string; description: string; category: string; }'.
+  Types of property 'category' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+components/privacy/PrivacyLevelSelector.tsx(33,35): error TS2322: Type '"public"' is not assignable to type 'PrivacyLevel'.
+components/privacy/PrivacyLevelSelector.tsx(33,45): error TS2322: Type '"private"' is not assignable to type 'PrivacyLevel'.
+components/privacy/PrivacyLevelSelector.tsx(33,56): error TS2322: Type '"high-privacy"' is not assignable to type 'PrivacyLevel'.
+components/privacy/PrivacyLevelSelector.tsx(44,33): error TS7053: Element implicitly has an 'any' type because expression of type '"public" | PrivacyLevel' can't be used to index type '{ minimal: string; standard: string; enhanced: string; maximum: string; }'.
+  Property 'public' does not exist on type '{ minimal: string; standard: string; enhanced: string; maximum: string; }'.
+components/privacy/PrivacyLevelSelector.tsx(51,47): error TS2339: Property 'getPrivacyConfig' does not exist on type 'typeof HybridPrivacyManager'.
+components/privacy/PrivacyLevelSelector.tsx(87,57): error TS2339: Property 'icon' does not exist on type 'string'.
+components/privacy/PrivacyLevelSelector.tsx(89,74): error TS2339: Property 'title' does not exist on type 'string'.
+components/privacy/PrivacyLevelSelector.tsx(90,69): error TS2339: Property 'recommended' does not exist on type 'string'.
+components/privacy/PrivacyLevelSelector.tsx(95,70): error TS2339: Property 'description' does not exist on type 'string'.
+components/privacy/PrivacyLevelSelector.tsx(143,16): error TS2367: This comparison appears to be unintentional because the types 'PrivacyLevel' and '"public"' have no overlap.
+components/privacy/PrivacyLevelSelector.tsx(144,16): error TS2367: This comparison appears to be unintentional because the types 'PrivacyLevel' and '"private"' have no overlap.
+components/privacy/PrivacyLevelSelector.tsx(145,16): error TS2367: This comparison appears to be unintentional because the types 'PrivacyLevel' and '"high-privacy"' have no overlap.
+disabled-pages/[id].disabled/page.tsx(12,25): error TS2307: Cannot find module '@/components/polls/PollResults' or its corresponding type declarations.
+disabled-pages/[id].disabled/page.tsx(13,23): error TS2307: Cannot find module '@/components/polls/PollShare' or its corresponding type declarations.
+disabled-pages/test-ranked-choice.disabled/page.tsx(9,32): error TS2307: Cannot find module '@/components/voting/RankedChoiceVoting' or its corresponding type declarations.
+disabled-pages/test-single-choice/page.tsx(9,32): error TS2307: Cannot find module '@/components/voting/SingleChoiceVoting' or its corresponding type declarations.
+disabled-pages/test-single-choice/page.tsx(123,20): error TS7006: Parameter 'choice' implicitly has an 'any' type.
+features/analytics/lib/auth-analytics.ts(17,24): error TS2307: Cannot find module './logger' or its corresponding type declarations.
+features/auth/lib/social-auth-config.ts(1,40): error TS2307: Cannot find module '@/types/auth' or its corresponding type declarations.
+features/auth/pages/biometric-setup/page.tsx(11,8): error TS2307: Cannot find module '@/features/webauthn/lib/webauthn' or its corresponding type declarations.
+features/auth/pages/callback/route.ts(53,35): error TS2554: Expected 1-2 arguments, but got 3.
+features/civics/schemas/index.ts(138,15): error TS2554: Expected 2-3 arguments, but got 1.
+features/civics/sources/civicinfo/index.ts(7,15): error TS2459: Module '"../../ingest/connectors/civicinfo"' declares 'AddressLookupResult' locally, but it is not exported.
+features/landing/pages/enhanced-landing/page.tsx(9,42): error TS2307: Cannot find module '../../components/DemographicVisualization' or its corresponding type declarations.
+features/landing/pages/enhanced-landing/page.tsx(10,50): error TS2307: Cannot find module '../../components/BiasFreePromise' or its corresponding type declarations.
+features/landing/pages/enhanced-landing/page.tsx(11,42): error TS2307: Cannot find module '../../components/TierSystem' or its corresponding type declarations.
+features/landing/pages/enhanced-landing/page.tsx(12,31): error TS2307: Cannot find module '../../components/TopicAnalysis' or its corresponding type declarations.
+features/polls/components/CreatePollForm.tsx(36,5): error TS2322: Type '"public"' is not assignable to type 'PrivacyLevel'.
+features/polls/components/CreatePollForm.tsx(145,7): error TS2322: Type 'string | undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+features/polls/components/CreatePollForm.tsx(379,16): error TS2367: This comparison appears to be unintentional because the types 'PrivacyLevel' and '"public"' have no overlap.
+features/polls/components/CreatePollForm.tsx(380,16): error TS2367: This comparison appears to be unintentional because the types 'PrivacyLevel' and '"private"' have no overlap.
+features/polls/components/CreatePollForm.tsx(381,16): error TS2367: This comparison appears to be unintentional because the types 'PrivacyLevel' and '"high-privacy"' have no overlap.
+features/polls/components/CreatePollForm.tsx(385,18): error TS2367: This comparison appears to be unintentional because the types 'PrivacyLevel' and '"public"' have no overlap.
+features/polls/components/CreatePollForm.tsx(386,18): error TS2367: This comparison appears to be unintentional because the types 'PrivacyLevel' and '"private"' have no overlap.
+features/polls/components/CreatePollForm.tsx(387,18): error TS2367: This comparison appears to be unintentional because the types 'PrivacyLevel' and '"high-privacy"' have no overlap.
+features/polls/components/CreatePollForm.tsx(390,18): error TS2367: This comparison appears to be unintentional because the types 'PrivacyLevel' and '"public"' have no overlap.
+features/polls/components/CreatePollForm.tsx(391,18): error TS2367: This comparison appears to be unintentional because the types 'PrivacyLevel' and '"private"' have no overlap.
+features/polls/components/CreatePollForm.tsx(392,18): error TS2367: This comparison appears to be unintentional because the types 'PrivacyLevel' and '"high-privacy"' have no overlap.
+features/polls/components/OptimizedPollResults.tsx(5,37): error TS2305: Module '"@/lib/performance/optimized-poll-service"' has no exported member 'OptimizedPollResult'.
+features/polls/components/OptimizedPollResults.tsx(40,54): error TS2339: Property 'getOptimizedPollResults' does not exist on type 'OptimizedPollService'.
+features/polls/components/OptimizedPollResults.tsx(105,20): error TS7053: Element implicitly has an 'any' type because expression of type 'any' can't be used to index type '{ ended: { label: string; color: string; bgColor: string; }; active: { label: string; color: string; bgColor: string; }; ongoing: { label: string; color: string; bgColor: string; }; }'.
+features/polls/components/PrivatePollResults.tsx(30,42): error TS2315: Type 'PrivateQueryResult' is not generic.
+features/polls/components/PrivatePollResults.tsx(40,56): error TS2339: Property 'getPrivatePollResults' does not exist on type 'DifferentialPrivacyManager'.
+features/polls/components/PrivatePollResults.tsx(59,48): error TS2551: Property 'getPrivacyBudget' does not exist on type 'DifferentialPrivacyManager'. Did you mean 'hasPrivacyBudget'?
+features/polls/components/PrivatePollResults.tsx(182,32): error TS7006: Parameter 'result' implicitly has an 'any' type.
+features/polls/components/PrivatePollResults.tsx(182,40): error TS7006: Parameter 'index' implicitly has an 'any' type.
+features/polls/pages/create/page.tsx(24,5): error TS2322: Type '"food"' is not assignable to type 'PollCategory'.
+features/polls/pages/create/page.tsx(25,5): error TS2322: Type '"travel"' is not assignable to type 'PollCategory'.
+features/polls/pages/create/page.tsx(26,5): error TS2322: Type '"fashion"' is not assignable to type 'PollCategory'.
+features/polls/pages/create/page.tsx(27,5): error TS2322: Type '"finance"' is not assignable to type 'PollCategory'.
+features/polls/pages/create/page.tsx(36,5): error TS2339: Property 'progress' does not exist on type '{ wizardState: PollWizardState; nextStep: () => void; prevStep: () => void; goToStep: (step: number) => void; updateData: (updates: Partial<PollWizardData>) => void; ... 8 more ...; validateStep: (step: number) => Record<...>; }'.
+features/polls/pages/create/page.tsx(37,5): error TS2339: Property 'updateWizardData' does not exist on type '{ wizardState: PollWizardState; nextStep: () => void; prevStep: () => void; goToStep: (step: number) => void; updateData: (updates: Partial<PollWizardData>) => void; ... 8 more ...; validateStep: (step: number) => Record<...>; }'.
+features/polls/pages/create/page.tsx(39,5): error TS2339: Property 'previousStep' does not exist on type '{ wizardState: PollWizardState; nextStep: () => void; prevStep: () => void; goToStep: (step: number) => void; updateData: (updates: Partial<PollWizardData>) => void; ... 8 more ...; validateStep: (step: number) => Record<...>; }'.
+features/polls/pages/create/page.tsx(43,5): error TS2339: Property 'updateSettings' does not exist on type '{ wizardState: PollWizardState; nextStep: () => void; prevStep: () => void; goToStep: (step: number) => void; updateData: (updates: Partial<PollWizardData>) => void; ... 8 more ...; validateStep: (step: number) => Record<...>; }'.
+features/polls/pages/create/page.tsx(255,49): error TS2339: Property 'settings' does not exist on type 'PollWizardData'.
+features/polls/pages/create/page.tsx(265,49): error TS2339: Property 'settings' does not exist on type 'PollWizardData'.
+features/polls/pages/create/page.tsx(275,49): error TS2339: Property 'settings' does not exist on type 'PollWizardData'.
+features/polls/pages/create/page.tsx(285,49): error TS2339: Property 'settings' does not exist on type 'PollWizardData'.
+features/polls/pages/create/page.tsx(301,47): error TS2339: Property 'settings' does not exist on type 'PollWizardData'.
+features/polls/pages/create/page.tsx(314,47): error TS2339: Property 'settings' does not exist on type 'PollWizardData'.
+features/polls/pages/create/page.tsx(329,49): error TS2339: Property 'settings' does not exist on type 'PollWizardData'.
+features/polls/pages/create/page.tsx(379,51): error TS2339: Property 'settings' does not exist on type 'PollWizardData'.
+features/polls/pages/create/page.tsx(380,50): error TS2339: Property 'settings' does not exist on type 'PollWizardData'.
+features/polls/pages/create/page.tsx(381,58): error TS2339: Property 'settings' does not exist on type 'PollWizardData'.
+features/polls/pages/create/page.tsx(382,53): error TS2339: Property 'settings' does not exist on type 'PollWizardData'.
+features/polls/pages/create/page.tsx(406,28): error TS7006: Parameter 'step' implicitly has an 'any' type.
+features/polls/pages/create/page.tsx(406,34): error TS7006: Parameter 'index' implicitly has an 'any' type.
+features/polls/pages/create/page.tsx(454,36): error TS2339: Property 'canGoBack' does not exist on type 'PollWizardState'.
+features/polls/pages/create/page.tsx(465,40): error TS2339: Property 'canProceed' does not exist on type 'PollWizardState'.
+features/polls/pages/create/page.tsx(473,40): error TS2339: Property 'canProceed' does not exist on type 'PollWizardState'.
+features/polls/pages/templates/page.tsx(15,3): error TS2322: Type '{ id: string; name: string; description: string; icon: string; color: string; templateCount: number; }' is not assignable to type 'TemplateCategory'.
+features/polls/pages/templates/page.tsx(16,3): error TS2322: Type '{ id: string; name: string; description: string; icon: string; color: string; templateCount: number; }' is not assignable to type 'TemplateCategory'.
+features/polls/pages/templates/page.tsx(17,3): error TS2322: Type '{ id: string; name: string; description: string; icon: string; color: string; templateCount: number; }' is not assignable to type 'TemplateCategory'.
+features/polls/pages/templates/page.tsx(18,3): error TS2322: Type '{ id: string; name: string; description: string; icon: string; color: string; templateCount: number; }' is not assignable to type 'TemplateCategory'.
+features/polls/pages/templates/page.tsx(19,3): error TS2322: Type '{ id: string; name: string; description: string; icon: string; color: string; templateCount: number; }' is not assignable to type 'TemplateCategory'.
+features/polls/pages/templates/page.tsx(20,3): error TS2322: Type '{ id: string; name: string; description: string; icon: string; color: string; templateCount: number; }' is not assignable to type 'TemplateCategory'.
+features/polls/pages/templates/page.tsx(21,3): error TS2322: Type '{ id: string; name: string; description: string; icon: string; color: string; templateCount: number; }' is not assignable to type 'TemplateCategory'.
+features/polls/pages/templates/page.tsx(22,3): error TS2322: Type '{ id: string; name: string; description: string; icon: string; color: string; templateCount: number; }' is not assignable to type 'TemplateCategory'.
+features/polls/pages/templates/page.tsx(31,5): error TS2322: Type '"beginner"' is not assignable to type '"medium" | "easy" | "hard"'.
+features/polls/pages/templates/page.tsx(59,5): error TS2322: Type '"intermediate"' is not assignable to type '"medium" | "easy" | "hard"'.
+features/polls/pages/templates/page.tsx(87,5): error TS2322: Type '"beginner"' is not assignable to type '"medium" | "easy" | "hard"'.
+features/polls/pages/templates/page.tsx(115,5): error TS2322: Type '"intermediate"' is not assignable to type '"medium" | "easy" | "hard"'.
+features/polls/pages/templates/page.tsx(142,5): error TS2322: Type '"food"' is not assignable to type 'PollCategory'.
+features/polls/pages/templates/page.tsx(143,5): error TS2322: Type '"beginner"' is not assignable to type '"medium" | "easy" | "hard"'.
+features/polls/pages/templates/page.tsx(171,5): error TS2322: Type '"advanced"' is not assignable to type '"medium" | "easy" | "hard"'.
+features/polls/pages/templates/page.tsx(205,36): error TS2339: Property 'name' does not exist on type 'PollTemplate'.
+features/polls/pages/templates/page.tsx(222,24): error TS2339: Property 'createdAt' does not exist on type 'PollTemplate'.
+features/polls/pages/templates/page.tsx(222,48): error TS2339: Property 'createdAt' does not exist on type 'PollTemplate'.
+features/polls/pages/templates/page.tsx(225,24): error TS2339: Property 'rating' does not exist on type 'PollTemplate'.
+features/polls/pages/templates/page.tsx(225,35): error TS2339: Property 'rating' does not exist on type 'PollTemplate'.
+features/polls/pages/templates/page.tsx(228,24): error TS2339: Property 'name' does not exist on type 'PollTemplate'.
+features/polls/pages/templates/page.tsx(228,45): error TS2339: Property 'name' does not exist on type 'PollTemplate'.
+features/polls/pages/templates/page.tsx(281,41): error TS2339: Property 'id' does not exist on type 'TemplateCategory'.
+  Property 'id' does not exist on type '"quick"'.
+features/polls/pages/templates/page.tsx(281,61): error TS2339: Property 'id' does not exist on type 'TemplateCategory'.
+  Property 'id' does not exist on type '"quick"'.
+features/polls/pages/templates/page.tsx(282,31): error TS2339: Property 'name' does not exist on type 'TemplateCategory'.
+  Property 'name' does not exist on type '"quick"'.
+features/polls/pages/templates/page.tsx(282,48): error TS2339: Property 'templateCount' does not exist on type 'TemplateCategory'.
+  Property 'templateCount' does not exist on type '"quick"'.
+features/polls/pages/templates/page.tsx(322,31): error TS2339: Property 'id' does not exist on type 'TemplateCategory'.
+  Property 'id' does not exist on type '"quick"'.
+features/polls/pages/templates/page.tsx(323,61): error TS2339: Property 'id' does not exist on type 'TemplateCategory'.
+  Property 'id' does not exist on type '"quick"'.
+features/polls/pages/templates/page.tsx(325,49): error TS2339: Property 'id' does not exist on type 'TemplateCategory'.
+  Property 'id' does not exist on type '"quick"'.
+features/polls/pages/templates/page.tsx(330,27): error TS2339: Property 'icon' does not exist on type 'TemplateCategory'.
+  Property 'icon' does not exist on type '"quick"'.
+features/polls/pages/templates/page.tsx(330,43): error TS2339: Property 'name' does not exist on type 'TemplateCategory'.
+  Property 'name' does not exist on type '"quick"'.
+features/polls/pages/templates/page.tsx(350,67): error TS2339: Property 'name' does not exist on type 'PollTemplate'.
+features/polls/pages/templates/page.tsx(363,31): error TS2339: Property 'estimatedTime' does not exist on type 'PollTemplate'.
+features/polls/pages/templates/page.tsx(371,31): error TS2339: Property 'rating' does not exist on type 'PollTemplate'.
+features/pwa/components/PWAUserProfile.tsx(16,57): error TS2307: Cannot find module '../lib/pwa-utils' or its corresponding type declarations.
+features/pwa/components/PWAVotingInterface.tsx(17,32): error TS2307: Cannot find module '../hooks/useFeatureFlags' or its corresponding type declarations.
+features/pwa/hooks/usePWAUtils.ts(8,62): error TS2307: Cannot find module '../lib/pwa-utils' or its corresponding type declarations.
+features/pwa/hooks/usePWAUtils.ts(33,18): error TS2307: Cannot find module '../lib/pwa-utils' or its corresponding type declarations.
+features/pwa/index.ts(25,17): error TS2307: Cannot find module './lib/pwa-utils' or its corresponding type declarations.
+features/pwa/index.ts(39,17): error TS2307: Cannot find module './components' or its corresponding type declarations.
+features/pwa/lib/pwa-auth-integration.ts(8,34): error TS2307: Cannot find module './feature-flags' or its corresponding type declarations.
+features/testing/pages/analytics-test/page.tsx(4,30): error TS2307: Cannot find module '../../hooks/useAnalytics' or its corresponding type declarations.
+features/testing/pages/test-privacy/page.tsx(4,37): error TS2307: Cannot find module '@/components/polls/CreatePollForm' or its corresponding type declarations.
+features/testing/pages/test-privacy/page.tsx(5,32): error TS2307: Cannot find module '@/components/polls/CreatePollForm' or its corresponding type declarations.
+features/testing/pages/test-privacy/page.tsx(7,35): error TS2307: Cannot find module '@/lib/hybrid-privacy' or its corresponding type declarations.
+features/webauthn/index.ts(8,34): error TS2307: Cannot find module '../../shared/lib/feature-flags' or its corresponding type declarations.
+hooks/useFeatureFlags.ts(85,5): error TS2322: Type 'void' is not assignable to type 'boolean'.
+hooks/useFeatureFlags.ts(89,5): error TS2322: Type 'void' is not assignable to type 'boolean'.
+hooks/useFeatureFlags.ts(93,5): error TS2322: Type 'void' is not assignable to type 'boolean'.
+hooks/useFeatureFlags.ts(97,5): error TS2322: Type 'boolean' is not assignable to type 'FeatureFlag'.
+hooks/useFeatureFlags.ts(113,5): error TS2322: Type 'string[]' is not assignable to type 'FeatureFlag[]'.
+  Type 'string' is not assignable to type 'FeatureFlag'.
+hooks/useFeatureFlags.ts(131,5): error TS2739: Type '{ totalFlags: number; enabledFlags: number; disabledFlags: number; }' is missing the following properties from type '{ totalFlags: number; enabledFlags: number; disabledFlags: number; environment: string; categories: Record<string, number>; }': environment, categories
+hooks/useFeatureFlags.ts(267,20): error TS2339: Property 'updateFlagMetadata' does not exist on type '{ enable: (k: string) => void; disable: (k: string) => void; toggle: (k: string) => void; get: (key: string) => boolean; all: () => { CORE_AUTH: true; CORE_POLLS: true; CORE_USERS: true; WEBAUTHN: false; ... 5 more ...; ADVANCED_PRIVACY: false; }; ... 8 more ...; subscribe: (callback: (flags: any) => void) => () => ...'.
+hooks/useFeatureFlags.ts(271,13): error TS2339: Property 'reset' does not exist on type '{ enable: (k: string) => void; disable: (k: string) => void; toggle: (k: string) => void; get: (key: string) => boolean; all: () => { CORE_AUTH: true; CORE_POLLS: true; CORE_USERS: true; WEBAUTHN: false; ... 5 more ...; ADVANCED_PRIVACY: false; }; ... 8 more ...; subscribe: (callback: (flags: any) => void) => () => ...'.
+hooks/useFeatureFlags.ts(275,20): error TS2339: Property 'exportConfig' does not exist on type '{ enable: (k: string) => void; disable: (k: string) => void; toggle: (k: string) => void; get: (key: string) => boolean; all: () => { CORE_AUTH: true; CORE_POLLS: true; CORE_USERS: true; WEBAUTHN: false; ... 5 more ...; ADVANCED_PRIVACY: false; }; ... 8 more ...; subscribe: (callback: (flags: any) => void) => () => ...'.
+hooks/useFeatureFlags.ts(279,13): error TS2339: Property 'importConfig' does not exist on type '{ enable: (k: string) => void; disable: (k: string) => void; toggle: (k: string) => void; get: (key: string) => boolean; all: () => { CORE_AUTH: true; CORE_POLLS: true; CORE_USERS: true; WEBAUTHN: false; ... 5 more ...; ADVANCED_PRIVACY: false; }; ... 8 more ...; subscribe: (callback: (flags: any) => void) => () => ...'.
+hooks/usePerformanceUtils.ts(22,48): error TS2307: Cannot find module '../lib/performance-monitor-simple' or its corresponding type declarations.
+hooks/usePrivacyUtils.ts(27,49): error TS2345: Argument of type '"advancedPrivacy"' is not assignable to parameter of type '"CORE_AUTH" | "CORE_POLLS" | "CORE_USERS" | "WEBAUTHN" | "PWA" | "ANALYTICS" | "ADMIN" | "EXPERIMENTAL_UI" | "EXPERIMENTAL_ANALYTICS"'.
+hooks/usePrivacyUtils.ts(66,20): error TS2307: Cannot find module '../lib/differential-privacy' or its corresponding type declarations.
+hooks/usePrivacyUtils.ts(67,20): error TS2307: Cannot find module '../lib/differential-privacy' or its corresponding type declarations.
+hooks/usePrivacyUtils.ts(68,20): error TS2307: Cannot find module '../lib/zero-knowledge-proofs' or its corresponding type declarations.
+hooks/useSupabaseAuth.ts(92,46): error TS2554: Expected 1-2 arguments, but got 3.
+hooks/useTestingUtils.ts(5,35): error TS2307: Cannot find module '../lib/testing-suite' or its corresponding type declarations.
+hooks/useTestingUtils.ts(6,49): error TS2307: Cannot find module '../lib/comprehensive-testing-runner' or its corresponding type declarations.
+hooks/useTestingUtils.ts(7,43): error TS2307: Cannot find module '../lib/cross-platform-testing' or its corresponding type declarations.
+hooks/useTestingUtils.ts(8,49): error TS2307: Cannot find module '../lib/mobile-compatibility-testing' or its corresponding type declarations.
+hooks/useTestingUtils.ts(30,18): error TS2307: Cannot find module '../lib/testing-suite' or its corresponding type declarations.
+hooks/useTestingUtils.ts(31,18): error TS2307: Cannot find module '../lib/comprehensive-testing-runner' or its corresponding type declarations.
+hooks/useTestingUtils.ts(32,18): error TS2307: Cannot find module '../lib/cross-platform-testing' or its corresponding type declarations.
+hooks/useTestingUtils.ts(33,18): error TS2307: Cannot find module '../lib/mobile-compatibility-testing' or its corresponding type declarations.
+lib/core/auth/idempotency.ts(76,59): error TS2554: Expected 1-2 arguments, but got 3.
+lib/core/auth/idempotency.ts(85,114): error TS2554: Expected 1-2 arguments, but got 3.
+lib/core/auth/idempotency.ts(114,62): error TS2554: Expected 1-2 arguments, but got 3.
+lib/core/auth/idempotency.ts(121,116): error TS2554: Expected 1-2 arguments, but got 3.
+lib/core/auth/idempotency.ts(176,128): error TS2554: Expected 1-2 arguments, but got 3.
+lib/core/auth/middleware.ts(87,60): error TS2554: Expected 1-2 arguments, but got 3.
+lib/core/auth/middleware.ts(201,78): error TS2554: Expected 1-2 arguments, but got 8.
+lib/core/auth/middleware.ts(236,47): error TS2554: Expected 1-2 arguments, but got 6.
+lib/core/auth/server-actions.ts(123,107): error TS2554: Expected 1-2 arguments, but got 3.
+lib/core/security/index.ts(2,1): error TS2308: Module './config' has already exported a member named 'RateLimitConfig'. Consider explicitly re-exporting to resolve the ambiguity.
+lib/core/services/analytics.ts(10,8): error TS2307: Cannot find module '@/types/analytics' or its corresponding type declarations.
+lib/core/services/hybrid-voting.ts(5,35): error TS2307: Cannot find module './hybrid-privacy' or its corresponding type declarations.
+lib/index.ts(2,1): error TS2308: Module './core' has already exported a member named 'BreakingNewsStory'. Consider explicitly re-exporting to resolve the ambiguity.
+lib/index.ts(2,1): error TS2308: Module './core' has already exported a member named 'PollContext'. Consider explicitly re-exporting to resolve the ambiguity.
+lib/index.ts(3,1): error TS2308: Module './core' has already exported a member named 'DeviceFingerprint'. Consider explicitly re-exporting to resolve the ambiguity.
+lib/performance/optimized-poll-service.ts(40,9): error TS2532: Object is possibly 'undefined'.
+lib/performance/optimized-poll-service.ts(53,7): error TS2532: Object is possibly 'undefined'.
+lib/performance/optimized-poll-service.ts(119,16): error TS2532: Object is possibly 'undefined'.
+lib/performance/optimized-poll-service.ts(119,45): error TS2532: Object is possibly 'undefined'.
+lib/performance/optimized-poll-service.ts(120,22): error TS2532: Object is possibly 'undefined'.
+lib/performance/optimized-poll-service.ts(120,51): error TS2532: Object is possibly 'undefined'.
+lib/performance/performance.ts(83,40): error TS2532: Object is possibly 'undefined'.
+lib/services/poll-service.ts(43,7): error TS2322: Type 'string | undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+lib/shared/pwa-components.tsx(17,28): error TS2307: Cannot find module '../lib/pwa-utils' or its corresponding type declarations.
+lib/shared/pwa-utils.ts(435,66): error TS2554: Expected 1-2 arguments, but got 3.
+lib/supabase-ssr-safe.ts(14,31): error TS2307: Cannot find module './supabase/server' or its corresponding type declarations.
+middleware.ts(41,3): error TS2322: Type 'boolean | undefined' is not assignable to type 'boolean'.
+  Type 'undefined' is not assignable to type 'boolean'.
+modules/advanced-privacy/config/privacy-config.ts(207,53): error TS2345: Argument of type '"advancedPrivacy"' is not assignable to parameter of type '"CORE_AUTH" | "CORE_POLLS" | "CORE_USERS" | "WEBAUTHN" | "PWA" | "ANALYTICS" | "ADMIN" | "EXPERIMENTAL_UI" | "EXPERIMENTAL_ANALYTICS"'.
+modules/advanced-privacy/differential-privacy.ts(42,37): error TS2345: Argument of type '"advancedPrivacy"' is not assignable to parameter of type '"CORE_AUTH" | "CORE_POLLS" | "CORE_USERS" | "WEBAUTHN" | "PWA" | "ANALYTICS" | "ADMIN" | "EXPERIMENTAL_UI" | "EXPERIMENTAL_ANALYTICS"'.
+modules/advanced-privacy/differential-privacy.ts(399,37): error TS2345: Argument of type '"advancedPrivacy"' is not assignable to parameter of type '"CORE_AUTH" | "CORE_POLLS" | "CORE_USERS" | "WEBAUTHN" | "PWA" | "ANALYTICS" | "ADMIN" | "EXPERIMENTAL_UI" | "EXPERIMENTAL_ANALYTICS"'.
+modules/advanced-privacy/hooks/usePrivacyUtils.ts(50,29): error TS2345: Argument of type '"advancedPrivacy"' is not assignable to parameter of type '"CORE_AUTH" | "CORE_POLLS" | "CORE_USERS" | "WEBAUTHN" | "PWA" | "ANALYTICS" | "ADMIN" | "EXPERIMENTAL_UI" | "EXPERIMENTAL_ANALYTICS"'.
+modules/advanced-privacy/index.ts(37,27): error TS2345: Argument of type '"advancedPrivacy"' is not assignable to parameter of type '"CORE_AUTH" | "CORE_POLLS" | "CORE_USERS" | "WEBAUTHN" | "PWA" | "ANALYTICS" | "ADMIN" | "EXPERIMENTAL_UI" | "EXPERIMENTAL_ANALYTICS"'.
+modules/advanced-privacy/privacy-auditor.ts(68,37): error TS2345: Argument of type '"advancedPrivacy"' is not assignable to parameter of type '"CORE_AUTH" | "CORE_POLLS" | "CORE_USERS" | "WEBAUTHN" | "PWA" | "ANALYTICS" | "ADMIN" | "EXPERIMENTAL_UI" | "EXPERIMENTAL_ANALYTICS"'.
+modules/advanced-privacy/privacy-bridge.ts(79,47): error TS2345: Argument of type '"advancedPrivacy"' is not assignable to parameter of type '"CORE_AUTH" | "CORE_POLLS" | "CORE_USERS" | "WEBAUTHN" | "PWA" | "ANALYTICS" | "ADMIN" | "EXPERIMENTAL_UI" | "EXPERIMENTAL_ANALYTICS"'.
+modules/advanced-privacy/privacy-bridge.ts(146,54): error TS2307: Cannot find module '../../lib/differential-privacy' or its corresponding type declarations.
+modules/advanced-privacy/privacy-bridge.ts(147,54): error TS2307: Cannot find module '../../lib/zero-knowledge-proofs' or its corresponding type declarations.
+modules/advanced-privacy/zero-knowledge-proofs.ts(44,37): error TS2345: Argument of type '"advancedPrivacy"' is not assignable to parameter of type '"CORE_AUTH" | "CORE_POLLS" | "CORE_USERS" | "WEBAUTHN" | "PWA" | "ANALYTICS" | "ADMIN" | "EXPERIMENTAL_UI" | "EXPERIMENTAL_ANALYTICS"'.
+modules/advanced-privacy/zero-knowledge-proofs.ts(568,37): error TS2345: Argument of type '"advancedPrivacy"' is not assignable to parameter of type '"CORE_AUTH" | "CORE_POLLS" | "CORE_USERS" | "WEBAUTHN" | "PWA" | "ANALYTICS" | "ADMIN" | "EXPERIMENTAL_UI" | "EXPERIMENTAL_ANALYTICS"'.
+shared/core/database/lib/server.ts(11,24): error TS2307: Cannot find module '../logger' or its corresponding type declarations.
+shared/core/database/lib/server.ts(12,31): error TS2307: Cannot find module '../../types/database' or its corresponding type declarations.
+shared/core/database/lib/supabase-performance.ts(14,24): error TS2307: Cannot find module './logger' or its corresponding type declarations.
+shared/core/database/lib/supabase-server.ts(10,24): error TS2307: Cannot find module './logger' or its corresponding type declarations.
+shared/core/database/lib/supabase-ssr-safe.ts(14,24): error TS2307: Cannot find module './logger' or its corresponding type declarations.
+shared/core/database/lib/supabase-ssr-safe.ts(15,37): error TS2307: Cannot find module './ssr-safe' or its corresponding type declarations.
+shared/core/database/lib/supabase-ssr-safe.ts(16,105): error TS2307: Cannot find module '../types/database' or its corresponding type declarations.
+shared/core/performance/lib/optimized-poll-service.ts(82,121): error TS2554: Expected 1-2 arguments, but got 3.
+shared/core/performance/lib/optimized-poll-service.ts(106,117): error TS2554: Expected 1-2 arguments, but got 3.
+shared/core/performance/lib/optimized-poll-service.ts(133,115): error TS2554: Expected 1-2 arguments, but got 3.
+shared/core/performance/lib/optimized-poll-service.ts(152,110): error TS2554: Expected 1-2 arguments, but got 3.
+shared/core/performance/lib/optimized-poll-service.ts(180,122): error TS2554: Expected 1-2 arguments, but got 3.
+shared/core/performance/lib/optimized-poll-service.ts(197,116): error TS2554: Expected 1-2 arguments, but got 3.
+shared/core/performance/lib/optimized-poll-service.ts(225,119): error TS2554: Expected 1-2 arguments, but got 3.
+shared/core/performance/lib/optimized-poll-service.ts(242,113): error TS2554: Expected 1-2 arguments, but got 3.
+shared/core/performance/lib/optimized-poll-service.ts(257,116): error TS2554: Expected 1-2 arguments, but got 3.
+shared/core/performance/lib/optimized-poll-service.ts(263,111): error TS2554: Expected 1-2 arguments, but got 3.
+shared/core/performance/lib/optimized-poll-service.ts(285,118): error TS2554: Expected 1-2 arguments, but got 3.
+shared/core/performance/lib/performance.ts(7,24): error TS2307: Cannot find module './logger' or its corresponding type declarations.
+shared/core/services/lib/poll-service.ts(2,24): error TS2307: Cannot find module './logger' or its corresponding type declarations.
+shared/lib/client.ts(16,24): error TS2307: Cannot find module '../logger' or its corresponding type declarations.
+shared/lib/server.ts(11,24): error TS2307: Cannot find module '../logger' or its corresponding type declarations.
+shared/modules/lib/module-loader.ts(8,54): error TS2307: Cannot find module './feature-flags' or its corresponding type declarations.
+shared/modules/lib/module-loader.ts(9,24): error TS2307: Cannot find module './logger' or its corresponding type declarations.
+shared/modules/lib/module-loader.ts(412,11): error TS7053: Element implicitly has an 'any' type because expression of type 'any' can't be used to index type '{ core: number; optional: number; experimental: number; }'.
+shared/utils/lib/usePollWizard.ts(7,8): error TS2307: Cannot find module '../types/poll-templates' or its corresponding type declarations.
+shared/utils/lib/usePollWizard.ts(69,50): error TS7006: Parameter 'option' implicitly has an 'any' type.
+shared/utils/lib/usePollWizard.ts(75,31): error TS7006: Parameter 'option' implicitly has an 'any' type.
+shared/utils/lib/usePollWizard.ts(75,39): error TS7006: Parameter 'index' implicitly has an 'any' type.
+shared/utils/lib/usePollWizard.ts(109,20): error TS7006: Parameter 'prev' implicitly has an 'any' type.
+shared/utils/lib/usePollWizard.ts(125,20): error TS7006: Parameter 'prev' implicitly has an 'any' type.
+shared/utils/lib/usePollWizard.ts(145,20): error TS7006: Parameter 'prev' implicitly has an 'any' type.
+shared/utils/lib/usePollWizard.ts(165,20): error TS7006: Parameter 'prev' implicitly has an 'any' type.
+shared/utils/lib/usePollWizard.ts(184,20): error TS7006: Parameter 'prev' implicitly has an 'any' type.
+shared/utils/lib/usePollWizard.ts(200,20): error TS7006: Parameter 'prev' implicitly has an 'any' type.
+shared/utils/lib/usePollWizard.ts(203,52): error TS7006: Parameter '_' implicitly has an 'any' type.
+shared/utils/lib/usePollWizard.ts(203,55): error TS7006: Parameter 'i' implicitly has an 'any' type.
+shared/utils/lib/usePollWizard.ts(218,20): error TS7006: Parameter 'prev' implicitly has an 'any' type.
+shared/utils/lib/usePollWizard.ts(235,20): error TS7006: Parameter 'prev' implicitly has an 'any' type.
+shared/utils/lib/usePollWizard.ts(251,20): error TS7006: Parameter 'prev' implicitly has an 'any' type.
+shared/utils/lib/usePollWizard.ts(270,20): error TS7006: Parameter 'prev' implicitly has an 'any' type.
+shared/utils/lib/usePollWizard.ts(271,45): error TS7006: Parameter 'tag' implicitly has an 'any' type.
+shared/utils/lib/usePollWizard.ts(299,20): error TS7006: Parameter 'prev' implicitly has an 'any' type.
+tests/server/admin-apis.test.ts(24,3): error TS2305: Module '"@/utils/supabase/server"' has no exported member '__client'.
+tests/server/admin-apis.test.ts(25,3): error TS2305: Module '"@/utils/supabase/server"' has no exported member '__resetClient'.
+tests/server/admin-apis.test.ts(26,3): error TS2305: Module '"@/utils/supabase/server"' has no exported member '__setFromSingle'.
+tests/server/admin-apis.test.ts(27,3): error TS2305: Module '"@/utils/supabase/server"' has no exported member '__setFromLimit'.
+tests/server/admin-apis.test.ts(51,29): error TS2554: Expected 0 arguments, but got 1.
+tests/server/admin-apis.test.ts(61,29): error TS2554: Expected 0 arguments, but got 1.
+tests/server/admin-auth.test.ts(18,3): error TS2305: Module '"@/utils/supabase/server"' has no exported member '__client'.
+tests/server/admin-auth.test.ts(19,3): error TS2305: Module '"@/utils/supabase/server"' has no exported member '__resetClient'.
+tests/server/admin-auth.test.ts(20,3): error TS2305: Module '"@/utils/supabase/server"' has no exported member '__setFromSingle'.
+tests/server/admin-auth.test.ts(21,3): error TS2305: Module '"@/utils/supabase/server"' has no exported member '__setRpcResult'.
+utils/supabase/__mocks__/server.ts(31,22): error TS2743: No overload expects 1 type arguments, but overloads do exist that expect either 0 or 2 type arguments.

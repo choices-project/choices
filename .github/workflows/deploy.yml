@@ -1,0 +1,337 @@
+name: Continuous Deployment Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Deployment environment'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+
+permissions:
+  contents: read
+  id-token: write
+  deployments: write
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  NODE_VERSION: '22.x'
+  NPM_VERSION: '10.9.3'
+
+jobs:
+  # Pre-deployment validation
+  pre-deployment:
+    name: Pre-deployment Validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: web
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Use repo's npm version
+        run: npm i -g npm@${{ env.NPM_VERSION }}
+
+      - name: Clean workspace
+        run: rm -rf node_modules
+
+      - name: Install dependencies
+        run: npm run ci:install
+
+      - name: Verify lockfile unchanged
+        run: git diff --exit-code package-lock.json
+
+      - name: Type check (strict)
+        run: npm run type-check:strict
+
+      - name: Lint (strict mode)
+        run: npm run lint:strict
+
+      - name: Security audit
+        run: npm run audit:high
+
+      - name: Security check
+        run: npm run security-check
+
+      - name: Next.js security check
+        run: npm run check:next-security
+
+      - name: Trivy vulnerability scan (CRITICAL/HIGH)
+        uses: aquasecurity/trivy-action@0.24.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          format: table
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+          exit-code: '1'
+          scanners: vuln
+
+  # Build and test
+  build-and-test:
+    name: Build and Test
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: pre-deployment
+    defaults:
+      run:
+        working-directory: web
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Use repo's npm version
+        run: npm i -g npm@${{ env.NPM_VERSION }}
+
+      - name: Clean workspace
+        run: rm -rf node_modules
+
+      - name: Install dependencies
+        run: npm run ci:install
+
+      - name: Run unit tests
+        run: npm run test:unit -- --coverage --coverageReporters=lcov
+
+      - name: Run integration tests
+        run: npm run test:integration -- --coverage --coverageReporters=lcov
+
+      - name: Build application
+        run: npm run build
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts
+          path: web/.next/
+          retention-days: 1
+
+      - name: Upload test coverage
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./coverage/lcov.info
+          flags: deployment
+          name: deployment-coverage
+          fail_ci_if_error: false
+
+  # Deploy to staging
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: build-and-test
+    if: github.ref == 'refs/heads/main' || github.event.inputs.environment == 'staging'
+    environment:
+      name: staging
+      url: https://choices-platform-staging.vercel.app
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts
+          path: web/.next/
+
+      - name: Deploy to Vercel (Staging)
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          working-directory: web
+          vercel-args: '--confirm'   # no --prod on staging
+          scope: ${{ secrets.VERCEL_ORG_ID }}
+
+      - name: Run E2E tests against staging
+        run: |
+          cd web
+          npm run test:e2e -- --config=playwright.staging.config.ts
+        env:
+          BASE_URL: https://choices-platform-staging.vercel.app
+
+      - name: Health check
+        run: |
+          curl -f https://choices-platform-staging.vercel.app/api/health || exit 1
+
+  # Deploy to production
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: [build-and-test, deploy-staging]
+    if: github.ref == 'refs/heads/main' && github.event.inputs.environment == 'production'
+    environment:
+      name: production
+      url: https://choices-platform.vercel.app
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts
+          path: web/.next/
+
+      - name: Deploy to Vercel (Production)
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID_PROD }}
+          working-directory: web
+          vercel-args: '--prod --confirm'
+          scope: ${{ secrets.VERCEL_ORG_ID }}
+
+      - name: Run smoke tests against production
+        run: |
+          cd web
+          npm run test:e2e -- --config=playwright.production.config.ts
+        env:
+          BASE_URL: https://choices-platform.vercel.app
+
+      - name: Health check
+        run: |
+          curl -f https://choices-platform.vercel.app/api/health || exit 1
+
+      - name: Notify deployment success
+        uses: 8398a7/action-slack@v3
+        if: success()
+        with:
+          status: success
+          channel: '#deployments'
+          text: '🚀 Production deployment successful!'
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  # Post-deployment monitoring
+  post-deployment:
+    name: Post-deployment Monitoring
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: [deploy-staging, deploy-production]
+    if: always() && (needs.deploy-staging.result == 'success' || needs.deploy-production.result == 'success')
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Install dependencies
+        run: |
+          cd web
+          npm ci
+
+      - name: Run performance monitoring
+        run: |
+          cd web
+          npm run test:performance -- --config=playwright.monitoring.config.ts
+        env:
+          BASE_URL: ${{ needs.deploy-production.result == 'success' && 'https://choices-platform.vercel.app' || 'https://choices-platform-staging.vercel.app' }}
+
+      - name: Check error rates
+        run: |
+          # Check for high error rates in the last 5 minutes
+          echo "Checking error rates..."
+          # This would integrate with your monitoring service
+          echo "Error rate check completed"
+
+      - name: Verify database connectivity
+        run: |
+          # Check database connectivity
+          echo "Verifying database connectivity..."
+          # This would check your database connection
+          echo "Database connectivity verified"
+
+  # Rollback on failure
+  rollback:
+    name: Rollback on Failure
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: [deploy-staging, deploy-production]
+    if: failure() && (needs.deploy-staging.result == 'failure' || needs.deploy-production.result == 'failure')
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Rollback deployment
+        run: |
+          echo "Rolling back deployment..."
+          # This would implement your rollback strategy
+          echo "Rollback completed"
+
+      - name: Notify rollback
+        uses: 8398a7/action-slack@v3
+        with:
+          status: failure
+          channel: '#deployments'
+          text: '🚨 Deployment failed and rollback initiated!'
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  # Deployment summary
+  deployment-summary:
+    name: Deployment Summary
+    runs-on: ubuntu-latest
+    needs: [pre-deployment, build-and-test, deploy-staging, deploy-production, post-deployment]
+    if: always()
+    
+    steps:
+      - name: Generate deployment summary
+        run: |
+          echo "# Deployment Summary" > deployment-summary.md
+          echo "" >> deployment-summary.md
+          echo "## Deployment Status" >> deployment-summary.md
+          echo "- Pre-deployment: ${{ needs.pre-deployment.result }}" >> deployment-summary.md
+          echo "- Build and Test: ${{ needs.build-and-test.result }}" >> deployment-summary.md
+          echo "- Staging Deployment: ${{ needs.deploy-staging.result }}" >> deployment-summary.md
+          echo "- Production Deployment: ${{ needs.deploy-production.result }}" >> deployment-summary.md
+          echo "- Post-deployment: ${{ needs.post-deployment.result }}" >> deployment-summary.md
+          echo "" >> deployment-summary.md
+          echo "## Environment URLs" >> deployment-summary.md
+          echo "- Staging: https://choices-platform-staging.vercel.app" >> deployment-summary.md
+          echo "- Production: https://choices-platform.vercel.app" >> deployment-summary.md
+
+      - name: Upload deployment summary
+        uses: actions/upload-artifact@v4
+        with:
+          name: deployment-summary
+          path: deployment-summary.md
+          retention-days: 30

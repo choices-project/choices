@@ -26,6 +26,7 @@ import PlatformTourStep from './steps/PlatformTourStep';
 import DataUsageStep from './steps/DataUsageStep';
 import AuthSetupStep from './steps/AuthSetupStep';
 import ProfileSetupStep from './steps/ProfileSetupStep';
+import InterestSelectionStep from './steps/InterestSelectionStep';
 import FirstExperienceStep from './steps/FirstExperienceStep';
 import CompleteStep from './steps/CompleteStep';
 import ProgressIndicator from './components/ProgressIndicator';
@@ -287,12 +288,18 @@ function EnhancedOnboardingFlowInner() {
 
   const handleNext = () => {
     const i = STEP_ORDER.indexOf(currentStep);
-    if (i >= 0 && i < STEP_ORDER.length - 1) goTo(STEP_ORDER[i + 1]);
+    if (i >= 0 && i < STEP_ORDER.length - 1) {
+      const nextStep = STEP_ORDER[i + 1];
+      if (nextStep) goTo(nextStep);
+    }
   };
 
   const handleBack = () => {
     const i = STEP_ORDER.indexOf(currentStep);
-    if (i > 0) goTo(STEP_ORDER[i - 1]);
+    if (i > 0) {
+      const prevStep = STEP_ORDER[i - 1];
+      if (prevStep) goTo(prevStep);
+    }
   };
 
   const ctx: OnboardingContextType = {
@@ -334,14 +341,14 @@ function EnhancedOnboardingFlowInner() {
         <div className="container mx-auto px-4 py-8">
           {currentStep === 'welcome' && (
             <WelcomeStep
-              data={data.welcome}
+              data={data.welcome ?? {}}
               onStepUpdate={updateStepData('welcome')}
               onNext={handleNext}
             />
           )}
           {currentStep === 'privacy-philosophy' && (
             <PrivacyPhilosophyStep
-              data={data.privacyPhilosophy}
+              data={data.privacyPhilosophy ?? {}}
               onStepUpdate={updateStepData('privacyPhilosophy')}
               onNext={handleNext}
               onBack={handleBack}
@@ -375,6 +382,12 @@ function EnhancedOnboardingFlowInner() {
             <ProfileSetupStep
               data={data.profile}
               onUpdate={updateStepData('profile')}
+              onNext={handleNext}
+              onBack={handleBack}
+            />
+          )}
+          {currentStep === 'interest-selection' && (
+            <InterestSelectionStep
               onNext={handleNext}
               onBack={handleBack}
             />

@@ -148,26 +148,84 @@ export default function CompleteStep({ data, onComplete, onBack, isLoading = fal
         </div>
       </div>
 
-      {/* What&apos;s next */}
+      {/* What's next */}
       <div className="bg-blue-50 rounded-2xl p-6 border border-blue-200">
         <h3 className="font-semibold text-blue-900 mb-4">What's next?</h3>
         <div className="space-y-3 text-blue-800 text-sm">
           <div className="flex items-start space-x-2">
             <span className="text-blue-600">1.</span>
-            <span>Explore active polls and start voting</span>
+            <span>Find your local candidates and see who's really representing you</span>
           </div>
           <div className="flex items-start space-x-2">
             <span className="text-blue-600">2.</span>
-            <span>Create your own polls to gather community input</span>
+            <span>Ask questions directly to candidates and track their responses</span>
           </div>
           <div className="flex items-start space-x-2">
             <span className="text-blue-600">3.</span>
-            <span>Connect with others who share your values</span>
+            <span>See who's funding whom and spot "bought off" politicians</span>
           </div>
           <div className="flex items-start space-x-2">
             <span className="text-blue-600">4.</span>
-            <span>Update your profile anytime from your dashboard</span>
+            <span>Connect with other voters who care about democracy</span>
           </div>
+        </div>
+      </div>
+
+      {/* Open Source Contribution */}
+      <div className="bg-gradient-to-r from-green-50 to-blue-50 rounded-2xl p-6 border border-green-200">
+        <h3 className="font-semibold text-green-900 mb-4 flex items-center">
+          <span className="mr-2">🚀</span>
+          Help Build the Democratic Revolution
+        </h3>
+        <p className="text-green-800 text-sm mb-4">
+          This is an open source project fighting for democracy. Every contribution helps level the playing field!
+        </p>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="bg-white rounded-lg p-4 border border-green-200">
+            <h4 className="font-semibold text-green-900 mb-2 flex items-center">
+              <span className="mr-2">💻</span>
+              Code Contributions
+            </h4>
+            <p className="text-sm text-green-800 mb-3">
+              Help us build features, fix bugs, and improve the platform
+            </p>
+            <div className="space-y-2 text-xs text-green-700">
+              <div>• Frontend: React, TypeScript, Tailwind</div>
+              <div>• Backend: Node.js, Supabase, PostgreSQL</div>
+              <div>• APIs: Government data integration</div>
+              <div>• Privacy: Zero-knowledge architecture</div>
+            </div>
+            <button className="mt-3 w-full px-3 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition-colors">
+              View on GitHub
+            </button>
+          </div>
+          
+          <div className="bg-white rounded-lg p-4 border border-green-200">
+            <h4 className="font-semibold text-green-900 mb-2 flex items-center">
+              <span className="mr-2">🤝</span>
+              Other Ways to Help
+            </h4>
+            <p className="text-sm text-green-800 mb-3">
+              Not a developer? There are other ways to contribute!
+            </p>
+            <div className="space-y-2 text-xs text-green-700">
+              <div>• Report bugs and suggest features</div>
+              <div>• Help with documentation</div>
+              <div>• Share with friends and family</div>
+              <div>• Test new features</div>
+            </div>
+            <button className="mt-3 w-full px-3 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors">
+              Join Community
+            </button>
+          </div>
+        </div>
+        
+        <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+          <p className="text-xs text-yellow-800">
+            <strong>Note:</strong> We're exploring ethical ways to accept financial contributions. 
+            For now, we focus on code and community contributions to keep the platform truly independent.
+          </p>
         </div>
       </div>
 

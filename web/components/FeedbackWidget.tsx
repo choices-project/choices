@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react'
 import { devLog } from '@/lib/logger';
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence } from '@/components/motion/Motion'
 import Image from 'next/image'
 import { 
   MessageCircle, 
@@ -207,7 +207,7 @@ const FeedbackWidget: React.FC = () => {
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.8, opacity: 0 }}
-              onClick={(e) => e.stopPropagation()}
+              onClick={(e: React.MouseEvent) => e.stopPropagation()}
             >
               {/* Header */}
               <div className="flex items-center justify-between p-6 border-b border-gray-100">
@@ -429,7 +429,13 @@ const FeedbackWidget: React.FC = () => {
                               className="w-full rounded-lg border border-gray-200"
                             />
                             <button
-                              onClick={() => setFeedback(prev => ({ ...prev, screenshot: undefined }))}
+                              onClick={() => setFeedback(prev => {
+                                const newFeedback = { ...prev };
+                                if ('screenshot' in newFeedback) {
+                                  delete newFeedback.screenshot;
+                                }
+                                return newFeedback;
+                              })}
                               className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
                             >
                               <X className="w-4 h-4" />

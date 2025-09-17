@@ -1,0 +1,8 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+MSG_FILE="$1"
+if ! grep -Eq '^(feat|fix|docs|style|refactor|test|chore|perf|ci|build|revert)(\(.+\))?: .+' "$MSG_FILE"; then
+  echo "⚠️  Consider conventional commits: type(scope): description"
+  echo "    e.g. feat: add OAuth callback handling"
+fi

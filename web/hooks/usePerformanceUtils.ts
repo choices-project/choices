@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, createContext, useContext } from 'react'
+import { useState, useEffect } from 'react'
 import { devLog } from '@/lib/logger';
 
 interface PerformanceUtils {
@@ -22,7 +22,7 @@ export function usePerformanceUtils() {
         const performanceModule = await import('../lib/performance-monitor-simple')
         
         setUtils({
-          performanceMonitor: performanceModule.simplePerformanceMonitor
+          performanceMonitor: new performanceModule.SimplePerformanceMonitor()
         })
       } catch (err) {
         devLog('Error loading performance utils:', err)

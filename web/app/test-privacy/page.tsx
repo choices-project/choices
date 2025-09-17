@@ -1,9 +1,11 @@
 'use client';
 
-import { useState } from 'react';
-import { CreatePollForm, CreatePollData } from '@/components/polls/CreatePollForm';
+import React, { useState } from 'react';
+import type { CreatePollData } from '@/features/polls/components/CreatePollForm';
+import { CreatePollForm } from '@/features/polls/components/CreatePollForm';
 import { PrivacyLevelIndicator } from '@/components/privacy/PrivacyLevelIndicator';
-import { PrivacyLevel } from '@/lib/hybrid-privacy';
+import { PrivacyLevel } from '@/lib/privacy/hybrid-privacy';
+import { HybridPrivacyManager } from '@/lib/privacy/hybrid-privacy';
 import { devLog } from '@/lib/logger';
 
 interface TestPoll {
@@ -24,7 +26,7 @@ export default function TestPrivacyPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedPoll, setSelectedPoll] = useState<TestPoll | null>(null);
   const [voteChoice, setVoteChoice] = useState<number>(0);
-  const [votePrivacyLevel, setVotePrivacyLevel] = useState<PrivacyLevel>('public');
+  const [votePrivacyLevel, setVotePrivacyLevel] = useState<PrivacyLevel>(PrivacyLevel.STANDARD);
 
   const handleCreatePoll = async (pollData: CreatePollData) => {
     setIsLoading(true);
@@ -98,7 +100,7 @@ export default function TestPrivacyPage() {
 
       setSelectedPoll(null);
       setVoteChoice(0);
-      setVotePrivacyLevel('public');
+        setVotePrivacyLevel(PrivacyLevel.STANDARD);
       
       devLog('Vote submitted successfully:', result);
       alert(`Vote submitted successfully! Response time: ${result.responsetime}ms`);
@@ -108,7 +110,13 @@ export default function TestPrivacyPage() {
     }
   };
 
-
+  const getRecommendedPrivacyLevel = (pollData: CreatePollData) => {
+    return HybridPrivacyManager.getRecommendedPrivacyLevel({
+      title: pollData.title,
+      description: pollData.description,
+      category: pollData.category || 'general'
+    });
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
@@ -253,14 +261,16 @@ export default function TestPrivacyPage() {
                         onChange={(e) => setVotePrivacyLevel(e.target.value as PrivacyLevel)}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       >
-                        <option value="public">Public Vote</option>
-                        <option value="private">Private Vote</option>
-                        <option value="high-privacy">High Privacy Vote</option>
+                        <option value={PrivacyLevel.MINIMAL}>Minimal Privacy</option>
+                        <option value={PrivacyLevel.STANDARD}>Standard Privacy</option>
+                        <option value={PrivacyLevel.ENHANCED}>Enhanced Privacy</option>
+                        <option value={PrivacyLevel.MAXIMUM}>Maximum Privacy</option>
                       </select>
                       <p className="text-xs text-gray-500 mt-1">
-                        {votePrivacyLevel === 'public' && 'Fast voting with basic privacy'}
-                        {votePrivacyLevel === 'private' && 'Enhanced privacy with authentication'}
-                        {votePrivacyLevel === 'high-privacy' && 'Maximum privacy with cryptographic guarantees'}
+                        {votePrivacyLevel === PrivacyLevel.MINIMAL && 'Fast voting with basic privacy'}
+                        {votePrivacyLevel === PrivacyLevel.STANDARD && 'Standard privacy with authentication'}
+                        {votePrivacyLevel === PrivacyLevel.ENHANCED && 'Enhanced privacy with additional protection'}
+                        {votePrivacyLevel === PrivacyLevel.MAXIMUM && 'Maximum privacy with cryptographic guarantees'}
                       </p>
                     </div>
 

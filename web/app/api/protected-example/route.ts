@@ -6,7 +6,7 @@
  */
 
 import { NextResponse } from 'next/server';
-import { requireUser } from '@/lib/auth';
+import { requireUser } from '@/lib/core/auth/auth';
 import { requireTrustedOrigin } from '@/lib/http';
 
 // Cache guards for auth routes

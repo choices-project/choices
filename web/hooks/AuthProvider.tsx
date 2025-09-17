@@ -1,7 +1,9 @@
 'use client'
 
-import { createContext, useContext, ReactNode } from 'react'
-import { useSupabaseAuth, AuthState, AuthActions } from './useSupabaseAuth'
+import type { ReactNode } from 'react';
+import { createContext, useContext } from 'react'
+import type { AuthState, AuthActions } from './useSupabaseAuth';
+import { useSupabaseAuth } from './useSupabaseAuth'
 
 interface AuthContextType extends AuthState, AuthActions {}
 

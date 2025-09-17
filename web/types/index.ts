@@ -1,5 +1,37 @@
 
 // Common type definitions
+
+// Re-export all type modules for easy importing
+export * from './api';
+export * from './webauthn';
+export * from './google-civic';
+export * from './pwa';
+
+// Export poll types (avoiding conflicts with frontend.ts)
+export type {
+  Poll,
+  PollOption,
+  PollSettings,
+  PollResult,
+  OptionResult,
+  ResultMetadata,
+  PollEventHandler,
+  PollListProps,
+  ResultsChartProps
+} from './poll';
+
+// Export frontend types (excluding duplicates)
+export type {
+  ApiResponse,
+  PaginatedResponse,
+  ApiError,
+  WebAuthnAuthProps,
+  WebAuthnCredentialResponse,
+  DashboardData,
+  GeographicData,
+  DemographicsData,
+  EngagementData
+} from './frontend';
 export interface LoginCredentials {
   email: string;
   password: string;

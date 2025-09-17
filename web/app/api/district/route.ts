@@ -1,11 +1,23 @@
-import { NextRequest, NextResponse } from "next/server";
-import { lookupAddress } from "../../../lib/civics/ingest";
+import type { NextRequest} from "next/server";
+import { NextResponse } from "next/server";
+import { getDistrict } from "@/features/civics/server/district";
 
 export async function GET(req: NextRequest) {
-  const url = new URL(req.url);
-  const addr = url.searchParams.get("addr")?.trim();
-  if (!addr) return NextResponse.json({ error: "Missing addr" }, { status: 400 });
-
-  const data = await lookupAddress(addr);
-  return NextResponse.json(data);
+  try {
+    const url = new URL(req.url);
+    const addr = url.searchParams.get("addr");
+    
+    const data = await getDistrict(addr || "");
+    return NextResponse.json(data);
+  } catch (error) {
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Internal server error" }, 
+      { status: 400 }
+    );
+  }
 }
+
+
+
+
+

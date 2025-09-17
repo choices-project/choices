@@ -42,14 +42,37 @@ const MAX_FILE_SIZE_BYTES = 2.5 * 1024 * 1024; // 2.5MB
 // We try to keep these specific to reduce false positives.
 // Note: we ignore lines that contain an explicit typeof guard.
 const CHECKS = [
-  { label: "window",        re: /\bwindow\./ },
-  { label: "document",      re: /\bdocument\./ },
+  { label: "window",        re: /\bwindow\b/ },
+  { label: "document",      re: /\bdocument\b/ },
   { label: "localStorage",  re: /\blocalStorage\b/ },
   { label: "sessionStorage",re: /\bsessionStorage\b/ },
-  { label: "navigator",     re: /\bnavigator\./ },
-  { label: "location",      re: /\blocation\./ }, // only match location.property access
+  { label: "navigator",     re: /\bnavigator\b/ },
+  { label: "location",      re: /\blocation\./ }, // Only match location.property access, not locationDistribution
   { label: "FileReader",    re: /\bnew\s+FileReader\s*\(/ },
   { label: "HTMLElement",   re: /\bHTMLElement\b/ },
+];
+
+// Whitelist patterns for known false-positives
+const WHITELIST = [
+  /"use client"/,
+  /"client-only"/,
+  /"server-only"/,
+  /typeof\s+window\s*[!==]/,
+  /typeof\s+document\s*[!==]/,
+  /typeof\s+navigator\s*[!==]/,
+  /window\s*===?\s*['"]undefined['"]/,
+  /document\s*===?\s*['"]undefined['"]/,
+  /navigator\s*===?\s*['"]undefined['"]/,
+  // Allow string literals and comments
+  /['"`].*window.*['"`]/,
+  /['"`].*document.*['"`]/,
+  /['"`].*navigator.*['"`]/,
+  /\/\*.*window.*\*\//,
+  /\/\*.*document.*\*\//,
+  /\/\*.*navigator.*\*\//,
+  /\/\/.*window/,
+  /\/\/.*document/,
+  /\/\/.*navigator/,
 ];
 
 // If a line contains one of these, we consider it "guarded" and don't flag.
@@ -57,6 +80,11 @@ const TYPEOF_GUARDS = [
   /typeof\s+window\s*!==?\s*['"]undefined['"]/,
   /typeof\s+window\s*===?\s*['"]undefined['"]/,
 ];
+
+// Check if a line matches any whitelist patterns
+function isWhitelisted(line) {
+  return WHITELIST.some(pattern => pattern.test(line));
+}
 
 // Rough check to see if a token is inside quotes (single/double/backtick)
 // This is simple and intentionally conservative; prevents obvious false positives in strings.
@@ -121,10 +149,17 @@ for (const dir of SCAN_DIRS) {
           while ((m = re.exec(buf))) {
             const idx = m.index;
             if (isQuoted(buf, idx)) continue;
+            
+            // Check if this match is in a whitelisted context
+            const start = Math.max(0, idx - 100);
+            const end = Math.min(buf.length, idx + 100);
+            const context = buf.slice(start, end);
+            if (WHITELIST.some((rgx) => rgx.test(context))) continue;
+            
             // Try to extract a short excerpt
-            const start = Math.max(0, idx - 60);
-            const end   = Math.min(buf.length, idx + 60);
-            const excerpt = buf.slice(start, end).replace(/\s+/g, " ").trim();
+            const excerptStart = Math.max(0, idx - 60);
+            const excerptEnd = Math.min(buf.length, idx + 60);
+            const excerpt = buf.slice(excerptStart, excerptEnd).replace(/\s+/g, " ").trim();
 
             findings.push({
               file,
@@ -145,6 +180,9 @@ for (const dir of SCAN_DIRS) {
       for (let i = 0; i < lines.length; i++) {
         const line = lines[i];
 
+        // Skip lines that match whitelist patterns (server-only, client-only, etc.)
+        if (WHITELIST.some((rgx) => rgx.test(line))) continue;
+        
         // Skip trivial generated lines or with explicit typeof guards
         if (TYPEOF_GUARDS.some((rgx) => rgx.test(line))) continue;
 

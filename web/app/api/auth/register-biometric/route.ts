@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
 import { getSupabaseServerClient } from '@/utils/supabase/server'
-import { cookies as _cookies } from 'next/headers'
 import { logger } from '@/lib/logger'
-import { rateLimiters } from '@/lib/rate-limit'
+import { rateLimiters } from '@/lib/core/security/rate-limit'
 
 export const dynamic = 'force-dynamic'
 

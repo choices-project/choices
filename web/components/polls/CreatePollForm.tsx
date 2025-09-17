@@ -1,114 +1,101 @@
+/**
+ * Create Poll Form Component
+ * 
+ * This module provides a form component for creating polls.
+ */
+
 'use client';
 
 import React, { useState } from 'react';
-import { devLog } from '@/lib/logger';
-import { Plus, X, Save, AlertCircle, Shield } from 'lucide-react';
-import { PrivacyLevelSelector } from '../privacy/PrivacyLevelSelector';
-import { PrivacyLevel, HybridPrivacyManager } from '@/lib/hybrid-privacy';
+import { logger } from '@/lib/logger';
 
-interface CreatePollFormProps {
-  onSubmit: (pollData: CreatePollData) => Promise<void>;
-  onCancel: () => void;
-  isLoading?: boolean;
-}
-
-export interface CreatePollData {
+export interface CreatePollFormData {
   title: string;
   description: string;
+  category: string;
   options: string[];
-  votingmethod: 'single' | 'multiple' | 'ranked' | 'approval' | 'range' | 'quadratic';
-  privacylevel: PrivacyLevel;
-  category?: string;
-  tags: string[];
+  privacyLevel: 'public' | 'private';
+  allowComments: boolean;
+  showResults: boolean;
+}
+
+export interface CreatePollFormProps {
+  onSubmit: (data: CreatePollFormData) => void;
+  onCancel?: () => void;
+  initialData?: Partial<CreatePollFormData>;
+  isLoading?: boolean;
 }
 
 export const CreatePollForm: React.FC<CreatePollFormProps> = ({
   onSubmit,
   onCancel,
+  initialData,
   isLoading = false
 }) => {
-  const [formData, setFormData] = useState<CreatePollData>({
+  const [formData, setFormData] = useState<CreatePollFormData>({
     title: '',
     description: '',
-    options: ['', ''],
-    votingmethod: 'single',
-    privacylevel: 'public',
     category: '',
-    tags: []
+    options: ['', ''],
+    privacyLevel: 'public',
+    allowComments: true,
+    showResults: true,
+    ...initialData
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [newTag, setNewTag] = useState('');
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
 
-    // Validate title
     if (!formData.title.trim()) {
       newErrors.title = 'Title is required';
-    } else if (formData.title.length > 200) {
-      newErrors.title = 'Title must be less than 200 characters';
     }
 
-    // Validate description
-    if (formData.description.length > 1000) {
-      newErrors.description = 'Description must be less than 1000 characters';
+    if (!formData.description.trim()) {
+      newErrors.description = 'Description is required';
     }
 
-    // Validate options
-    const validOptions = formData.options.filter(option => option.trim().length > 0);
+    if (!formData.category.trim()) {
+      newErrors.category = 'Category is required';
+    }
+
+    const validOptions = formData.options.filter(option => option.trim());
     if (validOptions.length < 2) {
       newErrors.options = 'At least 2 options are required';
-    }
-
-    // Validate category
-    if (formData.category && formData.category.length > 50) {
-      newErrors.category = 'Category must be less than 50 characters';
     }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!validateForm()) {
+      logger.warn('Form validation failed:', errors);
       return;
     }
 
-    const validOptions = formData.options.filter(option => option.trim().length > 0);
-    const pollData = {
+    const validOptions = formData.options.filter(option => option.trim());
+    onSubmit({
       ...formData,
       options: validOptions
-    };
-
-    try {
-      // Validate pollData before submission
-      if (!pollData.title || pollData.options.length < 2) {
-        throw new Error('Invalid poll data');
-      }
-      
-      await onSubmit(pollData);
-    } catch (error) {
-      devLog('Error creating poll:', error);
-    }
+    });
   };
 
   const addOption = () => {
-    if (formData.options.length < 10) {
-      setFormData(prev => ({
-        ...prev,
-        options: [...prev.options, '']
-      }));
-    }
+    setFormData(prev => ({
+      ...prev,
+      options: [...prev.options, '']
+    }));
   };
 
   const removeOption = (index: number) => {
     if (formData.options.length > 2) {
       setFormData(prev => ({
         ...prev,
-        options: prev.options.filter((_, i: any) => i !== index)
+        options: prev.options.filter((_, i) => i !== index)
       }));
     }
   };
@@ -116,313 +103,182 @@ export const CreatePollForm: React.FC<CreatePollFormProps> = ({
   const updateOption = (index: number, value: string) => {
     setFormData(prev => ({
       ...prev,
-      options: prev.options.map((option: any, i: any) => i === index ? value : option)
+      options: prev.options.map((option, i) => i === index ? value : option)
     }));
-  };
-
-  const addTag = () => {
-    if (newTag.trim() && !formData.tags.includes(newTag.trim()) && formData.tags.length < 5) {
-      setFormData(prev => ({
-        ...prev,
-        tags: [...prev.tags, newTag.trim()]
-      }));
-      setNewTag('');
-    }
-  };
-
-  const removeTag = (tagToRemove: string) => {
-    setFormData(prev => ({
-      ...prev,
-      tags: prev.tags.filter(tag => tag !== tagToRemove)
-    }));
-  };
-
-  const getRecommendedPrivacyLevel = () => {
-    return HybridPrivacyManager.getRecommendedPrivacyLevel({
-      title: formData.title,
-      description: formData.description,
-      category: formData.category
-    });
-  };
-
-  const handlePrivacyRecommendation = () => {
-    const recommendedLevel = getRecommendedPrivacyLevel();
-    setFormData(prev => ({ ...prev, privacylevel: recommendedLevel }));
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-lg p-6 max-w-2xl mx-auto">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">Create New Poll</h2>
-        <button
-          onClick={onCancel}
-          className="text-gray-400 hover:text-gray-600"
-        >
-          <X className="h-6 w-6" />
-        </button>
+    <form onSubmit={handleSubmit} className="space-y-6">
+      {/* Title */}
+      <div>
+        <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">
+          Poll Title *
+        </label>
+        <input
+          type="text"
+          id="title"
+          value={formData.title}
+          onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+            errors.title ? 'border-red-500' : 'border-gray-300'
+          }`}
+          placeholder="Enter poll title"
+        />
+        {errors.title && <p className="text-red-500 text-sm mt-1">{errors.title}</p>}
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Title */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Poll Title *
-          </label>
-          <input
-            type="text"
-            value={formData.title}
-            onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-            className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-              errors.title ? 'border-red-300' : 'border-gray-300'
-            }`}
-            placeholder="Enter your poll question..."
-            maxLength={200}
-          />
-          {errors.title && (
-            <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
-              <AlertCircle className="h-4 w-4" />
-              {errors.title}
-            </p>
-          )}
-        </div>
+      {/* Description */}
+      <div>
+        <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
+          Description *
+        </label>
+        <textarea
+          id="description"
+          value={formData.description}
+          onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+            errors.description ? 'border-red-500' : 'border-gray-300'
+          }`}
+          rows={3}
+          placeholder="Enter poll description"
+        />
+        {errors.description && <p className="text-red-500 text-sm mt-1">{errors.description}</p>}
+      </div>
 
-        {/* Description */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Description (Optional)
-          </label>
-          <textarea
-            value={formData.description}
-            onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-            className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-              errors.description ? 'border-red-300' : 'border-gray-300'
-            }`}
-            placeholder="Add more context to your poll..."
-            rows={3}
-            maxLength={1000}
-          />
-          {errors.description && (
-            <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
-              <AlertCircle className="h-4 w-4" />
-              {errors.description}
-            </p>
-          )}
-        </div>
+      {/* Category */}
+      <div>
+        <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-1">
+          Category *
+        </label>
+        <select
+          id="category"
+          value={formData.category}
+          onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value }))}
+          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+            errors.category ? 'border-red-500' : 'border-gray-300'
+          }`}
+        >
+          <option value="">Select a category</option>
+          <option value="politics">Politics</option>
+          <option value="social">Social</option>
+          <option value="technology">Technology</option>
+          <option value="entertainment">Entertainment</option>
+          <option value="sports">Sports</option>
+          <option value="other">Other</option>
+        </select>
+        {errors.category && <p className="text-red-500 text-sm mt-1">{errors.category}</p>}
+      </div>
 
-        {/* Category */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Category (Optional)
-          </label>
-          <input
-            type="text"
-            value={formData.category}
-            onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value }))}
-            className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-              errors.category ? 'border-red-300' : 'border-gray-300'
-            }`}
-            placeholder="e.g., Politics, Technology, Entertainment..."
-            maxLength={50}
-          />
-          {errors.category && (
-            <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
-              <AlertCircle className="h-4 w-4" />
-              {errors.category}
-            </p>
-          )}
-        </div>
-
-        {/* Privacy Level */}
-        <div>
-          <div className="flex items-center justify-between mb-2">
-            <label className="block text-sm font-medium text-gray-700">
-              Privacy Level
-            </label>
-            <button
-              type="button"
-              onClick={handlePrivacyRecommendation}
-              className="text-sm text-blue-600 hover:text-blue-700 flex items-center gap-1"
-            >
-              <Shield className="h-4 w-4" />
-              Get Recommendation
-            </button>
-          </div>
-          <PrivacyLevelSelector
-            value={formData.privacylevel}
-            onChange={(level) => setFormData(prev => ({ ...prev, privacylevel: level }))}
-            pollData={{
-              title: formData.title,
-              description: formData.description,
-              category: formData.category
-            }}
-          />
-        </div>
-
-        {/* Voting Method */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Voting Method
-          </label>
-          <select
-            value={formData.votingmethod}
-            onChange={(e) => setFormData(prev => ({ 
-              ...prev, 
-              votingmethod: e.target.value as CreatePollData['votingmethod']
-            }))}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          >
-            <option value="single">Single Choice</option>
-            <option value="multiple">Multiple Choice</option>
-            <option value="ranked">Ranked Choice</option>
-            <option value="approval">Approval Voting</option>
-            <option value="range">Range Voting</option>
-            <option value="quadratic">Quadratic Voting</option>
-          </select>
-        </div>
-
-        {/* Options */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Poll Options *
-          </label>
-          <div className="space-y-2">
-            {formData.options.map((option: any, index: any) => (
-              <div key={index} className="flex items-center gap-2">
-                <input
-                  type="text"
-                  value={option}
-                  onChange={(e) => updateOption(index, e.target.value)}
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder={`Option ${index + 1}`}
-                  maxLength={100}
-                />
-                {formData.options.length > 2 && (
-                  <button
-                    type="button"
-                    onClick={() => removeOption(index)}
-                    className="text-red-500 hover:text-red-700"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-                )}
-              </div>
-            ))}
-          </div>
-          {formData.options.length < 10 && (
-            <button
-              type="button"
-              onClick={addOption}
-              className="mt-2 flex items-center gap-1 text-blue-600 hover:text-blue-700 text-sm"
-            >
-              <Plus className="h-4 w-4" />
-              Add Option
-            </button>
-          )}
-          {errors.options && (
-            <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
-              <AlertCircle className="h-4 w-4" />
-              {errors.options}
-            </p>
-          )}
-        </div>
-
-        {/* Tags */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Tags (Optional)
-          </label>
-          <div className="flex items-center gap-2 mb-2">
+      {/* Options */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Options *
+        </label>
+        {formData.options.map((option, index) => (
+          <div key={index} className="flex items-center gap-2 mb-2">
             <input
               type="text"
-              value={newTag}
-              onChange={(e) => setNewTag(e.target.value)}
-              className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Add a tag..."
-              maxLength={20}
-              onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())}
+              value={option}
+              onChange={(e) => updateOption(index, e.target.value)}
+              className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder={`Option ${index + 1}`}
             />
-            <button
-              type="button"
-              onClick={addTag}
-              disabled={!newTag.trim() || formData.tags.length >= 5}
-              className="px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Add
-            </button>
+            {formData.options.length > 2 && (
+              <button
+                type="button"
+                onClick={() => removeOption(index)}
+                className="px-3 py-2 text-red-600 hover:text-red-800"
+              >
+                Remove
+              </button>
+            )}
           </div>
-          {formData.tags.length > 0 && (
-            <div className="flex flex-wrap gap-2">
-              {formData.tags.map((tag: any, index: any) => (
-                <span
-                  key={index}
-                  className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-sm"
-                >
-                  {tag}
-                  <button
-                    type="button"
-                    onClick={() => removeTag(tag)}
-                    className="text-blue-600 hover:text-blue-800"
-                  >
-                    <X className="h-3 w-3" />
-                  </button>
-                </span>
-              ))}
-            </div>
-          )}
-        </div>
+        ))}
+        <button
+          type="button"
+          onClick={addOption}
+          className="text-blue-600 hover:text-blue-800 text-sm"
+        >
+          + Add Option
+        </button>
+        {errors.options && <p className="text-red-500 text-sm mt-1">{errors.options}</p>}
+      </div>
 
-        {/* Privacy Level Info */}
-        <div className="bg-blue-50 p-4 rounded-lg">
-          <div className="flex items-start gap-2">
-            <div className="text-blue-600">
-              {formData.privacylevel === 'public' && '🌐'}
-              {formData.privacylevel === 'private' && '🔒'}
-              {formData.privacylevel === 'high-privacy' && '🛡️'}
-            </div>
-            <div className="text-sm text-blue-800">
-              <p className="font-medium">
-                {formData.privacylevel === 'public' && 'Public Poll'}
-                {formData.privacylevel === 'private' && 'Private Poll'}
-                {formData.privacylevel === 'high-privacy' && 'High Privacy Poll'}
-              </p>
-              <p className="text-blue-600">
-                {formData.privacylevel === 'public' && 'Fast voting with basic privacy protection'}
-                {formData.privacylevel === 'private' && 'Enhanced privacy with user authentication'}
-                {formData.privacylevel === 'high-privacy' && 'Maximum privacy with cryptographic guarantees'}
-              </p>
-            </div>
-          </div>
+      {/* Privacy Level */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Privacy Level
+        </label>
+        <div className="space-y-2">
+          <label className="flex items-center">
+            <input
+              type="radio"
+              value="public"
+              checked={formData.privacyLevel === 'public'}
+              onChange={(e) => setFormData(prev => ({ ...prev, privacyLevel: e.target.value as 'public' | 'private' }))}
+              className="mr-2"
+            />
+            Public - Anyone can view and vote
+          </label>
+          <label className="flex items-center">
+            <input
+              type="radio"
+              value="private"
+              checked={formData.privacyLevel === 'private'}
+              onChange={(e) => setFormData(prev => ({ ...prev, privacyLevel: e.target.value as 'public' | 'private' }))}
+              className="mr-2"
+            />
+            Private - Only invited users can vote
+          </label>
         </div>
+      </div>
 
-        {/* Submit Buttons */}
-        <div className="flex items-center justify-end gap-3 pt-4 border-t">
+      {/* Settings */}
+      <div className="space-y-3">
+        <label className="flex items-center">
+          <input
+            type="checkbox"
+            checked={formData.allowComments}
+            onChange={(e) => setFormData(prev => ({ ...prev, allowComments: e.target.checked }))}
+            className="mr-2"
+          />
+          Allow comments
+        </label>
+        <label className="flex items-center">
+          <input
+            type="checkbox"
+            checked={formData.showResults}
+            onChange={(e) => setFormData(prev => ({ ...prev, showResults: e.target.checked }))}
+            className="mr-2"
+          />
+          Show results to voters
+        </label>
+      </div>
+
+      {/* Actions */}
+      <div className="flex gap-3">
+        <button
+          type="submit"
+          disabled={isLoading}
+          className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 disabled:opacity-50"
+        >
+          {isLoading ? 'Creating...' : 'Create Poll'}
+        </button>
+        {onCancel && (
           <button
             type="button"
             onClick={onCancel}
-            className="px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
-            disabled={isLoading}
+            className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
           >
             Cancel
           </button>
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2"
-          >
-            {isLoading ? (
-              <>
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                Creating...
-              </>
-            ) : (
-              <>
-                <Save className="h-4 w-4" />
-                Create Poll
-              </>
-            )}
-          </button>
-        </div>
-      </form>
-    </div>
+        )}
+      </div>
+    </form>
   );
 };
+
+
+
+
+

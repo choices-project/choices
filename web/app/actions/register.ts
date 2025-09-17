@@ -6,13 +6,13 @@ import { redirect } from 'next/navigation';
 import { v4 as uuidv4 } from 'uuid';
 
 import { logger } from '@/lib/logger';
-import { TypeGuardError } from '@/lib/types/guards';
-import { logSecurityEvent } from '@/lib/auth/server-actions';
-import { setSessionCookie, rotateSessionToken } from '@/lib/auth/session-cookies';
+import { TypeGuardError } from '@/lib/core/types/guards';
+import { logSecurityEvent } from '@/lib/core/auth/server-actions';
+import { setSessionCookie, rotateSessionToken } from '@/lib/core/auth/session-cookies';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 // Import the existing ServerActionContext type
-import { ServerActionContext } from '@/lib/auth/server-actions';
+import type { ServerActionContext } from '@/lib/core/auth/server-actions';
 
 const RegisterForm = z.object({
   email: z.string().email('Invalid email'),

@@ -2,12 +2,17 @@ name: Web CI (Secure)
 
 on:
   push:
-
-    paths: ["web/**", ".github/workflows/web-ci.yml"]
-    paths-ignore: ["web/**/*.md", "web/**/docs/**"]
+    paths: 
+      - "web/**"
+      - ".github/workflows/web-ci.yml"
+      - "!web/**/*.md"
+      - "!web/**/docs/**"
   pull_request:
-    paths: ["web/**", ".github/workflows/web-ci.yml"]
-    paths-ignore: ["web/**/*.md", "web/**/docs/**"]
+    paths:
+      - "web/**"
+      - ".github/workflows/web-ci.yml"
+      - "!web/**/*.md"
+      - "!web/**/docs/**"
   workflow_dispatch:
 
 permissions:
@@ -29,9 +34,9 @@ jobs:
         node: [ "22.x" ]
     env:
       # Safe fallbacks so forked PRs (no secrets) still compile without calling real services
-      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || 'https://example.supabase.co' }}
-      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'fake-dev-key-for-ci-only' }}
-      SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY || 'dev-only-secret' }}
+      NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: fake-dev-key-for-ci-only
+      SUPABASE_SECRET_KEY: dev-only-secret
 
     steps:
       - uses: actions/checkout@v4
@@ -42,9 +47,9 @@ jobs:
           cache: npm
           cache-dependency-path: web/package-lock.json
 
-      # Ensure CI uses the same npm you pinned in package.json ("npm@10.9.2")
+      # Ensure CI uses the same npm you pinned in package.json ("npm@10.9.3")
       - name: Use repo's npm version
-        run: npm i -g npm@10.9.2
+        run: npm i -g npm@10.9.3
 
       - name: Clean workspace
         run: rm -rf node_modules
@@ -88,8 +93,13 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: OSV Scan (extra signal)
-        uses: google/osv-scanner-action@v1
+      - name: Trivy vulnerability scan (CRITICAL/HIGH)
+        uses: aquasecurity/trivy-action@0.24.0
         with:
-          scan-args: |
-            -r .
+          scan-type: fs
+          scan-ref: .
+          format: table
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+          exit-code: '1'
+          scanners: vuln

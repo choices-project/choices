@@ -1,0 +1,485 @@
+
+> types:strict
+> tsc -p tsconfig.json --noEmit --skipLibCheck
+
+lib/auth/middleware.ts(12,41): error TS2307: Cannot find module '../../../utils/supabase/server' or its corresponding type declarations.
+lib/auth/middleware.ts(13,24): error TS2307: Cannot find module '../../logger' or its corresponding type declarations.
+lib/auth/middleware.ts(14,38): error TS2307: Cannot find module '../../http/origin' or its corresponding type declarations.
+lib/auth/middleware.ts(15,30): error TS2307: Cannot find module '../security/rate-limit' or its corresponding type declarations.
+lib/auth/middleware.ts(16,46): error TS2307: Cannot find module '../../security/turnstile' or its corresponding type declarations.
+lib/auth/middleware.ts(17,30): error TS2307: Cannot find module '../../util/objects' or its corresponding type declarations.
+lib/auth/require-user.ts(9,41): error TS2307: Cannot find module '../../../utils/supabase/server' or its corresponding type declarations.
+lib/auth/require-user.ts(10,24): error TS2307: Cannot find module '../../logger' or its corresponding type declarations.
+lib/auth/require-user.ts(11,32): error TS2307: Cannot find module '../../http/origin' or its corresponding type declarations.
+lib/auth/require-user.ts(12,30): error TS2307: Cannot find module '../../util/objects' or its corresponding type declarations.
+lib/auth/session-cookies.ts(14,24): error TS2307: Cannot find module '../../logger' or its corresponding type declarations.
+lib/auth/session-cookies.ts(15,30): error TS2307: Cannot find module '../../util/objects' or its corresponding type declarations.
+lib/core/auth/device-flow.ts(20,41): error TS2307: Cannot find module '../../utils/supabase/server' or its corresponding type declarations.
+lib/core/auth/device-flow.ts(21,24): error TS2307: Cannot find module '../logger' or its corresponding type declarations.
+lib/core/auth/device-flow.ts(22,30): error TS2307: Cannot find module '../util/objects' or its corresponding type declarations.
+lib/core/auth/idempotency.ts(12,24): error TS2307: Cannot find module '../logger' or its corresponding type declarations.
+lib/core/auth/idempotency.ts(13,41): error TS2307: Cannot find module '../../utils/supabase/server' or its corresponding type declarations.
+lib/core/auth/idempotency.ts(14,30): error TS2307: Cannot find module '../util/objects' or its corresponding type declarations.
+lib/electoral/geographic-feed.ts(148,7): error TS2322: Type '{ governor: string; legislature: { house: { district: string; representative: string; }; senate: { district: string; representative: string; }; }; }' is not assignable to type 'string'.
+lib/electoral/geographic-feed.ts(189,11): error TS18048: 'location.state' is possibly 'undefined'.
+lib/electoral/geographic-feed.ts(189,26): error TS2339: Property 'legislature' does not exist on type 'string'.
+lib/electoral/geographic-feed.ts(190,68): error TS18048: 'location.state' is possibly 'undefined'.
+lib/electoral/geographic-feed.ts(190,83): error TS2339: Property 'legislature' does not exist on type 'string'.
+lib/electoral/geographic-feed.ts(220,9): error TS2322: Type '(Promise<ElectoralRace> | { raceId: string; office: string; jurisdiction: string; electionDate: string; incumbent: Representative; challengers: Representative[]; ... 6 more ...; absenteeBallotDeadline: string; })[]' is not assignable to type 'ElectoralRace[]'.
+  Type 'Promise<ElectoralRace> | { raceId: string; office: string; jurisdiction: string; electionDate: string; incumbent: Representative; challengers: Representative[]; ... 6 more ...; absenteeBallotDeadline: string; }' is not assignable to type 'ElectoralRace'.
+    Type 'Promise<ElectoralRace>' is missing the following properties from type 'ElectoralRace': raceId, office, jurisdiction, electionDate, and 13 more.
+lib/electoral/geographic-feed.ts(252,11): error TS2739: Type 'Candidate' is missing the following properties from type 'Representative': votingRecord, walk_the_talk_score
+lib/electoral/geographic-feed.ts(253,11): error TS2739: Type 'Candidate' is missing the following properties from type 'Representative': votingRecord, walk_the_talk_score
+lib/electoral/geographic-feed.ts(457,7): error TS2322: Type 'Record<string, string> | undefined' is not assignable to type 'Record<string, string>'.
+  Type 'undefined' is not assignable to type 'Record<string, string>'.
+lib/electoral/geographic-feed.ts(604,7): error TS2353: Object literal may only specify known properties, and 'candidateId' does not exist in type 'UnifiedCampaignFinance'.
+lib/feedback/FeedbackParser.ts(93,11): error TS2322: Type '{ id: string; type: "interest_suggestion" | "demographic_suggestion"; category: "interest" | "demographic"; title: string; description: string; sentiment: "positive" | "neutral" | "negative"; priority: "low" | ... 2 more ... | "urgent"; tags: string[]; metadata: { ...; }; }' is not assignable to type 'ParsedFeedback'.
+  The types of 'metadata.userId' are incompatible between these types.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+lib/feedback/FeedbackParser.ts(241,22): error TS2454: Variable 'parsed' is used before being assigned.
+lib/governance/advisory-board.ts(525,37): error TS2345: Argument of type 'number | undefined' is not assignable to parameter of type 'number'.
+  Type 'undefined' is not assignable to type 'number'.
+lib/governance/advisory-board.ts(527,5): error TS2322: Type 'string | undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+lib/governance/rfcs.ts(120,7): error TS2322: Type 'string | undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+lib/governance/rfcs.ts(121,7): error TS2322: Type 'string | undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+lib/governance/rfcs.ts(158,5): error TS2322: Type 'string | undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+lib/governance/rfcs.ts(221,5): error TS2322: Type 'string | undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+lib/governance/rfcs.ts(277,5): error TS2322: Type 'string | undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+lib/governance/rfcs.ts(310,5): error TS2322: Type 'string | undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+lib/http/origin.ts(201,12): error TS2532: Object is possibly 'undefined'.
+lib/identity/proof-of-personhood.ts(404,37): error TS2345: Argument of type 'number | undefined' is not assignable to parameter of type 'number'.
+  Type 'undefined' is not assignable to type 'number'.
+lib/identity/proof-of-personhood.ts(416,21): error TS2532: Object is possibly 'undefined'.
+lib/identity/proof-of-personhood.ts(417,7): error TS2322: Type 'string | undefined' is not assignable to type 'string | null'.
+  Type 'undefined' is not assignable to type 'string | null'.
+lib/integrations/caching.ts(390,34): error TS2345: Argument of type 'CacheConfig | undefined' is not assignable to parameter of type 'CacheConfig'.
+  Type 'undefined' is not assignable to type 'CacheConfig'.
+lib/integrations/google-civic/error-handling.ts(59,35): error TS2345: Argument of type 'unknown' is not assignable to parameter of type '{ status?: number; statusCode?: number; body?: unknown; data?: unknown; }'.
+lib/integrations/google-civic/error-handling.ts(73,28): error TS18046: 'error' is of type 'unknown'.
+lib/integrations/google-civic/error-handling.ts(169,11): error TS2345: Argument of type 'number | undefined' is not assignable to parameter of type 'number'.
+  Type 'undefined' is not assignable to type 'number'.
+lib/integrations/google-civic/index.ts(23,8): error TS2459: Module '"./error-handling"' declares 'GoogleCivicErrorDetails' locally, but it is not exported.
+lib/integrations/google-civic/index.ts(24,8): error TS2459: Module '"./error-handling"' declares 'RetryConfig' locally, but it is not exported.
+lib/integrations/google-civic/transformers.ts(91,3): error TS2322: Type '{ id: string; name: string; party: string; office: string; district: string; state: string; contact: {}; source: "google-civic"; sourceId: string; channels: { type: string; id: string; }[] | undefined; }[]' is not assignable to type 'TransformedRepresentative[]'.
+  Type '{ id: string; name: string; party: string; office: string; district: string; state: string; contact: {}; source: "google-civic"; sourceId: string; channels: { type: string; id: string; }[] | undefined; }' is not assignable to type 'TransformedRepresentative' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+    Types of property 'channels' are incompatible.
+      Type '{ type: string; id: string; }[] | undefined' is not assignable to type '{ type: string; id: string; }[]'.
+        Type 'undefined' is not assignable to type '{ type: string; id: string; }[]'.
+lib/integrations/index.ts(29,3): error TS2459: Module '"./google-civic/error-handling"' declares 'RetryConfig' locally, but it is not exported.
+lib/integrations/monitoring.ts(250,5): error TS2322: Type 'IntegrationMetrics | null | undefined' is not assignable to type 'IntegrationMetrics | null'.
+  Type 'undefined' is not assignable to type 'IntegrationMetrics | null'.
+lib/integrations/monitoring.ts(388,9): error TS2322: Type 'number | undefined' is not assignable to type 'number'.
+  Type 'undefined' is not assignable to type 'number'.
+lib/integrations/monitoring.ts(389,9): error TS2322: Type 'number | undefined' is not assignable to type 'number'.
+  Type 'undefined' is not assignable to type 'number'.
+lib/integrations/monitoring.ts(390,9): error TS2322: Type 'number | undefined' is not assignable to type 'number'.
+  Type 'undefined' is not assignable to type 'number'.
+lib/integrations/monitoring.ts(391,9): error TS2322: Type 'number | undefined' is not assignable to type 'number'.
+  Type 'undefined' is not assignable to type 'number'.
+lib/integrations/propublica/client.ts(191,7): error TS2322: Type 'ProPublicaMember | undefined' is not assignable to type 'ProPublicaMember'.
+  Type 'undefined' is not assignable to type 'ProPublicaMember'.
+lib/integrations/propublica/client.ts(255,7): error TS2322: Type 'ProPublicaBill | undefined' is not assignable to type 'ProPublicaBill'.
+  Type 'undefined' is not assignable to type 'ProPublicaBill'.
+lib/integrations/propublica/transformers.ts(98,7): error TS2375: Type '{ phone: string | undefined; email: undefined; website: string; }' is not assignable to type '{ phone?: string; email?: string; address?: string; website?: string; }' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'phone' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+lib/integrations/propublica/transformers.ts(176,7): error TS2375: Type '{ republican: number | undefined; democrat: number | undefined; independent: number | undefined; }' is not assignable to type '{ republican?: number; democrat?: number; independent?: number; }' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'republican' are incompatible.
+    Type 'number | undefined' is not assignable to type 'number'.
+      Type 'undefined' is not assignable to type 'number'.
+lib/integrations/propublica/transformers.ts(356,5): error TS2375: Type '{ phone: string | undefined; website: string | undefined; email?: string; address?: string; }' is not assignable to type '{ phone?: string; email?: string; address?: string; website?: string; }' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'phone' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+lib/integrations/propublica/transformers.ts(368,3): error TS2375: Type '{ title: string; shortTitle: string | undefined; billNumber: string; summary: string | undefined; lastAction: string; sponsor: { name: string; party: string; state: string; }; id: string; billType: string; ... 10 more ...; lastUpdated: string; }' is not assignable to type 'TransformedProPublicaBill' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'shortTitle' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+lib/integrations/rate-limiting.ts(245,5): error TS2375: Type '{ remaining: number; resetTime: number; retryAfter: number | undefined; }' is not assignable to type 'RateLimitStatus' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'retryAfter' are incompatible.
+    Type 'number | undefined' is not assignable to type 'number'.
+      Type 'undefined' is not assignable to type 'number'.
+lib/legal/compliance.ts(421,11): error TS2375: Type '{ id: string; type: "access" | "rectification" | "erasure" | "portability" | "restriction" | "objection"; status: "pending"; requestedAt: Date; response: undefined; legalBasis: string; }' is not assignable to type 'DataSubjectRequest' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'response' are incompatible.
+    Type 'undefined' is not assignable to type 'string'.
+lib/normalize/fec.ts(99,3): error TS2322: Type '{ contributor_id: string; contributor_name: string; contributor_type: string; amount: number; date: string; candidate_id: string; committee_id: string; election_cycle: string; }' is not assignable to type 'FECContributionModel'.
+  Types of property 'contributor_type' are incompatible.
+    Type 'string' is not assignable to type '"individual" | "committee" | "organization"'.
+lib/pipelines/data-transformation.ts(352,15): error TS2375: Type '{ id: string; name: string; party: string; office: string; level: "state" | "federal" | "local"; jurisdiction: string; district: string; contact: { phone?: string; email?: string; address?: string; website?: string; }; ... 4 more ...; lastUpdated: string; }' is not assignable to type 'NormalizedRepresentative' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'socialMedia' are incompatible.
+    Type '{ twitter?: string; facebook?: string; youtube?: string; } | undefined' is not assignable to type '{ twitter?: string; facebook?: string; instagram?: string; }'.
+      Type 'undefined' is not assignable to type '{ twitter?: string; facebook?: string; instagram?: string; }'.
+lib/pipelines/data-transformation.ts(381,15): error TS2375: Type '{ id: string; title: string; shortTitle: string | undefined; billNumber: string; billType: string; level: "state" | "federal" | "local"; jurisdiction: string; congress: string; introducedDate: string; ... 10 more ...; lastUpdated: string; }' is not assignable to type 'NormalizedBill' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'shortTitle' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+lib/privacy/location-resolver.ts(99,3): error TS2375: Type '{ jurisdictionIds: string[]; coarseGrid: string | undefined; level: "state" | "local" | "federal"; }' is not assignable to type 'ClientResolvedJurisdiction' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'coarseGrid' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+lib/privacy/location-resolver.ts(149,18): error TS2532: Object is possibly 'undefined'.
+lib/privacy/location-resolver.ts(157,3): error TS2322: Type 'string | null | undefined' is not assignable to type 'string | null'.
+  Type 'undefined' is not assignable to type 'string | null'.
+lib/privacy/retention-policies.ts(288,7): error TS2375: Type '{ dataType: string; totalRecords: number; recordsToDelete: number; recordsToAnonymize: number; oldestRecord: Date; newestRecord: Date; nextCleanup: Date; lastCleanup: Date | undefined; policy: RetentionPolicy; }' is not assignable to type 'DataRetentionStatus' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'lastCleanup' are incompatible.
+    Type 'Date | undefined' is not assignable to type 'Date'.
+      Type 'undefined' is not assignable to type 'Date'.
+lib/realtime/incremental-tally.ts(247,5): error TS2375: Type '{ type: "full"; round: number; counts: Record<string, number>; eliminated: string[]; winner: string | undefined; totalBallots: number; processingTime: number; timestamp: number; }' is not assignable to type 'TallyUpdate' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'winner' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+lib/realtime/update-manager.ts(157,15): error TS18048: 'latestUpdate' is possibly 'undefined'.
+lib/realtime/update-manager.ts(158,14): error TS18048: 'latestUpdate' is possibly 'undefined'.
+lib/realtime/update-manager.ts(161,60): error TS18048: 'latestUpdate' is possibly 'undefined'.
+lib/services/poll-service.ts(37,11): error TS2375: Type '{ id: string; title: string; description: string; options: string[]; privacyLevel: string; votingType: string; status: "active"; createdAt: string; expiresAt: string | undefined; totalVotes: number; }' is not assignable to type 'Poll' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'expiresAt' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+lib/testing/load-testing.ts(228,44): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+lib/testing/load-testing.ts(255,17): error TS2322: Type 'string | undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+lib/testing/load-testing.ts(261,17): error TS2322: Type 'string | undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+lib/testing/load-testing.ts(389,61): error TS2345: Argument of type 'BallotData | undefined' is not assignable to parameter of type 'BallotData'.
+  Type 'undefined' is not assignable to type 'BallotData'.
+lib/testing/load-testing.ts(573,5): error TS2322: Type 'number | undefined' is not assignable to type 'number'.
+  Type 'undefined' is not assignable to type 'number'.
+lib/trending/TrendingHashtags.ts(255,7): error TS2532: Object is possibly 'undefined'.
+lib/trending/TrendingHashtags.ts(256,7): error TS2532: Object is possibly 'undefined'.
+lib/trending/TrendingHashtags.ts(258,9): error TS2532: Object is possibly 'undefined'.
+lib/trending/TrendingHashtags.ts(260,29): error TS2532: Object is possibly 'undefined'.
+lib/trending/TrendingHashtags.ts(261,9): error TS2532: Object is possibly 'undefined'.
+lib/trending/TrendingHashtags.ts(277,9): error TS2532: Object is possibly 'undefined'.
+lib/types/electoral-unified.ts(43,20): error TS2304: Cannot find name 'CampaignFinance'.
+lib/types/electoral-unified.ts(63,3): error TS2300: Duplicate identifier 'state'.
+lib/types/electoral-unified.ts(63,3): error TS2687: All declarations of 'state' must have identical modifiers.
+lib/types/electoral-unified.ts(70,3): error TS2300: Duplicate identifier 'state'.
+lib/types/electoral-unified.ts(70,3): error TS2687: All declarations of 'state' must have identical modifiers.
+lib/types/electoral-unified.ts(70,3): error TS2717: Subsequent property declarations must have the same type.  Property 'state' must be of type 'string | undefined', but here has type '{ governor: string; legislature: { house: { district: string; representative: string; }; senate: { district: string; representative: string; }; }; }'.
+lib/types/electoral-unified.ts(93,20): error TS2304: Cannot find name 'CampaignFinance'.
+lib/types/electoral-unified.ts(123,20): error TS2304: Cannot find name 'CampaignFinance'.
+lib/vote/engine.ts(168,9): error TS2375: Type '{ success: false; message: string; pollId: string; privacyLevel: "public" | "private" | "anonymous" | undefined; responseTime: number; }' is not assignable to type 'VoteResponse' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'privacyLevel' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+lib/vote/engine.ts(196,7): error TS2375: Type '{ success: false; message: string; pollId: string; privacyLevel: "public" | "private" | "anonymous" | undefined; responseTime: number; }' is not assignable to type 'VoteResponse' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'privacyLevel' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+lib/vote/finalize.ts(218,7): error TS2375: Type '{ id: string; title: string; description: string | undefined; candidates: { id: string; name: string; description?: string; }[]; closeAt: Date | undefined; allowPostclose: boolean; status: "draft" | "active" | "closed" | "archived"; lockedAt: Date | undefined; createdAt: Date; updatedAt: Date; }' is not assignable to type 'Poll' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'description' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+lib/vote/finalize.ts(355,57): error TS18048: 'finalRound' is possibly 'undefined'.
+lib/vote/finalize.ts(362,9): error TS2322: Type '{ round: number; eliminated: string | undefined; votes: Record<string, number>; percentages: Record<string, number>; }[]' is not assignable to type '{ round: number; eliminated?: string; votes: Record<string, number>; percentages: Record<string, number>; }[]'.
+  Type '{ round: number; eliminated: string | undefined; votes: Record<string, number>; percentages: Record<string, number>; }' is not assignable to type '{ round: number; eliminated?: string; votes: Record<string, number>; percentages: Record<string, number>; }' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+    Types of property 'eliminated' are incompatible.
+      Type 'string | undefined' is not assignable to type 'string'.
+        Type 'undefined' is not assignable to type 'string'.
+lib/vote/finalize.ts(461,7): error TS2375: Type '{ id: string; pollId: string; takenAt: Date; results: typeof snapshotData.results; totalBallots: number; checksum: string; merkleRoot: string | undefined; createdAt: Date; }' is not assignable to type 'PollSnapshot' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'merkleRoot' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+lib/vote/finalize.ts(609,7): error TS2375: Type '{ isFinalized: true; snapshotId: string; finalizedAt: Date; checksum: string; merkleRoot: string | undefined; }' is not assignable to type '{ isFinalized: boolean; snapshotId?: string; finalizedAt?: Date; checksum?: string; merkleRoot?: string; }' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'merkleRoot' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+lib/vote/finalize.ts(672,39): error TS18048: 'a' is possibly 'undefined'.
+lib/vote/finalize.ts(672,43): error TS18048: 'b' is possibly 'undefined'.
+lib/vote/finalize.ts(677,5): error TS2322: Type 'string | undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+lib/vote/irv-calculator.ts(51,14): error TS2322: Type 'string | undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+lib/vote/irv-calculator.ts(57,10): error TS2532: Object is possibly 'undefined'.
+lib/vote/irv-calculator.ts(69,3): error TS2322: Type 'string | undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+lib/vote/irv-calculator.ts(84,3): error TS2322: Type 'string | undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+lib/vote/irv-calculator.ts(187,13): error TS2538: Type 'undefined' cannot be used as an index type.
+lib/vote/irv-calculator.ts(188,19): error TS2379: Argument of type '{ round: number; votes: Record<string, number>; winner: string | undefined; totalVotes: number; activeCandidates: string[]; exhausted: number; }' is not assignable to parameter of type 'IRVRound' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'winner' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+lib/vote/irv-calculator.ts(197,9): error TS2322: Type 'string | undefined' is not assignable to type 'string | null'.
+  Type 'undefined' is not assignable to type 'string | null'.
+lib/vote/irv-calculator.ts(244,15): error TS2375: Type '{ round: number; votes: Record<string, number>; winner: string | undefined; totalVotes: number; activeCandidates: string[]; exhausted: number; }' is not assignable to type 'IRVRound' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'winner' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+lib/vote/irv-calculator.ts(269,30): error TS2538: Type 'undefined' cannot be used as an index type.
+lib/vote/irv-calculator.ts(270,30): error TS2538: Type 'undefined' cannot be used as an index type.
+lib/vote/irv-calculator.ts(274,43): error TS2322: Type 'string | undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+lib/vote/irv-calculator.ts(274,55): error TS2322: Type 'string | undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+lib/vote/irv-calculator.ts(282,17): error TS2375: Type '{ round: number; votes: Record<string, number>; eliminated: string | undefined; winner: string; totalVotes: number; activeCandidates: string[]; exhausted: number; }' is not assignable to type 'IRVRound' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'eliminated' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+lib/vote/irv-calculator.ts(359,13): error TS2375: Type '{ round: number; votes: Record<string, number>; eliminated: string | undefined; winner: string | undefined; totalVotes: number; activeCandidates: string[]; exhausted: number; }' is not assignable to type 'IRVRound' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'eliminated' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+lib/vote/strategies/quadratic.ts(220,17): error TS2532: Object is possibly 'undefined'.
+lib/vote/strategies/quadratic.ts(221,17): error TS2532: Object is possibly 'undefined'.
+lib/vote/strategies/quadratic.ts(248,13): error TS2322: Type 'number | undefined' is not assignable to type 'number'.
+  Type 'undefined' is not assignable to type 'number'.
+lib/vote/strategies/quadratic.ts(253,13): error TS2375: Type '{ winner: string | undefined; winnerVotes: number; winnerPercentage: number; quadraticScores: Record<string, number>; quadraticSpending: Record<string, number>; optionVotes: Record<...>; optionPercentages: Record<...>; abstentions: number; abstentionPercentage: number; }' is not assignable to type 'PollResults' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'winner' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+lib/vote/strategies/range.ts(158,7): error TS2375: Type '{ success: true; message: string; pollId: string; voteId: string; auditReceipt: string; privacyLevel: "public" | "private" | "anonymous" | undefined; responseTime: number; metadata: { votingMethod: string; ... 4 more ...; rangeMax: number; }; }' is not assignable to type 'VoteResponse' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'privacyLevel' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+lib/vote/strategies/range.ts(178,7): error TS2375: Type '{ success: false; message: string; pollId: string; voteId: undefined; auditReceipt: undefined; privacyLevel: "public" | "private" | "anonymous" | undefined; responseTime: number; metadata: { ...; }; }' is not assignable to type 'VoteResponse' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'voteId' are incompatible.
+    Type 'undefined' is not assignable to type 'string'.
+lib/vote/strategies/range.ts(225,15): error TS2532: Object is possibly 'undefined'.
+lib/vote/strategies/range.ts(226,15): error TS2532: Object is possibly 'undefined'.
+lib/vote/strategies/range.ts(261,13): error TS2322: Type 'number | undefined' is not assignable to type 'number'.
+  Type 'undefined' is not assignable to type 'number'.
+lib/vote/strategies/range.ts(266,13): error TS2375: Type '{ winner: string | undefined; winnerVotes: number; winnerPercentage: number; rangeScores: Record<string, number>; rangeAverages: Record<string, number>; optionVotes: Record<...>; optionPercentages: Record<...>; abstentions: number; abstentionPercentage: number; }' is not assignable to type 'PollResults' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'winner' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+lib/vote/strategies/ranked.ts(145,7): error TS2375: Type '{ success: true; message: string; pollId: string; voteId: string; auditReceipt: string; privacyLevel: "public" | "private" | "anonymous" | undefined; responseTime: number; metadata: { votingMethod: string; rankings: number[] | undefined; rankedOptions: { ...; }[]; }; }' is not assignable to type 'VoteResponse' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'privacyLevel' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+lib/vote/strategies/ranked.ts(165,7): error TS2375: Type '{ success: false; message: string; pollId: string; voteId: undefined; auditReceipt: undefined; privacyLevel: "public" | "private" | "anonymous" | undefined; responseTime: number; metadata: { ...; }; }' is not assignable to type 'VoteResponse' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'voteId' are incompatible.
+    Type 'undefined' is not assignable to type 'string'.
+lib/vote/strategies/ranked.ts(220,31): error TS2532: Object is possibly 'undefined'.
+lib/vote/strategies/ranked.ts(237,13): error TS2375: Type '{ winner: string | undefined; winnerVotes: number; winnerPercentage: number; bordaScores: Record<string, number>; instantRunoffRounds: InstantRunoffRound[]; optionVotes: Record<...>; optionPercentages: Record<...>; abstentions: number; abstentionPercentage: number; }' is not assignable to type 'PollResults' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'winner' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+lib/vote/strategies/ranked.ts(301,15): error TS2532: Object is possibly 'undefined'.
+lib/vote/strategies/ranked.ts(340,31): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+lib/vote/strategies/ranked.ts(342,19): error TS2379: Argument of type '{ round: number; eliminated: string | undefined; votes: Record<string, number>; percentages: Record<string, number>; }' is not assignable to parameter of type 'InstantRunoffRound' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'eliminated' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+lib/vote/strategies/single-choice.ts(118,7): error TS2375: Type '{ success: true; message: string; pollId: string; voteId: string; auditReceipt: string; privacyLevel: "public" | "private" | "anonymous" | undefined; responseTime: number; metadata: { votingMethod: string; choice: number | undefined; optionText: PollOption | undefined; }; }' is not assignable to type 'VoteResponse' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'privacyLevel' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+lib/vote/strategies/single-choice.ts(135,7): error TS2375: Type '{ success: false; message: string; pollId: string; voteId: undefined; auditReceipt: undefined; privacyLevel: "public" | "private" | "anonymous" | undefined; responseTime: number; metadata: { ...; }; }' is not assignable to type 'VoteResponse' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'voteId' are incompatible.
+    Type 'undefined' is not assignable to type 'string'.
+lib/vote/strategies/single-choice.ts(180,45): error TS2532: Object is possibly 'undefined'.
+lib/vote/strategies/single-choice.ts(194,13): error TS2322: Type 'number | undefined' is not assignable to type 'number'.
+  Type 'undefined' is not assignable to type 'number'.
+lib/vote/strategies/single-choice.ts(199,13): error TS2375: Type '{ winner: string | undefined; winnerVotes: number; winnerPercentage: number; optionVotes: Record<string, number>; optionPercentages: Record<string, number>; abstentions: number; abstentionPercentage: number; }' is not assignable to type 'PollResults' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'winner' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+middleware.ts(90,12): error TS2532: Object is possibly 'undefined'.
+modules/advanced-privacy/differential-privacy.ts(158,34): error TS2345: Argument of type 'number | undefined' is not assignable to parameter of type 'number'.
+  Type 'undefined' is not assignable to type 'number'.
+modules/advanced-privacy/differential-privacy.ts(248,32): error TS2532: Object is possibly 'undefined'.
+modules/advanced-privacy/differential-privacy.ts(250,9): error TS2322: Type 'T | undefined' is not assignable to type 'T'.
+  'T' could be instantiated with an arbitrary type which could be unrelated to 'T | undefined'.
+modules/advanced-privacy/differential-privacy.ts(254,5): error TS2322: Type 'T | undefined' is not assignable to type 'T'.
+  'T' could be instantiated with an arbitrary type which could be unrelated to 'T | undefined'.
+modules/advanced-privacy/zero-knowledge-proofs.ts(477,46): error TS2345: Argument of type 'number | undefined' is not assignable to parameter of type 'string | number | bigint | boolean'.
+  Type 'undefined' is not assignable to type 'string | number | bigint | boolean'.
+playwright.config.ts(5,29): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Argument of type '{ testDir: string; fullyParallel: true; forbidOnly: boolean; retries: number; workers: number | undefined; reporter: (["html", { outputFolder: string; open: "never"; }] | ["junit", { outputFile: string; }])[]; ... 5 more ...; globalSetup: string; }' is not assignable to parameter of type 'PlaywrightTestConfig<unknown, unknown>' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+      Types of property 'workers' are incompatible.
+        Type 'number | undefined' is not assignable to type 'string | number'.
+          Type 'undefined' is not assignable to type 'string | number'.
+playwright.production.config.ts(3,29): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Argument of type '{ testDir: string; fullyParallel: true; forbidOnly: boolean; retries: number; workers: number | undefined; reporter: (["html", { outputFolder: string; open: "never"; }] | ["junit", { outputFile: string; }])[]; timeout: number; expect: { ...; }; use: { ...; }; projects: { ...; }[]; }' is not assignable to parameter of type 'PlaywrightTestConfig<unknown, unknown>' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+      Types of property 'workers' are incompatible.
+        Type 'number | undefined' is not assignable to type 'string | number'.
+          Type 'undefined' is not assignable to type 'string | number'.
+playwright.staging.config.ts(3,29): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Argument of type '{ testDir: string; fullyParallel: true; forbidOnly: boolean; retries: number; workers: number | undefined; reporter: (["html", { outputFolder: string; open: "never"; }] | ["junit", { outputFile: string; }])[]; timeout: number; expect: { ...; }; use: { ...; }; projects: { ...; }[]; }' is not assignable to parameter of type 'PlaywrightTestConfig<unknown, unknown>' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+      Types of property 'workers' are incompatible.
+        Type 'number | undefined' is not assignable to type 'string | number'.
+          Type 'undefined' is not assignable to type 'string | number'.
+scripts/_shared/http.ts(29,31): error TS2375: Type '{ status: 304; etag: string | undefined; }' is not assignable to type 'FetchETagResult' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'etag' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string | null'.
+      Type 'undefined' is not assignable to type 'string | null'.
+scripts/civics-contact-collection.ts(51,32): error TS2345: Argument of type '{ 'X-API-Key': string | undefined; }' is not assignable to parameter of type 'Record<string, string>'.
+  Property ''X-API-Key'' is incompatible with index signature.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+scripts/civics-contact-collection.ts(61,43): error TS2345: Argument of type '{ 'X-API-Key': string | undefined; }' is not assignable to parameter of type 'Record<string, string>'.
+  Property ''X-API-Key'' is incompatible with index signature.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+scripts/civics-contact-collection.ts(92,9): error TS2322: Type 'string | undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+scripts/civics-contact-collection.ts(92,31): error TS2532: Object is possibly 'undefined'.
+scripts/civics-contact-collection.ts(101,9): error TS2322: Type 'string | undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+scripts/civics-contact-collection.ts(110,9): error TS2322: Type 'string | undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+scripts/civics-contact-collection.ts(110,33): error TS2532: Object is possibly 'undefined'.
+scripts/civics-contact-collection.ts(119,9): error TS2322: Type 'string | undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+scripts/civics-contact-collection.ts(128,9): error TS2322: Type 'string | undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+scripts/civics-enhance-local-contacts.ts(241,32): error TS7053: Element implicitly has an 'any' type because expression of type 'string' can't be used to index type '{ twitter: string; twitter_url: string; instagram: string; instagram_url: string; } | { twitter: string; twitter_url: string; instagram?: never; instagram_url?: never; } | { twitter: string; twitter_url: string; facebook: string; facebook_url: string; instagram: string; instagram_url: string; } | { ...; } | { ...; }'.
+  No index signature with a parameter of type 'string' was found on type '{ twitter: string; twitter_url: string; instagram: string; instagram_url: string; } | { twitter: string; twitter_url: string; instagram?: never; instagram_url?: never; } | { twitter: string; twitter_url: string; facebook: string; facebook_url: string; instagram: string; instagram_url: string; } | { ...; } | { ...; }'.
+scripts/civics-seed-everything.ts(305,38): error TS2554: Expected 1 arguments, but got 2.
+scripts/civics-seed-everything.ts(306,39): error TS2554: Expected 1 arguments, but got 2.
+scripts/cleanup-sf-duplicates.ts(85,24): error TS18046: 'reps' is of type 'unknown'.
+scripts/run-civics-migration.ts(55,11): error TS18048: 'statement' is possibly 'undefined'.
+scripts/run-civics-migration.ts(55,41): error TS18048: 'statement' is possibly 'undefined'.
+scripts/run-civics-migration.ts(66,42): error TS18048: 'statement' is possibly 'undefined'.
+scripts/test-google-civic-api.ts(60,42): error TS18046: 'error' is of type 'unknown'.
+scripts/test-openstates-api.ts(77,49): error TS18046: 'error' is of type 'unknown'.
+scripts/test-openstates-api.ts(82,37): error TS18046: 'error' is of type 'unknown'.
+shared/core/database/lib/database-config.ts(50,5): error TS2375: Type '{ type: "postgres"; url: string | undefined; enabled: true; fallbackToMock: true; }' is not assignable to type 'DatabaseConfig' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'url' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+shared/core/performance/lib/component-optimization.tsx(23,3): error TS4114: This member must have an 'override' modifier because it overrides a member in the base class 'Component<{ fallback?: ReactNode | ((_e: unknown) => ReactNode); children: ReactNode; }, { error: unknown; }, any>'.
+shared/core/performance/lib/component-optimization.tsx(25,3): error TS4114: This member must have an 'override' modifier because it overrides a member in the base class 'Component<{ fallback?: ReactNode | ((_e: unknown) => ReactNode); children: ReactNode; }, { error: unknown; }, any>'.
+shared/core/performance/lib/component-optimization.tsx(29,3): error TS4114: This member must have an 'override' modifier because it overrides a member in the base class 'Component<{ fallback?: ReactNode | ((_e: unknown) => ReactNode); children: ReactNode; }, { error: unknown; }, any>'.
+shared/core/performance/lib/performance.ts(64,11): error TS2375: Type '{ name: string; duration: number; timestamp: Date; metadata: Record<string, any> | undefined; }' is not assignable to type 'PerformanceMetric' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'metadata' are incompatible.
+    Type 'Record<string, any> | undefined' is not assignable to type 'Record<string, any>'.
+      Type 'undefined' is not assignable to type 'Record<string, any>'.
+shared/core/performance/lib/performance.ts(123,7): error TS2322: Type 'number | undefined' is not assignable to type 'number'.
+  Type 'undefined' is not assignable to type 'number'.
+shared/core/performance/lib/performance.ts(124,7): error TS2322: Type 'number | undefined' is not assignable to type 'number'.
+  Type 'undefined' is not assignable to type 'number'.
+shared/core/privacy/lib/zero-knowledge-proofs.ts(349,46): error TS2345: Argument of type 'number | undefined' is not assignable to parameter of type 'string | number | bigint | boolean'.
+  Type 'undefined' is not assignable to type 'string | number | bigint | boolean'.
+shared/core/services/lib/poll-service.ts(419,5): error TS18048: 'poll' is possibly 'undefined'.
+shared/core/services/lib/poll-service.ts(422,10): error TS18048: 'poll' is possibly 'undefined'.
+shared/core/services/lib/poll-service.ts(423,7): error TS18048: 'poll' is possibly 'undefined'.
+shared/core/services/lib/poll-service.ts(426,5): error TS18048: 'poll' is possibly 'undefined'.
+shared/core/services/lib/poll-service.ts(426,29): error TS18048: 'poll' is possibly 'undefined'.
+shared/core/services/lib/poll-service.ts(427,5): error TS18048: 'poll' is possibly 'undefined'.
+shared/core/services/lib/poll-service.ts(430,5): error TS18048: 'poll' is possibly 'undefined'.
+shared/core/services/lib/poll-service.ts(430,38): error TS18048: 'poll' is possibly 'undefined'.
+src/app/page.tsx(21,7): error TS2322: Type 'ForwardRefExoticComponent<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>>' is not assignable to type 'ComponentType<{ className?: string; }>'.
+  Type 'ForwardRefExoticComponent<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>>' is not assignable to type 'FunctionComponent<{ className?: string; }>'.
+    Types of property 'defaultProps' are incompatible.
+      Type 'Partial<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>> | undefined' is not assignable to type 'Partial<{ className?: string; }> | undefined'.
+        Type 'Partial<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>>' is not assignable to type 'Partial<{ className?: string; }>' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+          Types of property 'className' are incompatible.
+            Type 'string | undefined' is not assignable to type 'string'.
+              Type 'undefined' is not assignable to type 'string'.
+src/app/page.tsx(26,7): error TS2322: Type 'ForwardRefExoticComponent<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>>' is not assignable to type 'ComponentType<{ className?: string; }>'.
+  Type 'ForwardRefExoticComponent<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>>' is not assignable to type 'FunctionComponent<{ className?: string; }>'.
+    Types of property 'defaultProps' are incompatible.
+      Type 'Partial<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>> | undefined' is not assignable to type 'Partial<{ className?: string; }> | undefined'.
+        Type 'Partial<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>>' is not assignable to type 'Partial<{ className?: string; }>' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+          Types of property 'className' are incompatible.
+            Type 'string | undefined' is not assignable to type 'string'.
+              Type 'undefined' is not assignable to type 'string'.
+src/app/page.tsx(31,7): error TS2322: Type 'ForwardRefExoticComponent<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>>' is not assignable to type 'ComponentType<{ className?: string; }>'.
+  Type 'ForwardRefExoticComponent<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>>' is not assignable to type 'FunctionComponent<{ className?: string; }>'.
+    Types of property 'defaultProps' are incompatible.
+      Type 'Partial<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>> | undefined' is not assignable to type 'Partial<{ className?: string; }> | undefined'.
+        Type 'Partial<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>>' is not assignable to type 'Partial<{ className?: string; }>' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+          Types of property 'className' are incompatible.
+            Type 'string | undefined' is not assignable to type 'string'.
+              Type 'undefined' is not assignable to type 'string'.
+src/app/page.tsx(36,7): error TS2322: Type 'ForwardRefExoticComponent<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>>' is not assignable to type 'ComponentType<{ className?: string; }>'.
+  Type 'ForwardRefExoticComponent<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>>' is not assignable to type 'FunctionComponent<{ className?: string; }>'.
+    Types of property 'defaultProps' are incompatible.
+      Type 'Partial<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>> | undefined' is not assignable to type 'Partial<{ className?: string; }> | undefined'.
+        Type 'Partial<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>>' is not assignable to type 'Partial<{ className?: string; }>' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+          Types of property 'className' are incompatible.
+            Type 'string | undefined' is not assignable to type 'string'.
+              Type 'undefined' is not assignable to type 'string'.
+src/app/polls/page.tsx(243,42): error TS2551: Property 'createdat' does not exist on type 'Poll'. Did you mean 'created_at'?
+src/app/results/page.tsx(246,42): error TS2551: Property 'createdat' does not exist on type 'Poll'. Did you mean 'created_at'?
+src/lib/api.ts(315,5): error TS2322: Type 'ApiResult<DashboardData>' is not assignable to type 'DashboardData'.
+  Type 'ApiErr' is missing the following properties from type 'DashboardData': totalPolls, activePolls, closedPolls, totalVotes, activeUsers
+src/lib/api.ts(315,36): error TS2345: Argument of type 'Response' is not assignable to parameter of type 'RequestInfo'.
+  Type 'Response' is missing the following properties from type 'Request': cache, credentials, destination, integrity, and 7 more.
+tests/accessibility/accessibility-testing.tsx(637,19): error TS18048: 'rs' is possibly 'undefined'.
+tests/accessibility/accessibility-testing.tsx(637,33): error TS18048: 'gs' is possibly 'undefined'.
+tests/accessibility/accessibility-testing.tsx(637,47): error TS18048: 'bs' is possibly 'undefined'.
+tests/irv/golden-cases.ts(23,25): error TS2305: Module '"../../lib/vote/irv-calculator"' has no exported member 'Candidate'.
+tests/irv/golden-cases.ts(23,36): error TS1484: 'UserRanking' is a type and must be imported using a type-only import when 'verbatimModuleSyntax' is enabled.
+tests/irv/golden-cases.ts(23,49): error TS1484: 'RankedChoiceResults' is a type and must be imported using a type-only import when 'verbatimModuleSyntax' is enabled.
+tests/irv/golden-cases.ts(384,7): error TS18048: 'actual.metadata' is possibly 'undefined'.
+tests/irv/golden-cases.ts(385,103): error TS18048: 'actual.metadata' is possibly 'undefined'.
+tests/unit/finalize-manager.test.ts(33,41): error TS2345: Argument of type '{ data: null; error: null; }' is not assignable to parameter of type 'never'.
+tests/unit/finalize-manager.test.ts(34,39): error TS2345: Argument of type '{ data: never[]; error: null; }' is not assignable to parameter of type 'never'.
+tests/unit/finalize-manager.test.ts(45,51): error TS2345: Argument of type '{ winner: string; rounds: { round: number; eliminated: string; votes: { 'candidate-1': number; 'candidate-2': number; 'candidate-3': number; }; percentages: { 'candidate-1': number; 'candidate-2': number; 'candidate-3': number; }; }[]; totalVotes: number; participationRate: number; breakdown: { ...; }; metadata: { ....' is not assignable to parameter of type 'never'.
+tests/unit/finalize-manager.test.ts(98,23): error TS2554: Expected 1 arguments, but got 0.
+tests/unit/finalize-manager.test.ts(154,7): error TS2571: Object is of type 'unknown'.
+tests/unit/finalize-manager.test.ts(160,7): error TS2571: Object is of type 'unknown'.
+tests/unit/finalize-manager.test.ts(166,58): error TS2345: Argument of type '{ data: { id: string; }; error: null; }' is not assignable to parameter of type 'never'.
+tests/unit/finalize-manager.test.ts(172,7): error TS2571: Object is of type 'unknown'.
+tests/unit/finalize-manager.test.ts(197,7): error TS2571: Object is of type 'unknown'.
+tests/unit/finalize-manager.test.ts(219,7): error TS2571: Object is of type 'unknown'.
+tests/unit/finalize-manager.test.ts(241,7): error TS2571: Object is of type 'unknown'.
+tests/unit/finalize-manager.test.ts(247,7): error TS2571: Object is of type 'unknown'.
+tests/unit/finalize-manager.test.ts(253,58): error TS2345: Argument of type '{ data: { id: string; }; error: null; }' is not assignable to parameter of type 'never'.
+tests/unit/finalize-manager.test.ts(259,7): error TS2571: Object is of type 'unknown'.
+tests/unit/finalize-manager.test.ts(279,7): error TS2571: Object is of type 'unknown'.
+tests/unit/finalize-manager.test.ts(285,7): error TS2571: Object is of type 'unknown'.
+tests/unit/finalize-manager.test.ts(307,58): error TS2345: Argument of type '{ data: { id: string; }; error: null; }' is not assignable to parameter of type 'never'.
+tests/unit/finalize-manager.test.ts(320,58): error TS2345: Argument of type '{ data: null; error: { message: string; }; }' is not assignable to parameter of type 'never'.
+tests/unit/finalize-manager.test.ts(333,7): error TS2571: Object is of type 'unknown'.
+tests/unit/finalize-manager.test.ts(338,45): error TS2341: Property 'getOfficialBallots' is private and only accessible within class 'FinalizePollManager'.
+tests/unit/finalize-manager.test.ts(355,7): error TS2571: Object is of type 'unknown'.
+tests/unit/finalize-manager.test.ts(360,45): error TS2341: Property 'getPostCloseBallots' is private and only accessible within class 'FinalizePollManager'.
+tests/unit/finalize-manager.test.ts(364,14): error TS2532: Object is possibly 'undefined'.
+tests/unit/finalize-manager.test.ts(369,7): error TS2571: Object is of type 'unknown'.
+tests/unit/finalize-manager.test.ts(374,36): error TS2341: Property 'getOfficialBallots' is private and only accessible within class 'FinalizePollManager'.
+tests/unit/finalize-manager.test.ts(381,45): error TS2341: Property 'calculateIRVResults' is private and only accessible within class 'FinalizePollManager'.
+tests/unit/finalize-manager.test.ts(381,45): error TS2554: Expected 2 arguments, but got 1.
+tests/unit/finalize-manager.test.ts(391,45): error TS2341: Property 'calculateIRVResults' is private and only accessible within class 'FinalizePollManager'.
+tests/unit/finalize-manager.test.ts(391,45): error TS2554: Expected 2 arguments, but got 1.
+tests/unit/finalize-manager.test.ts(401,55): error TS2345: Argument of type 'Error' is not assignable to parameter of type 'never'.
+tests/unit/finalize-manager.test.ts(404,36): error TS2341: Property 'calculateIRVResults' is private and only accessible within class 'FinalizePollManager'.
+tests/unit/finalize-manager.test.ts(404,36): error TS2554: Expected 2 arguments, but got 1.
+tests/unit/finalize-manager.test.ts(420,46): error TS2341: Property 'generateSnapshotChecksum' is private and only accessible within class 'FinalizePollManager'.
+tests/unit/finalize-manager.test.ts(420,46): error TS2554: Expected 3 arguments, but got 2.
+tests/unit/finalize-manager.test.ts(441,36): error TS2341: Property 'generateSnapshotChecksum' is private and only accessible within class 'FinalizePollManager'.
+tests/unit/finalize-manager.test.ts(441,36): error TS2554: Expected 3 arguments, but got 2.
+tests/unit/finalize-manager.test.ts(470,28): error TS2345: Argument of type 'null' is not assignable to parameter of type 'never'.
+tests/unit/finalize-manager.test.ts(487,7): error TS2571: Object is of type 'unknown'.
+tests/unit/finalize-manager.test.ts(493,7): error TS2571: Object is of type 'unknown'.
+tests/unit/finalize-manager.test.ts(499,58): error TS2345: Argument of type '{ data: null; error: { message: string; }; }' is not assignable to parameter of type 'never'.
+tests/unit/finalize-manager.test.ts(519,7): error TS2571: Object is of type 'unknown'.
+tests/unit/finalize-manager.test.ts(525,7): error TS2571: Object is of type 'unknown'.
+tests/unit/finalize-manager.test.ts(531,58): error TS2345: Argument of type '{ data: { id: string; }; error: null; }' is not assignable to parameter of type 'never'.
+tests/unit/finalize-manager.test.ts(537,7): error TS2571: Object is of type 'unknown'.
+tests/unit/finalize-manager.test.ts(559,7): error TS2571: Object is of type 'unknown'.
+tests/unit/finalize-manager.test.ts(565,7): error TS2571: Object is of type 'unknown'.
+tests/unit/finalize-manager.test.ts(571,58): error TS2345: Argument of type '{ data: { id: string; }; error: null; }' is not assignable to parameter of type 'never'.
+tests/unit/finalize-manager.test.ts(577,7): error TS2571: Object is of type 'unknown'.
+tests/unit/irv-calculator.test.ts(12,25): error TS2305: Module '"@/lib/vote/irv-calculator"' has no exported member 'Candidate'.
+tests/unit/irv-calculator.test.ts(12,36): error TS1484: 'UserRanking' is a type and must be imported using a type-only import when 'verbatimModuleSyntax' is enabled.
+tests/unit/irv-calculator.test.ts(130,14): error TS2532: Object is possibly 'undefined'.
+tests/unit/irv-calculator.test.ts(568,14): error TS18048: 'results.metadata' is possibly 'undefined'.
+tests/unit/irv-calculator.test.ts(569,14): error TS18048: 'results.metadata' is possibly 'undefined'.
+tests/unit/irv-calculator.test.ts(570,28): error TS18048: 'results.metadata' is possibly 'undefined'.
+tests/unit/irv-calculator.test.ts(591,14): error TS18048: 'results.metadata' is possibly 'undefined'.
+tests/unit/irv-calculator.test.ts(597,14): error TS18048: 'results.metadata' is possibly 'undefined'.
+tests/unit/irv-calculator.test.ts(598,28): error TS18048: 'results.metadata' is possibly 'undefined'.
+tests/unit/vote-engine.test.ts(258,51): error TS2345: Argument of type 'Error' is not assignable to parameter of type 'never'.
+tests/unit/vote-engine.test.ts(337,55): error TS2345: Argument of type 'Error' is not assignable to parameter of type 'never'.
+tools/codemods/optional-literals.ts(1,37): error TS2307: Cannot find module 'ts-morph' or its corresponding type declarations.
+tools/codemods/optional-literals.ts(5,76): error TS7006: Parameter 'sf' implicitly has an 'any' type.
+tools/codemods/optional-literals.ts(6,24): error TS7006: Parameter 'n' implicitly has an 'any' type.
+tools/codemods/optional-literals.ts(8,33): error TS7006: Parameter 'prop' implicitly has an 'any' type.

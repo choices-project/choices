@@ -4,14 +4,15 @@ import { useState, useEffect, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useSupabaseAuth } from '../../hooks/useSupabaseAuth'
 import { ArrowLeft, Share2, BarChart3, Settings, Users, Clock, TrendingUp } from 'lucide-react'
-import SingleChoiceVoting from '@/components/voting/SingleChoiceVoting'
-import RankedChoiceVoting from '@/components/voting/RankedChoiceVoting'
-import ApprovalVoting from '@/components/voting/ApprovalVoting'
-import RangeVoting from '@/components/voting/RangeVoting'
-import QuadraticVoting from '@/components/voting/QuadraticVoting'
-import PollResults from '@/components/polls/PollResults'
-import PollShare from '@/components/polls/PollShare'
+import SingleChoiceVoting from '@/features/voting/components/SingleChoiceVoting'
+import RankedChoiceVoting from '@/features/voting/components/RankedChoiceVoting'
+import ApprovalVoting from '@/features/voting/components/ApprovalVoting'
+import RangeVoting from '@/features/voting/components/RangeVoting'
+import QuadraticVoting from '@/features/voting/components/QuadraticVoting'
+import PollResults from '@/features/polls/components/PollResults'
+import PollShare from '@/features/polls/components/PollShare'
 import { devLog } from '@/lib/logger'
+import { withOptional } from '@/lib/util/objects'
 
 type ViewMode = 'voting' | 'results' | 'share' | 'settings'
 type VotingMethod = 'single' | 'ranked' | 'approval' | 'range' | 'quadratic'
@@ -191,16 +192,19 @@ export default function PollPage() {
   const renderVotingInterface = () => {
     if (!poll) return null
 
-    const commonProps = {
+    const baseProps = {
       pollId: poll.id,
       title: poll.title,
-      description: poll.description,
       options: poll.options,
       onVote: handleVote,
       isVoting,
       hasVoted,
       userVote
     }
+
+    const commonProps = withOptional(baseProps, {
+      description: poll.description ?? undefined
+    })
 
     switch (poll.votingMethod) {
       case 'single':

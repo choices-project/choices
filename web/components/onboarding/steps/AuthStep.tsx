@@ -6,7 +6,7 @@ import { getSupabaseBrowserClient } from '@/utils/supabase/client'
 import { devLog } from '@/lib/logger';
 import { useOnboardingContext } from '../OnboardingFlow'
 import SocialLoginButtons from '@/components/auth/SocialLoginButtons'
-import { OAuthProvider } from '@/types/auth'
+import type { OAuthProvider } from '@/features/auth/types/auth'
 
 interface AuthStepProps {
   data: any

@@ -7,7 +7,7 @@
 
 import { isFeatureEnabled } from '../../lib/feature-flags';
 import { devLog } from '@/lib/logger';
-import { PrivacyBridge } from './privacy-bridge';
+import type { PrivacyBridge } from './privacy-bridge';
 
 export interface PrivacyAuditResult {
   timestamp: number

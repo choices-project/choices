@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { Shield, Info, CheckCircle } from 'lucide-react';
-import { PrivacyLevel, HybridPrivacyManager, PRIVACY_DESCRIPTIONS } from '@/lib/hybrid-privacy';
+import { PrivacyLevel, HybridPrivacyManager, PRIVACY_DESCRIPTIONS } from '@/lib/privacy/hybrid-privacy';
 
 interface PrivacyLevelSelectorProps {
   value: PrivacyLevel;
@@ -26,10 +26,14 @@ export const PrivacyLevelSelector: React.FC<PrivacyLevelSelectorProps> = ({
   const [showDetails, setShowDetails] = useState(false);
   
   const recommendedLevel = pollData 
-    ? HybridPrivacyManager.getRecommendedPrivacyLevel(pollData)
-    : 'public';
+    ? HybridPrivacyManager.getRecommendedPrivacyLevel({
+        title: pollData.title,
+        description: pollData.description,
+        category: pollData.category || 'general'
+      })
+    : PrivacyLevel.STANDARD;
 
-  const levels: PrivacyLevel[] = ['public', 'private', 'high-privacy'];
+  const levels: PrivacyLevel[] = [PrivacyLevel.MINIMAL, PrivacyLevel.STANDARD, PrivacyLevel.ENHANCED];
 
   return (
     <div className="space-y-4">
@@ -83,10 +87,10 @@ export const PrivacyLevelSelector: React.FC<PrivacyLevelSelectorProps> = ({
 
               {/* Icon */}
               <div className="flex items-center gap-2 mb-2">
-                <span className="text-2xl">{description.icon}</span>
+                <span className="text-2xl">{config.icon}</span>
                 <div>
-                  <h3 className="font-medium text-gray-900">{description.title}</h3>
-                  <p className="text-xs text-gray-500">{description.recommended}</p>
+                  <h3 className="font-medium text-gray-900">{config.title}</h3>
+                  <p className="text-xs text-gray-500">{config.recommended ? 'Recommended' : ''}</p>
                 </div>
               </div>
 
@@ -139,9 +143,9 @@ export const PrivacyLevelSelector: React.FC<PrivacyLevelSelectorProps> = ({
           <div className="text-xs text-gray-600">
             <p className="font-medium mb-1">Privacy Protection:</p>
             <p>
-              {value === 'public' && 'Basic privacy with fast voting'}
-              {value === 'private' && 'Enhanced privacy with user authentication'}
-              {value === 'high-privacy' && 'Maximum privacy with cryptographic guarantees'}
+              {value === PrivacyLevel.MINIMAL && 'Basic privacy with fast voting'}
+              {value === PrivacyLevel.STANDARD && 'Enhanced privacy with user authentication'}
+              {value === PrivacyLevel.ENHANCED && 'Maximum privacy with cryptographic guarantees'}
             </p>
           </div>
         </div>

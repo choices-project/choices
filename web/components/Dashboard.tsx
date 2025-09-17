@@ -18,18 +18,13 @@ import {
   Award,
   Zap,
   Smartphone,
-  Monitor
+  Monitor,
+  Vote,
+  CheckCircle
 } from 'lucide-react';
 import { devLog } from '@/lib/logger';
+import type { DashboardData } from '@/types/frontend';
 
-interface DashboardData {
-  polls: PollSummary[];
-  overallmetrics: OverallMetrics;
-  trends: TrendData[];
-  geographicmap: GeographicMap;
-  demographics: DemographicsData;
-  engagement: EngagementMetrics;
-}
 
 interface PollSummary {
   id: string;
@@ -316,7 +311,8 @@ export default function Dashboard() {
                   <option value="T3">Tier 3</option>
                 </select>
               </div>
-              <div>
+              {/* Poll filter temporarily disabled - API doesn't provide poll data yet */}
+              {/* <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Poll</label>
                 <select
                   value={selectedPoll}
@@ -324,11 +320,11 @@ export default function Dashboard() {
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                 >
                   <option value="all">All Polls</option>
-                  {dashboardData.polls.map((poll: any) => (
+                  {dashboardData.polls?.map((poll: any) => (
                     <option key={poll.id} value={poll.id}>{poll.title}</option>
                   ))}
                 </select>
-              </div>
+              </div> */}
             </div>
           )}
         </div>
@@ -337,7 +333,7 @@ export default function Dashboard() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
           <EnhancedMetricCard
             title="Total Polls"
-            value={dashboardData.overallmetrics.totalpolls}
+            value={dashboardData.totalPolls}
             icon={<BarChart3 className="h-5 w-5 sm:h-6 sm:w-6" />}
             color="blue"
             trend="+12%"
@@ -345,7 +341,7 @@ export default function Dashboard() {
           />
           <EnhancedMetricCard
             title="Active Polls"
-            value={dashboardData.overallmetrics.activepolls}
+            value={dashboardData.activePolls}
             icon={<Activity className="h-5 w-5 sm:h-6 sm:w-6" />}
             color="green"
             trend="+5%"
@@ -353,15 +349,15 @@ export default function Dashboard() {
           />
           <EnhancedMetricCard
             title="Total Votes"
-            value={dashboardData.overallmetrics.totalvotes.toLocaleString()}
+            value={dashboardData.totalVotes.toLocaleString()}
             icon={<Users className="h-5 w-5 sm:h-6 sm:w-6" />}
             color="purple"
             trend="+23%"
             trendDirection="up"
           />
           <EnhancedMetricCard
-            title="Avg Participation"
-            value={`${dashboardData.overallmetrics.averageparticipation.toFixed(1)}%`}
+            title="Active Users"
+            value={dashboardData.activeUsers.toLocaleString()}
             icon={<TrendingUp className="h-5 w-5 sm:h-6 sm:w-6" />}
             color="orange"
             trend="+8%"
@@ -626,57 +622,54 @@ function EnhancedTrendsChart({ data }: { data: TrendData[] }) {
 function OverviewView({ data }: { data: DashboardData }) {
   return (
     <div className="space-y-8">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Enhanced Poll Results */}
-        <div className="bg-white rounded-xl shadow-sm border p-4 sm:p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-semibold text-gray-900">Active Polls</h2>
-            <Globe className="h-5 w-5 text-gray-400" />
-          </div>
-          <div className="space-y-4">
-            {data.polls.map((poll: any) => (
-              <EnhancedPollCard key={poll.id} poll={poll} />
-            ))}
+      {/* Simple Metrics Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="bg-white rounded-xl shadow-sm border p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Total Polls</p>
+              <p className="text-2xl font-bold text-gray-900">{data.totalPolls}</p>
+            </div>
+            <BarChart3 className="h-8 w-8 text-blue-600" />
           </div>
         </div>
-
-        {/* Enhanced Demographics */}
-        <div className="bg-white rounded-xl shadow-sm border p-4 sm:p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-semibold text-gray-900">Demographics</h2>
-            <PieChart className="h-5 w-5 text-gray-400" />
+        
+        <div className="bg-white rounded-xl shadow-sm border p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Active Polls</p>
+              <p className="text-2xl font-bold text-gray-900">{data.activePolls}</p>
+            </div>
+            <Vote className="h-8 w-8 text-green-600" />
           </div>
-          <EnhancedDemographicsChart data={data.demographics} />
+        </div>
+        
+        <div className="bg-white rounded-xl shadow-sm border p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Closed Polls</p>
+              <p className="text-2xl font-bold text-gray-900">{data.closedPolls}</p>
+            </div>
+            <CheckCircle className="h-8 w-8 text-gray-600" />
+          </div>
+        </div>
+        
+        <div className="bg-white rounded-xl shadow-sm border p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Total Votes</p>
+              <p className="text-2xl font-bold text-gray-900">{data.totalVotes}</p>
+            </div>
+            <Users className="h-8 w-8 text-purple-600" />
+          </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Enhanced Geographic Data */}
-        <div className="bg-white rounded-xl shadow-sm border p-4 sm:p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-semibold text-gray-900">Geographic Distribution</h2>
-            <Map className="h-5 w-5 text-gray-400" />
-          </div>
-          <EnhancedGeographicChart data={data.geographicmap} />
-        </div>
-
-        {/* Enhanced Engagement Metrics */}
-        <div className="bg-white rounded-xl shadow-sm border p-4 sm:p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-semibold text-gray-900">Engagement</h2>
-            <TrendingUp className="h-5 w-5 text-gray-400" />
-          </div>
-          <EnhancedEngagementChart data={data.engagement} />
-        </div>
-      </div>
-
-      {/* Enhanced Trends */}
-      <div className="bg-white rounded-xl shadow-sm border p-4 sm:p-6">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-semibold text-gray-900">Voting Trends</h2>
-          <Clock className="h-5 w-5 text-gray-400" />
-        </div>
-        <EnhancedTrendsChart data={data.trends} />
+      {/* Active Users */}
+      <div className="bg-white rounded-xl shadow-sm border p-6">
+        <h2 className="text-xl font-semibold text-gray-900 mb-4">Active Users</h2>
+        <div className="text-3xl font-bold text-gray-900">{data.activeUsers}</div>
+        <p className="text-gray-600 mt-2">Users who have participated recently</p>
       </div>
     </div>
   );
@@ -686,28 +679,26 @@ function OverviewView({ data }: { data: DashboardData }) {
 function DetailedView({ data }: { data: DashboardData }) {
   return (
     <div className="space-y-8">
-      <div className="bg-white rounded-xl shadow-sm border p-4 sm:p-6">
+      <div className="bg-white rounded-xl shadow-sm border p-6">
         <h2 className="text-xl font-semibold text-gray-900 mb-6">Detailed Analytics</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="text-center p-4 bg-blue-50 rounded-lg">
             <Target className="h-8 w-8 text-blue-600 mx-auto mb-2" />
-            <p className="text-2xl font-bold text-blue-600">{data.overallmetrics.totalvotes.toLocaleString()}</p>
+            <p className="text-2xl font-bold text-blue-600">{data.totalVotes.toLocaleString()}</p>
             <p className="text-sm text-gray-600">Total Votes Cast</p>
           </div>
           <div className="text-center p-4 bg-green-50 rounded-lg">
             <Award className="h-8 w-8 text-green-600 mx-auto mb-2" />
-            <p className="text-2xl font-bold text-green-600">{data.overallmetrics.totalusers.toLocaleString()}</p>
-            <p className="text-sm text-gray-600">Unique Users</p>
+            <p className="text-2xl font-bold text-green-600">{data.activeUsers.toLocaleString()}</p>
+            <p className="text-sm text-gray-600">Active Users</p>
           </div>
           <div className="text-center p-4 bg-purple-50 rounded-lg">
             <Calendar className="h-8 w-8 text-purple-600 mx-auto mb-2" />
-            <p className="text-2xl font-bold text-purple-600">{data.overallmetrics.activepolls}</p>
+            <p className="text-2xl font-bold text-purple-600">{data.activePolls}</p>
             <p className="text-sm text-gray-600">Active Polls</p>
           </div>
         </div>
       </div>
-      
-      {/* Add more detailed components here */}
     </div>
   );
 }
@@ -716,41 +707,23 @@ function DetailedView({ data }: { data: DashboardData }) {
 function AnalyticsView({ data }: { data: DashboardData }) {
   return (
     <div className="space-y-8">
-      <div className="bg-white rounded-xl shadow-sm border p-4 sm:p-6">
-        <h2 className="text-xl font-semibold text-gray-900 mb-6">Advanced Analytics</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="p-4 bg-gray-50 rounded-lg">
-            <h3 className="font-semibold text-gray-900 mb-2">Participation Rate</h3>
-            <div className="flex items-center">
-              <div className="flex-1 bg-gray-200 rounded-full h-2 mr-4">
-                <div
-                  className="bg-blue-600 h-2 rounded-full"
-                  style={{ width: `${data.overallmetrics.averageparticipation}%` }}
-                />
-              </div>
-              <span className="text-sm font-medium text-gray-900">
-                {data.overallmetrics.averageparticipation.toFixed(1)}%
-              </span>
+      <div className="bg-white rounded-xl shadow-sm border p-6">
+        <h2 className="text-xl font-semibold text-gray-900 mb-6">Analytics</h2>
+        <div className="text-center py-8">
+          <BarChart3 className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+          <p className="text-gray-600">Advanced analytics coming soon...</p>
+          <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="p-4 bg-gray-50 rounded-lg">
+              <h3 className="font-semibold text-gray-900 mb-2">Total Polls</h3>
+              <p className="text-2xl font-bold text-blue-600">{data.totalPolls}</p>
             </div>
-          </div>
-          <div className="p-4 bg-gray-50 rounded-lg">
-            <h3 className="font-semibold text-gray-900 mb-2">User Engagement</h3>
-            <div className="flex items-center">
-              <div className="flex-1 bg-gray-200 rounded-full h-2 mr-4">
-                <div
-                  className="bg-green-600 h-2 rounded-full"
-                  style={{ width: `${(data.engagement.activeusers / data.overallmetrics.totalusers) * 100}%` }}
-                />
-              </div>
-              <span className="text-sm font-medium text-gray-900">
-                {((data.engagement.activeusers / data.overallmetrics.totalusers) * 100).toFixed(1)}%
-              </span>
+            <div className="p-4 bg-gray-50 rounded-lg">
+              <h3 className="font-semibold text-gray-900 mb-2">Total Votes</h3>
+              <p className="text-2xl font-bold text-green-600">{data.totalVotes}</p>
             </div>
           </div>
         </div>
       </div>
-      
-      {/* Add more analytics components here */}
     </div>
   );
 }

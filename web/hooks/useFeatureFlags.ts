@@ -5,18 +5,19 @@
  * re-rendering when flags change.
  */
 
-import { useState, useEffect, useCallback, useMemo, createContext, useContext } from 'react';
-import { 
-  featureFlagManager, 
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import type { 
   FeatureFlag, 
-  FeatureFlagManager,
+  FeatureFlagManager} from '@/lib/core/feature-flags';
+import { 
+  featureFlagManager,
   isFeatureEnabled as _isFeatureEnabled,
   enableFeature as _enableFeature,
   disableFeature as _disableFeature,
   toggleFeature as _toggleFeature,
   getFeatureFlag as _getFeatureFlag,
   getAllFeatureFlags as _getAllFeatureFlags
-} from '../lib/feature-flags';
+} from '@/lib/core/feature-flags';
 
 export interface UseFeatureFlagsReturn {
   // Flag checking
@@ -64,11 +65,16 @@ export function useFeatureFlags(): UseFeatureFlagsReturn {
     setLoading(false);
 
     // Subscribe to flag changes
-    const unsubscribe = featureFlagManager.subscribe((newFlags) => {
-      setFlags(new Map(newFlags));
+    const subscription = featureFlagManager.subscribe((newFlags) => {
+      setFlags(new Map(Object.entries(newFlags).map(([key, enabled]) => [key, {
+        id: key,
+        name: key.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase()),
+        enabled,
+        description: `Feature flag for ${key.toLowerCase().replace(/_/g, ' ')}`
+      }])));
     });
 
-    return unsubscribe;
+    return subscription.unsubscribe;
   }, []);
 
   // Memoized functions to prevent unnecessary re-renders
@@ -93,7 +99,7 @@ export function useFeatureFlags(): UseFeatureFlagsReturn {
   }, []);
 
   const getFlag = useCallback((flagId: string): FeatureFlag | undefined => {
-    return featureFlagManager.getFlag(flagId);
+    return featureFlagManager.getFlag(flagId) || undefined;
   }, []);
 
   const getAllFlags = useCallback((): Map<string, FeatureFlag> => {

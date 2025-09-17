@@ -1,13 +1,19 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { withAuth, AuthContext } from '@/lib/auth-middleware'
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
+import { requireAdminOr401 } from '@/lib/admin-auth'
 import { logger } from '@/lib/logger'
+import { getSupabaseServerClient } from '@/utils/supabase/server'
+import { withOptional } from '@/lib/util/objects'
 
-export const GET = withAuth(async (request: NextRequest, context: AuthContext) => {
+export async function GET(request: NextRequest) {
+  // Single admin gate - returns 401 if not admin
+  const authGate = await requireAdminOr401()
+  if (authGate) return authGate
+  
   try {
     logger.info('Admin site messages GET request', { 
       ip: request.headers.get('x-forwarded-for') || 'unknown',
-      userAgent: request.headers.get('user-agent') || 'unknown',
-      userId: context.user.id
+      userAgent: request.headers.get('user-agent') || 'unknown'
     })
 
     const { searchParams } = new URL(request.url)
@@ -22,14 +28,17 @@ export const GET = withAuth(async (request: NextRequest, context: AuthContext) =
       { status: 500 }
     )
   }
-}, { requireAdmin: true })
+}
 
-export const POST = withAuth(async (request: NextRequest, context: AuthContext) => {
+export async function POST(request: NextRequest) {
+  // Single admin gate - returns 401 if not admin
+  const authGate = await requireAdminOr401()
+  if (authGate) return authGate
+  
   try {
     logger.info('Admin site messages POST request', { 
       ip: request.headers.get('x-forwarded-for') || 'unknown',
-      userAgent: request.headers.get('user-agent') || 'unknown',
-      userId: context.user.id
+      userAgent: request.headers.get('user-agent') || 'unknown'
     })
 
     const body = await request.json()
@@ -43,12 +52,13 @@ export const POST = withAuth(async (request: NextRequest, context: AuthContext) 
       )
     }
 
-    const newMessage = await createSiteMessage(context.supabase, {
+    const supabase = await getSupabaseServerClient()
+    const newMessage = await createSiteMessage(supabase, {
       title,
       message,
       type,
       priority: priority || 'medium',
-      isActive: isActive !== undefined ? isActive : true,
+      isActive: isActive ?? true,
       expiresAt
     })
 
@@ -60,14 +70,17 @@ export const POST = withAuth(async (request: NextRequest, context: AuthContext) 
       { status: 500 }
     )
   }
-}, { requireAdmin: true })
+}
 
-export const PUT = withAuth(async (request: NextRequest, context: AuthContext) => {
+export async function PUT(request: NextRequest) {
+  // Single admin gate - returns 401 if not admin
+  const authGate = await requireAdminOr401()
+  if (authGate) return authGate
+  
   try {
     logger.info('Admin site messages PUT request', { 
       ip: request.headers.get('x-forwarded-for') || 'unknown',
-      userAgent: request.headers.get('user-agent') || 'unknown',
-      userId: context.user.id
+      userAgent: request.headers.get('user-agent') || 'unknown'
     })
 
     const body = await request.json()
@@ -80,7 +93,8 @@ export const PUT = withAuth(async (request: NextRequest, context: AuthContext) =
       )
     }
 
-    const updatedMessage = await updateSiteMessage(context.supabase, id, {
+    const supabase = await getSupabaseServerClient()
+    const updatedMessage = await updateSiteMessage(supabase, id, {
       title,
       message,
       type,
@@ -97,14 +111,17 @@ export const PUT = withAuth(async (request: NextRequest, context: AuthContext) =
       { status: 500 }
     )
   }
-}, { requireAdmin: true })
+}
 
-export const DELETE = withAuth(async (request: NextRequest, context: AuthContext) => {
+export async function DELETE(request: NextRequest) {
+  // Single admin gate - returns 401 if not admin
+  const authGate = await requireAdminOr401()
+  if (authGate) return authGate
+  
   try {
     logger.info('Admin site messages DELETE request', { 
       ip: request.headers.get('x-forwarded-for') || 'unknown',
-      userAgent: request.headers.get('user-agent') || 'unknown',
-      userId: context.user.id
+      userAgent: request.headers.get('user-agent') || 'unknown'
     })
 
     const { searchParams } = new URL(request.url)
@@ -117,7 +134,8 @@ export const DELETE = withAuth(async (request: NextRequest, context: AuthContext
       )
     }
 
-    await deleteSiteMessage(context.supabase, id)
+    const supabase = await getSupabaseServerClient()
+    await deleteSiteMessage(supabase, id)
     return NextResponse.json({ success: true })
   } catch (error) {
     logger.error('Error deleting site message', error instanceof Error ? error : new Error(String(error)))
@@ -126,7 +144,7 @@ export const DELETE = withAuth(async (request: NextRequest, context: AuthContext
       { status: 500 }
     )
   }
-}, { requireAdmin: true })
+}
 
 async function getSiteMessages(includeInactive: boolean = false) {
   try {
@@ -178,7 +196,7 @@ async function createSiteMessage(supabase: any, messageData: {
         message: messageData.message,
         type: messageData.type,
         priority: messageData.priority || 'medium',
-        is_active: messageData.isActive !== undefined ? messageData.isActive : true,
+        is_active: messageData.isActive ?? true,
         expires_at: messageData.expiresAt,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
@@ -213,16 +231,17 @@ async function updateSiteMessage(supabase: any, id: string, updateData: {
   expiresAt?: string
 }) {
   try {
-    const updatePayload: any = {
-      updated_at: new Date().toISOString()
-    }
-
-    if (updateData.title !== undefined) updatePayload.title = updateData.title
-    if (updateData.message !== undefined) updatePayload.message = updateData.message
-    if (updateData.type !== undefined) updatePayload.type = updateData.type
-    if (updateData.priority !== undefined) updatePayload.priority = updateData.priority
-    if (updateData.isActive !== undefined) updatePayload.is_active = updateData.isActive
-    if (updateData.expiresAt !== undefined) updatePayload.expires_at = updateData.expiresAt
+    const updatePayload = withOptional(
+      { updated_at: new Date().toISOString() },
+      {
+        title: updateData.title,
+        message: updateData.message,
+        type: updateData.type,
+        priority: updateData.priority,
+        is_active: updateData.isActive,
+        expires_at: updateData.expiresAt
+      }
+    )
 
     const { data, error } = await supabase
       .from('site_messages')

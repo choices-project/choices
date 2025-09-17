@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server';
 import { devLog } from '@/lib/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 import { handleError, getUserMessage, getHttpStatus, AuthenticationError } from '@/lib/error-handler';
@@ -89,7 +90,7 @@ export async function POST(_request: NextRequest) {
 
   } catch (error) {
     devLog('Unexpected error in sync-user:', error)
-    const appError = handleError(error as Error, { context: 'sync-user' })
+    const appError = handleError(error as Error)
     const userMessage = getUserMessage(appError)
     const statusCode = getHttpStatus(appError)
     

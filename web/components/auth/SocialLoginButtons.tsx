@@ -1,8 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { getAvailableProviders } from '@/lib/social-auth-config'
-import { OAuthProvider } from '@/types/auth'
+import { getAvailableProviders } from '@/features/auth/lib/social-auth-config'
+import type { OAuthProvider } from '@/features/auth/types/auth'
 import { devLog } from '@/lib/logger'
 import { 
   Chrome, 
@@ -15,7 +15,7 @@ import {
   Video 
 } from 'lucide-react'
 
-type OnProviderClick = (...[, provider]: [OAuthProvider, OAuthProvider]) => Promise<void>;
+type OnProviderClick = (provider: OAuthProvider) => Promise<void>;
 
 interface SocialLoginButtonsProps {
   onProviderClick: OnProviderClick
@@ -51,11 +51,14 @@ export default function SocialLoginButtons({
     try {
       // Use the redirectTo parameter to provide redirect information
       if (redirectTo) {
-        devLog('Social login: Redirecting to:', redirectTo, 'after provider:', provider);
+        devLog('Social login: Redirecting to', {
+          redirectTo,
+          provider
+        });
       }
       
       // Pass the provider parameter to the click handler
-      await onProviderClick(provider, provider)
+      await onProviderClick(provider)
     } finally {
       setLoadingProvider(null)
     }
@@ -74,7 +77,7 @@ export default function SocialLoginButtons({
         return (
           <button
             key={option.provider}
-            onClick={() => handleProviderClick(option.provider)}
+            onClick={() => handleProviderClick(option.provider as OAuthProvider)}
             disabled={isLoading || isCurrentLoading}
             className={`
               w-full py-2 px-4 rounded-md border transition-all duration-200

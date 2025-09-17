@@ -474,7 +474,8 @@ export class ZeroKnowledgeProofs {
     let result = BigInt(0)
     
     for (let i = 0; i < bytes.length; i++) {
-      result = result * BigInt(256) + BigInt(bytes[i])
+      const byte = bytes[i] ?? 0
+      result = result * BigInt(256) + BigInt(byte)
     }
     
     return result % (this.prime - BigInt(1))

@@ -1,12 +1,18 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server';
 import { devLog } from '@/lib/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
-import { RealTimeNewsService } from '@/lib/real-time-news-service';
+import { RealTimeNewsService } from '@/lib/core/services/real-time-news';
+import { requireAdminOr401 } from '@/lib/admin-auth';
 
 export const dynamic = 'force-dynamic';
 
 // GET /api/admin/breaking-news - Get breaking news stories
 export async function GET(request: NextRequest) {
+  // Single admin gate - returns 401 if not admin
+  const authGate = await requireAdminOr401()
+  if (authGate) return authGate
+  
   try {
     const supabase = getSupabaseServerClient();
     
@@ -17,29 +23,6 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(
         { error: 'Supabase client not available' },
         { status: 500 }
-      );
-    }
-
-    // Check authentication
-    const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
-    if (userError || !user) {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      );
-    }
-
-    // Check admin permissions - RESTRICTED TO OWNER ONLY
-    const { data: userProfile } = await supabaseClient
-      .from('ia_users')
-      .select('verification_tier')
-      .eq('stable_id', String(user.id) as any)
-      .single();
-
-    if (!userProfile) {
-      return NextResponse.json(
-        { error: 'Admin access restricted to owner only' },
-        { status: 403 }
       );
     }
 
@@ -82,6 +65,10 @@ export async function GET(request: NextRequest) {
 
 // POST /api/admin/breaking-news - Create new breaking news story
 export async function POST(request: NextRequest) {
+  // Single admin gate - returns 401 if not admin
+  const authGate = await requireAdminOr401()
+  if (authGate) return authGate
+  
   try {
     const supabase = getSupabaseServerClient();
     
@@ -92,29 +79,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'Supabase client not available' },
         { status: 500 }
-      );
-    }
-
-    // Check authentication
-    const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
-    if (userError || !user) {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      );
-    }
-
-    // Check admin permissions - RESTRICTED TO OWNER ONLY
-    const { data: userProfile } = await supabaseClient
-      .from('ia_users')
-      .select('verification_tier')
-      .eq('stable_id', String(user.id) as any)
-      .single();
-
-    if (!userProfile) {
-      return NextResponse.json(
-        { error: 'Admin access restricted to owner only' },
-        { status: 403 }
       );
     }
 

@@ -1,6 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { DeviceFlowManager, DeviceFlowRequest } from '@/lib/device-flow'
-import { rateLimiters } from '@/lib/rate-limit'
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
+import type { DeviceFlowRequest } from '@/lib/core/auth/device-flow';
+import { DeviceFlowManager } from '@/lib/core/auth/device-flow'
+import { rateLimiters } from '@/lib/core/security/rate-limit'
 import { logger } from '@/lib/logger'
 
 export async function POST(request: NextRequest) {
