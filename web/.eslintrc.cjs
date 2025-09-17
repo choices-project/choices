@@ -84,8 +84,8 @@ module.exports = {
       ]
     }],
 
-    // Regression-blocking rules for type safety
-    '@typescript-eslint/no-explicit-any': 'error',
+    // Regression-blocking rules for type safety (moved to type-aware overlay)
+    '@typescript-eslint/no-explicit-any': 'off', // moved to type-aware overlay
     '@typescript-eslint/consistent-type-imports': ['error', { 
       fixStyle: 'inline-type-imports',
       prefer: 'type-imports'

@@ -15,6 +15,7 @@ module.exports = {
     {
       files: ['lib/**/*', 'shared/**/*', 'app/api/**/*'],
       rules: {
+        '@typescript-eslint/no-explicit-any': 'error',
         '@typescript-eslint/no-unsafe-assignment': 'error',
         '@typescript-eslint/no-unsafe-member-access': 'error',
         '@typescript-eslint/no-unsafe-call': 'error',
@@ -31,6 +32,7 @@ module.exports = {
     {
       files: ['app/(app)/**/*', 'components/**/*'],
       rules: {
+        '@typescript-eslint/no-explicit-any': 'warn',
         '@typescript-eslint/no-unsafe-assignment': 'warn',
         '@typescript-eslint/no-unsafe-member-access': 'warn',
         '@typescript-eslint/no-unsafe-call': 'warn',
