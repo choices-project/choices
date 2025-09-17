@@ -4,7 +4,7 @@
  * This module provides PWA-specific utility functions.
  */
 
-export interface PWAConfig {
+export type PWAConfig = {
   name: string;
   shortName: string;
   description: string;
@@ -77,7 +77,7 @@ export class PWAUtils {
 
   static isPWAInstalled(): boolean {
     return window.matchMedia('(display-mode: standalone)').matches ||
-           (window.navigator as any).standalone === true;
+           (window.navigator as Navigator & { standalone?: boolean }).standalone === true;
   }
 
   static isOnline(): boolean {
@@ -103,10 +103,10 @@ export class PWAUtils {
   }
 }
 
-export interface BeforeInstallPromptEvent extends Event {
+export type BeforeInstallPromptEvent = {
   prompt(): Promise<void>;
   userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
-}
+} & Event
 
 declare global {
   interface WindowEventMap {
@@ -155,7 +155,7 @@ export class PWAManager {
 
   isInstalled(): boolean {
     return window.matchMedia('(display-mode: standalone)').matches ||
-           (window.navigator as any).standalone === true;
+           (window.navigator as Navigator & { standalone?: boolean }).standalone === true;
   }
 
   async storeOfflineVote(vote: any): Promise<void> {
@@ -190,14 +190,14 @@ export class PWAWebAuthn {
 // Privacy Storage class for encrypted local storage
 export class PrivacyStorage {
   async storeEncryptedData(key: string, data: any): Promise<void> {
-    if ('crypto' in window && 'subtle' in (window as any).crypto) {
+    if ('crypto' in window && 'subtle' in (window as Window & { crypto: Crypto }).crypto) {
       // Implementation would go here
       localStorage.setItem(key, JSON.stringify(data));
     }
   }
 
   async getEncryptedData(key: string): Promise<any> {
-    if ('crypto' in window && 'subtle' in (window as any).crypto) {
+    if ('crypto' in window && 'subtle' in (window as Window & { crypto: Crypto }).crypto) {
       const data = localStorage.getItem(key);
       return data ? JSON.parse(data) : null;
     }

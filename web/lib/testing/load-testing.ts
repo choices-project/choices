@@ -8,7 +8,7 @@
 import { logger } from '@/lib/logger';
 import { sloMonitor } from '../monitoring/slos';
 
-export interface LoadTestConfig {
+export type LoadTestConfig = {
   name: string;
   description: string;
   duration: number; // seconds
@@ -19,7 +19,7 @@ export interface LoadTestConfig {
   testType: 'stress' | 'spike' | 'volume' | 'endurance';
 }
 
-export interface LoadTestResult {
+export type LoadTestResult = {
   testId: string;
   config: LoadTestConfig;
   startTime: number;
@@ -46,7 +46,7 @@ export interface LoadTestResult {
   recommendations: string[];
 }
 
-export interface LoadTestError {
+export type LoadTestError = {
   type: string;
   message: string;
   count: number;
@@ -54,7 +54,7 @@ export interface LoadTestError {
   timestamp: number;
 }
 
-export interface BallotData {
+export type BallotData = {
   id: string;
   pollId: string;
   ranking: string[];
@@ -62,7 +62,7 @@ export interface BallotData {
   userId: string;
 }
 
-export interface UserSession {
+export type UserSession = {
   id: string;
   startTime: number;
   endTime?: number;

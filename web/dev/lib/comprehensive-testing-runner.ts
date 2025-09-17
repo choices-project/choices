@@ -6,7 +6,7 @@ import { devLog } from '@/lib/logger';
 import { crossPlatformTesting } from './cross-platform-testing'
 import { mobileCompatibilityTesting } from './mobile-compatibility-testing'
 
-export interface ComprehensiveTestResult {
+export type ComprehensiveTestResult = {
   testSuite: string
   status: 'pass' | 'fail' | 'warning'
   totalTests: number
@@ -18,7 +18,7 @@ export interface ComprehensiveTestResult {
   timestamp: number
 }
 
-export interface ComprehensiveReport {
+export type ComprehensiveReport = {
   overallStatus: 'ready' | 'needs-improvement' | 'not-ready'
   overallSuccessRate: number
   totalTestSuites: number

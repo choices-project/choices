@@ -4,16 +4,15 @@
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 import { PrivacyLevel } from '@/lib/privacy/hybrid-privacy'
 import { devLog } from '@/lib/logger'
-import type { SupabaseClient } from '@supabase/supabase-js'
 
-export interface VoteRequest {
+export type VoteRequest = {
   pollId: string;
   choice: number;
   privacyLevel: PrivacyLevel;
   userId?: string;
 }
 
-export interface VoteResponse {
+export type VoteResponse = {
   success: boolean;
   message: string;
   pollId: string;
@@ -23,7 +22,7 @@ export interface VoteResponse {
   responseTime: number;
 }
 
-export interface VoteValidation {
+export type VoteValidation = {
   isValid: boolean;
   error?: string;
   requiresAuthentication: boolean;

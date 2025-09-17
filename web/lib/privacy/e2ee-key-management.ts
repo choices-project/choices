@@ -10,14 +10,14 @@
 
 import { logger } from '@/lib/logger';
 
-export interface E2EEKeyBag {
+export type E2EEKeyBag = {
   localCEK: CryptoKey;
   wrappedCEK?: ArrayBuffer; // For sync across devices
   salt?: Uint8Array;
   iterations?: number;
 }
 
-export interface KeyManagementConfig {
+export type KeyManagementConfig = {
   enableSync: boolean;
   passphrase?: string;
   deviceName?: string;

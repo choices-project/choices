@@ -9,8 +9,8 @@
  * - Validates security headers configuration
  */
 
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
 
 // Expected Next.js version (from package.json)
 const EXPECTED_NEXT_VERSION = '14.2.32';

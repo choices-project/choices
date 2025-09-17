@@ -24,7 +24,7 @@ import { devLog } from '@/lib/logger';
 /**
  * WebAuthn credential data from database
  */
-export interface WebAuthnCredentialData {
+export type WebAuthnCredentialData = {
   credentialId: string;
   publicKey: string; // BYTEA format
   counter: number;
@@ -40,7 +40,7 @@ export interface WebAuthnCredentialData {
 /**
  * Verification result for registration
  */
-export interface RegistrationVerificationResult {
+export type RegistrationVerificationResult = {
   verified: boolean;
   credentialId: string;
   publicKey: ArrayBuffer;
@@ -56,7 +56,7 @@ export interface RegistrationVerificationResult {
 /**
  * Verification result for authentication
  */
-export interface AuthenticationVerificationResult {
+export type AuthenticationVerificationResult = {
   verified: boolean;
   credentialId: string;
   newCounter: number;
@@ -87,7 +87,7 @@ export async function verifyCredentialRegistration(
     if (credentialData) {
       // Note: expectedCredentialBackupState and expectedCredentialDeviceType are not supported
       // in @simplewebauthn/server v13.2.0, but we can log the expected state for auditing
-      console.log('Expected credential backup state:', credentialData.backupEligible);
+      devLog('Expected credential backup state:', credentialData.backupEligible);
     }
 
     // Verify the registration response
@@ -295,8 +295,8 @@ export function logCredentialOperation(
   };
 
   if (error) {
-    console.error('WebAuthn credential operation failed:', logData);
+    devLog('WebAuthn credential operation failed:', logData);
   } else {
-    console.log('WebAuthn credential operation:', logData);
+    devLog('WebAuthn credential operation:', logData);
   }
 }

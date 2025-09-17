@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { Search, MapPin, Zap, Shield, Users } from 'lucide-react';
 
-interface LocationInputProps {
+type LocationInputProps = {
   onLocationResolved: (jurisdictionIds: string[]) => void;
   onError: (error: string) => void;
 }

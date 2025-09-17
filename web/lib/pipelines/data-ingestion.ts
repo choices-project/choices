@@ -27,7 +27,7 @@ import type {
   DataSourceConfig 
 } from '@/features/civics/schemas';
 
-export interface IngestionConfig {
+export type IngestionConfig = {
   sources: DataSourceConfig[];
   batchSize: number;
   maxRetries: number;
@@ -38,7 +38,7 @@ export interface IngestionConfig {
   cacheTTL: number;
 }
 
-export interface IngestionJob {
+export type IngestionJob = {
   id: string;
   type: 'full' | 'incremental' | 'delta';
   sources: string[];
@@ -51,7 +51,7 @@ export interface IngestionJob {
   metadata: Record<string, any>;
 }
 
-export interface IngestionResult {
+export type IngestionResult = {
   jobId: string;
   success: boolean;
   recordsProcessed: number;

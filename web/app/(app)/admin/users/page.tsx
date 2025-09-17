@@ -22,7 +22,7 @@ import {
 } from 'lucide-react';
 import { devLog } from '@/lib/logger';
 
-interface User {
+type User = {
   id: string;
   email: string;
   name: string;

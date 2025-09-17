@@ -52,7 +52,7 @@ export async function GET(request: Request) {
       }
 
       if (data.session) {
-        devLog('Session created successfully for:', data.user?.email)
+        devLog('Session created successfully for:', data.user.email)
         return NextResponse.redirect(`${origin}${redirectTo}`)
       }
     }

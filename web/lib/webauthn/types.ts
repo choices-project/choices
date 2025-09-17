@@ -13,20 +13,20 @@
 // WebAuthn Core Types
 // ============================================================================
 
-export interface CredentialData {
+export type CredentialData = {
   id: string
   type: 'public-key'
   rawId: ArrayBuffer
   response: AuthenticatorAttestationResponse | AuthenticatorAssertionResponse
 }
 
-export interface WebAuthnError {
+export type WebAuthnError = {
   name: string
   message: string
   code: number
 }
 
-export interface SessionData {
+export type SessionData = {
   userId: string
   credentialId: string
   expiresAt: Date
@@ -36,7 +36,7 @@ export interface SessionData {
 // Credential Types
 // ============================================================================
 
-export interface PublicKeyCredentialCreationOptions {
+export type PublicKeyCredentialCreationOptions = {
   challenge: ArrayBuffer
   rp: PublicKeyCredentialRpEntity
   user: PublicKeyCredentialUserEntity
@@ -48,7 +48,7 @@ export interface PublicKeyCredentialCreationOptions {
   extensions?: AuthenticationExtensionsClientInputs
 }
 
-export interface PublicKeyCredentialRequestOptions {
+export type PublicKeyCredentialRequestOptions = {
   challenge: ArrayBuffer
   timeout?: number
   rpId?: string
@@ -61,12 +61,12 @@ export interface PublicKeyCredentialRequestOptions {
 // Response Types
 // ============================================================================
 
-export interface AuthenticatorAttestationResponse {
+export type AuthenticatorAttestationResponse = {
   clientDataJSON: ArrayBuffer
   attestationObject: ArrayBuffer
 }
 
-export interface AuthenticatorAssertionResponse {
+export type AuthenticatorAssertionResponse = {
   clientDataJSON: ArrayBuffer
   authenticatorData: ArrayBuffer
   signature: ArrayBuffer
@@ -77,25 +77,25 @@ export interface AuthenticatorAssertionResponse {
 // Entity Types
 // ============================================================================
 
-export interface PublicKeyCredentialRpEntity {
+export type PublicKeyCredentialRpEntity = {
   id?: string
   name: string
   icon?: string
 }
 
-export interface PublicKeyCredentialUserEntity {
+export type PublicKeyCredentialUserEntity = {
   id: ArrayBuffer
   name: string
   displayName: string
   icon?: string
 }
 
-export interface PublicKeyCredentialParameters {
+export type PublicKeyCredentialParameters = {
   type: 'public-key'
   alg: number
 }
 
-export interface PublicKeyCredentialDescriptor {
+export type PublicKeyCredentialDescriptor = {
   type: 'public-key'
   id: ArrayBuffer
   transports?: AuthenticatorTransport[]
@@ -105,7 +105,7 @@ export interface PublicKeyCredentialDescriptor {
 // Selection and Verification Types
 // ============================================================================
 
-export interface AuthenticatorSelectionCriteria {
+export type AuthenticatorSelectionCriteria = {
   authenticatorAttachment?: AuthenticatorAttachment
   userVerification?: UserVerificationRequirement
   requireResidentKey?: boolean
@@ -120,7 +120,7 @@ export type AuthenticatorTransport = 'usb' | 'nfc' | 'ble' | 'internal'
 // Database Types
 // ============================================================================
 
-export interface WebAuthnCredential {
+export type WebAuthnCredential = {
   id: string
   user_id: string
   credential_id: string
@@ -132,7 +132,7 @@ export interface WebAuthnCredential {
   last_used_at?: string
 }
 
-export interface WebAuthnSession {
+export type WebAuthnSession = {
   id: string
   user_id: string
   credential_id: string
@@ -144,13 +144,13 @@ export interface WebAuthnSession {
 // API Response Types
 // ============================================================================
 
-export interface WebAuthnRegistrationResponse {
+export type WebAuthnRegistrationResponse = {
   success: boolean
   credentialId?: string
   error?: string
 }
 
-export interface WebAuthnAuthenticationResponse {
+export type WebAuthnAuthenticationResponse = {
   success: boolean
   userId?: string
   session?: SessionData
@@ -161,7 +161,7 @@ export interface WebAuthnAuthenticationResponse {
 // Error Types
 // ============================================================================
 
-export interface WebAuthnErrorResponse {
+export type WebAuthnErrorResponse = {
   success: false
   error: string
   code?: string
@@ -172,7 +172,7 @@ export interface WebAuthnErrorResponse {
 // Configuration Types
 // ============================================================================
 
-export interface WebAuthnConfig {
+export type WebAuthnConfig = {
   rpId: string
   rpName: string
   rpIcon?: string
@@ -187,7 +187,7 @@ export interface WebAuthnConfig {
 
 export type WebAuthnOperation = 'registration' | 'authentication'
 
-export interface WebAuthnChallenge {
+export type WebAuthnChallenge = {
   challenge: string
   expiresAt: Date
   operation: WebAuthnOperation

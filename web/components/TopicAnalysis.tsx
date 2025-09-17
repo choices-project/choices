@@ -10,7 +10,7 @@ import {
 } from 'lucide-react'
 import { FancyDonutChart, FancyBarChart } from './FancyCharts'
 
-interface TopicData {
+type TopicData = {
   question: string
   totalVotes: number
   overallResult: {
@@ -90,7 +90,7 @@ const sampleTopicData: TopicData = {
   }
 }
 
-interface TopicAnalysisProps {
+type TopicAnalysisProps = {
   data?: TopicData
   title?: string
   subtitle?: string

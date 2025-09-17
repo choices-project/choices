@@ -235,7 +235,7 @@ export class GoogleCivicErrorHandler {
    * Get user-friendly error message
    */
   getUserFriendlyMessage(error: GoogleCivicApiError): string {
-    const userMessage = (error.details as GoogleCivicErrorDetails)?.userMessage;
+    const userMessage = (error.details as GoogleCivicErrorDetails).userMessage;
     if (userMessage) {
       return userMessage;
     }

@@ -19,7 +19,7 @@ import {
   getAllFeatureFlags as _getAllFeatureFlags
 } from '@/lib/core/feature-flags';
 
-export interface UseFeatureFlagsReturn {
+export type UseFeatureFlagsReturn = {
   // Flag checking
   isEnabled: (flagId: string) => boolean;
   isDisabled: (flagId: string) => boolean;
@@ -258,10 +258,10 @@ export function useFeatureFlagManagement(): {
     environment: string;
     categories: Record<string, number>;
   };
-  updateFlagMetadata: (flagId: string, metadata: Record<string, any>) => boolean;
+  updateFlagMetadata: (flagId: string, metadata: Record<string, unknown>) => boolean;
   reset: () => void;
-  exportConfig: () => any;
-  importConfig: (config: any) => void;
+  exportConfig: () => Record<string, unknown>;
+  importConfig: (config: Record<string, unknown>) => void;
   loading: boolean;
 } {
   const { getAllFlags, systemInfo, loading, manager } = useFeatureFlags();
@@ -280,7 +280,7 @@ export function useFeatureFlagManagement(): {
     return manager.exportConfig();
   }, [manager]);
 
-  const importConfig = useCallback((config: any) => {
+  const importConfig = useCallback((config: Record<string, unknown>) => {
     manager.importConfig(config);
   }, [manager]);
 

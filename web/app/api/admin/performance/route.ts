@@ -4,7 +4,7 @@
  * API endpoints for accessing performance monitoring data and insights.
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { type NextRequest, NextResponse } from 'next/server';
 import { logger } from '@/lib/logger';
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
 import { smartCache } from '@/lib/database/smart-cache';

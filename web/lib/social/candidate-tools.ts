@@ -27,7 +27,7 @@ import type {
 // TYPES AND INTERFACES
 // ============================================================================
 
-export interface Candidate {
+export type Candidate = {
   id: string;
   name: string;
   party?: string;
@@ -44,7 +44,7 @@ export interface Candidate {
   updatedAt: Date;
 }
 
-export interface CampaignFinance {
+export type CampaignFinance = {
   totalRaised: number;
   independenceScore: number; // 0-100, higher = more independent
   topDonors: string[];
@@ -52,14 +52,14 @@ export interface CampaignFinance {
   transparencyScore: number; // 0-100
 }
 
-export interface FundingSource {
+export type FundingSource = {
   type: 'individual' | 'corporate' | 'pac' | 'party' | 'self-funded';
   amount: number;
   percentage: number;
   description: string;
 }
 
-export interface CandidateVerification {
+export type CandidateVerification = {
   verified: boolean;
   method: 'government-email' | 'campaign-website' | 'social-media' | 'manual';
   verifiedAt?: Date;
@@ -67,21 +67,21 @@ export interface CandidateVerification {
   documents: VerificationDocument[];
 }
 
-export interface VerificationDocument {
+export type VerificationDocument = {
   type: 'government-id' | 'campaign-filing' | 'website-ownership' | 'social-media';
   url: string;
   verified: boolean;
   verifiedAt?: Date;
 }
 
-export interface CandidateContact {
+export type CandidateContact = {
   email?: string;
   phone?: string;
   address?: string;
   campaignOffice?: string;
 }
 
-export interface SocialMedia {
+export type SocialMedia = {
   twitter?: string;
   facebook?: string;
   instagram?: string;
@@ -89,7 +89,7 @@ export interface SocialMedia {
   youtube?: string;
 }
 
-export interface CampaignDashboardData {
+export type CampaignDashboardData = {
   candidateId: string;
   currentRank: number;
   totalCandidates: number;
@@ -107,14 +107,14 @@ export interface CampaignDashboardData {
   lastUpdated: Date;
 }
 
-export interface InterestAlignment {
+export type InterestAlignment = {
   name: string;
   alignment: number; // 0-100
   userCount: number;
   trend: 'up' | 'down' | 'stable';
 }
 
-export interface EngagementMetrics {
+export type EngagementMetrics = {
   totalEngagements: number;
   engagementRate: number;
   averageEngagementScore: number;
@@ -122,26 +122,26 @@ export interface EngagementMetrics {
   engagementTrend: 'up' | 'down' | 'stable';
 }
 
-export interface EngagementType {
+export type EngagementType = {
   type: 'profile_view' | 'policy_click' | 'social_share' | 'discussion' | 'vote';
   count: number;
   percentage: number;
 }
 
-export interface DemographicBreakdown {
+export type DemographicBreakdown = {
   ageGroups: Record<string, number>;
   education: Record<string, number>;
   politicalAffiliation: Record<string, number>;
   incomeBrackets: Record<string, number>;
 }
 
-export interface GeographicBreakdown {
+export type GeographicBreakdown = {
   regions: Record<string, number>;
   cities: Record<string, number>;
   counties: Record<string, number>;
 }
 
-export interface PolicyAlignment {
+export type PolicyAlignment = {
   policy: string;
   alignment: number; // 0-100
   userCount: number;
@@ -149,7 +149,7 @@ export interface PolicyAlignment {
   sources: string[];
 }
 
-export interface CandidateInsights {
+export type CandidateInsights = {
   candidateId: string;
   strengths: string[];
   weaknesses: string[];
@@ -160,7 +160,7 @@ export interface CandidateInsights {
   lastUpdated: Date;
 }
 
-export interface CompetitiveAnalysis {
+export type CompetitiveAnalysis = {
   competitorId: string;
   competitorName: string;
   comparison: {

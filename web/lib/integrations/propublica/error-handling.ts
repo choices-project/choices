@@ -8,7 +8,7 @@
 import { logger } from '@/lib/logger';
 import { ProPublicaApiError } from './client';
 
-export interface ProPublicaErrorDetails {
+export type ProPublicaErrorDetails = {
   message?: string;
   status?: string;
   userMessage?: string;
@@ -18,7 +18,7 @@ export interface ProPublicaErrorDetails {
   }>;
 }
 
-export interface RetryConfig {
+export type RetryConfig = {
   maxAttempts: number;
   baseDelay: number;
   maxDelay: number;
@@ -261,7 +261,7 @@ export class ProPublicaErrorHandler {
    * Get user-friendly error message
    */
   getUserFriendlyMessage(error: ProPublicaApiError): string {
-    const userMessage = (error.details as ProPublicaErrorDetails)?.userMessage;
+    const userMessage = (error.details as ProPublicaErrorDetails).userMessage;
     if (userMessage) {
       return userMessage;
     }

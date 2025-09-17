@@ -1,26 +1,26 @@
 // Zero-Knowledge Proof Implementation for Choices Platform
 // Enables verification without revealing sensitive data
 
-export interface ZKProof {
+export type ZKProof = {
   proof: string
-  publicInputs: any
+  publicInputs: unknown
   verificationKey: string
   timestamp: number
 }
 
-export interface ZKStatement {
+export type ZKStatement = {
   statement: string
-  witness: any
-  publicInputs: any
+  witness: unknown
+  publicInputs: unknown
 }
 
-export interface ZKVerificationResult {
+export type ZKVerificationResult = {
   isValid: boolean
   confidence: number
   timestamp: number
 }
 
-export interface Commitment {
+export type Commitment = {
   commitment: string
   randomness: string
   value: any

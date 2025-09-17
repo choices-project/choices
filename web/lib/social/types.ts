@@ -12,7 +12,7 @@
 // CORE SOCIAL TYPES
 // ============================================================================
 
-export interface UserProfile {
+export type UserProfile = {
   id: string;
   age: number;
   education: string;
@@ -22,7 +22,7 @@ export interface UserProfile {
   votingHistory: VotingRecord[];
 }
 
-export interface Demographics {
+export type Demographics = {
   ageGroup: string;
   education: string;
   location: string;
@@ -30,7 +30,7 @@ export interface Demographics {
   incomeBracket?: string;
 }
 
-export interface VotingRecord {
+export type VotingRecord = {
   pollId: string;
   ranking: string[];
   timestamp: Date;
@@ -41,7 +41,7 @@ export interface VotingRecord {
 // CANDIDATE TOOLS TYPES
 // ============================================================================
 
-export interface Candidate {
+export type Candidate = {
   id: string;
   name: string;
   party?: string;
@@ -58,7 +58,7 @@ export interface Candidate {
   updatedAt: Date;
 }
 
-export interface CampaignFinance {
+export type CampaignFinance = {
   totalRaised: number;
   independenceScore: number; // 0-100, higher = more independent
   topDonors: string[];
@@ -66,14 +66,14 @@ export interface CampaignFinance {
   transparencyScore: number; // 0-100
 }
 
-export interface FundingSource {
+export type FundingSource = {
   type: 'individual' | 'corporate' | 'pac' | 'party' | 'self-funded';
   amount: number;
   percentage: number;
   description: string;
 }
 
-export interface CandidateVerification {
+export type CandidateVerification = {
   verified: boolean;
   method: 'government-email' | 'campaign-website' | 'social-media' | 'manual';
   verifiedAt?: Date;
@@ -81,21 +81,21 @@ export interface CandidateVerification {
   documents: VerificationDocument[];
 }
 
-export interface VerificationDocument {
+export type VerificationDocument = {
   type: 'government-id' | 'campaign-filing' | 'website-ownership' | 'social-media';
   url: string;
   verified: boolean;
   verifiedAt?: Date;
 }
 
-export interface CandidateContact {
+export type CandidateContact = {
   email?: string;
   phone?: string;
   address?: string;
   campaignOffice?: string;
 }
 
-export interface SocialMedia {
+export type SocialMedia = {
   twitter?: string;
   facebook?: string;
   instagram?: string;
@@ -103,7 +103,7 @@ export interface SocialMedia {
   youtube?: string;
 }
 
-export interface CampaignDashboardData {
+export type CampaignDashboardData = {
   candidateId: string;
   currentRank: number;
   totalCandidates: number;
@@ -121,14 +121,14 @@ export interface CampaignDashboardData {
   lastUpdated: Date;
 }
 
-export interface InterestAlignment {
+export type InterestAlignment = {
   name: string;
   alignment: number; // 0-100
   userCount: number;
   trend: 'up' | 'down' | 'stable';
 }
 
-export interface EngagementMetrics {
+export type EngagementMetrics = {
   totalEngagements: number;
   engagementRate: number;
   averageEngagementScore: number;
@@ -136,26 +136,26 @@ export interface EngagementMetrics {
   engagementTrend: 'up' | 'down' | 'stable';
 }
 
-export interface EngagementType {
+export type EngagementType = {
   type: 'profile_view' | 'policy_click' | 'social_share' | 'discussion' | 'vote';
   count: number;
   percentage: number;
 }
 
-export interface DemographicBreakdown {
+export type DemographicBreakdown = {
   ageGroups: Record<string, number>;
   education: Record<string, number>;
   politicalAffiliation: Record<string, number>;
   incomeBrackets: Record<string, number>;
 }
 
-export interface GeographicBreakdown {
+export type GeographicBreakdown = {
   regions: Record<string, number>;
   cities: Record<string, number>;
   counties: Record<string, number>;
 }
 
-export interface PolicyAlignment {
+export type PolicyAlignment = {
   policy: string;
   alignment: number; // 0-100
   userCount: number;
@@ -163,7 +163,7 @@ export interface PolicyAlignment {
   sources: string[];
 }
 
-export interface CandidateInsights {
+export type CandidateInsights = {
   candidateId: string;
   strengths: string[];
   weaknesses: string[];
@@ -174,7 +174,7 @@ export interface CandidateInsights {
   lastUpdated: Date;
 }
 
-export interface CompetitiveAnalysis {
+export type CompetitiveAnalysis = {
   competitorId: string;
   competitorName: string;
   comparison: {
@@ -190,7 +190,7 @@ export interface CompetitiveAnalysis {
 // SOCIAL DISCOVERY TYPES
 // ============================================================================
 
-export interface InterestRecommendation {
+export type InterestRecommendation = {
   candidateId: string;
   candidateName: string;
   interest: string;
@@ -201,7 +201,7 @@ export interface InterestRecommendation {
   privacyProtected: boolean;
 }
 
-export interface NetworkInsight {
+export type NetworkInsight = {
   connectionId: string;
   connectionName: string;
   sharedInterests: string[];
@@ -210,7 +210,7 @@ export interface NetworkInsight {
   privacyProtected: boolean;
 }
 
-export interface TrendingCandidate {
+export type TrendingCandidate = {
   candidateId: string;
   candidateName: string;
   trendScore: number;
@@ -221,7 +221,7 @@ export interface TrendingCandidate {
   metadata: TrendingMetadata;
 }
 
-export interface TrendingMetadata {
+export type TrendingMetadata = {
   pollId: string;
   category: string;
   geographicArea: string;
@@ -229,7 +229,7 @@ export interface TrendingMetadata {
   interestCategories: string[];
 }
 
-export interface SurgeData {
+export type SurgeData = {
   pollId: string;
   candidateId: string;
   surgeScore: number;
@@ -241,7 +241,7 @@ export interface SurgeData {
   metadata: Record<string, unknown>;
 }
 
-export interface PollResults {
+export type PollResults = {
   pollId: string;
   totalVotes: number;
   candidateResults: Array<{
@@ -252,7 +252,7 @@ export interface PollResults {
   timestamp: Date;
 }
 
-export interface Activity {
+export type Activity = {
   candidateId: string;
   timestamp: Date;
   intensity: number;
@@ -261,7 +261,7 @@ export interface Activity {
   metadata?: Record<string, unknown>;
 }
 
-export interface CommunityDiscussion {
+export type CommunityDiscussion = {
   id: string;
   pollId: string;
   candidateId?: string;
@@ -278,7 +278,7 @@ export interface CommunityDiscussion {
   tags: string[];
 }
 
-export interface SocialEngagement {
+export type SocialEngagement = {
   userId: string;
   pollId: string;
   actions: {
@@ -295,7 +295,7 @@ export interface SocialEngagement {
 // NETWORK EFFECTS TYPES
 // ============================================================================
 
-export interface AggregatedInsights {
+export type AggregatedInsights = {
   demographicBreakdowns: DemographicBreakdown[];
   geographicBreakdowns: GeographicBreakdown[];
   interestBreakdowns: Record<string, InterestBreakdown>;
@@ -303,7 +303,7 @@ export interface AggregatedInsights {
   lastUpdated: Date;
 }
 
-export interface InterestBreakdown {
+export type InterestBreakdown = {
   interest: string;
   topCandidate: {
     id: string;
@@ -314,7 +314,7 @@ export interface InterestBreakdown {
   confidence: number;
 }
 
-export interface DiversityNudge {
+export type DiversityNudge = {
   type: 'cross-demographic' | 'geographic' | 'cross-interest' | 'similar-users';
   message: string;
   candidateId: string;
@@ -325,7 +325,7 @@ export interface DiversityNudge {
   privacyProtected: boolean;
 }
 
-export interface CrossDemographicInsight {
+export type CrossDemographicInsight = {
   candidateId: string;
   candidateName: string;
   confidence: number;
@@ -334,7 +334,7 @@ export interface CrossDemographicInsight {
   privacyProtected: boolean;
 }
 
-export interface GeographicInsight {
+export type GeographicInsight = {
   candidateId: string;
   candidateName: string;
   confidence: number;
@@ -343,7 +343,7 @@ export interface GeographicInsight {
   privacyProtected: boolean;
 }
 
-export interface CrossInterestInsight {
+export type CrossInterestInsight = {
   candidateId: string;
   candidateName: string;
   confidence: number;
@@ -352,7 +352,7 @@ export interface CrossInterestInsight {
   privacyProtected: boolean;
 }
 
-export interface ExposureRecord {
+export type ExposureRecord = {
   userId: string;
   contentType: 'cluster' | 'candidate' | 'viral' | 'diversity';
   contentId: string;
@@ -360,7 +360,7 @@ export interface ExposureRecord {
   sessionId: string;
 }
 
-export interface CounterfactualPreview {
+export type CounterfactualPreview = {
   scenario: string;
   description: string;
   impact: {
@@ -373,7 +373,7 @@ export interface CounterfactualPreview {
   userCount: number;
 }
 
-export interface FriendConnection {
+export type FriendConnection = {
   id: string;
   userId: string;
   friendId: string;
@@ -383,7 +383,7 @@ export interface FriendConnection {
   acceptedAt?: Date;
 }
 
-export interface NetworkMetrics {
+export type NetworkMetrics = {
   totalConnections: number;
   activeConnections: number;
   inviteCodesGenerated: number;
@@ -396,7 +396,7 @@ export interface NetworkMetrics {
 // VIRAL DETECTION TYPES
 // ============================================================================
 
-export interface ViralMoment {
+export type ViralMoment = {
   id: string;
   pollId: string;
   candidateId?: string;
@@ -410,7 +410,7 @@ export interface ViralMoment {
   factors: ViralFactor[];
 }
 
-export interface ViralFactor {
+export type ViralFactor = {
   type: 'social_media' | 'news' | 'influencer' | 'event' | 'controversy';
   impact: number;
   description: string;
@@ -418,7 +418,7 @@ export interface ViralFactor {
   timestamp: Date;
 }
 
-export interface ViralThreshold {
+export type ViralThreshold = {
   minReach: number;
   minEngagement: number;
   minVelocity: number;
@@ -430,7 +430,7 @@ export interface ViralThreshold {
 // API RESPONSE TYPES
 // ============================================================================
 
-export interface PollData {
+export type PollData = {
   id: string;
   title: string;
   candidates: Candidate[];
@@ -442,25 +442,25 @@ export interface PollData {
   updatedAt: Date;
 }
 
-export interface UserConnection {
+export type UserConnection = {
   id: string;
   name: string;
   sharedInterests: string[];
 }
 
-export interface ConnectionInsights {
+export type ConnectionInsights = {
   ranking: string[];
   confidence: number;
   privacyProtected: boolean;
 }
 
-export interface VerificationAttemptData {
+export type VerificationAttemptData = {
   email?: string;
   code?: string;
   status: 'pending' | 'verified' | 'failed';
 }
 
-export interface VoteData {
+export type VoteData = {
   id: string;
   poll_id: string;
   user_id: string;
@@ -470,7 +470,7 @@ export interface VoteData {
   created_at: string;
 }
 
-export interface SupabaseResponse<T> {
+export type SupabaseResponse<T> = {
   data: T | null;
   error: {
     message: string;
@@ -480,11 +480,11 @@ export interface SupabaseResponse<T> {
   } | null;
 }
 
-export interface SessionData {
+export type SessionData = {
   id: string;
 }
 
-export interface ReplayData {
+export type ReplayData = {
   algorithm: string;
   steps: unknown[];
   metadata: Record<string, unknown>;

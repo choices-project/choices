@@ -42,7 +42,7 @@ const AuditLogs = createLazyComponent(
   }
 );
 
-interface AdminDashboardProps {
+type AdminDashboardProps = {
   user: {
     id: string;
     email: string;
@@ -51,7 +51,7 @@ interface AdminDashboardProps {
   onLogout: () => void;
 }
 
-interface DashboardStats {
+type DashboardStats = {
   totalUsers: number;
   activePolls: number;
   totalVotes: number;

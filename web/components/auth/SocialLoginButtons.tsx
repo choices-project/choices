@@ -17,7 +17,7 @@ import {
 
 type OnProviderClick = (provider: OAuthProvider) => Promise<void>;
 
-interface SocialLoginButtonsProps {
+type SocialLoginButtonsProps = {
   onProviderClick: OnProviderClick
   redirectTo?: string
   isLoading?: boolean

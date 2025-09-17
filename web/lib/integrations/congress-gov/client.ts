@@ -11,7 +11,7 @@
 import { dev } from '../../dev.logger';
 
 // Types for Congress.gov API responses
-export interface CongressGovCongress {
+export type CongressGovCongress = {
   congress: number;
   name: string;
   startYear: string;
@@ -24,7 +24,7 @@ export interface CongressGovCongress {
   }>;
 }
 
-export interface CongressGovMember {
+export type CongressGovMember = {
   bioguideId: string;
   fullName: string;
   firstName: string;
@@ -37,7 +37,7 @@ export interface CongressGovMember {
   apiUri: string;
 }
 
-export interface CongressGovBill {
+export type CongressGovBill = {
   congress: number;
   billId: string;
   billType: string;
@@ -60,7 +60,7 @@ export interface CongressGovBill {
   apiUri: string;
 }
 
-export interface CongressGovVote {
+export type CongressGovVote = {
   rollCall: number;
   congress: number;
   session: number;
@@ -79,7 +79,7 @@ export interface CongressGovVote {
   apiUri: string;
 }
 
-export interface CongressGovApiResponse<T> {
+export type CongressGovApiResponse<T> = {
   results: T[];
   pagination?: {
     count: number;
@@ -88,7 +88,7 @@ export interface CongressGovApiResponse<T> {
   };
 }
 
-export interface CongressGovClientConfig {
+export type CongressGovClientConfig = {
   apiKey: string;
   baseUrl?: string;
   rateLimit?: {
@@ -291,7 +291,7 @@ export class CongressGovClient {
 
   async getMember(bioguideId: string): Promise<CongressGovMember> {
     const response = await this.makeRequest<CongressGovApiResponse<CongressGovMember>>(`/member/${bioguideId}`);
-    const member = response.results?.[0];
+    const member = response.results[0];
     if (!member) {
       throw new Error(`Member with bioguide ID ${bioguideId} not found`);
     }
@@ -319,7 +319,7 @@ export class CongressGovClient {
 
   async getBill(congress: number, billId: string): Promise<CongressGovBill> {
     const response = await this.makeRequest<CongressGovApiResponse<CongressGovBill>>(`/bill/${congress}/${billId}`);
-    const bill = response.results?.[0];
+    const bill = response.results[0];
     if (!bill) {
       throw new Error(`Bill ${billId} in congress ${congress} not found`);
     }
@@ -348,7 +348,7 @@ export class CongressGovClient {
 
   async getVote(congress: number, session: number, rollCall: number): Promise<CongressGovVote> {
     const response = await this.makeRequest<CongressGovApiResponse<CongressGovVote>>(`/vote/${congress}/${session}/${rollCall}`);
-    const vote = response.results?.[0];
+    const vote = response.results[0];
     if (!vote) {
       throw new Error(`Vote ${rollCall} in congress ${congress}, session ${session} not found`);
     }

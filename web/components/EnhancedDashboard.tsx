@@ -18,7 +18,7 @@ import {
   Zap
 } from 'lucide-react';
 
-interface DashboardData {
+type DashboardData = {
   polls: PollSummary[];
   overallmetrics: OverallMetrics;
   trends: TrendData[];
@@ -27,7 +27,7 @@ interface DashboardData {
   engagement: EngagementMetrics;
 }
 
-interface PollSummary {
+type PollSummary = {
   id: string;
   title: string;
   status: string;
@@ -38,13 +38,13 @@ interface PollSummary {
   choices: Choice[];
 }
 
-interface Choice {
+type Choice = {
   id: string;
   text: string;
   votes: number;
 }
 
-interface OverallMetrics {
+type OverallMetrics = {
   totalpolls: number;
   activepolls: number;
   totalvotes: number;
@@ -52,20 +52,20 @@ interface OverallMetrics {
   averageparticipation: number;
 }
 
-interface TrendData {
+type TrendData = {
   date: string;
   votes: number;
   users: number;
   polls: number;
 }
 
-interface GeographicMap {
+type GeographicMap = {
   regions: GeographicRegion[];
   countries: GeographicCountry[];
   heatmap: HeatmapPoint[];
 }
 
-interface GeographicRegion {
+type GeographicRegion = {
   name: string;
   votecount: number;
   population: number;
@@ -74,7 +74,7 @@ interface GeographicRegion {
   longitude: number;
 }
 
-interface GeographicCountry {
+type GeographicCountry = {
   code: string;
   name: string;
   votecount: number;
@@ -82,13 +82,13 @@ interface GeographicCountry {
   percentage: number;
 }
 
-interface HeatmapPoint {
+type HeatmapPoint = {
   latitude: number;
   longitude: number;
   intensity: number;
 }
 
-interface DemographicsData {
+type DemographicsData = {
   agegroups: Record<string, number>;
   genders: Record<string, number>;
   education: Record<string, number>;
@@ -96,7 +96,7 @@ interface DemographicsData {
   verificationtiers: Record<string, number>;
 }
 
-interface EngagementMetrics {
+type EngagementMetrics = {
   activeusers: number;
   newusers: number;
   returningusers: number;
@@ -199,7 +199,7 @@ export default function EnhancedDashboard() {
                 {['overview', 'detailed', 'analytics'].map((mode) => (
                   <button
                     key={mode}
-                    onClick={() => setViewMode(mode as any)}
+                    onClick={() => setViewMode(mode as 'overview' | 'detailed' | 'analytics')}
                     className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
                       viewMode === mode
                         ? 'bg-white text-blue-600 shadow-sm'

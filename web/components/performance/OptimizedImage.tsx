@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
 import Image from 'next/image';
 
-interface OptimizedImageProps {
+type OptimizedImageProps = {
   src: string
   alt: string
   width?: number
@@ -222,7 +222,7 @@ export default function OptimizedImage({
 }
 
 // Background image component
-interface OptimizedBackgroundImageProps {
+type OptimizedBackgroundImageProps = {
   src: string
   alt?: string
   className?: string
@@ -330,7 +330,7 @@ export function OptimizedBackgroundImage({
 }
 
 // Picture component with multiple formats
-interface OptimizedPictureProps {
+type OptimizedPictureProps = {
   src: string
   alt: string
   width?: number

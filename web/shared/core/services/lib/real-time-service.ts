@@ -1,10 +1,10 @@
 // Real-time service for admin dashboard
 
-export interface SubscriptionCallback {
+export type SubscriptionCallback = {
   (data: any): void;
 }
 
-export interface SubscriptionId {
+export type SubscriptionId = {
   event: string;
   callback: SubscriptionCallback;
 }

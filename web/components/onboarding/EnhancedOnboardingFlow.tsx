@@ -41,7 +41,7 @@ const STEP_ORDER = DEFAULT_STEP_ORDER;
 
 const OnboardingContext = React.createContext<OnboardingContextType | undefined>(undefined);
 
-interface OnboardingContextType {
+type OnboardingContextType = {
   data: OnboardingDataHybrid;
   updateData: OnGenericUpdate;
   updateStepData: <K extends StepId>(key: K) => OnStepUpdate<K>;
@@ -251,13 +251,13 @@ function EnhancedOnboardingFlowInner() {
           throw new Error('Failed to create Supabase client');
         }
         const { data: auth, error: userError } = await client.auth.getUser();
-        const user = auth?.user;
+        const user = auth.user;
         if (user && !userError) {
           setData(prev => ({
             ...prev,
             user,
-            displayName: user.user_metadata?.full_name || user.email?.split('@')[0] || '',
-            avatar: user.user_metadata?.avatar_url || '',
+            displayName: user.user_metadata.full_name || user.email?.split('@')[0] || '',
+            avatar: user.user_metadata.avatar_url || '',
           }));
         }
 

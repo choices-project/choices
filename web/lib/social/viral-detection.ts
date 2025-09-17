@@ -25,7 +25,7 @@ import type { SurgeData, TrendingCandidate, Activity } from './types';
 // TYPES AND INTERFACES
 // ============================================================================
 
-export interface Poll {
+export type Poll = {
   id: string;
   title: string;
   location: string;
@@ -37,7 +37,7 @@ export interface Poll {
   allowPostClose: boolean;
 }
 
-export interface Candidate {
+export type Candidate = {
   id: string;
   name: string;
   party?: string;
@@ -48,7 +48,7 @@ export interface Candidate {
   };
 }
 
-export interface PollResults {
+export type PollResults = {
   pollId: string;
   winner: Candidate;
   margin: number;
@@ -62,7 +62,7 @@ export interface PollResults {
   timestamp: Date;
 }
 
-export interface CandidateRanking {
+export type CandidateRanking = {
   candidateId: string;
   candidateName: string;
   rank: number;
@@ -70,7 +70,7 @@ export interface CandidateRanking {
   percentage: number;
 }
 
-export interface ViralMoment {
+export type ViralMoment = {
   id: string;
   type: 'independent-leading' | 'surprising-second-choice' | 'local-surge' | 'trending-candidate';
   pollId: string;
@@ -85,7 +85,7 @@ export interface ViralMoment {
   createdAt: Date;
 }
 
-export interface ViralMomentMetadata {
+export type ViralMomentMetadata = {
   candidateId?: string;
   candidateName?: string;
   isIndependent?: boolean;
@@ -97,7 +97,7 @@ export interface ViralMomentMetadata {
   demographicGroup?: string;
 }
 
-export interface StabilityMetrics {
+export type StabilityMetrics = {
   windows: number;
   newBallots: number;
   confidence: number;
@@ -105,7 +105,7 @@ export interface StabilityMetrics {
   trendConsistency: number;
 }
 
-export interface ShareabilityMetrics {
+export type ShareabilityMetrics = {
   engagement: number;
   controversy: number;
   novelty: number;

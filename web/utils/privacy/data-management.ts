@@ -11,7 +11,7 @@ import { getSupabaseBrowserClient } from '../supabase/client';
 import { UserEncryption, EncryptionUtils } from './encryption';
 import { ConsentManager } from './consent';
 
-export interface UserDataExport {
+export type UserDataExport = {
   profile: any;
   polls: any[];
   votes: any[];
@@ -20,7 +20,7 @@ export interface UserDataExport {
   exported_at: string;
 }
 
-export interface AnonymizationResult {
+export type AnonymizationResult = {
   success: boolean;
   message: string;
   anonymized_fields: string[];
@@ -138,6 +138,7 @@ export class PrivacyDataManager {
       const updateData: any = {
         encryption_version: 1,
         key_derivation_salt: saltBase64,
+        initialization_vector: ivBase64, // Store IV for decryption
         key_hash: keyHash,
         updated_at: new Date().toISOString()
       };
@@ -194,13 +195,13 @@ export class PrivacyDataManager {
 
       let encryptedData: string | null = null;
       let salt: string | null = null;
-      const iv: string | null = null;
+      let iv: string | null = null;
 
       // Retrieve encrypted data from appropriate table
       if (['demographics', 'preferences', 'contact_info'].includes(dataType)) {
         const { data, error } = await this.supabaseClient
           .from('user_profiles_encrypted')
-          .select(`encrypted_${dataType}, key_derivation_salt`)
+          .select(`encrypted_${dataType}, key_derivation_salt, initialization_vector`)
           .eq('user_id', userId)
           .single();
 
@@ -209,6 +210,7 @@ export class PrivacyDataManager {
 
         encryptedData = data[`encrypted_${dataType}`];
         salt = data.key_derivation_salt;
+        iv = data.initialization_vector;
       } else {
         const { data, error } = await this.supabaseClient
           .from('private_user_data')
@@ -221,29 +223,29 @@ export class PrivacyDataManager {
 
         encryptedData = data[`encrypted_${dataType}`];
         
-        // Get salt from user_profiles_encrypted
+        // Get salt and IV from user_profiles_encrypted
         const { data: profileData } = await this.supabaseClient
           .from('user_profiles_encrypted')
-          .select('key_derivation_salt')
+          .select('key_derivation_salt, initialization_vector')
           .eq('user_id', userId)
           .single();
         
         salt = profileData?.key_derivation_salt;
+        iv = profileData?.initialization_vector;
       }
 
-      if (!encryptedData || !salt) return null;
+      if (!encryptedData || !salt || !iv) return null;
 
       // Generate encryption key
       const saltArray = EncryptionUtils.base64ToUint8Array(salt);
       await this.encryption.generateUserKey(password, saltArray);
 
-      // Decrypt data
+      // Decrypt data using the stored IV
       const encryptedDataArray = EncryptionUtils.base64ToArrayBuffer(encryptedData);
-      const ivArray = new Uint8Array(12); // IV is prepended to encrypted data
-      const actualEncryptedData = encryptedDataArray.slice(12);
+      const ivArray = EncryptionUtils.base64ToUint8Array(iv);
       
       const decryptionResult = await this.encryption.decryptData(
-        actualEncryptedData,
+        encryptedDataArray,
         saltArray,
         ivArray
       );

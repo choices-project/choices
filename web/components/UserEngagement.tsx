@@ -16,7 +16,7 @@ import {
   RefreshCw
 } from 'lucide-react';
 
-interface EngagementMetrics {
+type EngagementMetrics = {
   totalUsers: number;
   activeUsers: number;
   totalVotes: number;
@@ -27,21 +27,21 @@ interface EngagementMetrics {
   pollsActive: number;
 }
 
-interface GeographicData {
+type GeographicData = {
   country: string;
   users: number;
   votes: number;
   percentage: number;
 }
 
-interface ActivityData {
+type ActivityData = {
   time: string;
   votes: number;
   users: number;
   polls: number;
 }
 
-interface UserEngagementProps {
+type UserEngagementProps = {
   metrics: EngagementMetrics;
   geographicData?: GeographicData[];
   activityData?: ActivityData[];

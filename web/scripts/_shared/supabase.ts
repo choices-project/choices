@@ -1,5 +1,5 @@
 // scripts/_shared/supabase.ts
-import { createClient, SupabaseClient } from '@supabase/supabase-js'
+import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { config } from 'dotenv'
 
 // Load .env.local explicitly

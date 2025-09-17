@@ -16,7 +16,7 @@ import { ArrowLeft, Download, FileText, User, Vote, MessageSquare, Settings, Che
 // Utilities
 import { devLog } from '@/lib/logger'
 
-interface ExportOptions {
+type ExportOptions = {
   profile: boolean
   polls: boolean
   votes: boolean
@@ -27,7 +27,7 @@ interface ExportOptions {
   dateRange: 'all' | '30d' | '90d' | '1y'
 }
 
-interface ExportHistory {
+type ExportHistory = {
   id: string
   createdat: string
   format: string

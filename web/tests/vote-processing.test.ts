@@ -490,7 +490,7 @@ describe('Vote Processing Integration', () => {
       
       // Generate 1000 votes
       for (let i = 0; i < 1000; i++) {
-        const optionId = `option-${(i % 3) + 1}`;
+        const _optionId = `option-${(i % 3) + 1}`;
         votes.push({
           id: `vote-${i}`,
           pollId: 'processing-poll-123',

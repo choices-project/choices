@@ -7,7 +7,7 @@
  * Updated: September 15, 2025
  */
 
-export interface VoteRequest {
+export type VoteRequest = {
   pollId: string;
   userId?: string;
   voteData: {
@@ -22,7 +22,7 @@ export interface VoteRequest {
   metadata?: Record<string, unknown>;
 }
 
-export interface VoteResponse {
+export type VoteResponse = {
   success: boolean;
   message?: string;
   pollId: string;
@@ -33,14 +33,14 @@ export interface VoteResponse {
   metadata?: Record<string, unknown>;
 }
 
-export interface VoteValidation {
+export type VoteValidation = {
   isValid: boolean;
   error?: string;
   requiresAuthentication: boolean;
   requiresTokens: boolean;
 }
 
-export interface PollData {
+export type PollData = {
   id: string;
   title: string;
   description?: string;
@@ -67,14 +67,14 @@ export interface PollData {
   metadata?: Record<string, unknown>;
 }
 
-export interface PollOption {
+export type PollOption = {
   id: string;
   text: string;
   description?: string;
   metadata?: Record<string, unknown>;
 }
 
-export interface VoteData {
+export type VoteData = {
   id: string;
   pollId: string;
   userId?: string;
@@ -94,7 +94,7 @@ export interface VoteData {
   metadata?: Record<string, unknown>;
 }
 
-export interface ResultsData {
+export type ResultsData = {
   pollId: string;
   votingMethod: VotingMethod;
   totalVotes: number;
@@ -104,7 +104,7 @@ export interface ResultsData {
   metadata?: Record<string, unknown>;
 }
 
-export interface VoteResult {
+export type VoteResult = {
   optionId: string;
   votes: number;
   percentage: number;
@@ -113,7 +113,7 @@ export interface VoteResult {
 
 export type VotingMethod = 'single' | 'approval' | 'ranked' | 'quadratic' | 'range';
 
-export interface PollResults {
+export type PollResults = {
   winner?: string;
   winnerVotes: number;
   winnerPercentage: number;
@@ -132,14 +132,14 @@ export interface PollResults {
   rangeAverages?: Record<string, number>;
 }
 
-export interface InstantRunoffRound {
+export type InstantRunoffRound = {
   round: number;
   eliminated?: string;
   votes: Record<string, number>;
   percentages: Record<string, number>;
 }
 
-export interface VotingStrategy {
+export type VotingStrategy = {
   getVotingMethod(): VotingMethod;
   validateVote(request: VoteRequest, poll: PollData): Promise<VoteValidation>;
   processVote(request: VoteRequest, poll: PollData): Promise<VoteResponse>;
@@ -147,11 +147,11 @@ export interface VotingStrategy {
   getConfiguration(): Record<string, unknown>;
 }
 
-export interface VoteProcessor {
+export type VoteProcessor = {
   processVote(vote: VoteData): Promise<VoteSubmissionResult>;
 }
 
-export interface VoteSubmissionResult {
+export type VoteSubmissionResult = {
   success: boolean;
   voteId?: string;
   error?: string;
@@ -161,7 +161,7 @@ export interface VoteSubmissionResult {
 // IRV CALCULATION TYPES
 // ============================================================================
 
-export interface IRVResult {
+export type IRVResult = {
   winner: string;
   rounds: IRVRound[];
   totalVotes: number;
@@ -174,21 +174,21 @@ export interface IRVResult {
   };
 }
 
-export interface IRVRound {
+export type IRVRound = {
   round: number;
   eliminated?: string;
   votes: Record<string, number>;
   percentages: Record<string, number>;
 }
 
-export interface UserRanking {
+export type UserRanking = {
   pollId: string;
   userId: string;
   ranking: string[];
   createdAt: Date;
 }
 
-export interface Candidate {
+export type Candidate = {
   id: string;
   name: string;
   description?: string;
@@ -198,7 +198,7 @@ export interface Candidate {
 // FINALIZATION TYPES
 // ============================================================================
 
-export interface PollSnapshot {
+export type PollSnapshot = {
   id: string;
   pollId: string;
   takenAt: Date;
@@ -209,7 +209,7 @@ export interface PollSnapshot {
   createdAt: Date;
 }
 
-export interface FinalizeResult {
+export type FinalizeResult = {
   success: boolean;
   snapshotId?: string;
   error?: string;
@@ -222,14 +222,14 @@ export interface FinalizeResult {
   };
 }
 
-export interface FinalizeOptions {
+export type FinalizeOptions = {
   force: boolean;
   skipValidation: boolean;
   generateReplayData: boolean;
   broadcastUpdate: boolean;
 }
 
-export interface Ballot {
+export type Ballot = {
   id: string;
   pollId: string;
   userId: string;
@@ -238,7 +238,7 @@ export interface Ballot {
   isPostClose: boolean;
 }
 
-export interface Poll {
+export type Poll = {
   id: string;
   title: string;
   description?: string;
@@ -255,22 +255,22 @@ export interface Poll {
 // MERKLE TREE TYPES
 // ============================================================================
 
-export interface MerkleTree {
+export type MerkleTree = {
   addBallots(ballots: BallotCommitment[]): string[];
   getRoot(): string;
   generateReplayData(algorithm: string): ReplayData;
 }
 
-export interface BallotCommitment {
+export type BallotCommitment = {
   id: string;
   data: Ballot;
 }
 
-export interface BallotVerificationManager {
+export type BallotVerificationManager = {
   createTree(pollId: string): MerkleTree;
 }
 
-export interface ReplayData {
+export type ReplayData = {
   algorithm: string;
   steps: unknown[];
   metadata: Record<string, unknown>;
@@ -280,7 +280,7 @@ export interface ReplayData {
 // UTILITY TYPES
 // ============================================================================
 
-export interface SnapshotData {
+export type SnapshotData = {
   pollId: string;
   takenAt: Date;
   results: IRVResult;

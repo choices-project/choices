@@ -5,7 +5,7 @@ import { Menu, Heart, TrendingUp, MapPin } from 'lucide-react';
 import BurgerMenu from '../navigation/BurgerMenu';
 import LiveVotingFeed from '../viral/LiveVotingFeed';
 
-interface AppLayoutProps {
+type AppLayoutProps = {
   children: React.ReactNode;
   currentPage?: 'viral' | 'civics' | 'profile' | 'other';
 }

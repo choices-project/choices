@@ -8,7 +8,7 @@
 import type { JurisdictionID } from '../privacy/location-resolver';
 import { logger } from '@/lib/logger';
 
-export interface ElectoralFeed {
+export type ElectoralFeed = {
   jurisdictionId: JurisdictionID;
   level: 'federal' | 'state' | 'local';
   currentOfficials: Official[];
@@ -17,7 +17,7 @@ export interface ElectoralFeed {
   lastUpdated: string;
 }
 
-export interface Official {
+export type Official = {
   id: string;
   name: string;
   office: string;
@@ -35,7 +35,7 @@ export interface Official {
   transparencyScore?: number; // 0-100%
 }
 
-export interface Race {
+export type Race = {
   id: string;
   office: string;
   electionDate: string;
@@ -43,7 +43,7 @@ export interface Race {
   keyIssues: string[];
 }
 
-export interface Candidate {
+export type Candidate = {
   id: string;
   name: string;
   party?: string;
@@ -56,7 +56,7 @@ export interface Candidate {
   transparencyScore?: number;
 }
 
-export interface Issue {
+export type Issue = {
   id: string;
   title: string;
   description: string;

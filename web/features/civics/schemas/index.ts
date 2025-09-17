@@ -38,7 +38,7 @@ export const CandidateCardV1Schema = z.object({
 // TypeScript type derived from Zod schema
 export type CandidateCardV1 = z.infer<typeof CandidateCardV1Schema>;
 
-export interface District {
+export type District = {
   id: string;
   name: string;
   state: string;
@@ -48,7 +48,7 @@ export interface District {
   };
 }
 
-export interface Representative {
+export type Representative = {
   id: string;
   name: string;
   party: string;
@@ -63,7 +63,7 @@ export interface Representative {
   };
 }
 
-export interface Vote {
+export type Vote = {
   id: string;
   bill: string;
   title: string;

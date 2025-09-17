@@ -5,13 +5,13 @@
  * It replaces the old @/shared/core/privacy/lib/zero-knowledge-proofs imports.
  */
 
-export interface ZKProof {
+export type ZKProof = {
   proof: string;
   publicInputs: string[];
   verificationKey: string;
 }
 
-export interface ZKProofConfig {
+export type ZKProofConfig = {
   curve: 'secp256k1' | 'bn254' | 'bls12_381';
   hashFunction: 'sha256' | 'keccak256' | 'poseidon';
   circuitSize: number;
@@ -32,8 +32,8 @@ export class ZeroKnowledgeProofManager {
    * Generate a zero knowledge proof for a private computation
    */
   async generateProof(
-    privateInputs: any[],
-    publicInputs: any[],
+    privateInputs: unknown[],
+    publicInputs: unknown[],
     circuit: string
   ): Promise<ZKProof> {
     // TODO: Implement actual ZK proof generation
@@ -103,6 +103,7 @@ export class ZeroKnowledgeProofManager {
 
 // Default instance
 export const zeroKnowledgeProofs = new ZeroKnowledgeProofManager();
+
 
 
 

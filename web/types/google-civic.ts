@@ -5,7 +5,7 @@
 /**
  * Google Civic API office information
  */
-export interface GcOffice {
+export type GcOffice = {
   name: string;
   divisionId: string;
   officialIndices: number[];
@@ -14,7 +14,7 @@ export interface GcOffice {
 /**
  * Google Civic API official information
  */
-export interface GcOfficial {
+export type GcOfficial = {
   name: string;
   party?: string;
   phones?: string[];
@@ -25,7 +25,7 @@ export interface GcOfficial {
 /**
  * Google Civic API representatives response
  */
-export interface GcRepresentatives {
+export type GcRepresentatives = {
   divisions?: Record<string, { name?: string }>;
   offices?: GcOffice[];
   officials?: GcOfficial[];
@@ -34,7 +34,7 @@ export interface GcRepresentatives {
 /**
  * Google Civic API election information
  */
-export interface GcElectionInfo {
+export type GcElectionInfo = {
   kind: string;
   elections: Array<{
     id: string;
@@ -53,7 +53,7 @@ export interface GcElectionInfo {
 /**
  * Google Civic API voter information
  */
-export interface GcVoterInfo {
+export type GcVoterInfo = {
   kind: string;
   election: {
     id: string;
@@ -66,7 +66,7 @@ export interface GcVoterInfo {
 /**
  * Google Civic API error details
  */
-export interface GcErrorDetails {
+export type GcErrorDetails = {
   code?: string;
   message?: string;
   status?: string;
@@ -82,7 +82,7 @@ export interface GcErrorDetails {
 /**
  * Retry configuration for API calls
  */
-export interface RetryConfig {
+export type RetryConfig = {
   maxAttempts: number;
   baseDelay: number;
   maxDelay: number;
@@ -93,7 +93,7 @@ export interface RetryConfig {
 /**
  * Error context for logging and debugging
  */
-export interface ErrorContext extends Record<string, unknown> {}
+export type ErrorContext = {} & Record<string, unknown>
 
 // Legacy aliases for backward compatibility
 export type GoogleCivicElectionInfo = GcElectionInfo;

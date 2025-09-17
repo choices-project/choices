@@ -4,9 +4,28 @@ import { useState } from 'react'
 import { Shield, Eye, Users, TrendingUp, Lock } from 'lucide-react'
 import { useOnboardingContext } from '../OnboardingFlow'
 
-interface PrivacyStepProps {
-  data: any
-  onUpdate: (updates: any) => void
+type PrivacyData = {
+  privacy?: {
+    shareProfile?: boolean
+    shareDemographics?: boolean
+    shareParticipation?: boolean
+    allowAnalytics?: boolean
+  }
+}
+
+type PrivacyOption = {
+  field: string
+  label: string
+  description: string
+  icon: React.ReactNode
+  color: string
+  bgColor: string
+  borderColor: string
+}
+
+type PrivacyStepProps = {
+  data: PrivacyData
+  onUpdate: (updates: PrivacyData) => void
   onNext: () => void
   onBack: () => void
 }
@@ -104,7 +123,7 @@ export default function PrivacyStep({ data, onUpdate, onNext, onBack }: PrivacyS
 
       {/* Privacy toggles */}
       <div className="space-y-4">
-        {privacyOptions.map((option: any) => (
+        {privacyOptions.map((option: PrivacyOption) => (
           <div
             key={option.field}
             className={`

@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { Shield, Users } from 'lucide-react'
 import { useOnboardingContext } from '../OnboardingFlow'
 
-interface DemographicsStepProps {
+type DemographicsStepProps = {
   data: any
   onUpdate: (updates: any, _unused: any) => void
   onNext: () => void

@@ -19,7 +19,7 @@ export const IS_E2E =
   process.env.E2E === '1' ||
   process.env.PLAYWRIGHT === '1';
 
-export interface SecurityConfig {
+export type SecurityConfig = {
   csp: CSPConfig
   headers: SecurityHeaders
   rateLimit: RateLimitConfig
@@ -27,7 +27,7 @@ export interface SecurityConfig {
   privacy: PrivacyConfig
 }
 
-export interface CSPConfig {
+export type CSPConfig = {
   'default-src': string[]
   'script-src': string[]
   'style-src': string[]
@@ -42,7 +42,7 @@ export interface CSPConfig {
   'upgrade-insecure-requests'?: string[]
 }
 
-export interface SecurityHeaders {
+export type SecurityHeaders = {
   'X-Frame-Options': string
   'X-Content-Type-Options': string
   'X-XSS-Protection': string
@@ -53,7 +53,7 @@ export interface SecurityHeaders {
   'Cross-Origin-Resource-Policy': string
 }
 
-export interface RateLimitConfig {
+export type RateLimitConfig = {
   enabled: boolean
   windowMs: number
   maxRequests: number
@@ -61,14 +61,14 @@ export interface RateLimitConfig {
   e2eBypassHeader: string
 }
 
-export interface ValidationConfig {
+export type ValidationConfig = {
   maxContentLength: number
   allowedContentTypes: string[]
   suspiciousPatterns: RegExp[]
   blockedUserAgents: string[]
 }
 
-export interface PrivacyConfig {
+export type PrivacyConfig = {
   dataRetentionDays: number
   anonymizeIPs: boolean
   logSensitiveData: boolean

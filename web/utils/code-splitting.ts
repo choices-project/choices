@@ -10,7 +10,7 @@ import { lazy } from 'react';
 import type { ComponentType } from 'react';
 import { performanceMetrics } from '../lib/performance/performance-metrics';
 
-interface CodeSplittingOptions {
+type CodeSplittingOptions = {
   retryCount?: number;
   retryDelay?: number;
   timeout?: number;
@@ -19,10 +19,10 @@ interface CodeSplittingOptions {
   onError?: (error: Error) => void;
 }
 
-interface RouteSplittingOptions extends CodeSplittingOptions {
+type RouteSplittingOptions = {
   preload?: boolean;
   preloadDelay?: number;
-}
+} & CodeSplittingOptions
 
 /**
  * Create a code-split component with advanced error handling

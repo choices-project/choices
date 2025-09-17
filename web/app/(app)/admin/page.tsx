@@ -21,7 +21,7 @@ import {
   MessageSquare
 } from 'lucide-react'
 
-interface AdminStats {
+type AdminStats = {
   totalUsers: number
   totalPolls: number
   totalVotes: number

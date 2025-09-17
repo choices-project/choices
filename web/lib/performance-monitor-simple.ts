@@ -4,7 +4,7 @@
  * This module provides basic performance monitoring functionality.
  */
 
-export interface PerformanceMetric {
+export type PerformanceMetric = {
   name: string;
   value: number;
   timestamp: Date;
@@ -117,6 +117,7 @@ export class SimplePerformanceMonitor {
 
 // Singleton instance
 export const performanceMonitor = new SimplePerformanceMonitor();
+
 
 
 

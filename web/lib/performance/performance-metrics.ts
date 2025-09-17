@@ -8,7 +8,7 @@
  * - User interaction metrics
  */
 
-interface PerformanceMetric {
+type PerformanceMetric = {
   name: string;
   value: number;
   timestamp: number;
@@ -17,7 +17,7 @@ interface PerformanceMetric {
   connection?: string;
 }
 
-interface CoreWebVitals {
+type CoreWebVitals = {
   lcp: number; // Largest Contentful Paint
   fid: number; // First Input Delay
   cls: number; // Cumulative Layout Shift
@@ -25,7 +25,7 @@ interface CoreWebVitals {
   ttfb: number; // Time to First Byte
 }
 
-interface BundlePerformance {
+type BundlePerformance = {
   bundleName: string;
   loadTime: number;
   parseTime: number;
@@ -34,7 +34,7 @@ interface BundlePerformance {
   gzipSize?: number;
 }
 
-interface ResourcePerformance {
+type ResourcePerformance = {
   url: string;
   type: 'script' | 'stylesheet' | 'image' | 'font' | 'other';
   loadTime: number;

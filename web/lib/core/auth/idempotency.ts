@@ -14,14 +14,14 @@ import { getSupabaseServerClient } from '@/utils/supabase/server'
 import { withOptional } from '@/lib/util/objects'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
-export interface IdempotencyResult<T> {
+export type IdempotencyResult<T> = {
   success: boolean
   data?: T
   error?: string
   isDuplicate: boolean
 }
 
-export interface IdempotencyOptions {
+export type IdempotencyOptions = {
   ttl?: number // Time to live in seconds
   namespace?: string // Namespace for key isolation
 }

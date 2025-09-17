@@ -6,7 +6,7 @@
  * These types ensure type safety when working with Supabase operations.
  */
 
-export interface Database {
+export type Database = {
   public: {
     Tables: {
       user_profiles: {

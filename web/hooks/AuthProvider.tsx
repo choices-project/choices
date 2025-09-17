@@ -5,7 +5,7 @@ import { createContext, useContext } from 'react'
 import type { AuthState, AuthActions } from './useSupabaseAuth';
 import { useSupabaseAuth } from './useSupabaseAuth'
 
-interface AuthContextType extends AuthState, AuthActions {}
+type AuthContextType = {} & AuthState & AuthActions
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 

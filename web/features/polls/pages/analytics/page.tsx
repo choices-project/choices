@@ -17,7 +17,7 @@ import { ArrowLeft, BarChart3, Users, Target, Award, Eye, Vote, Filter, Download
 import { logger } from '@/lib/logger'
 import { cn } from '@/lib/utils'
 
-interface PollAnalytics {
+type PollAnalytics = {
   pollid: string
   title: string
   totalvotes: number
@@ -45,7 +45,7 @@ interface PollAnalytics {
   recommendations: string[]
 }
 
-interface AnalyticsFilters {
+type AnalyticsFilters = {
   timeRange: '7d' | '30d' | '90d' | 'all'
   pollType: 'all' | 'public' | 'private'
   status: 'all' | 'active' | 'closed'

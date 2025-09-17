@@ -4,12 +4,12 @@ import { useState, useEffect } from 'react'
 import { devLog } from '@/lib/logger';
 import { isFeatureEnabled } from '../lib/feature-flags'
 
-interface PrivacyUtils {
-  privacyBudgetManager: any
-  privateAnalytics: any
-  zkProofManager: any
-  bridge?: any
-  auditor?: any
+type PrivacyUtils = {
+  privacyBudgetManager: unknown
+  privateAnalytics: unknown
+  zkProofManager: unknown
+  bridge?: unknown
+  auditor?: unknown
 }
 
 export function usePrivacyUtils() {

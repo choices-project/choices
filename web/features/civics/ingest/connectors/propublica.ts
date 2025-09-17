@@ -7,11 +7,11 @@
 
 import type { DataSourceConfig } from '../../schemas';
 
-export interface ProPublicaConfig extends DataSourceConfig {
+export type ProPublicaConfig = {
   type: 'propublica';
   apiKey: string;
   baseUrl: string;
-}
+} & DataSourceConfig
 
 export class ProPublicaConnector {
   private config: ProPublicaConfig;

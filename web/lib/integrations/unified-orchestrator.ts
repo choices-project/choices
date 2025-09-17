@@ -18,7 +18,7 @@ import { createGovTrackClient } from './govtrack/client';
 import type { UserLocation, ElectoralRace } from '@/lib/types/electoral-unified';
 
 // Unified data types
-export interface UnifiedRepresentative {
+export type UnifiedRepresentative = {
   // Primary Identifiers
   id: string;
   bioguideId?: string;
@@ -64,7 +64,7 @@ export interface UnifiedRepresentative {
   sourcePriority: number; // 0-100, higher = more reliable
 }
 
-export interface UnifiedVote {
+export type UnifiedVote = {
   id: string;
   representativeId: string;
   
@@ -94,7 +94,7 @@ export interface UnifiedVote {
   dataQuality: 'high' | 'medium' | 'low';
 }
 
-export interface UnifiedCampaignFinance {
+export type UnifiedCampaignFinance = {
   id: string;
   representativeId: string;
   cycle: number;
@@ -137,7 +137,7 @@ export interface UnifiedCampaignFinance {
   dataQuality: 'high' | 'medium' | 'low';
 }
 
-export interface DataQualityScore {
+export type DataQualityScore = {
   representativeId: string;
   scores: {
     basicInfo: number;        // Name, party, district
@@ -234,7 +234,7 @@ export class UnifiedDataOrchestrator {
       if (this.clients.fec) {
         try {
           const fecData = await this.clients.fec.getCandidate(identifier);
-          if (fecData?.results?.[0]) {
+          if (fecData.results[0]) {
             dataFromSources.push({
               source: 'fec',
               data: fecData.results[0],
@@ -250,7 +250,7 @@ export class UnifiedDataOrchestrator {
       if (this.clients.openSecrets) {
         try {
           const openSecretsData = await this.clients.openSecrets.getCandidate(identifier);
-          if (openSecretsData?.response?.legislator?.[0]) {
+          if (openSecretsData.response.legislator?.[0]) {
             dataFromSources.push({
               source: 'opensecrets',
               data: openSecretsData.response.legislator[0],

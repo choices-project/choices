@@ -5,13 +5,13 @@ import { logger } from '@/lib/logger';
 import { vote } from '@/app/actions/vote'
 import { offlineOutbox } from '@/features/pwa/lib/offline-outbox'
 
-interface PollOption {
+type PollOption = {
   id: string
   label: string
   description?: string
 }
 
-interface Poll {
+type Poll = {
   id: string
   title: string
   description?: string
@@ -21,7 +21,7 @@ interface Poll {
   options: PollOption[]
 }
 
-interface EnhancedVoteFormProps {
+type EnhancedVoteFormProps = {
   poll: Poll
   onVoteSubmitted?: (result: any) => void
   onVoteError?: (error: string) => void

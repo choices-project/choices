@@ -12,7 +12,7 @@ import {
   ExternalLink
 } from 'lucide-react'
 
-interface DeviceFlowAuthProps {
+type DeviceFlowAuthProps = {
   provider: 'google' | 'github' | 'facebook' | 'twitter' | 'linkedin' | 'discord'
   redirectTo?: string
   onSuccess?: () => void
@@ -20,7 +20,7 @@ interface DeviceFlowAuthProps {
   className?: string
 }
 
-interface DeviceFlowData {
+type DeviceFlowData = {
   deviceCode: string
   userCode: string
   verificationUri: string

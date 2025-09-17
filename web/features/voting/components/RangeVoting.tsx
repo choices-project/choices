@@ -3,13 +3,13 @@
 import { useState, useEffect } from 'react'
 import { CheckCircle, AlertCircle, Info, Star } from 'lucide-react'
 
-interface PollOption {
+type PollOption = {
   id: string
   text: string
   description?: string
 }
 
-interface RangeVotingProps {
+type RangeVotingProps = {
   pollId: string
   title: string
   description?: string

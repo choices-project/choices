@@ -24,7 +24,7 @@ import { IRVCalculator } from '../../lib/vote/irv-calculator';
 import type { UserRanking, RankedChoiceResults } from '../../lib/vote/irv-calculator';
 
 // Define Candidate type locally since it's not exported from the calculator
-interface Candidate {
+type Candidate = {
   id: string;
   name: string;
   party: string;

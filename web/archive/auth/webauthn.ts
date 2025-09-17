@@ -49,7 +49,7 @@ export enum WebAuthnErrorType {
   UNKNOWN = 'UNKNOWN'
 }
 
-export interface WebAuthnError {
+export type WebAuthnError = {
   type: WebAuthnErrorType;
   message: string;
   code?: string;
@@ -57,7 +57,7 @@ export interface WebAuthnError {
   suggestedAction?: string;
 }
 
-export interface WebAuthnResult {
+export type WebAuthnResult = {
   success: boolean;
   credential?: PublicKeyCredential;
   error?: WebAuthnError;

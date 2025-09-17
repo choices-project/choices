@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { CheckCircle2, ArrowRight, User, Heart, Shield, Zap } from 'lucide-react'
 import { completeOnboarding } from '@/app/actions/complete-onboarding'
 
-interface OnboardingStep {
+type OnboardingStep = {
   id: number
   title: string
   description: string

@@ -48,7 +48,7 @@ async function main() {
     .not('fec_candidate_id', 'is', null)
 
   if (error) throw error
-  if (!people?.length) { console.log('no fec_candidate_id rows found'); return }
+  if (!people.length) { console.log('no fec_candidate_id rows found'); return }
 
   let ok = 0, bad = 0
   for (const p of people) {

@@ -9,7 +9,7 @@ const supabase = createClient(
 );
 
 // San Francisco DataSF API endpoints
-const DATASF_BASE = 'https://data.sfgov.org/resource';
+// const DATASF_BASE = 'https://data.sfgov.org/resource'; // Unused variable
 
 // Current SF officials (as of January 2025) - UPDATED DATA
 const SF_OFFICIALS_2025 = [

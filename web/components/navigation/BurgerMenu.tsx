@@ -16,7 +16,7 @@ import {
   ChevronRight
 } from 'lucide-react';
 
-interface BurgerMenuProps {
+type BurgerMenuProps = {
   isOpen: boolean;
   onClose: () => void;
   user?: {

@@ -18,7 +18,7 @@ export async function GET(_request: NextRequest) {
 
       if (usersError) throw usersError;
 
-      const totalUsers = users?.length || 0;
+      const totalUsers = users.length || 0;
 
       // Get recent polls
       const { data: polls, error: pollsError } = await supabase

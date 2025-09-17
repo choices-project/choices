@@ -24,7 +24,7 @@ import { ScreenReaderSupport } from '../../lib/accessibility/screen-reader';
 // TYPES AND INTERFACES
 // ============================================================================
 
-export interface Candidate {
+export type Candidate = {
   id: string;
   name: string;
   bio: string;
@@ -39,14 +39,14 @@ export interface Candidate {
   };
 }
 
-export interface UserInterests {
+export type UserInterests = {
   demographics: string[];
   interests: string[];
   location: string;
   ageGroup: string;
 }
 
-export interface ProgressiveRankingProps {
+export type ProgressiveRankingProps = {
   candidates: Candidate[];
   userInterests: UserInterests;
   onRankingChange: (rankings: string[]) => void;
@@ -57,7 +57,7 @@ export interface ProgressiveRankingProps {
   className?: string;
 }
 
-export interface RankingState {
+export type RankingState = {
   rankings: string[];
   showAll: boolean;
   validationErrors: string[];
@@ -416,7 +416,7 @@ export function ProgressiveRanking({
 // CANDIDATE CARD COMPONENT
 // ============================================================================
 
-interface CandidateCardProps {
+type CandidateCardProps = {
   candidate: Candidate;
   rank: number;
   isRanked: boolean;
@@ -538,7 +538,7 @@ function CandidateCard({
 // VALIDATION SECTION COMPONENT
 // ============================================================================
 
-interface ValidationSectionProps {
+type ValidationSectionProps = {
   errors: string[];
   warnings: string[];
   rankings: string[];

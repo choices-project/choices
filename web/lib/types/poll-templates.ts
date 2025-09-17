@@ -5,7 +5,7 @@
  * It replaces the old @/shared/utils/lib/types/poll-templates imports.
  */
 
-export interface PollTemplate {
+export type PollTemplate = {
   id: string;
   name: string;
   title: string;
@@ -24,7 +24,7 @@ export interface PollTemplate {
   updatedAt: Date;
   createdBy: string;
   isPublic: boolean;
-  steps: any[];
+  steps: unknown[];
   defaultSettings: {
     allowMultipleVotes: boolean;
     allowAnonymousVotes: boolean;
@@ -55,7 +55,7 @@ export type PollCategory =
   | 'fashion'
   | 'finance';
 
-export interface TemplateCategory {
+export type TemplateCategory = {
   id: string;
   name: string;
   description: string;
@@ -64,7 +64,7 @@ export interface TemplateCategory {
   templateCount: number;
 }
 
-export interface PollSettings {
+export type PollSettings = {
   allowMultipleVotes: boolean;
   allowAnonymousVotes: boolean;
   requireEmail: boolean;
@@ -79,7 +79,7 @@ export interface PollSettings {
   maxVotes?: number;
 }
 
-export interface PollWizardData {
+export type PollWizardData = {
   title: string;
   description: string;
   category: PollCategory;
@@ -93,7 +93,7 @@ export interface PollWizardData {
   settings: PollSettings;
 }
 
-export interface PollWizardState {
+export type PollWizardState = {
   currentStep: number;
   totalSteps: number;
   data: PollWizardData;

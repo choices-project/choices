@@ -14,7 +14,7 @@ import {
   AlertTriangle
 } from 'lucide-react';
 
-interface CivicsLureProps {
+type CivicsLureProps = {
   userLocation?: string;
   onEngage: () => void;
 }

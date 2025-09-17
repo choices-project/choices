@@ -10,7 +10,7 @@ import {
   RefreshCw
 } from 'lucide-react';
 
-interface UserSuggestion {
+type UserSuggestion = {
   id: string;
   user_id: string;
   type: 'interest_suggestion' | 'demographic_suggestion' | 'poll_suggestion' | 'general_feedback';
@@ -83,7 +83,7 @@ export default function UserSuggestionsManager() {
         setSuggestions(prev => 
           prev.map(suggestion => 
             suggestion.id === id 
-              ? { ...suggestion, status: status as any }
+              ? { ...suggestion, status: status as 'pending' | 'approved' | 'rejected' | 'implemented' }
               : suggestion
           )
         );

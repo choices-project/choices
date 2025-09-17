@@ -6,7 +6,7 @@ import { motion } from 'framer-motion'
 import { TrendingUp, TrendingDown, Minus, Activity } from 'lucide-react'
 import * as Tooltip from '@radix-ui/react-tooltip'
 
-interface ChartData {
+type ChartData = {
   name: string
   value: number
   color: string
@@ -14,7 +14,7 @@ interface ChartData {
   previousValue?: number
 }
 
-interface ProfessionalChartProps {
+type ProfessionalChartProps = {
   data: ChartData[]
   title?: string
   subtitle?: string

@@ -16,7 +16,7 @@ import { ArrowLeft, Trash2, Download, AlertTriangle, Shield, User, Vote, FileTex
 // Utilities
 import { devLog } from '@/lib/logger'
 
-interface UserData {
+type UserData = {
   profile: {
     displayname: string
     email: string
@@ -45,7 +45,7 @@ interface UserData {
   }>
 }
 
-interface DeletionStep {
+type DeletionStep = {
   id: string
   title: string
   description: string

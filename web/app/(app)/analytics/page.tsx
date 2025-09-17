@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 import { useAnalytics } from '../../../hooks/useAnalytics';
 
-interface AnalyticsView {
+type AnalyticsView = {
   id: string;
   name: string;
   description: string;

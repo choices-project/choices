@@ -1,4 +1,4 @@
-export interface PollTemplate {
+export type PollTemplate = {
   id: string;
   name: string;
   description: string;
@@ -17,7 +17,7 @@ export interface PollTemplate {
   defaultSettings: PollSettings;
 }
 
-export interface PollWizardStep {
+export type PollWizardStep = {
   id: string;
   title: string;
   description: string;
@@ -28,7 +28,7 @@ export interface PollWizardStep {
   options?: WizardStepOption[];
 }
 
-export interface WizardStepOption {
+export type WizardStepOption = {
   id: string;
   label: string;
   value: string | number | boolean;
@@ -37,7 +37,7 @@ export interface WizardStepOption {
   isDefault?: boolean;
 }
 
-export interface StepValidation {
+export type StepValidation = {
   required?: boolean;
   minLength?: number;
   maxLength?: number;
@@ -45,7 +45,7 @@ export interface StepValidation {
   custom?: (value: string | number | boolean) => boolean | string;
 }
 
-export interface PollSettings {
+export type PollSettings = {
   allowMultipleVotes: boolean;
   allowAnonymousVotes: boolean;
   requireEmail: boolean;
@@ -61,7 +61,7 @@ export interface PollSettings {
   autoCloseThreshold?: number;
 }
 
-export interface PollWizardState {
+export type PollWizardState = {
   currentStep: number;
   totalSteps: number;
   isComplete: boolean;
@@ -72,7 +72,7 @@ export interface PollWizardState {
   isLoading: boolean;
 }
 
-export interface PollWizardData {
+export type PollWizardData = {
   title: string;
   description: string;
   options: string[];
@@ -103,7 +103,7 @@ export type PollCategory =
   | 'social'
   | 'custom';
 
-export interface TemplateCategory {
+export type TemplateCategory = {
   id: PollCategory;
   name: string;
   description: string;
@@ -112,7 +112,7 @@ export interface TemplateCategory {
   templateCount: number;
 }
 
-export interface PollWizardProgress {
+export type PollWizardProgress = {
   step: number;
   title: string;
   isCompleted: boolean;
@@ -121,7 +121,7 @@ export interface PollWizardProgress {
   estimatedTime: number;
 }
 
-export interface PollTemplateSearch {
+export type PollTemplateSearch = {
   query: string;
   category?: PollCategory;
   difficulty?: string;
@@ -132,7 +132,7 @@ export interface PollTemplateSearch {
   limit: number;
 }
 
-export interface PollTemplateStats {
+export type PollTemplateStats = {
   totalTemplates: number;
   publicTemplates: number;
   userTemplates: number;

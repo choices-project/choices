@@ -6,7 +6,7 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
-export interface OptimizedPollResult {
+export type OptimizedPollResult = {
   pollId: string
   pollTitle: string
   pollType: string
@@ -21,7 +21,7 @@ export interface OptimizedPollResult {
   kAnonymitySatisfied: boolean
 }
 
-export interface PollOptionResult {
+export type PollOptionResult = {
   optionId: string
   label: string
   voteCount: number
@@ -29,7 +29,7 @@ export interface PollOptionResult {
   uniqueVoters: number
 }
 
-export interface TrendingPoll {
+export type TrendingPoll = {
   pollId: string
   pollTitle: string
   pollType: string
@@ -39,7 +39,7 @@ export interface TrendingPoll {
   trendingRank: number
 }
 
-export interface PerformanceMetrics {
+export type PerformanceMetrics = {
   metricName: string
   avgValue: number
   minValue: number

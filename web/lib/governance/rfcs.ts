@@ -8,7 +8,7 @@
 import { devLog } from '../logger';
 import { withOptional } from '../util/objects';
 
-export interface RFCData {
+export type RFCData = {
   title: string;
   summary: string;
   motivation: string;
@@ -22,7 +22,7 @@ export interface RFCData {
   updated?: string;
 }
 
-export interface RFC extends RFCData {
+export type RFC = {
   id: string;
   status: 'Draft' | 'Review' | 'Accepted' | 'Rejected';
   created: string;
@@ -31,9 +31,9 @@ export interface RFC extends RFCData {
   votes: RFCVote[];
   tags: string[];
   category: string;
-}
+} & RFCData
 
-export interface PublicRFC {
+export type PublicRFC = {
   id: string;
   title: string;
   status: 'Review' | 'Accepted' | 'Rejected';
@@ -52,7 +52,7 @@ export interface PublicRFC {
   category: string;
 }
 
-export interface RFCComment {
+export type RFCComment = {
   id: string;
   rfcId: string;
   author: string;
@@ -62,7 +62,7 @@ export interface RFCComment {
   replies: RFCComment[];
 }
 
-export interface RFCVote {
+export type RFCVote = {
   id: string;
   rfcId: string;
   voter: string;
@@ -71,7 +71,7 @@ export interface RFCVote {
   timestamp: number;
 }
 
-export interface RFCNotification {
+export type RFCNotification = {
   id: string;
   rfcId: string;
   type: 'created' | 'updated' | 'status_changed' | 'comment_added' | 'vote_cast';
@@ -138,7 +138,7 @@ export class RFCManager {
    */
   static async publishRFC(rfcId: string): Promise<void> {
     const manager = new RFCManager();
-    return await manager.publishRFCInstance(rfcId);
+    await manager.publishRFCInstance(rfcId);
   }
 
   /**
@@ -289,7 +289,7 @@ export class RFCManager {
    */
   static async updateRFCStatus(rfcId: string, status: 'Accepted' | 'Rejected', reason?: string): Promise<void> {
     const manager = new RFCManager();
-    return await manager.updateRFCStatusInstance(rfcId, status, reason);
+    await manager.updateRFCStatusInstance(rfcId, status, reason);
   }
 
   /**

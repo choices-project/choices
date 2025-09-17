@@ -8,7 +8,7 @@ import {
   Lock, Unlock
 } from 'lucide-react'
 
-interface Tier {
+type Tier = {
   level: number;
   name: string;
   price: string;
@@ -19,7 +19,7 @@ interface Tier {
   icon: React.ReactNode;
 }
 
-interface TierSystemProps {
+type TierSystemProps = {
   tiers: Tier[];
   currentTier?: number;
 }

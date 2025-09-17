@@ -21,7 +21,7 @@ const DemographicContext = createContext<{
   error: null
 })
 
-interface DemographicData {
+type DemographicData = {
   ageDistribution: { range: string; count: number; percentage: number }[];
   geographicSpread: { state: string; count: number; percentage: number }[];
   commonInterests: { interest: string; count: number; percentage: number }[];
@@ -31,7 +31,7 @@ interface DemographicData {
   urbanRural: { type: string; count: number; percentage: number }[];
 }
 
-interface DemographicVisualizationProps {
+type DemographicVisualizationProps = {
   data?: DemographicData;
   title: string;
   subtitle: string;
@@ -157,7 +157,7 @@ export function DemographicVisualization({
 
   const getTotalUsers = () => {
     if (!data) return 0
-    return (data as any).ageDistribution?.reduce((sum: any, item: any) => sum + item.count, 0) || 0
+    return data?.ageDistribution?.reduce((sum: number, item: { count: number }) => sum + item.count, 0) || 0
   }
 
                                          const getInsightMessage = () => {
@@ -284,7 +284,7 @@ export function DemographicVisualization({
           <span className="text-blue-600 font-medium">active citizens</span>
           {!useMockData && realData && (
             <span className="text-xs text-blue-500">
-              (Updated: {new Date((realData as any).lastUpdated || Date.now()).toLocaleTimeString()})
+              (Updated: {new Date((realData as DemographicData & { lastUpdated?: number }).lastUpdated || Date.now()).toLocaleTimeString()})
             </span>
           )}
         </div>

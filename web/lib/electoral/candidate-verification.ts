@@ -11,7 +11,7 @@
 import { dev } from '@/lib/dev.logger';
 
 // Verification and access types
-export interface CandidateVerification {
+export type CandidateVerification = {
   candidateId: string;
   
   // Official Verification
@@ -42,7 +42,7 @@ export interface CandidateVerification {
   };
 }
 
-export interface OfficialChannel {
+export type OfficialChannel = {
   candidateId: string;
   channelType: 'verified_official' | 'campaign_team' | 'volunteer';
   
@@ -72,7 +72,7 @@ export interface OfficialChannel {
   };
 }
 
-export interface EqualAccessPlatform {
+export type EqualAccessPlatform = {
   candidateId: string;
   
   // Equal Rights
@@ -101,7 +101,7 @@ export interface EqualAccessPlatform {
   };
 }
 
-export interface CandidateOnboarding {
+export type CandidateOnboarding = {
   candidateId: string;
   step: 'verification' | 'profile_setup' | 'content_guidelines' | 'platform_access' | 'complete';
   

@@ -3,8 +3,8 @@
 import { useState, useEffect } from 'react'
 import { devLog } from '@/lib/logger';
 
-interface PerformanceUtils {
-  performanceMonitor: any
+type PerformanceUtils = {
+  performanceMonitor: unknown
 }
 
 export function usePerformanceUtils() {

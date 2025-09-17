@@ -6,7 +6,7 @@
 import { logger } from '@/lib/logger';
 
 // Types for performance monitoring
-export interface QueryPerformanceData {
+export type QueryPerformanceData = {
   queryHash: string;
   querySignature: string;
   queryType: 'SELECT' | 'INSERT' | 'UPDATE' | 'DELETE' | 'CREATE' | 'ALTER' | 'DROP';
@@ -22,7 +22,7 @@ export interface QueryPerformanceData {
   userAgent?: string;
 }
 
-export interface IndexUsageData {
+export type IndexUsageData = {
   tableName: string;
   indexName: string;
   indexType: string;
@@ -34,7 +34,7 @@ export interface IndexUsageData {
   avgScanTimeMs?: number;
 }
 
-export interface ConnectionPoolData {
+export type ConnectionPoolData = {
   poolName: string;
   poolType: 'database' | 'redis' | 'external';
   totalConnections: number;
@@ -46,7 +46,7 @@ export interface ConnectionPoolData {
   connectionErrors?: number;
 }
 
-export interface CachePerformanceData {
+export type CachePerformanceData = {
   cacheName: string;
   cacheType: 'memory' | 'redis' | 'database' | 'cdn';
   hitCount: number;
@@ -59,12 +59,12 @@ export interface CachePerformanceData {
   evictionCount?: number;
 }
 
-export interface MaintenanceJobData {
+export type MaintenanceJobData = {
   jobName: string;
   jobType: 'cleanup' | 'vacuum' | 'analyze' | 'reindex' | 'backup' | 'optimization';
 }
 
-export interface PerformanceRecommendation {
+export type PerformanceRecommendation = {
   recommendationType: string;
   recommendationText: string;
   priority: 'high' | 'medium' | 'low';
@@ -72,7 +72,7 @@ export interface PerformanceRecommendation {
   implementationEffort: 'low' | 'medium' | 'high';
 }
 
-export interface PerformanceMetrics {
+export type PerformanceMetrics = {
   metricType: string;
   metricName: string;
   metricValue: number;
@@ -89,7 +89,7 @@ export interface PerformanceMetrics {
 }
 
 // Performance monitoring configuration
-export interface PerformanceConfig {
+export type PerformanceConfig = {
   enabled: boolean;
   sampleRate: number; // 0.0 to 1.0
   slowQueryThresholdMs: number;

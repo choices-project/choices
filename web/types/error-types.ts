@@ -58,7 +58,7 @@ export type ErrorCode =
 export type HttpStatusCode = 
   | 400 | 401 | 403 | 404 | 409 | 429 | 500 | 502 | 503 | 504;
 
-export interface ErrorContext {
+export type ErrorContext = {
   userId?: string;
   requestId?: string;
   endpoint?: string;
@@ -69,7 +69,7 @@ export interface ErrorContext {
   timestamp?: string;
 }
 
-export interface ErrorDetails {
+export type ErrorDetails = {
   field?: string;
   value?: unknown;
   constraint?: string;
@@ -78,7 +78,7 @@ export interface ErrorDetails {
   cause?: Error;
 }
 
-export interface ErrorResponse {
+export type ErrorResponse = {
   error: string;
   message: string;
   statusCode: HttpStatusCode;
@@ -88,46 +88,46 @@ export interface ErrorResponse {
   requestId?: string;
 }
 
-export interface ValidationErrorDetails extends ErrorDetails {
+export type ValidationErrorDetails = {
   field: string;
   value: unknown;
   constraint: string;
   expectedType?: string;
   receivedType?: string;
-}
+} & ErrorDetails
 
-export interface AuthenticationErrorDetails extends ErrorDetails {
+export type AuthenticationErrorDetails = {
   authMethod?: 'webauthn' | 'session' | 'token';
   credentialId?: string;
   sessionId?: string;
   userId?: string;
-}
+} & ErrorDetails
 
-export interface AuthorizationErrorDetails extends ErrorDetails {
+export type AuthorizationErrorDetails = {
   requiredPermission?: string;
   requiredRole?: string;
   userRole?: string;
   resourceId?: string;
   action?: string;
-}
+} & ErrorDetails
 
-export interface DatabaseErrorDetails extends ErrorDetails {
+export type DatabaseErrorDetails = {
   operation?: string;
   table?: string;
   constraint?: string;
   query?: string;
   parameters?: unknown[];
-}
+} & ErrorDetails
 
-export interface ExternalServiceErrorDetails extends ErrorDetails {
+export type ExternalServiceErrorDetails = {
   serviceName?: string;
   endpoint?: string;
   statusCode?: number;
   responseBody?: string;
   retryAfter?: number;
-}
+} & ErrorDetails
 
-export interface ErrorHandlerConfig {
+export type ErrorHandlerConfig = {
   logErrors: boolean;
   includeStackTrace: boolean;
   sanitizeErrors: boolean;
@@ -136,7 +136,7 @@ export interface ErrorHandlerConfig {
   errorReportingEndpoint?: string;
 }
 
-export interface ErrorMetrics {
+export type ErrorMetrics = {
   totalErrors: number;
   errorsByCode: Record<ErrorCode, number>;
   errorsByEndpoint: Record<string, number>;
@@ -145,13 +145,13 @@ export interface ErrorMetrics {
   lastErrorAt: string;
 }
 
-export interface ErrorBoundaryProps {
+export type ErrorBoundaryProps = {
   fallback?: React.ComponentType<{ error: Error; resetError: () => void }>;
   onError?: (error: Error, errorInfo: React.ErrorInfo) => void;
   children: React.ReactNode;
 }
 
-export interface ErrorBoundaryState {
+export type ErrorBoundaryState = {
   hasError: boolean;
   error?: Error;
   errorInfo?: React.ErrorInfo;

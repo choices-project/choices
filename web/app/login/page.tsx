@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { logger } from '@/lib/logger';
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
@@ -8,7 +8,7 @@ import { Eye, EyeOff, User, Lock, Fingerprint, CheckCircle2, AlertCircle } from 
 import { clientSession } from '@/lib/client-session'
 import { safeBrowserAccess } from '@/lib/ssr-safe'
 
-export default function LoginPage() {
+function LoginForm() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -122,7 +122,7 @@ export default function LoginPage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          rpId: safeBrowserAccess.window()?.location?.hostname || 'localhost'
+          rpId: safeBrowserAccess.window()?.location.hostname || 'localhost'
         })
       })
 
@@ -136,7 +136,7 @@ export default function LoginPage() {
       const challenge = Uint8Array.from(atob(authData.challenge), c => c.charCodeAt(0))
       
       // Convert credential IDs from base64 to ArrayBuffer
-      const allowCredentials = authData.allowCredentials.map((cred: any) => ({
+      const allowCredentials = authData.allowCredentials.map((cred: { id: string; transports?: string[] }) => ({
         id: Uint8Array.from(atob(cred.id), c => c.charCodeAt(0)),
         type: 'public-key',
         transports: cred.transports || ['internal']
@@ -337,5 +337,20 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-2 text-gray-600">Loading...</p>
+        </div>
+      </div>
+    }>
+      <LoginForm />
+    </Suspense>
   )
 }

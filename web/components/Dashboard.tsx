@@ -4,13 +4,9 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { poApi } from '../src/lib/api';
 import { 
   BarChart3, 
-  Map, 
   Users, 
   TrendingUp, 
-  Activity, 
-  Globe, 
-  PieChart, 
-  Clock,
+  Activity,
   RefreshCw,
   Filter,
   Calendar,
@@ -26,7 +22,7 @@ import { devLog } from '@/lib/logger';
 import type { DashboardData } from '@/types/frontend';
 
 
-interface PollSummary {
+type PollSummary = {
   id: string;
   title: string;
   status: string;
@@ -37,13 +33,13 @@ interface PollSummary {
   choices: Choice[];
 }
 
-interface Choice {
+type Choice = {
   id: string;
   text: string;
   votes: number;
 }
 
-interface OverallMetrics {
+type OverallMetrics = {
   totalpolls: number;
   activepolls: number;
   totalvotes: number;
@@ -51,20 +47,20 @@ interface OverallMetrics {
   averageparticipation: number;
 }
 
-interface TrendData {
+type TrendData = {
   date: string;
   votes: number;
   users: number;
   polls: number;
 }
 
-interface GeographicMap {
+type GeographicMap = {
   regions: GeographicRegion[];
   countries: GeographicCountry[];
   heatmap: HeatmapPoint[];
 }
 
-interface GeographicRegion {
+type GeographicRegion = {
   name: string;
   votecount: number;
   population: number;
@@ -73,7 +69,7 @@ interface GeographicRegion {
   longitude: number;
 }
 
-interface GeographicCountry {
+type GeographicCountry = {
   code: string;
   name: string;
   votecount: number;
@@ -81,13 +77,13 @@ interface GeographicCountry {
   percentage: number;
 }
 
-interface HeatmapPoint {
+type HeatmapPoint = {
   latitude: number;
   longitude: number;
   intensity: number;
 }
 
-interface DemographicsData {
+type DemographicsData = {
   agegroups: Record<string, number>;
   genders: Record<string, number>;
   education: Record<string, number>;
@@ -95,7 +91,7 @@ interface DemographicsData {
   verificationtiers: Record<string, number>;
 }
 
-interface EngagementMetrics {
+type EngagementMetrics = {
   activeusers: number;
   newusers: number;
   returningusers: number;

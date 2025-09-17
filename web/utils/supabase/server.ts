@@ -2,7 +2,7 @@ import 'server-only';                  // build-time guard
 import { cookies } from 'next/headers'
 
 // Database schema types for type safety
-export interface Database {
+export type Database = {
   public: {
     Tables: {
       user_profiles: {
@@ -107,7 +107,7 @@ export interface Database {
           verification_token?: string
           is_verified: boolean
           voting_method: 'single' | 'approval' | 'ranked' | 'quadratic' | 'range'
-          vote_data: any // JSON data for complex voting methods
+          vote_data: Record<string, unknown> // JSON data for complex voting methods
         }
         Insert: {
           id?: string
@@ -119,7 +119,7 @@ export interface Database {
           verification_token?: string
           is_verified?: boolean
           voting_method: 'single' | 'approval' | 'ranked' | 'quadratic' | 'range'
-          vote_data?: any
+          vote_data?: Record<string, unknown>
         }
         Update: {
           id?: string
@@ -131,7 +131,7 @@ export interface Database {
           verification_token?: string
           is_verified?: boolean
           voting_method?: 'single' | 'approval' | 'ranked' | 'quadratic' | 'range'
-          vote_data?: any
+          vote_data?: Record<string, unknown>
         }
       }
       // Privacy-first tables
@@ -176,21 +176,21 @@ export interface Database {
           action: string
           user_id_hash: string
           created_at: string
-          metadata: any
+          metadata: Record<string, unknown>
         }
         Insert: {
           id?: string
           action: string
           user_id_hash: string
           created_at?: string
-          metadata?: any
+          metadata?: Record<string, unknown>
         }
         Update: {
           id?: string
           action?: string
           user_id_hash?: string
           created_at?: string
-          metadata?: any
+          metadata?: Record<string, unknown>
         }
       }
       user_profiles_encrypted: {
@@ -311,7 +311,7 @@ export interface Database {
           error_type: string
           error_message: string
           stack_trace?: string
-          context?: any
+          context?: Record<string, unknown>
           created_at: string
           severity: 'low' | 'medium' | 'high' | 'critical'
         }
@@ -321,7 +321,7 @@ export interface Database {
           error_type: string
           error_message: string
           stack_trace?: string
-          context?: any
+          context?: Record<string, unknown>
           created_at?: string
           severity?: 'low' | 'medium' | 'high' | 'critical'
         }
@@ -331,7 +331,7 @@ export interface Database {
           error_type?: string
           error_message?: string
           stack_trace?: string
-          context?: any
+          context?: Record<string, unknown>
           created_at?: string
           severity?: 'low' | 'medium' | 'high' | 'critical'
         }
@@ -363,7 +363,7 @@ export interface Database {
         Args: {
           target_user_id: string
         }
-        Returns: any
+        Returns: Record<string, unknown>
       }
       contribute_to_analytics: {
         Args: {
@@ -412,7 +412,7 @@ export async function getSupabaseServerClient() {
   let cookieStore
   try {
     cookieStore = cookies()
-  } catch (error) {
+  } catch (_error) {
     // During build time, cookies() might not be available
     // Throw an error to prevent build-time usage
     throw new Error('getSupabaseServerClient() cannot be called during build time. Use it only in API routes and server components.')
@@ -426,17 +426,17 @@ export async function getSupabaseServerClient() {
     {
       cookies: {
         get: (name: string) => cookieStore.get(name)?.value,
-        set: (name: string, value: string, options: any) => {
+        set: (name: string, value: string, options: Record<string, unknown>) => {
           try {
             cookieStore.set(name, value, options)
-          } catch (error) {
+          } catch (_error) {
             // Ignore errors in RSC context
           }
         },
-        remove: (name: string, options: any) => {
+        remove: (name: string, _options: Record<string, unknown>) => {
           try {
             cookieStore.delete(name)
-          } catch (error) {
+          } catch (_error) {
             // Ignore errors in RSC context
           }
         },

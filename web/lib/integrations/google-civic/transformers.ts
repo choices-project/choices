@@ -19,7 +19,7 @@ import type {
   CandidateCardV1 
 } from '../../../features/civics/schemas';
 
-export interface TransformedRepresentative extends Representative {
+export type TransformedRepresentative = {
   source: 'google-civic';
   sourceId: string;
   photoUrl?: string;
@@ -32,13 +32,13 @@ export interface TransformedRepresentative extends Representative {
     type: string;
     id: string;
   }>;
-}
+} & Representative
 
-export interface TransformedCandidateCard extends CandidateCardV1 {
+export type TransformedCandidateCard = {
   source: 'google-civic';
   sourceId: string;
   lastUpdated: string;
-}
+} & CandidateCardV1
 
 /**
  * Transform Google Civic API response to AddressLookupResult
@@ -310,7 +310,7 @@ export function cleanRepresentativeData(representative: TransformedRepresentativ
     {
       ...representative,
       name: representative.name.trim(),
-      party: representative.party?.trim() || 'Unknown',
+      party: representative.party.trim() || 'Unknown',
       office: representative.office.trim(),
       district: representative.district.trim(),
       state: representative.state.trim().toUpperCase(),
@@ -318,7 +318,7 @@ export function cleanRepresentativeData(representative: TransformedRepresentativ
         {},
         {
           phone: representative.contact.phone?.trim(),
-          email: representative.contact.email?.trim()?.toLowerCase(),
+          email: representative.contact.email?.trim().toLowerCase(),
           website: representative.contact.website?.trim(),
           address: representative.contact.address
         }

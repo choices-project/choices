@@ -3,13 +3,13 @@
 import { useState, useEffect } from 'react'
 import { CheckCircle, AlertCircle, Info, DollarSign, TrendingUp, TrendingDown } from 'lucide-react'
 
-interface PollOption {
+type PollOption = {
   id: string
   text: string
   description?: string
 }
 
-interface QuadraticVotingProps {
+type QuadraticVotingProps = {
   pollId: string
   title: string
   description?: string
@@ -51,7 +51,7 @@ export default function QuadraticVoting({
   }, [userVote, options])
 
   const getTotalSpent = () => {
-    return Object.values(allocations).reduce((total: any, credits: any) => {
+    return Object.values(allocations).reduce((total: number, credits: number) => {
       return total + (credits * credits) // Quadratic cost
     }, 0)
   }
@@ -84,7 +84,7 @@ export default function QuadraticVoting({
     if (hasVoted || isVoting) return
 
     // Validate that at least some credits are allocated
-    const totalAllocated = Object.values(allocations).reduce((sum: any, credits: any) => sum + credits, 0)
+    const totalAllocated = Object.values(allocations).reduce((sum: number, credits: number) => sum + credits, 0)
     if (totalAllocated === 0) {
       setError('Please allocate at least some credits to vote')
       return
@@ -121,8 +121,8 @@ export default function QuadraticVoting({
       }
       
       await onVote(pollId, validAllocations)
-    } catch (err: any) {
-      setError(err.message || 'Failed to submit vote')
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to submit vote')
     } finally {
       setIsSubmitting(false)
     }
@@ -213,7 +213,7 @@ export default function QuadraticVoting({
       {/* Voting Interface */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
         <div className="space-y-6">
-          {options.map((option: any) => {
+          {options.map((option: PollOption) => {
             const credits = allocations[option.id] || 0
             const cost = credits ** 2
             return (

@@ -7,13 +7,12 @@ import type {
   DemographicsData, 
   EngagementData 
 } from '../../types/frontend';
-import type { ApiResult, toApiError } from '../../types/api';
 import { safeJson } from '../../lib/http/safeFetch';
 
 const IA_BASE_URL = 'http://localhost:8081/api'
 const PO_BASE_URL = 'http://localhost:8082/api'
 
-export interface TokenResponse {
+export type TokenResponse = {
   token: string
   tag: string
   issued_at: string
@@ -23,7 +22,7 @@ export interface TokenResponse {
   public_key: string
 }
 
-export interface Poll {
+export type Poll = {
   id: string
   title: string
   description: string
@@ -35,7 +34,7 @@ export interface Poll {
   created_at: string
 }
 
-export interface Vote {
+export type Vote = {
   poll_id: string
   token: string
   tag: string
@@ -45,11 +44,9 @@ export interface Vote {
   merkle_proof: string[]
 }
 
-export interface Tally {
-  [key: number]: number
-}
+export type Tally = Record<number, number>
 
-export interface CommitmentLog {
+export type CommitmentLog = {
   leaf_count: number
   root: string
   timestamp: string
@@ -300,8 +297,8 @@ export const poApi = {
       throw new Error(`Failed to verify vote proof: ${response.statusText}`)
     }
 
-    const result = await response.json()
-    return result.verified || false
+    const result = await response.json() as { verified?: boolean }
+    return result.verified ?? false
   },
 
   // Get dashboard data
@@ -314,7 +311,7 @@ export const poApi = {
 
     const result = await safeJson<DashboardData>(`${PO_BASE_URL}/v1/dashboard`)
     if (!result.ok) {
-      throw new Error(`Failed to get dashboard data: ${result.errors}`)
+      throw new Error(`Failed to get dashboard data: ${result.errors ?? 'Unknown error'}`)
     }
     return result.data
   },

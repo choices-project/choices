@@ -14,7 +14,7 @@ export function withOptional<T extends object>(
   base: T,
   extras: Record<string, unknown>
 ) {
-  const out = { ...base } as any
+  const out = { ...base } as Record<string, unknown>
   for (const [k, v] of Object.entries(extras)) {
     if (v != null) out[k] = v
   }
@@ -29,7 +29,7 @@ export function createPayload<T extends Record<string, unknown>>(data: T): Parti
   const result: Partial<T> = {}
   for (const [key, value] of Object.entries(data)) {
     if (value !== null && value !== undefined) {
-      (result as any)[key] = value
+      (result as Record<string, unknown>)[key] = value
     }
   }
   return result
@@ -40,10 +40,10 @@ export function createPayload<T extends Record<string, unknown>>(data: T): Parti
  * Prevents exactOptionalPropertyTypes violations
  */
 export function mergeOptional<T extends object, U extends object>(base: T, extras: U): T & Partial<U> {
-  const result = { ...base }
+  const result = { ...base } as Record<string, unknown>
   for (const [key, value] of Object.entries(extras)) {
     if (value !== null && value !== undefined) {
-      (result as any)[key] = value
+      result[key] = value
     }
   }
   return result as T & Partial<U>

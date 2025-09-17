@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { type NextRequest, NextResponse } from 'next/server';
 import { TrendingCandidateDetector } from '@/lib/social/social-discovery';
 import { devLog } from '@/lib/logger';
 import { handleError, getUserMessage, getHttpStatus } from '@/lib/error-handler';
@@ -119,7 +119,7 @@ export async function POST(request: NextRequest) {
 }
 
 // Helper methods (would be moved to a service class in production)
-function calculateActivityIntensity(activityType: string, metadata: any): number {
+function calculateActivityIntensity(activityType: string, metadata: Record<string, unknown>): number {
   const baseIntensities: Record<string, number> = {
     'vote': 1.0,
     'view': 0.3,
@@ -139,7 +139,7 @@ function calculateActivityIntensity(activityType: string, metadata: any): number
   return baseIntensity * multiplier;
 }
 
-async function storeActivityRecord(activityRecord: any): Promise<void> {
+async function storeActivityRecord(activityRecord: Record<string, unknown>): Promise<void> {
   // Mock implementation - would store in database
   devLog('Storing activity record:', activityRecord);
 }

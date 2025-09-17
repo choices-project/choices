@@ -3,14 +3,14 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 
-interface ChartData {
+type ChartData = {
   name: string
   value: number
   color: string
   gradient?: string
 }
 
-interface FancyDonutChartProps {
+type FancyDonutChartProps = {
   data: ChartData[]
   size?: number
   strokeWidth?: number
@@ -111,7 +111,7 @@ export function FancyDonutChart({ data, size = 200, strokeWidth = 20, title }: F
   )
 }
 
-interface FancyBarChartProps {
+type FancyBarChartProps = {
   data: ChartData[]
   height?: number
   title?: string
@@ -181,7 +181,7 @@ export function FancyBarChart({ data, title }: FancyBarChartProps) {
   )
 }
 
-interface FancyProgressRingProps {
+type FancyProgressRingProps = {
   percentage: number
   size?: number
   strokeWidth?: number
@@ -257,7 +257,7 @@ export function FancyProgressRing({
   )
 }
 
-interface FancyMetricCardProps {
+type FancyMetricCardProps = {
   title: string
   value: string | number
   change?: string

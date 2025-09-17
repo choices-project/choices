@@ -16,7 +16,7 @@ import {
   AlertTriangle
 } from 'lucide-react';
 
-interface Candidate {
+type Candidate = {
   id: string;
   name: string;
   party?: string;
@@ -36,7 +36,7 @@ interface Candidate {
   isVerified: boolean;
 }
 
-interface CandidateFeedProps {
+type CandidateFeedProps = {
   candidates: Candidate[];
   jurisdictionName: string;
 }

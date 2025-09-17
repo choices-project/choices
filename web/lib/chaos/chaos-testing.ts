@@ -8,7 +8,7 @@
 import { logger } from '@/lib/logger';
 import { IncrementalTallyManager } from '../realtime/incremental-tally';
 
-export interface ChaosResult {
+export type ChaosResult = {
   success: boolean;
   duration: number;
   drillType: 'redis' | 'database' | 'network' | 'full';
@@ -25,7 +25,7 @@ export interface ChaosResult {
   };
 }
 
-export interface ChaosConfig {
+export type ChaosConfig = {
   enabled: boolean;
   maxDuration: number;
   autoRecovery: boolean;
@@ -33,7 +33,7 @@ export interface ChaosConfig {
   dryRun: boolean;
 }
 
-export interface SystemState {
+export type SystemState = {
   redis: 'healthy' | 'degraded' | 'failed';
   database: 'healthy' | 'degraded' | 'failed';
   network: 'healthy' | 'degraded' | 'failed';

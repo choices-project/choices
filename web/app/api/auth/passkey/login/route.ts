@@ -5,7 +5,7 @@
  * Supports both discoverable and non-discoverable credentials.
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { type NextRequest, NextResponse } from 'next/server';
 import { 
   generateAuthenticationOptions as generateAuthOptions,
   verifyAuthenticationResponse,
@@ -139,7 +139,7 @@ async function generateAuthOptionsHandler(request: NextRequest, body: any) {
   }
 
   // Prepare allowCredentials
-  const allowCredentials = credentials?.map(cred => ({
+  const allowCredentials = credentials.map(cred => ({
     id: cred.credential_id, // Keep as base64url string, not ArrayBuffer
     transports: cred.transports || []
   })) || [];

@@ -24,7 +24,7 @@ import { logger } from '@/lib/logger'
 import BiometricSetup from '@/features/webauthn/components/BiometricSetup'
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
 
-interface UserProfile {
+type UserProfile = {
   id: string
   email: string
   verificationtier: string
@@ -32,7 +32,7 @@ interface UserProfile {
   updatedat: string
 }
 
-interface BiometricCredential {
+type BiometricCredential = {
   id: string
   credentialId: string
   deviceType: string

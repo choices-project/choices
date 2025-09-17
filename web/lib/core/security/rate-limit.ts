@@ -17,7 +17,7 @@
 import { devLog } from '../../logger'
 
 // Rate limit configuration
-export interface RateLimitConfig {
+export type RateLimitConfig = {
   interval: number // Time window in milliseconds
   uniqueTokenPerInterval: number // Max requests per interval
   maxBurst?: number // Maximum burst allowance
@@ -26,7 +26,7 @@ export interface RateLimitConfig {
 }
 
 // IP reputation data
-export interface IPReputation {
+export type IPReputation = {
   ip: string
   score: number // 0-100, higher = more trusted
   requestCount: number
@@ -38,7 +38,7 @@ export interface IPReputation {
 }
 
 // Device fingerprint data
-export interface DeviceFingerprint {
+export type DeviceFingerprint = {
   userAgent: string
   screenResolution: string
   timezone: string
@@ -50,7 +50,7 @@ export interface DeviceFingerprint {
 }
 
 // Risk assessment result
-export interface RiskAssessment {
+export type RiskAssessment = {
   riskScore: number // 0-100, higher = higher risk
   factors: string[]
   recommendedAction: 'allow' | 'challenge' | 'block'
@@ -58,7 +58,7 @@ export interface RiskAssessment {
 }
 
 // Rate limit result
-export interface RateLimitResult {
+export type RateLimitResult = {
   success: boolean
   allowed: boolean
   remaining: number

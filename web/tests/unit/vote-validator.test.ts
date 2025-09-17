@@ -563,7 +563,7 @@ describe('VoteValidator', () => {
         }))
       };
       
-      (require('@/utils/supabase/server').getSupabaseServerClient as jest.MockedFunction<() => Promise<any>>)
+      ((await import('@/utils/supabase/server')).getSupabaseServerClient as jest.MockedFunction<() => Promise<any>>)
         .mockResolvedValue(mockSupabase);
       
       const validation = await validator.validateVote(mockVoteData, highTrustPoll, 'user-1');
@@ -597,7 +597,7 @@ describe('VoteValidator', () => {
         }))
       };
       
-      (require('@/utils/supabase/server').getSupabaseServerClient as jest.MockedFunction<() => Promise<any>>)
+      ((await import('@/utils/supabase/server')).getSupabaseServerClient as jest.MockedFunction<() => Promise<any>>)
         .mockResolvedValue(mockSupabase);
       
       const validation = await validator.validateVote(mockVoteData, highTrustPoll, 'user-1');

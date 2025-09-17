@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
 
     devLog('Retrieved WebAuthn credentials for domain', {
       host: request.headers.get('host'),
-      count: credentials?.length || 0
+      count: credentials.length || 0
     })
 
     return NextResponse.json({

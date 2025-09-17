@@ -4,9 +4,12 @@
  * Provides real-time critical metrics dashboard for system health monitoring.
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { type NextRequest, NextResponse } from 'next/server';
 import { RedDashboard } from '@/lib/monitoring/red-dashboards';
 import { logger } from '@/lib/logger';
+
+// Force dynamic rendering since we use request.url
+export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {

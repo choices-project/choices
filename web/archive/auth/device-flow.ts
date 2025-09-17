@@ -20,7 +20,7 @@
 import { getSupabaseServerClient } from '@/utils/supabase/server'
 import { logger } from '@/lib/logger'
 
-export interface DeviceFlowState {
+export type DeviceFlowState = {
   deviceCode: string
   userCode: string
   verificationUri: string
@@ -33,13 +33,13 @@ export interface DeviceFlowState {
   expiresAt: Date
 }
 
-export interface DeviceFlowRequest {
+export type DeviceFlowRequest = {
   provider: 'google' | 'github' | 'facebook' | 'twitter' | 'linkedin' | 'discord'
   redirectTo?: string
   scopes?: string[]
 }
 
-export interface DeviceFlowResponse {
+export type DeviceFlowResponse = {
   success: boolean
   deviceCode?: string
   userCode?: string
@@ -49,7 +49,7 @@ export interface DeviceFlowResponse {
   error?: string
 }
 
-export interface DeviceFlowVerification {
+export type DeviceFlowVerification = {
   success: boolean
   userId?: string
   session?: any
