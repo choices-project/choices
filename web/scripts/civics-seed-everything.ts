@@ -3,7 +3,6 @@ import 'dotenv/config';
 import { createClient } from '@supabase/supabase-js';
 import assert from 'node:assert';
 import { has, toString, asArray } from '@/lib/util/guards';
-import { withOptional } from '@/lib/util/objects';
 
 // All 50 US states + DC
 const ALL_STATES = [

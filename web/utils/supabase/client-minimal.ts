@@ -306,7 +306,7 @@ export type Database = {
 }
 
 // Type for Supabase client (we'll import this dynamically)
-export type SupabaseClient<T = Database> = {
+export type SupabaseClient<_T = Database> = {
   from: (table: string) => {
     select: (columns?: string) => unknown
     insert: (data: unknown) => unknown

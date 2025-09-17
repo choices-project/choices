@@ -23,7 +23,7 @@ async function runTests(): Promise<TestResult[]> {
   
   // Test 1: Database Connection
   try {
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('civics_representatives')
       .select('id')
       .limit(1);
@@ -93,7 +93,7 @@ async function runTests(): Promise<TestResult[]> {
   
   // Test 3: Contact Information Availability
   try {
-    const { data: contactCount, error } = await supabase
+    const { error } = await supabase
       .from('civics_contact_info')
       .select('count(*)');
     

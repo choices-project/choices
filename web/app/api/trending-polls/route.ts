@@ -4,6 +4,30 @@ import { devLog } from '@/lib/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 import { handleError, getUserMessage, getHttpStatus } from '@/lib/error-handler';
 
+type PollData = {
+  title: string;
+  total_votes: number;
+  participation_rate: number;
+  options: unknown;
+  status: string;
+};
+
+type TopicData = {
+  id: string;
+  title: string;
+  description: string;
+  category: string[];
+  trending_score: number;
+  source_name: string;
+  velocity: number;
+  momentum: number;
+  sentiment_score: number;
+  metadata?: {
+    engagement?: string;
+    controversy?: string;
+  };
+};
+
 export async function GET(_request: NextRequest) {
   try {
     const supabase = getSupabaseServerClient();
@@ -29,7 +53,7 @@ export async function GET(_request: NextRequest) {
     }
 
     // Fetch available polls (optional - if no polls exist, we'll still create trending polls)
-    let polls: unknown[] = [];
+    let polls: PollData[] = [];
     try {
       const { data: pollsData, error: pollsError } = await supabaseClient
         .from('po_polls')
@@ -41,7 +65,7 @@ export async function GET(_request: NextRequest) {
         devLog('Error fetching polls:', pollsError);
         // Continue without polls - we'll use fallback data
       } else {
-        polls = pollsData || [];
+        polls = (pollsData as PollData[]) || [];
       }
     } catch (pollsError) {
       devLog('Error fetching polls:', pollsError);
@@ -49,7 +73,7 @@ export async function GET(_request: NextRequest) {
     }
 
     // Create dynamic trending polls by combining trending topics with poll data
-    const trendingPolls = trendingTopics.map((topic: Record<string, unknown>, _index: number) => {
+    const trendingPolls = (trendingTopics as TopicData[]).map((topic: TopicData, _index: number) => {
       // Try to find a matching poll, or use the first available poll
       const matchingPoll = polls.find(poll => 
         poll.title.toLowerCase().includes(topic.category?.[0]?.toLowerCase() || '') ||
@@ -103,7 +127,7 @@ export async function GET(_request: NextRequest) {
   }
 }
 
-function generateDynamicOptions(topic: Record<string, unknown>, _matchingPoll: unknown) {
+function generateDynamicOptions(topic: TopicData, _matchingPoll: PollData | undefined) {
   const category = topic.category?.[0]?.toLowerCase() || 'general';
   
   const optionTexts: Record<string, string[]> = {

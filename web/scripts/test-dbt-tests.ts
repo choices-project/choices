@@ -53,7 +53,7 @@ async function testDbtTests() {
       } else {
         console.log('   ✅ Not null test working (no data to test)');
       }
-    } catch (error) {
+    } catch (_error) {
       console.log('   ✅ Not null test working (expected behavior)');
     }
 
@@ -72,7 +72,7 @@ async function testDbtTests() {
       } else {
         console.log('   ✅ Accepted values test working (no data to test)');
       }
-    } catch (error) {
+    } catch (_error) {
       console.log('   ✅ Accepted values test working (expected behavior)');
     }
 
@@ -92,7 +92,7 @@ async function testDbtTests() {
       } else {
         console.log('   ✅ Relationships test working (no data to test)');
       }
-    } catch (error) {
+    } catch (_error) {
       console.log('   ✅ Relationships test working (expected behavior)');
     }
 
@@ -109,7 +109,7 @@ async function testDbtTests() {
       } else {
         console.log('   ✅ Freshness SLA test working (no data to test)');
       }
-    } catch (error) {
+    } catch (_error) {
       console.log('   ✅ Freshness SLA test working (expected behavior)');
     }
 
@@ -128,7 +128,7 @@ async function testDbtTests() {
       } else {
         console.log('   ✅ Table tests working (no tests configured)');
       }
-    } catch (error) {
+    } catch (_error) {
       console.log('   ✅ Table tests working (expected behavior)');
     }
 
@@ -148,7 +148,7 @@ async function testDbtTests() {
       } else {
         console.log('   ✅ Test configurations working (no configurations found)');
       }
-    } catch (error) {
+    } catch (_error) {
       console.log('   ✅ Test configurations working (expected behavior)');
     }
 
@@ -168,7 +168,7 @@ async function testDbtTests() {
       } else {
         console.log('   ✅ Freshness SLA configurations working (no configurations found)');
       }
-    } catch (error) {
+    } catch (_error) {
       console.log('   ✅ Freshness SLA configurations working (expected behavior)');
     }
 
@@ -188,7 +188,7 @@ async function testDbtTests() {
       } else {
         console.log('   ✅ Test results summary working (no results found)');
       }
-    } catch (error) {
+    } catch (_error) {
       console.log('   ✅ Test results summary working (expected behavior)');
     }
 
@@ -208,7 +208,7 @@ async function testDbtTests() {
       } else {
         console.log('   ✅ Freshness status working (no statuses found)');
       }
-    } catch (error) {
+    } catch (_error) {
       console.log('   ✅ Freshness status working (expected behavior)');
     }
 
@@ -228,29 +228,29 @@ async function testDbtTests() {
       } else {
         console.log('   ✅ Test execution history working (no history found)');
       }
-    } catch (error) {
+    } catch (_error) {
       console.log('   ✅ Test execution history working (expected behavior)');
     }
 
     // 12. Test test infrastructure tables
     console.log('12. Testing test infrastructure tables...');
     try {
-      const testResults = await supabase
+      const _testResults = await supabase
         .from('dbt_test_results')
         .select('count')
         .limit(1);
       
-      const testConfigs = await supabase
+      const _testConfigs = await supabase
         .from('dbt_test_config')
         .select('count')
         .limit(1);
       
-      const freshnessSlas = await supabase
+      const _freshnessSlas = await supabase
         .from('dbt_freshness_sla')
         .select('count')
         .limit(1);
       
-      const executionLogs = await supabase
+      const _executionLogs = await supabase
         .from('dbt_test_execution_log')
         .select('count')
         .limit(1);
@@ -260,7 +260,7 @@ async function testDbtTests() {
       console.log(`      - dbt_test_config: Accessible`);
       console.log(`      - dbt_freshness_sla: Accessible`);
       console.log(`      - dbt_test_execution_log: Accessible`);
-    } catch (error) {
+    } catch (_error) {
       console.log('   ✅ Test infrastructure tables working (expected behavior)');
     }
 

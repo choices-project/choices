@@ -3,6 +3,26 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
+type RepresentativeData = {
+  level: string;
+  source: string;
+  jurisdiction: string;
+  last_updated: string;
+};
+
+type CoverageData = {
+  level: string;
+  source: string;
+  count: number;
+  last_updated: string;
+};
+
+type FreshnessData = {
+  total: number;
+  fresh: number;
+  stale: number;
+};
+
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SECRET_KEY!,
@@ -22,7 +42,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Calculate coverage by source
-    const coverageBySource = (coverageData || []).reduce((acc: Record<string, unknown>, rep: Record<string, unknown>) => {
+    const coverageBySource = (coverageData as RepresentativeData[] || []).reduce((acc: Record<string, CoverageData>, rep: RepresentativeData) => {
       const key = `${rep.level}-${rep.source}`;
       if (!acc[key]) {
         acc[key] = { level: rep.level, source: rep.source, count: 0, last_updated: rep.last_updated };
@@ -33,7 +53,7 @@ export async function GET(request: NextRequest) {
 
     // Calculate freshness by level
     const now = new Date();
-    const freshnessByLevel = (coverageData || []).reduce((acc: Record<string, unknown>, rep: Record<string, unknown>) => {
+    const freshnessByLevel = (coverageData as RepresentativeData[] || []).reduce((acc: Record<string, FreshnessData>, rep: RepresentativeData) => {
       if (!acc[rep.level]) {
         acc[rep.level] = { total: 0, fresh: 0, stale: 0 };
       }
@@ -111,7 +131,7 @@ export async function GET(request: NextRequest) {
         contact_enrichment_threshold: 90
       },
       alerts: {
-        freshness_breach: Object.values(freshnessByLevel).some((data: unknown) => 
+        freshness_breach: Object.values(freshnessByLevel).some((data: FreshnessData) => 
           data.stale > 0
         ),
         fec_mapping_low: fecMappingRate < 90,

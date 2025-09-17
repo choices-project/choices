@@ -211,7 +211,7 @@ export type Database = {
   }
 }
 
-export const getSupabaseForRequest = (req: NextRequest, res: NextResponse) => {
+export const getSupabaseForRequest = (req: NextRequest, _res: NextResponse) => {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
   

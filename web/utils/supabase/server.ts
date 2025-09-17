@@ -412,7 +412,7 @@ export async function getSupabaseServerClient() {
   let cookieStore
   try {
     cookieStore = cookies()
-  } catch (error) {
+  } catch (_error) {
     // During build time, cookies() might not be available
     // Throw an error to prevent build-time usage
     throw new Error('getSupabaseServerClient() cannot be called during build time. Use it only in API routes and server components.')
@@ -429,14 +429,14 @@ export async function getSupabaseServerClient() {
         set: (name: string, value: string, options: Record<string, unknown>) => {
           try {
             cookieStore.set(name, value, options)
-          } catch (error) {
+          } catch (_error) {
             // Ignore errors in RSC context
           }
         },
-        remove: (name: string, options: Record<string, unknown>) => {
+        remove: (name: string, _options: Record<string, unknown>) => {
           try {
             cookieStore.delete(name)
-          } catch (error) {
+          } catch (_error) {
             // Ignore errors in RSC context
           }
         },
