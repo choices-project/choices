@@ -1,3 +1,4 @@
+**Last Updated**: 2025-09-17
 # Contributing to Choices
 
 > **Guidelines for contributing to the Choices democratic polling platform**

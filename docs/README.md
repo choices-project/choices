@@ -1,3 +1,4 @@
+**Last Updated**: 2025-09-17
 # Choices Platform Documentation
 
 > **A privacy-first, unbiased polling platform for democratic participation**

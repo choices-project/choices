@@ -1,3 +1,4 @@
+**Last Updated**: 2025-09-17
 # 📚 Civics System Implementation Guide
 **Last Updated**: 2025-09-17
 

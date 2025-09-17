@@ -13,6 +13,7 @@ import type {
   VoteRequest, 
   VoteResponse, 
   VoteValidation, 
+  Poll,
   PollData, 
   VoteData, 
   ResultsData,
