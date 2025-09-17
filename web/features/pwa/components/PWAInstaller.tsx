@@ -40,7 +40,7 @@ export default function PWAInstaller() {
     // Check if PWA is installed
     const checkInstallation = () => {
       const isInstalled = window.matchMedia('(display-mode: standalone)').matches ||
-                         (window.navigator as any).standalone === true
+                         (window.navigator as Navigator & { standalone?: boolean }).standalone === true
       setPwaStatus(prev => ({ ...prev, isInstalled }))
     }
 

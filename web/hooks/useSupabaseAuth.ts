@@ -16,10 +16,10 @@ export type AuthState = {
 
 export type AuthActions = {
   signIn: (email: string, password: string) => Promise<void>
-  signUp: (email: string, password: string, metadata?: any) => Promise<void>
+  signUp: (email: string, password: string, metadata?: Record<string, unknown>) => Promise<void>
   signOut: () => Promise<void>
   resetPassword: (email: string) => Promise<void>
-  updateProfile: (updates: any) => Promise<void>
+  updateProfile: (updates: Record<string, unknown>) => Promise<void>
   clearError: () => void
 }
 
@@ -151,7 +151,7 @@ export function useSupabaseAuth(): AuthState & AuthActions {
   }, [supabase])
 
   // Sign up function
-  const signUp = useCallback(async (email: string, password: string, metadata?: any) => {
+  const signUp = useCallback(async (email: string, password: string, metadata?: Record<string, unknown>) => {
     if (!supabase) {
       throw new Error('Supabase client not available')
     }
@@ -276,7 +276,7 @@ export function useSupabaseAuth(): AuthState & AuthActions {
   }, [supabase])
 
   // Update profile function
-  const updateProfile = useCallback(async (updates: any) => {
+  const updateProfile = useCallback(async (updates: Record<string, unknown>) => {
     if (!supabase) {
       throw new Error('Supabase client not available')
     }

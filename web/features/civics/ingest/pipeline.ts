@@ -41,10 +41,10 @@ export class CivicsIngestPipeline {
 
       switch (sourceConfig.type) {
         case 'civicinfo':
-          this.connectors.set(sourceConfig.name, new CivicInfoConnector(sourceConfig as any));
+          this.connectors.set(sourceConfig.name, new CivicInfoConnector(sourceConfig as Record<string, unknown>));
           break;
         case 'propublica':
-          this.connectors.set(sourceConfig.name, new ProPublicaConnector(sourceConfig as any));
+          this.connectors.set(sourceConfig.name, new ProPublicaConnector(sourceConfig as Record<string, unknown>));
           break;
         default:
           console.warn(`Unknown data source type: ${sourceConfig.type}`);

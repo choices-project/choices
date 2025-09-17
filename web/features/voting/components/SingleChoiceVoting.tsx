@@ -72,8 +72,8 @@ export default function SingleChoiceVoting({
       
       // Use the choice parameter properly
       await onVote(selectedOption)
-    } catch (err: any) {
-      setError(err.message || 'Failed to submit vote')
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to submit vote')
     } finally {
       setIsSubmitting(false)
     }
@@ -138,7 +138,7 @@ export default function SingleChoiceVoting({
       {/* Voting Interface */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
         <div className="space-y-3">
-          {options.map((option: any, index: number) => (
+          {options.map((option: PollOption, index: number) => (
             <div
               key={option.id}
               onClick={() => handleOptionSelect(index)}

@@ -62,8 +62,8 @@ export function PWAUserProfile({ user, onUpdate: _onUpdate }: PWAUserProfileProp
       offline: 'serviceWorker' in navigator,
       pushNotifications: 'PushManager' in window,
       webAuthn: 'credentials' in navigator,
-      backgroundSync: 'serviceWorker' in navigator && 'sync' in (navigator.serviceWorker as any),
-      encryptedStorage: 'crypto' in window && 'subtle' in (window as any).crypto
+      backgroundSync: 'serviceWorker' in navigator && 'sync' in (navigator.serviceWorker as ServiceWorkerContainer & { sync?: unknown }),
+      encryptedStorage: 'crypto' in window && 'subtle' in (window as Window & { crypto: Crypto }).crypto
     }
     setPwaFeatures(features)
     

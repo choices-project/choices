@@ -5,11 +5,11 @@ import { devLog } from '@/lib/logger';
 import { isFeatureEnabled } from '../lib/feature-flags'
 
 type PrivacyUtils = {
-  privacyBudgetManager: any
-  privateAnalytics: any
-  zkProofManager: any
-  bridge?: any
-  auditor?: any
+  privacyBudgetManager: unknown
+  privateAnalytics: unknown
+  zkProofManager: unknown
+  bridge?: unknown
+  auditor?: unknown
 }
 
 export function usePrivacyUtils() {

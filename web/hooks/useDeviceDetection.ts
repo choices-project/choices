@@ -112,7 +112,7 @@ export function useDeviceDetection() {
 
     // Check network speed
     if ('connection' in navigator) {
-      const connection = (navigator as any).connection
+      const connection = (navigator as Navigator & { connection?: { effectiveType?: string } }).connection
       if (connection) {
         capabilities.connection_type = connection.effectiveType || 'unknown'
         capabilities.network_speed = connection.effectiveType === 'slow-2g' || connection.effectiveType === '2g' ? 'slow' : 
@@ -123,7 +123,7 @@ export function useDeviceDetection() {
     // Check battery level
     if ('getBattery' in navigator) {
       try {
-        const battery = await (navigator as any).getBattery()
+        const battery = await (navigator as Navigator & { getBattery?: () => Promise<{ level: number }> }).getBattery!()
         capabilities.battery_level = battery.level * 100
       } catch (error) {
         devLog('Error checking battery level:', error)
@@ -236,7 +236,7 @@ export function useDeviceDetection() {
     let speed: 'slow' | 'medium' | 'fast' = 'medium'
 
     if ('connection' in navigator) {
-      const connection = (navigator as any).connection
+      const connection = (navigator as Navigator & { connection?: { effectiveType?: string } }).connection
       if (connection) {
         speed = connection.effectiveType === 'slow-2g' || connection.effectiveType === '2g' ? 'slow' : 
                connection.effectiveType === '3g' ? 'medium' : 'fast'

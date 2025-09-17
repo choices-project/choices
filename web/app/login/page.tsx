@@ -136,7 +136,7 @@ function LoginForm() {
       const challenge = Uint8Array.from(atob(authData.challenge), c => c.charCodeAt(0))
       
       // Convert credential IDs from base64 to ArrayBuffer
-      const allowCredentials = authData.allowCredentials.map((cred: any) => ({
+      const allowCredentials = authData.allowCredentials.map((cred: { id: string; transports?: string[] }) => ({
         id: Uint8Array.from(atob(cred.id), c => c.charCodeAt(0)),
         type: 'public-key',
         transports: cred.transports || ['internal']

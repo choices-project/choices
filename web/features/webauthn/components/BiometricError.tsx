@@ -93,7 +93,12 @@ export default function BiometricError({
   }
 
   const getRecoveryOptions = () => {
-    const options: any[] = []
+    const options: Array<{
+      label: string;
+      icon: React.ReactNode;
+      action: () => void;
+      primary?: boolean;
+    }> = []
 
     // Always show retry if recoverable
     if (error.recoverable) {
