@@ -1,13 +1,35 @@
-import type { PostgrestSingleResponse } from '@supabase/supabase-js';
+import type { PostgrestSingleResponse, PostgrestError } from '@supabase/supabase-js';
 
 type Thenable<T> = { then: jest.Mock<any, any> }
 type Single<T> = jest.Mock<Promise<PostgrestSingleResponse<T>>, any>
 
+// Helper to create proper PostgrestSingleResponse
+function createSuccessResponse<T>(data: T): PostgrestSingleResponse<T> {
+  return {
+    data,
+    error: null,
+    count: null,
+    status: 200,
+    statusText: "OK"
+  };
+}
+
+// Helper to create proper PostgrestError
+function createErrorResponse(message: string): PostgrestError {
+  return {
+    message,
+    details: "",
+    hint: "",
+    code: "",
+    name: "PostgrestError"
+  };
+}
+
 export function createMockSupabase() {
-  const single: Single<any> = jest.fn().mockResolvedValue({ data: null, error: null } as any);
-  const insert = jest.fn().mockResolvedValue({ data: null, error: null } as any);
-  const update = jest.fn().mockResolvedValue({ data: null, error: null } as any);
-  const thenable: Thenable<any> = { then: jest.fn().mockResolvedValue({ data: [], error: null }) };
+  const single: Single<any> = jest.fn().mockResolvedValue(createSuccessResponse(null));
+  const insert = jest.fn().mockResolvedValue(createSuccessResponse(null));
+  const update = jest.fn().mockResolvedValue(createSuccessResponse(null));
+  const thenable: Thenable<any> = { then: jest.fn().mockResolvedValue(createSuccessResponse([])) };
 
   const from = jest.fn(() => ({
     select: jest.fn().mockReturnThis(),
@@ -29,3 +51,6 @@ export function createMockSupabase() {
 
   return { from, channel, single, insert, update, thenable };
 }
+
+// Export helper functions for use in tests
+export { createSuccessResponse, createErrorResponse };

@@ -10,6 +10,7 @@
     "npm": "10.9.3"
   },
   "devDependencies": {
+    "@types/jest": "30.0.0",
     "@types/node": "24.5.1",
     "husky": "9.1.7",
     "typescript": "5.9.2"

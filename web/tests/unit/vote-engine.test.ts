@@ -256,9 +256,9 @@ describe('VoteEngine', () => {
       // Mock a strategy to throw an error
       const mockStrategy = {
         getVotingMethod: () => 'single' as VotingMethod,
-        validateVote: jest.fn<Promise<void>>().mockRejectedValue(new Error('Strategy error')),
-        processVote: jest.fn<Promise<void>>(),
-        calculateResults: jest.fn<Promise<void>>(),
+        validateVote: jest.fn().mockRejectedValue(new Error('Strategy error')),
+        processVote: jest.fn(),
+        calculateResults: jest.fn(),
         getConfiguration: jest.fn(),
       } as any;
 
@@ -333,9 +333,9 @@ describe('VoteEngine', () => {
       // Mock a strategy to throw an error during calculation
       const mockStrategy2 = {
         getVotingMethod: () => 'single' as VotingMethod,
-        validateVote: jest.fn<Promise<void>>(),
-        processVote: jest.fn<Promise<void>>(),
-        calculateResults: jest.fn<Promise<void>>().mockRejectedValue(new Error('Calculation error')),
+        validateVote: jest.fn(),
+        processVote: jest.fn(),
+        calculateResults: jest.fn().mockRejectedValue(new Error('Calculation error')),
         getConfiguration: jest.fn(),
       } as any;
 
@@ -407,7 +407,7 @@ describe('VoteEngine', () => {
         privacyLevel: 'public'
       };
 
-      const validation = await engine.validateVote(request, null as unknown as PollData);
+      const validation = await engine.validateVote(request, null as any);
       
       expect(validation.isValid).toBe(false);
       expect(validation.error).toBe('Poll not found or not active');

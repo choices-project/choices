@@ -11,8 +11,7 @@
     "tests/**/*",
     "web/tests/**/*",
     "**/*.test.ts",
-    "**/*.test.tsx",
-    "**/__tests__/**"
+    "**/*.test.tsx"
   ],
   "exclude": [
     "node_modules",
