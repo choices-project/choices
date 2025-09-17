@@ -9,6 +9,7 @@
  */
 
 import { devLog } from '../../logger';
+import { withOptional } from '../../util/objects';
 import type { 
   VotingStrategy, 
   VoteRequest, 
@@ -114,36 +115,44 @@ export class SingleChoiceStrategy implements VotingStrategy {
         auditReceipt
       });
 
-      return {
-        success: true,
-        message: 'Vote submitted successfully',
-        pollId,
-        voteId,
-        auditReceipt,
-        privacyLevel,
-        responseTime: 0, // Will be set by the engine
-        metadata: {
-          votingMethod: 'single',
+      return withOptional(
+        {
+          success: true,
+          message: 'Vote submitted successfully',
+          pollId,
+          voteId,
+          auditReceipt,
+          responseTime: 0, // Will be set by the engine
+          metadata: {
+            votingMethod: 'single'
+          }
+        },
+        {
+          privacyLevel,
           choice: voteData.choice,
           optionText: poll.options[voteData.choice || 0]
         }
-      };
+      );
 
     } catch (error) {
       devLog('Single choice vote processing error:', error);
-      return {
-        success: false,
-        message: error instanceof Error ? error.message : 'Vote processing failed',
-        pollId: request.pollId,
-        voteId: undefined,
-        auditReceipt: undefined,
-        privacyLevel: request.privacyLevel,
-        responseTime: 0,
-        metadata: {
-          votingMethod: 'single',
-          error: error instanceof Error ? error.message : 'Unknown error'
+      return withOptional(
+        {
+          success: false,
+          message: error instanceof Error ? error.message : 'Vote processing failed',
+          pollId: request.pollId,
+          responseTime: 0,
+          metadata: {
+            votingMethod: 'single',
+            error: error instanceof Error ? error.message : 'Unknown error'
+          }
+        },
+        {
+          voteId: undefined,
+          auditReceipt: undefined,
+          privacyLevel: request.privacyLevel
         }
-      };
+      );
     }
   }
 
@@ -165,15 +174,21 @@ export class SingleChoiceStrategy implements VotingStrategy {
       let totalVotes = 0;
       votes.forEach(vote => {
         if (vote.choice !== undefined && vote.choice >= 0 && vote.choice < poll.options.length) {
-          optionVotes[vote.choice.toString()]++;
-          totalVotes++;
+          const choiceKey = vote.choice.toString();
+          if (optionVotes[choiceKey] !== undefined) {
+            optionVotes[choiceKey]++;
+            totalVotes++;
+          }
         }
       });
 
       // Calculate percentages
       if (totalVotes > 0) {
         Object.keys(optionVotes).forEach(optionIndex => {
-          optionPercentages[optionIndex] = (optionVotes[optionIndex] / totalVotes) * 100;
+          const votes = optionVotes[optionIndex];
+          if (votes !== undefined) {
+            optionPercentages[optionIndex] = (votes / totalVotes) * 100;
+          }
         });
       }
 
@@ -187,20 +202,24 @@ export class SingleChoiceStrategy implements VotingStrategy {
           if (votes > winnerVotes) {
             winner = optionIndex;
             winnerVotes = votes;
-            winnerPercentage = optionPercentages[optionIndex];
+            winnerPercentage = optionPercentages[optionIndex] ?? 0;
           }
         });
       }
 
-      const results: PollResults = {
-        winner,
-        winnerVotes,
-        winnerPercentage,
-        optionVotes,
-        optionPercentages,
-        abstentions: 0,
-        abstentionPercentage: 0
-      };
+      const results: PollResults = withOptional(
+        {
+          winnerVotes,
+          winnerPercentage,
+          optionVotes,
+          optionPercentages,
+          abstentions: 0,
+          abstentionPercentage: 0
+        },
+        {
+          winner
+        }
+      );
 
       const resultsData: ResultsData = {
         pollId: poll.id,
@@ -233,7 +252,7 @@ export class SingleChoiceStrategy implements VotingStrategy {
     }
   }
 
-  getConfiguration(): Record<string, any> {
+  getConfiguration(): Record<string, unknown> {
     return {
       name: 'Single Choice Voting',
       description: 'Voters select exactly one option. The option with the most votes wins.',

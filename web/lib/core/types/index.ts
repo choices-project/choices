@@ -11,7 +11,7 @@ export * from '../privacy/hybrid-privacy';
 // Analytics types
 export interface AnalyticsEvent {
   name: string;
-  properties?: Record<string, any>;
+  properties?: Record<string, string | number | boolean>;
   timestamp?: Date;
 }
 
@@ -127,8 +127,8 @@ export interface UserProfile {
   id: string;
   userId: string;
   bio?: string;
-  preferences: Record<string, any>;
-  privacySettings: Record<string, any>;
+  preferences: Record<string, string | number | boolean>;
+  privacySettings: Record<string, string | number | boolean>;
 }
 
 // Performance types
@@ -159,11 +159,11 @@ export interface AppError {
   code: string;
   message: string;
   statusCode: number;
-  details?: any;
+  details?: Record<string, string | number | boolean>;
 }
 
 // API response types
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   success: boolean;
   data?: T;
   error?: string;

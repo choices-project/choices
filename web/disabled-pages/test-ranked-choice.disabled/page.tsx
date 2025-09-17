@@ -7,7 +7,8 @@ import { useState, useEffect } from 'react'
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
 import { useRouter } from 'next/navigation'
 import RankedChoiceVoting from '@/features/voting/components/RankedChoiceVoting'
-import { devLog } from '@/lib/logger';
+import { devLog } from '@/lib/logger'
+import { withOptional } from '@/lib/util/objects'
 
 // Sample poll data for testing
 const samplePoll = {
@@ -116,14 +117,17 @@ function TestRankedChoiceContent() {
 
         {/* Voting Interface */}
         <RankedChoiceVoting
-          pollId={samplePoll.id}
-          title={samplePoll.title}
-          description={samplePoll.description}
-          options={samplePoll.options}
-          onVote={handleVote}
-          isVoting={isVoting}
-          hasVoted={hasVoted}
-          userVote={userVote}
+          {...withOptional({
+            pollId: samplePoll.id,
+            title: samplePoll.title,
+            options: samplePoll.options,
+            onVote: handleVote,
+            isVoting,
+            hasVoted
+          }, {
+            description: samplePoll.description,
+            userVote: userVote ?? undefined
+          })}
         />
 
         {/* Demo Information */}

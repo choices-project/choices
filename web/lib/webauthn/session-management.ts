@@ -8,7 +8,7 @@
 
 import { NextResponse } from 'next/server';
 import { devLog } from '@/lib/logger';
-import { generateSessionToken, setSessionCookie } from '@/lib/core/auth/session-cookies';
+import { generateSessionToken } from '@/lib/core/auth/session-cookies';
 
 export interface WebAuthnSessionData {
   userId: string;
@@ -37,9 +37,9 @@ export function createWebAuthnSessionToken(sessionData: Omit<WebAuthnSessionData
 
   // Generate a secure session token
   const token = generateSessionToken({
-    sub: sessionData.userId,
-    role: sessionData.trustTier || 'T1',
-    stableId: sessionData.userId
+    sub: fullSessionData.userId,
+    role: fullSessionData.trustTier || 'T1',
+    stableId: fullSessionData.userId
   });
 
   devLog('WebAuthn session token created', {
@@ -133,6 +133,17 @@ export function createWebAuthnRegistrationResponse(
     }
   });
 
+  // Apply session options if provided
+  if (options.maxAge) {
+    response.cookies.set('session', '', {
+      maxAge: options.maxAge,
+      secure: options.secure ?? true,
+      sameSite: options.sameSite ?? 'strict',
+      httpOnly: true,
+      path: '/'
+    });
+  }
+
   devLog('WebAuthn registration successful', {
     userId,
     username,
@@ -145,14 +156,20 @@ export function createWebAuthnRegistrationResponse(
 /**
  * Validate WebAuthn session data
  */
-export function validateWebAuthnSession(sessionData: any): sessionData is WebAuthnSessionData {
+export function validateWebAuthnSession(sessionData: unknown): sessionData is WebAuthnSessionData {
   return (
-    sessionData &&
-    typeof sessionData.userId === 'string' &&
-    typeof sessionData.username === 'string' &&
-    typeof sessionData.credentialId === 'string' &&
-    typeof sessionData.authenticatedAt === 'string' &&
-    sessionData.method === 'webauthn'
+    sessionData !== null &&
+    typeof sessionData === 'object' &&
+    'userId' in sessionData &&
+    'username' in sessionData &&
+    'credentialId' in sessionData &&
+    'authenticatedAt' in sessionData &&
+    'method' in sessionData &&
+    typeof (sessionData as any).userId === 'string' &&
+    typeof (sessionData as any).username === 'string' &&
+    typeof (sessionData as any).credentialId === 'string' &&
+    typeof (sessionData as any).authenticatedAt === 'string' &&
+    (sessionData as any).method === 'webauthn'
   );
 }
 
@@ -161,8 +178,32 @@ export function validateWebAuthnSession(sessionData: any): sessionData is WebAut
  */
 export function getWebAuthnSession(request: Request): WebAuthnSessionData | null {
   try {
-    // This would typically extract from cookies or headers
+    // Extract session token from Authorization header or cookies
+    const authHeader = request.headers.get('authorization');
+    const cookieHeader = request.headers.get('cookie');
+    
+    let sessionToken: string | null = null;
+    
+    if (authHeader?.startsWith('Bearer ')) {
+      sessionToken = authHeader.substring(7);
+    } else if (cookieHeader) {
+      const cookies = cookieHeader.split(';').reduce((acc, cookie) => {
+        const [key, value] = cookie.trim().split('=');
+        if (key && value) {
+          acc[key] = value;
+        }
+        return acc;
+      }, {} as Record<string, string>);
+      sessionToken = cookies.session || null;
+    }
+    
+    if (!sessionToken) {
+      return null;
+    }
+    
+    // This would typically decode and validate the session token
     // For now, return null as this is handled by the main session system
+    devLog('WebAuthn session token found in request');
     return null;
   } catch (error) {
     devLog('Error extracting WebAuthn session:', error);

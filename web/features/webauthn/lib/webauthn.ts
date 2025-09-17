@@ -95,10 +95,10 @@ export class WebAuthnManager {
         
         return {
           id: credential.id,
-          type: 'public-key',
-          transports: publicKeyCredential.response && 'getTransports' in publicKeyCredential.response 
-            ? (publicKeyCredential.response.getTransports as () => string[])() 
-            : undefined,
+          type: 'public-key' as const,
+          ...(publicKeyCredential.response && 'getTransports' in publicKeyCredential.response 
+            ? { transports: (publicKeyCredential.response.getTransports as () => string[])() }
+            : {}),
         };
       }
 
@@ -135,7 +135,7 @@ export class WebAuthnManager {
         
         return {
           id: credential.id,
-          type: 'public-key',
+          type: 'public-key' as const,
         };
       }
 

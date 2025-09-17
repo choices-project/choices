@@ -38,7 +38,7 @@ export interface NewsEntity {
   confidence: number;
   role?: string;
   stance?: 'support' | 'oppose' | 'neutral' | 'unknown';
-  metadata?: Record<string, any>;
+  metadata?: Record<string, string | number | boolean>;
 }
 
 export interface NewsSource {
@@ -48,8 +48,8 @@ export interface NewsSource {
   reliability: number; // 0-1 scale
   bias: 'left' | 'center-left' | 'center' | 'center-right' | 'right' | 'unknown';
   type: 'mainstream' | 'wire' | 'digital' | 'international';
-  apiEndpoint?: string;
-  apiKey?: string;
+  apiEndpoint?: string | null;
+  apiKey?: string | null;
   rateLimit: number;
   isActive: boolean;
   lastUpdated: Date;
@@ -74,7 +74,7 @@ export interface PollOption {
   text: string;
   description?: string;
   stance?: 'support' | 'oppose' | 'neutral' | 'nuanced';
-  metadata?: Record<string, any>;
+  metadata?: Record<string, string | number | boolean>;
 }
 
 // ============================================================================
@@ -367,7 +367,7 @@ Experts suggest this social media activity could influence traditional media cov
         name: "Social Media",
         type: "concept",
         confidence: 0.90,
-        metadata: { platforms: ["Twitter", "TikTok", "YouTube"] }
+        metadata: { platforms: "Twitter,TikTok,YouTube" }
       },
       {
         name: "Viral Content",
@@ -406,10 +406,8 @@ Experts suggest this social media activity could influence traditional media cov
 // ============================================================================
 
 export class RealTimeNewsService {
-  private supabase;
-
   constructor() {
-    this.supabase = getSupabaseServerClient();
+    // No initialization needed - we'll get the client in each method
   }
 
   // ============================================================================
@@ -418,7 +416,7 @@ export class RealTimeNewsService {
 
   async getBreakingNews(limit: number = 10): Promise<BreakingNewsStory[]> {
     try {
-      const supabaseClient = await this.supabase;
+      const supabaseClient = await getSupabaseServerClient();
       const { data, error } = await supabaseClient
         .from('breaking_news')
         .select('id, title, content, source, created_at')
@@ -436,11 +434,11 @@ export class RealTimeNewsService {
 
   async getBreakingNewsById(id: string): Promise<BreakingNewsStory | null> {
     try {
-      const supabaseClient = await this.supabase;
+      const supabaseClient = await getSupabaseServerClient();
       const { data, error } = await supabaseClient
         .from('breaking_news')
         .select('id, title, content, source, created_at')
-        .eq('id', id as any)
+        .eq('id', id)
         .single();
 
       if (error) throw error;
@@ -454,7 +452,7 @@ export class RealTimeNewsService {
 
   async createBreakingNews(story: Omit<BreakingNewsStory, 'id' | 'createdAt' | 'updatedAt'>): Promise<BreakingNewsStory | null> {
     try {
-      const supabaseClient = await this.supabase;
+      const supabaseClient = await getSupabaseServerClient();
       const { data, error } = await supabaseClient
         .from('breaking_news')
         .insert([this.mapBreakingNewsToDB(story)])
@@ -476,11 +474,11 @@ export class RealTimeNewsService {
 
   async getNewsSources(): Promise<NewsSource[]> {
     try {
-      const supabaseClient = await this.supabase;
+      const supabaseClient = await getSupabaseServerClient();
       const { data, error } = await supabaseClient
         .from('news_sources')
         .select('id, title, content, source, created_at')
-        .eq('is_active', true as any)
+        .eq('is_active', true)
         .order('reliability', { ascending: false });
 
       if (error) throw error;
@@ -494,11 +492,11 @@ export class RealTimeNewsService {
 
   async updateNewsSource(id: string, updates: Partial<NewsSource>): Promise<NewsSource | null> {
     try {
-      const supabaseClient = await this.supabase;
+      const supabaseClient = await getSupabaseServerClient();
       const { data, error } = await supabaseClient
         .from('news_sources')
         .update(this.mapNewsSourceToDB(updates))
-        .eq('id', id as any)
+        .eq('id', id)
         .select()
         .single();
 
@@ -674,26 +672,33 @@ export class RealTimeNewsService {
   // DATA MAPPING METHODS
   // ============================================================================
 
-  private mapBreakingNewsFromDB(data: any): BreakingNewsStory {
+  private mapBreakingNewsFromDB(data: Record<string, unknown>): BreakingNewsStory {
     return {
-      id: data.id,
-      headline: data.headline,
-      summary: data.summary,
-      fullStory: data.full_story,
-      sourceUrl: data.source_url,
-      sourceName: data.source_name,
-      sourceReliability: data.source_reliability,
-      category: data.category || [],
-      urgency: data.urgency,
-      sentiment: data.sentiment,
-      entities: data.entities || [],
-      metadata: data.metadata || {},
-      createdAt: new Date(data.created_at),
-      updatedAt: new Date(data.updated_at)
+      id: data.id as string,
+      headline: data.headline as string,
+      summary: data.summary as string,
+      fullStory: data.full_story as string,
+      sourceUrl: data.source_url as string,
+      sourceName: data.source_name as string,
+      sourceReliability: data.source_reliability as number,
+      category: (data.category as string[]) || [],
+      urgency: data.urgency as BreakingNewsStory['urgency'],
+      sentiment: data.sentiment as BreakingNewsStory['sentiment'],
+      entities: (data.entities as NewsEntity[]) || [],
+      metadata: (data.metadata as BreakingNewsStory['metadata']) || {
+        keywords: [],
+        controversy: 0,
+        timeSensitivity: 'low' as const,
+        geographicScope: 'local' as const,
+        politicalImpact: 0,
+        publicInterest: 0
+      },
+      createdAt: new Date(data.created_at as string),
+      updatedAt: new Date(data.updated_at as string)
     };
   }
 
-  private mapBreakingNewsToDB(story: Partial<BreakingNewsStory>): any {
+  private mapBreakingNewsToDB(story: Partial<BreakingNewsStory>): Record<string, unknown> {
     return {
       headline: story.headline,
       summary: story.summary,
@@ -709,25 +714,25 @@ export class RealTimeNewsService {
     };
   }
 
-  private mapNewsSourceFromDB(data: any): NewsSource {
+  private mapNewsSourceFromDB(data: Record<string, unknown>): NewsSource {
     return {
-      id: data.id,
-      name: data.name,
-      domain: data.domain,
-      reliability: data.reliability,
-      bias: data.bias,
-      type: data.type,
-      apiEndpoint: data.api_endpoint,
-      apiKey: data.api_key,
-      rateLimit: data.rate_limit,
-      isActive: data.is_active,
-      lastUpdated: new Date(data.last_updated),
-      errorCount: data.error_count,
-      successRate: data.success_rate
+      id: data.id as string,
+      name: data.name as string,
+      domain: data.domain as string,
+      reliability: data.reliability as number,
+      bias: data.bias as NewsSource['bias'],
+      type: data.type as NewsSource['type'],
+      apiEndpoint: data.api_endpoint as string | null,
+      apiKey: data.api_key as string | null,
+      rateLimit: data.rate_limit as number,
+      isActive: data.is_active as boolean,
+      lastUpdated: new Date(data.last_updated as string),
+      errorCount: data.error_count as number,
+      successRate: data.success_rate as number
     };
   }
 
-  private mapNewsSourceToDB(source: Partial<NewsSource>): any {
+  private mapNewsSourceToDB(source: Partial<NewsSource>): Record<string, unknown> {
     return {
       name: source.name,
       domain: source.domain,
@@ -749,7 +754,7 @@ export class RealTimeNewsService {
 // UTILITY FUNCTIONS
 // ============================================================================
 
-export function calculateNewsReliability(source: NewsSource, content: any): number {
+export function calculateNewsReliability(source: NewsSource, content: { hasQuotes?: boolean; hasMultipleSources?: boolean; hasFactChecking?: boolean }): number {
   // Base reliability on source reputation
   let reliability = source.reliability;
   

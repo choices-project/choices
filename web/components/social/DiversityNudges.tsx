@@ -11,7 +11,7 @@ import {
   ChevronRight,
   X
 } from 'lucide-react';
-import { DiversityNudge } from '@/lib/social/network-effects';
+import type { DiversityNudge } from '@/lib/social/types';
 
 interface DiversityNudgesProps {
   userId: string;

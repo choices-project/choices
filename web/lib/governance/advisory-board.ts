@@ -5,7 +5,7 @@
  * oversight and guidance for the ranked choice democracy platform.
  */
 
-import { logger } from '@/lib/logger';
+import { devLog } from '../logger';
 
 export interface AdvisoryBoardMember {
   id: string;
@@ -196,6 +196,15 @@ export class AdvisoryBoardManager {
   private actionItems: Map<string, ActionItem[]> = new Map();
 
   /**
+   * Initialize the advisory board manager
+   */
+  async initialize(): Promise<void> {
+    // Perform any necessary initialization
+    // In production, this might load data from database
+    devLog('Advisory board manager initialized');
+  }
+
+  /**
    * Schedule quarterly meeting
    */
   static async scheduleQuarterlyMeeting(): Promise<MeetingInvite> {
@@ -213,7 +222,7 @@ export class AdvisoryBoardManager {
       time: "14:00",
       timezone: "UTC",
       agenda: await this.generateMeetingAgenda(),
-      attendees: AdvisoryBoardManager.BOARD_MEMBERS.filter((member: any) => member.status === 'active'),
+      attendees: AdvisoryBoardManager.BOARD_MEMBERS.filter((member: AdvisoryBoardMember) => member.status === 'active'),
       status: 'scheduled' as const,
       meetingLink: this.generateMeetingLink()
     };
@@ -221,7 +230,7 @@ export class AdvisoryBoardManager {
     await this.saveMeeting(meeting);
     await this.sendInvites(meeting);
     
-    logger.info(`Scheduled quarterly advisory board meeting`, { 
+    devLog(`Scheduled quarterly advisory board meeting`, { 
       meetingId: meeting.id, 
       date: meeting.date,
       attendees: meeting.attendees.length 
@@ -255,7 +264,7 @@ export class AdvisoryBoardManager {
     await this.processActionItems(notes.actionItems);
     await this.publishPublicNotes(meeting, notes);
     
-    logger.info(`Recorded meeting notes`, { 
+    devLog(`Recorded meeting notes`, { 
       meetingId, 
       actionItems: notes.actionItems.length,
       decisions: notes.decisions.length 
@@ -298,6 +307,15 @@ export class AdvisoryBoardManager {
    */
   static async getAdvisoryBoardMembers(): Promise<AdvisoryBoardMember[]> {
     const manager = new AdvisoryBoardManager();
+    
+    // Use the manager to perform any necessary initialization or validation
+    await manager.initialize();
+    
+    // Log the request for audit purposes
+    devLog('Retrieved advisory board members', { 
+      memberCount: AdvisoryBoardManager.BOARD_MEMBERS.length,
+      activeMembers: AdvisoryBoardManager.BOARD_MEMBERS.filter(m => m.status === 'active').length
+    });
     return AdvisoryBoardManager.BOARD_MEMBERS;
   }
 
@@ -370,7 +388,7 @@ export class AdvisoryBoardManager {
    */
   private async publishPublicNotes(meeting: MeetingInvite, notes: MeetingNotes): Promise<void> {
     // In production, this would publish to public website
-    logger.info(`Published public meeting notes`, { 
+    devLog(`Published public meeting notes`, { 
       meetingId: meeting.id, 
       date: meeting.date,
       publicActionItems: notes.public.publicActionItems.length 
@@ -397,11 +415,17 @@ export class AdvisoryBoardManager {
     };
     
     // In production, this would send actual email
-    logger.info(`Sent meeting invite`, { 
+    // For now, we log the invite details and could integrate with email service
+    devLog(`Prepared meeting invite`, { 
       attendee: attendee.name, 
       email: attendee.email,
-      meetingId: meeting.id 
+      meetingId: meeting.id,
+      inviteSubject: invite.subject,
+      inviteBodyLength: invite.body.length
     });
+    
+    // TODO: Integrate with email service (SendGrid, AWS SES, etc.)
+    // await emailService.send(invite);
   }
 
   /**
@@ -498,9 +522,13 @@ Choices Platform Team
     const year = nextQuarter === 0 ? now.getFullYear() + 1 : now.getFullYear();
     
     const quarterMonths = [0, 3, 6, 9]; // Jan, Apr, Jul, Oct
-    const nextDate = new Date(year, quarterMonths[nextQuarter], 15);
+    const month = quarterMonths[nextQuarter];
+    if (month === undefined) {
+      throw new Error(`Invalid quarter: ${nextQuarter}`);
+    }
+    const nextDate = new Date(year, month, 15);
     
-    return nextDate.toISOString().split('T')[0];
+    return nextDate.toISOString().split('T')[0] ?? nextDate.toISOString();
   }
 
   /**

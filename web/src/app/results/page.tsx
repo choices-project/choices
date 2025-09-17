@@ -49,8 +49,8 @@ export default function ResultsPage() {
     }
   }
 
-  const getTotalVotes = (tally: Tally) => {
-    return Object.values(tally).reduce((sum: any, count: any) => (sum as number) + (count as number), 0)
+  const getTotalVotes = (tally: Tally): number => {
+    return Object.values(tally).reduce((sum: number, count: number) => sum + count, 0)
   }
 
   const getPercentage = (votes: number, total: number) => {
@@ -154,7 +154,7 @@ export default function ResultsPage() {
                 </div>
 
                 <div className="space-y-4">
-                  {selectedPoll.options.map((option: any, index: any) => {
+                  {selectedPoll.options.map((option: string, index: number) => {
                     const votes = (tally[index] as number) || 0
                     const total = getTotalVotes(tally)
                     const percentage = getPercentage(votes, total)
@@ -230,7 +230,7 @@ export default function ResultsPage() {
             </div>
 
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {polls.map((poll: any) => (
+              {polls.map((poll: Poll) => (
                 <div key={poll.id} className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-semibold text-gray-900">{poll.title}</h3>
@@ -243,7 +243,7 @@ export default function ResultsPage() {
                   
                   <div className="flex items-center justify-between text-xs text-gray-500 mb-4">
                     <span>{poll.options.length} options</span>
-                    <span>{new Date(poll.createdat).toLocaleDateString()}</span>
+                    <span>{new Date(poll.created_at).toLocaleDateString()}</span>
                   </div>
 
                   <button

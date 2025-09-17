@@ -18,7 +18,8 @@
 // Status: Phase 4 Implementation
 // ============================================================================
 
-import { devLog } from '@/lib/logger';
+import { devLog } from '../logger';
+import type { SurgeData, TrendingCandidate, Activity } from './types';
 
 // ============================================================================
 // TYPES AND INTERFACES
@@ -53,6 +54,11 @@ export interface PollResults {
   margin: number;
   totalVotes: number;
   rankings: CandidateRanking[];
+  candidateResults: Array<{
+    candidateId: string;
+    votes: number;
+    percentage: number;
+  }>;
   timestamp: Date;
 }
 
@@ -306,7 +312,7 @@ export class ViralMomentDetector {
    */
   private static async createLocalSurgeMoment(
     poll: Poll, 
-    surgeData: any
+    surgeData: SurgeData
   ): Promise<ViralMoment | null> {
     const shareability = await this.calculateShareability({
       engagement: 0.7,
@@ -320,15 +326,15 @@ export class ViralMomentDetector {
       id: this.generateId(),
       type: 'local-surge',
       pollId: poll.id,
-      headline: `Local surge: ${surgeData.candidateName} gaining momentum in ${poll.location}`,
+      headline: `Local surge: ${(surgeData.metadata as any).candidateName || 'Candidate'} gaining momentum in ${poll.location}`,
       description: 'A local candidate is seeing unexpected support in ranked choice voting.',
       shareability,
       confidence: await this.calculateConfidence(poll.id),
       timeWindow: this.STABILITY_CONFIG.windowDuration,
       metadata: {
         candidateId: surgeData.candidateId,
-        candidateName: surgeData.candidateName,
-        trendDirection: surgeData.direction,
+        candidateName: (surgeData.metadata as any).candidateName || 'Unknown',
+        trendDirection: (surgeData.metadata as any).direction || 'stable',
         activityCount: surgeData.activityCount,
         geographicArea: poll.location
       },
@@ -342,7 +348,7 @@ export class ViralMomentDetector {
    */
   private static async createTrendingCandidateMoment(
     poll: Poll, 
-    trendingData: any
+    trendingData: TrendingCandidate
   ): Promise<ViralMoment | null> {
     const shareability = await this.calculateShareability({
       engagement: 0.8,
@@ -364,7 +370,7 @@ export class ViralMomentDetector {
       metadata: {
         candidateId: trendingData.candidateId,
         candidateName: trendingData.candidateName,
-        trendDirection: trendingData.direction,
+        trendDirection: trendingData.trendDirection,
         activityCount: trendingData.activityCount
       },
       disclaimer: '', // Will be set in validation
@@ -390,8 +396,8 @@ export class ViralMomentDetector {
     return secondChoice || null;
   }
 
-  private static async detectLocalSurge(poll: Poll, results: PollResults): Promise<any | null> {
-    // Detect candidates with rapid growth in support
+  private static async detectLocalSurge(poll: Poll, results: PollResults): Promise<SurgeData | null> {
+    // Detect candidates with rapid growth in support using poll results
     const recentActivity = await this.getRecentActivity(poll.id, 60 * 60 * 1000); // 1 hour
     
     for (const candidate of poll.candidates) {
@@ -399,16 +405,32 @@ export class ViralMomentDetector {
         activity => activity.candidateId === candidate.id
       );
       
+      // Use results to get current vote percentage
+      const candidateResult = results.candidateResults.find(
+        result => result.candidateId === candidate.id
+      );
+      const currentPercentage = candidateResult?.percentage || 0;
+      
       if (candidateActivity.length > 0) {
         const trendScore = this.calculateTrendScore(candidateActivity, 60 * 60 * 1000);
         
-        if (trendScore > 0.8) {
+        if (trendScore > 0.8 && currentPercentage > 10) { // Only surge if above 10% support
           return {
+            pollId: poll.id,
             candidateId: candidate.id,
-            candidateName: candidate.name,
-            direction: 'up' as const,
+            surgeScore: trendScore,
             activityCount: candidateActivity.length,
-            trendScore
+            timeWindow: 60 * 60 * 1000, // 1 hour
+            geographicArea: poll.location,
+            demographicGroup: 'all',
+            confidence: Math.min(trendScore, 0.95),
+            metadata: {
+              candidateName: candidate.name,
+              direction: this.getTrendDirection(candidateActivity),
+              currentPercentage,
+              totalVotes: results.totalVotes,
+              timestamp: results.timestamp
+            }
           };
         }
       }
@@ -417,8 +439,8 @@ export class ViralMomentDetector {
     return null;
   }
 
-  private static async detectTrendingCandidates(poll: Poll, results: PollResults): Promise<any[]> {
-    const trending: any[] = [];
+  private static async detectTrendingCandidates(poll: Poll, results: PollResults): Promise<TrendingCandidate[]> {
+    const trending: TrendingCandidate[] = [];
     const recentActivity = await this.getRecentActivity(poll.id, 60 * 60 * 1000); // 1 hour
     
     for (const candidate of poll.candidates) {
@@ -430,12 +452,27 @@ export class ViralMomentDetector {
         const trendScore = this.calculateTrendScore(candidateActivity, 60 * 60 * 1000);
         
         if (trendScore > 0.7) {
+          // Use results to get current vote percentage
+          const candidateResult = results.candidateResults.find(
+            result => result.candidateId === candidate.id
+          );
+          const currentPercentage = candidateResult?.percentage || 0;
+          
           trending.push({
             candidateId: candidate.id,
             candidateName: candidate.name,
             trendScore,
             activityCount: candidateActivity.length,
-            direction: this.getTrendDirection(candidateActivity)
+            trendDirection: this.getTrendDirection(candidateActivity),
+            timeWindow: 60 * 60 * 1000, // 1 hour
+            confidence: Math.min(trendScore, 0.95),
+            metadata: {
+              pollId: poll.id,
+              category: 'candidate',
+              geographicArea: poll.location,
+              demographicGroup: 'all',
+              interestCategories: ['politics', 'voting']
+            }
           });
         }
       }
@@ -496,7 +533,7 @@ export class ViralMomentDetector {
     return Math.sqrt(variance) / 100; // Normalize to 0-1
   }
 
-  private static calculateTrendConsistency(results: PollResults): number {
+  private static calculateTrendConsistency(_results: PollResults): number {
     // Calculate how consistent the trend is
     // This would be more sophisticated in a real implementation
     return 0.8; // Placeholder
@@ -534,7 +571,7 @@ export class ViralMomentDetector {
   // UTILITY METHODS
   // ============================================================================
 
-  private static calculateTrendScore(activity: any[], timeWindow: number): number {
+  private static calculateTrendScore(activity: Activity[], timeWindow: number): number {
     // Calculate trend based on activity velocity and acceleration
     const timeBuckets = this.bucketActivityByTime(activity, timeWindow);
     const velocity = this.calculateVelocity(timeBuckets);
@@ -543,7 +580,7 @@ export class ViralMomentDetector {
     return (velocity * 0.7 + acceleration * 0.3);
   }
 
-  private static getTrendDirection(activity: any[]): 'up' | 'down' | 'stable' {
+  private static getTrendDirection(activity: Activity[]): 'up' | 'down' | 'stable' {
     const recent = activity.slice(-5);
     const older = activity.slice(-10, -5);
     
@@ -559,7 +596,7 @@ export class ViralMomentDetector {
     return 'stable';
   }
 
-  private static bucketActivityByTime(activity: any[], timeWindow: number): number[] {
+  private static bucketActivityByTime(activity: Activity[], timeWindow: number): number[] {
     // Bucket activity into time windows
     const buckets: number[] = [];
     const bucketSize = timeWindow / 10; // 10 buckets
@@ -583,7 +620,7 @@ export class ViralMomentDetector {
     // Calculate velocity of activity
     let velocity = 0;
     for (let i = 1; i < buckets.length; i++) {
-      velocity += buckets[i] - buckets[i - 1];
+      velocity += (buckets[i] ?? 0) - (buckets[i - 1] ?? 0);
     }
     return velocity / (buckets.length - 1);
   }
@@ -592,8 +629,8 @@ export class ViralMomentDetector {
     // Calculate acceleration of activity
     let acceleration = 0;
     for (let i = 2; i < buckets.length; i++) {
-      const velocity1 = buckets[i] - buckets[i - 1];
-      const velocity2 = buckets[i - 1] - buckets[i - 2];
+      const velocity1 = (buckets[i] ?? 0) - (buckets[i - 1] ?? 0);
+      const velocity2 = (buckets[i - 1] ?? 0) - (buckets[i - 2] ?? 0);
       acceleration += velocity1 - velocity2;
     }
     return acceleration / (buckets.length - 2);
@@ -657,7 +694,7 @@ export class ViralMomentDetector {
     };
   }
 
-  private static async getRecentResults(pollId: string, timeWindow: number): Promise<PollResults | null> {
+  private static async getRecentResults(pollId: string, _timeWindow: number): Promise<PollResults | null> {
     // Mock implementation - replace with real database call
     return {
       pollId,
@@ -675,16 +712,21 @@ export class ViralMomentDetector {
         { candidateId: 'candidate2', candidateName: 'John Doe', rank: 2, votes: 600, percentage: 40 },
         { candidateId: 'candidate3', candidateName: 'Bob Johnson', rank: 3, votes: 225, percentage: 15 }
       ],
+      candidateResults: [
+        { candidateId: 'candidate1', votes: 675, percentage: 45 },
+        { candidateId: 'candidate2', votes: 600, percentage: 40 },
+        { candidateId: 'candidate3', votes: 225, percentage: 15 }
+      ],
       timestamp: new Date()
     };
   }
 
-  private static async getRecentActivity(pollId: string, timeWindow: number): Promise<any[]> {
+  private static async getRecentActivity(_pollId: string, _timeWindow: number): Promise<Activity[]> {
     // Mock implementation - replace with real database call
     return [
-      { candidateId: 'candidate1', timestamp: new Date(), intensity: 1.2 },
-      { candidateId: 'candidate1', timestamp: new Date(), intensity: 1.5 },
-      { candidateId: 'candidate2', timestamp: new Date(), intensity: 0.8 }
+      { candidateId: 'candidate1', timestamp: new Date(), intensity: 1.2, type: 'vote' as const },
+      { candidateId: 'candidate1', timestamp: new Date(), intensity: 1.5, type: 'view' as const },
+      { candidateId: 'candidate2', timestamp: new Date(), intensity: 0.8, type: 'share' as const }
     ];
   }
 }
@@ -697,7 +739,7 @@ export class DisclaimerGenerator {
   /**
    * Generate viral disclaimer for a moment
    */
-  static generateViralDisclaimer(moment: ViralMoment, poll: Poll): string {
+  static generateViralDisclaimer(moment: ViralMoment, _poll: Poll): string {
     const baseDisclaimer = "Unofficial community poll • Self-selected respondents • Not a scientific survey";
     const timestamp = `As of ${new Date().toLocaleString()}`;
     const methodology = "Method: Instant Runoff Voting (IRV)";

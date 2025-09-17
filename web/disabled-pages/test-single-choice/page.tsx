@@ -7,7 +7,8 @@ import { useState, useEffect } from 'react'
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
 import { useRouter } from 'next/navigation'
 import SingleChoiceVoting from '@/features/voting/components/SingleChoiceVoting'
-import { devLog } from '@/lib/logger';
+import { devLog } from '@/lib/logger'
+import { withOptional } from '@/lib/util/objects'
 
 // Sample poll data for testing
 const samplePoll = {
@@ -116,14 +117,17 @@ function TestSingleChoiceContent() {
 
         {/* Voting Interface */}
         <SingleChoiceVoting
-          pollId={samplePoll.id}
-          title={samplePoll.title}
-          description={samplePoll.description}
-          options={samplePoll.options}
-          onVote={(choice) => handleVote(samplePoll.id, choice)}
-          isVoting={isVoting}
-          hasVoted={hasVoted}
-          userVote={userVote}
+          {...withOptional({
+            pollId: samplePoll.id,
+            title: samplePoll.title,
+            options: samplePoll.options,
+            onVote: (choice) => handleVote(samplePoll.id, choice),
+            isVoting,
+            hasVoted
+          }, {
+            description: samplePoll.description,
+            userVote: userVote ?? undefined
+          })}
         />
 
         {/* Demo Information */}

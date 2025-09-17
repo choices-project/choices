@@ -35,8 +35,14 @@ module.exports = {
     '@typescript-eslint/no-unused-vars': 'off',
     'unused-imports/no-unused-imports': 'error',
     'unused-imports/no-unused-vars': [
-      'warn',
-      { vars: 'all', varsIgnorePattern: '^_', args: 'after-used', argsIgnorePattern: '^_' },
+      'error',
+      {
+        vars: 'all',
+        varsIgnorePattern: '^_',
+        args: 'after-used',
+        argsIgnorePattern: '^_',
+        ignoreRestSiblings: true,
+      },
     ],
 
     // Architectural boundaries (adjust if you need to)
@@ -58,6 +64,52 @@ module.exports = {
         { group: ['@/shared/*', '@/admin/lib/*'], message: 'Use "@/lib/**" or feature modules.' },
       ],
     }],
+
+    // RSC-safe import rules
+    'react/jsx-no-undef': ['error', { allowGlobals: false }],
+    'import/no-unresolved': 'error',
+    'import/named': 'error',
+    'import/no-restricted-paths': ['error', {
+      zones: [
+        { 
+          target: './components', 
+          from: 'lucide-react',
+          message: 'Import icons via direct modular import, never re-export through UI barrel.' 
+        },
+        {
+          target: './app',
+          from: './components/ui/client',
+          message: 'Server components cannot import client barrel. Use @/components/ui for server-safe primitives.'
+        }
+      ]
+    }],
+
+    // Regression-blocking rules for type safety
+    '@typescript-eslint/no-explicit-any': 'error',
+    '@typescript-eslint/consistent-type-imports': ['error', { 
+      fixStyle: 'inline-type-imports',
+      prefer: 'type-imports'
+    }],
+    
+    // Phase 4: exactOptionalPropertyTypes enforcement
+    '@typescript-eslint/no-unnecessary-condition': 'error',
+    '@typescript-eslint/consistent-type-definitions': ['error', 'type'],
+    '@typescript-eslint/no-confusing-void-expression': ['error', { 'ignoreArrowShorthand': true }],
+    'no-restricted-syntax': [
+      'error',
+      { 
+        selector: 'TSTypeReference[typeName.name="AnyObject"]', 
+        message: 'Prefer exact interfaces over AnyObject.' 
+      },
+      { 
+        selector: 'AssignmentExpression[right.type="Identifier"][right.name="undefined"]',
+        message: 'Use conditional spread or delete, not = undefined.' 
+      },
+      { 
+        selector: 'SpreadElement[argument.type="Identifier"]', 
+        message: 'Prefer withOptional()/stripUndefinedDeep on objects that may contain undefined.' 
+      }
+    ],
   },
   overrides: [
     // Test files: loosen some rules

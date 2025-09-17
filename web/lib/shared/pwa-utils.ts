@@ -4,6 +4,52 @@
 import { isFeatureEnabled } from '@/lib/core/feature-flags'
 import { devLog } from '@/lib/logger';
 
+// Helper function to convert ArrayBuffer to base64url
+function arrayBufferToBase64url(buffer: ArrayBuffer): string {
+  const uint8Array = new Uint8Array(buffer);
+  const base64 = btoa(String.fromCharCode(...uint8Array));
+  return base64
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=/g, '');
+}
+
+// Additional type definitions
+export interface BeforeInstallPromptEvent extends Event {
+  prompt(): Promise<void>;
+  userChoice: Promise<{
+    outcome: 'accepted' | 'dismissed';
+    platform: string;
+  }>;
+}
+
+export interface NavigatorWithServiceWorker extends Navigator {
+  serviceWorker: ServiceWorkerContainer & {
+    sync?: {
+      register(tag: string): Promise<void>;
+      getTags(): Promise<string[]>;
+    };
+  };
+}
+
+export interface NavigatorWithStandalone extends Navigator {
+  standalone?: boolean;
+}
+
+export interface WebAuthnRegistrationResult {
+  success: boolean;
+  credentialId: string;
+  publicKey: string;
+  error?: string;
+}
+
+export interface WebAuthnAuthenticationResult {
+  success: boolean;
+  credentialId: string;
+  signature: string;
+  error?: string;
+}
+
 export interface PWAConfig {
   name: string;
   shortName: string;
@@ -38,14 +84,34 @@ export interface OfflineVote {
 export interface VerificationChallenge {
   id: string;
   type: 'webauthn' | 'fingerprint' | 'location';
-  data: any;
+  data: WebAuthnChallengeData | FingerprintData | LocationData;
   completed: boolean;
+}
+
+export interface WebAuthnChallengeData {
+  challenge: string;
+  rpId: string;
+  userVerification: string;
+  timeout: number;
+}
+
+export interface FingerprintData {
+  deviceId: string;
+  timestamp: number;
+  signature: string;
+}
+
+export interface LocationData {
+  latitude: number;
+  longitude: number;
+  accuracy: number;
+  timestamp: number;
 }
 
 // PWA Manager Class
 export class PWAManager {
   private registration: ServiceWorkerRegistration | null = null;
-  private deferredPrompt: any = null;
+  private deferredPrompt: BeforeInstallPromptEvent | null = null;
   private isOnline = false;
   private pwaEnabled = false;
   private pushSubscription: PushSubscription | null = null;
@@ -90,7 +156,7 @@ export class PWAManager {
     // Listen for install prompt
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
-      this.deferredPrompt = e;
+      this.deferredPrompt = e as BeforeInstallPromptEvent;
       this.showInstallPrompt();
     });
 
@@ -205,10 +271,10 @@ export class PWAManager {
       webAuthn: 'credentials' in navigator,
       serviceWorker: 'serviceWorker' in navigator,
       pushNotifications: 'PushManager' in window,
-      backgroundSync: 'serviceWorker' in navigator && 'sync' in (navigator.serviceWorker as any),
+      backgroundSync: 'serviceWorker' in navigator && 'sync' in (navigator as NavigatorWithServiceWorker).serviceWorker,
       installPrompt: 'beforeinstallprompt' in window,
       offlineStorage: 'indexedDB' in window,
-      encryptedStorage: 'crypto' in window && 'subtle' in (window as any).crypto
+      encryptedStorage: 'crypto' in window && 'subtle' in window.crypto
     };
   }
 
@@ -250,7 +316,7 @@ export class PWAManager {
     
     // Check if running in standalone mode (installed PWA)
     return window.matchMedia('(display-mode: standalone)').matches ||
-           (window.navigator as any).standalone === true;
+           (window.navigator as NavigatorWithStandalone).standalone === true;
   }
 
   // Get PWA installation status
@@ -359,7 +425,7 @@ export class PWAWebAuthn {
   }
 
   // Register user with WebAuthn
-  async registerUser(userId: string): Promise<any> {
+  async registerUser(userId: string): Promise<WebAuthnRegistrationResult> {
     if (!this.pwaEnabled) {
       throw new Error('PWA feature is disabled');
     }
@@ -394,7 +460,15 @@ export class PWAWebAuthn {
         }
       });
 
-      return credential;
+      if (!credential) {
+        throw new Error('Failed to create credential');
+      }
+
+      return {
+        success: true,
+        credentialId: credential.id,
+        publicKey: arrayBufferToBase64url((credential as any).rawId)
+      };
     } catch (error) {
       devLog('WebAuthn registration failed:', error);
       throw error;
@@ -402,7 +476,7 @@ export class PWAWebAuthn {
   }
 
   // Authenticate user with WebAuthn
-  async authenticateUser(userId: string): Promise<any> {
+  async authenticateUser(userId: string): Promise<WebAuthnAuthenticationResult> {
     if (!this.pwaEnabled) {
       throw new Error('PWA feature is disabled');
     }
@@ -428,9 +502,17 @@ export class PWAWebAuthn {
         }
       });
 
+      if (!assertion) {
+        throw new Error('Failed to authenticate');
+      }
+
       // Log successful authentication with userId
       devLog('PWA: WebAuthn authentication successful for user:', userId);
-      return assertion;
+      return {
+        success: true,
+        credentialId: assertion.id,
+        signature: arrayBufferToBase64url((assertion as any).rawId)
+      };
     } catch (error) {
       devLog('WebAuthn authentication failed for user:', userId, error);
       throw error;
@@ -454,13 +536,13 @@ export class PrivacyStorage {
   }
 
   // Store encrypted data
-  async storeEncryptedData(key: string, data: any): Promise<void> {
+  async storeEncryptedData(key: string, data: Record<string, unknown>): Promise<void> {
     if (!this.pwaEnabled) {
       devLog('PWA: Feature disabled, cannot store encrypted data');
       return;
     }
 
-    if (!('crypto' in window) || !('subtle' in (window as any).crypto)) {
+    if (!('crypto' in window) || !('subtle' in window.crypto)) {
       devLog('PWA: Crypto API not supported');
       return;
     }
@@ -481,13 +563,13 @@ export class PrivacyStorage {
   }
 
   // Get encrypted data
-  async getEncryptedData(key: string): Promise<any> {
+  async getEncryptedData(key: string): Promise<Record<string, unknown> | null> {
     if (!this.pwaEnabled) {
       devLog('PWA: Feature disabled, cannot retrieve encrypted data');
       return null;
     }
 
-    if (!('crypto' in window) || !('subtle' in (window as any).crypto)) {
+    if (!('crypto' in window) || !('subtle' in window.crypto)) {
       devLog('PWA: Crypto API not supported');
       return null;
     }

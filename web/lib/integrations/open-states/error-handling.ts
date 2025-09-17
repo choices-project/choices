@@ -4,7 +4,8 @@
  * Comprehensive error handling for Open States API integration
  */
 
-import { dev } from '@/lib/dev.logger';
+import { dev } from '../../dev.logger';
+import { withOptional } from '../../util/objects';
 
 // Error types
 export interface ErrorDetails {
@@ -36,9 +37,13 @@ export class OpenStatesApiError extends Error {
     super(message);
     this.name = 'OpenStatesApiError';
     this.code = code;
-    this.statusCode = statusCode;
     this.retryable = retryable;
     this.details = details;
+    
+    // Use withOptional to handle optional statusCode property
+    if (statusCode !== undefined) {
+      this.statusCode = statusCode;
+    }
   }
 }
 

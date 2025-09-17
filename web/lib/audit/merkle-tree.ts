@@ -122,7 +122,7 @@ export class MerkleTree {
     }
 
     if (leaves.length === 1) {
-      return this.createLeafNode(leaves[0]);
+      return this.createLeafNode(leaves[0] || '');
     }
 
     // Build tree level by level
@@ -135,14 +135,16 @@ export class MerkleTree {
         const left = currentLevel[i];
         const right = currentLevel[i + 1] || left; // Duplicate last node if odd number
         
-        const parent = this.createParentNode(left, right);
-        nextLevel.push(parent);
+        if (left && right) {
+          const parent = this.createParentNode(left, right);
+          nextLevel.push(parent);
+        }
       }
       
       currentLevel = nextLevel;
     }
 
-    return currentLevel[0];
+    return currentLevel[0] || this.createLeafNode('');
   }
 
   private createLeafNode(data: string): MerkleNode {

@@ -6,11 +6,9 @@ import {
   Users, 
   Shield, 
   Heart, 
-  CheckCircle, 
-  ArrowRight,
+  CheckCircle,
   Sparkles,
-  Target,
-  Zap
+  Target
 } from 'lucide-react';
 import LocationInput from './LocationInput';
 import WelcomeStep from './steps/WelcomeStep';
@@ -125,6 +123,10 @@ export default function OnboardingFlow() {
 
   const currentStepData = steps[currentStep];
   const progress = ((currentStep + 1) / steps.length) * 100;
+
+  if (!currentStepData) {
+    return <div>Step not found</div>;
+  }
 
   const contextValue: OnboardingContextType = {
     userData,

@@ -5,8 +5,8 @@
  * error handling, rate limiting, caching, and data validation.
  */
 
-import { logger } from '@/lib/logger';
-import { ApplicationError } from '@/lib/errors';
+import { logger } from '../../logger';
+import { ApplicationError } from '../../errors/base';
 
 export interface ProPublicaConfig {
   apiKey: string;
@@ -188,7 +188,11 @@ export class ProPublicaClient {
         throw new ProPublicaApiError('Member not found', 404, { memberId });
       }
 
-      return response.results[0];
+      const member = response.results[0];
+      if (!member) {
+        throw new ProPublicaApiError('Member data is invalid', 500, { memberId });
+      }
+      return member;
     } catch (error) {
       logger.error('Failed to get member from ProPublica API', { memberId, error });
       throw error;
@@ -252,7 +256,11 @@ export class ProPublicaClient {
         throw new ProPublicaApiError('Bill not found', 404, { billId });
       }
 
-      return response.results[0];
+      const bill = response.results[0];
+      if (!bill) {
+        throw new ProPublicaApiError('Bill data is invalid', 500, { billId });
+      }
+      return bill;
     } catch (error) {
       logger.error('Failed to get bill from ProPublica API', { billId, error });
       throw error;
@@ -410,7 +418,7 @@ export class ProPublicaClient {
     const now = Date.now();
     const cutoff = now - 3600000; // 1 hour ago
 
-    for (const [key] of this.rateLimiter) {
+    for (const [key] of Array.from(this.rateLimiter.entries())) {
       const timestamp = parseInt(key) * (key.length === 10 ? 60000 : 3600000);
       if (timestamp < cutoff) {
         this.rateLimiter.delete(key);

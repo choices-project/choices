@@ -23,7 +23,7 @@ class ClientSessionManager {
     const cookies = document.cookie.split(";")
     for (const cookie of cookies) {
       const [name, value] = cookie.trim().split("=")
-      if (name === "choices_csrf") {
+      if (name === "choices_csrf" && value) {
         return decodeURIComponent(value)
       }
     }

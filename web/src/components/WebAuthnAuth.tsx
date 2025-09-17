@@ -185,7 +185,7 @@ export default function WebAuthnAuth({ onAuthenticated }: WebAuthnAuthProps) {
           <span className="text-yellow-800 font-medium">WebAuthn Not Supported</span>
         </div>
         <p className="text-yellow-700 mt-2 text-sm">
-          Your browser doesn't support WebAuthn. Please use a modern browser with biometric authentication support.
+          Your browser doesn&apos;t support WebAuthn. Please use a modern browser with biometric authentication support.
         </p>
       </div>
     )
@@ -199,7 +199,7 @@ export default function WebAuthnAuth({ onAuthenticated }: WebAuthnAuthProps) {
             <Shield className="w-6 h-6 text-white" />
           </div>
           <h3 className="text-lg font-semibold text-gray-900">Secure Authentication</h3>
-          <p className="text-gray-600 text-sm">Use your device's biometric authentication or security key</p>
+          <p className="text-gray-600 text-sm">Use your device&apos;s biometric authentication or security key</p>
         </div>
 
         {step === 'input' && (
@@ -267,7 +267,7 @@ export default function WebAuthnAuth({ onAuthenticated }: WebAuthnAuthProps) {
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
             <h4 className="text-lg font-medium text-gray-900 mb-2">Setting up your credentials</h4>
             <p className="text-gray-600 text-sm">
-              Please use your device's biometric authentication or security key to complete registration.
+              Please use your device&apos;s biometric authentication or security key to complete registration.
             </p>
           </div>
         )}
@@ -277,7 +277,7 @@ export default function WebAuthnAuth({ onAuthenticated }: WebAuthnAuthProps) {
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
             <h4 className="text-lg font-medium text-gray-900 mb-2">Authenticating</h4>
             <p className="text-gray-600 text-sm">
-              Please use your device's biometric authentication or security key to sign in.
+              Please use your device&apos;s biometric authentication or security key to sign in.
             </p>
           </div>
         )}

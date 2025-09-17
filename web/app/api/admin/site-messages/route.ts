@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server'
 import { requireAdminOr401 } from '@/lib/admin-auth'
 import { logger } from '@/lib/logger'
 import { getSupabaseServerClient } from '@/utils/supabase/server'
+import { withOptional } from '@/lib/util/objects'
 
 export async function GET(request: NextRequest) {
   // Single admin gate - returns 401 if not admin
@@ -57,7 +58,7 @@ export async function POST(request: NextRequest) {
       message,
       type,
       priority: priority || 'medium',
-      isActive: isActive !== undefined ? isActive : true,
+      isActive: isActive ?? true,
       expiresAt
     })
 
@@ -195,7 +196,7 @@ async function createSiteMessage(supabase: any, messageData: {
         message: messageData.message,
         type: messageData.type,
         priority: messageData.priority || 'medium',
-        is_active: messageData.isActive !== undefined ? messageData.isActive : true,
+        is_active: messageData.isActive ?? true,
         expires_at: messageData.expiresAt,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
@@ -230,16 +231,17 @@ async function updateSiteMessage(supabase: any, id: string, updateData: {
   expiresAt?: string
 }) {
   try {
-    const updatePayload: any = {
-      updated_at: new Date().toISOString()
-    }
-
-    if (updateData.title !== undefined) updatePayload.title = updateData.title
-    if (updateData.message !== undefined) updatePayload.message = updateData.message
-    if (updateData.type !== undefined) updatePayload.type = updateData.type
-    if (updateData.priority !== undefined) updatePayload.priority = updateData.priority
-    if (updateData.isActive !== undefined) updatePayload.is_active = updateData.isActive
-    if (updateData.expiresAt !== undefined) updatePayload.expires_at = updateData.expiresAt
+    const updatePayload = withOptional(
+      { updated_at: new Date().toISOString() },
+      {
+        title: updateData.title,
+        message: updateData.message,
+        type: updateData.type,
+        priority: updateData.priority,
+        is_active: updateData.isActive,
+        expires_at: updateData.expiresAt
+      }
+    )
 
     const { data, error } = await supabase
       .from('site_messages')

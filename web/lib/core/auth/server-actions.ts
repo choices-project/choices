@@ -256,7 +256,7 @@ export function checkRateLimit(
  */
 export function logSecurityEvent(
   event: string,
-  details: Record<string, any>,
+  details: Record<string, unknown>,
   context: ServerActionContext
 ) {
   const securityConfig = getSecurityConfig()
@@ -289,7 +289,7 @@ export function sanitizeInput(input: string): string {
 export function createErrorResponse(
   message: string, 
   statusCode: number = 400,
-  details?: Record<string, any>
+  details?: Record<string, unknown>
 ) {
   return {
     error: true,

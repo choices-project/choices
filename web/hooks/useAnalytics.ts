@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { devLog } from '@/lib/logger';
 import { useFeatureFlags } from './useFeatureFlags';
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
+import { withOptional } from '@/lib/util/objects';
 
 interface AnalyticsData {
   period: string;
@@ -328,7 +329,7 @@ export function useTrendsAnalytics(options?: UseAnalyticsOptions) {
   const analytics = useAnalytics(options);
   
   const fetchTrends = useCallback((dateRange?: string) => {
-    return analytics.fetchData('trends', { dateRange });
+    return analytics.fetchData('trends', withOptional({}, { dateRange }));
   }, [analytics.fetchData]);
   
   return {

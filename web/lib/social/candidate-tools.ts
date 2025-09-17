@@ -18,7 +18,10 @@
 // Status: Phase 4 Implementation
 // ============================================================================
 
-import { devLog } from '@/lib/logger';
+import { devLog } from '../logger';
+import type {
+  VerificationAttemptData
+} from './types';
 
 // ============================================================================
 // TYPES AND INTERFACES
@@ -503,17 +506,17 @@ export class CampaignDashboardManager {
   }
 
   // Private helper methods
-  private static async getCurrentRank(candidateId: string): Promise<{ rank: number; total: number }> {
+  private static async getCurrentRank(_candidateId: string): Promise<{ rank: number; total: number }> {
     // Mock implementation
     return { rank: 2, total: 5 };
   }
 
-  private static async getTrendData(candidateId: string): Promise<{ direction: 'up' | 'down' | 'stable'; percentage: number }> {
+  private static async getTrendData(_candidateId: string): Promise<{ direction: 'up' | 'down' | 'stable'; percentage: number }> {
     // Mock implementation
     return { direction: 'up', percentage: 15 };
   }
 
-  private static async getInterestAlignments(candidateId: string): Promise<InterestAlignment[]> {
+  private static async getInterestAlignments(_candidateId: string): Promise<InterestAlignment[]> {
     // Mock implementation
     return [
       { name: 'environment', alignment: 85, userCount: 150, trend: 'up' },
@@ -522,7 +525,7 @@ export class CampaignDashboardManager {
     ];
   }
 
-  private static async getEngagementMetrics(candidateId: string): Promise<EngagementMetrics> {
+  private static async getEngagementMetrics(_candidateId: string): Promise<EngagementMetrics> {
     // Mock implementation
     return {
       totalEngagements: 1250,
@@ -537,7 +540,7 @@ export class CampaignDashboardManager {
     };
   }
 
-  private static async getDemographicBreakdown(candidateId: string): Promise<DemographicBreakdown> {
+  private static async getDemographicBreakdown(_candidateId: string): Promise<DemographicBreakdown> {
     // Mock implementation
     return {
       ageGroups: { '18-24': 15, '25-34': 35, '35-49': 30, '50-64': 15, '65+': 5 },
@@ -547,7 +550,7 @@ export class CampaignDashboardManager {
     };
   }
 
-  private static async getGeographicBreakdown(candidateId: string): Promise<GeographicBreakdown> {
+  private static async getGeographicBreakdown(_candidateId: string): Promise<GeographicBreakdown> {
     // Mock implementation
     return {
       regions: { 'north': 40, 'south': 30, 'east': 20, 'west': 10 },
@@ -556,7 +559,7 @@ export class CampaignDashboardManager {
     };
   }
 
-  private static async getTopSupportReasons(candidateId: string): Promise<string[]> {
+  private static async getTopSupportReasons(_candidateId: string): Promise<string[]> {
     // Mock implementation
     return [
       'Strong environmental policies',
@@ -566,7 +569,7 @@ export class CampaignDashboardManager {
     ];
   }
 
-  private static async getCommonConcerns(candidateId: string): Promise<string[]> {
+  private static async getCommonConcerns(_candidateId: string): Promise<string[]> {
     // Mock implementation
     return [
       'Limited national experience',
@@ -575,7 +578,7 @@ export class CampaignDashboardManager {
     ];
   }
 
-  private static async calculatePolicyAlignment(candidateId: string, policy: string): Promise<PolicyAlignment | null> {
+  private static async calculatePolicyAlignment(_candidateId: string, policy: string): Promise<PolicyAlignment | null> {
     // Mock implementation
     return {
       policy,
@@ -586,27 +589,27 @@ export class CampaignDashboardManager {
     };
   }
 
-  private static async analyzeStrengths(candidateId: string): Promise<string[]> {
+  private static async analyzeStrengths(_candidateId: string): Promise<string[]> {
     // Mock implementation
     return ['Strong environmental record', 'High transparency score', 'Local community support'];
   }
 
-  private static async analyzeWeaknesses(candidateId: string): Promise<string[]> {
+  private static async analyzeWeaknesses(_candidateId: string): Promise<string[]> {
     // Mock implementation
     return ['Limited national experience', 'Smaller campaign budget'];
   }
 
-  private static async analyzeOpportunities(candidateId: string): Promise<string[]> {
+  private static async analyzeOpportunities(_candidateId: string): Promise<string[]> {
     // Mock implementation
     return ['Growing environmental movement', 'Independent voter support'];
   }
 
-  private static async analyzeThreats(candidateId: string): Promise<string[]> {
+  private static async analyzeThreats(_candidateId: string): Promise<string[]> {
     // Mock implementation
     return ['Strong party candidates', 'Limited media coverage'];
   }
 
-  private static async generateRecommendations(candidateId: string): Promise<string[]> {
+  private static async generateRecommendations(_candidateId: string): Promise<string[]> {
     // Mock implementation
     return [
       'Focus on environmental messaging',
@@ -615,7 +618,7 @@ export class CampaignDashboardManager {
     ];
   }
 
-  private static async getCompetitiveAnalysis(candidateId: string): Promise<CompetitiveAnalysis[]> {
+  private static async getCompetitiveAnalysis(_candidateId: string): Promise<CompetitiveAnalysis[]> {
     // Mock implementation
     return [
       {
@@ -632,7 +635,7 @@ export class CampaignDashboardManager {
     ];
   }
 
-  private static async getCandidate(candidateId: string): Promise<Candidate | null> {
+  private static async getCandidate(_candidateId: string): Promise<Candidate | null> {
     // Mock implementation
     return null;
   }
@@ -729,6 +732,8 @@ export class CandidateVerificationSystem {
 
   private static async validateGovernmentDomain(email: string): Promise<boolean> {
     const domain = email.split('@')[1];
+    if (!domain) return false;
+    
     const governmentDomains = [
       'gov', 'mil', 'us', 'ca.gov', 'ny.gov', 'tx.gov', 'fl.gov'
     ];
@@ -744,7 +749,7 @@ export class CandidateVerificationSystem {
     devLog('Sending verification email to:', email, 'with code:', code);
   }
 
-  private static async storeVerificationAttempt(candidateId: string, method: string, data: any): Promise<void> {
+  private static async storeVerificationAttempt(candidateId: string, method: string, data: VerificationAttemptData): Promise<void> {
     devLog('Storing verification attempt:', { candidateId, method, data });
   }
 
@@ -757,7 +762,7 @@ export class CandidateVerificationSystem {
     }
   }
 
-  private static async verifyWebsiteOwnership(websiteUrl: string, candidateId: string): Promise<boolean> {
+  private static async verifyWebsiteOwnership(_websiteUrl: string, _candidateId: string): Promise<boolean> {
     // Mock implementation - would check for verification file or meta tag
     return true;
   }
@@ -766,7 +771,7 @@ export class CandidateVerificationSystem {
     devLog('Updating candidate verification:', { candidateId, verification });
   }
 
-  private static async getCandidate(candidateId: string): Promise<Candidate | null> {
+  private static async getCandidate(_candidateId: string): Promise<Candidate | null> {
     // Mock implementation
     return null;
   }
@@ -776,8 +781,10 @@ export class CandidateVerificationSystem {
 // EXPORTED CLASSES
 // ============================================================================
 
-export default {
+const candidateTools = {
   EqualPlatformProfileManager,
   CampaignDashboardManager,
   CandidateVerificationSystem
 };
+
+export default candidateTools;

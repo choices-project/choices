@@ -3,6 +3,7 @@
 
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 import { devLog } from '@/lib/logger';
+import { withOptional } from '@/lib/util/objects';
 // ============================================================================
 // CORE INTERFACES
 // ============================================================================
@@ -656,7 +657,7 @@ export class PollNarrativeService {
   }
 
   private mapVerificationRequestFromDB(data: any): FactVerificationRequest {
-    return {
+    return withOptional({
       id: data.id,
       factId: data.fact_id,
       requesterId: data.requester_id,
@@ -666,9 +667,10 @@ export class PollNarrativeService {
       status: data.status,
       assignedTo: data.assigned_to,
       createdAt: new Date(data.created_at),
-      completedAt: data.completed_at ? new Date(data.completed_at) : undefined,
       result: data.result
-    };
+    }, {
+      completedAt: data.completed_at ? new Date(data.completed_at) : undefined
+    }) as FactVerificationRequest;
   }
 }
 

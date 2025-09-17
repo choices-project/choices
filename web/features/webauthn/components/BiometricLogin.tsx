@@ -91,7 +91,7 @@ export default function BiometricLogin({ onSuccess, onError, onCancel }: Biometr
         const user = { 
           id: 'authenticated-user', // Use a default ID since result doesn't have userId
           email: username.trim(),
-          username: username.trim().split('@')[0]
+          username: username.trim().split('@')[0] || username.trim()
         }
         // Biometric authentication successful
         devLog('Biometric authentication successful');

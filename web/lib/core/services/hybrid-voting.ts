@@ -4,6 +4,7 @@
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 import { PrivacyLevel } from '@/lib/privacy/hybrid-privacy'
 import { devLog } from '@/lib/logger'
+import type { SupabaseClient } from '@supabase/supabase-js'
 
 export interface VoteRequest {
   pollId: string;
@@ -30,10 +31,15 @@ export interface VoteValidation {
 }
 
 export class HybridVotingService {
-  private supabase: any;
+  private supabase: Awaited<ReturnType<typeof getSupabaseServerClient>> | null = null;
 
   constructor() {
-    this.supabase = getSupabaseServerClient();
+    // Initialize supabase client in constructor
+    this.initializeSupabase();
+  }
+
+  private async initializeSupabase() {
+    this.supabase = await getSupabaseServerClient();
   }
 
   /**
@@ -57,30 +63,37 @@ export class HybridVotingService {
       };
     }
 
+    // Type assertion for poll settings
+    const settings = pollSettings as {
+      privacy_level: string;
+      requires_authentication: boolean;
+      uses_blinded_tokens: boolean;
+    };
+
     // Check if privacy level matches poll settings
-    if (pollSettings.privacy_level !== request.privacyLevel) {
+    if (settings.privacy_level !== request.privacyLevel) {
       return {
         isValid: false,
-        error: `Poll requires ${pollSettings.privacy_level} privacy level`,
-        requiresAuthentication: pollSettings.requires_authentication,
-        requiresTokens: pollSettings.uses_blinded_tokens
+        error: `Poll requires ${settings.privacy_level} privacy level`,
+        requiresAuthentication: settings.requires_authentication,
+        requiresTokens: settings.uses_blinded_tokens
       };
     }
 
     // Check authentication requirements
-    if (pollSettings.requires_authentication && !userId) {
+    if (settings.requires_authentication && !userId) {
       return {
         isValid: false,
         error: 'Authentication required for this privacy level',
         requiresAuthentication: true,
-        requiresTokens: pollSettings.uses_blinded_tokens
+        requiresTokens: settings.uses_blinded_tokens
       };
     }
 
     return {
       isValid: true,
-      requiresAuthentication: pollSettings.requires_authentication,
-      requiresTokens: pollSettings.uses_blinded_tokens
+      requiresAuthentication: settings.requires_authentication,
+      requiresTokens: settings.uses_blinded_tokens
     };
   }
 
@@ -121,7 +134,7 @@ export class HybridVotingService {
     } catch (error) {
       return {
         success: false,
-        message: error instanceof Error ? error instanceof Error ? error instanceof Error ? error.message : "Unknown error" : "Unknown error" : 'Vote submission failed',
+        message: error instanceof Error ? error.message : 'Vote submission failed',
         pollId,
         privacyLevel: request.privacyLevel,
         responseTime: Date.now() - startTime
@@ -156,7 +169,7 @@ export class HybridVotingService {
       .single();
 
     if (error) {
-      throw new Error(`Failed to submit public vote: ${error instanceof Error ? error instanceof Error ? error.message : "Unknown error" : "Unknown error"}`);
+      throw new Error(`Failed to submit public vote: ${error instanceof Error ? error.message : "Unknown error"}`);
     }
 
     // Update poll vote count
@@ -224,7 +237,7 @@ export class HybridVotingService {
       .single();
 
     if (error) {
-      throw new Error(`Failed to submit private vote: ${error instanceof Error ? error instanceof Error ? error.message : "Unknown error" : "Unknown error"}`);
+      throw new Error(`Failed to submit private vote: ${error instanceof Error ? error.message : "Unknown error"}`);
     }
 
     // Update poll vote count
@@ -270,7 +283,7 @@ export class HybridVotingService {
         responseTime: Date.now() - startTime
       };
     } catch (error) {
-      throw new Error(`High-privacy vote failed: ${error instanceof Error ? error instanceof Error ? error instanceof Error ? error.message : "Unknown error" : "Unknown error" : 'Unknown error'}`);
+      throw new Error(`High-privacy vote failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 

@@ -7,7 +7,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { ElectoralFeedService } from '@/lib/electoral/feed-service';
-import { JurisdictionID } from '@/lib/privacy/location-resolver';
+import type { JurisdictionID } from '@/lib/privacy/location-resolver';
 import { logger } from '@/lib/logger';
 
 const feedService = new ElectoralFeedService();

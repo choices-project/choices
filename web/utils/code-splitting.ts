@@ -6,7 +6,8 @@
  */
 
 import * as React from 'react';
-import { ComponentType, lazy } from 'react';
+import { lazy } from 'react';
+import type { ComponentType } from 'react';
 import { performanceMetrics } from '../lib/performance/performance-metrics';
 
 interface CodeSplittingOptions {

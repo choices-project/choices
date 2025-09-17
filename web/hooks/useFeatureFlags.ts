@@ -65,11 +65,16 @@ export function useFeatureFlags(): UseFeatureFlagsReturn {
     setLoading(false);
 
     // Subscribe to flag changes
-    const unsubscribe = featureFlagManager.subscribe((newFlags) => {
-      setFlags(new Map(newFlags));
+    const subscription = featureFlagManager.subscribe((newFlags) => {
+      setFlags(new Map(Object.entries(newFlags).map(([key, enabled]) => [key, {
+        id: key,
+        name: key.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase()),
+        enabled,
+        description: `Feature flag for ${key.toLowerCase().replace(/_/g, ' ')}`
+      }])));
     });
 
-    return unsubscribe;
+    return subscription.unsubscribe;
   }, []);
 
   // Memoized functions to prevent unnecessary re-renders
@@ -94,7 +99,7 @@ export function useFeatureFlags(): UseFeatureFlagsReturn {
   }, []);
 
   const getFlag = useCallback((flagId: string): FeatureFlag | undefined => {
-    return featureFlagManager.getFlag(flagId);
+    return featureFlagManager.getFlag(flagId) || undefined;
   }, []);
 
   const getAllFlags = useCallback((): Map<string, FeatureFlag> => {

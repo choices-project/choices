@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { devLog } from '@/lib/logger'
 import { getFeedbackTracker } from '@/lib/admin/feedback-tracker'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence } from '@/components/motion/Motion'
 import { 
   MessageCircle, 
   X, 
@@ -102,7 +102,13 @@ const EnhancedFeedbackWidget: React.FC = () => {
     setCapturingScreenshot(true)
     try {
       const screenshot = await feedbackTracker.captureScreenshot()
-      setFeedback(prev => ({ ...prev, screenshot }))
+      setFeedback(prev => {
+        const newFeedback = { ...prev };
+        if (screenshot !== undefined) {
+          newFeedback.screenshot = screenshot;
+        }
+        return newFeedback;
+      })
     } catch (error) {
       devLog('Failed to capture screenshot:', error)
     } finally {
@@ -247,7 +253,7 @@ const EnhancedFeedbackWidget: React.FC = () => {
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.8, opacity: 0 }}
-              onClick={(e) => e.stopPropagation()}
+              onClick={(e: React.MouseEvent) => e.stopPropagation()}
             >
               {/* Header */}
               <div className="flex items-center justify-between p-6 border-b border-gray-100">

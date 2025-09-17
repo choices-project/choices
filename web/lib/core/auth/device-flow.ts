@@ -19,6 +19,9 @@
 
 import { getSupabaseServerClient } from '@/utils/supabase/server'
 import { logger } from '@/lib/logger'
+import { withOptional } from '@/lib/util/objects'
+import type { Session } from '@supabase/supabase-js'
+import type { DeviceFlowRecord } from './types'
 
 export interface DeviceFlowState {
   deviceCode: string
@@ -52,7 +55,7 @@ export interface DeviceFlowResponse {
 export interface DeviceFlowVerification {
   success: boolean
   userId?: string
-  session?: any
+  session?: Session
   error?: string
 }
 
@@ -77,7 +80,10 @@ export class DeviceFlowManager {
     
     let result = ''
     for (let i = 0; i < this.CODE_LENGTH; i++) {
-      result += chars[array[i] % chars.length]
+      const value = array[i]
+      if (value !== undefined) {
+        result += chars[value % chars.length]
+      }
     }
     
     return result
@@ -126,7 +132,7 @@ export class DeviceFlowManager {
           client_ip: clientIp,
           redirect_to: request.redirectTo || '/dashboard',
           scopes: request.scopes || []
-        } as any)
+        })
 
       if (insertError) {
         logger.error('Failed to create device flow', new Error(insertError.message))
@@ -175,7 +181,7 @@ export class DeviceFlowManager {
       const { data: deviceFlow, error: fetchError } = await supabaseClient
         .from('device_flows')
         .select('*')
-        .eq('device_code', deviceCode as any)
+        .eq('device_code', deviceCode)
         .single()
 
       if (fetchError || !deviceFlow) {
@@ -186,7 +192,7 @@ export class DeviceFlowManager {
       }
 
       // Check if expired
-      if (deviceFlow && !('error' in deviceFlow) && new Date() > new Date((deviceFlow as any).expires_at)) {
+      if (deviceFlow && !('error' in deviceFlow) && new Date() > new Date((deviceFlow as DeviceFlowRecord).expires_at)) {
         await this.markDeviceFlowExpired(deviceCode)
         return {
           success: false,
@@ -195,7 +201,7 @@ export class DeviceFlowManager {
       }
 
       // Check if completed
-      if (deviceFlow && !('error' in deviceFlow) && (deviceFlow as any).status === 'completed' && (deviceFlow as any).user_id) {
+      if (deviceFlow && !('error' in deviceFlow) && (deviceFlow as DeviceFlowRecord).status === 'completed' && (deviceFlow as DeviceFlowRecord).user_id) {
         // Get user session
         const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession()
         
@@ -209,15 +215,16 @@ export class DeviceFlowManager {
         // Log successful verification
         logger.info('Device flow verified successfully', {
           deviceCode,
-          userId: (deviceFlow as any).user_id,
-          provider: (deviceFlow as any).provider
+          userId: (deviceFlow as DeviceFlowRecord).user_id,
+          provider: (deviceFlow as DeviceFlowRecord).provider
         })
 
-        return {
+        return withOptional({
           success: true,
-          userId: (deviceFlow as any).user_id,
           session
-        }
+        }, {
+          userId: (deviceFlow as DeviceFlowRecord).user_id
+        })
       }
 
       // Still pending
@@ -253,9 +260,9 @@ export class DeviceFlowManager {
           status: 'completed',
           user_id: userId,
           completed_at: new Date().toISOString()
-        } as any)
-        .eq('user_code', userCode as any)
-        .eq('status', 'pending' as any)
+        })
+        .eq('user_code', userCode)
+        .eq('status', 'pending')
 
       if (updateError) {
         logger.error('Failed to complete device flow', new Error(updateError.message))
@@ -282,9 +289,9 @@ export class DeviceFlowManager {
       const supabaseClient = await supabase
       await supabaseClient
         .from('device_flows')
-        .update({ status: 'expired' } as any)
-        .eq('device_code', deviceCode as any)
-        .eq('status', 'pending' as any)
+        .update({ status: 'expired' })
+        .eq('device_code', deviceCode)
+        .eq('status', 'pending')
 
     } catch (error) {
       logger.error('Failed to mark device flow as expired', error instanceof Error ? error : new Error('Unknown error'))
@@ -294,7 +301,7 @@ export class DeviceFlowManager {
   /**
    * Get active device flows for IP address (rate limiting)
    */
-  private static async getActiveFlowsForIP(clientIp: string): Promise<any[]> {
+  private static async getActiveFlowsForIP(clientIp: string): Promise<DeviceFlowRecord[]> {
     try {
       const supabase = getSupabaseServerClient()
       if (!supabase) return []
@@ -303,8 +310,8 @@ export class DeviceFlowManager {
       const { data: flows } = await supabaseClient
         .from('device_flows')
         .select('*')
-        .eq('client_ip', clientIp as any)
-        .eq('status', 'pending' as any)
+        .eq('client_ip', clientIp)
+        .eq('status', 'pending')
         .gte('expires_at', new Date().toISOString())
 
       return flows || []

@@ -19,12 +19,12 @@
       "@/utils/supabase/server": ["./utils/supabase/server"],
       "@/lib/supabase/server": ["./utils/supabase/server"]
     },
-    /* Relax these in base to get builds unblocked */
-    /* Keep them ON in strict config below */
-    "noUncheckedIndexedAccess": false,
-    "exactOptionalPropertyTypes": false,
-    "noImplicitOverride": false,
-    "verbatimModuleSyntax": false
+    /* Stricter TypeScript settings for better type safety */
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "noImplicitOverride": true,
+    "verbatimModuleSyntax": true,
+    "useUnknownInCatchVariables": true
   },
   "include": ["next-env.d.ts", ".next/types/**/*.ts", "**/*.ts", "**/*.tsx"],
   "exclude": ["node_modules"]

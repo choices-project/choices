@@ -11,6 +11,8 @@
 
 import { logger } from '@/lib/logger'
 import { getSupabaseServerClient } from '@/utils/supabase/server'
+import { withOptional } from '@/lib/util/objects'
+import type { SupabaseClient } from '@supabase/supabase-js'
 
 export interface IdempotencyResult<T> {
   success: boolean
@@ -30,7 +32,7 @@ const DEFAULT_OPTIONS: Required<IdempotencyOptions> = {
 }
 
 // Initialize Supabase client for idempotency storage
-let supabase: any = null
+let supabase: SupabaseClient | null = null
 
 const getSupabase = async () => {
   if (!supabase) {
@@ -56,15 +58,19 @@ export function createIdempotencyKey(key: string, namespace: string = DEFAULT_OP
 /**
  * Check if idempotency key exists and is valid
  */
-export async function checkIdempotencyKey(
+export async function checkIdempotencyKey<T = unknown>(
   key: string, 
   options: IdempotencyOptions = {}
-): Promise<{ exists: boolean; data?: any; error?: string }> {
+): Promise<{ exists: boolean; data?: T; error?: string }> {
   const opts = { ...DEFAULT_OPTIONS, ...options }
   const fullKey = createIdempotencyKey(key, opts.namespace)
 
   try {
     const supabaseClient = await getSupabase()
+    if (!supabaseClient) {
+      return { exists: false, error: 'Failed to initialize Supabase client' }
+    }
+    
     const { data, error } = await supabaseClient
       .from('idempotency_keys')
       .select('*')
@@ -90,9 +96,9 @@ export async function checkIdempotencyKey(
 /**
  * Store idempotency key with result data
  */
-export async function storeIdempotencyKey(
+export async function storeIdempotencyKey<T = unknown>(
   key: string,
-  resultData: any,
+  resultData: T,
   options: IdempotencyOptions = {}
 ): Promise<{ success: boolean; error?: string }> {
   const opts = { ...DEFAULT_OPTIONS, ...options }
@@ -101,6 +107,10 @@ export async function storeIdempotencyKey(
 
   try {
     const supabaseClient = await getSupabase()
+    if (!supabaseClient) {
+      return { success: false, error: 'Failed to initialize Supabase client' }
+    }
+    
     const { error } = await supabaseClient
       .from('idempotency_keys')
       .insert({
@@ -134,7 +144,7 @@ export async function withIdempotency<T>(
   const opts = { ...DEFAULT_OPTIONS, ...options }
 
   // Check if key already exists
-  const checkResult = await checkIdempotencyKey(key, opts)
+  const checkResult = await checkIdempotencyKey<T>(key, opts)
   
   if (checkResult.error) {
     return {
@@ -146,11 +156,12 @@ export async function withIdempotency<T>(
 
   if (checkResult.exists) {
     logger.info('Idempotency key found, returning cached result', { key })
-    return {
+    return withOptional({
       success: true,
-      data: checkResult.data,
       isDuplicate: true
-    }
+    }, {
+      data: checkResult.data
+    })
   }
 
   // Execute operation
@@ -187,7 +198,12 @@ export async function withIdempotency<T>(
  */
 export async function cleanupExpiredIdempotencyKeys(): Promise<{ deleted: number; error?: string }> {
   try {
-    const { count, error } = await supabase
+    const client = await getSupabase()
+    if (!client) {
+      return { deleted: 0, error: 'Failed to initialize Supabase client' }
+    }
+    
+    const { count, error } = await client
       .from('idempotency_keys')
       .delete()
       .lt('expires_at', new Date().toISOString())
@@ -227,9 +243,14 @@ export async function getIdempotencyStats(): Promise<{
   error?: string
 }> {
   try {
+    const client = await getSupabase()
+    if (!client) {
+      return { total: 0, expired: 0, active: 0, error: 'Failed to initialize Supabase client' }
+    }
+    
     const now = new Date().toISOString()
     
-    const { count: total, error: totalError } = await supabase
+    const { count: total, error: totalError } = await client
       .from('idempotency_keys')
       .select('*', { count: 'exact', head: true })
 
@@ -238,7 +259,7 @@ export async function getIdempotencyStats(): Promise<{
       return { total: 0, expired: 0, active: 0, error: 'Query failed' }
     }
 
-    const { count: expired, error: expiredError } = await supabase
+    const { count: expired, error: expiredError } = await client
       .from('idempotency_keys')
       .select('*', { count: 'exact', head: true })
       .lt('expires_at', now)

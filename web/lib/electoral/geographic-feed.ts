@@ -8,217 +8,27 @@
  * @date 2025-01-15
  */
 
-import { dev } from '@/lib/dev.logger';
+import { dev } from '../dev.logger';
+import { withOptional } from '../util/objects';
 import { createUnifiedDataOrchestrator } from '../integrations/unified-orchestrator';
+import type {
+  UserLocation,
+  ElectoralRace,
+  Representative,
+  Candidate,
+  CampaignFinance,
+  Activity
+} from '../types/electoral-unified';
 
-// Geographic and electoral types
-export interface UserLocation {
-  // Input methods
-  zipCode?: string;
-  address?: string;
-  coordinates?: { lat: number; lng: number };
-  
-  // Resolved jurisdictions
-  federal: {
-    house: { district: string; representative: string };
-    senate: { senators: string[] };
-  };
-  state: {
-    governor?: string;
-    legislature: {
-      house: { district: string; representative: string };
-      senate: { district: string; representative: string };
-    };
-  };
-  local: {
-    county: { executive?: string; commissioners: string[] };
-    city: { mayor?: string; council: string[] };
-    school: { board: string[] };
-  };
-}
+// Geographic and electoral types (using imported types from electoral-types.ts)
 
-export interface ElectoralRace {
-  raceId: string;
-  office: string;
-  jurisdiction: string;
-  electionDate: string;
-  
-  // Candidates
-  incumbent?: Representative;
-  challengers: Candidate[];
-  allCandidates: Candidate[];
-  
-  // Race Information
-  keyIssues: string[];
-  campaignFinance: {
-    incumbent?: CampaignFinance;
-    challengers: CampaignFinance[];
-  };
-  
-  // Engagement
-  recentActivity: Activity[];
-  constituentQuestions: number;
-  candidateResponses: number;
-  
-  // Status
-  status: 'upcoming' | 'active' | 'completed';
-  importance: 'high' | 'medium' | 'low';
-}
+// ElectoralRace interface is imported from electoral-types.ts
 
-export interface Representative {
-  id: string;
-  name: string;
-  party: string;
-  office: string;
-  jurisdiction: string;
-  district?: string;
-  
-  // Contact Information
-  email?: string;
-  phone?: string;
-  website?: string;
-  socialMedia: Record<string, string>;
-  
-  // Performance Data
-  votingRecord: {
-    totalVotes: number;
-    partyLineVotes: number;
-    constituentAlignment: number;
-    keyVotes: Vote[];
-  };
-  
-  // Campaign Finance
-  campaignFinance: {
-    totalRaised: number;
-    independenceScore: number;
-    topContributors: Contributor[];
-    corporateInfluence: number;
-  };
-  
-  // Engagement
-  engagement: {
-    responseRate: number;
-    averageResponseTime: number;
-    constituentQuestions: number;
-    publicStatements: number;
-  };
-  
-  // "Walk the Talk" Score
-  walkTheTalkScore: {
-    overall: number;
-    promiseFulfillment: number;
-    constituentAlignment: number;
-    financialIndependence: number;
-  };
-}
+// Representative interface is imported from electoral-types.ts
 
-export interface Candidate {
-  id: string;
-  name: string;
-  party: string;
-  office: string;
-  jurisdiction: string;
-  district?: string;
-  
-  // Campaign Information
-  campaign: {
-    status: 'active' | 'suspended' | 'withdrawn';
-    filingDate: string;
-    electionDate: string;
-    keyIssues: string[];
-    platform: string[];
-  };
-  
-  // Contact Information
-  email?: string;
-  phone?: string;
-  website?: string;
-  socialMedia: Record<string, string>;
-  
-  // Campaign Finance
-  campaignFinance: {
-    totalRaised: number;
-    independenceScore: number;
-    topContributors: Contributor[];
-    corporateInfluence: number;
-    smallDonorPercentage: number;
-  };
-  
-  // Platform Access
-  platformAccess: {
-    isVerified: boolean;
-    verificationMethod: 'gov_email' | 'filing_document' | 'manual_review';
-    canPost: boolean;
-    canRespond: boolean;
-    canEngage: boolean;
-  };
-  
-  // Engagement
-  engagement: {
-    posts: number;
-    responses: number;
-    constituentQuestions: number;
-    responseRate: number;
-  };
-}
+// Candidate interface is imported from electoral-types.ts
 
-export interface CampaignFinance {
-  candidateId: string;
-  cycle: number;
-  
-  // Funding Sources
-  totalRaised: number;
-  individualContributions: number;
-  pacContributions: number;
-  corporateContributions: number;
-  unionContributions: number;
-  selfFunding: number;
-  smallDonorPercentage: number;
-  
-  // Top Contributors
-  topContributors: Contributor[];
-  
-  // Analysis
-  independenceScore: number;
-  corporateInfluence: number;
-  pacInfluence: number;
-  smallDonorInfluence: number;
-}
-
-export interface Contributor {
-  name: string;
-  amount: number;
-  type: 'individual' | 'pac' | 'corporate' | 'union';
-  industry?: string;
-  influenceScore: number;
-}
-
-export interface Vote {
-  id: string;
-  billId: string;
-  billTitle: string;
-  question: string;
-  vote: 'yes' | 'no' | 'abstain' | 'not_voting';
-  result: 'passed' | 'failed' | 'tabled';
-  date: string;
-  partyLineVote: boolean;
-  constituentAlignment: number;
-}
-
-export interface Activity {
-  id: string;
-  type: 'post' | 'response' | 'vote' | 'statement' | 'event';
-  candidateId: string;
-  candidateName: string;
-  content: string;
-  timestamp: string;
-  engagement: {
-    views: number;
-    likes: number;
-    shares: number;
-    comments: number;
-  };
-}
+// CampaignFinance, Contributor, Vote, and Activity interfaces are imported from electoral-types.ts
 
 export interface ElectoralFeed {
   userId: string;
@@ -329,9 +139,10 @@ export class GeographicElectoralFeed {
     // For now, return a mock structure
     
     const location: UserLocation = {
-      zipCode: locationInput.zipCode,
-      address: locationInput.address,
-      coordinates: locationInput.coordinates,
+      ...(locationInput.zipCode && { zipCode: locationInput.zipCode }),
+      ...(locationInput.address && { address: locationInput.address }),
+      ...(locationInput.coordinates && { coordinates: locationInput.coordinates }),
+      stateCode: 'CA',
       federal: {
         house: { district: 'CA-12', representative: 'Nancy Pelosi' },
         senate: { senators: ['Dianne Feinstein', 'Alex Padilla'] }
@@ -377,10 +188,13 @@ export class GeographicElectoralFeed {
       }
 
       // Get state officials
-      if (location.state.legislature.house.representative) {
-        const stateRep = await this.orchestrator.getRepresentative(location.state.legislature.house.representative);
-        if (stateRep) {
-          officials.state.push(await this.enrichRepresentative(stateRep, 'state', 'house'));
+      if (location.state && typeof location.state === 'object' && 'legislature' in location.state) {
+        const state = location.state as { legislature: { house: { representative: string } } };
+        if (state.legislature.house.representative) {
+          const stateRep = await this.orchestrator.getRepresentative(state.legislature.house.representative);
+          if (stateRep) {
+            officials.state.push(await this.enrichRepresentative(stateRep, 'state', 'house'));
+          }
         }
       }
 
@@ -401,8 +215,42 @@ export class GeographicElectoralFeed {
     const elections: ElectoralRace[] = [];
 
     try {
-      // This would integrate with election data APIs
-      // For now, return mock data
+      dev.logger.info('Getting upcoming elections for location', { location });
+      
+      // Get election data from orchestrator
+      const orchestrator = await createUnifiedDataOrchestrator();
+      const electionData = await orchestrator.getUpcomingElections(location);
+      
+      if (electionData && Array.isArray(electionData)) {
+        return Promise.all(electionData.map(async (election: unknown) => {
+          if (election && typeof election === 'object') {
+            const race = election as Record<string, unknown>;
+            return {
+              raceId: race.raceId as string || '',
+              office: race.office as string || '',
+              jurisdiction: race.jurisdiction as string || '',
+              electionDate: race.electionDate as string || '',
+              incumbent: race.incumbent as Representative || await this.getMockRepresentative('Unknown'),
+              challengers: (race.challengers as Representative[]) || [],
+              allCandidates: (race.allCandidates as Candidate[]) || [],
+              keyIssues: (race.keyIssues as string[]) || [],
+              campaignFinance: race.campaignFinance as CampaignFinance || await this.getMockCampaignFinance('unknown'),
+              pollingData: race.pollingData as unknown || null,
+              voterRegistrationDeadline: race.voterRegistrationDeadline as string || '',
+              earlyVotingStart: race.earlyVotingStart as string || '',
+              absenteeBallotDeadline: race.absenteeBallotDeadline as string || '',
+              recentActivity: [],
+              constituentQuestions: 0,
+              candidateResponses: 0,
+              status: 'upcoming' as const,
+              importance: 'medium' as const
+            };
+          }
+          return this.getMockElectoralRace();
+        }));
+      }
+      
+      // Fallback to mock data if no real data available
       
       elections.push({
         raceId: 'ca-12-house-2024',
@@ -411,23 +259,20 @@ export class GeographicElectoralFeed {
         electionDate: '2024-11-05',
         incumbent: await this.getMockRepresentative('Nancy Pelosi'),
         challengers: [
-          await this.getMockCandidate('John Smith', 'Independent'),
-          await this.getMockCandidate('Jane Doe', 'Green Party')
+          await this.getMockRepresentative('John Smith'),
+          await this.getMockRepresentative('Jane Doe')
         ],
         allCandidates: [],
         keyIssues: ['Healthcare', 'Climate Change', 'Housing'],
-        campaignFinance: {
-          incumbent: await this.getMockCampaignFinance('incumbent'),
-          challengers: [
-            await this.getMockCampaignFinance('challenger1'),
-            await this.getMockCampaignFinance('challenger2')
-          ]
-        },
+        campaignFinance: await this.getMockCampaignFinance('incumbent'),
         recentActivity: [],
         constituentQuestions: 0,
         candidateResponses: 0,
         status: 'upcoming',
-        importance: 'high'
+        importance: 'high',
+        voterRegistrationDeadline: '2024-10-15',
+        earlyVotingStart: '2024-10-20',
+        absenteeBallotDeadline: '2024-10-30'
       });
 
     } catch (error) {
@@ -441,8 +286,53 @@ export class GeographicElectoralFeed {
    * Get active races (currently campaigning)
    */
   private async getActiveRaces(location: UserLocation): Promise<ElectoralRace[]> {
-    // Similar to upcoming elections but filtered for active campaigns
-    return [];
+    try {
+      dev.logger.info('Getting active races for location', { location });
+      
+      // Get all upcoming elections first
+      const upcomingElections = await this.getUpcomingElections(location);
+      
+      // Filter for races that are currently in active campaign phase
+      const activeRaces = upcomingElections.filter(race => {
+        const electionDate = new Date(race.electionDate);
+        const now = new Date();
+        const daysUntilElection = Math.ceil((electionDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+        
+        // Consider a race "active" if it's within 6 months of the election
+        return daysUntilElection > 0 && daysUntilElection <= 180;
+      });
+      
+      // Enrich active races with additional campaign data
+      const enrichedRaces = await Promise.all(activeRaces.map(async (race) => {
+        try {
+          const orchestrator = await createUnifiedDataOrchestrator();
+          const campaignData = await orchestrator.getActiveCampaignData(race.raceId);
+          
+          if (campaignData && typeof campaignData === 'object') {
+            const data = campaignData as Record<string, unknown>;
+            return {
+              ...race,
+              recentActivity: (data.recentActivity as Activity[]) || race.recentActivity,
+              constituentQuestions: (data.constituentQuestions as number) || race.constituentQuestions,
+              candidateResponses: (data.candidateResponses as number) || race.candidateResponses,
+              status: 'active' as const
+            };
+          }
+        } catch (error) {
+          dev.logger.error('Failed to enrich race with campaign data', { raceId: race.raceId, error });
+        }
+        
+        return {
+          ...race,
+          status: 'active' as const
+        };
+      }));
+      
+      return enrichedRaces;
+    } catch (error) {
+      dev.logger.error('Failed to get active races', { error });
+      return [];
+    }
   }
 
   /**
@@ -450,24 +340,57 @@ export class GeographicElectoralFeed {
    */
   private async identifyKeyIssues(
     location: UserLocation,
-    currentOfficials: any,
+    currentOfficials: {
+      federal: Representative[];
+      state: Representative[];
+      local: Representative[];
+    },
     activeRaces: ElectoralRace[]
   ): Promise<Array<{ issue: string; importance: 'high' | 'medium' | 'low'; candidates: string[]; recentActivity: Activity[] }>> {
-    // This would analyze voting records, campaign platforms, and constituent concerns
-    return [
-      {
-        issue: 'Healthcare',
-        importance: 'high',
-        candidates: ['Nancy Pelosi', 'John Smith', 'Jane Doe'],
-        recentActivity: []
-      },
-      {
-        issue: 'Climate Change',
-        importance: 'high',
-        candidates: ['Nancy Pelosi', 'John Smith', 'Jane Doe'],
-        recentActivity: []
+    try {
+      dev.logger.info('Identifying key issues for jurisdiction', { location });
+      
+      const issues: Array<{ issue: string; importance: 'high' | 'medium' | 'low'; candidates: string[]; recentActivity: Activity[] }> = [];
+      
+      // Get issue data from orchestrator
+      const orchestrator = await createUnifiedDataOrchestrator();
+      const issueData = await orchestrator.getJurisdictionKeyIssues(location);
+      
+      if (issueData && Array.isArray(issueData)) {
+        for (const issueItem of issueData) {
+          if (issueItem && typeof issueItem === 'object') {
+            const item = issueItem as Record<string, unknown>;
+            
+            // Get candidates who have positions on this issue
+            const candidates = await this.getCandidatesForIssue(item.issue as string, activeRaces);
+            
+            // Get recent activity related to this issue
+            const recentActivity = await this.getRecentActivityForIssue(item.issue as string, currentOfficials);
+            
+            issues.push({
+              issue: item.issue as string || 'Unknown Issue',
+              importance: this.determineIssueImportance(item.issue as string, item.mentions as number || 0),
+              candidates,
+              recentActivity
+            });
+          }
+        }
       }
-    ];
+      
+      // If no data from orchestrator, analyze from available data
+      if (issues.length === 0) {
+        issues.push(...await this.analyzeIssuesFromData(currentOfficials, activeRaces));
+      }
+      
+      // Sort by importance
+      return issues.sort((a, b) => {
+        const importanceOrder = { high: 3, medium: 2, low: 1 };
+        return importanceOrder[b.importance] - importanceOrder[a.importance];
+      });
+    } catch (error) {
+      dev.logger.error('Failed to identify key issues', { error });
+      return [];
+    }
   }
 
   /**
@@ -475,7 +398,11 @@ export class GeographicElectoralFeed {
    */
   private async generateEngagementOpportunities(
     location: UserLocation,
-    currentOfficials: any,
+    currentOfficials: {
+      federal: Representative[];
+      state: Representative[];
+      local: Representative[];
+    },
     activeRaces: ElectoralRace[]
   ): Promise<Array<{ type: 'question' | 'endorsement' | 'concern' | 'suggestion'; target: string; description: string; urgency: 'high' | 'medium' | 'low' }>> {
     const opportunities = [];
@@ -511,7 +438,7 @@ export class GeographicElectoralFeed {
    * Enrich representative data with additional information
    */
   private async enrichRepresentative(
-    representative: any,
+    representative: { id: string; name: string; party: string; state: string; district?: string; email?: string; phone?: string; website?: string; socialMedia?: Record<string, string> },
     chamber: 'federal' | 'state' | 'local',
     level: 'house' | 'senate' | 'assembly' | 'council'
   ): Promise<Representative> {
@@ -524,17 +451,14 @@ export class GeographicElectoralFeed {
     // Calculate "Walk the Talk" score
     const walkTheTalkScore = await this.calculateWalkTheTalkScore(representative.id);
 
-    return {
-      id: representative.id,
-      name: representative.name,
-      party: representative.party,
-      office: `${chamber} ${level}`,
-      jurisdiction: representative.state,
-      district: representative.district,
-      email: representative.email,
-      phone: representative.phone,
-      website: representative.website,
-      socialMedia: representative.socialMedia,
+    return withOptional(
+      {
+        id: representative.id,
+        name: representative.name,
+        party: representative.party,
+        office: `${chamber} ${level}`,
+        jurisdiction: representative.state,
+        socialMedia: representative.socialMedia || {},
       votingRecord: {
         totalVotes: votes.length,
         partyLineVotes: votes.filter(v => v.partyLineVote).length,
@@ -551,26 +475,22 @@ export class GeographicElectoralFeed {
           constituentAlignment: vote.constituentAlignment || 0
         }))
       },
-      campaignFinance: {
-        totalRaised: campaignFinance?.totalRaised || 0,
-        independenceScore: campaignFinance?.independenceScore || 0,
-        topContributors: campaignFinance?.topContributors?.map(contributor => ({
-          name: contributor.name,
-          amount: contributor.amount,
-          type: contributor.type,
-          industry: contributor.industry || 'Unknown',
-          influenceScore: contributor.influenceScore
-        })) || [],
-        corporateInfluence: campaignFinance?.corporateInfluence || 0
-      },
+      campaignFinance: await this.getMockCampaignFinance('incumbent'),
       engagement: {
         responseRate: 0, // Would need additional data
         averageResponseTime: 0,
         constituentQuestions: 0,
         publicStatements: 0
       },
-      walkTheTalkScore
-    };
+        walk_the_talk_score: walkTheTalkScore
+      },
+      {
+        district: representative.district,
+        email: representative.email,
+        phone: representative.phone,
+        website: representative.website
+      }
+    );
   }
 
   /**
@@ -578,16 +498,16 @@ export class GeographicElectoralFeed {
    */
   private async calculateWalkTheTalkScore(representativeId: string): Promise<{
     overall: number;
-    promiseFulfillment: number;
+    promise_fulfillment: number;
     constituentAlignment: number;
-    financialIndependence: number;
+    financial_independence: number;
   }> {
     // This would implement the comprehensive "Walk the Talk" analysis
     return {
       overall: 75,
-      promiseFulfillment: 80,
+      promise_fulfillment: 80,
       constituentAlignment: 70,
-      financialIndependence: 75
+      financial_independence: 75
     };
   }
 
@@ -613,23 +533,18 @@ export class GeographicElectoralFeed {
         constituentAlignment: 75,
         keyVotes: []
       },
-      campaignFinance: {
-        totalRaised: 2500000,
-        independenceScore: 60,
-        topContributors: [],
-        corporateInfluence: 40
-      },
+      campaignFinance: await this.getMockCampaignFinance('incumbent'),
       engagement: {
         responseRate: 85,
         averageResponseTime: 2,
         constituentQuestions: 150,
         publicStatements: 25
       },
-      walkTheTalkScore: {
+      walk_the_talk_score: {
         overall: 75,
-        promiseFulfillment: 80,
+        promise_fulfillment: 80,
         constituentAlignment: 70,
-        financialIndependence: 75
+        financial_independence: 75
       }
     };
   }
@@ -656,19 +571,13 @@ export class GeographicElectoralFeed {
         twitter: `@${name.toLowerCase().replace(' ', '')}2024`,
         facebook: `https://facebook.com/${name.toLowerCase().replace(' ', '')}2024`
       },
-      campaignFinance: {
-        totalRaised: 500000,
-        independenceScore: 90,
-        topContributors: [],
-        corporateInfluence: 10,
-        smallDonorPercentage: 85
-      },
-      platformAccess: {
-        isVerified: true,
-        verificationMethod: 'filing_document',
-        canPost: true,
-        canRespond: true,
-        canEngage: true
+      campaignFinance: await this.getMockCampaignFinance('challenger'),
+      platform_access: {
+        is_verified: true,
+        verification_method: 'filing_document',
+        can_post: true,
+        can_respond: true,
+        can_engage: true
       },
       engagement: {
         posts: 25,
@@ -681,7 +590,8 @@ export class GeographicElectoralFeed {
 
   private async getMockCampaignFinance(type: string): Promise<CampaignFinance> {
     return {
-      candidateId: `mock-${type}`,
+      id: `mock-${type}-finance`,
+      representativeId: `mock-${type}-rep`,
       cycle: 2024,
       totalRaised: type === 'incumbent' ? 2500000 : 500000,
       individualContributions: type === 'incumbent' ? 1500000 : 400000,
@@ -694,8 +604,133 @@ export class GeographicElectoralFeed {
       independenceScore: type === 'incumbent' ? 60 : 90,
       corporateInfluence: type === 'incumbent' ? 40 : 10,
       pacInfluence: type === 'incumbent' ? 35 : 15,
-      smallDonorInfluence: type === 'incumbent' ? 25 : 75
+      smallDonorInfluence: type === 'incumbent' ? 25 : 75,
+      totalSpent: type === 'incumbent' ? 2000000 : 400000,
+      advertising: type === 'incumbent' ? 800000 : 150000,
+      staff: type === 'incumbent' ? 600000 : 100000,
+      travel: type === 'incumbent' ? 200000 : 50000,
+      fundraising: type === 'incumbent' ? 400000 : 100000,
+      sources: ['mock-data'],
+      lastUpdated: new Date().toISOString(),
+      dataQuality: 'low' as const
     };
+  }
+
+  private async getMockElectoralRace(): Promise<ElectoralRace> {
+    return {
+      raceId: 'mock-race-1',
+      office: 'Mock Office',
+      jurisdiction: 'Mock Jurisdiction',
+      electionDate: '2024-11-05',
+      incumbent: await this.getMockRepresentative('Mock Incumbent'),
+      challengers: [
+        await this.getMockRepresentative('Mock Challenger 1'),
+        await this.getMockRepresentative('Mock Challenger 2')
+      ],
+      allCandidates: [
+        await this.getMockCandidate('Mock Candidate 1', 'Democratic'),
+        await this.getMockCandidate('Mock Candidate 2', 'Republican')
+      ],
+      keyIssues: ['Mock Issue 1', 'Mock Issue 2'],
+      campaignFinance: await this.getMockCampaignFinance('mock'),
+      pollingData: null,
+      voterRegistrationDeadline: '2024-10-15',
+      earlyVotingStart: '2024-10-20',
+      absenteeBallotDeadline: '2024-11-01',
+      recentActivity: [],
+      constituentQuestions: 0,
+      candidateResponses: 0,
+      status: 'upcoming',
+      importance: 'medium'
+    };
+  }
+  
+  // Helper methods for issue identification
+  private async getCandidatesForIssue(issue: string, activeRaces: ElectoralRace[]): Promise<string[]> {
+    const candidates: string[] = [];
+    
+    for (const race of activeRaces) {
+      // Check if any candidates have positions on this issue
+      for (const candidate of race.allCandidates) {
+        if (candidate.platform && candidate.platform.includes(issue.toLowerCase())) {
+          candidates.push(candidate.name);
+        }
+      }
+      
+      // Also check challengers
+      for (const challenger of race.challengers) {
+        if (challenger.platform && challenger.platform.includes(issue.toLowerCase())) {
+          candidates.push(challenger.name);
+        }
+      }
+    }
+    
+    return Array.from(new Set(candidates)); // Remove duplicates
+  }
+  
+  private async getRecentActivityForIssue(issue: string, currentOfficials: {
+    federal: Representative[];
+    state: Representative[];
+    local: Representative[];
+  }): Promise<Activity[]> {
+    const activities: Activity[] = [];
+    
+    // Check all officials for recent activity on this issue
+    const allOfficials = [...currentOfficials.federal, ...currentOfficials.state, ...currentOfficials.local];
+    
+    for (const official of allOfficials) {
+      if (official.recentActivity) {
+        const relevantActivities = official.recentActivity.filter(activity => 
+          activity.description.toLowerCase().includes(issue.toLowerCase()) ||
+          activity.title.toLowerCase().includes(issue.toLowerCase())
+        );
+        activities.push(...relevantActivities);
+      }
+    }
+    
+    // Sort by date (most recent first) and limit to 10
+    return activities
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+      .slice(0, 10);
+  }
+  
+  private determineIssueImportance(issue: string, mentions: number): 'high' | 'medium' | 'low' {
+    // Base importance on mention count and issue type
+    const highPriorityIssues = ['healthcare', 'climate', 'economy', 'education', 'security'];
+    const isHighPriority = highPriorityIssues.some(priority => 
+      issue.toLowerCase().includes(priority)
+    );
+    
+    if (isHighPriority || mentions > 100) return 'high';
+    if (mentions > 50) return 'medium';
+    return 'low';
+  }
+  
+  private async analyzeIssuesFromData(currentOfficials: {
+    federal: Representative[];
+    state: Representative[];
+    local: Representative[];
+  }, activeRaces: ElectoralRace[]): Promise<Array<{ issue: string; importance: 'high' | 'medium' | 'low'; candidates: string[]; recentActivity: Activity[] }>> {
+    const issues: Array<{ issue: string; importance: 'high' | 'medium' | 'low'; candidates: string[]; recentActivity: Activity[] }> = [];
+    
+    // Common issues to check for
+    const commonIssues = ['Healthcare', 'Climate Change', 'Economy', 'Education', 'Housing', 'Transportation'];
+    
+    for (const issue of commonIssues) {
+      const candidates = await this.getCandidatesForIssue(issue, activeRaces);
+      const recentActivity = await this.getRecentActivityForIssue(issue, currentOfficials);
+      
+      if (candidates.length > 0 || recentActivity.length > 0) {
+        issues.push({
+          issue,
+          importance: this.determineIssueImportance(issue, recentActivity.length * 10),
+          candidates,
+          recentActivity
+        });
+      }
+    }
+    
+    return issues;
   }
 }
 

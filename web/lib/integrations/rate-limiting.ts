@@ -5,7 +5,8 @@
  * and implements proper backoff strategies for good API citizenship.
  */
 
-import { logger } from '@/lib/logger';
+import { logger } from '../logger';
+import { withOptional } from '../util/objects';
 
 export interface RateLimitConfig {
   requestsPerSecond: number;
@@ -242,11 +243,15 @@ export class RateLimiter {
     const nextHourReset = 3600000 - (now % 3600000);
     const nextDayReset = this.usageMetrics.nextResetTime.getTime() - now;
 
-    return {
-      remaining: Math.max(0, this.config.requestsPerHour - this.usageMetrics.requestsThisHour),
-      resetTime: Math.min(nextHourReset, nextDayReset),
-      retryAfter: this.usageMetrics.quotaExceeded ? nextHourReset : undefined
-    };
+    return withOptional(
+      {
+        remaining: Math.max(0, this.config.requestsPerHour - this.usageMetrics.requestsThisHour),
+        resetTime: Math.min(nextHourReset, nextDayReset)
+      },
+      {
+        retryAfter: this.usageMetrics.quotaExceeded ? nextHourReset : undefined
+      }
+    );
   }
 
   /**

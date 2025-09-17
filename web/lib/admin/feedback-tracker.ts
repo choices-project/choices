@@ -3,7 +3,8 @@
  * Captures comprehensive user journey data for AI analysis and diagnosis
  */
 
-import { devLog } from '@/lib/logger'
+import { devLog } from '../logger'
+import { withOptional } from '../util/objects'
 
 export interface UserJourney {
   // Current page context
@@ -305,41 +306,45 @@ class FeedbackTracker {
   }
   
   public captureUserJourney(): UserJourney {
-    return {
-      currentPage: window.location.pathname,
-      currentPath: window.location.href,
-      pageTitle: document.title,
-      referrer: document.referrer,
-      
-      userAgent: navigator.userAgent,
-      screenResolution: `${window.screen.width}x${window.screen.height}`,
-      viewportSize: `${window.innerWidth}x${window.innerHeight}`,
-      timeOnPage: this.performanceMetrics.timeOnPage || 0,
-      
-      sessionId: this.sessionId,
-      sessionStartTime: this.sessionStartTime,
-      totalPageViews: this.pageViews,
-      
-      activeFeatures: this.getActiveFeatures(),
-      lastAction: this.actionSequence[this.actionSequence.length - 1] || 'none',
-      actionSequence: this.actionSequence.slice(-10), // Last 10 actions
-      
-      pageLoadTime: this.performanceMetrics.pageLoadTime || 0,
-      performanceMetrics: {
-        fcp: this.performanceMetrics.fcp,
-        lcp: this.performanceMetrics.lcp,
-        fid: this.performanceMetrics.fid,
-        cls: this.performanceMetrics.cls
+    return withOptional(
+      {
+        currentPage: window.location.pathname,
+        currentPath: window.location.href,
+        pageTitle: document.title,
+        referrer: document.referrer,
+        
+        userAgent: navigator.userAgent,
+        screenResolution: `${window.screen.width}x${window.screen.height}`,
+        viewportSize: `${window.innerWidth}x${window.innerHeight}`,
+        timeOnPage: this.performanceMetrics.timeOnPage || 0,
+        
+        sessionId: this.sessionId,
+        sessionStartTime: this.sessionStartTime,
+        totalPageViews: this.pageViews,
+        
+        activeFeatures: this.getActiveFeatures(),
+        lastAction: this.actionSequence[this.actionSequence.length - 1] || 'none',
+        actionSequence: this.actionSequence.slice(-10), // Last 10 actions
+        
+        pageLoadTime: this.performanceMetrics.pageLoadTime || 0,
+        performanceMetrics: {
+          fcp: this.performanceMetrics.fcp,
+          lcp: this.performanceMetrics.lcp,
+          fid: this.performanceMetrics.fid,
+          cls: this.performanceMetrics.cls
+        },
+        
+        errors: this.errors,
+        
+        deviceInfo: this.getDeviceInfo(),
+        
+        isAuthenticated: this.isUserAuthenticated()
       },
-      
-      errors: this.errors,
-      
-      deviceInfo: this.getDeviceInfo(),
-      
-      isAuthenticated: this.isUserAuthenticated(),
-      userRole: this.getUserRole(),
-      userId: this.getUserId()
-    }
+      {
+        userRole: this.getUserRole(),
+        userId: this.getUserId()
+      }
+    )
   }
   
   private getActiveFeatures(): string[] {
@@ -410,36 +415,40 @@ class FeedbackTracker {
     description: string,
     sentiment: string
   ): FeedbackContext {
-    return {
-      feedbackId: `feedback_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      timestamp: new Date().toISOString(),
-      source: 'widget',
-      
-      userJourney: this.captureUserJourney(),
-      
-      type: type as any,
-      title,
-      description,
-      sentiment: sentiment as any,
-      
-      category: this.categorizeFeedback(type, title, description),
-      priority: this.determinePriority(type, sentiment),
-      severity: this.determineSeverity(type, sentiment),
-      
-      screenshot: undefined, // Would be captured if needed
-      consoleLogs: this.captureConsoleLogs(),
-      networkRequests: this.performanceMetrics.networkRequests || [],
-      
-      aiAnalysis: {
-        intent: '',
-        category: '',
-        sentiment: 0,
-        urgency: 0,
-        complexity: 0,
-        keywords: [],
-        suggestedActions: []
+    return withOptional(
+      {
+        feedbackId: `feedback_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        timestamp: new Date().toISOString(),
+        source: 'widget',
+        
+        userJourney: this.captureUserJourney(),
+        
+        type: type as any,
+        title,
+        description,
+        sentiment: sentiment as any,
+        
+        category: this.categorizeFeedback(type, title, description),
+        priority: this.determinePriority(type, sentiment),
+        severity: this.determineSeverity(type, sentiment),
+        
+        consoleLogs: this.captureConsoleLogs(),
+        networkRequests: this.performanceMetrics.networkRequests || [],
+        
+        aiAnalysis: {
+          intent: '',
+          category: '',
+          sentiment: 0,
+          urgency: 0,
+          complexity: 0,
+          keywords: [],
+          suggestedActions: []
+        }
+      },
+      {
+        screenshot: this.captureScreenshot()
       }
-    }
+    )
   }
   
   private categorizeFeedback(type: string, title: string, description: string): string[] {

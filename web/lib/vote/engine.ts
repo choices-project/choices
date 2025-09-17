@@ -9,6 +9,7 @@
  */
 
 import { devLog } from '../logger';
+import { withOptional } from '../util/objects';
 import { SingleChoiceStrategy } from './strategies/single-choice';
 import { ApprovalStrategy } from './strategies/approval';
 import { RankedStrategy } from './strategies/ranked';
@@ -165,15 +166,17 @@ export class VoteEngine {
       // Validate the vote first
       const validation = await this.validateVote(request, poll);
       if (!validation.isValid) {
-        return {
-          success: false,
-          message: validation.error || 'Vote validation failed',
-          pollId: request.pollId,
-          voteId: undefined,
-          auditReceipt: undefined,
-          privacyLevel: request.privacyLevel,
-          responseTime: Date.now() - startTime
-        };
+        return withOptional(
+          {
+            success: false,
+            message: validation.error || 'Vote validation failed',
+            pollId: request.pollId,
+            responseTime: Date.now() - startTime
+          },
+          {
+            privacyLevel: request.privacyLevel
+          }
+        );
       }
 
       // Get the appropriate strategy and process the vote
@@ -195,15 +198,17 @@ export class VoteEngine {
 
     } catch (error) {
       devLog('Vote processing error:', error);
-      return {
-        success: false,
-        message: error instanceof Error ? error.message : 'Vote processing failed',
-        pollId: request.pollId,
-        voteId: undefined,
-        auditReceipt: undefined,
-        privacyLevel: request.privacyLevel,
-        responseTime: Date.now() - startTime
-      };
+      return withOptional(
+        {
+          success: false,
+          message: error instanceof Error ? error.message : 'Vote processing failed',
+          pollId: request.pollId,
+          responseTime: Date.now() - startTime
+        },
+        {
+          privacyLevel: request.privacyLevel
+        }
+      );
     }
   }
 
@@ -235,7 +240,7 @@ export class VoteEngine {
   /**
    * Get voting method configuration
    */
-  getVotingMethodConfig(method: VotingMethod): any {
+  getVotingMethodConfig(method: VotingMethod): Record<string, unknown> {
     const strategy = this.getStrategy(method);
     return strategy.getConfiguration();
   }

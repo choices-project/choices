@@ -225,7 +225,7 @@ export default function RankedChoiceVoting({
                   ? 'cursor-not-allowed opacity-60' 
                   : 'hover:border-blue-300 hover:shadow-md'
                 }
-                ${rankings[option.id] > 0 ? 'border-blue-300 bg-blue-50' : 'border-gray-200'}
+                ${(rankings[option.id] ?? 0) > 0 ? 'border-blue-300 bg-blue-50' : 'border-gray-200'}
               `}
             >
               {/* Rank Display */}
@@ -246,9 +246,9 @@ export default function RankedChoiceVoting({
               </div>
 
               {/* Rank Label */}
-              {rankings[option.id] > 0 && (
+              {(rankings[option.id] ?? 0) > 0 && (
                 <div className="mt-2 text-xs font-medium text-blue-600">
-                  {getRankLabel(rankings[option.id])} choice
+                  {getRankLabel(rankings[option.id] ?? 0)} choice
                 </div>
               )}
             </div>
@@ -318,15 +318,15 @@ export default function RankedChoiceVoting({
           <h3 className="font-semibold text-gray-900 mb-4">Your Current Rankings</h3>
           <div className="space-y-2">
             {options
-              .filter(option => rankings[option.id] > 0)
-              .sort((a, b) => rankings[a.id] - rankings[b.id])
+              .filter(option => (rankings[option.id] ?? 0) > 0)
+              .sort((a, b) => (rankings[a.id] ?? 0) - (rankings[b.id] ?? 0))
               .map(option => (
                 <div key={option.id} className="flex items-center space-x-3">
                   <div className={`
                     w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white
                     ${getRankClass(option.id)}
                   `}>
-                    {rankings[option.id]}
+                    {rankings[option.id] ?? 0}
                   </div>
                   <span className="text-gray-900">{option.text}</span>
                 </div>

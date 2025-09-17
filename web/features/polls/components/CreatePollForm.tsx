@@ -5,6 +5,7 @@ import { devLog } from '@/lib/logger';
 import { Plus, X, Save, AlertCircle, Shield } from 'lucide-react';
 import { PrivacyLevelSelector } from '@/components/privacy/PrivacyLevelSelector';
 import { PrivacyLevel, HybridPrivacyManager } from '@/lib/privacy/hybrid-privacy';
+import { withOptional } from '@/lib/util/objects';
 
 interface CreatePollFormProps {
   onSubmit: (pollData: CreatePollData) => Promise<void>;
@@ -250,11 +251,12 @@ export const CreatePollForm: React.FC<CreatePollFormProps> = ({
           <PrivacyLevelSelector
             value={formData.privacylevel}
             onChange={(level) => setFormData(prev => ({ ...prev, privacylevel: level }))}
-            pollData={{
+            pollData={withOptional({
               title: formData.title,
-              description: formData.description,
-              category: formData.category
-            }}
+              description: formData.description
+            }, {
+              category: formData.category ?? undefined
+            })}
           />
         </div>
 

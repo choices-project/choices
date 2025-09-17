@@ -87,10 +87,10 @@ describe('Viral Moment Detection', () => {
     const moments = await ViralMomentDetector.detectViralMoments('poll1');
 
     expect(moments).toHaveLength(1);
-    expect(moments[0].type).toBe('independent-leading');
-    expect(moments[0].shareability).toBeGreaterThan(0.8);
-    expect(moments[0].confidence).toBeGreaterThan(0.8);
-    expect(moments[0].metadata.isIndependent).toBe(true);
+    expect(moments[0]?.type).toBe('independent-leading');
+    expect(moments[0]?.shareability).toBeGreaterThan(0.8);
+    expect(moments[0]?.confidence).toBeGreaterThan(0.8);
+    expect(moments[0]?.metadata.isIndependent).toBe(true);
   });
 
   test('should enforce stability requirements', async () => {
@@ -222,9 +222,9 @@ describe('Network Effects', () => {
     const nudges = await DiversityNudgeEngine.generateDiversityNudges('user1', [], 'poll1');
 
     expect(nudges).toHaveLength(3);
-    expect(nudges[0].type).toBe('cross-demographic');
-    expect(nudges[1].type).toBe('geographic');
-    expect(nudges[2].type).toBe('cross-interest');
+    expect(nudges[0]?.type).toBe('cross-demographic');
+    expect(nudges[1]?.type).toBe('geographic');
+    expect(nudges[2]?.type).toBe('cross-interest');
     expect(nudges.every(nudge => nudge.privacyProtected)).toBe(true);
     expect(nudges.every(nudge => nudge.confidence > 0.7)).toBe(true);
   });
@@ -285,9 +285,9 @@ describe('Network Effects', () => {
     );
 
     expect(previews).toHaveLength(1);
-    expect(previews[0].scenario).toBe('add_rank');
-    expect(previews[0].impact.direction).toBe('up');
-    expect(previews[0].confidence).toBeGreaterThan(0.6);
+    expect(previews[0]?.scenario).toBe('add_rank');
+    expect(previews[0]?.impact.direction).toBe('up');
+    expect(previews[0]?.confidence).toBeGreaterThan(0.6);
   });
 });
 
@@ -330,9 +330,9 @@ describe('Social Discovery', () => {
     const recommendations = await InterestRecommendationEngine.getInterestBasedRecommendations('user1', 'poll1');
 
     expect(recommendations).toHaveLength(2);
-    expect(recommendations[0].interest).toBe('environment');
-    expect(recommendations[0].alignmentScore).toBe(0.9);
-    expect(recommendations[0].privacyProtected).toBe(true);
+    expect(recommendations[0]?.interest).toBe('environment');
+    expect(recommendations[0]?.alignmentScore).toBe(0.9);
+    expect(recommendations[0]?.privacyProtected).toBe(true);
     expect(recommendations.every(rec => rec.userCount >= 50)).toBe(true); // K-anonymity
   });
 
@@ -379,10 +379,10 @@ describe('Social Discovery', () => {
     const trending = await TrendingCandidateDetector.detectTrendingCandidates('poll1');
 
     expect(trending).toHaveLength(1);
-    expect(trending[0].candidateId).toBe('candidate1');
-    expect(trending[0].trendScore).toBeGreaterThan(0.7);
-    expect(trending[0].trendDirection).toBe('up');
-    expect(trending[0].confidence).toBeGreaterThan(0);
+    expect(trending[0]?.candidateId).toBe('candidate1');
+    expect(trending[0]?.trendScore).toBeGreaterThan(0.7);
+    expect(trending[0]?.trendDirection).toBe('up');
+    expect(trending[0]?.confidence).toBeGreaterThan(0);
   });
 
   test('should track social engagement', async () => {
@@ -582,7 +582,7 @@ describe('Social Features Integration', () => {
     expect(nudges.length).toBeGreaterThanOrEqual(0);
 
     // 2. User clicks on a nudge, triggering exposure tracking
-    if (nudges.length > 0) {
+    if (nudges.length > 0 && nudges[0]?.candidateId) {
       await ExposureCapManager.recordExposure(userId, 'diversity', nudges[0].candidateId);
     }
 

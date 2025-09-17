@@ -184,11 +184,11 @@ describe('Baseline System Integration', () => {
         const liveVotes = liveResults.results.optionVotes[optionIndex] || 0;
         return {
           optionId: optionIndex,
-          baselineVotes,
+          baselineVotes: baselineVotes ?? 0,
           liveVotes,
-          drift: liveVotes - baselineVotes,
-          driftPercentage: baselineVotes > 0 
-            ? ((liveVotes - baselineVotes) / baselineVotes) * 100
+          drift: liveVotes - (baselineVotes ?? 0),
+          driftPercentage: (baselineVotes ?? 0) > 0 
+            ? ((liveVotes - (baselineVotes ?? 0)) / (baselineVotes ?? 0)) * 100
             : 0
         };
       });
@@ -226,7 +226,8 @@ describe('Baseline System Integration', () => {
 
   describe('Baseline System Edge Cases', () => {
     it('should handle poll without baseline date', async () => {
-      const pollWithoutBaseline = { ...testPoll, baselineAt: undefined };
+      const pollWithoutBaseline = { ...testPoll };
+      delete pollWithoutBaseline.baselineAt;
       
       const response = await engine.processVote({
         pollId: 'baseline-poll-123',
@@ -241,7 +242,7 @@ describe('Baseline System Integration', () => {
     it('should handle baseline date at poll start', async () => {
       const pollWithEarlyBaseline = { 
         ...testPoll, 
-        baselineAt: testPoll.startTime 
+        baselineAt: testPoll.startTime!
       };
       
       const response = await engine.processVote({
@@ -257,7 +258,7 @@ describe('Baseline System Integration', () => {
     it('should handle baseline date at poll end', async () => {
       const pollWithLateBaseline = { 
         ...testPoll, 
-        baselineAt: testPoll.endTime 
+        baselineAt: testPoll.endTime!
       };
       
       const response = await engine.processVote({

@@ -34,19 +34,19 @@ export function detectBrowser(): BrowserInfo {
   if (userAgent.includes('Firefox')) {
     name = 'firefox'
     const match = userAgent.match(/Firefox\/(\d+)/)
-    version = match ? match[1] : 'unknown'
+    version = match?.[1] ?? 'unknown'
   } else if (userAgent.includes('Chrome') && !userAgent.includes('Edg')) {
     name = 'chrome'
     const match = userAgent.match(/Chrome\/(\d+)/)
-    version = match ? match[1] : 'unknown'
+    version = match?.[1] ?? 'unknown'
   } else if (userAgent.includes('Safari') && !userAgent.includes('Chrome')) {
     name = 'safari'
     const match = userAgent.match(/Version\/(\d+)/)
-    version = match ? match[1] : 'unknown'
+    version = match?.[1] ?? 'unknown'
   } else if (userAgent.includes('Edg')) {
     name = 'edge'
     const match = userAgent.match(/Edg\/(\d+)/)
-    version = match ? match[1] : 'unknown'
+    version = match?.[1] ?? 'unknown'
   }
 
   // Determine server redirect support based on browser and version

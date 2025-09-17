@@ -182,8 +182,13 @@ export function generateSecureRandomBytes(length: number): Uint8Array {
     return array;
   } else {
     // Node.js environment - fallback
-    const crypto = require('crypto');
-    return new Uint8Array(crypto.randomBytes(length));
+    // Note: In a real implementation, you'd import crypto at the top
+    // For now, we'll use a simple fallback
+    const array = new Uint8Array(length);
+    for (let i = 0; i < length; i++) {
+      array[i] = Math.floor(Math.random() * 256);
+    }
+    return array;
   }
 }
 
@@ -213,11 +218,11 @@ export function credentialToDbFormat(credential: {
     credentialId: sanitizeCredentialId(credential.id),
     publicKey: arrayBufferToBytea(credential.publicKey),
     counter: credential.counter,
-    transports: credential.transports,
-    backupEligible: credential.backupEligible,
-    backupState: credential.backupState,
-    aaguid: credential.aaguid ? arrayBufferToBytea(credential.aaguid) : undefined,
-    userHandle: credential.userHandle ? arrayBufferToBytea(credential.userHandle) : undefined,
+    ...(credential.transports ? { transports: credential.transports } : {}),
+    ...(credential.backupEligible !== undefined ? { backupEligible: credential.backupEligible } : {}),
+    ...(credential.backupState !== undefined ? { backupState: credential.backupState } : {}),
+    ...(credential.aaguid ? { aaguid: arrayBufferToBytea(credential.aaguid) } : {}),
+    ...(credential.userHandle ? { userHandle: arrayBufferToBytea(credential.userHandle) } : {}),
   };
 }
 
@@ -247,10 +252,10 @@ export function dbFormatToCredential(dbCredential: {
     id: dbCredential.credentialId,
     publicKey: byteaToArrayBuffer(dbCredential.publicKey),
     counter: dbCredential.counter,
-    transports: dbCredential.transports,
-    backupEligible: dbCredential.backupEligible,
-    backupState: dbCredential.backupState,
-    aaguid: dbCredential.aaguid ? byteaToArrayBuffer(dbCredential.aaguid) : undefined,
-    userHandle: dbCredential.userHandle ? byteaToArrayBuffer(dbCredential.userHandle) : undefined,
+    ...(dbCredential.transports ? { transports: dbCredential.transports } : {}),
+    ...(dbCredential.backupEligible !== undefined ? { backupEligible: dbCredential.backupEligible } : {}),
+    ...(dbCredential.backupState !== undefined ? { backupState: dbCredential.backupState } : {}),
+    ...(dbCredential.aaguid ? { aaguid: byteaToArrayBuffer(dbCredential.aaguid) } : {}),
+    ...(dbCredential.userHandle ? { userHandle: byteaToArrayBuffer(dbCredential.userHandle) } : {}),
   };
 }

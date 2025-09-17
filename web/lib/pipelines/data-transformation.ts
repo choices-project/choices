@@ -5,20 +5,17 @@
  * Transforms raw API responses into structured, normalized data for database storage.
  */
 
-import { logger } from '@/lib/logger';
+import { logger } from '../logger';
+import { withOptional } from '../util/objects';
 import type { 
-  AddressLookupResult, 
-  Representative,
-  CandidateCardV1 
-} from '@/features/civics/schemas';
-import type { 
-  TransformedRepresentative,
-  TransformedCandidateCard 
-} from '@/lib/integrations/google-civic/transformers';
+  AddressLookupResult 
+} from '../../features/civics/schemas';
+
+
 import type { 
   TransformedProPublicaMember,
   TransformedProPublicaBill 
-} from '@/lib/integrations/propublica/transformers';
+} from '../integrations/propublica/transformers';
 
 export interface GovernmentLevel {
   level: 'federal' | 'state' | 'local';
@@ -353,21 +350,25 @@ export class DataTransformationPipeline {
       const normalizedMembers = members.map(member => {
         recordsTransformed++;
         
-        const normalized: NormalizedRepresentative = {
-          id: member.id,
-          name: member.name,
-          party: member.party,
-          office: member.office,
-          level: this.determineLevel(member.office),
-          jurisdiction: member.state,
-          district: member.district,
-          contact: member.contact,
-          socialMedia: member.socialMedia,
-          votingRecord: member.votingRecord,
-          recentVotes: member.recentVotes,
-          sources: ['propublica'],
-          lastUpdated: new Date().toISOString()
-        };
+        const normalized: NormalizedRepresentative = withOptional(
+          {
+            id: member.id,
+            name: member.name,
+            party: member.party,
+            office: member.office,
+            level: this.determineLevel(member.office),
+            jurisdiction: member.state,
+            district: member.district,
+            contact: member.contact,
+            sources: ['propublica'],
+            lastUpdated: new Date().toISOString()
+          },
+          {
+            socialMedia: member.socialMedia,
+            votingRecord: member.votingRecord,
+            recentVotes: member.recentVotes
+          }
+        );
 
         if (this.validateRepresentative(normalized)) {
           recordsValid++;
@@ -382,31 +383,35 @@ export class DataTransformationPipeline {
       const normalizedBills = bills.map(bill => {
         recordsTransformed++;
         
-        const normalized: NormalizedBill = {
-          id: bill.id,
-          title: bill.title,
-          shortTitle: bill.shortTitle,
-          billNumber: bill.billNumber,
-          billType: bill.billType,
-          level: this.determineBillLevel(bill.billType),
-          jurisdiction: 'US', // ProPublica is federal
-          congress: bill.congress,
-          introducedDate: bill.introducedDate,
-          sponsor: {
-            ...bill.sponsor,
-            jurisdiction: 'US' // ProPublica is federal
+        const normalized: NormalizedBill = withOptional(
+          {
+            id: bill.id,
+            title: bill.title,
+            billNumber: bill.billNumber,
+            billType: bill.billType,
+            level: this.determineBillLevel(bill.billType),
+            jurisdiction: 'US', // ProPublica is federal
+            congress: bill.congress,
+            introducedDate: bill.introducedDate,
+            sponsor: {
+              ...bill.sponsor,
+              jurisdiction: 'US' // ProPublica is federal
+            },
+            status: bill.status,
+            lastAction: bill.lastAction,
+            lastActionDate: bill.lastActionDate,
+            cosponsors: bill.cosponsors,
+            cosponsorsByParty: bill.cosponsorsByParty,
+            committees: bill.committees,
+            subjects: bill.subjects,
+            sources: ['propublica'],
+            lastUpdated: new Date().toISOString()
           },
-          summary: bill.summary,
-          status: bill.status,
-          lastAction: bill.lastAction,
-          lastActionDate: bill.lastActionDate,
-          cosponsors: bill.cosponsors,
-          cosponsorsByParty: bill.cosponsorsByParty,
-          committees: bill.committees,
-          subjects: bill.subjects,
-          sources: ['propublica'],
-          lastUpdated: new Date().toISOString()
-        };
+          {
+            shortTitle: bill.shortTitle,
+            summary: bill.summary
+          }
+        );
 
         if (this.validateBill(normalized)) {
           recordsValid++;

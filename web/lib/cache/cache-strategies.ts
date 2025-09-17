@@ -9,7 +9,9 @@
  */
 
 import { logger } from '../logger'
-import { RedisClient, CacheEntry, CacheStats } from './redis-client'
+import { RedisClient } from './redis-client'
+import type { CacheStats } from './redis-client'
+import { withOptional } from '../util/objects'
 
 // Cache strategy types
 export type CacheStrategy = 'write-through' | 'write-behind' | 'cache-aside' | 'read-through'
@@ -264,10 +266,10 @@ export class CacheStrategyManager {
       // Identify missing keys
       cachedValues.forEach((value, index) => {
         const key = keys[index]
-        if (value === null) {
+        if (key && value === null) {
           missingKeys.push(key)
           missingIndices.push(index)
-        } else {
+        } else if (key) {
           results[key] = {
             data: value,
             fromCache: true,

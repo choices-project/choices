@@ -12,6 +12,7 @@ import QuadraticVoting from '@/features/voting/components/QuadraticVoting'
 import PollResults from '@/features/polls/components/PollResults'
 import PollShare from '@/features/polls/components/PollShare'
 import { devLog } from '@/lib/logger'
+import { withOptional } from '@/lib/util/objects'
 
 type ViewMode = 'voting' | 'results' | 'share' | 'settings'
 type VotingMethod = 'single' | 'ranked' | 'approval' | 'range' | 'quadratic'
@@ -191,16 +192,19 @@ export default function PollPage() {
   const renderVotingInterface = () => {
     if (!poll) return null
 
-    const commonProps = {
+    const baseProps = {
       pollId: poll.id,
       title: poll.title,
-      description: poll.description,
       options: poll.options,
       onVote: handleVote,
       isVoting,
       hasVoted,
       userVote
     }
+
+    const commonProps = withOptional(baseProps, {
+      description: poll.description ?? undefined
+    })
 
     switch (poll.votingMethod) {
       case 'single':

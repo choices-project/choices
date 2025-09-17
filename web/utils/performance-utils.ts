@@ -390,7 +390,8 @@ export class PerformanceBudgetChecker {
       const metrics = performanceMetrics.getMetricsByName(budget.name);
       if (metrics.length === 0) return false;
       
-      const latestValue = metrics[metrics.length - 1].value;
+      const latestValue = metrics[metrics.length - 1]?.value;
+      if (latestValue === undefined) return false;
       return !this.checkMetric(budget.name, latestValue);
     });
   }
@@ -434,8 +435,8 @@ export class PerformanceProfiler {
     const count = durations.length;
     const total = durations.reduce((sum, duration) => sum + duration, 0);
     const average = total / count;
-    const min = sorted[0];
-    const max = sorted[sorted.length - 1];
+    const min = sorted[0] ?? 0;
+    const max = sorted[sorted.length - 1] ?? 0;
     const p95Index = Math.floor(sorted.length * 0.95);
     const p99Index = Math.floor(sorted.length * 0.99);
     

@@ -77,7 +77,7 @@ export class DeviceFlowManager {
     
     let result = ''
     for (let i = 0; i < this.CODE_LENGTH; i++) {
-      result += chars[array[i] % chars.length]
+      result += chars[array[i]! % chars.length]
     }
     
     return result

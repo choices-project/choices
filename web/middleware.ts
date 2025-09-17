@@ -87,7 +87,10 @@ function getClientIP(request: NextRequest): string {
   // Check for forwarded headers (common with proxies)
   const forwarded = request.headers.get('x-forwarded-for')
   if (forwarded) {
-    return forwarded.split(',')[0].trim()
+    const firstIP = forwarded.split(',')[0]
+    if (firstIP) {
+      return firstIP.trim()
+    }
   }
   
   // Check for real IP header

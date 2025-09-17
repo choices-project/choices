@@ -1,5 +1,4 @@
 import React from 'react';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
@@ -7,7 +6,6 @@ import {
   Clock, 
   TrendingUp, 
   Info,
-  Eye,
   EyeOff,
   Lock
 } from 'lucide-react';

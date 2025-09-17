@@ -416,6 +416,9 @@ class PollService {
     }
 
     const poll = userPolls[pollIndex];
+    if (!poll) {
+      throw new Error('Poll not found');
+    }
     poll.total_votes += 1;
 
     // Initialize results if not exists

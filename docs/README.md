@@ -21,6 +21,7 @@ This documentation provides comprehensive guides for developers, contributors, a
 - **[System Architecture](core/SYSTEM_ARCHITECTURE.md)** - Technical overview and design decisions
 - **[Security Model](core/SECURITY.md)** - Security policies and implementation
 - **[Authentication System](core/AUTHENTICATION.md)** - WebAuthn and Supabase auth
+- **[Type Safety Improvements](core/TYPE_SAFETY_IMPROVEMENTS.md)** - 🆕 **Core Auth & Security type safety refactoring**
 - **[Database Schema](core/DATABASE_SCHEMA.md)** - Database design and relationships
 
 ### 🎯 Features

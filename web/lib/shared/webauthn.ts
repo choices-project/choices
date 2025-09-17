@@ -68,7 +68,10 @@ export function arrayBufferToBase64(buffer: ArrayBuffer): string {
   const bytes = new Uint8Array(buffer)
   let binary = ''
   for (let i = 0; i < bytes.byteLength; i++) {
-    binary += String.fromCharCode(bytes[i])
+    const byte = bytes[i];
+    if (byte !== undefined) {
+      binary += String.fromCharCode(byte);
+    }
   }
   return btoa(binary)
 }
@@ -85,7 +88,8 @@ export function base64ToArrayBuffer(base64: string): ArrayBuffer {
 
 // Generate random challenge
 export function generateChallenge(): ArrayBuffer {
-  const challenge = crypto.getRandomValues(new Uint8Array(WEBAUTHN_CONFIG.challengeLength))
+  const challengeLength = WEBAUTHN_CONFIG.challengeLength || 32;
+  const challenge = crypto.getRandomValues(new Uint8Array(challengeLength))
   return challenge.buffer
 }
 
@@ -157,55 +161,56 @@ export function getDeviceInfo(): { deviceType: string; browser: string; platform
 }
 
 // Enhanced error handling
-export function handleWebAuthnError(error: any): WebAuthnError {
-  const errorMessage = error.message || error.name || 'Unknown error';
+export function handleWebAuthnError(error: unknown): WebAuthnError {
+  const errorObj = error as { message?: string; name?: string };
+  const errorMessage = errorObj.message || errorObj.name || 'Unknown error';
   
   // Handle specific error types
-  if (error.name === 'NotAllowedError') {
+  if (errorObj.name === 'NotAllowedError') {
     return {
       type: WebAuthnErrorType.USER_CANCELLED,
       message: 'Authentication was cancelled by the user',
-      code: error.name,
+      code: errorObj.name,
       recoverable: true,
       suggestedAction: 'Try again or use an alternative authentication method'
     };
   }
   
-  if (error.name === 'SecurityError') {
+  if (errorObj.name === 'SecurityError') {
     return {
       type: WebAuthnErrorType.SECURITY_ERROR,
       message: 'Security error occurred during authentication',
-      code: error.name,
+      code: errorObj.name,
       recoverable: false,
       suggestedAction: 'Please contact support if this persists'
     };
   }
   
-  if (error.name === 'InvalidStateError') {
+  if (errorObj.name === 'InvalidStateError') {
     return {
       type: WebAuthnErrorType.INVALID_RESPONSE,
       message: 'Invalid authentication state',
-      code: error.name,
+      code: errorObj.name,
       recoverable: true,
       suggestedAction: 'Please try again'
     };
   }
   
-  if (error.name === 'NotSupportedError') {
+  if (errorObj.name === 'NotSupportedError') {
     return {
       type: WebAuthnErrorType.NOT_SUPPORTED,
       message: 'Biometric authentication is not supported on this device',
-      code: error.name,
+      code: errorObj.name,
       recoverable: false,
       suggestedAction: 'Use password authentication instead'
     };
   }
   
-  if (error.name === 'AbortError') {
+  if (errorObj.name === 'AbortError') {
     return {
       type: WebAuthnErrorType.TIMEOUT,
       message: 'Authentication timed out',
-      code: error.name,
+      code: errorObj.name,
       recoverable: true,
       suggestedAction: 'Please try again'
     };
@@ -215,7 +220,7 @@ export function handleWebAuthnError(error: any): WebAuthnError {
   return {
     type: WebAuthnErrorType.UNKNOWN,
     message: errorMessage,
-    code: error.name,
+    ...(errorObj.name ? { code: errorObj.name } : {}),
     recoverable: true,
     suggestedAction: 'Please try again or contact support'
   };
@@ -444,7 +449,7 @@ export async function authenticateBiometric(username: string): Promise<WebAuthnR
     const challengeBuffer = base64ToArrayBuffer(challenge);
 
     // Convert allowCredentials
-    const allowCredentialsArray = allowCredentials.map((cred: any) => ({
+    const allowCredentialsArray = allowCredentials.map((cred: { id: string; type: string; transports?: string[] }) => ({
       ...cred,
       id: base64ToArrayBuffer(cred.id),
     }));
@@ -528,7 +533,12 @@ export async function authenticateBiometric(username: string): Promise<WebAuthnR
 // Get user's registered credentials
 export async function getUserCredentials(userId: string): Promise<{
   success: boolean;
-  credentials?: any[];
+  credentials?: Array<{
+    id: string;
+    name: string;
+    createdAt: string;
+    lastUsed?: string;
+  }>;
   error?: string;
 }> {
   try {

@@ -23,7 +23,6 @@ import {
   createDataValidationPipeline 
 } from './data-validation';
 import type { 
-  IngestStatus, 
   DataQualityMetrics,
   DataSourceConfig 
 } from '@/features/civics/schemas';

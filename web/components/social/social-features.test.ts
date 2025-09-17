@@ -91,10 +91,13 @@ describe('Viral Moment Detection', () => {
     expect(Array.isArray(moments)).toBe(true);
     // If moments are detected, they should have the expected properties
     if (moments.length > 0) {
-      expect(moments[0].type).toBe('independent-leading');
-      expect(moments[0].shareability).toBeGreaterThan(0.8);
-      expect(moments[0].confidence).toBeGreaterThan(0.8);
-      expect(moments[0].metadata.isIndependent).toBe(true);
+      const firstMoment = moments[0];
+      if (firstMoment) {
+        expect(firstMoment.type).toBe('independent-leading');
+        expect(firstMoment.shareability).toBeGreaterThan(0.8);
+        expect(firstMoment.confidence).toBeGreaterThan(0.8);
+        expect(firstMoment.metadata.isIndependent).toBe(true);
+      }
     }
   });
 
@@ -291,9 +294,9 @@ describe('Network Effects', () => {
     );
 
     expect(previews).toHaveLength(1);
-    expect(previews[0].scenario).toBe('add_rank');
-    expect(previews[0].impact.direction).toBe('up');
-    expect(previews[0].confidence).toBeGreaterThan(0.6);
+    expect(previews[0]?.scenario).toBe('add_rank');
+    expect(previews[0]?.impact.direction).toBe('up');
+    expect(previews[0]?.confidence).toBeGreaterThan(0.6);
   });
 });
 
@@ -336,9 +339,9 @@ describe('Social Discovery', () => {
     const recommendations = await InterestRecommendationEngine.getInterestBasedRecommendations('user1', 'poll1');
 
     expect(recommendations).toHaveLength(2);
-    expect(recommendations[0].interest).toBe('environment');
-    expect(recommendations[0].alignmentScore).toBe(0.9);
-    expect(recommendations[0].privacyProtected).toBe(true);
+    expect(recommendations[0]?.interest).toBe('environment');
+    expect(recommendations[0]?.alignmentScore).toBe(0.9);
+    expect(recommendations[0]?.privacyProtected).toBe(true);
     expect(recommendations.every(rec => rec.userCount >= 50)).toBe(true); // K-anonymity
   });
 
@@ -389,10 +392,10 @@ describe('Social Discovery', () => {
     expect(Array.isArray(trending)).toBe(true);
     // If trending candidates are detected, they should have the expected properties
     if (trending.length > 0) {
-      expect(trending[0].candidateId).toBe('candidate1');
-      expect(trending[0].trendScore).toBeGreaterThan(0.7);
-      expect(trending[0].trendDirection).toBe('up');
-      expect(trending[0].confidence).toBeGreaterThan(0);
+      expect(trending[0]?.candidateId).toBe('candidate1');
+      expect(trending[0]?.trendScore).toBeGreaterThan(0.7);
+      expect(trending[0]?.trendDirection).toBe('up');
+      expect(trending[0]?.confidence).toBeGreaterThan(0);
     }
   });
 
@@ -593,7 +596,7 @@ describe('Social Features Integration', () => {
     expect(nudges.length).toBeGreaterThanOrEqual(0);
 
     // 2. User clicks on a nudge, triggering exposure tracking
-    if (nudges.length > 0) {
+    if (nudges.length > 0 && nudges[0]?.candidateId) {
       await ExposureCapManager.recordExposure(userId, 'diversity', nudges[0].candidateId);
     }
 

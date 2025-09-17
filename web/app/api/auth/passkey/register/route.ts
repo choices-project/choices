@@ -12,23 +12,18 @@ import {
   type GenerateRegistrationOptionsOpts,
   type VerifyRegistrationResponseOpts
 } from '@simplewebauthn/server';
-import { getSupabaseServerClient } from '@/utils/supabase/server';
 import { devLog } from '@/lib/logger';
 import { rateLimiters } from '@/lib/core/security/rate-limit';
 import { requireUser } from '@/lib/core/auth/require-user';
 import { validateOrigin } from '@/lib/http/origin';
-import { requireTurnstileVerification } from '@/lib/security/turnstile';
 import { 
   arrayBufferToBytea,
   base64urlToArrayBuffer,
-  arrayBufferToBase64url,
   sanitizeCredentialId,
   logCredentialOperation,
   stringAaguidToBytea
 } from '@/lib/webauthn/pg-bytea';
 import { 
-  WebAuthnError, 
-  WebAuthnErrorType, 
   handleWebAuthnError 
 } from '@/lib/webauthn/error-handling';
 import { 
@@ -141,7 +136,7 @@ async function generateRegistrationOptions(request: NextRequest, body: any): Pro
 
   // Prepare existing credentials for exclusion
   const excludeCredentials = existingCredentials?.map((cred: any) => ({
-    id: base64urlToArrayBuffer(cred.credential_id),
+    id: cred.credential_id,
     type: 'public-key' as const,
     transports: cred.transports || []
   })) || [];

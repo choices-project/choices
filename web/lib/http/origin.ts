@@ -6,7 +6,7 @@
  * development, staging, and production environments.
  */
 
-import { devLog } from '@/lib/logger';
+import { devLog } from '../logger';
 
 export interface OriginConfig {
   allowedOrigins: string[];
@@ -198,7 +198,10 @@ export function getClientIP(request: Request): string {
   // Check for forwarded headers (common in proxy setups)
   const forwarded = request.headers.get('x-forwarded-for');
   if (forwarded) {
-    return forwarded.split(',')[0].trim();
+    const firstIP = forwarded.split(',')[0];
+    if (firstIP) {
+      return firstIP.trim();
+    }
   }
 
   const realIP = request.headers.get('x-real-ip');

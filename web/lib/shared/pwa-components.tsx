@@ -14,7 +14,16 @@ import {
   X,
   CheckCircle
 } from 'lucide-react'
-import { PWAUtils, pwaManager } from '../../features/pwa/lib/pwa-utils'
+import type { ComponentType } from 'react'
+import { pwaManager } from '../../features/pwa/lib/pwa-utils'
+import type { 
+  PWAFeatures, 
+  PWAStatus, 
+  FeatureCardProps, 
+  StatusItemProps,
+  NavigatorWithServiceWorker 
+} from '../../types/pwa'
+import type { BeforeInstallPromptEvent } from './pwa-utils'
 
 // PWA Install Prompt Component
 export function PWAInstallPrompt() {
@@ -30,7 +39,7 @@ export function PWAInstallPrompt() {
     }
 
     // Listen for install prompt
-    const handleBeforeInstallPrompt = (e: any) => {
+    const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault()
       setShowPrompt(true)
     }
@@ -273,7 +282,7 @@ export function PWAUpdatePrompt() {
 
 // PWA Features Showcase Component
 export function PWAFeaturesShowcase() {
-  const [features, setFeatures] = useState({
+  const [features, setFeatures] = useState<PWAFeatures>({
     installable: false,
     offline: false,
     pushNotifications: false,
@@ -288,7 +297,7 @@ export function PWAFeaturesShowcase() {
         offline: 'serviceWorker' in navigator,
         pushNotifications: 'PushManager' in window,
         webAuthn: 'credentials' in navigator,
-        backgroundSync: 'serviceWorker' in navigator && 'sync' in (navigator.serviceWorker as any)
+        backgroundSync: 'serviceWorker' in navigator && 'sync' in (navigator as NavigatorWithServiceWorker).serviceWorker
       }
       setFeatures(newFeatures)
     }
@@ -305,31 +314,31 @@ export function PWAFeaturesShowcase() {
         <FeatureCard
           title="Installable"
           description="Install on your home screen for app-like experience"
-          icon={Smartphone}
+          icon={Smartphone as ComponentType<{ className?: string }>}
           available={features.installable}
         />
         <FeatureCard
           title="Offline Support"
           description="Vote and browse polls without internet connection"
-          icon={WifiOff}
+          icon={WifiOff as ComponentType<{ className?: string }>}
           available={features.offline}
         />
         <FeatureCard
           title="Push Notifications"
           description="Get notified about new polls and results"
-          icon={Zap}
+          icon={Zap as ComponentType<{ className?: string }>}
           available={features.pushNotifications}
         />
         <FeatureCard
           title="Secure Authentication"
           description="Biometric and device-based authentication"
-          icon={Shield}
+          icon={Shield as ComponentType<{ className?: string }>}
           available={features.webAuthn}
         />
         <FeatureCard
           title="Background Sync"
           description="Sync your data automatically when online"
-          icon={RefreshCw}
+          icon={RefreshCw as ComponentType<{ className?: string }>}
           available={features.backgroundSync}
         />
       </div>
@@ -343,12 +352,7 @@ function FeatureCard({
   description, 
   icon: Icon, 
   available 
-}: {
-  title: string
-  description: string
-  icon: any
-  available: boolean
-}) {
+}: FeatureCardProps) {
   return (
     <div className={`p-4 rounded-lg border ${
       available 
@@ -395,12 +399,12 @@ function FeatureCard({
 
 // PWA Status Component
 export function PWAStatus() {
-  const [status, setStatus] = useState({
+  const [status, setStatus] = useState<PWAStatus>({
     isStandalone: false,
     isOnline: true,
     hasServiceWorker: false,
     hasPushSupport: false,
-    pwaStatus: null as any
+    pwaStatus: null
   })
 
   useEffect(() => {
@@ -475,11 +479,7 @@ function StatusItem({
   label, 
   value, 
   status 
-}: {
-  label: string
-  value: string
-  status: 'success' | 'warning' | 'error' | 'info'
-}) {
+}: StatusItemProps) {
   const getStatusColor = () => {
     switch (status) {
       case 'success':

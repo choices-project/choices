@@ -11,6 +11,7 @@
 import { logger } from '../logger'
 import { RedisClient } from './redis-client'
 import { CacheStrategyManager } from './cache-strategies'
+import { withOptional } from '../util/objects'
 
 // Invalidation event types
 export type InvalidationEvent = 
@@ -312,15 +313,16 @@ export class CacheInvalidationManager {
       error = err instanceof Error ? err.message : 'Unknown error'
     }
 
-    return {
+    return withOptional({
       ruleId: rule.id,
       event: rule.event,
       invalidatedKeys,
       invalidatedTags,
       executionTime: Date.now() - startTime,
-      success,
+      success
+    }, {
       error
-    }
+    })
   }
 
   /**

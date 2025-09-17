@@ -157,7 +157,7 @@ function generateDynamicOptions(topic: any, _matchingPoll: any) {
   // Generate realistic vote distribution
   const percentages = [35, 25, 20, 15, 5]; // Realistic distribution
   
-  return texts.map((text: any, index: any) => ({
+  return texts?.map((text: any, index: any) => ({
     text,
     votes: percentages[index],
     color: colors[index],

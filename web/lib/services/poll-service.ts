@@ -5,6 +5,8 @@
  * It replaces the old @/shared/core/services/lib/poll-service imports.
  */
 
+import { withOptional } from '../util/objects';
+
 export interface CreatePollRequest {
   title: string;
   description: string;
@@ -34,18 +36,22 @@ export interface Poll {
 export class PollService {
   async createPoll(request: CreatePollRequest): Promise<Poll> {
     // TODO: Implement actual poll creation
-    const poll: Poll = {
-      id: Math.random().toString(36).substr(2, 9),
-      title: request.title,
-      description: request.description,
-      options: request.options,
-      privacyLevel: request.privacyLevel,
-      votingType: request.votingType || 'standard',
-      status: 'active',
-      createdAt: new Date().toISOString(),
-      expiresAt: request.expiresAt,
-      totalVotes: 0
-    };
+    const poll: Poll = withOptional(
+      {
+        id: Math.random().toString(36).substr(2, 9),
+        title: request.title,
+        description: request.description,
+        options: request.options,
+        privacyLevel: request.privacyLevel,
+        votingType: request.votingType || 'standard',
+        status: 'active' as const,
+        createdAt: new Date().toISOString(),
+        totalVotes: 0
+      },
+      {
+        expiresAt: request.expiresAt
+      }
+    );
 
     return poll;
   }

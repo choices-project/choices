@@ -4,7 +4,7 @@
  * Transforms Open States API responses into unified data structures
  */
 
-import { dev } from '@/lib/dev.logger';
+import { dev } from '../../dev.logger';
 
 // Open States API types
 export interface OpenStatesLegislator {

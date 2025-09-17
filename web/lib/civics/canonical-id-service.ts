@@ -10,12 +10,7 @@ import type {
   IdCrosswalk,
   CanonicalIdMapping,
   EntityType,
-  DataSource,
-  Candidate,
-  Election,
-  CampaignFinance,
-  Contribution,
-  VotingRecord
+  DataSource
 } from './types';
 
 export class CanonicalIdService {
@@ -149,7 +144,7 @@ export class CanonicalIdService {
     return {
       canonical_id: canonicalId,
       sources,
-      entity_type: entries[0].entity_type
+      entity_type: entries[0]?.entity_type || 'representative' as EntityType
     };
   }
 
@@ -197,7 +192,7 @@ export class CanonicalIdService {
       // Use the highest priority source for canonical ID generation
       const priorityOrder: DataSource[] = ['congress-gov', 'fec', 'open-states', 'opensecrets', 'govtrack', 'google-civic'];
       const primarySource = sourceData.find(s => priorityOrder.includes(s.source)) || sourceData[0];
-      canonicalId = this.generateCanonicalId(entityType, primarySource.data);
+      canonicalId = this.generateCanonicalId(entityType, primarySource?.data || {});
     }
 
     // Create/update crosswalk entries for all sources
@@ -318,7 +313,7 @@ export class CanonicalIdService {
     const optionalFields = ['email', 'phone', 'website', 'photo_url'];
     
     let score = 0;
-    let totalFields = requiredFields.length + optionalFields.length;
+    const totalFields = requiredFields.length + optionalFields.length;
     
     // Check required fields
     for (const field of requiredFields) {

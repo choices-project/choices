@@ -8,7 +8,7 @@
  * @date 2025-01-15
  */
 
-import { dev } from '@/lib/dev.logger';
+import { dev } from '../../dev.logger';
 
 // Types for Congress.gov API responses
 export interface CongressGovCongress {
@@ -102,7 +102,7 @@ export class CongressGovApiError extends Error {
   constructor(
     message: string,
     public statusCode: number,
-    public apiResponse?: any
+    public apiResponse?: unknown
   ) {
     super(message);
     this.name = 'CongressGovApiError';
@@ -271,7 +271,11 @@ export class CongressGovClient {
 
   async getCurrentCongress(): Promise<CongressGovCongress> {
     const response = await this.getCongresses();
-    return response[0]; // Most recent congress
+    const currentCongress = response[0]; // Most recent congress
+    if (!currentCongress) {
+      throw new Error('No congress data available');
+    }
+    return currentCongress;
   }
 
   // Member information
@@ -287,7 +291,11 @@ export class CongressGovClient {
 
   async getMember(bioguideId: string): Promise<CongressGovMember> {
     const response = await this.makeRequest<CongressGovApiResponse<CongressGovMember>>(`/member/${bioguideId}`);
-    return response.results?.[0];
+    const member = response.results?.[0];
+    if (!member) {
+      throw new Error(`Member with bioguide ID ${bioguideId} not found`);
+    }
+    return member;
   }
 
   async getMembersByState(state: string, chamber?: 'house' | 'senate'): Promise<CongressGovMember[]> {
@@ -311,7 +319,11 @@ export class CongressGovClient {
 
   async getBill(congress: number, billId: string): Promise<CongressGovBill> {
     const response = await this.makeRequest<CongressGovApiResponse<CongressGovBill>>(`/bill/${congress}/${billId}`);
-    return response.results?.[0];
+    const bill = response.results?.[0];
+    if (!bill) {
+      throw new Error(`Bill ${billId} in congress ${congress} not found`);
+    }
+    return bill;
   }
 
   async getBillsByMember(bioguideId: string, params: {
@@ -336,7 +348,11 @@ export class CongressGovClient {
 
   async getVote(congress: number, session: number, rollCall: number): Promise<CongressGovVote> {
     const response = await this.makeRequest<CongressGovApiResponse<CongressGovVote>>(`/vote/${congress}/${session}/${rollCall}`);
-    return response.results?.[0];
+    const vote = response.results?.[0];
+    if (!vote) {
+      throw new Error(`Vote ${rollCall} in congress ${congress}, session ${session} not found`);
+    }
+    return vote;
   }
 
   // Utility methods

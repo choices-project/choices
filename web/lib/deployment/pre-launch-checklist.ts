@@ -6,8 +6,8 @@
  */
 
 import { logger } from '@/lib/logger';
-import { sloMonitor } from '../monitoring/slos';
-import { ChaosTestingFramework } from '../chaos/chaos-testing';
+import { sloMonitor } from '@/lib/monitoring/slos';
+import { ChaosTestingFramework } from '@/lib/chaos/chaos-testing';
 
 export interface ChecklistItem {
   category: string;
@@ -739,11 +739,11 @@ export class PreLaunchChecklist {
   }
 
   // Mock data methods - in production these would query actual systems
-  private async getRLSPolicies(): Promise<any[]> {
+  private async getRLSPolicies(): Promise<Array<{ table: string; operation: string; denies: boolean }>> {
     return [{ table: 'ballots', operation: 'UPDATE', denies: true }];
   }
 
-  private async getRecentSnapshots(): Promise<any[]> {
+  private async getRecentSnapshots(): Promise<Array<{ checksum: string; merkleRoot: string }>> {
     return [{ checksum: 'abc123', merkleRoot: 'def456' }];
   }
 
@@ -767,7 +767,7 @@ export class PreLaunchChecklist {
     return { level: 'AA' };
   }
 
-  private async getCharts(): Promise<any[]> {
+  private async getCharts(): Promise<Array<{ colorSafe: boolean }>> {
     return [{ colorSafe: true }];
   }
 
@@ -787,7 +787,7 @@ export class PreLaunchChecklist {
     return { success: true, ballots: 1000000 };
   }
 
-  private async getActivePolls(): Promise<any[]> {
+  private async getActivePolls(): Promise<Array<{ hasUnofficialBadge: boolean }>> {
     return [{ hasUnofficialBadge: true }];
   }
 

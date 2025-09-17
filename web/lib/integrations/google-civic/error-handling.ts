@@ -7,27 +7,9 @@
 
 import { logger } from '@/lib/logger';
 import { GoogleCivicApiError } from './client';
+import type { GoogleCivicErrorDetails, RetryConfig, ErrorContext } from '@/lib/types/google-civic';
 
-export interface GoogleCivicErrorDetails {
-  code?: string;
-  message?: string;
-  status?: string;
-  userMessage?: string;
-  details?: Array<{
-    '@type': string;
-    reason: string;
-    domain: string;
-    metadata?: Record<string, any>;
-  }>;
-}
-
-export interface RetryConfig {
-  maxAttempts: number;
-  baseDelay: number;
-  maxDelay: number;
-  backoffMultiplier: number;
-  retryableStatusCodes: number[];
-}
+// Types imported from scratch/google-civic-types.ts
 
 export class GoogleCivicErrorHandler {
   private retryConfig: RetryConfig;
@@ -46,7 +28,7 @@ export class GoogleCivicErrorHandler {
   /**
    * Handle Google Civic API errors with proper classification
    */
-  handleError(error: any, context?: Record<string, any>): GoogleCivicApiError {
+  handleError(error: unknown, context?: ErrorContext): GoogleCivicApiError {
     logger.error('Google Civic API error occurred', { error, context });
 
     // If it's already our custom error, return as-is
@@ -64,7 +46,7 @@ export class GoogleCivicErrorHandler {
     }
 
     // Handle timeout errors
-    if (error.name === 'AbortError') {
+    if ((error as any).name === 'AbortError') {
       return new GoogleCivicApiError(
         'Request timeout: Google Civic API did not respond in time',
         408,
@@ -73,8 +55,8 @@ export class GoogleCivicErrorHandler {
     }
 
     // Handle HTTP response errors
-    if (error.status || error.statusCode) {
-      return this.handleHttpError(error, context);
+    if ((error as any).status || (error as any).statusCode) {
+      return this.handleHttpError(error as { status?: number; statusCode?: number; body?: unknown; data?: unknown }, context);
     }
 
     // Handle JSON parsing errors
@@ -88,7 +70,7 @@ export class GoogleCivicErrorHandler {
 
     // Generic error fallback
     return new GoogleCivicApiError(
-      `Unexpected error: ${error.message || 'Unknown error'}`,
+      `Unexpected error: ${error instanceof Error ? error.message : 'Unknown error'}`,
       500,
       { originalError: error, context }
     );
@@ -97,7 +79,7 @@ export class GoogleCivicErrorHandler {
   /**
    * Handle HTTP response errors
    */
-  private handleHttpError(error: any, context?: Record<string, any>): GoogleCivicApiError {
+  private handleHttpError(error: { status?: number; statusCode?: number; body?: unknown; data?: unknown }, context?: ErrorContext): GoogleCivicApiError {
     const status = error.status || error.statusCode;
     const errorData = error.body || error.data || {};
 
@@ -183,8 +165,8 @@ export class GoogleCivicErrorHandler {
 
       default:
         return new GoogleCivicApiError(
-          `HTTP error ${status}: ${errorData.message || 'Unknown error'}`,
-          status,
+          `HTTP error ${status}: ${(errorData as any).message || 'Unknown error'}`,
+          status || 500,
           { 
             details: errorData,
             context,
@@ -206,7 +188,7 @@ export class GoogleCivicErrorHandler {
    */
   async executeWithRetry<T>(
     operation: () => Promise<T>,
-    context?: Record<string, any>
+    context?: ErrorContext
   ): Promise<T> {
     let lastError: GoogleCivicApiError;
     
@@ -283,7 +265,7 @@ export class GoogleCivicErrorHandler {
   /**
    * Log error with appropriate level
    */
-  logError(error: GoogleCivicApiError, context?: Record<string, any>): void {
+  logError(error: GoogleCivicApiError, context?: ErrorContext): void {
     const logData = {
       error: error.message,
       statusCode: error.statusCode,
@@ -304,7 +286,7 @@ export class GoogleCivicErrorHandler {
   /**
    * Create error metrics for monitoring
    */
-  createErrorMetrics(error: GoogleCivicApiError): Record<string, any> {
+  createErrorMetrics(error: GoogleCivicApiError): Record<string, unknown> {
     return {
       errorType: 'google_civic_api_error',
       statusCode: error.statusCode,
@@ -324,7 +306,7 @@ export const googleCivicErrorHandler = new GoogleCivicErrorHandler();
 /**
  * Utility function to handle Google Civic API errors
  */
-export function handleGoogleCivicError(error: any, context?: Record<string, any>): GoogleCivicApiError {
+export function handleGoogleCivicError(error: unknown, context?: ErrorContext): GoogleCivicApiError {
   return googleCivicErrorHandler.handleError(error, context);
 }
 
@@ -333,7 +315,7 @@ export function handleGoogleCivicError(error: any, context?: Record<string, any>
  */
 export function executeWithRetry<T>(
   operation: () => Promise<T>,
-  context?: Record<string, any>
+  context?: ErrorContext
 ): Promise<T> {
   return googleCivicErrorHandler.executeWithRetry(operation, context);
 }

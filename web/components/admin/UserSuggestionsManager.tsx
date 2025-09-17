@@ -4,12 +4,8 @@ import React, { useState, useEffect } from 'react';
 import { 
   CheckCircle, 
   X, 
-  Clock, 
-  TrendingUp, 
-  Users, 
   Tag,
   MessageSquare,
-  Filter,
   Search,
   RefreshCw
 } from 'lucide-react';

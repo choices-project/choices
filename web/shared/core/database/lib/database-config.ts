@@ -2,6 +2,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { createClient } from '@supabase/supabase-js';
 import { Pool } from 'pg';
+import { withOptional } from '../../../../lib/util/objects';
 
 // Environment detection
 export const isDevelopment = process.env.NODE_ENV === 'development'
@@ -47,12 +48,16 @@ export const getDatabaseConfig = (): DatabaseConfig => {
 
   // Local development with PostgreSQL
   if (isLocalDevelopment && (DATABASE_URL || LOCAL_DATABASE_URL)) {
-    return {
-      type: 'postgres',
-      url: LOCAL_DATABASE_URL || DATABASE_URL,
-      enabled: true,
-      fallbackToMock: true
-    }
+    return withOptional(
+      {
+        type: 'postgres' as const,
+        enabled: true,
+        fallbackToMock: true
+      },
+      {
+        url: LOCAL_DATABASE_URL || DATABASE_URL
+      }
+    )
   }
 
   // Build time or no database - use mock

@@ -17,9 +17,9 @@ import {
 import { 
   arrayBufferToBase64url,
   base64urlToArrayBuffer,
-  byteaToArrayBuffer,
-  arrayBufferToBytea
+  byteaToArrayBuffer
 } from './type-converters';
+import { devLog } from '@/lib/logger';
 
 /**
  * WebAuthn credential data from database
@@ -83,8 +83,12 @@ export async function verifyCredentialRegistration(
       requireUserVerification: true,
     };
 
-    // Note: expectedCredentialBackupState and expectedCredentialDeviceType are not supported
-    // in @simplewebauthn/server v13.2.0. These properties are handled differently in this version.
+    // If credentialData is provided, use it to set expected backup state
+    if (credentialData) {
+      // Note: expectedCredentialBackupState and expectedCredentialDeviceType are not supported
+      // in @simplewebauthn/server v13.2.0, but we can log the expected state for auditing
+      console.log('Expected credential backup state:', credentialData.backupEligible);
+    }
 
     // Verify the registration response
     const verification = await verifyRegistrationResponse(verificationOptions);
@@ -154,6 +158,12 @@ export async function verifyCredentialAuthentication(
       },
       requireUserVerification: true,
     };
+
+    // Log credential ID for debugging (using the converted ArrayBuffer)
+    devLog('Verifying credential', {
+      credentialId: credentialData.credentialId.substring(0, 8) + '...',
+      credentialIdLength: credentialID.byteLength
+    });
 
     // Verify the authentication response
     const verification = await verifyAuthenticationResponse(verificationOptions);

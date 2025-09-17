@@ -5,7 +5,8 @@
  * with proper validation and error handling.
  */
 
-import { logger } from '@/lib/logger';
+import { logger } from '../../logger';
+import { withOptional } from '../../util/objects';
 import type { 
   GoogleCivicResponse, 
   GoogleCivicRepresentative, 
@@ -16,7 +17,7 @@ import type {
   AddressLookupResult, 
   Representative,
   CandidateCardV1 
-} from '@/features/civics/schemas';
+} from '../../../features/civics/schemas';
 
 export interface TransformedRepresentative extends Representative {
   source: 'google-civic';
@@ -59,8 +60,10 @@ export function transformAddressLookup(
     // Transform representatives
     const representatives = transformRepresentatives(response.officials, response.offices, district, state);
     
-    // Create normalized address
-    const normalizedAddress = createNormalizedAddress(response.normalizedInput);
+    // Create normalized address, fallback to original if normalized input is not available
+    const normalizedAddress = response.normalizedInput ? 
+      createNormalizedAddress(response.normalizedInput) : 
+      originalAddress;
 
     return {
       district,
@@ -89,24 +92,30 @@ export function transformRepresentatives(
     const office = findOfficeForOfficial(offices, index);
     const socialMedia = extractSocialMedia(official.channels);
     
-    return {
-      id: `google-civic-${index}-${Date.now()}`,
-      name: official.name,
-      party: official.party || 'Unknown',
-      office: office?.name || 'Unknown Office',
-      district,
-      state,
-      contact: {
-        phone: official.phones?.[0],
-        email: official.emails?.[0],
-        address: undefined // Not provided by Google Civic API
+    return withOptional(
+      {
+        id: `google-civic-${index}-${Date.now()}`,
+        name: official.name,
+        party: official.party || 'Unknown',
+        office: office?.name || 'Unknown Office',
+        district,
+        state,
+        contact: withOptional(
+          {},
+          {
+            phone: official.phones?.[0],
+            email: official.emails?.[0]
+          }
+        ),
+        source: 'google-civic' as const,
+        sourceId: `official-${index}`
       },
-      source: 'google-civic',
-      sourceId: `official-${index}`,
-      photoUrl: official.photoUrl,
-      socialMedia,
-      channels: official.channels
-    };
+      {
+        photoUrl: official.photoUrl,
+        socialMedia,
+        channels: official.channels || undefined
+      }
+    );
   });
 }
 
@@ -297,18 +306,24 @@ export function validateTransformedData(data: AddressLookupResult): boolean {
  * Clean and normalize representative data
  */
 export function cleanRepresentativeData(representative: TransformedRepresentative): TransformedRepresentative {
-  return {
-    ...representative,
-    name: representative.name.trim(),
-    party: representative.party?.trim() || 'Unknown',
-    office: representative.office.trim(),
-    district: representative.district.trim(),
-    state: representative.state.trim().toUpperCase(),
-    contact: {
-      ...representative.contact,
-      phone: representative.contact.phone?.trim(),
-      email: representative.contact.email?.trim()?.toLowerCase(),
-      website: representative.contact.website?.trim()
-    }
-  };
+  return withOptional(
+    {
+      ...representative,
+      name: representative.name.trim(),
+      party: representative.party?.trim() || 'Unknown',
+      office: representative.office.trim(),
+      district: representative.district.trim(),
+      state: representative.state.trim().toUpperCase(),
+      contact: withOptional(
+        {},
+        {
+          phone: representative.contact.phone?.trim(),
+          email: representative.contact.email?.trim()?.toLowerCase(),
+          website: representative.contact.website?.trim(),
+          address: representative.contact.address
+        }
+      )
+    },
+    {}
+  );
 }

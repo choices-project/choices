@@ -8,8 +8,9 @@
  * Agent D - Database Specialist
  */
 
-import { logger } from '../logger'
-import { getSupabaseServerClient } from '../../utils/supabase/server'
+import { logger } from '@/lib/logger'
+import { getSupabaseServerClient } from '@/utils/supabase/server'
+import type { SupabaseClient } from '@supabase/supabase-js'
 
 // Connection pool configuration
 export interface PoolConfig {
@@ -41,7 +42,7 @@ export interface PoolMetrics {
 // Connection wrapper
 interface ConnectionWrapper {
   id: string
-  connection: any
+  connection: SupabaseClient
   createdAt: number
   lastUsed: number
   isActive: boolean
@@ -74,7 +75,7 @@ export class ConnectionPoolManager {
   private idleConnections: Set<string> = new Set()
   private activeConnections: Set<string> = new Set()
   private pendingRequests: Array<{
-    resolve: (connection: any) => void
+    resolve: (connectionId: string) => void
     reject: (error: Error) => void
     timestamp: number
   }> = []
@@ -186,7 +187,7 @@ export class ConnectionPoolManager {
   /**
    * Acquire a connection from the pool
    */
-  async acquireConnection(): Promise<any> {
+  async acquireConnection(): Promise<SupabaseClient> {
     if (!this.isInitialized) {
       throw new Error('Connection pool not initialized')
     }
@@ -242,7 +243,7 @@ export class ConnectionPoolManager {
   /**
    * Release a connection back to the pool
    */
-  async releaseConnection(connection: any): Promise<void> {
+  async releaseConnection(connection: SupabaseClient): Promise<void> {
     try {
       // Find the connection wrapper
       let connectionId: string | null = null
@@ -346,7 +347,6 @@ export class ConnectionPoolManager {
         .from('polls')
         .select('id')
         .limit(1)
-        .timeout(this.config.validationQueryTimeout)
       
       const validationTime = Date.now() - startTime
       wrapper.validationCount++
@@ -387,9 +387,9 @@ export class ConnectionPoolManager {
         return
       }
       
-      // Close the connection
-      if (wrapper.connection && typeof wrapper.connection.close === 'function') {
-        await wrapper.connection.close()
+      // Close the connection if it has a close method
+      if (wrapper.connection && 'close' in wrapper.connection && typeof wrapper.connection.close === 'function') {
+        await (wrapper.connection as { close: () => Promise<void> }).close()
       }
       
       // Remove from all sets

@@ -1,6 +1,8 @@
 // ============================================================================
 // PHASE 2: DATA RETENTION POLICIES IMPLEMENTATION
 // ============================================================================
+
+import { withOptional } from '../util/objects';
 // Agent A2 - Privacy Specialist
 // 
 // This module implements data retention policies and automatic purging
@@ -285,17 +287,21 @@ export class DataRetentionManager {
       // Calculate next cleanup time
       const nextCleanup = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours from now
       
-      return {
-        dataType,
-        totalRecords: stats.totalRecords,
-        recordsToDelete,
-        recordsToAnonymize,
-        oldestRecord: stats.oldestRecord,
-        newestRecord: stats.newestRecord,
-        nextCleanup,
-        lastCleanup: stats.lastCleanup,
-        policy
-      };
+      return withOptional(
+        {
+          dataType,
+          totalRecords: stats.totalRecords,
+          recordsToDelete,
+          recordsToAnonymize,
+          oldestRecord: stats.oldestRecord,
+          newestRecord: stats.newestRecord,
+          nextCleanup,
+          policy
+        },
+        {
+          lastCleanup: stats.lastCleanup
+        }
+      );
     } catch (error) {
       console.error(`Error getting retention status for ${dataType}:`, error);
       return null;

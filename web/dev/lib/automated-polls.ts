@@ -3,6 +3,7 @@
 
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 import { devLog } from '@/lib/logger';
+import { withOptional } from '@/lib/util/objects';
 
 // ============================================================================
 // CORE INTERFACES
@@ -514,7 +515,7 @@ export class AutomatedPollsService {
   // ============================================================================
 
   private mapTrendingTopicFromDB(data: any): TrendingTopic {
-    return {
+    return withOptional({
       id: data.id,
       title: data.title,
       description: data.description,
@@ -530,10 +531,11 @@ export class AutomatedPollsService {
       metadata: data.metadata || {},
       processingStatus: data.processing_status,
       analysisData: data.analysis_data || {},
-      lastProcessedAt: data.last_processed_at ? new Date(data.last_processed_at) : undefined,
       createdAt: new Date(data.created_at),
       updatedAt: new Date(data.updated_at)
-    };
+    }, {
+      lastProcessedAt: data.last_processed_at ? new Date(data.last_processed_at) : undefined
+    }) as TrendingTopic;
   }
 
   private mapTrendingTopicToDB(topic: Partial<TrendingTopic>): any {
@@ -557,7 +559,7 @@ export class AutomatedPollsService {
   }
 
   private mapGeneratedPollFromDB(data: any): GeneratedPoll {
-    return {
+    return withOptional({
       id: data.id,
       topicId: data.topic_id,
       title: data.title,
@@ -569,13 +571,14 @@ export class AutomatedPollsService {
       qualityScore: data.quality_score,
       status: data.status,
       approvedBy: data.approved_by,
-      approvedAt: data.approved_at ? new Date(data.approved_at) : undefined,
       topicAnalysis: data.topic_analysis || {},
       qualityMetrics: data.quality_metrics || {},
       generationMetadata: data.generation_metadata || {},
       createdAt: new Date(data.created_at),
       updatedAt: new Date(data.updated_at)
-    };
+    }, {
+      approvedAt: data.approved_at ? new Date(data.approved_at) : undefined
+    }) as GeneratedPoll;
   }
 
   private mapGeneratedPollToDB(poll: Partial<GeneratedPoll>): any {
@@ -809,12 +812,15 @@ export function generatePollOptions(topicAnalysis: TopicAnalysis): PollOption[] 
   
   // Use recommended options if available
   if (pollRecommendation.suggestedOptions.length > 0) {
-    return pollRecommendation.suggestedOptions.map((option: any, index: any) => ({
-      id: `option_${index + 1}`,
-      text: option,
-      description: undefined,
-      metadata: {}
-    }));
+    return pollRecommendation.suggestedOptions.map((option: any, index: any) => 
+      withOptional({
+        id: `option_${index + 1}`,
+        text: option,
+        metadata: {}
+      }, {
+        description: undefined
+      }) as PollOption
+    );
   }
   
   // Generate options based on stakeholders

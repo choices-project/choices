@@ -9,6 +9,8 @@ import { NextRequest } from 'next/server';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 import { devLog } from '@/lib/logger';
 import { validateOrigin } from '@/lib/http/origin';
+import { withOptional } from '@/lib/util/objects';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
 export interface User {
   id: string;
@@ -16,6 +18,11 @@ export interface User {
   trust_tier: 'T1' | 'T2' | 'T3';
   username?: string;
   is_admin?: boolean;
+}
+
+export interface UserProfile {
+  trust_tier: 'T1' | 'T2' | 'T3';
+  username?: string;
 }
 
 export interface RequireUserOptions {
@@ -27,7 +34,7 @@ export interface RequireUserOptions {
 
 export interface RequireUserResult {
   user: User;
-  supabase: any;
+  supabase: SupabaseClient;
 }
 
 export interface RequireUserError {
@@ -103,7 +110,7 @@ export async function requireUser(
     const { data: profile, error: profileError } = await supabase
       .from('user_profiles')
       .select('trust_tier, username')
-      .eq('user_id', String(user.id) as any)
+      .eq('user_id', String(user.id))
       .single();
 
     if (profileError) {
@@ -122,14 +129,15 @@ export async function requireUser(
       devLog('Admin check error:', adminError, { userId: user.id });
     }
 
-    const userProfile = profile && !('error' in profile) ? profile as any : null;
-    const userObj: User = {
+    const userProfile = profile && !('error' in profile) ? profile as UserProfile : null;
+    const userObj: User = withOptional({
       id: user.id,
       email: user.email || '',
       trust_tier: userProfile?.trust_tier || 'T1',
-      username: userProfile?.username,
       is_admin: !!isAdmin
-    };
+    }, {
+      username: userProfile?.username
+    });
 
     // Check admin requirement
     if (requireAdmin && !userObj.is_admin) {
@@ -148,9 +156,9 @@ export async function requireUser(
       };
 
       const userTier = tierHierarchy[userObj.trust_tier] || 0;
-      const requiredTier = tierHierarchy[requireTrustTier];
+      const requiredTier = tierHierarchy[requireTrustTier!];
 
-      if (userTier < requiredTier) {
+      if (userTier < (requiredTier || 0)) {
         return {
           error: `Trust tier ${requireTrustTier} required`,
           status: 403
@@ -222,7 +230,7 @@ export async function requireUserForAction(
   const { data: profile, error: profileError } = await supabase
     .from('user_profiles')
     .select('trust_tier, username')
-    .eq('user_id', String(user.id) as any)
+    .eq('user_id', String(user.id))
     .single();
 
   if (profileError) {
@@ -236,14 +244,15 @@ export async function requireUserForAction(
   const { data: isAdmin } = await supabase
     .rpc('is_admin', { user_id: user.id });
 
-  const userProfile = profile && !('error' in profile) ? profile as any : null;
-  const userObj: User = {
+  const userProfile = profile && !('error' in profile) ? profile as UserProfile : null;
+  const userObj: User = withOptional({
     id: user.id,
     email: user.email || '',
     trust_tier: userProfile?.trust_tier || 'T1',
-    username: userProfile?.username,
     is_admin: !!isAdmin
-  };
+  }, {
+    username: userProfile?.username
+  });
 
   // Apply requirements
   if (options.requireAdmin && !userObj.is_admin) {
@@ -261,9 +270,9 @@ export async function requireUserForAction(
     };
 
     const userTier = tierHierarchy[userObj.trust_tier] || 0;
-    const requiredTier = tierHierarchy[options.requireTrustTier];
+    const requiredTier = tierHierarchy[options.requireTrustTier!];
 
-    if (userTier < requiredTier) {
+    if (userTier < (requiredTier || 0)) {
       return {
         error: `Trust tier ${options.requireTrustTier} required`,
         status: 403
@@ -292,7 +301,7 @@ export async function getCurrentUser(): Promise<User | null> {
     const { data: profile, error: profileError } = await supabase
       .from('user_profiles')
       .select('trust_tier, username')
-      .eq('user_id', String(user.id) as any)
+      .eq('user_id', String(user.id))
       .single();
 
     if (profileError) return null;
@@ -301,15 +310,16 @@ export async function getCurrentUser(): Promise<User | null> {
     const { data: isAdmin } = await supabase
       .rpc('is_admin', { user_id: user.id });
 
-    const userProfile = profile && !('error' in profile) ? profile as any : null;
+    const userProfile = profile && !('error' in profile) ? profile as UserProfile : null;
     
-    return {
+    return withOptional({
       id: user.id,
       email: user.email || '',
       trust_tier: userProfile?.trust_tier || 'T1',
-      username: userProfile?.username,
       is_admin: !!isAdmin
-    };
+    }, {
+      username: userProfile?.username
+    });
 
   } catch (error) {
     devLog('Get current user error:', error);

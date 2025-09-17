@@ -224,7 +224,11 @@ export class LoadTestingFramework {
     const ballots: BallotData[] = [];
     
     for (let i = 0; i < count; i++) {
-      const votingMethod = votingMethods[Math.floor(Math.random() * votingMethods.length)];
+      const methodIndex = Math.floor(Math.random() * votingMethods.length);
+      const votingMethod = votingMethods[methodIndex];
+      if (!votingMethod) {
+        throw new Error('Invalid voting method index');
+      }
       const ranking = this.generateRanking(votingMethod);
       
       ballots.push({
@@ -252,13 +256,18 @@ export class LoadTestingFramework {
         return candidates.sort(() => Math.random() - 0.5);
       case 'single':
         // Return single choice
-        return [candidates[Math.floor(Math.random() * candidates.length)]];
+        const singleIndex = Math.floor(Math.random() * candidates.length);
+        const singleCandidate = candidates[singleIndex];
+        if (!singleCandidate) {
+          throw new Error('Invalid candidate index');
+        }
+        return [singleCandidate];
       case 'approval':
         // Return multiple choices
         const numChoices = Math.floor(Math.random() * 3) + 1;
         return candidates.slice(0, numChoices);
       default:
-        return [candidates[0]];
+        return [candidates[0] ?? 'candidate-a'];
     }
   }
 
@@ -385,7 +394,11 @@ export class LoadTestingFramework {
     
     while (Date.now() - sessionStartTime < sessionDuration) {
       try {
-        const ballot = ballots[Math.floor(Math.random() * ballots.length)];
+        const ballotIndex = Math.floor(Math.random() * ballots.length);
+        const ballot = ballots[ballotIndex];
+        if (!ballot) {
+          throw new Error('Invalid ballot index');
+        }
         const responseTime = await this.simulateVoteRequest(ballot);
         
         responseTimes.push(responseTime);
@@ -570,7 +583,7 @@ export class LoadTestingFramework {
     
     const sorted = values.sort((a, b) => a - b);
     const index = Math.ceil((percentile / 100) * sorted.length) - 1;
-    return sorted[Math.max(0, index)];
+    return sorted[Math.max(0, index)] ?? 0;
   }
 
   /**

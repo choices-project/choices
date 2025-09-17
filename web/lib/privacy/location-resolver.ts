@@ -5,6 +5,8 @@
  * No plaintext address or GPS ever leaves the device.
  */
 
+import { withOptional } from '../util/objects';
+
 export type JurisdictionID = string; // e.g. "ocd-division/country:us/state:ca/county:alameda"
 
 export interface ClientResolvedJurisdiction {
@@ -96,11 +98,15 @@ async function resolveViaGoogleCivic(input: LocationInput): Promise<ClientResolv
   // Generate H3 cell for caching (optional)
   const coarseGrid = input.coords ? generateH3Cell(input.coords) : undefined;
 
-  return {
-    jurisdictionIds,
-    coarseGrid,
-    level
-  };
+  return withOptional(
+    {
+      jurisdictionIds,
+      level
+    },
+    {
+      coarseGrid
+    }
+  );
 }
 
 /**
@@ -146,7 +152,10 @@ export function isValidJurisdictionId(id: string): boolean {
  */
 export function extractStateFromJurisdictionId(id: string): string | null {
   const match = id.match(/\/state:([a-z]{2})/);
-  return match ? match[1].toUpperCase() : null;
+  if (match && match[1]) {
+    return match[1].toUpperCase();
+  }
+  return null;
 }
 
 /**
@@ -154,5 +163,5 @@ export function extractStateFromJurisdictionId(id: string): string | null {
  */
 export function extractCountyFromJurisdictionId(id: string): string | null {
   const match = id.match(/\/county:([a-z0-9_-]+)/);
-  return match ? match[1] : null;
+  return match ? match[1] ?? null : null;
 }

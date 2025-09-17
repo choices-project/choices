@@ -54,7 +54,7 @@ class Logger {
 
   warn(message: string, context?: LogContext): void {
     if (this.shouldLog(LogLevel.WARN)) {
-      // eslint-disable-next-line no-console
+       
       console.warn(this.formatMessage('WARN', message, context));
     }
   }
@@ -66,7 +66,7 @@ class Logger {
         error: error?.message,
         stack: error?.stack
       };
-      // eslint-disable-next-line no-console
+       
       console.error(this.formatMessage('ERROR', message, errorContext));
     }
   }

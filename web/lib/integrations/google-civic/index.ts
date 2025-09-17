@@ -20,9 +20,10 @@ export {
   googleCivicErrorHandler,
   handleGoogleCivicError,
   executeWithRetry,
-  type GoogleCivicErrorDetails,
-  type RetryConfig
 } from './error-handling';
+
+// Import types from the types file
+export type { GoogleCivicErrorDetails } from '@/lib/types/google-civic';
 
 // Re-export types from client for convenience
 export type {

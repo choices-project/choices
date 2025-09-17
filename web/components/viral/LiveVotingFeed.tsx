@@ -2,18 +2,14 @@
 
 import React, { useState, useEffect } from 'react';
 import { 
-  Heart, 
   Share2, 
   TrendingUp, 
   Clock, 
-  Users, 
-  Zap,
+  Users,
   Crown,
   Star,
   MessageCircle,
-  ExternalLink,
-  Play,
-  Pause
+  ExternalLink
 } from 'lucide-react';
 import CivicsLure from '../civics/CivicsLure';
 

@@ -4,7 +4,7 @@
  * Errors related to user authentication, authorization, and session management.
  */
 
-import { ApplicationError, ErrorDetails } from './base';
+import { ApplicationError, type ErrorDetails } from './base';
 
 export class AuthenticationError extends ApplicationError {
   constructor(message: string = 'Authentication required', details?: ErrorDetails) {

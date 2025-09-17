@@ -7,11 +7,7 @@
 
 import { createClient } from '@supabase/supabase-js';
 import type {
-  GeographicLookup,
-  ZipToOcd,
-  LatLonToOcd,
-  EntityType,
-  DataSource
+  GeographicLookup
 } from './types';
 
 export interface DistrictInfo {

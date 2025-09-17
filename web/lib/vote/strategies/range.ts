@@ -9,6 +9,7 @@
  */
 
 import { devLog } from '../../logger';
+import { withOptional } from '../../util/objects';
 import type { 
   VotingStrategy, 
   VoteRequest, 
@@ -154,39 +155,47 @@ export class RangeStrategy implements VotingStrategy {
         auditReceipt
       });
 
-      return {
-        success: true,
-        message: 'Vote submitted successfully',
-        pollId,
-        voteId,
-        auditReceipt,
-        privacyLevel,
-        responseTime: 0, // Will be set by the engine
-        metadata: {
-          votingMethod: 'range',
-          ratings,
-          totalScore,
-          averageScore,
-          rangeMin: poll.votingConfig.rangeMin || 0,
-          rangeMax: poll.votingConfig.rangeMax || 10
+      return withOptional(
+        {
+          success: true,
+          message: 'Vote submitted successfully',
+          pollId,
+          voteId,
+          auditReceipt,
+          responseTime: 0, // Will be set by the engine
+          metadata: {
+            votingMethod: 'range',
+            ratings,
+            totalScore,
+            averageScore,
+            rangeMin: poll.votingConfig.rangeMin || 0,
+            rangeMax: poll.votingConfig.rangeMax || 10
+          }
+        },
+        {
+          privacyLevel
         }
-      };
+      );
 
     } catch (error) {
       devLog('Range vote processing error:', error);
-      return {
-        success: false,
-        message: error instanceof Error ? error.message : 'Vote processing failed',
-        pollId: request.pollId,
-        voteId: undefined,
-        auditReceipt: undefined,
-        privacyLevel: request.privacyLevel,
-        responseTime: 0,
-        metadata: {
-          votingMethod: 'range',
-          error: error instanceof Error ? error.message : 'Unknown error'
+      return withOptional(
+        {
+          success: false,
+          message: error instanceof Error ? error.message : 'Vote processing failed',
+          pollId: request.pollId,
+          responseTime: 0,
+          metadata: {
+            votingMethod: 'range',
+            error: error instanceof Error ? error.message : 'Unknown error'
+          }
+        },
+        {
+          voteId: undefined,
+          auditReceipt: undefined,
+          privacyLevel: request.privacyLevel
         }
-      };
+      );
     }
   }
 
@@ -218,24 +227,34 @@ export class RangeStrategy implements VotingStrategy {
           Object.entries(vote.ratings).forEach(([optionIndex, rating]) => {
             const ratingNum = rating as number;
             const optionIdx = optionIndex.toString();
-            rangeScores[optionIdx] += ratingNum;
-            ratingCounts[optionIdx]++;
-            optionVotes[optionIdx]++;
+            // Ensure the option exists in our tracking objects
+            if (rangeScores[optionIdx] !== undefined && 
+                ratingCounts[optionIdx] !== undefined && 
+                optionVotes[optionIdx] !== undefined) {
+              rangeScores[optionIdx] += ratingNum;
+              ratingCounts[optionIdx]++;
+              optionVotes[optionIdx]++;
+            }
           });
         }
       });
 
       // Calculate averages
       Object.keys(rangeScores).forEach(optionIndex => {
-        if (ratingCounts[optionIndex] > 0) {
-          rangeAverages[optionIndex] = rangeScores[optionIndex] / ratingCounts[optionIndex];
+        const count = ratingCounts[optionIndex];
+        const score = rangeScores[optionIndex];
+        if (count !== undefined && score !== undefined && count > 0) {
+          rangeAverages[optionIndex] = score / count;
         }
       });
 
       // Calculate percentages (based on vote count)
       if (totalVotes > 0) {
         Object.keys(optionVotes).forEach(optionIndex => {
-          optionPercentages[optionIndex] = (optionVotes[optionIndex] / totalVotes) * 100;
+          const votes = optionVotes[optionIndex];
+          if (votes !== undefined) {
+            optionPercentages[optionIndex] = (votes / totalVotes) * 100;
+          }
         });
       }
 
@@ -249,22 +268,26 @@ export class RangeStrategy implements VotingStrategy {
           if (average > winnerVotes) {
             winner = optionIndex;
             winnerVotes = average;
-            winnerPercentage = optionPercentages[optionIndex];
+            winnerPercentage = optionPercentages[optionIndex] ?? 0;
           }
         });
       }
 
-      const results: PollResults = {
-        winner,
-        winnerVotes,
-        winnerPercentage,
-        rangeScores,
-        rangeAverages,
-        optionVotes,
-        optionPercentages,
-        abstentions: 0,
-        abstentionPercentage: 0
-      };
+      const results: PollResults = withOptional(
+        {
+          winnerVotes,
+          winnerPercentage,
+          rangeScores,
+          rangeAverages,
+          optionVotes,
+          optionPercentages,
+          abstentions: 0,
+          abstentionPercentage: 0
+        },
+        {
+          winner
+        }
+      );
 
       const resultsData: ResultsData = {
         pollId: poll.id,
@@ -300,7 +323,7 @@ export class RangeStrategy implements VotingStrategy {
     }
   }
 
-  getConfiguration(): Record<string, any> {
+  getConfiguration(): Record<string, unknown> {
     return {
       name: 'Range Voting',
       description: 'Voters rate each option on a scale. The option with the highest average rating wins.',

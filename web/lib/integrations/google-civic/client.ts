@@ -5,9 +5,10 @@
  * error handling, rate limiting, caching, and data validation.
  */
 
-import { logger } from '@/lib/logger';
-import { ApplicationError } from '@/lib/errors';
-import type { AddressLookupResult } from '@/features/civics/schemas';
+import { logger } from '../../logger';
+import { ApplicationError } from '../../errors/base';
+import type { AddressLookupResult } from '../../../features/civics/schemas';
+import type { GoogleCivicElectionInfo, GoogleCivicVoterInfo } from '../../types/google-civic';
 
 export interface GoogleCivicConfig {
   apiKey: string;
@@ -73,7 +74,7 @@ export interface GoogleCivicResponse {
 }
 
 export class GoogleCivicApiError extends ApplicationError {
-  constructor(message: string, statusCode: number, details?: any) {
+  constructor(message: string, statusCode: number, details?: Record<string, unknown>) {
     super(message, statusCode, 'GOOGLE_CIVIC_API_ERROR', details);
   }
 }
@@ -128,7 +129,7 @@ export class GoogleCivicClient {
   /**
    * Get election information for an address
    */
-  async getElectionInfo(address: string): Promise<any> {
+  async getElectionInfo(address: string): Promise<GoogleCivicElectionInfo> {
     await this.checkRateLimit();
 
     try {
@@ -138,7 +139,7 @@ export class GoogleCivicClient {
         address
       });
 
-      return response;
+      return response as GoogleCivicElectionInfo;
     } catch (error) {
       logger.error('Failed to get election info from Google Civic API', { address, error });
       throw error;
@@ -148,19 +149,19 @@ export class GoogleCivicClient {
   /**
    * Get voter information for an address
    */
-  async getVoterInfo(address: string, electionId?: string): Promise<any> {
+  async getVoterInfo(address: string, electionId?: string): Promise<GoogleCivicVoterInfo> {
     await this.checkRateLimit();
 
     try {
       logger.info('Getting voter info from Google Civic API', { address, electionId });
 
-      const params: any = { address };
+      const params: Record<string, string> = { address };
       if (electionId) {
         params.electionId = electionId;
       }
 
       const response = await this.makeRequest('/voterinfo', params);
-      return response;
+      return response as GoogleCivicVoterInfo;
     } catch (error) {
       logger.error('Failed to get voter info from Google Civic API', { address, electionId, error });
       throw error;
@@ -170,7 +171,7 @@ export class GoogleCivicClient {
   /**
    * Make HTTP request to Google Civic API
    */
-  private async makeRequest<T = any>(endpoint: string, params: Record<string, any> = {}): Promise<T> {
+  private async makeRequest<T = unknown>(endpoint: string, params: Record<string, unknown> = {}): Promise<T> {
     const url = new URL(`${this.config.baseUrl}${endpoint}`);
     
     // Add API key
@@ -280,7 +281,9 @@ export class GoogleCivicClient {
         district,
         state,
         representatives,
-        normalizedAddress: `${response.normalizedInput.line1}, ${response.normalizedInput.city}, ${response.normalizedInput.state} ${response.normalizedInput.zip}`,
+        normalizedAddress: response.normalizedInput ? 
+          `${response.normalizedInput.line1}, ${response.normalizedInput.city}, ${response.normalizedInput.state} ${response.normalizedInput.zip}` :
+          originalAddress,
         confidence: 0.95, // Google Civic API is generally reliable
         coordinates: undefined // Not provided by this API
       };
@@ -331,7 +334,7 @@ export class GoogleCivicClient {
     const now = Date.now();
     const cutoff = now - 3600000; // 1 hour ago
 
-    for (const [key] of this.rateLimiter) {
+    for (const [key] of Array.from(this.rateLimiter.entries())) {
       const timestamp = parseInt(key) * (key.length === 10 ? 60000 : 3600000);
       if (timestamp < cutoff) {
         this.rateLimiter.delete(key);

@@ -21,6 +21,8 @@
 // TYPES AND INTERFACES
 // ============================================================================
 
+import { withOptional } from '../util/objects';
+
 export interface ScreenReaderAnnouncement {
   message: string;
   priority: 'polite' | 'assertive';
@@ -227,7 +229,11 @@ export class ScreenReaderSupport {
     }
     
     // Set focus
-    element.focus({ preventScroll: options.preventScroll });
+    const focusOptions = withOptional(
+      {},
+      { preventScroll: options.preventScroll }
+    );
+    element.focus(focusOptions);
     
     // Announce focus change if requested
     if (options.announce) {
@@ -532,7 +538,11 @@ export function announce(message: string, priority: 'polite' | 'assertive' = 'po
  * @param announce - Optional announcement
  */
 export function focusElement(element: HTMLElement, announce?: string): void {
-  ScreenReaderSupport.setFocus(element, { announce });
+  const options = withOptional(
+    {},
+    { announce }
+  );
+  ScreenReaderSupport.setFocus(element, options);
 }
 
 /**

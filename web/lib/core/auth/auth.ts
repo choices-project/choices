@@ -22,10 +22,10 @@ export function getSupabaseServer() {
         get: (name: string) => {
           return cookieStore.get(name)?.value;
         },
-        set: (name: string, value: string, options: any) => {
+        set: (name: string, value: string, options: Record<string, unknown>) => {
           cookieStore.set(name, value, options);
         },
-        remove: (name: string, options: any) => {
+        remove: (name: string, options: Record<string, unknown>) => {
           cookieStore.set(name, '', { ...options, maxAge: 0 });
         },
       },
@@ -36,6 +36,15 @@ export function getSupabaseServer() {
 // Universal auth helper for route handlers
 export async function requireUser(req: Request) {
   const supabase = getSupabaseServer();
+  
+  // Extract user from request headers if available
+  const authHeader = req.headers.get('authorization');
+  if (authHeader?.startsWith('Bearer ')) {
+    const token = authHeader.substring(7);
+    // Set the auth token for this request
+    supabase.auth.setSession({ access_token: token, refresh_token: '' });
+  }
+  
   const { data: { user }, error } = await supabase.auth.getUser();
   
   if (error || !user) {

@@ -218,7 +218,8 @@ class PerformanceMetricsCollector {
    */
   private getLatestMetric(name: string): PerformanceMetric | null {
     const metrics = this.metrics.filter(m => m.name === name);
-    return metrics.length > 0 ? metrics[metrics.length - 1] : null;
+    const latestMetric = metrics[metrics.length - 1];
+    return latestMetric || null;
   }
 
   /**

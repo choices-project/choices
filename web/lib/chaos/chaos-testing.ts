@@ -144,7 +144,7 @@ export class ChaosTestingFramework {
     const targetNode = redisNodes[0];
     
     // Kill Redis node
-    await this.killRedisNode(targetNode);
+    await this.killRedisNode(targetNode || 'default');
     this.systemState.redis = 'failed';
     
     // Test fallback behavior
@@ -153,7 +153,7 @@ export class ChaosTestingFramework {
     const fallbackTime = Date.now() - fallbackStart;
     
     // Restore Redis node
-    await this.restoreRedisNode(targetNode);
+    await this.restoreRedisNode(targetNode || 'default');
     this.systemState.redis = 'healthy';
     
     const success = fallbackTime < 30000; // 30 second threshold

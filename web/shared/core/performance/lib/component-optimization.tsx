@@ -21,12 +21,12 @@ class InlineErrorBoundary extends React.Component<
   { error: unknown }
 > {
   state = { error: null as unknown };
-  static getDerivedStateFromError(error: unknown) { return { error }; }
-  componentDidCatch(_error: unknown) {
+  static override getDerivedStateFromError(error: unknown) { return { error }; }
+  override componentDidCatch(_error: unknown) {
     // optional: route through your logger here
     // logger.error('Lazy component crashed', { error });
   }
-  render() {
+  override render() {
     const { error } = this.state;
     if (error) {
       const { fallback } = this.props;
@@ -46,7 +46,7 @@ export function LazyOptimized<P extends Record<string, unknown>>(props: LazyProp
   return (
     <React.Suspense fallback={fallback ?? <div>Loading…</div>}>
       <InlineErrorBoundary fallback={errorFallback}>
-        {/* eslint-disable-next-line react/jsx-props-no-spreading */}
+        { }
         <LazyComp {...(props.props as any)} />
       </InlineErrorBoundary>
     </React.Suspense>
@@ -61,7 +61,7 @@ export function withLazy<P extends Record<string, unknown>>(loader: () => Promis
     return (
       <React.Suspense fallback={fallback ?? <div>Loading…</div>}>
         <InlineErrorBoundary fallback={errorFallback}>
-          {/* eslint-disable-next-line react/jsx-props-no-spreading */}
+          { }
           <LC {...(rest as any)} />
         </InlineErrorBoundary>
       </React.Suspense>

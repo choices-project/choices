@@ -13,7 +13,7 @@ import { join } from 'path';
 dotenv.config({ path: join(process.cwd(), '.env.local') });
 
 import { canonicalIdService } from '../lib/civics/canonical-id-service';
-import type { DataSource, EntityType } from '../lib/civics/types';
+import type { DataSource } from '../lib/civics/types';
 
 // Test data for a known House member
 const testHouseMember = {

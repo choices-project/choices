@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { feedbackParser, InterestSuggestion } from '@/lib/feedback/FeedbackParser';
+import { feedbackParser } from '@/lib/feedback/FeedbackParser';
+import type { InterestSuggestion } from '@/lib/feedback/FeedbackParser';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 import { devLog } from '@/lib/logger';
 

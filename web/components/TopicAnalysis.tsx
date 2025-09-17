@@ -141,7 +141,7 @@ export function TopicAnalysis({
       const key = Object.keys(item)[0] as keyof typeof item
       const name = String(item[key])
       const value = showYes ? item.yes : item.no
-      const color = showYes ? colors[index % colors.length] : '#ef4444' // Red for No
+      const color: string = showYes ? (colors[index % colors.length] || '#3b82f6') : '#ef4444' // Red for No
       
       return {
         name,

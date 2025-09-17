@@ -6,7 +6,7 @@
  */
 
 import { logger } from '@/lib/logger';
-import { sloMonitor, SLOMetrics } from './slos';
+import { sloMonitor } from './slos';
 
 export interface CriticalMetrics {
   queueDepth: number;

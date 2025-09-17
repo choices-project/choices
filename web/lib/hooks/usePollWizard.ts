@@ -8,8 +8,7 @@
 import { useState, useCallback } from 'react';
 import type { 
   PollWizardData, 
-  PollWizardState, 
-  PollCategory 
+  PollWizardState 
 } from '../types/poll-templates';
 
 const INITIAL_WIZARD_DATA: PollWizardData = {
@@ -231,7 +230,7 @@ export function usePollWizard() {
   // Alias functions for compatibility
   const updateWizardData = updateData;
   const previousStep = prevStep;
-  const updateSettings = (updates: any) => updateData({ settings: { ...wizardState.data.settings, ...updates } });
+  const updateSettings = (updates: Partial<PollWizardData['settings']>) => updateData({ settings: { ...wizardState.data.settings, ...updates } });
 
   return {
     wizardState,

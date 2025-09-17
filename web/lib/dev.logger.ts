@@ -5,7 +5,7 @@
  * This is a placeholder implementation that re-exports the main logger.
  */
 
-import { devLog } from '@/lib/logger';
+import { devLog } from './logger';
 
 export const dev = {
   logger: {

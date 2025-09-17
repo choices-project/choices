@@ -8,7 +8,7 @@ export class CongressGovApiError extends Error {
   constructor(
     message: string,
     public statusCode: number,
-    public apiResponse?: any
+    public apiResponse?: unknown
   ) {
     super(message);
     this.name = 'CongressGovApiError';
@@ -49,13 +49,14 @@ export class CongressGovQuotaExceededError extends CongressGovApiError {
 /**
  * Handle Congress.gov API errors
  */
-export function handleCongressGovError(error: any): never {
+export function handleCongressGovError(error: unknown): never {
   if (error instanceof CongressGovApiError) {
     throw error;
   }
 
-  if (error.response) {
-    const { status, data } = error.response;
+  if (error && typeof error === 'object' && 'response' in error) {
+    const response = (error as { response: { status: number; data: unknown; headers?: Record<string, string> } }).response;
+    const { status, data } = response;
     
     switch (status) {
       case 401:
@@ -63,7 +64,7 @@ export function handleCongressGovError(error: any): never {
       case 404:
         throw new CongressGovNotFoundError('Resource', 'Unknown');
       case 429:
-        const retryAfter = error.response.headers['retry-after'];
+        const retryAfter = response.headers?.['retry-after'];
         throw new CongressGovRateLimitError(
           'Rate limit exceeded',
           retryAfter ? parseInt(retryAfter) : undefined
@@ -78,29 +79,39 @@ export function handleCongressGovError(error: any): never {
         );
       default:
         throw new CongressGovApiError(
-          `API error: ${status} ${data?.message || 'Unknown error'}`,
+          `API error: ${status} ${(data as any)?.message || 'Unknown error'}`,
           status,
           data
         );
     }
   }
 
-  if (error.code === 'ENOTFOUND' || error.code === 'ECONNREFUSED') {
-    throw new CongressGovApiError(
-      'Network error: Unable to connect to Congress.gov API',
-      0
-    );
+  if (error && typeof error === 'object' && 'code' in error) {
+    const errorCode = (error as { code: string }).code;
+    if (errorCode === 'ENOTFOUND' || errorCode === 'ECONNREFUSED') {
+      throw new CongressGovApiError(
+        'Network error: Unable to connect to Congress.gov API',
+        0
+      );
+    }
   }
 
-  if (error.name === 'AbortError') {
-    throw new CongressGovApiError(
-      'Request timeout',
-      408
-    );
+  if (error && typeof error === 'object' && 'name' in error) {
+    const errorName = (error as { name: string }).name;
+    if (errorName === 'AbortError') {
+      throw new CongressGovApiError(
+        'Request timeout',
+        408
+      );
+    }
   }
+
+  const errorMessage = error && typeof error === 'object' && 'message' in error 
+    ? (error as { message: string }).message 
+    : 'Unknown error';
 
   throw new CongressGovApiError(
-    `Unexpected error: ${error.message || 'Unknown error'}`,
+    `Unexpected error: ${errorMessage}`,
     500
   );
 }
@@ -108,7 +119,7 @@ export function handleCongressGovError(error: any): never {
 /**
  * Check if error is a rate limit error
  */
-export function isRateLimitError(error: any): boolean {
+export function isRateLimitError(error: unknown): boolean {
   return error instanceof CongressGovRateLimitError || 
          error instanceof CongressGovQuotaExceededError ||
          (error instanceof CongressGovApiError && error.statusCode === 429);
@@ -117,7 +128,7 @@ export function isRateLimitError(error: any): boolean {
 /**
  * Check if error is a temporary error that can be retried
  */
-export function isRetryableError(error: any): boolean {
+export function isRetryableError(error: unknown): boolean {
   if (error instanceof CongressGovApiError) {
     return error.statusCode >= 500 || error.statusCode === 429;
   }
@@ -127,7 +138,7 @@ export function isRetryableError(error: any): boolean {
 /**
  * Get retry delay for rate limit errors
  */
-export function getRetryDelay(error: any): number {
+export function getRetryDelay(error: unknown): number {
   if (error instanceof CongressGovRateLimitError && error.retryAfter) {
     return error.retryAfter * 1000; // Convert to milliseconds
   }

@@ -5,7 +5,8 @@
  * Protects against automated attacks and bot submissions.
  */
 
-import { devLog } from '@/lib/logger';
+import { devLog } from '../logger';
+import { withOptional } from '../util/objects';
 
 export interface TurnstileConfig {
   secretKey: string;
@@ -110,11 +111,13 @@ export async function verifyTurnstileToken(
     });
 
     if (!result.success) {
-      return {
-        success: false,
-        error: 'Turnstile verification failed',
-        errorCodes: result.error_codes,
-      };
+      return withOptional(
+        { success: false },
+        { 
+          error: 'Turnstile verification failed',
+          errorCodes: result.error_codes
+        }
+      );
     }
 
     // Additional validation in strict mode
@@ -125,12 +128,14 @@ export async function verifyTurnstileToken(
       }
     }
 
-    return {
-      success: true,
-      hostname: result.hostname,
-      action: result.action,
-      timestamp: result.challenge_ts,
-    };
+    return withOptional(
+      { success: true },
+      { 
+        hostname: result.hostname,
+        action: result.action,
+        timestamp: result.challenge_ts
+      }
+    );
 
   } catch (error) {
     devLog('Turnstile verification error:', error);
@@ -156,24 +161,27 @@ function validateTurnstileResponse(
   response: TurnstileResponse,
   config: TurnstileConfig
 ): TurnstileVerificationResult {
-  // Validate hostname if provided
-  if (response.hostname) {
-    const allowedHostnames = [
-      'choices-platform.vercel.app',
-      'choices.app',
-      'www.choices.app',
-    ];
+  // Use config for validation settings
+  if (config.strictMode) {
+    // Validate hostname if provided
+    if (response.hostname) {
+      const allowedHostnames = [
+        'choices-platform.vercel.app',
+        'choices.app',
+        'www.choices.app',
+      ];
 
-    if (process.env.NODE_ENV === 'development') {
-      allowedHostnames.push('localhost', '127.0.0.1');
-    }
+      if (process.env.NODE_ENV === 'development') {
+        allowedHostnames.push('localhost', '127.0.0.1');
+      }
 
-    if (!allowedHostnames.includes(response.hostname)) {
-      return {
-        success: false,
-        error: `Invalid hostname: ${response.hostname}`,
-        hostname: response.hostname,
-      };
+      if (!allowedHostnames.includes(response.hostname)) {
+        return {
+          success: false,
+          error: `Invalid hostname: ${response.hostname}`,
+          hostname: response.hostname,
+        };
+      }
     }
   }
 
@@ -267,17 +275,14 @@ export function getTurnstileWidgetConfig(action?: string): {
   size?: 'normal' | 'compact';
   tabindex?: number;
 } {
-  const config: any = {
-    sitekey: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || '',
-    theme: 'auto',
-    size: 'normal',
-  };
-
-  if (action) {
-    config.action = action;
-  }
-
-  return config;
+  return withOptional(
+    {
+      sitekey: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || '',
+      theme: 'auto' as const,
+      size: 'normal' as const,
+    },
+    { action }
+  );
 }
 
 /**

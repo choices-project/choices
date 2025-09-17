@@ -16,16 +16,12 @@ import { getSupabaseServerClient } from '@/utils/supabase/server';
 import { devLog } from '@/lib/logger';
 import { rateLimiters } from '@/lib/core/security/rate-limit';
 import { validateOrigin } from '@/lib/http/origin';
-import { requireTurnstileVerification } from '@/lib/security/turnstile';
 import { 
   byteaToArrayBuffer,
-  base64urlToArrayBuffer,
   sanitizeCredentialId,
   logCredentialOperation
 } from '@/lib/webauthn/pg-bytea';
 import { 
-  WebAuthnError, 
-  WebAuthnErrorType, 
   handleWebAuthnError 
 } from '@/lib/webauthn/error-handling';
 import { 

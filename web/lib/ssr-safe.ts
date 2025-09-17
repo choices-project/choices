@@ -2,7 +2,7 @@
  * SSR/browser guards + helpers. Warn in prod if this stub lingers.
  */
 if (process.env.NODE_ENV === 'production') {
-  // eslint-disable-next-line no-console
+   
   console.warn('[ssr-safe] Using temporary stub in production. Replace with real impl.');
 }
 

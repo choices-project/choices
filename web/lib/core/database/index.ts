@@ -16,7 +16,7 @@ export interface DatabaseConfig {
   ssl?: boolean;
 }
 
-export interface QueryResult<T = any> {
+export interface QueryResult<T = unknown> {
   data: T[];
   error?: string;
   count?: number;

@@ -1,6 +1,8 @@
 // Comprehensive Cross-Platform Testing Suite
 // Tests web and mobile compatibility across all devices and browsers
 
+import { withOptional } from '@/lib/util/objects';
+
 export interface DeviceInfo {
   userAgent: string
   platform: string
@@ -102,7 +104,7 @@ export class CrossPlatformTesting {
       }
     }
 
-    return {
+    return withOptional({
       userAgent: navigator.userAgent,
       platform: navigator.platform,
       vendor: navigator.vendor,
@@ -123,13 +125,14 @@ export class CrossPlatformTesting {
       viewport: {
         width: window.innerWidth,
         height: window.innerHeight
-      },
+      }
+    }, {
       connection: (navigator as any).connection ? {
         effectiveType: (navigator as any).connection.effectiveType,
         downlink: (navigator as any).connection.downlink,
         rtt: (navigator as any).connection.rtt
       } : undefined
-    }
+    }) as DeviceInfo
   }
 
   // Get browser information
@@ -163,52 +166,52 @@ export class CrossPlatformTesting {
     if (ua.includes('Chrome')) {
       name = 'Chrome'
       const match = ua.match(/Chrome\/(\d+)/)
-      version = match ? match[1] : 'Unknown'
+      version = match?.[1] || 'Unknown'
     } else if (ua.includes('Firefox')) {
       name = 'Firefox'
       const match = ua.match(/Firefox\/(\d+)/)
-      version = match ? match[1] : 'Unknown'
+      version = match?.[1] || 'Unknown'
     } else if (ua.includes('Safari') && !ua.includes('Chrome')) {
       name = 'Safari'
       const match = ua.match(/Version\/(\d+)/)
-      version = match ? match[1] : 'Unknown'
+      version = match?.[1] || 'Unknown'
     } else if (ua.includes('Edge')) {
       name = 'Edge'
       const match = ua.match(/Edge\/(\d+)/)
-      version = match ? match[1] : 'Unknown'
+      version = match?.[1] ?? 'Unknown'
     }
 
     // Detect engine
     if (ua.includes('WebKit')) {
       engine = 'WebKit'
       const match = ua.match(/WebKit\/(\d+)/)
-      engineVersion = match ? match[1] : 'Unknown'
+      engineVersion = match?.[1] ?? 'Unknown'
     } else if (ua.includes('Gecko')) {
       engine = 'Gecko'
       const match = ua.match(/rv:(\d+)/)
-      engineVersion = match ? match[1] : 'Unknown'
+      engineVersion = match?.[1] ?? 'Unknown'
     }
 
     // Detect OS
     if (ua.includes('Windows')) {
       os = 'Windows'
       const match = ua.match(/Windows NT (\d+\.\d+)/)
-      osVersion = match ? match[1] : 'Unknown'
+      osVersion = match?.[1] ?? 'Unknown'
     } else if (ua.includes('Mac OS X')) {
       os = 'macOS'
       const match = ua.match(/Mac OS X (\d+_\d+)/)
-      osVersion = match ? match[1].replace('_', '.') : 'Unknown'
+      osVersion = match?.[1]?.replace('_', '.') ?? 'Unknown'
     } else if (ua.includes('Linux')) {
       os = 'Linux'
       osVersion = 'Unknown'
     } else if (ua.includes('Android')) {
       os = 'Android'
       const match = ua.match(/Android (\d+\.\d+)/)
-      osVersion = match ? match[1] : 'Unknown'
+      osVersion = match?.[1] ?? 'Unknown'
     } else if (ua.includes('iOS')) {
       os = 'iOS'
       const match = ua.match(/OS (\d+_\d+)/)
-      osVersion = match ? match[1].replace('_', '.') : 'Unknown'
+      osVersion = match?.[1]?.replace('_', '.') ?? 'Unknown'
     }
 
     // Detect device type

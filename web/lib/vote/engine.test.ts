@@ -9,7 +9,7 @@
 
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { VoteEngine, type VoteEngineConfig } from './engine';
-import type { VoteRequest, PollData, VoteData } from './types';
+import type { VoteRequest, PollData, VoteData, VotingMethod } from './types';
 
 // Mock the logger
 jest.mock('@/lib/logger', () => ({
@@ -130,7 +130,8 @@ describe('VoteEngine', () => {
     });
 
     it('should reject vote without authentication when required', async () => {
-      const unauthenticatedRequest = { ...mockVoteRequest, userId: undefined };
+      const unauthenticatedRequest = { ...mockVoteRequest };
+      delete unauthenticatedRequest.userId;
       const validation = await engine.validateVote(unauthenticatedRequest, mockPoll);
       expect(validation.isValid).toBe(false);
       expect(validation.error).toBe('Authentication required to vote');
@@ -139,7 +140,8 @@ describe('VoteEngine', () => {
 
     it('should allow vote without authentication when not required', async () => {
       engine.updateConfig({ requireAuthentication: false });
-      const unauthenticatedRequest = { ...mockVoteRequest, userId: undefined };
+      const unauthenticatedRequest = { ...mockVoteRequest };
+      delete unauthenticatedRequest.userId;
       const validation = await engine.validateVote(unauthenticatedRequest, mockPoll);
       expect(validation.isValid).toBe(true);
     });
@@ -281,7 +283,7 @@ describe('VoteEngine', () => {
 
     it('should throw error for unsupported voting method', () => {
       expect(() => {
-        engine.getVotingMethodConfig('unsupported' as any);
+        engine.getVotingMethodConfig('unsupported' as VotingMethod);
       }).toThrow('Unsupported voting method: unsupported');
     });
   });

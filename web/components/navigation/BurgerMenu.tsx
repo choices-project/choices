@@ -2,9 +2,7 @@
 
 import React, { useState } from 'react';
 import { 
-  Menu, 
   X, 
-  Github, 
   Heart, 
   Users, 
   Code, 

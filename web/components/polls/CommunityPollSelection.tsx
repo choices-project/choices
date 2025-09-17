@@ -3,12 +3,9 @@
 import React, { useState } from 'react';
 import { 
   TrendingUp, 
-  Clock, 
   Users, 
-  Star, 
   CheckCircle, 
   Heart,
-  Calendar,
   Award,
   Zap
 } from 'lucide-react';

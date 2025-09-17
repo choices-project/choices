@@ -8,9 +8,9 @@
  * Updated: September 15, 2025
  */
 
-import { devLog } from '@/lib/logger';
-import { getSupabaseServerClient } from '@/utils/supabase/server';
-import { v4 as uuidv4 } from 'uuid';
+import { devLog } from '../logger';
+import { getSupabaseServerClient } from '../../utils/supabase/server';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import type { 
   VoteData, 
   PollData, 
@@ -18,12 +18,23 @@ import type {
   VoteSubmissionResult
 } from './types';
 
+type ClientFactory = () => SupabaseClient | Promise<SupabaseClient>;
+
 export class VoteProcessor implements IVoteProcessor {
-  private supabase: any;
+  private _db?: SupabaseClient;
+  private readonly clientFactory: ClientFactory;
   private rateLimitCache: Map<string, { count: number; resetTime: number }> = new Map();
 
-  constructor() {
-    this.supabase = getSupabaseServerClient();
+  constructor(factory: ClientFactory = getSupabaseServerClient) {
+    this.clientFactory = factory;
+  }
+
+  private async db(): Promise<SupabaseClient> {
+    if (!this._db) {
+      const c = this.clientFactory();
+      this._db = (c instanceof Promise) ? await c : c;
+    }
+    return this._db!;
   }
 
   /**
@@ -34,13 +45,7 @@ export class VoteProcessor implements IVoteProcessor {
     
     try {
       // Get poll data from database
-      const supabaseClient = await this.supabase;
-      if (!supabaseClient) {
-        return {
-          success: false,
-          error: 'Supabase client not available'
-        };
-      }
+      const supabaseClient = await this.db();
 
       const { data: pollData, error: pollError } = await supabaseClient
         .from('polls')
@@ -102,7 +107,7 @@ export class VoteProcessor implements IVoteProcessor {
       }
 
       // Update poll vote count
-      await this.updatePollVoteCount(vote.pollId, supabaseClient);
+      await this.updatePollVoteCount(vote.pollId, await supabaseClient);
 
       // Update rate limit cache
       if (vote.userId) {
@@ -185,7 +190,7 @@ export class VoteProcessor implements IVoteProcessor {
 
       // Check if user has already voted (if not allowing multiple votes)
       if (userId) {
-        const supabaseClient = await this.supabase;
+        const supabaseClient = await this.db();
         if (supabaseClient) {
           const { data: existingVote } = await supabaseClient
             .from('votes')
@@ -211,7 +216,7 @@ export class VoteProcessor implements IVoteProcessor {
   /**
    * Update poll vote count
    */
-  private async updatePollVoteCount(pollId: string, supabaseClient: any): Promise<void> {
+  private async updatePollVoteCount(pollId: string, supabaseClient: Awaited<ReturnType<typeof getSupabaseServerClient>>): Promise<void> {
     try {
       // Get current vote count
       const { count } = await supabaseClient

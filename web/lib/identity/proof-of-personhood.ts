@@ -401,7 +401,8 @@ export class ProofOfPersonhoodManager {
     const bytes = new Uint8Array(buffer);
     let binary = '';
     for (let i = 0; i < bytes.byteLength; i++) {
-      binary += String.fromCharCode(bytes[i]);
+      const byte = bytes[i] ?? 0;
+      binary += String.fromCharCode(byte);
     }
     return btoa(binary);
   }
@@ -413,8 +414,13 @@ export class ProofOfPersonhoodManager {
       // Mock implementation - in production, use real geocoding
       const mockJurisdictions = ['CA-12', 'NY-14', 'TX-28', 'FL-27'];
       const hash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(address));
-      const index = new Uint8Array(hash)[0] % mockJurisdictions.length;
-      return mockJurisdictions[index];
+      const hashArray = new Uint8Array(hash);
+      const firstByte = hashArray[0];
+      if (firstByte !== undefined) {
+        const index = firstByte % mockJurisdictions.length;
+        return mockJurisdictions[index] ?? null;
+      }
+      return mockJurisdictions[0] ?? null;
     } catch (error) {
       console.error('Jurisdiction determination failed:', error);
       return null;

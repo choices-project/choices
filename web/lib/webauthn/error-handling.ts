@@ -41,26 +41,35 @@ export enum WebAuthnErrorType {
 }
 
 /**
+ * WebAuthn error details interface
+ */
+export interface WebAuthnErrorDetails {
+  [key: string]: unknown;
+}
+
+/**
  * WebAuthn error class
  */
 export class WebAuthnError extends Error {
   public readonly type: WebAuthnErrorType;
   public readonly statusCode: number;
   public readonly userMessage: string;
-  public readonly details?: any;
+  public readonly details?: WebAuthnErrorDetails;
 
   constructor(
     type: WebAuthnErrorType,
     message: string,
     userMessage?: string,
-    details?: any
+    details?: WebAuthnErrorDetails
   ) {
     super(message);
     this.name = 'WebAuthnError';
     this.type = type;
     this.statusCode = getStatusCodeForError(type);
     this.userMessage = userMessage || getUserMessageForError(type);
-    this.details = details;
+    if (details) {
+      this.details = details;
+    }
   }
 }
 
@@ -281,14 +290,14 @@ export function handleWebAuthnError(error: unknown): {
   statusCode: number;
   error: string;
   userMessage: string;
-  details?: any;
+  details?: WebAuthnErrorDetails;
 } {
   if (error instanceof WebAuthnError) {
     return {
       statusCode: error.statusCode,
       error: error.type,
       userMessage: error.userMessage,
-      details: error.details
+      ...(error.details ? { details: error.details } : {})
     };
   }
   
@@ -298,7 +307,7 @@ export function handleWebAuthnError(error: unknown): {
       statusCode: webAuthnError.statusCode,
       error: webAuthnError.type,
       userMessage: webAuthnError.userMessage,
-      details: webAuthnError.details
+      ...(webAuthnError.details ? { details: webAuthnError.details } : {})
     };
   }
   

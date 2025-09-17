@@ -2,14 +2,10 @@
 
 import React, { useState } from 'react';
 import { 
-  Plus, 
   Users, 
-  TrendingUp, 
-  Clock, 
   CheckCircle, 
   AlertTriangle,
   Heart,
-  Star,
   MessageCircle,
   Share2
 } from 'lucide-react';

@@ -154,7 +154,7 @@ export class DifferentialPrivacy {
   // Median with differential privacy
   privateMedian(values: number[]): NoisyResult {
     const sorted = [...values].sort((a, b) => a - b)
-    const median = sorted[Math.floor(sorted.length / 2)]
+    const median = sorted[Math.floor(sorted.length / 2)] ?? 0
     return this.laplaceMechanism(median)
   }
 
@@ -241,17 +241,29 @@ export class DifferentialPrivacy {
   }
 
   private weightedRandomChoice<T>(items: T[], probabilities: number[]): T {
+    if (items.length === 0) {
+      throw new Error('No items available for selection')
+    }
+    
     const random = Math.random()
     let cumulativeProbability = 0
     
     for (let i = 0; i < items.length; i++) {
-      cumulativeProbability += probabilities[i]
-      if (random <= cumulativeProbability) {
-        return items[i]
+      const prob = probabilities[i]
+      if (prob !== undefined) {
+        cumulativeProbability += prob
+        if (random <= cumulativeProbability) {
+          return items[i] ?? items[0]!
+        }
       }
     }
     
-    return items[items.length - 1]
+    const lastItem = items[items.length - 1]
+    if (lastItem !== undefined) {
+      return lastItem
+    }
+    
+    return items[0]!
   }
 
   private calculateConfidence(scale: number): number {

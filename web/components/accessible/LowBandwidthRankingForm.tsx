@@ -147,11 +147,16 @@ export function LowBandwidthRankingForm({
       return;
     }
 
-    setState(prevState => ({
-      ...prevState,
-      isSubmitting: true,
-      submissionError: undefined
-    }));
+    setState(prevState => {
+      const newState = {
+        ...prevState,
+        isSubmitting: true
+      };
+      if ('submissionError' in newState) {
+        delete newState.submissionError;
+      }
+      return newState;
+    });
 
     ScreenReaderSupport.announceFormSubmission('submitting');
 
@@ -183,13 +188,18 @@ export function LowBandwidthRankingForm({
   };
 
   const clearForm = () => {
-    setState(prevState => ({
-      ...prevState,
-      rankings: {},
-      errors: [],
-      isSubmitted: false,
-      submissionError: undefined
-    }));
+    setState(prevState => {
+      const newState = {
+        ...prevState,
+        rankings: {},
+        errors: [],
+        isSubmitted: false
+      };
+      if ('submissionError' in newState) {
+        delete newState.submissionError;
+      }
+      return newState;
+    });
 
     // Clear all inputs
     if (formRef.current) {

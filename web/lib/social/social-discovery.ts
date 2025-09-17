@@ -18,114 +18,20 @@
 // Status: Phase 4 Implementation
 // ============================================================================
 
-import { devLog } from '@/lib/logger';
+import { devLog } from '../logger';
+import type {
+  InterestRecommendation,
+  NetworkInsight,
+  TrendingCandidate,
+  TrendingMetadata,
+  Activity,
+  CommunityDiscussion,
+  SocialEngagement
+} from './types';
 
 // ============================================================================
-// TYPES AND INTERFACES
+// TYPES AND INTERFACES - Imported from ./types.ts
 // ============================================================================
-
-export interface UserProfile {
-  id: string;
-  age: number;
-  education: string;
-  location: string;
-  interests: string[];
-  demographics: Demographics;
-  votingHistory: VotingRecord[];
-}
-
-export interface Demographics {
-  ageGroup: string;
-  education: string;
-  location: string;
-  politicalAffiliation?: string;
-  incomeBracket?: string;
-}
-
-export interface VotingRecord {
-  pollId: string;
-  ranking: string[];
-  timestamp: Date;
-  category: string;
-}
-
-export interface InterestRecommendation {
-  candidateId: string;
-  candidateName: string;
-  interest: string;
-  alignmentScore: number;
-  userCount: number;
-  confidence: number;
-  reason: string;
-  privacyProtected: boolean;
-}
-
-export interface NetworkInsight {
-  connectionId: string;
-  connectionName: string;
-  sharedInterests: string[];
-  ranking: string[];
-  confidence: number;
-  privacyProtected: boolean;
-}
-
-export interface TrendingCandidate {
-  candidateId: string;
-  candidateName: string;
-  trendScore: number;
-  activityCount: number;
-  trendDirection: 'up' | 'down' | 'stable';
-  timeWindow: number;
-  confidence: number;
-  metadata: TrendingMetadata;
-}
-
-export interface TrendingMetadata {
-  pollId: string;
-  category: string;
-  geographicArea: string;
-  demographicGroup: string;
-  interestCategories: string[];
-}
-
-export interface Activity {
-  candidateId: string;
-  timestamp: Date;
-  intensity: number;
-  type: 'vote' | 'view' | 'share' | 'discuss';
-  userId?: string;
-  metadata?: Record<string, any>;
-}
-
-export interface CommunityDiscussion {
-  id: string;
-  pollId: string;
-  candidateId?: string;
-  title: string;
-  content: string;
-  authorId: string;
-  authorName: string;
-  createdAt: Date;
-  updatedAt: Date;
-  upvotes: number;
-  downvotes: number;
-  replies: number;
-  isModerated: boolean;
-  tags: string[];
-}
-
-export interface SocialEngagement {
-  userId: string;
-  pollId: string;
-  actions: {
-    voted: boolean;
-    shared: boolean;
-    discussed: boolean;
-    recommended: boolean;
-  };
-  timestamp: Date;
-  engagementScore: number;
-}
 
 // ============================================================================
 // INTEREST RECOMMENDATION ENGINE
@@ -239,13 +145,17 @@ export class InterestRecommendationEngine {
   }
 
   // Mock data methods - replace with real database calls
-  private static async getUserInterests(userId: string): Promise<string[]> {
+  private static async getUserInterests(_userId: string): Promise<string[]> {
     return ['environment', 'education', 'technology'];
   }
 
-  private static async getPoll(pollId: string): Promise<any> {
+  private static async getPoll(_pollId: string): Promise<{
+    id: string;
+    title: string;
+    candidates: Array<{ id: string; name: string }>;
+  }> {
     return {
-      id: pollId,
+      id: _pollId,
       title: 'Sample Poll',
       candidates: [
         { id: 'candidate1', name: 'Jane Smith' },
@@ -254,7 +164,14 @@ export class InterestRecommendationEngine {
     };
   }
 
-  private static async getAggregatedInsights(pollId: string): Promise<any> {
+  private static async getAggregatedInsights(_pollId: string): Promise<{
+    interestBreakdowns: Record<string, {
+      interest: string;
+      topCandidate: { id: string; name: string; alignmentScore: number };
+      userCount: number;
+      confidence: number;
+    }>;
+  }> {
     return {
       interestBreakdowns: {
         'environment': {
@@ -273,7 +190,11 @@ export class InterestRecommendationEngine {
     };
   }
 
-  private static async getUserConnections(userId: string): Promise<any[]> {
+  private static async getUserConnections(_userId: string): Promise<Array<{
+    id: string;
+    name: string;
+    sharedInterests: string[];
+  }>> {
     return [
       {
         id: 'connection1',
@@ -283,7 +204,11 @@ export class InterestRecommendationEngine {
     ];
   }
 
-  private static async getConnectionInsights(connectionId: string, pollId: string): Promise<any> {
+  private static async getConnectionInsights(_connectionId: string, _pollId: string): Promise<{
+    ranking: string[];
+    confidence: number;
+    privacyProtected: boolean;
+  }> {
     return {
       ranking: ['candidate1', 'candidate2'],
       confidence: 0.8,
@@ -433,7 +358,7 @@ export class TrendingCandidateDetector {
   private static calculateVelocity(buckets: number[]): number {
     let velocity = 0;
     for (let i = 1; i < buckets.length; i++) {
-      velocity += buckets[i] - buckets[i - 1];
+      velocity += (buckets[i] ?? 0) - (buckets[i - 1] ?? 0);
     }
     return velocity / (buckets.length - 1);
   }
@@ -441,8 +366,8 @@ export class TrendingCandidateDetector {
   private static calculateAcceleration(buckets: number[]): number {
     let acceleration = 0;
     for (let i = 2; i < buckets.length; i++) {
-      const velocity1 = buckets[i] - buckets[i - 1];
-      const velocity2 = buckets[i - 1] - buckets[i - 2];
+      const velocity1 = (buckets[i] ?? 0) - (buckets[i - 1] ?? 0);
+      const velocity2 = (buckets[i - 1] ?? 0) - (buckets[i - 2] ?? 0);
       acceleration += velocity1 - velocity2;
     }
     return acceleration / (buckets.length - 2);
@@ -458,7 +383,7 @@ export class TrendingCandidateDetector {
     return max - min;
   }
 
-  private static async getTrendingMetadata(candidateId: string, pollId: string): Promise<TrendingMetadata> {
+  private static async getTrendingMetadata(_candidateId: string, pollId: string): Promise<TrendingMetadata> {
     // Mock implementation - replace with real data
     return {
       pollId,
@@ -470,9 +395,12 @@ export class TrendingCandidateDetector {
   }
 
   // Mock data methods - replace with real database calls
-  private static async getPoll(pollId: string): Promise<any> {
+  private static async getPoll(_pollId: string): Promise<{
+    id: string;
+    candidates: Array<{ id: string; name: string }>;
+  }> {
     return {
-      id: pollId,
+      id: _pollId,
       candidates: [
         { id: 'candidate1', name: 'Jane Smith' },
         { id: 'candidate2', name: 'John Doe' },
@@ -481,7 +409,7 @@ export class TrendingCandidateDetector {
     };
   }
 
-  private static async getRecentActivity(pollId: string, timeWindow: number): Promise<Activity[]> {
+  private static async getRecentActivity(_pollId: string, _timeWindow: number): Promise<Activity[]> {
     // Mock implementation - replace with real database call
     const now = new Date();
     return [
@@ -645,30 +573,35 @@ export class CommunityDiscussionsManager {
     ];
   }
 
-  private static async getDiscussionsByCandidate(candidateId: string): Promise<CommunityDiscussion[]> {
+  private static async getDiscussionsByCandidate(_candidateId: string): Promise<CommunityDiscussion[]> {
     // Mock implementation
     return [];
   }
 
-  private static async getDiscussion(discussionId: string): Promise<CommunityDiscussion | null> {
+  private static async getDiscussion(_discussionId: string): Promise<CommunityDiscussion | null> {
     // Mock implementation
     return null;
   }
 
-  private static async getUserVote(discussionId: string, userId: string): Promise<any> {
+  private static async getUserVote(_discussionId: string, _userId: string): Promise<{
+    discussionId: string;
+    userId: string;
+    voteType: 'upvote' | 'downvote';
+    timestamp: Date;
+  } | null> {
     // Mock implementation
     return null;
   }
 
-  private static async updateVote(discussionId: string, userId: string, voteType: string): Promise<void> {
+  private static async updateVote(_discussionId: string, _userId: string, _voteType: string): Promise<void> {
     // Mock implementation
   }
 
-  private static async createVote(discussionId: string, userId: string, voteType: string): Promise<void> {
+  private static async createVote(_discussionId: string, _userId: string, _voteType: string): Promise<void> {
     // Mock implementation
   }
 
-  private static async updateDiscussionVotes(discussionId: string): Promise<void> {
+  private static async updateDiscussionVotes(_discussionId: string): Promise<void> {
     // Mock implementation
   }
 }
@@ -737,12 +670,12 @@ export class SocialEngagementTracker {
     devLog('Updating engagement metrics:', engagement);
   }
 
-  private static async getPollTotalUsers(pollId: string): Promise<number> {
+  private static async getPollTotalUsers(_pollId: string): Promise<number> {
     // Mock implementation
     return 1000;
   }
 
-  private static async getEngagedUsers(pollId: string): Promise<number> {
+  private static async getEngagedUsers(_pollId: string): Promise<number> {
     // Mock implementation
     return 300;
   }
@@ -770,9 +703,11 @@ export class SocialEngagementTracker {
 // EXPORTED CLASSES
 // ============================================================================
 
-export default {
+const socialDiscovery = {
   InterestRecommendationEngine,
   TrendingCandidateDetector,
   CommunityDiscussionsManager,
   SocialEngagementTracker
 };
+
+export default socialDiscovery;

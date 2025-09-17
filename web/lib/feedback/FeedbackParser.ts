@@ -8,7 +8,8 @@
  * - Admin dashboard submissions
  */
 
-import { devLog } from '@/lib/logger';
+import { devLog } from '../logger';
+import { withOptional } from '../util/objects';
 
 export interface ParsedFeedback {
   id: string;
@@ -51,6 +52,19 @@ export interface PollSuggestion {
   createdAt: string;
 }
 
+export interface RawFeedbackItem {
+  type?: 'interest' | 'demographic' | 'poll' | 'general' | 'bug' | 'feature';
+  text?: string;
+  title?: string;
+  description?: string;
+  category?: string;
+  userId?: string;
+  timestamp?: string;
+  userAgent?: string;
+  source?: 'onboarding' | 'feedback_widget' | 'admin_dashboard' | 'api';
+  [key: string]: unknown;
+}
+
 export class FeedbackParser {
   private static instance: FeedbackParser;
   
@@ -76,7 +90,7 @@ export class FeedbackParser {
     // AI analysis (simplified for now)
     const aiAnalysis = await this.performAIAnalysis(cleanedText, type);
     
-    const parsed: ParsedFeedback = {
+    const parsed: ParsedFeedback = withOptional({
       id: this.generateId(),
       type: type === 'interest' ? 'interest_suggestion' : 'demographic_suggestion',
       category: type,
@@ -85,14 +99,19 @@ export class FeedbackParser {
       sentiment,
       priority,
       tags: keywords,
-      metadata: {
-        source: 'onboarding',
-        userId,
-        timestamp,
-        originalText: text
-      },
+      metadata: withOptional(
+        {
+          source: 'onboarding' as const,
+          timestamp,
+          originalText: text
+        },
+        {
+          userId
+        }
+      )
+    }, {
       aiAnalysis
-    };
+    });
 
     devLog('Parsed interest suggestion:', parsed);
     return parsed;
@@ -112,7 +131,7 @@ export class FeedbackParser {
     
     const aiAnalysis = await this.performAIAnalysis(cleanedDescription, 'poll');
     
-    const parsed: ParsedFeedback = {
+    const parsed: ParsedFeedback = withOptional({
       id: this.generateId(),
       type: 'poll_suggestion',
       category: 'poll',
@@ -126,9 +145,10 @@ export class FeedbackParser {
         userId: suggestedBy,
         timestamp: createdAt,
         originalText: `${title} - ${description}`
-      },
+      }
+    }, {
       aiAnalysis
-    };
+    });
 
     devLog('Parsed poll suggestion:', parsed);
     return parsed;
@@ -153,7 +173,7 @@ export class FeedbackParser {
     
     const aiAnalysis = await this.performAIAnalysis(cleanedText, feedbackType);
     
-    const parsed: ParsedFeedback = {
+    const parsed: ParsedFeedback = withOptional({
       id: this.generateId(),
       type: feedbackType,
       category: this.mapTypeToCategory(feedbackType),
@@ -162,14 +182,16 @@ export class FeedbackParser {
       sentiment,
       priority,
       tags: keywords,
-      metadata: {
+      metadata: withOptional({
         source: 'feedback_widget',
-        userId,
         timestamp,
         originalText: text
-      },
+      }, {
+        userId
+      })
+    }, {
       aiAnalysis
-    };
+    });
 
     devLog('Parsed general feedback:', parsed);
     return parsed;
@@ -178,22 +200,51 @@ export class FeedbackParser {
   /**
    * Batch process multiple feedback items
    */
-  async batchProcess(feedbackItems: any[]): Promise<ParsedFeedback[]> {
+  async batchProcess(feedbackItems: RawFeedbackItem[]): Promise<ParsedFeedback[]> {
     const results: ParsedFeedback[] = [];
     
     for (const item of feedbackItems) {
       try {
-        let parsed: ParsedFeedback;
+        let parsed: ParsedFeedback | undefined;
         
         if (item.type && (item.type === 'interest' || item.type === 'demographic')) {
-          parsed = await this.parseInterestSuggestion(item);
-        } else if (item.category && item.votes !== undefined) {
-          parsed = await this.parsePollSuggestion(item);
-        } else {
-          parsed = await this.parseGeneralFeedback(item);
+          // Convert RawFeedbackItem to InterestSuggestion format
+          const interestSuggestion: InterestSuggestion = withOptional(
+            {
+              type: item.type,
+              text: item.text || '',
+              timestamp: item.timestamp || new Date().toISOString()
+            },
+            { userId: item.userId }
+          );
+          parsed = await this.parseInterestSuggestion(interestSuggestion);
+        } else if (item.category && item.title && item.description) {
+          // Convert RawFeedbackItem to PollSuggestion format
+          const pollSuggestion: PollSuggestion = {
+            title: item.title,
+            description: item.description,
+            category: item.category,
+            suggestedBy: item.userId || 'anonymous',
+            votes: 0, // Default for new suggestions
+            status: 'pending',
+            createdAt: item.timestamp || new Date().toISOString()
+          };
+          parsed = await this.parsePollSuggestion(pollSuggestion);
+        } else if (item.text) {
+          // Convert RawFeedbackItem to general feedback format
+          const generalFeedback = withOptional({
+            text: item.text,
+            timestamp: item.timestamp || new Date().toISOString()
+          }, {
+            type: item.type,
+            userId: item.userId
+          });
+          parsed = await this.parseGeneralFeedback(generalFeedback);
         }
         
-        results.push(parsed);
+        if (parsed) {
+          results.push(parsed);
+        }
       } catch (error) {
         devLog('Error parsing feedback item:', error);
         // Continue processing other items
@@ -252,7 +303,7 @@ export class FeedbackParser {
       .filter(word => !this.isStopWord(word));
     
     // Remove duplicates and return top keywords
-    return [...new Set(words)].slice(0, 10);
+    return Array.from(new Set(words)).slice(0, 10);
   }
 
   private analyzeSentiment(text: string): 'positive' | 'neutral' | 'negative' {
@@ -312,7 +363,20 @@ export class FeedbackParser {
 
   private generateTitle(text: string, type: string): string {
     const words = text.split(' ').slice(0, 6);
-    return words.join(' ').replace(/^\w/, c => c.toUpperCase());
+    const baseTitle = words.join(' ').replace(/^\w/, c => c.toUpperCase());
+    
+    // Add type-specific prefix for better categorization
+    const typePrefixes: Record<string, string> = {
+      'interest_suggestion': '[Interest] ',
+      'poll_suggestion': '[Poll] ',
+      'demographic_suggestion': '[Demographic] ',
+      'general_feedback': '[Feedback] ',
+      'bug_report': '[Bug] ',
+      'feature_request': '[Feature] '
+    };
+    
+    const prefix = typePrefixes[type] || '';
+    return prefix + baseTitle;
   }
 
   private generateId(): string {

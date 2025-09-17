@@ -5,7 +5,8 @@
  * images, and other resources to improve initial page load performance.
  */
 
-import { ComponentType, lazy, Suspense } from 'react';
+import { lazy, Suspense } from 'react';
+import type { ComponentType } from 'react';
 import { performanceMetrics } from './performance-metrics';
 
 interface LazyLoadOptions {
@@ -325,8 +326,9 @@ export function createViewportLazyComponent<T extends ComponentType<any>>(
       if (!ref.current || typeof window === 'undefined') return;
       
       const observer = new IntersectionObserver(
-        ([entry]) => {
-          if (entry.isIntersecting) {
+        (entries) => {
+          const entry = entries[0];
+          if (entry && entry.isIntersecting) {
             setIsInViewport(true);
             observer.disconnect();
           }

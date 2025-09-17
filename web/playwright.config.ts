@@ -1,18 +1,19 @@
 import { defineConfig, devices } from '@playwright/test';
+import { withOptional } from './lib/util/objects';
 
 const isCI = !!process.env.CI;
 
-export default defineConfig({
-  testDir: './tests/e2e',
-  fullyParallel: true,
-  forbidOnly: isCI,
-  retries: isCI ? 2 : 0,
-  workers: isCI ? 1 : undefined,
-  reporter: [
-    ['html', { outputFolder: 'playwright-report', open: 'never' }],
-    ['junit', { outputFile: 'test-results/results.xml' }]
-  ],
-  timeout: 60_000,
+export default defineConfig(withOptional(
+  {
+    testDir: './tests/e2e',
+    fullyParallel: true,
+    forbidOnly: isCI,
+    retries: isCI ? 2 : 0,
+    reporter: [
+      ['html', { outputFolder: 'playwright-report', open: 'never' }],
+      ['junit', { outputFile: 'test-results/results.xml' }]
+    ],
+    timeout: 60_000,
   expect: { timeout: 10_000 },
 
   use: {
@@ -45,5 +46,9 @@ export default defineConfig({
     }
   },
 
-  globalSetup: './tests/e2e/setup/global-setup.ts'
-});
+    globalSetup: './tests/e2e/setup/global-setup.ts'
+  },
+  {
+    workers: isCI ? 1 : undefined
+  }
+));

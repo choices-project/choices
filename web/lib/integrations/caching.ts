@@ -15,7 +15,7 @@ export interface CacheConfig {
   enablePersistence: boolean;
 }
 
-export interface CacheEntry<T = any> {
+export interface CacheEntry<T = unknown> {
   key: string;
   data: T;
   timestamp: number;
@@ -23,7 +23,7 @@ export interface CacheEntry<T = any> {
   accessCount: number;
   lastAccessed: number;
   source: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, string | number | boolean>;
 }
 
 export interface CacheStats {
@@ -51,7 +51,7 @@ export interface CacheMetrics {
 /**
  * In-memory cache implementation for API responses
  */
-export class ApiResponseCache<T = any> {
+export class ApiResponseCache<T = unknown> {
   private cache: Map<string, CacheEntry<T>> = new Map();
   private config: CacheConfig;
   private stats = {
@@ -104,7 +104,7 @@ export class ApiResponseCache<T = any> {
   /**
    * Set cached data with TTL
    */
-  set(key: string, data: T, ttl?: number, source?: string, metadata?: Record<string, any>): void {
+  set(key: string, data: T, ttl?: number, source?: string, metadata?: Record<string, string | number | boolean>): void {
     const entry: CacheEntry<T> = {
       key,
       data,
@@ -113,7 +113,7 @@ export class ApiResponseCache<T = any> {
       accessCount: 0,
       lastAccessed: Date.now(),
       source: source || 'unknown',
-      metadata
+      ...(metadata && { metadata })
     };
 
     // Check cache size limit
@@ -171,7 +171,7 @@ export class ApiResponseCache<T = any> {
     let newestEntry = 0;
     let memoryUsage = 0;
 
-    for (const entry of this.cache.values()) {
+    for (const entry of Array.from(this.cache.values())) {
       oldestEntry = Math.min(oldestEntry, entry.timestamp);
       newestEntry = Math.max(newestEntry, entry.timestamp);
       memoryUsage += this.estimateEntrySize(entry);
@@ -226,7 +226,7 @@ export class ApiResponseCache<T = any> {
     let invalidated = 0;
     const regex = typeof pattern === 'string' ? new RegExp(pattern) : pattern;
 
-    for (const [key, entry] of this.cache) {
+    for (const [key, entry] of Array.from(this.cache.entries())) {
       if (regex.test(key)) {
         this.cache.delete(key);
         invalidated++;
@@ -243,7 +243,7 @@ export class ApiResponseCache<T = any> {
   invalidateBySource(source: string): number {
     let invalidated = 0;
 
-    for (const [key, entry] of this.cache) {
+    for (const [key, entry] of Array.from(this.cache.entries())) {
       if (entry.source === source) {
         this.cache.delete(key);
         invalidated++;
@@ -284,7 +284,7 @@ export class ApiResponseCache<T = any> {
     let oldestKey = '';
     let oldestTime = Date.now();
 
-    for (const [key, entry] of this.cache) {
+    for (const [key, entry] of Array.from(this.cache.entries())) {
       if (entry.lastAccessed < oldestTime) {
         oldestTime = entry.lastAccessed;
         oldestKey = key;
@@ -313,7 +313,7 @@ export class ApiResponseCache<T = any> {
     const beforeSize = this.cache.size;
     let cleaned = 0;
 
-    for (const [key, entry] of this.cache) {
+    for (const [key, entry] of Array.from(this.cache.entries())) {
       if (this.isExpired(entry)) {
         this.cache.delete(key);
         cleaned++;
@@ -385,9 +385,13 @@ export const CACHE_CONFIGS: Record<string, CacheConfig> = {
 /**
  * Create cache for specific API
  */
-export function createApiCache<T = any>(apiName: string): ApiResponseCache<T> {
+export function createApiCache<T = unknown>(apiName: string): ApiResponseCache<T> {
   const config = CACHE_CONFIGS[apiName] || CACHE_CONFIGS['google-civic'];
-  return new ApiResponseCache<T>(config);
+  const finalConfig = config ?? CACHE_CONFIGS['google-civic'];
+  if (!finalConfig) {
+    throw new Error(`No cache configuration found for API: ${apiName}`);
+  }
+  return new ApiResponseCache<T>(finalConfig);
 }
 
 /**

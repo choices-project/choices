@@ -9,6 +9,7 @@
  */
 
 import { logger } from '../logger'
+import { withOptional } from '../util/objects'
 
 // Redis client configuration interface
 export interface RedisConfig {
@@ -108,17 +109,19 @@ export class RedisClient {
       // Dynamic import to avoid build-time dependency
       const Redis = await import('redis')
       
-      this.client = Redis.createClient({
-        socket: {
+      this.client = Redis.createClient(withOptional({
+        socket: withOptional({
           host: this.config.host,
           port: this.config.port,
+          keepAlive: this.config.keepAlive ? true : false
+        }, {
           connectTimeout: this.config.connectTimeout,
-          keepAlive: this.config.keepAlive ? true : false,
           family: this.config.family
-        },
+        })
+      }, {
         password: this.config.password,
         database: this.config.db
-      })
+      }))
 
       // Set up event listeners
       this.client.on('connect', () => {
@@ -242,14 +245,15 @@ export class RedisClient {
     }
 
     try {
-      const entry: CacheEntry<T> = {
+      const entry: CacheEntry<T> = withOptional({
         data: value,
         expiresAt: Date.now() + (ttlSeconds * 1000),
         createdAt: Date.now(),
         hitCount: 0,
-        tags,
+        tags
+      }, {
         metadata
-      }
+      })
 
       await this.client.setEx(key, ttlSeconds, JSON.stringify(entry))
       
@@ -325,7 +329,10 @@ export class RedisClient {
           
           // Check if entry has expired
           if (entry.expiresAt < Date.now()) {
-            this.del(keys[index])
+            const key = keys[index]
+            if (key) {
+              this.del(key)
+            }
             this.stats.misses++
             return null
           }
@@ -583,14 +590,15 @@ export class RedisClient {
 }
 
 // Default Redis configuration
-const defaultRedisConfig: RedisConfig = {
+const defaultRedisConfig: RedisConfig = withOptional({
   host: process.env.REDIS_HOST || 'localhost',
   port: parseInt(process.env.REDIS_PORT || '6379'),
-  password: process.env.REDIS_PASSWORD,
   db: parseInt(process.env.REDIS_DB || '0'),
   maxMemoryPolicy: 'allkeys-lru',
   maxMemory: '256mb'
-}
+}, {
+  password: process.env.REDIS_PASSWORD
+})
 
 // Global Redis client instance
 let redisClient: RedisClient | null = null

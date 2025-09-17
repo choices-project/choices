@@ -5,6 +5,7 @@ import QuadraticVoting from './QuadraticVoting'
 import RangeVoting from './RangeVoting'
 import RankedChoiceVoting from './RankedChoiceVoting'
 import SingleChoiceVoting from './SingleChoiceVoting'
+import { withOptional } from '@/lib/util/objects'
 
 type VoteResponse = { ok: boolean; id?: string; error?: string };
 type VerificationResponse = { ok: boolean; error?: string };
@@ -158,66 +159,81 @@ export default function VotingInterface({
       case 'approval':
         return (
           <ApprovalVoting
-            pollId={poll.id}
-            title={poll.title}
-            description={poll.description}
-            options={poll.options}
-            onVote={onApproval}
-            isVoting={isVoting}
-            hasVoted={hasVoted}
-            userVote={userApprovalVote}
+            {...withOptional({
+              pollId: poll.id,
+              title: poll.title,
+              options: poll.options,
+              onVote: onApproval,
+              isVoting,
+              hasVoted
+            }, {
+              description: poll.description ?? undefined,
+              userVote: userApprovalVote ?? undefined
+            })}
           />
         );
       case 'quadratic':
         return (
           <QuadraticVoting
-            pollId={poll.id}
-            title={poll.title}
-            description={poll.description}
-            options={poll.options}
-            onVote={onQuadratic}
-            isVoting={isVoting}
-            hasVoted={hasVoted}
-            userVote={userQuadraticVote}
+            {...withOptional({
+              pollId: poll.id,
+              title: poll.title,
+              options: poll.options,
+              onVote: onQuadratic,
+              isVoting,
+              hasVoted
+            }, {
+              description: poll.description ?? undefined,
+              userVote: userQuadraticVote ?? undefined
+            })}
           />
         );
       case 'range':
         return (
           <RangeVoting
-            pollId={poll.id}
-            title={poll.title}
-            description={poll.description}
-            options={poll.options}
-            onVote={onRange}
-            isVoting={isVoting}
-            hasVoted={hasVoted}
-            userVote={userRangeVote}
+            {...withOptional({
+              pollId: poll.id,
+              title: poll.title,
+              options: poll.options,
+              onVote: onRange,
+              isVoting,
+              hasVoted
+            }, {
+              description: poll.description ?? undefined,
+              userVote: userRangeVote ?? undefined
+            })}
           />
         );
       case 'ranked':
         return (
           <RankedChoiceVoting
-            pollId={poll.id}
-            title={poll.title}
-            description={poll.description}
-            options={poll.options}
-            onVote={onRanked}
-            isVoting={isVoting}
-            hasVoted={hasVoted}
-            userVote={userRankedVote}
+            {...withOptional({
+              pollId: poll.id,
+              title: poll.title,
+              options: poll.options,
+              onVote: onRanked,
+              isVoting,
+              hasVoted
+            }, {
+              description: poll.description ?? undefined,
+              userVote: userRankedVote ?? undefined
+            })}
           />
         );
       default:
         return (
           <SingleChoiceVoting
-            pollId={poll.id}
-            title={poll.title}
-            description={poll.description}
-            options={poll.options}
-            onVote={onSingle}
-            isVoting={isVoting}
-            hasVoted={hasVoted}
-            userVote={userVote}
+            {...withOptional({
+              pollId: poll.id,
+              title: poll.title,
+              options: poll.options,
+              onVote: onSingle,
+              isVoting,
+              hasVoted
+            }, {
+              description: poll.description ?? undefined,
+              userVote: userVote ?? undefined
+            })}
           />
         );
     }

@@ -5,6 +5,7 @@
 
 import React from 'react';
 import { logger } from '@/lib/logger';
+import { withOptional } from '../../../../lib/util/objects';
 
 export interface PerformanceMetric {
   name: string;
@@ -61,12 +62,16 @@ class PerformanceMonitor {
 
   // Record a performance metric
   recordMetric(name: string, duration: number, metadata?: Record<string, any>): void {
-    const metric: PerformanceMetric = {
-      name,
-      duration,
-      timestamp: new Date(),
-      metadata
-    };
+    const metric: PerformanceMetric = withOptional(
+      {
+        name,
+        duration,
+        timestamp: new Date()
+      },
+      {
+        metadata
+      }
+    );
 
     this.metrics.push(metric);
     logger.performance(name, duration, metadata);
@@ -120,10 +125,10 @@ class PerformanceMonitor {
     return {
       count,
       average,
-      min,
-      max,
-      p95: durations[p95Index] || 0,
-      p99: durations[p99Index] || 0
+      min: min ?? 0,
+      max: max ?? 0,
+      p95: durations[p95Index] ?? 0,
+      p99: durations[p99Index] ?? 0
     };
   }
 

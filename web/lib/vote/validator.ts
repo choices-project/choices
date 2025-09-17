@@ -8,8 +8,8 @@
  * Updated: September 15, 2025
  */
 
-import { devLog } from '@/lib/logger';
-import { getSupabaseServerClient } from '@/utils/supabase/server';
+import { devLog } from '../logger';
+import { getSupabaseServerClient } from '../../utils/supabase/server';
 import type { 
   VoteData, 
   PollData, 
@@ -18,7 +18,7 @@ import type {
 } from './types';
 
 export class VoteValidator {
-  private supabase: any;
+  private supabase: ReturnType<typeof getSupabaseServerClient>;
 
   constructor() {
     this.supabase = getSupabaseServerClient();
@@ -615,7 +615,7 @@ export class VoteValidator {
   /**
    * Check rate limit for user
    */
-  private async checkRateLimit(userId: string): Promise<boolean> {
+  private async checkRateLimit(_userId: string): Promise<boolean> {
     // This would implement actual rate limiting logic
     // For now, return false (no rate limiting)
     return false;

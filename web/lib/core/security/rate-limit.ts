@@ -14,7 +14,7 @@
  * @since 2024-12-27
  */
 
-import { devLog } from '@/lib/logger'
+import { devLog } from '../../logger'
 
 // Rate limit configuration
 export interface RateLimitConfig {
@@ -63,9 +63,9 @@ export interface RateLimitResult {
   allowed: boolean
   remaining: number
   resetTime: Date
-  retryAfter?: number
+  retryAfter?: number | null
   riskAssessment?: RiskAssessment
-  reputation?: IPReputation
+  reputation?: IPReputation | null
 }
 
 // Token bucket for rate limiting
@@ -135,7 +135,10 @@ export class EnhancedRateLimiter {
     // Check for forwarded headers (common in proxy setups)
     const forwarded = req.headers.get('x-forwarded-for')
     if (forwarded) {
-      return forwarded.split(',')[0].trim()
+      const firstIP = forwarded.split(',')[0]
+      if (firstIP) {
+        return firstIP.trim()
+      }
     }
 
     const realIP = req.headers.get('x-real-ip')
@@ -370,15 +373,15 @@ export class EnhancedRateLimiter {
       allowed,
       remaining,
       resetTime,
-      retryAfter: allowed ? undefined : Math.ceil((resetTime.getTime() - Date.now()) / 1000),
+      retryAfter: allowed ? null : Math.ceil((resetTime.getTime() - Date.now()) / 1000),
       riskAssessment,
-      reputation: this.reputation.get(ip)
+      reputation: this.reputation.get(ip) || null
     }
   }
 
   // Get reputation for an IP
-  getReputation(ip: string): IPReputation | undefined {
-    return this.reputation.get(ip)
+  getReputation(ip: string): IPReputation | null {
+    return this.reputation.get(ip) || null
   }
 
   // Manually update reputation
@@ -396,14 +399,14 @@ export class EnhancedRateLimiter {
     const maxAge = 24 * 60 * 60 * 1000 // 24 hours
 
     // Cleanup old buckets
-    for (const [key, bucket] of this.buckets.entries()) {
+    for (const [key, bucket] of Array.from(this.buckets.entries())) {
       if (now - bucket.getResetTime().getTime() > maxAge) {
         this.buckets.delete(key)
       }
     }
 
     // Cleanup old reputation data
-    for (const [ip, reputation] of this.reputation.entries()) {
+    for (const [ip, reputation] of Array.from(this.reputation.entries())) {
       if (now - reputation.lastRequest.getTime() > maxAge * 7) { // 7 days
         this.reputation.delete(ip)
       }

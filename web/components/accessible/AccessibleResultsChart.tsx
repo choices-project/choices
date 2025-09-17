@@ -29,7 +29,7 @@ export interface ChartData {
   name: string;
   votes: number;
   percentage: number;
-  color?: string;
+  color?: string | undefined;
   isWinner?: boolean;
   isEliminated?: boolean;
   round?: number;
@@ -147,10 +147,13 @@ export function AccessibleResultsChart({
 
   const getDataWithColors = (): ChartData[] => {
     const palette = getColorPalette();
-    return data.map((item, index) => ({
-      ...item,
-      color: item.color || palette[index % palette.length]
-    }));
+    return data.map((item, index) => {
+      const result: ChartData = {
+        ...item,
+        color: item.color ?? palette[index % palette.length]
+      };
+      return result;
+    });
   };
 
   const getMaxValue = (): number => {
@@ -178,20 +181,24 @@ export function AccessibleResultsChart({
       onArrowUp: () => {
         if (index > 0) {
           setFocusedIndex(index - 1);
-          onDataPointFocus?.(data[index - 1]);
+          const prevData = data[index - 1];
+          if (prevData) onDataPointFocus?.(prevData);
         }
       },
       onArrowDown: () => {
         if (index < data.length - 1) {
           setFocusedIndex(index + 1);
-          onDataPointFocus?.(data[index + 1]);
+          const nextData = data[index + 1];
+          if (nextData) onDataPointFocus?.(nextData);
         }
       },
       onEnter: () => {
-        onDataPointClick?.(data[index]);
+        const dataPoint = data[index];
+        if (dataPoint) onDataPointClick?.(dataPoint);
       },
       onSpace: () => {
-        onDataPointClick?.(data[index]);
+        const dataPoint = data[index];
+        if (dataPoint) onDataPointClick?.(dataPoint);
       }
     });
   };
@@ -469,7 +476,7 @@ function getLuminance(color: number): number {
     return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
   });
   
-  return 0.2126 * rs + 0.7152 * gs + 0.0722 * bs;
+  return 0.2126 * (rs ?? 0) + 0.7152 * (gs ?? 0) + 0.0722 * (bs ?? 0);
 }
 
 // ============================================================================

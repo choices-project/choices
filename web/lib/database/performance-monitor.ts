@@ -8,8 +8,9 @@
  * Agent D - Database Specialist
  */
 
-import { logger } from '../logger'
-import { getSupabaseServerClient } from '../../utils/supabase/server'
+import { logger } from '@/lib/logger'
+import { getSupabaseServerClient } from '@/utils/supabase/server'
+import type { SupabaseClient } from '@supabase/supabase-js'
 
 // Performance metrics interfaces
 export interface DatabaseMetrics {
@@ -75,7 +76,7 @@ export interface PerformanceThresholds {
  * Monitors database performance, generates alerts, and provides optimization recommendations.
  */
 export class DatabasePerformanceMonitor {
-  private supabase: any
+  private supabase!: SupabaseClient
   private metrics: DatabaseMetrics[] = []
   private queryMetrics: QueryPerformanceMetrics[] = []
   private alerts: PerformanceAlert[] = []
@@ -250,14 +251,14 @@ export class DatabasePerformanceMonitor {
         .single()
       
       return {
-        connectionCount: connectionData?.total_connections || 0,
-        activeConnections: connectionData?.active_connections || 0,
-        idleConnections: connectionData?.idle_connections || 0,
-        queryCount: queryData?.total_queries || 0,
-        averageQueryTime: queryData?.avg_query_time || 0,
-        slowQueries: queryData?.slow_queries || 0,
-        errorCount: queryData?.error_count || 0,
-        cacheHitRate: cacheData?.hit_rate || 0
+        connectionCount: (connectionData as { total_connections?: number })?.total_connections || 0,
+        activeConnections: (connectionData as { active_connections?: number })?.active_connections || 0,
+        idleConnections: (connectionData as { idle_connections?: number })?.idle_connections || 0,
+        queryCount: (queryData as { total_queries?: number })?.total_queries || 0,
+        averageQueryTime: (queryData as { avg_query_time?: number })?.avg_query_time || 0,
+        slowQueries: (queryData as { slow_queries?: number })?.slow_queries || 0,
+        errorCount: (queryData as { error_count?: number })?.error_count || 0,
+        cacheHitRate: (cacheData as { hit_rate?: number })?.hit_rate || 0
       }
     } catch (error) {
       logger.warn('Failed to get database metrics', error instanceof Error ? error : new Error('Unknown error'))
@@ -274,11 +275,11 @@ export class DatabasePerformanceMonitor {
         .rpc('get_slow_queries', { threshold_ms: this.thresholds.slowQueryThreshold })
         .limit(10)
       
-      return (data || []).map((query: any) => ({
-        query: query.query_text,
-        executionTime: query.mean_time,
-        rowsReturned: query.rows,
-        cacheHit: query.cache_hit || false,
+      return (data || []).map((query: Record<string, unknown>) => ({
+        query: query.query_text as string,
+        executionTime: query.mean_time as number,
+        rowsReturned: query.rows as number,
+        cacheHit: (query.cache_hit as boolean) || false,
         timestamp: Date.now()
       }))
     } catch (error) {
@@ -298,9 +299,9 @@ export class DatabasePerformanceMonitor {
         .single()
       
       return {
-        memoryUsage: data?.memory_usage || 0,
-        diskUsage: data?.disk_usage || 0,
-        cpuUsage: data?.cpu_usage || 0
+        memoryUsage: (data as { memory_usage?: number })?.memory_usage || 0,
+        diskUsage: (data as { disk_usage?: number })?.disk_usage || 0,
+        cpuUsage: (data as { cpu_usage?: number })?.cpu_usage || 0
       }
     } catch (error) {
       logger.warn('Failed to get system metrics', error instanceof Error ? error : new Error('Unknown error'))
@@ -317,6 +318,7 @@ export class DatabasePerformanceMonitor {
     }
 
     const latestMetrics = this.metrics[this.metrics.length - 1]
+    if (!latestMetrics) return
     
     // Check slow queries
     if (latestMetrics.slowQueries > 0) {
@@ -418,6 +420,7 @@ export class DatabasePerformanceMonitor {
 
     const latestMetrics = this.metrics[this.metrics.length - 1]
     const previousMetrics = this.metrics[this.metrics.length - 2]
+    if (!latestMetrics) return
     
     // Analyze trends and generate recommendations
     this.analyzeSlowQueries()
@@ -453,6 +456,7 @@ export class DatabasePerformanceMonitor {
    */
   private analyzeConnectionUsage(): void {
     const latestMetrics = this.metrics[this.metrics.length - 1]
+    if (!latestMetrics) return
     const connectionUtilization = latestMetrics.connectionCount > 0
       ? (latestMetrics.activeConnections / latestMetrics.connectionCount) * 100
       : 0
@@ -475,6 +479,7 @@ export class DatabasePerformanceMonitor {
    */
   private analyzeCachePerformance(): void {
     const latestMetrics = this.metrics[this.metrics.length - 1]
+    if (!latestMetrics) return
     
     if (latestMetrics.cacheHitRate < 70) {
       this.addRecommendation({
@@ -494,6 +499,7 @@ export class DatabasePerformanceMonitor {
    */
   private analyzeMemoryUsage(): void {
     const latestMetrics = this.metrics[this.metrics.length - 1]
+    if (!latestMetrics) return
     
     if (latestMetrics.memoryUsage > 80) {
       this.addRecommendation({
@@ -570,7 +576,7 @@ export class DatabasePerformanceMonitor {
    * Get current performance metrics
    */
   getCurrentMetrics(): DatabaseMetrics | null {
-    return this.metrics.length > 0 ? this.metrics[this.metrics.length - 1] : null
+    return this.metrics.length > 0 ? this.metrics[this.metrics.length - 1] ?? null : null
   }
 
   /**

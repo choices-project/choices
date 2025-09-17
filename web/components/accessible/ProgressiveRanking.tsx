@@ -165,7 +165,12 @@ export function ProgressiveRanking({
       }
 
       // Swap candidates
-      [newRankings[currentIndex], newRankings[newIndex]] = [newRankings[newIndex], newRankings[currentIndex]];
+      const currentCandidate = newRankings[currentIndex];
+      const newCandidate = newRankings[newIndex];
+      if (currentCandidate !== undefined && newCandidate !== undefined) {
+        newRankings[currentIndex] = newCandidate;
+        newRankings[newIndex] = currentCandidate;
+      }
 
       // Announce the change
       const candidate = candidates.find(c => c.id === candidateId);

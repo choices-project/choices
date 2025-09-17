@@ -15,6 +15,7 @@ import QuadraticVoting from '@/features/voting/components/QuadraticVoting'
 import RangeVoting from '@/features/voting/components/RangeVoting'
 import RankedChoiceVoting from '@/features/voting/components/RankedChoiceVoting'
 import type { VoteResponse } from '@/lib/vote/types'
+import { withOptional } from '@/lib/util/objects'
 
 interface Poll {
   id: string
@@ -197,7 +198,7 @@ export const VotingInterface: React.FC<VotingInterfaceProps> = ({
         return (
           <ApprovalVoting
             {...commonProps}
-            userVote={userApprovalVote}
+            userVote={userApprovalVote || []}
             onVote={onApproval}
           />
         );
@@ -206,7 +207,7 @@ export const VotingInterface: React.FC<VotingInterfaceProps> = ({
         return (
           <QuadraticVoting
             {...commonProps}
-            userVote={userQuadraticVote}
+            {...withOptional({}, { userVote: userQuadraticVote })}
             onVote={onQuadratic}
           />
         );
@@ -215,7 +216,7 @@ export const VotingInterface: React.FC<VotingInterfaceProps> = ({
         return (
           <RangeVoting
             {...commonProps}
-            userVote={userRangeVote}
+            {...withOptional({}, { userVote: userRangeVote })}
             onVote={onRange}
           />
         );
@@ -225,7 +226,7 @@ export const VotingInterface: React.FC<VotingInterfaceProps> = ({
         return (
           <RankedChoiceVoting
             {...commonProps}
-            userVote={userRankedVote}
+            {...withOptional({}, { userVote: userRankedVote })}
             onVote={onRanked}
           />
         );
@@ -236,7 +237,7 @@ export const VotingInterface: React.FC<VotingInterfaceProps> = ({
         return (
           <SingleChoiceVoting
             {...commonProps}
-            userVote={userVote}
+            {...withOptional({}, { userVote: userVote })}
             onVote={onSingle}
           />
         );

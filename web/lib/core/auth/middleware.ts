@@ -11,9 +11,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 import { devLog } from '@/lib/logger';
-import { validateOrigin, requireTrustedOrigin } from '@/lib/http/origin';
+import { requireTrustedOrigin } from '@/lib/http/origin';
 import { rateLimiters } from '@/lib/core/security/rate-limit';
 import { requireTurnstileVerification } from '@/lib/security/turnstile';
+import { withOptional } from '@/lib/util/objects';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
 export type TrustTier = 'T1' | 'T2' | 'T3';
 
@@ -21,12 +23,17 @@ export interface AuthUser {
   id: string;
   email: string;
   trust_tier: TrustTier;
-  username?: string;
+  username?: string | null;
 }
 
 export interface AuthContext {
   user: AuthUser;
-  supabase: any;
+  supabase: SupabaseClient;
+}
+
+export interface UserProfile {
+  trust_tier: TrustTier;
+  username?: string;
 }
 
 export interface AuthMiddlewareOptions {
@@ -68,6 +75,14 @@ export function createAuthMiddleware(options: AuthMiddlewareOptions = {}) {
             { status: 403 }
           );
         }
+      }
+
+      // Use context if provided for enhanced authentication
+      if (context?.user && !allowPublic) {
+        devLog('Using provided authentication context', {
+          userId: context.user.id,
+          trustTier: context.user.trust_tier
+        });
       }
 
       // Rate limiting
@@ -135,7 +150,7 @@ export function createAuthMiddleware(options: AuthMiddlewareOptions = {}) {
       const { data: profile, error: profileError } = await supabase
         .from('user_profiles')
         .select('trust_tier, username')
-        .eq('user_id', String(user.id) as any)
+        .eq('user_id', String(user.id))
         .single();
 
       if (profileError) {
@@ -146,12 +161,13 @@ export function createAuthMiddleware(options: AuthMiddlewareOptions = {}) {
         );
       }
 
-      const authUser: AuthUser = {
+      const authUser: AuthUser = withOptional({
         id: user.id,
         email: user.email || '',
-        trust_tier: profile && !('error' in profile) ? (profile as any).trust_tier || 'T1' : 'T1',
-        username: profile && !('error' in profile) ? (profile as any).username : undefined
-      };
+        trust_tier: profile && !('error' in profile) ? (profile as UserProfile).trust_tier || 'T1' : 'T1'
+      }, {
+        username: profile && !('error' in profile) ? (profile as UserProfile).username : null
+      });
 
       // Check admin requirement - rely on RLS policies for security
       if (requireAdmin) {
@@ -233,16 +249,17 @@ export function withAuth(
     const { data: profile } = await supabase
       .from('user_profiles')
       .select('username')
-      .eq('user_id', String(user!.id) as any)
+      .eq('user_id', String(user!.id))
       .single();
 
     const context: AuthContext = {
-      user: {
+      user: withOptional({
         id: user!.id,
         email: user!.email || '',
-        trust_tier: isAdmin ? 'T3' : 'T1',
-        username: profile && !('error' in profile) ? (profile as any).username : undefined
-      },
+        trust_tier: isAdmin ? 'T3' : 'T1'
+      }, {
+        username: profile && !('error' in profile) ? (profile as UserProfile).username : null
+      }),
       supabase
     };
 
@@ -271,14 +288,24 @@ export function createRateLimitMiddleware(options: {
   return async (request: NextRequest): Promise<NextResponse | null> => {
     const key = keyGenerator ? keyGenerator(request) : 'default';
     
-    // Use the enhanced rate limiter
+    // Use the enhanced rate limiter with custom parameters
     const rateLimitResult = await rateLimiters.auth.check(request);
+    
+    // Log rate limit configuration for debugging
+    devLog('Rate limit check', {
+      key: key.substring(0, 8) + '...',
+      maxRequests,
+      windowMs,
+      allowed: rateLimitResult.allowed
+    });
     
     if (!rateLimitResult.allowed) {
       return NextResponse.json(
         { 
           message: 'Too many requests. Please try again later.',
-          retryAfter: rateLimitResult.retryAfter
+          retryAfter: rateLimitResult.retryAfter,
+          limit: maxRequests,
+          window: windowMs
         },
         { status: 429 }
       );

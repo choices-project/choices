@@ -52,7 +52,7 @@ async function runMigration() {
       const statement = statements[i];
       
       // Skip comments and empty statements
-      if (statement.startsWith('--') || statement.length === 0) {
+      if (!statement || statement.startsWith('--') || statement.length === 0) {
         continue;
       }
 
@@ -63,7 +63,7 @@ async function runMigration() {
         
         if (error) {
           console.error(`   ❌ Error executing statement ${i + 1}:`, error.message);
-          console.error(`   Statement: ${statement.substring(0, 100)}...`);
+          console.error(`   Statement: ${statement?.substring(0, 100) ?? 'undefined'}...`);
           throw error;
         }
         

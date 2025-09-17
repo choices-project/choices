@@ -364,9 +364,9 @@ export class CandidateVerificationSystem {
         verification: {
           method: channelInfo.email ? 'gov_email' : 
                    channelInfo.domain ? 'campaign_domain' : 'filing_verification',
-          email: channelInfo.email,
-          domain: channelInfo.domain,
-          filingId: channelInfo.filingId
+          ...(channelInfo.email && { email: channelInfo.email }),
+          ...(channelInfo.domain && { domain: channelInfo.domain }),
+          ...(channelInfo.filingId && { filingId: channelInfo.filingId })
         },
         permissions: {
           canPostAnnouncements: true,

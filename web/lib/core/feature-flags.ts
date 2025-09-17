@@ -13,7 +13,45 @@ export const FEATURE_FLAGS = {
   EXPERIMENTAL_UI: false,
   EXPERIMENTAL_ANALYTICS: false,
   ADVANCED_PRIVACY: false,
+  // Database optimization suite - disabled by default to prevent bloat
+  FEATURE_DB_OPTIMIZATION_SUITE: false,
 } as const;
+
+// Define proper types for feature flag system
+export interface FeatureFlag {
+  id: string;
+  name: string;
+  enabled: boolean;
+  description: string;
+  key?: FeatureFlagKey;
+  category?: string;
+}
+
+export interface FeatureFlagMetadata {
+  description?: string;
+  category?: string;
+  dependencies?: string[];
+  experimental?: boolean;
+  deprecated?: boolean;
+}
+
+export interface FeatureFlagConfig {
+  flags: Record<string, boolean>;
+  timestamp: string;
+  version: string;
+}
+
+export interface FeatureFlagSubscription {
+  unsubscribe: () => void;
+}
+
+export interface FeatureFlagSystemInfo {
+  totalFlags: number;
+  enabledFlags: number;
+  disabledFlags: number;
+  environment: string;
+  categories: Record<string, number>;
+}
 
 type KnownFlag = keyof typeof FEATURE_FLAGS;
 
@@ -31,86 +69,127 @@ const ALIASES: Record<string, FeatureFlagKey> = {
   admin: 'ADMIN',
 };
 
-function normalize(key: string): FeatureFlagKey | undefined {
-  if ((FEATURE_FLAGS as any)[key]) return key as FeatureFlagKey;
+function normalize(key: string): FeatureFlagKey | null {
+  if (key in FEATURE_FLAGS) return key as FeatureFlagKey;
   const alias = ALIASES[key.toLowerCase()];
-  return alias;
+  return alias || null;
 }
 
 export function isFeatureEnabled<K extends string>(key: K): boolean {
-  if ((FEATURE_FLAGS as Record<string, boolean>)[key] !== undefined) {
-    return (FEATURE_FLAGS as Record<string, boolean>)[key];
+  const normalizedKey = normalize(key);
+  if (normalizedKey && normalizedKey in FEATURE_FLAGS) {
+    return FEATURE_FLAGS[normalizedKey];
   }
   // Unknown flags default to false but don't crash
   return false;
 }
 
+// Create a mutable copy of FEATURE_FLAGS for runtime modifications
+const mutableFlags: Record<string, boolean> = { ...FEATURE_FLAGS };
+
+// Helper function to categorize flags
+function categorizeFlag(flagId: string): string {
+  const categories: Record<string, string[]> = {
+    core: ['CORE_AUTH', 'CORE_POLLS', 'CORE_USERS'],
+    experimental: ['EXPERIMENTAL_UI', 'EXPERIMENTAL_ANALYTICS'],
+    features: ['WEBAUTHN', 'PWA', 'ANALYTICS', 'ADMIN', 'ADVANCED_PRIVACY', 'FEATURE_DB_OPTIMIZATION_SUITE']
+  };
+  
+  for (const [category, flags] of Object.entries(categories)) {
+    if (flags.includes(flagId)) {
+      return category;
+    }
+  }
+  return 'general';
+}
+
 export const featureFlagManager = {
   enable: (k: string | FeatureFlagKey): boolean => {
     const key = normalize(String(k)); 
-    if (key) {
-      (FEATURE_FLAGS as any)[key] = true;
+    if (key && key in mutableFlags) {
+      mutableFlags[key] = true;
       return true;
     }
     return false;
   },
   disable: (k: string | FeatureFlagKey): boolean => {
     const key = normalize(String(k)); 
-    if (key) {
-      (FEATURE_FLAGS as any)[key] = false;
+    if (key && key in mutableFlags) {
+      mutableFlags[key] = false;
       return true;
     }
     return false;
   },
   toggle: (k: string | FeatureFlagKey): boolean => {
     const key = normalize(String(k)); 
-    if (key) {
-      (FEATURE_FLAGS as any)[key] = !FEATURE_FLAGS[key];
+    if (key && key in mutableFlags) {
+      mutableFlags[key] = !mutableFlags[key];
       return true;
     }
     return false;
   },
-  get: isFeatureEnabled,
-  all: () => ({ ...FEATURE_FLAGS }),
+  get: (key: string | FeatureFlagKey): boolean => {
+    const normalizedKey = normalize(String(key));
+    if (normalizedKey && normalizedKey in mutableFlags) {
+      return mutableFlags[normalizedKey] || false;
+    }
+    return false;
+  },
+  all: () => ({ ...mutableFlags }),
   
   // Additional methods expected by useFeatureFlags hook
-  getAllFlags: () => {
-    const flags: FeatureFlag[] = Object.entries(FEATURE_FLAGS).map(([key, enabled]) => ({
+  getAllFlags: (): Map<string, FeatureFlag> => {
+    const flags: FeatureFlag[] = Object.entries(mutableFlags).map(([key, enabled]) => ({
       id: key,
       name: key.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase()),
       enabled,
-      description: `Feature flag for ${key.toLowerCase().replace(/_/g, ' ')}`
+      description: `Feature flag for ${key.toLowerCase().replace(/_/g, ' ')}`,
+      key: key as FeatureFlagKey,
+      category: categorizeFlag(key)
     }));
     return new Map(flags.map(flag => [flag.id, flag]));
   },
-  isEnabled: isFeatureEnabled,
-  getFlag: (flagId: string): FeatureFlag | undefined => {
-    const enabled = isFeatureEnabled(flagId);
-    if (enabled !== undefined) {
+  isEnabled: (key: string | FeatureFlagKey): boolean => {
+    const normalizedKey = normalize(String(key));
+    if (normalizedKey && normalizedKey in mutableFlags) {
+      return mutableFlags[normalizedKey] || false;
+    }
+    return false;
+  },
+  getFlag: (flagId: string): FeatureFlag | null => {
+    const normalizedKey = normalize(flagId);
+    if (normalizedKey && normalizedKey in mutableFlags) {
+      const enabled = mutableFlags[normalizedKey] || false;
       return {
         id: flagId,
         name: flagId.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase()),
         enabled,
-        description: `Feature flag for ${flagId.toLowerCase().replace(/_/g, ' ')}`
+        description: `Feature flag for ${flagId.toLowerCase().replace(/_/g, ' ')}`,
+        key: normalizedKey,
+        category: categorizeFlag(flagId)
       };
     }
-    return undefined;
+    return null;
   },
-  getEnabledFlags: () => Object.entries(FEATURE_FLAGS)
+  getEnabledFlags: (): FeatureFlag[] => Object.entries(mutableFlags)
     .filter(([_, enabled]) => enabled)
     .map(([key, enabled]) => ({
       id: key,
       name: key.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase()),
       enabled,
-      description: `Feature flag for ${key.toLowerCase().replace(/_/g, ' ')}`
+      description: `Feature flag for ${key.toLowerCase().replace(/_/g, ' ')}`,
+      key: key as FeatureFlagKey,
+      category: categorizeFlag(key)
     })),
-  getDisabledFlags: () => Object.entries(FEATURE_FLAGS)
+  getDisabledFlags: (): FeatureFlag[] => Object.entries(mutableFlags)
     .filter(([_, enabled]) => !enabled)
     .map(([key, enabled]) => ({
       id: key,
       name: key.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase()),
       enabled,
-      description: `Feature flag for ${key.toLowerCase().replace(/_/g, ' ')}`
+      description: `Feature flag for ${key.toLowerCase().replace(/_/g, ' ')}`,
+      key: key as FeatureFlagKey,
+      category: categorizeFlag(key)
     })),
   getFlagsByCategory: (category: string): FeatureFlag[] => {
     // Simple categorization - can be enhanced
@@ -123,14 +202,16 @@ export const featureFlagManager = {
     return flagIds.map(flagId => ({
       id: flagId,
       name: flagId.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase()),
-      enabled: isFeatureEnabled(flagId),
-      description: `Feature flag for ${flagId.toLowerCase().replace(/_/g, ' ')}`
+      enabled: mutableFlags[flagId as FeatureFlagKey] || false,
+      description: `Feature flag for ${flagId.toLowerCase().replace(/_/g, ' ')}`,
+      key: flagId as FeatureFlagKey,
+      category: category
     }));
   },
-  getSystemInfo: () => ({
-    totalFlags: Object.keys(FEATURE_FLAGS).length,
-    enabledFlags: Object.values(FEATURE_FLAGS).filter(Boolean).length,
-    disabledFlags: Object.values(FEATURE_FLAGS).filter(f => !f).length,
+  getSystemInfo: (): FeatureFlagSystemInfo => ({
+    totalFlags: Object.keys(mutableFlags).length,
+    enabledFlags: Object.values(mutableFlags).filter(Boolean).length,
+    disabledFlags: Object.values(mutableFlags).filter(f => !f).length,
     environment: process.env.NODE_ENV || 'development',
     categories: {
       core: 3,
@@ -138,7 +219,7 @@ export const featureFlagManager = {
       features: 5
     }
   }),
-  areDependenciesEnabled: (flagId: string) => {
+  areDependenciesEnabled: (flagId: string): boolean => {
     // Simple dependency check - can be enhanced
     const dependencies: Record<string, string[]> = {
       'ADVANCED_PRIVACY': ['CORE_AUTH'],
@@ -146,14 +227,19 @@ export const featureFlagManager = {
       'WEBAUTHN': ['CORE_AUTH']
     };
     const deps = dependencies[flagId] || [];
-    return deps.every(dep => isFeatureEnabled(dep));
+    return deps.every(dep => {
+      const normalizedKey = normalize(dep);
+      return normalizedKey ? mutableFlags[normalizedKey] : false;
+    });
   },
-  subscribe: (callback: (flags: any) => void) => {
+  subscribe: (callback: (flags: Record<string, boolean>) => void): FeatureFlagSubscription => {
     // Simple subscription - in a real app, this would use a proper event system
     // For now, just return a no-op unsubscribe function
-    return () => {};
+    return {
+      unsubscribe: () => {}
+    };
   },
-  updateFlagMetadata: (flagId: string, metadata: Record<string, any>): boolean => {
+  updateFlagMetadata: (flagId: string, metadata: FeatureFlagMetadata): boolean => {
     // For now, just return true - in a real app, this would update flag metadata
     console.log(`Updating metadata for flag ${flagId}:`, metadata);
     return true;
@@ -161,23 +247,25 @@ export const featureFlagManager = {
   reset: (): void => {
     // Reset all flags to their default values
     Object.keys(FEATURE_FLAGS).forEach(key => {
-      (FEATURE_FLAGS as any)[key] = FEATURE_FLAGS[key as FeatureFlagKey];
+      const flagKey = key as FeatureFlagKey;
+      mutableFlags[flagKey] = FEATURE_FLAGS[flagKey];
     });
   },
-  exportConfig: (): any => {
+  exportConfig: (): FeatureFlagConfig => {
     // Export current flag configuration
     return {
-      flags: { ...FEATURE_FLAGS },
+      flags: { ...mutableFlags },
       timestamp: new Date().toISOString(),
       version: '1.0.0'
     };
   },
-  importConfig: (config: any): void => {
+  importConfig: (config: FeatureFlagConfig): void => {
     // Import flag configuration
     if (config && config.flags) {
       Object.entries(config.flags).forEach(([key, value]) => {
-        if (key in FEATURE_FLAGS && typeof value === 'boolean') {
-          (FEATURE_FLAGS as any)[key] = value;
+        const normalizedKey = normalize(key);
+        if (normalizedKey && normalizedKey in mutableFlags && typeof value === 'boolean') {
+          mutableFlags[normalizedKey] = value;
         }
       });
     }
@@ -192,13 +280,4 @@ export const getFeatureFlag = (k: string | FeatureFlagKey) => isFeatureEnabled(k
 export const getAllFeatureFlags = () => featureFlagManager.all();
 
 // Additional exports expected by useFeatureFlags hook
-export interface FeatureFlag {
-  id: string;
-  name: string;
-  enabled: boolean;
-  description: string;
-  key?: FeatureFlagKey;
-  category?: string;
-}
-
 export const FeatureFlagManager = featureFlagManager;

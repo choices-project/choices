@@ -4,7 +4,8 @@
  * Transform raw Congress.gov API responses into normalized data structures
  */
 
-import { CongressGovMember, CongressGovBill, CongressGovVote } from './client';
+import type { CongressGovMember, CongressGovBill, CongressGovVote } from './client';
+import { withOptional } from '../../util/objects';
 
 export interface NormalizedRepresentative {
   id: string;
@@ -68,7 +69,7 @@ export function transformCongressGovMember(member: CongressGovMember): Normalize
     lastName: member.lastName,
     party: member.party,
     state: member.state,
-    district: member.district,
+    ...(member.district && { district: member.district }),
     chamber: member.chamber.toLowerCase() as 'house' | 'senate',
     url: member.url,
     source: 'congress-gov',
@@ -80,26 +81,30 @@ export function transformCongressGovMember(member: CongressGovMember): Normalize
  * Transform Congress.gov bill data to normalized format
  */
 export function transformCongressGovBill(bill: CongressGovBill): NormalizedBill {
-  return {
-    id: bill.billId,
-    title: bill.title,
-    shortTitle: bill.shortTitle,
-    billType: bill.billType,
-    number: bill.number,
-    congress: bill.congress,
-    introducedDate: bill.introducedDate,
-    sponsor: {
-      id: bill.sponsor.bioguideId,
-      name: bill.sponsor.fullName,
-      party: bill.sponsor.party,
-      state: bill.sponsor.state
+  return withOptional(
+    {
+      id: bill.billId,
+      title: bill.title,
+      billType: bill.billType,
+      number: bill.number,
+      congress: bill.congress,
+      introducedDate: bill.introducedDate,
+      sponsor: {
+        id: bill.sponsor.bioguideId,
+        name: bill.sponsor.fullName,
+        party: bill.sponsor.party,
+        state: bill.sponsor.state
+      },
+      subjects: bill.subjects,
+      url: bill.url,
+      source: 'congress-gov',
+      lastUpdated: new Date().toISOString()
     },
-    subjects: bill.subjects,
-    summary: bill.summary?.text,
-    url: bill.url,
-    source: 'congress-gov',
-    lastUpdated: new Date().toISOString()
-  };
+    {
+      shortTitle: bill.shortTitle,
+      summary: bill.summary?.text
+    }
+  );
 }
 
 /**

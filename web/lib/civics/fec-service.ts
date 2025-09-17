@@ -6,7 +6,6 @@
  */
 
 import { createClient } from '@supabase/supabase-js';
-import type { DataSource } from './types';
 
 export interface FECCycle {
   cycle: number;

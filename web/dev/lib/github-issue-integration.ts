@@ -4,6 +4,7 @@
  */
 
 import { devLog } from '@/lib/logger';
+import { withOptional } from '@/lib/util/objects';
 
 // GitHub API Configuration
 interface GitHubConfig {
@@ -73,7 +74,7 @@ class GitHubIssueIntegration {
   async analyzeFeedback(feedback: any): Promise<FeedbackAnalysis> {
     devLog('Analyzing feedback for issue generation:', { feedbackId: feedback.id });
 
-    const analysis: FeedbackAnalysis = {
+    const analysis = withOptional({
       intent: this.classifyIntent(feedback),
       urgency: this.calculateUrgency(feedback),
       complexity: this.estimateComplexity(feedback),
@@ -83,19 +84,20 @@ class GitHubIssueIntegration {
       technicalUrgency: this.calculateTechnicalUrgency(feedback),
       estimatedEffort: this.estimateEffort(feedback),
       suggestedLabels: this.generateLabels(feedback),
-      suggestedAssignee: this.suggestAssignee(feedback),
       affectedComponents: this.identifyAffectedComponents(feedback),
+      userSegment: this.identifyUserSegment(feedback),
+      featureArea: this.identifyFeatureArea(feedback),
+      userExperienceImpact: this.calculateUserExperienceImpact(feedback),
+      dependencies: this.identifyDependencies(feedback),
+      relatedIssues: await this.findRelatedIssues(feedback)
+    }, {
+      suggestedAssignee: this.suggestAssignee(feedback),
       errorPatterns: this.extractErrorPatterns(feedback),
       performanceIssues: this.identifyPerformanceIssues(feedback),
       browserSpecific: this.isBrowserSpecific(feedback),
       deviceSpecific: this.isDeviceSpecific(feedback),
-      userSegment: this.identifyUserSegment(feedback),
-      featureArea: this.identifyFeatureArea(feedback),
-      revenueImpact: this.assessRevenueImpact(feedback),
-      userExperienceImpact: this.calculateUserExperienceImpact(feedback),
-      dependencies: this.identifyDependencies(feedback),
-      relatedIssues: await this.findRelatedIssues(feedback)
-    };
+      revenueImpact: this.assessRevenueImpact(feedback)
+    }) as FeedbackAnalysis;
 
     devLog('Feedback analysis completed:', analysis);
     return analysis;
@@ -523,9 +525,11 @@ class GitHubIssueIntegration {
     const title = this.generateTitle(feedback, analysis);
     const body = this.generateBody(template, feedback, analysis);
     const labels = analysis.suggestedLabels;
-    const assignees = analysis.suggestedAssignee ? [analysis.suggestedAssignee] : undefined;
     
-    return { title, body, labels, assignees };
+    return withOptional(
+      { title, body, labels },
+      { assignees: analysis.suggestedAssignee ? [analysis.suggestedAssignee] : undefined }
+    ) as GitHubIssue;
   }
 
   private generateTitle(feedback: any, analysis: FeedbackAnalysis): string {

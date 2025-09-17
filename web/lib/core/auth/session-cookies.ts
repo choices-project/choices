@@ -10,8 +10,9 @@
  */
 
 import { cookies } from 'next/headers'
-import jwt from 'jsonwebtoken'
+import * as jwt from 'jsonwebtoken'
 import { logger } from '@/lib/logger'
+import { withOptional } from '@/lib/util/objects'
 
 export interface SessionPayload {
   sub: string // user ID
@@ -136,11 +137,12 @@ export function clearSessionCookie(): void {
  * Rotate session token (for security events)
  */
 export function rotateSessionToken(userId: string, role?: string, stableId?: string): string {
-  const newToken = generateSessionToken({
-    sub: userId,
+  const newToken = generateSessionToken(withOptional({
+    sub: userId
+  }, {
     role,
     stableId
-  })
+  }))
 
   setSessionCookie(newToken)
   
@@ -160,11 +162,12 @@ export function validateSession(): { userId: string; role?: string; stableId?: s
   const session = getCurrentSession()
   if (!session) return null
 
-  return {
-    userId: session.sub,
+  return withOptional({
+    userId: session.sub
+  }, {
     role: session.role,
     stableId: session.stableId
-  }
+  })
 }
 
 /**

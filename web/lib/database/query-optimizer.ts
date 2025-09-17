@@ -10,6 +10,8 @@
 
 import { logger } from '../logger'
 import { getSupabaseServerClient } from '../../utils/supabase/server'
+import type { SupabaseClient } from '@supabase/supabase-js'
+import type { QueryPlan } from '../types/database'
 
 // Query optimization options
 export interface QueryOptions {
@@ -39,13 +41,13 @@ export interface OptimizationResult {
   optimizedQuery: string
   optimizations: string[]
   estimatedImprovement: number
-  executionPlan?: any
+  executionPlan?: QueryPlan
 }
 
 // Query cache entry
-interface QueryCacheEntry {
+interface QueryCacheEntry<T = unknown> {
   query: string
-  result: any
+  result: T
   timestamp: number
   ttl: number
   hitCount: number
@@ -57,8 +59,8 @@ interface QueryCacheEntry {
  * Provides intelligent query optimization, caching, and performance monitoring.
  */
 export class AdvancedQueryOptimizer {
-  private supabase: any
-  private queryCache: Map<string, QueryCacheEntry> = new Map()
+  private supabase!: SupabaseClient
+  private queryCache: Map<string, QueryCacheEntry<unknown>> = new Map()
   private metrics: QueryMetrics[] = []
   private maxCacheSize: number = 1000
   private maxMetricsHistory: number = 10000
@@ -84,7 +86,7 @@ export class AdvancedQueryOptimizer {
   /**
    * Execute optimized query
    */
-  async executeQuery<T = any>(
+  async executeQuery<T = unknown>(
     query: string,
     options: QueryOptions = {}
   ): Promise<{ data: T | null; metrics: QueryMetrics; fromCache: boolean }> {
@@ -122,7 +124,7 @@ export class AdvancedQueryOptimizer {
           
           this.recordMetrics(metrics)
           
-          return { data: cachedResult, metrics, fromCache: true }
+          return { data: cachedResult as T, metrics, fromCache: true }
         }
       }
 
@@ -203,7 +205,7 @@ export class AdvancedQueryOptimizer {
   /**
    * Execute regular query
    */
-  private async executeRegularQuery<T = any>(query: string): Promise<T> {
+  private async executeRegularQuery<T = unknown>(query: string): Promise<T> {
     const { data, error } = await this.supabase.rpc('execute_query', { query_text: query })
     
     if (error) {
@@ -216,7 +218,7 @@ export class AdvancedQueryOptimizer {
   /**
    * Execute EXPLAIN query
    */
-  private async executeExplainQuery<T = any>(
+  private async executeExplainQuery<T = unknown>(
     query: string,
     explain: boolean,
     analyze: boolean
@@ -357,7 +359,7 @@ export class AdvancedQueryOptimizer {
     
     // Check for multiple ORDER BY columns
     const orderByMatch = query.match(/ORDER BY\s+([^LIMIT]+)/i)
-    if (orderByMatch) {
+    if (orderByMatch?.[1]) {
       const orderColumns = orderByMatch[1].split(',').length
       if (orderColumns > 3) {
         optimizations.push('Consider reducing ORDER BY columns for better performance')
@@ -384,7 +386,7 @@ export class AdvancedQueryOptimizer {
   /**
    * Get from cache
    */
-  private getFromCache(key: string): any | null {
+  private getFromCache(key: string): unknown | null {
     const entry = this.queryCache.get(key)
     
     if (!entry) {
@@ -406,7 +408,7 @@ export class AdvancedQueryOptimizer {
   /**
    * Set cache
    */
-  private setCache(key: string, result: any, ttl: number, tags: string[]): void {
+  private setCache(key: string, result: unknown, ttl: number, tags: string[]): void {
     // Clean up cache if it's getting too large
     if (this.queryCache.size >= this.maxCacheSize) {
       this.cleanupCache()
@@ -438,7 +440,10 @@ export class AdvancedQueryOptimizer {
     // Remove bottom 20% of entries
     const toRemove = Math.floor(entries.length * 0.2)
     for (let i = 0; i < toRemove; i++) {
-      this.queryCache.delete(entries[i][0])
+      const entry = entries[i]
+      if (entry) {
+        this.queryCache.delete(entry[0])
+      }
     }
   }
 

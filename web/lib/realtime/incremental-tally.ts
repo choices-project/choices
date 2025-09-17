@@ -5,7 +5,8 @@
  * for ranked choice voting with Redis backing store.
  */
 
-import { logger } from '@/lib/logger';
+import { logger } from '../logger';
+import { withOptional } from '../util/objects';
 
 export interface Ballot {
   id: string;
@@ -244,16 +245,20 @@ export class IncrementalTallyManager {
   private generateFullUpdate(state: RoundState, startTime: number): TallyUpdate {
     const latestRound = state.roundHistory[state.roundHistory.length - 1];
     
-    return {
-      type: 'full',
-      round: state.currentRound,
-      counts: state.currentRoundCounts,
-      eliminated: latestRound?.eliminated || [],
-      winner: latestRound?.winner,
-      totalBallots: state.totalBallots,
-      processingTime: Date.now() - startTime,
-      timestamp: Date.now()
-    };
+    return withOptional(
+      {
+        type: 'full' as const,
+        round: state.currentRound,
+        counts: state.currentRoundCounts,
+        eliminated: latestRound?.eliminated || [],
+        totalBallots: state.totalBallots,
+        processingTime: Date.now() - startTime,
+        timestamp: Date.now()
+      },
+      {
+        winner: latestRound?.winner
+      }
+    );
   }
 
   /**

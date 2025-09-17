@@ -5,6 +5,8 @@
 
 import { devLog } from './logger';
 
+import { withOptional } from '../../../lib/util/objects';
+
 export enum ErrorType {
   VALIDATION = 'VALIDATION',
   AUTHENTICATION = 'AUTHENTICATION',
@@ -46,11 +48,17 @@ export class ApplicationError extends Error {
     super(message);
     this.name = 'ApplicationError';
     this.type = type;
-    this.code = code;
-    this.details = details;
     this.timestamp = new Date();
-    this.userId = userId;
-    this.requestId = requestId;
+    
+    // Use withOptional for optional properties
+    const optionalProps = withOptional({}, {
+      code,
+      details,
+      userId,
+      requestId
+    });
+    
+    Object.assign(this, optionalProps);
   }
 }
 
@@ -161,15 +169,16 @@ export class ErrorHandler {
     let appError: AppError;
 
     if (error instanceof ApplicationError) {
-      appError = {
+      appError = withOptional({
         type: error.type,
         message: error.message,
+        timestamp: error.timestamp
+      }, {
         code: error.code,
         details: error.details,
-        timestamp: error.timestamp,
         userId: error.userId,
         requestId: error.requestId
-      };
+      });
     } else {
       appError = {
         type: ErrorType.UNKNOWN,

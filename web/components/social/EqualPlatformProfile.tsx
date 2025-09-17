@@ -14,13 +14,10 @@ import {
   Mail,
   Phone,
   MapPin,
-  TrendingUp,
   Users,
-  Eye,
-  Share2,
-  Heart
+  Share2
 } from 'lucide-react';
-import { Candidate } from '@/lib/social/candidate-tools';
+import type { Candidate } from '@/lib/social/candidate-tools';
 
 interface EqualPlatformProfileProps {
   candidate: Candidate;

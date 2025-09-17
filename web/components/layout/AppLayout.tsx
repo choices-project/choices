@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Menu, Heart, TrendingUp, Users, MapPin } from 'lucide-react';
+import { Menu, Heart, TrendingUp, MapPin } from 'lucide-react';
 import BurgerMenu from '../navigation/BurgerMenu';
 import LiveVotingFeed from '../viral/LiveVotingFeed';
 

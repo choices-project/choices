@@ -4,8 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   TrendingUp, 
   TrendingDown, 
-  Minus,
-  Users, 
+  Minus, 
   Eye, 
   Share2, 
   MessageCircle,
@@ -13,12 +12,9 @@ import {
   Target,
   AlertCircle,
   CheckCircle,
-  Clock,
-  MapPin,
-  Heart,
-  DollarSign
+  Heart
 } from 'lucide-react';
-import { CampaignDashboardData } from '@/lib/social/candidate-tools';
+import type { CampaignDashboardData } from '@/lib/social/candidate-tools';
 
 interface CampaignDashboardProps {
   candidateId: string;

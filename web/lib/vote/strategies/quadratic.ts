@@ -9,6 +9,7 @@
  */
 
 import { devLog } from '../../logger';
+import { withOptional } from '../../util/objects';
 import type { 
   VotingStrategy, 
   VoteRequest, 
@@ -149,13 +150,12 @@ export class QuadraticStrategy implements VotingStrategy {
         auditReceipt
       });
 
-      return {
+      return withOptional({
         success: true,
         message: 'Vote submitted successfully',
         pollId,
         voteId,
         auditReceipt,
-        privacyLevel,
         responseTime: 0, // Will be set by the engine
         metadata: {
           votingMethod: 'quadratic',
@@ -164,23 +164,26 @@ export class QuadraticStrategy implements VotingStrategy {
           totalCredits: poll.votingConfig.quadraticCredits || 100,
           remainingCredits: (poll.votingConfig.quadraticCredits || 100) - (totalSpent as number)
         }
-      };
+      }, {
+        privacyLevel
+      });
 
     } catch (error) {
       devLog('Quadratic vote processing error:', error);
-      return {
+      return withOptional({
         success: false,
         message: error instanceof Error ? error.message : 'Vote processing failed',
         pollId: request.pollId,
-        voteId: undefined,
-        auditReceipt: undefined,
-        privacyLevel: request.privacyLevel,
         responseTime: 0,
         metadata: {
           votingMethod: 'quadratic',
           error: error instanceof Error ? error.message : 'Unknown error'
         }
-      };
+      }, {
+        voteId: undefined,
+        auditReceipt: undefined,
+        privacyLevel: request.privacyLevel
+      });
     }
   }
 
@@ -211,9 +214,14 @@ export class QuadraticStrategy implements VotingStrategy {
             const creditsNum = credits as number;
             if (creditsNum > 0) {
               const optionIdx = optionIndex.toString();
-              quadraticScores[optionIdx] += creditsNum;
-              quadraticSpending[optionIdx] += creditsNum * creditsNum;
-              optionVotes[optionIdx]++;
+              // Ensure the option exists in our tracking objects
+              if (quadraticScores[optionIdx] !== undefined && 
+                  quadraticSpending[optionIdx] !== undefined && 
+                  optionVotes[optionIdx] !== undefined) {
+                quadraticScores[optionIdx] += creditsNum;
+                quadraticSpending[optionIdx] += creditsNum * creditsNum;
+                optionVotes[optionIdx]++;
+              }
             }
           });
         }
@@ -222,7 +230,10 @@ export class QuadraticStrategy implements VotingStrategy {
       // Calculate percentages
       if (totalVotes > 0) {
         Object.keys(quadraticScores).forEach(optionIndex => {
-          optionPercentages[optionIndex] = (optionVotes[optionIndex] / totalVotes) * 100;
+          const votes = optionVotes[optionIndex];
+          if (votes !== undefined) {
+            optionPercentages[optionIndex] = (votes / totalVotes) * 100;
+          }
         });
       }
 
@@ -236,22 +247,26 @@ export class QuadraticStrategy implements VotingStrategy {
           if (score > winnerVotes) {
             winner = optionIndex;
             winnerVotes = score;
-            winnerPercentage = optionPercentages[optionIndex];
+            winnerPercentage = optionPercentages[optionIndex] ?? 0;
           }
         });
       }
 
-      const results: PollResults = {
-        winner,
-        winnerVotes,
-        winnerPercentage,
-        quadraticScores,
-        quadraticSpending,
-        optionVotes,
-        optionPercentages,
-        abstentions: 0,
-        abstentionPercentage: 0
-      };
+      const results: PollResults = withOptional(
+        {
+          winnerVotes,
+          winnerPercentage,
+          quadraticScores,
+          quadraticSpending,
+          optionVotes,
+          optionPercentages,
+          abstentions: 0,
+          abstentionPercentage: 0
+        },
+        {
+          winner
+        }
+      );
 
       const resultsData: ResultsData = {
         pollId: poll.id,
@@ -287,7 +302,7 @@ export class QuadraticStrategy implements VotingStrategy {
     }
   }
 
-  getConfiguration(): Record<string, any> {
+  getConfiguration(): Record<string, unknown> {
     return {
       name: 'Quadratic Voting',
       description: 'Voters allocate credits across options. Cost increases quadratically with votes.',

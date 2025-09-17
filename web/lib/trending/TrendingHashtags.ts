@@ -5,7 +5,7 @@
  * for viral content discovery and user engagement
  */
 
-import { devLog } from '@/lib/logger';
+import { devLog } from '../logger';
 
 export interface HashtagUsage {
   hashtag: string;
@@ -252,13 +252,16 @@ export class TrendingHashtagsTracker {
         };
       }
       
-      hashtagStats[usage.hashtag].usageCount++;
-      hashtagStats[usage.hashtag].uniqueUsers.add(usage.userId);
-      if (usage.metadata?.category) {
-        hashtagStats[usage.hashtag].categories.add(usage.metadata.category);
-      }
-      if (usage.timestamp > hashtagStats[usage.hashtag].lastUsed) {
-        hashtagStats[usage.hashtag].lastUsed = usage.timestamp;
+      const stats = hashtagStats[usage.hashtag];
+      if (stats) {
+        stats.usageCount++;
+        stats.uniqueUsers.add(usage.userId);
+        if (usage.metadata?.category) {
+          stats.categories.add(usage.metadata.category);
+        }
+        if (usage.timestamp > stats.lastUsed) {
+          stats.lastUsed = usage.timestamp;
+        }
       }
     });
 
@@ -273,8 +276,9 @@ export class TrendingHashtagsTracker {
     });
 
     previousUsage.forEach(usage => {
-      if (hashtagStats[usage.hashtag]) {
-        hashtagStats[usage.hashtag].previousCount++;
+      const stats = hashtagStats[usage.hashtag];
+      if (stats) {
+        stats.previousCount++;
       }
     });
 

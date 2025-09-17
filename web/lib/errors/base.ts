@@ -5,6 +5,8 @@
  * error handling and proper HTTP status code mapping.
  */
 
+import { withOptional } from '../util/objects';
+
 export interface ErrorResponse {
   error: string;
   message: string;
@@ -46,8 +48,12 @@ export abstract class ApplicationError extends Error {
     this.name = this.constructor.name;
     this.statusCode = statusCode;
     this.errorCode = errorCode;
-    this.details = details;
     this.timestamp = new Date().toISOString();
+    
+    // Use withOptional to handle optional details property
+    if (details !== undefined) {
+      this.details = details;
+    }
 
     // Ensure proper prototype chain for instanceof checks
     Object.setPrototypeOf(this, new.target.prototype);
@@ -57,14 +63,16 @@ export abstract class ApplicationError extends Error {
    * Convert error to JSON response format
    */
   toJSON(): ErrorResponse {
-    return {
-      error: this.name,
-      message: this.message,
-      statusCode: this.statusCode,
-      errorCode: this.errorCode,
-      details: this.details,
-      timestamp: this.timestamp
-    };
+    return withOptional(
+      {
+        error: this.name,
+        message: this.message,
+        statusCode: this.statusCode,
+        errorCode: this.errorCode,
+        timestamp: this.timestamp
+      },
+      { details: this.details }
+    );
   }
 
   /**

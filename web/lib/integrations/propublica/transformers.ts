@@ -5,7 +5,8 @@
  * with proper validation and error handling.
  */
 
-import { logger } from '@/lib/logger';
+import { logger } from '../../logger';
+import { withOptional } from '../../util/objects';
 import type { 
   ProPublicaMember, 
   ProPublicaVote, 
@@ -14,7 +15,7 @@ import type {
 import type { 
   Representative,
   CandidateCardV1 
-} from '@/features/civics/schemas';
+} from '../../../features/civics/schemas';
 
 export interface TransformedProPublicaMember extends Representative {
   source: 'propublica';
@@ -88,25 +89,31 @@ export function transformMember(
     const votingRecord = extractVotingRecord(member);
     const transformedRecentVotes = recentVotes ? transformRecentVotes(recentVotes) : undefined;
 
-    return {
-      id: `propublica-${member.id}`,
-      name: `${member.first_name} ${member.last_name}${member.suffix ? ` ${member.suffix}` : ''}`,
-      party: member.party,
-      office: member.title,
-      district: member.district || 'At-Large',
-      state: member.state,
-      contact: {
-        phone: member.phone,
-        email: undefined, // ProPublica doesn't provide email
-        website: member.url
+    return withOptional(
+      {
+        id: `propublica-${member.id}`,
+        name: `${member.first_name} ${member.last_name}${member.suffix ? ` ${member.suffix}` : ''}`,
+        party: member.party,
+        office: member.title,
+        district: member.district || 'At-Large',
+        state: member.state,
+        contact: withOptional(
+          {},
+          {
+            phone: member.phone,
+            website: member.url
+          }
+        ),
+        source: 'propublica' as const,
+        sourceId: member.id
       },
-      source: 'propublica',
-      sourceId: member.id,
-      bio: undefined, // ProPublica doesn't provide bio
-      socialMedia,
-      votingRecord,
-      recentVotes: transformedRecentVotes
-    };
+      {
+        bio: undefined, // ProPublica doesn't provide bio
+        socialMedia,
+        votingRecord,
+        recentVotes: transformedRecentVotes
+      }
+    );
   } catch (error) {
     logger.error('Failed to transform ProPublica member', { error, member });
     throw new Error(`Failed to transform member: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -155,35 +162,42 @@ export function transformBill(bill: ProPublicaBill): TransformedProPublicaBill {
       billNumber: bill.number
     });
 
-    return {
-      id: `propublica-bill-${bill.bill_id}`,
-      title: bill.title,
-      shortTitle: bill.short_title,
-      billNumber: bill.number,
-      billType: bill.bill_type,
-      congress: bill.congress,
-      introducedDate: bill.introduced_date,
-      sponsor: {
-        name: bill.sponsor_name || 'Unknown',
-        party: bill.sponsor_party || 'Unknown',
-        state: bill.sponsor_state || 'Unknown'
+    return withOptional(
+      {
+        id: `propublica-bill-${bill.bill_id}`,
+        title: bill.title,
+        billNumber: bill.number,
+        billType: bill.bill_type,
+        congress: bill.congress,
+        introducedDate: bill.introduced_date,
+        sponsor: {
+          name: bill.sponsor_name || 'Unknown',
+          party: bill.sponsor_party || 'Unknown',
+          state: bill.sponsor_state || 'Unknown'
+        },
+        status: bill.active ? 'active' : 'inactive',
+        lastAction: bill.latest_major_action || bill.latest_action || 'Unknown',
+        lastActionDate: bill.latest_major_action_date || bill.latest_action_date || bill.introduced_date,
+        cosponsors: bill.cosponsors,
+        cosponsorsByParty: withOptional(
+          {},
+          {
+            republican: bill.cosponsors_by_party.R,
+            democrat: bill.cosponsors_by_party.D,
+            independent: bill.cosponsors_by_party.I
+          }
+        ),
+        committees: bill.committees ? [bill.committees] : [],
+        subjects: bill.primary_subject ? [bill.primary_subject] : [],
+        source: 'propublica' as const,
+        sourceId: bill.bill_id,
+        lastUpdated: new Date().toISOString()
       },
-      summary: bill.summary || bill.summary_short,
-      status: bill.active ? 'active' : 'inactive',
-      lastAction: bill.latest_major_action || bill.latest_action || 'Unknown',
-      lastActionDate: bill.latest_major_action_date || bill.latest_action_date || bill.introduced_date,
-      cosponsors: bill.cosponsors,
-      cosponsorsByParty: {
-        republican: bill.cosponsors_by_party.R,
-        democrat: bill.cosponsors_by_party.D,
-        independent: bill.cosponsors_by_party.I
-      },
-      committees: bill.committees ? [bill.committees] : [],
-      subjects: bill.primary_subject ? [bill.primary_subject] : [],
-      source: 'propublica',
-      sourceId: bill.bill_id,
-      lastUpdated: new Date().toISOString()
-    };
+      {
+        shortTitle: bill.short_title,
+        summary: bill.summary || bill.summary_short
+      }
+    );
   } catch (error) {
     logger.error('Failed to transform ProPublica bill', { error, bill });
     throw new Error(`Failed to transform bill: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -353,11 +367,15 @@ export function cleanMemberData(member: TransformedProPublicaMember): Transforme
     office: member.office.trim(),
     district: member.district.trim(),
     state: member.state.trim().toUpperCase(),
-    contact: {
-      ...member.contact,
-      phone: member.contact.phone?.trim(),
-      website: member.contact.website?.trim()
-    }
+    contact: withOptional(
+      {},
+      {
+        phone: member.contact.phone?.trim(),
+        email: member.contact.email,
+        address: member.contact.address,
+        website: member.contact.website?.trim()
+      }
+    )
   };
 }
 
@@ -365,18 +383,22 @@ export function cleanMemberData(member: TransformedProPublicaMember): Transforme
  * Clean and normalize bill data
  */
 export function cleanBillData(bill: TransformedProPublicaBill): TransformedProPublicaBill {
-  return {
-    ...bill,
-    title: bill.title.trim(),
-    shortTitle: bill.shortTitle?.trim(),
-    billNumber: bill.billNumber.trim(),
-    summary: bill.summary?.trim(),
-    lastAction: bill.lastAction.trim(),
-    sponsor: {
-      ...bill.sponsor,
-      name: bill.sponsor.name.trim(),
-      party: bill.sponsor.party.trim(),
-      state: bill.sponsor.state.trim().toUpperCase()
+  return withOptional(
+    {
+      ...bill,
+      title: bill.title.trim(),
+      billNumber: bill.billNumber.trim(),
+      lastAction: bill.lastAction.trim(),
+      sponsor: {
+        ...bill.sponsor,
+        name: bill.sponsor.name.trim(),
+        party: bill.sponsor.party.trim(),
+        state: bill.sponsor.state.trim().toUpperCase()
+      }
+    },
+    {
+      shortTitle: bill.shortTitle?.trim(),
+      summary: bill.summary?.trim()
     }
-  };
+  );
 }

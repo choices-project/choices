@@ -1,6 +1,8 @@
 // ============================================================================
 // PHASE 2: LEGAL COMPLIANCE FRAMEWORK
 // ============================================================================
+
+import { withOptional } from '../util/objects';
 // Agent A2 - Privacy Specialist
 // 
 // This module implements legal compliance frameworks for TCPA/CAN-SPAM
@@ -418,14 +420,18 @@ export class CommunicationComplianceManager {
   ): Promise<string> {
     const requestId = this.generateRequestId();
     
-    const request: DataSubjectRequest = {
-      id: requestId,
-      type,
-      status: 'pending',
-      requestedAt: new Date(),
-      response: undefined,
-      legalBasis: this.getLegalBasisForRequest(type)
-    };
+    const request: DataSubjectRequest = withOptional(
+      {
+        id: requestId,
+        type,
+        status: 'pending' as const,
+        requestedAt: new Date(),
+        legalBasis: this.getLegalBasisForRequest(type)
+      },
+      {
+        response: undefined
+      }
+    );
 
     // Store request
     await this.storeDataSubjectRequest(userId, request);

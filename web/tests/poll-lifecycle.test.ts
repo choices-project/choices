@@ -324,7 +324,8 @@ describe('Poll Lifecycle Integration', () => {
 
   describe('Poll Lifecycle Edge Cases', () => {
     it('should handle poll without start time', async () => {
-      const pollWithoutStart = { ...activePoll, startTime: undefined };
+      const pollWithoutStart = { ...activePoll };
+      delete pollWithoutStart.startTime;
       
       const voteRequest: VoteRequest = {
         pollId: 'lifecycle-poll-123',
@@ -338,7 +339,8 @@ describe('Poll Lifecycle Integration', () => {
     });
 
     it('should handle poll without end time', async () => {
-      const pollWithoutEnd = { ...activePoll, endTime: undefined };
+      const pollWithoutEnd = { ...activePoll };
+      delete pollWithoutEnd.endTime;
       
       const voteRequest: VoteRequest = {
         pollId: 'lifecycle-poll-123',

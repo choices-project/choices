@@ -5,7 +5,8 @@
  * democracy platform, enabling community-driven decision making.
  */
 
-import { logger } from '@/lib/logger';
+import { devLog } from '../logger';
+import { withOptional } from '../util/objects';
 
 export interface RFCData {
   title: string;
@@ -77,6 +78,7 @@ export interface RFCNotification {
   message: string;
   timestamp: number;
   recipients: string[];
+  metadata?: Record<string, unknown>;
 }
 
 export class RFCManager {
@@ -115,8 +117,8 @@ export class RFCManager {
       ...rfcData,
       id: rfcId,
       status: 'Draft',
-      created: new Date().toISOString().split('T')[0],
-      updated: new Date().toISOString().split('T')[0],
+      created: new Date().toISOString().split('T')[0] ?? new Date().toISOString() ?? new Date().toISOString(),
+      updated: new Date().toISOString().split('T')[0] ?? new Date().toISOString() ?? new Date().toISOString(),
       comments: [],
       votes: [],
       tags: this.extractTags(rfcData),
@@ -126,7 +128,7 @@ export class RFCManager {
     await this.saveRFC(rfc);
     await this.notifyStakeholders(rfc);
     
-    logger.info(`Created RFC ${rfcId}`, { title: rfc.title, authors: rfc.authors });
+    devLog(`Created RFC ${rfcId}`, { title: rfc.title, authors: rfc.authors });
     
     return rfcId;
   }
@@ -153,13 +155,13 @@ export class RFCManager {
     }
     
     rfc.status = 'Review';
-    rfc.updated = new Date().toISOString().split('T')[0];
+    rfc.updated = new Date().toISOString().split('T')[0] ?? new Date().toISOString();
     
     await this.saveRFC(rfc);
     await this.publishToPublicRepo(rfc);
     await this.notifyCommunity(rfc);
     
-    logger.info(`Published RFC ${rfcId} for review`, { title: rfc.title });
+    devLog(`Published RFC ${rfcId} for review`, { title: rfc.title });
   }
 
   /**
@@ -198,15 +200,17 @@ export class RFCManager {
     }
     
     const commentId = this.generateCommentId();
-    const comment: RFCComment = {
-      id: commentId,
-      rfcId,
-      author,
-      content,
-      timestamp: Date.now(),
-      parentId,
-      replies: []
-    };
+    const comment: RFCComment = withOptional(
+      {
+        id: commentId,
+        rfcId,
+        author,
+        content,
+        timestamp: Date.now(),
+        replies: []
+      },
+      { parentId }
+    );
     
     const comments = this.commentStorage.get(rfcId) || [];
     comments.push(comment);
@@ -214,12 +218,12 @@ export class RFCManager {
     
     // Update RFC comment count
     rfc.comments = comments;
-    rfc.updated = new Date().toISOString().split('T')[0];
+    rfc.updated = new Date().toISOString().split('T')[0] ?? new Date().toISOString();
     await this.saveRFC(rfc);
     
     await this.notifyCommentAdded(rfc, comment);
     
-    logger.info(`Added comment to RFC ${rfcId}`, { commentId, author });
+    devLog(`Added comment to RFC ${rfcId}`, { commentId, author });
     
     return commentId;
   }
@@ -246,14 +250,16 @@ export class RFCManager {
     }
     
     const voteId = this.generateVoteId();
-    const rfcVote: RFCVote = {
-      id: voteId,
-      rfcId,
-      voter,
-      vote,
-      reasoning,
-      timestamp: Date.now()
-    };
+    const rfcVote: RFCVote = withOptional(
+      {
+        id: voteId,
+        rfcId,
+        voter,
+        vote,
+        timestamp: Date.now()
+      },
+      { reasoning }
+    );
     
     const votes = this.voteStorage.get(rfcId) || [];
     
@@ -268,12 +274,12 @@ export class RFCManager {
     
     // Update RFC vote count
     rfc.votes = votes;
-    rfc.updated = new Date().toISOString().split('T')[0];
+    rfc.updated = new Date().toISOString().split('T')[0] ?? new Date().toISOString();
     await this.saveRFC(rfc);
     
     await this.notifyVoteCast(rfc, rfcVote);
     
-    logger.info(`Vote cast on RFC ${rfcId}`, { voteId, voter, vote });
+    devLog(`Vote cast on RFC ${rfcId}`, { voteId, voter, vote });
     
     return voteId;
   }
@@ -301,12 +307,12 @@ export class RFCManager {
     
     const oldStatus = rfc.status;
     rfc.status = status;
-    rfc.updated = new Date().toISOString().split('T')[0];
+    rfc.updated = new Date().toISOString().split('T')[0] ?? new Date().toISOString();
     
     await this.saveRFC(rfc);
     await this.notifyStatusChange(rfc, oldStatus, reason);
     
-    logger.info(`Updated RFC ${rfcId} status`, { oldStatus, newStatus: status, reason });
+    devLog(`Updated RFC ${rfcId} status`, { oldStatus, newStatus: status, reason });
   }
 
   /**
@@ -461,9 +467,14 @@ export class RFCManager {
       id: `notif-${Date.now()}`,
       rfcId: rfc.id,
       type: 'comment_added',
-      message: `New comment on RFC: ${rfc.title}`,
+      message: `New comment on RFC: ${rfc.title} by ${comment.author}`,
       timestamp: Date.now(),
-      recipients: ['rfc-authors', 'commenters']
+      recipients: ['rfc-authors', 'commenters'],
+      metadata: {
+        commentId: comment.id,
+        commentAuthor: comment.author,
+        commentLength: comment.content.length
+      }
     };
     
     await this.sendNotification(notification);
@@ -477,9 +488,15 @@ export class RFCManager {
       id: `notif-${Date.now()}`,
       rfcId: rfc.id,
       type: 'vote_cast',
-      message: `Vote cast on RFC: ${rfc.title}`,
+      message: `Vote cast on RFC: ${rfc.title} by ${vote.voter}`,
       timestamp: Date.now(),
-      recipients: ['rfc-authors', 'voters']
+      recipients: ['rfc-authors', 'voters'],
+      metadata: {
+        voteId: vote.id,
+        voterId: vote.voter,
+        voteValue: vote.vote,
+        voteReason: vote.reasoning
+      }
     };
     
     await this.sendNotification(notification);
@@ -489,13 +506,22 @@ export class RFCManager {
    * Notify status change
    */
   private async notifyStatusChange(rfc: RFC, oldStatus: string, reason?: string): Promise<void> {
+    const message = reason ? 
+      `RFC status changed from ${oldStatus} to ${rfc.status}: ${rfc.title}. Reason: ${reason}` :
+      `RFC status changed from ${oldStatus} to ${rfc.status}: ${rfc.title}`;
+      
     const notification: RFCNotification = {
       id: `notif-${Date.now()}`,
       rfcId: rfc.id,
       type: 'status_changed',
-      message: `RFC status changed from ${oldStatus} to ${rfc.status}: ${rfc.title}`,
+      message,
       timestamp: Date.now(),
-      recipients: ['community', 'stakeholders', 'rfc-authors']
+      recipients: ['community', 'stakeholders', 'rfc-authors'],
+      metadata: {
+        oldStatus,
+        newStatus: rfc.status,
+        reason: reason || 'No reason provided'
+      }
     };
     
     await this.sendNotification(notification);
@@ -509,7 +535,7 @@ export class RFCManager {
     notifications.push(notification);
     this.notificationStorage.set(notification.rfcId, notifications);
     
-    logger.info(`RFC notification sent`, { 
+    devLog(`RFC notification sent`, { 
       rfcId: notification.rfcId, 
       type: notification.type,
       recipients: notification.recipients.length 
@@ -521,6 +547,6 @@ export class RFCManager {
    */
   private async publishToPublicRepo(rfc: RFC): Promise<void> {
     // In production, this would publish to a public repository
-    logger.info(`RFC published to public repo`, { rfcId: rfc.id, title: rfc.title });
+    devLog(`RFC published to public repo`, { rfcId: rfc.id, title: rfc.title });
   }
 }

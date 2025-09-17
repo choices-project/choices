@@ -199,7 +199,7 @@ async function verifyJWT(jwt: string, publicKey: CryptoKey): Promise<boolean> {
     const signingInput = `${headerB64}.${payloadB64}`
     
     // Decode signature
-    const signature = base64URLDecode(signatureB64)
+    const signature = base64URLDecode(signatureB64 || '')
     
     // Verify signature
     const encoder = new TextEncoder()
@@ -262,7 +262,7 @@ function arrayBufferToBase64URL(buffer: ArrayBuffer): string {
   const bytes = new Uint8Array(buffer)
   let binary = ''
   for (let i = 0; i < bytes.byteLength; i++) {
-    binary += String.fromCharCode(bytes[i])
+    binary += String.fromCharCode(bytes[i] || 0)
   }
   return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '')
 }

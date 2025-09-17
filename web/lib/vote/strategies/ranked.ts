@@ -9,6 +9,7 @@
  */
 
 import { devLog } from '../../logger';
+import { withOptional } from '../../util/objects';
 import type { 
   VotingStrategy, 
   VoteRequest, 
@@ -141,39 +142,47 @@ export class RankedStrategy implements VotingStrategy {
         auditReceipt
       });
 
-      return {
-        success: true,
-        message: 'Vote submitted successfully',
-        pollId,
-        voteId,
-        auditReceipt,
-        privacyLevel,
-        responseTime: 0, // Will be set by the engine
-        metadata: {
-          votingMethod: 'ranked',
-          rankings: voteData.rankings,
-          rankedOptions: voteData.rankings?.map((rank, index) => ({
-            rank: index + 1,
-            option: poll.options[rank]?.text
-          })) || []
+      return withOptional(
+        {
+          success: true,
+          message: 'Vote submitted successfully',
+          pollId,
+          voteId,
+          auditReceipt,
+          responseTime: 0, // Will be set by the engine
+          metadata: {
+            votingMethod: 'ranked',
+            rankings: voteData.rankings,
+            rankedOptions: voteData.rankings?.map((rank, index) => ({
+              rank: index + 1,
+              option: poll.options[rank]?.text
+            })) || []
+          }
+        },
+        {
+          privacyLevel
         }
-      };
+      );
 
     } catch (error) {
       devLog('Ranked vote processing error:', error);
-      return {
-        success: false,
-        message: error instanceof Error ? error.message : 'Vote processing failed',
-        pollId: request.pollId,
-        voteId: undefined,
-        auditReceipt: undefined,
-        privacyLevel: request.privacyLevel,
-        responseTime: 0,
-        metadata: {
-          votingMethod: 'ranked',
-          error: error instanceof Error ? error.message : 'Unknown error'
+      return withOptional(
+        {
+          success: false,
+          message: error instanceof Error ? error.message : 'Vote processing failed',
+          pollId: request.pollId,
+          responseTime: 0,
+          metadata: {
+            votingMethod: 'ranked',
+            error: error instanceof Error ? error.message : 'Unknown error'
+          }
+        },
+        {
+          voteId: undefined,
+          auditReceipt: undefined,
+          privacyLevel: request.privacyLevel
         }
-      };
+      );
     }
   }
 
@@ -216,29 +225,41 @@ export class RankedStrategy implements VotingStrategy {
       // Count first-choice votes
       votes.forEach(vote => {
         if (vote.rankings && vote.rankings.length > 0) {
-          const firstChoice = vote.rankings[0].toString();
-          optionVotes[firstChoice]++;
+          const firstRanking = vote.rankings[0];
+          if (firstRanking !== undefined) {
+            const firstChoice = firstRanking.toString();
+            if (optionVotes[firstChoice] !== undefined) {
+              optionVotes[firstChoice]++;
+            }
+          }
         }
       });
 
       const totalVotes = votes.length;
       if (totalVotes > 0) {
         Object.keys(optionVotes).forEach(optionIndex => {
-          optionPercentages[optionIndex] = (optionVotes[optionIndex] / totalVotes) * 100;
+          const votes = optionVotes[optionIndex];
+          if (votes !== undefined) {
+            optionPercentages[optionIndex] = (votes / totalVotes) * 100;
+          }
         });
       }
 
-      const results: PollResults = {
-        winner,
-        winnerVotes,
-        winnerPercentage,
-        bordaScores,
-        instantRunoffRounds: runoffRounds,
-        optionVotes,
-        optionPercentages,
-        abstentions: 0,
-        abstentionPercentage: 0
-      };
+      const results: PollResults = withOptional(
+        {
+          winnerVotes,
+          winnerPercentage,
+          bordaScores,
+          instantRunoffRounds: runoffRounds,
+          optionVotes,
+          optionPercentages,
+          abstentions: 0,
+          abstentionPercentage: 0
+        },
+        {
+          winner
+        }
+      );
 
       const resultsData: ResultsData = {
         pollId: poll.id,
@@ -275,8 +296,8 @@ export class RankedStrategy implements VotingStrategy {
 
   private runInstantRunoff(poll: PollData, votes: VoteData[]): InstantRunoffRound[] {
     const rounds: InstantRunoffRound[] = [];
-    let remainingOptions = new Set(poll.options.map((_, index) => index.toString()));
-    let currentVotes = [...votes];
+    const remainingOptions = new Set(poll.options.map((_, index) => index.toString()));
+    const currentVotes = [...votes];
 
     let round = 1;
     while (remainingOptions.size > 1) {
@@ -290,10 +311,12 @@ export class RankedStrategy implements VotingStrategy {
         if (vote.rankings && vote.rankings.length > 0) {
           // Find the highest-ranked remaining option
           for (const ranking of vote.rankings) {
-            const optionIndex = ranking.toString();
-            if (remainingOptions.has(optionIndex)) {
-              roundVotes[optionIndex]++;
-              break;
+            if (ranking !== undefined) {
+              const optionIndex = ranking.toString();
+              if (remainingOptions.has(optionIndex)) {
+                roundVotes[optionIndex] = (roundVotes[optionIndex] ?? 0) + 1;
+                break;
+              }
             }
           }
         }
@@ -303,7 +326,10 @@ export class RankedStrategy implements VotingStrategy {
       const totalVotes = Object.values(roundVotes).reduce((sum, count) => sum + count, 0);
       const roundPercentages: Record<string, number> = {};
       Object.keys(roundVotes).forEach(option => {
-        roundPercentages[option] = totalVotes > 0 ? (roundVotes[option] / totalVotes) * 100 : 0;
+        const votes = roundVotes[option];
+        if (votes !== undefined) {
+          roundPercentages[option] = totalVotes > 0 ? (votes / totalVotes) * 100 : 0;
+        }
       });
 
       // Check for majority winner
@@ -328,14 +354,21 @@ export class RankedStrategy implements VotingStrategy {
 
       // If there's a tie for elimination, eliminate the first one
       const eliminated = eliminatedOptions[0];
+      if (!eliminated) {
+        throw new Error('No options to eliminate');
+      }
       remainingOptions.delete(eliminated);
 
-      rounds.push({
-        round,
-        eliminated,
-        votes: roundVotes,
-        percentages: roundPercentages
-      });
+      rounds.push(withOptional(
+        {
+          round,
+          votes: roundVotes,
+          percentages: roundPercentages
+        },
+        {
+          eliminated
+        }
+      ));
 
       round++;
     }
@@ -356,7 +389,10 @@ export class RankedStrategy implements VotingStrategy {
       if (vote.rankings && vote.rankings.length > 0) {
         vote.rankings.forEach((optionIndex, rank) => {
           const score = poll.options.length - rank - 1; // Higher rank = higher score
-          bordaScores[optionIndex.toString()] += score;
+          const optionKey = optionIndex.toString();
+          if (bordaScores[optionKey] !== undefined) {
+            bordaScores[optionKey] += score;
+          }
         });
       }
     });
@@ -364,7 +400,7 @@ export class RankedStrategy implements VotingStrategy {
     return bordaScores;
   }
 
-  getConfiguration(): Record<string, any> {
+  getConfiguration(): Record<string, unknown> {
     return {
       name: 'Ranked Choice Voting',
       description: 'Voters rank options in order of preference. Results use instant runoff voting.',

@@ -39,7 +39,7 @@ export interface IdCrosswalk {
   canonical_id: string;
   source: DataSource;
   source_id: string;
-  attrs: Record<string, any>;
+  attrs: Record<string, unknown>;
   created_at: string;
   updated_at: string;
 }
@@ -92,7 +92,7 @@ export interface Candidate {
   created_at: string;
   
   // Provenance
-  provenance: Record<string, any>;
+  provenance: Record<string, unknown>;
   license_key: string;
 }
 
@@ -126,7 +126,7 @@ export interface Election {
   created_at: string;
   
   // Provenance
-  provenance: Record<string, any>;
+  provenance: Record<string, unknown>;
   license_key: string;
 }
 
@@ -161,7 +161,7 @@ export interface CampaignFinance {
   created_at: string;
   
   // Provenance
-  provenance: Record<string, any>;
+  provenance: Record<string, unknown>;
   license_key: string;
 }
 
@@ -194,7 +194,7 @@ export interface Contribution {
   created_at: string;
   
   // Provenance
-  provenance: Record<string, any>;
+  provenance: Record<string, unknown>;
   license_key: string;
   
   // Retention policy
@@ -229,7 +229,7 @@ export interface VotingRecord {
   created_at: string;
   
   // Provenance
-  provenance: Record<string, any>;
+  provenance: Record<string, unknown>;
   license_key: string;
 }
 
@@ -243,7 +243,7 @@ export interface DataLicense {
   attribution_text: string;
   display_requirements?: string;
   cache_ttl_seconds?: number;
-  usage_restrictions?: Record<string, any>;
+  usage_restrictions?: Record<string, unknown>;
   created_at: string;
 }
 
@@ -259,7 +259,7 @@ export interface IndependenceScoreMethodology {
 
 export interface IngestCursor {
   source: DataSource;
-  cursor: Record<string, any>;
+  cursor: Record<string, unknown>;
   updated_at: string;
 }
 
@@ -374,7 +374,7 @@ export interface ValidationIssue {
 export interface IngestTask {
   id: string;
   source: DataSource;
-  params: Record<string, any>;
+  params: Record<string, unknown>;
   window: string; // e.g., "2024-01-01:2024-01-31"
   priority: 'high' | 'medium' | 'low';
   retryCount: number;
@@ -409,7 +409,7 @@ export interface GeographicLookup {
   geoid?: string;
   census_cycle?: number;
   congress_number?: number;
-  geometry?: any; // PostGIS geometry
+  geometry?: unknown; // PostGIS geometry
   created_at: string;
 }
 

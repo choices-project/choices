@@ -139,7 +139,7 @@ export interface GovTrackResponse<T> {
 }
 
 export class GovTrackApiError extends ApplicationError {
-  constructor(message: string, statusCode: number, details?: any) {
+  constructor(message: string, statusCode: number, details?: Record<string, unknown>) {
     super(message, statusCode, 'GOVTRACK_API_ERROR', details);
   }
 }
@@ -314,7 +314,7 @@ export class GovTrackClient {
   /**
    * Make HTTP request to GovTrack API
    */
-  private async makeRequest<T = any>(endpoint: string): Promise<T> {
+  private async makeRequest<T = unknown>(endpoint: string): Promise<T> {
     const url = `${this.config.baseUrl}${endpoint}`;
 
     const controller = new AbortController();

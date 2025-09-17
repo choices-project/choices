@@ -67,6 +67,8 @@ export interface DecryptionResult {
 // SECURE KEY MANAGER CLASS
 // ============================================================================
 
+import { withOptional } from '../util/objects';
+
 export class SecureKeyManager {
   private keys: Map<string, SecureKey> = new Map();
   private rotationPolicy: KeyRotationPolicy;
@@ -417,7 +419,10 @@ export class SecureKeyManager {
     const bytes = new Uint8Array(buffer);
     let binary = '';
     for (let i = 0; i < bytes.byteLength; i++) {
-      binary += String.fromCharCode(bytes[i]);
+      const byte = bytes[i];
+      if (byte !== undefined) {
+        binary += String.fromCharCode(byte);
+      }
     }
     return btoa(binary);
   }
@@ -455,27 +460,31 @@ export class SecureKeyManager {
     const key = this.keys.get(keyId);
     if (!key) return null;
     
-    return {
-      id: key.id,
-      algorithm: key.algorithm,
-      extractable: key.extractable,
-      usages: key.usages,
-      createdAt: key.createdAt,
-      expiresAt: key.expiresAt,
-      version: key.version
-    };
+    return withOptional(
+      {
+        id: key.id,
+        algorithm: key.algorithm,
+        extractable: key.extractable,
+        usages: key.usages,
+        createdAt: key.createdAt,
+        version: key.version
+      },
+      { expiresAt: key.expiresAt }
+    );
   }
 
   listKeys(): Omit<SecureKey, 'key'>[] {
-    return Array.from(this.keys.values()).map(key => ({
-      id: key.id,
-      algorithm: key.algorithm,
-      extractable: key.extractable,
-      usages: key.usages,
-      createdAt: key.createdAt,
-      expiresAt: key.expiresAt,
-      version: key.version
-    }));
+    return Array.from(this.keys.values()).map(key => withOptional(
+      {
+        id: key.id,
+        algorithm: key.algorithm,
+        extractable: key.extractable,
+        usages: key.usages,
+        createdAt: key.createdAt,
+        version: key.version
+      },
+      { expiresAt: key.expiresAt }
+    ));
   }
 
   deleteKey(keyId: string): boolean {

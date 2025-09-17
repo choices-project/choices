@@ -9,6 +9,7 @@
  */
 
 import { devLog } from '../../logger';
+import { withOptional } from '../../util/objects';
 import type { 
   VotingStrategy, 
   VoteRequest, 
@@ -141,36 +142,38 @@ export class ApprovalStrategy implements VotingStrategy {
         auditReceipt
       });
 
-      return {
+      return withOptional({
         success: true,
         message: 'Vote submitted successfully',
         pollId,
         voteId,
         auditReceipt,
-        privacyLevel,
         responseTime: 0, // Will be set by the engine
         metadata: {
           votingMethod: 'approval',
           approvals: voteData.approvals,
           approvedOptions: voteData.approvals?.map(index => poll.options[index]?.text) || []
         }
-      };
+      }, {
+        privacyLevel
+      });
 
     } catch (error) {
       devLog('Approval vote processing error:', error);
-      return {
+      return withOptional({
         success: false,
         message: error instanceof Error ? error.message : 'Vote processing failed',
         pollId: request.pollId,
-        voteId: undefined,
-        auditReceipt: undefined,
-        privacyLevel: request.privacyLevel,
         responseTime: 0,
         metadata: {
           votingMethod: 'approval',
           error: error instanceof Error ? error.message : 'Unknown error'
         }
-      };
+      }, {
+        voteId: undefined,
+        auditReceipt: undefined,
+        privacyLevel: request.privacyLevel
+      });
     }
   }
 
@@ -198,9 +201,10 @@ export class ApprovalStrategy implements VotingStrategy {
         if (vote.approvals && Array.isArray(vote.approvals)) {
           totalVotes++;
           vote.approvals.forEach(approval => {
-            if (approval >= 0 && approval < poll.options.length) {
-              approvalScores[approval.toString()]++;
-              optionVotes[approval.toString()]++;
+            if (approval !== undefined && approval >= 0 && approval < poll.options.length) {
+              const key = approval.toString();
+              approvalScores[key] = (approvalScores[key] ?? 0) + 1;
+              optionVotes[key] = (optionVotes[key] ?? 0) + 1;
             }
           });
         }
@@ -209,8 +213,14 @@ export class ApprovalStrategy implements VotingStrategy {
       // Calculate percentages
       if (totalVotes > 0) {
         Object.keys(approvalScores).forEach(optionIndex => {
-          approvalPercentages[optionIndex] = (approvalScores[optionIndex] / totalVotes) * 100;
-          optionPercentages[optionIndex] = (optionVotes[optionIndex] / totalVotes) * 100;
+          const approvalScore = approvalScores[optionIndex];
+          const optionVote = optionVotes[optionIndex];
+          if (approvalScore !== undefined) {
+            approvalPercentages[optionIndex] = (approvalScore / totalVotes) * 100;
+          }
+          if (optionVote !== undefined) {
+            optionPercentages[optionIndex] = (optionVote / totalVotes) * 100;
+          }
         });
       }
 
@@ -224,13 +234,13 @@ export class ApprovalStrategy implements VotingStrategy {
           if (score > winnerVotes) {
             winner = optionIndex;
             winnerVotes = score;
-            winnerPercentage = approvalPercentages[optionIndex];
+            const percentage = approvalPercentages[optionIndex];
+            winnerPercentage = percentage ?? 0;
           }
         });
       }
 
-      const results: PollResults = {
-        winner,
+      const results: PollResults = withOptional({
         winnerVotes,
         winnerPercentage,
         approvalScores,
@@ -239,7 +249,9 @@ export class ApprovalStrategy implements VotingStrategy {
         optionPercentages,
         abstentions: 0,
         abstentionPercentage: 0
-      };
+      }, {
+        winner
+      });
 
       const resultsData: ResultsData = {
         pollId: poll.id,
@@ -273,7 +285,7 @@ export class ApprovalStrategy implements VotingStrategy {
     }
   }
 
-  getConfiguration(): Record<string, any> {
+  getConfiguration(): Record<string, unknown> {
     return {
       name: 'Approval Voting',
       description: 'Voters can approve (vote for) multiple options. The option with the most approvals wins.',

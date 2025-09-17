@@ -6,7 +6,7 @@
  */
 
 import { createClient } from '@supabase/supabase-js';
-import { logger } from '@/lib/logger';
+import { logger } from '../logger';
 
 export interface RealtimeConfig {
   throttleMs: number;
@@ -153,6 +153,10 @@ export class RealtimeUpdateManager {
       }
     }
 
+    if (!latestUpdate) {
+      throw new Error('No latest update available');
+    }
+    
     return {
       pollId: latestUpdate.pollId,
       round: latestUpdate.data.round || 0,

@@ -354,7 +354,7 @@ export class ComprehensiveTestingRunner {
       })),
       performance: {
         buildTime: Date.now() - comprehensiveReport.timestamp,
-        testExecutionTime: comprehensiveReport.timestamp - this.results[0]?.timestamp || 0
+        testExecutionTime: comprehensiveReport.timestamp - (this.results[0]?.timestamp ?? comprehensiveReport.timestamp)
       }
     }
     

@@ -392,7 +392,8 @@ export class MetricBuffer {
       .sort((a, b) => a - b);
     
     const index = Math.ceil((percentile / 100) * sorted.length) - 1;
-    return sorted[Math.max(0, index)];
+    const value = sorted[Math.max(0, index)];
+    return value ?? 0;
   }
 
   getAverage(): number {

@@ -9,6 +9,7 @@
  */
 
 import { dev } from '@/lib/dev.logger';
+import { withOptional } from '@/lib/util/objects';
 
 // Types for FEC API responses
 export interface FECCandidate {
@@ -161,7 +162,7 @@ export class FECApiError extends Error {
   constructor(
     message: string,
     public statusCode: number,
-    public apiResponse?: any
+    public apiResponse?: unknown
   ) {
     super(message);
     this.name = 'FECApiError';
@@ -425,11 +426,11 @@ export class FECClient {
   }
 
   // Financial summaries
-  async getCandidateFinancialSummary(candidateId: string, cycle: number): Promise<any> {
+  async getCandidateFinancialSummary(candidateId: string, cycle: number): Promise<unknown> {
     return await this.makeRequest(`/candidate/${candidateId}/totals/`, { cycle });
   }
 
-  async getCommitteeFinancialSummary(committeeId: string, cycle: number): Promise<any> {
+  async getCommitteeFinancialSummary(committeeId: string, cycle: number): Promise<unknown> {
     return await this.makeRequest(`/committee/${committeeId}/totals/`, { cycle });
   }
 
@@ -474,11 +475,17 @@ export class FECClient {
 export function createFECClient(): FECClient {
   const apiKey = process.env.FEC_API_KEY; // Optional for FEC API
   
-  return new FECClient({
-    apiKey,
-    rateLimit: {
-      requestsPerHour: 1000, // Official limit
-      requestsPerMinute: 20 // Conservative limit
-    }
-  });
+  return new FECClient(
+    withOptional(
+      {
+        rateLimit: {
+          requestsPerHour: 1000, // Official limit
+          requestsPerMinute: 20 // Conservative limit
+        }
+      },
+      {
+        apiKey
+      }
+    )
+  );
 }

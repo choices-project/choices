@@ -8,10 +8,9 @@ import {
   Users, 
   AlertTriangle,
   ExternalLink,
-  Copy,
   Check
 } from 'lucide-react';
-import { ViralMoment } from '@/lib/social/viral-detection';
+import type { ViralMoment } from '@/lib/social/viral-detection';
 
 interface ViralMomentCardProps {
   moment: ViralMoment;

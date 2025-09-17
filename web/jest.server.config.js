@@ -14,7 +14,7 @@ const createJestConfig = nextJest({
 
 // Add any custom config to be passed to Jest
 const customJestConfig = {
-  setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
+  setupFilesAfterEnv: ['<rootDir>/jest.server.setup.js'],
   testEnvironment: 'node',
   testMatch: [
     '<rootDir>/tests/**/*.test.{js,jsx,ts,tsx}',

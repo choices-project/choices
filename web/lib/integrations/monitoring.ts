@@ -5,9 +5,9 @@
  * performance tracking, error monitoring, and alerting capabilities.
  */
 
-import { logger } from '@/lib/logger';
-import type { ApiUsageMetrics } from './rate-limiting';
-import type { CacheStats, CacheMetrics } from './caching';
+import { logger } from '../logger';
+import type { CacheStats } from './caching';
+import { withOptional } from '../util/objects';
 
 export interface IntegrationMetrics {
   apiName: string;
@@ -77,7 +77,7 @@ export interface HealthCheck {
   responseTime: number;
   errorRate: number;
   lastError?: string;
-  details: Record<string, any>;
+  details: Record<string, string | number | boolean>;
 }
 
 /**
@@ -196,19 +196,21 @@ export class IntegrationMonitor {
         errorRate = totalRequests > 0 ? totalErrors / totalRequests : 0;
       }
 
-      const healthCheck: HealthCheck = {
-        apiName,
-        status,
-        timestamp: new Date(),
-        responseTime,
-        errorRate,
-        lastError,
-        details: {
+      const healthCheck: HealthCheck = withOptional(
+        {
+          apiName,
+          status,
+          timestamp: new Date(),
           responseTime,
           errorRate,
-          isHealthy
-        }
-      };
+          details: {
+            responseTime,
+            errorRate,
+            isHealthy
+          }
+        },
+        { lastError }
+      );
 
       this.healthChecks.set(apiName, healthCheck);
       
@@ -245,7 +247,7 @@ export class IntegrationMonitor {
    */
   getCurrentMetrics(apiName: string): IntegrationMetrics | null {
     const metricsList = this.metrics.get(apiName);
-    return metricsList && metricsList.length > 0 ? metricsList[metricsList.length - 1] : null;
+    return metricsList && metricsList.length > 0 ? metricsList[metricsList.length - 1] ?? null : null;
   }
 
   /**
@@ -381,12 +383,16 @@ export class IntegrationMonitor {
     const responseTimes = this.responseTimes.get(apiName) || [];
     if (responseTimes.length > 0) {
       const sorted = [...responseTimes].sort((a, b) => a - b);
+      const p95Index = Math.floor(sorted.length * 0.95);
+      const p99Index = Math.floor(sorted.length * 0.99);
+      const maxIndex = sorted.length - 1;
+      
       currentMetrics.performance = {
         averageResponseTime: responseTimes.reduce((sum, time) => sum + time, 0) / responseTimes.length,
-        p95ResponseTime: sorted[Math.floor(sorted.length * 0.95)],
-        p99ResponseTime: sorted[Math.floor(sorted.length * 0.99)],
-        minResponseTime: sorted[0],
-        maxResponseTime: sorted[sorted.length - 1]
+        p95ResponseTime: sorted[p95Index] ?? 0,
+        p99ResponseTime: sorted[p99Index] ?? 0,
+        minResponseTime: sorted[0] ?? 0,
+        maxResponseTime: sorted[maxIndex] ?? 0
       };
     }
 
@@ -452,7 +458,7 @@ export class IntegrationMonitor {
     const currentMetrics = this.getCurrentMetrics(apiName);
     if (!currentMetrics) return;
 
-    for (const rule of this.alertRules.values()) {
+    for (const rule of Array.from(this.alertRules.values())) {
       if (rule.apiName !== apiName || !rule.enabled) continue;
 
       // Check cooldown
@@ -477,10 +483,10 @@ export class IntegrationMonitor {
    */
   private getMetricValue(metrics: IntegrationMetrics, metric: string): number | null {
     const parts = metric.split('.');
-    let value: any = metrics;
+    let value: unknown = metrics;
     
     for (const part of parts) {
-      value = value?.[part];
+      value = (value as Record<string, unknown>)?.[part];
       if (value === undefined) return null;
     }
     
