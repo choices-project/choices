@@ -8,13 +8,13 @@
 import { logger } from '../logger';
 import { withOptional } from '../util/objects';
 
-export interface Ballot {
+export type Ballot = {
   id: string;
   ranking: string[];
   timestamp: number;
 }
 
-export interface RoundState {
+export type RoundState = {
   pollId: string;
   currentRound: number;
   activeCandidates: Set<string>;
@@ -25,7 +25,7 @@ export interface RoundState {
   roundHistory: RoundResult[];
 }
 
-export interface RoundResult {
+export type RoundResult = {
   round: number;
   counts: Record<string, number>;
   eliminated: string[];
@@ -33,7 +33,7 @@ export interface RoundResult {
   timestamp: number;
 }
 
-export interface TallyUpdate {
+export type TallyUpdate = {
   type: 'incremental' | 'full';
   round: number;
   counts: Record<string, number>;
@@ -44,7 +44,7 @@ export interface TallyUpdate {
   timestamp: number;
 }
 
-export interface RedisClient {
+export type RedisClient = {
   get(key: string): Promise<string | null>;
   setex(key: string, ttl: number, value: string): Promise<void>;
   del(key: string): Promise<void>;

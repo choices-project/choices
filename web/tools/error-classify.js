@@ -1,5 +1,5 @@
-const fs = require('fs');
-const { execSync } = require('child_process');
+import fs from 'fs';
+import { execSync } from 'child_process';
 
 try {
   const out = execSync('npm run types:strict', { encoding: 'utf8' });

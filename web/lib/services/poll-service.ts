@@ -7,7 +7,7 @@
 
 import { withOptional } from '../util/objects';
 
-export interface CreatePollRequest {
+export type CreatePollRequest = {
   title: string;
   description: string;
   category?: string;
@@ -20,7 +20,7 @@ export interface CreatePollRequest {
   sponsors?: string[];
 }
 
-export interface Poll {
+export type Poll = {
   id: string;
   title: string;
   description: string;

@@ -13,7 +13,7 @@ const supabase = createClient(
 const DRIFT_THRESHOLD = 2.0; // 2% threshold
 const ALERT_THRESHOLD = 1.0; // 1% for warnings
 
-interface CountValidation {
+type CountValidation = {
   level: string;
   jurisdiction: string;
   expectedCount: number;
@@ -40,7 +40,7 @@ async function validateCounts(): Promise<CountValidation[]> {
     }
 
     // Group counts manually
-    const currentCounts = allReps?.reduce((acc: any[], rep: any) => {
+    const currentCounts = allReps.reduce((acc: any[], rep: any) => {
       const key = `${rep.level}-${rep.jurisdiction}`;
       const existing = acc.find(item => item.key === key);
       if (existing) {

@@ -63,7 +63,7 @@ async function runMigration() {
         
         if (error) {
           console.error(`   ❌ Error executing statement ${i + 1}:`, error.message);
-          console.error(`   Statement: ${statement?.substring(0, 100) ?? 'undefined'}...`);
+          console.error(`   Statement: ${statement.substring(0, 100) ?? 'undefined'}...`);
           throw error;
         }
         
@@ -100,8 +100,8 @@ async function runMigration() {
     if (tablesError) {
       console.error('❌ Error verifying tables:', tablesError.message);
     } else {
-      console.log(`   ✅ Found ${tables?.length || 0} civics tables created`);
-      tables?.forEach(table => {
+      console.log(`   ✅ Found ${tables.length || 0} civics tables created`);
+      tables.forEach(table => {
         console.log(`      - ${table.table_name}`);
       });
     }
@@ -115,8 +115,8 @@ async function runMigration() {
     if (extensionsError) {
       console.error('❌ Error verifying extensions:', extensionsError.message);
     } else {
-      console.log(`   ✅ Found ${extensions?.length || 0} required extensions`);
-      extensions?.forEach(ext => {
+      console.log(`   ✅ Found ${extensions.length || 0} required extensions`);
+      extensions.forEach(ext => {
         console.log(`      - ${ext.extname}`);
       });
     }

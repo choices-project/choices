@@ -4,16 +4,16 @@ import { useState, useEffect } from 'react'
 import { logger } from '@/lib/logger';
 import { offlineOutbox, initializeOfflineOutbox } from '@/features/pwa/lib/offline-outbox'
 
-interface BeforeInstallPromptEvent extends Event {
+type BeforeInstallPromptEvent = {
   readonly platforms: string[]
   readonly userChoice: Promise<{
     outcome: 'accepted' | 'dismissed'
     platform: string
   }>
   prompt(): Promise<void>
-}
+} & Event
 
-interface PWAStatus {
+type PWAStatus = {
   isInstalled: boolean
   isInstallable: boolean
   isOnline: boolean
@@ -40,7 +40,7 @@ export default function PWAInstaller() {
     // Check if PWA is installed
     const checkInstallation = () => {
       const isInstalled = window.matchMedia('(display-mode: standalone)').matches ||
-                         (window.navigator as any).standalone === true
+                         (window.navigator as Navigator & { standalone?: boolean }).standalone === true
       setPwaStatus(prev => ({ ...prev, isInstalled }))
     }
 

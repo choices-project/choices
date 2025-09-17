@@ -17,7 +17,7 @@ import { withOptional } from '@/lib/util/objects'
 type ViewMode = 'voting' | 'results' | 'share' | 'settings'
 type VotingMethod = 'single' | 'ranked' | 'approval' | 'range' | 'quadratic'
 
-interface Poll {
+type Poll = {
   id: string
   title: string
   description?: string
@@ -224,7 +224,7 @@ export default function PollPage() {
 
   const renderCurrentView = () => {
     // Show results if user has voted or if showResults is enabled
-    const shouldShowResults = hasVoted || showResults || (poll?.settings?.showResults ?? false)
+    const shouldShowResults = hasVoted || showResults || (poll?.settings.showResults ?? false)
     
     switch (currentView) {
       case 'voting':

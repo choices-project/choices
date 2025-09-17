@@ -21,7 +21,7 @@
 // TYPES AND INTERFACES
 // ============================================================================
 
-export interface LINDDUNThreat {
+export type LINDDUNThreat = {
   dimension: string;
   threat: string;
   mitigation: string;
@@ -30,7 +30,7 @@ export interface LINDDUNThreat {
   status: 'requires_attention' | 'mitigated' | 'acceptable';
 }
 
-export interface DataFlow {
+export type DataFlow = {
   id: string;
   name: string;
   source: string;
@@ -44,7 +44,7 @@ export interface DataFlow {
   anonymization: boolean;
 }
 
-export interface ThreatAssessment {
+export type ThreatAssessment = {
   overallRisk: number;
   threats: LINDDUNThreat[];
   recommendations: string[];
@@ -56,7 +56,7 @@ export interface ThreatAssessment {
   };
 }
 
-export interface PrivacyRisk {
+export type PrivacyRisk = {
   category: string;
   riskLevel: 'low' | 'medium' | 'high' | 'critical';
   description: string;
@@ -66,7 +66,7 @@ export interface PrivacyRisk {
   priority: number;
 }
 
-export interface RetentionPolicy {
+export type RetentionPolicy = {
   dataType: string;
   retentionPeriod: number; // milliseconds
   autoDelete: boolean;

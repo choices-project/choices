@@ -24,17 +24,17 @@ async function cleanupDuplicates() {
     return;
   }
 
-  console.log(`📊 Found ${allSF?.length || 0} SF local records`);
+  console.log(`📊 Found ${allSF.length || 0} SF local records`);
 
   // Group by office to find duplicates
-  const officeGroups = allSF?.reduce((acc: any, rep: any) => {
+  const officeGroups = allSF.reduce((acc: any, rep: any) => {
     if (!acc[rep.office]) acc[rep.office] = [];
     acc[rep.office].push(rep);
     return acc;
   }, {}) || {};
 
   // Find offices with duplicates
-  const duplicates = Object.entries(officeGroups).filter(([office, reps]: [string, any]) => reps.length > 1);
+  const duplicates = Object.entries(officeGroups).filter(([_office, reps]: [string, any]) => reps.length > 1);
 
   if (duplicates.length === 0) {
     console.log('✅ No duplicates found!');

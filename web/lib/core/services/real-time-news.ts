@@ -7,7 +7,7 @@ import { devLog } from '@/lib/logger';
 // CORE INTERFACES
 // ============================================================================
 
-export interface BreakingNewsStory {
+export type BreakingNewsStory = {
   id: string;
   headline: string;
   summary: string;
@@ -32,7 +32,7 @@ export interface BreakingNewsStory {
   updatedAt: Date;
 }
 
-export interface NewsEntity {
+export type NewsEntity = {
   name: string;
   type: 'person' | 'organization' | 'location' | 'event' | 'policy' | 'concept';
   confidence: number;
@@ -41,7 +41,7 @@ export interface NewsEntity {
   metadata?: Record<string, string | number | boolean>;
 }
 
-export interface NewsSource {
+export type NewsSource = {
   id: string;
   name: string;
   domain: string;
@@ -57,7 +57,7 @@ export interface NewsSource {
   successRate: number;
 }
 
-export interface PollContext {
+export type PollContext = {
   storyId: string;
   question: string;
   context: string;
@@ -69,7 +69,7 @@ export interface PollContext {
   timeToLive: number; // hours
 }
 
-export interface PollOption {
+export type PollOption = {
   id: string;
   text: string;
   description?: string;
@@ -425,7 +425,7 @@ export class RealTimeNewsService {
 
       if (error) throw error;
 
-      return data?.map(this.mapBreakingNewsFromDB) || [];
+      return data.map(this.mapBreakingNewsFromDB) || [];
     } catch (error) {
       devLog('Error fetching breaking news:', error);
       return [];
@@ -483,7 +483,7 @@ export class RealTimeNewsService {
 
       if (error) throw error;
 
-      return data?.map(this.mapNewsSourceFromDB) || [];
+      return data.map(this.mapNewsSourceFromDB) || [];
     } catch (error) {
       devLog('Error fetching news sources:', error);
       return [];

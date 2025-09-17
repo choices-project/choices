@@ -10,7 +10,7 @@ import {
   Zap
 } from 'lucide-react';
 
-interface PollSuggestion {
+type PollSuggestion = {
   id: string;
   title: string;
   description: string;
@@ -24,7 +24,7 @@ interface PollSuggestion {
   expectedEngagement: 'low' | 'medium' | 'high';
 }
 
-interface WeeklySelection {
+type WeeklySelection = {
   week: string;
   selectedPolls: PollSuggestion[];
   totalVotes: number;

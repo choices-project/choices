@@ -5,7 +5,7 @@
  * It replaces the old @/shared/core/performance/lib/optimized-poll-service imports.
  */
 
-export interface PerformanceMetrics {
+export type PerformanceMetrics = {
   metricName: string;
   avgValue: number;
   minValue: number;
@@ -198,7 +198,7 @@ export class OptimizedPollService {
 export const optimizedPollService = new OptimizedPollService();
 
 // Additional exports for compatibility
-export interface OptimizedPollResult {
+export type OptimizedPollResult = {
   id: string;
   title: string;
   options: string[];

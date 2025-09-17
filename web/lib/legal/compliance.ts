@@ -23,7 +23,7 @@ import { withOptional } from '../util/objects';
 // TYPES AND INTERFACES
 // ============================================================================
 
-export interface ConsentRecord {
+export type ConsentRecord = {
   userId: string;
   type: 'sms' | 'email' | 'analytics' | 'marketing';
   granted: boolean;
@@ -37,7 +37,7 @@ export interface ConsentRecord {
   withdrawable: boolean;
 }
 
-export interface CommunicationCompliance {
+export type CommunicationCompliance = {
   type: 'sms' | 'email';
   recipient: string;
   content: string;
@@ -47,7 +47,7 @@ export interface CommunicationCompliance {
   senderIdentificationRequired: boolean;
 }
 
-export interface COPPACompliance {
+export type COPPACompliance = {
   age: number;
   parentalConsentRequired: boolean;
   guardianConsentRequired: boolean;
@@ -56,7 +56,7 @@ export interface COPPACompliance {
   parentalRights: string[];
 }
 
-export interface DataSubjectRights {
+export type DataSubjectRights = {
   userId: string;
   rights: {
     access: boolean;
@@ -69,7 +69,7 @@ export interface DataSubjectRights {
   requestHistory: DataSubjectRequest[];
 }
 
-export interface DataSubjectRequest {
+export type DataSubjectRequest = {
   id: string;
   type: 'access' | 'rectification' | 'erasure' | 'portability' | 'restriction' | 'objection';
   status: 'pending' | 'in_progress' | 'completed' | 'rejected';
@@ -79,7 +79,7 @@ export interface DataSubjectRequest {
   legalBasis?: string;
 }
 
-export interface ComplianceAudit {
+export type ComplianceAudit = {
   timestamp: Date;
   complianceScore: number;
   violations: ComplianceViolation[];
@@ -87,7 +87,7 @@ export interface ComplianceAudit {
   nextAuditDate: Date;
 }
 
-export interface ComplianceViolation {
+export type ComplianceViolation = {
   type: 'tcpa' | 'can_spam' | 'coppa' | 'gdpr' | 'ccpa';
   severity: 'low' | 'medium' | 'high' | 'critical';
   description: string;

@@ -10,18 +10,14 @@ import { getSupabaseServerClient } from '@/utils/supabase/server'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import {
   safeParse,
-  validateDatabaseResponse,
-  parseWithFallback
+  validateDatabaseResponse
 } from '@/lib/validation/validator'
 import { DatabaseSchemas } from '@/lib/validation/schemas'
 import { isFeatureEnabled } from '@/lib/core/feature-flags'
 import { minimalTelemetry } from '@/lib/telemetry/minimal'
 import { smartCache } from '@/lib/database/smart-cache'
-import { queryAnalyzer } from '@/lib/database/query-analyzer'
-import { withOptional } from '@/lib/util/objects'
 import type {
   UserProfile,
-  Poll,
   PollsResponse,
   PollWithVotes,
   Vote,
@@ -412,7 +408,7 @@ export class QueryOptimizer {
     const { includeUserInfo = false, groupByChoice = false } = options
 
     const startTime = Date.now()
-    let query = this.supabase
+    const query = this.supabase
       .from('votes')
       .select('id, poll_id, user_id, choice, rank, created_at, updated_at')
       .eq('poll_id', pollId)
@@ -601,7 +597,7 @@ export class QueryOptimizer {
       return {
         test: testName,
         status: result.status === 'fulfilled' ? 'healthy' as const : 'unhealthy' as const,
-        error: result.status === 'rejected' ? (result.reason as Error)?.message || 'Unknown error' : null
+        error: result.status === 'rejected' ? (result.reason as Error).message || 'Unknown error' : null
       }
     })
 

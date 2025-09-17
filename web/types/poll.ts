@@ -5,7 +5,7 @@
 /**
  * Core poll data structure
  */
-export interface Poll {
+export type Poll = {
   id: string;
   title: string;
   description: string;
@@ -22,7 +22,7 @@ export interface Poll {
 /**
  * Individual poll option
  */
-export interface PollOption {
+export type PollOption = {
   id: string;
   text: string;
   description?: string;
@@ -33,7 +33,7 @@ export interface PollOption {
 /**
  * Poll configuration settings
  */
-export interface PollSettings {
+export type PollSettings = {
   allowMultipleVotes: boolean;
   requireAuthentication: boolean;
   showResults: boolean;
@@ -44,7 +44,7 @@ export interface PollSettings {
 /**
  * Poll voting result
  */
-export interface PollResult {
+export type PollResult = {
   pollId: string;
   totalVotes: number;
   results: OptionResult[];
@@ -54,7 +54,7 @@ export interface PollResult {
 /**
  * Individual option result
  */
-export interface OptionResult {
+export type OptionResult = {
   optionId: string;
   optionText: string;
   votes: number;
@@ -65,7 +65,7 @@ export interface OptionResult {
 /**
  * Result calculation metadata
  */
-export interface ResultMetadata {
+export type ResultMetadata = {
   strategy: string;
   processedAt: Date;
   totalRounds: number;
@@ -76,7 +76,7 @@ export interface ResultMetadata {
 /**
  * Poll event handler interface
  */
-export interface PollEventHandler {
+export type PollEventHandler = {
   onVote: (pollId: string, selections: string[]) => Promise<void>;
   onShare: (pollId: string) => void;
   onBookmark: (pollId: string) => void;
@@ -86,7 +86,7 @@ export interface PollEventHandler {
 /**
  * Poll list component props
  */
-export interface PollListProps {
+export type PollListProps = {
   polls: Poll[];
   loading: boolean;
   error?: string;
@@ -98,7 +98,7 @@ export interface PollListProps {
 /**
  * Results chart component props
  */
-export interface ResultsChartProps {
+export type ResultsChartProps = {
   results: PollResult;
   chartType: 'bar' | 'pie' | 'line';
   showPercentages: boolean;

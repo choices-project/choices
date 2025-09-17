@@ -3,7 +3,12 @@
 // Minimal Supabase client that doesn't import any Supabase packages at the top level
 // This avoids SSR issues by using dynamic imports only
 
-export interface Database {
+// Define proper types for database fields
+type ContextData = Record<string, unknown>
+type StakeholderData = Record<string, unknown>
+type OptionsData = Record<string, unknown>
+
+export type Database = {
   public: {
     Tables: {
       user_profiles: {
@@ -108,7 +113,7 @@ export interface Database {
           verification_token?: string
           is_verified: boolean
           voting_method: 'single' | 'approval' | 'ranked' | 'quadratic' | 'range'
-          vote_data: any // JSON data for complex voting methods
+          vote_data: Record<string, unknown> // JSON data for complex voting methods
         }
         Insert: {
           id?: string
@@ -120,7 +125,7 @@ export interface Database {
           verification_token?: string
           is_verified?: boolean
           voting_method: 'single' | 'approval' | 'ranked' | 'quadratic' | 'range'
-          vote_data?: any
+          vote_data?: Record<string, unknown>
         }
         Update: {
           id?: string
@@ -132,7 +137,7 @@ export interface Database {
           verification_token?: string
           is_verified?: boolean
           voting_method?: 'single' | 'approval' | 'ranked' | 'quadratic' | 'range'
-          vote_data?: any
+          vote_data?: Record<string, unknown>
         }
       }
       webauthn_credentials: {
@@ -174,7 +179,7 @@ export interface Database {
           error_type: string
           error_message: string
           stack_trace?: string
-          context?: any
+          context?: Record<string, unknown>
           created_at: string
           severity: 'low' | 'medium' | 'high' | 'critical'
         }
@@ -184,7 +189,7 @@ export interface Database {
           error_type: string
           error_message: string
           stack_trace?: string
-          context?: any
+          context?: Record<string, unknown>
           created_at?: string
           severity?: 'low' | 'medium' | 'high' | 'critical'
         }
@@ -194,7 +199,7 @@ export interface Database {
           error_type?: string
           error_message?: string
           stack_trace?: string
-          context?: any
+          context?: Record<string, unknown>
           created_at?: string
           severity?: 'low' | 'medium' | 'high' | 'critical'
         }
@@ -245,10 +250,10 @@ export interface Database {
           id: string
           story_id: string
           question: string
-          context: any
+          context: ContextData
           why_important: string
-          stakeholders: any
-          options: any
+          stakeholders: StakeholderData
+          options: OptionsData
           voting_method: string
           estimated_controversy: number
           time_to_live: number
@@ -260,10 +265,10 @@ export interface Database {
           id?: string
           story_id: string
           question: string
-          context?: any
+          context?: ContextData
           why_important: string
-          stakeholders?: any
-          options?: any
+          stakeholders?: StakeholderData
+          options?: OptionsData
           voting_method: string
           estimated_controversy?: number
           time_to_live?: number
@@ -275,10 +280,10 @@ export interface Database {
           id?: string
           story_id?: string
           question?: string
-          context?: any
+          context?: Record<string, unknown>
           why_important?: string
-          stakeholders?: any
-          options?: any
+          stakeholders?: Record<string, unknown>
+          options?: Record<string, unknown>
           voting_method?: string
           estimated_controversy?: number
           time_to_live?: number
@@ -301,12 +306,25 @@ export interface Database {
 }
 
 // Type for Supabase client (we'll import this dynamically)
-export type SupabaseClient<T = Database> = any
+export type SupabaseClient<_T = Database> = {
+  from: (table: string) => {
+    select: (columns?: string) => unknown
+    insert: (data: unknown) => unknown
+    update: (data: unknown) => unknown
+    delete: () => unknown
+    eq: (column: string, value: unknown) => unknown
+    single: () => Promise<{ data: unknown; error: unknown }>
+  }
+  auth: {
+    getUser: () => Promise<{ data: { user: unknown }; error: unknown }>
+    signOut: () => Promise<{ error: unknown }>
+  }
+}
 
 let client: SupabaseClient<Database> | undefined
 
-export function getSupabaseBrowserClient(): SupabaseClient<Database> {
-  if (typeof window === 'undefined') {
+export async function getSupabaseBrowserClient(): Promise<SupabaseClient<Database>> {
+  if (typeof globalThis.window === 'undefined') {
     throw new Error('getSupabaseBrowserClient can only be used in client-side code')
   }
   
@@ -319,7 +337,7 @@ export function getSupabaseBrowserClient(): SupabaseClient<Database> {
     }
     
     // Use dynamic import to avoid SSR issues
-    const { createBrowserClient } = require('@supabase/ssr')
+    const { createBrowserClient } = await import('@supabase/ssr')
     client = createBrowserClient(
       supabaseUrl,
       supabaseKey,
@@ -334,6 +352,7 @@ export type UserProfile = Database['public']['Tables']['user_profiles']['Row']
 export type Poll = Database['public']['Tables']['polls']['Row']
 export type Vote = Database['public']['Tables']['votes']['Row']
 export type WebAuthnCredential = Database['public']['Tables']['webauthn_credentials']['Row']
+
 
 
 

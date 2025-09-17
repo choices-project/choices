@@ -4,7 +4,7 @@
  * Provides endpoints for running and managing pre-launch checklist validation.
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { type NextRequest, NextResponse } from 'next/server';
 import { PreLaunchChecklist } from '@/lib/deployment/pre-launch-checklist';
 import { logger } from '@/lib/logger';
 

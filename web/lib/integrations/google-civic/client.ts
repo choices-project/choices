@@ -10,7 +10,7 @@ import { ApplicationError } from '../../errors/base';
 import type { AddressLookupResult } from '../../../features/civics/schemas';
 import type { GoogleCivicElectionInfo, GoogleCivicVoterInfo } from '../../types/google-civic';
 
-export interface GoogleCivicConfig {
+export type GoogleCivicConfig = {
   apiKey: string;
   baseUrl?: string;
   timeout?: number;
@@ -22,14 +22,14 @@ export interface GoogleCivicConfig {
   };
 }
 
-export interface GoogleCivicAddress {
+export type GoogleCivicAddress = {
   address: string;
   includeOffices?: boolean;
   levels?: string[];
   roles?: string[];
 }
 
-export interface GoogleCivicRepresentative {
+export type GoogleCivicRepresentative = {
   name: string;
   party?: string;
   phones?: string[];
@@ -42,7 +42,7 @@ export interface GoogleCivicRepresentative {
   }>;
 }
 
-export interface GoogleCivicOffice {
+export type GoogleCivicOffice = {
   name: string;
   divisionId: string;
   levels: string[];
@@ -54,13 +54,13 @@ export interface GoogleCivicOffice {
   officialIndices?: number[];
 }
 
-export interface GoogleCivicDivision {
+export type GoogleCivicDivision = {
   name: string;
   alsoKnownAs?: string[];
   officeIndices?: number[];
 }
 
-export interface GoogleCivicResponse {
+export type GoogleCivicResponse = {
   kind: string;
   normalizedInput: {
     line1: string;

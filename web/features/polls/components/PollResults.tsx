@@ -5,18 +5,18 @@ import { logger } from '@/lib/logger';
 import { BarChart3, TrendingUp, Users, Share2, Download } from 'lucide-react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
 
-interface PollResultsProps {
+type PollResultsProps = {
   pollId: string
 }
 
-interface PollResult {
+type PollResult = {
   option: string
   votes: number
   percentage: number
   trend: 'up' | 'down' | 'stable'
 }
 
-interface PollData {
+type PollData = {
   id: string
   title: string
   description?: string

@@ -21,7 +21,7 @@
 // TYPES AND INTERFACES
 // ============================================================================
 
-export interface WebAuthnCredential {
+export type WebAuthnCredential = {
   id: string;
   type: 'public-key';
   rawId: ArrayBuffer;
@@ -29,7 +29,7 @@ export interface WebAuthnCredential {
   clientExtensionResults: AuthenticationExtensionsClientOutputs;
 }
 
-export interface UserProfile {
+export type UserProfile = {
   id: string;
   accountAge: number; // milliseconds since account creation
   responseEntropy: number; // measure of response diversity
@@ -40,7 +40,7 @@ export interface UserProfile {
   trustTier: 'T0' | 'T1' | 'T2' | 'T3';
 }
 
-export interface ProofOfPersonhoodResult {
+export type ProofOfPersonhoodResult = {
   verified: boolean;
   confidence: number; // 0-1 scale
   reputationScore: number; // 0-1 scale
@@ -53,7 +53,7 @@ export interface ProofOfPersonhoodResult {
   };
 }
 
-export interface ConstituentStatus {
+export type ConstituentStatus = {
   verified: boolean;
   jurisdiction: string;
   credential: string; // blind-signed credential
@@ -61,7 +61,7 @@ export interface ConstituentStatus {
   verificationMethod: 'address' | 'voter-registration' | 'government-id';
 }
 
-export interface ReputationMetrics {
+export type ReputationMetrics = {
   ageScore: number;
   consistencyScore: number;
   activityScore: number;

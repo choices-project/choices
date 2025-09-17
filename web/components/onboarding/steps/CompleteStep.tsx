@@ -2,7 +2,7 @@
 
 import { CheckCircle, Heart, Users, TrendingUp, Shield } from 'lucide-react';
 
-interface CompleteStepProps {
+type CompleteStepProps = {
   data: any
   onComplete: () => void
   onBack: () => void

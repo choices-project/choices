@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import { devLog } from '@/lib/logger';
 
-interface HeroSectionProps {
+type HeroSectionProps = {
   isAuthenticated?: boolean;
   userStats?: {
     totalVotes: number;

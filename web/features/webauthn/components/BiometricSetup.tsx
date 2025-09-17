@@ -36,7 +36,7 @@ export function useBiometricSetupContext() {
   return useContext(BiometricSetupContext);
 }
 
-interface BiometricSetupProps {
+type BiometricSetupProps = {
   userId: string
   username: string
   onSuccess?: () => void

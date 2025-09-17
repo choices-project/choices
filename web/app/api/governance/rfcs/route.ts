@@ -4,7 +4,7 @@
  * Provides endpoints for managing Request for Comments (RFC) system.
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { type NextRequest, NextResponse } from 'next/server';
 import { RFCManager } from '@/lib/governance/rfcs';
 import { logger } from '@/lib/logger';
 

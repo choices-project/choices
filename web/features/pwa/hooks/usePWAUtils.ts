@@ -8,7 +8,7 @@ import type { PWAAuth } from '../lib/pwa-auth-integration';
 import type { PWAManager, PWAWebAuthn, PrivacyStorage } from '../lib/pwa-utils';
 // import type { PWAAnalytics } from '../lib/pwa-analytics'; // Archived PWA feature
 
-interface PWAUtils {
+type PWAUtils = {
   pwaAuth: PWAAuth;
   pwaManager: PWAManager;
   pwaAnalytics: null; // Archived PWA feature

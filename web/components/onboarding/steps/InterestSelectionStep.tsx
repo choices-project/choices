@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 
 
-interface InterestSelectionStepProps {
+type InterestSelectionStepProps = {
   onNext: () => void;
   onBack: () => void;
 }

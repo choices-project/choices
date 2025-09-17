@@ -13,7 +13,7 @@ import ModeSwitch from '@/components/ModeSwitch';
 import type { ResultsMode } from '@/components/ModeSwitch';
 import type { VoteResponse } from '@/lib/vote/types';
 
-interface Poll {
+type Poll = {
   id: string;
   title: string;
   description: string;
@@ -30,7 +30,7 @@ interface Poll {
   allowPostClose?: boolean;
 }
 
-interface PollResults {
+type PollResults = {
   totalVotes: number;
   uniqueVoters: number;
   options: Array<{

@@ -36,7 +36,7 @@ export function useBiometricContext() {
   return useContext(BiometricContext);
 }
 
-interface BiometricLoginProps {
+type BiometricLoginProps = {
   onSuccess?: (_user?: { id: string; email: string; username: string }) => void
   onError?: () => void
   onCancel?: () => void

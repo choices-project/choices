@@ -10,7 +10,7 @@ import {
   Share2
 } from 'lucide-react';
 
-interface UserPoll {
+type UserPoll = {
   id: string;
   title: string;
   description: string;
@@ -21,7 +21,7 @@ interface UserPoll {
   status: 'active' | 'completed' | 'draft';
 }
 
-interface PollSuggestion {
+type PollSuggestion = {
   id: string;
   title: string;
   description: string;

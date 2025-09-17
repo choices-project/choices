@@ -14,7 +14,7 @@ import * as jwt from 'jsonwebtoken'
 import { logger } from '@/lib/logger'
 import { withOptional } from '@/lib/util/objects'
 
-export interface SessionPayload {
+export type SessionPayload = {
   sub: string // user ID
   iat: number // issued at
   exp: number // expiration
@@ -22,7 +22,7 @@ export interface SessionPayload {
   stableId?: string // stable user identifier
 }
 
-export interface SessionOptions {
+export type SessionOptions = {
   maxAge?: number // seconds
   secure?: boolean
   sameSite?: 'lax' | 'strict' | 'none'

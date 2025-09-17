@@ -2,7 +2,6 @@
 import { setTimeout as sleep } from 'node:timers/promises'
 import fs from 'node:fs/promises'
 import path from 'node:path'
-import { withOptional } from '../../lib/util/objects'
 
 const CACHE_FILE = path.join(process.cwd(), 'scripts', '.etag-cache.json')
 
@@ -27,7 +26,7 @@ export async function fetchWithETag(url: string, init: RequestInit = {}, retries
   for (let i=0;i<=retries;i++){
     try {
       const res = await fetch(url, { ...init, headers })
-      if (res.status === 304) return withOptional({ status: 304 }, { etag })
+      if (res.status === 304) return { status: 304, etag }
       if (!res.ok) throw new Error(`GET ${url} -> ${res.status}`)
       const nextEtag = res.headers.get('etag')
       const text = await res.text()

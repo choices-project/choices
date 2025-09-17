@@ -19,11 +19,11 @@ export enum ErrorType {
   UNKNOWN = 'UNKNOWN'
 }
 
-export interface AppError {
+export type AppError = {
   type: ErrorType;
   message: string;
   code?: string;
-  details?: any;
+  details?: unknown;
   timestamp: Date;
   userId?: string;
   requestId?: string;
@@ -32,7 +32,7 @@ export interface AppError {
 export class ApplicationError extends Error {
   public type: ErrorType;
   public code?: string;
-  public details?: any;
+  public details?: unknown;
   public timestamp: Date;
   public userId?: string;
   public requestId?: string;
@@ -41,7 +41,7 @@ export class ApplicationError extends Error {
     type: ErrorType,
     message: string,
     code?: string,
-    details?: any,
+    details?: unknown,
     userId?: string,
     requestId?: string
   ) {
@@ -63,7 +63,7 @@ export class ApplicationError extends Error {
 }
 
 export class ValidationError extends ApplicationError {
-  constructor(message: string, details?: any, code?: string) {
+  constructor(message: string, details?: unknown, code?: string) {
     super(ErrorType.VALIDATION, message, code, details);
     this.name = 'ValidationError';
   }
@@ -132,7 +132,7 @@ export class ErrorHandler {
   }
 
   // Create specific error types using the enums
-  createValidationError(message: string, details?: any, code?: string): ValidationError {
+  createValidationError(message: string, details?: unknown, code?: string): ValidationError {
     return new ValidationError(message, details, code);
   }
 
@@ -165,7 +165,7 @@ export class ErrorHandler {
   }
 
   // Handle and log errors
-  handleError(error: Error | ApplicationError, context?: any): AppError {
+  handleError(error: Error | ApplicationError, context?: unknown): AppError {
     let appError: AppError;
 
     if (error instanceof ApplicationError) {
@@ -195,7 +195,7 @@ export class ErrorHandler {
   }
 
   // Private logging method
-  private logError(error: AppError, context?: any): void {
+  private logError(error: AppError, context?: unknown): void {
     const logData = {
       type: error.type,
       message: error.message,
@@ -240,7 +240,7 @@ export class ErrorHandler {
 // Convenience functions
 export const errorHandler = ErrorHandler.getInstance();
 
-export const handleError = (error: Error | ApplicationError, context?: any) => {
+export const handleError = (error: Error | ApplicationError, context?: unknown) => {
   return errorHandler.handleError(error, context);
 };
 

@@ -16,7 +16,7 @@ import { FeedbackDetailModal } from './FeedbackDetailModal';
 import { IssueGenerationPanel } from './IssueGenerationPanel';
 import { devLog } from '@/lib/logger';
 
-interface Feedback {
+type Feedback = {
   id: string;
   userid: string | null;
   type: string;

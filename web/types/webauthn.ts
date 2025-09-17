@@ -12,7 +12,7 @@ export type PublicKeyCred = PublicKeyCredential;
 /**
  * WebAuthn authentication component props
  */
-export interface WebAuthnAuthProps {
+export type WebAuthnAuthProps = {
   onSuccess: (credential: PublicKeyCredential) => void;
   onError: (error: Error) => void;
   mode: 'register' | 'authenticate';
@@ -24,7 +24,7 @@ export interface WebAuthnAuthProps {
  * WebAuthn credential response for API serialization
  * Note: ArrayBuffers are converted to base64url at the edge, not in types
  */
-export interface WebAuthnCredentialResponse {
+export type WebAuthnCredentialResponse = {
   id: string;
   type: string;
   rawId: string; // base64url encoded
@@ -40,7 +40,7 @@ export interface WebAuthnCredentialResponse {
 /**
  * WebAuthn registration result
  */
-export interface WebAuthnRegistrationResult {
+export type WebAuthnRegistrationResult = {
   success: boolean;
   credentialId: string;
   publicKey: string;
@@ -50,7 +50,7 @@ export interface WebAuthnRegistrationResult {
 /**
  * WebAuthn authentication result
  */
-export interface WebAuthnAuthenticationResult {
+export type WebAuthnAuthenticationResult = {
   success: boolean;
   credentialId: string;
   signature: string;

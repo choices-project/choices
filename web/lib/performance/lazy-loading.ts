@@ -9,7 +9,7 @@ import { lazy, Suspense } from 'react';
 import type { ComponentType } from 'react';
 import { performanceMetrics } from './performance-metrics';
 
-interface LazyLoadOptions {
+type LazyLoadOptions = {
   threshold?: number;
   rootMargin?: string;
   fallback?: React.ReactNode;
@@ -17,10 +17,10 @@ interface LazyLoadOptions {
   onError?: (error: Error) => void;
 }
 
-interface LazyComponentOptions extends LazyLoadOptions {
+type LazyComponentOptions = {
   retryCount?: number;
   retryDelay?: number;
-}
+} & LazyLoadOptions
 
 /**
  * Create a lazy-loaded component with error boundary and retry logic

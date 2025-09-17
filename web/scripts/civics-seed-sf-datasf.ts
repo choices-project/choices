@@ -9,7 +9,7 @@ const supabase = createClient(
 );
 
 // San Francisco DataSF API endpoints
-const DATASF_BASE = 'https://data.sfgov.org/resource';
+// const DATASF_BASE = 'https://data.sfgov.org/resource'; // Unused variable
 
 // Known SF officials data (since we can't get it from Google Civic API)
 const SF_OFFICIALS = [

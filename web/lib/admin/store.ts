@@ -3,7 +3,7 @@ import { devtools } from 'zustand/middleware';
 import { logger } from '@/lib/logger';
 
 // Types
-export interface Notification {
+export type Notification = {
   id: string;
   type: 'info' | 'success' | 'warning' | 'error';
   title: string;
@@ -16,7 +16,7 @@ export interface Notification {
   };
 }
 
-export interface TrendingTopic {
+export type TrendingTopic = {
   id: string;
   title: string;
   description: string;
@@ -27,7 +27,7 @@ export interface TrendingTopic {
   metadata?: Record<string, any>;
 }
 
-export interface GeneratedPoll {
+export type GeneratedPoll = {
   id: string;
   title: string;
   description: string;
@@ -39,7 +39,7 @@ export interface GeneratedPoll {
   metadata?: Record<string, any>;
 }
 
-export interface SystemMetrics {
+export type SystemMetrics = {
   total_topics: number;
   total_polls: number;
   active_polls: number;
@@ -52,7 +52,7 @@ export interface SystemMetrics {
   };
 }
 
-export interface ActivityItem {
+export type ActivityItem = {
   id: string;
   type: 'topic_created' | 'topic_updated' | 'poll_created' | 'poll_updated' | 'system_alert' | 'user_action';
   title: string;
@@ -61,7 +61,7 @@ export interface ActivityItem {
   metadata?: Record<string, any>;
 }
 
-interface AdminStore {
+type AdminStore = {
   // State
   sidebarCollapsed: boolean;
   currentPage: string;

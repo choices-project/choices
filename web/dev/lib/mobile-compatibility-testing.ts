@@ -1,7 +1,7 @@
 // Mobile Compatibility Testing Suite
 // Comprehensive testing for mobile devices and touch interfaces
 
-export interface MobileTestResult {
+export type MobileTestResult = {
   testName: string
   category: string
   status: 'pass' | 'fail' | 'warning' | 'skip'
@@ -11,7 +11,7 @@ export interface MobileTestResult {
   timestamp: number
 }
 
-export interface MobileTestSuite {
+export type MobileTestSuite = {
   name: string
   tests: MobileTestResult[]
   summary: {

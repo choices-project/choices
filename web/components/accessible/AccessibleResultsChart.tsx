@@ -24,7 +24,7 @@ import { ScreenReaderSupport } from '../../lib/accessibility/screen-reader';
 // TYPES AND INTERFACES
 // ============================================================================
 
-export interface ChartData {
+export type ChartData = {
   id: string;
   name: string;
   votes: number;
@@ -35,7 +35,7 @@ export interface ChartData {
   round?: number;
 }
 
-export interface AccessibleResultsChartProps {
+export type AccessibleResultsChartProps = {
   data: ChartData[];
   title: string;
   'aria-label': string;

@@ -212,9 +212,9 @@ export class AnalyticsService {
       }
 
       // Calculate engagement metrics
-      const total_polls_participated = analytics?.length || 0
-      const total_votes_cast = analytics?.length || 0
-      const average_engagement_score = analytics?.length > 0 
+      const total_polls_participated = analytics.length || 0
+      const total_votes_cast = analytics.length || 0
+      const average_engagement_score = analytics.length > 0 
         ? analytics.reduce((sum, a) => sum + (a.data_quality_score || 0), 0) / analytics.length
         : 0
 
@@ -260,7 +260,7 @@ export class AnalyticsService {
           trust_tier_history: trustTierHistory,
           trust_tier_upgrade_date: existingEntry?.current_trust_tier !== trustTierScore.trust_tier 
             ? new Date().toISOString() 
-            : existingEntry?.trust_tier_upgrade_date
+            : existingEntry.trust_tier_upgrade_date
         })
 
       if (upsertError) {
@@ -386,16 +386,16 @@ export class AnalyticsService {
       }
 
       // Calculate metrics
-      const total_responses = analytics?.length || 0
-      const data_quality_score = analytics?.length > 0
+      const total_responses = analytics.length || 0
+      const data_quality_score = analytics.length > 0
         ? analytics.reduce((sum, a) => sum + (a.data_quality_score || 0), 0) / analytics.length
         : 0
-      const confidence_level = analytics?.length > 0
+      const confidence_level = analytics.length > 0
         ? analytics.reduce((sum, a) => sum + (a.confidence_level || 0), 0) / analytics.length
         : 0
 
       // Calculate trust tier breakdown
-      const trustTierBreakdown = analytics?.reduce((acc, item) => {
+      const trustTierBreakdown = analytics.reduce((acc, item) => {
         acc[item.trust_tier] = (acc[item.trust_tier] || 0) + 1
         return acc
       }, {} as Record<TrustTier, number>) || { T0: 0, T1: 0, T2: 0, T3: 0 }
@@ -454,7 +454,7 @@ export class AnalyticsService {
       }
 
       // Get latest demographic data
-      const latestAnalytics = analytics?.[0]
+      const latestAnalytics = analytics[0]
 
       return {
         user_id: userId,

@@ -12,7 +12,7 @@ import { queryAnalyzer } from '@/lib/database/query-analyzer';
 /**
  * Dashboard metrics for real-time monitoring
  */
-export interface DashboardMetrics {
+export type DashboardMetrics = {
   /** Timestamp of the metrics */
   timestamp: number;
   /** Cache performance metrics */
@@ -50,7 +50,7 @@ export interface DashboardMetrics {
 /**
  * Dashboard configuration
  */
-export interface DashboardConfig {
+export type DashboardConfig = {
   /** Refresh interval in milliseconds */
   refreshInterval: number;
   /** Number of data points to keep in history */

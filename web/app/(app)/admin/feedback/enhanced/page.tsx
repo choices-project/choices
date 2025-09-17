@@ -24,7 +24,7 @@ import {
   X
 } from 'lucide-react'
 
-interface FeedbackItem {
+type FeedbackItem = {
   id: string
   type: 'bug' | 'feature' | 'general' | 'performance' | 'accessibility' | 'security'
   title: string
@@ -47,7 +47,7 @@ interface FeedbackItem {
   tags?: string[]
 }
 
-interface Analytics {
+type Analytics = {
   total: number
   byType: Record<string, number>
   bySentiment: Record<string, number>

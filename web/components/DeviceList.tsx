@@ -3,7 +3,7 @@
 import React, { useState, useCallback, useMemo } from 'react'
 import { Smartphone, Monitor, Tablet, Laptop, Trash2, Plus, QrCode } from 'lucide-react'
 
-interface Device {
+type Device = {
   id: string
   name: string
   type: 'mobile' | 'desktop' | 'tablet' | 'laptop'
@@ -12,7 +12,7 @@ interface Device {
   icon?: string
 }
 
-interface DeviceListProps {
+type DeviceListProps = {
   devices: Device[]
   onAddDevice?: () => void
   onRemoveDevice?: (deviceId: string) => void

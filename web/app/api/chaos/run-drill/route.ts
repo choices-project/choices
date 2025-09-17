@@ -4,7 +4,7 @@
  * Provides endpoints for running chaos engineering drills and tests.
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { type NextRequest, NextResponse } from 'next/server';
 import { ChaosTestingFramework } from '@/lib/chaos/chaos-testing';
 import { logger } from '@/lib/logger';
 

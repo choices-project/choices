@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 
-interface CandidateCard {
+type CandidateCard = {
   personId: string;
   cycle: number;
   name: string;

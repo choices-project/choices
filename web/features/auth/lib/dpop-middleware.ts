@@ -8,7 +8,7 @@ import { NextResponse } from 'next/server';
 import { logger } from '@/lib/logger';
 import { createClient } from '@supabase/supabase-js';
 
-export interface DPoPValidationResult {
+export type DPoPValidationResult = {
   valid: boolean;
   error?: string;
   jkt?: string;

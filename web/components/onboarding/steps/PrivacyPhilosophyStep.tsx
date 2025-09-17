@@ -3,7 +3,7 @@
 import * as React from 'react';
 import type { StepDataMap, OnStepUpdate } from '../types';
 
-interface PrivacyPhilosophyStepProps {
+type PrivacyPhilosophyStepProps = {
   data?: StepDataMap['privacyPhilosophy'];
   onStepUpdate?: OnStepUpdate<'privacyPhilosophy'>;
   onNext?: () => void;

@@ -23,20 +23,20 @@
 
 import { withOptional } from '../util/objects';
 
-export interface ScreenReaderAnnouncement {
+export type ScreenReaderAnnouncement = {
   message: string;
   priority: 'polite' | 'assertive';
   duration?: number;
   id?: string;
 }
 
-export interface FocusManagement {
+export type FocusManagement = {
   element: HTMLElement;
   previousElement?: HTMLElement;
   restoreFocus?: boolean;
 }
 
-export interface ARIAState {
+export type ARIAState = {
   expanded?: boolean;
   selected?: boolean;
   checked?: boolean;

@@ -17,7 +17,7 @@ import PrivacyStep from './steps/PrivacyStep';
 import CompleteStep from './steps/CompleteStep';
 
 // Onboarding Context
-interface OnboardingContextType {
+type OnboardingContextType = {
   userData: any;
   setUserData: (updater: (prev: any) => any) => void;
   currentStep: number;
@@ -37,7 +37,7 @@ export const useOnboardingContext = () => {
   return context;
 };
 
-interface OnboardingStep {
+type OnboardingStep = {
   id: string;
   title: string;
   description: string;

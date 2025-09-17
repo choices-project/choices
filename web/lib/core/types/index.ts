@@ -9,26 +9,26 @@
 export * from '../privacy/hybrid-privacy';
 
 // Analytics types
-export interface AnalyticsEvent {
+export type AnalyticsEvent = {
   name: string;
   properties?: Record<string, string | number | boolean>;
   timestamp?: Date;
 }
 
-export interface AnalyticsConfig {
+export type AnalyticsConfig = {
   enabled: boolean;
   provider?: string;
   apiKey?: string;
 }
 
-export interface PollDemographicInsights {
+export type PollDemographicInsights = {
   ageGroups: Record<string, number>;
   genderDistribution: Record<string, number>;
   geographicDistribution: Record<string, number>;
   educationLevels: Record<string, number>;
 }
 
-export interface TrustTier {
+export type TrustTier = {
   id: string;
   name: string;
   level: number;
@@ -36,7 +36,7 @@ export interface TrustTier {
   requirements: string[];
 }
 
-export interface TrustTierScore {
+export type TrustTierScore = {
   userId: string;
   tierId: string;
   score: number;
@@ -44,7 +44,7 @@ export interface TrustTierScore {
   lastUpdated: Date;
 }
 
-export interface AnalyticsSummary {
+export type AnalyticsSummary = {
   totalPolls: number;
   totalVotes: number;
   activeUsers: number;
@@ -52,7 +52,7 @@ export interface AnalyticsSummary {
   topCategories: Array<{ category: string; count: number }>;
 }
 
-export interface PollAnalytics {
+export type PollAnalytics = {
   pollId: string;
   totalVotes: number;
   uniqueVoters: number;
@@ -61,7 +61,7 @@ export interface PollAnalytics {
   demographicBreakdown: PollDemographicInsights;
 }
 
-export interface UserAnalytics {
+export type UserAnalytics = {
   userId: string;
   totalPollsCreated: number;
   totalVotesCast: number;
@@ -72,7 +72,7 @@ export interface UserAnalytics {
 }
 
 // Poll types
-export interface Poll {
+export type Poll = {
   id: string;
   title: string;
   description: string;
@@ -84,14 +84,14 @@ export interface Poll {
   expiresAt?: Date;
 }
 
-export interface PollChoice {
+export type PollChoice = {
   id: string;
   pollId: string;
   option: string;
   votes: number;
 }
 
-export interface PollVote {
+export type PollVote = {
   id: string;
   pollId: string;
   choiceId: string;
@@ -100,7 +100,7 @@ export interface PollVote {
 }
 
 // User types
-export interface User {
+export type User = {
   id: string;
   email: string;
   name?: string;
@@ -110,7 +110,7 @@ export interface User {
   updatedAt: Date;
 }
 
-export interface SocialLoginOption {
+export type SocialLoginOption = {
   provider: string;
   label: string;
   description: string;
@@ -123,7 +123,7 @@ export interface SocialLoginOption {
   hoverTextColor: string;
 }
 
-export interface UserProfile {
+export type UserProfile = {
   id: string;
   userId: string;
   bio?: string;
@@ -132,7 +132,7 @@ export interface UserProfile {
 }
 
 // Performance types
-export interface PerformanceMetrics {
+export type PerformanceMetrics = {
   metricName: string;
   avgValue: number;
   minValue: number;
@@ -145,7 +145,7 @@ export interface PerformanceMetrics {
 }
 
 // Feature flag types
-export interface FeatureFlag {
+export type FeatureFlag = {
   id: string;
   name: string;
   enabled: boolean;
@@ -155,7 +155,7 @@ export interface FeatureFlag {
 }
 
 // Error types
-export interface AppError {
+export type AppError = {
   code: string;
   message: string;
   statusCode: number;
@@ -163,7 +163,7 @@ export interface AppError {
 }
 
 // API response types
-export interface ApiResponse<T = unknown> {
+export type ApiResponse<T = unknown> = {
   success: boolean;
   data?: T;
   error?: string;

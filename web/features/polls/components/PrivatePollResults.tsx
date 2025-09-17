@@ -4,13 +4,13 @@ import { useState, useEffect, useCallback } from 'react'
 import { logger } from '@/lib/logger';
 import { differentialPrivacy, type PrivateQueryResult } from '@/lib/privacy/differential-privacy'
 
-interface PollOption {
+type PollOption = {
   id: string
   label: string
   description?: string
 }
 
-interface Poll {
+type Poll = {
   id: string
   title: string
   description?: string
@@ -20,7 +20,7 @@ interface Poll {
   options: PollOption[]
 }
 
-interface PrivatePollResultsProps {
+type PrivatePollResultsProps = {
   poll: Poll
   userId: string
   onPrivacyBudgetExceeded?: () => void

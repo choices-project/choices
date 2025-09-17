@@ -19,7 +19,7 @@ import {
   Send
 } from 'lucide-react';
 
-interface Feedback {
+type Feedback = {
   id: string;
   userid: string | null;
   type: string;
@@ -37,7 +37,7 @@ interface Feedback {
   updatedat: string;
 }
 
-interface FeedbackDetailModalProps {
+type FeedbackDetailModalProps = {
   feedback: Feedback;
   isOpen: boolean;
   onClose: () => void;

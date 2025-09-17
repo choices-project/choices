@@ -7,13 +7,13 @@ import { PrivacyLevelSelector } from '@/components/privacy/PrivacyLevelSelector'
 import { PrivacyLevel, HybridPrivacyManager } from '@/lib/privacy/hybrid-privacy';
 import { withOptional } from '@/lib/util/objects';
 
-interface CreatePollFormProps {
+type CreatePollFormProps = {
   onSubmit: (pollData: CreatePollData) => Promise<void>;
   onCancel: () => void;
   isLoading?: boolean;
 }
 
-export interface CreatePollData {
+export type CreatePollData = {
   title: string;
   description: string;
   options: string[];

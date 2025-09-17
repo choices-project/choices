@@ -5,7 +5,7 @@
  * consistent response formats across the application.
  */
 
-export interface ApiResponse<T = unknown> {
+export type ApiResponse<T = unknown> = {
   success: boolean;
   data?: T;
   error?: string;
@@ -13,7 +13,7 @@ export interface ApiResponse<T = unknown> {
   timestamp: string;
 }
 
-export interface ApiErrorResponse {
+export type ApiErrorResponse = {
   success: false;
   error: string;
   message: string;
@@ -27,14 +27,14 @@ export interface ApiErrorResponse {
   timestamp: string;
 }
 
-export interface VoteResponse {
+export type VoteResponse = {
   success: boolean;
   voteId: string;
   message: string;
   timestamp: string;
 }
 
-export interface PollResponse {
+export type PollResponse = {
   id: string;
   title: string;
   description: string;
@@ -51,13 +51,13 @@ export interface PollResponse {
   votingConfig: VotingConfig;
 }
 
-export interface PollOption {
+export type PollOption = {
   id: string;
   text: string;
   description?: string;
 }
 
-export interface VotingConfig {
+export type VotingConfig = {
   allowMultipleVotes: boolean;
   requireAuthentication: boolean;
   allowAnonymous: boolean;
@@ -66,7 +66,7 @@ export interface VotingConfig {
   customSettings?: Record<string, unknown>;
 }
 
-export interface ResultsResponse {
+export type ResultsResponse = {
   pollId: string;
   method: string;
   results: PollResults;
@@ -75,7 +75,7 @@ export interface ResultsResponse {
   isBaseline: boolean;
 }
 
-export interface PollResults {
+export type PollResults = {
   [optionId: string]: {
     optionId: string;
     text: string;
@@ -85,7 +85,7 @@ export interface PollResults {
   };
 }
 
-export interface UserResponse {
+export type UserResponse = {
   id: string;
   email: string;
   username?: string;
@@ -95,7 +95,7 @@ export interface UserResponse {
   updatedAt: string;
 }
 
-export interface AuthResponse {
+export type AuthResponse = {
   user: UserResponse;
   session: {
     accessToken: string;
@@ -104,7 +104,7 @@ export interface AuthResponse {
   };
 }
 
-export interface PaginatedResponse<T> {
+export type PaginatedResponse<T> = {
   data: T[];
   pagination: {
     page: number;
@@ -116,7 +116,7 @@ export interface PaginatedResponse<T> {
   };
 }
 
-export interface HealthCheckResponse {
+export type HealthCheckResponse = {
   status: 'healthy' | 'degraded' | 'unhealthy';
   timestamp: string;
   services: {

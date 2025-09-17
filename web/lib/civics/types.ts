@@ -33,7 +33,7 @@ export type BillType = 'house' | 'senate' | 'concurrent';
 // ID CROSSWALK SYSTEM
 // ============================================================================
 
-export interface IdCrosswalk {
+export type IdCrosswalk = {
   entity_uuid: string;
   entity_type: EntityType;
   canonical_id: string;
@@ -44,7 +44,7 @@ export interface IdCrosswalk {
   updated_at: string;
 }
 
-export interface CanonicalIdMapping {
+export type CanonicalIdMapping = {
   canonical_id: string;
   sources: Record<DataSource, string>;
   entity_type: EntityType;
@@ -54,7 +54,7 @@ export interface CanonicalIdMapping {
 // CORE DATA MODELS
 // ============================================================================
 
-export interface Candidate {
+export type Candidate = {
   id: string;
   canonical_id: string;
   name: string;
@@ -96,7 +96,7 @@ export interface Candidate {
   license_key: string;
 }
 
-export interface Election {
+export type Election = {
   id: string;
   canonical_id: string;
   name: string;
@@ -130,7 +130,7 @@ export interface Election {
   license_key: string;
 }
 
-export interface CampaignFinance {
+export type CampaignFinance = {
   id: string;
   candidate_id: string;
   committee_id?: string;
@@ -165,7 +165,7 @@ export interface CampaignFinance {
   license_key: string;
 }
 
-export interface Contribution {
+export type Contribution = {
   id: string;
   candidate_id: string;
   committee_id?: string;
@@ -201,7 +201,7 @@ export interface Contribution {
   retention_until?: string;
 }
 
-export interface VotingRecord {
+export type VotingRecord = {
   id: string;
   candidate_id: string;
   
@@ -237,7 +237,7 @@ export interface VotingRecord {
 // SUPPORTING TABLES
 // ============================================================================
 
-export interface DataLicense {
+export type DataLicense = {
   license_key: string;
   source_name: string;
   attribution_text: string;
@@ -247,7 +247,7 @@ export interface DataLicense {
   created_at: string;
 }
 
-export interface IndependenceScoreMethodology {
+export type IndependenceScoreMethodology = {
   version: string;
   formula: string;
   data_sources: DataSource[];
@@ -257,13 +257,13 @@ export interface IndependenceScoreMethodology {
   created_at: string;
 }
 
-export interface IngestCursor {
+export type IngestCursor = {
   source: DataSource;
   cursor: Record<string, unknown>;
   updated_at: string;
 }
 
-export interface DataQualityAudit {
+export type DataQualityAudit = {
   id: string;
   table_name: string;
   record_id: string;
@@ -293,7 +293,7 @@ export interface DataQualityAudit {
 // UTILITY TYPES
 // ============================================================================
 
-export interface ProvenanceData {
+export type ProvenanceData = {
   source_names: DataSource[];
   source_urls: string[];
   retrieved_at: string[];
@@ -303,7 +303,7 @@ export interface ProvenanceData {
   md5_hash?: string;
 }
 
-export interface QualityMetrics {
+export type QualityMetrics = {
   completeness: number; // 0-1
   accuracy: number; // 0-1
   consistency: number; // 0-1
@@ -311,7 +311,7 @@ export interface QualityMetrics {
   overall: number; // 0-1
 }
 
-export interface DataSourceConfig {
+export type DataSourceConfig = {
   name: DataSource;
   enabled: boolean;
   rate_limit: {
@@ -327,7 +327,7 @@ export interface DataSourceConfig {
 // API RESPONSE TYPES
 // ============================================================================
 
-export interface CivicsApiResponse<T> {
+export type CivicsApiResponse<T> = {
   data: T[];
   pagination?: {
     count: number;
@@ -341,7 +341,7 @@ export interface CivicsApiResponse<T> {
   };
 }
 
-export interface CrosswalkResponse {
+export type CrosswalkResponse = {
   canonical_id: string;
   entity_type: EntityType;
   sources: Record<DataSource, string>;
@@ -353,14 +353,14 @@ export interface CrosswalkResponse {
 // VALIDATION SCHEMAS
 // ============================================================================
 
-export interface ValidationResult {
+export type ValidationResult = {
   isValid: boolean;
   score: number; // 0-1
   issues: ValidationIssue[];
   suggestions: string[];
 }
 
-export interface ValidationIssue {
+export type ValidationIssue = {
   field: string;
   severity: 'error' | 'warning' | 'info';
   message: string;
@@ -371,7 +371,7 @@ export interface ValidationIssue {
 // INGESTION TYPES
 // ============================================================================
 
-export interface IngestTask {
+export type IngestTask = {
   id: string;
   source: DataSource;
   params: Record<string, unknown>;
@@ -386,7 +386,7 @@ export interface IngestTask {
   error?: string;
 }
 
-export interface IngestMetrics {
+export type IngestMetrics = {
   source: DataSource;
   total_processed: number;
   successful: number;
@@ -402,7 +402,7 @@ export interface IngestMetrics {
 // GEOGRAPHIC TYPES
 // ============================================================================
 
-export interface GeographicLookup {
+export type GeographicLookup = {
   ocd_division_id: string;
   fips_state_code?: string;
   fips_county_code?: string;
@@ -413,13 +413,13 @@ export interface GeographicLookup {
   created_at: string;
 }
 
-export interface ZipToOcd {
+export type ZipToOcd = {
   zip5: string;
   ocd_division_id: string;
   confidence: number; // 0-1
 }
 
-export interface LatLonToOcd {
+export type LatLonToOcd = {
   lat: number;
   lon: number;
   ocd_division_id: string;

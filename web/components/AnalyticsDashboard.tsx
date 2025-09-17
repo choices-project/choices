@@ -15,7 +15,7 @@ import {
 import { useFeatureFlags } from '../hooks/useFeatureFlags';
 // import { PWAAnalytics } from '../lib/pwa-analytics'; // Archived PWA feature
 
-interface AnalyticsData {
+type AnalyticsData = {
   overview: {
     totalPolls: number;
     activePolls: number;
@@ -67,7 +67,7 @@ interface AnalyticsData {
   };
 }
 
-interface AnalyticsView {
+type AnalyticsView = {
   id: string;
   name: string;
   description: string;
@@ -76,7 +76,7 @@ interface AnalyticsView {
   enabled: boolean;
 }
 
-interface AnalyticsDashboardProps {
+type AnalyticsDashboardProps = {
   title?: string;
   subtitle?: string;
   showHeader?: boolean;

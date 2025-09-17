@@ -23,7 +23,7 @@ import { withOptional } from '../util/objects';
 // TYPES AND INTERFACES
 // ============================================================================
 
-export interface RetentionPolicy {
+export type RetentionPolicy = {
   dataType: string;
   retentionPeriod: number; // milliseconds
   autoDelete: boolean;
@@ -36,7 +36,7 @@ export interface RetentionPolicy {
   createdBy: string;
 }
 
-export interface DataLifecycleEvent {
+export type DataLifecycleEvent = {
   id: string;
   dataType: string;
   recordId: string;
@@ -47,7 +47,7 @@ export interface DataLifecycleEvent {
   metadata: Record<string, any>;
 }
 
-export interface RetentionAudit {
+export type RetentionAudit = {
   timestamp: Date;
   dataType: string;
   recordsProcessed: number;
@@ -58,7 +58,7 @@ export interface RetentionAudit {
   success: boolean;
 }
 
-export interface DataRetentionStatus {
+export type DataRetentionStatus = {
   dataType: string;
   totalRecords: number;
   recordsToDelete: number;
@@ -70,7 +70,7 @@ export interface DataRetentionStatus {
   policy: RetentionPolicy;
 }
 
-export interface PurgeResult {
+export type PurgeResult = {
   success: boolean;
   recordsDeleted: number;
   recordsAnonymized: number;

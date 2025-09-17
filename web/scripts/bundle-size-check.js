@@ -6,8 +6,8 @@
  * Analyzes bundle sizes and provides recommendations for optimization.
  */
 
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
 
 // Bundle size thresholds
 const THRESHOLDS = {

@@ -10,7 +10,7 @@ import { NextResponse } from 'next/server';
 import { devLog } from '@/lib/logger';
 import { generateSessionToken } from '@/lib/core/auth/session-cookies';
 
-export interface WebAuthnSessionData {
+export type WebAuthnSessionData = {
   userId: string;
   username: string;
   credentialId: string;
@@ -20,7 +20,7 @@ export interface WebAuthnSessionData {
   isAdmin?: boolean;
 }
 
-export interface WebAuthnSessionOptions {
+export type WebAuthnSessionOptions = {
   maxAge?: number; // seconds
   secure?: boolean;
   sameSite?: 'strict' | 'lax' | 'none';

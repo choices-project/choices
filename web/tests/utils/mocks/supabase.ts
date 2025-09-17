@@ -1,6 +1,6 @@
 import type { PostgrestSingleResponse, PostgrestError } from '@supabase/supabase-js';
 
-type Thenable<T> = { then: jest.Mock<any, any> }
+type Thenable<_T> = { then: jest.Mock<any, any> }
 type Single<T> = jest.Mock<Promise<PostgrestSingleResponse<T>>, any>
 
 // Helper to create proper PostgrestSingleResponse

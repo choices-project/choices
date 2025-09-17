@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { useDebounce } from '@/hooks/useDebounce'
 
-interface VirtualScrollProps {
+type VirtualScrollProps = {
   items: any[]
   itemHeight?: number
   containerHeight?: number
@@ -21,7 +21,7 @@ interface VirtualScrollProps {
   hasError?: boolean
 }
 
-interface VirtualScrollItem {
+type VirtualScrollItem = {
   id: string
   height: number
   data: any

@@ -43,7 +43,7 @@ export const EmailSchema = z.string()
   .optional()
 
 // Server Action wrapper with security features
-export interface ServerActionOptions {
+export type ServerActionOptions = {
   requireAuth?: boolean
   requireAdmin?: boolean
   idempotency?: IdempotencyOptions
@@ -55,7 +55,7 @@ export interface ServerActionOptions {
   }
 }
 
-export interface ServerActionContext {
+export type ServerActionContext = {
   userId?: string
   userRole?: string
   sessionToken?: string

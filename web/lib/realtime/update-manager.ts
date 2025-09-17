@@ -8,21 +8,21 @@
 import { createClient } from '@supabase/supabase-js';
 import { logger } from '../logger';
 
-export interface RealtimeConfig {
+export type RealtimeConfig = {
   throttleMs: number;
   maxDiffsInMemory: number;
   batchSize: number;
   adaptiveThrottling: boolean;
 }
 
-export interface PollUpdate {
+export type PollUpdate = {
   pollId: string;
   type: 'vote' | 'elimination' | 'round_complete' | 'poll_close';
-  data: any;
+  data: unknown;
   timestamp: number;
 }
 
-export interface PollDiff {
+export type PollDiff = {
   pollId: string;
   round: number;
   delta: {
@@ -35,15 +35,15 @@ export interface PollDiff {
   checksum: string;
 }
 
-export interface UpdateQueue {
+export type UpdateQueue = {
   updates: PollUpdate[];
   lastProcessed: number;
   isThrottled: boolean;
   throttleUntil: number;
 }
 
-export interface InitialState {
-  snapshot: any;
+export type InitialState = {
+  snapshot: unknown;
   diffs: PollDiff[];
   lastUpdate: number;
   checksum: string;
@@ -52,9 +52,9 @@ export interface InitialState {
 export class RealtimeUpdateManager {
   private config: RealtimeConfig;
   private updateQueues: Map<string, UpdateQueue> = new Map();
-  private supabaseClient: any;
+  private supabaseClient: unknown;
   private diffStorage: Map<string, PollDiff[]> = new Map();
-  private snapshots: Map<string, any> = new Map();
+  private snapshots: Map<string, unknown> = new Map();
   private rateTracking: Map<string, number[]> = new Map();
 
   constructor(config?: Partial<RealtimeConfig>) {
@@ -345,7 +345,7 @@ export class RealtimeUpdateManager {
 
 // Extend UpdateQueue with throttling methods
 declare module './update-manager' {
-  interface UpdateQueue {
+  type UpdateQueue = {
     setThrottled(throttleMs: number): void;
   }
 }

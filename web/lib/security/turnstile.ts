@@ -8,7 +8,7 @@
 import { devLog } from '../logger';
 import { withOptional } from '../util/objects';
 
-export interface TurnstileConfig {
+export type TurnstileConfig = {
   secretKey: string;
   siteKey: string;
   enabled: boolean;
@@ -16,7 +16,7 @@ export interface TurnstileConfig {
   timeout: number;
 }
 
-export interface TurnstileResponse {
+export type TurnstileResponse = {
   success: boolean;
   challenge_ts?: string;
   hostname?: string;
@@ -25,7 +25,7 @@ export interface TurnstileResponse {
   error_codes?: string[];
 }
 
-export interface TurnstileVerificationResult {
+export type TurnstileVerificationResult = {
   success: boolean;
   error?: string;
   errorCodes?: string[];

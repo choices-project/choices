@@ -15,8 +15,8 @@ export enum LogLevel {
   NONE = 4
 }
 
-interface LogContext {
-  [key: string]: any;
+type LogContext = {
+  [key: string]: unknown;
 }
 
 class Logger {
@@ -130,7 +130,7 @@ export const logPerformance = (operation: string, duration: number, context?: Lo
 };
 
 // Development-only logging (replaces logger.info)
-export const devLog = (message: string, ...args: any[]) => {
+export const devLog = (message: string, ...args: unknown[]) => {
   if (process.env.NODE_ENV === 'development') {
     // eslint-disable-next-line no-console
     console.log(`[DEV] ${message}`, ...args);

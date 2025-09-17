@@ -153,7 +153,7 @@ async function main() {
     .not('govtrack_id', 'is', null)
 
   if (error) throw error
-  if (!people?.length) { console.log('no govtrack_id rows found'); return }
+  if (!people.length) { console.log('no govtrack_id rows found'); return }
 
   let written = 0, skipped = 0
   for (const p of people) {
@@ -168,8 +168,8 @@ async function main() {
 
       const voteId = `${congress}-${chamber}-${session}-${roll}`
       const title = normalizeBillTitle(cjson, v.vote.related_bill?.title)
-      const date  = cjson?.vote_date ?? v.vote.created?.slice(0,10) ?? null
-      const pos   = v.option?.value || 'Unknown'
+      const date  = cjson?.vote_date ?? v.vote.created.slice(0,10) ?? null
+      const pos   = v.option.value || 'Unknown'
 
       await upsertVote(p.person_id, voteId, title, date, pos, chamber)
       written++

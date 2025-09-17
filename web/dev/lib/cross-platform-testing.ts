@@ -3,7 +3,7 @@
 
 import { withOptional } from '@/lib/util/objects';
 
-export interface DeviceInfo {
+export type DeviceInfo = {
   userAgent: string
   platform: string
   vendor: string
@@ -32,7 +32,7 @@ export interface DeviceInfo {
   }
 }
 
-export interface BrowserInfo {
+export type BrowserInfo = {
   name: string
   version: string
   engine: string
@@ -44,7 +44,7 @@ export interface BrowserInfo {
   desktop: boolean
 }
 
-export interface TestResult {
+export type TestResult = {
   testName: string
   category: string
   status: 'pass' | 'fail' | 'warning' | 'skip'
@@ -55,7 +55,7 @@ export interface TestResult {
   timestamp: number
 }
 
-export interface PlatformTestSuite {
+export type PlatformTestSuite = {
   name: string
   tests: TestResult[]
   summary: {
@@ -988,7 +988,7 @@ export class CrossPlatformTesting {
       testName: 'Slow Connection Support',
       category: 'Device Specific',
       status: isSlowConnection ? 'pass' : 'skip',
-      message: isSlowConnection ? `Slow connection detected (${connection?.effectiveType})` : 'Fast connection',
+      message: isSlowConnection ? `Slow connection detected (${connection.effectiveType})` : 'Fast connection',
       details: { connection, isSlowConnection },
       deviceInfo: this.deviceInfo,
       browserInfo: this.browserInfo,

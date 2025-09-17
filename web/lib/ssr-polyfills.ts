@@ -17,25 +17,25 @@ if (typeof globalThis === 'undefined') {
 /*
 // Polyfill for fetch if not available (Node.js < 18)
 if (typeof fetch === 'undefined') {
-  const { fetch: nodeFetch } = require('node-fetch');
+  const { fetch: nodeFetch } = await import('node-fetch');
   (global as any).fetch = nodeFetch;
 }
 
 // Polyfill for Headers if not available
 if (typeof Headers === 'undefined') {
-  const { Headers: NodeHeaders } = require('node-fetch');
+  const { Headers: NodeHeaders } = await import('node-fetch');
   (global as any).Headers = NodeHeaders;
 }
 
 // Polyfill for Request if not available
 if (typeof Request === 'undefined') {
-  const { Request: NodeRequest } = require('node-fetch');
+  const { Request: NodeRequest } = await import('node-fetch');
   (global as any).Request = NodeRequest;
 }
 
 // Polyfill for Response if not available
 if (typeof Response === 'undefined') {
-  const { Response: NodeResponse } = require('node-fetch');
+  const { Response: NodeResponse } = await import('node-fetch');
   (global as any).Response = NodeResponse;
 }
 */

@@ -4,14 +4,14 @@
  * Safe parsing utilities with comprehensive error handling for runtime validation
  */
 
-import { z, ZodError, type ZodSchema } from 'zod';
+import { type ZodError, type ZodSchema } from 'zod';
 import { logger } from '../logger';
 import { withOptional } from '../util/objects';
 
 /**
  * Result of a validation operation
  */
-export interface ValidationResult<T> {
+export type ValidationResult<T> = {
   /** Whether the validation was successful */
   success: boolean;
   /** The validated data (only present if success is true) */
@@ -25,13 +25,13 @@ export interface ValidationResult<T> {
 /**
  * Options for validation operations
  */
-export interface ValidationOptions {
+export type ValidationOptions = {
   /** Whether to log validation errors to the logger */
   logErrors?: boolean;
   /** Whether to throw an error on validation failure */
   throwOnError?: boolean;
   /** Fallback data to use if validation fails */
-  fallbackData?: any;
+  fallbackData?: unknown;
 }
 
 /**
@@ -338,7 +338,7 @@ export function validateBatch<T extends Record<string, unknown>>(
     const validationResult = safeParse(schema, data[key], { ...options, logErrors: false });
     
     if (validationResult.success && validationResult.data !== undefined) {
-      (result as any)[key] = validationResult.data;
+      (result as Record<string, unknown>)[key] = validationResult.data;
     } else {
       errors.push(`${key}: ${validationResult.error || 'Unknown error'}`);
     }

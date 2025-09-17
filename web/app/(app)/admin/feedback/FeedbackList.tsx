@@ -14,7 +14,7 @@ import {
   Calendar
 } from 'lucide-react';
 
-interface Feedback {
+type Feedback = {
   id: string;
   userid: string | null;
   type: string;
@@ -32,7 +32,7 @@ interface Feedback {
   updatedat: string;
 }
 
-interface FeedbackListProps {
+type FeedbackListProps = {
   feedback: Feedback[];
   isLoading: boolean;
   onFeedbackSelect: (_item: Feedback) => void;

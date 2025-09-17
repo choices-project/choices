@@ -9,7 +9,7 @@
 import React, { useState } from 'react';
 import { logger } from '@/lib/logger';
 
-export interface CreatePollFormData {
+export type CreatePollFormData = {
   title: string;
   description: string;
   category: string;
@@ -19,7 +19,7 @@ export interface CreatePollFormData {
   showResults: boolean;
 }
 
-export interface CreatePollFormProps {
+export type CreatePollFormProps = {
   onSubmit: (data: CreatePollFormData) => void;
   onCancel?: () => void;
   initialData?: Partial<CreatePollFormData>;
@@ -277,6 +277,7 @@ export const CreatePollForm: React.FC<CreatePollFormProps> = ({
     </form>
   );
 };
+
 
 
 

@@ -12,7 +12,7 @@ import { logger } from '../logger'
 import { withOptional } from '../util/objects'
 
 // Redis client configuration interface
-export interface RedisConfig {
+export type RedisConfig = {
   host: string
   port: number
   password?: string
@@ -31,7 +31,7 @@ export interface RedisConfig {
 }
 
 // Cache entry interface
-export interface CacheEntry<T = any> {
+export type CacheEntry<T = any> = {
   data: T
   expiresAt: number
   createdAt: number
@@ -41,7 +41,7 @@ export interface CacheEntry<T = any> {
 }
 
 // Cache statistics interface
-export interface CacheStats {
+export type CacheStats = {
   hits: number
   misses: number
   hitRate: number
@@ -53,7 +53,7 @@ export interface CacheStats {
 }
 
 // Cache invalidation options
-export interface InvalidationOptions {
+export type InvalidationOptions = {
   pattern?: string
   tags?: string[]
   keys?: string[]

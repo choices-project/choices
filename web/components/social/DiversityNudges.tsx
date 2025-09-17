@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import type { DiversityNudge } from '@/lib/social/types';
 
-interface DiversityNudgesProps {
+type DiversityNudgesProps = {
   userId: string;
   pollId: string;
   onNudgeClick?: (nudge: DiversityNudge) => void;

@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import CivicsLure from '../civics/CivicsLure';
 
-interface LivePoll {
+type LivePoll = {
   id: string;
   title: string;
   description: string;
@@ -28,7 +28,7 @@ interface LivePoll {
   externalLink?: string;
 }
 
-interface PollOption {
+type PollOption = {
   id: string;
   name: string;
   votes: number;

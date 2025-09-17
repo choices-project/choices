@@ -6,7 +6,7 @@
 
 import type { CandidateCardV1, Representative, Vote } from '../schemas';
 
-export interface CacheConfig {
+export type CacheConfig = {
   ttl: number; // Time to live in milliseconds
   maxSize: number; // Maximum cache size
 }

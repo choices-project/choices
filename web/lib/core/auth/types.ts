@@ -16,12 +16,12 @@ import type { User, Session } from '@supabase/supabase-js'
 // User and Session Types
 // ============================================================================
 
-export interface UserSession {
+export type UserSession = {
   user: User | null
   session: Session | null
 }
 
-export interface AuthContext {
+export type AuthContext = {
   user: User | null
   session: Session | null
   loading: boolean
@@ -31,13 +31,13 @@ export interface AuthContext {
 // Device Flow Types
 // ============================================================================
 
-export interface DeviceFlowRequest {
+export type DeviceFlowRequest = {
   provider: 'google' | 'github' | 'facebook' | 'twitter' | 'linkedin' | 'discord'
   redirectTo?: string
   scopes?: string[]
 }
 
-export interface DeviceFlowResponse {
+export type DeviceFlowResponse = {
   success: boolean
   deviceCode?: string
   userCode?: string
@@ -47,14 +47,14 @@ export interface DeviceFlowResponse {
   error?: string
 }
 
-export interface DeviceFlowVerification {
+export type DeviceFlowVerification = {
   success: boolean
   userId?: string
   session?: Session
   error?: string
 }
 
-export interface DeviceFlowState {
+export type DeviceFlowState = {
   deviceCode: string
   userCode: string
   verificationUri: string
@@ -71,7 +71,7 @@ export interface DeviceFlowState {
 // Database Types
 // ============================================================================
 
-export interface DeviceFlowRecord {
+export type DeviceFlowRecord = {
   device_code: string
   user_code: string
   provider: string
@@ -90,13 +90,13 @@ export interface DeviceFlowRecord {
 // Middleware Types
 // ============================================================================
 
-export interface MiddlewareContext {
+export type MiddlewareContext = {
   req: Request
   res: Response
   user?: User
 }
 
-export interface RateLimitConfig {
+export type RateLimitConfig = {
   maxRequests: number
   windowMs: number
   key: string
@@ -106,13 +106,13 @@ export interface RateLimitConfig {
 // Error Types
 // ============================================================================
 
-export interface AuthError {
+export type AuthError = {
   message: string
   code?: string
   statusCode?: number
 }
 
-export interface ValidationError {
+export type ValidationError = {
   field: string
   message: string
   value?: unknown
@@ -122,27 +122,27 @@ export interface ValidationError {
 // API Response Types
 // ============================================================================
 
-export interface ApiResponse<T = unknown> {
+export type ApiResponse<T = unknown> = {
   success: boolean
   data?: T
   error?: string
   message?: string
 }
 
-export interface PaginatedResponse<T = unknown> extends ApiResponse<T[]> {
+export type PaginatedResponse<T = unknown> = {
   pagination: {
     page: number
     limit: number
     total: number
     totalPages: number
   }
-}
+} & ApiResponse<T[]>
 
 // ============================================================================
 // Security Types
 // ============================================================================
 
-export interface SecurityHeaders {
+export type SecurityHeaders = {
   'Content-Security-Policy'?: string
   'X-Frame-Options'?: string
   'X-Content-Type-Options'?: string
@@ -150,7 +150,7 @@ export interface SecurityHeaders {
   'Permissions-Policy'?: string
 }
 
-export interface RateLimitInfo {
+export type RateLimitInfo = {
   limit: number
   remaining: number
   reset: number

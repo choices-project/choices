@@ -24,7 +24,7 @@ import { ScreenReaderSupport } from '../../lib/accessibility/screen-reader';
 // TYPES AND INTERFACES
 // ============================================================================
 
-export interface Candidate {
+export type Candidate = {
   id: string;
   name: string;
   bio: string;
@@ -32,7 +32,7 @@ export interface Candidate {
   website?: string;
 }
 
-export interface LowBandwidthRankingFormProps {
+export type LowBandwidthRankingFormProps = {
   pollId: string;
   candidates: Candidate[];
   onSubmit: (rankings: Record<string, number>) => Promise<boolean>;
@@ -42,7 +42,7 @@ export interface LowBandwidthRankingFormProps {
   className?: string;
 }
 
-export interface FormState {
+export type FormState = {
   rankings: Record<string, number>;
   errors: string[];
   isSubmitting: boolean;

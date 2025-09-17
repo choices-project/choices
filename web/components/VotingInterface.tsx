@@ -17,7 +17,7 @@ import RankedChoiceVoting from '@/features/voting/components/RankedChoiceVoting'
 import type { VoteResponse } from '@/lib/vote/types'
 import { withOptional } from '@/lib/util/objects'
 
-interface Poll {
+type Poll = {
   id: string
   title: string
   description: string
@@ -29,7 +29,7 @@ interface Poll {
 }
 
 // --- types you already have ---
-interface VotingInterfaceProps {
+type VotingInterfaceProps = {
   poll: Poll;
   onVote: (choice: number) => Promise<VoteResponse>;
   isVoting?: boolean;
@@ -193,7 +193,7 @@ export const VotingInterface: React.FC<VotingInterfaceProps> = ({
       hasVoted
     };
 
-    switch (poll.votingMethod?.toLowerCase()) {
+    switch (poll.votingMethod.toLowerCase()) {
       case 'approval': {
         return (
           <ApprovalVoting

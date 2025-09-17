@@ -6,8 +6,8 @@
  * Monitors performance metrics and provides analysis.
  */
 
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
 
 // Performance thresholds
 const THRESHOLDS = {

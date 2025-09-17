@@ -7,7 +7,7 @@ import { devLog } from '@/lib/logger';
 import { withOptional } from '@/lib/util/objects';
 
 // GitHub API Configuration
-interface GitHubConfig {
+type GitHubConfig = {
   token: string;
   owner: string;
   repo: string;
@@ -15,7 +15,7 @@ interface GitHubConfig {
 }
 
 // Enhanced Feedback Analysis
-interface FeedbackAnalysis {
+type FeedbackAnalysis = {
   intent: 'bug' | 'feature' | 'improvement' | 'question' | 'compliment';
   urgency: number; // 1-10 scale
   complexity: number; // 1-10 scale
@@ -40,7 +40,7 @@ interface FeedbackAnalysis {
 }
 
 // GitHub Issue Structure
-interface GitHubIssue {
+type GitHubIssue = {
   title: string;
   body: string;
   labels: string[];
@@ -50,7 +50,7 @@ interface GitHubIssue {
 }
 
 // Feedback to Issue Mapping
-interface FeedbackToIssueMapping {
+type FeedbackToIssueMapping = {
   feedbackId: string;
   issueNumber?: number;
   issueUrl?: string;

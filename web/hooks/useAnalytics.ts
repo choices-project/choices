@@ -4,7 +4,7 @@ import { useFeatureFlags } from './useFeatureFlags';
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
 import { withOptional } from '@/lib/util/objects';
 
-interface AnalyticsData {
+type AnalyticsData = {
   period: string;
   summary: {
     totalUsers: number;
@@ -26,20 +26,20 @@ interface AnalyticsData {
   };
 }
 
-interface AnalyticsFilters {
+type AnalyticsFilters = {
   dateRange?: string;
   pollId?: string;
   userType?: string;
   deviceType?: string;
 }
 
-interface UseAnalyticsOptions {
+type UseAnalyticsOptions = {
   autoRefresh?: boolean;
   refreshInterval?: number;
   defaultFilters?: AnalyticsFilters;
 }
 
-interface UseAnalyticsReturn {
+type UseAnalyticsReturn = {
   // Data
   data: AnalyticsData | null;
   loading: boolean;

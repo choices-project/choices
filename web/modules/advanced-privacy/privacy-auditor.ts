@@ -9,7 +9,7 @@ import { isFeatureEnabled } from '../../lib/feature-flags';
 import { devLog } from '@/lib/logger';
 import type { PrivacyBridge } from './privacy-bridge';
 
-export interface PrivacyAuditResult {
+export type PrivacyAuditResult = {
   timestamp: number
   overallScore: number
   compliance: {
@@ -31,7 +31,7 @@ export interface PrivacyAuditResult {
   errors: string[]
 }
 
-export interface PrivacyTestResult {
+export type PrivacyTestResult = {
   testName: string
   passed: boolean
   score: number
@@ -39,7 +39,7 @@ export interface PrivacyTestResult {
   timestamp: number
 }
 
-export interface PrivacyComplianceConfig {
+export type PrivacyComplianceConfig = {
   enableGDPR: boolean
   enableCCPA: boolean
   enableCOPPA: boolean

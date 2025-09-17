@@ -5,14 +5,14 @@
  * Provides consistent user authentication with proper error handling.
  */
 
-import { NextRequest } from 'next/server';
+import { type NextRequest } from 'next/server';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 import { devLog } from '@/lib/logger';
 import { validateOrigin } from '@/lib/http/origin';
 import { withOptional } from '@/lib/util/objects';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
-export interface User {
+export type User = {
   id: string;
   email: string;
   trust_tier: 'T1' | 'T2' | 'T3';
@@ -20,24 +20,24 @@ export interface User {
   is_admin?: boolean;
 }
 
-export interface UserProfile {
+export type UserProfile = {
   trust_tier: 'T1' | 'T2' | 'T3';
   username?: string;
 }
 
-export interface RequireUserOptions {
+export type RequireUserOptions = {
   requireOrigin?: boolean;
   allowPublic?: boolean;
   requireAdmin?: boolean;
   requireTrustTier?: 'T1' | 'T2' | 'T3';
 }
 
-export interface RequireUserResult {
+export type RequireUserResult = {
   user: User;
   supabase: SupabaseClient;
 }
 
-export interface RequireUserError {
+export type RequireUserError = {
   error: string;
   status: number;
 }

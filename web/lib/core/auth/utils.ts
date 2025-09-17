@@ -2,7 +2,7 @@ import type { NextRequest } from 'next/server';
 import { logger } from '@/lib/logger';
 import jwt from 'jsonwebtoken'
 
-export interface JWTPayload {
+export type JWTPayload = {
   userId: string
   email: string
   stableId: string

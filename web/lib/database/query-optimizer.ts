@@ -14,7 +14,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import type { QueryPlan } from '../types/database'
 
 // Query optimization options
-export interface QueryOptions {
+export type QueryOptions = {
   useCache?: boolean
   cacheTTL?: number
   cacheTags?: string[]
@@ -25,7 +25,7 @@ export interface QueryOptions {
 }
 
 // Query performance metrics
-export interface QueryMetrics {
+export type QueryMetrics = {
   query: string
   executionTime: number
   rowsReturned: number
@@ -36,7 +36,7 @@ export interface QueryMetrics {
 }
 
 // Query optimization result
-export interface OptimizationResult {
+export type OptimizationResult = {
   originalQuery: string
   optimizedQuery: string
   optimizations: string[]
@@ -45,7 +45,7 @@ export interface OptimizationResult {
 }
 
 // Query cache entry
-interface QueryCacheEntry<T = unknown> {
+type QueryCacheEntry<T = unknown> = {
   query: string
   result: T
   timestamp: number

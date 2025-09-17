@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 import PollCard from './PollCard';
 
-interface Poll {
+type Poll = {
   id: string;
   title: string;
   description: string;
@@ -26,12 +26,12 @@ interface Poll {
   tags?: string[];
 }
 
-interface PollResults {
+type PollResults = {
   [key: number]: number;
   total: number;
 }
 
-interface FeaturedPollsProps {
+type FeaturedPollsProps = {
   polls: Poll[];
   onVote?: (_pollId: string, _choice: number) => Promise<any>;
   onViewDetails?: (_pollId: string) => void;
@@ -138,7 +138,7 @@ export const FeaturedPolls: React.FC<FeaturedPollsProps> = ({
               
               <select
                 value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as any)}
+                onChange={(e) => setSortBy(e.target.value as 'recent' | 'popular' | 'ending')}
                 className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value="recent">Most Recent</option>
@@ -158,10 +158,10 @@ export const FeaturedPolls: React.FC<FeaturedPollsProps> = ({
                     { value: 'all', label: 'All', count: polls.length },
                     { value: 'active', label: 'Active', count: getStatusCount('active') },
                     { value: 'closed', label: 'Closed', count: getStatusCount('closed') }
-                  ].map((filter: any) => (
+                  ].map((filter: { value: 'all' | 'active' | 'closed'; label: string; count: number }) => (
                     <button
                       key={filter.value}
-                      onClick={() => setStatusFilter(filter.value as any)}
+                      onClick={() => setStatusFilter(filter.value)}
                       className={`
                         px-3 py-1 rounded-full text-sm font-medium transition-colors
                         ${statusFilter === filter.value

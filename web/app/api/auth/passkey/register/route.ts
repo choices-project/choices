@@ -5,7 +5,7 @@
  * Supports both discoverable and non-discoverable credentials.
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { type NextRequest, NextResponse } from 'next/server';
 import { 
   generateRegistrationOptions as generateRegistrationOptionsLib,
   verifyRegistrationResponse,
@@ -135,7 +135,7 @@ async function generateRegistrationOptions(request: NextRequest, body: any): Pro
   }
 
   // Prepare existing credentials for exclusion
-  const excludeCredentials = existingCredentials?.map((cred: any) => ({
+  const excludeCredentials = existingCredentials.map((cred: any) => ({
     id: cred.credential_id,
     type: 'public-key' as const,
     transports: cred.transports || []

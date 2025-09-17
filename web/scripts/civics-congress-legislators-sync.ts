@@ -67,7 +67,7 @@ async function upsertPerson(
   return person_id
 }
 
-async function upsertSocials(bioguide: string, socials: Record<string,string>) {
+async function upsertSocials(_bioguide: string, _socials: Record<string,string>) {
   // optional: write into a contacts table if you have it. we just no-op to avoid schema bloat.
   // hook here if `civics_contact_info` exists:
   // await supabase.from('civics_contact_info').upsert({ person_id, twitter_url: ..., ... })
@@ -107,12 +107,12 @@ async function main() {
   if (current) {
     let upserts = 0
     for (const leg of current) {
-      const bio = leg.id?.bioguide
+      const bio = leg.id.bioguide
       if (!bio) continue
-      const gov = leg.id?.govtrack ?? null
-      const fecList = (leg.id?.fec ?? []).filter(Boolean)
+      const gov = leg.id.govtrack ?? null
+      const fecList = (leg.id.fec ?? []).filter(Boolean)
       const fec = fecList.length ? fecList[0]! : null // schema supports single unique id
-      const personId = await upsertPerson(bio, gov, fec)
+      await upsertPerson(bio, gov, fec)
       const soc = socialByBio[bio]
       if (soc) await upsertSocials(bio, soc)
       upserts++

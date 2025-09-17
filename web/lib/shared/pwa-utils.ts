@@ -15,42 +15,42 @@ function arrayBufferToBase64url(buffer: ArrayBuffer): string {
 }
 
 // Additional type definitions
-export interface BeforeInstallPromptEvent extends Event {
+export type BeforeInstallPromptEvent = {
   prompt(): Promise<void>;
   userChoice: Promise<{
     outcome: 'accepted' | 'dismissed';
     platform: string;
   }>;
-}
+} & Event
 
-export interface NavigatorWithServiceWorker extends Navigator {
+export type NavigatorWithServiceWorker = {
   serviceWorker: ServiceWorkerContainer & {
     sync?: {
       register(tag: string): Promise<void>;
       getTags(): Promise<string[]>;
     };
   };
-}
+} & Navigator
 
-export interface NavigatorWithStandalone extends Navigator {
+export type NavigatorWithStandalone = {
   standalone?: boolean;
-}
+} & Navigator
 
-export interface WebAuthnRegistrationResult {
+export type WebAuthnRegistrationResult = {
   success: boolean;
   credentialId: string;
   publicKey: string;
   error?: string;
 }
 
-export interface WebAuthnAuthenticationResult {
+export type WebAuthnAuthenticationResult = {
   success: boolean;
   credentialId: string;
   signature: string;
   error?: string;
 }
 
-export interface PWAConfig {
+export type PWAConfig = {
   name: string;
   shortName: string;
   description: string;
@@ -59,7 +59,7 @@ export interface PWAConfig {
   display: 'standalone' | 'fullscreen' | 'minimal-ui' | 'browser';
 }
 
-export interface DeviceFingerprint {
+export type DeviceFingerprint = {
   userAgent: string;
   platform: string;
   screenResolution: string;
@@ -74,34 +74,34 @@ export interface DeviceFingerprint {
   encryptedStorage: boolean;
 }
 
-export interface OfflineVote {
+export type OfflineVote = {
   pollId: string;
   choice: number;
   timestamp: number;
   deviceFingerprint: DeviceFingerprint;
 }
 
-export interface VerificationChallenge {
+export type VerificationChallenge = {
   id: string;
   type: 'webauthn' | 'fingerprint' | 'location';
   data: WebAuthnChallengeData | FingerprintData | LocationData;
   completed: boolean;
 }
 
-export interface WebAuthnChallengeData {
+export type WebAuthnChallengeData = {
   challenge: string;
   rpId: string;
   userVerification: string;
   timeout: number;
 }
 
-export interface FingerprintData {
+export type FingerprintData = {
   deviceId: string;
   timestamp: number;
   signature: string;
 }
 
-export interface LocationData {
+export type LocationData = {
   latitude: number;
   longitude: number;
   accuracy: number;

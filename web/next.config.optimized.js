@@ -55,7 +55,7 @@ const nextConfig = {
     ]
   },
 
-  webpack: (config, { isServer, webpack, dev }) => {
+  webpack: async (config, { isServer, webpack, dev }) => {
     if (isServer) {
       // Define browser globals as undefined for server-side compatibility
       config.plugins.push(new webpack.DefinePlugin({ 
@@ -88,7 +88,7 @@ const nextConfig = {
       });
 
       // More aggressive Supabase externalization for server builds
-      config.externals.push(({ context, request }, callback) => {
+      config.externals.push(({ request }, callback) => {
         if (isServer && request && request.includes('@supabase')) {
           return callback(null, `commonjs ${request}`);
         }
@@ -111,7 +111,7 @@ const nextConfig = {
     // Module resolution optimizations
     config.resolve.alias = {
       ...config.resolve.alias,
-      '@': require('path').resolve(__dirname, './')
+      '@': new URL('./', import.meta.url).pathname
     }
 
     // Enhanced bundle size optimizations
@@ -223,7 +223,7 @@ const nextConfig = {
 
       // Add bundle analyzer in development
       if (dev && process.env.ANALYZE === 'true') {
-        const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');
+        const { BundleAnalyzerPlugin } = await import('webpack-bundle-analyzer');
         config.plugins.push(
           new BundleAnalyzerPlugin({
             analyzerMode: 'server',

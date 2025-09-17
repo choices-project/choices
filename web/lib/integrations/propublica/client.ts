@@ -8,7 +8,7 @@
 import { logger } from '../../logger';
 import { ApplicationError } from '../../errors/base';
 
-export interface ProPublicaConfig {
+export type ProPublicaConfig = {
   apiKey: string;
   baseUrl?: string;
   timeout?: number;
@@ -20,7 +20,7 @@ export interface ProPublicaConfig {
   };
 }
 
-export interface ProPublicaMember {
+export type ProPublicaMember = {
   id: string;
   title: string;
   short_title: string;
@@ -68,7 +68,7 @@ export interface ProPublicaMember {
   votes_against_party_pct?: number;
 }
 
-export interface ProPublicaVote {
+export type ProPublicaVote = {
   roll_call: number;
   bill: {
     bill_id: string;
@@ -91,7 +91,7 @@ export interface ProPublicaVote {
   position: string;
 }
 
-export interface ProPublicaBill {
+export type ProPublicaBill = {
   bill_id: string;
   bill_slug: string;
   congress: string;
@@ -135,7 +135,7 @@ export interface ProPublicaBill {
   latest_action_date?: string;
 }
 
-export interface ProPublicaResponse<T> {
+export type ProPublicaResponse<T> = {
   status: string;
   copyright: string;
   results: T[];

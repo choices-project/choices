@@ -7,7 +7,7 @@ import { Header } from './Header';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 
-interface AdminLayoutProps {
+type AdminLayoutProps = {
   children: React.ReactNode;
 }
 

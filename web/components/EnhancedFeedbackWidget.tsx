@@ -22,7 +22,7 @@ import {
   Upload
 } from 'lucide-react'
 
-interface FeedbackData {
+type FeedbackData = {
   type: 'bug' | 'feature' | 'general' | 'performance' | 'accessibility' | 'security'
   title: string
   description: string
@@ -45,10 +45,18 @@ const EnhancedFeedbackWidget: React.FC = () => {
   const [showSuccess, setShowSuccess] = useState(false)
   const [capturingScreenshot, setCapturingScreenshot] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const feedbackTracker = getFeedbackTracker()
+  const [feedbackTracker, setFeedbackTracker] = useState<any>(null)
+
+  // Initialize feedback tracker on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setFeedbackTracker(getFeedbackTracker())
+    }
+  }, [])
 
   // Track user journey on mount
   useEffect(() => {
+    if (!feedbackTracker) return
     const userJourney = feedbackTracker.captureUserJourney()
     setFeedback(prev => ({
       ...prev,
@@ -61,17 +69,19 @@ const EnhancedFeedbackWidget: React.FC = () => {
     setStep('type')
     
     // Update user journey when widget opens
-    const userJourney = feedbackTracker.captureUserJourney()
-    setFeedback(prev => ({
-      ...prev,
-      userJourney
-    }))
+    if (feedbackTracker) {
+      const userJourney = feedbackTracker.captureUserJourney()
+      setFeedback(prev => ({
+        ...prev,
+        userJourney
+      }))
+    }
     
     // Track analytics
     if (typeof window !== 'undefined' && window.gtag) {
       window.gtag('event', 'feedbackwidgetopened', {
         page: window.location.pathname,
-        sessionid: userJourney.sessionId
+        sessionid: feedback.userJourney?.sessionId || 'unknown'
       })
     }
   }
@@ -101,14 +111,16 @@ const EnhancedFeedbackWidget: React.FC = () => {
   const handleScreenshotCapture = async () => {
     setCapturingScreenshot(true)
     try {
-      const screenshot = await feedbackTracker.captureScreenshot()
-      setFeedback(prev => {
-        const newFeedback = { ...prev };
-        if (screenshot !== undefined) {
-          newFeedback.screenshot = screenshot;
-        }
-        return newFeedback;
-      })
+      if (feedbackTracker) {
+        const screenshot = await feedbackTracker.captureScreenshot()
+        setFeedback(prev => {
+          const newFeedback = { ...prev };
+          if (screenshot !== undefined) {
+            newFeedback.screenshot = screenshot;
+          }
+          return newFeedback;
+        })
+      }
     } catch (error) {
       devLog('Failed to capture screenshot:', error)
     } finally {
@@ -142,16 +154,26 @@ const EnhancedFeedbackWidget: React.FC = () => {
     
     try {
       // Generate comprehensive feedback context
-      const feedbackContext = feedbackTracker.generateFeedbackContext(
-        feedback.type,
-        feedback.title,
-        feedback.description,
-        feedback.sentiment
-      )
+      let feedbackContext = {
+        type: feedback.type,
+        title: feedback.title,
+        description: feedback.description,
+        sentiment: feedback.sentiment,
+        userJourney: feedback.userJourney
+      }
 
-      // Update with current user journey
-      const currentUserJourney = feedbackTracker.captureUserJourney()
-      feedbackContext.userJourney = currentUserJourney
+      if (feedbackTracker) {
+        feedbackContext = feedbackTracker.generateFeedbackContext(
+          feedback.type,
+          feedback.title,
+          feedback.description,
+          feedback.sentiment
+        )
+
+        // Update with current user journey
+        const currentUserJourney = feedbackTracker.captureUserJourney()
+        feedbackContext.userJourney = currentUserJourney
+      }
 
       // Submit to API
       const response = await fetch('/api/feedback', {
@@ -165,7 +187,7 @@ const EnhancedFeedbackWidget: React.FC = () => {
           description: feedback.description,
           sentiment: feedback.sentiment,
           screenshot: feedback.screenshot,
-          userJourney: currentUserJourney,
+          userJourney: feedback.userJourney,
           feedbackContext // Include the full context for AI analysis
         }),
       })
@@ -181,7 +203,7 @@ const EnhancedFeedbackWidget: React.FC = () => {
           window.gtag('event', 'feedbacksubmitted', {
             feedbacktype: feedback.type,
             sentiment: feedback.sentiment,
-            page: currentUserJourney.currentPage
+            page: feedback.userJourney?.currentPage || 'unknown'
           })
         }
 

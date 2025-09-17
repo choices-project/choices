@@ -36,7 +36,7 @@ export async function GET(_request: NextRequest) {
           debug: {
             userError: userError.message,
             cookies: (cookies().getAll()).map(c => c.name || 'unnamed'),
-            hasAuthCookies: (cookies().getAll()).some(c => c.name?.includes('auth'))
+            hasAuthCookies: (cookies().getAll()).some(c => c.name.includes('auth'))
           }
         },
         { status: 401 }
@@ -49,7 +49,7 @@ export async function GET(_request: NextRequest) {
           error: 'Authentication required',
           debug: {
             cookies: (cookies().getAll()).map(c => c.name || 'unnamed'),
-            hasAuthCookies: (cookies().getAll()).some(c => c.name?.includes('auth')),
+            hasAuthCookies: (cookies().getAll()).some(c => c.name.includes('auth')),
             suggestion: 'Make sure you are logged in and try refreshing the page'
           }
         },

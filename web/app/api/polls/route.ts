@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
         throw directError;
       }
 
-      devLog('Found polls:', directPolls?.length || 0);
+      devLog('Found polls:', directPolls.length || 0);
 
       // Manually aggregate results (temporary solution)
       polls = directPolls && !('error' in directPolls) ? directPolls.filter(poll => 
@@ -53,7 +53,7 @@ export async function GET(request: NextRequest) {
         title: poll.title,
         total_votes: poll.total_votes || 0,
         aggregated_results: poll.options ? 
-          poll.options.reduce((acc: any, _option: any, _index: any) => {
+          poll.options.reduce((acc: Record<string, number>, _option: unknown, _index: number) => {
             acc[`option_${_index + 1}`] = 0; // Default to 0 until we can count votes
             return acc;
           }, {}) : {},
@@ -68,7 +68,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Additional security: ensure no sensitive data is returned
-    const sanitizedPolls = polls?.map(poll => ({
+    const sanitizedPolls = polls.map(poll => ({
       poll_id: poll.id,
       title: poll.title,
       total_votes: poll.total_votes,
@@ -118,7 +118,7 @@ export async function POST(request: NextRequest) {
     const { data: userProfile } = await supabase
       .from('user_profiles')
       .select('is_active')
-      .eq('user_id', user.userId as any)
+      .eq('user_id', user.userId)
       .single();
 
     if (!userProfile || !('is_active' in userProfile) || !userProfile.is_active) {
@@ -164,7 +164,7 @@ export async function POST(request: NextRequest) {
         created_by: user.userId,
         total_votes: 0,
         participation_rate: 0.0
-      } as any)
+      })
       .select()
       .single();
 
@@ -178,15 +178,15 @@ export async function POST(request: NextRequest) {
 
     // Return sanitized poll data (no sensitive information)
     const sanitizedPoll = poll && !('error' in poll) ? {
-      poll_id: (poll as any).poll_id,
-      title: (poll as any).title,
-      description: (poll as any).description,
-      options: (poll as any).options,
-      voting_method: (poll as any).voting_method,
-      status: (poll as any).status,
-      total_votes: (poll as any).total_votes,
-      participation_rate: (poll as any).participation_rate,
-      created_at: (poll as any).created_at
+      poll_id: poll.poll_id,
+      title: poll.title,
+      description: poll.description,
+      options: poll.options,
+      voting_method: poll.voting_method,
+      status: poll.status,
+      total_votes: poll.total_votes,
+      participation_rate: poll.participation_rate,
+      created_at: poll.created_at
     } : null;
 
     return NextResponse.json({

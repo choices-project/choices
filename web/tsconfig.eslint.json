@@ -1,5 +1,20 @@
 {
   "extends": "./tsconfig.json",
-  "include": ["app/**/*", "components/**/*", "lib/**/*", "hooks/**/*", "contexts/**/*", "types/**/*"],
-  "exclude": ["node_modules", ".next", "dist", "out", "build", "e2e", "test-results", "playwright-report"]
+  "compilerOptions": {
+    "noEmit": true
+  },
+  "include": [
+    "app/**/*",
+    "components/**/*",
+    "lib/**/*",
+    "scripts/**/*",
+    "shared/**/*",
+    "src/**/*",
+    "tests/**/*",
+    "types/**/*",
+    "utils/**/*",
+    "features/**/*",
+    "tools/**/*"
+  ],
+  "exclude": ["node_modules", ".next", "dist", "build", "coverage", "playwright-report", "test-results"]
 }

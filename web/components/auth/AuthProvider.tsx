@@ -4,7 +4,7 @@ import React, { createContext, useContext, useEffect, useState, type ReactNode }
 import { useRouter } from 'next/navigation';
 import { devLog } from '@/lib/logger';
 
-interface User {
+type User = {
   id: string;
   email: string;
   stable_id: string;
@@ -14,7 +14,7 @@ interface User {
   updated_at: string;
 }
 
-interface AuthContextType {
+type AuthContextType = {
   user: User | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
@@ -29,7 +29,7 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-interface AuthProviderProps {
+type AuthProviderProps = {
   children: ReactNode;
 }
 

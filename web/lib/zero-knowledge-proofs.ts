@@ -4,19 +4,19 @@
  * This module provides zero-knowledge proof functionality.
  */
 
-export interface ZKProofConfig {
+export type ZKProofConfig = {
   curve: 'secp256k1' | 'ed25519' | 'bls12-381';
   hashFunction: 'sha256' | 'blake2b' | 'poseidon';
   commitmentScheme: 'pedersen' | 'merkle' | 'polynomial';
 }
 
-export interface ZKProof {
+export type ZKProof = {
   proof: string;
   publicInputs: string[];
   verificationKey: string;
 }
 
-export interface ZKCommitment {
+export type ZKCommitment = {
   commitment: string;
   randomness: string;
   value: string;

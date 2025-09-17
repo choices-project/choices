@@ -9,7 +9,7 @@ import { withOptional } from '@/lib/util/objects';
 // CORE INTERFACES
 // ============================================================================
 
-export interface TrendingTopic {
+export type TrendingTopic = {
   id: string;
   title: string;
   description?: string;
@@ -30,7 +30,7 @@ export interface TrendingTopic {
   updatedAt: Date;
 }
 
-export interface GeneratedPoll {
+export type GeneratedPoll = {
   id: string;
   topicId?: string;
   title: string;
@@ -50,21 +50,21 @@ export interface GeneratedPoll {
   updatedAt: Date;
 }
 
-export interface PollOption {
+export type PollOption = {
   id: string;
   text: string;
   description?: string;
   metadata?: Record<string, any>;
 }
 
-export interface Entity {
+export type Entity = {
   name: string;
   type: 'person' | 'organization' | 'location' | 'event' | 'concept';
   confidence: number;
   metadata?: Record<string, any>;
 }
 
-export interface DataSource {
+export type DataSource = {
   id: string;
   name: string;
   type: 'news' | 'social' | 'search' | 'academic';
@@ -80,7 +80,7 @@ export interface DataSource {
   updatedAt: Date;
 }
 
-export interface QualityMetrics {
+export type QualityMetrics = {
   id: string;
   pollId: string;
   biasScore: number;
@@ -94,7 +94,7 @@ export interface QualityMetrics {
   updatedAt: Date;
 }
 
-export interface PollGenerationLog {
+export type PollGenerationLog = {
   id: string;
   topicId?: string;
   pollId?: string;
@@ -106,7 +106,7 @@ export interface PollGenerationLog {
   createdAt: Date;
 }
 
-export interface SystemConfiguration {
+export type SystemConfiguration = {
   id: string;
   key: string;
   value: Record<string, any>;
@@ -118,7 +118,7 @@ export interface SystemConfiguration {
 
 export type VotingMethod = 'single' | 'multiple' | 'ranked' | 'approval' | 'range' | 'quadratic';
 
-export interface TopicAnalysis {
+export type TopicAnalysis = {
   topicId: string;
   trendingScore: number;
   velocity: number;
@@ -130,7 +130,7 @@ export interface TopicAnalysis {
   pollRecommendation: PollRecommendation;
 }
 
-export interface Stakeholder {
+export type Stakeholder = {
   name: string;
   type: 'person' | 'organization' | 'government' | 'company';
   influence: number;
@@ -138,7 +138,7 @@ export interface Stakeholder {
   metadata?: Record<string, any>;
 }
 
-export interface TopicContext {
+export type TopicContext = {
   domain: string;
   subdomain?: string;
   complexity: 'low' | 'medium' | 'high';
@@ -148,7 +148,7 @@ export interface TopicContext {
   metadata?: Record<string, any>;
 }
 
-export interface PollRecommendation {
+export type PollRecommendation = {
   votingMethod: VotingMethod;
   suggestedOptions: string[];
   estimatedControversy: number;
@@ -209,7 +209,7 @@ export class AutomatedPollsService {
 
       if (error) throw error;
 
-      return data ? this?.mapTrendingTopicFromDB(data) : null;
+      return data ? this.mapTrendingTopicFromDB(data) : null;
     } catch (error) {
       devLog('Error fetching trending topic:', error);
       return null;
@@ -230,7 +230,7 @@ export class AutomatedPollsService {
 
       if (error) throw error;
 
-      return data ? this?.mapTrendingTopicFromDB(data) : null;
+      return data ? this.mapTrendingTopicFromDB(data) : null;
     } catch (error) {
       devLog('Error creating trending topic:', error);
       return null;
@@ -252,7 +252,7 @@ export class AutomatedPollsService {
 
       if (error) throw error;
 
-      return data ? this?.mapTrendingTopicFromDB(data) : null;
+      return data ? this.mapTrendingTopicFromDB(data) : null;
     } catch (error) {
       devLog('Error updating trending topic:', error);
       return null;
@@ -283,7 +283,7 @@ export class AutomatedPollsService {
 
       if (error) throw error;
 
-      return data ? data.map((item: any) => this?.mapGeneratedPollFromDB(item)) : [];
+      return data ? data.map((item: any) => this.mapGeneratedPollFromDB(item)) : [];
     } catch (error) {
       devLog('Error fetching generated polls:', error);
       return [];
@@ -304,7 +304,7 @@ export class AutomatedPollsService {
 
       if (error) throw error;
 
-      return data ? this?.mapGeneratedPollFromDB(data) : null;
+      return data ? this.mapGeneratedPollFromDB(data) : null;
     } catch (error) {
       devLog('Error fetching generated poll:', error);
       return null;
@@ -325,7 +325,7 @@ export class AutomatedPollsService {
 
       if (error) throw error;
 
-      return data ? this?.mapGeneratedPollFromDB(data) : null;
+      return data ? this.mapGeneratedPollFromDB(data) : null;
     } catch (error) {
       devLog('Error creating generated poll:', error);
       return null;
@@ -347,7 +347,7 @@ export class AutomatedPollsService {
 
       if (error) throw error;
 
-      return data ? this?.mapGeneratedPollFromDB(data) : null;
+      return data ? this.mapGeneratedPollFromDB(data) : null;
     } catch (error) {
       devLog('Error updating generated poll:', error);
       return null;
@@ -387,7 +387,7 @@ export class AutomatedPollsService {
 
       if (error) throw error;
 
-      return data ? data.map((item: any) => this?.mapDataSourceFromDB(item)) : [];
+      return data ? data.map((item: any) => this.mapDataSourceFromDB(item)) : [];
     } catch (error) {
       devLog('Error fetching data sources:', error);
       return [];
@@ -409,7 +409,7 @@ export class AutomatedPollsService {
 
       if (error) throw error;
 
-      return data ? this?.mapDataSourceFromDB(data) : null;
+      return data ? this.mapDataSourceFromDB(data) : null;
     } catch (error) {
       devLog('Error updating data source:', error);
       return null;
@@ -434,7 +434,7 @@ export class AutomatedPollsService {
 
       if (error) throw error;
 
-      return data ? this?.mapQualityMetricsFromDB(data) : null;
+      return data ? this.mapQualityMetricsFromDB(data) : null;
     } catch (error) {
       devLog('Error fetching quality metrics:', error);
       return null;
@@ -455,7 +455,7 @@ export class AutomatedPollsService {
 
       if (error) throw error;
 
-      return data ? this?.mapQualityMetricsFromDB(data) : null;
+      return data ? this.mapQualityMetricsFromDB(data) : null;
     } catch (error) {
       devLog('Error creating quality metrics:', error);
       return null;
@@ -481,7 +481,7 @@ export class AutomatedPollsService {
 
       if (error) throw error;
 
-      return data ? this?.mapSystemConfigurationFromDB(data) : null;
+      return data ? this.mapSystemConfigurationFromDB(data) : null;
     } catch (error) {
       devLog('Error fetching system configuration:', error);
       return null;
@@ -503,7 +503,7 @@ export class AutomatedPollsService {
 
       if (error) throw error;
 
-      return data ? this?.mapSystemConfigurationFromDB(data) : null;
+      return data ? this.mapSystemConfigurationFromDB(data) : null;
     } catch (error) {
       devLog('Error updating system configuration:', error);
       return null;
@@ -700,7 +700,7 @@ export class AutomatedPollsService {
 
       if (sourcesError) throw sourcesError;
 
-      const sourcesRefreshed = dataSources?.length || 0;
+      const sourcesRefreshed = dataSources.length || 0;
       let newTopicsFound = 0;
 
       // Process each data source

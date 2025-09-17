@@ -8,7 +8,7 @@
 import { featureFlagManager, isFeatureEnabled } from '@/lib/core/feature-flags';
 import { devLog } from '@/lib/logger';
 
-interface ModuleConfig {
+type ModuleConfig = {
   id: string;
   name: string;
   description: string;
@@ -20,7 +20,7 @@ interface ModuleConfig {
   category?: 'core' | 'optional' | 'experimental';
 }
 
-export interface LoadedModule {
+export type LoadedModule = {
   id: string;
   module: any;
   loaded: boolean;

@@ -14,7 +14,7 @@ import type { UserRanking } from '@/lib/vote/irv-calculator';
 import { goldenTestCases, runGoldenTestCase, runAllGoldenTests } from '../irv/golden-cases';
 
 // Define Candidate type locally since it's not exported from the calculator
-interface Candidate {
+type Candidate = {
   id: string;
   name: string;
   party: string;

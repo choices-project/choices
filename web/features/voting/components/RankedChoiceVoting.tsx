@@ -3,13 +3,13 @@
 import { useState, useEffect } from 'react'
 import { CheckCircle, AlertCircle, Info } from 'lucide-react'
 
-interface PollOption {
+type PollOption = {
   id: string
   text: string
   description?: string
 }
 
-interface RankedChoiceVotingProps {
+type RankedChoiceVotingProps = {
   pollId: string
   title: string
   description?: string
@@ -127,8 +127,8 @@ export default function RankedChoiceVoting({
       }
       
       await onVote(pollId, Object.keys(validRankings))
-    } catch (err: any) {
-      setError(err.message || 'Failed to submit vote')
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to submit vote')
     } finally {
       setIsSubmitting(false)
     }
@@ -215,7 +215,7 @@ export default function RankedChoiceVoting({
       {/* Voting Interface */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {options.map((option: any, index: number) => (
+          {options.map((option: PollOption, index: number) => (
             <div
               key={`${option.id}-${index}`}
               onClick={() => handleRankClick(option.id)}

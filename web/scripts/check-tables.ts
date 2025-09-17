@@ -66,7 +66,7 @@ async function checkTables() {
       }
     } else {
       console.log('✅ id_crosswalk table exists and is accessible');
-      console.log(`   Found ${data?.length || 0} records`);
+      console.log(`   Found ${data.length || 0} records`);
     }
 
     // Check other tables
@@ -82,7 +82,7 @@ async function checkTables() {
         if (error) {
           console.log(`❌ ${table} table: ${error.message}`);
         } else {
-          console.log(`✅ ${table} table: accessible (${data?.length || 0} records)`);
+          console.log(`✅ ${table} table: accessible (${data.length || 0} records)`);
         }
       } catch (err) {
         console.log(`❌ ${table} table: ${err}`);

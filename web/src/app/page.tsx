@@ -6,7 +6,7 @@ import { Vote, ArrowRight, CheckCircle, Lock } from 'lucide-react'
 import Link from 'next/link'
 import { safeNavigate } from '@/lib/ssr-safe'
 
-interface Feature {
+type Feature = {
   icon: React.ComponentType<any>;
   title: string;
   description: string;

@@ -126,10 +126,10 @@ export default function TestSPAPage() {
           {/* Navigation Tabs */}
           <div className="border-t border-gray-200 pt-4">
             <nav className="flex space-x-8">
-              {views.map((view: any) => (
+              {views.map((view: { id: string; label: string; icon: React.ComponentType }) => (
                 <button
                   key={view.id}
-                  onClick={() => setCurrentView(view.id as any)}
+                  onClick={() => setCurrentView(view.id as 'demo' | 'results' | 'share')}
                   className={`
                     flex items-center space-x-2 py-2 px-1 border-b-2 font-medium text-sm transition-colors
                     ${currentView === view.id

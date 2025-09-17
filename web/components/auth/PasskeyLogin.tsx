@@ -15,7 +15,7 @@ import {
   Key
 } from 'lucide-react';
 
-interface PasskeyLoginProps {
+type PasskeyLoginProps = {
   onSuccess?: (session: any) => void;
   onError?: (error: string) => void;
   className?: string;

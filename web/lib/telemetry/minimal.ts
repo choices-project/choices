@@ -7,13 +7,13 @@
 
 import { logger } from '@/lib/logger';
 
-interface TelemetryCounters {
+type TelemetryCounters = {
   dbQueryCount: number;
   dbQueryErrors: number;
   cacheHitRate: number;
 }
 
-interface TelemetryTimers {
+type TelemetryTimers = {
   dbQueryDuration: number[];
 }
 
@@ -117,5 +117,6 @@ class MinimalTelemetry {
 
 // Export singleton instance
 export const minimalTelemetry = new MinimalTelemetry();
+
 
 

@@ -2,8 +2,9 @@
 
 import React from 'react';
 import { Search, X } from 'lucide-react';
+import { withOptional } from '@/lib/util/objects';
 
-interface Filters {
+type Filters = {
   type: string;
   sentiment: string;
   status: string;
@@ -12,7 +13,7 @@ interface Filters {
   search: string;
 }
 
-interface FeedbackFiltersProps {
+type FeedbackFiltersProps = {
   filters: Filters;
   onFiltersChange: (_newFilters: Filters) => void;
 }
@@ -22,10 +23,7 @@ export const FeedbackFilters: React.FC<FeedbackFiltersProps> = ({
   onFiltersChange 
 }) => {
   const handleFilterChange = (key: keyof Filters, value: string) => {
-    onFiltersChange({
-      ...filters,
-      [key]: value
-    });
+    onFiltersChange(withOptional(filters, { [key]: value }));
   };
 
   const clearFilters = () => {

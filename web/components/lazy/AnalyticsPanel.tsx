@@ -30,7 +30,7 @@ import {
   Pie
 } from 'recharts';
 
-interface AnalyticsData {
+type AnalyticsData = {
   userGrowth: Array<{ date: string; users: number }>;
   pollActivity: Array<{ date: string; polls: number; votes: number }>;
   votingMethods: Array<{ method: string; count: number; percentage: number }>;
@@ -41,7 +41,7 @@ interface AnalyticsData {
   };
 }
 
-interface AnalyticsPanelProps {
+type AnalyticsPanelProps = {
   dateRange?: {
     start: Date;
     end: Date;

@@ -23,7 +23,7 @@ async function testCompleteSystem() {
   }
 
   // Count by level
-  const levelCounts = allReps?.reduce((acc: any, rep: any) => {
+  const levelCounts = allReps.reduce((acc: any, rep: any) => {
     acc[rep.level] = (acc[rep.level] || 0) + 1;
     return acc;
   }, {}) || {};
@@ -45,7 +45,7 @@ async function testCompleteSystem() {
   if (divError) {
     console.error('❌ Divisions error:', divError);
   } else {
-    const divCounts = divisions?.reduce((acc: any, div: any) => {
+    const divCounts = divisions.reduce((acc: any, div: any) => {
       acc[div.level] = (acc[div.level] || 0) + 1;
       return acc;
     }, {}) || {};
@@ -68,7 +68,7 @@ async function testCompleteSystem() {
   if (stateError) {
     console.error('❌ State coverage error:', stateError);
   } else {
-    const stateCounts = stateCoverage?.reduce((acc: any, rep: any) => {
+    const stateCounts = stateCoverage.reduce((acc: any, rep: any) => {
       if (rep.jurisdiction === 'US') {
         acc['Federal'] = (acc['Federal'] || 0) + 1;
       } else if (rep.jurisdiction === 'San Francisco, CA') {

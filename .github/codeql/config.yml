@@ -25,6 +25,11 @@ paths-ignore:
   - '**/.vercel/output/**'
   - '**/public/**'
   - '**/static/**'
+  # Exclude legacy/disabled code to reduce noise
+  - 'web/archive/**'
+  - 'web/disabled-pages/**'
+  - 'scripts/archive/**'
+  - '**/*.disabled/**'
 
 # Query suites to run
 queries:

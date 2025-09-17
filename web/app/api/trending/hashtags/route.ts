@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { type NextRequest, NextResponse } from 'next/server';
 import { trendingHashtagsTracker } from '@/lib/trending/TrendingHashtags';
 import { devLog } from '@/lib/logger';
 

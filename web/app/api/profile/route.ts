@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
     // Prepare profile data
     const profileData = {
       user_id: user.userId,
-      display_name: displayName || user.email?.split('@')[0],
+      display_name: displayName || user.email.split('@')[0],
       bio: bio || null,
       primary_concerns: primaryConcerns || [],
       community_focus: communityFocus || [],
@@ -85,7 +85,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       message: 'Profile saved successfully',
-      profile: data?.[0]
+      profile: data[0]
     })
 
   } catch (error) {
@@ -196,7 +196,7 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json({
       success: true,
       message: 'Profile updated successfully',
-      profile: data?.[0]
+      profile: data[0]
     })
 
   } catch (error) {

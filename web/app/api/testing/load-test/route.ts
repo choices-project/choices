@@ -4,7 +4,7 @@
  * Provides endpoints for running load tests and performance validation.
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { type NextRequest, NextResponse } from 'next/server';
 import { LoadTestingFramework } from '@/lib/testing/load-testing';
 import { logger } from '@/lib/logger';
 

@@ -1,4 +1,5 @@
 import '@testing-library/jest-dom';
+import React from 'react';
 
 // Set up test environment variables
 process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://test.supabase.co';
@@ -94,7 +95,7 @@ jest.mock('next/router', () => ({
 jest.mock('next/image', () => ({
   __esModule: true,
   default: function MockImage(props) {
-    return require('react').createElement('img', props);
+    return React.createElement('img', props);
   },
 }));
 

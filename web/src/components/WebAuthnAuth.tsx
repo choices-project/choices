@@ -3,9 +3,19 @@
 import { useState } from 'react'
 import { devLog } from '@/lib/logger';
 import { Shield, Key, CheckCircle, AlertCircle } from 'lucide-react'
+import { has, isRecord, toString } from '@/lib/util/guards'
 
-interface WebAuthnAuthProps {
+type WebAuthnAuthProps = {
   onAuthenticated: (_userStableId: string, _sessionToken: string) => void
+}
+
+type WebAuthnBeginResponse = {
+  options: PublicKeyCredentialCreationOptions | PublicKeyCredentialRequestOptions
+  session: string
+}
+
+type WebAuthnFinishResponse = {
+  sessiontoken: string
 }
 
 export default function WebAuthnAuth({ onAuthenticated }: WebAuthnAuthProps) {
@@ -42,7 +52,11 @@ export default function WebAuthnAuth({ onAuthenticated }: WebAuthnAuthProps) {
         throw new Error('Failed to begin registration')
       }
 
-      const beginData = await beginResponse.json()
+      const beginDataRaw = await beginResponse.json()
+      if (!isRecord(beginDataRaw) || !has(beginDataRaw, 'options') || !has(beginDataRaw, 'session')) {
+        throw new Error('Invalid response format')
+      }
+      const beginData = beginDataRaw as WebAuthnBeginResponse
       setStep('registering')
 
       // Step 2: Create credentials using WebAuthn API
@@ -118,7 +132,11 @@ export default function WebAuthnAuth({ onAuthenticated }: WebAuthnAuthProps) {
         throw new Error('Failed to begin login')
       }
 
-      const beginData = await beginResponse.json()
+      const beginDataRaw = await beginResponse.json()
+      if (!isRecord(beginDataRaw) || !has(beginDataRaw, 'options') || !has(beginDataRaw, 'session')) {
+        throw new Error('Invalid response format')
+      }
+      const beginData = beginDataRaw as WebAuthnBeginResponse
       setStep('logging-in')
 
       // Step 2: Get credentials using WebAuthn API
@@ -157,7 +175,11 @@ export default function WebAuthnAuth({ onAuthenticated }: WebAuthnAuthProps) {
         throw new Error('Failed to complete login')
       }
 
-      const finishData = await finishResponse.json()
+      const finishDataRaw = await finishResponse.json()
+      if (!isRecord(finishDataRaw) || !has(finishDataRaw, 'sessiontoken')) {
+        throw new Error('Invalid finish response format')
+      }
+      const finishData = finishDataRaw as WebAuthnFinishResponse
       setStep('success')
       
       setTimeout(() => {

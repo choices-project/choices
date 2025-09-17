@@ -6,7 +6,7 @@ const supabase = createClient(
   { auth: { persistSession: false } }
 );
 
-interface DataQualityReport {
+type DataQualityReport = {
   totalRecords: number;
   bySource: Record<string, {
     count: number;

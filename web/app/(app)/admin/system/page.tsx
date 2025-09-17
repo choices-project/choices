@@ -24,7 +24,7 @@ import {
   EyeOff
 } from 'lucide-react';
 
-interface SystemConfig {
+type SystemConfig = {
   general: {
     siteName: string;
     siteDescription: string;

@@ -13,7 +13,7 @@ import type { UnifiedCampaignFinance, UnifiedVote } from '@/lib/integrations/uni
 export type CampaignFinance = UnifiedCampaignFinance;
 export type Vote = UnifiedVote;
 
-export interface Representative {
+export type Representative = {
   id: string
   name: string
   party: string
@@ -57,7 +57,7 @@ export interface Representative {
   platform?: string[]
 }
 
-export interface UserLocation {
+export type UserLocation = {
   address?: string
   city?: string
   stateCode?: string
@@ -81,7 +81,7 @@ export interface UserLocation {
   }
 }
 
-export interface ElectoralRace {
+export type ElectoralRace = {
   raceId: string
   office: string
   jurisdiction: string
@@ -102,7 +102,7 @@ export interface ElectoralRace {
   importance: 'high' | 'medium' | 'low'
 }
 
-export interface Candidate {
+export type Candidate = {
   id: string
   name: string
   party: string
@@ -137,7 +137,7 @@ export interface Candidate {
   platform?: string[]
 }
 
-export interface Activity {
+export type Activity = {
   id: string
   type: 'vote' | 'statement' | 'event'
   title: string

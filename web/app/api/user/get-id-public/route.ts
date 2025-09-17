@@ -28,7 +28,7 @@ export async function GET(_request: NextRequest) {
 
     // Get all cookies for debugging
     const allCookies = cookies().getAll();
-    const authCookies = allCookies.filter(c => c.name?.includes('auth') || c.name?.includes('supabase'));
+    const authCookies = allCookies.filter(c => c.name.includes('auth') || c.name.includes('supabase'));
 
     // Try to get user from session
     const supabaseClient = await supabase;
@@ -73,7 +73,7 @@ export async function GET(_request: NextRequest) {
     const { data: userProfile, error: _profileError } = await supabaseClient
       .from('ia_users')
       .select('stable_id, verification_tier, is_active')
-      .eq('stable_id', String(user.id) as any)
+      .eq('stable_id', String(user.id))
       .single();
 
     return NextResponse.json({
@@ -83,9 +83,9 @@ export async function GET(_request: NextRequest) {
         email: user.email,
         created_at: user.created_at,
         profile: userProfile && !('error' in userProfile) ? {
-          stable_id: (userProfile as any).stable_id,
-          verification_tier: (userProfile as any).verification_tier,
-          is_active: (userProfile as any).is_active
+          stable_id: userProfile.stable_id,
+          verification_tier: userProfile.verification_tier,
+          is_active: userProfile.is_active
         } : null
       },
       instructions: {

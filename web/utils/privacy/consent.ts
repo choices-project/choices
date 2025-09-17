@@ -15,7 +15,7 @@ export type ConsentType =
   | 'research'            // Data for research purposes
   | 'marketing';          // Marketing communications
 
-export interface ConsentRecord {
+export type ConsentRecord = {
   id: string;
   user_id: string;
   consent_type: ConsentType;
@@ -27,7 +27,7 @@ export interface ConsentRecord {
   data_types: string[];
 }
 
-export interface ConsentPreferences {
+export type ConsentPreferences = {
   analytics: boolean;
   demographics: boolean;
   behavioral: boolean;

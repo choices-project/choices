@@ -5,11 +5,13 @@
  * for bundle size reduction and performance improvement.
  */
 
-const path = require('path');
-const webpack = require('webpack');
-const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');
+import path from 'path';
+import webpack from 'webpack';
+import { BundleAnalyzerPlugin } from 'webpack-bundle-analyzer';
+import TerserPlugin from 'terser-webpack-plugin';
+import CssMinimizerPlugin from 'css-minimizer-webpack-plugin';
 
-module.exports = (env, argv) => {
+export default (env, argv) => {
   const isProduction = argv.mode === 'production';
   const isDevelopment = !isProduction;
   const analyzeBundle = process.env.ANALYZE === 'true';
@@ -126,7 +128,7 @@ module.exports = (env, argv) => {
       minimize: isProduction,
       minimizer: isProduction ? [
         // Terser for JavaScript
-        new (require('terser-webpack-plugin'))({
+        new TerserPlugin({
           terserOptions: {
             compress: {
               drop_console: true,
@@ -143,7 +145,7 @@ module.exports = (env, argv) => {
           extractComments: false,
         }),
         // CSS minification
-        new (require('css-minimizer-webpack-plugin'))({
+        new CssMinimizerPlugin({
           minimizerOptions: {
             preset: [
               'default',
@@ -277,7 +279,7 @@ module.exports = (env, argv) => {
       new webpack.ProgressPlugin({
         activeModules: false,
         entries: true,
-        handler(percentage, message, ...args) {
+        handler(percentage, _message, ..._args) {
           if (percentage === 1) {
             console.log('✅ Webpack build completed');
           }

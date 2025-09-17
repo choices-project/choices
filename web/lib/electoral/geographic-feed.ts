@@ -30,7 +30,7 @@ import type {
 
 // CampaignFinance, Contributor, Vote, and Activity interfaces are imported from electoral-types.ts
 
-export interface ElectoralFeed {
+export type ElectoralFeed = {
   userId: string;
   location: UserLocation;
   generatedAt: string;

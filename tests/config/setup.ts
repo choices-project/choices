@@ -17,7 +17,7 @@ Object.defineProperty(global, 'crypto', {
 });
 
 // Mock TextEncoder and TextDecoder for Node.js environment
-const { TextEncoder, TextDecoder } = require('util');
+import { TextEncoder, TextDecoder } from 'util';
 global.TextEncoder = TextEncoder;
 global.TextDecoder = TextDecoder;
 

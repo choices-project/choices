@@ -23,7 +23,7 @@ import {
   Key
 } from 'lucide-react'
 
-interface AccountSettings {
+type AccountSettings = {
   email: string
   displayName: string
   twoFactorEnabled: boolean

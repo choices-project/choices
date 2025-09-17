@@ -9,7 +9,7 @@ const supabase = createClient(
   { auth: { persistSession: false } }
 );
 
-interface TestResult {
+type TestResult = {
   test: string;
   status: 'PASS' | 'FAIL' | 'WARN';
   message: string;
@@ -23,7 +23,7 @@ async function runTests(): Promise<TestResult[]> {
   
   // Test 1: Database Connection
   try {
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('civics_representatives')
       .select('id')
       .limit(1);
@@ -68,12 +68,12 @@ async function runTests(): Promise<TestResult[]> {
         details: error
       });
     } else {
-      const levelCounts = counts?.reduce((acc: any, rep: any) => {
+      const levelCounts = counts.reduce((acc: any, rep: any) => {
         acc[rep.level] = (acc[rep.level] || 0) + 1;
         return acc;
       }, {}) || {};
       
-      const totalReps = counts?.length || 0;
+      const totalReps = counts.length || 0;
       
       results.push({
         test: 'Data Coverage',
@@ -93,7 +93,7 @@ async function runTests(): Promise<TestResult[]> {
   
   // Test 3: Contact Information Availability
   try {
-    const { data: contactCount, error } = await supabase
+    const { data, error } = await supabase
       .from('civics_contact_info')
       .select('count(*)');
     
@@ -105,10 +105,11 @@ async function runTests(): Promise<TestResult[]> {
         details: error
       });
     } else {
+      const contactCount = data?.[0]?.count || 0;
       results.push({
         test: 'Contact Information',
         status: 'PASS',
-        message: 'Contact information table available'
+        message: `Contact information table available with ${contactCount} records`
       });
     }
   } catch (error) {
@@ -139,8 +140,8 @@ async function runTests(): Promise<TestResult[]> {
       results.push({
         test: 'API Data Access',
         status: 'PASS',
-        message: `Successfully fetched ${federalReps?.length || 0} federal representatives`,
-        details: { sample: federalReps?.[0] }
+        message: `Successfully fetched ${federalReps.length || 0} federal representatives`,
+        details: { sample: federalReps[0] }
       });
     }
   } catch (error) {
@@ -167,17 +168,17 @@ async function runTests(): Promise<TestResult[]> {
         details: error
       });
     } else {
-      const hasRequiredFields = reps?.every(rep => 
+      const hasRequiredFields = reps.every(rep => 
         rep.name && rep.office && rep.level && rep.jurisdiction
       ) || false;
       
-      const hasDataSource = reps?.every(rep => rep.source) || false;
+      const hasDataSource = reps.every(rep => rep.source) || false;
       
       results.push({
         test: 'Data Quality',
         status: hasRequiredFields && hasDataSource ? 'PASS' : 'WARN',
         message: `Data quality check: Required fields: ${hasRequiredFields}, Data sources: ${hasDataSource}`,
-        details: { hasRequiredFields, hasDataSource, sample: reps?.[0] }
+        details: { hasRequiredFields, hasDataSource, sample: reps[0] }
       });
     }
   } catch (error) {
@@ -204,12 +205,12 @@ async function runTests(): Promise<TestResult[]> {
         details: error
       });
     } else {
-      const localCount = localReps?.length || 0;
+      const localCount = localReps.length || 0;
       results.push({
         test: 'Local Data Coverage',
         status: localCount > 0 ? 'PASS' : 'WARN',
         message: `Found ${localCount} local representatives`,
-        details: { count: localCount, sample: localReps?.[0] }
+        details: { count: localCount, sample: localReps[0] }
       });
     }
   } catch (error) {

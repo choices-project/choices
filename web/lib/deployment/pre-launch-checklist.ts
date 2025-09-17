@@ -9,7 +9,7 @@ import { logger } from '@/lib/logger';
 import { sloMonitor } from '@/lib/monitoring/slos';
 import { ChaosTestingFramework } from '@/lib/chaos/chaos-testing';
 
-export interface ChecklistItem {
+export type ChecklistItem = {
   category: string;
   item: string;
   weight: 'critical' | 'high' | 'medium' | 'low';
@@ -18,7 +18,7 @@ export interface ChecklistItem {
   dependencies?: string[];
 }
 
-export interface ChecklistItemResult {
+export type ChecklistItemResult = {
   category: string;
   item: string;
   weight: 'critical' | 'high' | 'medium' | 'low';
@@ -30,7 +30,7 @@ export interface ChecklistItemResult {
   verifiedBy?: string;
 }
 
-export interface ChecklistResult {
+export type ChecklistResult = {
   items: ChecklistItemResult[];
   summary: {
     total: number;

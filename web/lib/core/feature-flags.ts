@@ -18,7 +18,7 @@ export const FEATURE_FLAGS = {
 } as const;
 
 // Define proper types for feature flag system
-export interface FeatureFlag {
+export type FeatureFlag = {
   id: string;
   name: string;
   enabled: boolean;
@@ -27,7 +27,7 @@ export interface FeatureFlag {
   category?: string;
 }
 
-export interface FeatureFlagMetadata {
+export type FeatureFlagMetadata = {
   description?: string;
   category?: string;
   dependencies?: string[];
@@ -35,17 +35,17 @@ export interface FeatureFlagMetadata {
   deprecated?: boolean;
 }
 
-export interface FeatureFlagConfig {
+export type FeatureFlagConfig = {
   flags: Record<string, boolean>;
   timestamp: string;
   version: string;
 }
 
-export interface FeatureFlagSubscription {
+export type FeatureFlagSubscription = {
   unsubscribe: () => void;
 }
 
-export interface FeatureFlagSystemInfo {
+export type FeatureFlagSystemInfo = {
   totalFlags: number;
   enabledFlags: number;
   disabledFlags: number;

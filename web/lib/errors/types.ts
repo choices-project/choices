@@ -4,7 +4,7 @@
  * Type definitions for error handling and response formatting.
  */
 
-export interface ErrorResponse {
+export type ErrorResponse = {
   error: string;
   message: string;
   statusCode: number;
@@ -13,14 +13,14 @@ export interface ErrorResponse {
   timestamp: string;
 }
 
-export interface ErrorDetails {
+export type ErrorDetails = {
   field?: string;
   value?: unknown;
   constraint?: string;
   context?: ErrorContext;
 }
 
-export interface ErrorContext {
+export type ErrorContext = {
   userId?: string;
   requestId?: string;
   endpoint?: string;
@@ -33,7 +33,7 @@ export type ErrorHandler = (error: Error) => ErrorResponse;
 
 export type ErrorLogger = (error: Error, context?: ErrorContext) => void;
 
-export interface ErrorHandlingConfig {
+export type ErrorHandlingConfig = {
   logErrors: boolean;
   includeStackTrace: boolean;
   sanitizeErrors: boolean;

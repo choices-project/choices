@@ -7,13 +7,13 @@
  * @created September 9, 2025
  */
 
-export interface EncryptionResult {
+export type EncryptionResult = {
   encryptedData: ArrayBuffer;
   salt: Uint8Array;
   iv: Uint8Array;
 }
 
-export interface DecryptionResult {
+export type DecryptionResult = {
   decryptedData: any;
   success: boolean;
   error?: string;

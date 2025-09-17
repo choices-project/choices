@@ -3,7 +3,27 @@
 import { useState, useEffect } from 'react'
 import { Heart, Users, Globe, TrendingUp } from 'lucide-react'
 
-interface ValuesStepProps {
+type ValueCategory = {
+  title: string
+  icon: React.ReactNode
+  color: string
+  concerns: string[]
+}
+
+type CommunityOption = {
+  value: string
+  label: string
+  description: string
+}
+
+type ParticipationOption = {
+  value: string
+  label: string
+  description: string
+  icon: React.ReactNode
+}
+
+type ValuesStepProps = {
   data: {
     primaryConcerns?: string[]
     communityFocus?: string[]
@@ -170,14 +190,14 @@ export default function ValuesStep({ data, onUpdate, onNext, onBack }: ValuesSte
         </h3>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {valueCategories.map((category: any) => (
+          {valueCategories.map((category: ValueCategory) => (
             <div key={category.title} className="space-y-3">
               <div className={`flex items-center space-x-2 p-3 rounded-lg ${category.color}`}>
                 {category.icon}
                 <span className="font-semibold">{category.title}</span>
               </div>
               <div className="space-y-2">
-                {category.concerns.map((concern: any) => (
+                {category.concerns.map((concern: string) => (
                   <button
                     key={concern}
                     onClick={() => handleConcernToggle(concern)}
@@ -204,7 +224,7 @@ export default function ValuesStep({ data, onUpdate, onNext, onBack }: ValuesSte
           Where do you want to make an impact?
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          {communityOptions.map((option: any) => (
+          {communityOptions.map((option: CommunityOption) => (
             <button
               key={option.value}
               onClick={() => handleCommunityToggle(option.value)}
@@ -229,7 +249,7 @@ export default function ValuesStep({ data, onUpdate, onNext, onBack }: ValuesSte
           How would you like to participate?
         </h3>
         <div className="space-y-3">
-          {participationOptions.map((option: any) => (
+          {participationOptions.map((option: ParticipationOption) => (
             <button
               key={option.value}
               onClick={() => handleParticipationChange(option.value)}

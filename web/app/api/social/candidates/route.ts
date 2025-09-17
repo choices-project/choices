@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { type NextRequest, NextResponse } from 'next/server';
 import { 
   EqualPlatformProfileManager, 
   CampaignDashboardManager,
@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
       });
     } else {
       // Search candidates
-      const searchCriteria: any = {};
+      const searchCriteria: Record<string, unknown> = {};
       
       if (search) searchCriteria.name = search;
       if (party) searchCriteria.party = party;
@@ -117,7 +117,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-async function handleCreateCandidate(data: any) {
+async function handleCreateCandidate(data: Record<string, unknown>) {
   const { candidateData } = data;
 
   if (!candidateData) {
@@ -137,7 +137,7 @@ async function handleCreateCandidate(data: any) {
   });
 }
 
-async function handleUpdateCandidate(data: any) {
+async function handleUpdateCandidate(data: Record<string, unknown>) {
   const { candidateId, updates } = data;
 
   if (!candidateId || !updates) {
@@ -168,7 +168,7 @@ async function handleUpdateCandidate(data: any) {
   });
 }
 
-async function handleVerifyCandidate(data: any) {
+async function handleVerifyCandidate(data: Record<string, unknown>) {
   const { candidateId, verificationMethod, verificationData } = data;
 
   if (!candidateId || !verificationMethod) {
@@ -224,7 +224,7 @@ async function handleVerifyCandidate(data: any) {
   });
 }
 
-async function handleGetDashboard(data: any) {
+async function handleGetDashboard(data: Record<string, unknown>) {
   const { candidateId } = data;
 
   if (!candidateId) {

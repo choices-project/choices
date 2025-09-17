@@ -7,7 +7,7 @@ import { devLog } from '@/lib/logger';
 // CORE INTERFACES
 // ============================================================================
 
-export interface MediaPoll {
+export type MediaPoll = {
   id: string;
   headline: string;
   question: string;
@@ -21,7 +21,7 @@ export interface MediaPoll {
   updatedAt: Date;
 }
 
-export interface MediaPollOption {
+export type MediaPollOption = {
   id: string;
   text: string;
   percentage: number;
@@ -29,7 +29,7 @@ export interface MediaPollOption {
   biasScore: number; // 0-1 scale
 }
 
-export interface MediaSource {
+export type MediaSource = {
   id: string;
   name: string;
   network: string;
@@ -42,7 +42,7 @@ export interface MediaSource {
   propagandaIndicators: string[];
 }
 
-export interface PollMethodology {
+export type PollMethodology = {
   sampleSize: number;
   marginOfError: number;
   confidenceLevel: number;
@@ -58,7 +58,7 @@ export interface PollMethodology {
   leadingQuestions: string[];
 }
 
-export interface DemographicBreakdown {
+export type DemographicBreakdown = {
   age: Record<string, number>;
   gender: Record<string, number>;
   education: Record<string, number>;
@@ -67,7 +67,7 @@ export interface DemographicBreakdown {
   politicalAffiliation: Record<string, number>;
 }
 
-export interface MediaPollResults {
+export type MediaPollResults = {
   totalResponses: number;
   optionResults: Record<string, number>;
   demographicBreakdown: Record<string, any>;
@@ -75,7 +75,7 @@ export interface MediaPollResults {
   rawData: any;
 }
 
-export interface BiasIndicator {
+export type BiasIndicator = {
   type: 'framing' | 'methodology' | 'timing' | 'demographics' | 'question_order' | 'context';
   severity: 'low' | 'medium' | 'high' | 'critical';
   description: string;
@@ -84,7 +84,7 @@ export interface BiasIndicator {
   recommendations: string[];
 }
 
-export interface FactCheckResult {
+export type FactCheckResult = {
   accuracy: 'true' | 'mostly_true' | 'mixed' | 'mostly_false' | 'false' | 'unknown';
   sources: FactCheckSource[];
   claims: FactCheckClaim[];
@@ -93,7 +93,7 @@ export interface FactCheckResult {
   lastUpdated: Date;
 }
 
-export interface FactCheckSource {
+export type FactCheckSource = {
   name: string;
   url: string;
   reliability: number;
@@ -101,14 +101,14 @@ export interface FactCheckSource {
   conclusion: string;
 }
 
-export interface FactCheckClaim {
+export type FactCheckClaim = {
   claim: string;
   accuracy: 'true' | 'mostly_true' | 'mixed' | 'mostly_false' | 'false';
   evidence: string[];
   sources: string[];
 }
 
-export interface PublicOpinionComparison {
+export type PublicOpinionComparison = {
   id: string;
   mediaPollId: string;
   ourPollId: string;
@@ -127,7 +127,7 @@ export interface PublicOpinionComparison {
   createdAt: Date;
 }
 
-export interface BiasDetectionResult {
+export type BiasDetectionResult = {
   overallBias: number; // 0-1 scale
   framingBias: number;
   methodologyBias: number;

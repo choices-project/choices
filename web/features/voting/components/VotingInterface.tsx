@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState, useCallback, useEffect } from 'react'
 import { Users, Clock, CheckCircle2, Shield, Lock, Unlock } from 'lucide-react'
 import ApprovalVoting from './ApprovalVoting'
@@ -12,7 +14,7 @@ type VerificationResponse = { ok: boolean; error?: string };
 type OnVote = (n: number) => Promise<VoteResponse>;
 type OnVerify = (id: string) => Promise<VerificationResponse>;
 
-interface Poll {
+type Poll = {
   id: string;
   title: string;
   description?: string;
@@ -22,7 +24,7 @@ interface Poll {
   totalVotes: number;
 }
 
-interface VotingInterfaceProps {
+type VotingInterfaceProps = {
   poll: Poll;
   onVote: OnVote;
   onVerify?: OnVerify;

@@ -76,7 +76,8 @@ if (typeof window === 'undefined') {
   }
 
   if (typeof (globalThis as any).crypto === 'undefined') {
-    (globalThis as any).crypto = require('crypto').webcrypto;
+    const crypto = await import('crypto');
+    (globalThis as any).crypto = crypto.webcrypto;
   }
 
   if (typeof (globalThis as any).performance === 'undefined') {

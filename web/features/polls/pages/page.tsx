@@ -6,7 +6,7 @@ import {
   ArrowRight, Activity
 } from 'lucide-react'
 
-interface Poll {
+type Poll = {
   id: string
   title: string
   description: string

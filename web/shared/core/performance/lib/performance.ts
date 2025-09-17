@@ -7,14 +7,14 @@ import React from 'react';
 import { logger } from '@/lib/logger';
 import { withOptional } from '../../../../lib/util/objects';
 
-export interface PerformanceMetric {
+export type PerformanceMetric = {
   name: string;
   duration: number;
   timestamp: Date;
   metadata?: Record<string, any>;
 }
 
-export interface PerformanceThresholds {
+export type PerformanceThresholds = {
   warning: number; // milliseconds
   error: number; // milliseconds
 }

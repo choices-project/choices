@@ -8,7 +8,7 @@
 import React, { useState, useEffect } from 'react';
 import { performanceMetrics } from '@/lib/performance/performance-metrics';
 
-interface SystemSettings {
+type SystemSettings = {
   general: {
     siteName: string;
     siteDescription: string;
@@ -35,7 +35,7 @@ interface SystemSettings {
   };
 }
 
-interface SystemSettingsProps {
+type SystemSettingsProps = {
   onSettingsUpdate?: (settings: SystemSettings) => void;
 }
 

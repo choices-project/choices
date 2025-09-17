@@ -13,7 +13,7 @@ import { getSupabaseServerClient } from '@/utils/supabase/server'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
 // Connection pool configuration
-export interface PoolConfig {
+export type PoolConfig = {
   minConnections: number
   maxConnections: number
   acquireTimeoutMillis: number
@@ -26,7 +26,7 @@ export interface PoolConfig {
 }
 
 // Connection pool metrics
-export interface PoolMetrics {
+export type PoolMetrics = {
   activeConnections: number
   idleConnections: number
   totalConnections: number
@@ -40,7 +40,7 @@ export interface PoolMetrics {
 }
 
 // Connection wrapper
-interface ConnectionWrapper {
+type ConnectionWrapper = {
   id: string
   connection: SupabaseClient
   createdAt: number
@@ -52,7 +52,7 @@ interface ConnectionWrapper {
 }
 
 // Connection pool statistics
-interface PoolStats {
+type PoolStats = {
   totalCreated: number
   totalDestroyed: number
   totalAcquired: number

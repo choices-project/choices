@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo, forwardRef, useImperativeHandle } from 'react'
 import { performanceUtils } from '@/lib/performance/performance'
 
-interface VirtualScrollProps<T> {
+type VirtualScrollProps<T> = {
   items: T[]
   itemHeight: number
   containerHeight: number
@@ -14,7 +14,7 @@ interface VirtualScrollProps<T> {
   onVisibleItemsChange?: () => void
 }
 
-interface VirtualScrollRef {
+type VirtualScrollRef = {
   scrollToItem: (index: number) => void
   scrollToTop: () => void
   scrollToBottom: () => void
@@ -167,7 +167,7 @@ const VirtualScroll = forwardRef<VirtualScrollRef, VirtualScrollProps<any>>(<T,>
 VirtualScroll.displayName = 'VirtualScroll'
 
 // Optimized list item component
-interface VirtualListItemProps {
+type VirtualListItemProps = {
   children: React.ReactNode
   height: number
   className?: string
@@ -205,12 +205,12 @@ const VirtualListItem = React.memo(function VirtualListItem({
 })
 
 // Virtual scroll with search functionality
-interface VirtualScrollWithSearchProps<T> extends VirtualScrollProps<T> {
+type VirtualScrollWithSearchProps<T> = {
   searchTerm: string
   searchFilter: (item: T, searchTerm: string) => boolean
   placeholder?: string
   onSearchChange?: (searchTerm: string) => void
-}
+} & VirtualScrollProps<T>
 
 function VirtualScrollWithSearch<T>({
   items,
@@ -266,12 +266,12 @@ function VirtualScrollWithSearch<T>({
 }
 
 // Virtual scroll with infinite loading
-interface VirtualScrollWithInfiniteProps<T> extends VirtualScrollProps<T> {
+type VirtualScrollWithInfiniteProps<T> = {
   hasMore: boolean
   isLoading: boolean
   onLoadMore: () => void
   loadingComponent?: React.ReactNode
-}
+} & VirtualScrollProps<T>
 
 function VirtualScrollWithInfinite<T>({
   items,

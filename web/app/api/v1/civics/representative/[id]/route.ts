@@ -1,8 +1,7 @@
 // app/api/v1/civics/representative/[id]/route.ts
 // Versioned API endpoint for single representative with FEC and voting data
-import { NextRequest, NextResponse } from 'next/server';
+import { type NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { headers } from 'next/headers';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -10,7 +9,7 @@ const supabase = createClient(
   { auth: { persistSession: false } }
 );
 
-interface RepresentativeResponse {
+type RepresentativeResponse = {
   id: string;
   name: string;
   office: string;
@@ -25,7 +24,7 @@ interface RepresentativeResponse {
     last_updated: string;
   };
   votes?: {
-    last_5: any[];
+    last_5: unknown[];
     party_alignment: number;
     last_updated: string;
   };
@@ -153,7 +152,7 @@ export async function GET(
 
     // Filter fields if requested
     if (fields.length > 0) {
-      const filteredResponse: any = {};
+      const filteredResponse: Record<string, unknown> = {};
       fields.forEach(field => {
         if (field in response) {
           filteredResponse[field] = response[field as keyof RepresentativeResponse];

@@ -5,7 +5,7 @@
  * It replaces the old @/shared/core/privacy/lib/differential-privacy imports.
  */
 
-export interface PrivateQueryResult<T = any> {
+export type PrivateQueryResult<T = any> = {
   data: T;
   privacyBudget: number;
   noiseLevel: number;
@@ -17,7 +17,7 @@ export interface PrivateQueryResult<T = any> {
   confidenceInterval?: [number, number];
 }
 
-export interface DifferentialPrivacyConfig {
+export type DifferentialPrivacyConfig = {
   epsilon: number;
   delta: number;
   sensitivity: number;

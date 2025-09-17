@@ -7,10 +7,10 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Search, MapPin, Phone, Mail, Globe, Users, Building2, Home, Database, CheckCircle, AlertCircle, Clock } from 'lucide-react';
 
-interface Representative {
+type Representative = {
   name: string;
   party: string | null;
   office: string;
@@ -28,7 +28,7 @@ interface Representative {
   verification_notes?: string;
 }
 
-interface CivicsData {
+type CivicsData = {
   ok: boolean;
   count: number;
   data: Representative[];

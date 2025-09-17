@@ -10,7 +10,7 @@ import type {
   GeographicLookup
 } from './types';
 
-export interface DistrictInfo {
+export type DistrictInfo = {
   district_number: string;
   ocd_division_id: string;
   census_cycle: number;
@@ -18,7 +18,7 @@ export interface DistrictInfo {
   is_current: boolean;
 }
 
-export interface RedistrictingChange {
+export type RedistrictingChange = {
   id: string;
   state: string;
   district_type: string;
@@ -32,7 +32,7 @@ export interface RedistrictingChange {
   created_at: string;
 }
 
-export interface GeographicSearchResult {
+export type GeographicSearchResult = {
   ocd_division_id: string;
   confidence: number;
   source: 'zip' | 'latlon' | 'manual';

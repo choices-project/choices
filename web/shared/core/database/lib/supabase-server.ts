@@ -28,7 +28,7 @@ const validateEnvironment = () => {
 }
 
 // Database schema types (simplified for server-side)
-export interface Database {
+export type Database = {
   public: {
     Tables: {
       user_profiles: {

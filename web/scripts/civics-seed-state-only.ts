@@ -143,8 +143,8 @@ async function run() {
   assert(process.env.OPEN_STATES_API_KEY, 'OPEN_STATES_API_KEY required');
 
   let totalStates = 0;
-  let totalSenators = 0;
-  let totalReps = 0;
+  // const totalSenators = 0; // Unused variables
+  // const totalReps = 0;
 
   // Seed top 10 states
   for (const st of TOP10) {

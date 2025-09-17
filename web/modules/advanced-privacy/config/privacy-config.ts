@@ -7,7 +7,7 @@
 
 import { isFeatureEnabled } from '../../../lib/feature-flags';
 
-export interface PrivacyConfig {
+export type PrivacyConfig = {
   // Feature flags
   features: {
     differentialPrivacy: boolean

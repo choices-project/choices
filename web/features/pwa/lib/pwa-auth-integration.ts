@@ -8,7 +8,7 @@
 import { isFeatureEnabled } from './feature-flags';
 import { devLog } from '@/lib/logger';
 
-export interface PWAUser {
+export type PWAUser = {
   stableId: string;
   pseudonym: string;
   trustTier: 'T0' | 'T1' | 'T2' | 'T3';
@@ -26,7 +26,7 @@ export interface PWAUser {
   lastActive: Date;
 }
 
-export interface PWAUserProfile {
+export type PWAUserProfile = {
   stableId: string;
   pseudonym: string;
   trustTier: string;

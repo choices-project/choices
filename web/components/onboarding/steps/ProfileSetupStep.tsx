@@ -8,8 +8,14 @@ import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 
-interface ProfileSetupStepProps {
-  data: any
+type ProfileSetupStepProps = {
+  data: {
+    displayName?: string
+    profileVisibility?: string
+    emailNotifications?: boolean
+    pushNotifications?: boolean
+    profileSetupCompleted?: boolean
+  }
   onUpdate: (updates: {
     displayName?: string
     profileVisibility?: string

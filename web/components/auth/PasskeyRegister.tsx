@@ -18,7 +18,7 @@ import {
   Laptop
 } from 'lucide-react';
 
-interface PasskeyRegisterProps {
+type PasskeyRegisterProps = {
   onSuccess?: (credential: any) => void;
   onError?: (error: string) => void;
   className?: string;

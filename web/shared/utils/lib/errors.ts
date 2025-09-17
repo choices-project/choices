@@ -14,9 +14,9 @@ export function getErrorMessage(e: unknown): string {
 /**
  * Safe error logging utility that handles unknown types
  */
-export function logError(message: string, error: unknown): void {
+export async function logError(message: string, error: unknown): Promise<void> {
   const err = toError(error);
   // Import logger dynamically to avoid circular dependencies
-  const { logger } = require('./logger');
+  const { logger } = await import('./logger');
   logger.error(message, err);
 }

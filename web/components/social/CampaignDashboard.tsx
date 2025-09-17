@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 import type { CampaignDashboardData } from '@/lib/social/candidate-tools';
 
-interface CampaignDashboardProps {
+type CampaignDashboardProps = {
   candidateId: string;
   onRefresh?: () => void;
   className?: string;

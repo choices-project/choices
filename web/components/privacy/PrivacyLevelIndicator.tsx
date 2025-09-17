@@ -5,7 +5,7 @@ import { Shield, Lock, Globe, Info } from 'lucide-react';
 import { PrivacyLevel } from '@/lib/privacy/hybrid-privacy';
 import { PRIVACY_DESCRIPTIONS } from '@/lib/privacy/hybrid-privacy';
 
-interface PrivacyLevelIndicatorProps {
+type PrivacyLevelIndicatorProps = {
   level: PrivacyLevel;
   size?: 'sm' | 'md' | 'lg';
   showTooltip?: boolean;

@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { logger } from '@/lib/logger';
 import { optimizedPollService, type PerformanceMetrics } from '@/lib/performance/optimized-poll-service'
 
-interface PerformanceDashboardProps {
+type PerformanceDashboardProps = {
   refreshInterval?: number // in milliseconds
 }
 

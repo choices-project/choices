@@ -18,7 +18,7 @@ import { useFeatureFlags } from '../hooks/useFeatureFlags'
 import { usePWAUtils } from '../hooks/usePWAUtils'
 import { devLog } from '@/lib/logger';
 
-interface Poll {
+type Poll = {
   id: string
   question: string
   options: string[]
@@ -33,7 +33,7 @@ interface Poll {
 
 type OnVote = (choice: number) => Promise<void> | void;
 
-interface PWAVotingInterfaceProps {
+type PWAVotingInterfaceProps = {
   poll: Poll
   onVote: OnVote
   showResults?: boolean

@@ -8,7 +8,7 @@
 
 import { devLog } from '../logger';
 
-export interface OriginConfig {
+export type OriginConfig = {
   allowedOrigins: string[];
   allowLocalhost: boolean;
   allowVercelPreview: boolean;

@@ -12,7 +12,7 @@ import {
   ChevronUp
 } from 'lucide-react'
 
-interface SiteMessage {
+type SiteMessage = {
   id: string
   title: string
   message: string
@@ -23,7 +23,7 @@ interface SiteMessage {
   expires_at?: string
 }
 
-interface SiteMessagesProps {
+type SiteMessagesProps = {
   className?: string
   maxMessages?: number
   showDismiss?: boolean

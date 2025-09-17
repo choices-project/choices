@@ -12,13 +12,13 @@
 // CORE DATABASE TYPES
 // ============================================================================
 
-export interface QueryResult<T = unknown> {
+export type QueryResult<T = unknown> = {
   data: T[];
   count: number;
   error: Error | null;
 }
 
-export interface OptimizationMetrics {
+export type OptimizationMetrics = {
   queryTime: number;
   cacheHit: boolean;
   fromCache: boolean;
@@ -26,14 +26,14 @@ export interface OptimizationMetrics {
   memoryUsage: number;
 }
 
-export interface ConnectionPoolConfig {
+export type ConnectionPoolConfig = {
   min: number;
   max: number;
   idleTimeoutMillis: number;
   connectionTimeoutMillis: number;
 }
 
-export interface PerformanceMetrics {
+export type PerformanceMetrics = {
   averageResponseTime: number;
   totalQueries: number;
   cacheHitRate: number;
@@ -46,7 +46,7 @@ export interface PerformanceMetrics {
 // QUERY OPTIMIZER TYPES
 // ============================================================================
 
-export interface QueryPlan {
+export type QueryPlan = {
   id: string;
   query: string;
   estimatedCost: number;
@@ -55,13 +55,13 @@ export interface QueryPlan {
   tables: string[];
 }
 
-export interface CacheConfig {
+export type CacheConfig = {
   ttl: number;
   maxSize: number;
   strategy: 'lru' | 'fifo' | 'ttl';
 }
 
-export interface QueryOptions {
+export type QueryOptions = {
   useCache?: boolean;
   cacheTTL?: number;
   cacheTags?: string[];
@@ -71,7 +71,7 @@ export interface QueryOptions {
   analyze?: boolean;
 }
 
-export interface QueryMetrics {
+export type QueryMetrics = {
   query: string;
   executionTime: number;
   rowsReturned: number;
@@ -81,7 +81,7 @@ export interface QueryMetrics {
   timestamp: number;
 }
 
-export interface OptimizationResult {
+export type OptimizationResult = {
   originalQuery: string;
   optimizedQuery: string;
   optimizations: string[];
@@ -89,7 +89,7 @@ export interface OptimizationResult {
   executionPlan?: QueryPlan;
 }
 
-export interface QueryCacheEntry<T = unknown> {
+export type QueryCacheEntry<T = unknown> = {
   query: string;
   result: T;
   timestamp: number;
@@ -101,7 +101,7 @@ export interface QueryCacheEntry<T = unknown> {
 // CONNECTION POOL TYPES
 // ============================================================================
 
-export interface PoolConfig {
+export type PoolConfig = {
   minConnections: number;
   maxConnections: number;
   acquireTimeoutMillis: number;
@@ -113,7 +113,7 @@ export interface PoolConfig {
   connectionTimeoutMillis: number;
 }
 
-export interface PoolMetrics {
+export type PoolMetrics = {
   activeConnections: number;
   idleConnections: number;
   totalConnections: number;
@@ -126,7 +126,7 @@ export interface PoolMetrics {
   lastValidationTime: number;
 }
 
-export interface ConnectionWrapper {
+export type ConnectionWrapper = {
   id: string;
   connection: SupabaseClient;
   createdAt: number;
@@ -137,7 +137,7 @@ export interface ConnectionWrapper {
   lastValidation: number;
 }
 
-export interface PoolStats {
+export type PoolStats = {
   totalCreated: number;
   totalDestroyed: number;
   totalAcquired: number;
@@ -153,7 +153,7 @@ export interface PoolStats {
 // PERFORMANCE MONITORING TYPES
 // ============================================================================
 
-export interface DatabaseMetrics {
+export type DatabaseMetrics = {
   connectionCount: number;
   activeConnections: number;
   idleConnections: number;
@@ -168,7 +168,7 @@ export interface DatabaseMetrics {
   timestamp: number;
 }
 
-export interface QueryPerformanceMetrics {
+export type QueryPerformanceMetrics = {
   query: string;
   executionTime: number;
   rowsReturned: number;
@@ -177,7 +177,7 @@ export interface QueryPerformanceMetrics {
   timestamp: number;
 }
 
-export interface PerformanceAlert {
+export type PerformanceAlert = {
   id: string;
   type: 'warning' | 'error' | 'critical';
   message: string;
@@ -188,7 +188,7 @@ export interface PerformanceAlert {
   resolved: boolean;
 }
 
-export interface PerformanceRecommendation {
+export type PerformanceRecommendation = {
   id: string;
   type: 'index' | 'query' | 'configuration' | 'maintenance';
   priority: 'low' | 'medium' | 'high' | 'critical';
@@ -200,7 +200,7 @@ export interface PerformanceRecommendation {
   timestamp: number;
 }
 
-export interface PerformanceThresholds {
+export type PerformanceThresholds = {
   slowQueryThreshold: number;
   errorRateThreshold: number;
   connectionUtilizationThreshold: number;
@@ -213,13 +213,13 @@ export interface PerformanceThresholds {
 // SUPABASE CLIENT TYPES
 // ============================================================================
 
-export interface SupabaseClient {
+export type SupabaseClient = {
   from: (table: string) => SupabaseQueryBuilder;
   rpc: (fn: string, params?: Record<string, unknown>) => SupabaseRPCBuilder;
   close: () => Promise<void>;
 }
 
-export interface SupabaseQueryBuilder {
+export type SupabaseQueryBuilder = {
   select: (columns?: string) => SupabaseQueryBuilder;
   insert: (data: unknown) => SupabaseQueryBuilder;
   update: (data: unknown) => SupabaseQueryBuilder;
@@ -261,7 +261,7 @@ export interface SupabaseQueryBuilder {
   then: (onfulfilled?: (value: { data: unknown; error: Error | null }) => unknown, onrejected?: (reason: unknown) => unknown) => Promise<unknown>;
 }
 
-export interface SupabaseRPCBuilder {
+export type SupabaseRPCBuilder = {
   single: () => Promise<{ data: unknown; error: Error | null }>;
   maybeSingle: () => Promise<{ data: unknown; error: Error | null }>;
   then: (onfulfilled?: (value: { data: unknown; error: Error | null }) => unknown, onrejected?: (reason: unknown) => unknown) => Promise<unknown>;
@@ -271,13 +271,13 @@ export interface SupabaseRPCBuilder {
 // DATABASE HEALTH CHECK TYPES
 // ============================================================================
 
-export interface DatabaseHealthCheck {
+export type DatabaseHealthCheck = {
   test: string;
   status: 'healthy' | 'unhealthy';
   error: string | null;
 }
 
-export interface DatabaseHealthStatus {
+export type DatabaseHealthStatus = {
   status: 'healthy' | 'degraded' | 'unhealthy';
   healthPercentage: number;
   responseTime: string;
@@ -298,7 +298,7 @@ export interface DatabaseHealthStatus {
 // ANALYTICS TYPES
 // ============================================================================
 
-export interface AnalyticsData {
+export type AnalyticsData = {
   period: string;
   summary: {
     totalUsers: number;
@@ -319,7 +319,7 @@ export interface AnalyticsData {
 // CACHE TYPES
 // ============================================================================
 
-export interface CacheEntry<T = unknown> {
+export type CacheEntry<T = unknown> = {
   key: string;
   value: T;
   ttl: number;
@@ -327,7 +327,7 @@ export interface CacheEntry<T = unknown> {
   accessedAt: Date;
 }
 
-export interface CacheStats {
+export type CacheStats = {
   hits: number;
   misses: number;
   size: number;
@@ -338,7 +338,7 @@ export interface CacheStats {
 // USER PROFILE TYPES
 // ============================================================================
 
-export interface UserProfile {
+export type UserProfile = {
   user_id: string;
   username: string;
   email: string;
@@ -351,7 +351,7 @@ export interface UserProfile {
 // POLL TYPES
 // ============================================================================
 
-export interface Poll {
+export type Poll = {
   id: string;
   title: string;
   description: string;
@@ -364,20 +364,20 @@ export interface Poll {
   expires_at?: string;
 }
 
-export interface PollWithVotes extends Poll {
+export type PollWithVotes = {
   votes: Array<{
     count: number;
   }>;
-}
+} & Poll
 
-export interface PollPagination {
+export type PollPagination = {
   page: number;
   limit: number;
   total: number;
   pages: number;
 }
 
-export interface PollsResponse {
+export type PollsResponse = {
   polls: PollWithVotes[];
   pagination: PollPagination;
 }
@@ -386,7 +386,7 @@ export interface PollsResponse {
 // VOTE TYPES
 // ============================================================================
 
-export interface Vote {
+export type Vote = {
   id: string;
   poll_id: string;
   user_id?: string;
@@ -394,19 +394,19 @@ export interface Vote {
   created_at: string;
 }
 
-export interface VoteWithUserInfo extends Vote {
+export type VoteWithUserInfo = {
   user_profiles: {
     username: string;
     trust_tier: string;
   };
-}
+} & Vote
 
-export interface VoteGroupedByChoice {
+export type VoteGroupedByChoice = {
   choice: string;
   count: number;
 }
 
-export interface VoteInsert {
+export type VoteInsert = {
   poll_id: string;
   user_id?: string;
   choice: string;
@@ -417,7 +417,7 @@ export interface VoteInsert {
 // CACHE DATABASE TYPES
 // ============================================================================
 
-export interface CacheDatabaseEntry {
+export type CacheDatabaseEntry = {
   key: string;
   value: string;
   expires_at: string;
@@ -431,7 +431,7 @@ export type DatabaseTable = 'user_profiles' | 'polls' | 'votes' | 'cache' | 'bre
 
 export type DatabaseOperation = 'SELECT' | 'INSERT' | 'UPDATE' | 'DELETE';
 
-export interface DatabaseError {
+export type DatabaseError = {
   code: string;
   message: string;
   details?: string;

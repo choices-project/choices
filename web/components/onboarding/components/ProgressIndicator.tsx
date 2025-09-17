@@ -5,7 +5,7 @@ import { CheckCircle2 } from 'lucide-react';
 import type { StepSlug } from '../types';
 import { DEFAULT_STEP_ORDER, STEP_LABEL } from '../types';
 
-interface ProgressIndicatorProps {
+type ProgressIndicatorProps = {
   currentStep: StepSlug;
   completedSteps: string[]; // kept broad for back-compat; values should be StepSlug
   steps?: StepSlug[];       // override order if needed; defaults to DEFAULT_STEP_ORDER

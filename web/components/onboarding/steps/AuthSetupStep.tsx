@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { getSupabaseBrowserClient } from '@/utils/supabase/client'
 
-interface AuthSetupStepProps {
+type AuthSetupStepProps = {
   data: any
   onUpdate: (_updates: any) => void
   onNext: () => void

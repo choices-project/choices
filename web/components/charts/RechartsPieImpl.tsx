@@ -2,7 +2,7 @@
 
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts'
 
-interface PieChartProps {
+type PieChartProps = {
   data: any[]
   dataKey?: string
   nameKey?: string

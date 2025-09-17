@@ -5,7 +5,7 @@
  * credential creation, assertion, and related interfaces.
  */
 
-export interface WebAuthnCredential {
+export type WebAuthnCredential = {
   id: string;
   type: 'public-key';
   rawId: ArrayBuffer;
@@ -13,7 +13,7 @@ export interface WebAuthnCredential {
   clientExtensionResults: AuthenticationExtensionsClientOutputs;
 }
 
-export interface WebAuthnCredentialCreationOptions {
+export type WebAuthnCredentialCreationOptions = {
   challenge: ArrayBuffer;
   rp: PublicKeyCredentialRpEntity;
   user: PublicKeyCredentialUserEntity;
@@ -25,7 +25,7 @@ export interface WebAuthnCredentialCreationOptions {
   extensions?: AuthenticationExtensionsClientInputs;
 }
 
-export interface WebAuthnCredentialRequestOptions {
+export type WebAuthnCredentialRequestOptions = {
   challenge: ArrayBuffer;
   timeout?: number;
   rpId?: string;
@@ -34,14 +34,14 @@ export interface WebAuthnCredentialRequestOptions {
   extensions?: AuthenticationExtensionsClientInputs;
 }
 
-export interface WebAuthnRegistrationData {
+export type WebAuthnRegistrationData = {
   credential: WebAuthnCredential;
   userAgent: string;
   platform: string;
   createdAt: string;
 }
 
-export interface WebAuthnAuthenticationData {
+export type WebAuthnAuthenticationData = {
   credentialId: string;
   authenticatorData: ArrayBuffer;
   clientDataJSON: ArrayBuffer;
@@ -52,32 +52,32 @@ export interface WebAuthnAuthenticationData {
   authenticatedAt: string;
 }
 
-export interface WebAuthnUser {
+export type WebAuthnUser = {
   id: string;
   name: string;
   displayName: string;
   icon?: string;
 }
 
-export interface WebAuthnRelyingParty {
+export type WebAuthnRelyingParty = {
   id: string;
   name: string;
   icon?: string;
 }
 
-export interface WebAuthnCredentialDescriptor {
+export type WebAuthnCredentialDescriptor = {
   type: 'public-key';
   id: ArrayBuffer;
   transports?: AuthenticatorTransport[];
 }
 
-export interface WebAuthnAuthenticatorSelection {
+export type WebAuthnAuthenticatorSelection = {
   authenticatorAttachment?: AuthenticatorAttachment;
   userVerification?: UserVerificationRequirement;
   requireResidentKey?: boolean;
 }
 
-export interface WebAuthnExtensions {
+export type WebAuthnExtensions = {
   appid?: string;
   appidExclude?: string;
   uvm?: boolean;
@@ -89,13 +89,13 @@ export interface WebAuthnExtensions {
   };
 }
 
-export interface WebAuthnError extends Error {
+export type WebAuthnError = {
   code: string;
   name: string;
   message: string;
-}
+} & Error
 
-export interface WebAuthnSupportedFeatures {
+export type WebAuthnSupportedFeatures = {
   isSupported: boolean;
   isUserVerifyingPlatformAuthenticatorAvailable: boolean;
   isConditionalMediationAvailable: boolean;
@@ -103,7 +103,7 @@ export interface WebAuthnSupportedFeatures {
   isCredentialPropertiesSupported: boolean;
 }
 
-export interface WebAuthnRegistrationResult {
+export type WebAuthnRegistrationResult = {
   success: boolean;
   credentialId: string;
   publicKey: string;
@@ -115,7 +115,7 @@ export interface WebAuthnRegistrationResult {
   registeredAt: string;
 }
 
-export interface WebAuthnAuthenticationResult {
+export type WebAuthnAuthenticationResult = {
   success: boolean;
   userId: string;
   credentialId: string;
@@ -125,7 +125,7 @@ export interface WebAuthnAuthenticationResult {
   authenticatedAt: string;
 }
 
-export interface WebAuthnCredentialInfo {
+export type WebAuthnCredentialInfo = {
   id: string;
   publicKey: string;
   counter: number;
@@ -137,7 +137,7 @@ export interface WebAuthnCredentialInfo {
   lastUsedAt?: string;
 }
 
-export interface WebAuthnServerConfig {
+export type WebAuthnServerConfig = {
   rpId: string;
   rpName: string;
   rpIcon?: string;

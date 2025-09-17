@@ -7,11 +7,11 @@
 
 import type { AddressLookupResult, DataSourceConfig } from '../../schemas';
 
-export interface CivicInfoConfig extends DataSourceConfig {
+export type CivicInfoConfig = {
   type: 'civicinfo';
   apiKey: string;
   baseUrl: string;
-}
+} & DataSourceConfig
 
 export class CivicInfoConnector {
   private config: CivicInfoConfig;

@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react'
 import { logger } from '@/lib/logger';
 import { optimizedPollService, type OptimizedPollResult } from '@/lib/performance/optimized-poll-service'
 
-interface OptimizedPollResultsProps {
+type OptimizedPollResultsProps = {
   pollId: string
   userId?: string
   includePrivate?: boolean

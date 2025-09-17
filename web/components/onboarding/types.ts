@@ -55,7 +55,7 @@ export const toSlug = (id: StepId): StepSlug => STEP_ID_TO_SLUG[id];
 export const toId = (slug: StepSlug): StepId => STEP_SLUG_TO_ID[slug];
 
 /** Step-scoped data shapes (extend safely over time) */
-export interface StepDataMap {
+export type StepDataMap = {
   welcome: { welcomeStarted?: boolean };
 
   profile: {
@@ -117,7 +117,7 @@ export interface StepDataMap {
 }
 
 /** Legacy structure (kept for back-compat) */
-export interface LegacyOnboardingData {
+export type LegacyOnboardingData = {
   user?: unknown;
   displayName?: string;
   avatar?: string;

@@ -8,7 +8,7 @@
 import { logger } from '@/lib/logger';
 import { sloMonitor } from './slos';
 
-export interface CriticalMetrics {
+export type CriticalMetrics = {
   queueDepth: number;
   diffFanoutErrorRate: number;
   dpBudgetRemaining: number;
@@ -23,13 +23,13 @@ export interface CriticalMetrics {
   databaseConnections: number;
 }
 
-export interface MetricThresholds {
+export type MetricThresholds = {
   critical: number;
   warning: number;
   healthy: number;
 }
 
-export interface DashboardConfig {
+export type DashboardConfig = {
   refreshInterval: number;
   autoRefresh: boolean;
   showHistorical: boolean;

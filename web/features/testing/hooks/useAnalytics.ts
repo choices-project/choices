@@ -7,13 +7,13 @@
 import { useState, useEffect } from 'react';
 import { logger } from '@/lib/logger';
 
-export interface AnalyticsEvent {
+export type AnalyticsEvent = {
   name: string;
   properties?: Record<string, any>;
   timestamp?: Date;
 }
 
-export interface AnalyticsConfig {
+export type AnalyticsConfig = {
   enabled: boolean;
   provider?: string;
   apiKey?: string;
@@ -77,6 +77,7 @@ export function useAnalytics() {
     isEnabled: config.enabled
   };
 }
+
 
 
 

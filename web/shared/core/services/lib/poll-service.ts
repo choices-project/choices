@@ -2,7 +2,7 @@ import { logger } from '@/lib/logger';
 import { devLog } from '@/lib/logger';
 
 // Types
-export interface Poll {
+export type Poll = {
   id: string;
   title: string;
   description: string;
@@ -20,12 +20,12 @@ export interface Poll {
   created_by?: string; // User ID for user-generated polls
 }
 
-export interface PollResults {
+export type PollResults = {
   [key: number]: number;
   total: number;
 }
 
-export interface CreatePollRequest {
+export type CreatePollRequest = {
   title: string;
   description: string;
   options: string[];
@@ -35,19 +35,19 @@ export interface CreatePollRequest {
   sponsors?: string[];
 }
 
-export interface VoteRequest {
+export type VoteRequest = {
   pollId: string;
   choice: number;
 }
 
-export interface VoteResponse {
+export type VoteResponse = {
   success: boolean;
   voteId: string;
   message: string;
   verificationToken?: string;
 }
 
-export interface VerificationResponse {
+export type VerificationResponse = {
   success: boolean;
   verified: boolean;
   message: string;

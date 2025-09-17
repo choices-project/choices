@@ -8,7 +8,7 @@
 import { logger } from '../logger';
 import { withOptional } from '../util/objects';
 
-export interface RateLimitConfig {
+export type RateLimitConfig = {
   requestsPerSecond: number;
   requestsPerMinute: number;
   requestsPerHour: number;
@@ -18,13 +18,13 @@ export interface RateLimitConfig {
   maxBackoffDelay: number;
 }
 
-export interface RateLimitStatus {
+export type RateLimitStatus = {
   remaining: number;
   resetTime: number;
   retryAfter?: number;
 }
 
-export interface ApiUsageMetrics {
+export type ApiUsageMetrics = {
   apiName: string;
   requestsToday: number;
   requestsThisHour: number;
