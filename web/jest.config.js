@@ -1,10 +1,17 @@
 /** @type {import('jest').Config} */
 module.exports = {
-  projects: [
-    '<rootDir>/jest.client.config.js',
-    '<rootDir>/jest.server.config.js'
-  ],
-  moduleNameMapper: { '^@/(.*)$': '<rootDir>/$1' },
+  testEnvironment: "node",
+  preset: "ts-jest",
+  globals: {
+    "ts-jest": { 
+      tsconfig: "../tsconfig.tests.json", 
+      isolatedModules: true 
+    }
+  },
+  moduleNameMapper: {
+    "^@/(.*)$": "<rootDir>/$1"
+  },
+  setupFilesAfterEnv: ["<rootDir>/jest.setup.js"],
   collectCoverageFrom: [
     'app/**/*.{ts,tsx}',
     'components/**/*.{ts,tsx}',

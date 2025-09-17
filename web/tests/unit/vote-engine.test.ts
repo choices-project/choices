@@ -256,11 +256,11 @@ describe('VoteEngine', () => {
       // Mock a strategy to throw an error
       const mockStrategy = {
         getVotingMethod: () => 'single' as VotingMethod,
-        validateVote: jest.fn().mockRejectedValue(new Error('Strategy error')),
-        processVote: jest.fn(),
-        calculateResults: jest.fn(),
-        getConfiguration: jest.fn()
-      };
+        validateVote: jest.fn<Promise<void>>().mockRejectedValue(new Error('Strategy error')),
+        processVote: jest.fn<Promise<void>>(),
+        calculateResults: jest.fn<Promise<void>>(),
+        getConfiguration: jest.fn(),
+      } as any;
 
       // Replace the strategy in the engine
       (engine as any).strategies.set('single', mockStrategy);
@@ -331,15 +331,15 @@ describe('VoteEngine', () => {
 
     it('should handle calculation errors gracefully', async () => {
       // Mock a strategy to throw an error during calculation
-      const mockStrategy = {
+      const mockStrategy2 = {
         getVotingMethod: () => 'single' as VotingMethod,
-        validateVote: jest.fn(),
-        processVote: jest.fn(),
-        calculateResults: jest.fn().mockRejectedValue(new Error('Calculation error')),
-        getConfiguration: jest.fn()
-      };
+        validateVote: jest.fn<Promise<void>>(),
+        processVote: jest.fn<Promise<void>>(),
+        calculateResults: jest.fn<Promise<void>>().mockRejectedValue(new Error('Calculation error')),
+        getConfiguration: jest.fn(),
+      } as any;
 
-      (engine as unknown as { strategies: Map<string, unknown> }).strategies.set('single', mockStrategy);
+      (engine as unknown as { strategies: Map<string, unknown> }).strategies.set('single', mockStrategy2);
 
       const votes: VoteData[] = [{
         id: 'vote-1',

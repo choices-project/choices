@@ -13,61 +13,48 @@ import type {
   Poll, 
   Ballot, 
   FinalizeResult, 
-  FinalizeOptions 
+  FinalizeOptions
 } from '@/lib/vote/types';
+import type { RankedChoiceResults } from '@/lib/vote/irv-calculator';
+import type { SupabaseClient } from '@supabase/supabase-js';
+import { createMockSupabase } from '../utils/mocks/supabase';
 
 // Mock the logger
 jest.mock('@/lib/logger', () => ({
   devLog: jest.fn()
 }));
 
-// Mock Supabase client
-const mockSupabaseClient = {
-  from: jest.fn(() => ({
-    select: jest.fn().mockReturnThis(),
-    insert: jest.fn().mockReturnThis(),
-    update: jest.fn().mockReturnThis(),
-    eq: jest.fn().mockReturnThis(),
-    gte: jest.fn().mockReturnThis(),
-    lte: jest.fn().mockReturnThis(),
-    single: jest.fn().mockResolvedValue({ data: null, error: null }),
-    then: jest.fn().mockResolvedValue({ data: [], error: null })
-  })),
-  channel: jest.fn(() => ({
-    on: jest.fn().mockReturnThis(),
-    subscribe: jest.fn().mockReturnThis(),
-    unsubscribe: jest.fn().mockReturnThis()
-  }))
-};
+// Supabase
+const { from: mockFrom, channel: mockChannel, single: mockSingle, insert: mockInsert, update: mockUpdate, thenable: mockThenable } = createMockSupabase();
+const mockSupabaseClient = { from: mockFrom, channel: mockChannel } as unknown as SupabaseClient;
 
 jest.mock('@/utils/supabase/server', () => ({
   getSupabaseServerClient: jest.fn(() => Promise.resolve(mockSupabaseClient))
 }));
 
-// Mock IRVCalculator
-jest.mock('@/lib/vote/irv-calculator', () => ({
-  IRVCalculator: jest.fn().mockImplementation(() => ({
-    calculateResults: jest.fn().mockResolvedValue({
+// IRVCalculator
+jest.mock('@/lib/vote/irv-calculator', () => {
+  const calculateResults = jest
+    .fn().mockResolvedValue({
       winner: 'candidate-1',
       rounds: [
         {
           round: 1,
           eliminated: 'candidate-3',
           votes: { 'candidate-1': 2, 'candidate-2': 1, 'candidate-3': 0 },
-          percentages: { 'candidate-1': 66.67, 'candidate-2': 33.33, 'candidate-3': 0 }
-        }
+          percentages: { 'candidate-1': 66.67, 'candidate-2': 33.33, 'candidate-3': 0 },
+        },
       ],
       totalVotes: 3,
       participationRate: 0.75,
       breakdown: { 'candidate-1': 2, 'candidate-2': 1, 'candidate-3': 0 },
-      metadata: {
-        algorithm: 'IRV',
-        tieBreakingMethod: 'poll-seeded-hash',
-        calculationTime: 15
-      }
-    } as any)
-  }))
-}));
+      metadata: { algorithm: 'IRV', tieBreakingMethod: 'poll-seeded-hash', calculationTime: 15 },
+    } as unknown as RankedChoiceResults);
+
+  return {
+    IRVCalculator: jest.fn().mockImplementation(() => ({ calculateResults })),
+  };
+});
 
 // Mock MerkleTree
 jest.mock('@/lib/audit/merkle-tree', () => ({
@@ -78,7 +65,7 @@ jest.mock('@/lib/audit/merkle-tree', () => ({
       algorithm: 'IRV',
       steps: ['step1', 'step2', 'step3'],
       metadata: { totalSteps: 3 }
-    } as any)
+    })
   })),
   BallotVerificationManager: jest.fn().mockImplementation(() => ({
     createTree: jest.fn().mockReturnValue({
@@ -156,25 +143,25 @@ describe('FinalizeManager', () => {
   describe('Poll Finalization', () => {
     it('should finalize poll successfully', async () => {
       // Mock successful poll lookup
-      (mockSupabaseClient.from().select().eq().single as any).mockResolvedValue({
+      mockSingle.mockResolvedValue({
         data: mockPoll,
         error: null
       });
 
       // Mock successful ballot retrieval
-      (mockSupabaseClient.from().select().eq().then as any).mockResolvedValue({
+      mockThenable.then.mockResolvedValue({
         data: mockBallots,
         error: null
       });
 
       // Mock successful snapshot creation
-      (mockSupabaseClient.from().insert as any).mockResolvedValue({
+      mockInsert.mockResolvedValue({
         data: { id: 'snapshot-123' },
         error: null
       });
 
       // Mock successful poll update
-      (mockSupabaseClient.from().update().eq as any).mockResolvedValue({
+      mockUpdate.mockResolvedValue({
         data: null,
         error: null
       });
@@ -199,7 +186,7 @@ describe('FinalizeManager', () => {
 
     it('should handle poll not found', async () => {
       // Mock poll not found
-      (mockSupabaseClient.from().select().eq().single as any).mockResolvedValue({
+      mockSingle.mockResolvedValue({
         data: null,
         error: { message: 'Poll not found' }
       });
@@ -221,7 +208,7 @@ describe('FinalizeManager', () => {
       const finalizedPoll = { ...mockPoll, status: 'closed' as const };
       
       // Mock poll already finalized
-      (mockSupabaseClient.from().select().eq().single as any).mockResolvedValue({
+      mockSingle.mockResolvedValue({
         data: finalizedPoll,
         error: null
       });
@@ -243,25 +230,25 @@ describe('FinalizeManager', () => {
       const finalizedPoll = { ...mockPoll, status: 'closed' as const };
       
       // Mock poll already finalized
-      (mockSupabaseClient.from().select().eq().single as any).mockResolvedValue({
+      mockSingle.mockResolvedValue({
         data: finalizedPoll,
         error: null
       });
 
       // Mock successful ballot retrieval
-      (mockSupabaseClient.from().select().eq().then as any).mockResolvedValue({
+      mockThenable.then.mockResolvedValue({
         data: mockBallots,
         error: null
       });
 
       // Mock successful snapshot creation
-      (mockSupabaseClient.from().insert as any).mockResolvedValue({
+      mockInsert.mockResolvedValue({
         data: { id: 'snapshot-123' },
         error: null
       });
 
       // Mock successful poll update
-      (mockSupabaseClient.from().update().eq as any).mockResolvedValue({
+      mockUpdate.mockResolvedValue({
         data: null,
         error: null
       });
@@ -281,13 +268,13 @@ describe('FinalizeManager', () => {
 
     it('should handle no ballots found', async () => {
       // Mock successful poll lookup
-      (mockSupabaseClient.from().select().eq().single as any).mockResolvedValue({
+      mockSingle.mockResolvedValue({
         data: mockPoll,
         error: null
       });
 
       // Mock no ballots found
-      (mockSupabaseClient.from().select().eq().then as any).mockResolvedValue({
+      mockThenable.then.mockResolvedValue({
         data: [],
         error: null
       });
@@ -309,7 +296,7 @@ describe('FinalizeManager', () => {
   describe('Snapshot Creation', () => {
     it('should create snapshot successfully', async () => {
       // Mock successful snapshot creation
-      (mockSupabaseClient.from().insert as any).mockResolvedValue({
+      mockInsert.mockResolvedValue({
         data: { id: 'snapshot-123' },
         error: null
       });
@@ -322,7 +309,7 @@ describe('FinalizeManager', () => {
 
     it('should handle snapshot creation error', async () => {
       // Mock snapshot creation error
-      (mockSupabaseClient.from().insert as any).mockResolvedValue({
+      mockInsert.mockResolvedValue({
         data: null,
         error: { message: 'Database error' }
       });
@@ -335,7 +322,7 @@ describe('FinalizeManager', () => {
   describe('Ballot Retrieval', () => {
     it('should retrieve official ballots correctly', async () => {
       // Mock successful ballot retrieval
-      (mockSupabaseClient.from().select().eq().lte().then as any).mockResolvedValue({
+      mockThenable.then.mockResolvedValue({
         data: mockBallots,
         error: null
       });
@@ -357,7 +344,7 @@ describe('FinalizeManager', () => {
       ];
 
       // Mock successful post-close ballot retrieval
-      (mockSupabaseClient.from().select().eq().gte().then as any).mockResolvedValue({
+      mockThenable.then.mockResolvedValue({
         data: postCloseBallots,
         error: null
       });
@@ -374,7 +361,7 @@ describe('FinalizeManager', () => {
 
     it('should handle ballot retrieval error', async () => {
       // Mock ballot retrieval error
-      (mockSupabaseClient.from().select().eq().lte().then as any).mockResolvedValue({
+      mockThenable.then.mockResolvedValue({
         data: null,
         error: { message: 'Database error' }
       });
@@ -404,9 +391,9 @@ describe('FinalizeManager', () => {
 
     it('should handle IRV calculation error', async () => {
       // Mock IRVCalculator to throw error
-      const { IRVCalculator } = require('@/lib/vote/irv-calculator');
-      IRVCalculator.mockImplementation(() => ({
-        calculateResults: jest.fn().mockRejectedValue(new Error('IRV calculation error'))
+      const { IRVCalculator } = jest.requireMock('@/lib/vote/irv-calculator') as any;
+      (IRVCalculator as jest.Mock).mockImplementation(() => ({
+        calculateResults: rejectErr(new Error('IRV calculation error')),
       }));
 
       await expect((finalizeManager as any).calculateIRVResults(mockPoll, mockBallots))
@@ -475,7 +462,7 @@ describe('FinalizeManager', () => {
     it('should handle database connection errors', async () => {
       // Mock Supabase client as unavailable
       (require('@/utils/supabase/server').getSupabaseServerClient as jest.Mock)
-        .mockResolvedValue(null);
+        .mockResolvedValue(null as any);
 
       const options: FinalizeOptions = {
         force: false,
@@ -492,19 +479,19 @@ describe('FinalizeManager', () => {
 
     it('should handle snapshot creation errors gracefully', async () => {
       // Mock successful poll lookup
-      (mockSupabaseClient.from().select().eq().single as any).mockResolvedValue({
+      mockSingle.mockResolvedValue({
         data: mockPoll,
         error: null
       });
 
       // Mock successful ballot retrieval
-      (mockSupabaseClient.from().select().eq().then as any).mockResolvedValue({
+      mockThenable.then.mockResolvedValue({
         data: mockBallots,
         error: null
       });
 
       // Mock snapshot creation error
-      (mockSupabaseClient.from().insert as any).mockResolvedValue({
+      mockInsert.mockResolvedValue({
         data: null,
         error: { message: 'Snapshot creation failed' }
       });
@@ -524,25 +511,25 @@ describe('FinalizeManager', () => {
 
     it('should handle poll update errors gracefully', async () => {
       // Mock successful poll lookup
-      (mockSupabaseClient.from().select().eq().single as any).mockResolvedValue({
+      mockSingle.mockResolvedValue({
         data: mockPoll,
         error: null
       });
 
       // Mock successful ballot retrieval
-      (mockSupabaseClient.from().select().eq().then as any).mockResolvedValue({
+      mockThenable.then.mockResolvedValue({
         data: mockBallots,
         error: null
       });
 
       // Mock successful snapshot creation
-      (mockSupabaseClient.from().insert as any).mockResolvedValue({
+      mockInsert.mockResolvedValue({
         data: { id: 'snapshot-123' },
         error: null
       });
 
       // Mock poll update error
-      (mockSupabaseClient.from().update().eq as any).mockResolvedValue({
+      mockUpdate.mockResolvedValue({
         data: null,
         error: { message: 'Poll update failed' }
       });
@@ -564,25 +551,25 @@ describe('FinalizeManager', () => {
   describe('Performance', () => {
     it('should finalize poll efficiently', async () => {
       // Mock successful poll lookup
-      (mockSupabaseClient.from().select().eq().single as any).mockResolvedValue({
+      mockSingle.mockResolvedValue({
         data: mockPoll,
         error: null
       });
 
       // Mock successful ballot retrieval
-      (mockSupabaseClient.from().select().eq().then as any).mockResolvedValue({
+      mockThenable.then.mockResolvedValue({
         data: mockBallots,
         error: null
       });
 
       // Mock successful snapshot creation
-      (mockSupabaseClient.from().insert as any).mockResolvedValue({
+      mockInsert.mockResolvedValue({
         data: { id: 'snapshot-123' },
         error: null
       });
 
       // Mock successful poll update
-      (mockSupabaseClient.from().update().eq as any).mockResolvedValue({
+      mockUpdate.mockResolvedValue({
         data: null,
         error: null
       });

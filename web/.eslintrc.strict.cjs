@@ -1,6 +1,16 @@
 module.exports = {
   extends: ['./.eslintrc.cjs'],
   plugins: ['eslint-comments'],
+  parser: "@typescript-eslint/parser",
+  parserOptions: {
+    project: ["../tsconfig.json", "../tsconfig.tests.json"],
+    tsconfigRootDir: __dirname
+  },
+  settings: {
+    "import/resolver": {
+      typescript: { project: ["../tsconfig.json"] }
+    }
+  },
   overrides: [
     // SERVER: everything under app/** except client components
     {
