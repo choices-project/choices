@@ -133,7 +133,7 @@ export class PrivacyDataManager {
       // Store encrypted data
       const encryptedDataBase64 = EncryptionUtils.arrayBufferToBase64(encryptionResult.encryptedData);
       const saltBase64 = EncryptionUtils.uint8ArrayToBase64(encryptionResult.salt);
-      const ivBase64 = EncryptionUtils.uint8ArrayToBase64(encryptionResult.iv);
+      const _ivBase64 = EncryptionUtils.uint8ArrayToBase64(encryptionResult.iv);
 
       const updateData: any = {
         encryption_version: 1,
@@ -194,7 +194,7 @@ export class PrivacyDataManager {
 
       let encryptedData: string | null = null;
       let salt: string | null = null;
-      const iv: string | null = null;
+      const _iv: string | null = null;
 
       // Retrieve encrypted data from appropriate table
       if (['demographics', 'preferences', 'contact_info'].includes(dataType)) {

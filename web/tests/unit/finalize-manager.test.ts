@@ -17,7 +17,7 @@ import type {
 } from '@/lib/vote/types';
 import type { RankedChoiceResults as IRVResults } from '@/lib/vote/irv-calculator';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { makeMockSupabase, okSingle, okList, errSingle, errList } from '../helpers/supabase-mock';
+import { makeMockSupabase, okSingle, errSingle } from '../helpers/supabase-mock';
 
 // central logger mock
 jest.mock('@/lib/logger', () => ({ devLog: jest.fn() }));

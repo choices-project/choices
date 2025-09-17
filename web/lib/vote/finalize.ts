@@ -18,6 +18,7 @@
 // ============================================================================
 
 import { IRVCalculator } from './irv-calculator';
+import { logger } from '../logger';
 import { withOptional } from '../util/objects';
 import type { UserRanking } from './irv-calculator';
 import { type MerkleTree, BallotVerificationManager, snapshotChecksum } from '../audit/merkle-tree';
@@ -182,7 +183,7 @@ export class FinalizePollManager {
       };
 
     } catch (error) {
-      console.error(`Failed to finalize poll ${pollId}:`, error);
+      logger.error(`Failed to finalize poll ${pollId}:`, error);
       return {
         success: false,
         error: error instanceof Error ? error.message : String(error),

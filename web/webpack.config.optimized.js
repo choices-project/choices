@@ -8,8 +8,10 @@
 import path from 'path';
 import webpack from 'webpack';
 import { BundleAnalyzerPlugin } from 'webpack-bundle-analyzer';
+import TerserPlugin from 'terser-webpack-plugin';
+import CssMinimizerPlugin from 'css-minimizer-webpack-plugin';
 
-export default async (env, argv) => {
+export default (env, argv) => {
   const isProduction = argv.mode === 'production';
   const isDevelopment = !isProduction;
   const analyzeBundle = process.env.ANALYZE === 'true';
@@ -126,7 +128,7 @@ export default async (env, argv) => {
       minimize: isProduction,
       minimizer: isProduction ? [
         // Terser for JavaScript
-        new (await import('terser-webpack-plugin')).default({
+        new TerserPlugin({
           terserOptions: {
             compress: {
               drop_console: true,
@@ -143,7 +145,7 @@ export default async (env, argv) => {
           extractComments: false,
         }),
         // CSS minification
-        new (await import('css-minimizer-webpack-plugin')).default({
+        new CssMinimizerPlugin({
           minimizerOptions: {
             preset: [
               'default',
