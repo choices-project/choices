@@ -91,10 +91,10 @@ module.exports = {
       prefer: 'type-imports'
     }],
     
-    // Phase 4: exactOptionalPropertyTypes enforcement
-    '@typescript-eslint/no-unnecessary-condition': 'error',
+    // Phase 4: exactOptionalPropertyTypes enforcement (moved to type-aware overlay)
+    // '@typescript-eslint/no-unnecessary-condition': 'error', // requires type info
+    // '@typescript-eslint/no-confusing-void-expression': ['error', { 'ignoreArrowShorthand': true }], // requires type info
     '@typescript-eslint/consistent-type-definitions': ['error', 'type'],
-    '@typescript-eslint/no-confusing-void-expression': ['error', { 'ignoreArrowShorthand': true }],
     'no-restricted-syntax': [
       'error',
       { 
