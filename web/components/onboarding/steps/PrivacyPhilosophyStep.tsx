@@ -40,7 +40,7 @@ export default function PrivacyPhilosophyStep({
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6" >
       <h2 className="text-xl font-semibold mb-4">Privacy Philosophy</h2>
 
       <div className="space-y-4">

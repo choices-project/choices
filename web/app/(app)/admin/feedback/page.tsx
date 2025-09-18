@@ -207,7 +207,7 @@ export default function AdminFeedbackPage() {
           />
 
           {/* Feedback List */}
-          <div className="bg-white rounded-lg shadow">
+          <div className="bg-white rounded-lg shadow" data-testid="feedback-list">
             <FeedbackList
               feedback={feedback?.data || []}
               isLoading={isLoading}

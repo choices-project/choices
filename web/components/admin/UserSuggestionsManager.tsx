@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   CheckCircle, 
   X, 
@@ -45,11 +45,7 @@ export default function UserSuggestionsManager() {
     search: ''
   });
 
-  useEffect(() => {
-    loadSuggestions();
-  }, [filter]);
-
-  const loadSuggestions = async () => {
+  const loadSuggestions = useCallback(async () => {
     try {
       setLoading(true);
       const params = new URLSearchParams();
@@ -67,7 +63,11 @@ export default function UserSuggestionsManager() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filter]);
+
+  useEffect(() => {
+    loadSuggestions();
+  }, [loadSuggestions]);
 
   const updateSuggestionStatus = async (id: string, status: string) => {
     try {

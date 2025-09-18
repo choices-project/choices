@@ -14,7 +14,7 @@ export async function isAdmin(): Promise<boolean> {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) return false;
 
-    const { data: isAdminUser, error: adminError } = await supabase.rpc('is_admin', { user_id: user.id });
+    const { data: isAdminUser, error: adminError } = await supabase.rpc('is_admin', { input_user_id: user.id });
     if (adminError) return false;
 
     return isAdminUser === true;
@@ -30,7 +30,7 @@ export async function getAdminUser(): Promise<any | null> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
 
-  const { data: isAdminUser, error } = await supabase.rpc('is_admin', { user_id: user.id });
+  const { data: isAdminUser, error } = await supabase.rpc('is_admin', { input_user_id: user.id });
   if (error || !isAdminUser) return null;
 
   return user;
@@ -42,7 +42,7 @@ export async function requireAdminUser(): Promise<any> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('Not authenticated');
 
-  const { data: isAdminUser, error } = await supabase.rpc('is_admin', { user_id: user.id });
+  const { data: isAdminUser, error } = await supabase.rpc('is_admin', { input_user_id: user.id });
   if (error || !isAdminUser) throw new Error('Admin access required');
 
   return user;

@@ -343,7 +343,7 @@ export function DemographicVisualization({
           <span className="font-semibold text-gray-800">Data Insights</span>
         </div>
         <p className="text-sm text-gray-700 italic">
-          "{getInsightMessage()}"
+          &quot;{getInsightMessage()}&quot;
         </p>
       </motion.div>
 

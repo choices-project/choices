@@ -23,12 +23,29 @@ export default function DataUsageStep({ data, onUpdate, onNext }: DataUsageStepP
   const [currentSection, setCurrentSection] = useState<'overview' | 'controls' | 'preview'>('overview')
 
   const handleNext = () => {
-    onUpdate()
-    onNext()
+    if (currentSection === 'overview') {
+      setCurrentSection('controls')
+    } else if (currentSection === 'controls') {
+      setCurrentSection('preview')
+    } else if (currentSection === 'preview') {
+      onUpdate()
+      onNext()
+    }
+  }
+
+  const handleBack = () => {
+    if (currentSection === 'preview') {
+      setCurrentSection('controls')
+    } else if (currentSection === 'controls') {
+      setCurrentSection('overview')
+    } else {
+      // If we're at the overview section, go to the previous onboarding step
+      onBack()
+    }
   }
 
   const renderOverview = () => (
-    <div className="space-y-8">
+    <div className="space-y-8" >
       <div className="text-center space-y-4">
         <h2 className="text-3xl font-bold text-gray-900">How We Use Your Data</h2>
         <p className="text-lg text-gray-600 max-w-2xl mx-auto">
@@ -124,7 +141,7 @@ export default function DataUsageStep({ data, onUpdate, onNext }: DataUsageStepP
       </div>
 
       <div className="text-center">
-        <Button onClick={() => setCurrentSection('controls')} size="lg">
+        <Button onClick={handleNext} size="lg">
           Configure Your Preferences
           <ArrowRight className="ml-2 h-4 w-4" />
         </Button>
@@ -273,11 +290,11 @@ export default function DataUsageStep({ data, onUpdate, onNext }: DataUsageStepP
       </Card>
 
       <div className="flex justify-between max-w-2xl mx-auto">
-        <Button variant="outline" onClick={() => setCurrentSection('overview')}>
+        <Button variant="outline" onClick={handleBack}>
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back
         </Button>
-        <Button onClick={() => setCurrentSection('preview')}>
+        <Button onClick={handleNext}>
           Preview Your Settings
           <ArrowRight className="ml-2 h-4 w-4" />
         </Button>
@@ -343,11 +360,11 @@ export default function DataUsageStep({ data, onUpdate, onNext }: DataUsageStepP
       </Card>
 
       <div className="flex justify-between max-w-2xl mx-auto">
-        <Button variant="outline" onClick={() => setCurrentSection('controls')}>
+        <Button variant="outline" onClick={handleBack}>
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back
         </Button>
-        <Button onClick={handleNext}>
+        <Button onClick={handleNext} >
           Save Preferences
           <ArrowRight className="ml-2 h-4 w-4" />
         </Button>

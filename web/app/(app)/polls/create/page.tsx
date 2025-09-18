@@ -1,208 +1,143 @@
 'use client';
+import * as React from 'react';
+import { T } from '@/lib/testing/testIds';
 
-import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { 
-  ArrowLeft, 
-  Plus, 
-  X, 
-  Save, 
-  Loader2, 
-  AlertCircle, 
-  CheckCircle2
-} from 'lucide-react';
+type VotingMethod = 'single' | 'approval' | 'ranked' | 'range' | 'quadratic' | '';
 
-type CreatePollData = {
-  title: string;
-  description: string;
-  category: string;
-  options: Array<{ id: string; text: string }>;
-  votingMethod: string;
-  privacyLevel: string;
-  allowMultipleVotes: boolean;
-  showResults: boolean;
-  allowComments: boolean;
-  endDate: string;
-  endTime: string;
-}
+export default function PollCreatePage() {
+  const [title, setTitle] = React.useState('');
+  const [description, setDescription] = React.useState('');
+  const [category, setCategory] = React.useState('');
+  const [votingMethod, setVotingMethod] = React.useState<VotingMethod>('');
+  const [privacyLevel, setPrivacyLevel] = React.useState<'public'|'private'>('public');
+  const [startTime, setStartTime] = React.useState<string>('');
+  const [endDate, setEndDate] = React.useState<string>('');
+  const [endTime, setEndTime] = React.useState<string>('');
+  const [options, setOptions] = React.useState<string[]>(['', '', '', '']);
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [success, setSuccess] = React.useState(false);
+  const [createdPollId, setCreatedPollId] = React.useState<string>('');
 
-const POLL_CATEGORIES = [
-  { value: 'politics', label: 'Politics', icon: '🏛️' },
-  { value: 'social', label: 'Social Issues', icon: '👥' },
-  { value: 'technology', label: 'Technology', icon: '💻' },
-  { value: 'entertainment', label: 'Entertainment', icon: '🎬' },
-  { value: 'sports', label: 'Sports', icon: '⚽' },
-  { value: 'education', label: 'Education', icon: '📚' },
-  { value: 'health', label: 'Health', icon: '🏥' },
-  { value: 'environment', label: 'Environment', icon: '🌱' },
-  { value: 'business', label: 'Business', icon: '💼' },
-  { value: 'general', label: 'General', icon: '📋' }
-];
+  const [errors, setErrors] = React.useState<{
+    title?: string; 
+    votingMethod?: string; 
+    options?: string; 
+    timing?: string;
+    general?: string;
+  }>({});
 
-const VOTING_METHODS = [
-  { value: 'single', label: 'Single Choice', description: 'Voters select one option' },
-  { value: 'approval', label: 'Approval Voting', description: 'Voters can approve multiple options' },
-  { value: 'ranked', label: 'Ranked Choice', description: 'Voters rank options by preference' },
-  { value: 'range', label: 'Range Voting', description: 'Voters rate each option on a scale' },
-  { value: 'quadratic', label: 'Quadratic Voting', description: 'Voters allocate credits with quadratic cost' }
-];
+  function addOption() {
+    setOptions((o) => [...o, '']);
+  }
 
-export default function CreatePollPage() {
-  const router = useRouter();
-  const [formData, setFormData] = useState<CreatePollData>({
-    title: '',
-    description: '',
-    category: '',
-    options: [
-      { id: '1', text: '' },
-      { id: '2', text: '' }
-    ],
-    votingMethod: 'single',
-    privacyLevel: 'public',
-    allowMultipleVotes: false,
-    showResults: true,
-    allowComments: true,
-    endDate: '',
-    endTime: ''
-  });
+  function removeOption(i: number) {
+    setOptions((o) => o.filter((_, idx) => idx !== i));
+  }
 
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
+  function updateOption(i: number, value: string) {
+    setOptions((o) => o.map((v, idx) => (idx === i ? value : v)));
+  }
 
-  const addOption = () => {
-    if (formData.options.length < 10) {
-      const newId = (formData.options.length + 1).toString();
-      setFormData(prev => ({
-        ...prev,
-        options: [...prev.options, { id: newId, text: '' }]
-      }));
+  function validate(): boolean {
+    const e: typeof errors = {};
+    if (!title.trim()) e.title = 'Title is required';
+    if (!votingMethod) e.votingMethod = 'Voting method is required';
+    const filled = options.map((o) => o.trim()).filter(Boolean);
+    if (filled.length < 2) e.options = 'At least 2 options are required';
+    if (startTime && endTime && new Date(startTime) >= new Date(`${endDate}T${endTime}`)) {
+      e.timing = 'End time must be after start time';
     }
-  };
+    setErrors(e);
+    return Object.keys(e).length === 0;
+  }
 
-  const removeOption = (id: string) => {
-    if (formData.options.length > 2) {
-      setFormData(prev => ({
-        ...prev,
-        options: prev.options.filter(option => option.id !== id)
-      }));
-    }
-  };
-
-  const updateOption = (id: string, text: string) => {
-    setFormData(prev => ({
-      ...prev,
-      options: prev.options.map(option =>
-        option.id === id ? { ...option, text } : option
-      )
-    }));
-  };
-
-  const validateForm = () => {
-    if (!formData.title.trim()) {
-      setError('Poll title is required');
-      return false;
-    }
-
-    if (!formData.category) {
-      setError('Please select a category');
-      return false;
-    }
-
-    if (formData.options.length < 2) {
-      setError('At least 2 options are required');
-      return false;
-    }
-
-    const emptyOptions = formData.options.filter(option => !option.text.trim());
-    if (emptyOptions.length > 0) {
-      setError('All options must have text');
-      return false;
-    }
-
-    if (!formData.endDate || !formData.endTime) {
-      setError('Please set an end date and time');
-      return false;
-    }
-
-    const endDateTime = new Date(`${formData.endDate}T${formData.endTime}`);
-    if (endDateTime <= new Date()) {
-      setError('End date must be in the future');
-      return false;
-    }
-
-    return true;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!validate()) return;
     
-    if (!validateForm()) return;
-
     setIsSubmitting(true);
-    setError(null);
-    setSuccess(false);
-
     try {
-      const pollData = {
-        title: formData.title,
-        description: formData.description,
-        category: formData.category,
-        options: formData.options.map(option => option.text).filter(text => text.trim()),
-        votingMethod: formData.votingMethod,
-        privacyLevel: formData.privacyLevel,
-        allowMultipleVotes: formData.allowMultipleVotes,
-        showResults: formData.showResults,
-        allowComments: formData.allowComments,
-        endTime: new Date(`${formData.endDate}T${formData.endTime}`).toISOString()
-      };
-
+      // Create poll via API
       const response = await fetch('/api/polls', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(pollData),
+        body: JSON.stringify({
+          title,
+          description,
+          options: options.filter(opt => opt.trim()),
+          votingMethod,
+          category,
+          privacyLevel,
+          endTime: endDate && endTime ? `${endDate}T${endTime}` : null,
+        }),
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to create poll');
+        throw new Error('Failed to create poll');
       }
 
-      const createdPoll = await response.json();
+      const poll = await response.json();
+      setCreatedPollId(poll.id);
       setSuccess(true);
       
-      // Redirect to the created poll after a short delay
+      // Redirect to the poll page after a short delay
       setTimeout(() => {
-        router.push(`/polls/${createdPoll.id}`);
+        window.location.href = `/polls/${poll.id}`;
       }, 2000);
-
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create poll');
+    } catch (error) {
+      console.error('Poll creation failed:', error);
+      setErrors({ ...errors, general: 'Failed to create poll. Please try again.' });
     } finally {
       setIsSubmitting(false);
     }
-  };
+  }
+
+  function onReset() {
+    setTitle('');
+    setDescription('');
+    setCategory('');
+    setVotingMethod('');
+    setPrivacyLevel('public');
+    setStartTime('');
+    setEndDate('');
+    setEndTime('');
+    setOptions(['', '', '', '']);
+    setErrors({});
+  }
 
   if (success) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center max-w-md mx-auto px-4">
-          <CheckCircle2 className="h-12 w-12 text-green-500 mx-auto mb-4" />
           <h2 className="text-xl font-semibold text-gray-700 mb-2">Poll Created Successfully!</h2>
-          <p className="text-gray-600 mb-4">
-            Your poll has been created and is now live. Redirecting you to the poll page...
+          <p className="text-gray-600 mb-4" data-testid="poll-created-success">
+            Your poll has been created and is now live.
           </p>
-          <Button onClick={() => router.push('/polls')}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Polls
-          </Button>
+          
+          <div className="bg-white p-4 rounded-lg shadow-sm mb-4 text-left">
+            <p className="text-sm text-gray-600 mb-2">
+              <span className="font-medium">Poll ID:</span> 
+              <span data-testid="poll-id" className="ml-2 font-mono text-xs bg-gray-100 px-2 py-1 rounded">
+                {createdPollId}
+              </span>
+            </p>
+            <p className="text-sm text-gray-600 mb-2">
+              <span className="font-medium">Title:</span> 
+              <span data-testid="poll-title-display" className="ml-2">{title}</span>
+            </p>
+            <p className="text-sm text-gray-600">
+              <span className="font-medium">Voting Method:</span> 
+              <span data-testid="voting-method-display" className="ml-2">
+                {votingMethod === 'single' ? 'Single Choice' :
+                 votingMethod === 'approval' ? 'Approval Voting' :
+                 votingMethod === 'ranked' ? 'Ranked Choice' :
+                 votingMethod === 'range' ? 'Range Voting' :
+                 votingMethod === 'quadratic' ? 'Quadratic Voting' : votingMethod}
+              </span>
+            </p>
+          </div>
         </div>
       </div>
     );
@@ -211,281 +146,189 @@ export default function CreatePollPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-4xl mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="mb-6">
-          <Button
-            variant="ghost"
-            onClick={() => router.push('/polls')}
-            className="mb-4"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Polls
-          </Button>
+        <h1 className="text-3xl font-bold text-gray-900 mb-6">Create New Poll</h1>
+        
+        <form onSubmit={onSubmit} className="space-y-6" data-testid="poll-creation-form">
+          <div>
+            <label className="block mb-1">Title</label>
+            <input
+              data-testid={T.pollCreate.title}
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className="input w-full px-3 py-2 border border-gray-300 rounded-md"
+            />
+            {errors.title && (
+              <p data-testid={T.pollCreate.titleError} className="text-red-600 text-sm">
+                {errors.title}
+              </p>
+            )}
+          </div>
 
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Create New Poll</h1>
-          <p className="text-gray-600">
-            Create a poll to gather opinions and make decisions with your community
-          </p>
-        </div>
+          <div>
+            <label className="block mb-1">Description</label>
+            <textarea
+              data-testid={T.pollCreate.description}
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              className="textarea w-full px-3 py-2 border border-gray-300 rounded-md"
+              rows={3}
+            />
+          </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Basic Information */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Basic Information</CardTitle>
-              <CardDescription>
-                Provide the essential details for your poll
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <Label htmlFor="title">Poll Title *</Label>
-                <Input
-                  id="title"
-                  value={formData.title}
-                  onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                  placeholder="What would you like to ask?"
-                  className="mt-1"
-                />
-              </div>
+          <div>
+            <label className="block mb-1">Category</label>
+            <select
+              data-testid={T.pollCreate.category}
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              className="select w-full px-3 py-2 border border-gray-300 rounded-md"
+            >
+              <option value="">Select a category</option>
+              <option value="general">General</option>
+              <option value="politics">Politics</option>
+              <option value="technology">Technology</option>
+            </select>
+          </div>
 
-              <div>
-                <Label htmlFor="description">Description</Label>
-                <textarea
-                  id="description"
-                  value={formData.description}
-                  onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                  rows={3}
-                  className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Provide additional context or details..."
-                />
-              </div>
+          <div>
+            <label className="block mb-1">Voting method</label>
+            <select
+              data-testid={T.pollCreate.votingMethod}
+              value={votingMethod}
+              onChange={(e) => setVotingMethod(e.target.value as VotingMethod)}
+              className="select w-full px-3 py-2 border border-gray-300 rounded-md"
+            >
+              <option value="">Select voting method</option>
+              <option value="single">Single Choice</option>
+              <option value="approval">Approval Voting</option>
+              <option value="ranked">Ranked Choice</option>
+              <option value="range">Range Voting</option>
+              <option value="quadratic">Quadratic Voting</option>
+            </select>
+            {errors.votingMethod && (
+              <p data-testid={T.pollCreate.votingMethodError} className="text-red-600 text-sm">
+                {errors.votingMethod}
+              </p>
+            )}
+          </div>
 
-              <div>
-                <Label htmlFor="category">Category *</Label>
-                <select
-                  id="category"
-                  value={formData.category}
-                  onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value }))}
-                  className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="">Select a category</option>
-                  {POLL_CATEGORIES.map((category) => (
-                    <option key={category.value} value={category.value}>
-                      {category.icon} {category.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Poll Options */}
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle>Poll Options</CardTitle>
-                  <CardDescription>
-                    Define the choices voters can select from
-                  </CardDescription>
-                </div>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={addOption}
-                  disabled={formData.options.length >= 10}
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Option
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {formData.options.map((option, index) => (
-                <div key={option.id} className="flex items-center space-x-3">
-                  <div className="flex-1">
-                    <Label htmlFor={`option-${option.id}`}>
-                      Option {index + 1} *
-                    </Label>
-                    <Input
-                      id={`option-${option.id}`}
-                      value={option.text}
-                      onChange={(e) => updateOption(option.id, e.target.value)}
-                      placeholder={`Option ${index + 1}`}
-                      className="mt-1"
-                    />
-                  </div>
-                  {formData.options.length > 2 && (
-                    <Button
+          <div className="space-y-2">
+            <label className="block">Options</label>
+            {options.map((val, idx) => {
+              const humanIndex = idx + 1;
+              return (
+                <div key={idx} className="flex items-center gap-2">
+                  <input
+                    data-testid={T.pollCreate.optionInput(humanIndex)}
+                    value={val}
+                    onChange={(e) => updateOption(idx, e.target.value)}
+                    className="input flex-1 px-3 py-2 border border-gray-300 rounded-md"
+                    placeholder={`Option ${humanIndex}`}
+                  />
+                  {options.length > 2 && (
+                    <button
                       type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => removeOption(option.id)}
-                      className="mt-6"
+                      data-testid={T.pollCreate.removeOption(humanIndex)}
+                      onClick={() => removeOption(idx)}
+                      className="btn btn-secondary px-3 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300"
                     >
-                      <X className="h-4 w-4" />
-                    </Button>
+                      Remove
+                    </button>
                   )}
                 </div>
-              ))}
-              <p className="text-sm text-gray-500">
-                Minimum 2 options, maximum 10 options
+              );
+            })}
+            <button
+              type="button"
+              data-testid={T.pollCreate.addOption}
+              onClick={addOption}
+              className="btn px-3 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+            >
+              Add option
+            </button>
+            {errors.options && (
+              <p data-testid={T.pollCreate.optionsError} className="text-red-600 text-sm">
+                {errors.options}
               </p>
-            </CardContent>
-          </Card>
+            )}
+          </div>
 
-          {/* Voting Settings */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Voting Settings</CardTitle>
-              <CardDescription>
-                Configure how voting will work for your poll
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <Label htmlFor="votingMethod">Voting Method</Label>
-                <select
-                  id="votingMethod"
-                  value={formData.votingMethod}
-                  onChange={(e) => setFormData(prev => ({ ...prev, votingMethod: e.target.value }))}
-                  className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  {VOTING_METHODS.map((method) => (
-                    <option key={method.value} value={method.value}>
-                      {method.label} - {method.description}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <Label htmlFor="privacyLevel">Privacy Level</Label>
-                <select
-                  id="privacyLevel"
-                  value={formData.privacyLevel}
-                  onChange={(e) => setFormData(prev => ({ ...prev, privacyLevel: e.target.value }))}
-                  className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="public">Public - Anyone can view and vote</option>
-                  <option value="private">Private - Only invited users can vote</option>
-                  <option value="anonymous">Anonymous - Votes are not linked to users</option>
-                </select>
-              </div>
-
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label>Allow Multiple Votes</Label>
-                    <p className="text-sm text-gray-500">Voters can select multiple options</p>
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={formData.allowMultipleVotes}
-                    onChange={(e) => setFormData(prev => ({ ...prev, allowMultipleVotes: e.target.checked }))}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                  />
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label>Show Results</Label>
-                    <p className="text-sm text-gray-500">Display results to voters</p>
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={formData.showResults}
-                    onChange={(e) => setFormData(prev => ({ ...prev, showResults: e.target.checked }))}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                  />
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label>Allow Comments</Label>
-                    <p className="text-sm text-gray-500">Voters can add comments</p>
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={formData.allowComments}
-                    onChange={(e) => setFormData(prev => ({ ...prev, allowComments: e.target.checked }))}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                  />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Schedule */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Schedule</CardTitle>
-              <CardDescription>
-                Set when your poll will end
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="endDate">End Date *</Label>
-                  <Input
-                    id="endDate"
-                    type="date"
-                    value={formData.endDate}
-                    onChange={(e) => setFormData(prev => ({ ...prev, endDate: e.target.value }))}
-                    min={new Date().toISOString().split('T')[0]}
-                    className="mt-1"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="endTime">End Time *</Label>
-                  <Input
-                    id="endTime"
-                    type="time"
-                    value={formData.endTime}
-                    onChange={(e) => setFormData(prev => ({ ...prev, endTime: e.target.value }))}
-                    className="mt-1"
-                  />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Error Display */}
-          {error && (
-            <Alert variant="destructive">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block mb-1">Start Time</label>
+              <input
+                type="datetime-local"
+                data-testid={T.pollCreate.startTime}
+                value={startTime}
+                onChange={(e) => setStartTime(e.target.value)}
+                className="input w-full px-3 py-2 border border-gray-300 rounded-md"
+              />
+            </div>
+            <div>
+              <label className="block mb-1">End Date</label>
+              <input
+                type="date"
+                data-testid="end-date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                className="input w-full px-3 py-2 border border-gray-300 rounded-md"
+              />
+            </div>
+          </div>
+          
+          <div>
+            <label className="block mb-1">End Time</label>
+            <input
+              type="time"
+              data-testid={T.pollCreate.endTime}
+              value={endTime}
+              onChange={(e) => setEndTime(e.target.value)}
+              className="input w-full px-3 py-2 border border-gray-300 rounded-md"
+            />
+          </div>
+          
+          {errors.timing && (
+            <p data-testid={T.pollCreate.timingError} className="text-red-600 text-sm">
+              {errors.timing}
+            </p>
           )}
 
-          {/* Submit Button */}
-          <div className="flex justify-end space-x-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => router.push('/polls')}
+          {errors.general && (
+            <p className="text-red-600 text-sm">
+              {errors.general}
+            </p>
+          )}
+
+          <div>
+            <label className="block mb-1">Privacy Level</label>
+            <select
+              data-testid={T.pollCreate.privacyLevel}
+              value={privacyLevel}
+              onChange={(e) => setPrivacyLevel(e.target.value as 'public'|'private')}
+              className="select w-full px-3 py-2 border border-gray-300 rounded-md"
             >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
+              <option value="public">Public</option>
+              <option value="private">Private</option>
+            </select>
+          </div>
+
+          <div className="flex gap-2">
+            <button 
+              data-testid={T.pollCreate.submit} 
+              type="submit" 
               disabled={isSubmitting}
+              className="btn btn-primary px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50"
             >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Creating Poll...
-                </>
-              ) : (
-                <>
-                  <Save className="h-4 w-4 mr-2" />
-                  Create Poll
-                </>
-              )}
-            </Button>
+              {isSubmitting ? 'Creating...' : 'Create poll'}
+            </button>
+            <button 
+              data-testid={T.pollCreate.reset} 
+              type="button" 
+              onClick={onReset}
+              className="btn btn-secondary px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300"
+            >
+              Reset
+            </button>
           </div>
         </form>
       </div>

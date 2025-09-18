@@ -136,7 +136,7 @@ export default function SingleChoiceVoting({
       )}
 
       {/* Voting Interface */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6" data-testid="voting-form">
         <div className="space-y-3">
           {options.map((option: PollOption, index: number) => (
             <div
@@ -153,6 +153,7 @@ export default function SingleChoiceVoting({
                   : 'border-gray-200'
                 }
               `}
+              data-testid={`option-${index + 1}-radio`}
             >
               <div className="flex items-start space-x-3">
                 {/* Radio Button */}
@@ -207,9 +208,9 @@ export default function SingleChoiceVoting({
         {/* Submit Button */}
         <div className="mt-6 flex justify-center">
           {hasVoted ? (
-            <div className="flex items-center space-x-2 text-green-600">
+            <div className="flex items-center space-x-2 text-green-600" data-testid="vote-confirmation">
               <CheckCircle className="w-5 h-5" />
-              <span className="font-medium">Vote submitted successfully!</span>
+              <span className="font-medium" data-testid="vote-receipt">Vote submitted successfully!</span>
             </div>
           ) : (
             <button
@@ -222,6 +223,7 @@ export default function SingleChoiceVoting({
                   : 'bg-blue-600 text-white hover:bg-blue-700'
                 }
               `}
+              data-testid="submit-vote-button"
             >
               <CheckCircle className="w-5 h-5" />
               <span>{isSubmitting ? 'Submitting Vote...' : 'Submit Vote'}</span>

@@ -23,6 +23,8 @@ import { withOptional } from '../util/objects';
 import type { UserRanking } from './irv-calculator';
 import { type MerkleTree, BallotVerificationManager, snapshotChecksum } from '../audit/merkle-tree';
 import { createHash } from 'crypto';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
+import type { SupabaseClient as RealSupabaseClient } from '@supabase/supabase-js';
 import type {
   Poll,
   Ballot,
@@ -84,8 +86,6 @@ type SupabaseQueryBuilder = {
   update(data: Record<string, unknown>): SupabaseQueryBuilder;
   upsert(data: Record<string, unknown>, options?: { onConflict?: string }): SupabaseQueryBuilder;
   then(onfulfilled?: (value: { data: unknown; error: unknown }) => void): Promise<{ data: unknown; error: unknown }>;
-  data: unknown;
-  error: unknown;
 };
 
 type SupabaseClient = {
@@ -97,9 +97,9 @@ type SupabaseClient = {
 
 export class FinalizePollManager {
   private ballotVerifier: BallotVerificationManager;
-  private supabaseClient: SupabaseClient;
+  private supabaseClient: RealSupabaseClient;
 
-  constructor(supabaseClient: SupabaseClient) {
+  constructor(supabaseClient: RealSupabaseClient) {
     this.supabaseClient = supabaseClient;
     this.ballotVerifier = new BallotVerificationManager();
   }
@@ -729,14 +729,16 @@ export function getDefaultFinalizeOptions(): FinalizeOptions {
 
 export async function finalizePoll(pollId: string, options?: Partial<FinalizeOptions>): Promise<FinalizeResult> {
   // This would be called from an API endpoint or background job
-  const manager = new FinalizePollManager({} as SupabaseClient); // TODO: Pass actual supabase client
+  const supabase = await getSupabaseServerClient();
+  const manager = new FinalizePollManager(supabase);
   const finalOptions = withOptional(getDefaultFinalizeOptions(), options ?? {});
   return manager.finalizePoll(pollId, finalOptions);
 }
 
 export async function createPollSnapshot(pollId: string): Promise<string> {
   // This would be called from the database migration
-  const manager = new FinalizePollManager({} as SupabaseClient); // TODO: Pass actual supabase client
+  const supabase = await getSupabaseServerClient();
+  const manager = new FinalizePollManager(supabase);
   const result = await manager.finalizePoll(pollId);
   
   if (!result.success) {

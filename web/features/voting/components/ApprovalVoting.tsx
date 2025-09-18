@@ -155,6 +155,7 @@ export default function ApprovalVoting({
             <div
               key={option.id}
               onClick={() => handleOptionToggle(option.id)}
+              data-testid={`option-${parseInt(option.id) + 1}-checkbox`}
               className={`
                 relative p-4 border-2 rounded-lg cursor-pointer transition-all duration-200
                 ${isDisabled 
@@ -209,14 +210,20 @@ export default function ApprovalVoting({
         {/* Submit Button */}
         <div className="mt-6 flex justify-center">
           {hasVoted ? (
-            <div className="flex items-center space-x-2 text-green-600">
-              <CheckCircle className="w-5 h-5" />
-              <span className="font-medium">Vote submitted successfully!</span>
+            <div className="text-center">
+              <div className="flex items-center justify-center space-x-2 text-green-600 mb-2" data-testid="vote-confirmation">
+                <CheckCircle className="w-5 h-5" />
+                <span className="font-medium">Vote submitted successfully!</span>
+              </div>
+              <div className="text-sm text-gray-600" data-testid="selected-options">
+                You approved: {approvedOptions.map(id => options.find(opt => opt.id === id)?.text).join(', ')}
+              </div>
             </div>
           ) : (
             <button
               onClick={handleSubmit}
               disabled={isDisabled || approvedOptions.length === 0}
+              data-testid="start-voting-button"
               className={`
                 flex items-center space-x-2 px-8 py-3 rounded-lg font-medium transition-colors
                 ${isDisabled || approvedOptions.length === 0

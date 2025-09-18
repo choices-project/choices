@@ -9,7 +9,7 @@
 
 import { test, expect, chromium } from '@playwright/test';
 
-test.describe('WebAuthn with CDP Virtual Authenticators', () => {
+test.describe('WebAuthn with CDP Virtual Authenticators @passkeys', () => {
   let browser: any;
   let context: any;
   let page: any;

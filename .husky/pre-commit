@@ -1,3 +1,12 @@
-#!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
-bash scripts/precommit.sh
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Block new legacy files
+if git diff --cached --name-only --diff-filter=A | grep -E '^web/components/(polls|voting|admin/layout)/'; then
+  echo "❌ New legacy files under web/components/* blocked. Use canonical paths."; exit 1;
+fi
+
+# Type & lint in UTC
+export TZ=UTC
+npm run -w web types:strict
+npm run -w web lint

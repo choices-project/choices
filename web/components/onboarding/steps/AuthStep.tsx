@@ -5,7 +5,7 @@ import { Lock, Shield } from 'lucide-react'
 import { getSupabaseBrowserClient } from '@/utils/supabase/client'
 import { devLog } from '@/lib/logger';
 import { useOnboardingContext } from '../OnboardingFlow'
-import SocialLoginButtons from '@/components/auth/SocialLoginButtons'
+import SocialLoginButtons from '@/features/auth/components/SocialLoginButtons'
 import type { OAuthProvider } from '@/features/auth/types/auth'
 
 type AuthStepProps = {
@@ -30,13 +30,13 @@ export default function AuthStep({ data, onUpdate, onNext, onBack }: AuthStepPro
     }
   }, [data?.authMethod, authMethod])
 
-  const supabase = getSupabaseBrowserClient()
-
   const handleSocialLogin = async (provider: OAuthProvider) => {
     setIsLoading(true)
     setError(null)
     
     try {
+      const supabase = await getSupabaseBrowserClient()
+      
       if (!supabase) {
         throw new Error('Authentication service not available')
       }

@@ -1,13 +1,19 @@
 {
   "name": "choice-web",
   "private": true,
-  "engines": { "node": "22.19.0", "npm": "10.9.3" },
+  "engines": {
+    "node": "22.19.0",
+    "npm": "10.9.3"
+  },
   "packageManager": "npm@10.9.3",
-  "volta": { "node": "22.19.0", "npm": "10.9.3" },
+  "volta": {
+    "node": "22.19.0",
+    "npm": "10.9.3"
+  },
   "scripts": {
     "preinstall": "node scripts/ensure-tooling.js",
-    "dev": "next dev",
-    "build": "next build",
+    "dev": "TZ=UTC next dev",
+    "build": "TZ=UTC next build",
     "postbuild": "node scripts/check-server-bundle-for-browser-globals.mjs",
     "start": "next start",
     "lint:fix": "eslint -c .eslintrc.cjs . --fix",
@@ -48,10 +54,9 @@
     "errors:classify": "node tools/error-classify.js",
     "codemod:optional-literals": "tsx tools/codemods/optional-literals.ts",
     "check": "npm-run-all -p types:ci lint:test jest:ci",
-    "ci:verify": "npm run lint && npm run types:ci && npm run lint:typed",
+    "ci:verify": "npm run audit:high && npm run check:next-security",
     "lint:typed:changed": "eslint . --config .eslintrc.type-aware.cjs --ext .ts,.tsx --cache --max-warnings=0 --cache-location .eslintcache-typed --report-unused-disable-directives",
     "prepush": "npm run types:ci && npm run lint:test",
-    "lint:fix": "eslint -c .eslintrc.cjs . --fix",
     "lint:strict:fix": "eslint -c .eslintrc.cjs . --fix",
     "lint:staged": "eslint --cache --max-warnings=0",
     "security-check": "grep -r \"select('\\*')\" . --include='*.ts' --include='*.tsx' --exclude-dir=node_modules --exclude-dir=.next || echo 'No security issues found'",
@@ -74,7 +79,6 @@
     "test:raw-provenance": "tsx scripts/test-raw-provenance.ts",
     "setup:dbt-tests": "tsx scripts/setup-dbt-tests.ts",
     "test:dbt-tests": "tsx scripts/test-dbt-tests.ts",
-    "ci:verify": "npm run audit:high && npm run check:next-security",
     "ci:verify:deploy": "npm run audit:high && npm run check:next-security && npm run lint && npm run types:ci",
     "analyze": "ANALYZE=true npm run build",
     "analyze:server": "ANALYZE=true npm run build && npx webpack-bundle-analyzer .next/static/chunks/*.js",
@@ -103,7 +107,10 @@
     "@types/redis": "4.0.10",
     "@upstash/ratelimit": "2.0.6",
     "@upstash/redis": "1.35.3",
+    "base64url": "3.0.1",
     "bcryptjs": "3.0.2",
+    "circomlib": "2.0.5",
+    "circomlibjs": "0.1.7",
     "class-variance-authority": "0.7.1",
     "client-only": "0.0.1",
     "clsx": "2.1.1",
@@ -118,15 +125,13 @@
     "recharts": "2.12.7",
     "redis": "5.8.2",
     "server-only": "0.0.1",
+    "snarkjs": "0.7.2",
     "speakeasy": "2.0.0",
     "tailwind-merge": "3.3.1",
     "uuid": "11.1.0",
     "yaml": "2.8.1",
     "zod": "4.1.3",
-    "zustand": "5.0.2",
-    "snarkjs": "0.7.2",
-    "circomlib": "2.0.5",
-    "circomlibjs": "0.1.7"
+    "zustand": "5.0.2"
   },
   "devDependencies": {
     "@babel/core": "7.25.7",
@@ -168,7 +173,6 @@
     "tsx": "4.20.5",
     "typescript": "5.7.2"
   },
-  "packageManager": "npm@10.9.3",
   "overrides": {
     "chalk": "4.1.2",
     "ansi-styles": "4.3.0",

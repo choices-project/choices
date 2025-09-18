@@ -151,16 +151,14 @@ export class HybridVotingService {
     // Simple vote insertion
     if (!this.supabase) { throw new Error('Supabase client not available'); }
     const { data: vote, error } = await this.supabase
-      .from('po_votes')
+      .from('votes')
       .insert({
         poll_id: pollId,
+        user_id: userId,
         choice: choice,
-        privacy_level: PrivacyLevel.MINIMAL,
-        token: `public_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-        tag: `public_${Date.now()}`,
-        merkle_leaf: 'public_vote',
-        vote_metadata: {
-          method: PrivacyLevel.MINIMAL,
+        voting_method: 'single',
+        vote_data: {
+          privacy_level: PrivacyLevel.MINIMAL,
           timestamp: new Date().toISOString()
         }
       })
@@ -200,7 +198,7 @@ export class HybridVotingService {
     // Check if user has already voted
     if (!this.supabase) { throw new Error('Supabase client not available'); }
     const { data: existingVote, error: existingVoteError } = await this.supabase
-      .from('po_votes')
+      .from('votes')
       .select('id')
       .eq('poll_id', pollId)
       .eq('user_id', userId)
@@ -217,17 +215,14 @@ export class HybridVotingService {
     // Private vote insertion with user tracking
     if (!this.supabase) { throw new Error('Supabase client not available'); }
     const { data: vote, error } = await this.supabase
-      .from('po_votes')
+      .from('votes')
       .insert({
         poll_id: pollId,
         user_id: userId,
         choice: choice,
-        privacy_level: PrivacyLevel.STANDARD,
-        token: `private_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-        tag: `private_${userId}_${Date.now()}`,
-        merkle_leaf: 'private_vote',
-        vote_metadata: {
-          method: PrivacyLevel.STANDARD,
+        voting_method: 'single',
+        vote_data: {
+          privacy_level: PrivacyLevel.STANDARD,
           timestamp: new Date().toISOString(),
           userId: userId
         }
@@ -294,16 +289,16 @@ export class HybridVotingService {
       // Get user profile to determine tier
       if (!this.supabase) { throw new Error('Supabase client not available'); }
       const { data: userProfile, error: profileError } = await this.supabase
-        .from('ia_users')
-        .select('verification_tier')
-        .eq('stable_id', userId)
+        .from('user_profiles')
+        .select('trust_tier')
+        .eq('user_id', userId)
         .single();
 
       if (profileError || !userProfile) {
         throw new Error('User profile not found');
       }
 
-      const tier = userProfile.verification_tier || 'T1';
+      const tier = userProfile.trust_tier || 'T0';
 
       // Request token from IA service
       const response = await fetch('/api/ia/tokens', {

@@ -129,7 +129,7 @@ export class WebAuthnManager {
 
       if (credential && 'rawId' in credential) {
         // Update credential type assertions
-        const publicKeyCredential = credential as PublicKeyCredential & {
+        const _publicKeyCredential = credential as PublicKeyCredential & {
           response: AuthenticatorAssertionResponse;
         };
         
@@ -150,7 +150,7 @@ export class WebAuthnManager {
 export const webauthnManager = WebAuthnManager.getInstance();
 
 // Additional exports for compatibility
-export async function registerBiometric(username: string, email: string): Promise<{ success: boolean; error?: { message: string } }> {
+export async function registerBiometric(_username: string, _email: string): Promise<{ success: boolean; error?: { message: string } }> {
   try {
     const credential = await webauthnManager.createCredential({
       challenge: 'registration-challenge',

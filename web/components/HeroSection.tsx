@@ -136,7 +136,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               </h1>
               <p className="text-xl lg:text-2xl text-gray-600 leading-relaxed">
                 Participate in democratic decision-making with privacy, security, and transparency. 
-                Your voice matters, and we ensure it's heard.
+                Your voice matters, and we ensure it&apos;s heard.
               </p>
             </div>
 

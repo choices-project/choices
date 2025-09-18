@@ -76,7 +76,7 @@ export class PrivacyDataManager {
 
   constructor(supabaseClient?: SupabaseClient) {
     this.encryption = new UserEncryption();
-    this.supabaseClient = supabaseClient || getSupabaseBrowserClient() as SupabaseClient;
+    this.supabaseClient = supabaseClient || (getSupabaseBrowserClient() as unknown as SupabaseClient);
     this.consentManager = new ConsentManager(this.supabaseClient);
   }
 
@@ -279,8 +279,8 @@ export class PrivacyDataManager {
           .eq('user_id', user.id)
           .single();
         
-        salt = profileData?.key_derivation_salt;
-        iv = profileData?.initialization_vector;
+        salt = (profileData as Record<string, unknown>)?.key_derivation_salt as string;
+        iv = (profileData as Record<string, unknown>)?.initialization_vector as string;
       }
 
       if (!encryptedData || !salt || !iv) return null;
@@ -302,7 +302,7 @@ export class PrivacyDataManager {
       // Clear encryption key from memory
       this.encryption.clearKey();
 
-      return decryptionResult.success ? decryptionResult.decryptedData : null;
+      return decryptionResult.success ? (decryptionResult.decryptedData as Record<string, unknown>) : null;
     } catch (error) {
       console.error('Error retrieving encrypted data:', error);
       this.encryption.clearKey();

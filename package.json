@@ -21,6 +21,7 @@
     "ci:verify": "npm audit --audit-level=moderate"
   },
   "dependencies": {
+    "pg": "8.16.3",
     "zod": "4.1.8"
   }
 }

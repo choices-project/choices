@@ -71,7 +71,7 @@ export default function InterestSelectionStep({ onNext, onBack }: InterestSelect
 
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
+    <div className="max-w-4xl mx-auto p-6" >
       {/* Header */}
       <div className="text-center mb-8">
         <h2 className="text-3xl font-bold text-gray-900 mb-2">

@@ -33,7 +33,7 @@ test.describe('Admin System', () => {
     test('should show admin access denied for regular users', async ({ page }) => {
       // Login as regular user (you'll need to set up test user)
       await page.fill('input[name="email"]', 'regular@example.com')
-      await page.fill('input[name="password"]', 'password123')
+      await page.fill('input[name="password"]', 'Passw0rd!123')
       await page.click('button[type="submit"]')
       
       // Wait for login to complete
@@ -49,7 +49,7 @@ test.describe('Admin System', () => {
     test('should allow admin users to access admin dashboard', async ({ page }) => {
       // Login as admin user (you'll need to set up test admin user)
       await page.fill('input[name="email"]', 'admin@example.com')
-      await page.fill('input[name="password"]', 'adminpassword')
+      await page.fill('input[name="password"]', 'Passw0rd!123')
       await page.click('button[type="submit"]')
       
       // Wait for login to complete
@@ -68,12 +68,22 @@ test.describe('Admin System', () => {
     test.beforeEach(async ({ page }) => {
       // Login as admin user
       await page.fill('input[name="email"]', 'admin@example.com')
-      await page.fill('input[name="password"]', 'adminpassword')
+      await page.fill('input[name="password"]', 'Passw0rd!123')
       await page.click('button[type="submit"]')
-      await page.waitForURL(/\/dashboard|\/profile/)
+      
+      // Wait for login to complete and check for any errors
+      await page.waitForURL(/\/dashboard|\/profile/, { timeout: 10000 })
+      
+      // Debug: Check if we're actually logged in
+      console.log('Current URL after login:', page.url())
       
       // Navigate to admin dashboard
       await page.goto('/admin')
+      
+      // Debug: Check what we see on admin page
+      console.log('Current URL after admin navigation:', page.url())
+      const pageContent = await page.textContent('body')
+      console.log('Page content preview:', pageContent?.substring(0, 200))
     })
 
     test('should display admin dashboard with all sections', async ({ page }) => {
@@ -122,7 +132,7 @@ test.describe('Admin System', () => {
     test.beforeEach(async ({ page }) => {
       // Login as admin and navigate to users page
       await page.fill('input[name="email"]', 'admin@example.com')
-      await page.fill('input[name="password"]', 'adminpassword')
+      await page.fill('input[name="password"]', 'Passw0rd!123')
       await page.click('button[type="submit"]')
       await page.waitForURL(/\/dashboard|\/profile/)
       await page.goto('/admin/users')
@@ -152,7 +162,7 @@ test.describe('Admin System', () => {
     test.beforeEach(async ({ page }) => {
       // Login as admin and navigate to feedback page
       await page.fill('input[name="email"]', 'admin@example.com')
-      await page.fill('input[name="password"]', 'adminpassword')
+      await page.fill('input[name="password"]', 'Passw0rd!123')
       await page.click('button[type="submit"]')
       await page.waitForURL(/\/dashboard|\/profile/)
       await page.goto('/admin/feedback')
@@ -189,7 +199,7 @@ test.describe('Admin System', () => {
     test.beforeEach(async ({ page }) => {
       // Login as admin and navigate to analytics page
       await page.fill('input[name="email"]', 'admin@example.com')
-      await page.fill('input[name="password"]', 'adminpassword')
+      await page.fill('input[name="password"]', 'Passw0rd!123')
       await page.click('button[type="submit"]')
       await page.waitForURL(/\/dashboard|\/profile/)
       await page.goto('/admin/analytics')
@@ -215,7 +225,7 @@ test.describe('Admin System', () => {
     test.beforeEach(async ({ page }) => {
       // Login as admin and navigate to system page
       await page.fill('input[name="email"]', 'admin@example.com')
-      await page.fill('input[name="password"]', 'adminpassword')
+      await page.fill('input[name="password"]', 'Passw0rd!123')
       await page.click('button[type="submit"]')
       await page.waitForURL(/\/dashboard|\/profile/)
       await page.goto('/admin/system')
@@ -241,7 +251,7 @@ test.describe('Admin System', () => {
     test.beforeEach(async ({ page }) => {
       // Login as admin and navigate to site messages page
       await page.fill('input[name="email"]', 'admin@example.com')
-      await page.fill('input[name="password"]', 'adminpassword')
+      await page.fill('input[name="password"]', 'Passw0rd!123')
       await page.click('button[type="submit"]')
       await page.waitForURL(/\/dashboard|\/profile/)
       await page.goto('/admin/site-messages')

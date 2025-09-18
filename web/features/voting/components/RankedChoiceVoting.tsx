@@ -280,6 +280,7 @@ export default function RankedChoiceVoting({
             <button
               onClick={handleSubmit}
               disabled={isDisabled || Object.values(rankings).filter(r => r > 0).length !== options.length}
+              data-testid="start-voting-button"
               className={`
                 flex items-center space-x-2 px-8 py-3 rounded-lg font-medium transition-colors
                 ${isDisabled || Object.values(rankings).filter(r => r > 0).length !== options.length

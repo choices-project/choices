@@ -6,15 +6,19 @@ export const FEATURE_FLAGS = {
   CORE_AUTH: true,
   CORE_POLLS: true,
   CORE_USERS: true,
-  WEBAUTHN: false,
-  PWA: false,
+  WEBAUTHN: true,
+  PWA: true,
   ANALYTICS: false,
   ADMIN: true,
   EXPERIMENTAL_UI: false,
   EXPERIMENTAL_ANALYTICS: false,
   ADVANCED_PRIVACY: false,
-  // Database optimization suite - disabled by default to prevent bloat
-  FEATURE_DB_OPTIMIZATION_SUITE: false,
+  // Database optimization suite - enabled for performance
+  FEATURE_DB_OPTIMIZATION_SUITE: true,
+  // Experimental components - keep disabled until evaluated
+  EXPERIMENTAL_COMPONENTS: false,
+  // Civics address lookup system - disabled by default until e2e is complete
+  CIVICS_ADDRESS_LOOKUP: false,
 } as const;
 
 // Define proper types for feature flag system
@@ -67,6 +71,8 @@ const ALIASES: Record<string, FeatureFlagKey> = {
   'advanced-privacy': 'ADVANCED_PRIVACY',
   analytics: 'ANALYTICS',
   admin: 'ADMIN',
+  civics: 'CIVICS_ADDRESS_LOOKUP',
+  'civics-address-lookup': 'CIVICS_ADDRESS_LOOKUP',
 };
 
 function normalize(key: string): FeatureFlagKey | null {
@@ -92,7 +98,7 @@ function categorizeFlag(flagId: string): string {
   const categories: Record<string, string[]> = {
     core: ['CORE_AUTH', 'CORE_POLLS', 'CORE_USERS'],
     experimental: ['EXPERIMENTAL_UI', 'EXPERIMENTAL_ANALYTICS'],
-    features: ['WEBAUTHN', 'PWA', 'ANALYTICS', 'ADMIN', 'ADVANCED_PRIVACY', 'FEATURE_DB_OPTIMIZATION_SUITE']
+    features: ['WEBAUTHN', 'PWA', 'ANALYTICS', 'ADMIN', 'ADVANCED_PRIVACY', 'FEATURE_DB_OPTIMIZATION_SUITE', 'CIVICS_ADDRESS_LOOKUP']
   };
   
   for (const [category, flags] of Object.entries(categories)) {
@@ -196,7 +202,7 @@ export const featureFlagManager = {
     const categories: Record<string, string[]> = {
       core: ['CORE_AUTH', 'CORE_POLLS', 'CORE_USERS'],
       experimental: ['EXPERIMENTAL_UI', 'EXPERIMENTAL_ANALYTICS'],
-      features: ['WEBAUTHN', 'PWA', 'ANALYTICS', 'ADMIN', 'ADVANCED_PRIVACY']
+      features: ['WEBAUTHN', 'PWA', 'ANALYTICS', 'ADMIN', 'ADVANCED_PRIVACY', 'CIVICS_ADDRESS_LOOKUP']
     };
     const flagIds = categories[category] || [];
     return flagIds.map(flagId => ({
@@ -277,6 +283,20 @@ export const enableFeature = featureFlagManager.enable;
 export const disableFeature = featureFlagManager.disable;
 export const toggleFeature = featureFlagManager.toggle;
 export const getFeatureFlag = (k: string | FeatureFlagKey) => isFeatureEnabled(k);
+
+// E2E API functions
+export async function getFeatureFlags(): Promise<Record<string, boolean>> {
+  return featureFlagManager.all();
+}
+
+export async function setFeatureFlags(flags: Record<string, boolean>): Promise<void> {
+  Object.entries(flags).forEach(([key, value]) => {
+    const normalizedKey = normalize(key);
+    if (normalizedKey && normalizedKey in mutableFlags && typeof value === 'boolean') {
+      mutableFlags[normalizedKey] = value;
+    }
+  });
+}
 export const getAllFeatureFlags = () => featureFlagManager.all();
 
 // Additional exports expected by useFeatureFlags hook

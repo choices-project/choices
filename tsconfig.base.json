@@ -17,7 +17,11 @@
       "@/*": ["./web/*"],
       "@/lib/*": ["./web/lib/*"],
       "@/utils/supabase/server": ["./web/utils/supabase/server"],
-      "@/lib/supabase/server": ["./web/utils/supabase/server"]
+      "@/lib/supabase/server": ["./web/utils/supabase/server"],
+      "@/components/polls/*": ["./web/features/polls/*"],
+      "@/components/voting/*": ["./web/features/voting/*"],
+      "@/components/CreatePoll*": ["./web/features/polls/components/CreatePollForm"],
+      "@/components/admin/layout/*": ["./web/app/(app)/admin/layout/*"]
     },
     "types": ["node"],
     "declaration": true,

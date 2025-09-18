@@ -43,7 +43,7 @@ export default function FirstExperienceStep({ onUpdate, onNext }: FirstExperienc
   }
 
   const renderOverview = () => (
-    <div className="space-y-8">
+    <div className="space-y-8" >
       <div className="text-center space-y-4">
         <h2 className="text-3xl font-bold text-gray-900">Your First Experience</h2>
         <p className="text-lg text-gray-600 max-w-2xl mx-auto">
@@ -439,7 +439,7 @@ export default function FirstExperienceStep({ onUpdate, onNext }: FirstExperienc
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back
         </Button>
-        <Button onClick={handleNext}>
+        <Button onClick={handleNext} >
           Complete Onboarding
           <ArrowRight className="ml-2 h-4 w-4" />
         </Button>

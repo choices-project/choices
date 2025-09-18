@@ -147,6 +147,9 @@ export type LegacyOnboardingData = {
   authSetupCompleted?: boolean;
   profileSetupCompleted?: boolean;
   firstExperienceCompleted?: boolean;
+  
+  // Progressive disclosure state
+  showAdvancedPrivacy?: boolean;
 }
 
 /** New + legacy hybrid snapshot used by the app */

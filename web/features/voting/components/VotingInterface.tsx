@@ -54,13 +54,39 @@ export default function VotingInterface({
   const [timeRemaining, setTimeRemaining] = useState<string>('');
 
   const handleVote = useCallback((n: number) => onVote(n), [onVote]);
+  
+  const handleApprovalVote = useCallback(async (approvals: string[]) => {
+    try {
+      const response = await fetch(`/api/polls/${poll.id}/vote`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-e2e-bypass': '1'
+        },
+        body: JSON.stringify({ approvals }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to submit vote');
+      }
+
+      const result = await response.json();
+
+      // Call the original onVote callback to update the UI
+      await onVote(approvals.length);
+    } catch (error) {
+      console.error('Approval vote failed:', error);
+      throw error;
+    }
+  }, [poll.id, onVote]);
 
   // Stable adapters for each child signature (NO unused params anywhere)
   const onApproval = useCallback(
     async (...[, approvals]: [string, string[]]) => {
-      await handleVote(approvals.length);
+      await handleApprovalVote(approvals);
     },
-    [handleVote]
+    []
   );
 
   const onQuadratic = useCallback(
@@ -242,7 +268,7 @@ export default function VotingInterface({
   };
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-4xl mx-auto" data-testid="voting-form">
       {/* Header with poll info and verification tier */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
         <div className="flex items-start justify-between mb-4">

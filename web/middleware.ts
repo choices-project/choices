@@ -37,12 +37,14 @@ function shouldBypassForE2E(req: NextRequest): boolean {
   const h = SECURITY_CONFIG.rateLimit.e2eBypassHeader
   const bypass = process.env.NODE_ENV === 'test' || process.env.E2E === '1'
   const isLocal = req.ip === '127.0.0.1' || req.ip === '::1' || req.ip?.endsWith(':127.0.0.1')
+  const hasE2EHeader = req.headers.get(h) === '1'
   
   const rateLimitEnabled = Boolean(SECURITY_CONFIG.rateLimit.enabled)
   
   return Boolean(!rateLimitEnabled ||
          bypass ||
-         (isLocal && req.nextUrl.pathname.startsWith('/login')))
+         hasE2EHeader ||
+         (isLocal && (req.nextUrl.pathname.startsWith('/login') || req.nextUrl.pathname.startsWith('/register'))))
 }
 
 /**

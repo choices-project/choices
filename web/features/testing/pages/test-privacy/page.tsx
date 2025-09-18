@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import type { CreatePollFormData } from '@/components/polls/CreatePollForm';
-import { CreatePollForm } from '@/components/polls/CreatePollForm';
+import type { CreatePollFormData } from '@/features/polls/components/CreatePollForm';
+import { CreatePollForm } from '@/features/polls/components/CreatePollForm';
 import { PrivacyLevelIndicator } from '@/components/privacy/PrivacyLevelIndicator';
 import { PrivacyLevel } from '@/lib/privacy/hybrid-privacy';
 import { devLog } from '@/lib/logger';

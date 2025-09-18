@@ -262,6 +262,7 @@ export default function RangeVoting({
             <button
               onClick={handleSubmit}
               disabled={isDisabled}
+              data-testid="start-voting-button"
               className={`
                 flex items-center space-x-2 px-8 py-3 rounded-lg font-medium transition-colors
                 ${isDisabled

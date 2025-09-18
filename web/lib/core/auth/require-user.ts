@@ -123,7 +123,7 @@ export async function requireUser(
 
     // Check admin status
     const { data: isAdmin, error: adminError } = await supabase
-      .rpc('is_admin', { user_id: user.id });
+      .rpc('is_admin', { input_user_id: user.id });
 
     if (adminError) {
       devLog('Admin check error:', adminError, { userId: user.id });
@@ -242,7 +242,7 @@ export async function requireUserForAction(
 
   // Check admin status
   const { data: isAdmin } = await supabase
-    .rpc('is_admin', { user_id: user.id });
+    .rpc('is_admin', { input_user_id: user.id });
 
   const userProfile = profile && !('error' in profile) ? profile as UserProfile : null;
   const userObj: User = withOptional({
@@ -308,7 +308,7 @@ export async function getCurrentUser(): Promise<User | null> {
 
     // Check admin status
     const { data: isAdmin } = await supabase
-      .rpc('is_admin', { user_id: user.id });
+      .rpc('is_admin', { input_user_id: user.id });
 
     const userProfile = profile && !('error' in profile) ? profile as UserProfile : null;
     

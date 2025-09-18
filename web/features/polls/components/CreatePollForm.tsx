@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { devLog } from '@/lib/logger';
 import { Plus, X, Save, AlertCircle, Shield } from 'lucide-react';
-import { PrivacyLevelSelector } from '@/components/privacy/PrivacyLevelSelector';
+import { PrivacyLevelSelector } from '@/shared/components/PrivacyLevelSelector';
 import { PrivacyLevel, HybridPrivacyManager } from '@/lib/privacy/hybrid-privacy';
 import { withOptional } from '@/lib/util/objects';
 

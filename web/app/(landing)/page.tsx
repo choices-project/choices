@@ -11,8 +11,8 @@ export default function LandingPage() {
               <h1 className="text-2xl font-bold text-gray-900">Choices</h1>
             </div>
             <nav className="flex space-x-8">
-              <Link href="/login" className="text-gray-600 hover:text-gray-900">Sign In</Link>
-              <Link href="/register" className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+              <Link href="/login" className="text-gray-600 hover:text-gray-900" data-testid="sign-in-button">Sign In</Link>
+              <Link href="/register" className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700" data-testid="sign-up-button">
                 Get Started
               </Link>
             </nav>
@@ -32,10 +32,10 @@ export default function LandingPage() {
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
-            <Link href="/register" className="inline-block bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-8 rounded-lg text-lg transition-colors duration-200">
+            <Link href="/register" className="inline-block bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-8 rounded-lg text-lg transition-colors duration-200" data-testid="sign-up-button">
               Get Started
             </Link>
-            <Link href="/login" className="inline-block border border-gray-300 hover:border-gray-400 text-gray-700 font-semibold py-3 px-8 rounded-lg text-lg transition-colors duration-200">
+            <Link href="/login" className="inline-block border border-gray-300 hover:border-gray-400 text-gray-700 font-semibold py-3 px-8 rounded-lg text-lg transition-colors duration-200" data-testid="sign-in-button">
               Sign In
             </Link>
           </div>

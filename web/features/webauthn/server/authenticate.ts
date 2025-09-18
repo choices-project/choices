@@ -102,9 +102,9 @@ export async function verifyCredential(body: any) {
 
     // Get user data
     const { data: user, error: userError } = await supabaseClient
-      .from('ia_users')
-      .select('stable_id, email')
-      .eq('stable_id', storedCredential.user_id)
+      .from('user_profiles')
+      .select('user_id, email')
+      .eq('user_id', storedCredential.user_id)
       .single()
 
     if (userError || !user) {

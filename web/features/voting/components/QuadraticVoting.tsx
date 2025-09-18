@@ -290,6 +290,7 @@ export default function QuadraticVoting({
             <button
               onClick={handleSubmit}
               disabled={isDisabled || getTotalSpent() === 0}
+              data-testid="start-voting-button"
               className={`
                 flex items-center space-x-2 px-8 py-3 rounded-lg font-medium transition-colors
                 ${isDisabled || getTotalSpent() === 0

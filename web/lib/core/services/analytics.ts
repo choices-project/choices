@@ -33,9 +33,9 @@ export class AnalyticsService {
 
       // Get user verification status
       const { data: user, error: userError } = await supabase
-        .from('ia_users')
-        .select('verification_tier, email')
-        .eq('stable_id', userId)
+        .from('user_profiles')
+        .select('trust_tier, email')
+        .eq('user_id', userId)
         .single()
 
       if (userError || !user) {
@@ -50,14 +50,14 @@ export class AnalyticsService {
 
       // Get voting history count
       const { count: votingHistory } = await supabase
-        .from('po_votes')
+        .from('votes')
         .select('*', { count: 'exact', head: true })
         .eq('user_id', userId)
 
       // Calculate verification factors
       const biometric_verified = (biometricCreds?.length || 0) > 0
-      const phone_verified = user.verification_tier === 'T2' || user.verification_tier === 'T3'
-      const identity_verified = user.verification_tier === 'T3'
+      const phone_verified = user.trust_tier === 'T2' || user.trust_tier === 'T3'
+      const identity_verified = user.trust_tier === 'T3'
       const voting_history_count = votingHistory || 0
 
       // Calculate score using database function

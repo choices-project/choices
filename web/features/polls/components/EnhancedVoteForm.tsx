@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { logger } from '@/lib/logger';
-import { vote } from '@/app/actions/vote'
+import { vote } from '@/shared/actions/vote'
 import { offlineOutbox } from '@/features/pwa/lib/offline-outbox'
 
 type PollOption = {

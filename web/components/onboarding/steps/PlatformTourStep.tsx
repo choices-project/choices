@@ -466,7 +466,7 @@ export default function PlatformTourStep({ onUpdate, onNext }: PlatformTourStepP
         <Button onClick={() => {
           handleSectionComplete('analytics')
           handleNext()
-        }}>
+        }} >
           Complete Tour
           <ArrowRight className="ml-2 h-4 w-4" />
         </Button>
@@ -492,7 +492,7 @@ export default function PlatformTourStep({ onUpdate, onNext }: PlatformTourStepP
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8">
+    <div className="max-w-6xl mx-auto px-4 py-8" >
       {renderContent()}
     </div>
   )

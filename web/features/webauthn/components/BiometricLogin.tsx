@@ -265,7 +265,7 @@ export default function BiometricLogin({ onSuccess, onError, onCancel }: Biometr
             <XCircle className="h-8 w-8 text-gray-500 mx-auto mb-2" />
             <p className="text-gray-700 font-medium">WebAuthn not supported</p>
             <p className="text-gray-600 text-sm">
-              Your browser doesn't support WebAuthn. Please use a modern browser like Chrome, Firefox, or Safari.
+              Your browser doesn&apos;t support WebAuthn. Please use a modern browser like Chrome, Firefox, or Safari.
             </p>
           </div>
         )}
@@ -276,7 +276,7 @@ export default function BiometricLogin({ onSuccess, onError, onCancel }: Biometr
             <XCircle className="h-8 w-8 text-gray-500 mx-auto mb-2" />
             <p className="text-gray-700 font-medium">Biometric authentication not available</p>
             <p className="text-gray-600 text-sm">
-              Your device doesn't have biometric authentication capabilities or it's not enabled.
+              Your device doesn&apos;t have biometric authentication capabilities or it&apos;s not enabled.
             </p>
           </div>
         )}
@@ -299,7 +299,7 @@ export default function BiometricLogin({ onSuccess, onError, onCancel }: Biometr
           <ul className="text-sm text-blue-800 space-y-1">
             <li>• Biometric data never leaves your device</li>
             <li>• Uses industry-standard WebAuthn protocol</li>
-            <li>• Protected by your device's secure enclave</li>
+            <li>• Protected by your device&apos;s secure enclave</li>
             <li>• Cannot be copied or transferred</li>
             <li>• Automatically logs all authentication attempts</li>
           </ul>

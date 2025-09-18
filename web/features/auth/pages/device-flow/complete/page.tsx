@@ -12,11 +12,10 @@ function DeviceFlowCompleteContent() {
   
   const router = useRouter()
   const searchParams = useSearchParams()
-  const supabase = getSupabaseBrowserClient()
-
   useEffect(() => {
     const completeDeviceFlow = async () => {
       try {
+        const supabase = await getSupabaseBrowserClient()
         if (!supabase) {
           throw new Error('Supabase client not available')
         }
@@ -69,7 +68,7 @@ function DeviceFlowCompleteContent() {
     }
 
     completeDeviceFlow()
-  }, [searchParams, router, supabase])
+  }, [searchParams, router])
 
   if (isLoading) {
     return (

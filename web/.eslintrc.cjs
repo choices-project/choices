@@ -50,8 +50,8 @@ module.exports = {
       default: 'disallow',
       rules: [
         { from: 'lib',        allow: ['lib', 'utils', 'features'] }, // Allow lib to import from utils and features
-        { from: 'features',   allow: ['lib', 'components', 'utils'] },
-        { from: 'components', allow: ['lib', 'utils'] },
+        { from: 'features',   allow: ['lib', 'components', 'utils', 'features'] },
+        { from: 'components', allow: ['lib', 'utils', 'components'] },
         { from: 'app',        allow: ['features', 'components', 'lib', 'utils'] },
         { from: 'utils',      allow: ['lib'] },
         { from: 'tests',      allow: ['app', 'features', 'components', 'lib', 'utils'] },
@@ -62,6 +62,10 @@ module.exports = {
     'no-restricted-imports': ['error', {
       patterns: [
         { group: ['@/shared/*', '@/admin/lib/*'], message: 'Use "@/lib/**" or feature modules.' },
+        { group: ['@/components/polls/*'], message: "Use '@/features/polls/*' (canonical)." },
+        { group: ['@/components/voting/*'], message: "Use '@/features/voting/*' (canonical)." },
+        { group: ['@/components/CreatePoll*'], message: "Use '@/features/polls/components/CreatePollForm' (canonical)." },
+        { group: ['@/components/admin/layout/*'], message: "Use '@/app/(app)/admin/layout/*' (canonical)." },
       ],
     }],
 

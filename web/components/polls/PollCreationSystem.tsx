@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { FEATURE_FLAGS } from '@/lib/core/feature-flags';
 import { 
   Users, 
   CheckCircle, 
@@ -33,6 +34,10 @@ type PollSuggestion = {
 }
 
 export default function PollCreationSystem() {
+  if (!FEATURE_FLAGS.EXPERIMENTAL_COMPONENTS) {
+    return null;
+  }
+  
   const [activeTab, setActiveTab] = useState<'create' | 'suggest' | 'my-polls'>('create');
   const [userPolls, setUserPolls] = useState<UserPoll[]>([
     {

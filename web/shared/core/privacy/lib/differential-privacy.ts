@@ -117,7 +117,7 @@ export class DifferentialPrivacyManager {
       return 0
     }
 
-    const totalEpsilon = data.reduce((sum, entry) => sum + entry.epsilon_used, 0) || 0
+    const totalEpsilon = data.reduce((sum, entry) => sum + (entry.epsilon_used as number), 0)
     return Math.max(0, this.config.maxEpsilonPerUser - totalEpsilon)
   }
 
@@ -191,11 +191,12 @@ export class DifferentialPrivacyManager {
     // Count votes per option
     const voteCounts = new Map<string, number>()
     rawResults.forEach(vote => {
-      const count = voteCounts.get(vote.option_id) || 0
-      voteCounts.set(vote.option_id, count + 1)
+      const optionId = (vote as Record<string, unknown>).option_id as string;
+      const count = voteCounts.get(optionId) ?? 0
+      voteCounts.set(optionId, count + 1)
     })
 
-    const totalVotes = rawResults.length || 0
+    const totalVotes = rawResults.length
     const kAnonymitySatisfied = this.checkKAnonymity(totalVotes)
 
     // If k-anonymity not satisfied, return aggregated results only
@@ -260,14 +261,14 @@ export class DifferentialPrivacyManager {
   async getPrivateAggregateStats(
     userId: string,
     queryType: 'user_activity' | 'poll_popularity' | 'voting_patterns'
-  ): Promise<PrivateQueryResult<any>> {
+  ): Promise<PrivateQueryResult<Record<string, unknown>>> {
     // Check privacy budget
     const remainingBudget = await this.getPrivacyBudget(userId)
     if (remainingBudget < this.config.epsilon) {
       throw new Error('Privacy budget exceeded')
     }
 
-    let rawData: any
+    let rawData: Record<string, unknown>
     let description: string
 
     switch (queryType) {
@@ -275,7 +276,7 @@ export class DifferentialPrivacyManager {
         const { data: activityData } = await supabase
           .from('user_profiles')
           .select('created_at, last_active')
-        rawData = activityData
+        rawData = activityData as unknown as Record<string, unknown>
         description = 'User activity statistics'
         break
 
@@ -283,7 +284,7 @@ export class DifferentialPrivacyManager {
         const { data: pollData } = await supabase
           .from('polls')
           .select('created_at, visibility')
-        rawData = pollData
+        rawData = pollData as unknown as Record<string, unknown>
         description = 'Poll popularity statistics'
         break
 
@@ -291,7 +292,7 @@ export class DifferentialPrivacyManager {
         const { data: voteData } = await supabase
           .from('votes')
           .select('created_at, anonymous')
-        rawData = voteData
+        rawData = voteData as unknown as Record<string, unknown>
         description = 'Voting pattern statistics'
         break
 
@@ -300,7 +301,7 @@ export class DifferentialPrivacyManager {
     }
 
     // Calculate aggregate statistics with noise
-    const stats = this.calculateAggregateStats(rawData)
+    const stats = this.calculateAggregateStats(rawData as unknown as Record<string, unknown>[])
     const noisyStats = this.addNoiseToStats(stats)
 
     // Record privacy usage
@@ -327,8 +328,8 @@ export class DifferentialPrivacyManager {
   /**
    * Calculate aggregate statistics
    */
-  private calculateAggregateStats(data: any[]): any {
-    if (!data || data.length === 0) {
+  private calculateAggregateStats(data: Record<string, unknown>[]): Record<string, number> {
+    if (data.length === 0) {
       return { count: 0, average: 0, median: 0 }
     }
 
@@ -336,7 +337,7 @@ export class DifferentialPrivacyManager {
     const values = data.map(item => this.extractNumericValue(item))
     const average = values.reduce((sum, val) => sum + val, 0) / count
     const sorted = values.sort((a, b) => a - b)
-    const median = sorted[Math.floor(count / 2)]
+    const median = sorted[Math.floor(count / 2)] ?? 0
 
     return { count, average, median }
   }
@@ -344,13 +345,13 @@ export class DifferentialPrivacyManager {
   /**
    * Extract numeric value from data item
    */
-  private extractNumericValue(item: any): number {
+  private extractNumericValue(item: Record<string, unknown>): number {
     // Convert timestamps to numeric values for analysis
     if (item.created_at) {
-      return new Date(item.created_at).getTime()
+      return new Date(item.created_at as string).getTime()
     }
     if (item.last_active) {
-      return new Date(item.last_active).getTime()
+      return new Date(item.last_active as string).getTime()
     }
     return 0
   }
@@ -358,11 +359,11 @@ export class DifferentialPrivacyManager {
   /**
    * Add noise to statistics
    */
-  private addNoiseToStats(stats: any): any {
+  private addNoiseToStats(stats: Record<string, number>): Record<string, number> {
     return {
-      count: Math.max(0, this.addLaplaceNoise(stats.count)),
-      average: this.addLaplaceNoise(stats.average, 1000), // Higher sensitivity for averages
-      median: this.addLaplaceNoise(stats.median, 1000)
+      count: Math.max(0, this.addLaplaceNoise(stats.count ?? 0)),
+      average: this.addLaplaceNoise(stats.average ?? 0, 1000), // Higher sensitivity for averages
+      median: this.addLaplaceNoise(stats.median ?? 0, 1000)
     }
   }
 
@@ -394,16 +395,16 @@ export class DifferentialPrivacyManager {
     }
 
     return data.map(entry => ({
-      id: entry.id,
-      userId: entry.user_id,
-      pollId: entry.poll_id,
-      epsilonUsed: entry.epsilon_used,
-      queryType: entry.query_type,
-      timestamp: entry.timestamp,
-      description: entry.description,
-      noiseAdded: entry.noise_added,
-      kAnonymitySatisfied: entry.k_anonymity_satisfied
-    })) || []
+      id: (entry as Record<string, unknown>).id as string,
+      userId: (entry as Record<string, unknown>).user_id as string,
+      pollId: (entry as Record<string, unknown>).poll_id as string,
+      epsilonUsed: (entry as Record<string, unknown>).epsilon_used as number,
+      queryType: (entry as Record<string, unknown>).query_type as string,
+      timestamp: (entry as Record<string, unknown>).timestamp as string,
+      description: (entry as Record<string, unknown>).description as string,
+      noiseAdded: (entry as Record<string, unknown>).noise_added as number,
+      kAnonymitySatisfied: (entry as Record<string, unknown>).k_anonymity_satisfied as boolean
+    })) as PrivacyLedgerEntry[]
   }
 
   /**
@@ -430,8 +431,8 @@ export class DifferentialPrivacyManager {
     }
 
     const totalQueries = data.length || 0
-    const totalEpsilonUsed = data.reduce((sum, entry) => sum + entry.epsilon_used, 0) || 0
-    const totalNoiseAdded = data.reduce((sum, entry) => sum + entry.noise_added, 0) || 0
+    const totalEpsilonUsed = data.reduce((sum, entry) => sum + (entry.epsilon_used as number), 0)
+    const totalNoiseAdded = data.reduce((sum, entry) => sum + (entry.noise_added as number), 0)
     const kAnonymitySatisfiedCount = data.filter(entry => entry.k_anonymity_satisfied).length || 0
 
     return {
@@ -476,7 +477,7 @@ export const privacyUtils = {
   /**
    * Sanitize data for privacy
    */
-  sanitizeForPrivacy(data: any, epsilon: number): any {
+  sanitizeForPrivacy(data: Record<string, unknown>, epsilon: number): Record<string, unknown> {
     // Remove or anonymize sensitive fields
     const sanitized = { ...data }
     delete sanitized.userId

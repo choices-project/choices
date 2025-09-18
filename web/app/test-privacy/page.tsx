@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import type { CreatePollData } from '@/features/polls/components/CreatePollForm';
 import { CreatePollForm } from '@/features/polls/components/CreatePollForm';
-import { PrivacyLevelIndicator } from '@/components/privacy/PrivacyLevelIndicator';
+import { PrivacyLevelIndicator } from '@/shared/components/PrivacyLevelIndicator';
 import { PrivacyLevel } from '@/lib/privacy/hybrid-privacy';
 import { HybridPrivacyManager } from '@/lib/privacy/hybrid-privacy';
 import { devLog } from '@/lib/logger';

@@ -23,17 +23,23 @@ test.describe('Poll Creation', () => {
     await page.fill('[data-testid="poll-title"]', 'Test Single Choice Poll');
     await page.fill('[data-testid="poll-description"]', 'A test poll for single choice voting');
     
+    // Select category (required field)
+    await page.selectOption('[data-testid="category"]', 'general');
+    
     // Select voting method
     await page.selectOption('[data-testid="voting-method"]', 'single');
     
     // Add options
     await page.fill('[data-testid="option-1"]', 'Option A');
     await page.fill('[data-testid="option-2"]', 'Option B');
+    
+    // Add a third option
+    await page.click('[data-testid="add-option-button"]');
     await page.fill('[data-testid="option-3"]', 'Option C');
     
     // Set poll timing
-    await page.fill('[data-testid="start-time"]', '2025-01-01T00:00');
-    await page.fill('[data-testid="end-time"]', '2025-12-31T23:59');
+    await page.fill('[data-testid="end-date"]', '2025-12-31');
+    await page.fill('[data-testid="end-time"]', '23:59');
     
     // Submit the form
     await page.click('[data-testid="create-poll-button"]');
@@ -63,7 +69,8 @@ test.describe('Poll Creation', () => {
     
     // Set poll timing
     await page.fill('[data-testid="start-time"]', '2025-01-01T00:00');
-    await page.fill('[data-testid="end-time"]', '2025-12-31T23:59');
+    await page.fill('[data-testid="end-date"]', '2025-12-31');
+    await page.fill('[data-testid="end-time"]', '23:59');
     
     // Submit the form
     await page.click('[data-testid="create-poll-button"]');
@@ -88,7 +95,8 @@ test.describe('Poll Creation', () => {
     
     // Set poll timing
     await page.fill('[data-testid="start-time"]', '2025-01-01T00:00');
-    await page.fill('[data-testid="end-time"]', '2025-12-31T23:59');
+    await page.fill('[data-testid="end-date"]', '2025-12-31');
+    await page.fill('[data-testid="end-time"]', '23:59');
     
     // Submit the form
     await page.click('[data-testid="create-poll-button"]');
@@ -113,7 +121,8 @@ test.describe('Poll Creation', () => {
     
     // Set poll timing
     await page.fill('[data-testid="start-time"]', '2025-01-01T00:00');
-    await page.fill('[data-testid="end-time"]', '2025-12-31T23:59');
+    await page.fill('[data-testid="end-date"]', '2025-12-31');
+    await page.fill('[data-testid="end-time"]', '23:59');
     
     // Submit the form
     await page.click('[data-testid="create-poll-button"]');
@@ -138,7 +147,8 @@ test.describe('Poll Creation', () => {
     
     // Set poll timing
     await page.fill('[data-testid="start-time"]', '2025-01-01T00:00');
-    await page.fill('[data-testid="end-time"]', '2025-12-31T23:59');
+    await page.fill('[data-testid="end-date"]', '2025-12-31');
+    await page.fill('[data-testid="end-time"]', '23:59');
     
     // Submit the form
     await page.click('[data-testid="create-poll-button"]');
@@ -188,7 +198,8 @@ test.describe('Poll Creation', () => {
     
     // Set invalid timing (end before start)
     await page.fill('[data-testid="start-time"]', '2025-12-31T23:59');
-    await page.fill('[data-testid="end-time"]', '2025-01-01T00:00');
+    await page.fill('[data-testid="end-date"]', '2025-12-31');
+    await page.fill('[data-testid="end-time"]', '00:00');
     
     // Try to submit
     await page.click('[data-testid="create-poll-button"]');
@@ -222,7 +233,8 @@ test.describe('Poll Creation', () => {
     
     // Set timing and submit
     await page.fill('[data-testid="start-time"]', '2025-01-01T00:00');
-    await page.fill('[data-testid="end-time"]', '2025-12-31T23:59');
+    await page.fill('[data-testid="end-date"]', '2025-12-31');
+    await page.fill('[data-testid="end-time"]', '23:59');
     
     await page.click('[data-testid="create-poll-button"]');
     
@@ -239,7 +251,8 @@ test.describe('Poll Creation', () => {
     
     // Set poll timing
     await page.fill('[data-testid="start-time"]', '2025-01-01T00:00');
-    await page.fill('[data-testid="end-time"]', '2025-12-31T23:59');
+    await page.fill('[data-testid="end-date"]', '2025-12-31');
+    await page.fill('[data-testid="end-time"]', '23:59');
     
     // Enable baseline system
     await page.check('[data-testid="enable-baseline"]');
@@ -270,7 +283,8 @@ test.describe('Poll Creation', () => {
     
     // Set poll timing
     await page.fill('[data-testid="start-time"]', '2025-01-01T00:00');
-    await page.fill('[data-testid="end-time"]', '2025-12-31T23:59');
+    await page.fill('[data-testid="end-date"]', '2025-12-31');
+    await page.fill('[data-testid="end-time"]', '23:59');
     
     // Configure custom settings
     await page.check('[data-testid="require-authentication"]');
@@ -320,7 +334,8 @@ test.describe('Poll Creation', () => {
     await page.fill('[data-testid="option-1"]', 'Option A');
     await page.fill('[data-testid="option-2"]', 'Option B');
     await page.fill('[data-testid="start-time"]', '2025-01-01T00:00');
-    await page.fill('[data-testid="end-time"]', '2025-12-31T23:59');
+    await page.fill('[data-testid="end-date"]', '2025-12-31');
+    await page.fill('[data-testid="end-time"]', '23:59');
     
     // Try to submit
     await page.click('[data-testid="create-poll-button"]');
@@ -346,7 +361,8 @@ test.describe('Poll Creation', () => {
     await page.fill('[data-testid="option-1"]', 'Option A');
     await page.fill('[data-testid="option-2"]', 'Option B');
     await page.fill('[data-testid="start-time"]', '2025-01-01T00:00');
-    await page.fill('[data-testid="end-time"]', '2025-12-31T23:59');
+    await page.fill('[data-testid="end-date"]', '2025-12-31');
+    await page.fill('[data-testid="end-time"]', '23:59');
     
     // Try to submit
     await page.click('[data-testid="create-poll-button"]');

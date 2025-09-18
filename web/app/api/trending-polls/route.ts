@@ -22,6 +22,8 @@ type TopicData = {
   velocity: number;
   momentum: number;
   sentiment_score: number;
+  created_at: string;
+  updated_at: string;
   metadata?: {
     engagement?: string;
     controversy?: string;

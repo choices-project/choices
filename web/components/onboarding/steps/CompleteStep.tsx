@@ -29,7 +29,7 @@ export default function CompleteStep({ data, onComplete, onBack, isLoading = fal
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8" >
       {/* Success message */}
       <div className="text-center space-y-4">
         <div className="flex justify-center">

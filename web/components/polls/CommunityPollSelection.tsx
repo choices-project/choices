@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { FEATURE_FLAGS } from '@/lib/core/feature-flags';
 import { 
   TrendingUp, 
   Users, 
@@ -32,6 +33,10 @@ type WeeklySelection = {
 }
 
 export default function CommunityPollSelection() {
+  if (!FEATURE_FLAGS.EXPERIMENTAL_COMPONENTS) {
+    return null;
+  }
+  
   const [selectedWeek, setSelectedWeek] = useState('current');
   const [viewMode, setViewMode] = useState<'trending' | 'selected' | 'analytics'>('trending');
 
