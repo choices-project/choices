@@ -9,21 +9,26 @@ This directory contains the core documentation for the Choices platform, includi
 ### **System Architecture**
 - **[System Architecture](SYSTEM_ARCHITECTURE.md)** - Complete system design and technical overview
 - **[Feature Flags](FEATURE_FLAGS_COMPREHENSIVE.md)** - Comprehensive feature flag documentation
+- **[Project Overview](PROJECT_COMPREHENSIVE_OVERVIEW.md)** - Complete project overview and status
+- **[Database Schema](DATABASE_SCHEMA_COMPREHENSIVE.md)** - Complete database schema documentation
 
 ### **Authentication & Security**
 - **[Authentication Comprehensive](AUTHENTICATION_COMPREHENSIVE.md)** - Complete auth system with WebAuthn
+- **[WebAuthn Comprehensive](WEBAUTHN_IMPLEMENTATION_COMPREHENSIVE.md)** - WebAuthn passkey system
 - **[Security Comprehensive](SECURITY_COMPREHENSIVE.md)** - Security policies and implementation
 
 ### **Features & Systems**
 - **[Civics Comprehensive](CIVICS_COMPREHENSIVE.md)** - Civics data system and implementation
 - **[Civics Address Lookup](CIVICS_ADDRESS_LOOKUP_ROADMAP.md)** - Address-based representative lookup
 - **[Civics Testing Strategy](CIVICS_TESTING_STRATEGY.md)** - Civics testing approach
+- **[Contact Information System](CONTACT_INFORMATION_SYSTEM.md)** - Representative contact and social media integration
 - **[Multi-Agent Testing Strategy](MULTI_AGENT_TESTING_STRATEGY.md)** - Multi-agent testing coordination
 - **[Voting Engine Comprehensive](VOTING_ENGINE_COMPREHENSIVE.md)** - Voting system implementation
 - **[Admin System Implementation](ADMIN_SYSTEM_IMPLEMENTATION.md)** - Admin panel and tools
 
 ### **Development & Operations**
 - **[Agent Onboarding Comprehensive](AGENT_ONBOARDING_COMPREHENSIVE.md)** - AI agent onboarding guide
+- **[Agent Onboarding Choices Project](AGENT_ONBOARDING_CHOICES_PROJECT.md)** - Project-specific agent guide
 - **[TypeScript Agent Guide](TYPESCRIPT_AGENT_GUIDE.md)** - Development guidelines
 - **[Workflow Troubleshooting Guide](WORKFLOW_TROUBLESHOOTING_GUIDE.md)** - Troubleshooting procedures
 
