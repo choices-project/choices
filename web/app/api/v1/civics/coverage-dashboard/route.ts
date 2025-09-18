@@ -57,7 +57,7 @@ export async function GET(request: NextRequest) {
       if (!acc[rep.level]) {
         acc[rep.level] = { total: 0, fresh: 0, stale: 0 };
       }
-      acc[rep.level].total++;
+      acc[rep.level]!.total++;
       
       const lastUpdated = new Date(rep.last_updated);
       const daysSinceUpdate = (now.getTime() - lastUpdated.getTime()) / (1000 * 60 * 60 * 24);
@@ -67,9 +67,9 @@ export async function GET(request: NextRequest) {
       const threshold = thresholds[rep.level as keyof typeof thresholds] || 30;
       
       if (daysSinceUpdate <= threshold) {
-        acc[rep.level].fresh++;
+        acc[rep.level]!.fresh++;
       } else {
-        acc[rep.level].stale++;
+        acc[rep.level]!.stale++;
       }
       
       return acc;

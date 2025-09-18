@@ -8,5 +8,5 @@ fi
 
 # Type & lint in UTC
 export TZ=UTC
-npm run -w web types:strict
-npm run -w web lint
+cd web && npm run types:strict
+cd web && npm run lint
