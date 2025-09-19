@@ -1,7 +1,7 @@
 'use client'
 
-import EnhancedOnboardingFlow from '@/components/onboarding/EnhancedOnboardingFlow'
+import SimpleOnboardingFlow from '@/components/onboarding/SimpleOnboardingFlow'
 
 export default function OnboardingPage() {
-  return <EnhancedOnboardingFlow />
+  return <SimpleOnboardingFlow />
 }

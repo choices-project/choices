@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
+import { useSupabaseAuth } from '@/contexts/AuthContext'
 import { Button } from '@/components/ui/button'
 import { 
   Menu, 

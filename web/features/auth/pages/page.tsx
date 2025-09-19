@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { useSupabaseAuth } from '../../../hooks/useSupabaseAuth';
+import { useSupabaseAuth } from '@/contexts/AuthContext';
 import { PasskeyControls } from '../../../components/auth/PasskeyControls';
 
 export default function AuthPage() {

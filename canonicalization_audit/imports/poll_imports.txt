@@ -1,0 +1,2 @@
+web/features/polls/components/OptimizedPollResults.tsx:import { optimizedPollService, type OptimizedPollResult } from '@/lib/performance/optimized-poll-service'
+web/components/admin/PerformanceDashboard.tsx:import { optimizedPollService, type PerformanceMetrics } from '@/lib/performance/optimized-poll-service'

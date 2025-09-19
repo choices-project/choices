@@ -6,7 +6,7 @@
  */
 
 import { NextResponse } from 'next/server';
-import { requireUser } from '@/lib/core/auth/auth';
+import { requireUser } from '@/lib/core/auth/middleware';
 import { requireTrustedOrigin } from '@/lib/http';
 
 // Cache guards for auth routes
@@ -21,8 +21,7 @@ export async function POST(req: Request) {
     requireTrustedOrigin(req);
     
     // 2. Authentication check
-    const { user, fail } = await requireUser(req);
-    if (!user) return fail();
+    const user = await requireUser(req);
     
     // 3. Parse and validate request body
     const body = await req.json();
@@ -51,8 +50,7 @@ export async function POST(req: Request) {
 export async function GET(req: Request) {
   try {
     // 1. Authentication check (no origin validation for GET)
-    const { user, fail } = await requireUser(req);
-    if (!user) return fail();
+    const user = await requireUser(req);
     
     // 2. Perform authorized read operation
     const data = {

@@ -17,7 +17,7 @@ type CommunityOption = {
 }
 
 type ParticipationOption = {
-  value: string
+  value: 'observer' | 'contributor' | 'leader'
   label: string
   description: string
   icon: React.ReactNode
@@ -150,7 +150,7 @@ export default function ValuesStep({ data, onUpdate, onNext, onBack }: ValuesSte
     { value: 'global', label: 'Global challenges', description: 'International cooperation' }
   ]
 
-  const participationOptions = [
+  const participationOptions: ParticipationOption[] = [
     {
       value: 'observer',
       label: 'Observer',

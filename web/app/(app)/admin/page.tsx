@@ -1,6 +1,6 @@
 'use client'
 
-import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
+import { useSupabaseAuth } from '@/contexts/AuthContext'
 import { logger } from '@/lib/logger';
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'

@@ -1,0 +1,4 @@
+web/app/(app)/layout.tsx:import { AuthProvider } from '../../hooks/AuthProvider'
+web/features/auth/components/SocialLoginButtons.tsx:import type { OAuthProvider } from '@/features/auth/types/auth'
+web/shared/modules/lib/module-loader.ts:      loadFunction: () => import('../components/auth/AuthProvider'),
+web/components/onboarding/steps/AuthStep.tsx:import type { OAuthProvider } from '@/features/auth/types/auth'

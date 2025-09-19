@@ -19,6 +19,13 @@ export const FEATURE_FLAGS = {
   EXPERIMENTAL_COMPONENTS: false,
   // Civics address lookup system - disabled by default until e2e is complete
   CIVICS_ADDRESS_LOOKUP: false,
+  // Social sharing features - ALL DISABLED BY DEFAULT
+  SOCIAL_SHARING: false,           // Master switch for all social features
+  SOCIAL_SHARING_POLLS: false,     // Poll sharing (Twitter, Facebook, LinkedIn)
+  SOCIAL_SHARING_CIVICS: false,    // Representative sharing
+  SOCIAL_SHARING_VISUAL: false,    // Visual content generation (IG, TikTok)
+  SOCIAL_SHARING_OG: false,        // Dynamic Open Graph image generation
+  SOCIAL_SIGNUP: false,            // Social OAuth signup
 } as const;
 
 // Define proper types for feature flag system

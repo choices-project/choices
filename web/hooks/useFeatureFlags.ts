@@ -8,7 +8,8 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import type { 
   FeatureFlag, 
-  FeatureFlagManager} from '@/lib/core/feature-flags';
+  FeatureFlagManager,
+  FeatureFlagConfig} from '@/lib/core/feature-flags';
 import { 
   featureFlagManager,
   isFeatureEnabled as _isFeatureEnabled,
@@ -261,7 +262,7 @@ export function useFeatureFlagManagement(): {
   updateFlagMetadata: (flagId: string, metadata: Record<string, unknown>) => boolean;
   reset: () => void;
   exportConfig: () => Record<string, unknown>;
-  importConfig: (config: Record<string, unknown>) => void;
+  importConfig: (config: FeatureFlagConfig) => void;
   loading: boolean;
 } {
   const { getAllFlags, systemInfo, loading, manager } = useFeatureFlags();
@@ -280,7 +281,7 @@ export function useFeatureFlagManagement(): {
     return manager.exportConfig();
   }, [manager]);
 
-  const importConfig = useCallback((config: Record<string, unknown>) => {
+  const importConfig = useCallback((config: FeatureFlagConfig) => {
     manager.importConfig(config);
   }, [manager]);
 

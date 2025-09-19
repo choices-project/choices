@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
+import { useSupabaseAuth } from '@/contexts/AuthContext'
 
 // UI Components
 import { Button } from '@/components/ui/button'

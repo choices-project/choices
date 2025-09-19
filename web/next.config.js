@@ -15,6 +15,8 @@ const nextConfig = {
       '@supabase/supabase-js',
       // Externalize all Supabase packages to prevent browser globals in server bundles
     ],
+    // Enable SWC for better performance
+    swcMinify: true,
     // Disable CSS optimization to avoid critters dependency issues
     optimizeCss: false,
     // Disable font optimization to prevent browser globals in server bundles
@@ -24,6 +26,9 @@ const nextConfig = {
       'lucide-react',
       'clsx',
       'tailwind-merge',
+      'recharts',
+      'framer-motion',
+      'uuid',
     ],
   },
 
@@ -44,6 +49,41 @@ const nextConfig = {
   },
 
   webpack: (config, { isServer, webpack }) => {
+    // Exclude test files from compilation
+    config.module.rules.push({
+      test: /\.(test|spec)\.(ts|tsx|js|jsx)$/,
+      use: 'ignore-loader'
+    });
+    
+    // Exclude test directories
+    config.module.rules.push({
+      test: /tests\/.*\.(ts|tsx|js|jsx)$/,
+      use: 'ignore-loader'
+    });
+
+    // Exclude social sharing components when feature is disabled
+    if (process.env.SOCIAL_SHARING_ENABLED !== 'true') {
+      config.module.rules.push({
+        test: /components\/social\/.*\.(ts|tsx|js|jsx)$/,
+        use: 'ignore-loader'
+      });
+      
+      config.module.rules.push({
+        test: /lib\/share\.(ts|tsx|js|jsx)$/,
+        use: 'ignore-loader'
+      });
+
+      config.module.rules.push({
+        test: /app\/p\/\[id\]\/opengraph-image\.(ts|tsx|js|jsx)$/,
+        use: 'ignore-loader'
+      });
+
+      config.module.rules.push({
+        test: /app\/api\/share\/.*\.(ts|tsx|js|jsx)$/,
+        use: 'ignore-loader'
+      });
+    }
+
     if (isServer) {
       // Define browser globals as undefined for server-side compatibility
       config.plugins.push(new webpack.DefinePlugin({ 
@@ -104,80 +144,93 @@ const nextConfig = {
 
     // Bundle size optimizations
     if (!isServer) {
-      // Optimize bundle splitting
+      // Optimize bundle splitting - more aggressive consolidation
       config.optimization = {
         ...config.optimization,
         splitChunks: {
           chunks: 'all',
+          minSize: 20000, // 20KB minimum chunk size
+          maxSize: 300000, // 300KB maximum chunk size
+          minChunks: 1,
+          maxAsyncRequests: 10, // Limit async chunks
+          maxInitialRequests: 8, // Limit initial chunks
           cacheGroups: {
-            // React specific chunk
+            // React specific chunk - highest priority
             react: {
               test: /[\\/]node_modules[\\/](react|react-dom)[\\/]/,
               name: 'react',
               chunks: 'all',
+              priority: 40,
+              enforce: true,
+            },
+            // Next.js framework chunk
+            nextjs: {
+              test: /[\\/]node_modules[\\/](next)[\\/]/,
+              name: 'nextjs',
+              chunks: 'all',
+              priority: 35,
+              enforce: true,
+            },
+            // UI libraries consolidated
+            ui: {
+              test: /[\\/]node_modules[\\/](@radix-ui|lucide-react|clsx|tailwind-merge)[\\/]/,
+              name: 'ui',
+              chunks: 'all',
               priority: 30,
               enforce: true,
             },
-            // Radix UI components
-            radix: {
-              test: /[\\/]node_modules[\\/]@radix-ui[\\/]/,
-              name: 'radix',
+            // Data & state management
+            data: {
+              test: /[\\/]node_modules[\\/](@tanstack|@supabase|zod)[\\/]/,
+              name: 'data',
               chunks: 'all',
               priority: 25,
               enforce: true,
-              maxSize: 200000, // 200KB max
             },
-            // Chart libraries
+            // Charts and visualization - more aggressive splitting
             charts: {
               test: /[\\/]node_modules[\\/](recharts|d3|chart\.js|react-smooth)[\\/]/,
               name: 'charts',
-              chunks: 'all',
-              priority: 25,
+              chunks: 'async', // Only load charts when needed
+              priority: 20,
               enforce: true,
-              maxSize: 200000, // 200KB max
+              maxSize: 100000, // 100KB max for charts
             },
-            // Animation libraries
+            // Animation libraries - async loading
             animations: {
               test: /[\\/]node_modules[\\/](framer-motion|lottie)[\\/]/,
               name: 'animations',
-              chunks: 'all',
-              priority: 25,
-              enforce: true,
-              maxSize: 200000, // 200KB max
-            },
-            // Supabase specific chunk
-            supabase: {
-              test: /[\\/]node_modules[\\/]@supabase[\\/]/,
-              name: 'supabase',
-              chunks: 'all',
+              chunks: 'async', // Only load animations when needed
               priority: 20,
               enforce: true,
-              maxSize: 200000, // 200KB max
+              maxSize: 100000, // 100KB max for animations
             },
-            // TanStack Query
-            tanstack: {
-              test: /[\\/]node_modules[\\/]@tanstack[\\/]/,
-              name: 'tanstack',
-              chunks: 'all',
-              priority: 20,
+            // Utility libraries - async loading
+            utils: {
+              test: /[\\/]node_modules[\\/](date-fns|lodash-es|uuid)[\\/]/,
+              name: 'utils',
+              chunks: 'async', // Only load utils when needed
+              priority: 15,
               enforce: true,
+              maxSize: 50000, // 50KB max for utils
             },
-            // Vendor chunks - separate large libraries
+            // All other vendor libraries - consolidated
             vendor: {
               test: /[\\/]node_modules[\\/]/,
               name: 'vendors',
               chunks: 'all',
               priority: 10,
               enforce: true,
-              maxSize: 150000, // 150KB max for remaining vendors
+              minChunks: 1,
             },
-            // Common chunks
+            // Common application code
             common: {
               name: 'common',
               minChunks: 2,
               chunks: 'all',
               priority: 5,
               reuseExistingChunk: true,
+              enforce: true,
             }
           }
         }
@@ -207,6 +260,9 @@ const nextConfig = {
     'date-fns': { transform: 'date-fns/{{member}}' },
     'lodash-es': { transform: 'lodash-es/{{member}}' },
     '@radix-ui/react-*': { transform: '@radix-ui/react-{{member}}' },
+    'recharts': { transform: 'recharts/esm/{{member}}' },
+    'framer-motion': { transform: 'framer-motion/dist/es/{{member}}' },
+    'uuid': { transform: 'uuid/dist/esm/{{member}}' },
   },
 
   // Powered by header

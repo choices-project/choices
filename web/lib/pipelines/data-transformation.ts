@@ -7,9 +7,13 @@
 
 import { logger } from '../logger';
 import { withOptional } from '../util/objects';
-import type { 
-  AddressLookupResult 
-} from '../../features/civics/schemas';
+// TODO: Re-enable when civics features are enabled
+// import type { 
+//   AddressLookupResult
+// } from '../../features/civics/schemas';
+
+// Temporary stub type until civics schemas are re-enabled
+type AddressLookupResult = any;
 
 
 import type { 
@@ -276,7 +280,7 @@ export class DataTransformationPipeline {
 
     try {
       // Transform representatives
-      const normalizedReps = data.representatives.map(rep => {
+      const normalizedReps = data.representatives.map((rep: any) => {
         recordsTransformed++;
         
         const normalized: NormalizedRepresentative = {

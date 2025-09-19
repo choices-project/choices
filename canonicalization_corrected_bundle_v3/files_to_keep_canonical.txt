@@ -1,0 +1,29 @@
+# files_to_keep_canonical.txt
+# Generated (UTC): 2025-09-18T12:14:43Z
+
+web/lib/core/auth/middleware.ts
+web/lib/core/auth/require-user.ts
+web/contexts/AuthContext.tsx
+web/app/actions/login.ts
+web/app/api/auth/login/route.ts
+web/lib/vote/engine.ts
+web/lib/vote/processor.ts
+web/shared/core/services/lib/poll-service.ts
+web/features/polls/components/CreatePollForm.tsx
+web/features/voting/components/VotingInterface.tsx
+web/database/schema.sql
+web/shared/core/database/supabase-schema.sql
+web/database/migrations/001_initial_schema.sql
+web/scripts/migrations/001-webauthn-schema.sql
+web/utils/supabase/server.ts
+web/utils/supabase/client.ts
+web/components/AnalyticsDashboard.tsx
+web/lib/webauthn/config.ts
+web/lib/webauthn/client.ts
+web/lib/webauthn/credential-verification.ts
+web/components/ui/index.ts
+web/components/ui/client.ts
+web/components/OptimizedImage.tsx
+web/components/VirtualScroll.tsx
+web/components/DeviceList.tsx
+web/features/civics/ingest/connectors/propublica.ts

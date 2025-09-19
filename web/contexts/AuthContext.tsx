@@ -2,12 +2,13 @@
 
 import { createContext, useContext, useEffect, useState, useMemo } from 'react'
 import type { User, Session } from '@supabase/supabase-js'
-import { getSupabaseBrowserClient } from '@/utils/supabase/client-minimal'
+import { getSupabaseBrowserClient } from '@/utils/supabase/client'
 
 type AuthContextType = {
   user: User | null
   session: Session | null
   loading: boolean
+  isLoading: boolean  // Alias for backward compatibility
   signOut: () => Promise<void>
   refreshSession: () => Promise<void>
 }
@@ -88,6 +89,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     user,
     session,
     loading,
+    isLoading: loading,  // Alias for backward compatibility
     signOut,
     refreshSession,
   }
@@ -106,3 +108,6 @@ export function useAuth() {
   }
   return context
 }
+
+// Alias for backward compatibility
+export const useSupabaseAuth = useAuth

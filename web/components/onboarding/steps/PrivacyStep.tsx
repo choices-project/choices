@@ -14,7 +14,7 @@ type PrivacyData = {
 }
 
 type PrivacyOption = {
-  field: string
+  field: keyof NonNullable<PrivacyData['privacy']>
   label: string
   description: string
   icon: React.ReactNode
@@ -49,7 +49,7 @@ export default function PrivacyStep({ data, onUpdate, onNext, onBack }: PrivacyS
     updateData({ privacy: newPrivacy })
   }
 
-  const privacyOptions = [
+  const privacyOptions: PrivacyOption[] = [
     {
       field: 'shareProfile',
       label: 'Share my profile publicly',

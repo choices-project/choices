@@ -13,11 +13,16 @@ import type {
   GoogleCivicOffice,
   GoogleCivicDivision 
 } from './client';
-import type { 
-  AddressLookupResult, 
-  Representative,
-  CandidateCardV1 
-} from '../../../features/civics/schemas';
+// import type { 
+//   AddressLookupResult, 
+//   Representative,
+//   CandidateCardV1 
+// } from '../../../features/civics/schemas'; // DISABLED: civics features disabled for MVP
+
+// Temporary stub types until civics features are re-enabled
+type AddressLookupResult = any;
+type Representative = any;
+type CandidateCardV1 = any;
 
 export type TransformedRepresentative = {
   source: 'google-civic';

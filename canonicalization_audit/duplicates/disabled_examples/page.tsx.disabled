@@ -1,0 +1,410 @@
+'use client'
+
+import { useState, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
+import { useUserType } from '@/hooks/useUserType'
+import { useAuth } from '@/hooks/useAuth'
+
+// UI Components
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+
+// Icons
+import { ArrowLeft, User, Target, TrendingUp, Award, Crown, Users, Activity, CheckCircle, AlertCircle, Star, Zap, BarChart3, Trophy } from 'lucide-react'
+
+// Utilities
+import { devLog } from '@/lib/logger'
+import { cn } from '@/lib/utils'
+
+export default function UserTypePage() {
+  const router = useRouter()
+  const { user } = useAuth()
+  const {
+    userType,
+    confidenceScore,
+    behaviorMetrics,
+    recommendations,
+    nextMilestone,
+    isLoading,
+    error,
+    trackFeatureUsage,
+    refreshUserType
+  } = useUserType(user?.id)
+
+  const [isRefreshing, setIsRefreshing] = useState(false)
+
+  const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true)
+    try {
+      await refreshUserType()
+    } catch (error) {
+      devLog('Error refreshing user type:', error)
+    } finally {
+      setIsRefreshing(false)
+    }
+  }, [refreshUserType])
+
+  const getUserTypeIcon = useCallback((type: string) => {
+    switch (type) {
+      case 'newcomer': return <User className="h-6 w-6" />
+      case 'active': return <Activity className="h-6 w-6" />
+      case 'poweruser': return <TrendingUp className="h-6 w-6" />
+      case 'influencer': return <Award className="h-6 w-6" />
+      case 'admin': return <Crown className="h-6 w-6" />
+      default: return <User className="h-6 w-6" />
+    }
+  }, [])
+
+  const getUserTypeColor = useCallback((type: string) => {
+    switch (type) {
+      case 'newcomer': return 'bg-blue-100 text-blue-800 border-blue-200'
+      case 'active': return 'bg-green-100 text-green-800 border-green-200'
+      case 'poweruser': return 'bg-purple-100 text-purple-800 border-purple-200'
+      case 'influencer': return 'bg-yellow-100 text-yellow-800 border-yellow-200'
+      case 'admin': return 'bg-red-100 text-red-800 border-red-200'
+      default: return 'bg-gray-100 text-gray-800 border-gray-200'
+    }
+  }, [])
+
+  const getUserTypeDescription = useCallback((type: string) => {
+    switch (type) {
+      case 'newcomer': return 'Welcome! You\'re just getting started with the platform.'
+      case 'active': return 'Great job! You\'re actively participating in the community.'
+      case 'poweruser': return 'Excellent! You\'re a key contributor to the platform.'
+      case 'influencer': return 'Outstanding! You\'re leading the community discussions.'
+      case 'admin': return 'You have administrative privileges and help manage the platform.'
+      default: return 'Your user type is being determined.'
+    }
+  }, [])
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Analyzing your user type...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <Alert>
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>Failed to load user type data: {error}</AlertDescription>
+          </Alert>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-white shadow-sm border-b">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between py-6">
+            <div className="flex items-center space-x-4">
+              <button
+                onClick={() => router.push('/dashboard')}
+                className="flex items-center text-gray-600 hover:text-gray-900"
+              >
+                <ArrowLeft className="h-5 w-5 mr-2" />
+                Back to Dashboard
+              </button>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">User Type Analysis</h1>
+                <p className="text-gray-600">Your engagement level and personalized recommendations</p>
+              </div>
+            </div>
+            <Button
+              onClick={handleRefresh}
+              disabled={isRefreshing}
+              variant="outline"
+              className="flex items-center"
+            >
+              {isRefreshing ? (
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
+              ) : (
+                <BarChart3 className="h-4 w-4 mr-2" />
+              )}
+              {isRefreshing ? 'Refreshing...' : 'Refresh Data'}
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* User Type Overview */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Current User Type */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  {getUserTypeIcon(userType)}
+                  <span className="ml-2">Your User Type</span>
+                </CardTitle>
+                <CardDescription>
+                  {getUserTypeDescription(userType)}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <Badge className={cn("text-lg px-4 py-2", getUserTypeColor(userType))}>
+                    {userType.replace('toUpperCase()}
+                  </Badge>
+                  <div className="text-right">
+                    <p className="text-sm text-gray-600">Confidence Score</p>
+                    <p className="text-2xl font-bold text-blue-600">{confidenceScore.toFixed(0)}%</p>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">Type Accuracy</span>
+                    <span className="text-sm text-gray-600">{confidenceScore.toFixed(0)}%</span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div 
+                      className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                      style={{ width: `${confidenceScore}%` }}
+                    ></div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Behavior Metrics */}
+            {behaviorMetrics && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <Activity className="h-5 w-5 mr-2" />
+                    Your Activity Metrics
+                  </CardTitle>
+                  <CardDescription>
+                    Detailed breakdown of your platform engagement
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="text-center p-4 border rounded-lg">
+                      <div className="text-2xl font-bold text-blue-600">{behaviorMetrics.pollscreated}</div>
+                      <div className="text-sm text-gray-600">Polls Created</div>
+                    </div>
+                    <div className="text-center p-4 border rounded-lg">
+                      <div className="text-2xl font-bold text-green-600">{behaviorMetrics.votescast}</div>
+                      <div className="text-sm text-gray-600">Votes Cast</div>
+                    </div>
+                    <div className="text-center p-4 border rounded-lg">
+                      <div className="text-2xl font-bold text-purple-600">{behaviorMetrics.sessions}</div>
+                      <div className="text-sm text-gray-600">Sessions</div>
+                    </div>
+                    <div className="text-center p-4 border rounded-lg">
+                      <div className="text-2xl font-bold text-orange-600">{behaviorMetrics.commentsmade}</div>
+                      <div className="text-sm text-gray-600">Comments</div>
+                    </div>
+                  </div>
+
+                  {Object.keys(behaviorMetrics.featureusage).length > 0 && (
+                    <div className="mt-6">
+                      <h4 className="font-medium mb-3">Feature Usage</h4>
+                      <div className="space-y-2">
+                        {Object.entries(behaviorMetrics.featureusage).map(([feature, count]) => (
+                          <div key={feature} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                            <span className="text-sm capitalize">{feature.replace('span>
+                            <Badge variant="secondary">{count} uses</Badge>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Next Milestone */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Target className="h-5 w-5 mr-2" />
+                  Next Milestone
+                </CardTitle>
+                <CardDescription>
+                  Your next goal to advance your user type
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center space-x-3 p-4 bg-blue-50 rounded-lg">
+                  <Trophy className="h-6 w-6 text-blue-600" />
+                  <div>
+                    <p className="font-medium text-blue-900">{nextMilestone}</p>
+                    <p className="text-sm text-blue-700">Keep up the great work!</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Sidebar */}
+          <div className="space-y-6">
+            {/* Recommendations */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Star className="h-5 w-5 mr-2" />
+                  Recommendations
+                </CardTitle>
+                <CardDescription>
+                  Personalized suggestions for your growth
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {recommendations.map((recommendation, index) => (
+                  <div key={index} className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg">
+                    <CheckCircle className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
+                    <p className="text-sm text-gray-700">{recommendation}</p>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+
+            {/* User Type Benefits */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Zap className="h-5 w-5 mr-2" />
+                  Your Benefits
+                </CardTitle>
+                <CardDescription>
+                  Features available at your user type level
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {userType === 'newcomer' && (
+                  <>
+                    <div className="flex items-center space-x-2">
+                      <CheckCircle className="h-4 w-4 text-green-600" />
+                      <span className="text-sm">Access to all public polls</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <CheckCircle className="h-4 w-4 text-green-600" />
+                      <span className="text-sm">Basic profile features</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <CheckCircle className="h-4 w-4 text-green-600" />
+                      <span className="text-sm">Community guidelines</span>
+                    </div>
+                  </>
+                )}
+                {userType === 'active' && (
+                  <>
+                    <div className="flex items-center space-x-2">
+                      <CheckCircle className="h-4 w-4 text-green-600" />
+                      <span className="text-sm">Create your own polls</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <CheckCircle className="h-4 w-4 text-green-600" />
+                      <span className="text-sm">Advanced analytics</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <CheckCircle className="h-4 w-4 text-green-600" />
+                      <span className="text-sm">Community features</span>
+                    </div>
+                  </>
+                )}
+                {userType === 'poweruser' && (
+                  <>
+                    <div className="flex items-center space-x-2">
+                      <CheckCircle className="h-4 w-4 text-green-600" />
+                      <span className="text-sm">Priority support</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <CheckCircle className="h-4 w-4 text-green-600" />
+                      <span className="text-sm">Advanced poll features</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <CheckCircle className="h-4 w-4 text-green-600" />
+                      <span className="text-sm">Mentorship opportunities</span>
+                    </div>
+                  </>
+                )}
+                {userType === 'influencer' && (
+                  <>
+                    <div className="flex items-center space-x-2">
+                      <CheckCircle className="h-4 w-4 text-green-600" />
+                      <span className="text-sm">Featured content placement</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <CheckCircle className="h-4 w-4 text-green-600" />
+                      <span className="text-sm">Community leadership tools</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <CheckCircle className="h-4 w-4 text-green-600" />
+                      <span className="text-sm">Platform feedback access</span>
+                    </div>
+                  </>
+                )}
+                {userType === 'admin' && (
+                  <>
+                    <div className="flex items-center space-x-2">
+                      <CheckCircle className="h-4 w-4 text-green-600" />
+                      <span className="text-sm">Full platform access</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <CheckCircle className="h-4 w-4 text-green-600" />
+                      <span className="text-sm">User management tools</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <CheckCircle className="h-4 w-4 text-green-600" />
+                      <span className="text-sm">System administration</span>
+                    </div>
+                  </>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Quick Actions */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Users className="h-5 w-5 mr-2" />
+                  Quick Actions
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <Button
+                  onClick={() => router.push('/polls/create')}
+                  className="w-full"
+                  variant="outline"
+                >
+                  Create a Poll
+                </Button>
+                <Button
+                  onClick={() => router.push('/polls')}
+                  className="w-full"
+                  variant="outline"
+                >
+                  Browse Polls
+                </Button>
+                <Button
+                  onClick={() => router.push('/profile/edit')}
+                  className="w-full"
+                  variant="outline"
+                >
+                  Update Profile
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}

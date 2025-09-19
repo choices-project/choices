@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { getSupabaseServer } from '@/lib/supabase/server';
 import { beginRegister } from '@/lib/webauthn/client';
 import { WebAuthnPrivacyBadge } from './WebAuthnPrivacyBadge';
 
@@ -24,9 +23,14 @@ export function PasskeyManagement() {
 
   const loadPasskeys = async () => {
     try {
-      // This would need to be implemented with proper auth context
-      // For now, showing the structure
-      setPasskeys([]);
+      // Load passkeys via API endpoint
+      const response = await fetch('/api/auth/webauthn/credentials');
+      if (response.ok) {
+        const data = await response.json();
+        setPasskeys(data.credentials || []);
+      } else {
+        setError('Failed to load passkeys');
+      }
     } catch (err) {
       setError('Failed to load passkeys');
     } finally {

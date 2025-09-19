@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { devLog } from '@/lib/logger';
 import type { DashboardData } from '@/types/frontend';
+import PWAStatus from './PWAStatus';
 
 
 type PollSummary = {
@@ -395,6 +396,11 @@ export default function Dashboard() {
         {viewMode === 'analytics' && (
           <AnalyticsView data={dashboardData} />
         )}
+
+        {/* PWA Status Card */}
+        <div className="mt-6">
+          <PWAStatus showDetails={true} />
+        </div>
       </div>
     </div>
   );

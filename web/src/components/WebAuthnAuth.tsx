@@ -61,7 +61,7 @@ export default function WebAuthnAuth({ onAuthenticated }: WebAuthnAuthProps) {
 
       // Step 2: Create credentials using WebAuthn API
       const credential = await navigator.credentials.create({
-        publicKey: beginData.options,
+        publicKey: beginData.options as PublicKeyCredentialCreationOptions,
       }) as PublicKeyCredential
 
       if (!credential) {

@@ -31,10 +31,20 @@ type ProfileVisibility = 'public' | 'private' | 'friends_only' | 'anonymous'
 
 export default function ProfileSetupStep({ data, onUpdate, onNext }: ProfileSetupStepProps) {
   const [displayName, setDisplayName] = useState(data?.displayName || '')
-  const [profileVisibility, setProfileVisibility] = useState<ProfileVisibility>(data?.profileVisibility || 'public')
+  const [profileVisibility, setProfileVisibility] = useState<ProfileVisibility>((data?.profileVisibility as ProfileVisibility) || 'public')
   const [emailNotifications, setEmailNotifications] = useState(data?.emailNotifications !== false)
   const [pushNotifications, setPushNotifications] = useState(data?.pushNotifications !== false)
   const [currentSection, setCurrentSection] = useState<'overview' | 'profile' | 'preferences' | 'complete'>('overview')
+
+  const handleNext = () => {
+    onUpdate({
+      displayName,
+      profileVisibility,
+      emailNotifications,
+      pushNotifications
+    })
+    onNext()
+  }
 
   // E2E bypass: If we're in test environment, render a simple version
   if (process.env.NODE_ENV === 'test' || process.env.NEXT_PUBLIC_SUPABASE_URL === 'https://test.supabase.co') {
@@ -73,16 +83,6 @@ export default function ProfileSetupStep({ data, onUpdate, onNext }: ProfileSetu
     )
   }
 
-  const handleNext = () => {
-    onUpdate({
-      displayName,
-      profileVisibility,
-      emailNotifications,
-      pushNotifications,
-      profileSetupCompleted: true
-    })
-    onNext()
-  }
 
   const renderOverview = () => (
     <div className="space-y-8" >

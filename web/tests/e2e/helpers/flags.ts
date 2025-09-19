@@ -7,7 +7,7 @@
  * Updated: 2024-12-19
  */
 
-import { Page } from '@playwright/test';
+import { type Page } from '@playwright/test';
 
 export interface FeatureFlags {
   CORE_AUTH?: boolean;

@@ -32,14 +32,33 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
+        {/* PWA Manifest */}
         <link rel="manifest" href="/manifest.json" />
-        <link rel="apple-touch-icon" href="/favicon.ico" />
+        
+        {/* PWA Icons */}
+        <link rel="icon" href="/icons/icon-192x192.svg" />
+        <link rel="apple-touch-icon" href="/icons/icon-192x192.svg" />
+        <link rel="apple-touch-icon" sizes="72x72" href="/icons/icon-72x72.svg" />
+        <link rel="apple-touch-icon" sizes="96x96" href="/icons/icon-96x96.svg" />
+        <link rel="apple-touch-icon" sizes="128x128" href="/icons/icon-128x128.svg" />
+        <link rel="apple-touch-icon" sizes="144x144" href="/icons/icon-144x144.svg" />
+        <link rel="apple-touch-icon" sizes="152x152" href="/icons/icon-152x152.svg" />
+        <link rel="apple-touch-icon" sizes="192x192" href="/icons/icon-192x192.svg" />
+        <link rel="apple-touch-icon" sizes="384x384" href="/icons/icon-384x384.svg" />
+        <link rel="apple-touch-icon" sizes="512x512" href="/icons/icon-512x512.svg" />
+        
+        {/* PWA Meta Tags */}
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="Choices" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="msapplication-TileColor" content="#3b82f6" />
-        <meta name="msapplication-tileImage" content="/favicon.ico" />
+        <meta name="msapplication-tileImage" content="/icons/icon-144x144.svg" />
+        <meta name="msapplication-config" content="/browserconfig.xml" />
+        
+        {/* PWA Theme */}
+        <meta name="theme-color" content="#3b82f6" />
+        <meta name="background-color" content="#ffffff" />
       </head>
       <body>
         {/* Minimal root layout - providers moved to route groups */}

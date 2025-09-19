@@ -1,89 +1,80 @@
 /**
- * Centralized Test ID Registry
+ * Test IDs Registry - MVP VERSION
  * 
- * Single source of truth for all data-testid attributes used in E2E tests.
- * Use this registry to ensure consistent test IDs across the application.
- * 
- * Created: 2024-12-19
- * Updated: 2025-01-17
+ * Complete test ID registry for MVP functionality
  */
 
 export const T = {
+  // Auth related
+  loginButton: 'login-button',
+  registerButton: 'register-button',
+  logoutButton: 'logout-button',
+  
+  // Poll related
+  createPollButton: 'create-poll-button',
+  voteButton: 'vote-button',
+  pollTitle: 'poll-title',
+  
+  // Navigation
+  navigation: 'navigation',
+  userMenu: 'user-menu',
+  
+  // Admin
+  admin: {
+    accessDenied: 'admin-access-denied',
+    usersTab: 'admin-users-tab',
+    pollsTab: 'admin-polls-tab',
+    userList: 'admin-user-list',
+    pollList: 'admin-poll-list',
+    promoteUser: (userId: string) => `admin-promote-user-${userId}`,
+    banUser: (userId: string) => `admin-ban-user-${userId}`,
+  },
+  
+  // Login/Register
   login: {
     email: 'login-email',
     password: 'login-password',
     submit: 'login-submit',
-    webauthn: 'login-webauthn',
-    register: 'register-link',
-    forgotPassword: 'forgot-password-link',
-    error: 'login-error',
   },
-
-  pollCreate: {
-    title: 'poll-title',
-    description: 'poll-description',
-    category: 'category',
-    votingMethod: 'voting-method',
-    privacyLevel: 'privacy-level',
-
-    // Timing (tests expect dashed ids)
-    startTime: 'start-time',
-    endTime: 'end-time',
-
-    // Dynamic options — tests expect "option-3" shape:
-    optionInput: (i: number) => `option-${i}`,
-    addOption: 'add-option-button',
-    removeOption: (i: number) => `remove-option-${i}-button`,
-
-    // Buttons
-    submit: 'create-poll-button',
-    reset: 'reset-form-button',
-
-    // Validation error containers (explicit ids used by specs)
-    titleError: 'title-error',
-    votingMethodError: 'voting-method-error',
-    optionsError: 'options-error',
-    timingError: 'timing-error',
-  },
-
-  pollVote: {
-    container: 'poll-vote-container',
-    option: (i: number) => `poll-option-${i}`,
-    submit: 'vote-submit',
-    results: 'results-container',
-  },
-
+  
+  // WebAuthn
   webauthn: {
-    register: 'register-passkey-button',
-    login: 'login-passkey-button',
+    register: 'webauthn-register',
+    login: 'webauthn-login',
     prompt: 'webauthn-prompt',
+    biometricButton: 'webauthn-biometric-button',
+    crossDeviceButton: 'webauthn-cross-device-button',
+    qr: 'webauthn-qr',
     authPrompt: 'webauthn-auth-prompt',
-    biometricButton: 'biometric-auth-button',
-    biometricPrompt: 'biometric-prompt',
-    crossDeviceButton: 'cross-device-auth-button',
-    qr: 'qr-code',
-    serverError: 'server-error',
-    networkError: 'network-error',
+    biometricPrompt: 'webauthn-biometric-prompt',
+    networkError: 'webauthn-network-error',
+    serverError: 'webauthn-server-error',
   },
-
-  admin: {
-    usersTab: 'admin-users-tab',
-    pollsTab: 'admin-polls-tab',
-    accessDenied: 'admin-access-denied',
-    userList: 'admin-user-list',
-    pollList: 'admin-poll-list',
-    banUser: (id: string) => `admin-ban-user-${id}`,
-    promoteUser: (id: string) => `admin-promote-user-${id}`,
+  
+  // Poll Creation
+  pollCreate: {
+    title: 'poll-create-title',
+    titleError: 'poll-create-title-error',
+    description: 'poll-create-description',
+    category: 'poll-create-category',
+    votingMethod: 'poll-create-voting-method',
+    votingMethodError: 'poll-create-voting-method-error',
+    optionInput: (index: number) => `poll-create-option-input-${index}`,
+    removeOption: (index: number) => `poll-create-remove-option-${index}`,
+    addOption: 'poll-create-add-option',
+    optionsError: 'poll-create-options-error',
+    startTime: 'poll-create-start-time',
+    endTime: 'poll-create-end-time',
+    timingError: 'poll-create-timing-error',
+    privacyLevel: 'poll-create-privacy-level',
+    submit: 'poll-create-submit',
+    reset: 'poll-create-reset',
   },
-
-  onboarding: {
-    container: 'onb-container',
-    start: 'onb-start',
-    next: 'onb-next',
-    finish: 'onb-finish',
-    privacyAllow: 'onb-privacy-allow',
-    privacyDeny: 'onb-privacy-deny',
-    category: (slug: string) => `onb-cat-${slug}`,
-    step: (step: number) => `onb-step-${step}`,
-  },
+  
+  // Generic
+  submitButton: 'submit-button',
+  cancelButton: 'cancel-button',
+  loadingSpinner: 'loading-spinner'
 } as const;
+
+export type TestId = typeof T[keyof typeof T];

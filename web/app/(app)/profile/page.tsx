@@ -21,8 +21,8 @@ import {
   Info
 } from 'lucide-react'
 import { logger } from '@/lib/logger'
-import BiometricSetup from '@/features/webauthn/components/BiometricSetup'
-import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
+// import BiometricSetup from '@/features/webauthn/components/BiometricSetup'
+import { useSupabaseAuth } from '@/contexts/AuthContext'
 
 type UserProfile = {
   id: string
@@ -302,12 +302,15 @@ export default function ProfilePage() {
             <CardDescription>Manage your biometric login credentials</CardDescription>
           </CardHeader>
           <CardContent>
-            <BiometricSetup 
+            {/* <BiometricSetup 
               userId={user.id} 
               username={user.email || ''}
               onSuccess={loadUserData}
               onError={() => setError('Failed to setup biometric authentication')}
-            />
+            /> */}
+            <div className="text-center py-8">
+              <p className="text-muted-foreground">Biometric setup temporarily disabled</p>
+            </div>
             
             {biometricCredentials.length > 0 && (
               <div className="mt-6">

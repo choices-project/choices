@@ -1,0 +1,6 @@
+web/app/(app)/admin/dashboard/page.tsx:import { DashboardOverview } from './DashboardOverview';
+web/app/api/monitoring/red-dashboard/route.ts:import { RedDashboard } from '@/lib/monitoring/red-dashboards';
+web/shared/modules/lib/module-loader.ts:      loadFunction: () => import('../components/analytics/AnalyticsDashboard'),
+web/components/Dashboard.tsx:import type { DashboardData } from '@/types/frontend';
+web/components/social/CampaignDashboard.tsx:import type { CampaignDashboardData } from '@/lib/social/candidate-tools';
+web/components/lazy/LazyAdmin.tsx:const AdminDashboard = lazy(() => import('@/components/lazy/AdminDashboard'))

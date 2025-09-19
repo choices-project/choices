@@ -1,0 +1,90 @@
+[
+  {
+    "from": "@/components/polls/*",
+    "to": "@/features/polls/*"
+  },
+  {
+    "from": "@/components/CreatePoll",
+    "to": "@/features/polls/components/CreatePollForm"
+  },
+  {
+    "from": "@/features/polls/components/EnhancedVoteForm",
+    "to": "@/features/voting/components/VotingInterface"
+  },
+  {
+    "from": "@/components/voting/*",
+    "to": "@/features/voting/*"
+  },
+  {
+    "from": "@/lib/supabase/server",
+    "to": "@/utils/supabase/server"
+  },
+  {
+    "from": "@/shared/core/database/lib/server",
+    "to": "@/utils/supabase/server"
+  },
+  {
+    "from": "@/shared/lib/server",
+    "to": "@/utils/supabase/server"
+  },
+  {
+    "from": "@/shared/core/database/lib/supabase-server",
+    "to": "@/utils/supabase/server"
+  },
+  {
+    "from": "@/lib/supabase-ssr-safe",
+    "to": "@/utils/supabase/server"
+  },
+  {
+    "from": "@/utils/supabase/client-dynamic",
+    "to": "@/utils/supabase/client"
+  },
+  {
+    "from": "@/utils/supabase/client-minimal",
+    "to": "@/utils/supabase/client"
+  },
+  {
+    "from": "@/shared/core/database/lib/client",
+    "to": "@/utils/supabase/client"
+  },
+  {
+    "from": "@/components/auth/AuthProvider",
+    "to": "@/contexts/AuthContext"
+  },
+  {
+    "from": "@/hooks/AuthProvider",
+    "to": "@/contexts/AuthContext"
+  },
+  {
+    "from": "@/hooks/useSupabaseAuth",
+    "to": "@/contexts/AuthContext"
+  },
+  {
+    "from": "@/lib/core/auth/auth",
+    "to": "@/lib/core/auth/middleware"
+  },
+  {
+    "from": "@/components/Dashboard",
+    "to": "@/components/AnalyticsDashboard"
+  },
+  {
+    "from": "@/components/EnhancedDashboard",
+    "to": "@/components/AnalyticsDashboard"
+  },
+  {
+    "from": "@/features/webauthn/lib/webauthn",
+    "to": "@/lib/webauthn/client"
+  },
+  {
+    "from": "@/lib/shared/webauthn",
+    "to": "@/lib/webauthn/client"
+  },
+  {
+    "from": "@/src/components/WebAuthnAuth",
+    "to": "@/lib/webauthn/client"
+  },
+  {
+    "from": "@/features/civics/sources/propublica",
+    "to": "@/features/civics/ingest/connectors/propublica"
+  }
+]

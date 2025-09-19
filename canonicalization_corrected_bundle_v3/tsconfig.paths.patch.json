@@ -1,0 +1,67 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/components/polls/*": [
+        "web/features/polls/*"
+      ],
+      "@/components/CreatePoll*": [
+        "web/features/polls/components/CreatePollForm.tsx"
+      ],
+      "@/components/voting/*": [
+        "web/features/voting/*"
+      ],
+      "@/components/Dashboard": [
+        "web/components/AnalyticsDashboard.tsx"
+      ],
+      "@/components/EnhancedDashboard": [
+        "web/components/AnalyticsDashboard.tsx"
+      ],
+      "@/components/auth/AuthProvider*": [
+        "web/contexts/AuthContext.tsx"
+      ],
+      "@/hooks/AuthProvider*": [
+        "web/contexts/AuthContext.tsx"
+      ],
+      "@/hooks/useSupabaseAuth*": [
+        "web/contexts/AuthContext.tsx"
+      ],
+      "@/lib/supabase/server": [
+        "web/utils/supabase/server.ts"
+      ],
+      "@/shared/core/database/lib/server": [
+        "web/utils/supabase/server.ts"
+      ],
+      "@/shared/lib/server": [
+        "web/utils/supabase/server.ts"
+      ],
+      "@/shared/core/database/lib/supabase-server": [
+        "web/utils/supabase/server.ts"
+      ],
+      "@/lib/supabase-ssr-safe": [
+        "web/utils/supabase/server.ts"
+      ],
+      "@/utils/supabase/client-dynamic": [
+        "web/utils/supabase/client.ts"
+      ],
+      "@/utils/supabase/client-minimal": [
+        "web/utils/supabase/client.ts"
+      ],
+      "@/shared/core/database/lib/client": [
+        "web/utils/supabase/client.ts"
+      ],
+      "@/features/webauthn/lib/webauthn": [
+        "web/lib/webauthn/client.ts"
+      ],
+      "@/lib/shared/webauthn": [
+        "web/lib/webauthn/client.ts"
+      ],
+      "@/src/components/WebAuthnAuth": [
+        "web/lib/webauthn/client.ts"
+      ],
+      "@/features/civics/sources/propublica": [
+        "web/features/civics/ingest/connectors/propublica.ts"
+      ]
+    }
+  }
+}

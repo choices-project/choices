@@ -2,8 +2,8 @@ import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
 import { getSupabaseServerClient } from '@/utils/supabase/server'
 import { devLog } from '@/lib/logger'
-import { getUser } from '@/lib/core/auth/auth'
-import { HybridVotingService } from '@/lib/core/services/hybrid-voting'
+import { getUser } from '@/lib/core/auth/middleware'
+// import { HybridVotingService } from '@/lib/core/services/hybrid-voting'
 import { AnalyticsService } from '@/lib/core/services/analytics'
 import { 
   ValidationError, 
@@ -149,23 +149,8 @@ export async function POST(
         responseTime: Date.now() - Date.now()
       })
     } else {
-      // Use hybrid voting service for other voting methods
-      const votingService = new HybridVotingService()
-      const voteRequest = {
-        pollId,
-        choice,
-        privacyLevel: privacy_level,
-        userId: user.id
-      }
-
-      const response = await votingService.submitVote(voteRequest)
-
-      if (!response.success) {
-        if (response.message.includes('not found') || response.message.includes('Poll not found')) {
-          throw new NotFoundError('Poll not found')
-        }
-        throw new Error(response.message)
-      }
+      // Hybrid voting service temporarily disabled
+      throw new Error('Advanced voting methods temporarily disabled')
     }
 
     // Record analytics for the vote

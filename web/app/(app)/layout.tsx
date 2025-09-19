@@ -1,12 +1,17 @@
 'use client'
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { useState } from 'react'
-import { AuthProvider } from '../../hooks/AuthProvider'
-import { PWAInstallPrompt, OfflineIndicator, PWAUpdatePrompt } from '../../lib/shared/pwa-components'
+import { useState, useEffect } from 'react'
+import { AuthProvider } from '@/contexts/AuthContext'
 import dynamic from 'next/dynamic'
+import { initializePWA } from '@/lib/pwa/init'
 
 const EnhancedFeedbackWidget = dynamic(() => import('../../components/EnhancedFeedbackWidget'), {
+  ssr: false,
+  loading: () => null
+})
+
+const PWAIntegration = dynamic(() => import('../../components/PWAIntegration'), {
   ssr: false,
   loading: () => null
 })
@@ -32,6 +37,16 @@ export default function AppLayout({
     },
   }))
 
+  // Initialize PWA functionality
+  useEffect(() => {
+    console.log('PWA: Starting initialization...')
+    initializePWA().then(() => {
+      console.log('PWA: Initialization completed successfully')
+    }).catch(error => {
+      console.error('PWA: Failed to initialize PWA:', error)
+    })
+  }, [])
+
   return (
     <FontProvider>
       <ClientOnly>
@@ -47,18 +62,11 @@ export default function AppLayout({
             
             {children}
             
-            {/* PWA Components - Only render on client side */}
-            <PWAInstallPrompt />
-            <OfflineIndicator />
-            <PWAUpdatePrompt />
+            {/* PWA Integration - Handles all PWA functionality */}
+            <PWAIntegration />
             
             {/* Enhanced Feedback Widget - Only render on client side */}
             <EnhancedFeedbackWidget />
-            
-            {/* Hidden elements for PWA functionality */}
-            <div id="install-pwa" style={{ display: 'none' }} />
-            <div id="update-pwa" style={{ display: 'none' }} />
-            <div id="offline-indicator" style={{ display: 'none' }} />
           </AuthProvider>
         </QueryClientProvider>
       </ClientOnly>

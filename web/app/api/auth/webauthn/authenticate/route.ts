@@ -1,41 +1,47 @@
 import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server';
-import { getAuthenticationOptions, verifyCredential } from '@/features/webauthn/server/authenticate';
 import { devLog } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic'
 
-// POST - Handle WebAuthn authentication (both getting options and verifying)
+// POST - Handle WebAuthn authentication (redirect to proper endpoints)
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json()
+    const body = await request.json();
     
-    // If credential is provided, this is a verification request
-    if (body.credential) {
-      const result = await verifyCredential(body);
+    // Check if this is a request for options or verification
+    if (body.action === 'options') {
+      // Redirect to the working options endpoint
+      const optionsResponse = await fetch(`${request.nextUrl.origin}/api/v1/auth/webauthn/authenticate/options`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': request.headers.get('Authorization') || '',
+        },
+        body: JSON.stringify(body),
+      });
       
-      // Set session cookie
-      const response = NextResponse.json({
-        success: result.success,
-        message: result.message,
-        user: result.user
-      })
-
-      response.cookies.set('choices_session', JSON.stringify(result.sessionToken), {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        path: '/',
-        sameSite: 'lax',
-        maxAge: 7 * 24 * 60 * 60 // 7 days
-      })
-
-      return response;
+      const optionsData = await optionsResponse.json();
+      return NextResponse.json(optionsData, { status: optionsResponse.status });
+    } else if (body.action === 'verify') {
+      // Redirect to the working verify endpoint
+      const verifyResponse = await fetch(`${request.nextUrl.origin}/api/v1/auth/webauthn/authenticate/verify`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': request.headers.get('Authorization') || '',
+        },
+        body: JSON.stringify(body),
+      });
+      
+      const verifyData = await verifyResponse.json();
+      return NextResponse.json(verifyData, { status: verifyResponse.status });
+    } else {
+      return NextResponse.json(
+        { error: 'Invalid action. Use "options" or "verify"' },
+        { status: 400 }
+      );
     }
-    
-    // Otherwise, this is a request for authentication options
-    const result = await getAuthenticationOptions(body);
-    return NextResponse.json(result);
-    
   } catch (error) {
     devLog('WebAuthn authentication error:', error)
     return NextResponse.json(

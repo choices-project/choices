@@ -11,8 +11,8 @@ export default function LandingPage() {
               <h1 className="text-2xl font-bold text-gray-900">Choices</h1>
             </div>
             <nav className="flex space-x-8">
-              <Link href="/login" className="text-gray-600 hover:text-gray-900">Sign In</Link>
-              <Link href="/register" className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+              <Link href="/login" className="text-gray-600 hover:text-gray-900" data-testid="sign-in-button">Sign In</Link>
+              <Link href="/register" className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700" data-testid="sign-up-button">
                 Get Started
               </Link>
             </nav>
@@ -65,7 +65,7 @@ export default function LandingPage() {
             <div className="bg-white rounded-lg p-6 shadow-lg">
               <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mx-auto mb-4">
                 <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 00-2-2z" />
                 </svg>
               </div>
               <h3 className="text-lg font-semibold mb-2">Transparent Results</h3>

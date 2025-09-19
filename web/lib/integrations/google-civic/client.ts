@@ -7,8 +7,11 @@
 
 import { logger } from '../../logger';
 import { ApplicationError } from '../../errors/base';
-import type { AddressLookupResult } from '../../../features/civics/schemas';
+// import type { AddressLookupResult } from '../../../features/civics/schemas'; // DISABLED: civics features disabled for MVP
 import type { GoogleCivicElectionInfo, GoogleCivicVoterInfo } from '../../types/google-civic';
+
+// Temporary stub type until civics features are re-enabled
+type AddressLookupResult = any;
 
 export type GoogleCivicConfig = {
   apiKey: string;

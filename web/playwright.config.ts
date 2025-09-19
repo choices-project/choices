@@ -7,11 +7,14 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : 4,
   reporter: 'html',
+  timeout: 60_000,
+  expect: { timeout: 10_000 },
   use: {
-    baseURL: process.env.BASE_URL || 'http://127.0.0.1:3001', // avoid localhost oddities
+    baseURL: process.env.BASE_URL || 'http://127.0.0.1:3000', // use existing dev server
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
+    extraHTTPHeaders: { 'x-e2e-bypass': '1' },
   },
 
   projects: [
@@ -26,6 +29,30 @@ export default defineConfig({
       name: 'ui-tests',
       testMatch: /.*\.ui\.spec\.ts/,
       use: { ...devices['Desktop Chrome'] },
+    },
+    {
+      name: 'pwa-tests',
+      testMatch: /.*pwa.*\.spec\.ts/,
+      use: { 
+        ...devices['Desktop Chrome'],
+        // PWA-specific settings
+        permissions: ['notifications'],
+        geolocation: { latitude: 37.7749, longitude: -122.4194 },
+        locale: 'en-US',
+        timezoneId: 'America/Los_Angeles',
+      },
+    },
+    {
+      name: 'pwa-mobile-tests',
+      testMatch: /.*pwa.*\.spec\.ts/,
+      use: { 
+        ...devices['Pixel 5'],
+        // Mobile PWA-specific settings
+        permissions: ['notifications'],
+        geolocation: { latitude: 37.7749, longitude: -122.4194 },
+        locale: 'en-US',
+        timezoneId: 'America/Los_Angeles',
+      },
     },
     {
       name: 'chromium',
@@ -54,10 +81,5 @@ export default defineConfig({
     },
   ],
 
-  webServer: {
-    command: 'NODE_ENV=production next build && NODE_ENV=production next start -p 3001',
-    port: 3001,
-    reuseExistingServer: !process.env.CI,
-    timeout: 120 * 1000,
-  },
+  // No webServer - assuming dev server is already running on port 3000
 })

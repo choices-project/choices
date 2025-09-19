@@ -87,8 +87,8 @@ export function isWebAuthnSupported(): boolean {
   return !!(
     window.PublicKeyCredential &&
     window.navigator.credentials &&
-    window.navigator.credentials.create &&
-    window.navigator.credentials.get
+    typeof window.navigator.credentials.create === 'function' &&
+    typeof window.navigator.credentials.get === 'function'
   );
 }
 
@@ -106,4 +106,20 @@ export async function getPrivacyStatus(fetcher = fetch) {
       badge: { color: 'red', label: 'Privacy protections: ERROR' }
     };
   }
+}
+
+// MVP stub functions for backward compatibility
+export async function registerBiometric() {
+  console.warn('registerBiometric: Using MVP stub - implement for full functionality');
+  return { success: false, error: 'Not implemented in MVP' };
+}
+
+export async function isBiometricAvailable() {
+  console.warn('isBiometricAvailable: Using MVP stub - implement for full functionality');
+  return false;
+}
+
+export async function getUserCredentials() {
+  console.warn('getUserCredentials: Using MVP stub - implement for full functionality');
+  return [];
 }

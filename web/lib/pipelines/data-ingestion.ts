@@ -22,10 +22,41 @@ import {
 import { 
   createDataValidationPipeline 
 } from './data-validation';
-import type { 
-  DataQualityMetrics,
-  DataSourceConfig 
-} from '@/features/civics/schemas';
+// TODO: Re-enable when civics features are enabled
+// import type { 
+//   DataQualityMetrics,
+//   DataSourceConfig 
+// } from '@/features/civics/schemas';
+
+// Temporary types until civics schemas are re-enabled
+type DataQualityMetrics = {
+  source: string;
+  timestamp: string;
+  totalRecords: number;
+  validRecords: number;
+  invalidRecords: number;
+  duplicateRecords: number;
+  completeness: number;
+  accuracy: number;
+  freshness: number;
+  issues: string[];
+};
+
+type DataSourceConfig = {
+  name: string;
+  type: string;
+  enabled: boolean;
+  apiKey: string;
+  baseUrl: string;
+  rateLimit: {
+    requestsPerMinute: number;
+    requestsPerHour: number;
+  };
+  cache: {
+    ttl: number;
+    maxSize: number;
+  };
+};
 
 export type IngestionConfig = {
   sources: DataSourceConfig[];

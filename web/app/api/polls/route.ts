@@ -2,7 +2,7 @@ import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server';
 import { devLog } from '@/lib/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
-import { getUser } from '@/lib/core/auth/auth';
+import { getUser } from '@/lib/core/auth/middleware';
 
 export const dynamic = 'force-dynamic';
 

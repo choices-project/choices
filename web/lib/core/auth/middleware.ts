@@ -15,7 +15,7 @@ import { requireTrustedOrigin } from '@/lib/http/origin';
 import { rateLimiters } from '@/lib/core/security/rate-limit';
 import { requireTurnstileVerification } from '@/lib/security/turnstile';
 import { withOptional } from '@/lib/util/objects';
-import type { SupabaseClient } from '@supabase/supabase-js';
+import type { SupabaseClient, User } from '@supabase/supabase-js';
 
 export type TrustTier = 'T1' | 'T2' | 'T3';
 
@@ -364,4 +364,39 @@ export function combineMiddleware(...middlewares: Array<(request: NextRequest) =
     }
     return null;
   };
+}
+
+/**
+ * Simple getUser function for backward compatibility
+ * Uses canonical Supabase client
+ */
+export async function getUser(): Promise<User | null> {
+  try {
+    const supabase = await getSupabaseServerClient();
+    const { data: { user }, error } = await supabase.auth.getUser();
+    
+    if (error) {
+      devLog('getUser error:', error);
+      return null;
+    }
+    
+    return user;
+  } catch (error) {
+    devLog('getUser error:', error);
+    return null;
+  }
+}
+
+/**
+ * requireUser function for backward compatibility
+ * Uses canonical Supabase client
+ */
+export async function requireUser(req: Request): Promise<User> {
+  const user = await getUser();
+  
+  if (!user) {
+    throw new Error('Authentication required');
+  }
+  
+  return user;
 }

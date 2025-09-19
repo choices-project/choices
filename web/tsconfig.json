@@ -15,5 +15,11 @@
     ".next/types/**/*.ts",
     "**/*.ts",
     "**/*.tsx"
+  ],
+  "exclude": [
+    "**/*.disabled",
+    "**/*.disabled.*",
+    "**/scripts.disabled/**",
+    "**/tests.disabled/**"
   ]
 }

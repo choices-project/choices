@@ -1,0 +1,64 @@
+# files_to_disable.txt
+# Generated from canonicalization_audit_comprehensive.tar.gz
+# Created (UTC): 2025-09-18T11:57:54Z
+#
+# This list contains repo-relative paths identified as DUPLICATE / LEGACY / BANNED
+# in the audit package documentation and/or duplicates folder.
+# Action: append '.disabled' to each file (or remove) and update imports to canonical modules.
+#
+# Count: 55
+/web/app/(app)/polls/create/page.tsx
+/web/app/(app)/profile/biometric-setup/page.tsx
+/web/app/dashboard/page.tsx
+/web/app/register/page.tsx
+/web/components/AnalyticsDashboard.tsx
+/web/components/CreatePoll.tsx
+/web/components/Dashboard.tsx
+/web/components/DeviceList.tsx
+/web/components/EnhancedDashboard.tsx
+/web/components/OptimizedImage.tsx
+/web/components/VirtualScroll.tsx
+/web/components/auth/AuthProvider.tsx
+/web/components/auth/DeviceList.tsx
+/web/components/auth/PasskeyLogin.tsx
+/web/components/auth/PasskeyRegister.tsx
+/web/components/performance/OptimizedImage.tsx
+/web/components/performance/VirtualScroll.tsx
+/web/components/polls/CommunityPollSelection.tsx
+/web/components/polls/CreatePollForm.tsx
+/web/components/polls/PollCreationSystem.tsx
+/web/components/ui/client.ts
+/web/components/ui/index.ts
+/web/contexts/AuthContext.tsx
+/web/database/migrations/001_dual_track_results.sql
+/web/database/polls_schema.sql
+/web/database/schema.sql
+/web/features/civics/ingest/connectors/propublica.ts
+/web/features/civics/sources/propublica.ts
+/web/features/dashboard/pages/dashboard/page.tsx
+/web/features/polls/components/CreatePollForm.tsx
+/web/features/polls/components/EnhancedVoteForm.tsx
+/web/features/voting/components/VotingInterface.tsx
+/web/features/webauthn/lib/webauthn.ts
+/web/hooks/AuthProvider.tsx
+/web/hooks/useSupabaseAuth.ts
+/web/lib/core/auth/auth.ts
+/web/lib/core/auth/middleware.ts
+/web/lib/services/poll-service.ts
+/web/lib/shared/webauthn.ts
+/web/lib/supabase-ssr-safe.ts
+/web/lib/supabase/server.ts
+/web/lib/vote/engine.ts
+/web/lib/webauthn/credential-verification.ts
+/web/scripts/migrations/001-webauthn-schema.sql
+/web/shared/components/index.ts
+/web/shared/core/database/lib/client.ts
+/web/shared/core/database/lib/server.ts
+/web/shared/core/database/lib/supabase-server.ts
+/web/shared/core/database/supabase-schema.sql
+/web/shared/lib/server.ts
+/web/src/components/WebAuthnAuth.tsx
+/web/utils/supabase/client-dynamic.ts
+/web/utils/supabase/client-minimal.ts
+/web/utils/supabase/client.ts
+/web/utils/supabase/server.ts

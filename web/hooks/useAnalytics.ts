@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { devLog } from '@/lib/logger';
-import { useFeatureFlags } from './useFeatureFlags';
+// import { useFeatureFlags } from './useFeatureFlags';
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
 import { withOptional } from '@/lib/util/objects';
 
@@ -73,7 +73,8 @@ export function useAnalytics(options: UseAnalyticsOptions = {}): UseAnalyticsRet
     defaultFilters = {}
   } = options;
 
-  const featureFlags = useFeatureFlags();
+  // const featureFlags = useFeatureFlags();
+  const featureFlags = { flags: {}, isLoading: false };
   const [data, setData] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);

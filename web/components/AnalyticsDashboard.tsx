@@ -12,7 +12,7 @@ import {
   Shield,
   Clock
 } from 'lucide-react';
-import { useFeatureFlags } from '../hooks/useFeatureFlags';
+// import { useFeatureFlags } from '../hooks/useFeatureFlags';
 // import { PWAAnalytics } from '../lib/pwa-analytics'; // Archived PWA feature
 
 type AnalyticsData = {
@@ -101,7 +101,8 @@ export default function AnalyticsDashboard({
   onError,
   className = ""
 }: AnalyticsDashboardProps) {
-  const featureFlags = useFeatureFlags();
+  // const featureFlags = useFeatureFlags();
+  const featureFlags = { isEnabled: (flag: string) => true }; // Stub for MVP
   const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

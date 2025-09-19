@@ -12,10 +12,15 @@ import type {
   ProPublicaVote, 
   ProPublicaBill 
 } from './client';
-import type { 
-  Representative,
-  CandidateCardV1 
-} from '../../../features/civics/schemas';
+// TODO: Re-enable when civics features are enabled
+// import type { 
+//   Representative,
+//   CandidateCardV1 
+// } from '../../../features/civics/schemas';
+
+// Temporary stub types until civics schemas are re-enabled
+type Representative = any;
+type CandidateCardV1 = any;
 
 export type TransformedProPublicaMember = {
   source: 'propublica';

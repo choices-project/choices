@@ -1,5 +1,5 @@
-import '@testing-library/jest-dom';
-import React from 'react';
+require('@testing-library/jest-dom');
+const React = require('react');
 
 // Set up test environment variables
 process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://test.supabase.co';
@@ -54,18 +54,18 @@ jest.mock('@supabase/supabase-js', () => ({
   }))
 }));
 
-// Mock auth service
-jest.mock('@/lib/auth', () => ({
-  getAuthService: jest.fn(() => ({
-    isAuthenticated: jest.fn().mockReturnValue(false),
-    getStoredUser: jest.fn().mockReturnValue(null),
-    getCurrentUser: jest.fn().mockResolvedValue(null),
-    login: jest.fn().mockResolvedValue({ user: null }),
-    register: jest.fn().mockResolvedValue({ user: null }),
-    logout: jest.fn().mockResolvedValue(),
-    refreshUser: jest.fn().mockResolvedValue(null),
-  }))
-}));
+// Mock auth service (commented out as module doesn't exist)
+// jest.mock('@/lib/auth', () => ({
+//   getAuthService: jest.fn(() => ({
+//     isAuthenticated: jest.fn().mockReturnValue(false),
+//     getStoredUser: jest.fn().mockReturnValue(null),
+//     getCurrentUser: jest.fn().mockResolvedValue(null),
+//     login: jest.fn().mockResolvedValue({ user: null }),
+//     register: jest.fn().mockResolvedValue({ user: null }),
+//     logout: jest.fn().mockResolvedValue(),
+//     refreshUser: jest.fn().mockResolvedValue(null),
+//   }))
+// }));
 
 // Mock Next.js router
 jest.mock('next/router', () => ({
@@ -95,6 +95,7 @@ jest.mock('next/router', () => ({
 jest.mock('next/image', () => ({
   __esModule: true,
   default: function MockImage(props) {
+    const React = require('react');
     return React.createElement('img', props);
   },
 }));
@@ -115,20 +116,51 @@ jest.mock('next/server', () => ({
   }
 }));
 
-// Mock window.matchMedia
-Object.defineProperty(window, 'matchMedia', {
-  writable: true,
-  value: jest.fn().mockImplementation(query => ({
-    matches: false,
-    media: query,
-    onchange: null,
-    addListener: jest.fn(),
-    removeListener: jest.fn(),
-    addEventListener: jest.fn(),
-    removeEventListener: jest.fn(),
-    dispatchEvent: jest.fn(),
-  })),
-});
+// Mock window.matchMedia (only in browser environment)
+if (typeof window !== 'undefined') {
+  Object.defineProperty(window, 'matchMedia', {
+    writable: true,
+    value: jest.fn().mockImplementation(query => ({
+      matches: false,
+      media: query,
+      onchange: null,
+      addListener: jest.fn(),
+      removeListener: jest.fn(),
+      addEventListener: jest.fn(),
+      removeEventListener: jest.fn(),
+      dispatchEvent: jest.fn(),
+    })),
+  });
+
+  // Mock performance API
+  Object.defineProperty(window, 'performance', {
+    value: {
+      now: jest.fn(() => Date.now()),
+      mark: jest.fn(),
+      measure: jest.fn(),
+      getEntriesByType: jest.fn(() => []),
+      memory: {
+        usedJSHeapSize: 1000000,
+        totalJSHeapSize: 2000000,
+        jsHeapSizeLimit: 4000000
+      }
+    }
+  });
+
+  // Mock navigator
+  Object.defineProperty(window, 'navigator', {
+    value: {
+      ...window.navigator,
+      connection: {
+        effectiveType: '4g',
+        downlink: 10,
+        rtt: 50
+      },
+      standalone: false,
+      userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36'
+    }
+  });
+}
 
 // Mock ResizeObserver
 global.ResizeObserver = jest.fn().mockImplementation(() => ({
@@ -143,35 +175,6 @@ global.IntersectionObserver = jest.fn().mockImplementation(() => ({
   unobserve: jest.fn(),
   disconnect: jest.fn(),
 }));
-
-// Mock performance API
-Object.defineProperty(window, 'performance', {
-  value: {
-    now: jest.fn(() => Date.now()),
-    mark: jest.fn(),
-    measure: jest.fn(),
-    getEntriesByType: jest.fn(() => []),
-    memory: {
-      usedJSHeapSize: 1000000,
-      totalJSHeapSize: 2000000,
-      jsHeapSizeLimit: 4000000
-    }
-  }
-});
-
-// Mock navigator
-Object.defineProperty(window, 'navigator', {
-  value: {
-    ...window.navigator,
-    connection: {
-      effectiveType: '4g',
-      downlink: 10,
-      rtt: 50
-    },
-    standalone: false,
-    userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36'
-  }
-});
 
 // Suppress console warnings in tests
 const originalWarn = console.warn;

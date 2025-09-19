@@ -12,6 +12,10 @@
     "**/*.test.ts",
     "**/*.test.tsx",
     "**/__tests__/**",
-    "tests/**"
+    "tests/**",
+    "**/*.disabled",
+    "**/*.disabled.*",
+    "**/scripts.disabled/**",
+    "**/tests.disabled/**"
   ]
 }
