@@ -11,9 +11,9 @@ export type SharePlatform =
 
 export interface ShareInput {
   url: string           // canonical https URL
-  text?: string         // short copy
-  hashtags?: string[]   // no '#'
-  via?: string          // x username w/o @
+  text?: string | undefined         // short copy
+  hashtags?: string[] | undefined   // no '#'
+  via?: string | undefined          // x username w/o @
 }
 
 const enc = encodeURIComponent

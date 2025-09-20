@@ -2,7 +2,9 @@
 
 import { useState } from 'react'
 import { devLog } from '@/lib/logger';
-import { Share2, Copy, Link, Twitter, Facebook, Linkedin, Mail, QrCode, Download } from 'lucide-react'
+import { Share2, Copy, Link, Twitter, Facebook, Linkedin, Mail, QrCode, Download, Zap, TrendingUp } from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
+import { isFeatureEnabled } from '@/lib/core/feature-flags'
 
 type PollShareProps = {
   pollId: string
@@ -15,12 +17,7 @@ export default function PollShare({ pollId, poll }: PollShareProps) {
 
   const pollUrl = `${window.location.origin}/polls/${pollId}`
   const pollTitle = poll?.title || 'Check out this poll!'
-
-  const shareData = {
-    title: pollTitle,
-    text: poll?.description || 'I found this interesting poll. Take a look!',
-    url: pollUrl
-  }
+  const socialSharingEnabled = isFeatureEnabled('SOCIAL_SHARING')
 
   const handleCopyLink = async () => {
     try {
@@ -80,7 +77,11 @@ export default function PollShare({ pollId, poll }: PollShareProps) {
   const handleNativeShare = async () => {
     if (navigator.share) {
       try {
-        await navigator.share(shareData)
+        await navigator.share({
+          title: pollTitle,
+          text: 'Check out this poll!',
+          url: pollUrl
+        })
       } catch (error) {
         devLog('Error sharing:', error)
       }
@@ -88,6 +89,8 @@ export default function PollShare({ pollId, poll }: PollShareProps) {
   }
 
   const handleSocialShare = (platform: string) => {
+    if (!socialSharingEnabled) return
+    
     const encodedUrl = encodeURIComponent(pollUrl)
     const encodedTitle = encodeURIComponent(pollTitle)
     
@@ -140,40 +143,42 @@ export default function PollShare({ pollId, poll }: PollShareProps) {
           </div>
         </div>
 
-        {/* Social Media Buttons */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <button
-            onClick={() => handleSocialShare('twitter')}
-            className="flex items-center justify-center space-x-2 p-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
-          >
-            <Twitter className="w-5 h-5" />
-            <span className="text-sm font-medium">Twitter</span>
-          </button>
-          
-          <button
-            onClick={() => handleSocialShare('facebook')}
-            className="flex items-center justify-center space-x-2 p-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            <Facebook className="w-5 h-5" />
-            <span className="text-sm font-medium">Facebook</span>
-          </button>
-          
-          <button
-            onClick={() => handleSocialShare('linkedin')}
-            className="flex items-center justify-center space-x-2 p-3 bg-blue-700 text-white rounded-lg hover:bg-blue-800 transition-colors"
-          >
-            <Linkedin className="w-5 h-5" />
-            <span className="text-sm font-medium">Linkedin</span>
-          </button>
-          
-          <button
-            onClick={() => handleSocialShare('email')}
-            className="flex items-center justify-center space-x-2 p-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
-          >
-            <Mail className="w-5 h-5" />
-            <span className="text-sm font-medium">Email</span>
-          </button>
-        </div>
+        {/* Social Media Buttons - Only show when social sharing is enabled */}
+        {socialSharingEnabled && (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <button
+              onClick={() => handleSocialShare('twitter')}
+              className="flex items-center justify-center space-x-2 p-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+            >
+              <Twitter className="w-5 h-5" />
+              <span className="text-sm font-medium">Twitter</span>
+            </button>
+            
+            <button
+              onClick={() => handleSocialShare('facebook')}
+              className="flex items-center justify-center space-x-2 p-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              <Facebook className="w-5 h-5" />
+              <span className="text-sm font-medium">Facebook</span>
+            </button>
+            
+            <button
+              onClick={() => handleSocialShare('linkedin')}
+              className="flex items-center justify-center space-x-2 p-3 bg-blue-700 text-white rounded-lg hover:bg-blue-800 transition-colors"
+            >
+              <Linkedin className="w-5 h-5" />
+              <span className="text-sm font-medium">Linkedin</span>
+            </button>
+            
+            <button
+              onClick={() => handleSocialShare('email')}
+              className="flex items-center justify-center space-x-2 p-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+            >
+              <Mail className="w-5 h-5" />
+              <span className="text-sm font-medium">Email</span>
+            </button>
+          </div>
+        )}
 
         {/* Native Share (Mobile) */}
         {'share' in navigator && (
@@ -267,29 +272,6 @@ export default function PollShare({ pollId, poll }: PollShareProps) {
         </div>
       </div>
 
-      {/* Analytics */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Share Analytics</h3>
-        
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-          <div>
-            <p className="text-2xl font-bold text-blue-600">1,247</p>
-            <p className="text-sm text-gray-600">Total Views</p>
-          </div>
-          <div>
-            <p className="text-2xl font-bold text-green-600">892</p>
-            <p className="text-sm text-gray-600">Votes Cast</p>
-          </div>
-          <div>
-            <p className="text-2xl font-bold text-purple-600">156</p>
-            <p className="text-sm text-gray-600">Shares</p>
-          </div>
-          <div>
-            <p className="text-2xl font-bold text-orange-600">78%</p>
-            <p className="text-sm text-gray-600">Participation</p>
-          </div>
-        </div>
-      </div>
     </div>
   )
 }

@@ -22,7 +22,18 @@ interface PWAStatusProps {
 export default function PWAStatus({ showDetails = false, className = '' }: PWAStatusProps) {
   const pwa = usePWA();
 
+  // Debug logging for tests
+  if (typeof window !== 'undefined') {
+    console.log('PWAStatus: Rendering with status:', {
+      isEnabled: pwa.isEnabled,
+      isSupported: pwa.isSupported,
+      loading: pwa.loading,
+      error: pwa.error
+    });
+  }
+
   if (!pwa.isEnabled || !pwa.isSupported) {
+    console.log('PWAStatus: Not rendering - isEnabled:', pwa.isEnabled, 'isSupported:', pwa.isSupported);
     return null;
   }
 

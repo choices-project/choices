@@ -100,11 +100,14 @@ export function usePWA(): PWAStatus & PWAActions {
   // Initialize PWA
   const initializePWA = useCallback(async () => {
     try {
+      console.log('usePWA: Starting initialization...');
       setStatus(prev => ({ ...prev, loading: true, error: null }));
 
       // Check if PWA feature is enabled
       const pwaEnabled = isFeatureEnabled('PWA');
+      console.log('usePWA: PWA feature enabled:', pwaEnabled);
       if (!pwaEnabled) {
+        console.log('usePWA: PWA feature is disabled, setting status');
         setStatus(prev => ({
           ...prev,
           isEnabled: false,
@@ -131,8 +134,7 @@ export function usePWA(): PWAStatus & PWAActions {
       // Get offline data status
       const offlineVotes = await getOfflineVotesCount();
       
-      setStatus(prev => ({
-        ...prev,
+      const finalStatus = {
         isSupported,
         isEnabled: pwaEnabled,
         installation: installationStatus,
@@ -143,6 +145,12 @@ export function usePWA(): PWAStatus & PWAActions {
         hasOfflineData: offlineVotes > 0,
         loading: false,
         error: null
+      };
+      
+      console.log('usePWA: Setting final status:', finalStatus);
+      setStatus(prev => ({
+        ...prev,
+        ...finalStatus
       }));
 
     } catch (error) {

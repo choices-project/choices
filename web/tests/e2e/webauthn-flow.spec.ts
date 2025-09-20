@@ -8,7 +8,7 @@
  * Updated: January 18, 2025
  */
 
-import { test, expect, chromium, BrowserContext, Page } from '@playwright/test';
+import { test, expect, chromium, BrowserContext, type Page } from '@playwright/test';
 import { T } from '@/lib/testing/testIds';
 
 test.describe('WebAuthn Passkey Flow', () => {

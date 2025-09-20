@@ -116,6 +116,7 @@ const nextConfig = {
       });
 
       // More aggressive Supabase externalization for server builds
+      // @ts-ignore - webpack callback types
       config.externals.push(({ request }, callback) => {
         if (isServer && request && request.includes('@supabase')) {
           return callback(null, `commonjs ${request}`);

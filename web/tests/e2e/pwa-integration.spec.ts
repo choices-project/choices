@@ -9,7 +9,7 @@
  * - Error recovery
  */
 
-import { test, expect, Page } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 
 test.describe('PWA Integration', () => {
   test.beforeEach(async ({ page }) => {

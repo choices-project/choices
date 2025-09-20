@@ -8,7 +8,7 @@
  * - PWA feature detection
  */
 
-import { Page, expect } from '@playwright/test';
+import { type Page, expect } from '@playwright/test';
 
 export class PWAHelpers {
   constructor(private page: Page) {}

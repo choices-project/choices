@@ -74,7 +74,54 @@ export const T = {
   // Generic
   submitButton: 'submit-button',
   cancelButton: 'cancel-button',
-  loadingSpinner: 'loading-spinner'
+  loadingSpinner: 'loading-spinner',
+  
+  // PWA
+  pwa: {
+    status: 'pwa-status',
+    installPrompt: 'pwa-install-prompt',
+    installButton: 'pwa-install-button',
+    installedStatus: 'pwa-installed-status',
+    offlineIndicator: 'offline-indicator',
+    offlineQueue: 'offline-queue',
+  },
+  
+  // Poll
+  poll: {
+    item: 'poll-item',
+    title: 'poll-title',
+    description: 'poll-description',
+    results: 'poll-results',
+    voteCount: 'vote-count',
+    category: 'poll-category',
+    privacy: 'poll-privacy',
+    timing: 'poll-timing',
+    voteError: 'vote-error',
+    search: 'poll-search',
+    categoryFilter: 'category-filter',
+  },
+  
+  // Navigation
+  pollsNav: 'polls-nav',
+  profileLink: 'profile-link',
+  
+  // Forms
+  registerForm: 'register-form',
+  loginForm: 'login-form',
+  loginError: 'login-error',
+  
+  // User
+  signUpButton: 'sign-up-button',
+  completeOnboarding: 'complete-onboarding',
+  biometricSetupButton: 'biometric-setup-button',
+  
+  // Admin
+  adminUsersTab: 'admin-users-tab',
+  adminPollsTab: 'admin-polls-tab',
+  adminSystemTab: 'admin-system-tab',
+  systemStatus: 'system-status',
+  deletePollButton: 'delete-poll-button',
+  moderatePollButton: 'moderate-poll-button',
 } as const;
 
 export type TestId = typeof T[keyof typeof T];

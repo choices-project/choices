@@ -9,7 +9,7 @@
  * - Background sync
  */
 
-import { test, expect, Page } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 
 test.describe('PWA Offline Functionality', () => {
   test.beforeEach(async ({ page }) => {

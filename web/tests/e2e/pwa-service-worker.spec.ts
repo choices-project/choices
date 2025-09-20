@@ -9,7 +9,7 @@
  * - Push notifications
  */
 
-import { test, expect, Page } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 
 test.describe('PWA Service Worker', () => {
   test.beforeEach(async ({ page }) => {
