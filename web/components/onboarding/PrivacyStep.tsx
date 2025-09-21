@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { Shield, Eye, Users, TrendingUp, Lock } from 'lucide-react'
-import { useOnboardingContext } from './OnboardingFlow'
+import { useOnboardingContext } from './EnhancedOnboardingFlow'
 
 type PrivacyData = {
   privacy?: {
@@ -46,7 +46,14 @@ export default function PrivacyStep({ data, onUpdate, onNext, onBack }: PrivacyS
     // Update both local state and context - the updates parameter is used here
     const updates = { privacy: newPrivacy }
     onUpdate(updates)
-    updateData({ privacy: newPrivacy })
+    // Map to the correct type for updateData
+    updateData({ 
+      privacy: {
+        shareAnalytics: newPrivacy.allowAnalytics || false,
+        dpLevel: 1,
+        privacyCompleted: true
+      }
+    })
   }
 
   const privacyOptions: PrivacyOption[] = [

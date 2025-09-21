@@ -523,7 +523,7 @@ export default function EditProfilePage() {
               <CardContent className="space-y-4">
                 <div className="flex justify-center">
                   <Avatar className="h-24 w-24">
-                    <AvatarImage src={avatarPreview || formData.avatar || profile?.avatar} />
+                    <AvatarImage src={avatarPreview || formData.avatar || profile?.avatar || ''} />
                     <AvatarFallback>
                       <User className="h-12 w-12" />
                     </AvatarFallback>
@@ -613,7 +613,7 @@ export default function EditProfilePage() {
                     </div>
                     <Switch
                       checked={formData.privacysettings.showemail}
-                      onCheckedChange={(checked) => handlePrivacyChange('showemail', checked)}
+                      onChange={(e) => handlePrivacyChange('showemail', e.target.checked)}
                     />
                   </div>
 
@@ -624,7 +624,7 @@ export default function EditProfilePage() {
                     </div>
                     <Switch
                       checked={formData.privacysettings.showactivity}
-                      onCheckedChange={(checked) => handlePrivacyChange('showactivity', checked)}
+                      onChange={(e) => handlePrivacyChange('showactivity', e.target.checked)}
                     />
                   </div>
 
@@ -635,7 +635,7 @@ export default function EditProfilePage() {
                     </div>
                     <Switch
                       checked={formData.privacysettings.allowmessages}
-                      onCheckedChange={(checked) => handlePrivacyChange('allowmessages', checked)}
+                      onChange={(e) => handlePrivacyChange('allowmessages', e.target.checked)}
                     />
                   </div>
 
@@ -646,7 +646,7 @@ export default function EditProfilePage() {
                     </div>
                     <Switch
                       checked={formData.privacysettings.sharedemographics}
-                      onCheckedChange={(checked) => handlePrivacyChange('sharedemographics', checked)}
+                      onChange={(e) => handlePrivacyChange('sharedemographics', e.target.checked)}
                     />
                   </div>
 
@@ -657,7 +657,7 @@ export default function EditProfilePage() {
                     </div>
                     <Switch
                       checked={formData.privacysettings.allowanalytics}
-                      onCheckedChange={(checked) => handlePrivacyChange('allowanalytics', checked)}
+                      onChange={(e) => handlePrivacyChange('allowanalytics', e.target.checked)}
                     />
                   </div>
                 </div>

@@ -57,7 +57,7 @@ export const completeOnboarding = createSecureServerAction(
     
     // Get authenticated user
     const user = await getAuthenticatedUser(context)
-    console.log('Authenticated user:', user?.id);
+    console.log('Authenticated user:', user?.userId);
     
     // Validate form data
     const validatedData = validateFormData(formData, OnboardingSchema)

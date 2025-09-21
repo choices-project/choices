@@ -292,6 +292,10 @@ function EnhancedOnboardingFlowInner() {
     []
   );
 
+  const handleComplete = React.useCallback(() => {
+    // This will be handled by the form submission
+    devLog('Onboarding completion triggered');
+  }, []);
 
   // Init: auth + URL step
   React.useEffect(() => {
@@ -525,6 +529,7 @@ function EnhancedOnboardingFlowInner() {
               <CompleteStep
                 data={data}
                 onBack={handleBack}
+                onComplete={handleComplete}
               />
               
               <form

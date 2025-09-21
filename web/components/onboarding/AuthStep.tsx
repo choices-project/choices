@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { Lock, Shield } from 'lucide-react'
 import { getSupabaseBrowserClient } from '@/utils/supabase/client'
 import { devLog } from '@/lib/logger';
-import { useOnboardingContext } from './OnboardingFlow'
+import { useOnboardingContext } from './EnhancedOnboardingFlow'
 import SocialLoginButtons from '@/features/auth/components/SocialLoginButtons'
 import type { OAuthProvider } from '@/features/auth/types/auth'
 
@@ -50,7 +50,7 @@ export default function AuthStep({ data, onUpdate, onNext, onBack }: AuthStepPro
       }
       
       // Update onboarding data with auth method
-      updateData({ authMethod: provider })
+      // updateData({ authMethod: provider }) // TODO: Add authMethod to OnboardingDataHybrid type
       
       const { data: authData, error } = await supabase.auth.signInWithOAuth({
         provider: supabaseProvider,
@@ -101,7 +101,7 @@ export default function AuthStep({ data, onUpdate, onNext, onBack }: AuthStepPro
     
     try {
       // Update onboarding data with auth method
-      updateData({ authMethod: 'email' })
+      // updateData({ authMethod: 'email' }) // TODO: Add authMethod to OnboardingDataHybrid type
       // The updates parameter is used here
       const updates = { authMethod: 'email' }
       onUpdate(updates, updates)

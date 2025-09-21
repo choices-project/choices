@@ -100,7 +100,7 @@ export function geohashWithJitter(
   requestId: string
 ): string {
   const seed = crypto.createHash('sha256').update(requestId).digest();
-  const j = (seed[0] - 128) / 12800; // ≈ ±1% deterministic jitter per request
+  const j = ((seed[0] || 0) - 128) / 12800; // ≈ ±1% deterministic jitter per request
   return simpleGeohash(lat + j, lng + j, precision);
 }
 

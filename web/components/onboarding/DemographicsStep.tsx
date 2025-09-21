@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { Shield, Users } from 'lucide-react'
-import { useOnboardingContext } from './OnboardingFlow'
+import { useOnboardingContext } from './EnhancedOnboardingFlow'
 
 type DemographicsStepProps = {
   data: any

@@ -431,9 +431,9 @@ export default function CivicsPage() {
                   district: rep.district || 'N/A',
                   state: selectedState,
                   office: rep.office,
-                  phone: rep.contact?.phone,
-                  email: rep.contact?.email,
-                  website: rep.contact?.website,
+                  phone: rep.contact?.phone || '',
+                  email: rep.contact?.email || '',
+                  website: rep.contact?.website || '',
                   tenure: '2 years',
                   nextElection: '2024-11-05'
                 }}

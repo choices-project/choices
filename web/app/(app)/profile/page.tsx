@@ -303,7 +303,7 @@ export default function ProfilePage() {
                 <Label htmlFor="email">Email Address</Label>
                 <Input
                   id="email"
-                  value={profile.email}
+                  value={profile?.email || ''}
                   disabled
                   className="bg-gray-50"
                 />
@@ -311,8 +311,8 @@ export default function ProfilePage() {
               <div>
                 <Label>Verification Tier</Label>
                 <div className="mt-2">
-                  <Badge className={getTierColor(profile.verificationtier)}>
-                    {getTierDisplayName(profile.verificationtier)}
+                  <Badge className={getTierColor(profile?.verificationtier || 'unverified')}>
+                    {getTierDisplayName(profile?.verificationtier || 'unverified')}
                   </Badge>
                 </div>
               </div>
@@ -321,13 +321,13 @@ export default function ProfilePage() {
               <div>
                 <Label>Account Created</Label>
                 <p className="text-sm text-gray-600 mt-1">
-                  {new Date(profile.createdat).toLocaleDateString()}
+                  {profile?.createdat ? new Date(profile.createdat).toLocaleDateString() : 'Unknown'}
                 </p>
               </div>
               <div>
                 <Label>Last Updated</Label>
                 <p className="text-sm text-gray-600 mt-1">
-                  {new Date(profile.updatedat).toLocaleDateString()}
+                  {profile?.updatedat ? new Date(profile.updatedat).toLocaleDateString() : 'Unknown'}
                 </p>
               </div>
             </div>
@@ -391,9 +391,9 @@ export default function ProfilePage() {
                 <p className="text-gray-600 mb-4">No biometric credentials configured</p>
                 <BiometricSetup 
                   userId={user.id} 
-                  username={profile.email}
+                  username={profile?.email || ''}
                   onSuccess={loadUserData}
-                  onError={setError}
+                  onError={() => setError('Biometric setup failed')}
                 />
               </div>
             )}
