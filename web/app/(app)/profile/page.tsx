@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -20,11 +20,11 @@ import {
   XCircle,
   Info
 } from 'lucide-react'
-import { logger } from '@/lib/logger'
-// import BiometricSetup from '@/features/webauthn/components/BiometricSetup'
-import { useSupabaseAuth } from '@/contexts/AuthContext'
+import { devLog } from '@/lib/logger'
+import BiometricSetup from '@/components/auth/BiometricSetup'
+import { useAuth } from '@/hooks/useAuth'
 
-type UserProfile = {
+interface UserProfile {
   id: string
   email: string
   verificationtier: string
@@ -32,7 +32,7 @@ type UserProfile = {
   updatedat: string
 }
 
-type BiometricCredential = {
+interface BiometricCredential {
   id: string
   credentialId: string
   deviceType: string
@@ -44,8 +44,9 @@ type BiometricCredential = {
 
 export default function ProfilePage() {
   const router = useRouter()
-  const { user, isLoading, signOut } = useSupabaseAuth()
+  const { user, isLoading, logout } = useAuth()
   const [profile, setProfile] = useState<UserProfile | null>(null)
+  const [mounted, setMounted] = useState(false)
   const [biometricCredentials, setBiometricCredentials] = useState<BiometricCredential[]>([])
   const [trustScore, setTrustScore] = useState<number | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -55,7 +56,17 @@ export default function ProfilePage() {
   const [isExporting, setIsExporting] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
 
-  const loadUserData = useCallback(async () => {
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  useEffect(() => {
+    if (user) {
+      loadUserData()
+    }
+  }, [user])
+
+  const loadUserData = async () => {
     try {
       if (!user) {
         router.push('/login')
@@ -86,14 +97,10 @@ export default function ProfilePage() {
       }
 
     } catch (error) {
-      logger.error('Error loading user data', error instanceof Error ? error : new Error(String(error)))
+      devLog('Error loading user data:', error)
       setError('Failed to load user data')
     }
-  }, [user, router])
-
-  useEffect(() => {
-    loadUserData()
-  }, [loadUserData])
+  }
 
   const handleExportData = async () => {
     try {
@@ -125,7 +132,7 @@ export default function ProfilePage() {
       setShowExportConfirm(false)
 
     } catch (error) {
-      logger.error('Error exporting data', error instanceof Error ? error : new Error(String(error)))
+      devLog('Error exporting data:', error)
       setError('Failed to export data')
     } finally {
       setIsExporting(false)
@@ -148,7 +155,7 @@ export default function ProfilePage() {
       })
 
       if (response.ok) {
-        await signOut()
+        await logout()
         setSuccess('Account deleted successfully')
         setTimeout(() => {
           router.push('/')
@@ -159,7 +166,7 @@ export default function ProfilePage() {
       }
 
     } catch (error) {
-      logger.error('Error deleting account', error instanceof Error ? error : new Error(String(error)))
+      devLog('Error deleting account:', error)
       setError('Failed to delete account')
     } finally {
       setIsDeleting(false)
@@ -180,7 +187,7 @@ export default function ProfilePage() {
         setError('Failed to delete biometric credential')
       }
     } catch (error) {
-      logger.error('Error deleting biometric credential', error instanceof Error ? error : new Error(String(error)))
+      devLog('Error deleting biometric credential:', error)
       setError('Failed to delete biometric credential')
     }
   }
@@ -219,19 +226,41 @@ export default function ProfilePage() {
     )
   }
 
-  if (!user || !profile) {
+  if (!mounted) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (isLoading) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading profile...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!user) {
     return (
       <div className="container mx-auto px-4 py-8">
         <Alert variant="destructive">
           <XCircle className="h-4 w-4" />
-          <AlertDescription>Failed to load profile data</AlertDescription>
+          <AlertDescription>Please log in to view your profile</AlertDescription>
         </Alert>
       </div>
     )
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl">
+    <div className="container mx-auto px-4 py-8 max-w-4xl" data-testid="profile-page">
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center gap-3">
@@ -252,7 +281,7 @@ export default function ProfilePage() {
 
         {error && (
           <Alert variant="destructive">
-            <AlertTriangle className="h-4 w-4" />
+            <XCircle className="h-4 w-4" />
             <AlertDescription>{error}</AlertDescription>
           </Alert>
         )}
@@ -264,29 +293,42 @@ export default function ProfilePage() {
               <User className="h-5 w-5" />
               Account Information
             </CardTitle>
-            <CardDescription>Your basic account details and verification status</CardDescription>
+            <CardDescription>
+              Your account details and verification status
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="email">Email Address</Label>
-                <Input id="email" value={profile.email} readOnly />
+                <Input
+                  id="email"
+                  value={profile.email}
+                  disabled
+                  className="bg-gray-50"
+                />
               </div>
               <div>
                 <Label>Verification Tier</Label>
-                <Badge className={getTierColor(profile.verificationtier)}>
-                  {getTierDisplayName(profile.verificationtier)}
-                </Badge>
+                <div className="mt-2">
+                  <Badge className={getTierColor(profile.verificationtier)}>
+                    {getTierDisplayName(profile.verificationtier)}
+                  </Badge>
+                </div>
               </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label>Account Created</Label>
-                <Input value={new Date(profile.createdat).toLocaleDateString()} readOnly />
+                <p className="text-sm text-gray-600 mt-1">
+                  {new Date(profile.createdat).toLocaleDateString()}
+                </p>
               </div>
               <div>
                 <Label>Last Updated</Label>
-                <Input value={new Date(profile.updatedat).toLocaleDateString()} readOnly />
+                <p className="text-sm text-gray-600 mt-1">
+                  {new Date(profile.updatedat).toLocaleDateString()}
+                </p>
               </div>
             </div>
           </CardContent>
@@ -299,35 +341,43 @@ export default function ProfilePage() {
               <Fingerprint className="h-5 w-5" />
               Biometric Authentication
             </CardTitle>
-            <CardDescription>Manage your biometric login credentials</CardDescription>
+            <CardDescription>
+              Manage your biometric login settings
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            {/* <BiometricSetup 
-              userId={user.id} 
-              username={user.email || ''}
-              onSuccess={loadUserData}
-              onError={() => setError('Failed to setup biometric authentication')}
-            /> */}
-            <div className="text-center py-8">
-              <p className="text-muted-foreground">Biometric setup temporarily disabled</p>
-            </div>
-            
-            {biometricCredentials.length > 0 && (
-              <div className="mt-6">
-                <h4 className="font-medium mb-3">Registered Devices</h4>
-                <div className="space-y-2">
-                  {biometricCredentials.map((credential) => (
+            {biometricCredentials.length > 0 ? (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-medium">Trust Score</p>
+                    <p className="text-sm text-gray-600">
+                      {trustScore ? `${(trustScore * 100).toFixed(1)}%` : 'Not available'}
+                    </p>
+                  </div>
+                  <Badge variant="outline">
+                    {biometricCredentials.length} credential{biometricCredentials.length !== 1 ? 's' : ''}
+                  </Badge>
+                </div>
+                
+                <Separator />
+                
+                <div className="space-y-3">
+                  {biometricCredentials.map((credential: any) => (
                     <div key={credential.id} className="flex items-center justify-between p-3 border rounded-lg">
                       <div>
-                        <p className="font-medium">{credential.deviceType}</p>
+                        <p className="font-medium">{credential.authenticatorType}</p>
                         <p className="text-sm text-gray-600">
-                          Last used: {new Date(credential.lastUsedAt).toLocaleDateString()}
+                          {credential.deviceType} • {credential.signCount} uses
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          Added {new Date(credential.createdAt).toLocaleDateString()}
                         </p>
                       </div>
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => handleDeleteBiometricCredential(credential.id)}
+                        onClick={() => handleDeleteBiometricCredential(credential.credentialId)}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -335,71 +385,79 @@ export default function ProfilePage() {
                   ))}
                 </div>
               </div>
-            )}
-
-            {trustScore !== null && (
-              <div className="mt-4 p-3 bg-blue-50 rounded-lg">
-                <div className="flex items-center gap-2">
-                  <Shield className="h-4 w-4 text-blue-600" />
-                  <span className="font-medium">Trust Score: {trustScore}%</span>
-                </div>
-                <p className="text-sm text-blue-700 mt-1">
-                  Your account security rating based on authentication patterns
-                </p>
+            ) : (
+              <div className="text-center py-8">
+                <Fingerprint className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-600 mb-4">No biometric credentials configured</p>
+                <BiometricSetup 
+                  userId={user.id} 
+                  username={profile.email}
+                  onSuccess={loadUserData}
+                  onError={setError}
+                />
               </div>
             )}
           </CardContent>
         </Card>
 
-        {/* Data Management */}
+        {/* Privacy & Data */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Download className="h-5 w-5" />
-              Data Management
+              <Shield className="h-5 w-5" />
+              Privacy & Data
             </CardTitle>
-            <CardDescription>Export your data or delete your account</CardDescription>
+            <CardDescription>
+              Manage your data and privacy settings
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex flex-col sm:flex-row gap-3">
-              <Button
-                variant="outline"
-                onClick={() => setShowExportConfirm(true)}
-                disabled={isExporting}
-              >
-                <Download className="h-4 w-4 mr-2" />
-                {isExporting ? 'Exporting...' : 'Export My Data'}
-              </Button>
-              
-              <Button
-                variant="destructive"
-                onClick={() => setShowDeleteConfirm(true)}
-                disabled={isDeleting}
-              >
-                <Trash2 className="h-4 w-4 mr-2" />
-                {isDeleting ? 'Deleting...' : 'Delete Account'}
-              </Button>
-            </div>
-
-            <div className="text-sm text-gray-600">
-              <div className="flex items-start gap-2">
-                <Info className="h-4 w-4 mt-0.5 flex-shrink-0" />
+            <div className="bg-blue-50 p-4 rounded-lg">
+              <div className="flex items-start gap-3">
+                <Info className="h-5 w-5 text-blue-600 mt-0.5" />
                 <div>
-                  <p className="font-medium mb-1">Data Export</p>
-                  <p>Download all your data including profile information, biometric credentials, and trust score.</p>
+                  <h4 className="font-medium text-blue-900">Your Privacy Rights</h4>
+                  <p className="text-sm text-blue-800 mt-1">
+                    You have the right to access, export, and delete your personal data. 
+                    You can also manage your biometric authentication settings.
+                  </p>
                 </div>
               </div>
             </div>
 
-            <Separator />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-3">
+                <h4 className="font-medium">Export Your Data</h4>
+                <p className="text-sm text-gray-600">
+                  Download a copy of all your personal data including profile information 
+                  and biometric credentials.
+                </p>
+                <Button 
+                  onClick={() => setShowExportConfirm(true)}
+                  className="w-full"
+                  variant="outline"
+                  data-testid="export-data-button"
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  Export Data
+                </Button>
+              </div>
 
-            <div className="text-sm text-gray-600">
-              <div className="flex items-start gap-2">
-                <AlertTriangle className="h-4 w-4 mt-0.5 flex-shrink-0 text-red-500" />
-                <div>
-                  <p className="font-medium mb-1 text-red-700">Account Deletion</p>
-                  <p>This action is permanent and cannot be undone. All your data will be permanently deleted.</p>
-                </div>
+              <div className="space-y-3">
+                <h4 className="font-medium">Delete Account</h4>
+                <p className="text-sm text-gray-600">
+                  Permanently delete your account and all associated data. 
+                  This action cannot be undone.
+                </p>
+                <Button 
+                  onClick={() => setShowDeleteConfirm(true)}
+                  className="w-full"
+                  variant="destructive"
+                  data-testid="delete-account-button"
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete Account
+                </Button>
               </div>
             </div>
           </CardContent>
@@ -409,17 +467,31 @@ export default function ProfilePage() {
       {/* Export Confirmation Modal */}
       {showExportConfirm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-            <h3 className="text-lg font-semibold mb-4">Export Your Data</h3>
-            <p className="text-gray-600 mb-6">
-              This will download a JSON file containing all your account data, including profile information, 
-              biometric credentials, and trust score.
+          <div className="bg-white p-6 rounded-lg max-w-md w-full mx-4">
+            <h3 className="text-lg font-medium mb-4">Export Your Data</h3>
+            <p className="text-gray-600 mb-4">
+              This will download a JSON file containing all your personal data including:
             </p>
+            <ul className="text-sm text-gray-600 mb-4 space-y-1">
+              <li>• Account profile information</li>
+              <li>• Biometric authentication data</li>
+              <li>• Trust scores and metrics</li>
+              <li>• Account creation and update timestamps</li>
+            </ul>
             <div className="flex gap-3">
-              <Button onClick={handleExportData} disabled={isExporting}>
-                {isExporting ? 'Exporting...' : 'Export'}
+              <Button
+                onClick={handleExportData}
+                disabled={isExporting}
+                className="flex-1"
+              >
+                {isExporting ? 'Exporting...' : 'Export Data'}
               </Button>
-              <Button variant="outline" onClick={() => setShowExportConfirm(false)}>
+              <Button
+                variant="outline"
+                onClick={() => setShowExportConfirm(false)}
+                disabled={isExporting}
+                className="flex-1"
+              >
                 Cancel
               </Button>
             </div>
@@ -430,17 +502,38 @@ export default function ProfilePage() {
       {/* Delete Confirmation Modal */}
       {showDeleteConfirm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-            <h3 className="text-lg font-semibold mb-4 text-red-700">Delete Account</h3>
-            <p className="text-gray-600 mb-6">
-              This action is permanent and cannot be undone. All your data, including profile information, 
-              biometric credentials, and voting history will be permanently deleted.
+          <div className="bg-white p-6 rounded-lg max-w-md w-full mx-4">
+            <div className="flex items-center gap-3 mb-4">
+              <AlertTriangle className="h-6 w-6 text-red-600" />
+              <h3 className="text-lg font-medium text-red-900">Delete Account</h3>
+            </div>
+            <p className="text-gray-600 mb-4">
+              This action will permanently delete your account and all associated data including:
+            </p>
+            <ul className="text-sm text-gray-600 mb-4 space-y-1">
+              <li>• Your profile and account information</li>
+              <li>• All biometric authentication credentials</li>
+              <li>• Voting history and participation data</li>
+              <li>• Trust scores and authentication logs</li>
+            </ul>
+            <p className="text-sm text-red-600 mb-4 font-medium">
+              This action cannot be undone. Please confirm that you want to proceed.
             </p>
             <div className="flex gap-3">
-              <Button variant="destructive" onClick={handleDeleteAccount} disabled={isDeleting}>
-                {isDeleting ? 'Deleting...' : 'Delete Permanently'}
+              <Button
+                variant="destructive"
+                onClick={handleDeleteAccount}
+                disabled={isDeleting}
+                className="flex-1"
+              >
+                {isDeleting ? 'Deleting...' : 'Delete Account'}
               </Button>
-              <Button variant="outline" onClick={() => setShowDeleteConfirm(false)}>
+              <Button
+                variant="outline"
+                onClick={() => setShowDeleteConfirm(false)}
+                disabled={isDeleting}
+                className="flex-1"
+              >
                 Cancel
               </Button>
             </div>

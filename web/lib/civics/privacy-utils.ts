@@ -4,151 +4,142 @@
  */
 
 import crypto from 'crypto';
+import { cookies } from 'next/headers';
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
+import { assertPepperConfig } from './env-guard';
 
-// Privacy helpers - only available when feature flag is enabled
-const PEPPER = process.env.PRIVACY_PEPPER || 'dev-pepper-consistent-for-testing-12345678901234567890';
+type Scope = 'addr' | 'place' | 'ip';
+type EncodedPepper = { raw: Buffer; source: 'DEV' | 'CURRENT' | 'PREVIOUS' };
 
-/**
- * Normalize address string for consistent HMAC generation
- */
-export function normalizeAddress(address: string): string {
-  if (!isFeatureEnabled('CIVICS_ADDRESS_LOOKUP')) {
-    throw new Error('Civics address lookup feature is disabled');
-  }
-  
-  return address.trim().toLowerCase().replace(/\s+/g, ' ');
+function decodePepper(v: string): Buffer {
+  const s = v.trim();
+  if (s.startsWith('base64:')) return Buffer.from(s.slice(7), 'base64');
+  if (s.startsWith('hex:')) return Buffer.from(s.slice(4), 'hex');
+  return Buffer.from(s, 'utf8');
 }
 
-/**
- * Generate HMAC-SHA256 hash with secret pepper
- */
-export function hmac256(data: string): string {
-  if (!isFeatureEnabled('CIVICS_ADDRESS_LOOKUP')) {
-    throw new Error('Civics address lookup feature is disabled');
+function loadPeppers(): EncodedPepper[] {
+  const env = process.env.NODE_ENV;
+  const isDev = env === 'development' || env === 'test';
+
+  if (isDev) {
+    const dv = process.env.PRIVACY_PEPPER_DEV;
+    if (!dv) throw new Error('PRIVACY_PEPPER_DEV required in development/test');
+    return [{ raw: decodePepper(dv), source: 'DEV' }];
   }
-  
-  return crypto.createHmac('sha256', PEPPER).update(data).digest('hex');
-}
-
-/**
- * Generate HMAC for normalized address
- */
-export function generateAddressHMAC(address: string): string {
-  const normalized = normalizeAddress(address);
-  return hmac256(normalized);
-}
-
-/**
- * Generate HMAC for place ID
- */
-export function generatePlaceIdHMAC(placeId: string): string {
-  if (!isFeatureEnabled('CIVICS_ADDRESS_LOOKUP')) {
-    throw new Error('Civics address lookup feature is disabled');
+  if (!process.env.PRIVACY_PEPPER_CURRENT) throw new Error('PRIVACY_PEPPER_CURRENT required');
+  const peppers: EncodedPepper[] = [
+    { raw: decodePepper(process.env.PRIVACY_PEPPER_CURRENT), source: 'CURRENT' },
+  ];
+  if (process.env.PRIVACY_PEPPER_PREVIOUS) {
+    peppers.push({ raw: decodePepper(process.env.PRIVACY_PEPPER_PREVIOUS), source: 'PREVIOUS' });
   }
-  
-  return hmac256(placeId);
-}
-
-/**
- * Generate HMAC for IP address
- */
-export function generateIPHMAC(ip: string): string {
-  if (!isFeatureEnabled('CIVICS_ADDRESS_LOOKUP')) {
-    throw new Error('Civics address lookup feature is disabled');
-  }
-  
-  return hmac256(ip);
-}
-
-/**
- * Simple geohash encoder (base32) for 5/7 precision
- * Based on expert recommendations for privacy-safe location bucketing
- */
-const GH_BASE32 = "0123456789bcdefghjkmnpqrstuvwxyz";
-
-export function geohash(lat: number, lng: number, precision: number): string {
-  if (!isFeatureEnabled('CIVICS_ADDRESS_LOOKUP')) {
-    throw new Error('Civics address lookup feature is disabled');
-  }
-  
-  let minLat = -90, maxLat = 90, minLng = -180, maxLng = 180;
-  let hash = "", bit = 0, ch = 0, even = true;
-  
-  while (hash.length < precision) {
-    if (even) {
-      const mid = (minLng + maxLng) / 2;
-      if (lng > mid) { 
-        ch |= 1 << (4 - bit); 
-        minLng = mid; 
-      } else { 
-        maxLng = mid; 
-      }
-    } else {
-      const mid = (minLat + maxLat) / 2;
-      if (lat > mid) { 
-        ch |= 1 << (4 - bit); 
-        minLat = mid; 
-      } else { 
-        maxLat = mid; 
-      }
+  peppers.forEach(p => {
+    if (p.source !== 'DEV' && p.raw.length < 32) {
+      throw new Error(`${p.source} pepper must be ≥32 bytes`);
     }
-    even = !even;
-    if (bit < 4) { 
-      bit++; 
-    } else { 
-      hash += GH_BASE32[ch]; 
-      bit = 0; 
-      ch = 0; 
+  });
+  return peppers;
+}
+
+// Assert pepper configuration on module load
+assertPepperConfig();
+const PEPPERS = loadPeppers();
+
+function hmacRaw(data: string, scope: Scope, pepper: Buffer): Buffer {
+  const h = crypto.createHmac('sha256', Buffer.concat([pepper, Buffer.from(`:${scope}`)]));
+  h.update(data);
+  return h.digest();
+}
+
+export function hmac256(data: string, scope: Scope): { hex: string; used: EncodedPepper['source'] } {
+  // Issue with CURRENT (or DEV)
+  const first = PEPPERS[0];
+  if (!first) throw new Error('No peppers configured');
+  const digest = hmacRaw(data, scope, first.raw).toString('hex');
+  return { hex: digest, used: first.source };
+}
+
+export function verifyHmacDigest(plain: string, scope: Scope, presentedHex: string): boolean {
+  const presented = Buffer.from(presentedHex, 'hex');
+  for (const p of PEPPERS) {
+    const cand = hmacRaw(plain, scope, p.raw);
+    if (presented.length === cand.length && crypto.timingSafeEqual(presented, cand)) {
+      return true;
     }
   }
-  return hash;
+  return false;
 }
 
-/**
- * Generate geohash with tiered precision based on user access level
- */
-export function generateGeohashWithTier(
+export const normalizeAddress = (a: string) =>
+  a.trim().toLowerCase()
+    .replace(/\./g, '')
+    .replace(/\s+/g, ' ')
+    .replace(/\b(street|st|road|rd|avenue|ave|boulevard|blvd)\b/g, m =>
+      ({ street: 'st', st: 'st', road: 'rd', rd: 'rd', avenue: 'ave', ave: 'ave', boulevard: 'blvd', blvd: 'blvd' } as any)[m]
+    );
+
+export const generateAddressHMAC = (address: string) => hmac256(normalizeAddress(address), 'addr').hex;
+export const generatePlaceIdHMAC = (placeId: string) => hmac256(placeId, 'place').hex;
+export const generateIPHMAC = (ip: string) => hmac256(ip, 'ip').hex;
+
+// --- Geoprivacy helpers ---
+function simpleGeohash(lat: number, lng: number, precision: 5 | 6 | 7): string {
+  // Minimal dependency placeholder; replace with a geohash library if you prefer
+  // Here we quantize lat/lng into a coarse grid and base36-encode.
+  const scale = Math.pow(10, precision);
+  const qlat = Math.round((lat + 90) * scale);
+  const qlng = Math.round((lng + 180) * scale);
+  return qlat.toString(36) + qlng.toString(36);
+}
+
+export function geohashWithJitter(
   lat: number, 
   lng: number, 
-  userTier: 'public' | 'authenticated' | 'internal'
+  precision: 5 | 6 | 7,
+  requestId: string
 ): string {
-  if (!isFeatureEnabled('CIVICS_ADDRESS_LOOKUP')) {
-    throw new Error('Civics address lookup feature is disabled');
-  }
-  
-  const precisionMap = {
-    public: 5,        // ~24km x 24km area (free/public)
-    authenticated: 6, // ~6km x 6km area (signed-in users)
-    internal: 7       // ~153m x 153m area (internal/admin)
-  };
-  
-  const precision = precisionMap[userTier];
-  return geohash(lat, lng, precision);
+  const seed = crypto.createHash('sha256').update(requestId).digest();
+  const j = (seed[0] - 128) / 12800; // ≈ ±1% deterministic jitter per request
+  return simpleGeohash(lat + j, lng + j, precision);
 }
 
-/**
- * Cover bounding box with geohash prefixes for heatmap queries
- */
-export function coverBBoxWithPrefixes(
-  bbox: [number, number, number, number], 
-  precision: 5 | 6 | 7
-): string[] {
-  if (!isFeatureEnabled('CIVICS_ADDRESS_LOOKUP')) {
-    throw new Error('Civics address lookup feature is disabled');
+export const bucketIsKAnonymous = (bucketCount: number, k = 25) => bucketCount >= k;
+
+// --- Cookie helpers for jurisdiction scoping ---
+const COOKIE_NAME = 'cx_jurisdictions';
+
+export async function setJurisdictionCookie(payload: { state?: string; district?: string; county?: string }) {
+  // Minimal sealed cookie using a signed value. Replace with iron-session/jose if you prefer AEAD.
+  const secret = process.env.SESSION_SECRET ?? 'dev-session-secret-not-for-prod';
+  const body = JSON.stringify({ ...payload, v: 1, iat: Date.now() });
+  const sig = crypto.createHmac('sha256', secret).update(body).digest('hex');
+  const value = Buffer.from(JSON.stringify({ body, sig })).toString('base64url');
+
+  cookies().set({
+    name: COOKIE_NAME,
+    value,
+    httpOnly: true,
+    sameSite: 'lax',
+    secure: true,
+    path: '/',
+    maxAge: 60 * 60 * 24 * 7
+  });
+}
+
+export function readJurisdictionCookie(): { state?: string; district?: string; county?: string } | null {
+  const secret = process.env.SESSION_SECRET ?? 'dev-session-secret-not-for-prod';
+  const raw = cookies().get(COOKIE_NAME)?.value;
+  if (!raw) return null;
+  try {
+    const { body, sig } = JSON.parse(Buffer.from(raw, 'base64url').toString());
+    const check = crypto.createHmac('sha256', secret).update(body).digest('hex');
+    if (!crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(check))) return null;
+    const parsed = JSON.parse(body);
+    return { state: parsed.state, district: parsed.district, county: parsed.county };
+  } catch {
+    return null;
   }
-  
-  const [minLat, minLng, maxLat, maxLng] = bbox;
-  const prefixes = new Set<string>();
-  const step = precision === 5 ? 0.5 : precision === 6 ? 0.2 : 0.05; // rough tiling
-  
-  for (let lat = minLat; lat <= maxLat; lat += step) {
-    for (let lng = minLng; lng <= maxLng; lng += step) {
-      prefixes.add(geohash(lat, lng, precision));
-    }
-  }
-  
-  return [...prefixes];
 }
 
 /**

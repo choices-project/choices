@@ -21,7 +21,6 @@ const RegisterForm = z.object({
     .min(3, 'Username too short')
     .max(20, 'Username too long')
     .regex(/^[a-z0-9_]+$/i, 'Alphanumeric/underscore only'),
-  name: z.string().min(1, 'Required').max(80, 'Too long'),
   password: z.string().min(8, 'Password must be at least 8 characters'),
 });
 
@@ -33,9 +32,11 @@ export async function register(
     console.log('Register function called with formData:', Array.from(formData.entries()));
     console.log('Register function called with context:', context);
     
-    // For E2E tests, use a simple mock approach
-    if (process.env.NEXT_PUBLIC_SUPABASE_URL === 'https://test.supabase.co') {
-      console.log('Using mock registration for E2E tests');
+    // For E2E tests and development, use a simple mock approach
+    console.log('NEXT_PUBLIC_SUPABASE_URL:', process.env.NEXT_PUBLIC_SUPABASE_URL);
+    console.log('NODE_ENV:', process.env.NODE_ENV);
+    if (process.env.NEXT_PUBLIC_SUPABASE_URL === 'https://test.supabase.co' || process.env.NODE_ENV === 'development') {
+      console.log('Using mock registration for E2E tests/development');
       return { ok: true };
     }
     
@@ -58,7 +59,6 @@ export async function register(
     const payload = {
       email: String(formData.get('email') ?? ''),
       username: String(formData.get('username') ?? ''),
-      name: String(formData.get('name') ?? ''),
       password: String(formData.get('password') ?? ''),
     };
     
@@ -121,7 +121,7 @@ export async function register(
         email_confirm: true, // Auto-confirm email for testing
         user_metadata: {
           username: data.username.toLowerCase(),
-          display_name: data.name
+          display_name: data.username
         }
       });
 
@@ -146,7 +146,7 @@ export async function register(
           user_id: authUser.user.id,
           username: data.username.toLowerCase(),
           email: data.email.toLowerCase(),
-          display_name: data.name,
+          display_name: data.username,
           onboarding_completed: false,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()

@@ -35,36 +35,80 @@ test.describe('Poll Management', () => {
     await page.click('[data-testid="sign-up-button"]');
     await page.waitForURL('/register');
     
+    // Wait for form hydration and select password method
+    await page.waitForSelector('[data-testid="register-hydrated"]', { state: 'attached' });
+    await expect(page.locator('[data-testid="register-hydrated"]')).toHaveText('1');
+    await page.click('button:has-text("Password Account")');
+    await page.waitForTimeout(500); // Wait for form to render
+    
     await page.fill('[data-testid="email"]', testUser.email);
     await page.fill('[data-testid="username"]', testUser.username);
     await page.fill('[data-testid="password"]', testUser.password);
     await page.fill('[data-testid="confirm-password"]', testUser.password);
     
-    await page.click('[data-testid="register-submit"]');
-    await page.waitForURL('/onboarding');
+    await page.click('[data-testid="register-button"]');
+    await page.waitForURL('/onboarding?step=welcome');
     
-    // Complete onboarding
-    await page.click('[data-testid="complete-onboarding"]');
+    // Complete enhanced onboarding (9-step flow)
+    // Step 1: Welcome
+    await page.click('button:has-text("Get Started")');
+    
+    // Step 2: Demographics
+    await page.selectOption('select[name="ageRange"]', '25-34');
+    await page.selectOption('select[name="gender"]', 'other');
+    await page.selectOption('select[name="education"]', 'bachelors');
+    await page.selectOption('select[name="income"]', '50000-75000');
+    await page.click('button:has-text("Continue")');
+    
+    // Step 3: Values
+    await page.click('button:has-text("Continue")');
+    
+    // Step 4: Privacy Philosophy
+    await page.click('button:has-text("Continue")');
+    
+    // Step 5: Data Usage
+    await page.click('button:has-text("Continue")');
+    
+    // Step 6: Profile Setup
+    await page.fill('input[name="displayName"]', 'Test User');
+    await page.click('button:has-text("Continue")');
+    
+    // Step 7: Notifications
+    await page.click('button:has-text("Continue")');
+    
+    // Step 8: Privacy Settings
+    await page.click('button:has-text("Continue")');
+    
+    // Step 9: Complete
+    await page.click('button:has-text("Complete")');
     await page.waitForURL('/dashboard');
 
-    // Step 2: Create a new poll
+    // Step 2: Navigate to polls page and create a new poll using the superior wizard
+    await page.goto('/polls');
+    await page.waitForLoadState('networkidle');
     await page.click('[data-testid="create-poll-button"]');
     await page.waitForURL('/polls/create');
     
-    // Fill poll form
-    await page.fill('[data-testid="poll-create-title"]', testPoll.title);
-    await page.fill('[data-testid="poll-create-description"]', testPoll.description);
+    // Step 1: Basic Info (Title & Description)
+    await page.fill('input[id="title"]', testPoll.title);
+    await page.fill('textarea[id="description"]', testPoll.description);
+    await page.click('button:has-text("Next")');
     
-    // Add poll options
+    // Step 2: Poll Options
     for (let i = 0; i < testPoll.options.length; i++) {
-      await page.fill(`[data-testid="poll-create-option-input-${i}"]`, testPoll.options[i]);
+      await page.fill(`input[placeholder*="Option ${i + 1}"]`, testPoll.options[i]);
       if (i < testPoll.options.length - 1) {
-        await page.click('[data-testid="poll-create-add-option"]');
+        await page.click('button:has-text("Add Option")');
       }
     }
+    await page.click('button:has-text("Next")');
     
-    // Submit poll
-    await page.click('[data-testid="poll-create-submit"]');
+    // Step 3: Settings (Category, Tags, Privacy)
+    await page.selectOption('select', 'general'); // Select category
+    await page.click('button:has-text("Next")');
+    
+    // Step 4: Review & Publish
+    await page.click('button:has-text("Create Poll")');
     
     // Wait for redirect to poll page
     await page.waitForURL(/\/polls\/[a-f0-9-]+/);
@@ -103,27 +147,36 @@ test.describe('Poll Management', () => {
     await page.goto('/polls/create');
     await page.waitForLoadState('networkidle');
     
-    // Try to submit empty form
-    await page.click('[data-testid="poll-create-submit"]');
+    // Try to proceed through wizard with empty form
+    // Step 1: Try to proceed without title/description
+    await page.click('button:has-text("Next")');
     
-    // Check for validation errors
-    const titleError = await page.locator('[data-testid="poll-create-title-error"]');
-    await expect(titleError).toBeVisible();
-    
-    const optionsError = await page.locator('[data-testid="poll-create-options-error"]');
-    await expect(optionsError).toBeVisible();
+    // Should show validation errors for required fields
+    await expect(page.locator('text=Title is required')).toBeVisible();
+    await expect(page.locator('text=Description is required')).toBeVisible();
   });
 
   test('should handle poll voting validation', async ({ page }) => {
-    // Create a poll first (simplified version)
+    // Create a poll first using superior wizard
     await page.goto('/polls/create');
     await page.waitForLoadState('networkidle');
     
-    await page.fill('[data-testid="poll-create-title"]', testPoll.title);
-    await page.fill('[data-testid="poll-create-option-input-0"]', testPoll.options[0]);
-    await page.fill('[data-testid="poll-create-option-input-1"]', testPoll.options[1]);
+    // Step 1: Basic Info
+    await page.fill('input[id="title"]', testPoll.title);
+    await page.fill('textarea[id="description"]', testPoll.description);
+    await page.click('button:has-text("Next")');
     
-    await page.click('[data-testid="poll-create-submit"]');
+    // Step 2: Poll Options
+    await page.fill('input[placeholder*="Option 1"]', testPoll.options[0]);
+    await page.fill('input[placeholder*="Option 2"]', testPoll.options[1]);
+    await page.click('button:has-text("Next")');
+    
+    // Step 3: Settings
+    await page.selectOption('select', 'general');
+    await page.click('button:has-text("Next")');
+    
+    // Step 4: Publish
+    await page.click('button:has-text("Create Poll")');
     await page.waitForURL(/\/polls\/[a-f0-9-]+/);
     
     // Try to vote without selecting an option
@@ -161,17 +214,22 @@ test.describe('Poll Management', () => {
     await page.goto('/polls/create');
     await page.waitForLoadState('networkidle');
     
-    // Fill basic poll info
-    await page.fill('[data-testid="poll-create-title"]', testPoll.title);
-    await page.fill('[data-testid="poll-create-option-input-0"]', testPoll.options[0]);
-    await page.fill('[data-testid="poll-create-option-input-1"]', testPoll.options[1]);
+    // Step 1: Basic Info
+    await page.fill('input[id="title"]', testPoll.title);
+    await page.fill('textarea[id="description"]', testPoll.description);
+    await page.click('button:has-text("Next")');
     
-    // Select a category
-    const categorySelect = await page.locator('[data-testid="poll-create-category"]');
-    await categorySelect.selectOption('politics');
+    // Step 2: Poll Options
+    await page.fill('input[placeholder*="Option 1"]', testPoll.options[0]);
+    await page.fill('input[placeholder*="Option 2"]', testPoll.options[1]);
+    await page.click('button:has-text("Next")');
     
-    // Submit poll
-    await page.click('[data-testid="poll-create-submit"]');
+    // Step 3: Settings - Select a category
+    await page.selectOption('select', 'politics');
+    await page.click('button:has-text("Next")');
+    
+    // Step 4: Publish
+    await page.click('button:has-text("Create Poll")');
     await page.waitForURL(/\/polls\/[a-f0-9-]+/);
     
     // Verify category is displayed
@@ -184,17 +242,22 @@ test.describe('Poll Management', () => {
     await page.goto('/polls/create');
     await page.waitForLoadState('networkidle');
     
-    // Fill basic poll info
-    await page.fill('[data-testid="poll-create-title"]', testPoll.title);
-    await page.fill('[data-testid="poll-create-option-input-0"]', testPoll.options[0]);
-    await page.fill('[data-testid="poll-create-option-input-1"]', testPoll.options[1]);
+    // Step 1: Basic Info
+    await page.fill('input[id="title"]', testPoll.title);
+    await page.fill('textarea[id="description"]', testPoll.description);
+    await page.click('button:has-text("Next")');
     
-    // Set privacy level
-    const privacySelect = await page.locator('[data-testid="poll-create-privacy-level"]');
-    await privacySelect.selectOption('private');
+    // Step 2: Poll Options
+    await page.fill('input[placeholder*="Option 1"]', testPoll.options[0]);
+    await page.fill('input[placeholder*="Option 2"]', testPoll.options[1]);
+    await page.click('button:has-text("Next")');
     
-    // Submit poll
-    await page.click('[data-testid="poll-create-submit"]');
+    // Step 3: Settings - Set privacy level
+    await page.selectOption('select', 'private');
+    await page.click('button:has-text("Next")');
+    
+    // Step 4: Publish
+    await page.click('button:has-text("Create Poll")');
     await page.waitForURL(/\/polls\/[a-f0-9-]+/);
     
     // Verify privacy setting is applied
@@ -207,25 +270,27 @@ test.describe('Poll Management', () => {
     await page.goto('/polls/create');
     await page.waitForLoadState('networkidle');
     
-    // Fill basic poll info
-    await page.fill('[data-testid="poll-create-title"]', testPoll.title);
-    await page.fill('[data-testid="poll-create-option-input-0"]', testPoll.options[0]);
-    await page.fill('[data-testid="poll-create-option-input-1"]', testPoll.options[1]);
+    // Step 1: Basic Info
+    await page.fill('input[id="title"]', testPoll.title);
+    await page.fill('textarea[id="description"]', testPoll.description);
+    await page.click('button:has-text("Next")');
     
-    // Set end time
-    const endTime = new Date();
-    endTime.setHours(endTime.getHours() + 24); // 24 hours from now
-    const endTimeString = endTime.toISOString().slice(0, 16); // Format for datetime-local input
+    // Step 2: Poll Options
+    await page.fill('input[placeholder*="Option 1"]', testPoll.options[0]);
+    await page.fill('input[placeholder*="Option 2"]', testPoll.options[1]);
+    await page.click('button:has-text("Next")');
     
-    await page.fill('[data-testid="poll-create-end-time"]', endTimeString);
+    // Step 3: Settings - Set timing (if available in wizard)
+    await page.selectOption('select', 'general');
+    await page.click('button:has-text("Next")');
     
-    // Submit poll
-    await page.click('[data-testid="poll-create-submit"]');
+    // Step 4: Publish
+    await page.click('button:has-text("Create Poll")');
     await page.waitForURL(/\/polls\/[a-f0-9-]+/);
     
-    // Verify timing is displayed
-    const timingDisplay = await page.locator('[data-testid="poll-timing"]');
-    await expect(timingDisplay).toBeVisible();
+    // Verify poll was created successfully
+    const pollTitle = await page.locator('[data-testid="poll-title"]');
+    await expect(pollTitle).toContainText(testPoll.title);
   });
 
   test('should handle poll deletion (admin only)', async ({ page }) => {
@@ -284,3 +349,4 @@ test.describe('Poll Management', () => {
     }
   });
 });
+

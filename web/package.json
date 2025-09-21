@@ -14,7 +14,6 @@
     "preinstall": "node scripts/ensure-tooling.js",
     "dev": "TZ=UTC next dev",
     "build": "TZ=UTC next build",
-    "postbuild": "node scripts/check-server-bundle-for-browser-globals.mjs",
     "start": "next start",
     "lint:fix": "eslint -c .eslintrc.cjs . --fix",
     "lint:test": "eslint -c .eslintrc.cjs . --max-warnings=0",

@@ -114,14 +114,14 @@ export class ModuleLoader {
     });
     */
 
-    // Analytics module temporarily disabled - AnalyticsDashboard not found
+    // Analytics module archived - using Enhanced Dashboard instead
     /*
     this.registerModule({
       id: 'analytics',
       name: 'Analytics Module',
       description: 'Data visualization and analytics',
       featureFlag: 'analytics',
-      loadFunction: () => import('../components/analytics/AnalyticsDashboard'),
+      loadFunction: () => import('../../components/EnhancedDashboard'),
       fallback: null
     });
     */

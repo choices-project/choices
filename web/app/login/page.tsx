@@ -1,18 +1,35 @@
 'use client'
 
 import { useState, useEffect, Suspense, useCallback } from 'react'
+import { useFormStatus } from 'react-dom'
 import { logger } from '@/lib/logger';
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Eye, EyeOff, User, Lock, Fingerprint, CheckCircle2, AlertCircle } from 'lucide-react'
 import { clientSession } from '@/lib/client-session'
 import { safeBrowserAccess } from '@/lib/ssr-safe'
+import { loginAction } from '@/app/actions/login'
+
+// Login button component using useFormStatus
+function LoginButton() {
+  const { pending } = useFormStatus(); // disables during server-submit
+  return (
+    <button
+      type="submit"
+      data-testid="login-submit"
+      aria-label="Sign in"
+      disabled={pending}
+      className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-150 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed"
+    >
+      {pending ? 'Signing In...' : 'Sign In'}
+    </button>
+  );
+}
 
 function LoginForm() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
-  const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
   const [biometricSupported, setBiometricSupported] = useState<boolean | null>(null)
@@ -51,41 +68,8 @@ function LoginForm() {
       checkBiometricSupport()
     }, [checkBiometricSupport])
 
-  const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()                // ✅ block native navigation
-    setLoading(true)
-    setError(null)
-    setMessage(null)
-
-    try {
-      // For E2E testing, simulate login validation
-      // In a real app, this would call the actual authentication service
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      
-      // Simulate invalid credentials for testing
-      if (email === 'invalid@example.com' && password === 'wrongpassword') {
-        setError('Invalid credentials')  // ✅ will render
-        return
-      }
-      
-      setMessage('🎉 Login successful! Redirecting...')
-      
-      // Redirect to the intended destination
-      setTimeout(() => {
-        router.push(redirectTo)
-      }, 1000)
-    } catch (error) {
-      // narrow 'unknown' → Error
-      const err = error instanceof Error ? error : new Error(String(error));
-      logger.error('Login error:', err)
-      setError('Network error. Please try again.')
-    } finally {
-      setLoading(false)               // ✅ never leave loading stuck
-    }
-  }
 
   const handleBiometricLogin = async () => {
-    setLoading(true)
     setError(null)
     setMessage(null)
 
@@ -197,7 +181,7 @@ function LoginForm() {
       logger.error('Biometric login error:', err)
       setError(err.message || 'Biometric authentication failed. Please try again.')
     } finally {
-      setLoading(false)
+      // Loading state handled by useFormStatus
     }
   }
 
@@ -215,7 +199,7 @@ function LoginForm() {
           </p>
         </div>
 
-        <form onSubmit={handleLogin} className="mt-8 space-y-6" data-testid="login-form" noValidate>
+        <form action={loginAction} className="mt-8 space-y-6" data-testid="login-form" method="post">
           {error && (
             <div 
               className="bg-red-50 border border-red-200 rounded-md p-4" 
@@ -254,7 +238,10 @@ function LoginForm() {
                   id="email"
                   name="email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value.toLowerCase())}
+                  onChange={(e) => {
+                    console.log('Email onChange:', e.target.value);
+                    setEmail(e.target.value);
+                  }}
                   required
                   className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                   placeholder="your@email.com"
@@ -311,8 +298,7 @@ function LoginForm() {
               <button
                 type="button"
                 onClick={handleBiometricLogin}
-                disabled={loading}
-                className="w-full flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                 data-testid="login-webauthn"
               >
                 <Fingerprint className="h-5 w-5 mr-2 text-blue-600" />
@@ -321,14 +307,7 @@ function LoginForm() {
             </div>
           )}
 
-          <button
-            type="submit"
-            className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-150 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed"
-            disabled={loading || !email}
-            data-testid="login-submit"
-          >
-            {loading ? 'Signing In...' : 'Sign In'}
-          </button>
+          <LoginButton />
         </form>
 
         <div className="text-center space-y-2">

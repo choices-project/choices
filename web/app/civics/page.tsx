@@ -8,6 +8,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { isFeatureEnabled } from '@/lib/core/feature-flags';
+import { PrivacyStatusBadge } from '@/components/civics/PrivacyStatusBadge';
+import { CandidateAccountabilityCard } from '@/components/civics/CandidateAccountabilityCard';
 import { Search, MapPin, Phone, Mail, Globe, Users, Building2, Home, Database, CheckCircle, AlertCircle, Clock } from 'lucide-react';
 
 type Representative = {
@@ -35,6 +38,30 @@ type CivicsData = {
 }
 
 export default function CivicsPage() {
+  // Feature flag check - show disabled message if not enabled
+  if (!isFeatureEnabled('CIVICS_ADDRESS_LOOKUP')) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-12">
+        <div className="max-w-4xl mx-auto px-4">
+          <div className="text-center">
+            <h1 className="text-3xl font-bold text-gray-900 mb-4">
+              Civics Address Lookup
+            </h1>
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
+              <div className="flex items-center justify-center mb-4">
+                <PrivacyStatusBadge />
+              </div>
+              <p className="text-yellow-800">
+                This feature is currently disabled while we complete our e2e testing work. 
+                The foundation is ready and will be enabled soon!
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const [representatives, setRepresentatives] = useState<Representative[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -286,9 +313,10 @@ export default function CivicsPage() {
       )}
 
       {/* Representative Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-6">
         {filteredRepresentatives.map((rep, index) => (
-          <Card key={`${rep.name}-${rep.office}-${index}`} className="hover:shadow-lg transition-shadow">
+          <div key={`${rep.name}-${rep.office}-${index}`} className="space-y-4">
+            <Card className="hover:shadow-lg transition-shadow">
             <CardHeader className="pb-3">
               <div className="flex items-start justify-between">
                 <div className="flex-1">
@@ -390,7 +418,28 @@ export default function CivicsPage() {
                 </div>
               )}
             </CardContent>
-          </Card>
+            </Card>
+
+            {/* Candidate Accountability Card */}
+            {isFeatureEnabled('CANDIDATE_ACCOUNTABILITY') && (
+              <CandidateAccountabilityCard
+                representative={{
+                  id: rep.name.toLowerCase().replace(/\s+/g, '-'),
+                  name: rep.name,
+                  title: rep.office,
+                  party: rep.party || 'Independent',
+                  district: rep.district || 'N/A',
+                  state: selectedState,
+                  office: rep.office,
+                  phone: rep.contact?.phone,
+                  email: rep.contact?.email,
+                  website: rep.contact?.website,
+                  tenure: '2 years',
+                  nextElection: '2024-11-05'
+                }}
+              />
+            )}
+          </div>
         ))}
       </div>
 

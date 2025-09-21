@@ -36,8 +36,13 @@ test.describe('Authentication Flow', () => {
       await expect(page).toHaveURL('/register');
     }
     
-    // Wait for the register form to be visible
-    await page.waitForSelector('[data-testid="register-form"]', { timeout: 10000 });
+    // Wait for form hydration
+    await page.waitForSelector('[data-testid="register-hydrated"]', { state: 'attached' });
+    await expect(page.locator('[data-testid="register-hydrated"]')).toHaveText('1');
+    
+    // Select password registration method (since WebAuthn is now default)
+    await page.click('button:has-text("Password Account")');
+    await page.waitForTimeout(500); // Wait for form to render
     
     // Fill registration form
     await page.fill('[data-testid="email"]', 'test@test.com');

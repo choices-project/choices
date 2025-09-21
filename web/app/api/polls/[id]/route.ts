@@ -31,7 +31,23 @@ export async function GET(
         }
       );
     } else {
-      supabaseClient = await getSupabaseServerClient();
+      try {
+        supabaseClient = await getSupabaseServerClient();
+      } catch (error) {
+        devLog('Error getting Supabase server client:', error);
+        // Fallback to service role client
+        const { createClient } = await import('@supabase/supabase-js');
+        supabaseClient = createClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.SUPABASE_SECRET_KEY!,
+          {
+            auth: {
+              autoRefreshToken: false,
+              persistSession: false
+            }
+          }
+        );
+      }
     }
     
     if (!supabaseClient) {

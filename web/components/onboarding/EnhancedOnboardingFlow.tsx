@@ -2,9 +2,10 @@
 
 import * as React from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
+import { useFormStatus } from 'react-dom';
 import { getSupabaseBrowserClient } from '@/utils/supabase/client';
 import { devLog } from '@/lib/logger';
-import { completeOnboarding } from '@/app/actions/complete-onboarding';
+import { completeOnboardingAction } from '@/app/actions/complete-onboarding';
 import { FEATURE_FLAGS } from '@/lib/core/feature-flags';
 
 import type {
@@ -21,18 +22,18 @@ import {
   DEFAULT_STEP_ORDER,
 } from './types';
 
-// Step components (swap to your real ones)
-import WelcomeStep from './steps/WelcomeStep';
-import PrivacyPhilosophyStep from './steps/PrivacyPhilosophyStep';
-import PlatformTourStep from './steps/PlatformTourStep';
-import DataUsageStep from './steps/DataUsageStep';
-import DataUsageStepLite from './steps/DataUsageStepLite';
-import AuthSetupStep from './steps/AuthSetupStep';
-import ProfileSetupStep from './steps/ProfileSetupStep';
-import InterestSelectionStep from './steps/InterestSelectionStep';
-import FirstExperienceStep from './steps/FirstExperienceStep';
-import CompleteStep from './steps/CompleteStep';
-import ProgressIndicator from './components/ProgressIndicator';
+// Step components
+import WelcomeStep from './WelcomeStep';
+import PrivacyPhilosophyStep from './PrivacyPhilosophyStep';
+import PlatformTourStep from './PlatformTourStep';
+import DataUsageStep from './DataUsageStep';
+import DataUsageStepLite from './DataUsageStepLite';
+import AuthSetupStep from './AuthSetupStep';
+import ProfileSetupStep from './ProfileSetupStep';
+import InterestSelectionStep from './InterestSelectionStep';
+import FirstExperienceStep from './FirstExperienceStep';
+import CompleteStep from './CompleteStep';
+import ProgressIndicator from './ProgressIndicator';
 
 // Local state navigation with URL sync in background
 function useLocalStepNavigation(): [StepSlug, (s: StepSlug) => void] {
@@ -98,6 +99,22 @@ const BACK_TESTID: Partial<Record<StepSlug, string>> = {
   'first-experience': 'experience-back',
 };
 
+// Complete button component using useFormStatus
+function CompleteButton() {
+  const { pending } = useFormStatus(); // disables during server-submit
+  return (
+    <button
+      type="submit"
+      data-testid="complete-onboarding"
+      aria-label="Complete onboarding"
+      disabled={pending}
+      className="px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
+    >
+      {pending ? 'Finishing…' : 'Complete'}
+    </button>
+  );
+}
+
 const OnboardingContext = React.createContext<OnboardingContextType | undefined>(undefined);
 
 type OnboardingContextType = {
@@ -110,7 +127,6 @@ type OnboardingContextType = {
   error: string | null;
   startOnboarding: () => Promise<void>;
   updateOnboardingStep: (step: StepSlug, stepData?: Record<string, unknown>) => Promise<void>;
-  completeOnboarding: () => Promise<void>;
 }
 
 export function useOnboardingContext() {
@@ -276,20 +292,6 @@ function EnhancedOnboardingFlowInner() {
     []
   );
 
-  const handleCompleteOnboarding = React.useCallback(async () => {
-    try {
-      const formData = new FormData();
-      formData.append('notifications', 'true');
-      formData.append('dataSharing', 'false');
-      formData.append('theme', 'system');
-      
-      await completeOnboarding(formData);
-      devLog('Onboarding completed successfully');
-    } catch (error) {
-      devLog('Error completing onboarding:', error);
-      setError('Failed to complete onboarding');
-    }
-  }, []);
 
   // Init: auth + URL step
   React.useEffect(() => {
@@ -391,7 +393,6 @@ function EnhancedOnboardingFlowInner() {
     error,
     startOnboarding,
     updateOnboardingStep,
-    completeOnboarding: handleCompleteOnboarding,
   };
 
   if (error && !isLoading) {
@@ -523,34 +524,48 @@ function EnhancedOnboardingFlowInner() {
             <div data-testid="complete-step">
               <CompleteStep
                 data={data}
-                onComplete={handleCompleteOnboarding}
                 onBack={handleBack}
               />
+              
+              <form
+                action={completeOnboardingAction}
+                data-testid="onboarding-form"
+                method="post"
+                onSubmit={() => console.log('Client submit intercepted; calling server action')}
+              >
+                <input type="hidden" name="finished" value="true" />
+
+                <div className="mt-6 flex justify-center">
+                  <CompleteButton />
+                </div>
+              </form>
             </div>
           )}
           
-          {/* Navigation buttons with E2E test IDs */}
-          <div className="mt-6 flex gap-2 justify-center">
-            {currentStep !== 'welcome' && currentStep !== 'complete' && (
-              <button
-                data-testid={BACK_TESTID[currentStep] ?? 'onb-back'}
-                onClick={handleBack}
-                type="button"
-                className="px-6 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-              >
-                Back
-              </button>
-            )}
+          {/* Navigation buttons with E2E test IDs for other steps */}
+          {currentStep !== 'complete' && (
+            <div className="mt-6 flex gap-2 justify-center">
+              {currentStep !== 'welcome' && (
+                <button
+                  data-testid={BACK_TESTID[currentStep] ?? 'onb-back'}
+                  onClick={handleBack}
+                  type="button"
+                  className="px-6 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                >
+                  Back
+                </button>
+              )}
 
-            <button
-              data-testid={NEXT_TESTID[currentStep] ?? 'onb-next'}
-              onClick={currentStep === 'complete' ? () => handleCompleteOnboarding() : handleNext}
-              type="button"
-              className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-            >
-              {currentStep === 'complete' ? 'Finish' : 'Next'}
-            </button>
-          </div>
+              <button
+                data-testid={NEXT_TESTID[currentStep] ?? 'onb-next'}
+                onClick={handleNext}
+                type="button"
+                className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              >
+                Next
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </OnboardingContext.Provider>

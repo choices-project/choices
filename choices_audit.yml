@@ -1,8 +1,0 @@
-pre:
-  - echo "Reset DB here (optional)"
-playwright:
-  cmd: "npx playwright test --project=chromium --reporter=json"
-  cwd: "./web"
-artifacts_dir: "e2e-audit-artifacts"
-post:
-  - echo "Post-run cleanup (optional)"

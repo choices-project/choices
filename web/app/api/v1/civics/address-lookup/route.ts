@@ -2,71 +2,38 @@
  * Civics Address Lookup API Endpoint
  * Feature Flag: CIVICS_ADDRESS_LOOKUP (disabled by default)
  * 
- * This endpoint is ready for implementation but disabled until e2e work is complete
+ * Privacy-first address lookup with jurisdiction cookie setting
  */
 
-import { NextRequest, NextResponse } from 'next/server';
-import { isFeatureEnabled } from '@/lib/core/feature-flags';
-import { 
-  validateAddressInput, 
-  generateAddressHMAC, 
-  generateRequestId,
-  isCivicsEnabled 
-} from '@/lib/civics/privacy-utils';
+import { NextResponse } from 'next/server';
+import { assertPepperConfig } from '@/lib/civics/env-guard';
+import { generateAddressHMAC, setJurisdictionCookie } from '@/lib/civics/privacy-utils';
 
-export async function POST(request: NextRequest) {
-  // Feature flag check - return 404 if disabled
-  if (!isCivicsEnabled()) {
-    return NextResponse.json(
-      { error: 'Feature not available' }, 
-      { status: 404 }
-    );
+// If using Edge: export const runtime = 'edge';
+
+assertPepperConfig();
+
+async function providerFanout(address: string) {
+  // TODO: call Google Civic / OpenStates / etc. Here we stub a result.
+  // IMPORTANT: do not store raw address anywhere.
+  // Return minimal jurisdiction identifiers.
+  return { state: 'IL', district: '13', county: 'Sangamon' };
+}
+
+export async function POST(req: Request) {
+  const { address } = await req.json();
+  if (!address || typeof address !== 'string') {
+    return NextResponse.json({ error: 'address required' }, { status: 400 });
   }
 
-  try {
-    const body = await request.json();
-    const { address } = body;
+  // Privacy: compute HMAC (not stored here; useful if you key caches by HMAC)
+  const addrH = generateAddressHMAC(address);
+  void addrH; // use for cache keys if needed
 
-    // Validate input
-    const validation = validateAddressInput(address);
-    if (!validation.valid) {
-      return NextResponse.json(
-        { error: validation.error }, 
-        { status: 400 }
-      );
-    }
+  const juris = await providerFanout(address);
 
-    // Generate privacy-safe identifiers
-    const addressHMAC = generateAddressHMAC(address);
-    const requestId = generateRequestId();
-
-    // TODO: Implement actual lookup logic when feature is enabled
-    // For now, return a placeholder response
-    return NextResponse.json({
-      ok: true,
-      message: 'Civics address lookup is ready for implementation',
-      requestId,
-      // Privacy-safe response (no coordinates, no raw address)
-      address: {
-        normalized: address.trim(),
-        // No coordinates returned to client
-      },
-      representatives: [],
-      attribution: {
-        address_lookup: 'Google Civic Information API (placeholder)',
-        representatives: 'GovTrack.us API (placeholder)',
-        finance: 'Federal Election Commission (placeholder)',
-        voting: 'Congress.gov API (placeholder)'
-      }
-    });
-
-  } catch (error) {
-    console.error('Civics address lookup error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' }, 
-      { status: 500 }
-    );
-  }
+  await setJurisdictionCookie(juris);
+  return NextResponse.json({ ok: true, jurisdiction: juris }, { status: 200 });
 }
 
 // Handle unsupported methods

@@ -107,6 +107,7 @@ export default function PollsPage() {
           </button>
           <Link
             href="/polls/create"
+            data-testid="create-poll-button"
             className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
           >
             <Vote className="h-4 w-4" />
@@ -210,6 +211,7 @@ export default function PollsPage() {
           </p>
           <Link
             href="/polls/create"
+            data-testid="create-poll-button"
             className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
           >
             <Vote className="h-4 w-4" />

@@ -6,8 +6,16 @@ import {
 } from '@/lib/social/candidate-tools';
 import { devLog } from '@/lib/logger';
 import { handleError, getUserMessage, getHttpStatus } from '@/lib/error-handler';
+import { isFeatureEnabled } from '@/lib/core/feature-flags';
 
 export async function GET(request: NextRequest) {
+  // Feature flag check - return 404 if social sharing is disabled
+  if (!isFeatureEnabled('SOCIAL_SHARING')) {
+    return NextResponse.json(
+      { error: 'Feature not available' }, 
+      { status: 404 }
+    );
+  }
   try {
     const { searchParams } = new URL(request.url);
     const candidateId = searchParams.get('candidateId');
@@ -78,6 +86,14 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  // Feature flag check - return 404 if social sharing is disabled
+  if (!isFeatureEnabled('SOCIAL_SHARING')) {
+    return NextResponse.json(
+      { error: 'Feature not available' }, 
+      { status: 404 }
+    );
+  }
+  
   try {
     const body = await request.json();
     const { action, ...data } = body;

@@ -91,15 +91,12 @@ test.describe('Feature Flags', () => {
   });
 
   test('should verify enabled features work correctly', async ({ page }) => {
-    // Test PWA features are enabled
-    const pwaStatus = await page.locator('[data-testid="pwa-status"]').count();
-    expect(pwaStatus).toBeGreaterThan(0);
-
     // Test authentication is enabled
     await page.goto('/login');
     await page.waitForLoadState('networkidle');
-    const loginForm = await page.locator('[data-testid="login-form"]').count();
-    expect(loginForm).toBeGreaterThan(0);
+    // Check for login page elements instead of specific form
+    const loginPage = await page.locator('text=Sign in to your account').count();
+    expect(loginPage).toBeGreaterThan(0);
 
     // Test polls are enabled
     await page.goto('/polls');
@@ -113,6 +110,12 @@ test.describe('Feature Flags', () => {
     // Should either show admin interface or access denied, but not 404
     const is404 = await page.locator('text=404').count();
     expect(is404).toBe(0);
+
+    // Test PWA features are enabled (navigate to dashboard where PWA components are rendered)
+    await page.goto('/dashboard');
+    await page.waitForLoadState('networkidle');
+    const pwaStatus = await page.locator('[data-testid="pwa-status"]').count();
+    expect(pwaStatus).toBeGreaterThan(0);
   });
 
   test('should verify feature flag API works correctly', async ({ page }) => {
@@ -122,15 +125,15 @@ test.describe('Feature Flags', () => {
     
     const flags = await response.json();
     
-    // Verify expected flags are present
-    expect(flags).toHaveProperty('PWA');
-    expect(flags).toHaveProperty('SOCIAL_SHARING');
-    expect(flags).toHaveProperty('ANALYTICS');
+    // Verify expected flags are present in the flags object
+    expect(flags.flags).toHaveProperty('PWA');
+    expect(flags.flags).toHaveProperty('SOCIAL_SHARING');
+    expect(flags.flags).toHaveProperty('ANALYTICS');
     
     // Verify expected values
-    expect(flags.PWA).toBe(true);
-    expect(flags.SOCIAL_SHARING).toBe(false);
-    expect(flags.ANALYTICS).toBe(false);
+    expect(flags.flags.PWA).toBe(true);
+    expect(flags.flags.SOCIAL_SHARING).toBe(false);
+    expect(flags.flags.ANALYTICS).toBe(false);
   });
 
   test('should verify no social sharing routes are accessible', async ({ page }) => {
@@ -145,6 +148,7 @@ test.describe('Feature Flags', () => {
     for (const route of socialRoutes) {
       const response = await page.request.get(route);
       // Should either be 404 or return an error, not a successful response
+      // Note: Some routes might return 405 (Method Not Allowed) which is also acceptable
       expect(response.status()).not.toBe(200);
     }
   });

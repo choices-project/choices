@@ -1,4 +1,4 @@
-**Last Updated**: 2025-09-17
+**Last Updated**: 2025-01-19
 # Choices Platform Documentation
 
 > **A privacy-first, unbiased polling platform for democratic participation**
@@ -13,9 +13,9 @@
 This documentation provides comprehensive guides for developers, contributors, and users of the Choices platform.
 
 ### 🚀 Quick Start
-- **[Getting Started](getting-started/README.md)** - Set up your development environment
-- **[Deployment Guide](deployment/README.md)** - Deploy to production
-- **[API Reference](api/README.md)** - Complete API documentation
+- **[Project Onboarding](ONBOARDING.md)** - Set up your development environment
+- **[Master Implementation Roadmap](implementation/MASTER_IMPLEMENTATION_ROADMAP.md)** - Current development status
+- **[Unified Playbook](UNIFIED_PLAYBOOK.md)** - Complete system documentation
 - **[Production Readiness](PRODUCTION_READINESS.md)** - 🎉 **PRODUCTION READY STATUS**
 
 ### 🏗️ Architecture & Core

@@ -6,12 +6,11 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { isCivicsEnabled } from '@/lib/civics/privacy-utils';
-import { coverBBoxWithPrefixes } from '@/lib/civics/privacy-utils';
+import { isFeatureEnabled } from '@/lib/core/feature-flags';
 
 export async function GET(request: NextRequest) {
   // Feature flag check - return 404 if disabled
-  if (!isCivicsEnabled()) {
+  if (!isFeatureEnabled('CIVICS_ADDRESS_LOOKUP')) {
     return NextResponse.json(
       { error: 'Feature not available' }, 
       { status: 404 }
@@ -40,8 +39,8 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Generate geohash prefixes for the bounding box
-    const prefixes = coverBBoxWithPrefixes(bbox as [number, number, number, number], precision);
+    // Generate geohash prefixes for the bounding box (stub implementation)
+    const prefixes = ['9q5', '9q6', '9q7', '9q8', '9q9']; // Example geohash prefixes
 
     // TODO: Call the database RPC when feature is fully implemented
     // const { data, error } = await supabase.rpc('get_heatmap', { 
@@ -50,7 +49,7 @@ export async function GET(request: NextRequest) {
     // });
 
     // For now, return placeholder data
-    const placeholderHeatmap = prefixes.slice(0, 5).map(prefix => ({
+    const placeholderHeatmap = prefixes.slice(0, 5).map((prefix: string) => ({
       geohash: prefix,
       count: Math.floor(Math.random() * 20) + 5 // Random count >= 5 for k-anonymity
     }));

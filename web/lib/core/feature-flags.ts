@@ -3,29 +3,55 @@
  * Add new flags here; remove when dead.
  */
 export const FEATURE_FLAGS = {
+  // ===== CORE MVP FEATURES (Always Enabled) =====
   CORE_AUTH: true,
   CORE_POLLS: true,
   CORE_USERS: true,
   WEBAUTHN: true,
   PWA: true,
-  ANALYTICS: false,
   ADMIN: true,
-  EXPERIMENTAL_UI: false,
-  EXPERIMENTAL_ANALYTICS: false,
-  ADVANCED_PRIVACY: false,
-  // Database optimization suite - enabled for performance
-  FEATURE_DB_OPTIMIZATION_SUITE: true,
-  // Experimental components - keep disabled until evaluated
-  EXPERIMENTAL_COMPONENTS: false,
-  // Civics address lookup system - disabled by default until e2e is complete
-  CIVICS_ADDRESS_LOOKUP: false,
-  // Social sharing features - ALL DISABLED BY DEFAULT
-  SOCIAL_SHARING: false,           // Master switch for all social features
-  SOCIAL_SHARING_POLLS: false,     // Poll sharing (Twitter, Facebook, LinkedIn)
-  SOCIAL_SHARING_CIVICS: false,    // Representative sharing
-  SOCIAL_SHARING_VISUAL: false,    // Visual content generation (IG, TikTok)
-  SOCIAL_SHARING_OG: false,        // Dynamic Open Graph image generation
-  SOCIAL_SIGNUP: false,            // Social OAuth signup
+  
+  // ===== ENHANCED MVP FEATURES (Ready for Implementation) =====
+  ENHANCED_ONBOARDING: true,         // Multi-step onboarding system with comprehensive data collection
+  ENHANCED_PROFILE: true,            // Advanced profile management with privacy controls
+  ENHANCED_AUTH: false,              // SSR-safe authentication with advanced utilities
+  ENHANCED_DASHBOARD: true,          // Advanced dashboard with analytics and insights (COMPLETED)
+  ENHANCED_POLLS: true,              // Advanced poll creation and management system
+  ENHANCED_VOTING: true,             // Advanced voting methods and analytics
+  
+  // ===== CIVICS & ACCOUNTABILITY FEATURES =====
+  CIVICS_ADDRESS_LOOKUP: true,       // Address-based representative lookup system
+  CIVICS_REPRESENTATIVE_DATABASE: true, // Federal, state, and local representative database
+  CIVICS_CAMPAIGN_FINANCE: true,     // FEC campaign finance data integration
+  CIVICS_VOTING_RECORDS: true,       // Congressional voting records and analysis
+  CANDIDATE_ACCOUNTABILITY: true,    // Promise tracking and performance metrics
+  CANDIDATE_CARDS: true,             // Comprehensive candidate information cards
+  ALTERNATIVE_CANDIDATES: true,      // Platform for non-duopoly candidates
+  
+  // ===== FUTURE FEATURES (Development Required) =====
+  AUTOMATED_POLLS: false,            // AI-powered poll generation from trending topics
+  ADVANCED_PRIVACY: false,           // Zero-knowledge proofs and differential privacy
+  SOCIAL_SHARING: false,             // Master switch for all social features
+  SOCIAL_SHARING_POLLS: false,       // Poll sharing (Twitter, Facebook, LinkedIn)
+  SOCIAL_SHARING_CIVICS: false,      // Representative sharing
+  SOCIAL_SHARING_VISUAL: false,      // Visual content generation (IG, TikTok)
+  SOCIAL_SHARING_OG: false,          // Dynamic Open Graph image generation
+  SOCIAL_SIGNUP: false,              // Social OAuth signup
+  
+  // ===== PERFORMANCE & OPTIMIZATION =====
+  PERFORMANCE_OPTIMIZATION: false,   // Image optimization, virtual scrolling, lazy loading
+  FEATURE_DB_OPTIMIZATION_SUITE: true, // Database optimization suite - enabled for performance
+  ANALYTICS: false,                  // Advanced analytics and user insights
+  EXPERIMENTAL_UI: false,            // Experimental UI components
+  EXPERIMENTAL_ANALYTICS: false,     // Experimental analytics features
+  EXPERIMENTAL_COMPONENTS: false,    // Experimental components - keep disabled until evaluated
+  
+  // ===== SYSTEM FEATURES =====
+  FEEDBACK_WIDGET: true,             // Enhanced feedback collection system
+  NOTIFICATIONS: false,              // Push notifications and alerts
+  THEMES: false,                     // Dark mode and theme customization
+  ACCESSIBILITY: false,              // Advanced accessibility features
+  INTERNATIONALIZATION: false,       // Multi-language support
 } as const;
 
 // Define proper types for feature flag system
@@ -103,9 +129,23 @@ const mutableFlags: Record<string, boolean> = { ...FEATURE_FLAGS };
 // Helper function to categorize flags
 function categorizeFlag(flagId: string): string {
   const categories: Record<string, string[]> = {
-    core: ['CORE_AUTH', 'CORE_POLLS', 'CORE_USERS'],
-    experimental: ['EXPERIMENTAL_UI', 'EXPERIMENTAL_ANALYTICS'],
-    features: ['WEBAUTHN', 'PWA', 'ANALYTICS', 'ADMIN', 'ADVANCED_PRIVACY', 'FEATURE_DB_OPTIMIZATION_SUITE', 'CIVICS_ADDRESS_LOOKUP']
+    // Core MVP features
+    core: ['CORE_AUTH', 'CORE_POLLS', 'CORE_USERS', 'WEBAUTHN', 'PWA', 'ADMIN', 'FEEDBACK_WIDGET'],
+    
+    // Enhanced MVP features ready for implementation
+    enhanced: ['ENHANCED_ONBOARDING', 'ENHANCED_PROFILE', 'ENHANCED_AUTH', 'ENHANCED_DASHBOARD', 'ENHANCED_POLLS', 'ENHANCED_VOTING'],
+    
+    // Future features requiring development
+    future: ['AUTOMATED_POLLS', 'ADVANCED_PRIVACY', 'CIVICS_ADDRESS_LOOKUP', 'SOCIAL_SHARING', 'SOCIAL_SHARING_POLLS', 'SOCIAL_SHARING_CIVICS', 'SOCIAL_SHARING_VISUAL', 'SOCIAL_SHARING_OG', 'SOCIAL_SIGNUP'],
+    
+    // Performance and optimization
+    performance: ['PERFORMANCE_OPTIMIZATION', 'FEATURE_DB_OPTIMIZATION_SUITE', 'ANALYTICS'],
+    
+    // Experimental features
+    experimental: ['EXPERIMENTAL_UI', 'EXPERIMENTAL_ANALYTICS', 'EXPERIMENTAL_COMPONENTS'],
+    
+    // System features
+    system: ['NOTIFICATIONS', 'THEMES', 'ACCESSIBILITY', 'INTERNATIONALIZATION']
   };
   
   for (const [category, flags] of Object.entries(categories)) {
@@ -205,11 +245,24 @@ export const featureFlagManager = {
       category: categorizeFlag(key)
     })),
   getFlagsByCategory: (category: string): FeatureFlag[] => {
-    // Simple categorization - can be enhanced
     const categories: Record<string, string[]> = {
-      core: ['CORE_AUTH', 'CORE_POLLS', 'CORE_USERS'],
-      experimental: ['EXPERIMENTAL_UI', 'EXPERIMENTAL_ANALYTICS'],
-      features: ['WEBAUTHN', 'PWA', 'ANALYTICS', 'ADMIN', 'ADVANCED_PRIVACY', 'CIVICS_ADDRESS_LOOKUP']
+      // Core MVP features
+      core: ['CORE_AUTH', 'CORE_POLLS', 'CORE_USERS', 'WEBAUTHN', 'PWA', 'ADMIN', 'FEEDBACK_WIDGET'],
+      
+      // Enhanced MVP features ready for implementation
+      enhanced: ['ENHANCED_ONBOARDING', 'ENHANCED_PROFILE', 'ENHANCED_AUTH', 'ENHANCED_DASHBOARD', 'ENHANCED_POLLS', 'ENHANCED_VOTING'],
+      
+      // Future features requiring development
+      future: ['AUTOMATED_POLLS', 'ADVANCED_PRIVACY', 'CIVICS_ADDRESS_LOOKUP', 'SOCIAL_SHARING', 'SOCIAL_SHARING_POLLS', 'SOCIAL_SHARING_CIVICS', 'SOCIAL_SHARING_VISUAL', 'SOCIAL_SHARING_OG', 'SOCIAL_SIGNUP'],
+      
+      // Performance and optimization
+      performance: ['PERFORMANCE_OPTIMIZATION', 'FEATURE_DB_OPTIMIZATION_SUITE', 'ANALYTICS'],
+      
+      // Experimental features
+      experimental: ['EXPERIMENTAL_UI', 'EXPERIMENTAL_ANALYTICS', 'EXPERIMENTAL_COMPONENTS'],
+      
+      // System features
+      system: ['NOTIFICATIONS', 'THEMES', 'ACCESSIBILITY', 'INTERNATIONALIZATION']
     };
     const flagIds = categories[category] || [];
     return flagIds.map(flagId => ({
@@ -227,17 +280,49 @@ export const featureFlagManager = {
     disabledFlags: Object.values(mutableFlags).filter(f => !f).length,
     environment: process.env.NODE_ENV || 'development',
     categories: {
-      core: 3,
-      experimental: 2,
-      features: 5
+      core: 7,        // CORE_AUTH, CORE_POLLS, CORE_USERS, WEBAUTHN, PWA, ADMIN, FEEDBACK_WIDGET
+      enhanced: 6,    // ENHANCED_ONBOARDING, ENHANCED_PROFILE, ENHANCED_AUTH, ENHANCED_DASHBOARD, ENHANCED_POLLS, ENHANCED_VOTING
+      future: 9,      // AUTOMATED_POLLS, ADVANCED_PRIVACY, CIVICS_ADDRESS_LOOKUP, SOCIAL_SHARING + 5 sub-features
+      performance: 3, // PERFORMANCE_OPTIMIZATION, FEATURE_DB_OPTIMIZATION_SUITE, ANALYTICS
+      experimental: 3, // EXPERIMENTAL_UI, EXPERIMENTAL_ANALYTICS, EXPERIMENTAL_COMPONENTS
+      system: 4       // NOTIFICATIONS, THEMES, ACCESSIBILITY, INTERNATIONALIZATION
     }
   }),
   areDependenciesEnabled: (flagId: string): boolean => {
-    // Simple dependency check - can be enhanced
+    // Enhanced dependency check for all features
     const dependencies: Record<string, string[]> = {
+      // Core dependencies
       'ADVANCED_PRIVACY': ['CORE_AUTH'],
       'PWA': ['CORE_AUTH', 'CORE_POLLS'],
-      'WEBAUTHN': ['CORE_AUTH']
+      'WEBAUTHN': ['CORE_AUTH'],
+      
+      // Enhanced feature dependencies
+      'ENHANCED_ONBOARDING': ['CORE_AUTH'],
+      'ENHANCED_PROFILE': ['CORE_AUTH', 'CORE_USERS'],
+      'ENHANCED_AUTH': ['CORE_AUTH'],
+      'ENHANCED_DASHBOARD': ['CORE_AUTH', 'CORE_POLLS', 'CORE_USERS'],
+      'ENHANCED_POLLS': ['CORE_AUTH', 'CORE_POLLS'],
+      'ENHANCED_VOTING': ['CORE_AUTH', 'CORE_POLLS'],
+      
+      // Future feature dependencies
+      'AUTOMATED_POLLS': ['CORE_AUTH', 'CORE_POLLS', 'ADMIN'],
+      'CIVICS_ADDRESS_LOOKUP': ['CORE_AUTH'],
+      'SOCIAL_SHARING': ['CORE_AUTH', 'CORE_POLLS'],
+      'SOCIAL_SHARING_POLLS': ['SOCIAL_SHARING', 'CORE_POLLS'],
+      'SOCIAL_SHARING_CIVICS': ['SOCIAL_SHARING', 'CIVICS_ADDRESS_LOOKUP'],
+      'SOCIAL_SHARING_VISUAL': ['SOCIAL_SHARING'],
+      'SOCIAL_SHARING_OG': ['SOCIAL_SHARING'],
+      'SOCIAL_SIGNUP': ['CORE_AUTH'],
+      
+      // Performance dependencies
+      'PERFORMANCE_OPTIMIZATION': ['CORE_AUTH'],
+      'ANALYTICS': ['CORE_AUTH'],
+      
+      // System feature dependencies
+      'NOTIFICATIONS': ['CORE_AUTH', 'PWA'],
+      'THEMES': ['CORE_AUTH'],
+      'ACCESSIBILITY': ['CORE_AUTH'],
+      'INTERNATIONALIZATION': ['CORE_AUTH']
     };
     const deps = dependencies[flagId] || [];
     return deps.every(dep => {
