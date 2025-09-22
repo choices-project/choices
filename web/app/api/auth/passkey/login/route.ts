@@ -70,6 +70,13 @@ export async function POST(request: NextRequest) {
 
     // If credential is provided, this is a verification request
     if (credential) {
+      // Validate required fields for verification
+      if (!challenge || !username) {
+        return NextResponse.json(
+          { error: 'Missing challenge or username for verification' },
+          { status: 400 }
+        );
+      }
       return await verifyAuthentication(request, body);
     }
 

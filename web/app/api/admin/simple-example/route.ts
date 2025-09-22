@@ -1,4 +1,3 @@
-import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
 import { requireAdminOr401, getAdminUser } from '@/lib/admin-auth'
 
@@ -9,7 +8,7 @@ import { requireAdminOr401, getAdminUser } from '@/lib/admin-auth'
  * Clean, secure, and consistent across all admin APIs.
  */
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   // Single admin gate - returns 401 if not admin
   const authGate = await requireAdminOr401()
   if (authGate) return authGate

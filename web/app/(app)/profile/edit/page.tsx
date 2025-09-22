@@ -180,42 +180,6 @@ export default function EditProfilePage() {
     }
   }, [user, loadProfile])
 
-  const handleAvatarChange = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
-    try {
-      setIsLoading(true)
-      setError(null)
-      
-      const response = await fetch('/api/profile')
-      if (response.ok) {
-        const data = await response.json()
-        if (data.profile) {
-          setProfile(data.profile)
-          setFormData({
-            displayname: data.profile.displayname || '',
-            bio: data.profile.bio || '',
-            primaryconcerns: data.profile.primaryconcerns || [],
-            communityfocus: data.profile.communityfocus || [],
-            participationstyle: data.profile.participationstyle || 'observer',
-            privacysettings: data.profile.privacysettings || {
-              profilevisibility: 'public',
-              showemail: false,
-              showactivity: true,
-              allowmessages: true,
-              sharedemographics: false,
-              allowanalytics: true
-            }
-          })
-        }
-      } else {
-        setError('Failed to load profile')
-      }
-    } catch (error) {
-      devLog('Error loading profile:', error)
-      setError('Failed to load profile')
-    } finally {
-      setIsLoading(false)
-    }
-  }, [])
 
   const handleAvatarFileChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
@@ -487,7 +451,7 @@ export default function EditProfilePage() {
                   Community Focus
                 </CardTitle>
                 <CardDescription>
-                  Choose the types of communities you're most interested in
+                  Choose the types of communities you&apos;re most interested in
                 </CardDescription>
               </CardHeader>
               <CardContent>

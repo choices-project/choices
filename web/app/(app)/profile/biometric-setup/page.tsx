@@ -141,7 +141,7 @@ export default function BiometricSetupPage() {
         try {
           const isAvailable = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable()
           setIsSupported(isAvailable)
-        } catch (error) {
+        } catch {
           setIsSupported(false)
         }
       } else {
@@ -173,7 +173,7 @@ export default function BiometricSetupPage() {
               Biometric Authentication Not Supported
             </h1>
             <p className="text-gray-600 mb-6">
-              Your device or browser doesn't support biometric authentication. 
+              Your device or browser doesn&apos;t support biometric authentication. 
               You can still use email and password login.
             </p>
             <button
@@ -268,7 +268,7 @@ export default function BiometricSetupPage() {
           <div className="text-center space-y-4">
             <Loader2 className="h-8 w-8 animate-spin mx-auto text-blue-600" />
             <p className="text-gray-600">
-              Please follow your device's biometric prompt...
+              Please follow your device&apos;s biometric prompt...
             </p>
           </div>
         )}

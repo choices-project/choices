@@ -479,7 +479,7 @@ export default function DataExportPage() {
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-gray-600">
-                  Your exported data contains only the information you've shared with the platform. 
+                  Your exported data contains only the information you&apos;ve shared with the platform. 
                   We never include sensitive information like passwords or payment details.
                 </p>
               </CardContent>

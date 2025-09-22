@@ -110,6 +110,10 @@ export async function GET(request: NextRequest) {
       success: true,
       data: filteredFeedback,
       total: filteredFeedback.length,
+      admin: {
+        id: adminUser?.id,
+        email: adminUser?.email
+      },
       filters: {
         type,
         sentiment,
