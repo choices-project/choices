@@ -40,26 +40,7 @@ export default function DataExportPage() {
   const router = useRouter()
   const authContext = useContext(AuthContext)
   
-  // Handle case where auth context is not available during pre-rendering
-  if (!authContext) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Data Export</h1>
-          <p className="text-gray-600 mb-6">Please log in to access this page.</p>
-          <a 
-            href="/login"
-            className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
-          >
-            Login
-          </a>
-        </div>
-      </div>
-    );
-  }
-  
-  const { user } = authContext
-  
+  // All hooks must be called at the top level
   const [exportOptions, setExportOptions] = useState<ExportOptions>({
     profile: true,
     polls: true,
@@ -70,7 +51,7 @@ export default function DataExportPage() {
     format: 'json',
     dateRange: 'all'
   })
-    const [isExporting, setIsExporting] = useState(false)
+  const [isExporting, setIsExporting] = useState(false)
   const [exportHistory, setExportHistory] = useState<ExportHistory[]>([])
   const [error, setError] = useState<string | null>(null)
 
@@ -179,6 +160,26 @@ export default function DataExportPage() {
   }, [])
 
   const selectedCount = Object.values(exportOptions).filter(Boolean).length - 2 // Exclude format and dateRange
+
+  // Handle case where auth context is not available during pre-rendering
+  if (!authContext) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Data Export</h1>
+          <p className="text-gray-600 mb-6">Please log in to access this page.</p>
+          <a 
+            href="/login"
+            className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
+          >
+            Login
+          </a>
+        </div>
+      </div>
+    );
+  }
+  
+  const { user } = authContext
 
   return (
     <div className="min-h-screen bg-gray-50">

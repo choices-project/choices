@@ -12,9 +12,10 @@
 // STANDARD IMPORTS (Use in all test files)
 // ============================================================================
 
+import { describe, it, beforeEach, afterEach, expect, jest } from '@jest/globals';
+
 // Core test setup
 import { getMS } from '../setup';
-import { when, expectQueryState, expectExactQueryState, expectNoDBCalls, expectOnlyTablesCalled } from './supabase-when';
 import { arrangeFindById, arrangeInsertOk, arrangeUpdateOk, arrangeVoteProcessing, arrangePollCreation } from './arrange-helpers';
 
 // Mock the logger (if needed)
@@ -33,7 +34,7 @@ jest.mock('@/utils/supabase/server', () => ({
 
 describe('ComponentName', () => {
   // Get mock instances - use global for consistency
-  const { client: mockSupabaseClient, handles, getMetrics } = getMS();
+  const { client: mockSupabaseClient, when, getMetrics } = getMS();
   
   let componentInstance: any;
   let mockData: any;
@@ -44,7 +45,7 @@ describe('ComponentName', () => {
     
     // Create component instance with mock client factory
     const mockClientFactory = jest.fn(() => Promise.resolve(mockSupabaseClient));
-    componentInstance = new ComponentClass(mockClientFactory);
+    // componentInstance = new ComponentClass(mockClientFactory);
     
     // Set up mock data
     mockData = {
@@ -64,8 +65,8 @@ describe('ComponentName', () => {
   describe('Basic Functionality', () => {
     it('should handle successful operation', async () => {
       // 1. Set up mocks BEFORE calling the method
-      when(handles).table('table_name').select('*').eq('id', 'test-id').returnsSingle(mockData);
-      when(handles).table('table_name').op('insert').returnsList([{ id: 'new-id' }]);
+      when().table('table_name').op('select').select('*').eq('id', 'test-id').returnsSingle(mockData);
+      when().table('table_name').op('insert').returnsList([{ id: 'new-id' }]);
       
       // 2. Call the method
       const result = await componentInstance.methodName(mockData);
@@ -74,21 +75,16 @@ describe('ComponentName', () => {
       expect(result.success).toBe(true);
       expect(result.data).toBeDefined();
       
-      // 4. Assert query state (optional)
-      expectQueryState(handles.single, {
-        table: 'table_name',
-        filters: [{ type: 'eq', column: 'id', value: 'test-id' }],
-      });
-      
-      // 5. Assert metrics (optional)
+      // 4. Assert metrics (optional)
       const metrics = getMetrics();
+      expect(metrics.counts.single + metrics.counts.list + metrics.counts.mutate).toBeGreaterThan(0);
       expect(metrics.byTable.table_name?.single).toBe(1);
       expect(metrics.byTable.table_name?.mutate).toBe(1);
     });
 
     it('should handle error cases', async () => {
       // Mock error response
-      when(handles).table('table_name').select('*').eq('id', 'test-id').returnsError('Not found');
+      when().table('table_name').op('select').select('*').eq('id', 'test-id').returnsError('Not found');
       
       const result = await componentInstance.methodName(mockData);
       
@@ -101,7 +97,8 @@ describe('ComponentName', () => {
       const result = await componentInstance.methodName(mockData);
       
       expect(result.success).toBe(true);
-      expectNoDBCalls(handles);
+      const metrics = getMetrics();
+      expect(metrics.counts.single + metrics.counts.list + metrics.counts.mutate).toBe(0);
     });
   });
 
@@ -112,7 +109,7 @@ describe('ComponentName', () => {
   describe('Using Domain Helpers', () => {
     it('should use arrangeFindById helper', async () => {
       // Use domain-specific helpers for common patterns
-      arrangeFindById(handles, 'polls', 'test-poll-123', mockData);
+      arrangeFindById(when, 'polls', 'test-poll-123', mockData);
       
       const result = await componentInstance.methodName(mockData);
       
@@ -121,7 +118,7 @@ describe('ComponentName', () => {
 
     it('should use arrangeVoteProcessing helper', async () => {
       // Use complex domain helpers for multi-step operations
-      arrangeVoteProcessing(handles, 'test-poll-123', 'user-456', mockData);
+      arrangeVoteProcessing(when, 'test-poll-123', 'user-456', mockData);
       
       const result = await componentInstance.methodName(mockData);
       
@@ -135,26 +132,23 @@ describe('ComponentName', () => {
 
   describe('Assertion Patterns', () => {
     it('should assert query state correctly', async () => {
-      when(handles).table('table_name').select('*').eq('id', 'test-id').returnsSingle(mockData);
+      when().table('table_name').op('select').select('*').eq('id', 'test-id').returnsSingle(mockData);
       
       await componentInstance.methodName(mockData);
       
-      // Assert exact query state
-      expectExactQueryState(handles.single, {
-        table: 'table_name',
-        op: 'select',
-        selects: '*',
-        filters: [{ type: 'eq', column: 'id', value: 'test-id' }],
-      });
+      // Assert metrics for query state
+      const metrics = getMetrics();
+      expect(metrics.byTable.table_name?.single).toBe(1);
     });
 
     it('should assert only specific tables called', async () => {
-      when(handles).table('table_name').select('*').returnsSingle(mockData);
+      when().table('table_name').op('select').select('*').returnsSingle(mockData);
       
       await componentInstance.methodName(mockData);
       
       // Assert only specific tables were called
-      expectOnlyTablesCalled(handles, ['table_name']);
+      const metrics = getMetrics();
+      expect(Object.keys(metrics.byTable)).toEqual(['table_name']);
     });
   });
 });
@@ -163,6 +157,8 @@ describe('ComponentName', () => {
 // STANDARD MOCK DATA PATTERNS
 // ============================================================================
 
+// Example mock data patterns (uncomment and customize as needed)
+/*
 const standardMockData = {
   // Poll data
   poll: {
@@ -214,6 +210,8 @@ const standardMockData = {
 // STANDARD ERROR PATTERNS
 // ============================================================================
 
+// Example error patterns (uncomment and customize as needed)
+/*
 const standardErrors = {
   notFound: 'Not found',
   validationError: 'Validation failed',
@@ -221,4 +219,5 @@ const standardErrors = {
   rateLimitError: 'Rate limit exceeded',
   unauthorizedError: 'Unauthorized'
 };
+*/
 

@@ -15,7 +15,7 @@ import { goldenTestCases, runGoldenTestCase, runAllGoldenTests } from './golden-
 
 // Import V2 test setup
 import { getMS } from '../../setup';
-const { when, expectQueryState } = getMS();
+const { when } = getMS();
 
 // Define Candidate type locally since it's not exported from the calculator
 type Candidate = {

@@ -57,26 +57,7 @@ export default function AccountDeletionPage() {
   const router = useRouter()
   const authContext = useContext(AuthContext)
   
-  // Handle case where auth context is not available during pre-rendering
-  if (!authContext) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Account Deletion</h1>
-          <p className="text-gray-600 mb-6">Please log in to access this page.</p>
-          <a 
-            href="/login"
-            className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
-          >
-            Login
-          </a>
-        </div>
-      </div>
-    );
-  }
-  
-  const { user, signOut } = authContext
-  
+  // All hooks must be called at the top level
   const [userData, setUserData] = useState<UserData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isExporting, setIsExporting] = useState(false)
@@ -235,6 +216,26 @@ export default function AccountDeletionPage() {
   }, [user, signOut, router])
 
   const canDelete = deletionSteps.every(step => step.completed || !step.required)
+
+  // Handle case where auth context is not available during pre-rendering
+  if (!authContext) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Account Deletion</h1>
+          <p className="text-gray-600 mb-6">Please log in to access this page.</p>
+          <a 
+            href="/login"
+            className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
+          >
+            Login
+          </a>
+        </div>
+      </div>
+    );
+  }
+  
+  const { user, signOut } = authContext
 
   if (isLoading) {
     return (

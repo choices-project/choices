@@ -42,7 +42,7 @@ type PollResults = {
 };
 
 type PollClientProps = {
-  poll: any;
+  poll: Poll;
 };
 
 export default function PollClient({ poll }: PollClientProps) {
@@ -196,12 +196,6 @@ export default function PollClient({ poll }: PollClientProps) {
     });
   };
 
-  const formatTime = (dateString: string) => {
-    return new Date(dateString).toLocaleTimeString('en-US', {
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
 
   const isPollActive = poll.status === 'active';
   const isPollClosed = poll.status === 'closed';
@@ -238,7 +232,7 @@ export default function PollClient({ poll }: PollClientProps) {
                 variant={isPollActive ? "default" : isPollClosed ? "secondary" : "destructive"}
                 className="text-sm"
               >
-                {isPollActive ? 'Active' : isPollClosed ? 'Closed' : 'Locked'}
+                {isPollActive ? 'Active' : isPollClosed ? 'Closed' : isPollLocked ? 'Locked' : 'Unknown'}
               </Badge>
               <Button
                 variant="outline"
@@ -323,6 +317,18 @@ export default function PollClient({ poll }: PollClientProps) {
           </Card>
         )}
 
+        {/* Loading State */}
+        {loading && (
+          <Card>
+            <CardContent className="text-center py-8">
+              <div className="flex items-center justify-center space-x-2">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+                <span className="text-gray-600">Loading results...</span>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Results */}
         {results && (
           <Card>
@@ -391,7 +397,7 @@ export default function PollClient({ poll }: PollClientProps) {
 
         {/* Post-Close Banner */}
         {isPollClosed && poll.allowPostClose && (
-          <PostCloseBanner pollStatus={poll.status} />
+          <PostCloseBanner pollStatus={poll.status as 'closed' | 'locked' | 'post-close'} />
         )}
       </div>
     </div>
