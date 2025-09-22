@@ -57,6 +57,10 @@ export default function AccountDeletionPage() {
   const router = useRouter()
   const authContext = useContext(AuthContext)
   
+  // Extract user and signOut early to avoid "used before declaration" errors
+  const user = authContext?.user
+  const signOut = authContext?.signOut
+  
   // All hooks must be called at the top level
   const [userData, setUserData] = useState<UserData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -202,7 +206,9 @@ export default function AccountDeletionPage() {
         )
 
         // Logout and redirect
-        await signOut()
+        if (signOut) {
+          await signOut()
+        }
         router.push('/')
       } else {
         throw new Error('Failed to delete account')
@@ -218,7 +224,7 @@ export default function AccountDeletionPage() {
   const canDelete = deletionSteps.every(step => step.completed || !step.required)
 
   // Handle case where auth context is not available during pre-rendering
-  if (!authContext) {
+  if (!authContext || !user || !signOut) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -234,8 +240,6 @@ export default function AccountDeletionPage() {
       </div>
     );
   }
-  
-  const { user, signOut } = authContext
 
   if (isLoading) {
     return (

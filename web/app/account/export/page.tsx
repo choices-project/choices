@@ -40,6 +40,9 @@ export default function DataExportPage() {
   const router = useRouter()
   const authContext = useContext(AuthContext)
   
+  // Extract user early to avoid "used before declaration" errors
+  const user = authContext?.user
+  
   // All hooks must be called at the top level
   const [exportOptions, setExportOptions] = useState<ExportOptions>({
     profile: true,
@@ -162,7 +165,7 @@ export default function DataExportPage() {
   const selectedCount = Object.values(exportOptions).filter(Boolean).length - 2 // Exclude format and dateRange
 
   // Handle case where auth context is not available during pre-rendering
-  if (!authContext) {
+  if (!authContext || !user) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -178,8 +181,6 @@ export default function DataExportPage() {
       </div>
     );
   }
-  
-  const { user } = authContext
 
   return (
     <div className="min-h-screen bg-gray-50">
