@@ -28,39 +28,8 @@ async function globalSetup(config: FullConfig) {
 
       // Set flags based on project type
       switch (projectName) {
-        case 'chromium-core':
-          flags = {
-            CORE_AUTH: true,
-            CORE_POLLS: true,
-            CORE_USERS: true,
-            ADMIN: true,
-            WEBAUTHN: false,
-            PWA: false,
-            ANALYTICS: false,
-            EXPERIMENTAL_UI: false,
-            EXPERIMENTAL_ANALYTICS: false,
-            ADVANCED_PRIVACY: false,
-            FEATURE_DB_OPTIMIZATION_SUITE: true
-          };
-          break;
-
-        case 'chromium-passkeys':
-          flags = {
-            CORE_AUTH: true,
-            CORE_POLLS: true,
-            CORE_USERS: true,
-            ADMIN: true,
-            WEBAUTHN: true, // Enable WebAuthn for passkeys tests
-            PWA: false,
-            ANALYTICS: false,
-            EXPERIMENTAL_UI: false,
-            EXPERIMENTAL_ANALYTICS: false,
-            ADVANCED_PRIVACY: false,
-            FEATURE_DB_OPTIMIZATION_SUITE: true
-          };
-          break;
-
-        case 'chromium-pwa':
+        case 'pwa-tests':
+        case 'pwa-mobile-tests':
           flags = {
             CORE_AUTH: true,
             CORE_POLLS: true,
@@ -74,6 +43,43 @@ async function globalSetup(config: FullConfig) {
             ADVANCED_PRIVACY: false,
             FEATURE_DB_OPTIMIZATION_SUITE: true
           };
+          break;
+
+        case 'chromium':
+        case 'firefox':
+        case 'webkit':
+        case 'Mobile Chrome':
+        case 'Mobile Safari':
+          // Check if this is a WebAuthn test
+          if (projectName.includes('webauthn') || projectName.includes('passkey')) {
+            flags = {
+              CORE_AUTH: true,
+              CORE_POLLS: true,
+              CORE_USERS: true,
+              ADMIN: true,
+              WEBAUTHN: true, // Enable WebAuthn for WebAuthn tests
+              PWA: false,
+              ANALYTICS: false,
+              EXPERIMENTAL_UI: false,
+              EXPERIMENTAL_ANALYTICS: false,
+              ADVANCED_PRIVACY: false,
+              FEATURE_DB_OPTIMIZATION_SUITE: true
+            };
+          } else {
+            flags = {
+              CORE_AUTH: true,
+              CORE_POLLS: true,
+              CORE_USERS: true,
+              ADMIN: true,
+              WEBAUTHN: false,
+              PWA: false,
+              ANALYTICS: false,
+              EXPERIMENTAL_UI: false,
+              EXPERIMENTAL_ANALYTICS: false,
+              ADVANCED_PRIVACY: false,
+              FEATURE_DB_OPTIMIZATION_SUITE: true
+            };
+          }
           break;
 
         default:

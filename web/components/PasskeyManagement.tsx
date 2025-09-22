@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { beginRegister } from '@/lib/webauthn/client';
 import { WebAuthnPrivacyBadge } from './WebAuthnPrivacyBadge';
 
-interface Passkey {
+type Passkey = {
   id: string;
   device_label: string | null;
   last_used_at: string | null;

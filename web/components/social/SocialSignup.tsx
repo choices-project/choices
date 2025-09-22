@@ -9,7 +9,7 @@
 
 import { useState } from 'react'
 import { isFeatureEnabled } from '@/lib/core/feature-flags'
-import { Github, Mail } from 'lucide-react'
+import { Github } from 'lucide-react'
 
 type SocialSignupProps = {
   onSuccess?: (provider: string) => void

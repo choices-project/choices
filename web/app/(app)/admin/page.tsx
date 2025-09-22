@@ -3,7 +3,7 @@
 import { useSupabaseAuth } from '@/contexts/AuthContext'
 import { logger } from '@/lib/logger';
 import { useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import Link from 'next/link'
 import { T } from '@/lib/testing/testIds'
 import { 
@@ -38,17 +38,7 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true)
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null)
 
-  useEffect(() => {
-    // Server-side admin guard handles authentication and authorization
-    // This is just for UX - show loading while server checks admin status
-    if (!isLoading && user) {
-      checkAdminStatus()
-    } else if (!isLoading && !user) {
-      setIsAdmin(false)
-    }
-  }, [user, isLoading])
-
-  const checkAdminStatus = async () => {
+  const checkAdminStatus = useCallback(async () => {
     try {
       // Check if user is admin by calling admin API
       const response = await fetch('/api/admin/system-status', {
@@ -66,11 +56,21 @@ export default function AdminDashboard() {
         // API error - assume not admin for security
         setIsAdmin(false)
       }
-    } catch (error) {
+    } catch {
       // Network error - assume not admin for security
       setIsAdmin(false)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    // Server-side admin guard handles authentication and authorization
+    // This is just for UX - show loading while server checks admin status
+    if (!isLoading && user) {
+      checkAdminStatus()
+    } else if (!isLoading && !user) {
+      setIsAdmin(false)
+    }
+  }, [user, isLoading, checkAdminStatus])
 
   const loadAdminStats = async () => {
     try {

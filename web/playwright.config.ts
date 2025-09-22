@@ -2,6 +2,7 @@ import { defineConfig, devices } from '@playwright/test'
 
 export default defineConfig({
   testDir: './tests/e2e',
+  testIgnore: ['**/archive-old/**'],
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
@@ -10,7 +11,7 @@ export default defineConfig({
   timeout: 60_000,
   expect: { timeout: 10_000 },
   use: {
-    baseURL: process.env.BASE_URL || 'http://127.0.0.1:3001', // use existing dev server
+    baseURL: process.env.BASE_URL || 'http://127.0.0.1:3000', // use existing dev server
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
@@ -22,7 +23,7 @@ export default defineConfig({
       name: 'api-tests',
       testMatch: /.*\.api\.spec\.ts/,
       use: {
-        baseURL: process.env.BASE_URL || 'http://localhost:3001',
+        baseURL: process.env.BASE_URL || 'http://localhost:3000',
       },
     },
     {

@@ -7,7 +7,7 @@
  * Created: January 18, 2025
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { type NextRequest, NextResponse } from 'next/server';
 import { getAllFeatureFlags, setFeatureFlags } from '@/lib/core/feature-flags';
 
 export async function GET() {

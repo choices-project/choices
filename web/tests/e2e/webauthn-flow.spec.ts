@@ -1,19 +1,31 @@
 /**
- * WebAuthn E2E Tests
+ * WebAuthn E2E Tests - V2 Upgrade
  * 
  * Comprehensive end-to-end tests for WebAuthn passkey functionality
+ * using V2 mock factory for test data setup and improved test patterns.
  * Tests the existing WebAuthn implementation with virtual authenticators
  * 
- * Created: January 18, 2025
- * Updated: January 18, 2025
+ * Created: January 21, 2025
+ * Updated: January 21, 2025
  */
 
-import { test, expect, chromium, BrowserContext, type Page } from '@playwright/test';
+import { test, expect, chromium, type BrowserContext, type Page } from '@playwright/test';
 import { T } from '@/lib/testing/testIds';
+import { 
+  setupE2ETestData, 
+  cleanupE2ETestData, 
+  createTestUser, 
+  waitForPageReady,
+  setupExternalAPIMocks,
+  E2E_CONFIG
+} from './helpers/e2e-setup';
 
-test.describe('WebAuthn Passkey Flow', () => {
+test.describe('WebAuthn Passkey Flow - V2', () => {
   let context: BrowserContext;
   let page: Page;
+  let testData: {
+    user: ReturnType<typeof createTestUser>;
+  };
 
   test.beforeAll(async () => {
     // Launch browser with WebAuthn support
@@ -33,7 +45,19 @@ test.describe('WebAuthn Passkey Flow', () => {
   });
 
   test.beforeEach(async () => {
+    // Create test data using V2 patterns
+    testData = {
+      user: createTestUser({
+        email: 'webauthn-test@example.com',
+        username: 'webauthntestuser',
+        password: 'WebAuthnTest123!'
+      })
+    };
+
     page = await context.newPage();
+    
+    // Set up external API mocks
+    await setupExternalAPIMocks(page);
     
     // Set up virtual authenticator
     const cdpSession = await context.newCDPSession(page);
@@ -75,22 +99,27 @@ test.describe('WebAuthn Passkey Flow', () => {
         const originalGet = window.navigator.credentials.get;
 
         window.navigator.credentials.create = async (options: any) => {
-          console.log('Mock WebAuthn create called with:', options);
+          console.log('V2 Mock WebAuthn create called with:', options);
           return mockCredential;
         };
 
         window.navigator.credentials.get = async (options: any) => {
-          console.log('Mock WebAuthn get called with:', options);
+          console.log('V2 Mock WebAuthn get called with:', options);
           return mockAuthCredential;
         };
       }
     });
 
     await page.goto('/');
-    await page.waitForLoadState('networkidle');
+    await waitForPageReady(page);
   });
 
   test.afterEach(async () => {
+    // Clean up test data
+    await cleanupE2ETestData({
+      user: testData.user
+    });
+    
     await page.close();
   });
 
@@ -98,19 +127,21 @@ test.describe('WebAuthn Passkey Flow', () => {
     await context.close();
   });
 
-  test('should complete passkey registration flow', async () => {
+  test('should complete passkey registration flow with V2 setup', async () => {
+    // Set up test data for passkey registration
+    await setupE2ETestData({
+      user: testData.user
+    });
+
     // Navigate to registration page
     await page.goto('/register');
     await page.waitForSelector('[data-testid="register-form"]');
 
-    // Fill basic registration form
-    const testEmail = `webauthn-test-${Date.now()}@example.com`;
-    const testUsername = `webauthnuser${Date.now()}`;
-
-    await page.fill('[data-testid="email"]', testEmail);
-    await page.fill('[data-testid="username"]', testUsername);
-    await page.fill('[data-testid="password"]', 'password123');
-    await page.fill('[data-testid="confirm-password"]', 'password123');
+    // Fill basic registration form with V2 test data
+    await page.fill('[data-testid="email"]', testData.user.email);
+    await page.fill('[data-testid="username"]', testData.user.username);
+    await page.fill('[data-testid="password"]', testData.user.password);
+    await page.fill('[data-testid="confirm-password"]', testData.user.password);
 
     // Submit registration
     await page.click('[data-testid="register-submit"]');
@@ -134,18 +165,20 @@ test.describe('WebAuthn Passkey Flow', () => {
     await expect(page.locator('[data-testid="registration-success"]')).toBeVisible();
   });
 
-  test('should complete passkey authentication flow', async () => {
+  test('should complete passkey authentication flow with V2 setup', async () => {
+    // Set up test data for passkey authentication
+    await setupE2ETestData({
+      user: testData.user
+    });
+
     // First, register a user with passkey (setup)
     await page.goto('/register');
     await page.waitForSelector('[data-testid="register-form"]');
 
-    const testEmail = `webauthn-login-${Date.now()}@example.com`;
-    const testUsername = `webauthnlogin${Date.now()}`;
-
-    await page.fill('[data-testid="email"]', testEmail);
-    await page.fill('[data-testid="username"]', testUsername);
-    await page.fill('[data-testid="password"]', 'password123');
-    await page.fill('[data-testid="confirm-password"]', 'password123');
+    await page.fill('[data-testid="email"]', testData.user.email);
+    await page.fill('[data-testid="username"]', testData.user.username);
+    await page.fill('[data-testid="password"]', testData.user.password);
+    await page.fill('[data-testid="confirm-password"]', testData.user.password);
 
     await page.click('[data-testid="register-submit"]');
     await page.waitForSelector('[data-testid="passkey-register-prompt"]');
@@ -175,17 +208,19 @@ test.describe('WebAuthn Passkey Flow', () => {
     await expect(page.locator('[data-testid="login-success"]')).toBeVisible();
   });
 
-  test('should handle passkey registration cancellation', async () => {
+  test('should handle passkey registration cancellation with V2 setup', async () => {
+    // Set up test data for cancellation testing
+    await setupE2ETestData({
+      user: testData.user
+    });
+
     await page.goto('/register');
     await page.waitForSelector('[data-testid="register-form"]');
 
-    const testEmail = `cancel-test-${Date.now()}@example.com`;
-    const testUsername = `canceltest${Date.now()}`;
-
-    await page.fill('[data-testid="email"]', testEmail);
-    await page.fill('[data-testid="username"]', testUsername);
-    await page.fill('[data-testid="password"]', 'password123');
-    await page.fill('[data-testid="confirm-password"]', 'password123');
+    await page.fill('[data-testid="email"]', testData.user.email);
+    await page.fill('[data-testid="username"]', testData.user.username);
+    await page.fill('[data-testid="password"]', testData.user.password);
+    await page.fill('[data-testid="confirm-password"]', testData.user.password);
 
     await page.click('[data-testid="register-submit"]');
     await page.waitForSelector('[data-testid="passkey-register-prompt"]');
@@ -199,7 +234,12 @@ test.describe('WebAuthn Passkey Flow', () => {
     await expect(page.locator('[data-testid="operation-cancelled"]')).toBeVisible();
   });
 
-  test('should handle network errors gracefully', async () => {
+  test('should handle network errors gracefully with V2 setup', async () => {
+    // Set up test data for network error testing
+    await setupE2ETestData({
+      user: testData.user
+    });
+
     // Mock network failure
     await page.route('**/api/v1/auth/webauthn/**', route => {
       route.abort('failed');
@@ -208,13 +248,10 @@ test.describe('WebAuthn Passkey Flow', () => {
     await page.goto('/register');
     await page.waitForSelector('[data-testid="register-form"]');
 
-    const testEmail = `network-test-${Date.now()}@example.com`;
-    const testUsername = `networktest${Date.now()}`;
-
-    await page.fill('[data-testid="email"]', testEmail);
-    await page.fill('[data-testid="username"]', testUsername);
-    await page.fill('[data-testid="password"]', 'password123');
-    await page.fill('[data-testid="confirm-password"]', 'password123');
+    await page.fill('[data-testid="email"]', testData.user.email);
+    await page.fill('[data-testid="username"]', testData.user.username);
+    await page.fill('[data-testid="password"]', testData.user.password);
+    await page.fill('[data-testid="confirm-password"]', testData.user.password);
 
     await page.click('[data-testid="register-submit"]');
     await page.waitForSelector('[data-testid="passkey-register-prompt"]');
@@ -224,11 +261,16 @@ test.describe('WebAuthn Passkey Flow', () => {
     await expect(page.locator('[data-testid="network-error"]')).toBeVisible();
   });
 
-  test('should show passkey management interface', async () => {
+  test('should show passkey management interface with V2 setup', async () => {
+    // Set up test data for passkey management
+    await setupE2ETestData({
+      user: testData.user
+    });
+
     // Login first with traditional auth
     await page.goto('/login');
-    await page.fill('[data-testid="email"]', 'test@example.com');
-    await page.fill('[data-testid="password"]', 'password123');
+    await page.fill('[data-testid="email"]', testData.user.email);
+    await page.fill('[data-testid="password"]', testData.user.password);
     await page.click('[data-testid="login-submit"]');
 
     // Navigate to profile/settings
@@ -242,11 +284,16 @@ test.describe('WebAuthn Passkey Flow', () => {
     await expect(page.locator('[data-testid="credentials-list"]')).toBeVisible();
   });
 
-  test('should handle multiple passkey registration', async () => {
+  test('should handle multiple passkey registration with V2 setup', async () => {
+    // Set up test data for multiple passkey testing
+    await setupE2ETestData({
+      user: testData.user
+    });
+
     // Login first
     await page.goto('/login');
-    await page.fill('[data-testid="email"]', 'test@example.com');
-    await page.fill('[data-testid="password"]', 'password123');
+    await page.fill('[data-testid="email"]', testData.user.email);
+    await page.fill('[data-testid="password"]', testData.user.password);
     await page.click('[data-testid="login-submit"]');
 
     // Navigate to profile
@@ -263,7 +310,12 @@ test.describe('WebAuthn Passkey Flow', () => {
     await expect(page.locator('[data-testid="additional-passkey-success"]')).toBeVisible();
   });
 
-  test('should handle cross-device authentication', async () => {
+  test('should handle cross-device authentication with V2 setup', async () => {
+    // Set up test data for cross-device testing
+    await setupE2ETestData({
+      user: testData.user
+    });
+
     await page.goto('/login');
     await page.waitForSelector('[data-testid="login-form"]');
 
@@ -277,7 +329,12 @@ test.describe('WebAuthn Passkey Flow', () => {
     await expect(page.locator('[data-testid="' + T.webauthn.qr + '"]')).toBeVisible();
   });
 
-  test('should validate WebAuthn support detection', async () => {
+  test('should validate WebAuthn support detection with V2 setup', async () => {
+    // Set up test data for WebAuthn support testing
+    await setupE2ETestData({
+      user: testData.user
+    });
+
     // Test with WebAuthn support
     await page.goto('/login');
     await expect(page.locator('[data-testid="' + T.webauthn.login + '"]')).toBeVisible();
@@ -291,7 +348,12 @@ test.describe('WebAuthn Passkey Flow', () => {
     await expect(page.locator('[data-testid="' + T.webauthn.login + '"]')).not.toBeVisible();
   });
 
-  test('should test WebAuthn API endpoints directly', async () => {
+  test('should test WebAuthn API endpoints directly with V2 setup', async () => {
+    // Set up test data for API endpoint testing
+    await setupE2ETestData({
+      user: testData.user
+    });
+
     // Test registration options endpoint
     const registerOptionsResponse = await page.request.post('/api/v1/auth/webauthn/register/options', {
       data: {}
@@ -309,11 +371,89 @@ test.describe('WebAuthn Passkey Flow', () => {
     expect(authOptionsResponse.status()).toBe(401);
   });
 
-  test('should test WebAuthn feature flag integration', async () => {
+  test('should test WebAuthn feature flag integration with V2 setup', async () => {
+    // Set up test data for feature flag testing
+    await setupE2ETestData({
+      user: testData.user
+    });
+
     // Check that WebAuthn feature flag is enabled
     const flagsResponse = await page.request.get('/api/e2e/flags');
     const flags = await flagsResponse.json();
     
     expect(flags.flags.WEBAUTHN).toBe(true);
+  });
+
+  test('should handle WebAuthn with different user types with V2 setup', async () => {
+    // Create different user types for testing
+    const regularUser = createTestUser({
+      email: 'regular-webauthn@example.com',
+      username: 'regularwebauthn'
+    });
+
+    const adminUser = createTestUser({
+      email: 'admin-webauthn@example.com',
+      username: 'adminwebauthn'
+    });
+
+    // Test regular user WebAuthn
+    await setupE2ETestData({
+      user: regularUser
+    });
+
+    await page.goto('/register');
+    await page.waitForSelector('[data-testid="register-form"]');
+
+    await page.fill('[data-testid="email"]', regularUser.email);
+    await page.fill('[data-testid="username"]', regularUser.username);
+    await page.fill('[data-testid="password"]', regularUser.password);
+    await page.fill('[data-testid="confirm-password"]', regularUser.password);
+
+    await page.click('[data-testid="register-submit"]');
+    await page.waitForSelector('[data-testid="passkey-register-prompt"]');
+    await page.click('[data-testid="' + T.webauthn.register + '"]');
+
+    // Should work for regular users
+    await expect(page.locator('[data-testid="' + T.webauthn.prompt + '"]')).toBeVisible();
+
+    // Test admin user WebAuthn
+    await setupE2ETestData({
+      user: adminUser
+    });
+
+    await page.goto('/register');
+    await page.waitForSelector('[data-testid="register-form"]');
+
+    await page.fill('[data-testid="email"]', adminUser.email);
+    await page.fill('[data-testid="username"]', adminUser.username);
+    await page.fill('[data-testid="password"]', adminUser.password);
+    await page.fill('[data-testid="confirm-password"]', adminUser.password);
+
+    await page.click('[data-testid="register-submit"]');
+    await page.waitForSelector('[data-testid="passkey-register-prompt"]');
+    await page.click('[data-testid="' + T.webauthn.register + '"]');
+
+    // Should work for admin users too
+    await expect(page.locator('[data-testid="' + T.webauthn.prompt + '"]')).toBeVisible();
+  });
+
+  test('should handle WebAuthn with mobile viewport with V2 setup', async () => {
+    // Set up test data for mobile WebAuthn testing
+    await setupE2ETestData({
+      user: testData.user
+    });
+
+    // Set mobile viewport
+    await page.setViewportSize(E2E_CONFIG.BROWSER.MOBILE_VIEWPORT);
+
+    await page.goto('/login');
+    await waitForPageReady(page);
+
+    // Test mobile WebAuthn flow
+    await page.click('[data-testid="' + T.webauthn.login + '"]');
+    await page.waitForSelector('[data-testid="' + T.webauthn.prompt + '"]');
+
+    // Should work on mobile
+    await expect(page.locator('[data-testid="' + T.webauthn.prompt + '"]')).toBeVisible();
   });
 });

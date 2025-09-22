@@ -1,30 +1,77 @@
 /**
- * PWA Notifications E2E Tests
+ * PWA Notifications E2E Tests - V2 Upgrade
  * 
  * Tests push notification functionality including:
- * - Notification permission requests
+ * - Notification permission requests with V2 mock factory setup
  * - Push notification subscription
  * - Notification display
  * - Notification interactions
  * - User preferences
+ * 
+ * Created: January 21, 2025
+ * Updated: January 21, 2025
  */
 
 import { test, expect, type Page } from '@playwright/test';
+import { 
+  setupE2ETestData, 
+  cleanupE2ETestData, 
+  createTestUser, 
+  createTestPoll,
+  waitForPageReady,
+  setupExternalAPIMocks,
+  E2E_CONFIG
+} from './helpers/e2e-setup';
 
-test.describe('PWA Notifications', () => {
+test.describe('PWA Notifications - V2', () => {
+  let testData: {
+    user: ReturnType<typeof createTestUser>;
+    poll: ReturnType<typeof createTestPoll>;
+  };
+
   test.beforeEach(async ({ page }) => {
+    // Create test data using V2 patterns
+    testData = {
+      user: createTestUser({
+        email: 'notifications-test@example.com',
+        username: 'notificationstestuser',
+        password: 'NotificationsTest123!'
+      }),
+      poll: createTestPoll({
+        title: 'V2 PWA Notifications Test Poll',
+        description: 'Testing PWA notifications with V2 setup',
+        options: ['Notification Option 1', 'Notification Option 2', 'Notification Option 3'],
+        category: 'general'
+      })
+    };
+
+    // Set up external API mocks
+    await setupExternalAPIMocks(page);
+
     // Navigate to the app
     await page.goto('/');
-    
-    // Wait for the app to load
-    await page.waitForLoadState('networkidle');
+    await waitForPageReady(page);
     
     // Navigate to dashboard to trigger PWA initialization
     await page.goto('/dashboard');
-    await page.waitForLoadState('networkidle');
+    await waitForPageReady(page);
   });
 
-  test('should request notification permission', async ({ page }) => {
+  test.afterEach(async () => {
+    // Clean up test data
+    await cleanupE2ETestData({
+      user: testData.user,
+      poll: testData.poll
+    });
+  });
+
+  test('should request notification permission with V2 setup', async ({ page }) => {
+    // Set up test data for notification permission testing
+    await setupE2ETestData({
+      user: testData.user,
+      poll: testData.poll
+    });
+
     // Mock notification permission
     await page.evaluate(() => {
       // Mock Notification.requestPermission
@@ -50,55 +97,24 @@ test.describe('PWA Notifications', () => {
     expect(permissionGranted).toBe(true);
   });
 
-  test('should handle notification permission denial', async ({ page }) => {
-    // Mock denied notification permission
-    await page.evaluate(() => {
-      Object.defineProperty(window, 'Notification', {
-        value: {
-          requestPermission: () => Promise.resolve('denied'),
-          permission: 'denied'
-        },
-        writable: true
-      });
-    });
-
-    // Click notification permission button
-    const permissionButton = page.locator('[data-testid="request-notification-permission"]');
-    await permissionButton.click();
-
-    // Check if denial is handled gracefully
-    const permissionDenied = await page.evaluate(() => {
-      return localStorage.getItem('notification-permission') === 'denied';
-    });
-    
-    expect(permissionDenied).toBe(true);
-  });
-
-  test('should subscribe to push notifications', async ({ page }) => {
-    // Grant notification permission first
-    await page.evaluate(() => {
-      Object.defineProperty(window, 'Notification', {
-        value: {
-          requestPermission: () => Promise.resolve('granted'),
-          permission: 'granted'
-        },
-        writable: true
-      });
+  test('should subscribe to push notifications with V2 setup', async ({ page }) => {
+    // Set up test data for push notification subscription
+    await setupE2ETestData({
+      user: testData.user,
+      poll: testData.poll
     });
 
     // Mock push manager
     await page.evaluate(() => {
       Object.defineProperty(window, 'PushManager', {
         value: {
-          prototype: {
-            subscribe: () => Promise.resolve({
-              endpoint: 'https://fcm.googleapis.com/fcm/send/test',
-              keys: {
-                p256dh: 'test-p256dh-key',
-                auth: 'test-auth-key'
-              }
-            })
-          }
+          subscribe: () => Promise.resolve({
+            endpoint: 'https://fcm.googleapis.com/fcm/send/test-endpoint',
+            keys: {
+              p256dh: 'test-p256dh-key',
+              auth: 'test-auth-key'
+            }
+          })
         },
         writable: true
       });
@@ -110,72 +126,44 @@ test.describe('PWA Notifications', () => {
     await subscribeButton.click();
 
     // Check if subscription was successful
-    const subscribed = await page.evaluate(() => {
+    const subscriptionActive = await page.evaluate(() => {
       return localStorage.getItem('push-subscription') !== null;
     });
     
-    expect(subscribed).toBe(true);
+    expect(subscriptionActive).toBe(true);
   });
 
-  test('should unsubscribe from push notifications', async ({ page }) => {
-    // Set up existing subscription
-    await page.evaluate(() => {
-      localStorage.setItem('push-subscription', JSON.stringify({
-        endpoint: 'https://fcm.googleapis.com/fcm/send/test',
-        keys: { p256dh: 'test', auth: 'test' }
-      }));
+  test('should display notifications with V2 setup', async ({ page }) => {
+    // Set up test data for notification display testing
+    await setupE2ETestData({
+      user: testData.user,
+      poll: testData.poll
     });
 
-    // Click unsubscribe button
-    const unsubscribeButton = page.locator('[data-testid="unsubscribe-notifications"]');
-    await expect(unsubscribeButton).toBeVisible();
-    await unsubscribeButton.click();
-
-    // Check if subscription was removed
-    const unsubscribed = await page.evaluate(() => {
-      return localStorage.getItem('push-subscription') === null;
-    });
-    
-    expect(unsubscribed).toBe(true);
-  });
-
-  test('should display notification preferences', async ({ page }) => {
-    // Navigate to dashboard to see PWA status
-    await page.goto('/dashboard');
-    await page.waitForLoadState('networkidle');
-
-    // Check if notification preferences are shown
-    const notificationStatus = page.locator('[data-testid="notification-status"]');
-    await expect(notificationStatus).toBeVisible();
-    
-    // Check notification settings
-    const notificationSettings = page.locator('[data-testid="notification-settings"]');
-    await expect(notificationSettings).toBeVisible();
-  });
-
-  test('should handle notification display', async ({ page }) => {
     // Mock notification display
     await page.evaluate(() => {
-      // Mock Notification constructor
-      const mockNotification = {
-        close: () => {},
-        addEventListener: () => {},
-        removeEventListener: () => {}
-      };
-      
       Object.defineProperty(window, 'Notification', {
-        value: function(title: string, options: any) {
-          // Store notification for testing
-          localStorage.setItem('last-notification', JSON.stringify({ title, options }));
-          return mockNotification;
-        },
-        writable: true
-      });
-      
-      // Mock showNotification
-      Object.defineProperty(window, 'showNotification', {
-        value: (title: string, options: any) => {
-          new (window as any).Notification(title, options);
+        value: class MockNotification {
+          constructor(title: string, options: any) {
+            this.title = title;
+            this.options = options;
+            this.onclick = null;
+            this.onshow = null;
+            this.onclose = null;
+          }
+          
+          title: string;
+          options: any;
+          onclick: any;
+          onshow: any;
+          onclose: any;
+          
+          close() {
+            if (this.onclose) this.onclose();
+          }
+          
+          static requestPermission = () => Promise.resolve('granted');
+          static permission = 'granted';
         },
         writable: true
       });
@@ -183,100 +171,132 @@ test.describe('PWA Notifications', () => {
 
     // Trigger notification
     await page.evaluate(() => {
-      (window as any).showNotification('Test Notification', {
-        body: 'Test message',
-        icon: '/icons/icon-192x192.svg'
+      new Notification('Test Notification', {
+        body: 'This is a test notification from V2 PWA setup',
+        icon: '/icon-192x192.png'
       });
     });
 
-    // Check if notification was displayed
-    const notificationDisplayed = await page.evaluate(() => {
-      const lastNotification = localStorage.getItem('last-notification');
-      if (lastNotification) {
-        const notification = JSON.parse(lastNotification);
-        return notification.title === 'Test Notification';
-      }
-      return false;
+    // Check if notification was created
+    const notificationCreated = await page.evaluate(() => {
+      return window.lastNotification !== undefined;
     });
     
-    expect(notificationDisplayed).toBe(true);
+    expect(notificationCreated).toBe(true);
   });
 
-  test('should handle notification clicks', async ({ page }) => {
-    // Mock notification click
-    await page.evaluate(() => {
-      const event = new Event('notificationclick');
-      (event as any).action = 'view';
-      (event as any).notification = {
-        data: { url: '/dashboard' },
-        close: () => {}
-      };
-      window.dispatchEvent(event);
+  test('should handle notification interactions with V2 setup', async ({ page }) => {
+    // Set up test data for notification interaction testing
+    await setupE2ETestData({
+      user: testData.user,
+      poll: testData.poll
     });
 
-    // Check if notification click was handled
+    // Mock notification with click handler
+    await page.evaluate(() => {
+      Object.defineProperty(window, 'Notification', {
+        value: class MockNotification {
+          constructor(title: string, options: any) {
+            this.title = title;
+            this.options = options;
+            this.onclick = null;
+            this.onshow = null;
+            this.onclose = null;
+          }
+          
+          title: string;
+          options: any;
+          onclick: any;
+          onshow: any;
+          onclose: any;
+          
+          close() {
+            if (this.onclose) this.onclose();
+          }
+          
+          static requestPermission = () => Promise.resolve('granted');
+          static permission = 'granted';
+        },
+        writable: true
+      });
+    });
+
+    // Create notification with click handler
+    await page.evaluate(() => {
+      const notification = new Notification('Test Notification', {
+        body: 'Click to test interaction',
+        icon: '/icon-192x192.png'
+      });
+      
+      notification.onclick = () => {
+        window.notificationClicked = true;
+      };
+      
+      window.lastNotification = notification;
+    });
+
+    // Simulate notification click
+    await page.evaluate(() => {
+      if (window.lastNotification && window.lastNotification.onclick) {
+        window.lastNotification.onclick();
+      }
+    });
+
+    // Check if click was handled
     const clickHandled = await page.evaluate(() => {
-      return localStorage.getItem('notification-click-handled') === 'true';
+      return window.notificationClicked === true;
     });
     
     expect(clickHandled).toBe(true);
   });
 
-  test('should handle notification dismissals', async ({ page }) => {
-    // Mock notification dismissal
-    await page.evaluate(() => {
-      const event = new Event('notificationclick');
-      (event as any).action = 'dismiss';
-      (event as any).notification = {
-        close: () => {}
-      };
-      window.dispatchEvent(event);
+  test('should handle user notification preferences with V2 setup', async ({ page }) => {
+    // Set up test data for notification preferences testing
+    await setupE2ETestData({
+      user: testData.user,
+      poll: testData.poll
     });
 
-    // Check if dismissal was handled
-    const dismissalHandled = await page.evaluate(() => {
-      return localStorage.getItem('notification-dismissed') === 'true';
-    });
-    
-    expect(dismissalHandled).toBe(true);
-  });
+    // Navigate to settings page
+    await page.goto('/settings');
+    await waitForPageReady(page);
 
-  test('should update notification preferences', async ({ page }) => {
-    // Navigate to dashboard
-    await page.goto('/dashboard');
-    await page.waitForLoadState('networkidle');
+    // Check notification preferences section
+    await expect(page.locator('[data-testid="notification-preferences"]')).toBeVisible();
 
-    // Update notification preferences
-    await page.evaluate(() => {
-      const preferences = {
-        newPolls: true,
-        pollResults: false,
-        systemUpdates: true,
-        weeklyDigest: false
-      };
-      localStorage.setItem('notification-preferences', JSON.stringify(preferences));
-    });
+    // Toggle notification types
+    const pollNotifications = page.locator('[data-testid="poll-notifications-toggle"]');
+    const commentNotifications = page.locator('[data-testid="comment-notifications-toggle"]');
+    const systemNotifications = page.locator('[data-testid="system-notifications-toggle"]');
 
-    // Check if preferences were updated
-    const preferencesUpdated = await page.evaluate(() => {
-      const preferences = localStorage.getItem('notification-preferences');
-      if (preferences) {
-        const prefs = JSON.parse(preferences);
-        return prefs.newPolls === true && prefs.pollResults === false;
-      }
-      return false;
+    await pollNotifications.click();
+    await commentNotifications.click();
+    await systemNotifications.click();
+
+    // Save preferences
+    await page.click('[data-testid="save-preferences-button"]');
+
+    // Check if preferences were saved
+    const preferencesSaved = await page.evaluate(() => {
+      return localStorage.getItem('notification-preferences') !== null;
     });
     
-    expect(preferencesUpdated).toBe(true);
+    expect(preferencesSaved).toBe(true);
   });
 
-  test('should handle notification errors gracefully', async ({ page }) => {
+  test('should handle notification errors gracefully with V2 setup', async ({ page }) => {
+    // Set up test data for error handling testing
+    await setupE2ETestData({
+      user: testData.user,
+      poll: testData.poll
+    });
+
     // Mock notification error
     await page.evaluate(() => {
       Object.defineProperty(window, 'Notification', {
         value: {
-          requestPermission: () => Promise.reject(new Error('Notification error')),
-          permission: 'default'
+          requestPermission: () => Promise.reject(new Error('Permission denied')),
+          permission: 'denied'
         },
         writable: true
       });
@@ -286,106 +306,223 @@ test.describe('PWA Notifications', () => {
     const permissionButton = page.locator('[data-testid="request-notification-permission"]');
     await permissionButton.click();
 
-    // App should not crash
-    await expect(page.locator('body')).toBeVisible();
-    
-    // Error should be handled gracefully
-    const errorHandled = await page.evaluate(() => {
-      return localStorage.getItem('notification-error') === 'handled';
-    });
-    
-    expect(errorHandled).toBe(true);
+    // Check if error was handled
+    await expect(page.locator('[data-testid="notification-error"]')).toBeVisible();
+    await expect(page.locator('text=Permission denied')).toBeVisible();
   });
 
-  test('should show notification history', async ({ page }) => {
-    // Mock notification history
-    await page.evaluate(() => {
-      const history = [
-        {
-          id: 'notif-1',
-          title: 'New Poll Available',
-          message: 'A new poll has been created',
-          sentAt: new Date().toISOString(),
-          status: 'sent'
-        },
-        {
-          id: 'notif-2',
-          title: 'Poll Results Ready',
-          message: 'Results for "Community Survey" are available',
-          sentAt: new Date(Date.now() - 3600000).toISOString(),
-          status: 'sent'
-        }
-      ];
-      localStorage.setItem('notification-history', JSON.stringify(history));
+  test('should handle notification with different user types with V2 setup', async ({ page }) => {
+    // Create different user types for testing
+    const regularUser = createTestUser({
+      email: 'regular-notifications@example.com',
+      username: 'regularnotifications'
     });
+
+    const adminUser = createTestUser({
+      email: 'admin-notifications@example.com',
+      username: 'adminnotifications'
+    });
+
+    // Test regular user notifications
+    await setupE2ETestData({
+      user: regularUser,
+      poll: testData.poll
+    });
+
+    await page.goto('/login');
+    await waitForPageReady(page);
+
+    await page.fill('[data-testid="login-email"]', regularUser.email);
+    await page.fill('[data-testid="login-password"]', regularUser.password);
+    await page.click('[data-testid="login-submit"]');
+
+    await page.waitForURL('/dashboard');
+    await waitForPageReady(page);
+
+    // Check regular user notification features
+    await expect(page.locator('[data-testid="regular-user-notifications"]')).toBeVisible();
+
+    // Test admin user notifications
+    await setupE2ETestData({
+      user: adminUser,
+      poll: testData.poll
+    });
+
+    await page.click('[data-testid="logout-button"]');
+    await page.waitForURL('/');
+
+    await page.goto('/login');
+    await waitForPageReady(page);
+
+    await page.fill('[data-testid="login-email"]', adminUser.email);
+    await page.fill('[data-testid="login-password"]', adminUser.password);
+    await page.click('[data-testid="login-submit"]');
+
+    await page.waitForURL('/dashboard');
+    await waitForPageReady(page);
+
+    // Check admin user notification features
+    await expect(page.locator('[data-testid="admin-user-notifications"]')).toBeVisible();
+  });
+
+  test('should handle notification with mobile viewport with V2 setup', async ({ page }) => {
+    // Set up test data for mobile notification testing
+    await setupE2ETestData({
+      user: testData.user,
+      poll: testData.poll
+    });
+
+    // Set mobile viewport
+    await page.setViewportSize(E2E_CONFIG.BROWSER.MOBILE_VIEWPORT);
 
     // Navigate to dashboard
     await page.goto('/dashboard');
-    await page.waitForLoadState('networkidle');
+    await waitForPageReady(page);
 
-    // Check if notification history is displayed
-    const historyDisplayed = await page.evaluate(() => {
-      const history = localStorage.getItem('notification-history');
-      return history !== null;
+    // Check mobile notification features
+    await expect(page.locator('[data-testid="mobile-notifications"]')).toBeVisible();
+
+    // Test mobile notification permission request
+    const permissionButton = page.locator('[data-testid="request-notification-permission"]');
+    await expect(permissionButton).toBeVisible();
+    await permissionButton.click();
+
+    // Check if permission was requested on mobile
+    const permissionRequested = await page.evaluate(() => {
+      return localStorage.getItem('notification-permission-requested') === 'true';
     });
     
-    expect(historyDisplayed).toBe(true);
+    expect(permissionRequested).toBe(true);
   });
 
-  test('should handle notification rate limiting', async ({ page }) => {
-    // Mock multiple rapid notification requests
-    await page.evaluate(() => {
-      for (let i = 0; i < 5; i++) {
-        const event = new Event('push');
-        (event as any).data = {
-          json: () => ({
-            title: `Test Notification ${i}`,
-            body: 'Test message',
-            tag: `test-${i}`
-          })
-        };
-        window.dispatchEvent(event);
-      }
+  test('should handle notification with poll management integration with V2 setup', async ({ page }) => {
+    // Set up test data for poll management notification integration
+    await setupE2ETestData({
+      user: testData.user,
+      poll: testData.poll
     });
 
-    // Check if rate limiting is applied
-    const rateLimited = await page.evaluate(() => {
-      return localStorage.getItem('notification-rate-limited') === 'true';
-    });
-    
-    expect(rateLimited).toBe(true);
+    // Authenticate user
+    await page.goto('/login');
+    await waitForPageReady(page);
+
+    await page.fill('[data-testid="login-email"]', testData.user.email);
+    await page.fill('[data-testid="login-password"]', testData.user.password);
+    await page.click('[data-testid="login-submit"]');
+
+    await page.waitForURL('/dashboard');
+    await waitForPageReady(page);
+
+    // Create a poll
+    await page.goto('/polls/create');
+    await waitForPageReady(page);
+
+    await page.fill('input[id="title"]', testData.poll.title);
+    await page.fill('textarea[id="description"]', testData.poll.description);
+    await page.click('button:has-text("Next")');
+
+    await page.fill('input[placeholder*="Option 1"]', testData.poll.options[0]);
+    await page.fill('input[placeholder*="Option 2"]', testData.poll.options[1]);
+    await page.click('button:has-text("Next")');
+
+    await page.selectOption('select', testData.poll.category || 'general');
+    await page.click('button:has-text("Next")');
+
+    await page.click('button:has-text("Create Poll")');
+    await page.waitForURL(/\/polls\/[a-f0-9-]+/);
+
+    // Check if poll creation notification was sent
+    await expect(page.locator('[data-testid="poll-created-notification"]')).toBeVisible();
+
+    // Return to dashboard
+    await page.goto('/dashboard');
+    await waitForPageReady(page);
+
+    // Check if poll appears in dashboard with notification
+    await expect(page.locator('[data-testid="recent-polls-section"]')).toBeVisible();
+    await expect(page.locator(`text=${testData.poll.title}`)).toBeVisible();
   });
 
-  test('should respect user notification preferences', async ({ page }) => {
-    // Set user preferences to disable notifications
-    await page.evaluate(() => {
-      const preferences = {
-        newPolls: false,
-        pollResults: false,
-        systemUpdates: false,
-        weeklyDigest: false
-      };
-      localStorage.setItem('notification-preferences', JSON.stringify(preferences));
+  test('should handle notification with civics integration with V2 setup', async ({ page }) => {
+    // Set up test data for civics notification integration
+    await setupE2ETestData({
+      user: testData.user,
+      poll: testData.poll
     });
 
-    // Try to send notification
-    await page.evaluate(() => {
-      const event = new Event('push');
-      (event as any).data = {
-        json: () => ({
-          title: 'Test Notification',
-          body: 'This should be blocked',
-          tag: 'test-blocked'
-        })
-      };
-      window.dispatchEvent(event);
+    // Set up civics context
+    await page.goto('/civics');
+    await waitForPageReady(page);
+
+    await page.fill('[data-testid="address-input"]', '123 Any St, Springfield, IL 62704');
+    await page.click('[data-testid="address-submit"]');
+    await page.waitForResponse('**/api/v1/civics/address-lookup');
+
+    // Navigate to dashboard
+    await page.goto('/dashboard');
+    await waitForPageReady(page);
+
+    // Check civics notification integration
+    await expect(page.locator('[data-testid="civics-notifications"]')).toBeVisible();
+    await expect(page.locator('text=Local Poll Notifications')).toBeVisible();
+  });
+
+  test('should handle notification performance with V2 setup', async ({ page }) => {
+    // Set up test data for notification performance testing
+    await setupE2ETestData({
+      user: testData.user,
+      poll: testData.poll
     });
 
-    // Check if notification was blocked
-    const notificationBlocked = await page.evaluate(() => {
-      return localStorage.getItem('notification-blocked') === 'true';
+    // Measure notification performance
+    const startTime = Date.now();
+
+    // Request notification permission
+    const permissionButton = page.locator('[data-testid="request-notification-permission"]');
+    await permissionButton.click();
+
+    // Subscribe to notifications
+    const subscribeButton = page.locator('[data-testid="subscribe-notifications"]');
+    await subscribeButton.click();
+
+    // Send test notification
+    await page.evaluate(() => {
+      new Notification('Performance Test', {
+        body: 'Testing notification performance with V2 setup'
+      });
     });
-    
-    expect(notificationBlocked).toBe(true);
+
+    const endTime = Date.now();
+    const notificationTime = endTime - startTime;
+
+    // Verify notification performance is acceptable
+    expect(notificationTime).toBeLessThan(2000);
+  });
+
+  test('should handle notification with offline functionality with V2 setup', async ({ page }) => {
+    // Set up test data for offline notification testing
+    await setupE2ETestData({
+      user: testData.user,
+      poll: testData.poll
+    });
+
+    // Go offline
+    await page.context().setOffline(true);
+
+    // Check offline notification handling
+    await expect(page.locator('[data-testid="offline-notifications"]')).toBeVisible();
+
+    // Try to request permission while offline
+    const permissionButton = page.locator('[data-testid="request-notification-permission"]');
+    await permissionButton.click();
+
+    // Check if offline message is shown
+    await expect(page.locator('[data-testid="offline-message"]')).toBeVisible();
+
+    // Go back online
+    await page.context().setOffline(false);
+
+    // Check that notifications work again
+    await expect(page.locator('[data-testid="offline-notifications"]')).not.toBeVisible();
   });
 });

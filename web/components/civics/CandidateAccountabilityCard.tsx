@@ -1,27 +1,21 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { 
   TrendingUp, 
-  TrendingDown, 
   CheckCircle, 
   XCircle, 
   AlertTriangle,
   DollarSign,
   Vote,
   Users,
-  MessageSquare,
   ExternalLink,
   Star,
   Target,
   BarChart3,
-  Calendar,
-  MapPin,
   Phone,
   Mail,
-  Twitter,
-  Facebook,
-  Instagram
+  Twitter
 } from 'lucide-react';
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
 

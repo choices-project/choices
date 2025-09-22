@@ -24,7 +24,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { cn } from '@/lib/utils'
 
 // Types
-interface UserProfile {
+type UserProfile = {
   id: string
   userid: string
   displayname: string
@@ -39,7 +39,7 @@ interface UserProfile {
   avatar?: string
 }
 
-interface PrivacySettings {
+type PrivacySettings = {
   profilevisibility: 'public' | 'private' | 'friends'
   showemail: boolean
   showactivity: boolean
@@ -48,7 +48,7 @@ interface PrivacySettings {
   allowanalytics: boolean
 }
 
-interface UserProfileUpdate {
+type UserProfileUpdate = {
   displayname: string
   bio: string | null
   primaryconcerns: string[]
@@ -58,7 +58,7 @@ interface UserProfileUpdate {
   avatar?: string
 }
 
-interface ProfileUpdateResponse {
+type ProfileUpdateResponse = {
   success: boolean
   profile: UserProfile
   message?: string

@@ -5,7 +5,7 @@
  * This endpoint provides privacy-safe geographic analytics
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { type NextRequest, NextResponse } from 'next/server';
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
 
 export async function GET(request: NextRequest) {

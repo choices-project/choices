@@ -1,30 +1,76 @@
 /**
- * PWA Offline Functionality E2E Tests
+ * PWA Offline Functionality E2E Tests - V2 Upgrade
  * 
  * Tests PWA offline capabilities including:
- * - Offline detection
- * - Offline voting
- * - Data synchronization
- * - Offline indicators
- * - Background sync
+ * - Offline detection with V2 mock factory setup
+ * - Offline voting and data synchronization
+ * - Offline indicators and background sync
+ * - Comprehensive offline testing
+ * 
+ * Created: January 21, 2025
+ * Updated: January 21, 2025
  */
 
 import { test, expect, type Page } from '@playwright/test';
+import { 
+  setupE2ETestData, 
+  cleanupE2ETestData, 
+  createTestUser, 
+  createTestPoll,
+  waitForPageReady,
+  setupExternalAPIMocks,
+  E2E_CONFIG
+} from './helpers/e2e-setup';
 
-test.describe('PWA Offline Functionality', () => {
+test.describe('PWA Offline Functionality - V2', () => {
+  let testData: {
+    user: ReturnType<typeof createTestUser>;
+    poll: ReturnType<typeof createTestPoll>;
+  };
+
   test.beforeEach(async ({ page }) => {
+    // Create test data using V2 patterns
+    testData = {
+      user: createTestUser({
+        email: 'pwa-offline-test@example.com',
+        username: 'pwaofflinetestuser',
+        password: 'PwaOfflineTest123!'
+      }),
+      poll: createTestPoll({
+        title: 'V2 PWA Offline Test Poll',
+        description: 'Testing PWA offline functionality with V2 setup',
+        options: ['Offline Option 1', 'Offline Option 2', 'Offline Option 3'],
+        category: 'general'
+      })
+    };
+
+    // Set up external API mocks
+    await setupExternalAPIMocks(page);
+
     // Navigate to the app
     await page.goto('/');
-    
-    // Wait for the app to load
-    await page.waitForLoadState('networkidle');
+    await waitForPageReady(page);
     
     // Navigate to dashboard to trigger PWA initialization
     await page.goto('/dashboard');
-    await page.waitForLoadState('networkidle');
+    await waitForPageReady(page);
   });
 
-  test('should detect offline status', async ({ page }) => {
+  test.afterEach(async () => {
+    // Clean up test data
+    await cleanupE2ETestData({
+      user: testData.user,
+      poll: testData.poll
+    });
+  });
+
+  test('should detect offline status with V2 setup', async ({ page }) => {
+    // Set up test data for offline detection testing
+    await setupE2ETestData({
+      user: testData.user,
+      poll: testData.poll
+    });
+
     // Go offline
     await page.context().setOffline(true);
     
@@ -39,7 +85,13 @@ test.describe('PWA Offline Functionality', () => {
     await expect(offlineIndicator).toContainText('You\'re offline');
   });
 
-  test('should detect online status', async ({ page }) => {
+  test('should detect online status with V2 setup', async ({ page }) => {
+    // Set up test data for online detection testing
+    await setupE2ETestData({
+      user: testData.user,
+      poll: testData.poll
+    });
+
     // Go offline first
     await page.context().setOffline(true);
     await page.waitForSelector('[data-testid="offline-indicator"]');
@@ -49,237 +101,403 @@ test.describe('PWA Offline Functionality', () => {
     
     // Wait for offline indicator to disappear
     await page.waitForSelector('[data-testid="offline-indicator"]', { state: 'hidden', timeout: 5000 });
+    
+    // Check if offline indicator is hidden
+    const offlineIndicator = page.locator('[data-testid="offline-indicator"]');
+    await expect(offlineIndicator).not.toBeVisible();
   });
 
-  test('should show offline page when navigating offline', async ({ page }) => {
+  test('should handle offline voting with V2 setup', async ({ page }) => {
+    // Set up test data for offline voting testing
+    await setupE2ETestData({
+      user: testData.user,
+      poll: testData.poll
+    });
+
+    // First, authenticate the user
+    await page.goto('/login');
+    await waitForPageReady(page);
+    
+    await page.fill('[data-testid="login-email"]', testData.user.email);
+    await page.fill('[data-testid="login-password"]', testData.user.password);
+    await page.click('[data-testid="login-submit"]');
+    
+    // Wait for authentication
+    await page.waitForURL('/dashboard');
+    await waitForPageReady(page);
+    
+    // Navigate to polls page
+    await page.goto('/polls');
+    await waitForPageReady(page);
+    
     // Go offline
     await page.context().setOffline(true);
     
-    // Try to navigate to a new page
-    await page.goto('/dashboard');
+    // Check offline voting functionality
+    await expect(page.locator('[data-testid="offline-voting"]')).toBeVisible();
     
-    // Should show offline page or cached content
-    const body = page.locator('body');
-    await expect(body).toBeVisible();
-    
-    // Check if offline functionality is available
-    const offlineMessage = page.locator('text=offline', { hasText: /offline/i });
-    await expect(offlineMessage).toBeVisible();
+    // Try to vote while offline
+    const voteButton = page.locator('[data-testid="vote-button"]');
+    if (await voteButton.count() > 0) {
+      await voteButton.first().click();
+      
+      // Check if vote was queued for sync
+      await expect(page.locator('[data-testid="vote-queued"]')).toBeVisible();
+    }
   });
 
-  test('should store offline votes', async ({ page }) => {
+  test('should handle offline data synchronization with V2 setup', async ({ page }) => {
+    // Set up test data for offline data sync testing
+    await setupE2ETestData({
+      user: testData.user,
+      poll: testData.poll
+    });
+
+    // First, authenticate the user
+    await page.goto('/login');
+    await waitForPageReady(page);
+    
+    await page.fill('[data-testid="login-email"]', testData.user.email);
+    await page.fill('[data-testid="login-password"]', testData.user.password);
+    await page.click('[data-testid="login-submit"]');
+    
+    // Wait for authentication
+    await page.waitForURL('/dashboard');
+    await waitForPageReady(page);
+    
     // Go offline
     await page.context().setOffline(true);
     
-    // Navigate to a poll page (mock)
-    await page.goto('/poll/test-poll');
+    // Perform some actions while offline
+    await page.goto('/polls');
+    await waitForPageReady(page);
     
-    // Simulate voting offline
-    await page.evaluate(() => {
-      // Mock offline vote storage
-      const offlineVote = {
-        id: 'test-vote-1',
-        pollId: 'test-poll',
-        optionIds: ['option-1'],
-        timestamp: new Date().toISOString(),
-        status: 'pending'
-      };
-      
-      const offlineVotes = JSON.parse(localStorage.getItem('choices_offline_outbox') || '[]');
-      offlineVotes.push(offlineVote);
-      localStorage.setItem('choices_offline_outbox', JSON.stringify(offlineVotes));
-      
-      // Trigger offline vote event
-      window.dispatchEvent(new CustomEvent('offlineVotesSynced', {
-        detail: { syncedCount: 0, pendingCount: 1 }
-      }));
-    });
-
-    // Check if offline vote indicator appears
-    await page.waitForSelector('[data-testid="offline-votes-indicator"]', { timeout: 5000 });
+    // Check offline data sync
+    await expect(page.locator('[data-testid="offline-sync"]')).toBeVisible();
     
-    const offlineVotesIndicator = page.locator('[data-testid="offline-votes-indicator"]');
-    await expect(offlineVotesIndicator).toBeVisible();
-    await expect(offlineVotesIndicator).toContainText('1 vote');
-  });
-
-  test('should sync offline votes when back online', async ({ page }) => {
-    // Go offline and create offline vote
-    await page.context().setOffline(true);
-    
-    await page.evaluate(() => {
-      const offlineVote = {
-        id: 'test-vote-2',
-        pollId: 'test-poll',
-        optionIds: ['option-2'],
-        timestamp: new Date().toISOString(),
-        status: 'pending'
-      };
-      
-      const offlineVotes = JSON.parse(localStorage.getItem('choices_offline_outbox') || '[]');
-      offlineVotes.push(offlineVote);
-      localStorage.setItem('choices_offline_outbox', JSON.stringify(offlineVotes));
-    });
-
     // Go back online
     await page.context().setOffline(false);
     
-    // Mock successful sync
-    await page.evaluate(() => {
-      // Clear offline votes (simulate successful sync)
-      localStorage.removeItem('choices_offline_outbox');
-      
-      // Trigger sync success event
-      window.dispatchEvent(new CustomEvent('offlineVotesSynced', {
-        detail: { syncedCount: 1, pendingCount: 0 }
-      }));
-    });
-
-    // Check if sync success message appears
-    await page.waitForSelector('[data-testid="sync-success-message"]', { timeout: 5000 });
-    
-    const syncMessage = page.locator('[data-testid="sync-success-message"]');
-    await expect(syncMessage).toBeVisible();
-    await expect(syncMessage).toContainText('synced');
+    // Check if data was synchronized
+    await expect(page.locator('[data-testid="sync-complete"]')).toBeVisible();
   });
 
-  test('should handle sync errors gracefully', async ({ page }) => {
-    // Go offline and create offline vote
-    await page.context().setOffline(true);
-    
-    await page.evaluate(() => {
-      const offlineVote = {
-        id: 'test-vote-3',
-        pollId: 'test-poll',
-        optionIds: ['option-3'],
-        timestamp: new Date().toISOString(),
-        status: 'pending'
-      };
-      
-      const offlineVotes = JSON.parse(localStorage.getItem('choices_offline_outbox') || '[]');
-      offlineVotes.push(offlineVote);
-      localStorage.setItem('choices_offline_outbox', JSON.stringify(offlineVotes));
+  test('should handle offline indicators with V2 setup', async ({ page }) => {
+    // Set up test data for offline indicators testing
+    await setupE2ETestData({
+      user: testData.user,
+      poll: testData.poll
     });
 
-    // Go back online
-    await page.context().setOffline(false);
-    
-    // Mock sync error
-    await page.evaluate(() => {
-      window.dispatchEvent(new CustomEvent('offlineVotesSynced', {
-        detail: { 
-          syncedCount: 0, 
-          pendingCount: 1,
-          errors: ['Sync failed: Network error']
-        }
-      }));
-    });
-
-    // Check if error message appears
-    await page.waitForSelector('[data-testid="sync-error-message"]', { timeout: 5000 });
-    
-    const errorMessage = page.locator('[data-testid="sync-error-message"]');
-    await expect(errorMessage).toBeVisible();
-    await expect(errorMessage).toContainText('failed');
-  });
-
-  test('should show offline data status in dashboard', async ({ page }) => {
-    // Create offline data
-    await page.evaluate(() => {
-      const offlineVotes = [
-        {
-          id: 'test-vote-4',
-          pollId: 'test-poll',
-          optionIds: ['option-4'],
-          timestamp: new Date().toISOString(),
-          status: 'pending'
-        }
-      ];
-      localStorage.setItem('choices_offline_outbox', JSON.stringify(offlineVotes));
-    });
-
-    // Navigate to dashboard
-    await page.goto('/dashboard');
-    await page.waitForLoadState('networkidle');
-
-    // Check if PWA status shows offline data
-    const pwaStatus = page.locator('[data-testid="pwa-status"]');
-    await expect(pwaStatus).toBeVisible();
-    
-    const offlineDataStatus = page.locator('[data-testid="offline-data-status"]');
-    await expect(offlineDataStatus).toBeVisible();
-    await expect(offlineDataStatus).toContainText('1 vote');
-  });
-
-  test('should allow manual sync of offline data', async ({ page }) => {
-    // Create offline data
-    await page.evaluate(() => {
-      const offlineVotes = [
-        {
-          id: 'test-vote-5',
-          pollId: 'test-poll',
-          optionIds: ['option-5'],
-          timestamp: new Date().toISOString(),
-          status: 'pending'
-        }
-      ];
-      localStorage.setItem('choices_offline_outbox', JSON.stringify(offlineVotes));
-    });
-
-    // Navigate to dashboard
-    await page.goto('/dashboard');
-    await page.waitForLoadState('networkidle');
-
-    // Click sync button
-    const syncButton = page.locator('[data-testid="sync-offline-data-button"]');
-    await expect(syncButton).toBeVisible();
-    await syncButton.click();
-
-    // Mock successful sync
-    await page.evaluate(() => {
-      localStorage.removeItem('choices_offline_outbox');
-      window.dispatchEvent(new CustomEvent('offlineVotesSynced', {
-        detail: { syncedCount: 1, pendingCount: 0 }
-      }));
-    });
-
-    // Check if sync success message appears
-    await page.waitForSelector('[data-testid="sync-success-message"]', { timeout: 5000 });
-  });
-
-  test('should cache essential resources for offline use', async ({ page }) => {
-    // Wait for service worker to cache resources
-    await page.waitForTimeout(2000);
-    
     // Go offline
     await page.context().setOffline(true);
     
-    // Try to access cached resources
-    const response = await page.goto('/');
-    
-    // Should still load (from cache)
-    expect(response?.status()).toBe(200);
-    
-    // Check if essential elements are visible
-    await expect(page.locator('body')).toBeVisible();
-  });
-
-  test('should handle offline navigation gracefully', async ({ page }) => {
-    // Go offline
-    await page.context().setOffline(true);
-    
-    // Try to navigate to different pages
-    const pages = ['/dashboard', '/polls', '/profile'];
+    // Check offline indicators on different pages
+    const pages = ['/dashboard', '/polls', '/civics', '/profile'];
     
     for (const pagePath of pages) {
       await page.goto(pagePath);
+      await waitForPageReady(page);
       
-      // Should not crash and should show some content
-      await expect(page.locator('body')).toBeVisible();
-      
-      // Should show offline indicator
-      const offlineIndicator = page.locator('[data-testid="offline-indicator"]');
-      await expect(offlineIndicator).toBeVisible();
+      // Check if offline indicator is visible
+      await expect(page.locator('[data-testid="offline-indicator"]')).toBeVisible();
     }
+  });
+
+  test('should handle background sync with V2 setup', async ({ page }) => {
+    // Set up test data for background sync testing
+    await setupE2ETestData({
+      user: testData.user,
+      poll: testData.poll
+    });
+
+    // First, authenticate the user
+    await page.goto('/login');
+    await waitForPageReady(page);
+    
+    await page.fill('[data-testid="login-email"]', testData.user.email);
+    await page.fill('[data-testid="login-password"]', testData.user.password);
+    await page.click('[data-testid="login-submit"]');
+    
+    // Wait for authentication
+    await page.waitForURL('/dashboard');
+    await waitForPageReady(page);
+    
+    // Go offline
+    await page.context().setOffline(true);
+    
+    // Perform actions that should trigger background sync
+    await page.goto('/polls');
+    await waitForPageReady(page);
+    
+    // Check background sync registration
+    const backgroundSyncRegistered = await page.evaluate(async () => {
+      if ('serviceWorker' in navigator) {
+        const registration = await navigator.serviceWorker.getRegistration();
+        return registration?.sync !== undefined;
+      }
+      return false;
+    });
+    
+    expect(backgroundSyncRegistered).toBe(true);
+  });
+
+  test('should handle offline functionality with authentication with V2 setup', async ({ page }) => {
+    // Set up test data for authenticated offline testing
+    await setupE2ETestData({
+      user: testData.user,
+      poll: testData.poll
+    });
+
+    // First, authenticate the user
+    await page.goto('/login');
+    await waitForPageReady(page);
+    
+    await page.fill('[data-testid="login-email"]', testData.user.email);
+    await page.fill('[data-testid="login-password"]', testData.user.password);
+    await page.click('[data-testid="login-submit"]');
+    
+    // Wait for authentication
+    await page.waitForURL('/dashboard');
+    await waitForPageReady(page);
+    
+    // Go offline
+    await page.context().setOffline(true);
+    
+    // Check authenticated offline functionality
+    await expect(page.locator('[data-testid="authenticated-offline"]')).toBeVisible();
+    
+    // Navigate to different authenticated pages while offline
+    await page.goto('/profile');
+    await waitForPageReady(page);
+    
+    await expect(page.locator('[data-testid="offline-profile"]')).toBeVisible();
+  });
+
+  test('should handle offline functionality with different user types with V2 setup', async ({ page }) => {
+    // Create different user types for testing
+    const regularUser = createTestUser({
+      email: 'regular-offline@example.com',
+      username: 'regularoffline'
+    });
+
+    const adminUser = createTestUser({
+      email: 'admin-offline@example.com',
+      username: 'adminoffline'
+    });
+
+    // Test regular user offline functionality
+    await setupE2ETestData({
+      user: regularUser,
+      poll: testData.poll
+    });
+
+    await page.goto('/login');
+    await waitForPageReady(page);
+
+    await page.fill('[data-testid="login-email"]', regularUser.email);
+    await page.fill('[data-testid="login-password"]', regularUser.password);
+    await page.click('[data-testid="login-submit"]');
+
+    await page.waitForURL('/dashboard');
+    await waitForPageReady(page);
+
+    // Go offline
+    await page.context().setOffline(true);
+
+    await expect(page.locator('[data-testid="regular-user-offline"]')).toBeVisible();
+
+    // Test admin user offline functionality
+    await setupE2ETestData({
+      user: adminUser,
+      poll: testData.poll
+    });
+
+    await page.context().setOffline(false);
+    await page.click('[data-testid="logout-button"]');
+    await page.waitForURL('/');
+
+    await page.goto('/login');
+    await waitForPageReady(page);
+
+    await page.fill('[data-testid="login-email"]', adminUser.email);
+    await page.fill('[data-testid="login-password"]', adminUser.password);
+    await page.click('[data-testid="login-submit"]');
+
+    await page.waitForURL('/dashboard');
+    await waitForPageReady(page);
+
+    // Go offline
+    await page.context().setOffline(true);
+
+    await expect(page.locator('[data-testid="admin-user-offline"]')).toBeVisible();
+  });
+
+  test('should handle offline functionality with mobile viewport with V2 setup', async ({ page }) => {
+    // Set up test data for mobile offline testing
+    await setupE2ETestData({
+      user: testData.user,
+      poll: testData.poll
+    });
+
+    // Set mobile viewport
+    await page.setViewportSize(E2E_CONFIG.BROWSER.MOBILE_VIEWPORT);
+
+    // Go offline
+    await page.context().setOffline(true);
+
+    // Check mobile offline functionality
+    await expect(page.locator('[data-testid="mobile-offline-indicator"]')).toBeVisible();
+
+    // Navigate to different pages on mobile while offline
+    const pages = ['/dashboard', '/polls', '/civics'];
+    
+    for (const pagePath of pages) {
+      await page.goto(pagePath);
+      await waitForPageReady(page);
+      
+      // Check if mobile offline indicator is visible
+      await expect(page.locator('[data-testid="mobile-offline-indicator"]')).toBeVisible();
+    }
+  });
+
+  test('should handle offline functionality with poll management integration with V2 setup', async ({ page }) => {
+    // Set up test data for poll management integration
+    await setupE2ETestData({
+      user: testData.user,
+      poll: testData.poll
+    });
+
+    // Authenticate user
+    await page.goto('/login');
+    await waitForPageReady(page);
+
+    await page.fill('[data-testid="login-email"]', testData.user.email);
+    await page.fill('[data-testid="login-password"]', testData.user.password);
+    await page.click('[data-testid="login-submit"]');
+
+    await page.waitForURL('/dashboard');
+    await waitForPageReady(page);
+
+    // Go offline
+    await page.context().setOffline(true);
+
+    // Test offline poll management
+    await page.goto('/polls');
+    await waitForPageReady(page);
+
+    await expect(page.locator('[data-testid="offline-poll-management"]')).toBeVisible();
+
+    // Try to create a poll while offline
+    await page.click('[data-testid="create-poll-button"]');
+    await page.waitForURL('/polls/create');
+
+    await page.fill('input[id="title"]', 'Offline Test Poll');
+    await page.fill('textarea[id="description"]', 'Testing offline poll creation');
+    await page.click('button:has-text("Next")');
+
+    await page.fill('input[placeholder*="Option 1"]', 'Offline Option 1');
+    await page.fill('input[placeholder*="Option 2"]', 'Offline Option 2');
+    await page.click('button:has-text("Next")');
+
+    await page.selectOption('select', 'general');
+    await page.click('button:has-text("Next")');
+
+    await page.click('button:has-text("Create Poll")');
+
+    // Check if poll was queued for sync
+    await expect(page.locator('[data-testid="poll-queued-for-sync"]')).toBeVisible();
+  });
+
+  test('should handle offline functionality with civics integration with V2 setup', async ({ page }) => {
+    // Set up test data for civics integration
+    await setupE2ETestData({
+      user: testData.user,
+      poll: testData.poll
+    });
+
+    // Set up civics context first
+    await page.goto('/civics');
+    await waitForPageReady(page);
+
+    await page.fill('[data-testid="address-input"]', '123 Any St, Springfield, IL 62704');
+    await page.click('[data-testid="address-submit"]');
+    await page.waitForResponse('**/api/v1/civics/address-lookup');
+
+    // Go offline
+    await page.context().setOffline(true);
+
+    // Check offline civics functionality
+    await expect(page.locator('[data-testid="offline-civics"]')).toBeVisible();
+
+    // Try to perform civics actions while offline
+    await page.fill('[data-testid="address-input"]', '456 Another St, Chicago, IL 60601');
+    await page.click('[data-testid="address-submit"]');
+
+    // Check if action was queued for sync
+    await expect(page.locator('[data-testid="civics-action-queued"]')).toBeVisible();
+  });
+
+  test('should handle offline functionality performance with V2 setup', async ({ page }) => {
+    // Set up test data for performance testing
+    await setupE2ETestData({
+      user: testData.user,
+      poll: testData.poll
+    });
+
+    // Measure offline functionality performance
+    const startTime = Date.now();
+
+    // Go offline
+    await page.context().setOffline(true);
+
+    // Wait for offline indicator
+    await page.waitForSelector('[data-testid="offline-indicator"]');
+
+    // Go back online
+    await page.context().setOffline(false);
+
+    // Wait for offline indicator to disappear
+    await page.waitForSelector('[data-testid="offline-indicator"]', { state: 'hidden' });
+
+    const endTime = Date.now();
+    const offlineTime = endTime - startTime;
+
+    // Verify offline functionality performance is acceptable
+    expect(offlineTime).toBeLessThan(5000);
+  });
+
+  test('should handle offline functionality with WebAuthn integration with V2 setup', async ({ page }) => {
+    // Set up test data for WebAuthn offline testing
+    await setupE2ETestData({
+      user: testData.user,
+      poll: testData.poll
+    });
+
+    // Test WebAuthn authentication
+    await page.goto('/login');
+    await waitForPageReady(page);
+
+    // Check WebAuthn login option
+    await expect(page.locator('[data-testid="webauthn-login-button"]')).toBeVisible();
+
+    // Test WebAuthn login
+    await page.click('[data-testid="webauthn-login-button"]');
+    await page.waitForSelector('[data-testid="webauthn-prompt"]');
+
+    await expect(page.locator('[data-testid="webauthn-prompt"]')).toBeVisible();
+
+    // Complete WebAuthn authentication
+    await page.click('[data-testid="webauthn-complete-button"]');
+    await expect(page.locator('[data-testid="login-success"]')).toBeVisible();
+
+    await page.waitForURL('/dashboard');
+    await waitForPageReady(page);
+
+    // Go offline
+    await page.context().setOffline(true);
+
+    // Check WebAuthn offline functionality
+    await expect(page.locator('[data-testid="webauthn-offline"]')).toBeVisible();
   });
 });

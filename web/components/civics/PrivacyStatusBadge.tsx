@@ -10,7 +10,7 @@
 import { useState, useEffect } from 'react';
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
 
-interface PrivacyStatus {
+type PrivacyStatus = {
   status: 'healthy' | 'warning' | 'error' | 'disabled';
   message: string;
   details?: {

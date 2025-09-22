@@ -3,23 +3,14 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { 
   BarChart3, 
-  Map, 
-  Users, 
   TrendingUp, 
-  Activity, 
-  Globe, 
-  PieChart, 
-  Clock,
+  Activity,
   RefreshCw,
-  Filter,
   Calendar,
   Target,
   Award,
   Zap,
-  Vote,
-  CheckCircle,
-  Smartphone,
-  Monitor
+  Vote
 } from 'lucide-react';
 import { devLog } from '@/lib/logger';
 

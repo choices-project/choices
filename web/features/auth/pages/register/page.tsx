@@ -21,8 +21,8 @@ export default function RegisterPage() {
     setError('')
 
     const fd = new FormData(e.currentTarget)  // read from DOM, not React state
-    const username = String(fd.get('username') || '').trim()
-    const email = String(fd.get('email') || '').trim()
+    const _username = String(fd.get('username') || '').trim()
+    const _email = String(fd.get('email') || '').trim()
     const password = String(fd.get('password') || '')
     const confirm = String(fd.get('confirmPassword') || '')
 
@@ -71,7 +71,7 @@ export default function RegisterPage() {
         {/* Registration Method Selection */}
         <div className="space-y-4">
           <div className="text-center">
-            <p className="text-sm text-gray-600 mb-4">Choose how you'd like to sign up:</p>
+            <p className="text-sm text-gray-600 mb-4">Choose how you&apos;d like to sign up:</p>
           </div>
           
           <div className="grid grid-cols-1 gap-3">

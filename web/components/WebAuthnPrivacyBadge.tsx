@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { getPrivacyStatus } from '@/lib/webauthn/client';
 
-interface PrivacyStatus {
+type PrivacyStatus = {
   status: 'active' | 'partial' | 'inactive';
   badge: {
     color: 'green' | 'yellow' | 'red';

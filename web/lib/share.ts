@@ -9,7 +9,7 @@ export type SharePlatform =
   | 'x' | 'facebook' | 'linkedin' | 'reddit'
   | 'whatsapp' | 'telegram' | 'email' | 'sms'
 
-export interface ShareInput {
+export type ShareInput = {
   url: string           // canonical https URL
   text?: string | undefined         // short copy
   hashtags?: string[] | undefined   // no '#'

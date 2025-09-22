@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2, ArrowLeft, Share2, CheckCircle, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Share2, CheckCircle, AlertCircle } from 'lucide-react';
 import VotingInterface from '@/features/voting/components/VotingInterface';
 import PostCloseBanner from '@/components/PostCloseBanner';
 import ModeSwitch from '@/components/ModeSwitch';

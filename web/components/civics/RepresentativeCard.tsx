@@ -9,7 +9,7 @@
 
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
 
-interface Representative {
+type Representative = {
   id: string;
   name: string;
   party: string | null;
@@ -36,7 +36,7 @@ interface Representative {
   };
 }
 
-interface RepresentativeCardProps {
+type RepresentativeCardProps = {
   representative: Representative;
   className?: string;
 }

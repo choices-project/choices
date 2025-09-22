@@ -1,6 +1,8 @@
 // Run once at server start (import from your route/util entry point)
-const env = process.env.NODE_ENV;
-const isDev = env === 'development' || env === 'test';
+function isDev() {
+  const env = process.env.NODE_ENV;
+  return env === 'development' || env === 'test';
+}
 
 function isPrefixed(v?: string) {
   return !!v && /^(base64|hex):/.test(v);
@@ -13,7 +15,7 @@ function byteLenFromPrefixed(v: string): number {
 }
 
 export function assertPepperConfig() {
-  if (isDev) {
+  if (isDev()) {
     if (!process.env.PRIVACY_PEPPER_DEV) {
       throw new Error('PRIVACY_PEPPER_DEV required in dev/test');
     }

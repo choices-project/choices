@@ -8,7 +8,6 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { getSupabaseBrowserClient } from '@/utils/supabase/client'
 import { PasskeyButton } from '@/components/PasskeyButton'
-import { T } from '@/lib/testing/testIds'
 
 type AuthSetupStepProps = {
   data: any

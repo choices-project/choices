@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { devLog } from '@/lib/logger';
 import { Shield, Key, CheckCircle, AlertCircle } from 'lucide-react'
-import { has, isRecord, toString } from '@/lib/util/guards'
+import { has, isRecord } from '@/lib/util/guards'
 
 type WebAuthnAuthProps = {
   onAuthenticated: (_userStableId: string, _sessionToken: string) => void

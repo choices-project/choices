@@ -6,7 +6,6 @@ import { useFormStatus } from 'react-dom';
 import { getSupabaseBrowserClient } from '@/utils/supabase/client';
 import { devLog } from '@/lib/logger';
 import { completeOnboardingAction } from '@/app/actions/complete-onboarding';
-import { FEATURE_FLAGS } from '@/lib/core/feature-flags';
 
 import type {
   StepId,

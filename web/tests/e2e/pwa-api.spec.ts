@@ -1,26 +1,73 @@
 /**
- * PWA API Endpoints E2E Tests
+ * PWA API Endpoints E2E Tests - V2 Upgrade
  * 
  * Tests PWA API endpoints including:
- * - PWA status endpoint
+ * - PWA status endpoint with V2 mock factory setup
  * - Offline sync endpoint
  * - Notification subscription endpoints
  * - Manifest endpoint
- * - Error handling
+ * - Error handling and comprehensive testing
+ * 
+ * Created: January 21, 2025
+ * Updated: January 21, 2025
  */
 
 import { test, expect, type Page } from '@playwright/test';
+import { 
+  setupE2ETestData, 
+  cleanupE2ETestData, 
+  createTestUser, 
+  createTestPoll,
+  waitForPageReady,
+  setupExternalAPIMocks,
+  E2E_CONFIG
+} from './helpers/e2e-setup';
 
-test.describe('PWA API Endpoints', () => {
+test.describe('PWA API Endpoints - V2', () => {
+  let testData: {
+    user: ReturnType<typeof createTestUser>;
+    poll: ReturnType<typeof createTestPoll>;
+  };
+
   test.beforeEach(async ({ page }) => {
+    // Create test data using V2 patterns
+    testData = {
+      user: createTestUser({
+        email: 'pwa-api-test@example.com',
+        username: 'pwaapitestuser',
+        password: 'PwaApiTest123!'
+      }),
+      poll: createTestPoll({
+        title: 'V2 PWA API Test Poll',
+        description: 'Testing PWA API with V2 setup',
+        options: ['PWA Option 1', 'PWA Option 2', 'PWA Option 3'],
+        category: 'general'
+      })
+    };
+
+    // Set up external API mocks
+    await setupExternalAPIMocks(page);
+
     // Navigate to the app
     await page.goto('/');
-    
-    // Wait for the app to load
-    await page.waitForLoadState('networkidle');
+    await waitForPageReady(page);
   });
 
-  test('should serve PWA status endpoint', async ({ page }) => {
+  test.afterEach(async () => {
+    // Clean up test data
+    await cleanupE2ETestData({
+      user: testData.user,
+      poll: testData.poll
+    });
+  });
+
+  test('should serve PWA status endpoint with V2 setup', async ({ page }) => {
+    // Set up test data for PWA status testing
+    await setupE2ETestData({
+      user: testData.user,
+      poll: testData.poll
+    });
+
     const response = await page.request.get('/api/pwa/status');
     
     expect(response.status()).toBe(200);
@@ -38,7 +85,13 @@ test.describe('PWA API Endpoints', () => {
     expect(data.features).toHaveProperty('backgroundSync', true);
   });
 
-  test('should serve PWA status with user data', async ({ page }) => {
+  test('should serve PWA status with user data with V2 setup', async ({ page }) => {
+    // Set up test data for PWA status with user data testing
+    await setupE2ETestData({
+      user: testData.user,
+      poll: testData.poll
+    });
+
     const response = await page.request.get('/api/pwa/status?userId=test-user&includeUserData=true');
     
     expect(response.status()).toBe(200);
@@ -50,309 +103,445 @@ test.describe('PWA API Endpoints', () => {
     expect(data.user).toHaveProperty('stats');
   });
 
-  test('should handle PWA status POST requests', async ({ page }) => {
-    const response = await page.request.post('/api/pwa/status', {
+  test('should serve PWA manifest endpoint with V2 setup', async ({ page }) => {
+    // Set up test data for PWA manifest testing
+    await setupE2ETestData({
+      user: testData.user,
+      poll: testData.poll
+    });
+
+    const response = await page.request.get('/manifest.json');
+    
+    expect(response.status()).toBe(200);
+    
+    const data = await response.json();
+    expect(data).toHaveProperty('name');
+    expect(data).toHaveProperty('short_name');
+    expect(data).toHaveProperty('start_url');
+    expect(data).toHaveProperty('display');
+    expect(data).toHaveProperty('background_color');
+    expect(data).toHaveProperty('theme_color');
+    expect(data).toHaveProperty('icons');
+  });
+
+  test('should serve service worker endpoint with V2 setup', async ({ page }) => {
+    // Set up test data for service worker testing
+    await setupE2ETestData({
+      user: testData.user,
+      poll: testData.poll
+    });
+
+    const response = await page.request.get('/sw.js');
+    
+    expect(response.status()).toBe(200);
+    
+    const content = await response.text();
+    expect(content).toContain('serviceWorker');
+    expect(content).toContain('cache');
+  });
+
+  test('should handle PWA offline sync endpoint with V2 setup', async ({ page }) => {
+    // Set up test data for offline sync testing
+    await setupE2ETestData({
+      user: testData.user,
+      poll: testData.poll
+    });
+
+    // First authenticate
+    const loginResponse = await page.request.post('/api/auth/login', {
       data: {
-        action: 'register',
-        userId: 'test-user',
+        email: testData.user.email,
+        password: testData.user.password
+      }
+    });
+    
+    const loginData = await loginResponse.json();
+    const authToken = loginData.token;
+
+    // Test offline sync endpoint
+    const syncResponse = await page.request.post('/api/pwa/sync', {
+      headers: {
+        'Authorization': `Bearer ${authToken}`
+      },
+      data: {
+        action: 'sync',
         data: {
-          deviceInfo: {
-            platform: 'web',
-            userAgent: 'test-agent'
-          }
+          polls: [],
+          votes: []
         }
       }
     });
     
-    expect(response.status()).toBe(200);
+    expect(syncResponse.status()).toBe(200);
     
-    const data = await response.json();
-    expect(data).toHaveProperty('success', true);
-    expect(data).toHaveProperty('action', 'register');
-    expect(data).toHaveProperty('result');
+    const syncData = await syncResponse.json();
+    expect(syncData).toHaveProperty('success', true);
+    expect(syncData).toHaveProperty('synced');
   });
 
-  test('should serve PWA manifest endpoint', async ({ page }) => {
-    const response = await page.request.get('/api/pwa/manifest');
-    
-    expect(response.status()).toBe(200);
-    
-    const data = await response.json();
-    expect(data).toHaveProperty('success', true);
-    expect(data).toHaveProperty('manifest');
-    
-    // Check manifest properties
-    const manifest = data.manifest;
-    expect(manifest).toHaveProperty('name', 'Choices - Democratic Polling Platform');
-    expect(manifest).toHaveProperty('short_name', 'Choices');
-    expect(manifest).toHaveProperty('display', 'standalone');
-    expect(manifest).toHaveProperty('icons');
-    expect(Array.isArray(manifest.icons)).toBe(true);
-  });
+  test('should handle PWA notification subscription with V2 setup', async ({ page }) => {
+    // Set up test data for notification subscription testing
+    await setupE2ETestData({
+      user: testData.user,
+      poll: testData.poll
+    });
 
-  test('should serve PWA manifest as application/manifest+json', async ({ page }) => {
-    const response = await page.request.get('/api/pwa/manifest?format=json');
-    
-    expect(response.status()).toBe(200);
-    expect(response.headers()['content-type']).toContain('application/manifest+json');
-  });
-
-  test('should handle offline sync POST requests', async ({ page }) => {
-    const response = await page.request.post('/api/pwa/offline/sync', {
+    // First authenticate
+    const loginResponse = await page.request.post('/api/auth/login', {
       data: {
-        votes: [
-          {
-            id: 'test-vote-1',
-            pollId: 'test-poll',
-            optionIds: ['option-1'],
-            timestamp: new Date().toISOString(),
-            status: 'pending'
-          }
-        ],
-        deviceId: 'test-device',
-        timestamp: new Date().toISOString()
+        email: testData.user.email,
+        password: testData.user.password
       }
     });
     
-    expect(response.status()).toBe(200);
-    
-    const data = await response.json();
-    expect(data).toHaveProperty('success', true);
-    expect(data).toHaveProperty('syncedCount');
-    expect(data).toHaveProperty('failedCount');
-    expect(data).toHaveProperty('results');
-  });
+    const loginData = await loginResponse.json();
+    const authToken = loginData.token;
 
-  test('should handle offline sync GET requests', async ({ page }) => {
-    const response = await page.request.get('/api/pwa/offline/sync?deviceId=test-device');
-    
-    expect(response.status()).toBe(200);
-    
-    const data = await response.json();
-    expect(data).toHaveProperty('success', true);
-    expect(data).toHaveProperty('deviceId', 'test-device');
-    expect(data).toHaveProperty('syncStatus');
-  });
-
-  test('should handle notification subscription POST requests', async ({ page }) => {
-    const response = await page.request.post('/api/pwa/notifications/subscribe', {
+    // Test notification subscription endpoint
+    const subscriptionResponse = await page.request.post('/api/pwa/notifications/subscribe', {
+      headers: {
+        'Authorization': `Bearer ${authToken}`
+      },
       data: {
-        subscription: {
-          endpoint: 'https://fcm.googleapis.com/fcm/send/test',
-          keys: {
-            p256dh: 'test-p256dh-key',
-            auth: 'test-auth-key'
-          }
-        },
-        userId: 'test-user',
-        preferences: {
-          newPolls: true,
-          pollResults: true,
-          systemUpdates: false,
-          weeklyDigest: true
+        endpoint: 'https://fcm.googleapis.com/fcm/send/test-endpoint',
+        keys: {
+          p256dh: 'test-p256dh-key',
+          auth: 'test-auth-key'
         }
       }
     });
     
-    expect(response.status()).toBe(200);
+    expect(subscriptionResponse.status()).toBe(200);
     
-    const data = await response.json();
-    expect(data).toHaveProperty('success', true);
-    expect(data).toHaveProperty('subscriptionId');
-    expect(data).toHaveProperty('message');
+    const subscriptionData = await subscriptionResponse.json();
+    expect(subscriptionData).toHaveProperty('success', true);
+    expect(subscriptionData).toHaveProperty('subscriptionId');
   });
 
-  test('should handle notification subscription DELETE requests', async ({ page }) => {
-    const response = await page.request.delete('/api/pwa/notifications/subscribe?userId=test-user');
-    
-    expect(response.status()).toBe(200);
-    
-    const data = await response.json();
-    expect(data).toHaveProperty('success', true);
-    expect(data).toHaveProperty('message');
-  });
+  test('should handle PWA notification unsubscription with V2 setup', async ({ page }) => {
+    // Set up test data for notification unsubscription testing
+    await setupE2ETestData({
+      user: testData.user,
+      poll: testData.poll
+    });
 
-  test('should handle notification subscription GET requests', async ({ page }) => {
-    const response = await page.request.get('/api/pwa/notifications/subscribe?userId=test-user');
-    
-    expect(response.status()).toBe(200);
-    
-    const data = await response.json();
-    expect(data).toHaveProperty('success', true);
-    expect(data).toHaveProperty('userId', 'test-user');
-    expect(data).toHaveProperty('preferences');
-  });
-
-  test('should handle notification subscription PUT requests', async ({ page }) => {
-    const response = await page.request.put('/api/pwa/notifications/subscribe', {
+    // First authenticate
+    const loginResponse = await page.request.post('/api/auth/login', {
       data: {
-        userId: 'test-user',
-        preferences: {
-          newPolls: false,
-          pollResults: true,
-          systemUpdates: true,
-          weeklyDigest: false
+        email: testData.user.email,
+        password: testData.user.password
+      }
+    });
+    
+    const loginData = await loginResponse.json();
+    const authToken = loginData.token;
+
+    // Test notification unsubscription endpoint
+    const unsubscriptionResponse = await page.request.post('/api/pwa/notifications/unsubscribe', {
+      headers: {
+        'Authorization': `Bearer ${authToken}`
+      },
+      data: {
+        subscriptionId: 'test-subscription-id'
+      }
+    });
+    
+    expect(unsubscriptionResponse.status()).toBe(200);
+    
+    const unsubscriptionData = await unsubscriptionResponse.json();
+    expect(unsubscriptionData).toHaveProperty('success', true);
+  });
+
+  test('should handle PWA cache management with V2 setup', async ({ page }) => {
+    // Set up test data for cache management testing
+    await setupE2ETestData({
+      user: testData.user,
+      poll: testData.poll
+    });
+
+    // First authenticate
+    const loginResponse = await page.request.post('/api/auth/login', {
+      data: {
+        email: testData.user.email,
+        password: testData.user.password
+      }
+    });
+    
+    const loginData = await loginResponse.json();
+    const authToken = loginData.token;
+
+    // Test cache clear endpoint
+    const cacheResponse = await page.request.post('/api/pwa/cache/clear', {
+      headers: {
+        'Authorization': `Bearer ${authToken}`
+      },
+      data: {
+        cacheName: 'polls-cache'
+      }
+    });
+    
+    expect(cacheResponse.status()).toBe(200);
+    
+    const cacheData = await cacheResponse.json();
+    expect(cacheData).toHaveProperty('success', true);
+    expect(cacheData).toHaveProperty('cleared');
+  });
+
+  test('should handle PWA API error handling with V2 setup', async ({ page }) => {
+    // Set up test data for error handling testing
+    await setupE2ETestData({
+      user: testData.user,
+      poll: testData.poll
+    });
+
+    // Test invalid endpoint
+    const invalidResponse = await page.request.get('/api/pwa/invalid');
+    expect(invalidResponse.status()).toBe(404);
+
+    // Test unauthorized access
+    const unauthorizedResponse = await page.request.post('/api/pwa/sync', {
+      data: {
+        action: 'sync'
+      }
+    });
+    expect(unauthorizedResponse.status()).toBe(401);
+  });
+
+  test('should handle PWA API with different user types with V2 setup', async ({ page }) => {
+    // Create different user types for testing
+    const regularUser = createTestUser({
+      email: 'regular-pwa-api@example.com',
+      username: 'regularpwaapi'
+    });
+
+    const adminUser = createTestUser({
+      email: 'admin-pwa-api@example.com',
+      username: 'adminpwaapi'
+    });
+
+    // Test regular user PWA API access
+    await setupE2ETestData({
+      user: regularUser,
+      poll: testData.poll
+    });
+
+    const regularLoginResponse = await page.request.post('/api/auth/login', {
+      data: {
+        email: regularUser.email,
+        password: regularUser.password
+      }
+    });
+    
+    const regularLoginData = await regularLoginResponse.json();
+    const regularToken = regularLoginData.token;
+
+    // Test regular user PWA endpoints
+    const regularPwaResponse = await page.request.get('/api/pwa/status', {
+      headers: {
+        'Authorization': `Bearer ${regularToken}`
+      }
+    });
+    
+    expect(regularPwaResponse.status()).toBe(200);
+
+    // Test admin user PWA API access
+    await setupE2ETestData({
+      user: adminUser,
+      poll: testData.poll
+    });
+
+    const adminLoginResponse = await page.request.post('/api/auth/login', {
+      data: {
+        email: adminUser.email,
+        password: adminUser.password
+      }
+    });
+    
+    const adminLoginData = await adminLoginResponse.json();
+    const adminToken = adminLoginData.token;
+
+    // Test admin user PWA endpoints
+    const adminPwaResponse = await page.request.get('/api/pwa/status', {
+      headers: {
+        'Authorization': `Bearer ${adminToken}`
+      }
+    });
+    
+    expect(adminPwaResponse.status()).toBe(200);
+  });
+
+  test('should handle PWA API with mobile viewport with V2 setup', async ({ page }) => {
+    // Set up test data for mobile PWA API testing
+    await setupE2ETestData({
+      user: testData.user,
+      poll: testData.poll
+    });
+
+    // Set mobile viewport
+    await page.setViewportSize(E2E_CONFIG.BROWSER.MOBILE_VIEWPORT);
+
+    // Test mobile PWA endpoints
+    const mobilePwaResponse = await page.request.get('/api/pwa/status');
+    expect(mobilePwaResponse.status()).toBe(200);
+
+    const mobileManifestResponse = await page.request.get('/manifest.json');
+    expect(mobileManifestResponse.status()).toBe(200);
+  });
+
+  test('should handle PWA API with poll management integration with V2 setup', async ({ page }) => {
+    // Set up test data for poll management integration
+    await setupE2ETestData({
+      user: testData.user,
+      poll: testData.poll
+    });
+
+    // First authenticate
+    const loginResponse = await page.request.post('/api/auth/login', {
+      data: {
+        email: testData.user.email,
+        password: testData.user.password
+      }
+    });
+    
+    const loginData = await loginResponse.json();
+    const authToken = loginData.token;
+
+    // Create a poll
+    const createPollResponse = await page.request.post('/api/polls', {
+      headers: {
+        'Authorization': `Bearer ${authToken}`
+      },
+      data: {
+        title: testData.poll.title,
+        description: testData.poll.description,
+        options: testData.poll.options,
+        category: testData.poll.category
+      }
+    });
+    
+    const pollData = await createPollResponse.json();
+
+    // Test PWA sync with poll data
+    const syncResponse = await page.request.post('/api/pwa/sync', {
+      headers: {
+        'Authorization': `Bearer ${authToken}`
+      },
+      data: {
+        action: 'sync',
+        data: {
+          polls: [pollData],
+          votes: []
         }
       }
     });
     
-    expect(response.status()).toBe(200);
+    expect(syncResponse.status()).toBe(200);
     
-    const data = await response.json();
-    expect(data).toHaveProperty('success', true);
-    expect(data).toHaveProperty('message');
+    const syncData = await syncResponse.json();
+    expect(syncData).toHaveProperty('success', true);
   });
 
-  test('should handle notification send POST requests', async ({ page }) => {
-    const response = await page.request.post('/api/pwa/notifications/send', {
+  test('should handle PWA API with civics integration with V2 setup', async ({ page }) => {
+    // Set up test data for civics integration
+    await setupE2ETestData({
+      user: testData.user,
+      poll: testData.poll
+    });
+
+    // Test civics PWA integration
+    const civicsResponse = await page.request.post('/api/v1/civics/address-lookup', {
       data: {
-        title: 'Test Notification',
-        message: 'This is a test notification',
-        url: '/dashboard',
-        targetUsers: ['test-user'],
-        targetType: 'specific'
+        address: '123 Any St, Springfield, IL 62704'
       }
     });
     
-    expect(response.status()).toBe(200);
+    expect(civicsResponse.status()).toBe(200);
     
-    const data = await response.json();
-    expect(data).toHaveProperty('success', true);
-    expect(data).toHaveProperty('message');
-    expect(data).toHaveProperty('results');
-    expect(data.results).toHaveProperty('total');
-    expect(data.results).toHaveProperty('successful');
-    expect(data.results).toHaveProperty('failed');
+    const civicsData = await civicsResponse.json();
+    expect(civicsData).toHaveProperty('district');
+    expect(civicsData).toHaveProperty('state');
+
+    // Test PWA status with civics context
+    const pwaStatusResponse = await page.request.get('/api/pwa/status?civics=true');
+    expect(pwaStatusResponse.status()).toBe(200);
+    
+    const pwaStatusData = await pwaStatusResponse.json();
+    expect(pwaStatusData).toHaveProperty('civics');
   });
 
-  test('should handle notification history GET requests', async ({ page }) => {
-    const response = await page.request.get('/api/pwa/notifications/send?userId=test-user&limit=10');
-    
-    expect(response.status()).toBe(200);
-    
-    const data = await response.json();
-    expect(data).toHaveProperty('success', true);
-    expect(data).toHaveProperty('history');
-    expect(Array.isArray(data.history)).toBe(true);
-  });
-
-  test('should handle invalid requests gracefully', async ({ page }) => {
-    // Test invalid offline sync request
-    const response = await page.request.post('/api/pwa/offline/sync', {
-      data: {
-        // Missing required fields
-        deviceId: 'test-device'
-      }
+  test('should handle PWA API performance with V2 setup', async ({ page }) => {
+    // Set up test data for performance testing
+    await setupE2ETestData({
+      user: testData.user,
+      poll: testData.poll
     });
-    
-    expect(response.status()).toBe(400);
-    
-    const data = await response.json();
-    expect(data).toHaveProperty('success', false);
-    expect(data).toHaveProperty('error');
-  });
 
-  test('should handle missing parameters', async ({ page }) => {
-    // Test missing userId parameter
-    const response = await page.request.get('/api/pwa/notifications/subscribe');
-    
-    expect(response.status()).toBe(400);
-    
-    const data = await response.json();
-    expect(data).toHaveProperty('success', false);
-    expect(data).toHaveProperty('error');
-  });
+    // Measure PWA API performance
+    const startTime = Date.now();
 
-  test('should handle server errors gracefully', async ({ page }) => {
-    // Mock server error by sending malformed data
-    const response = await page.request.post('/api/pwa/status', {
-      data: {
-        action: 'invalid-action'
-      }
-    });
-    
-    expect(response.status()).toBe(400);
-    
-    const data = await response.json();
-    expect(data).toHaveProperty('success', false);
-    expect(data).toHaveProperty('error');
-  });
+    // Test multiple PWA endpoints
+    const responses = await Promise.all([
+      page.request.get('/api/pwa/status'),
+      page.request.get('/manifest.json'),
+      page.request.get('/sw.js')
+    ]);
 
-  test('should validate request data', async ({ page }) => {
-    // Test invalid subscription data
-    const response = await page.request.post('/api/pwa/notifications/subscribe', {
-      data: {
-        subscription: {
-          // Missing required fields
-          endpoint: 'invalid-endpoint'
-        },
-        userId: 'test-user'
-      }
-    });
-    
-    expect(response.status()).toBe(400);
-    
-    const data = await response.json();
-    expect(data).toHaveProperty('success', false);
-    expect(data).toHaveProperty('error');
-  });
+    const endTime = Date.now();
+    const pwaApiTime = endTime - startTime;
 
-  test('should handle rate limiting', async ({ page }) => {
-    // Send multiple rapid requests
-    const requests = [];
-    for (let i = 0; i < 10; i++) {
-      requests.push(
-        page.request.get('/api/pwa/status')
-      );
-    }
-    
-    const responses = await Promise.all(requests);
-    
-    // All requests should be handled (rate limiting is not implemented in test)
+    // All requests should succeed
     responses.forEach(response => {
-      expect(response.status()).toBeLessThan(500);
-    });
-  });
-
-  test('should include proper CORS headers', async ({ page }) => {
-    const response = await page.request.get('/api/pwa/status');
-    
-    const headers = response.headers();
-    expect(headers['access-control-allow-origin']).toBeDefined();
-    expect(headers['access-control-allow-methods']).toBeDefined();
-    expect(headers['access-control-allow-headers']).toBeDefined();
-  });
-
-  test('should handle feature flag disabled state', async ({ page }) => {
-    // Mock feature flag disabled
-    await page.evaluate(() => {
-      // This would require mocking the feature flag system
-      // For now, we'll test the error response structure
+      expect(response.status()).toBe(200);
     });
 
-    // The API should still respond with proper error structure
-    const response = await page.request.get('/api/pwa/status');
-    
-    // In test environment, PWA should be enabled
-    expect(response.status()).toBe(200);
+    // Performance should be acceptable
+    expect(pwaApiTime).toBeLessThan(3000);
   });
 
-  test('should provide consistent response format', async ({ page }) => {
-    const endpoints = [
-      '/api/pwa/status',
-      '/api/pwa/manifest',
-      '/api/pwa/offline/sync?deviceId=test'
-    ];
+  test('should handle PWA API with offline functionality with V2 setup', async ({ page }) => {
+    // Set up test data for offline PWA API testing
+    await setupE2ETestData({
+      user: testData.user,
+      poll: testData.poll
+    });
+
+    // Go offline
+    await page.context().setOffline(true);
+
+    // Test PWA API endpoints while offline
+    const offlineResponse = await page.request.get('/api/pwa/status');
+    expect(offlineResponse.status()).toBe(0); // Network error
+
+    // Go back online
+    await page.context().setOffline(false);
+
+    // Test PWA API endpoints while online
+    const onlineResponse = await page.request.get('/api/pwa/status');
+    expect(onlineResponse.status()).toBe(200);
+  });
+
+  test('should handle PWA API with WebAuthn integration with V2 setup', async ({ page }) => {
+    // Set up test data for WebAuthn PWA API testing
+    await setupE2ETestData({
+      user: testData.user,
+      poll: testData.poll
+    });
+
+    // Test WebAuthn PWA integration
+    const webauthnResponse = await page.request.post('/api/v1/auth/webauthn/register/options', {
+      data: {}
+    });
     
-    for (const endpoint of endpoints) {
-      const response = await page.request.get(endpoint);
-      const data = await response.json();
-      
-      // All responses should have consistent structure
-      expect(data).toHaveProperty('success');
-      expect(data).toHaveProperty('timestamp');
-      expect(typeof data.success).toBe('boolean');
-      expect(typeof data.timestamp).toBe('string');
-    }
+    expect(webauthnResponse.status()).toBe(200);
+    
+    const webauthnData = await webauthnResponse.json();
+    expect(webauthnData).toHaveProperty('challenge');
+
+    // Test PWA status with WebAuthn context
+    const pwaStatusResponse = await page.request.get('/api/pwa/status?webauthn=true');
+    expect(pwaStatusResponse.status()).toBe(200);
+    
+    const pwaStatusData = await pwaStatusResponse.json();
+    expect(pwaStatusData).toHaveProperty('webauthn');
   });
 });

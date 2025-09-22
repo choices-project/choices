@@ -5,7 +5,7 @@
  * that position Choices as a "social app with suspiciously activist undertones"
  */
 
-export interface SocialShareData {
+export type SocialShareData = {
   title: string
   description: string
   url: string
@@ -14,21 +14,21 @@ export interface SocialShareData {
   callToAction?: string
 }
 
-export interface PollShareData extends SocialShareData {
+export type PollShareData = {
   pollId: string
   totalVotes: number
   isActive: boolean
   options: string[]
   participationRate: number
-}
+} & SocialShareData
 
-export interface CivicsShareData extends SocialShareData {
+export type CivicsShareData = {
   representativeName: string
   office: string
   level: 'federal' | 'state' | 'local'
   party?: string
   jurisdiction: string
-}
+} & SocialShareData
 
 // Activist-themed messaging templates
 export const ACTIVIST_MESSAGES = {
@@ -301,7 +301,7 @@ export function generateQRCodeData(url: string): string {
 }
 
 // Social sharing analytics
-export interface ShareAnalytics {
+export type ShareAnalytics = {
   platform: string
   contentType: 'poll' | 'civics'
   contentId: string

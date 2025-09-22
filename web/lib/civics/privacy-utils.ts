@@ -42,9 +42,16 @@ function loadPeppers(): EncodedPepper[] {
   return peppers;
 }
 
-// Assert pepper configuration on module load
-assertPepperConfig();
-const PEPPERS = loadPeppers();
+// Lazy-load peppers to avoid crashes during test imports
+let PEPPERS: EncodedPepper[] | null = null;
+
+function getPeppers(): EncodedPepper[] {
+  if (PEPPERS === null) {
+    assertPepperConfig();
+    PEPPERS = loadPeppers();
+  }
+  return PEPPERS;
+}
 
 function hmacRaw(data: string, scope: Scope, pepper: Buffer): Buffer {
   const h = crypto.createHmac('sha256', Buffer.concat([pepper, Buffer.from(`:${scope}`)]));
@@ -54,7 +61,8 @@ function hmacRaw(data: string, scope: Scope, pepper: Buffer): Buffer {
 
 export function hmac256(data: string, scope: Scope): { hex: string; used: EncodedPepper['source'] } {
   // Issue with CURRENT (or DEV)
-  const first = PEPPERS[0];
+  const peppers = getPeppers();
+  const first = peppers[0];
   if (!first) throw new Error('No peppers configured');
   const digest = hmacRaw(data, scope, first.raw).toString('hex');
   return { hex: digest, used: first.source };
@@ -62,7 +70,8 @@ export function hmac256(data: string, scope: Scope): { hex: string; used: Encode
 
 export function verifyHmacDigest(plain: string, scope: Scope, presentedHex: string): boolean {
   const presented = Buffer.from(presentedHex, 'hex');
-  for (const p of PEPPERS) {
+  const peppers = getPeppers();
+  for (const p of peppers) {
     const cand = hmacRaw(plain, scope, p.raw);
     if (presented.length === cand.length && crypto.timingSafeEqual(presented, cand)) {
       return true;

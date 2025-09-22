@@ -4,12 +4,11 @@ module.exports = {
     {
       displayName: 'client',
       testEnvironment: 'jsdom',
-      setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
+      setupFiles: ['<rootDir>/jest.setup.js'],
+      setupFilesAfterEnv: ['<rootDir>/jest.setup.after.js', '<rootDir>/tests/setup.ts'],
       testMatch: [
         '<rootDir>/components/**/*.test.{js,jsx,ts,tsx}',
         '<rootDir>/components/**/*.spec.{js,jsx,ts,tsx}',
-        '<rootDir>/app/**/*.test.{js,jsx,ts,tsx}',
-        '<rootDir>/app/**/*.spec.{js,jsx,ts,tsx}',
       ],
       moduleNameMapper: {
         '^@/(.*)$': '<rootDir>/$1',
@@ -18,6 +17,8 @@ module.exports = {
         '^@/shared/(.*)$': '<rootDir>/shared/$1',
         '^@/features/(.*)$': '<rootDir>/features/$1',
         '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
+        '^@/app/api/health/civics/route$': '<rootDir>/tests/__mocks__/api-route.js',
+        '^@/app/api/v1/civics/address-lookup/route$': '<rootDir>/tests/__mocks__/api-route.js',
       },
       testPathIgnorePatterns: [
         "/node_modules/",
@@ -29,7 +30,8 @@ module.exports = {
         ".*\\.disabled\\..*",
         ".*/tests\\.disabled/.*",
         ".*/scripts\\.disabled/.*",
-        ".*/archive/.*"
+        ".*/archive/.*",
+        "/app/api/.*"
       ],
       collectCoverageFrom: [
         'components/**/*.{js,jsx,ts,tsx}',
@@ -45,10 +47,11 @@ module.exports = {
     {
       displayName: 'server',
       testEnvironment: 'node',
-      setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
+      setupFiles: ['<rootDir>/jest.setup.js'],
+      setupFilesAfterEnv: ['<rootDir>/jest.setup.after.js', '<rootDir>/tests/setup.ts'],
       testMatch: [
-        '<rootDir>/tests/**/*.test.{js,jsx,ts,tsx}',
-        '<rootDir>/tests/**/*.spec.{js,jsx,ts,tsx}',
+        '<rootDir>/tests/unit/**/*.test.{js,jsx,ts,tsx}',
+        '<rootDir>/tests/unit/**/*.spec.{js,jsx,ts,tsx}',
         '<rootDir>/lib/**/*.test.{js,jsx,ts,tsx}',
         '<rootDir>/lib/**/*.spec.{js,jsx,ts,tsx}',
       ],
@@ -69,7 +72,8 @@ module.exports = {
         ".*\\.disabled\\..*",
         ".*/tests\\.disabled/.*",
         ".*/scripts\\.disabled/.*",
-        ".*/archive/.*"
+        ".*/archive/.*",
+        "<rootDir>/tests/e2e/" // ← keep Playwright out of Jest
       ],
       collectCoverageFrom: [
         'lib/**/*.{js,jsx,ts,tsx}',

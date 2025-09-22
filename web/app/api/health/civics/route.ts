@@ -5,7 +5,7 @@
  * This endpoint provides health status for the civics system
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { type NextRequest, NextResponse } from 'next/server';
 import { isCivicsEnabled } from '@/lib/civics/privacy-utils';
 
 export async function GET(request: NextRequest) {

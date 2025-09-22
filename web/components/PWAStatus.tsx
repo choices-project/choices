@@ -14,7 +14,7 @@ import {
   Settings
 } from 'lucide-react';
 
-interface PWAStatusProps {
+type PWAStatusProps = {
   showDetails?: boolean;
   className?: string;
 }

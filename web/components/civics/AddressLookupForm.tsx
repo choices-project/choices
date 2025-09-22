@@ -10,7 +10,7 @@
 import { useState } from 'react';
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
 
-interface AddressLookupFormProps {
+type AddressLookupFormProps = {
   onLookup?: (address: string) => void;
   className?: string;
 }

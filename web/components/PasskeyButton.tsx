@@ -2,11 +2,9 @@
 
 import { useState } from 'react';
 import { beginRegister, beginAuthenticate, isWebAuthnSupported } from '@/lib/webauthn/client';
-import { getRPIDAndOrigins } from '@/lib/webauthn/config';
-import { copyConfig } from '@/lib/webauthn/config';
 import { T } from '@/lib/testing/testIds';
 
-interface PasskeyButtonProps {
+type PasskeyButtonProps = {
   mode: 'register' | 'authenticate';
   primary?: boolean;
   disabled?: boolean;

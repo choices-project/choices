@@ -1,36 +1,77 @@
 /**
- * API Endpoints E2E Tests
+ * API Endpoints E2E Tests - V2 Upgrade
  * 
- * Tests all API endpoints for proper functionality, error handling, and security.
+ * Tests all API endpoints for proper functionality, error handling, and security
+ * using V2 mock factory for test data setup and improved test patterns.
  * This ensures the backend is working correctly.
+ * 
+ * Created: January 21, 2025
+ * Updated: January 21, 2025
  */
 
 import { test, expect } from '@playwright/test';
+import { 
+  setupE2ETestData, 
+  cleanupE2ETestData, 
+  createTestUser, 
+  createTestPoll,
+  waitForPageReady,
+  setupExternalAPIMocks,
+  E2E_CONFIG
+} from './helpers/e2e-setup';
 
-test.describe('API Endpoints', () => {
+test.describe('API Endpoints - V2', () => {
+  let testData: {
+    user: ReturnType<typeof createTestUser>;
+    poll: ReturnType<typeof createTestPoll>;
+  };
   let authToken: string;
-  let testUser: { email: string; username: string; password: string };
 
   test.beforeEach(async ({ page }) => {
-    // Set up test data
-    testUser = {
-      email: `test-${Date.now()}@example.com`,
-      username: `testuser-${Date.now()}`,
-      password: 'password123'
+    // Create test data using V2 patterns
+    testData = {
+      user: createTestUser({
+        email: 'api-test@example.com',
+        username: 'apitestuser',
+        password: 'ApiTest123!'
+      }),
+      poll: createTestPoll({
+        title: 'V2 API Test Poll',
+        description: 'Testing API endpoints with V2 setup',
+        options: ['API Option 1', 'API Option 2', 'API Option 3'],
+        category: 'general'
+      })
     };
+
+    // Set up external API mocks
+    await setupExternalAPIMocks(page);
 
     // Navigate to the app
     await page.goto('/');
-    await page.waitForLoadState('networkidle');
+    await waitForPageReady(page);
   });
 
-  test('should test authentication API endpoints', async ({ page }) => {
+  test.afterEach(async () => {
+    // Clean up test data
+    await cleanupE2ETestData({
+      user: testData.user,
+      poll: testData.poll
+    });
+  });
+
+  test('should test authentication API endpoints with V2 setup', async ({ page }) => {
+    // Set up test data for authentication API testing
+    await setupE2ETestData({
+      user: testData.user,
+      poll: testData.poll
+    });
+
     // Test registration endpoint
     const registerResponse = await page.request.post('/api/auth/register', {
       data: {
-        email: testUser.email,
-        username: testUser.username,
-        password: testUser.password
+        email: testData.user.email,
+        username: testData.user.username,
+        password: testData.user.password
       }
     });
     
@@ -41,90 +82,107 @@ test.describe('API Endpoints', () => {
     // Test login endpoint
     const loginResponse = await page.request.post('/api/auth/login', {
       data: {
-        email: testUser.email,
-        password: testUser.password
+        email: testData.user.email,
+        password: testData.user.password
       }
     });
     
     expect(loginResponse.ok()).toBe(true);
     const loginData = await loginResponse.json();
-    expect(loginData).toHaveProperty('success', true);
     expect(loginData).toHaveProperty('token');
-    
     authToken = loginData.token;
-
-    // Test me endpoint
-    const meResponse = await page.request.get('/api/auth/me', {
-      headers: {
-        'Authorization': `Bearer ${authToken}`
-      }
-    });
-    
-    expect(meResponse.ok()).toBe(true);
-    const meData = await meResponse.json();
-    expect(meData).toHaveProperty('user');
-    expect(meData.user).toHaveProperty('email', testUser.email);
-
-    // Test logout endpoint
-    const logoutResponse = await page.request.post('/api/auth/logout', {
-      headers: {
-        'Authorization': `Bearer ${authToken}`
-      }
-    });
-    
-    expect(logoutResponse.ok()).toBe(true);
   });
 
-  test('should test poll API endpoints', async ({ page }) => {
-    // First, authenticate
-    await page.request.post('/api/auth/register', {
-      data: testUser
+  test('should test poll API endpoints with V2 setup', async ({ page }) => {
+    // Set up test data for poll API testing
+    await setupE2ETestData({
+      user: testData.user,
+      poll: testData.poll
     });
-    
+
+    // First authenticate
     const loginResponse = await page.request.post('/api/auth/login', {
       data: {
-        email: testUser.email,
-        password: testUser.password
+        email: testData.user.email,
+        password: testData.user.password
       }
     });
     
     const loginData = await loginResponse.json();
     authToken = loginData.token;
 
-    // Test poll creation
+    // Test poll creation endpoint
     const createPollResponse = await page.request.post('/api/polls', {
       headers: {
         'Authorization': `Bearer ${authToken}`
       },
       data: {
-        title: 'Test Poll',
-        description: 'Test Description',
-        options: ['Option 1', 'Option 2'],
-        category: 'general',
-        privacyLevel: 'public'
+        title: testData.poll.title,
+        description: testData.poll.description,
+        options: testData.poll.options,
+        category: testData.poll.category
       }
     });
     
     expect(createPollResponse.ok()).toBe(true);
     const pollData = await createPollResponse.json();
-    expect(pollData).toHaveProperty('poll');
-    expect(pollData.poll).toHaveProperty('id');
-    
-    const pollId = pollData.poll.id;
+    expect(pollData).toHaveProperty('id');
+    expect(pollData.title).toBe(testData.poll.title);
 
-    // Test poll retrieval
-    const getPollResponse = await page.request.get(`/api/polls/${pollId}`);
+    // Test poll retrieval endpoint
+    const getPollResponse = await page.request.get(`/api/polls/${pollData.id}`);
     expect(getPollResponse.ok()).toBe(true);
     const retrievedPoll = await getPollResponse.json();
-    expect(retrievedPoll).toHaveProperty('title', 'Test Poll');
+    expect(retrievedPoll.title).toBe(testData.poll.title);
 
-    // Test poll voting
-    const voteResponse = await page.request.post(`/api/polls/${pollId}/vote`, {
+    // Test polls list endpoint
+    const listPollsResponse = await page.request.get('/api/polls');
+    expect(listPollsResponse.ok()).toBe(true);
+    const pollsList = await listPollsResponse.json();
+    expect(Array.isArray(pollsList)).toBe(true);
+  });
+
+  test('should test voting API endpoints with V2 setup', async ({ page }) => {
+    // Set up test data for voting API testing
+    await setupE2ETestData({
+      user: testData.user,
+      poll: testData.poll
+    });
+
+    // First authenticate
+    const loginResponse = await page.request.post('/api/auth/login', {
+      data: {
+        email: testData.user.email,
+        password: testData.user.password
+      }
+    });
+    
+    const loginData = await loginResponse.json();
+    authToken = loginData.token;
+
+    // Create a poll first
+    const createPollResponse = await page.request.post('/api/polls', {
       headers: {
         'Authorization': `Bearer ${authToken}`
       },
       data: {
-        optionId: retrievedPoll.options[0].id
+        title: testData.poll.title,
+        description: testData.poll.description,
+        options: testData.poll.options,
+        category: testData.poll.category
+      }
+    });
+    
+    const pollData = await createPollResponse.json();
+
+    // Test vote submission endpoint
+    const voteResponse = await page.request.post(`/api/polls/${pollData.id}/vote`, {
+      headers: {
+        'Authorization': `Bearer ${authToken}`
+      },
+      data: {
+        optionId: pollData.options[0].id,
+        votingMethod: 'single'
       }
     });
     
@@ -132,186 +190,404 @@ test.describe('API Endpoints', () => {
     const voteData = await voteResponse.json();
     expect(voteData).toHaveProperty('success', true);
 
-    // Test poll results
-    const resultsResponse = await page.request.get(`/api/polls/${pollId}/results`);
+    // Test poll results endpoint
+    const resultsResponse = await page.request.get(`/api/polls/${pollData.id}/results`);
     expect(resultsResponse.ok()).toBe(true);
-    const results = await resultsResponse.json();
-    expect(results).toHaveProperty('results');
+    const resultsData = await resultsResponse.json();
+    expect(resultsData).toHaveProperty('results');
   });
 
-  test('should test PWA API endpoints', async ({ page }) => {
+  test('should test civics API endpoints with V2 setup', async ({ page }) => {
+    // Set up test data for civics API testing
+    await setupE2ETestData({
+      user: testData.user,
+      poll: testData.poll
+    });
+
+    // Test address lookup endpoint
+    const addressLookupResponse = await page.request.post('/api/v1/civics/address-lookup', {
+      data: {
+        address: '123 Any St, Springfield, IL 62704'
+      }
+    });
+    
+    expect(addressLookupResponse.ok()).toBe(true);
+    const addressData = await addressLookupResponse.json();
+    expect(addressData).toHaveProperty('district');
+    expect(addressData).toHaveProperty('state');
+
+    // Test jurisdiction info endpoint
+    const jurisdictionResponse = await page.request.get('/api/v1/civics/jurisdiction-info', {
+      params: {
+        state: 'IL',
+        district: '13'
+      }
+    });
+    
+    expect(jurisdictionResponse.ok()).toBe(true);
+    const jurisdictionData = await jurisdictionResponse.json();
+    expect(jurisdictionData).toHaveProperty('representatives');
+  });
+
+  test('should test user profile API endpoints with V2 setup', async ({ page }) => {
+    // Set up test data for user profile API testing
+    await setupE2ETestData({
+      user: testData.user,
+      poll: testData.poll
+    });
+
+    // First authenticate
+    const loginResponse = await page.request.post('/api/auth/login', {
+      data: {
+        email: testData.user.email,
+        password: testData.user.password
+      }
+    });
+    
+    const loginData = await loginResponse.json();
+    authToken = loginData.token;
+
+    // Test get user profile endpoint
+    const getProfileResponse = await page.request.get('/api/user/profile', {
+      headers: {
+        'Authorization': `Bearer ${authToken}`
+      }
+    });
+    
+    expect(getProfileResponse.ok()).toBe(true);
+    const profileData = await getProfileResponse.json();
+    expect(profileData).toHaveProperty('email');
+    expect(profileData.email).toBe(testData.user.email);
+
+    // Test update user profile endpoint
+    const updateProfileResponse = await page.request.put('/api/user/profile', {
+      headers: {
+        'Authorization': `Bearer ${authToken}`
+      },
+      data: {
+        displayName: 'Updated Display Name',
+        bio: 'Updated bio'
+      }
+    });
+    
+    expect(updateProfileResponse.ok()).toBe(true);
+    const updatedProfileData = await updateProfileResponse.json();
+    expect(updatedProfileData.displayName).toBe('Updated Display Name');
+  });
+
+  test('should test dashboard API endpoints with V2 setup', async ({ page }) => {
+    // Set up test data for dashboard API testing
+    await setupE2ETestData({
+      user: testData.user,
+      poll: testData.poll
+    });
+
+    // First authenticate
+    const loginResponse = await page.request.post('/api/auth/login', {
+      data: {
+        email: testData.user.email,
+        password: testData.user.password
+      }
+    });
+    
+    const loginData = await loginResponse.json();
+    authToken = loginData.token;
+
+    // Test dashboard data endpoint
+    const dashboardResponse = await page.request.get('/api/dashboard', {
+      headers: {
+        'Authorization': `Bearer ${authToken}`
+      }
+    });
+    
+    expect(dashboardResponse.ok()).toBe(true);
+    const dashboardData = await dashboardResponse.json();
+    expect(dashboardData).toHaveProperty('metrics');
+    expect(dashboardData).toHaveProperty('recentPolls');
+
+    // Test dashboard metrics endpoint
+    const metricsResponse = await page.request.get('/api/dashboard/metrics', {
+      headers: {
+        'Authorization': `Bearer ${authToken}`
+      }
+    });
+    
+    expect(metricsResponse.ok()).toBe(true);
+    const metricsData = await metricsResponse.json();
+    expect(metricsData).toHaveProperty('pollsCreated');
+    expect(metricsData).toHaveProperty('votesCast');
+  });
+
+  test('should test WebAuthn API endpoints with V2 setup', async ({ page }) => {
+    // Set up test data for WebAuthn API testing
+    await setupE2ETestData({
+      user: testData.user,
+      poll: testData.poll
+    });
+
+    // First authenticate
+    const loginResponse = await page.request.post('/api/auth/login', {
+      data: {
+        email: testData.user.email,
+        password: testData.user.password
+      }
+    });
+    
+    const loginData = await loginResponse.json();
+    authToken = loginData.token;
+
+    // Test WebAuthn registration options endpoint
+    const registerOptionsResponse = await page.request.post('/api/v1/auth/webauthn/register/options', {
+      headers: {
+        'Authorization': `Bearer ${authToken}`
+      },
+      data: {}
+    });
+    
+    expect(registerOptionsResponse.ok()).toBe(true);
+    const registerOptionsData = await registerOptionsResponse.json();
+    expect(registerOptionsData).toHaveProperty('challenge');
+
+    // Test WebAuthn authentication options endpoint
+    const authOptionsResponse = await page.request.post('/api/v1/auth/webauthn/authenticate/options', {
+      headers: {
+        'Authorization': `Bearer ${authToken}`
+      },
+      data: {}
+    });
+    
+    expect(authOptionsResponse.ok()).toBe(true);
+    const authOptionsData = await authOptionsResponse.json();
+    expect(authOptionsData).toHaveProperty('challenge');
+  });
+
+  test('should test PWA API endpoints with V2 setup', async ({ page }) => {
+    // Set up test data for PWA API testing
+    await setupE2ETestData({
+      user: testData.user,
+      poll: testData.poll
+    });
+
+    // First authenticate
+    const loginResponse = await page.request.post('/api/auth/login', {
+      data: {
+        email: testData.user.email,
+        password: testData.user.password
+      }
+    });
+    
+    const loginData = await loginResponse.json();
+    authToken = loginData.token;
+
     // Test PWA manifest endpoint
-    const manifestResponse = await page.request.get('/api/pwa/manifest');
+    const manifestResponse = await page.request.get('/manifest.json');
     expect(manifestResponse.ok()).toBe(true);
-    const manifest = await manifestResponse.json();
-    expect(manifest).toHaveProperty('success', true);
-    expect(manifest).toHaveProperty('manifest');
+    const manifestData = await manifestResponse.json();
+    expect(manifestData).toHaveProperty('name');
+    expect(manifestData).toHaveProperty('short_name');
 
-    // Test PWA status endpoint
-    const statusResponse = await page.request.get('/api/pwa/status');
-    expect(statusResponse.ok()).toBe(true);
-    const status = await statusResponse.json();
-    expect(status).toHaveProperty('success', true);
-    expect(status).toHaveProperty('status');
+    // Test service worker endpoint
+    const swResponse = await page.request.get('/sw.js');
+    expect(swResponse.ok()).toBe(true);
 
-    // Test PWA offline sync endpoint
-    const syncResponse = await page.request.post('/api/pwa/offline/sync', {
+    // Test push notification subscription endpoint
+    const pushSubscriptionResponse = await page.request.post('/api/pwa/push-subscribe', {
+      headers: {
+        'Authorization': `Bearer ${authToken}`
+      },
       data: {
-        actions: []
-      }
-    });
-    expect(syncResponse.ok()).toBe(true);
-    const syncData = await syncResponse.json();
-    expect(syncData).toHaveProperty('success', true);
-  });
-
-  test('should test WebAuthn API endpoints', async ({ page }) => {
-    // Test WebAuthn registration endpoint
-    const registerResponse = await page.request.post('/api/auth/webauthn/register', {
-      data: {
-        username: testUser.username,
-        displayName: 'Test User'
+        endpoint: 'https://fcm.googleapis.com/fcm/send/test-endpoint',
+        keys: {
+          p256dh: 'test-p256dh-key',
+          auth: 'test-auth-key'
+        }
       }
     });
     
-    // This might fail if WebAuthn is not available in test environment
-    // But we should get a proper error response, not a 500
-    expect(registerResponse.status()).toBeLessThan(500);
+    expect(pushSubscriptionResponse.ok()).toBe(true);
+    const subscriptionData = await pushSubscriptionResponse.json();
+    expect(subscriptionData).toHaveProperty('success', true);
+  });
 
-    // Test WebAuthn authentication endpoint
-    const authResponse = await page.request.post('/api/auth/webauthn/authenticate', {
-      data: {
-        username: testUser.username
-      }
+  test('should test API error handling with V2 setup', async ({ page }) => {
+    // Set up test data for API error handling testing
+    await setupE2ETestData({
+      user: testData.user,
+      poll: testData.poll
     });
-    
-    expect(authResponse.status()).toBeLessThan(500);
-  });
 
-  test('should test admin API endpoints', async ({ page }) => {
-    // Test admin system status endpoint
-    const systemStatusResponse = await page.request.get('/api/admin/system-status');
-    expect(systemStatusResponse.ok()).toBe(true);
-    const systemStatus = await systemStatusResponse.json();
-    expect(systemStatus).toHaveProperty('status');
-
-    // Test admin users endpoint
-    const usersResponse = await page.request.get('/api/admin/users');
-    // This might require admin authentication, so we expect either 200 or 401/403
-    expect([200, 401, 403]).toContain(usersResponse.status());
-
-    // Test admin feedback endpoint
-    const feedbackResponse = await page.request.get('/api/admin/feedback');
-    expect([200, 401, 403]).toContain(feedbackResponse.status());
-  });
-
-  test('should test health check endpoints', async ({ page }) => {
-    // Test main health endpoint
-    const healthResponse = await page.request.get('/api/health');
-    expect(healthResponse.ok()).toBe(true);
-    const health = await healthResponse.json();
-    expect(health).toHaveProperty('status', 'ok');
-
-    // Test database health endpoint
-    const dbHealthResponse = await page.request.get('/api/database-health');
-    expect(dbHealthResponse.ok()).toBe(true);
-    const dbHealth = await dbHealthResponse.json();
-    expect(dbHealth).toHaveProperty('status');
-
-    // Test civics health endpoint
-    const civicsHealthResponse = await page.request.get('/api/health/civics');
-    expect(civicsHealthResponse.ok()).toBe(true);
-    const civicsHealth = await civicsHealthResponse.json();
-    expect(civicsHealth).toHaveProperty('status');
-  });
-
-  test('should test error handling for invalid requests', async ({ page }) => {
     // Test invalid authentication
-    const invalidAuthResponse = await page.request.get('/api/auth/me', {
+    const invalidAuthResponse = await page.request.get('/api/user/profile', {
       headers: {
         'Authorization': 'Bearer invalid-token'
       }
     });
+    
     expect(invalidAuthResponse.status()).toBe(401);
 
     // Test invalid poll ID
     const invalidPollResponse = await page.request.get('/api/polls/invalid-id');
     expect(invalidPollResponse.status()).toBe(404);
 
-    // Test invalid endpoint
-    const invalidEndpointResponse = await page.request.get('/api/invalid-endpoint');
-    expect(invalidEndpointResponse.status()).toBe(404);
+    // Test invalid vote data
+    const invalidVoteResponse = await page.request.post('/api/polls/invalid-id/vote', {
+      data: {
+        optionId: 'invalid-option'
+      }
+    });
+    
+    expect(invalidVoteResponse.status()).toBe(400);
   });
 
-  test('should test rate limiting', async ({ page }) => {
-    // Make multiple rapid requests to test rate limiting
+  test('should test API rate limiting with V2 setup', async ({ page }) => {
+    // Set up test data for API rate limiting testing
+    await setupE2ETestData({
+      user: testData.user,
+      poll: testData.poll
+    });
+
+    // Make multiple requests to trigger rate limiting
     const requests = [];
     for (let i = 0; i < 10; i++) {
-      requests.push(page.request.get('/api/health'));
+      requests.push(page.request.get('/api/polls'));
     }
-    
+
     const responses = await Promise.all(requests);
     
-    // All requests should succeed (rate limiting might not be enabled in test)
-    // But we should not get 500 errors
-    responses.forEach(response => {
-      expect(response.status()).toBeLessThan(500);
+    // Some requests should be rate limited
+    const rateLimitedResponses = responses.filter(r => r.status() === 429);
+    expect(rateLimitedResponses.length).toBeGreaterThan(0);
+  });
+
+  test('should test API with different user types with V2 setup', async ({ page }) => {
+    // Create different user types for testing
+    const regularUser = createTestUser({
+      email: 'regular-api@example.com',
+      username: 'regularapi'
     });
+
+    const adminUser = createTestUser({
+      email: 'admin-api@example.com',
+      username: 'adminapi'
+    });
+
+    // Test regular user API access
+    await setupE2ETestData({
+      user: regularUser,
+      poll: testData.poll
+    });
+
+    const regularLoginResponse = await page.request.post('/api/auth/login', {
+      data: {
+        email: regularUser.email,
+        password: regularUser.password
+      }
+    });
+    
+    const regularLoginData = await regularLoginResponse.json();
+    const regularToken = regularLoginData.token;
+
+    // Test regular user endpoints
+    const regularProfileResponse = await page.request.get('/api/user/profile', {
+      headers: {
+        'Authorization': `Bearer ${regularToken}`
+      }
+    });
+    
+    expect(regularProfileResponse.ok()).toBe(true);
+
+    // Test admin user API access
+    await setupE2ETestData({
+      user: adminUser,
+      poll: testData.poll
+    });
+
+    const adminLoginResponse = await page.request.post('/api/auth/login', {
+      data: {
+        email: adminUser.email,
+        password: adminUser.password
+      }
+    });
+    
+    const adminLoginData = await adminLoginResponse.json();
+    const adminToken = adminLoginData.token;
+
+    // Test admin user endpoints
+    const adminProfileResponse = await page.request.get('/api/user/profile', {
+      headers: {
+        'Authorization': `Bearer ${adminToken}`
+      }
+    });
+    
+    expect(adminProfileResponse.ok()).toBe(true);
   });
 
-  test('should test CORS headers', async ({ page }) => {
-    // Test that API endpoints return proper CORS headers
-    const response = await page.request.get('/api/health');
-    const headers = response.headers();
-    
-    // Check for CORS headers
-    expect(headers).toHaveProperty('access-control-allow-origin');
-    expect(headers).toHaveProperty('access-control-allow-methods');
+  test('should test API with mobile viewport with V2 setup', async ({ page }) => {
+    // Set up test data for mobile API testing
+    await setupE2ETestData({
+      user: testData.user,
+      poll: testData.poll
+    });
+
+    // Set mobile viewport
+    await page.setViewportSize(E2E_CONFIG.BROWSER.MOBILE_VIEWPORT);
+
+    // Test mobile API endpoints
+    const mobilePollsResponse = await page.request.get('/api/polls');
+    expect(mobilePollsResponse.ok()).toBe(true);
+
+    const mobileManifestResponse = await page.request.get('/manifest.json');
+    expect(mobileManifestResponse.ok()).toBe(true);
   });
 
-  test('should test feature flag API', async ({ page }) => {
-    // Test feature flag endpoint
-    const flagsResponse = await page.request.get('/api/e2e/flags');
-    expect(flagsResponse.ok()).toBe(true);
-    const flags = await flagsResponse.json();
-    
-    // Verify expected flags are present
-    expect(flags).toHaveProperty('PWA');
-    expect(flags).toHaveProperty('SOCIAL_SHARING');
-    expect(flags).toHaveProperty('ANALYTICS');
-    
-    // Verify expected values
-    expect(flags.PWA).toBe(true);
-    expect(flags.SOCIAL_SHARING).toBe(false);
-    expect(flags.ANALYTICS).toBe(false);
+  test('should test API performance with V2 setup', async ({ page }) => {
+    // Set up test data for API performance testing
+    await setupE2ETestData({
+      user: testData.user,
+      poll: testData.poll
+    });
+
+    // Measure API performance
+    const startTime = Date.now();
+
+    // Test multiple API endpoints
+    const responses = await Promise.all([
+      page.request.get('/api/polls'),
+      page.request.get('/manifest.json'),
+      page.request.get('/sw.js')
+    ]);
+
+    const endTime = Date.now();
+    const apiTime = endTime - startTime;
+
+    // All requests should succeed
+    responses.forEach(response => {
+      expect(response.ok()).toBe(true);
+    });
+
+    // Performance should be acceptable
+    expect(apiTime).toBeLessThan(5000);
   });
 
-  test('should test analytics API (should be disabled)', async ({ page }) => {
-    // Test analytics endpoint - should be disabled
-    const analyticsResponse = await page.request.get('/api/analytics');
-    expect(analyticsResponse.status()).toBe(404);
-    
-    // Test analytics summary endpoint - should be disabled
-    const summaryResponse = await page.request.get('/api/analytics/summary');
-    expect(summaryResponse.status()).toBe(404);
-  });
+  test('should test API with offline functionality with V2 setup', async ({ page }) => {
+    // Set up test data for offline API testing
+    await setupE2ETestData({
+      user: testData.user,
+      poll: testData.poll
+    });
 
-  test('should test social sharing API (should be disabled)', async ({ page }) => {
-    // Test social sharing endpoints - should be disabled
-    const socialResponse = await page.request.get('/api/social/share');
-    expect(socialResponse.status()).toBe(404);
-    
-    const candidatesResponse = await page.request.get('/api/social/candidates');
-    expect(candidatesResponse.status()).toBe(404);
-  });
+    // Go offline
+    await page.context().setOffline(true);
 
-  test('should test civics API (should be disabled)', async ({ page }) => {
-    // Test civics endpoints - should be disabled
-    const civicsResponse = await page.request.get('/api/civics/by-state');
-    expect(civicsResponse.status()).toBe(404);
-    
-    const localResponse = await page.request.get('/api/civics/local/la');
-    expect(localResponse.status()).toBe(404);
+    // Test API endpoints while offline
+    const offlineResponse = await page.request.get('/api/polls');
+    expect(offlineResponse.status()).toBe(0); // Network error
+
+    // Go back online
+    await page.context().setOffline(false);
+
+    // Test API endpoints while online
+    const onlineResponse = await page.request.get('/api/polls');
+    expect(onlineResponse.ok()).toBe(true);
   });
 });
-

@@ -5,7 +5,6 @@
  * for monitoring and optimizing the application's bundle size.
  */
 
-import { BundleAnalyzerPlugin } from 'webpack-bundle-analyzer';
 
 export default {
   // Bundle analyzer plugin configuration

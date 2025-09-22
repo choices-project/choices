@@ -5,7 +5,7 @@
  * Feature-flagged and privacy-safe.
  */
 
-import { NextRequest, NextResponse } from 'next/server'
+import { type NextRequest, NextResponse } from 'next/server'
 import { isFeatureEnabled } from '@/lib/core/feature-flags'
 
 // TODO: Replace with actual Supabase client when ready

@@ -1,19 +1,19 @@
 import * as React from "react"
 import { cn } from "@/lib/utils"
 
-interface AvatarProps extends React.HTMLAttributes<HTMLDivElement> {
+type AvatarProps = {
   className?: string
-}
+} & React.HTMLAttributes<HTMLDivElement>
 
-interface AvatarImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
+type AvatarImageProps = {
   className?: string
   src?: string
   alt?: string
-}
+} & React.ImgHTMLAttributes<HTMLImageElement>
 
-interface AvatarFallbackProps extends React.HTMLAttributes<HTMLDivElement> {
+type AvatarFallbackProps = {
   className?: string
-}
+} & React.HTMLAttributes<HTMLDivElement>
 
 const Avatar = React.forwardRef<HTMLDivElement, AvatarProps>(
   ({ className, ...props }, ref) => (

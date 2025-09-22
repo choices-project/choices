@@ -103,10 +103,10 @@ export class PWAUtils {
   }
 }
 
-export type BeforeInstallPromptEvent = {
+export interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>;
   userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
-} & Event
+}
 
 declare global {
   interface WindowEventMap {
@@ -137,7 +137,7 @@ export class PWAManager {
 
   async subscribeToPushNotifications(): Promise<void> {
     if ('serviceWorker' in navigator && 'PushManager' in window) {
-      const registration = await navigator.serviceWorker.ready;
+      const _registration = await navigator.serviceWorker.ready;
       // Implementation would go here
     }
   }

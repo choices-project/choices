@@ -10,7 +10,7 @@
 import { useState } from 'react'
 import { isFeatureEnabled } from '@/lib/core/feature-flags'
 import { buildShareUrl, generateShareText, PLATFORM_CONFIG, type SharePlatform } from '@/lib/share'
-import { Share2, Copy, X, Facebook, Linkedin, MessageCircle, Mail, Smartphone, Send } from 'lucide-react'
+import { Share2, Copy, X, Facebook, Linkedin, MessageCircle, Mail, Smartphone } from 'lucide-react'
 
 type EnhancedPollShareProps = {
   pollId?: string | undefined

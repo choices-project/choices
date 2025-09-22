@@ -24,7 +24,7 @@ import { devLog } from '@/lib/logger'
 import BiometricSetup from '@/components/auth/BiometricSetup'
 import { useAuth } from '@/hooks/useAuth'
 
-interface UserProfile {
+type UserProfile = {
   id: string
   email: string
   verificationtier: string
@@ -32,7 +32,7 @@ interface UserProfile {
   updatedat: string
 }
 
-interface BiometricCredential {
+type BiometricCredential = {
   id: string
   credentialId: string
   deviceType: string

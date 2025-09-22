@@ -1,9 +1,9 @@
 import * as React from "react"
 import { cn } from "@/lib/utils"
 
-interface SwitchProps extends React.InputHTMLAttributes<HTMLInputElement> {
+type SwitchProps = {
   className?: string
-}
+} & React.InputHTMLAttributes<HTMLInputElement>
 
 const Switch = React.forwardRef<HTMLInputElement, SwitchProps>(
   ({ className, ...props }, ref) => (

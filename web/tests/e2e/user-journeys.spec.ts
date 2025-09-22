@@ -1,29 +1,58 @@
 /**
- * User Journey E2E Tests
+ * User Journey E2E Tests - V2 Upgrade
  * 
- * Tests complete user workflows from registration to voting.
- * This ensures the entire user experience works end-to-end.
+ * Tests complete user workflows from registration to voting using V2 mock factory
+ * for test data setup and improved test patterns.
+ * 
+ * Created: January 21, 2025
+ * Updated: January 21, 2025
  */
 
 import { test, expect } from '@playwright/test';
+import { 
+  setupE2ETestData, 
+  cleanupE2ETestData, 
+  createTestUser, 
+  createTestPoll,
+  waitForPageReady,
+  setupExternalAPIMocks,
+  E2E_CONFIG
+} from './helpers/e2e-setup';
 
-test.describe('User Journeys', () => {
-  let testUser: { email: string; username: string; password: string };
+test.describe('User Journeys - V2', () => {
+  let testData: {
+    user: ReturnType<typeof createTestUser>;
+    poll: ReturnType<typeof createTestPoll>;
+  };
 
   test.beforeEach(async ({ page }) => {
-    // Set up test data with proper validation requirements
-    testUser = {
-      email: `test-${Date.now()}@example.com`,
-      username: `testuser${Math.floor(Math.random() * 1000)}`, // Simple alphanumeric username
-      password: 'TestPassword123!' // Must be at least 8 characters
+    // Create test data using V2 patterns
+    testData = {
+      user: createTestUser(),
+      poll: createTestPoll({
+        title: 'V2 User Journey Test Poll',
+        description: 'Testing complete user journey with V2 mock factory setup',
+        options: ['Option 1', 'Option 2', 'Option 3', 'Option 4']
+      })
     };
+
+    // Set up external API mocks
+    await setupExternalAPIMocks(page);
 
     // Navigate to the app
     await page.goto('/');
-    await page.waitForLoadState('networkidle');
+    await waitForPageReady(page);
   });
 
-  test('should complete new user onboarding journey', async ({ page }) => {
+  test.afterEach(async () => {
+    // Clean up test data
+    await cleanupE2ETestData({
+      user: testData.user,
+      poll: testData.poll
+    });
+  });
+
+  test('should complete new user onboarding journey with V2 setup', async ({ page }) => {
     // Step 1: Landing page
     await expect(page).toHaveURL('/');
     await expect(page.locator('h1:has-text("Choices")')).toBeVisible();
@@ -40,12 +69,12 @@ test.describe('User Journeys', () => {
     await page.click('button:has-text("Password Account")');
     await page.waitForTimeout(500); // Wait for form to render
     
-    // Step 5: Fill registration form with valid data
-    console.log('Test user data:', testUser);
-    await page.fill('[data-testid="email"]', testUser.email);
-    await page.fill('[data-testid="username"]', testUser.username);
-    await page.fill('[data-testid="password"]', testUser.password);
-    await page.fill('[data-testid="confirm-password"]', testUser.password);
+    // Step 5: Fill registration form with V2 test data
+    console.log('V2 Test user data:', testData.user);
+    await page.fill('[data-testid="email"]', testData.user.email);
+    await page.fill('[data-testid="username"]', testData.user.username);
+    await page.fill('[data-testid="password"]', testData.user.password);
+    await page.fill('[data-testid="confirm-password"]', testData.user.password);
     
     // Step 6: Submit registration
     await page.click('[data-testid="register-button"]');
@@ -58,29 +87,35 @@ test.describe('User Journeys', () => {
     await expect(page.locator('[data-testid="welcome-step"]')).toBeVisible();
   });
 
-      test('should complete poll creation and voting journey', async ({ page }) => {
-        // Capture console logs
-        const consoleLogs: string[] = [];
-        page.on('console', msg => {
-          consoleLogs.push(`[${msg.type()}] ${msg.text()}`);
-        });
+  test('should complete poll creation and voting journey with V2 setup', async ({ page }) => {
+    // Set up test data for this journey
+    await setupE2ETestData({
+      user: testData.user,
+      poll: testData.poll
+    });
 
-        // Step 1: Register user
-        await page.click('[data-testid="sign-up-button"]');
-        await page.waitForURL('/register');
+    // Capture console logs
+    const consoleLogs: string[] = [];
+    page.on('console', msg => {
+      consoleLogs.push(`[${msg.type()}] ${msg.text()}`);
+    });
+
+    // Step 1: Register user
+    await page.click('[data-testid="sign-up-button"]');
+    await page.waitForURL('/register');
     
     // Wait for form hydration
     await page.waitForSelector('[data-testid="register-hydrated"]', { state: 'attached' });
     await expect(page.locator('[data-testid="register-hydrated"]')).toHaveText('1');
     
-    // Select password registration method (since WebAuthn is now default)
+    // Select password registration method
     await page.click('button:has-text("Password Account")');
-    await page.waitForTimeout(500); // Wait for form to render
+    await page.waitForTimeout(500);
     
-    await page.fill('[data-testid="email"]', testUser.email);
-    await page.fill('[data-testid="username"]', testUser.username);
-    await page.fill('[data-testid="password"]', testUser.password);
-    await page.fill('[data-testid="confirm-password"]', testUser.password);
+    await page.fill('[data-testid="email"]', testData.user.email);
+    await page.fill('[data-testid="username"]', testData.user.username);
+    await page.fill('[data-testid="password"]', testData.user.password);
+    await page.fill('[data-testid="confirm-password"]', testData.user.password);
     
     await page.click('[data-testid="register-button"]');
     await page.waitForURL('/onboarding*');
@@ -97,39 +132,35 @@ test.describe('User Journeys', () => {
     
     // Use App Router-aware assertions for the final step
     await Promise.all([
-      page.waitForURL('**/dashboard', { waitUntil: 'commit' }), // soft nav friendly
+      page.waitForURL('**/dashboard', { waitUntil: 'commit' }),
       page.click('[data-testid="complete-onboarding"]'),
     ]);
     
-    await expect(page).toHaveURL(/\/dashboard$/); // auto-wait
+    await expect(page).toHaveURL(/\/dashboard$/);
     
     // Step 3: Navigate to polls
     await page.click('[data-testid="polls-nav"]');
     await page.waitForURL('/polls');
     
-    // Step 4: Create a poll
+    // Step 4: Create a poll using V2 test data
     await page.click('[data-testid="create-poll-button"]');
     await page.waitForURL('/polls/create');
     
-    // Step 5: Fill poll form
-    await page.fill('[data-testid="poll-create-title"]', 'What should be our top priority?');
-    await page.fill('[data-testid="poll-create-description"]', 'Help us decide what to focus on next.');
+    // Step 5: Fill poll form with V2 test data
+    await page.fill('[data-testid="poll-create-title"]', testData.poll.title);
+    await page.fill('[data-testid="poll-create-description"]', testData.poll.description);
     await page.selectOption('[data-testid="poll-create-voting-method"]', 'single');
-    await page.fill('[data-testid="poll-create-option-input-1"]', 'Climate Action');
-    await page.fill('[data-testid="poll-create-option-input-2"]', 'Economic Growth');
+    await page.fill('[data-testid="poll-create-option-input-1"]', testData.poll.options[0]);
+    await page.fill('[data-testid="poll-create-option-input-2"]', testData.poll.options[1]);
     
     // Step 6: Submit poll
     await page.click('[data-testid="poll-create-submit"]');
     await page.waitForURL(/\/polls\/[a-f0-9-]+/);
     
-    // Debug: Check what's on the page
-    console.log('Current URL after poll creation:', page.url());
-    console.log('Poll title element exists:', await page.locator('[data-testid="poll-title"]').count());
-    
-    // Step 7: Verify poll was created
-    await expect(page.locator('[data-testid="poll-title"]')).toHaveText('What should be our top priority?');
-    await expect(page.locator('text=Climate Action')).toBeVisible();
-    await expect(page.locator('text=Economic Growth')).toBeVisible();
+    // Step 7: Verify poll was created with V2 test data
+    await expect(page.locator('[data-testid="poll-title"]')).toHaveText(testData.poll.title);
+    await expect(page.locator(`text=${testData.poll.options[0]}`)).toBeVisible();
+    await expect(page.locator(`text=${testData.poll.options[1]}`)).toBeVisible();
     
     // Step 8: Vote on the poll
     await page.click('[data-testid="vote-button"]');
@@ -140,10 +171,16 @@ test.describe('User Journeys', () => {
     await expect(page.locator('[data-testid="poll-results"]')).toBeVisible();
 
     // Log console output for debugging
-    console.log('Console logs during test:', consoleLogs);
+    console.log('V2 Console logs during test:', consoleLogs);
   });
 
-  test('should complete WebAuthn authentication journey', async ({ page }) => {
+  test('should complete WebAuthn authentication journey with V2 setup', async ({ page }) => {
+    // Set up test data for WebAuthn journey
+    await setupE2ETestData({
+      user: testData.user,
+      poll: testData.poll
+    });
+
     // Step 1: Register with regular authentication first
     await page.click('[data-testid="sign-up-button"]');
     await page.waitForURL('/register');
@@ -152,10 +189,10 @@ test.describe('User Journeys', () => {
     await page.waitForSelector('[data-testid="register-hydrated"]', { state: 'attached' });
     await expect(page.locator('[data-testid="register-hydrated"]')).toHaveText('1');
     
-    await page.fill('[data-testid="email"]', testUser.email);
-    await page.fill('[data-testid="username"]', testUser.username);
-    await page.fill('[data-testid="password"]', testUser.password);
-    await page.fill('[data-testid="confirm-password"]', testUser.password);
+    await page.fill('[data-testid="email"]', testData.user.email);
+    await page.fill('[data-testid="username"]', testData.user.username);
+    await page.fill('[data-testid="password"]', testData.user.password);
+    await page.fill('[data-testid="confirm-password"]', testData.user.password);
     
     await page.click('[data-testid="register-button"]');
     await page.waitForURL('/onboarding*');
@@ -172,11 +209,11 @@ test.describe('User Journeys', () => {
     
     // Use App Router-aware assertions for the final step
     await Promise.all([
-      page.waitForURL('**/dashboard', { waitUntil: 'commit' }), // soft nav friendly
+      page.waitForURL('**/dashboard', { waitUntil: 'commit' }),
       page.click('[data-testid="complete-onboarding"]'),
     ]);
     
-    await expect(page).toHaveURL(/\/dashboard$/); // auto-wait
+    await expect(page).toHaveURL(/\/dashboard$/);
     
     // Step 3: Navigate to profile to set up WebAuthn
     await page.click('[data-testid="user-menu"]');
@@ -202,14 +239,20 @@ test.describe('User Journeys', () => {
     await page.click('[data-testid="login-button"]');
     await page.waitForURL('/login');
     
-    await page.fill('[data-testid="login-email"]', testUser.email);
+    await page.fill('[data-testid="login-email"]', testData.user.email);
     await page.click('[data-testid="webauthn-login"]');
     
     // Verify biometric prompt is shown
     await expect(page.locator('[data-testid="webauthn-auth-prompt"]')).toBeVisible();
   });
 
-  test('should complete PWA installation journey', async ({ page }) => {
+  test('should complete PWA installation journey with V2 setup', async ({ page }) => {
+    // Set up test data for PWA journey
+    await setupE2ETestData({
+      user: testData.user,
+      poll: testData.poll
+    });
+
     // Step 1: Register and login
     await page.click('[data-testid="sign-up-button"]');
     await page.waitForURL('/register');
@@ -218,10 +261,10 @@ test.describe('User Journeys', () => {
     await page.waitForSelector('[data-testid="register-hydrated"]', { state: 'attached' });
     await expect(page.locator('[data-testid="register-hydrated"]')).toHaveText('1');
     
-    await page.fill('[data-testid="email"]', testUser.email);
-    await page.fill('[data-testid="username"]', testUser.username);
-    await page.fill('[data-testid="password"]', testUser.password);
-    await page.fill('[data-testid="confirm-password"]', testUser.password);
+    await page.fill('[data-testid="email"]', testData.user.email);
+    await page.fill('[data-testid="username"]', testData.user.username);
+    await page.fill('[data-testid="password"]', testData.user.password);
+    await page.fill('[data-testid="confirm-password"]', testData.user.password);
     
     await page.click('[data-testid="register-button"]');
     await page.waitForURL('/onboarding*');
@@ -238,11 +281,11 @@ test.describe('User Journeys', () => {
     
     // Use App Router-aware assertions for the final step
     await Promise.all([
-      page.waitForURL('**/dashboard', { waitUntil: 'commit' }), // soft nav friendly
+      page.waitForURL('**/dashboard', { waitUntil: 'commit' }),
       page.click('[data-testid="complete-onboarding"]'),
     ]);
     
-    await expect(page).toHaveURL(/\/dashboard$/); // auto-wait
+    await expect(page).toHaveURL(/\/dashboard$/);
     
     // Step 3: Check PWA status
     await expect(page.locator('[data-testid="pwa-status"]')).toBeVisible();
@@ -267,8 +310,20 @@ test.describe('User Journeys', () => {
     await expect(page.locator('[data-testid="pwa-installed-status"]')).toBeVisible();
   });
 
-  test('should complete admin user journey', async ({ page }) => {
-    // Step 1: Register as regular user first
+  test('should complete admin user journey with V2 setup', async ({ page }) => {
+    // Create admin user with V2 setup
+    const adminUser = createTestUser({
+      email: 'admin@example.com',
+      username: 'admin'
+    });
+
+    // Set up admin test data
+    await setupE2ETestData({
+      user: adminUser,
+      poll: testData.poll
+    });
+
+    // Step 1: Register as admin user
     await page.click('[data-testid="sign-up-button"]');
     await page.waitForURL('/register');
     
@@ -276,10 +331,10 @@ test.describe('User Journeys', () => {
     await page.waitForSelector('[data-testid="register-hydrated"]', { state: 'attached' });
     await expect(page.locator('[data-testid="register-hydrated"]')).toHaveText('1');
     
-    await page.fill('[data-testid="email"]', testUser.email);
-    await page.fill('[data-testid="username"]', testUser.username);
-    await page.fill('[data-testid="password"]', testUser.password);
-    await page.fill('[data-testid="confirm-password"]', testUser.password);
+    await page.fill('[data-testid="email"]', adminUser.email);
+    await page.fill('[data-testid="username"]', adminUser.username);
+    await page.fill('[data-testid="password"]', adminUser.password);
+    await page.fill('[data-testid="confirm-password"]', adminUser.password);
     
     await page.click('[data-testid="register-button"]');
     await page.waitForURL('/onboarding*');
@@ -296,11 +351,11 @@ test.describe('User Journeys', () => {
     
     // Use App Router-aware assertions for the final step
     await Promise.all([
-      page.waitForURL('**/dashboard', { waitUntil: 'commit' }), // soft nav friendly
+      page.waitForURL('**/dashboard', { waitUntil: 'commit' }),
       page.click('[data-testid="complete-onboarding"]'),
     ]);
     
-    await expect(page).toHaveURL(/\/dashboard$/); // auto-wait
+    await expect(page).toHaveURL(/\/dashboard$/);
     
     // Step 3: Try to access admin page (should be denied for regular users)
     await page.goto('/admin');
@@ -314,7 +369,7 @@ test.describe('User Journeys', () => {
     expect(isAccessDenied > 0 || isLoginPage > 0).toBe(true);
   });
 
-  test('should complete error recovery journey', async ({ page }) => {
+  test('should complete error recovery journey with V2 setup', async ({ page }) => {
     // Step 1: Try to access protected route without authentication
     await page.goto('/dashboard');
     
@@ -338,7 +393,7 @@ test.describe('User Journeys', () => {
     // Step 5: Verify error message
     await expect(page.locator('[data-testid="login-error"]')).toBeVisible();
     
-    // Step 6: Register a new user to test recovery
+    // Step 6: Register a new user to test recovery with V2 setup
     await page.click('[data-testid="sign-up-button"]');
     await page.waitForURL('/register');
     
@@ -346,10 +401,10 @@ test.describe('User Journeys', () => {
     await page.waitForSelector('[data-testid="register-hydrated"]', { state: 'attached' });
     await expect(page.locator('[data-testid="register-hydrated"]')).toHaveText('1');
     
-    await page.fill('[data-testid="email"]', testUser.email);
-    await page.fill('[data-testid="username"]', testUser.username);
-    await page.fill('[data-testid="password"]', testUser.password);
-    await page.fill('[data-testid="confirm-password"]', testUser.password);
+    await page.fill('[data-testid="email"]', testData.user.email);
+    await page.fill('[data-testid="username"]', testData.user.username);
+    await page.fill('[data-testid="password"]', testData.user.password);
+    await page.fill('[data-testid="confirm-password"]', testData.user.password);
     
     await page.click('[data-testid="register-button"]');
     
@@ -358,7 +413,13 @@ test.describe('User Journeys', () => {
     await expect(page).toHaveURL(/\/onboarding/);
   });
 
-  test('should complete cross-device synchronization journey', async ({ page, browser }) => {
+  test('should complete cross-device synchronization journey with V2 setup', async ({ page, browser }) => {
+    // Set up test data for cross-device journey
+    await setupE2ETestData({
+      user: testData.user,
+      poll: testData.poll
+    });
+
     // Step 1: Register on first device
     await page.click('[data-testid="sign-up-button"]');
     await page.waitForURL('/register');
@@ -367,10 +428,10 @@ test.describe('User Journeys', () => {
     await page.waitForSelector('[data-testid="register-hydrated"]', { state: 'attached' });
     await expect(page.locator('[data-testid="register-hydrated"]')).toHaveText('1');
     
-    await page.fill('[data-testid="email"]', testUser.email);
-    await page.fill('[data-testid="username"]', testUser.username);
-    await page.fill('[data-testid="password"]', testUser.password);
-    await page.fill('[data-testid="confirm-password"]', testUser.password);
+    await page.fill('[data-testid="email"]', testData.user.email);
+    await page.fill('[data-testid="username"]', testData.user.username);
+    await page.fill('[data-testid="password"]', testData.user.password);
+    await page.fill('[data-testid="confirm-password"]', testData.user.password);
     
     await page.click('[data-testid="register-button"]');
     await page.waitForURL('/onboarding*');
@@ -387,22 +448,22 @@ test.describe('User Journeys', () => {
     
     // Use App Router-aware assertions for the final step
     await Promise.all([
-      page.waitForURL('**/dashboard', { waitUntil: 'commit' }), // soft nav friendly
+      page.waitForURL('**/dashboard', { waitUntil: 'commit' }),
       page.click('[data-testid="complete-onboarding"]'),
     ]);
     
-    await expect(page).toHaveURL(/\/dashboard$/); // auto-wait
+    await expect(page).toHaveURL(/\/dashboard$/);
     
-    // Step 3: Create a poll on first device
+    // Step 3: Create a poll on first device using V2 test data
     await page.click('[data-testid="polls-nav"]');
     await page.waitForURL('/polls');
     
     await page.click('[data-testid="create-poll-button"]');
     await page.waitForURL('/polls/create');
     
-    await page.fill('[data-testid="poll-create-title"]', 'Cross-device test poll');
-    await page.fill('[data-testid="poll-create-option-input-0"]', 'Option 1');
-    await page.fill('[data-testid="poll-create-option-input-1"]', 'Option 2');
+    await page.fill('[data-testid="poll-create-title"]', testData.poll.title);
+    await page.fill('[data-testid="poll-create-option-input-0"]', testData.poll.options[0]);
+    await page.fill('[data-testid="poll-create-option-input-1"]', testData.poll.options[1]);
     
     await page.click('[data-testid="poll-create-submit"]');
     await page.waitForURL(/\/polls\/[a-f0-9-]+/);
@@ -413,18 +474,18 @@ test.describe('User Journeys', () => {
     
     // Step 5: Login on second device
     await page2.goto('/login');
-    await page2.fill('[data-testid="login-email"]', testUser.email);
-    await page2.fill('[data-testid="login-password"]', testUser.password);
+    await page2.fill('[data-testid="login-email"]', testData.user.email);
+    await page2.fill('[data-testid="login-password"]', testData.user.password);
     await page2.click('[data-testid="login-submit"]');
     await page2.waitForURL('/dashboard');
     
     // Step 6: Verify poll is visible on second device
     await page2.click('[data-testid="polls-nav"]');
     await page2.waitForURL('/polls');
-    await expect(page2.locator('text=Cross-device test poll')).toBeVisible();
+    await expect(page2.locator(`text=${testData.poll.title}`)).toBeVisible();
     
     // Step 7: Vote on second device
-    await page2.click('text=Cross-device test poll');
+    await page2.click(`text=${testData.poll.title}`);
     await page2.waitForURL(/\/polls\/[a-f0-9-]+/);
     await page2.click('[data-testid="vote-button"]');
     await page2.waitForTimeout(1000);
@@ -437,7 +498,13 @@ test.describe('User Journeys', () => {
     await context2.close();
   });
 
-  test('should complete offline functionality journey', async ({ page }) => {
+  test('should complete offline functionality journey with V2 setup', async ({ page }) => {
+    // Set up test data for offline journey
+    await setupE2ETestData({
+      user: testData.user,
+      poll: testData.poll
+    });
+
     // Step 1: Register and login
     await page.click('[data-testid="sign-up-button"]');
     await page.waitForURL('/register');
@@ -446,10 +513,10 @@ test.describe('User Journeys', () => {
     await page.waitForSelector('[data-testid="register-hydrated"]', { state: 'attached' });
     await expect(page.locator('[data-testid="register-hydrated"]')).toHaveText('1');
     
-    await page.fill('[data-testid="email"]', testUser.email);
-    await page.fill('[data-testid="username"]', testUser.username);
-    await page.fill('[data-testid="password"]', testUser.password);
-    await page.fill('[data-testid="confirm-password"]', testUser.password);
+    await page.fill('[data-testid="email"]', testData.user.email);
+    await page.fill('[data-testid="username"]', testData.user.username);
+    await page.fill('[data-testid="password"]', testData.user.password);
+    await page.fill('[data-testid="confirm-password"]', testData.user.password);
     
     await page.click('[data-testid="register-button"]');
     await page.waitForURL('/onboarding*');
@@ -466,11 +533,11 @@ test.describe('User Journeys', () => {
     
     // Use App Router-aware assertions for the final step
     await Promise.all([
-      page.waitForURL('**/dashboard', { waitUntil: 'commit' }), // soft nav friendly
+      page.waitForURL('**/dashboard', { waitUntil: 'commit' }),
       page.click('[data-testid="complete-onboarding"]'),
     ]);
     
-    await expect(page).toHaveURL(/\/dashboard$/); // auto-wait
+    await expect(page).toHaveURL(/\/dashboard$/);
     
     // Step 3: Go offline
     await page.context().setOffline(true);

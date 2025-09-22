@@ -425,7 +425,7 @@ export class PWAAuth {
     try {
       const stored = localStorage.getItem('offline_votes');
       return stored ? JSON.parse(stored) : [];
-    } catch (_error) {
+    } catch {
       return [];
     }
   }

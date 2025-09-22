@@ -5,8 +5,6 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { 
-  Github, 
-  Twitter, 
   Mail, 
   Shield, 
   Zap, 
@@ -15,7 +13,7 @@ import {
   CheckCircle
 } from 'lucide-react'
 
-interface SocialSignupProps {
+type SocialSignupProps = {
   onProviderSelect: (provider: 'google' | 'github' | 'twitter' | 'facebook' | 'linkedin') => void
   onEmailSignup: () => void
   className?: string

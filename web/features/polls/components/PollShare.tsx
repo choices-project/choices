@@ -2,8 +2,7 @@
 
 import { useState } from 'react'
 import { devLog } from '@/lib/logger';
-import { Share2, Copy, Link, Twitter, Facebook, Linkedin, Mail, QrCode, Download, Zap, TrendingUp } from 'lucide-react'
-import { Badge } from '@/components/ui/badge'
+import { Share2, Copy, Link, Twitter, Facebook, Linkedin, Mail, QrCode, Download } from 'lucide-react'
 import { isFeatureEnabled } from '@/lib/core/feature-flags'
 
 type PollShareProps = {

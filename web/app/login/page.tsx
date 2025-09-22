@@ -6,7 +6,6 @@ import { logger } from '@/lib/logger';
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Eye, EyeOff, User, Lock, Fingerprint, CheckCircle2, AlertCircle } from 'lucide-react'
-import { clientSession } from '@/lib/client-session'
 import { safeBrowserAccess } from '@/lib/ssr-safe'
 import { loginAction } from '@/app/actions/login'
 

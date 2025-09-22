@@ -1,7 +1,6 @@
 // A controllable mock for the Supabase "server" wrapper.
 // Exposes helpers so tests can set per-table results and reset cleanly.
 
-import type { SupabaseClient } from '@supabase/supabase-js'
 
 // Jest type declarations for mock functions
 declare const jest: {

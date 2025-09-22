@@ -4,7 +4,6 @@
  * Main layout for all admin pages with server-side admin authentication guard.
  */
 
-import { redirect } from 'next/navigation';
 import { getAdminUser } from '@/lib/admin-auth';
 import { AdminLayout } from './layout/AdminLayout';
 
