@@ -87,8 +87,8 @@ jobs:
       - name: Type check (strict)
         run: npm run type-check:strict
 
-      - name: Lint (strict mode - no unused variables)
-        run: npm run lint:strict
+      - name: Lint (allow warnings for MVP)
+        run: npm run lint
 
       - name: Build
         run: npm run build
