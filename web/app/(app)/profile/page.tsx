@@ -237,16 +237,8 @@ export default function ProfilePage() {
     )
   }
 
-  if (isLoading) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading profile...</p>
-        </div>
-      </div>
-    )
-  }
+  // Loading state is handled by the AuthProvider
+  // No need for additional loading check here
 
   if (!user) {
     return (

@@ -13,7 +13,7 @@ const supabase = createClient(
 export async function GET() {
   try {
     // Skip database operations during build
-    if (process.env.NODE_ENV === 'production' && !process.env.SUPABASE_SECRET_KEY?.includes('real')) {
+    if (process.env.NODE_ENV === 'production' && process.env.SUPABASE_SECRET_KEY === 'dev-only-secret') {
       console.log('🏙️ Skipping database fetch during build...');
       return NextResponse.json({
         ok: true,
