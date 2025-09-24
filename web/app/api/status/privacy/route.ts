@@ -2,6 +2,9 @@ import { type NextRequest, NextResponse } from 'next/server';
 import { getRPIDAndOrigins } from '@/lib/webauthn/config';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
+// Force dynamic rendering for this route
+export const dynamic = 'force-dynamic';
+
 /**
  * Privacy Status Endpoint
  * 

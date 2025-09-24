@@ -37,7 +37,7 @@ jobs:
       NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
       NEXT_PUBLIC_SUPABASE_ANON_KEY: fake-dev-key-for-ci-only
       SUPABASE_SECRET_KEY: dev-only-secret
-      PRIVACY_PEPPER_CURRENT: base64:fake-pepper-for-ci-only-this-is-a-very-long-fake-pepper-value-that-meets-the-32-byte-minimum-requirement-for-testing-purposes-only
+0      PRIVACY_PEPPER_CURRENT: base64:fake-pepper-for-ci-only-this-is-a-very-long-fake-pepper-value-that-meets-the-32-byte-minimum-requirement-for-testing-purposes-only
 
     steps:
       - uses: actions/checkout@v4

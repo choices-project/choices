@@ -84,6 +84,11 @@ function getErrorMessage(error: any): string {
  * Check if WebAuthn is supported
  */
 export function isWebAuthnSupported(): boolean {
+  // Check if we're in a browser environment
+  if (typeof window === 'undefined') {
+    return false;
+  }
+  
   return !!(
     window.PublicKeyCredential &&
     window.navigator.credentials &&

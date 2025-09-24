@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { beginRegister, beginAuthenticate, isWebAuthnSupported } from '@/lib/webauthn/client';
 import { T } from '@/lib/testing/testIds';
 
@@ -23,6 +23,16 @@ export function PasskeyButton({
 }: PasskeyButtonProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Don't render during SSR
+  if (!mounted) {
+    return null;
+  }
 
   // Check if WebAuthn is supported
   if (!isWebAuthnSupported()) {

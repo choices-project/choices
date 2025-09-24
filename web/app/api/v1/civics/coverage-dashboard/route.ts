@@ -3,6 +3,9 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
+// Force dynamic rendering for this route
+export const dynamic = 'force-dynamic';
+
 type RepresentativeData = {
   level: string;
   source: string;
