@@ -61,7 +61,7 @@ export function safeParse<T>(
   data: unknown,
   options: ValidationOptions = {}
 ): ValidationResult<T> {
-  const { logErrors = true, throwOnError = false, fallbackData } = options;
+  const { logErrors = true, throwOnError = false } = options;
 
   try {
     const result = schema.safeParse(data);

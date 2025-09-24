@@ -475,7 +475,7 @@ export class GeographicElectoralFeed {
           constituentAlignment: vote.constituentAlignment || 0
         }))
       },
-      campaignFinance: await this.getMockCampaignFinance('incumbent'),
+      campaignFinance: campaignFinance || await this.getMockCampaignFinance('incumbent'),
       engagement: {
         responseRate: 0, // Would need additional data
         averageResponseTime: 0,
@@ -503,11 +503,19 @@ export class GeographicElectoralFeed {
     financial_independence: number;
   }> {
     // This would implement the comprehensive "Walk the Talk" analysis
+    // For now, return mock data based on representative ID for consistency
+    const hash = representativeId.split('').reduce((a, b) => {
+      a = ((a << 5) - a) + b.charCodeAt(0);
+      return a & a;
+    }, 0);
+    
+    const baseScore = Math.abs(hash) % 30 + 60; // Score between 60-90
+    
     return {
-      overall: 75,
-      promise_fulfillment: 80,
-      constituentAlignment: 70,
-      financial_independence: 75
+      overall: baseScore,
+      promise_fulfillment: baseScore + 5,
+      constituentAlignment: baseScore - 5,
+      financial_independence: baseScore
     };
   }
 

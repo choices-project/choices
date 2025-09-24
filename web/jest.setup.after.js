@@ -1,6 +1,6 @@
 // Jest setup that runs after test environment is initialized
 require('@testing-library/jest-dom');
-const React = require('react');
+const _React = require('react');
 
 // Mock crypto API for DPoP tests
 Object.defineProperty(global, 'crypto', {

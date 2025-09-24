@@ -74,7 +74,7 @@ export function useAnalytics(options: UseAnalyticsOptions = {}): UseAnalyticsRet
   } = options;
 
   // const featureFlags = useFeatureFlags();
-  const featureFlags = { flags: {}, isLoading: false };
+  const _featureFlags = { flags: {}, isLoading: false };
   const [data, setData] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -86,7 +86,7 @@ export function useAnalytics(options: UseAnalyticsOptions = {}): UseAnalyticsRet
   const analyticsEnabled = isFeatureEnabled('analytics');
   const aiFeaturesEnabled = isFeatureEnabled('aiFeatures');
 
-  const fetchData = useCallback(async (type: string = 'overview', customFilters?: AnalyticsFilters) => {
+  const fetchData = useCallback(async (_type: string = 'overview', customFilters?: AnalyticsFilters) => {
     if (!analyticsEnabled) {
       setError('Analytics feature is disabled');
       return;
@@ -321,7 +321,7 @@ export function useOverviewAnalytics(options?: UseAnalyticsOptions) {
   }, [analytics.fetchData]);
   
   return {
-    ...analytics,
+    ...withOptional(analytics),
     fetchOverview
   };
 }
@@ -334,7 +334,7 @@ export function useTrendsAnalytics(options?: UseAnalyticsOptions) {
   }, [analytics.fetchData]);
   
   return {
-    ...analytics,
+    ...withOptional(analytics),
     fetchTrends
   };
 }
@@ -347,7 +347,7 @@ export function usePerformanceAnalytics(options?: UseAnalyticsOptions) {
   }, [analytics.fetchData]);
   
   return {
-    ...analytics,
+    ...withOptional(analytics),
     fetchPerformance
   };
 }

@@ -229,7 +229,7 @@ export function AccessibleRankingInterface({
   // FOCUS MANAGEMENT
   // ============================================================================
 
-  const setFocus = useCallback((index: number) => {
+  const _setFocus = useCallback((index: number) => {
     const element = candidateRefs.current[index];
     if (element) {
       ScreenReaderSupport.setFocus(element, {
@@ -333,7 +333,7 @@ export function AccessibleRankingInterface({
           <p>
             Click or use arrow keys to move candidates up or down. 
             Your first choice gets your vote if they need it. 
-            If they don't need it, your vote goes to your second choice.
+            If they don&apos;t need it, your vote goes to your second choice.
           </p>
           <ul>
             <li>Use ↑ and ↓ arrow keys to move candidates</li>
@@ -363,7 +363,7 @@ export function AccessibleRankingInterface({
             onFocus={() => handleFocus(index)}
             aria-label={`${candidate.name}, currently ranked ${getCandidateRank(candidate.id)}`}
             aria-describedby={`candidate-${candidate.id}-description`}
-            aria-selected={isCandidateRanked(candidate.id)}
+            data-selected={isCandidateRanked(candidate.id)}
           >
             <div className="candidate-info">
               <h3 className="candidate-name">{candidate.name}</h3>

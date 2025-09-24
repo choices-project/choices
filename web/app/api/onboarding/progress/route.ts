@@ -5,7 +5,7 @@ import { devLog } from '@/lib/logger'
 
 export const dynamic = 'force-dynamic'
 
-export async function GET(_request: NextRequest) {
+export async function GET() {
   try {
     const supabase = getSupabaseServerClient()
     

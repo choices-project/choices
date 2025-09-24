@@ -77,7 +77,6 @@ self.addEventListener('activate', (event) => {
 // Fetch event - implement caching strategies
 self.addEventListener('fetch', (event) => {
   const { request } = event;
-  const url = new URL(request.url);
   
   // Skip non-GET requests
   if (request.method !== 'GET') {
@@ -241,7 +240,7 @@ function isStaticAsset(request) {
 
 function isAPIRequest(request) {
   const url = new URL(request.url);
-  return url.pathname.startsWith('/api/');
+  return API_CACHE_PATTERNS.some((prefix) => url.pathname.startsWith(prefix));
 }
 
 function isImageRequest(request) {

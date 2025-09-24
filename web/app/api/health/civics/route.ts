@@ -5,10 +5,10 @@
  * This endpoint provides health status for the civics system
  */
 
-import { type NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { isCivicsEnabled } from '@/lib/civics/privacy-utils';
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   const issues: string[] = [];
   let status = 'healthy';
 

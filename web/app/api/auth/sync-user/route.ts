@@ -1,11 +1,11 @@
-import type { NextRequest} from 'next/server';
+// NextRequest import removed - not used
 import { NextResponse } from 'next/server';
 import { devLog } from '@/lib/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 import { handleError, getUserMessage, getHttpStatus, AuthenticationError } from '@/lib/error-handler';
 export const dynamic = 'force-dynamic'
 
-export async function POST(_request: NextRequest) {
+export async function POST() {
   try {
     const supabase = getSupabaseServerClient()
     

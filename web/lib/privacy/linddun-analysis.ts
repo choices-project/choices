@@ -345,7 +345,7 @@ export class PrivacyThreatAssessmentManager {
     
     const aggregated: LINDDUNThreat[] = [];
     
-    dimensionMap.forEach((dimensionThreats, dimension) => {
+    dimensionMap.forEach((dimensionThreats, _dimension) => {
       const maxRisk = Math.max(...dimensionThreats.map(t => t.riskLevel));
       const representativeThreat = dimensionThreats.find(t => t.riskLevel === maxRisk)!;
       

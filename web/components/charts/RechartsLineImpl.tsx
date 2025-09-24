@@ -17,7 +17,6 @@ export default function RechartsLineImpl({
   dataKey = 'value', 
   xAxisKey = 'name',
   height = 300,
-  width = 600,
   className = '',
   strokeColor = '#3b82f6'
 }: LineChartProps) {

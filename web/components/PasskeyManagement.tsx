@@ -31,7 +31,7 @@ export function PasskeyManagement() {
       } else {
         setError('Failed to load passkeys');
       }
-    } catch (err) {
+    } catch {
       setError('Failed to load passkeys');
     } finally {
       setLoading(false);
@@ -56,7 +56,7 @@ export function PasskeyManagement() {
     try {
       // Implement rename functionality
       console.log('Rename passkey:', id, newLabel);
-    } catch (err) {
+    } catch {
       setError('Failed to rename passkey');
     }
   };
@@ -66,7 +66,7 @@ export function PasskeyManagement() {
       // Implement revoke functionality
       console.log('Revoke passkey:', id);
       await loadPasskeys();
-    } catch (err) {
+    } catch {
       setError('Failed to revoke passkey');
     }
   };

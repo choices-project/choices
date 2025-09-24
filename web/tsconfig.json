@@ -20,6 +20,8 @@
     "**/*.disabled",
     "**/*.disabled.*",
     "**/scripts.disabled/**",
-    "**/tests.disabled/**"
+    "**/tests.disabled/**",
+    "archive/**",
+    "archive-*/**"
   ]
 }

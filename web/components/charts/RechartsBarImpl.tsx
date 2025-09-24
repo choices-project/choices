@@ -16,7 +16,6 @@ export default function RechartsBarImpl({
   dataKey = 'value', 
   xAxisKey = 'name',
   height = 300,
-  width = 600,
   className = ''
 }: BarChartProps) {
   return (

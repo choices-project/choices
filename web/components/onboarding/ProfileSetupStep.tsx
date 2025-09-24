@@ -196,7 +196,7 @@ export default function ProfileSetupStep({ data, onUpdate, onNext }: ProfileSetu
             onClick={handleNext}
             className="text-sm text-gray-500 hover:text-gray-700 underline"
           >
-            Skip for now - I'll set this up later
+            Skip for now - I&apos;ll set this up later
           </button>
         </div>
       </div>
@@ -409,7 +409,7 @@ export default function ProfileSetupStep({ data, onUpdate, onNext }: ProfileSetu
 
           <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
             <div className="text-sm text-blue-800">
-              <p className="font-medium mb-1">What you'll receive:</p>
+              <p className="font-medium mb-1">What you&apos;ll receive:</p>
               <ul className="space-y-1">
                 <li>• Responses from candidates to your questions</li>
                 <li>• Updates on campaign finance transparency</li>

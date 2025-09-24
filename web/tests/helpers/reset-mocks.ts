@@ -1,5 +1,6 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import type { Handles } from './supabase-mock';
+import type { makeMockSupabase } from './supabase-mock';
+
+type Handles = ReturnType<typeof makeMockSupabase>['handles'];
 
 export function resetAllMocks(handles: Handles) {
   handles.single.mockClear();
@@ -8,5 +9,6 @@ export function resetAllMocks(handles: Handles) {
   handles.mutate.mockClear();
   handles.rpc.mockClear();
 }
+
 
 

@@ -72,6 +72,9 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Log successful upload for audit trail
+    console.log(`Avatar uploaded successfully: ${uploadData?.path} for user: ${user.userId}`)
+
     // Get public URL
     const { data: urlData } = supabase.storage
       .from('avatars')

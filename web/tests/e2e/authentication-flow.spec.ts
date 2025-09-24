@@ -63,7 +63,7 @@ test.describe('Authentication Flow - V2', () => {
       // Wait for navigation to complete or fallback to direct navigation
       try {
         await page.waitForURL('/register', { timeout: 5000 });
-      } catch (error) {
+      } catch {
         // If Link navigation fails in webkit, navigate directly
         await page.goto('/register');
       }

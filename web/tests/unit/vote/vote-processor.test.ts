@@ -431,7 +431,6 @@ describe('VoteProcessor', () => {
 
     it('should handle canUserVote errors gracefully', async () => {
       const pollId = 'test-poll-123';
-      const userId = 'user-456';
       
       // Mock poll lookup
       when().table('polls').op('select').select('*').eq('id', pollId).returnsSingle(mockPoll);

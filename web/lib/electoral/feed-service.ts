@@ -122,7 +122,7 @@ export class ElectoralFeedService {
   /**
    * Build feed from jurisdiction ID
    */
-  private async buildFeed(jurisdictionId: JurisdictionID, version: string): Promise<ElectoralFeed> {
+  private async buildFeed(jurisdictionId: JurisdictionID, _version: string): Promise<ElectoralFeed> {
     const level = this.determineLevel(jurisdictionId);
     
     // Build feed components
@@ -147,17 +147,19 @@ export class ElectoralFeedService {
    */
   private async getCurrentOfficials(jurisdictionId: JurisdictionID): Promise<Official[]> {
     // This would integrate with our multi-source data system
-    // For now, return placeholder data
+    // For now, return placeholder data based on jurisdiction
+    const jurisdictionName = jurisdictionId.split('-').pop() || 'Unknown';
+    
     return [
       {
-        id: 'official-1',
+        id: `official-${jurisdictionId}-1`,
         name: 'John Smith',
         office: 'Mayor',
         party: 'Independent',
         contactInfo: {
-          email: 'mayor@city.gov',
+          email: `mayor@${jurisdictionName.toLowerCase()}.gov`,
           phone: '(555) 123-4567',
-          website: 'https://mayor.city.gov'
+          website: `https://mayor.${jurisdictionName.toLowerCase()}.gov`
         },
         socialMedia: {
           twitter: '@mayorjohnsmith'
@@ -173,11 +175,13 @@ export class ElectoralFeedService {
    */
   private async getUpcomingRaces(jurisdictionId: JurisdictionID): Promise<Race[]> {
     // This would integrate with our multi-source data system
-    // For now, return placeholder data
+    // For now, return placeholder data based on jurisdiction
+    const jurisdictionName = jurisdictionId.split('-').pop() || 'Unknown';
+    
     return [
       {
-        id: 'race-1',
-        office: 'City Council District 1',
+        id: `race-${jurisdictionId}-1`,
+        office: `${jurisdictionName} City Council District 1`,
         electionDate: '2024-11-05',
         candidates: [
           {
@@ -215,12 +219,14 @@ export class ElectoralFeedService {
    */
   private async getKeyIssues(jurisdictionId: JurisdictionID): Promise<Issue[]> {
     // This would integrate with our multi-source data system
-    // For now, return placeholder data
+    // For now, return placeholder data based on jurisdiction
+    const jurisdictionName = jurisdictionId.split('-').pop() || 'Unknown';
+    
     return [
       {
-        id: 'issue-1',
-        title: 'Affordable Housing',
-        description: 'Addressing the housing crisis and ensuring affordable housing for all residents',
+        id: `issue-${jurisdictionId}-1`,
+        title: `${jurisdictionName} Affordable Housing`,
+        description: `Addressing the housing crisis and ensuring affordable housing for all ${jurisdictionName} residents`,
         relevance: 'high',
         lastUpdated: new Date().toISOString()
       },

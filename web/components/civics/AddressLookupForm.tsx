@@ -37,20 +37,27 @@ export function AddressLookupForm({ onLookup, className = '' }: AddressLookupFor
     setError(null);
 
     try {
-      // TODO: Implement actual API call when feature is enabled
-      // const response = await fetch('/api/v1/civics/address-lookup', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ address })
-      // });
+      // Call the address lookup API
+      const response = await fetch('/api/v1/civics/address-lookup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ address })
+      });
       
-      // For now, just call the callback
+      if (!response.ok) {
+        throw new Error(`Address lookup failed: ${response.status}`);
+      }
+      
+      const _data = await response.json();
+      
+      // Call the callback with the results
       onLookup?.(address);
       
-      // Simulate API call
+      // Clear the form on success
+      setAddress('');
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-    } catch (err) {
+    } catch {
       setError('Failed to lookup address');
     } finally {
       setIsLoading(false);
@@ -67,6 +74,7 @@ export function AddressLookupForm({ onLookup, className = '' }: AddressLookupFor
           <input
             type="text"
             id="address"
+            data-testid="address-input"
             value={address}
             onChange={(e) => setAddress(e.target.value)}
             placeholder="123 Main St, City, State 12345"
@@ -77,7 +85,7 @@ export function AddressLookupForm({ onLookup, className = '' }: AddressLookupFor
           
           {/* Privacy messaging */}
           <p className="mt-2 text-xs text-gray-500">
-            <strong>Privacy first:</strong> We don't store your address. We keep a one-way fingerprint 
+            <strong>Privacy first:</strong> We don&apos;t store your address. We keep a one-way fingerprint 
             and a rough map square so we can draw anonymous stats. No one can turn that back into your home.
           </p>
         </div>
@@ -94,7 +102,7 @@ export function AddressLookupForm({ onLookup, className = '' }: AddressLookupFor
           >
             Voting from a different address?
           </button>
-          <span className="ml-1">Use "different address" for this search. Same privacy rules—nothing is stored.</span>
+          <span className="ml-1">Use &quot;different address&quot; for this search. Same privacy rules—nothing is stored.</span>
         </div>
 
         {error && (
@@ -105,6 +113,7 @@ export function AddressLookupForm({ onLookup, className = '' }: AddressLookupFor
 
         <button
           type="submit"
+          data-testid="address-submit"
           disabled={isLoading || !address.trim()}
           className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
         >

@@ -106,8 +106,8 @@ export default function ContributionStep({ data, onUpdate, onNext, onBack }: Con
         </p>
         <div className="bg-green-50 border border-green-200 rounded-lg p-4 max-w-2xl mx-auto">
           <p className="text-sm text-green-800">
-            <strong>Why contribute?</strong> We're building the most comprehensive democratic accountability system ever created. 
-            Your help makes it possible to expose "bought off" politicians and give equal voice to all candidates.
+            <strong>Why contribute?</strong> We&apos;re building the most comprehensive democratic accountability system ever created. 
+            Your help makes it possible to expose &quot;bought off&quot; politicians and give equal voice to all candidates.
           </p>
         </div>
       </div>
@@ -142,15 +142,21 @@ export default function ContributionStep({ data, onUpdate, onNext, onBack }: Con
 
       <div className="text-center space-y-3">
         <Button onClick={() => setCurrentSection('interests')} size="lg">
-          Tell us how you'd like to help
+          Tell us how you&apos;d like to help
           <ArrowRight className="ml-2 h-4 w-4" />
         </Button>
-        <div>
+        <div className="flex justify-center gap-4">
+          <button 
+            onClick={onBack}
+            className="text-sm text-gray-500 hover:text-gray-700 underline"
+          >
+            Back
+          </button>
           <button 
             onClick={handleNext}
             className="text-sm text-gray-500 hover:text-gray-700 underline"
           >
-            Skip for now - I'll contribute later
+            Skip for now - I&apos;ll contribute later
           </button>
         </div>
       </div>
@@ -161,7 +167,7 @@ export default function ContributionStep({ data, onUpdate, onNext, onBack }: Con
     <div className="space-y-8">
       <div className="text-center">
         <h3 className="text-2xl font-bold text-gray-900 mb-2">How would you like to contribute?</h3>
-        <p className="text-gray-600">Select the ways you'd like to help (you can choose multiple)</p>
+        <p className="text-gray-600">Select the ways you&apos;d like to help (you can choose multiple)</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -202,9 +208,9 @@ export default function ContributionStep({ data, onUpdate, onNext, onBack }: Con
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
         <h4 className="font-semibold text-blue-900 mb-2">What happens next?</h4>
         <div className="text-sm text-blue-800 space-y-1">
-          <div>• We'll send you relevant contribution opportunities</div>
-          <div>• You'll get access to our contributor community</div>
-          <div>• We'll recognize your contributions publicly (if you want)</div>
+          <div>• We&apos;ll send you relevant contribution opportunities</div>
+          <div>• You&apos;ll get access to our contributor community</div>
+          <div>• We&apos;ll recognize your contributions publicly (if you want)</div>
           <div>• You can change your preferences anytime</div>
         </div>
       </div>
@@ -226,7 +232,7 @@ export default function ContributionStep({ data, onUpdate, onNext, onBack }: Con
     <div className="space-y-8">
       <div className="text-center">
         <h3 className="text-2xl font-bold text-gray-900 mb-2">Contribution Summary</h3>
-        <p className="text-gray-600">Here's how you'd like to help build the democratic revolution</p>
+        <p className="text-gray-600">Here&apos;s how you&apos;d like to help build the democratic revolution</p>
       </div>
 
       <Card className="max-w-2xl mx-auto">
@@ -275,7 +281,7 @@ export default function ContributionStep({ data, onUpdate, onNext, onBack }: Con
               <div>• Check out our GitHub repository</div>
               <div>• Read our contribution guidelines</div>
               <div>• Join our developer Discord</div>
-              <div>• Pick up a "good first issue"</div>
+              <div>• Pick up a &quot;good first issue&quot;</div>
             </div>
             <Button size="sm" className="mt-3 w-full">
               <Github className="w-4 h-4 mr-2" />

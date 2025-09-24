@@ -64,6 +64,7 @@ export async function POST(
       try {
         user = await getUser();
       } catch (error) {
+        console.error('Authentication error during vote:', error);
         throw new AuthenticationError('Authentication required to vote')
       }
     } else {
@@ -296,6 +297,10 @@ export async function GET(
           .select('user_id, email')
           .eq('email', 'user@example.com')
           .single()
+          
+        if (testUserError) {
+          console.error('Error fetching test user for E2E bypass:', testUserError);
+        }
         
         
         if (testUser) {

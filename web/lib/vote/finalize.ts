@@ -88,7 +88,7 @@ type SupabaseQueryBuilder = {
   then(onfulfilled?: (value: { data: unknown; error: unknown }) => void): Promise<{ data: unknown; error: unknown }>;
 };
 
-type SupabaseClient = {
+type _SupabaseClient = {
   from(table: string): SupabaseQueryBuilder;
   channel(name: string): {
     send(message: { type: string; event: string; payload: Record<string, unknown> }): Promise<void>;

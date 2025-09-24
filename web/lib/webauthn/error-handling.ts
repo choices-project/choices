@@ -5,6 +5,9 @@
  * Maps WebAuthn-specific errors to user-friendly messages and proper HTTP status codes.
  */
 
+// Local SSR guard to avoid restricted imports and missing exports
+const isServer = (): boolean => typeof window === 'undefined';
+
 /**
  * WebAuthn error types
  */
@@ -288,7 +291,7 @@ export function createWebAuthnError(
  */
 export function handleWebAuthnError(error: unknown): {
   statusCode: number;
-  error: string;
+  error: WebAuthnErrorType;
   userMessage: string;
   details?: WebAuthnErrorDetails;
 } {
@@ -345,7 +348,16 @@ export function logWebAuthnError(
     },
     details: error.details
   };
-  
+
+  // Persist detailed logs on the server when enabled
+  if (isServer() && (process.env.WEBAUTHN_ERROR_LOG === '1' || process.env.WEBAUTHN_ERROR_LOG === 'true')) {
+    // Fire and forget; avoid blocking request cycle
+    void persistWebAuthnError(logData).catch(() => {
+      // Swallow file logging errors to avoid cascading failures
+    });
+  }
+
+  // Console-level logging with severity
   if (error.statusCode >= 500) {
     console.error('WebAuthn server error:', logData);
   } else if (error.statusCode >= 400) {
@@ -368,7 +380,16 @@ export function validateWebAuthnContext(context: {
   
   if (context.origin) {
     try {
-      new URL(context.origin);
+      const url = new URL(context.origin);
+      // Enforce HTTPS except for localhost
+      const isLocalhost = url.hostname === 'localhost' || url.hostname === '127.0.0.1';
+      if (!isLocalhost && url.protocol !== 'https:') {
+        errors.push('Origin must use HTTPS');
+      }
+      // Minimal sanity check: must include a hostname
+      if (!url.hostname) {
+        errors.push('Origin must include a valid hostname');
+      }
     } catch {
       errors.push('Invalid origin format');
     }
@@ -409,4 +430,30 @@ export function validateWebAuthnContext(context: {
     valid: errors.length === 0,
     errors
   };
+}
+
+/**
+ * Persist WebAuthn error logs to file (server-only)
+ */
+async function persistWebAuthnError(data: unknown): Promise<void> {
+  if (!isServer()) return; // Double-guard
+
+  const fsPromises = await import('node:fs/promises');
+  const pathMod = await import('node:path');
+
+  const dir = pathMod.resolve(process.cwd(), '.reports');
+  const file = pathMod.join(dir, 'webauthn-errors.jsonl');
+
+  try {
+    // Ensure directory exists
+    await fsPromises.mkdir(dir, { recursive: true });
+    // Append JSON line
+    const line = JSON.stringify(data) + '\n';
+    await fsPromises.appendFile(file, line, { encoding: 'utf-8' });
+  } catch (err) {
+    // Last resort: non-throwing debug log
+    if (process.env.NODE_ENV !== 'production') {
+      console.warn('Failed to persist WebAuthn error log:', err);
+    }
+  }
 }

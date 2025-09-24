@@ -8,12 +8,20 @@
 /**
  * Conditionally spread properties only if they are not null/undefined
  * Prevents exactOptionalPropertyTypes violations
- * Phase 4: Improved implementation for better performance
+ * Handles both single object filtering and multi-object merging
  */
 export function withOptional<T extends object>(
   base: T,
-  extras: Record<string, unknown>
-) {
+  extras?: Record<string, unknown>
+): T {
+  if (!extras) {
+    // Single parameter: filter undefined values from the object
+    return Object.fromEntries(
+      Object.entries(base).filter(([_, value]) => value !== undefined)
+    ) as T;
+  }
+  
+  // Two parameters: merge objects, filtering null/undefined from extras
   const out = { ...base } as Record<string, unknown>
   for (const [k, v] of Object.entries(extras)) {
     if (v != null) out[k] = v

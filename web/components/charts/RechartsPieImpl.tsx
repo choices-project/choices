@@ -19,7 +19,6 @@ export default function RechartsPieImpl({
   dataKey = 'value', 
   nameKey = 'name',
   height = 300,
-  width = 400,
   className = '',
   colors = DEFAULT_COLORS
 }: PieChartProps) {

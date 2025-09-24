@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect } from 'react'
 import { devLog } from '@/lib/logger'
 import { getFeedbackTracker } from '@/lib/admin/feedback-tracker'
 import { motion, AnimatePresence } from '@/components/motion/Motion'
+import { FEATURE_FLAGS } from '@/lib/core/feature-flags'
 import { 
   MessageCircle, 
   X, 
@@ -63,6 +64,11 @@ const EnhancedFeedbackWidget: React.FC = () => {
       userJourney
     }))
   }, [feedbackTracker])
+
+  // Check feature flag after hooks
+  if (!FEATURE_FLAGS.FEEDBACK_WIDGET) {
+    return null
+  }
 
   const handleOpen = () => {
     setIsOpen(true)
@@ -255,7 +261,7 @@ const EnhancedFeedbackWidget: React.FC = () => {
         whileTap={{ scale: 0.9 }}
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 2 }}
+        transition={{ delay: 0 }}
       >
         <MessageCircle className="w-6 h-6" />
       </motion.button>
@@ -481,7 +487,7 @@ const EnhancedFeedbackWidget: React.FC = () => {
                         Thank You! 🎉
                       </h4>
                       <p className="text-gray-600 mb-4">
-                        Your detailed feedback has been captured with full context. We'll analyze it and get back to you soon!
+                        Your detailed feedback has been captured with full context. We&apos;ll analyze it and get back to you soon!
                       </p>
                       
                       <div className="flex items-center justify-center gap-1 text-yellow-500">

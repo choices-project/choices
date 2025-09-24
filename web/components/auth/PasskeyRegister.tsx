@@ -173,7 +173,7 @@ export function PasskeyRegister({
           <span>Register Passkey</span>
         </CardTitle>
         <CardDescription>
-          Create a secure passkey using your device's biometric authentication or security key
+          Create a secure passkey using your device&apos;s biometric authentication or security key
         </CardDescription>
       </CardHeader>
 

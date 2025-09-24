@@ -38,7 +38,7 @@ export default function PlatformTourStep({ onUpdate, onNext }: PlatformTourStepP
       <div className="text-center space-y-4">
         <h2 className="text-3xl font-bold text-gray-900">Platform Tour</h2>
         <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-          Let's explore the key features that make Choices a powerful and privacy-focused polling platform.
+          Let&apos;s explore the key features that make Choices a powerful and privacy-focused polling platform.
         </p>
       </div>
 

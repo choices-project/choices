@@ -163,12 +163,29 @@ export class SecureKeyManager {
   }
 
   private generateIVFromSeed(seed: string): Uint8Array {
-    // Generate deterministic IV from seed (for reproducible encryption)
+    // Deterministic IV from seed (non-cryptographic; do NOT use where unpredictable IVs are required)
+    // Uses the encoded seed to derive 12 bytes in a repeatable way.
     const encoder = new TextEncoder();
     const data = encoder.encode(seed);
-    // Use synchronous hash for deterministic IV generation
-    const hash = crypto.getRandomValues(new Uint8Array(32));
-    return new Uint8Array(hash.slice(0, 12));
+    const iv = new Uint8Array(12);
+    // Combine simple hash accumulators
+    let h1 = 0x811C9DC5; // FNV basis
+    let h2 = 5381;       // djb2 basis
+    let h3 = 0x9E3779B9; // golden ratio
+    for (let i = 0; i < data.length; i++) {
+      const b = data[i];
+      if (b === undefined) continue;
+      h1 ^= b; h1 = (h1 * 16777619) >>> 0;
+      h2 = (((h2 << 5) + h2) ^ b) >>> 0; // h2*33 ^ b
+      h3 = (h3 + b + ((h3 << 10) >>> 0)) ^ ((h3 >>> 6) >>> 0); h3 >>>= 0;
+    }
+    // Fill 12 bytes from three 32-bit states
+    const combined = new Uint32Array([h1 >>> 0, h2 >>> 0, h3 >>> 0]);
+    const view = new DataView(combined.buffer);
+    for (let i = 0; i < 12; i++) {
+      iv[i] = view.getUint8(i);
+    }
+    return iv;
   }
 
   // ============================================================================

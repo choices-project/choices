@@ -7,6 +7,7 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 export const isBrowser = () => typeof window !== 'undefined';
+export const isServer = () => typeof window === 'undefined';
 
 export const safeBrowserAccess = {
   window: () => (isBrowser() ? window : undefined),
@@ -34,7 +35,16 @@ export function safeNavigate(url: string) {
 
 export function safeReload(force = false) {
   const loc = safeBrowserAccess.location();
-  if (loc) loc.reload && loc.reload();
+  if (!loc) return;
+  
+  if (force) {
+    loc.href = loc.href;
+    return;
+  }
+  
+  if (typeof loc.reload === 'function') {
+    loc.reload();
+  }
 }
 
 export function safeSetTimeout(cb: () => void, ms: number) {

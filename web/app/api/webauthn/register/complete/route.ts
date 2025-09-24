@@ -50,10 +50,8 @@ export async function POST(req: Request) {
       .delete()
       .eq('id', challengeData.id);
 
-    // For MVP, we'll do basic validation without @simplewebauthn/server
-    // In production, you should use @simplewebauthn/server for proper verification
-    const expectedOrigin = process.env.NEXT_PUBLIC_ORIGIN || 'http://localhost:3000';
-    const expectedRPID = process.env.NEXT_PUBLIC_PRIMARY_DOMAIN || 'localhost';
+    // For MVP, we'll do basic validation without @simplewebauthn/server.
+    // TODO: Integrate @simplewebauthn/server for full verification.
 
     // Basic validation (replace with proper @simplewebauthn/server verification)
     if (!response.rawId || !response.response) {

@@ -1,9 +1,9 @@
-import type { NextRequest} from 'next/server';
+// NextRequest import removed - not used
 import { NextResponse } from 'next/server'
 import { getSupabaseServerClient } from '@/utils/supabase/server'
 import { logger } from '@/lib/logger'
 
-export async function POST(_request: NextRequest) {
+export async function POST() {
   try {
     const supabase = getSupabaseServerClient()
     const supabaseClient = await supabase

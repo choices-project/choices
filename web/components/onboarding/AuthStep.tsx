@@ -18,7 +18,7 @@ type AuthStepProps = {
 export default function AuthStep({ data, onUpdate, onNext, onBack }: AuthStepProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const { updateData } = useOnboardingContext()
+  const { updateData: _updateData } = useOnboardingContext()
 
   // Initialize from existing data if available
   const [authMethod, setAuthMethod] = useState(data?.authMethod || '')
@@ -133,7 +133,7 @@ export default function AuthStep({ data, onUpdate, onNext, onBack }: AuthStepPro
           Sign in to participate
         </h2>
         <p className="text-gray-600 max-w-md mx-auto">
-          Choose how you'd like to sign in. We only need basic info to get you started.
+          Choose how you&apos;d like to sign in. We only need basic info to get you started.
         </p>
       </div>
 

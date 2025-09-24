@@ -1,0 +1,258 @@
+{
+  "existing": [
+    "user_profiles",
+    "polls",
+    "votes",
+    "error_logs",
+    "feedback",
+    "webauthn_credentials",
+    "webauthn_challenges",
+    "idempotency_keys",
+    "user_consent",
+    "privacy_logs",
+    "user_profiles_encrypted",
+    "private_user_data",
+    "analytics_contributions",
+    "civics_representatives",
+    "civics_address_cache",
+    "civics_rate_limits",
+    "civics_user_preferences",
+    "id_crosswalk",
+    "candidates",
+    "elections",
+    "campaign_finance",
+    "contributions",
+    "voting_records",
+    "data_licenses",
+    "independence_score_methodology",
+    "ingest_cursors",
+    "data_quality_audit",
+    "civics_person_xref",
+    "civics_source_precedence",
+    "civics_expected_counts",
+    "civics_quality_thresholds",
+    "civics_fec_minimal",
+    "civics_votes_minimal",
+    "civics_divisions",
+    "civics_campaign_finance",
+    "civics_votes",
+    "civics_voting_behavior"
+  ],
+  "missing": [],
+  "errors": [],
+  "tableDetails": {
+    "user_profiles": {
+      "count": 3,
+      "accessible": true,
+      "columns": [
+        "id",
+        "user_id",
+        "username",
+        "email",
+        "trust_tier",
+        "avatar_url",
+        "bio",
+        "is_active",
+        "created_at",
+        "updated_at",
+        "is_admin"
+      ]
+    },
+    "polls": {
+      "count": 143,
+      "accessible": true,
+      "columns": [
+        "id",
+        "title",
+        "description",
+        "options",
+        "voting_method",
+        "privacy_level",
+        "category",
+        "tags",
+        "created_by",
+        "status",
+        "total_votes",
+        "participation",
+        "sponsors",
+        "created_at",
+        "updated_at",
+        "end_time",
+        "is_mock",
+        "settings"
+      ]
+    },
+    "votes": {
+      "count": 3,
+      "accessible": true,
+      "columns": [
+        "id",
+        "poll_id",
+        "user_id",
+        "choice",
+        "voting_method",
+        "vote_data",
+        "verification_token",
+        "is_verified",
+        "created_at",
+        "updated_at"
+      ]
+    },
+    "error_logs": {
+      "count": 0,
+      "accessible": true
+    },
+    "feedback": {
+      "count": 16,
+      "accessible": true,
+      "columns": [
+        "id",
+        "user_id",
+        "poll_id",
+        "topic_id",
+        "type",
+        "rating",
+        "description",
+        "metadata",
+        "created_at",
+        "ai_analysis",
+        "user_journey",
+        "screenshot",
+        "status",
+        "priority",
+        "tags",
+        "updated_at",
+        "sentiment",
+        "title"
+      ]
+    },
+    "webauthn_credentials": {
+      "count": 0,
+      "accessible": true
+    },
+    "webauthn_challenges": {
+      "count": 0,
+      "accessible": true
+    },
+    "idempotency_keys": {
+      "count": 0,
+      "accessible": true
+    },
+    "user_consent": {
+      "count": 0,
+      "accessible": true
+    },
+    "privacy_logs": {
+      "count": 0,
+      "accessible": true
+    },
+    "user_profiles_encrypted": {
+      "count": 0,
+      "accessible": true
+    },
+    "private_user_data": {
+      "count": 0,
+      "accessible": true
+    },
+    "analytics_contributions": {
+      "count": 0,
+      "accessible": true
+    },
+    "civics_representatives": {
+      "count": 1273,
+      "accessible": true
+    },
+    "civics_address_cache": {
+      "count": 0,
+      "accessible": true
+    },
+    "civics_rate_limits": {
+      "count": 0,
+      "accessible": true
+    },
+    "civics_user_preferences": {
+      "count": 0,
+      "accessible": true
+    },
+    "id_crosswalk": {
+      "count": 5,
+      "accessible": true
+    },
+    "candidates": {
+      "count": 2,
+      "accessible": true
+    },
+    "elections": {
+      "count": 0,
+      "accessible": true
+    },
+    "campaign_finance": {
+      "count": 0,
+      "accessible": true
+    },
+    "contributions": {
+      "count": 0,
+      "accessible": true
+    },
+    "voting_records": {
+      "count": 0,
+      "accessible": true
+    },
+    "data_licenses": {
+      "count": 6,
+      "accessible": true
+    },
+    "independence_score_methodology": {
+      "count": 1,
+      "accessible": true
+    },
+    "ingest_cursors": {
+      "count": 0,
+      "accessible": true
+    },
+    "data_quality_audit": {
+      "count": 0,
+      "accessible": true
+    },
+    "civics_person_xref": {
+      "count": 540,
+      "accessible": true
+    },
+    "civics_source_precedence": {
+      "count": 6,
+      "accessible": true
+    },
+    "civics_expected_counts": {
+      "count": 0,
+      "accessible": true
+    },
+    "civics_quality_thresholds": {
+      "count": 3,
+      "accessible": true
+    },
+    "civics_fec_minimal": {
+      "count": 92,
+      "accessible": true
+    },
+    "civics_votes_minimal": {
+      "count": 2185,
+      "accessible": true
+    },
+    "civics_divisions": {
+      "count": 1172,
+      "accessible": true
+    },
+    "civics_campaign_finance": {
+      "count": 0,
+      "accessible": true
+    },
+    "civics_votes": {
+      "count": 0,
+      "accessible": true
+    },
+    "civics_voting_behavior": {
+      "count": 0,
+      "accessible": true
+    }
+  }
+}

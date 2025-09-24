@@ -94,7 +94,6 @@ export class AdvancedQueryOptimizer {
       useCache = true,
       cacheTTL = 300,
       cacheTags = [],
-      timeout = 30000,
       retries = 3,
       explain = false,
       analyze = false
@@ -103,7 +102,7 @@ export class AdvancedQueryOptimizer {
     const startTime = Date.now()
     const cacheKey = this.generateCacheKey(query, options)
     let fromCache = false
-    let cacheHit = false
+    let _cacheHit = false
 
     try {
       // Check cache first
@@ -111,7 +110,7 @@ export class AdvancedQueryOptimizer {
         const cachedResult = this.getFromCache(cacheKey)
         if (cachedResult) {
           fromCache = true
-          cacheHit = true
+          _cacheHit = true
           
           const metrics: QueryMetrics = {
             query: this.sanitizeQuery(query),
@@ -124,7 +123,7 @@ export class AdvancedQueryOptimizer {
           
           this.recordMetrics(metrics)
           
-          return { data: cachedResult as T, metrics, fromCache: true }
+          return { data: cachedResult as T, metrics, fromCache }
         }
       }
 
@@ -172,13 +171,13 @@ export class AdvancedQueryOptimizer {
         executionTime: Date.now() - startTime,
         rowsReturned: Array.isArray(result) ? result.length : (result ? 1 : 0),
         cacheHit: false,
-        fromCache: false,
+        fromCache,
         timestamp: Date.now()
       }
 
       this.recordMetrics(metrics)
 
-      return { data: result, metrics, fromCache: false }
+      return { data: result, metrics, fromCache }
 
     } catch (error) {
       const metrics: QueryMetrics = {
@@ -186,7 +185,7 @@ export class AdvancedQueryOptimizer {
         executionTime: Date.now() - startTime,
         rowsReturned: 0,
         cacheHit: false,
-        fromCache: false,
+        fromCache,
         error: error instanceof Error ? error.message : 'Unknown error',
         timestamp: Date.now()
       }
@@ -408,7 +407,7 @@ export class AdvancedQueryOptimizer {
   /**
    * Set cache
    */
-  private setCache(key: string, result: unknown, ttl: number, tags: string[]): void {
+  private setCache(key: string, result: unknown, ttl: number, _tags: string[]): void {
     // Clean up cache if it's getting too large
     if (this.queryCache.size >= this.maxCacheSize) {
       this.cleanupCache()

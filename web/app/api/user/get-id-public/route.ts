@@ -1,4 +1,4 @@
-import type { NextRequest} from 'next/server';
+// NextRequest import removed - not used
 import { NextResponse } from 'next/server';
 import { devLog } from '@/lib/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic';
 
 // GET /api/user/get-id-public - Temporary endpoint for security setup
 // This endpoint is for setup purposes only and should be removed after configuration
-export async function GET(_request: NextRequest) {
+export async function GET() {
   try {
     const supabase = getSupabaseServerClient();
     

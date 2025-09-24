@@ -1,10 +1,10 @@
 // web/app/api/civics/local/sf/route.ts
-import { type NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SECRET_KEY!, { auth: { persistSession: false } });
 
-export async function GET(_req: NextRequest) {
+export async function GET() {
   const { data, error } = await supabase
     .from('civics_representatives')
     .select('name,party,office,contact,ocd_division_id')

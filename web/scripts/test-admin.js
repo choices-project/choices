@@ -6,8 +6,8 @@
  * This script runs admin-related tests.
  */
 
-const fs = require('fs');
-const path = require('path');
+// const fs = require('fs');
+// const path = require('path');
 
 console.log('👨‍💼 Running admin tests...');
 

@@ -108,9 +108,9 @@ export default function EnhancedDashboard({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedView, setSelectedView] = useState<string>('overview');
-  const [autoRefreshEnabled, setAutoRefreshEnabled] = useState(autoRefresh);
+  const [autoRefreshEnabled, _setAutoRefreshEnabled] = useState(autoRefresh);
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
-  const [filters, setFilters] = useState({
+  const [_filters, _setFilters] = useState({
     dateRange: '30d',
     pollId: 'all',
     userType: 'all',
@@ -199,8 +199,8 @@ export default function EnhancedDashboard({
     loadDashboardData();
   };
 
-  const handleFilterChange = (key: string, value: string) => {
-    setFilters(prev => ({ ...prev, [key]: value }));
+  const _handleFilterChange = (key: string, value: string) => {
+    _setFilters(prev => ({ ...prev, [key]: value }));
   };
 
   const renderOverviewView = () => {

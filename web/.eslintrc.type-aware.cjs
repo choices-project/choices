@@ -14,6 +14,7 @@ module.exports = {
     // Core/critical code: strict
     {
       files: ['lib/**/*', 'shared/**/*', 'app/api/**/*'],
+      ignoredByDefault: false,
       rules: {
         '@typescript-eslint/no-explicit-any': 'error',
         '@typescript-eslint/no-unsafe-assignment': 'error',
@@ -65,7 +66,7 @@ module.exports = {
     },
     // Archive/disabled: don't block CI
     {
-      files: ['archive/**/*', 'web/disabled-pages/**/*', '**/*.disabled'],
+      files: ['archive/**/*', 'archive-*/**/*', 'app/archive-*/**/*', '_reports/**/*', 'tests/e2e/archive-old/**/*', 'archive-unused-files/**/*', 'web/disabled-pages/**/*', '**/*.disabled'],
       rules: { 
         'no-unused-vars': 'off', 
         '@typescript-eslint/*': 'off' 

@@ -43,14 +43,14 @@ export function createLazyComponent<T extends ComponentType<any>>(
     for (let attempt = 0; attempt <= retryCount; attempt++) {
       try {
         const startTime = performance.now();
-        const module = await importFn();
+        const importedModule = await importFn();
         const loadTime = performance.now() - startTime;
         
         // Track lazy loading performance
         performanceMetrics.addMetric('lazy-component-load', loadTime);
         
         onLoad?.();
-        return module;
+        return importedModule;
       } catch (error) {
         lastError = error as Error;
         

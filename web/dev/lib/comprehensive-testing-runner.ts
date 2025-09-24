@@ -338,7 +338,9 @@ export class ComprehensiveTestingRunner {
     const comprehensiveReport = await this.runAllTests()
     
     const detailedReport = {
-      ...comprehensiveReport,
+      ...Object.fromEntries(
+        Object.entries(comprehensiveReport).filter(([_, value]) => value !== undefined)
+      ),
       testDetails: this.results.map(result => ({
         suite: result.testSuite,
         status: result.status,

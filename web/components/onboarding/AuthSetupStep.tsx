@@ -140,7 +140,7 @@ export default function AuthSetupStep({ data, onUpdate, onNext }: AuthSetupStepP
       <div className="text-center space-y-4">
         <h2 className="text-3xl font-bold text-gray-900">Secure Your Account</h2>
         <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-          Choose how you'd like to authenticate. You can always change this later.
+          Choose how you&apos;d like to authenticate. You can always change this later.
         </p>
       </div>
 
@@ -308,7 +308,7 @@ export default function AuthSetupStep({ data, onUpdate, onNext }: AuthSetupStepP
               Email Authentication
             </CardTitle>
             <CardDescription>
-              We'll send you a secure login link
+              We&apos;ll send you a secure login link
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -346,7 +346,7 @@ export default function AuthSetupStep({ data, onUpdate, onNext }: AuthSetupStepP
                   <span className="text-sm">Check your email for the login link!</span>
                 </div>
                 <div className="mt-2 text-xs text-green-600">
-                  We've sent a secure login link to your email address.
+                  We&apos;ve sent a secure login link to your email address.
                 </div>
               </div>
             )}

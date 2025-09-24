@@ -9,10 +9,10 @@ import React, { useState, useEffect, Suspense } from 'react';
 import { performanceMetrics } from '@/lib/performance/performance-metrics';
 
 // Lazy load heavy chart components
-const Chart = React.lazy(() => import('recharts').then(module => ({ default: module.ResponsiveContainer })));
-const LineChart = React.lazy(() => import('recharts').then(module => ({ default: module.LineChart })));
-const BarChart = React.lazy(() => import('recharts').then(module => ({ default: module.BarChart })));
-const PieChart = React.lazy(() => import('recharts').then(module => ({ default: module.PieChart })));
+const _Chart = React.lazy(() => import('recharts').then(module => ({ default: module.ResponsiveContainer })));
+const _LineChart = React.lazy(() => import('recharts').then(module => ({ default: module.LineChart })));
+const _BarChart = React.lazy(() => import('recharts').then(module => ({ default: module.BarChart })));
+const _PieChart = React.lazy(() => import('recharts').then(module => ({ default: module.PieChart })));
 
 // Import chart components directly for proper typing
 import { 
@@ -50,7 +50,6 @@ type AnalyticsPanelProps = {
 }
 
 export default function AnalyticsPanel({ 
-  dateRange, 
   refreshInterval = 30000 
 }: AnalyticsPanelProps) {
   const [data, setData] = useState<AnalyticsData | null>(null);

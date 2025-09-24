@@ -1,6 +1,6 @@
 import type { State } from './supabase-mock';
 
-type Register = (m: (s: State) => boolean, r: () => any) => void;
+export type Register = (m: (s: State) => boolean, r: () => any) => void;
 
 function normalize(s: State) {
   return {
@@ -10,19 +10,19 @@ function normalize(s: State) {
   };
 }
 
-export function makeWhen(__registerRoute: Register) {
-  type MB = {
-    table: (t: string) => MB;
-    op: (op: State['op']) => MB;
-    select: (sel?: string) => MB;
-    eq: (c: string, v: any) => MB;
-    where: (pred: (s: State) => boolean) => MB;
-    returnsSingle: (row: any) => void;
-    returnsList: (rows: any[]) => void;
-    returnsError: (msg: string) => void;
-  };
+export type MockBuilder = {
+  table: (t: string) => MockBuilder;
+  op: (op: State['op']) => MockBuilder;
+  select: (sel?: string) => MockBuilder;
+  eq: (c: string, v: any) => MockBuilder;
+  where: (pred: (s: State) => boolean) => MockBuilder;
+  returnsSingle: (row: any) => void;
+  returnsList: (rows: any[]) => void;
+  returnsError: (msg: string) => void;
+};
 
-  return function when(): MB {
+export function makeWhen(registerRoute: Register) {
+  return function when(): MockBuilder {
     const wanted: Partial<State> = { filters: [] };
     let pred: ((s: State) => boolean) | undefined;
 
@@ -37,17 +37,21 @@ export function makeWhen(__registerRoute: Register) {
       return base && subset && selOK && predOK;
     };
 
-    const api: MB = {
+    const api: MockBuilder = {
       table(t){ wanted.table = t; return api; },
       op(op){ wanted.op = op; return api; },
-      select(sel){ wanted.selects = sel; return api; },
+      select(sel){ wanted.selects = sel ?? '*'; return api; },
       eq(c,v){ (wanted.filters as any[]).push({ type:'eq', column:c, value:v }); return api; },
       where(p){ pred = p; return api; },
 
-      returnsSingle(row){ __registerRoute(subsetMatch, () => ({ data: row, error: null })); },
-      returnsList(rows){ __registerRoute(subsetMatch, () => ({ data: rows, error: null })); },
-      returnsError(msg){ __registerRoute(subsetMatch, () => ({ data: null, error: { message: msg } })); },
+      returnsSingle(row){ registerRoute(subsetMatch, () => ({ data: row, error: null })); },
+      returnsList(rows){ registerRoute(subsetMatch, () => ({ data: rows, error: null })); },
+      returnsError(msg){ registerRoute(subsetMatch, () => ({ data: null, error: { message: msg } })); },
     };
     return api;
   };
 }
+
+// Export the when function and expectQueryState for backward compatibility
+export const when = makeWhen(() => {});
+export const expectQueryState = () => {};

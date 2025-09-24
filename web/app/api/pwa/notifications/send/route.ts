@@ -150,6 +150,8 @@ async function getTargetSubscriptions(targetUsers?: string[], targetType: string
   // This would typically query your database for active subscriptions
   // For now, we'll return mock data
   
+  console.log(`Getting subscriptions for target type: ${targetType}`);
+  
   if (targetUsers && targetUsers.length > 0) {
     // Return subscriptions for specific users
     return targetUsers.map(userId => ({

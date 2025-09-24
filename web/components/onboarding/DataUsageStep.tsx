@@ -50,7 +50,7 @@ export default function DataUsageStep({ data, onUpdate, onNext, onBack }: DataUs
         <h2 className="text-3xl font-bold text-gray-900">How We Use Your Data</h2>
         <p className="text-lg text-gray-600 max-w-2xl mx-auto">
           We believe in complete transparency about how your data is used. 
-          You have full control over what information is shared and how it's used.
+          You have full control over what information is shared and how it&apos;s used.
         </p>
       </div>
 
@@ -163,7 +163,7 @@ export default function DataUsageStep({ data, onUpdate, onNext, onBack }: DataUs
             Data Sharing Level
           </CardTitle>
           <CardDescription>
-            Choose how much data you're comfortable sharing for platform improvement
+            Choose how much data you&apos;re comfortable sharing for platform improvement
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -306,7 +306,7 @@ export default function DataUsageStep({ data, onUpdate, onNext, onBack }: DataUs
     <div className="space-y-8">
       <div className="text-center">
         <h3 className="text-2xl font-bold text-gray-900 mb-2">Your Privacy Summary</h3>
-        <p className="text-gray-600">Here's how your data will be used based on your preferences</p>
+        <p className="text-gray-600">Here&apos;s how your data will be used based on your preferences</p>
       </div>
 
       <Card className="max-w-2xl mx-auto">
@@ -350,7 +350,7 @@ export default function DataUsageStep({ data, onUpdate, onNext, onBack }: DataUs
                 <ul className="space-y-1">
                   <li>• You can change these settings anytime in your profile</li>
                   <li>• You can request deletion of your data at any time</li>
-                  <li>• We'll notify you of any changes to our data practices</li>
+                  <li>• We&apos;ll notify you of any changes to our data practices</li>
                   <li>• You can opt out of research participation at any time</li>
                 </ul>
               </div>

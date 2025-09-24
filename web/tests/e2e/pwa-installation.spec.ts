@@ -385,12 +385,12 @@ test.describe('PWA Installation - V2', () => {
     const startTime = Date.now();
 
     // Check PWA installation prompt
-    const installPrompt = await page.evaluate(() => {
+    const _installPrompt = await page.evaluate(() => {
       return window.deferredPrompt !== undefined;
     });
     
     // Check service worker registration
-    const swRegistered = await page.evaluate(async () => {
+    const _swRegistered = await page.evaluate(async () => {
       if ('serviceWorker' in navigator) {
         const registration = await navigator.serviceWorker.getRegistration();
         return !!registration;

@@ -1,11 +1,11 @@
-import type { NextRequest} from 'next/server';
+// NextRequest import removed - not used
 import { NextResponse } from 'next/server'
 import { AnalyticsService } from '@/lib/core/services/analytics'
 import { devLog } from '@/lib/logger'
 
 export const dynamic = 'force-dynamic'
 
-export async function GET(_request: NextRequest) {
+export async function GET() {
   try {
     const analyticsService = AnalyticsService.getInstance()
     const summary = await analyticsService.getAnalyticsSummary()

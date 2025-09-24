@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
       source || 'custom'
     );
 
-    devLog('Hashtags tracked:', { hashtags, userId, source });
+    devLog('Hashtags tracked:', { hashtags, userId, source, metadata });
 
     return NextResponse.json({
       success: true,

@@ -5,7 +5,10 @@ import { devLog } from '@/lib/logger';
 
 // Import types from respective PWA modules
 import type { PWAAuth } from '../lib/pwa-auth-integration';
-import type { PWAManager, PWAWebAuthn, PrivacyStorage } from '../lib/pwa-utils';
+// PWA utils types not implemented yet
+type PWAManager = any;
+type PWAWebAuthn = any;
+type PrivacyStorage = any;
 // import type { PWAAnalytics } from '../lib/pwa-analytics'; // Archived PWA feature
 
 type PWAUtils = {
@@ -28,18 +31,18 @@ export function usePWAUtils() {
         setError(null)
         
         // Dynamic imports - only loaded on client side
-        const [pwaAuthModule, pwaUtilsModule] = await Promise.all([
+        const [pwaAuthModule] = await Promise.all([
           import('../lib/pwa-auth-integration'),
-          import('../lib/pwa-utils'),
+          // import('../lib/pwa-utils'), // Not implemented yet
           // import('../lib/pwa-analytics') // Archived PWA feature
         ])
         
         setUtils({
           pwaAuth: pwaAuthModule.pwaAuth,
-          pwaManager: pwaUtilsModule.pwaManager,
+          pwaManager: {} as PWAManager, // Not implemented yet
           pwaAnalytics: null, // Archived PWA feature
-          pwaWebAuthn: pwaUtilsModule.pwaWebAuthn,
-          privacyStorage: pwaUtilsModule.privacyStorage
+          pwaWebAuthn: {} as PWAWebAuthn, // Not implemented yet
+          privacyStorage: {} as PrivacyStorage // Not implemented yet
         })
       } catch (err) {
         devLog('Error loading PWA utils:', err)

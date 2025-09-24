@@ -451,7 +451,7 @@ export class CandidateVerificationSystem {
     // This would integrate with your database
   }
 
-  private async saveOnboardingState(onboarding: CandidateOnboarding): Promise<void> {
+  private async saveOnboardingState(_onboarding: CandidateOnboarding): Promise<void> {
     // Save onboarding state to database
     // This would integrate with your database
   }
@@ -495,7 +495,7 @@ export class CandidateVerificationSystem {
     return govDomains.some(govDomain => domain?.endsWith(govDomain));
   }
 
-  private async sendVerificationEmail(email: string): Promise<boolean> {
+  private async sendVerificationEmail(_email: string): Promise<boolean> {
     // Send verification email
     // This would integrate with your email service
     return true;
@@ -523,6 +523,26 @@ export class CandidateVerificationSystem {
   }): Promise<boolean> {
     // Validate official filing
     // This would integrate with FEC, state, or local filing systems
+    
+    // Basic validation checks
+    if (!filingInfo.filingId || !filingInfo.jurisdiction || !filingInfo.office) {
+      return false;
+    }
+    
+    // Check if filing date is valid
+    const filingDate = new Date(filingInfo.filingDate);
+    if (isNaN(filingDate.getTime())) {
+      return false;
+    }
+    
+    // Check if filing is not too old (within last 2 years)
+    const twoYearsAgo = new Date();
+    twoYearsAgo.setFullYear(twoYearsAgo.getFullYear() - 2);
+    if (filingDate < twoYearsAgo) {
+      return false;
+    }
+    
+    // TODO: Integrate with actual filing systems
     return true;
   }
 }

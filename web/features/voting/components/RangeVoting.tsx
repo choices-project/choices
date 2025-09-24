@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { CheckCircle, AlertCircle, Info, Star } from 'lucide-react'
+import { withOptional } from '@/lib/util/objects'
 
 type PollOption = {
   id: string
@@ -57,7 +58,7 @@ export default function RangeVoting({
 
     setError(null)
     setRatings(prev => ({
-      ...prev,
+      ...withOptional(prev),
       [optionId]: Math.max(minRating, Math.min(maxRating, rating))
     }))
   }

@@ -180,7 +180,7 @@ export function PasskeyControls() {
         <div className="modal p-4 border rounded">
           <h3>Manage Credentials</h3>
           <div data-testid="credential-list" className="mt-4">
-            {credentials.map((cred, index) => (
+            {credentials.map((cred) => (
               <div key={cred.id} data-testid="credential-item" className="p-2 border rounded mb-2">
                 {cred.name}
               </div>

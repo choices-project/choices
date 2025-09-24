@@ -11,14 +11,14 @@
 
 import type { Page } from '@playwright/test';
 
-export interface E2ETestUser {
+export type E2ETestUser = {
   email: string;
   username: string;
   password: string;
   id?: string;
 }
 
-export interface E2ETestPoll {
+export type E2ETestPoll = {
   title: string;
   description: string;
   options: string[];
@@ -27,7 +27,7 @@ export interface E2ETestPoll {
   votingMethod?: 'single' | 'approval' | 'ranked' | 'quadratic' | 'range';
 }
 
-export interface E2ETestData {
+export type E2ETestData = {
   user: E2ETestUser;
   poll?: E2ETestPoll;
   votes?: Array<{ pollId: string; optionId: string; userId: string }>;
@@ -63,7 +63,7 @@ export async function setupE2ETestData(testData: E2ETestData): Promise<void> {
  * In a real implementation, this would delete the test data
  * from the database.
  */
-export async function cleanupE2ETestData(testData: E2ETestData): Promise<void> {
+export async function cleanupE2ETestData(_testData: E2ETestData): Promise<void> {
   // For E2E tests, cleanup is handled by the test framework
   // In a real implementation, this would delete test data from the database
   
@@ -110,15 +110,15 @@ export async function waitForPageReady(page: Page): Promise<void> {
   await page.waitForLoadState('domcontentloaded');
   
   // Wait for any loading spinners to disappear (with shorter timeout)
-  await page.waitForSelector('.animate-spin', { state: 'hidden', timeout: 2000 }).catch(() => {
+  await page.waitForSelector('.animate-spin', { state: 'hidden', timeout: 1000 }).catch(() => {
     // Loading spinner might not exist, which is fine
   });
   
   // Wait for main content to be visible (with shorter timeout)
-  await page.waitForSelector('body', { state: 'visible', timeout: 5000 });
+  await page.waitForSelector('body', { state: 'visible', timeout: 3000 });
   
-  // Small delay to ensure everything is settled
-  await page.waitForTimeout(200);
+  // Reduced delay for faster tests
+  await page.waitForTimeout(100);
 }
 
 /**
@@ -166,6 +166,26 @@ export async function setupExternalAPIMocks(page: Page): Promise<void> {
     });
   });
   
+  // Mock civics address lookup API
+  await page.route('**/api/v1/civics/address-lookup', route => {
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        ok: true,
+        normalizedInput: { 
+          line1: '123 Any St', 
+          city: 'Springfield', 
+          state: 'IL', 
+          zip: '62704' 
+        },
+        district: '13', 
+        state: 'IL', 
+        county: 'Sangamon'
+      })
+    });
+  });
+  
   console.log('✅ External API mocks setup complete');
 }
 
@@ -176,11 +196,11 @@ export async function setupExternalAPIMocks(page: Page): Promise<void> {
  * using the V2 mock factory patterns.
  */
 export const E2E_CONFIG = {
-  // Test data timeouts
+  // Test data timeouts (optimized for performance)
   TIMEOUTS: {
-    PAGE_LOAD: 30000,
-    ELEMENT_WAIT: 10000,
-    API_RESPONSE: 5000
+    PAGE_LOAD: 15000, // Reduced from 30s
+    ELEMENT_WAIT: 5000, // Reduced from 10s
+    API_RESPONSE: 3000 // Reduced from 5s
   },
   
   // Common test data

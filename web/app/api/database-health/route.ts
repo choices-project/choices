@@ -1,4 +1,4 @@
-import type { NextRequest} from 'next/server';
+import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 import { logger } from '@/lib/logger';
 import { withAuth, createRateLimitMiddleware, combineMiddleware } from '@/lib/core/auth/middleware'
@@ -112,9 +112,9 @@ export const GET = withAuth(async (request: NextRequest, context) => {
   }
 }, { allowPublic: true }) // Allow public access to health checks
 
-export async function POST(_request: NextRequest) {
+export async function POST(request: NextRequest) {
   try {
-    const { action } = await _request.json();
+    const { action } = await request.json();
 
     switch (action) {
       case 'clear_metrics':

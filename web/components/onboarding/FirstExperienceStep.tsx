@@ -47,7 +47,7 @@ export default function FirstExperienceStep({ onUpdate, onNext }: FirstExperienc
       <div className="text-center space-y-4">
         <h2 className="text-3xl font-bold text-gray-900">Your First Experience</h2>
         <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-          Let's walk through creating and voting in a poll. This will help you understand how the platform works.
+          Let&apos;s walk through creating and voting in a poll. This will help you understand how the platform works.
         </p>
       </div>
 
@@ -150,7 +150,7 @@ export default function FirstExperienceStep({ onUpdate, onNext }: FirstExperienc
     <div className="space-y-8">
       <div className="text-center">
         <h3 className="text-2xl font-bold text-gray-900 mb-2">Demo Poll</h3>
-        <p className="text-gray-600">Let's look at an example poll to see how it works</p>
+        <p className="text-gray-600">Let&apos;s look at an example poll to see how it works</p>
       </div>
 
       <Card className="max-w-2xl mx-auto">
@@ -359,7 +359,7 @@ export default function FirstExperienceStep({ onUpdate, onNext }: FirstExperienc
               </div>
             </div>
             <div className="mt-2 text-xs text-green-600">
-              🎉 Congratulations on your first vote! You're now ready to participate in polls.
+              🎉 Congratulations on your first vote! You&apos;re now ready to participate in polls.
             </div>
           </div>
         </CardContent>
@@ -382,14 +382,14 @@ export default function FirstExperienceStep({ onUpdate, onNext }: FirstExperienc
     <div className="space-y-8">
       <div className="text-center">
         <h3 className="text-2xl font-bold text-gray-900 mb-2">Experience Complete!</h3>
-        <p className="text-gray-600">You've successfully completed your first poll experience</p>
+        <p className="text-gray-600">You&apos;ve successfully completed your first poll experience</p>
       </div>
 
       <Card className="max-w-2xl mx-auto">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <CheckCircle className="h-5 w-5 text-green-600" />
-            What You've Learned
+            What You&apos;ve Learned
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -428,7 +428,7 @@ export default function FirstExperienceStep({ onUpdate, onNext }: FirstExperienc
           <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
             <div className="text-sm text-blue-800">
               <p className="font-medium mb-1">Ready to get started?</p>
-              <p>You can now create your own polls, vote on others' polls, and explore the full platform!</p>
+              <p>You can now create your own polls, vote on others&apos; polls, and explore the full platform!</p>
             </div>
           </div>
         </CardContent>

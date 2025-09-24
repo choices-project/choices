@@ -13,13 +13,7 @@ export {
   type GoogleCivicApiError
 } from './google-civic';
 
-// ProPublica Congress API - specific exports to avoid conflicts  
-export {
-  ProPublicaClient,
-  type ProPublicaConfig,
-  type ProPublicaResponse,
-  type ProPublicaApiError
-} from './propublica';
+// ProPublica Congress API - ARCHIVED (service closed down)
 
 // Congress.gov API
 export * from './congress-gov';
@@ -37,28 +31,18 @@ export {
   transformToCandidateCard as transformToGoogleCivicCandidateCard
 } from './google-civic/transformers';
 
-export type {
-  RetryConfig as ProPublicaRetryConfig
-} from './propublica/error-handling';
-
-export {
-  executeWithRetry as executeWithProPublicaRetry
-} from './propublica/error-handling';
-
-export {
-  transformToCandidateCard as transformToProPublicaCandidateCard
-} from './propublica/transformers';
+// ProPublica exports removed - service archived
 
 // Rate Limiting
 export {
   RateLimiter,
   createGoogleCivicRateLimiter,
-  createProPublicaRateLimiter,
+  // createProPublicaRateLimiter, // ARCHIVED
   withRateLimit,
   ApiUsageMonitor,
   apiUsageMonitor,
   GOOGLE_CIVIC_RATE_LIMITS,
-  PROPUBLICA_RATE_LIMITS,
+  // PROPUBLICA_RATE_LIMITS, // ARCHIVED
   type RateLimitConfig,
   type RateLimitStatus,
   type ApiUsageMetrics
@@ -69,7 +53,7 @@ export {
   ApiResponseCache,
   createApiCache,
   googleCivicCache,
-  proPublicaCache,
+  // proPublicaCache, // ARCHIVED
   CACHE_CONFIGS,
   type CacheConfig,
   type CacheEntry,

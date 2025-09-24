@@ -11,6 +11,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
 import { PrivacyStatusBadge } from '@/components/civics/PrivacyStatusBadge';
 import { CandidateAccountabilityCard } from '@/components/civics/CandidateAccountabilityCard';
+import { AddressLookupForm } from '@/components/civics/AddressLookupForm';
 import { Search, MapPin, Phone, Mail, Globe, Users, Building2, Home, Database, CheckCircle, AlertCircle, Clock } from 'lucide-react';
 
 type Representative = {
@@ -38,30 +39,7 @@ type CivicsData = {
 }
 
 export default function CivicsPage() {
-  // Feature flag check - show disabled message if not enabled
-  if (!isFeatureEnabled('CIVICS_ADDRESS_LOOKUP')) {
-    return (
-      <div className="min-h-screen bg-gray-50 py-12">
-        <div className="max-w-4xl mx-auto px-4">
-          <div className="text-center">
-            <h1 className="text-3xl font-bold text-gray-900 mb-4">
-              Civics Address Lookup
-            </h1>
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
-              <div className="flex items-center justify-center mb-4">
-                <PrivacyStatusBadge />
-              </div>
-              <p className="text-yellow-800">
-                This feature is currently disabled while we complete our e2e testing work. 
-                The foundation is ready and will be enabled soon!
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
+  // All React Hooks must be called at the top level, before any conditional returns
   const [representatives, setRepresentatives] = useState<Representative[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -171,13 +149,48 @@ export default function CivicsPage() {
     return <AlertCircle className="h-3 w-3" />;
   };
 
+  // Feature flag check - show disabled message if not enabled
+  if (!isFeatureEnabled('CIVICS_ADDRESS_LOOKUP')) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-12">
+        <div className="max-w-4xl mx-auto px-4">
+          <div className="text-center">
+            <h1 className="text-3xl font-bold text-gray-900 mb-4">
+              Civics Address Lookup
+            </h1>
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
+              <div className="flex items-center justify-center mb-4">
+                <PrivacyStatusBadge />
+              </div>
+              <p className="text-yellow-800">
+                This feature is currently disabled while we complete our e2e testing work. 
+                The foundation is ready and will be enabled soon!
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-8" data-testid="civics-page">
       <div className="mb-8">
         <h1 className="text-4xl font-bold mb-2">🗳️ Your Representatives</h1>
         <p className="text-gray-600 mb-4">
           Browse and contact your federal, state, and local government representatives
         </p>
+        
+        {/* Address Lookup Form */}
+        <div className="mb-6">
+          <AddressLookupForm 
+            onLookup={(address) => {
+              // Handle address lookup - this will be implemented when the API is ready
+              console.log('Address lookup:', address);
+            }}
+            className="mb-4"
+          />
+        </div>
         
         {/* Data Quality Summary */}
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">

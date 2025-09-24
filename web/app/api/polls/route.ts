@@ -133,6 +133,7 @@ export async function POST(request: NextRequest) {
     try {
       user = await getUser();
     } catch (error) {
+      console.error('Authentication error during poll creation:', error);
       // If getUser fails and this is not an E2E test, return auth error
       if (!isE2ETest) {
         return NextResponse.json(

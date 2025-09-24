@@ -1,8 +1,13 @@
 // Media Bias Analysis & Poll Origin Tracking System
 // Detects propaganda and bias by comparing mainstream media polls with real public opinion
+// 
+// ⚠️  FEATURE FLAGGED FOR MVP - NOT READY FOR PRODUCTION
+// This feature is disabled by default and requires FEATURE_FLAGS.MEDIA_BIAS_ANALYSIS = true
+// to enable. Currently not MVP-ready and should not be used in production.
 
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 import { devLog } from '@/lib/logger';
+import { FEATURE_FLAGS } from '@/lib/core/feature-flags';
 // ============================================================================
 // CORE INTERFACES
 // ============================================================================
@@ -518,12 +523,23 @@ export class PropagandaDetector {
 
 export class MediaBiasAnalysisService {
   private supabase;
+  private isEnabled: boolean;
 
   constructor() {
+    this.isEnabled = FEATURE_FLAGS.MEDIA_BIAS_ANALYSIS;
+    if (!this.isEnabled) {
+      devLog('MediaBiasAnalysisService: Feature disabled for MVP - not production ready');
+      return;
+    }
     this.supabase = getSupabaseServerClient();
   }
 
   async trackMediaPoll(poll: Omit<MediaPoll, 'id' | 'createdAt' | 'updatedAt'>): Promise<MediaPoll | null> {
+    if (!this.isEnabled) {
+      devLog('Media bias analysis is disabled - feature not MVP ready');
+      return null;
+    }
+    
     try {
       // Analyze for bias and propaganda
       const biasAnalysis = PropagandaDetector.analyzePoll(poll as MediaPoll);
@@ -539,7 +555,9 @@ export class MediaBiasAnalysisService {
       const { data, error } = await supabaseClient
         .from('media_polls')
         .insert([{
-          ...poll,
+          ...Object.fromEntries(
+            Object.entries(poll).filter(([_, value]) => value !== undefined)
+          ),
           bias_analysis: biasAnalysis,
           bias_indicators: biasIndicators,
           fact_check: factCheck
@@ -557,6 +575,11 @@ export class MediaBiasAnalysisService {
   }
 
   async compareWithPublicOpinion(mediaPollId: string, ourPollId: string): Promise<PublicOpinionComparison | null> {
+    if (!this.isEnabled) {
+      devLog('Media bias analysis is disabled - feature not MVP ready');
+      return null;
+    }
+    
     try {
       const mediaPoll = await this.getMediaPoll(mediaPollId);
       const ourPoll = await this.getOurPoll(ourPollId);

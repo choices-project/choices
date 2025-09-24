@@ -94,7 +94,7 @@ export default function DemographicsStep({ data, onUpdate, onNext, onBack }: Dem
             <h3 className="font-semibold text-green-900 mb-2">Your privacy is protected</h3>
             <ul className="text-green-800 text-sm space-y-1">
               <li>• This information is never shared publicly</li>
-              <li>• It's only used to ensure diverse representation</li>
+              <li>• It&apos;s only used to ensure diverse representation</li>
               <li>• You can skip any question or change answers later</li>
               <li>• We never ask for specific personal details</li>
             </ul>

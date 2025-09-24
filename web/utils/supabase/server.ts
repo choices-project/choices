@@ -413,7 +413,7 @@ export async function getSupabaseServerClient(): Promise<SupabaseClient<Database
   let cookieStore
   try {
     cookieStore = cookies()
-  } catch (_error) {
+  } catch {
     // During build time, cookies() might not be available
     // Throw an error to prevent build-time usage
     throw new Error('getSupabaseServerClient() cannot be called during build time. Use it only in API routes and server components.')
@@ -430,14 +430,14 @@ export async function getSupabaseServerClient(): Promise<SupabaseClient<Database
         set: (name: string, value: string, options: Record<string, unknown>) => {
           try {
             cookieStore.set(name, value, options)
-          } catch (_error) {
+          } catch {
             // Ignore errors in RSC context
           }
         },
         remove: (name: string, _options: Record<string, unknown>) => {
           try {
             cookieStore.delete(name)
-          } catch (_error) {
+          } catch {
             // Ignore errors in RSC context
           }
         },

@@ -419,7 +419,7 @@ export class DatabasePerformanceMonitor {
     }
 
     const latestMetrics = this.metrics[this.metrics.length - 1]
-    const previousMetrics = this.metrics[this.metrics.length - 2]
+    const _previousMetrics = this.metrics[this.metrics.length - 2]
     if (!latestMetrics) return
     
     // Analyze trends and generate recommendations

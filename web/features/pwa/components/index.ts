@@ -4,8 +4,10 @@
  * This module re-exports all PWA components.
  */
 
-export { PWAUserProfile } from './PWAUserProfile';
-export { PWAVotingInterface } from './PWAVotingInterface';
+// PWAUserProfile and PWAVotingInterface components not implemented yet
+export const PWAComponents = {
+  // Placeholder for future PWA components
+};
 
 
 

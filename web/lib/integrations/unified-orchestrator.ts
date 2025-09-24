@@ -194,7 +194,7 @@ export class UnifiedDataOrchestrator {
   /**
    * Get comprehensive representative data from all available sources
    */
-  async getRepresentative(identifier: string, type: 'bioguide' | 'name' | 'state-district' = 'bioguide'): Promise<UnifiedRepresentative | null> {
+  async getRepresentative(identifier: string, _type: 'bioguide' | 'name' | 'state-district' = 'bioguide'): Promise<UnifiedRepresentative | null> {
     const dataFromSources: Array<{ source: string; data: any; priority: number }> = [];
 
     try {

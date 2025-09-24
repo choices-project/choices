@@ -391,7 +391,7 @@ export async function getUser(): Promise<User | null> {
  * requireUser function for backward compatibility
  * Uses canonical Supabase client
  */
-export async function requireUser(req: Request): Promise<User> {
+export async function requireUser(_req: Request): Promise<User> {
   const user = await getUser();
   
   if (!user) {

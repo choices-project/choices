@@ -43,9 +43,7 @@ type BrowserWindow = {
   location?: { href: string; reload(): void };
 }
 
-type BrowserDocument = {
-  // Minimal document interface for SSR safety
-}
+type BrowserDocument = Record<string, never>
 
 type BrowserNavigator = {
   userAgent?: string;

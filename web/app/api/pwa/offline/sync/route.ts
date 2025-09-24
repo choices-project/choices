@@ -24,6 +24,9 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { votes, deviceId, timestamp } = body;
 
+    // Log sync attempt for audit trail
+    console.log(`Offline sync attempt from device: ${deviceId} at ${timestamp}`);
+
     if (!votes || !Array.isArray(votes)) {
       return NextResponse.json({
         success: false,
@@ -154,6 +157,7 @@ async function processOfflineVote(vote: any): Promise<any> {
 async function getSyncStatus(deviceId: string): Promise<any> {
   // This would typically query your database for pending sync operations
   // For now, we'll return a mock status
+  console.log(`Getting sync status for device: ${deviceId}`);
   
   return {
     lastSync: new Date().toISOString(),

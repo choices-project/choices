@@ -150,11 +150,11 @@ export default function CompleteStep({ data, onComplete, onBack, isLoading = fal
 
       {/* What's next */}
       <div className="bg-blue-50 rounded-2xl p-6 border border-blue-200">
-        <h3 className="font-semibold text-blue-900 mb-4">What's next?</h3>
+        <h3 className="font-semibold text-blue-900 mb-4">What&apos;s next?</h3>
         <div className="space-y-3 text-blue-800 text-sm">
           <div className="flex items-start space-x-2">
             <span className="text-blue-600">1.</span>
-            <span>Find your local candidates and see who's really representing you</span>
+            <span>Find your local candidates and see who&apos;s really representing you</span>
           </div>
           <div className="flex items-start space-x-2">
             <span className="text-blue-600">2.</span>
@@ -162,7 +162,7 @@ export default function CompleteStep({ data, onComplete, onBack, isLoading = fal
           </div>
           <div className="flex items-start space-x-2">
             <span className="text-blue-600">3.</span>
-            <span>See who's funding whom and spot "bought off" politicians</span>
+            <span>See who&apos;s funding whom and spot &quot;bought off&quot; politicians</span>
           </div>
           <div className="flex items-start space-x-2">
             <span className="text-blue-600">4.</span>
@@ -223,7 +223,7 @@ export default function CompleteStep({ data, onComplete, onBack, isLoading = fal
         
         <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
           <p className="text-xs text-yellow-800">
-            <strong>Note:</strong> We're exploring ethical ways to accept financial contributions. 
+            <strong>Note:</strong> We&apos;re exploring ethical ways to accept financial contributions. 
             For now, we focus on code and community contributions to keep the platform truly independent.
           </p>
         </div>
@@ -241,6 +241,7 @@ export default function CompleteStep({ data, onComplete, onBack, isLoading = fal
         <button
           onClick={onComplete}
           disabled={isLoading}
+          data-testid="complete-onboarding"
           className={`
             px-8 py-3 rounded-lg font-semibold transition-all duration-200 flex items-center space-x-2
             ${isLoading 

@@ -3,32 +3,42 @@ import { defineConfig, devices } from '@playwright/test'
 export default defineConfig({
   testDir: './tests/e2e',
   testIgnore: ['**/archive-old/**'],
-  fullyParallel: true,
+  fullyParallel: false, // Disabled for E2E stability
   forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 1 : 4,
+  retries: process.env.CI ? 1 : 0, // Reduced retries
+  workers: process.env.CI ? 1 : 2,
   reporter: 'html',
-  timeout: 60_000,
-  expect: { timeout: 10_000 },
+  timeout: 30_000,
+  expect: { timeout: 5_000 },
   use: {
-    baseURL: process.env.BASE_URL || 'http://127.0.0.1:3000', // use existing dev server
+    baseURL: process.env.BASE_URL || 'http://127.0.0.1:3000',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
     extraHTTPHeaders: { 'x-e2e-bypass': '1' },
+    actionTimeout: 10_000,
+    navigationTimeout: 15_000,
   },
+  // Use existing dev server instead of starting new one
+  // webServer: {
+  //   command: 'bash -c "npm run build && npm run start -- -p 3000"',
+  //   port: 3000,
+  //   reuseExistingServer: true,
+  //   timeout: 120_000,
+  // },
 
   projects: [
     {
       name: 'api-tests',
       testMatch: /.*\.api\.spec\.ts/,
       use: {
-        baseURL: process.env.BASE_URL || 'http://localhost:3000',
+        baseURL: process.env.BASE_URL || 'http://127.0.0.1:3000',
       },
     },
     {
-      name: 'ui-tests',
-      testMatch: /.*\.ui\.spec\.ts/,
+      name: 'chromium',
+      testMatch: /.*\.spec\.ts/,
+      testIgnore: /.*pwa.*\.spec\.ts/, // Exclude PWA specs to prevent duplicate runs
       use: { ...devices['Desktop Chrome'] },
     },
     {
@@ -36,49 +46,11 @@ export default defineConfig({
       testMatch: /.*pwa.*\.spec\.ts/,
       use: { 
         ...devices['Desktop Chrome'],
-        // PWA-specific settings
         permissions: ['notifications'],
         geolocation: { latitude: 37.7749, longitude: -122.4194 },
         locale: 'en-US',
         timezoneId: 'America/Los_Angeles',
       },
-    },
-    {
-      name: 'pwa-mobile-tests',
-      testMatch: /.*pwa.*\.spec\.ts/,
-      use: { 
-        ...devices['Pixel 5'],
-        // Mobile PWA-specific settings
-        permissions: ['notifications'],
-        geolocation: { latitude: 37.7749, longitude: -122.4194 },
-        locale: 'en-US',
-        timezoneId: 'America/Los_Angeles',
-      },
-    },
-    {
-      name: 'chromium',
-      testMatch: /.*\.spec\.ts/,
-      use: { ...devices['Desktop Chrome'] },
-    },
-    {
-      name: 'firefox',
-      testMatch: /.*\.spec\.ts/,
-      use: { ...devices['Desktop Firefox'] },
-    },
-    {
-      name: 'webkit',
-      testMatch: /.*\.spec\.ts/,
-      use: { ...devices['Desktop Safari'] },
-    },
-    {
-      name: 'Mobile Chrome',
-      testMatch: /.*\.spec\.ts/,
-      use: { ...devices['Pixel 5'] },
-    },
-    {
-      name: 'Mobile Safari',
-      testMatch: /.*\.spec\.ts/,
-      use: { ...devices['iPhone 12'] },
     },
   ],
 

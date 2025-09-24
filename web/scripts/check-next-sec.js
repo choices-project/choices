@@ -25,7 +25,7 @@ const sensitiveVars = [
 ];
 
 let hasExposedSecrets = false;
-for (const [key, value] of Object.entries(envVars)) {
+for (const [key, _value] of Object.entries(envVars)) {
   if (key.startsWith('NEXT_PUBLIC_') && sensitiveVars.some(sensitive => key.includes(sensitive))) {
     console.error(`❌ Exposed sensitive variable: ${key}`);
     hasExposedSecrets = true;

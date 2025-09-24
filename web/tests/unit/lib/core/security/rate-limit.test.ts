@@ -16,9 +16,7 @@ import {
   type RiskAssessment 
 } from '@/lib/core/security/rate-limit';
 
-// Import V2 test setup
-import { getMS } from '../../../../setup';
-const { expectNoDBCalls, expectOnlyTablesCalled } = getMS();
+// Test setup removed - not needed for this test
 
 // Mock the logger
 jest.mock('@/lib/logger', () => ({

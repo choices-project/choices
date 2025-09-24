@@ -4,9 +4,9 @@
  * Temporarily disabled due to missing dependencies
  */
 
-import { type NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   return NextResponse.json({
     success: false,
     error: 'Pre-launch checklist temporarily disabled - missing dependencies',
@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
   }, { status: 503 });
 }
 
-export async function POST(request: NextRequest) {
+export async function POST() {
   return NextResponse.json({
     success: false,
     error: 'Pre-launch checklist temporarily disabled - missing dependencies',

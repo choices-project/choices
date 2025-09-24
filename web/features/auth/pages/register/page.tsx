@@ -216,13 +216,13 @@ export default function RegisterPage() {
                 <div>
                   <h3 className="font-semibold text-blue-900 mb-2">What is a Passkey?</h3>
                   <p className="text-sm text-blue-800 mb-3">
-                    A passkey is a secure, passwordless way to sign in using your device's built-in security features like fingerprint, face recognition, or PIN.
+                    A passkey is a secure, passwordless way to sign in using your device&apos;s built-in security features like fingerprint, face recognition, or PIN.
                   </p>
                   <ul className="text-sm text-blue-800 space-y-1">
                     <li>• More secure than passwords</li>
                     <li>• Works across all your devices</li>
                     <li>• No need to remember complex passwords</li>
-                    <li>• Protected by your device's security</li>
+                    <li>• Protected by your device&apos;s security</li>
                   </ul>
                 </div>
               </div>

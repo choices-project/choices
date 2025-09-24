@@ -6,6 +6,7 @@
  */
 
 import { createClient } from '@supabase/supabase-js';
+import { logger } from '@/lib/logger';
 import type {
   GeographicLookup
 } from './types';
@@ -370,6 +371,12 @@ export class GeographicService {
         throw new Error(`Import failed: ${error.message}`);
       }
 
+      // Analytics: log result of upsert (rows affected if available)
+      const affected = Array.isArray(data) ? data.length : 0;
+      logger.info('ZIP to OCD mappings upserted', {
+        requested: mappings.length,
+        affected
+      });
       return mappings.length;
     } catch (error) {
       throw new Error(`ZIP mapping import failed: ${error}`);
@@ -396,6 +403,12 @@ export class GeographicService {
         throw new Error(`Import failed: ${error.message}`);
       }
 
+      // Analytics: log result of upsert (rows affected if available)
+      const affected = Array.isArray(data) ? data.length : 0;
+      logger.info('Lat/Lon to OCD mappings upserted', {
+        requested: mappings.length,
+        affected
+      });
       return mappings.length;
     } catch (error) {
       throw new Error(`Lat/Lon mapping import failed: ${error}`);

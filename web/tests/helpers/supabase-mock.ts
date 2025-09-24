@@ -12,14 +12,14 @@ export type State = {
   rpc?: { fn: string; args: any };
 };
 
-export interface MockLib {
-  fn: <T extends (...a: any[]) => any>(impl?: T) => jest.MockedFunction<T>;
-  spyOn: typeof jest.spyOn;
+export type MockLib = {
+  fn: <T extends (...a: any[]) => any>(impl?: T) => any;
+  spyOn: any;
 }
 
 type Route = { match: (s: State) => boolean; respond: () => any };
 
-export function makeMockSupabase(mockLib: MockLib = require('jest-mock')) {
+export function makeMockSupabase(mockLib: MockLib = {} as MockLib) {
   const routes: Route[] = [];
   const metrics = {
     counts: { single: 0, maybeSingle: 0, list: 0, mutate: 0, rpc: 0 },
@@ -42,7 +42,7 @@ export function makeMockSupabase(mockLib: MockLib = require('jest-mock')) {
   };
 
   const builder = (seed: State) => {
-    let state = structuredClone(seed);
+    const state = structuredClone(seed);
 
     const api: any = {
       // chainers

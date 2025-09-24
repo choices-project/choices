@@ -264,7 +264,7 @@ export class ZeroKnowledgeProofs {
         confidence: isValid ? 0.98 : 0.0,
         timestamp: Date.now()
       }
-    } catch (_error) {
+    } catch {
       return {
         isValid: false,
         confidence: 0.0,
@@ -661,7 +661,7 @@ export class ZeroKnowledgeProofs {
       };
       
       return mockEligibility;
-    } catch (_error) {
+    } catch {
       return { canVote: false, reason: 'Failed to check eligibility' };
     }
   }

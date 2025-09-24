@@ -53,7 +53,7 @@ test.describe('Civics Complete User Journey - Privacy-Safe Flow - V2', () => {
     });
   });
 
-  test('address→jurisdiction cookie→dashboard SSR (privacy-safe) with V2 setup', async ({ page, context }) => {
+  test('address→jurisdiction cookie→dashboard SSR (privacy-safe) with V2 setup', async ({ page }) => {
     // Set up test data for civics flow
     await setupE2ETestData({
       user: testData.user,
@@ -91,7 +91,7 @@ test.describe('Civics Complete User Journey - Privacy-Safe Flow - V2', () => {
     await page.waitForResponse('**/api/v1/civics/address-lookup');
     
     // Verify jurisdiction cookie is set
-    const cookies = await context.cookies();
+    const cookies = await page.context().cookies();
     const jurisCookie = cookies.find(c => c.name === 'cx_jurisdictions');
     expect(jurisCookie).toBeTruthy();
     expect(jurisCookie?.httpOnly).toBe(true);
@@ -145,7 +145,7 @@ test.describe('Civics Complete User Journey - Privacy-Safe Flow - V2', () => {
     }
   });
 
-  test('jurisdiction cookie security with V2 setup', async ({ page, context }) => {
+  test('jurisdiction cookie security with V2 setup', async ({ page }) => {
     // Set up test data for cookie security testing
     await setupE2ETestData({
       user: testData.user,
@@ -161,7 +161,7 @@ test.describe('Civics Complete User Journey - Privacy-Safe Flow - V2', () => {
     await page.waitForResponse('**/api/v1/civics/address-lookup');
     
     // Verify cookie security attributes
-    const cookies = await context.cookies();
+    const cookies = await page.context().cookies();
     const jurisCookie = cookies.find((c: any) => c.name === 'cx_jurisdictions');
     
     expect(jurisCookie?.httpOnly).toBe(true);
@@ -173,7 +173,7 @@ test.describe('Civics Complete User Journey - Privacy-Safe Flow - V2', () => {
     expect(jurisCookie?.value).toMatch(/^[A-Za-z0-9_-]+$/); // base64url format
   });
 
-  test('dashboard SSR filtering by jurisdiction with V2 setup', async ({ page, context }) => {
+  test('dashboard SSR filtering by jurisdiction with V2 setup', async ({ page }) => {
     // Set up test data for jurisdiction filtering
     await setupE2ETestData({
       user: testData.user,
@@ -227,7 +227,7 @@ test.describe('Civics Complete User Journey - Privacy-Safe Flow - V2', () => {
     await expect(page.locator('text=Failed to lookup address')).toBeVisible();
     
     // Verify no cookie is set on error
-    const cookies = await context.cookies();
+    const cookies = await page.context().cookies();
     const jurisCookie = cookies.find((c: any) => c.name === 'cx_jurisdictions');
     expect(jurisCookie).toBeFalsy();
   });
@@ -288,7 +288,7 @@ test.describe('Civics Complete User Journey - Privacy-Safe Flow - V2', () => {
     await expect(page.getByTestId('poll-card')).toHaveCount(1);
   });
 
-  test('civics integration with user authentication with V2 setup', async ({ page, context }) => {
+  test('civics integration with user authentication with V2 setup', async ({ page }) => {
     // Set up test data for authenticated civics flow
     await setupE2ETestData({
       user: testData.user,
@@ -317,7 +317,7 @@ test.describe('Civics Complete User Journey - Privacy-Safe Flow - V2', () => {
     await page.waitForResponse('**/api/v1/civics/address-lookup');
     
     // Verify jurisdiction cookie is set
-    const cookies = await context.cookies();
+    const cookies = await page.context().cookies();
     const jurisCookie = cookies.find(c => c.name === 'cx_jurisdictions');
     expect(jurisCookie).toBeTruthy();
     
@@ -330,7 +330,7 @@ test.describe('Civics Complete User Journey - Privacy-Safe Flow - V2', () => {
     await expect(page.locator('text=district 13')).toBeVisible();
   });
 
-  test('civics integration with poll creation with V2 setup', async ({ page, context }) => {
+  test('civics integration with poll creation with V2 setup', async ({ page }) => {
     // Set up test data for poll creation with civics
     await setupE2ETestData({
       user: testData.user,
@@ -383,7 +383,7 @@ test.describe('Civics Complete User Journey - Privacy-Safe Flow - V2', () => {
     await expect(page.locator('text=district 13')).toBeVisible();
   });
 
-  test('civics integration with multiple jurisdictions with V2 setup', async ({ page, context }) => {
+  test('civics integration with multiple jurisdictions with V2 setup', async ({ page }) => {
     // Set up test data for multiple jurisdictions
     await setupE2ETestData({
       user: testData.user,

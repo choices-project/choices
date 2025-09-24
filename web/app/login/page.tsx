@@ -275,7 +275,7 @@ function LoginForm() {
                 </button>
               </div>
               <p className="mt-1 text-xs text-gray-500">
-                If you don't have a password, you can use biometric authentication
+                If you don&apos;t have a password, you can use biometric authentication
               </p>
             </div>
           </div>

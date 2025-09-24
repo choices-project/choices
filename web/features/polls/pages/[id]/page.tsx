@@ -16,7 +16,11 @@ export default async function PollPage({ params }: { params: { id: string } }) {
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
     const res = await fetch(`${baseUrl}/api/polls/${params.id}`, {
       cache: 'no-store',
-      headers: { ...e2eHeader },
+      headers: { 
+        ...Object.fromEntries(
+          Object.entries(e2eHeader).filter(([_, value]) => value !== undefined)
+        ) 
+      },
     });
     
     if (!res.ok) {

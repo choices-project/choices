@@ -326,7 +326,7 @@ export class QueryOptimizer {
     } = options
 
     // Create cache key and query pattern
-    const cacheKey = `polls_${page}_${limit}_${privacyLevel || 'all'}_${userId || 'all'}`
+    const cacheKey = `polls_${page}_${limit}_${privacyLevel || 'all'}_${userId || 'all'}_${includeVotes ? 'with_votes' : 'no_votes'}`
     const queryPattern = 'SELECT polls WITH pagination and filters'
     
     // Try smart cache first
@@ -408,9 +408,16 @@ export class QueryOptimizer {
     const { includeUserInfo = false, groupByChoice = false } = options
 
     const startTime = Date.now()
+    
+    // Build select query based on options
+    let selectFields = 'id, poll_id, user_id, choice, rank, created_at, updated_at'
+    if (includeUserInfo) {
+      selectFields += ', user_profiles!inner(display_name, email)'
+    }
+    
     const query = this.supabase
       .from('votes')
-      .select('id, poll_id, user_id, choice, rank, created_at, updated_at')
+      .select(selectFields)
       .eq('poll_id', pollId)
 
     const result = await query
@@ -419,8 +426,26 @@ export class QueryOptimizer {
 
     if (result.error) throw result.error
 
-    // For now, return simple votes - groupByChoice and includeUserInfo would need separate queries
-    return result.data as Vote[]
+    // Process results based on options
+    if (groupByChoice && result.data && Array.isArray(result.data) && !result.error) {
+      // Group votes by choice for analytics
+      const grouped = (result.data as unknown as Vote[]).reduce((acc, vote) => {
+        const choice = vote.choice
+        if (!acc[choice]) {
+          acc[choice] = []
+        }
+        acc[choice].push(vote)
+        return acc
+      }, {} as Record<string, Vote[]>)
+      
+      return Object.entries(grouped).map(([choice, votes]) => ({
+        choice,
+        votes,
+        count: votes.length
+      })) as VoteGroupedByChoice[]
+    }
+    
+    return (result.data && Array.isArray(result.data) ? result.data : []) as unknown as Vote[]
   }
 
   // Batch insert votes for better performance
@@ -551,7 +576,7 @@ export class QueryOptimizer {
       if (result.data && new Date((result.data as CacheDatabaseEntry).expires_at) > new Date()) {
         return JSON.parse((result.data as CacheDatabaseEntry).value)
       }
-    } catch (_error) {
+    } catch {
       // Cache miss or error
     }
     return null
@@ -568,7 +593,7 @@ export class QueryOptimizer {
           value: JSON.stringify(value),
           expires_at: expiresAt
         })
-    } catch (_error) {
+    } catch {
       // Cache set failed, continue without caching
     }
   }

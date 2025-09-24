@@ -75,7 +75,7 @@ export class OptimizedPollService {
   }
 
   // Performance statistics for admin dashboard
-  async getPerformanceStats(hours: number = 24): Promise<PerformanceMetrics[]> {
+  async getPerformanceStats(_hours: number = 24): Promise<PerformanceMetrics[]> {
     // TODO: Implement actual performance stats collection
     // This should be server-side only and not expose sensitive data
     return [

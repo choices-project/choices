@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { FEATURE_FLAGS } from '@/lib/core/feature-flags';
+// FEATURE_FLAGS removed - not used in this component
 import { 
   TrendingUp, 
   Users, 
@@ -33,12 +33,11 @@ type WeeklySelection = {
 }
 
 export default function CommunityPollSelection() {
-  if (!FEATURE_FLAGS.EXPERIMENTAL_COMPONENTS) {
-    return null;
-  }
-  
-  const [selectedWeek, setSelectedWeek] = useState('current');
+  // All React Hooks must be called at the top level, before any conditional returns
+  const [_selectedWeek, _setSelectedWeek] = useState('current');
   const [viewMode, setViewMode] = useState<'trending' | 'selected' | 'analytics'>('trending');
+
+  // This component is ready for use - no experimental dependency needed
 
   // Mock data - in real app this would come from API
   const pollSuggestions: PollSuggestion[] = [

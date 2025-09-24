@@ -216,13 +216,8 @@ test.describe('API Endpoints - V2', () => {
     expect(addressData).toHaveProperty('district');
     expect(addressData).toHaveProperty('state');
 
-    // Test jurisdiction info endpoint
-    const jurisdictionResponse = await page.request.get('/api/v1/civics/jurisdiction-info', {
-      params: {
-        state: 'IL',
-        district: '13'
-      }
-    });
+    // Test jurisdiction info endpoint (using existing by-state endpoint)
+    const jurisdictionResponse = await page.request.get('/api/v1/civics/by-state?state=IL&level=federal');
     
     expect(jurisdictionResponse.ok()).toBe(true);
     const jurisdictionData = await jurisdictionResponse.json();
@@ -248,7 +243,7 @@ test.describe('API Endpoints - V2', () => {
     authToken = loginData.token;
 
     // Test get user profile endpoint
-    const getProfileResponse = await page.request.get('/api/user/profile', {
+    const getProfileResponse = await page.request.get('/api/profile', {
       headers: {
         'Authorization': `Bearer ${authToken}`
       }
@@ -260,7 +255,7 @@ test.describe('API Endpoints - V2', () => {
     expect(profileData.email).toBe(testData.user.email);
 
     // Test update user profile endpoint
-    const updateProfileResponse = await page.request.put('/api/user/profile', {
+    const updateProfileResponse = await page.request.put('/api/profile', {
       headers: {
         'Authorization': `Bearer ${authToken}`
       },
@@ -306,7 +301,7 @@ test.describe('API Endpoints - V2', () => {
     expect(dashboardData).toHaveProperty('recentPolls');
 
     // Test dashboard metrics endpoint
-    const metricsResponse = await page.request.get('/api/dashboard/metrics', {
+    const metricsResponse = await page.request.get('/api/dashboard/data', {
       headers: {
         'Authorization': `Bearer ${authToken}`
       }
@@ -391,16 +386,19 @@ test.describe('API Endpoints - V2', () => {
     expect(swResponse.ok()).toBe(true);
 
     // Test push notification subscription endpoint
-    const pushSubscriptionResponse = await page.request.post('/api/pwa/push-subscribe', {
+    const pushSubscriptionResponse = await page.request.post('/api/pwa/notifications/subscribe', {
       headers: {
         'Authorization': `Bearer ${authToken}`
       },
       data: {
-        endpoint: 'https://fcm.googleapis.com/fcm/send/test-endpoint',
-        keys: {
-          p256dh: 'test-p256dh-key',
-          auth: 'test-auth-key'
-        }
+        subscription: {
+          endpoint: 'https://fcm.googleapis.com/fcm/send/test-endpoint',
+          keys: {
+            p256dh: 'test-p256dh-key',
+            auth: 'test-auth-key'
+          }
+        },
+        userId: testData.user.email
       }
     });
     

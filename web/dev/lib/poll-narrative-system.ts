@@ -1,9 +1,13 @@
 // Poll Narrative System - Story-Driven Polls with Verified Information
 // Each poll becomes an educational narrative with community-moderated facts
+//
+// ⚠️  FEATURE FLAGGED FOR MVP - NOT READY FOR PRODUCTION
+// This feature is disabled by default and requires FEATURE_FLAGS.POLL_NARRATIVE_SYSTEM = true
+// to enable. Currently not MVP-ready and should not be used in production.
 
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 import { devLog } from '@/lib/logger';
-import { withOptional } from '@/lib/util/objects';
+import { FEATURE_FLAGS } from '@/lib/core/feature-flags';
 // ============================================================================
 // CORE INTERFACES
 // ============================================================================
@@ -290,21 +294,39 @@ export type FactVerificationResult = {
 
 export class PollNarrativeService {
   private supabase;
+  private isEnabled: boolean;
 
   constructor() {
+    this.isEnabled = FEATURE_FLAGS.POLL_NARRATIVE_SYSTEM;
+    if (!this.isEnabled) {
+      devLog('PollNarrativeService: Feature disabled for MVP - not production ready');
+      return;
+    }
     this.supabase = getSupabaseServerClient();
   }
 
   async createNarrative(narrative: Omit<PollNarrative, 'id' | 'createdAt' | 'updatedAt' | 'lastModeratedAt'>): Promise<PollNarrative | null> {
+    if (!this.isEnabled) {
+      devLog('Poll narrative system is disabled - feature not MVP ready');
+      return null;
+    }
+    
     try {
       if (!this.supabase) { throw new Error('Supabase client not available'); }
       const supabaseClient = await this.supabase;
+      if (!supabaseClient) {
+        throw new Error('Supabase client not available');
+      }
       const { data, error } = await supabaseClient
         .from('poll_narratives')
         .insert([{
-          ...narrative,
+          ...Object.fromEntries(
+            Object.entries(narrative).filter(([_, value]) => value !== undefined)
+          ),
           moderation: {
-            ...narrative.moderation,
+            ...Object.fromEntries(
+              Object.entries(narrative.moderation || {}).filter(([_, value]) => value !== undefined)
+            ),
             status: 'draft'
           }
         }] as any)
@@ -324,10 +346,15 @@ export class PollNarrativeService {
     try {
       if (!this.supabase) { throw new Error('Supabase client not available'); }
       const supabaseClient = await this.supabase;
+      if (!supabaseClient) {
+        throw new Error('Supabase client not available');
+      }
       const { data, error } = await supabaseClient
         .from('verified_facts')
         .insert([{
-          ...fact,
+          ...Object.fromEntries(
+            Object.entries(fact).filter(([_, value]) => value !== undefined)
+          ),
           narrative_id: narrativeId,
           last_verified: new Date()
         }] as any)
@@ -347,10 +374,15 @@ export class PollNarrativeService {
     try {
       if (!this.supabase) { throw new Error('Supabase client not available'); }
       const supabaseClient = await this.supabase;
+      if (!supabaseClient) {
+        throw new Error('Supabase client not available');
+      }
       const { data, error } = await supabaseClient
         .from('community_facts')
         .insert([{
-          ...fact,
+          ...Object.fromEntries(
+            Object.entries(fact).filter(([_, value]) => value !== undefined)
+          ),
           narrative_id: narrativeId,
           submitted_at: new Date(),
           status: 'pending',
@@ -376,6 +408,9 @@ export class PollNarrativeService {
   async voteOnCommunityFact(factId: string, _userId: string, voteType: 'helpful' | 'notHelpful' | 'verified' | 'disputed'): Promise<boolean> {
     try {
       const supabaseClient = await this.supabase;
+      if (!supabaseClient) {
+        throw new Error('Supabase client not available');
+      }
       
       // Get current fact
       const { data: fact, error: fetchError } = await supabaseClient
@@ -412,6 +447,9 @@ export class PollNarrativeService {
   async moderateNarrative(narrativeId: string, moderatorId: string, action: ModerationAction): Promise<boolean> {
     try {
       const supabaseClient = await this.supabase;
+      if (!supabaseClient) {
+        throw new Error('Supabase client not available');
+      }
       
       // Create moderation action
       const { error: actionError } = await supabaseClient
@@ -456,6 +494,9 @@ export class PollNarrativeService {
   async requestFactVerification(factId: string, requesterId: string, reason: string, evidence: string[]): Promise<FactVerificationRequest | null> {
     try {
       const supabaseClient = await this.supabase;
+      if (!supabaseClient) {
+        throw new Error('Supabase client not available');
+      }
       const { data, error } = await supabaseClient
         .from('fact_verification_requests')
         .insert([{
@@ -482,6 +523,9 @@ export class PollNarrativeService {
   async getNarrativeWithContext(narrativeId: string): Promise<PollNarrative | null> {
     try {
       const supabaseClient = await this.supabase;
+      if (!supabaseClient) {
+        throw new Error('Supabase client not available');
+      }
       const { data, error } = await supabaseClient
         .from('poll_narratives')
         .select(`
@@ -512,6 +556,9 @@ export class PollNarrativeService {
   }): Promise<PollNarrative[]> {
     try {
       const supabaseClient = await this.supabase;
+      if (!supabaseClient) {
+        throw new Error('Supabase client not available');
+      }
       let queryBuilder = supabaseClient
         .from('poll_narratives')
         .select('id, poll_id, narrative_data, created_at')
@@ -657,7 +704,7 @@ export class PollNarrativeService {
   }
 
   private mapVerificationRequestFromDB(data: any): FactVerificationRequest {
-    return withOptional({
+    return {
       id: data.id,
       factId: data.fact_id,
       requesterId: data.requester_id,
@@ -667,10 +714,9 @@ export class PollNarrativeService {
       status: data.status,
       assignedTo: data.assigned_to,
       createdAt: new Date(data.created_at),
-      result: data.result
-    }, {
+      result: data.result,
       completedAt: data.completed_at ? new Date(data.completed_at) : undefined
-    }) as FactVerificationRequest;
+    } as FactVerificationRequest;
   }
 }
 

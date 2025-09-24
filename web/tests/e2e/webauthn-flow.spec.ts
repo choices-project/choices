@@ -95,8 +95,8 @@ test.describe('WebAuthn Passkey Flow - V2', () => {
       };
 
       if (window.navigator.credentials) {
-        const originalCreate = window.navigator.credentials.create;
-        const originalGet = window.navigator.credentials.get;
+        const _originalCreate = window.navigator.credentials.create;
+        const _originalGet = window.navigator.credentials.get;
 
         window.navigator.credentials.create = async (options: any) => {
           console.log('V2 Mock WebAuthn create called with:', options);

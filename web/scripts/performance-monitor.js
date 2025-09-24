@@ -22,7 +22,7 @@ if (fs.existsSync(nextDir)) {
       const manifest = JSON.parse(fs.readFileSync(buildManifest, 'utf8'));
       const pages = Object.keys(manifest.pages || {});
       console.log(`📊 Built ${pages.length} pages`);
-    } catch (error) {
+    } catch {
       console.warn('⚠️  Could not parse build manifest');
     }
   }

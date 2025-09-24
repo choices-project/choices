@@ -1,6 +1,12 @@
 'use client';
 
+// ⚠️  ADMIN FEATURE - NOT CORE MVP
+// This component is for admin functionality and should be feature flagged
+// for MVP deployment
+
 import React, { useState, useEffect, useCallback } from 'react';
+import { FEATURE_FLAGS } from '@/lib/core/feature-flags';
+import { withOptional } from '@/lib/util/objects';
 import { 
   CheckCircle, 
   X, 
@@ -69,6 +75,15 @@ export default function UserSuggestionsManager() {
     loadSuggestions();
   }, [loadSuggestions]);
 
+  // Feature flag check - user suggestions manager for feedback widget data
+  if (!FEATURE_FLAGS.USER_SUGGESTIONS_MANAGER) {
+    return (
+      <div className="p-6 text-center text-gray-500">
+        <p>User suggestions management is disabled.</p>
+      </div>
+    );
+  }
+
   const updateSuggestionStatus = async (id: string, status: string) => {
     try {
       const response = await fetch(`/api/admin/feedback/${id}/status`, {
@@ -83,7 +98,7 @@ export default function UserSuggestionsManager() {
         setSuggestions(prev => 
           prev.map(suggestion => 
             suggestion.id === id 
-              ? { ...suggestion, status: status as 'pending' | 'approved' | 'rejected' | 'implemented' }
+              ? withOptional(suggestion, { status: status as 'pending' | 'approved' | 'rejected' | 'implemented' })
               : suggestion
           )
         );
@@ -169,7 +184,7 @@ export default function UserSuggestionsManager() {
             <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
             <select
               value={filter.type}
-              onChange={(e) => setFilter(prev => ({ ...prev, type: e.target.value }))}
+              onChange={(e) => setFilter(prev => withOptional(prev, { type: e.target.value }))}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
               <option value="">All Types</option>
@@ -184,7 +199,7 @@ export default function UserSuggestionsManager() {
             <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
             <select
               value={filter.status}
-              onChange={(e) => setFilter(prev => ({ ...prev, status: e.target.value }))}
+              onChange={(e) => setFilter(prev => withOptional(prev, { status: e.target.value }))}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
               <option value="pending">Pending</option>
@@ -198,7 +213,7 @@ export default function UserSuggestionsManager() {
             <label className="block text-sm font-medium text-gray-700 mb-1">Sentiment</label>
             <select
               value={filter.sentiment}
-              onChange={(e) => setFilter(prev => ({ ...prev, sentiment: e.target.value }))}
+              onChange={(e) => setFilter(prev => withOptional(prev, { sentiment: e.target.value }))}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
               <option value="">All Sentiments</option>
@@ -215,7 +230,7 @@ export default function UserSuggestionsManager() {
               <input
                 type="text"
                 value={filter.search}
-                onChange={(e) => setFilter(prev => ({ ...prev, search: e.target.value }))}
+              onChange={(e) => setFilter(prev => withOptional(prev, { search: e.target.value }))}
                 placeholder="Search suggestions..."
                 className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />

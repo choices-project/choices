@@ -21,18 +21,9 @@ type PrivacyStatus = {
 }
 
 export function PrivacyStatusBadge() {
+  // All React Hooks must be called at the top level, before any conditional returns
   const [status, setStatus] = useState<PrivacyStatus | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-
-  // Feature flag check - don't render if disabled
-  if (!isFeatureEnabled('CIVICS_ADDRESS_LOOKUP')) {
-    return (
-      <div className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-        <div className="w-2 h-2 rounded-full bg-gray-500 mr-1" />
-        Feature Disabled
-      </div>
-    );
-  }
 
   useEffect(() => {
     const checkPrivacyStatus = async () => {
@@ -51,7 +42,7 @@ export function PrivacyStatusBadge() {
             auth: true
           }
         });
-      } catch (error) {
+      } catch {
         setStatus({
           status: 'error',
           message: 'Privacy check failed'
@@ -63,6 +54,16 @@ export function PrivacyStatusBadge() {
 
     checkPrivacyStatus();
   }, []);
+
+  // Feature flag check - don't render if disabled
+  if (!isFeatureEnabled('CIVICS_ADDRESS_LOOKUP')) {
+    return (
+      <div className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+        <div className="w-2 h-2 rounded-full bg-gray-500 mr-1" />
+        Feature Disabled
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (

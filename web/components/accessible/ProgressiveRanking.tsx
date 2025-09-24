@@ -92,7 +92,7 @@ export function ProgressiveRanking({
   });
 
   const [showInstructions, setShowInstructions] = useState(true);
-  const [showSocialInsightsState, setShowSocialInsights] = useState(showSocialInsights);
+  const [_showSocialInsightsState, setShowSocialInsights] = useState(showSocialInsights);
 
   // ============================================================================
   // CANDIDATE ORGANIZATION
@@ -303,13 +303,13 @@ export function ProgressiveRanking({
           <p>
             Click or use arrow keys to move candidates up or down. 
             Your first choice gets your vote if they need it. 
-            If they don't need it, your vote goes to your second choice.
+            If they don&apos;t need it, your vote goes to your second choice.
           </p>
           <ul>
             <li>Use ↑ and ↓ arrow keys to move candidates</li>
             <li>Press Enter or Space to select a candidate</li>
             <li>Use Tab to move between candidates</li>
-            <li>Click "Add More Rankings" to see all candidates</li>
+            <li>Click &quot;Add More Rankings&quot; to see all candidates</li>
           </ul>
         </div>
       )}
@@ -320,7 +320,7 @@ export function ProgressiveRanking({
         <p>Start with your top {maxInitialCandidates} choices. You can add more later.</p>
         
         <div className="candidates-list" role="list" aria-label="Top candidates">
-          {getInitialCandidates().map((candidate, index) => (
+          {getInitialCandidates().map((candidate) => (
             <CandidateCard
               key={candidate.id}
               candidate={candidate}
@@ -357,7 +357,7 @@ export function ProgressiveRanking({
               <p>Adding more rankings improves accuracy and helps ensure your vote counts.</p>
               
               <div className="candidates-list" role="list" aria-label="Additional candidates">
-                {getRemainingCandidates().map((candidate, index) => (
+                {getRemainingCandidates().map((candidate) => (
                   <CandidateCard
                     key={candidate.id}
                     candidate={candidate}
@@ -434,7 +434,6 @@ function CandidateCard({
   rank,
   isRanked,
   isExpanded,
-  userInterests,
   socialInsights,
   showSocialInsights,
   onRankChange,
@@ -463,7 +462,7 @@ function CandidateCard({
       onFocus={() => setFocused(true)}
       onBlur={() => setFocused(false)}
       aria-label={`${candidate.name}, currently ranked ${rank}`}
-      aria-selected={isRanked}
+      data-selected={isRanked}
     >
       <div className="candidate-info">
         <h4 className="candidate-name">{candidate.name}</h4>

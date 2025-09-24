@@ -44,7 +44,7 @@ describe('ComponentName', () => {
     jest.clearAllMocks();
     
     // Create component instance with mock client factory
-    const mockClientFactory = jest.fn(() => Promise.resolve(mockSupabaseClient));
+    const _mockClientFactory = jest.fn(() => Promise.resolve(mockSupabaseClient));
     // componentInstance = new ComponentClass(mockClientFactory);
     
     // Set up mock data

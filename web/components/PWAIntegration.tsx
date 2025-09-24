@@ -76,7 +76,7 @@ export default function PWAIntegration() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192L5.636 18.364M12 2.25a9.75 9.75 0 100 19.5 9.75 9.75 0 000-19.5z" />
             </svg>
             <span className="text-sm font-medium text-orange-800">
-              You're offline
+              You&apos;re offline
             </span>
           </div>
         </div>

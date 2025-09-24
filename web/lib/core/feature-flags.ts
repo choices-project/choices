@@ -4,12 +4,13 @@
  */
 export const FEATURE_FLAGS = {
   // ===== CORE MVP FEATURES (Always Enabled) =====
-  CORE_AUTH: true,
-  CORE_POLLS: true,
-  CORE_USERS: true,
   WEBAUTHN: true,
   PWA: true,
   ADMIN: true,
+  FEEDBACK_WIDGET: true,        // CRITICAL: User feedback collection widget
+  
+  // ===== ADMIN FEATURES (Nice-to-have for MVP) =====
+  USER_SUGGESTIONS_MANAGER: false, // Admin can access from laptop for now
   
   // ===== ENHANCED MVP FEATURES (Ready for Implementation) =====
   ENHANCED_ONBOARDING: true,         // Multi-step onboarding system with comprehensive data collection
@@ -18,8 +19,6 @@ export const FEATURE_FLAGS = {
   ENHANCED_DASHBOARD: true,          // Advanced dashboard with analytics and insights (COMPLETED)
   ENHANCED_POLLS: true,              // Advanced poll creation and management system
   ENHANCED_VOTING: true,             // Advanced voting methods and analytics
-  
-  // ===== CIVICS & ACCOUNTABILITY FEATURES =====
   CIVICS_ADDRESS_LOOKUP: true,       // Address-based representative lookup system
   CIVICS_REPRESENTATIVE_DATABASE: true, // Federal, state, and local representative database
   CIVICS_CAMPAIGN_FINANCE: true,     // FEC campaign finance data integration
@@ -31,6 +30,8 @@ export const FEATURE_FLAGS = {
   // ===== FUTURE FEATURES (Development Required) =====
   AUTOMATED_POLLS: false,            // AI-powered poll generation from trending topics
   ADVANCED_PRIVACY: false,           // Zero-knowledge proofs and differential privacy
+  MEDIA_BIAS_ANALYSIS: false,        // Media bias detection and analysis (not MVP ready)
+  POLL_NARRATIVE_SYSTEM: false,      // AI-powered poll narrative generation (not MVP ready)
   SOCIAL_SHARING: false,             // Master switch for all social features
   SOCIAL_SHARING_POLLS: false,       // Poll sharing (Twitter, Facebook, LinkedIn)
   SOCIAL_SHARING_CIVICS: false,      // Representative sharing
@@ -41,14 +42,11 @@ export const FEATURE_FLAGS = {
   // ===== PERFORMANCE & OPTIMIZATION =====
   PERFORMANCE_OPTIMIZATION: false,   // Image optimization, virtual scrolling, lazy loading
   FEATURE_DB_OPTIMIZATION_SUITE: true, // Database optimization suite - enabled for performance
-  ANALYTICS: false,                  // Advanced analytics and user insights
-  EXPERIMENTAL_UI: false,            // Experimental UI components
-  EXPERIMENTAL_ANALYTICS: false,     // Experimental analytics features
-  EXPERIMENTAL_COMPONENTS: false,    // Experimental components - keep disabled until evaluated
+  ANALYTICS: true,                   // Advanced analytics and user insights
+  // Removed experimental features that aren't actually implemented
   
   // ===== SYSTEM FEATURES =====
-  FEEDBACK_WIDGET: true,             // Enhanced feedback collection system
-  NOTIFICATIONS: false,              // Push notifications and alerts
+  PUSH_NOTIFICATIONS: false,         // Push notifications and alerts (different from feedback widget)
   THEMES: false,                     // Dark mode and theme customization
   ACCESSIBILITY: false,              // Advanced accessibility features
   INTERNATIONALIZATION: false,       // Multi-language support
@@ -90,7 +88,7 @@ export type FeatureFlagSystemInfo = {
   categories: Record<string, number>;
 }
 
-type KnownFlag = keyof typeof FEATURE_FLAGS;
+type _KnownFlag = keyof typeof FEATURE_FLAGS;
 
 // Define the missing FeatureFlagKey type
 export type FeatureFlagKey = keyof typeof FEATURE_FLAGS;
@@ -112,6 +110,15 @@ function normalize(key: string): FeatureFlagKey | null {
   if (key in FEATURE_FLAGS) return key as FeatureFlagKey;
   const alias = ALIASES[key.toLowerCase()];
   return alias || null;
+}
+
+// Subscriptions for flag changes
+const subscribers = new Set<(flags: Record<string, boolean>) => void>();
+function notifySubscribers() {
+  const snapshot = { ...mutableFlags };
+  subscribers.forEach(cb => {
+    try { cb(snapshot); } catch { /* noop */ }
+  });
 }
 
 export function isFeatureEnabled<K extends string>(key: K): boolean {
@@ -141,8 +148,7 @@ function categorizeFlag(flagId: string): string {
     // Performance and optimization
     performance: ['PERFORMANCE_OPTIMIZATION', 'FEATURE_DB_OPTIMIZATION_SUITE', 'ANALYTICS'],
     
-    // Experimental features
-    experimental: ['EXPERIMENTAL_UI', 'EXPERIMENTAL_ANALYTICS', 'EXPERIMENTAL_COMPONENTS'],
+    // Experimental features removed - not actually implemented
     
     // System features
     system: ['NOTIFICATIONS', 'THEMES', 'ACCESSIBILITY', 'INTERNATIONALIZATION']
@@ -161,6 +167,7 @@ export const featureFlagManager = {
     const key = normalize(String(k)); 
     if (key && key in mutableFlags) {
       mutableFlags[key] = true;
+      notifySubscribers();
       return true;
     }
     return false;
@@ -169,6 +176,7 @@ export const featureFlagManager = {
     const key = normalize(String(k)); 
     if (key && key in mutableFlags) {
       mutableFlags[key] = false;
+      notifySubscribers();
       return true;
     }
     return false;
@@ -177,6 +185,7 @@ export const featureFlagManager = {
     const key = normalize(String(k)); 
     if (key && key in mutableFlags) {
       mutableFlags[key] = !mutableFlags[key];
+      notifySubscribers();
       return true;
     }
     return false;
@@ -246,14 +255,14 @@ export const featureFlagManager = {
     })),
   getFlagsByCategory: (category: string): FeatureFlag[] => {
     const categories: Record<string, string[]> = {
-      // Core MVP features
-      core: ['CORE_AUTH', 'CORE_POLLS', 'CORE_USERS', 'WEBAUTHN', 'PWA', 'ADMIN', 'FEEDBACK_WIDGET'],
+      // Core MVP features (always enabled)
+      core: ['WEBAUTHN', 'PWA', 'ADMIN', 'FEEDBACK_WIDGET'],
       
       // Enhanced MVP features ready for implementation
-      enhanced: ['ENHANCED_ONBOARDING', 'ENHANCED_PROFILE', 'ENHANCED_AUTH', 'ENHANCED_DASHBOARD', 'ENHANCED_POLLS', 'ENHANCED_VOTING'],
+      enhanced: ['ENHANCED_ONBOARDING', 'ENHANCED_PROFILE', 'ENHANCED_DASHBOARD', 'ENHANCED_POLLS', 'ENHANCED_VOTING', 'CIVICS_ADDRESS_LOOKUP'],
       
       // Future features requiring development
-      future: ['AUTOMATED_POLLS', 'ADVANCED_PRIVACY', 'CIVICS_ADDRESS_LOOKUP', 'SOCIAL_SHARING', 'SOCIAL_SHARING_POLLS', 'SOCIAL_SHARING_CIVICS', 'SOCIAL_SHARING_VISUAL', 'SOCIAL_SHARING_OG', 'SOCIAL_SIGNUP'],
+      future: ['AUTOMATED_POLLS', 'ADVANCED_PRIVACY', 'SOCIAL_SHARING', 'SOCIAL_SHARING_POLLS', 'SOCIAL_SHARING_CIVICS', 'SOCIAL_SHARING_VISUAL', 'SOCIAL_SHARING_OG', 'SOCIAL_SIGNUP'],
       
       // Performance and optimization
       performance: ['PERFORMANCE_OPTIMIZATION', 'FEATURE_DB_OPTIMIZATION_SUITE', 'ANALYTICS'],
@@ -280,49 +289,43 @@ export const featureFlagManager = {
     disabledFlags: Object.values(mutableFlags).filter(f => !f).length,
     environment: process.env.NODE_ENV || 'development',
     categories: {
-      core: 7,        // CORE_AUTH, CORE_POLLS, CORE_USERS, WEBAUTHN, PWA, ADMIN, FEEDBACK_WIDGET
-      enhanced: 6,    // ENHANCED_ONBOARDING, ENHANCED_PROFILE, ENHANCED_AUTH, ENHANCED_DASHBOARD, ENHANCED_POLLS, ENHANCED_VOTING
-      future: 9,      // AUTOMATED_POLLS, ADVANCED_PRIVACY, CIVICS_ADDRESS_LOOKUP, SOCIAL_SHARING + 5 sub-features
+      core: 4,        // WEBAUTHN, PWA, ADMIN, FEEDBACK_WIDGET
+      enhanced: 6,    // ENHANCED_ONBOARDING, ENHANCED_PROFILE, ENHANCED_DASHBOARD, ENHANCED_POLLS, ENHANCED_VOTING, CIVICS_ADDRESS_LOOKUP
+      future: 8,      // AUTOMATED_POLLS, ADVANCED_PRIVACY, SOCIAL_SHARING + 5 sub-features
       performance: 3, // PERFORMANCE_OPTIMIZATION, FEATURE_DB_OPTIMIZATION_SUITE, ANALYTICS
-      experimental: 3, // EXPERIMENTAL_UI, EXPERIMENTAL_ANALYTICS, EXPERIMENTAL_COMPONENTS
+      // experimental: 0, // Removed - not actually implemented
       system: 4       // NOTIFICATIONS, THEMES, ACCESSIBILITY, INTERNATIONALIZATION
     }
   }),
   areDependenciesEnabled: (flagId: string): boolean => {
     // Enhanced dependency check for all features
     const dependencies: Record<string, string[]> = {
-      // Core dependencies
-      'ADVANCED_PRIVACY': ['CORE_AUTH'],
-      'PWA': ['CORE_AUTH', 'CORE_POLLS'],
-      'WEBAUTHN': ['CORE_AUTH'],
-      
-      // Enhanced feature dependencies
-      'ENHANCED_ONBOARDING': ['CORE_AUTH'],
-      'ENHANCED_PROFILE': ['CORE_AUTH', 'CORE_USERS'],
-      'ENHANCED_AUTH': ['CORE_AUTH'],
-      'ENHANCED_DASHBOARD': ['CORE_AUTH', 'CORE_POLLS', 'CORE_USERS'],
-      'ENHANCED_POLLS': ['CORE_AUTH', 'CORE_POLLS'],
-      'ENHANCED_VOTING': ['CORE_AUTH', 'CORE_POLLS'],
+      // Enhanced feature dependencies (simplified - no core dependencies needed)
+      'ENHANCED_ONBOARDING': [],
+      'ENHANCED_PROFILE': [],
+      'ENHANCED_DASHBOARD': [],
+      'ENHANCED_POLLS': [],
+      'ENHANCED_VOTING': [],
+      'CIVICS_ADDRESS_LOOKUP': [],
       
       // Future feature dependencies
-      'AUTOMATED_POLLS': ['CORE_AUTH', 'CORE_POLLS', 'ADMIN'],
-      'CIVICS_ADDRESS_LOOKUP': ['CORE_AUTH'],
-      'SOCIAL_SHARING': ['CORE_AUTH', 'CORE_POLLS'],
-      'SOCIAL_SHARING_POLLS': ['SOCIAL_SHARING', 'CORE_POLLS'],
+      'AUTOMATED_POLLS': ['ADMIN'],
+      'SOCIAL_SHARING': [],
+      'SOCIAL_SHARING_POLLS': ['SOCIAL_SHARING'],
       'SOCIAL_SHARING_CIVICS': ['SOCIAL_SHARING', 'CIVICS_ADDRESS_LOOKUP'],
       'SOCIAL_SHARING_VISUAL': ['SOCIAL_SHARING'],
       'SOCIAL_SHARING_OG': ['SOCIAL_SHARING'],
-      'SOCIAL_SIGNUP': ['CORE_AUTH'],
+      'SOCIAL_SIGNUP': [],
       
       // Performance dependencies
-      'PERFORMANCE_OPTIMIZATION': ['CORE_AUTH'],
-      'ANALYTICS': ['CORE_AUTH'],
+      'PERFORMANCE_OPTIMIZATION': [],
+      'ANALYTICS': [],
       
       // System feature dependencies
-      'NOTIFICATIONS': ['CORE_AUTH', 'PWA'],
-      'THEMES': ['CORE_AUTH'],
-      'ACCESSIBILITY': ['CORE_AUTH'],
-      'INTERNATIONALIZATION': ['CORE_AUTH']
+      'NOTIFICATIONS': ['PWA'],
+      'THEMES': [],
+      'ACCESSIBILITY': [],
+      'INTERNATIONALIZATION': []
     };
     const deps = dependencies[flagId] || [];
     return deps.every(dep => {
@@ -331,11 +334,13 @@ export const featureFlagManager = {
     });
   },
   subscribe: (callback: (flags: Record<string, boolean>) => void): FeatureFlagSubscription => {
-    // Simple subscription - in a real app, this would use a proper event system
-    // For now, just return a no-op unsubscribe function
-    return {
-      unsubscribe: () => {}
-    };
+    // Register and provide unsubscribe
+    if (typeof callback === 'function') {
+      subscribers.add(callback);
+      // Immediately push current state to new subscriber
+      try { callback({ ...mutableFlags }); } catch { /* noop */ }
+    }
+    return { unsubscribe: () => subscribers.delete(callback) };
   },
   updateFlagMetadata: (flagId: string, metadata: FeatureFlagMetadata): boolean => {
     // For now, just return true - in a real app, this would update flag metadata
@@ -348,6 +353,7 @@ export const featureFlagManager = {
       const flagKey = key as FeatureFlagKey;
       mutableFlags[flagKey] = FEATURE_FLAGS[flagKey];
     });
+    notifySubscribers();
   },
   exportConfig: (): FeatureFlagConfig => {
     // Export current flag configuration
@@ -366,6 +372,7 @@ export const featureFlagManager = {
           mutableFlags[normalizedKey] = value;
         }
       });
+      notifySubscribers();
     }
   }
 };
@@ -388,6 +395,7 @@ export async function setFeatureFlags(flags: Record<string, boolean>): Promise<v
       mutableFlags[normalizedKey] = value;
     }
   });
+  notifySubscribers();
 }
 export const getAllFeatureFlags = () => featureFlagManager.all();
 

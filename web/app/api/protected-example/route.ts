@@ -30,7 +30,8 @@ export async function POST(req: Request) {
     const result = {
       message: 'Success!',
       userId: user.id,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      requestData: body // Include request data for audit trail
     };
     
     // 5. Return response with security headers
@@ -42,6 +43,7 @@ export async function POST(req: Request) {
     });
     
   } catch (e: any) {
+    console.error('Protected route error:', e);
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 }
@@ -68,6 +70,7 @@ export async function GET(req: Request) {
     });
     
   } catch (e: any) {
+    console.error('Protected route GET error:', e);
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 }

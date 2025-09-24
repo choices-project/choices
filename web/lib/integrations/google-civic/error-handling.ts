@@ -8,6 +8,7 @@
 import { logger } from '@/lib/logger';
 import { GoogleCivicApiError } from './client';
 import type { GoogleCivicErrorDetails, RetryConfig, ErrorContext } from '@/lib/types/google-civic';
+import { withOptional } from '@/lib/util/objects';
 
 // Types imported from scratch/google-civic-types.ts
 
@@ -15,14 +16,14 @@ export class GoogleCivicErrorHandler {
   private retryConfig: RetryConfig;
 
   constructor(retryConfig?: Partial<RetryConfig>) {
-    this.retryConfig = {
+    const base: RetryConfig = {
       maxAttempts: 3,
       baseDelay: 1000,
       maxDelay: 10000,
       backoffMultiplier: 2,
       retryableStatusCodes: [408, 429, 500, 502, 503, 504],
-      ...retryConfig
     };
+    this.retryConfig = withOptional(base, retryConfig ?? {});
   }
 
   /**
@@ -197,7 +198,8 @@ export class GoogleCivicErrorHandler {
         logger.debug('Executing Google Civic API operation', { attempt, context });
         return await operation();
       } catch (error) {
-        lastError = this.handleError(error, { ...context, attempt });
+        const contextWithAttempt: ErrorContext = withOptional(context ?? ({} as ErrorContext), { attempt });
+        lastError = this.handleError(error, contextWithAttempt);
         
         // If not retryable or last attempt, throw immediately
         if (!this.isRetryableError(lastError) || attempt === this.retryConfig.maxAttempts) {

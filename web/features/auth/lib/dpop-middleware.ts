@@ -18,7 +18,7 @@ export type DPoPValidationResult = {
 /**
  * DPoP middleware for API routes
  */
-export function withDPoP(handler: Function) {
+export function withDPoP(handler: (request: NextRequest, context: any) => Promise<NextResponse>) {
   return async (request: NextRequest, context: any) => {
     try {
       // Extract DPoP proof from headers

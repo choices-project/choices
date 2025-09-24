@@ -6,7 +6,7 @@
  */
 
 
-export default {
+const bundleAnalyzerConfig = {
   // Bundle analyzer plugin configuration
   analyzer: {
     // Server mode - opens in browser
@@ -154,3 +154,5 @@ export default {
     compareWithPrevious: true,
   },
 };
+
+export default bundleAnalyzerConfig;

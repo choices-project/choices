@@ -44,15 +44,29 @@ export const clientSession = {
 
   login: async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
     try {
-      // This is a placeholder implementation
-      // In a real app, this would call your authentication API
+      // Basic client-side validation using the supplied password
+      const issues: string[] = [];
+      if (!password || password.length < 8) issues.push('Password must be at least 8 characters.');
+      if (!/[A-Za-z]/.test(password)) issues.push('Password must include a letter.');
+      if (!/[0-9]/.test(password)) issues.push('Password must include a number.');
+      if (issues.length) {
+        return { success: false, error: issues.join(' ') };
+      }
+      // This is a placeholder implementation; do not log plaintext passwords
       console.log('Login attempt:', { email, password: '***' });
-      
+
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // For now, just return success
-      // In production, this would validate credentials with your backend
+
+      // Minimal client session persistence for MVP
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.setItem('session_user', email);
+          localStorage.setItem('auth_last_login', new Date().toISOString());
+        } catch {
+          // ignore storage failures
+        }
+      }
       return { success: true };
     } catch (error) {
       return { 

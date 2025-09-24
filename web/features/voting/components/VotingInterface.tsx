@@ -71,7 +71,7 @@ export default function VotingInterface({
         throw new Error(errorData.error || 'Failed to submit vote');
       }
 
-      const result = await response.json();
+      const _result = await response.json();
 
       // Call the original onVote callback to update the UI
       await onVote(approvals.length);
@@ -86,7 +86,7 @@ export default function VotingInterface({
     async (...[, approvals]: [string, string[]]) => {
       await handleApprovalVote(approvals);
     },
-    []
+    [handleApprovalVote]
   );
 
   const onQuadratic = useCallback(

@@ -1,34 +1,3 @@
-# CODEOWNERS - Lock the Canon
+# CODEOWNERS
 @michaeltempesta 
 
-# This file ensures that canonical components are properly maintained
-# and prevents unauthorized changes to critical system components.
-
-# Canonical Poll System
-/web/features/polls/**           @AgentA
-
-# Canonical Admin System  
-/web/app/(app)/admin/**          @AgentA
-
-# Canonical Voting System
-/web/features/voting/**          @AgentA
-
-# Canonical Authentication System
-/web/features/auth/**            @AgentA
-
-# Test Infrastructure (T Registry)
-/web/lib/testing/testIds.ts      @AgentA
-
-# Core Feature Flags
-/web/lib/core/feature-flags.ts   @AgentA
-
-# Voting Type Mappings
-/web/types/voting.ts             @AgentA
-
-# E2E Testing Infrastructure
-/web/tests/e2e/**                @AgentA
-/web/playwright.config.ts        @AgentA
-
-# Canonicalization Scripts
-/scripts/codemods/**             @AgentA
-dangerfile.js                    @AgentA

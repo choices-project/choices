@@ -18,7 +18,7 @@ export default function LocationInput({ onLocationResolved, onError }: LocationI
   const smartSuggestions = [
     "Just tell me your zip code",
     "I live in [City, State]",
-    "I'm near [Landmark]",
+    "I&apos;m near [Landmark]",
     "Use my current location"
   ];
 
@@ -41,7 +41,7 @@ export default function LocationInput({ onLocationResolved, onError }: LocationI
       setInput("Enter your zip code...");
     } else if (suggestion === "I live in [City, State]") {
       setInput("Enter your city and state...");
-    } else if (suggestion === "I'm near [Landmark]") {
+    } else if (suggestion === "I&apos;m near [Landmark]") {
       setInput("Enter a landmark near you...");
     } else if (suggestion === "Use my current location") {
       handleCurrentLocation();
@@ -70,7 +70,7 @@ export default function LocationInput({ onLocationResolved, onError }: LocationI
       const jurisdictionIds = await resolveLocationFromCoords([longitude, latitude]);
       onLocationResolved(jurisdictionIds);
       
-    } catch (error) {
+    } catch {
       onError('Could not get your location. Try entering your address instead.');
     } finally {
       setIsLoading(false);
@@ -94,7 +94,7 @@ export default function LocationInput({ onLocationResolved, onError }: LocationI
       }
 
       onLocationResolved(jurisdictionIds);
-    } catch (error) {
+    } catch {
       onError('Could not find that location. Try being more specific or use your zip code.');
     } finally {
       setIsLoading(false);
@@ -102,18 +102,18 @@ export default function LocationInput({ onLocationResolved, onError }: LocationI
   };
 
   // Mock resolution functions - in real app these would call our location resolver
-  const resolveLocationFromCoords = async (coords: [number, number]): Promise<string[]> => {
+  const resolveLocationFromCoords = async (_coords: [number, number]): Promise<string[]> => {
     // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 1000));
     return ['ocd-division/country:us/state:ca/county:alameda'];
   };
 
-  const resolveLocationFromZip = async (zip: string): Promise<string[]> => {
+  const resolveLocationFromZip = async (_zip: string): Promise<string[]> => {
     await new Promise(resolve => setTimeout(resolve, 800));
     return ['ocd-division/country:us/state:ca/county:alameda'];
   };
 
-  const resolveLocationFromAddress = async (address: string): Promise<string[]> => {
+  const resolveLocationFromAddress = async (_address: string): Promise<string[]> => {
     await new Promise(resolve => setTimeout(resolve, 1200));
     return ['ocd-division/country:us/state:ca/county:alameda'];
   };
@@ -128,10 +128,10 @@ export default function LocationInput({ onLocationResolved, onError }: LocationI
           </div>
         </div>
         <h2 className="text-2xl font-bold text-gray-900 mb-2">
-          Let's find your local candidates! 🗳️
+          Let&apos;s find your local candidates! 🗳️
         </h2>
         <p className="text-gray-600">
-          We'll show you everyone running in your area - no matter their party or funding
+          We&apos;ll show you everyone running in your area - no matter their party or funding
         </p>
       </div>
 
@@ -229,8 +229,8 @@ export default function LocationInput({ onLocationResolved, onError }: LocationI
       {/* Fun fact to keep engagement */}
       <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
         <p className="text-sm text-blue-800">
-          <strong>Did you know?</strong> In the last election, 47% of eligible voters didn't vote. 
-          We're here to make it easier to find candidates you actually want to vote for! 🚀
+          <strong>Did you know?</strong>           In the last election, 47% of eligible voters didn&apos;t vote. 
+          We&apos;re here to make it easier to find candidates you actually want to vote for! 🚀
         </p>
       </div>
     </div>

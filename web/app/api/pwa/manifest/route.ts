@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
       name: 'Choices - Democratic Polling Platform',
       short_name: 'Choices',
       description: 'A privacy-first, democratic polling platform with advanced voting methods',
-      start_url: '/',
+      start_url: baseUrl,
       display: 'standalone',
       background_color: '#ffffff',
       theme_color: '#3b82f6',
@@ -144,6 +144,8 @@ export async function GET(request: NextRequest) {
 
     // Set appropriate content type
     const headers = new Headers();
+    headers.set('Content-Type', 'application/manifest+json');
+    headers.set('Cache-Control', 'public, max-age=3600');
     
     // Always return wrapped response for consistency
     const responseObj = NextResponse.json({
@@ -155,6 +157,10 @@ export async function GET(request: NextRequest) {
     // Add CORS headers
     responseObj.headers.set('Access-Control-Allow-Origin', '*');
     responseObj.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    
+    // Add manifest-specific headers
+    responseObj.headers.set('Content-Type', 'application/manifest+json');
+    responseObj.headers.set('Cache-Control', 'public, max-age=3600');
     responseObj.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
     
     // Set appropriate content type based on format

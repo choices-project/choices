@@ -196,7 +196,7 @@ export default function PrivacyStep({ data, onUpdate, onNext, onBack }: PrivacyS
                 <p>✓ Anonymous data will help improve the platform</p>
               )}
               {!privacy.shareProfile && !privacy.shareDemographics && !privacy.shareParticipation && !privacy.allowAnalytics && (
-                <p>✓ You're keeping your information private - that's perfectly fine!</p>
+                <p>✓ You&apos;re keeping your information private - that&apos;s perfectly fine!</p>
               )}
             </div>
           </div>
@@ -208,12 +208,12 @@ export default function PrivacyStep({ data, onUpdate, onNext, onBack }: PrivacyS
         <div className="flex items-start space-x-3">
           <Shield className="w-6 h-6 text-green-600 mt-1 flex-shrink-0" />
           <div>
-            <h3 className="font-semibold text-green-900 mb-2">You're always in control</h3>
+            <h3 className="font-semibold text-green-900 mb-2">You&apos;re always in control</h3>
             <ul className="text-green-800 text-sm space-y-1">
               <li>• Change these settings anytime in your profile</li>
               <li>• Delete your account and all data instantly</li>
               <li>• Export your data whenever you want</li>
-              <li>• We'll notify you of any changes to our privacy policy</li>
+              <li>• We&apos;ll notify you of any changes to our privacy policy</li>
             </ul>
           </div>
         </div>

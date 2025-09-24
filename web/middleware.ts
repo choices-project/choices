@@ -122,7 +122,7 @@ function getClientIP(request: NextRequest): string {
  * Validate and sanitize request
  */
 function validateRequest(request: NextRequest): { valid: boolean; reason?: string } {
-  const url = request.nextUrl
+  const _url = request.nextUrl
   const method = request.method
   
   // Block suspicious requests

@@ -1,4 +1,3 @@
-/* eslint-disable import/no-extraneous-dependencies */
 import { Pool } from 'pg';
 
 // Client-safe interface; no 'pg' in client code.

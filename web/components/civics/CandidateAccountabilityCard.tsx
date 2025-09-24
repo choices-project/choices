@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Image from 'next/image';
 import { 
   TrendingUp, 
   CheckCircle, 
@@ -323,9 +324,11 @@ export function CandidateAccountabilityCard({
         <div className="flex items-start justify-between">
           <div className="flex items-center space-x-4">
             {representative.photo && (
-              <img
+              <Image
                 src={representative.photo}
                 alt={representative.name}
+                width={64}
+                height={64}
                 className="w-16 h-16 rounded-full object-cover"
               />
             )}

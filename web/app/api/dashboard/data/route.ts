@@ -72,6 +72,10 @@ export async function GET(request: NextRequest) {
       .eq('status', 'active')
       .gte('ends_at', new Date().toISOString());
 
+    if (allPollsError) {
+      console.error('Error fetching active polls for participation calculation:', allPollsError);
+    }
+
     const availablePolls = allPolls?.length || 1; // Avoid division by zero
     const participationRate = Math.round((votesCast / availablePolls) * 100);
 

@@ -20,7 +20,7 @@ type CivicsLureProps = {
 }
 
 export default function CivicsLure({ userLocation, onEngage }: CivicsLureProps) {
-  const [showDetails, setShowDetails] = useState(false);
+  const [_showDetails, _setShowDetails] = useState(false);
 
   // Mock data - in real app this would come from API
   const localCandidates = [
@@ -73,7 +73,7 @@ export default function CivicsLure({ userLocation, onEngage }: CivicsLureProps) 
           Ready to vote on something that actually matters? 🗳️
         </h2>
         <p className="text-gray-600">
-          While you're here voting on Drag Race, check out who's running in your area and see who's really representing you!
+          While you&apos;re here voting on Drag Race, check out who&apos;s running in your area and see who&apos;s really representing you!
         </p>
       </div>
 
@@ -123,7 +123,7 @@ export default function CivicsLure({ userLocation, onEngage }: CivicsLureProps) 
         <div className="p-4 border-b border-gray-100">
           <h3 className="font-semibold text-gray-900 mb-2">Your Local Candidates</h3>
           <p className="text-sm text-gray-600">
-            See who's running and who's really independent vs. "bought off"
+            See who&apos;s running and who&apos;s really independent vs. &quot;bought off&quot;
           </p>
         </div>
         
@@ -184,7 +184,7 @@ export default function CivicsLure({ userLocation, onEngage }: CivicsLureProps) 
               <h4 className="font-semibold text-yellow-900 mb-1">Did you know?</h4>
               <p className="text-sm text-yellow-800">
                 Sarah Johnson (Independent) has responded to 15 constituent questions this week, 
-                while Mike Rodriguez (Incumbent) hasn't responded to any in 3 months.
+                while Mike Rodriguez (Incumbent) hasn&apos;t responded to any in 3 months.
               </p>
             </div>
           </div>
@@ -194,10 +194,10 @@ export default function CivicsLure({ userLocation, onEngage }: CivicsLureProps) 
           <div className="flex items-start space-x-3">
             <DollarSign className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" />
             <div>
-              <h4 className="font-semibold text-red-900 mb-1">"Bought Off" Alert</h4>
+              <h4 className="font-semibold text-red-900 mb-1">&quot;Bought Off&quot; Alert</h4>
               <p className="text-sm text-red-800">
                 Mike Rodriguez received $50,000 from real estate developers last month. 
-                He's voting on a major development project next week. Coincidence?
+                He&apos;s voting on a major development project next week. Coincidence?
               </p>
             </div>
           </div>
@@ -214,7 +214,7 @@ export default function CivicsLure({ userLocation, onEngage }: CivicsLureProps) 
           <ArrowRight className="w-5 h-5 ml-2" />
         </button>
         <p className="text-sm text-gray-500 mt-2">
-          Ask questions, see who's funding whom, and make your voice heard
+          Ask questions, see who&apos;s funding whom, and make your voice heard
         </p>
       </div>
 

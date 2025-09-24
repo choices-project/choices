@@ -383,7 +383,7 @@ test.describe('WebAuthn API Endpoints - V2', () => {
     const startTime = Date.now();
 
     // Test multiple WebAuthn API endpoints
-    const responses = await Promise.all([
+    const _responses = await Promise.all([
       page.request.get('/api/e2e/flags'),
       page.request.post('/api/v1/auth/webauthn/register/options', { data: {} }),
       page.request.post('/api/v1/auth/webauthn/authenticate/options', { data: {} })

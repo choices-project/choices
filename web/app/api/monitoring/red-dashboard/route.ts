@@ -4,11 +4,11 @@
  * Temporarily disabled due to missing dependencies
  */
 
-import { type NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   return NextResponse.json({
     success: false,
     error: 'Red dashboard temporarily disabled - missing dependencies',

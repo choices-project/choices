@@ -50,15 +50,11 @@ export class ApplicationError extends Error {
     this.type = type;
     this.timestamp = new Date();
     
-    // Use withOptional for optional properties
-    const optionalProps = withOptional({}, {
-      code,
-      details,
-      userId,
-      requestId
-    });
-    
-    Object.assign(this, optionalProps);
+    // Assign optional properties without constructing an untyped `{}` 
+    if (code != null) this.code = code;
+    if (details != null) this.details = details;
+    if (userId != null) this.userId = userId;
+    if (requestId != null) this.requestId = requestId;
   }
 }
 

@@ -58,10 +58,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Invalid credential' }, { status: 400 });
     }
 
-    // For MVP, we'll do basic validation without @simplewebauthn/server
-    // In production, you should use @simplewebauthn/server for proper verification
-    const expectedOrigin = process.env.NEXT_PUBLIC_ORIGIN || 'http://localhost:3000';
-    const expectedRPID = process.env.NEXT_PUBLIC_PRIMARY_DOMAIN || 'localhost';
+    // For MVP, we'll do basic validation without @simplewebauthn/server.
+    // TODO: Integrate @simplewebauthn/server for full verification.
 
     // Basic validation (replace with proper @simplewebauthn/server verification)
     if (!response.rawId || !response.response) {
@@ -88,17 +86,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Failed to update credential' }, { status: 500 });
     }
 
-    // Create session for user (integrate with your existing auth system)
-    // This is where you would create a Supabase session or JWT token
-    const { data: sessionData, error: sessionError } = await supabase.auth.signInWithPassword({
-      email: credential.user_id, // You might need to get the actual email
-      password: 'webauthn-auth' // This is a placeholder - implement proper session creation
-    });
-
-    if (sessionError) {
-      logger.error('Failed to create session:', sessionError);
-      // For now, just return success - you'll need to implement proper session creation
-    }
+    // TODO: Create a session for the user via your auth system.
+    // For now, authentication is considered successful after counter update.
 
     logger.info('WebAuthn authentication successful', { 
       userId, 

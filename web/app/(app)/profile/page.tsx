@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -56,17 +56,7 @@ export default function ProfilePage() {
   const [isExporting, setIsExporting] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
 
-  useEffect(() => {
-    setMounted(true)
-  }, [])
-
-  useEffect(() => {
-    if (user) {
-      loadUserData()
-    }
-  }, [user])
-
-  const loadUserData = async () => {
+  const loadUserData = useCallback(async () => {
     try {
       if (!user) {
         router.push('/login')
@@ -100,7 +90,17 @@ export default function ProfilePage() {
       devLog('Error loading user data:', error)
       setError('Failed to load user data')
     }
-  }
+  }, [user, router])
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  useEffect(() => {
+    if (user) {
+      loadUserData()
+    }
+  }, [user, loadUserData])
 
   const handleExportData = async () => {
     try {

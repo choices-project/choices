@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Image from 'next/image';
 import { 
   X, 
   Heart, 
@@ -127,9 +128,11 @@ export default function BurgerMenu({ isOpen, onClose, user }: BurgerMenuProps) {
         <div className="p-4 bg-gray-50 rounded-lg mb-4">
           <div className="flex items-center space-x-3">
             {user.avatar ? (
-              <img
+              <Image
                 src={user.avatar}
-                alt={user.name}
+                alt={user.name || 'User avatar'}
+                width={40}
+                height={40}
                 className="w-10 h-10 rounded-full"
               />
             ) : (
@@ -199,7 +202,7 @@ export default function BurgerMenu({ isOpen, onClose, user }: BurgerMenuProps) {
       <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
         <p className="text-sm text-green-800">
           <strong>This is an open source project fighting for democracy.</strong> 
-          Every contribution helps level the playing field and expose "bought off" politicians.
+          Every contribution helps level the playing field and expose &quot;bought off&quot; politicians.
         </p>
       </div>
 
@@ -242,7 +245,7 @@ export default function BurgerMenu({ isOpen, onClose, user }: BurgerMenuProps) {
       {/* Note about financial contributions */}
       <div className="mt-6 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
         <p className="text-xs text-yellow-800">
-          <strong>Note:</strong> We're exploring ethical ways to accept financial contributions. 
+          <strong>Note:</strong> We&apos;re exploring ethical ways to accept financial contributions. 
           For now, we focus on code and community contributions to keep the platform truly independent.
         </p>
       </div>

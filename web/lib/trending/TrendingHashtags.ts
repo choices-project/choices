@@ -111,7 +111,27 @@ export class TrendingHashtagsTracker {
     );
 
     // Calculate trending hashtags
-    const trendingHashtags = await this.calculateTrendingHashtags(recentUsage);
+    let trendingHashtags = await this.calculateTrendingHashtags(recentUsage);
+
+    // Build 7-day baseline (exclude the last 24h window)
+    const baselineCounts: Record<string, number> = {};
+    this.hashtagUsage.forEach(u => {
+      const t = new Date(u.timestamp);
+      if (t > last7Days && t <= last24Hours) {
+        baselineCounts[u.hashtag] = (baselineCounts[u.hashtag] || 0) + 1;
+      }
+    });
+
+    // Normalize trending score by 7-day baseline
+    trendingHashtags = trendingHashtags.map(h => {
+      const baselinePerDay = (baselineCounts[h.hashtag] ?? 0) / 7;
+      // Adjustment factor emphasizes spikes above baseline, bounded for stability
+      const factor = 1 + Math.min(0.5, (h.usageCount - baselinePerDay) / (baselinePerDay + 1)) * 0.3;
+      return {
+        ...h,
+        trendingScore: Number((h.trendingScore * factor).toFixed(2))
+      };
+    });
 
     // Category breakdown
     const categoryBreakdown: Record<string, number> = {};
@@ -222,6 +242,11 @@ export class TrendingHashtagsTracker {
     const now = new Date();
     const last24Hours = new Date(now.getTime() - 24 * 60 * 60 * 1000);
     const last48Hours = new Date(now.getTime() - 48 * 60 * 60 * 1000);
+
+    // Prune entries older than 48 hours to keep memory bounded and focus on recency
+    this.hashtagUsage = this.hashtagUsage.filter(usage => {
+      return new Date(usage.timestamp) > last48Hours;
+    });
 
     const recentUsage = this.hashtagUsage.filter(usage => 
       new Date(usage.timestamp) > last24Hours

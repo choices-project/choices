@@ -51,20 +51,7 @@ export const GOOGLE_CIVIC_RATE_LIMITS: RateLimitConfig = {
   maxBackoffDelay: 30000 // 30 seconds max backoff
 };
 
-/**
- * ProPublica Congress API Rate Limits
- * Based on official documentation:
- * - 1,000 requests per hour
- */
-export const PROPUBLICA_RATE_LIMITS: RateLimitConfig = {
-  requestsPerSecond: 0.25, // Conservative: 0.25 req/sec = 900/hour
-  requestsPerMinute: 15, // Conservative: 15/min = 900/hour
-  requestsPerHour: 900, // Conservative: 900/hour (leaving 100 buffer)
-  requestsPerDay: 20000, // Not specified, but be conservative
-  burstLimit: 3, // Allow small bursts
-  backoffMultiplier: 2,
-  maxBackoffDelay: 30000 // 30 seconds max backoff
-};
+// ProPublica rate limits removed - service discontinued
 
 /**
  * Congress.gov API Rate Limits
@@ -333,12 +320,7 @@ export function createGoogleCivicRateLimiter(): RateLimiter {
   return new RateLimiter(GOOGLE_CIVIC_RATE_LIMITS, 'google-civic');
 }
 
-/**
- * Create rate limiter for ProPublica API
- */
-export function createProPublicaRateLimiter(): RateLimiter {
-  return new RateLimiter(PROPUBLICA_RATE_LIMITS, 'propublica');
-}
+// ProPublica rate limiter removed - service discontinued
 
 /**
  * Create rate limiter for Congress.gov API
@@ -401,7 +383,7 @@ export class ApiUsageMonitor {
 
   constructor() {
     this.rateLimiters.set('google-civic', createGoogleCivicRateLimiter());
-    this.rateLimiters.set('propublica', createProPublicaRateLimiter());
+    // ProPublica rate limiter removed - service discontinued
     this.rateLimiters.set('congress-gov', createCongressGovRateLimiter());
     this.rateLimiters.set('open-states', createOpenStatesRateLimiter());
   }
@@ -436,7 +418,7 @@ export class ApiUsageMonitor {
       const hourlyThreshold = 0.8;
       const hourlyLimits = {
         'google-civic': GOOGLE_CIVIC_RATE_LIMITS.requestsPerHour,
-        'propublica': PROPUBLICA_RATE_LIMITS.requestsPerHour,
+        // ProPublica removed - service discontinued
         'congress-gov': CONGRESS_GOV_RATE_LIMITS.requestsPerHour,
         'open-states': OPEN_STATES_RATE_LIMITS.requestsPerHour
       };
@@ -454,7 +436,6 @@ export class ApiUsageMonitor {
       const dailyThreshold = 0.9;
       const dailyLimits = {
         'google-civic': GOOGLE_CIVIC_RATE_LIMITS.requestsPerDay,
-        'propublica': PROPUBLICA_RATE_LIMITS.requestsPerDay,
         'congress-gov': CONGRESS_GOV_RATE_LIMITS.requestsPerDay,
         'open-states': OPEN_STATES_RATE_LIMITS.requestsPerDay
       };

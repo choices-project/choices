@@ -87,6 +87,9 @@ export async function GET(req: NextRequest) {
     const platform = searchParams.get('platform')
     const days = parseInt(searchParams.get('days') || '7')
 
+    // Log share analytics request for audit trail
+    console.log(`Share analytics requested for poll: ${pollId}, platform: ${platform}, days: ${days}`);
+
     // TODO: Query Supabase for share analytics
     // const { data, error } = await supabase
     //   .from('share_events')

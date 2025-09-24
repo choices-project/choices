@@ -343,8 +343,8 @@ test.describe('Enhanced Dashboard System - V2', () => {
     await page.fill('textarea[id="description"]', testData.poll.description);
     await page.click('button:has-text("Next")');
 
-    await page.fill('input[placeholder*="Option 1"]', testData.poll.options[0]);
-    await page.fill('input[placeholder*="Option 2"]', testData.poll.options[1]);
+    await page.fill('input[placeholder*="Option 1"]', testData.poll.options[0] || '');
+    await page.fill('input[placeholder*="Option 2"]', testData.poll.options[1] || '');
     await page.click('button:has-text("Next")');
 
     await page.selectOption('select', testData.poll.category || 'general');

@@ -2,10 +2,10 @@
 
 import * as React from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { useFormStatus } from 'react-dom';
+// useFormStatus removed - using client-side completion instead
 import { getSupabaseBrowserClient } from '@/utils/supabase/client';
 import { devLog } from '@/lib/logger';
-import { completeOnboardingAction } from '@/app/actions/complete-onboarding';
+// Server action replaced with client-side fetch to fix boundary violation
 
 import type {
   StepId,
@@ -98,18 +98,43 @@ const BACK_TESTID: Partial<Record<StepSlug, string>> = {
   'first-experience': 'experience-back',
 };
 
-// Complete button component using useFormStatus
+// Complete button component using client-side completion
 function CompleteButton() {
-  const { pending } = useFormStatus(); // disables during server-submit
+  const [isPending, setIsPending] = React.useState(false);
+  
+  const handleComplete = async () => {
+    setIsPending(true);
+    try {
+      // Call the onboarding completion API endpoint
+      const response = await fetch('/api/onboarding/complete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ finished: true })
+      });
+      
+      if (response.ok) {
+        // Redirect to dashboard or next page
+        window.location.href = '/dashboard';
+      } else {
+        console.error('Failed to complete onboarding');
+      }
+    } catch (error) {
+      console.error('Error completing onboarding:', error);
+    } finally {
+      setIsPending(false);
+    }
+  };
+  
   return (
     <button
-      type="submit"
+      type="button"
       data-testid="complete-onboarding"
       aria-label="Complete onboarding"
-      disabled={pending}
+      disabled={isPending}
+      onClick={handleComplete}
       className="px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
     >
-      {pending ? 'Finishing…' : 'Complete'}
+      {isPending ? 'Finishing…' : 'Complete'}
     </button>
   );
 }
@@ -141,7 +166,7 @@ function EnhancedOnboardingFlowInner() {
   const [error, setError] = React.useState<string | null>(null);
 
   const searchParams = useSearchParams();
-  const router = useRouter();
+  const _router = useRouter();
 
   /** Mirror important fields into legacy top-level properties (back-compat) */
   const bridgeToLegacy = React.useCallback(
@@ -531,18 +556,11 @@ function EnhancedOnboardingFlowInner() {
                 onComplete={handleComplete}
               />
               
-              <form
-                action={completeOnboardingAction}
-                data-testid="onboarding-form"
-                method="post"
-                onSubmit={() => console.log('Client submit intercepted; calling server action')}
-              >
-                <input type="hidden" name="finished" value="true" />
-
+              <div data-testid="onboarding-form">
                 <div className="mt-6 flex justify-center">
                   <CompleteButton />
                 </div>
-              </form>
+              </div>
             </div>
           )}
           

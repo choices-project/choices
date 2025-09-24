@@ -110,7 +110,7 @@ export default function TestPrivacyPage() {
     }
   };
 
-  const getRecommendedPrivacyLevel = (pollData: CreatePollData) => {
+  const _getRecommendedPrivacyLevel = (pollData: CreatePollData) => {
     return HybridPrivacyManager.getRecommendedPrivacyLevel({
       title: pollData.title,
       description: pollData.description,

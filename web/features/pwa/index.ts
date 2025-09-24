@@ -21,8 +21,15 @@ export const getPWAUtils = () => {
     };
   }
   
-  // Dynamically import PWA utilities only when feature is enabled
-  return import('./lib/pwa-utils').then(module => module);
+  // PWA utilities not implemented yet
+  return Promise.resolve({
+    isPwaSupported: () => false,
+    canInstallPwa: () => false,
+    installPwa: () => Promise.resolve(false),
+    isOffline: () => false,
+    registerServiceWorker: () => Promise.resolve(false),
+    unregisterServiceWorker: () => Promise.resolve(false),
+  });
 };
 
 // Re-export PWA components conditionally

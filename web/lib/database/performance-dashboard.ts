@@ -372,8 +372,8 @@ export class PerformanceDashboard {
 
   private determineSystemStatus(
     overallScore: number,
-    cacheStats: any,
-    queryAnalysis: any
+    _cacheStats: any,
+    _queryAnalysis: any
   ): 'excellent' | 'good' | 'fair' | 'poor' | 'critical' {
     if (overallScore >= 90) return 'excellent';
     if (overallScore >= 80) return 'good';

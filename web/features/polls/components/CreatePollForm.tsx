@@ -80,7 +80,7 @@ export const CreatePollForm: React.FC<CreatePollFormProps> = ({
 
     const validOptions = formData.options.filter(option => option.trim().length > 0);
     const pollData = {
-      ...formData,
+      ...withOptional(formData),
       options: validOptions
     };
 
@@ -99,7 +99,7 @@ export const CreatePollForm: React.FC<CreatePollFormProps> = ({
   const addOption = () => {
     if (formData.options.length < 10) {
       setFormData(prev => ({
-        ...prev,
+        ...withOptional(prev),
         options: [...prev.options, '']
       }));
     }
@@ -108,7 +108,7 @@ export const CreatePollForm: React.FC<CreatePollFormProps> = ({
   const removeOption = (index: number) => {
     if (formData.options.length > 2) {
       setFormData(prev => ({
-        ...prev,
+        ...withOptional(prev),
         options: prev.options.filter((_, i: any) => i !== index)
       }));
     }
@@ -116,7 +116,7 @@ export const CreatePollForm: React.FC<CreatePollFormProps> = ({
 
   const updateOption = (index: number, value: string) => {
     setFormData(prev => ({
-      ...prev,
+      ...withOptional(prev),
       options: prev.options.map((option: any, i: any) => i === index ? value : option)
     }));
   };
@@ -124,7 +124,7 @@ export const CreatePollForm: React.FC<CreatePollFormProps> = ({
   const addTag = () => {
     if (newTag.trim() && !formData.tags.includes(newTag.trim()) && formData.tags.length < 5) {
       setFormData(prev => ({
-        ...prev,
+        ...withOptional(prev),
         tags: [...prev.tags, newTag.trim()]
       }));
       setNewTag('');
@@ -133,7 +133,7 @@ export const CreatePollForm: React.FC<CreatePollFormProps> = ({
 
   const removeTag = (tagToRemove: string) => {
     setFormData(prev => ({
-      ...prev,
+      ...withOptional(prev),
       tags: prev.tags.filter(tag => tag !== tagToRemove)
     }));
   };
@@ -148,7 +148,10 @@ export const CreatePollForm: React.FC<CreatePollFormProps> = ({
 
   const handlePrivacyRecommendation = () => {
     const recommendedLevel = getRecommendedPrivacyLevel();
-    setFormData(prev => ({ ...prev, privacylevel: recommendedLevel }));
+    setFormData(prev => ({ 
+      ...withOptional(prev), 
+      privacylevel: recommendedLevel 
+    }));
   };
 
   return (
@@ -172,7 +175,10 @@ export const CreatePollForm: React.FC<CreatePollFormProps> = ({
           <input
             type="text"
             value={formData.title}
-            onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+            onChange={(e) => setFormData(prev => ({ 
+              ...withOptional(prev), 
+              title: e.target.value 
+            }))}
             className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
               errors.title ? 'border-red-300' : 'border-gray-300'
             }`}
@@ -194,7 +200,10 @@ export const CreatePollForm: React.FC<CreatePollFormProps> = ({
           </label>
           <textarea
             value={formData.description}
-            onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+            onChange={(e) => setFormData(prev => ({ 
+              ...withOptional(prev), 
+              description: e.target.value 
+            }))}
             className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
               errors.description ? 'border-red-300' : 'border-gray-300'
             }`}
@@ -218,7 +227,10 @@ export const CreatePollForm: React.FC<CreatePollFormProps> = ({
           <input
             type="text"
             value={formData.category}
-            onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value }))}
+            onChange={(e) => setFormData(prev => ({ 
+              ...withOptional(prev), 
+              category: e.target.value 
+            }))}
             className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
               errors.category ? 'border-red-300' : 'border-gray-300'
             }`}
@@ -250,7 +262,10 @@ export const CreatePollForm: React.FC<CreatePollFormProps> = ({
           </div>
           <PrivacyLevelSelector
             value={formData.privacylevel}
-            onChange={(level) => setFormData(prev => ({ ...prev, privacylevel: level }))}
+            onChange={(level) => setFormData(prev => ({ 
+              ...withOptional(prev), 
+              privacylevel: level 
+            }))}
             pollData={withOptional({
               title: formData.title,
               description: formData.description
@@ -268,7 +283,7 @@ export const CreatePollForm: React.FC<CreatePollFormProps> = ({
           <select
             value={formData.votingmethod}
             onChange={(e) => setFormData(prev => ({ 
-              ...prev, 
+              ...withOptional(prev), 
               votingmethod: e.target.value as CreatePollData['votingmethod']
             }))}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"

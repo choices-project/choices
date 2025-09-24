@@ -959,8 +959,8 @@ export class FinancialTransparencySystem {
     try {
       dev.logger.info('Getting government service history for candidate', { candidateId });
       
-      const orchestrator = await createUnifiedDataOrchestrator();
       // Note: getCandidateGovernmentService method not available in orchestrator
+      // TODO: Implement government service history retrieval
       const serviceHistory: unknown[] = [];
       
       if (!serviceHistory || !Array.isArray(serviceHistory)) {
@@ -1318,6 +1318,9 @@ export class FinancialTransparencySystem {
     
     // Shareholder positions (0-10 points)
     score += shareholders * 2;
+    
+    // Network density bonus (0-5 points) - more connections = higher influence
+    score += Math.min(totalConnections / 100, 5);
     
     return Math.min(score, 100);
   }

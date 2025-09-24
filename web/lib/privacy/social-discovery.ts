@@ -195,8 +195,6 @@ export class PrivacyAwareSocialDiscoveryManager {
     userProfile: UserProfile, 
     aggregatedInsights: any
   ): Promise<CrossDemographicInsight[]> {
-    const insights: CrossDemographicInsight[] = [];
-    
     // Get user's demographic group
     const userAgeGroup = this.getAgeGroup(userProfile.age);
     const userEducation = userProfile.education;
@@ -233,8 +231,6 @@ export class PrivacyAwareSocialDiscoveryManager {
     userLocation: string, 
     aggregatedInsights: any
   ): Promise<GeographicInsight[]> {
-    const insights: GeographicInsight[] = [];
-    
     // Find insights from different geographic areas
     const geographicInsights = aggregatedInsights.geographicBreakdowns
       ?.filter((breakdown: any) => breakdown.area !== userLocation)
@@ -264,8 +260,6 @@ export class PrivacyAwareSocialDiscoveryManager {
     userInterests: string[], 
     aggregatedInsights: any
   ): Promise<CrossInterestInsight[]> {
-    const insights: CrossInterestInsight[] = [];
-    
     // Find insights from different interest categories
     const crossInterestInsights = aggregatedInsights.interestBreakdowns
       ?.filter((breakdown: any) => !userInterests.includes(breakdown.interest))

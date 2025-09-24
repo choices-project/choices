@@ -205,7 +205,7 @@ export function PasskeyLogin({
               <div className="flex-1">
                 <p className="text-sm font-medium text-green-900">Registered Passkeys</p>
                 <p className="text-xs text-green-700">
-                  We'll automatically detect and use your registered passkeys
+                  We&apos;ll automatically detect and use your registered passkeys
                 </p>
               </div>
             </div>

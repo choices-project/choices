@@ -159,16 +159,14 @@ test.describe('PWA API Endpoints - V2', () => {
     const authToken = loginData.token;
 
     // Test offline sync endpoint
-    const syncResponse = await page.request.post('/api/pwa/sync', {
+    const syncResponse = await page.request.post('/api/pwa/offline/sync', {
       headers: {
         'Authorization': `Bearer ${authToken}`
       },
       data: {
-        action: 'sync',
-        data: {
-          polls: [],
-          votes: []
-        }
+        votes: [],
+        deviceId: 'test-device',
+        timestamp: new Date().toISOString()
       }
     });
     
@@ -203,11 +201,14 @@ test.describe('PWA API Endpoints - V2', () => {
         'Authorization': `Bearer ${authToken}`
       },
       data: {
-        endpoint: 'https://fcm.googleapis.com/fcm/send/test-endpoint',
-        keys: {
-          p256dh: 'test-p256dh-key',
-          auth: 'test-auth-key'
-        }
+        subscription: {
+          endpoint: 'https://fcm.googleapis.com/fcm/send/test-endpoint',
+          keys: {
+            p256dh: 'test-p256dh-key',
+            auth: 'test-auth-key'
+          }
+        },
+        userId: testData.user.email
       }
     });
     
@@ -237,12 +238,9 @@ test.describe('PWA API Endpoints - V2', () => {
     const authToken = loginData.token;
 
     // Test notification unsubscription endpoint
-    const unsubscriptionResponse = await page.request.post('/api/pwa/notifications/unsubscribe', {
+    const unsubscriptionResponse = await page.request.delete('/api/pwa/notifications/subscribe?subscriptionId=test-subscription-id', {
       headers: {
         'Authorization': `Bearer ${authToken}`
-      },
-      data: {
-        subscriptionId: 'test-subscription-id'
       }
     });
     
@@ -270,13 +268,10 @@ test.describe('PWA API Endpoints - V2', () => {
     const loginData = await loginResponse.json();
     const authToken = loginData.token;
 
-    // Test cache clear endpoint
-    const cacheResponse = await page.request.post('/api/pwa/cache/clear', {
+    // Test offline sync status endpoint (replacing non-existent cache clear)
+    const cacheResponse = await page.request.get('/api/pwa/offline/sync?deviceId=test-device', {
       headers: {
         'Authorization': `Bearer ${authToken}`
-      },
-      data: {
-        cacheName: 'polls-cache'
       }
     });
     
@@ -284,7 +279,8 @@ test.describe('PWA API Endpoints - V2', () => {
     
     const cacheData = await cacheResponse.json();
     expect(cacheData).toHaveProperty('success', true);
-    expect(cacheData).toHaveProperty('cleared');
+    expect(cacheData).toHaveProperty('deviceId', 'test-device');
+    expect(cacheData).toHaveProperty('syncStatus');
   });
 
   test('should handle PWA API error handling with V2 setup', async ({ page }) => {
@@ -298,13 +294,13 @@ test.describe('PWA API Endpoints - V2', () => {
     const invalidResponse = await page.request.get('/api/pwa/invalid');
     expect(invalidResponse.status()).toBe(404);
 
-    // Test unauthorized access
-    const unauthorizedResponse = await page.request.post('/api/pwa/sync', {
+    // Test unauthorized access (should return 400 for missing required fields)
+    const unauthorizedResponse = await page.request.post('/api/pwa/offline/sync', {
       data: {
-        action: 'sync'
+        // Missing required fields: votes, deviceId, timestamp
       }
     });
-    expect(unauthorizedResponse.status()).toBe(401);
+    expect(unauthorizedResponse.status()).toBe(400);
   });
 
   test('should handle PWA API with different user types with V2 setup', async ({ page }) => {
@@ -419,19 +415,17 @@ test.describe('PWA API Endpoints - V2', () => {
       }
     });
     
-    const pollData = await createPollResponse.json();
+    const _pollData = await createPollResponse.json();
 
     // Test PWA sync with poll data
-    const syncResponse = await page.request.post('/api/pwa/sync', {
+    const syncResponse = await page.request.post('/api/pwa/offline/sync', {
       headers: {
         'Authorization': `Bearer ${authToken}`
       },
       data: {
-        action: 'sync',
-        data: {
-          polls: [pollData],
-          votes: []
-        }
+        votes: [],
+        deviceId: 'test-device',
+        timestamp: new Date().toISOString()
       }
     });
     

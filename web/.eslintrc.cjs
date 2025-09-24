@@ -7,6 +7,21 @@ module.exports = {
     'plugin:@typescript-eslint/recommended',
     'plugin:eslint-comments/recommended',
   ],
+  ignorePatterns: [
+    'archive/**',
+    'archive-*/**',
+    'app/archive-*/**',
+    '_reports/**',
+    'tests/e2e/archive-old/**',
+    'archive-unused-files/**',
+    'node_modules/',
+    '.next/',
+    'dist/',
+    'coverage/',
+    'playwright-report/',
+    'test-results/',
+    '**/*.d.ts',
+  ],
   plugins: ['@typescript-eslint', 'unused-imports', 'boundaries'],
   parser: '@typescript-eslint/parser',
   parserOptions: {
@@ -28,6 +43,7 @@ module.exports = {
       { type: 'utils',      pattern: 'utils/**' },
       { type: 'tests',      pattern: 'tests/**' },
     ],
+    'import/core-modules': ['k6', 'k6/http'],
   },
   rules: {
     // Prefer the dedicated plugin for unuseds (fewer false positives with TS)
@@ -45,23 +61,23 @@ module.exports = {
       },
     ],
 
-    // Architectural boundaries (adjust if you need to)
+    // Simple boundaries - components and features are similar
     'boundaries/element-types': ['error', {
       default: 'disallow',
       rules: [
-        { from: 'lib',        allow: ['lib', 'utils', 'features'] }, // Allow lib to import from utils and features
-        { from: 'features',   allow: ['lib', 'components', 'utils', 'features'] },
-        { from: 'components', allow: ['lib', 'utils', 'components'] },
+        { from: 'lib',        allow: ['lib', 'utils', 'features', 'components'] },
+        { from: 'features',   allow: ['lib', 'components', 'utils', 'features', 'app'] },
+        { from: 'components', allow: ['lib', 'utils', 'components', 'features'] },
         { from: 'app',        allow: ['features', 'components', 'lib', 'utils'] },
         { from: 'utils',      allow: ['lib'] },
         { from: 'tests',      allow: ['app', 'features', 'components', 'lib', 'utils'] },
       ],
     }],
 
-    // Block legacy paths forever
+    // Block legacy paths forever (allow shared/components for UI primitives)
     'no-restricted-imports': ['error', {
       patterns: [
-        { group: ['@/shared/*', '@/admin/lib/*'], message: 'Use "@/lib/**" or feature modules.' },
+        { group: ['@/shared/lib/*', '@/shared/admin/*', '@/admin/lib/*'], message: 'Use "@/lib/**" or feature modules.' },
         { group: ['@/components/polls/*'], message: "Use '@/features/polls/*' (canonical)." },
         { group: ['@/components/voting/*'], message: "Use '@/features/voting/*' (canonical)." },
         { group: ['@/components/CreatePoll*'], message: "Use '@/features/polls/components/CreatePollForm' (canonical)." },
@@ -123,15 +139,38 @@ module.exports = {
         'unused-imports/no-unused-imports': 'off',
       },
     },
-  ],
-  ignorePatterns: [
-    'node_modules/',
-    '.next/',
-    'dist/',
-    'coverage/',
-    'playwright-report/',
-    'test-results/',
-    '**/*.d.ts',
+    // UI components: reduce noise from withOptional warnings
+    {
+      files: ['components/**', 'app/**'],
+      rules: {
+        'no-restricted-syntax': [
+          'warn',
+          { 
+            selector: 'TSTypeReference[typeName.name="AnyObject"]', 
+            message: 'Prefer exact interfaces over AnyObject.' 
+          },
+          { 
+            selector: 'AssignmentExpression[right.type="Identifier"][right.name="undefined"]',
+            message: 'Use conditional spread or delete, not = undefined.' 
+          },
+          // Removed SpreadElement warning for UI components to reduce noise
+        ],
+      },
+    },
+    // Config files: disable import resolution for webpack/next configs
+    {
+      files: ['**/webpack.config*.js', '**/next.config*.js'],
+      rules: {
+        'import/no-unresolved': 'off',
+      },
+    },
+    // JavaScript files: allow require() imports for Node.js scripts
+    {
+      files: ['**/*.js'],
+      rules: {
+        '@typescript-eslint/no-require-imports': 'off',
+      },
+    },
   ],
 };
 

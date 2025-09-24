@@ -462,7 +462,7 @@ export async function checkPlatformAuthenticator(): Promise<boolean> {
   
   try {
     return await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
-  } catch (error) {
+  } catch {
     return false;
   }
 }

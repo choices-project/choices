@@ -226,7 +226,7 @@ export class ApiResponseCache<T = unknown> {
     let invalidated = 0;
     const regex = typeof pattern === 'string' ? new RegExp(pattern) : pattern;
 
-    for (const [key, entry] of Array.from(this.cache.entries())) {
+    for (const [key, _entry] of Array.from(this.cache.entries())) {
       if (regex.test(key)) {
         this.cache.delete(key);
         invalidated++;
@@ -372,14 +372,8 @@ export const CACHE_CONFIGS: Record<string, CacheConfig> = {
     cleanupInterval: 60 * 60 * 1000, // 1 hour
     enableCompression: true,
     enablePersistence: false
-  },
-  'propublica': {
-    defaultTTL: 6 * 60 * 60 * 1000, // 6 hours - congressional data changes more frequently
-    maxSize: 5000,
-    cleanupInterval: 30 * 60 * 1000, // 30 minutes
-    enableCompression: true,
-    enablePersistence: false
   }
+  // ProPublica cache config removed - service discontinued
 };
 
 /**
@@ -398,4 +392,4 @@ export function createApiCache<T = unknown>(apiName: string): ApiResponseCache<T
  * Global cache instances
  */
 export const googleCivicCache = createApiCache('google-civic');
-export const proPublicaCache = createApiCache('propublica');
+// ProPublica cache removed - service discontinued

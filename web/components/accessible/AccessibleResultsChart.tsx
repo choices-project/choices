@@ -89,7 +89,6 @@ export function AccessibleResultsChart({
   showPercentages = true,
   showVoteCounts = true,
   showRoundInfo = false,
-  isAnimated = true,
   className = '',
   onDataPointClick,
   onDataPointFocus
@@ -268,7 +267,7 @@ export function AccessibleResultsChart({
           </tr>
         </thead>
         <tbody>
-          {chartData.map((item, index) => (
+          {chartData.map((item) => (
             <tr key={item.id}>
               <td>{item.name}</td>
               <td>{formatVoteCount(item.votes)}</td>
@@ -335,7 +334,7 @@ export function AccessibleResultsChart({
         
         {/* Chart Legend */}
         <div className="chart-legend" role="list" aria-label="Chart legend">
-          {chartData.map((item, index) => (
+          {chartData.map((item) => (
             <div
               key={`legend-${item.id}`}
               className="legend-item"
@@ -385,7 +384,7 @@ export function AccessibleResultsChart({
         <div id="detailed-chart-data" className="detailed-chart-data">
           <h4>Detailed Results</h4>
           <div className="detailed-results">
-            {chartData.map((item, index) => (
+            {chartData.map((item) => (
               <div key={`detailed-${item.id}`} className="detailed-result-item">
                 <div className="result-candidate">
                   <span className="candidate-name">{item.name}</span>

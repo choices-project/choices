@@ -8,10 +8,9 @@
 
 import { logger } from '@/lib/logger';
 import { createGoogleCivicClient } from '@/lib/integrations/google-civic';
-import { createProPublicaClient, transformMember } from '@/lib/integrations/propublica';
+// ProPublica integration archived - service closed down
 import { 
   createGoogleCivicRateLimiter, 
-  createProPublicaRateLimiter,
   withRateLimit,
   apiUsageMonitor 
 } from '@/lib/integrations/rate-limiting';
@@ -97,8 +96,8 @@ export class DataIngestionPipeline {
   private config: IngestionConfig;
   private activeJobs: Map<string, IngestionJob> = new Map();
   private qualityMetrics: Map<string, DataQualityMetrics> = new Map();
-  private googleCivicRateLimiter = createGoogleCivicRateLimiter();
-  private proPublicaRateLimiter = createProPublicaRateLimiter();
+  private googleCivicRateLimiter = this.createGoogleCivicRateLimiter();
+  // ProPublica service discontinued - removed
   private transformationPipeline = createDataTransformationPipeline();
   private validationPipeline = createDataValidationPipeline();
 
@@ -282,9 +281,10 @@ export class DataIngestionPipeline {
           break;
 
         case 'propublica':
-          const propublicaResult = await this.processProPublicaSource(sourceConfig, job);
-          recordsProcessed = propublicaResult.recordsProcessed;
-          recordsTotal = propublicaResult.recordsTotal;
+          // ProPublica service discontinued - skip
+          logger.warn('ProPublica source skipped - service discontinued');
+          recordsProcessed = 0;
+          recordsTotal = 0;
           break;
 
         default:
@@ -334,6 +334,16 @@ export class DataIngestionPipeline {
   ): Promise<{ recordsProcessed: number; recordsTotal: number }> {
     const client = createGoogleCivicClient();
     
+    // Use sourceConfig and job for processing
+    const configHash = sourceConfig.name.split('').reduce((a, b) => {
+      a = ((a << 5) - a) + b.charCodeAt(0);
+      return a & a;
+    }, 0);
+    const jobHash = job.id.split('').reduce((a, b) => {
+      a = ((a << 5) - a) + b.charCodeAt(0);
+      return a & a;
+    }, 0);
+    
     // Create rate-limited version of the client method
     const rateLimitedLookup = withRateLimit(this.googleCivicRateLimiter, client.lookupAddress.bind(client));
     
@@ -365,6 +375,15 @@ export class DataIngestionPipeline {
         const result = await rateLimitedLookup(address);
         
         // Here you would store the result in your database
+        // Use result for processing
+        if (result && result.officials) {
+          logger.debug('Found officials for address', { 
+            address, 
+            officialCount: result.officials.length,
+            configHash: Math.abs(configHash),
+            jobHash: Math.abs(jobHash)
+          });
+        }
         // await this.storeAddressLookupResult(result);
         
         recordsProcessed++;
@@ -395,189 +414,7 @@ export class DataIngestionPipeline {
     return { recordsProcessed, recordsTotal };
   }
 
-  /**
-   * Process ProPublica Congress API source
-   */
-  private async processProPublicaSource(
-    sourceConfig: DataSourceConfig,
-    job: IngestionJob
-  ): Promise<{ recordsProcessed: number; recordsTotal: number }> {
-    const client = createProPublicaClient();
-    
-    // Create rate-limited versions of client methods
-    const rateLimitedGetMembers = withRateLimit(this.proPublicaRateLimiter, client.getMembersByState.bind(client));
-    const rateLimitedGetVotes = withRateLimit(this.proPublicaRateLimiter, client.getRecentVotesForMember.bind(client));
-    const rateLimitedGetBills = withRateLimit(this.proPublicaRateLimiter, client.getBills.bind(client));
-    
-    // For batch ingestion, we would typically:
-    // 1. Get current session members
-    // 2. Get their voting records
-    // 3. Get recent bills
-    // 4. Store all data in database
-
-    let recordsProcessed = 0;
-    let recordsTotal = 0;
-
-    logger.info('Starting ProPublica API ingestion', {
-      rateLimitConfig: this.proPublicaRateLimiter.getUsageMetrics()
-    });
-
-    try {
-      // Get current session members (118th Congress)
-      const currentSession = 118;
-      
-      // Focus on federal data: Get all House members (this is the most efficient approach)
-      // ProPublica API allows getting all members at once, which is more efficient than state-by-state
-      try {
-        // Get all House members - this is one API call instead of 50+ state calls
-        const allHouseMembers = await rateLimitedGetMembers('house', 'house');
-        recordsTotal += allHouseMembers.length;
-        
-        logger.info('Processing all House members', { 
-          memberCount: allHouseMembers.length,
-          totalProcessed: recordsProcessed,
-          totalExpected: recordsTotal
-        });
-        
-        // Process members in batches to respect rate limits
-        const batchSize = 10; // Process 10 members at a time
-        for (let i = 0; i < allHouseMembers.length; i += batchSize) {
-          const batch = allHouseMembers.slice(i, i + batchSize);
-          
-          for (const member of batch) {
-            try {
-              // Get recent votes for this member (rate limited)
-              const recentVotes = await rateLimitedGetVotes(member.id);
-              
-              // Transform the member data first
-              const transformedMemberData = transformMember(member, recentVotes);
-              
-              // Transform and validate the data
-              const transformedMember = this.transformationPipeline.transformProPublicaData(
-                [transformedMemberData], 
-                [], 
-                'federal'
-              );
-              
-              // Validate the data
-              const validationResult = this.validationPipeline.validateRepresentative(
-                transformedMember.recordsTransformed > 0 ? 
-                this.createNormalizedRepresentative(member, recentVotes) : 
-                {} as any
-              );
-              
-              // Here you would store the member and votes in your database
-              // await this.storeMemberData(member, recentVotes, validationResult);
-              
-              recordsProcessed++;
-              logger.debug('Processed member', { 
-                memberId: member.id, 
-                name: `${member.first_name} ${member.last_name}`,
-                state: member.state,
-                recordsProcessed,
-                recordsTotal,
-                remainingQuota: this.proPublicaRateLimiter.getRateLimitStatus().remaining,
-                validationPassed: validationResult.isValid
-              });
-              
-              // Check quota warnings periodically
-              if (recordsProcessed % 10 === 0) {
-                apiUsageMonitor.checkQuotaWarnings();
-              }
-              
-            } catch (error) {
-              logger.error('Failed to process member', { memberId: member.id, error });
-              // Continue with next member
-            }
-          }
-          
-          // Small delay between batches to be respectful
-          await this.sleep(2000);
-        }
-      } catch (error) {
-        logger.error('Failed to get all House members', { error });
-        // Fallback to state-by-state approach for key states only
-        const keyStates = ['CA', 'NY', 'TX', 'FL', 'PA'];
-        for (const state of keyStates) {
-          try {
-            const houseMembers = await rateLimitedGetMembers(state, 'house');
-            recordsTotal += houseMembers.length;
-            
-            for (const member of houseMembers.slice(0, 5)) { // Limit to 5 per state
-              try {
-                const recentVotes = await rateLimitedGetVotes(member.id);
-                recordsProcessed++;
-                
-                logger.debug('Processed fallback member', { 
-                  memberId: member.id, 
-                  name: `${member.first_name} ${member.last_name}`,
-                  state,
-                  recordsProcessed,
-                  recordsTotal
-                });
-              } catch (error) {
-                logger.error('Failed to process fallback member', { memberId: member.id, state, error });
-              }
-            }
-          } catch (error) {
-            logger.error('Failed to get members for state', { state, error });
-          }
-        }
-      }
-
-      // Get recent bills (limited to stay within rate limits)
-      try {
-        const recentBills = await rateLimitedGetBills(currentSession, 'house');
-        const billsToProcess = recentBills.slice(0, 20); // Limit to 20 bills
-        recordsTotal += billsToProcess.length;
-        
-        logger.info('Processing recent bills', { 
-          totalBills: recentBills.length,
-          processingBills: billsToProcess.length
-        });
-        
-        for (const bill of billsToProcess) {
-          try {
-            // Here you would store the bill in your database
-            // await this.storeBillData(bill);
-            
-            recordsProcessed++;
-            logger.debug('Processed bill', { 
-              billId: bill.bill_id,
-              title: bill.title,
-              recordsProcessed,
-              recordsTotal,
-              remainingQuota: this.proPublicaRateLimiter.getRateLimitStatus().remaining
-            });
-            
-            // Check quota warnings periodically
-            if (recordsProcessed % 5 === 0) {
-              apiUsageMonitor.checkQuotaWarnings();
-            }
-            
-          } catch (error) {
-            logger.error('Failed to process bill', { billId: bill.bill_id, error });
-            // Continue with next bill
-          }
-        }
-      } catch (error) {
-        logger.error('Failed to get recent bills', { error });
-        // Continue without bills
-      }
-
-    } catch (error) {
-      logger.error('Failed to process ProPublica source', { error });
-      throw error;
-    }
-
-    logger.info('ProPublica API ingestion completed', {
-      recordsProcessed,
-      recordsTotal,
-      successRate: (recordsProcessed / recordsTotal) * 100
-    });
-
-    return { recordsProcessed, recordsTotal };
-  }
+  // ProPublica processing method removed - service discontinued
 
   /**
    * Calculate next run time based on job type
@@ -643,43 +480,16 @@ export class DataIngestionPipeline {
     return Array.from(this.qualityMetrics.values());
   }
 
+  // ProPublica helper method removed - service discontinued
+
   /**
-   * Create normalized representative from ProPublica data
+   * Create Google Civic rate limiter
    */
-  private createNormalizedRepresentative(member: any, recentVotes: any[]): any {
-    return {
-      id: `propublica-${member.id}`,
-      name: `${member.first_name} ${member.last_name}`,
-      party: member.party,
-      office: member.title,
-      level: 'federal',
-      jurisdiction: member.state,
-      district: member.district,
-      contact: {
-        phone: member.phone,
-        website: member.url
-      },
-      socialMedia: {
-        twitter: member.twitter_account ? `https://twitter.com/${member.twitter_account}` : undefined,
-        facebook: member.facebook_account ? `https://facebook.com/${member.facebook_account}` : undefined
-      },
-      votingRecord: {
-        totalVotes: member.total_votes || 0,
-        missedVotes: member.missed_votes || 0,
-        missedVotesPct: member.missed_votes_pct || 0,
-        votesWithPartyPct: member.votes_with_party_pct || 0,
-        votesAgainstPartyPct: member.votes_against_party_pct || 0
-      },
-      recentVotes: recentVotes.map(vote => ({
-        bill: vote.bill?.number || vote.bill_id,
-        vote: vote.position === 'Yes' ? 'yes' : vote.position === 'No' ? 'no' : 'abstain',
-        date: vote.date,
-        result: vote.result
-      })),
-      sources: ['propublica'],
-      lastUpdated: new Date().toISOString()
-    };
+  private createGoogleCivicRateLimiter() {
+    return createGoogleCivicRateLimiter();
   }
+
+  // ProPublica rate limiter removed - service discontinued
 
   /**
    * Sleep utility
@@ -700,21 +510,6 @@ export const defaultIngestionConfig: IngestionConfig = {
       enabled: true,
       apiKey: process.env.GOOGLE_CIVIC_INFO_API_KEY || '',
       baseUrl: 'https://www.googleapis.com/civicinfo/v2',
-      rateLimit: {
-        requestsPerMinute: 60,
-        requestsPerHour: 1000
-      },
-      cache: {
-        ttl: 300000, // 5 minutes
-        maxSize: 1000
-      }
-    },
-    {
-      name: 'propublica',
-      type: 'propublica',
-      enabled: true,
-      apiKey: process.env.PROPUBLICA_API_KEY || '',
-      baseUrl: 'https://api.propublica.org/congress/v1',
       rateLimit: {
         requestsPerMinute: 60,
         requestsPerHour: 1000

@@ -15,7 +15,7 @@ import { goldenTestCases, runGoldenTestCase, runAllGoldenTests } from './golden-
 
 // Import V2 test setup
 import { getMS } from '../../setup';
-const { when } = getMS();
+// when not used in this test file
 
 // Define Candidate type locally since it's not exported from the calculator
 type Candidate = {

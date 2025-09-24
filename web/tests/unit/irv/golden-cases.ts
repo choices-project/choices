@@ -464,7 +464,7 @@ export function runPerformanceTest(candidateCount: number = 10, ballotCount: num
     const rankings = createTestRankings(ballots);
     
     const calculator = new IRVCalculator('performance-test', candidates);
-    const results = calculator.calculateResults(rankings);
+    calculator.calculateResults(rankings);
     
     const endTime = performance.now();
     const duration = endTime - startTime;

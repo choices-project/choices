@@ -16,8 +16,8 @@ type InterestSelectionStepProps = {
 export default function InterestSelectionStep({ onNext, onBack }: InterestSelectionStepProps) {
   const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
   const [customInterest, setCustomInterest] = useState('');
-  const [trendingInterests, setTrendingInterests] = useState<string[]>([]);
-  const [recentInterests, setRecentInterests] = useState<string[]>([]);
+  const [_trendingInterests, _setTrendingInterests] = useState<string[]>([]);
+  const [_recentInterests, _setRecentInterests] = useState<string[]>([]);
 
   // Core interests that make logistic sense for demographics
   const coreInterests = [
@@ -34,7 +34,7 @@ export default function InterestSelectionStep({ onNext, onBack }: InterestSelect
   ];
 
   // Mock recent interests (in real app, this would come from user's recent activity)
-  const mockRecentInterests = [
+  const _mockRecentInterests = [
     'drag-race', 'local-events', 'fitness', 'cooking'
   ];
 
@@ -79,7 +79,7 @@ export default function InterestSelectionStep({ onNext, onBack }: InterestSelect
         </h2>
         <p className="text-lg text-gray-600 max-w-2xl mx-auto">
           Add hashtag-style interests to personalize your feed. 
-          <strong> Add as many as you want!</strong> We'll track what's trending.
+          <strong> Add as many as you want!</strong> We&apos;ll track what&apos;s trending.
         </p>
       </div>
 
@@ -127,7 +127,7 @@ export default function InterestSelectionStep({ onNext, onBack }: InterestSelect
           </button>
         </div>
         <p className="text-sm text-gray-500 mt-2">
-          Use hashtag-style names (e.g., 'drag-race', 'local-business', 'mental-health')
+          Use hashtag-style names (e.g., &apos;drag-race&apos;, &apos;local-business&apos;, &apos;mental-health&apos;)
         </p>
       </div>
 
@@ -181,11 +181,11 @@ export default function InterestSelectionStep({ onNext, onBack }: InterestSelect
             <CheckCircle className="w-5 h-5 text-green-600" />
             <div>
               <h4 className="font-semibold text-green-900 mb-1">
-                Awesome! You've added {selectedInterests.length} interests
+                Awesome! You&apos;ve added {selectedInterests.length} interests
               </h4>
               <p className="text-sm text-green-800">
-                We'll personalize your feed and track what's trending. 
-                <strong> You're helping us discover viral content!</strong>
+                We&apos;ll personalize your feed and track what&apos;s trending. 
+                <strong> You&apos;re helping us discover viral content!</strong>
               </p>
             </div>
           </div>

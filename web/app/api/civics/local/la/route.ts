@@ -1,4 +1,4 @@
-import { type NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(
@@ -7,7 +7,7 @@ const supabase = createClient(
   { auth: { persistSession: false } }
 );
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     console.log('🏙️ Fetching Los Angeles local representatives...');
     

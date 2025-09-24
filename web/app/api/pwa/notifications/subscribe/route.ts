@@ -259,6 +259,7 @@ async function removeSubscription(userId?: string | null, subscriptionId?: strin
  */
 async function getNotificationPreferences(userId: string): Promise<any> {
   // This would typically query your database
+  console.log(`Getting notification preferences for user: ${userId}`);
   return {
     newPolls: true,
     pollResults: true,

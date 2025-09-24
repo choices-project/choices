@@ -43,6 +43,11 @@ export function validateOrigin(
 
   // Extract origin from referer if origin header is missing
   const effectiveOrigin = origin || (referer ? new URL(referer).origin : null);
+  
+  // Log host for debugging purposes
+  if (host) {
+    devLog('Request host header:', { host });
+  }
 
   if (!effectiveOrigin) {
     // Allow requests without origin (e.g., direct API calls, mobile apps)
