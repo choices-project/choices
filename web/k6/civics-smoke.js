@@ -13,7 +13,7 @@ export const options = {
 const BASE = __ENV.BASE_URL || 'http://localhost:3000';
 const URL = `${BASE}/api/v1/civics/address-lookup`;
 
-export default function () {
+export default function civicsSmokeTest() {
   const payload = JSON.stringify({ address: '1600 Pennsylvania Ave NW, Washington, DC' });
   const params = { headers: { 'content-type': 'application/json' } };
 

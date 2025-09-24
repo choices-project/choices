@@ -72,7 +72,7 @@ if (typeof window === 'undefined') {
 
   // Define other browser APIs that might be referenced
   if (typeof (globalThis as any).indexedDB === 'undefined') {
-    (globalThis as any).indexedDB = undefined;
+    delete (globalThis as any).indexedDB;
   }
 
   if (typeof (globalThis as any).crypto === 'undefined') {

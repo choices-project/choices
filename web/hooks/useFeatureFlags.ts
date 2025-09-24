@@ -57,7 +57,7 @@ export type UseFeatureFlagsReturn = {
  * Main hook for feature flags
  */
 export function useFeatureFlags(): UseFeatureFlagsReturn {
-  const [flags, setFlags] = useState<Map<string, FeatureFlag>>(new Map());
+  const [, setFlags] = useState<Map<string, FeatureFlag>>(new Map());
   const [loading, setLoading] = useState(true);
 
   // Initialize flags on mount
@@ -121,7 +121,7 @@ export function useFeatureFlags(): UseFeatureFlagsReturn {
 
   const systemInfo = useMemo(() => {
     return featureFlagManager.getSystemInfo();
-  }, [flags]);
+  }, []);
 
   return {
     isEnabled,

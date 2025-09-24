@@ -318,7 +318,7 @@ export function useOverviewAnalytics(options?: UseAnalyticsOptions) {
   
   const fetchOverview = useCallback(() => {
     return analytics.fetchData('overview');
-  }, [analytics.fetchData]);
+  }, [analytics]);
   
   return {
     ...withOptional(analytics),
@@ -331,7 +331,7 @@ export function useTrendsAnalytics(options?: UseAnalyticsOptions) {
   
   const fetchTrends = useCallback((dateRange?: string) => {
     return analytics.fetchData('trends', withOptional({}, { dateRange }));
-  }, [analytics.fetchData]);
+  }, [analytics]);
   
   return {
     ...withOptional(analytics),
@@ -344,7 +344,7 @@ export function usePerformanceAnalytics(options?: UseAnalyticsOptions) {
   
   const fetchPerformance = useCallback(() => {
     return analytics.fetchData('performance');
-  }, [analytics.fetchData]);
+  }, [analytics]);
   
   return {
     ...withOptional(analytics),
