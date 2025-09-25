@@ -126,7 +126,7 @@ module.exports = {
         message: 'Use conditional spread or delete, not = undefined.' 
       },
       { 
-        selector: 'SpreadElement[argument.type="Identifier"]', 
+        selector: 'ObjectExpression > SpreadElement[argument.type="Identifier"]', 
         message: 'Prefer withOptional()/stripUndefinedDeep on objects that may contain undefined.' 
       }
     ],
