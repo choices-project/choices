@@ -309,10 +309,9 @@ describe('VoteValidator', () => {
     beforeEach(() => {
       mockPoll.votingMethod = 'ranked';
       const { choice, approvals, ...rankedVoteData } = mockVoteData;
-      mockVoteData = {
-        ...rankedVoteData,
+      mockVoteData = Object.assign({}, rankedVoteData, {
         rankings: [0, 1, 2]
-      };
+      });
     });
 
     it('should validate valid ranked vote', async () => {
@@ -358,13 +357,12 @@ describe('VoteValidator', () => {
     beforeEach(() => {
       mockPoll.votingMethod = 'quadratic';
       const { choice, approvals, rankings, ...quadraticVoteData } = mockVoteData;
-      mockVoteData = {
-        ...quadraticVoteData,
+      mockVoteData = Object.assign({}, quadraticVoteData, {
         allocations: {
           '0': 5,
           '1': 3
         }
-      };
+      });
     });
 
     it('should validate valid quadratic vote', async () => {
@@ -382,10 +380,9 @@ describe('VoteValidator', () => {
     });
 
     it('should reject vote with negative allocations', async () => {
-      const invalidVote = { 
-        ...mockVoteData, 
+      const invalidVote = Object.assign({}, mockVoteData, { 
         allocations: { '0': -5 } 
-      };
+      });
       const validation = await validator.validateVote(invalidVote, mockPoll, 'user-1');
       
       expect(validation.isValid).toBe(false);
@@ -393,10 +390,9 @@ describe('VoteValidator', () => {
     });
 
     it('should reject vote with non-integer allocations', async () => {
-      const invalidVote = { 
-        ...mockVoteData, 
+      const invalidVote = Object.assign({}, mockVoteData, { 
         allocations: { '0': 5.5 } 
-      };
+      });
       const validation = await validator.validateVote(invalidVote, mockPoll, 'user-1');
       
       expect(validation.isValid).toBe(false);
@@ -404,10 +400,9 @@ describe('VoteValidator', () => {
     });
 
     it('should reject vote exceeding credit limit', async () => {
-      const invalidVote = { 
-        ...mockVoteData, 
+      const invalidVote = Object.assign({}, mockVoteData, { 
         allocations: { '0': 11 } // 11^2 = 121 > 100
-      };
+      });
       const validation = await validator.validateVote(invalidVote, mockPoll, 'user-1');
       
       expect(validation.isValid).toBe(false);
@@ -415,10 +410,9 @@ describe('VoteValidator', () => {
     });
 
     it('should reject vote with no allocations', async () => {
-      const invalidVote = { 
-        ...mockVoteData, 
+      const invalidVote = Object.assign({}, mockVoteData, { 
         allocations: { '0': 0, '1': 0, '2': 0 } 
-      };
+      });
       const validation = await validator.validateVote(invalidVote, mockPoll, 'user-1');
       
       expect(validation.isValid).toBe(false);
