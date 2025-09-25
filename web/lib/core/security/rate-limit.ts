@@ -122,12 +122,11 @@ export class EnhancedRateLimiter {
   private config: RateLimitConfig
 
   constructor(config: RateLimitConfig) {
-    this.config = {
+    this.config = Object.assign({}, {
       maxBurst: 5,
       reputationThreshold: 50,
       deviceFingerprintWeight: 0.3,
-      ...config
-    }
+    }, config)
   }
 
   // Get client IP address
