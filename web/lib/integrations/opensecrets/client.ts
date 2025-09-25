@@ -150,15 +150,14 @@ export class OpenSecretsClient {
   private lastDailyReset = Date.now();
 
   constructor(config: OpenSecretsClientConfig) {
-    this.config = {
+    this.config = Object.assign({
       baseUrl: 'https://www.opensecrets.org/api',
       rateLimit: {
         requestsPerDay: 1000,
         requestsPerMinute: 20
       },
       timeout: 30000,
-      ...config
-    };
+    }, config);
 
     // Reset daily counter at midnight
     this.scheduleDailyReset();

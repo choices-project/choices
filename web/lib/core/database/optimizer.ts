@@ -71,10 +71,9 @@ class QueryMonitor {
   }
 
   getStats() {
-    const stats = Array.from(this.queries.entries()).map(([sql, data]) => ({
-      sql: sql.substring(0, 100),
-      ...data
-    }))
+    const stats = Array.from(this.queries.entries()).map(([sql, data]) => Object.assign({
+      sql: sql.substring(0, 100)
+    }, data))
 
     return {
       totalQueries: stats.reduce((sum, s) => sum + s.count, 0),
@@ -84,6 +83,11 @@ class QueryMonitor {
         .filter(s => s.avgTime > 100)
         .sort((a, b) => b.avgTime - a.avgTime)
         .slice(0, 10)
+        .map(s => ({
+          sql: s.sql,
+          avgTime: s.avgTime,
+          count: s.count
+        }))
     }
   }
 
@@ -376,10 +380,10 @@ export class QueryOptimizer {
 
     const pollsResponse: PollsResponse = {
       polls: validatedPolls.map(poll => {
-        const basePoll = { ...poll, votes: [{ count: 0 }] }
+        const basePoll = Object.assign({}, poll, { votes: [{ count: 0 }] })
         // Only include expires_at if it exists
         if (poll.expires_at) {
-          return { ...basePoll, expires_at: poll.expires_at } as PollWithVotes
+          return Object.assign({}, basePoll, { expires_at: poll.expires_at }) as PollWithVotes
         }
         return basePoll as PollWithVotes
       }),

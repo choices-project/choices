@@ -7,11 +7,30 @@
 
 import { logger } from '../../logger';
 import { ApplicationError } from '../../errors/base';
-// import type { AddressLookupResult } from '../../../features/civics/schemas'; // DISABLED: civics features disabled for MVP
 import type { GoogleCivicElectionInfo, GoogleCivicVoterInfo } from '../../types/google-civic';
 
-// Temporary stub type until civics features are re-enabled
-type AddressLookupResult = any;
+
+// Processed address lookup result type
+type AddressLookupResult = {
+  district: string;
+  state: string;
+  representatives: Array<{
+    id: string;
+    name: string;
+    party: string;
+    office: string;
+    district: string;
+    state: string;
+    contact: {
+      phone: string | undefined;
+      email: string | undefined;
+      website: string | undefined;
+    };
+  }>;
+  normalizedAddress: string;
+  confidence: number;
+  coordinates: undefined;
+};
 
 export type GoogleCivicConfig = {
   apiKey: string;
@@ -93,7 +112,7 @@ export class GoogleCivicClient {
       throw new GoogleCivicApiError('API key is required', 400);
     }
 
-    this.config = {
+    this.config = Object.assign({
       baseUrl: 'https://www.googleapis.com/civicinfo/v2',
       timeout: 10000,
       retryAttempts: 3,
@@ -102,8 +121,7 @@ export class GoogleCivicClient {
         requestsPerMinute: 60,
         requestsPerHour: 1000
       },
-      ...config
-    };
+    }, config);
   }
 
   /**

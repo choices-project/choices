@@ -209,15 +209,14 @@ export class OpenStatesClient {
   private lastDailyReset = Date.now();
 
   constructor(config: OpenStatesClientConfig) {
-    this.config = {
+    this.config = Object.assign({
       baseUrl: 'https://open.pluralpolicy.com/api/v1',
       rateLimit: {
         requestsPerDay: 10000,
         requestsPerMinute: 200
       },
       timeout: 30000,
-      ...config
-    };
+    }, config);
 
     // Reset daily counter at midnight
     this.scheduleDailyReset();

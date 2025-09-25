@@ -369,10 +369,12 @@ export class DataIngestionPipeline {
         
         // Here you would store the result in your database
         // Use result for processing
-        if (result && result.officials) {
-          logger.debug('Found officials for address', { 
+        if (result && result.representatives) {
+          logger.debug('Found representatives for address', { 
             address, 
-            officialCount: result.officials.length,
+            representativeCount: result.representatives.length,
+            district: result.district,
+            state: result.state,
             configHash: Math.abs(configHash),
             jobHash: Math.abs(jobHash)
           });
@@ -472,8 +474,7 @@ export class DataIngestionPipeline {
     return Array.from(this.qualityMetrics.values());
   }
 
-  // ProPublica helper method removed - service discontinued
-
+ 
   /**
    * Create Google Civic rate limiter
    */
@@ -481,8 +482,7 @@ export class DataIngestionPipeline {
     return createGoogleCivicRateLimiter();
   }
 
-  // ProPublica rate limiter removed - service discontinued
-
+  
   /**
    * Sleep utility
    */

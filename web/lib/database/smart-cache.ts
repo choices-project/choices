@@ -108,7 +108,7 @@ export class SmartCacheManager {
   private cleanupTimer?: NodeJS.Timeout;
 
   constructor(config: Partial<CacheConfig> = {}) {
-    this.config = {
+    this.config = Object.assign({
       defaultTtl: {
         userProfiles: 5 * 60 * 1000, // 5 minutes
         polls: 2 * 60 * 1000, // 2 minutes
@@ -120,8 +120,7 @@ export class SmartCacheManager {
       cleanupInterval: 60 * 1000, // 1 minute
       enablePatternLearning: true,
       minPatternFrequency: 5,
-      ...config,
-    };
+    }, config);
 
     this.startCleanupTimer();
   }

@@ -76,7 +76,7 @@ export class PerformanceDashboard {
   private isRunning = false;
 
   constructor(config: Partial<DashboardConfig> = {}) {
-    this.config = {
+    this.config = Object.assign({
       refreshInterval: 5000, // 5 seconds
       historySize: 100,
       thresholds: {
@@ -85,8 +85,7 @@ export class PerformanceDashboard {
         slowQueries: { warning: 10, critical: 25 },
       },
       enableRealTime: true,
-      ...config,
-    };
+    }, config);
   }
 
   /**

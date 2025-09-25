@@ -14,62 +14,56 @@ export class ForbiddenError extends ApplicationError {
 
 export class PollAccessDeniedError extends ApplicationError {
   constructor(pollId: string, action: string, details?: ErrorDetails) {
-    super(`Access denied for ${action} on poll '${pollId}'`, 403, 'POLL_ACCESS_DENIED', {
-      ...details,
+    super(`Access denied for ${action} on poll '${pollId}'`, 403, 'POLL_ACCESS_DENIED', Object.assign({}, details, {
       field: 'pollId',
       value: pollId,
       constraint: action
-    });
+    }));
   }
 }
 
 export class PollClosedError extends ApplicationError {
   constructor(pollId: string, details?: ErrorDetails) {
-    super(`Poll '${pollId}' is closed and cannot be modified`, 403, 'POLL_CLOSED', {
-      ...details,
+    super(`Poll '${pollId}' is closed and cannot be modified`, 403, 'POLL_CLOSED', Object.assign({}, details, {
       field: 'pollId',
       value: pollId
-    });
+    }));
   }
 }
 
 export class PollLockedError extends ApplicationError {
   constructor(pollId: string, details?: ErrorDetails) {
-    super(`Poll '${pollId}' is locked and cannot be modified`, 403, 'POLL_LOCKED', {
-      ...details,
+    super(`Poll '${pollId}' is locked and cannot be modified`, 403, 'POLL_LOCKED', Object.assign({}, details, {
       field: 'pollId',
       value: pollId
-    });
+    }));
   }
 }
 
 export class AlreadyVotedError extends ApplicationError {
   constructor(pollId: string, userId: string, details?: ErrorDetails) {
-    super(`User has already voted on poll '${pollId}'`, 403, 'ALREADY_VOTED', {
-      ...details,
+    super(`User has already voted on poll '${pollId}'`, 403, 'ALREADY_VOTED', Object.assign({}, details, {
       field: 'pollId',
       value: pollId,
       context: { userId }
-    });
+    }));
   }
 }
 
 export class VotingNotAllowedError extends ApplicationError {
   constructor(pollId: string, reason: string, details?: ErrorDetails) {
-    super(`Voting not allowed on poll '${pollId}': ${reason}`, 403, 'VOTING_NOT_ALLOWED', {
-      ...details,
+    super(`Voting not allowed on poll '${pollId}': ${reason}`, 403, 'VOTING_NOT_ALLOWED', Object.assign({}, details, {
       field: 'pollId',
       value: pollId,
       constraint: reason
-    });
+    }));
   }
 }
 
 export class AdminOnlyError extends ApplicationError {
   constructor(action: string, details?: ErrorDetails) {
-    super(`Admin privileges required for: ${action}`, 403, 'ADMIN_ONLY', {
-      ...details,
+    super(`Admin privileges required for: ${action}`, 403, 'ADMIN_ONLY', Object.assign({}, details, {
       constraint: action
-    });
+    }));
   }
 }

@@ -117,7 +117,7 @@ function normalize(key: string): FeatureFlagKey | null {
 // Subscriptions for flag changes
 const subscribers = new Set<(flags: Record<string, boolean>) => void>();
 function notifySubscribers() {
-  const snapshot = withOptional({}, { ...mutableFlags });
+  const snapshot = withOptional({}, mutableFlags);
   subscribers.forEach(cb => {
     try { cb(snapshot); } catch { /* noop */ }
   });
@@ -133,7 +133,7 @@ export function isFeatureEnabled<K extends string>(key: K): boolean {
 }
 
 // Create a mutable copy of FEATURE_FLAGS for runtime modifications
-const mutableFlags: Record<string, boolean> = withOptional({}, { ...FEATURE_FLAGS });
+const mutableFlags: Record<string, boolean> = withOptional({}, FEATURE_FLAGS);
 
 // Helper function to categorize flags
 function categorizeFlag(flagId: string): string {
@@ -199,7 +199,7 @@ export const featureFlagManager = {
     }
     return false;
   },
-  all: () => withOptional({}, { ...mutableFlags }),
+  all: () => withOptional({}, mutableFlags),
   
   // Additional methods expected by useFeatureFlags hook
   getAllFlags: (): Map<string, FeatureFlag> => {
@@ -340,7 +340,7 @@ export const featureFlagManager = {
     if (typeof callback === 'function') {
       subscribers.add(callback);
       // Immediately push current state to new subscriber
-      try { callback(withOptional({}, { ...mutableFlags })); } catch { /* noop */ }
+      try { callback(withOptional({}, mutableFlags)); } catch { /* noop */ }
     }
     return { unsubscribe: () => subscribers.delete(callback) };
   },
@@ -360,7 +360,7 @@ export const featureFlagManager = {
   exportConfig: (): FeatureFlagConfig => {
     // Export current flag configuration
     return {
-      flags: withOptional({}, { ...mutableFlags }),
+      flags: withOptional({}, mutableFlags),
       timestamp: new Date().toISOString(),
       version: '1.0.0'
     };

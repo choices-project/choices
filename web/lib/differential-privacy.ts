@@ -115,10 +115,9 @@ export function addNoiseToCount(count: number, config: DifferentialPrivacyConfig
 
 export function addNoiseToAverage(average: number, count: number, config: DifferentialPrivacyConfig): NoisyResult {
   // For averages, we need to consider the sensitivity based on the count
-  const adjustedConfig = {
-    ...config,
+  const adjustedConfig = Object.assign({}, config, {
     sensitivity: config.sensitivity / count
-  };
+  });
   const manager = new DifferentialPrivacyManager(adjustedConfig);
   return manager.addGaussianNoise(average);
 }

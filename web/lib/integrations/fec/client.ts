@@ -177,7 +177,7 @@ export class FECClient {
   private lastHourlyReset = Date.now();
 
   constructor(config: FECClientConfig = {}) {
-    this.config = {
+    this.config = Object.assign({
       apiKey: config.apiKey || '',
       baseUrl: 'https://api.open.fec.gov/v1',
       rateLimit: {
@@ -185,8 +185,7 @@ export class FECClient {
         requestsPerMinute: 20
       },
       timeout: 30000,
-      ...config
-    };
+    }, config);
 
     // Reset hourly counter
     this.scheduleHourlyReset();

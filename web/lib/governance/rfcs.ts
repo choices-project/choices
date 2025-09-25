@@ -112,9 +112,7 @@ export class RFCManager {
    */
   async createRFCInstance(rfcData: RFCData): Promise<string> {
     const rfcId = this.generateRFCId();
-    const rfc: RFC = {
-      ...RFCManager.RFC_TEMPLATE,
-      ...rfcData,
+    const rfc: RFC = Object.assign({}, RFCManager.RFC_TEMPLATE, rfcData, {
       id: rfcId,
       status: 'Draft',
       created: new Date().toISOString().split('T')[0] ?? new Date().toISOString() ?? new Date().toISOString(),
@@ -123,7 +121,7 @@ export class RFCManager {
       votes: [],
       tags: this.extractTags(rfcData),
       category: this.categorizeRFC(rfcData)
-    };
+    });
     
     await this.saveRFC(rfc);
     await this.notifyStakeholders(rfc);

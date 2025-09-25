@@ -310,22 +310,20 @@ export class GeographicElectoralFeed {
           
           if (campaignData && typeof campaignData === 'object') {
             const data = campaignData as Record<string, unknown>;
-            return {
-              ...race,
+            return Object.assign({}, race, {
               recentActivity: (data.recentActivity as Activity[]) || race.recentActivity,
               constituentQuestions: (data.constituentQuestions as number) || race.constituentQuestions,
               candidateResponses: (data.candidateResponses as number) || race.candidateResponses,
               status: 'active' as const
-            };
+            });
           }
         } catch (error) {
           dev.logger.error('Failed to enrich race with campaign data', { raceId: race.raceId, error });
         }
         
-        return {
-          ...race,
+        return Object.assign({}, race, {
           status: 'active' as const
-        };
+        });
       }));
       
       return enrichedRaces;

@@ -117,15 +117,14 @@ export class CongressGovClient {
   private lastDailyReset = Date.now();
 
   constructor(config: CongressGovClientConfig) {
-    this.config = {
+    this.config = Object.assign({
       baseUrl: 'https://api.congress.gov/v3',
       rateLimit: {
         requestsPerDay: 5000,
         requestsPerMinute: 100
       },
       timeout: 30000,
-      ...config
-    };
+    }, config);
 
     // Reset daily counter at midnight
     this.scheduleDailyReset();

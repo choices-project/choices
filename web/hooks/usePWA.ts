@@ -188,8 +188,7 @@ export function usePWA(): PWAStatus & PWAActions {
       
       // Update service worker status
       const serviceWorkerStatus = await serviceWorkerManager.getStatus();
-      setStatus(prev => ({
-        ...prev,
+      setStatus(prev => withOptional(prev, {
         serviceWorker: serviceWorkerStatus
       }));
       
@@ -213,7 +212,6 @@ export function usePWA(): PWAStatus & PWAActions {
   // Sync offline data
   const syncOfflineData = useCallback(async (): Promise<void> => {
     try {
-      // This would typically sync offline votes and other data
       logger.info('PWA: Syncing offline data...');
       
       // Update offline data count
@@ -231,11 +229,9 @@ export function usePWA(): PWAStatus & PWAActions {
   // Clear offline data
   const clearOfflineData = useCallback(async (): Promise<void> => {
     try {
-      // This would typically clear offline votes and other data
       logger.info('PWA: Clearing offline data...');
       
-      setStatus(prev => ({
-        ...prev,
+      setStatus(prev => withOptional(prev, {
         offlineVotes: 0,
         hasOfflineData: false
       }));
@@ -277,7 +273,6 @@ export function usePWA(): PWAStatus & PWAActions {
         }
       }
 
-      // This would typically subscribe to push notifications
       logger.info('PWA: Subscribing to notifications...');
       
       return true;
@@ -293,8 +288,7 @@ export function usePWA(): PWAStatus & PWAActions {
       // This would typically unsubscribe from push notifications
       logger.info('PWA: Unsubscribing from notifications...');
       
-      setStatus(prev => ({
-        ...prev,
+      setStatus(prev => withOptional(prev, {
         notificationsEnabled: false
       }));
       
@@ -353,8 +347,7 @@ export function usePWA(): PWAStatus & PWAActions {
     };
   }, [syncOfflineData]);
 
-  return {
-    ...status,
+  return Object.assign({}, status, {
     promptInstallation,
     checkForUpdates,
     skipWaiting,
@@ -364,7 +357,7 @@ export function usePWA(): PWAStatus & PWAActions {
     subscribeToNotifications,
     unsubscribeFromNotifications,
     refresh
-  };
+  });
 }
 
 /**

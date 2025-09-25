@@ -121,15 +121,14 @@ export function usePollWizard() {
     setWizardState(prev => {
       const errors = validateStep(prev.currentStep, prev.data);
       if (Object.keys(errors).length > 0) {
-        return { ...prev, errors };
+        return Object.assign({}, prev, { errors });
       }
       
-      return {
-        ...prev,
+      return Object.assign({}, prev, {
         currentStep: Math.min(prev.currentStep + 1, prev.totalSteps - 1),
         errors: {},
         canProceed: prev.currentStep + 1 < prev.totalSteps - 1 || isCurrentStepValid(prev.currentStep + 1, prev.data)
-      };
+      });
     });
   }, [validateStep, isCurrentStepValid]);
 
@@ -142,8 +141,7 @@ export function usePollWizard() {
   }, []);
 
   const goToStep = useCallback((step: number) => {
-    setWizardState(prev => ({
-      ...prev,
+    setWizardState(prev => Object.assign({}, prev, {
       currentStep: Math.max(0, Math.min(step, prev.totalSteps - 1)),
       errors: {}
     }));
@@ -151,9 +149,8 @@ export function usePollWizard() {
 
   // Data update functions
   const updateData = useCallback((updates: Partial<PollWizardData>) => {
-    setWizardState(prev => ({
-      ...prev,
-      data: { ...prev.data, ...updates }
+    setWizardState(prev => Object.assign({}, prev, {
+      data: Object.assign({}, prev.data, updates)
     }));
   }, []);
 

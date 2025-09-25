@@ -151,7 +151,7 @@ export class GovTrackClient {
   private lastResetTime = Date.now();
 
   constructor(config: GovTrackConfig = {}) {
-    this.config = {
+    this.config = Object.assign({
       baseUrl: 'https://www.govtrack.us/api/v2',
       timeout: 15000,
       retryAttempts: 3,
@@ -160,8 +160,7 @@ export class GovTrackClient {
         requestsPerMinute: 15, // Conservative: 15/min = 900/hour
         requestsPerHour: 900,  // Conservative: 900/hour (leaving 100 buffer)
       },
-      ...config
-    };
+    }, config);
   }
 
   /**
