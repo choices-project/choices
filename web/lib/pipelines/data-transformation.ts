@@ -7,9 +7,15 @@
 
 import { logger } from '../logger';
 // withOptional not used in this file
-import type { 
-  AddressLookupResult
-} from '../civics/ingest';
+// Define AddressLookupResult locally since it's not exported from civics/ingest
+type AddressLookupResult = {
+  district: string;
+  state: string;
+  representatives: any[];
+  normalizedAddress: string;
+  confidence: number;
+  coordinates?: { lat: number; lng: number };
+};
 
 export type GovernmentLevel = {
   level: 'federal' | 'state' | 'local';

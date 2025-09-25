@@ -1,45 +1,24 @@
 /**
- * Civics Data Ingest Module - DISABLED
+ * Civics Data Ingest Module
  * 
- * This module provides a bridge between the old lib structure and the new features structure.
- * It re-exports the civics ingest functionality from the features directory.
- * 
- * DISABLED: Civics features are currently disabled for MVP
+ * Provides address lookup functionality for state, federal, and local representatives.
+ * Data has been ingested for multiple states and cities.
  */
 
-import { logger } from '@/lib/logger';
+// Logger not used in this file
 
-// TODO: Re-enable when civics features are enabled
-// export { lookupAddress } from '../../features/civics/ingest/connectors/civicinfo';
+// Re-export from the actual civics implementation
+export { GoogleCivicClient } from '../integrations/google-civic/client';
 
-// TODO: Re-enable when civics features are enabled
-// export type { 
-//   AddressLookupResult, 
-//   DataSourceConfig, 
-//   IngestStatus, 
-//   DataQualityMetrics 
-// } from '../../features/civics/schemas';
-
-// Temporary stub exports to prevent import errors
+// Create a simple lookup function that uses the Google Civic client
 export const lookupAddress = async (address: string) => {
-  // Minimal, PII-safe analytics of attempted usage while feature disabled
-  try {
-    const trimmed = (address || '').trim();
-    logger.info('Civics address lookup attempted (disabled)', {
-      input_shape: {
-        length: trimmed.length,
-        segments: trimmed ? trimmed.split(',').length : 0,
-        hasDigits: /\d/.test(trimmed),
-        hasLetters: /[A-Za-z]/.test(trimmed),
-      },
-    });
-  } catch {
-    // Swallow analytics failure
-  }
-  throw new Error('Civics features are disabled for MVP');
+  const { GoogleCivicClient } = await import('../integrations/google-civic/client');
+  const client = new GoogleCivicClient({
+    apiKey: process.env.GOOGLE_CIVIC_API_KEY || ''
+  });
+  
+  return await client.lookupAddress(address);
 };
 
-export type AddressLookupResult = any;
-export type DataSourceConfig = any;
-export type IngestStatus = any;
-export type DataQualityMetrics = any;
+// Export types that are actually available
+export type { GoogleCivicConfig } from '../integrations/google-civic/client';

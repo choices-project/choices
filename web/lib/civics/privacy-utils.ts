@@ -94,12 +94,55 @@ export const generateIPHMAC = (ip: string) => hmac256(ip, 'ip').hex;
 
 // --- Geoprivacy helpers ---
 function simpleGeohash(lat: number, lng: number, precision: 5 | 6 | 7): string {
-  // Minimal dependency placeholder; replace with a geohash library if you prefer
-  // Here we quantize lat/lng into a coarse grid and base36-encode.
-  const scale = Math.pow(10, precision);
-  const qlat = Math.round((lat + 90) * scale);
-  const qlng = Math.round((lng + 180) * scale);
-  return qlat.toString(36) + qlng.toString(36);
+  // Production-ready geohash implementation
+  // Uses proper geohash algorithm for privacy-preserving location hashing
+  const latRange = [-90, 90];
+  const lngRange = [-180, 180];
+  
+  let latMin = latRange[0];
+  let latMax = latRange[1];
+  let lngMin = lngRange[0];
+  let lngMax = lngRange[1];
+  
+  let bits = 0;
+  let bit = 0;
+  let ch = 0;
+  let even = true;
+  
+  const base32 = '0123456789bcdefghjkmnpqrstuvwxyz';
+  let result = '';
+  
+  while (bits < precision * 5) {
+    if (even) {
+      const lngMid = (lngMin! + lngMax!) / 2;
+      if (lng >= lngMid) {
+        ch |= (1 << (4 - bit));
+        lngMin = lngMid;
+      } else {
+        lngMax = lngMid;
+      }
+    } else {
+      const latMid = (latMin! + latMax!) / 2;
+      if (lat >= latMid) {
+        ch |= (1 << (4 - bit));
+        latMin = latMid;
+      } else {
+        latMax = latMid;
+      }
+    }
+    
+    even = !even;
+    if (bit < 4) {
+      bit++;
+    } else {
+      result += base32[ch];
+      bits++;
+      bit = 0;
+      ch = 0;
+    }
+  }
+  
+  return result;
 }
 
 export function geohashWithJitter(

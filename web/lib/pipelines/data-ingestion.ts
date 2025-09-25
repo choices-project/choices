@@ -8,7 +8,6 @@
 
 import { logger } from '@/lib/logger';
 import { createGoogleCivicClient } from '@/lib/integrations/google-civic';
-// ProPublica integration archived - service closed down
 import { 
   createGoogleCivicRateLimiter, 
   withRateLimit,
@@ -21,13 +20,7 @@ import {
 import { 
   createDataValidationPipeline 
 } from './data-validation';
-// TODO: Re-enable when civics features are enabled
-// import type { 
-//   DataQualityMetrics,
-//   DataSourceConfig 
-// } from '@/features/civics/schemas';
-
-// Temporary types until civics schemas are re-enabled
+// Define types locally since they're not exported from the Google Civic client
 type DataQualityMetrics = {
   source: string;
   timestamp: string;
@@ -414,7 +407,6 @@ export class DataIngestionPipeline {
     return { recordsProcessed, recordsTotal };
   }
 
-  // ProPublica processing method removed - service discontinued
 
   /**
    * Calculate next run time based on job type
