@@ -159,12 +159,11 @@ export const useAdminStore = create<AdminStore>()(
       
       addNotification: (notification) => {
         const currentState = get();
-        const newNotification = {
-          ...notification,
+        const newNotification: Notification = Object.assign({}, notification, {
           id: crypto.randomUUID(),
           timestamp: new Date().toISOString(),
           read: false,
-        };
+        });
         
         set((state) => ({
           notifications: [
@@ -196,7 +195,7 @@ export const useAdminStore = create<AdminStore>()(
         
         set((state) => ({
           notifications: state.notifications.map(notif =>
-            notif.id === id ? { ...notif, read: true } : notif
+            notif.id === id ? Object.assign({}, notif, { read: true }) : notif
           ),
         }));
         
@@ -386,7 +385,7 @@ export const useAdminStore = create<AdminStore>()(
         
         set((state) => ({
           trendingTopics: state.trendingTopics.map(topic =>
-            topic.id === id ? { ...topic, ...updates } : topic
+            topic.id === id ? Object.assign({}, topic, updates) : topic
           ),
           activityFeed: [
             {
@@ -465,7 +464,7 @@ export const useAdminStore = create<AdminStore>()(
         
         set((state) => ({
           generatedPolls: state.generatedPolls.map(poll =>
-            poll.id === id ? { ...poll, ...updates } : poll
+            poll.id === id ? Object.assign({}, poll, updates) : poll
           ),
           activityFeed: [
             {
