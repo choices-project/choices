@@ -424,14 +424,13 @@ describe('VoteValidator', () => {
     beforeEach(() => {
       mockPoll.votingMethod = 'range';
       const { choice, approvals, rankings, allocations, ...rangeVoteData } = mockVoteData;
-      mockVoteData = {
-        ...rangeVoteData,
+      mockVoteData = Object.assign({}, rangeVoteData, {
         ratings: {
           '0': 8,
           '1': 6,
           '2': 4
         }
-      };
+      });
     });
 
     it('should validate valid range vote', async () => {
@@ -449,10 +448,9 @@ describe('VoteValidator', () => {
     });
 
     it('should reject vote with ratings outside range', async () => {
-      const invalidVote = { 
-        ...mockVoteData, 
+      const invalidVote = Object.assign({}, mockVoteData, { 
         ratings: { '0': 15 } 
-      };
+      });
       const validation = await validator.validateVote(invalidVote, mockPoll, 'user-1');
       
       expect(validation.isValid).toBe(false);
@@ -460,10 +458,9 @@ describe('VoteValidator', () => {
     });
 
     it('should reject vote with incomplete ratings', async () => {
-      const invalidVote = { 
-        ...mockVoteData, 
+      const invalidVote = Object.assign({}, mockVoteData, { 
         ratings: { '0': 8, '1': 6 } 
-      };
+      });
       const validation = await validator.validateVote(invalidVote, mockPoll, 'user-1');
       
       expect(validation.isValid).toBe(false);
@@ -471,10 +468,9 @@ describe('VoteValidator', () => {
     });
 
     it('should reject vote with all minimum ratings', async () => {
-      const invalidVote = { 
-        ...mockVoteData, 
+      const invalidVote = Object.assign({}, mockVoteData, { 
         ratings: { '0': 0, '1': 0, '2': 0 } 
-      };
+      });
       const validation = await validator.validateVote(invalidVote, mockPoll, 'user-1');
       
       expect(validation.isValid).toBe(false);
@@ -484,10 +480,9 @@ describe('VoteValidator', () => {
 
   describe('Security Validation', () => {
     it('should require authentication when verification is required', async () => {
-      const verifiedPoll = { 
-        ...mockPoll, 
+      const verifiedPoll = Object.assign({}, mockPoll, { 
         votingConfig: Object.assign({}, mockPoll.votingConfig, { requireVerification: true }) 
-      };
+      });
       const validation = await validator.validateVote(mockVoteData, verifiedPoll);
       
       expect(validation.isValid).toBe(false);
@@ -501,14 +496,12 @@ describe('VoteValidator', () => {
     });
 
     it('should check trust tier requirements', async () => {
-      const highTrustPoll = { 
-        ...mockPoll, 
-        votingConfig: { 
-          ...mockPoll.votingConfig, 
+      const highTrustPoll = Object.assign({}, mockPoll, { 
+        votingConfig: Object.assign({}, mockPoll.votingConfig, { 
           minTrustTier: 'T2',
           allowMultipleVotes: true // Allow multiple votes to avoid existing vote check
-        } 
-      };
+        })
+      });
       
       // Mock no existing vote (user can vote)
       when().table('votes').op('select').eq('poll_id', 'test-poll-123').eq('user_id', 'user-1').returnsList([]);
@@ -523,14 +516,12 @@ describe('VoteValidator', () => {
     });
 
     it('should accept vote with sufficient trust tier', async () => {
-      const highTrustPoll = { 
-        ...mockPoll, 
-        votingConfig: { 
-          ...mockPoll.votingConfig, 
+      const highTrustPoll = Object.assign({}, mockPoll, { 
+        votingConfig: Object.assign({}, mockPoll.votingConfig, { 
           minTrustTier: 'T1',
           allowMultipleVotes: true // Allow multiple votes to avoid existing vote check
-        } 
-      };
+        })
+      });
       
       // Mock getUserTrustTier to return T2 (sufficient)
       when().table('user_profiles').op('select').select('trust_tier').eq('user_id', 'user-1').returnsSingle({ trust_tier: 'T2' });
@@ -569,14 +560,12 @@ describe('VoteValidator', () => {
       mockGetUserTrustTier.mockResolvedValue('T0');
       (testValidator as any).getUserTrustTier = mockGetUserTrustTier;
 
-      const highTrustPoll = { 
-        ...mockPoll, 
-        votingConfig: { 
-          ...mockPoll.votingConfig, 
+      const highTrustPoll = Object.assign({}, mockPoll, { 
+        votingConfig: Object.assign({}, mockPoll.votingConfig, { 
           minTrustTier: 'T1',
           allowMultipleVotes: true // Allow multiple votes to avoid existing vote check
-        } 
-      };
+        })
+      });
       
       const validation = await testValidator.validateVote(mockVoteData, highTrustPoll, 'user-1');
       
