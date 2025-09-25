@@ -102,31 +102,30 @@ describe('VoteEngine', () => {
     });
 
     it('should reject vote with missing poll ID', async () => {
-      const invalidRequest = { ...mockVoteRequest, pollId: '' };
+      const invalidRequest = Object.assign({}, mockVoteRequest, { pollId: '' });
       const validation = await engine.validateVote(invalidRequest, mockPoll);
       expect(validation.isValid).toBe(false);
       expect(validation.error).toBe('Missing required vote data');
     });
 
     it('should reject vote with missing vote data', async () => {
-      const invalidRequest = { ...mockVoteRequest, voteData: {} };
+      const invalidRequest = Object.assign({}, mockVoteRequest, { voteData: {} });
       const validation = await engine.validateVote(invalidRequest, mockPoll);
       expect(validation.isValid).toBe(false);
       expect(validation.error).toBe('Choice is required for single-choice voting');
     });
 
     it('should reject vote for inactive poll', async () => {
-      const inactivePoll = { ...mockPoll, status: 'closed' as const };
+      const inactivePoll = Object.assign({}, mockPoll, { status: 'closed' as const });
       const validation = await engine.validateVote(mockVoteRequest, inactivePoll);
       expect(validation.isValid).toBe(false);
       expect(validation.error).toBe('Poll not found or not active');
     });
 
     it('should reject vote for ended poll', async () => {
-      const endedPoll = { 
-        ...mockPoll, 
+      const endedPoll = Object.assign({}, mockPoll, { 
         endTime: new Date('2024-12-31T23:59:59Z') 
-      };
+      });
       const validation = await engine.validateVote(mockVoteRequest, endedPoll);
       expect(validation.isValid).toBe(false);
       expect(validation.error).toBe('Poll has ended');
@@ -143,7 +142,7 @@ describe('VoteEngine', () => {
 
     it('should allow vote without authentication when not required', async () => {
       engine.updateConfig({ requireAuthentication: false });
-      const unauthenticatedRequest = { ...mockVoteRequest };
+      const unauthenticatedRequest = Object.assign({}, mockVoteRequest);
       delete unauthenticatedRequest.userId;
       const validation = await engine.validateVote(unauthenticatedRequest, mockPoll);
       expect(validation.isValid).toBe(true);
@@ -172,7 +171,7 @@ describe('VoteEngine', () => {
     });
 
     it('should reject invalid vote during processing', async () => {
-      const invalidRequest = { ...mockVoteRequest, voteData: {} };
+      const invalidRequest = Object.assign({}, mockVoteRequest, { voteData: {} });
       const response = await engine.processVote(invalidRequest, mockPoll);
       expect(response.success).toBe(false);
       expect(response.message).toBe('Choice is required for single-choice voting');
@@ -181,7 +180,7 @@ describe('VoteEngine', () => {
 
     it('should handle processing errors gracefully', async () => {
       // Test error handling with invalid data
-      const invalidRequest = { ...mockVoteRequest, voteData: {} };
+      const invalidRequest = Object.assign({}, mockVoteRequest, { voteData: {} });
       const response = await engine.processVote(invalidRequest, mockPoll);
       expect(response.success).toBe(false);
       expect(response.message).toBeDefined();
@@ -294,14 +293,14 @@ describe('VoteEngine', () => {
 
   describe('Error Handling', () => {
     it('should handle validation errors gracefully', async () => {
-      const invalidRequest = { ...mockVoteRequest, pollId: '' };
+      const invalidRequest = Object.assign({}, mockVoteRequest, { pollId: '' });
       const validation = await engine.validateVote(invalidRequest, mockPoll);
       expect(validation.isValid).toBe(false);
       expect(validation.error).toBeDefined();
     });
 
     it('should handle processing errors gracefully', async () => {
-      const invalidRequest = { ...mockVoteRequest, voteData: {} };
+      const invalidRequest = Object.assign({}, mockVoteRequest, { voteData: {} });
       const response = await engine.processVote(invalidRequest, mockPoll);
       expect(response.success).toBe(false);
       expect(response.message).toBeDefined();
