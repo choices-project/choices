@@ -61,11 +61,10 @@ class Logger {
 
   error(message: string, error?: Error, context?: LogContext): void {
     if (this.shouldLog(LogLevel.ERROR)) {
-      const errorContext = {
-        ...context,
+      const errorContext = Object.assign({}, context, {
         error: error?.message,
         stack: error?.stack
-      };
+      });
        
       console.error(this.formatMessage('ERROR', message, errorContext));
     }
@@ -92,20 +91,18 @@ class Logger {
 
   // User action logging
   userAction(action: string, userId?: string, context?: LogContext): void {
-    this.info('User Action', {
+    this.info('User Action', Object.assign({
       action,
       userId,
-      ...context
-    });
+    }, context));
   }
 
   // Performance logging
   performance(operation: string, duration: number, context?: LogContext): void {
-    this.info('Performance', {
+    this.info('Performance', Object.assign({
       operation,
       duration: `${duration}ms`,
-      ...context
-    });
+    }, context));
   }
 }
 

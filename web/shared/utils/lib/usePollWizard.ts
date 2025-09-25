@@ -40,8 +40,7 @@ export const usePollWizard = (template?: PollTemplate) => {
     canProceed: false,
     canGoBack: false,
     progress: 0,
-    data: template ? { 
-      ...DEFAULT_WIZARD_DATA, 
+    data: template ? Object.assign({}, DEFAULT_WIZARD_DATA, {
       title: template.title,
       description: template.description,
       category: template.category,
@@ -51,7 +50,7 @@ export const usePollWizard = (template?: PollTemplate) => {
       allowMultipleVotes: template.defaultSettings.allowMultipleVotes,
       showResults: template.defaultSettings.showResults,
       settings: template.defaultSettings
-    } : DEFAULT_WIZARD_DATA,
+    }) : DEFAULT_WIZARD_DATA,
     errors: {},
     isLoading: false,
   });
@@ -123,17 +122,16 @@ export const usePollWizard = (template?: PollTemplate) => {
 
   const updateWizardData = useCallback((updates: Partial<PollWizardData>) => {
     setWizardState(prev => {
-      const newData = { ...prev.data, ...updates };
+      const newData = Object.assign({}, prev.data, updates);
       const errors = validateStep(prev.currentStep, newData);
       const canProceed = Object.keys(errors).length === 0;
 
-      return {
-        ...prev,
+      return Object.assign({}, prev, {
         data: newData,
         errors,
         canProceed,
         canGoBack: prev.currentStep > 0,
-      };
+      });
     });
   }, [validateStep]);
 
@@ -144,14 +142,13 @@ export const usePollWizard = (template?: PollTemplate) => {
         const errors = validateStep(nextStepIndex, prev.data);
         const canProceed = Object.keys(errors).length === 0;
 
-        return {
-          ...prev,
+        return Object.assign({}, prev, {
           currentStep: nextStepIndex,
           errors,
           canProceed,
           canGoBack: true,
           isComplete: nextStepIndex === prev.totalSteps - 1,
-        };
+        });
       }
       return prev;
     });
@@ -164,14 +161,13 @@ export const usePollWizard = (template?: PollTemplate) => {
         const errors = validateStep(prevStepIndex, prev.data);
         const canProceed = Object.keys(errors).length === 0;
 
-        return {
-          ...prev,
+        return Object.assign({}, prev, {
           currentStep: prevStepIndex,
           errors,
           canProceed,
           canGoBack: prevStepIndex > 0,
           isComplete: false,
-        };
+        });
       }
       return prev;
     });
@@ -183,14 +179,13 @@ export const usePollWizard = (template?: PollTemplate) => {
         const errors = validateStep(stepIndex, prev.data);
         const canProceed = Object.keys(errors).length === 0;
 
-        return {
-          ...prev,
+        return Object.assign({}, prev, {
           currentStep: stepIndex,
           errors,
           canProceed,
           canGoBack: stepIndex > 0,
           isComplete: stepIndex === prev.totalSteps - 1,
-        };
+        });
       }
       return prev;
     });
@@ -199,16 +194,15 @@ export const usePollWizard = (template?: PollTemplate) => {
   const addOption = useCallback(() => {
     setWizardState(prev => {
       const newOptions = [...prev.data.options, ''];
-      const newData = { ...prev.data, options: newOptions };
+      const newData = Object.assign({}, prev.data, { options: newOptions });
       const errors = validateStep(prev.currentStep, newData);
       const canProceed = Object.keys(errors).length === 0;
 
-      return {
-        ...prev,
+      return Object.assign({}, prev, {
         data: newData,
         errors,
         canProceed,
-      };
+      });
     });
   }, [validateStep]);
 
@@ -217,7 +211,7 @@ export const usePollWizard = (template?: PollTemplate) => {
       if (prev.data.options.length <= 2) return prev; // Minimum 2 options
       
       const newOptions = prev.data.options.filter((_, i) => i !== index);
-      const newData = { ...prev.data, options: newOptions };
+      const newData = Object.assign({}, prev.data, { options: newOptions });
       const errors = validateStep(prev.currentStep, newData);
       const canProceed = Object.keys(errors).length === 0;
 
