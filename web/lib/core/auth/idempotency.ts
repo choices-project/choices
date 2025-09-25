@@ -62,7 +62,7 @@ export async function checkIdempotencyKey<T = unknown>(
   key: string, 
   options: IdempotencyOptions = {}
 ): Promise<{ exists: boolean; data?: T; error?: string }> {
-  const opts = { ...DEFAULT_OPTIONS, ...options }
+  const opts = Object.assign({}, DEFAULT_OPTIONS, options)
   const fullKey = createIdempotencyKey(key, opts.namespace)
 
   try {
@@ -101,7 +101,7 @@ export async function storeIdempotencyKey<T = unknown>(
   resultData: T,
   options: IdempotencyOptions = {}
 ): Promise<{ success: boolean; error?: string }> {
-  const opts = { ...DEFAULT_OPTIONS, ...options }
+  const opts = Object.assign({}, DEFAULT_OPTIONS, options)
   const fullKey = createIdempotencyKey(key, opts.namespace)
   const expiresAt = new Date(Date.now() + opts.ttl * 1000).toISOString()
 
@@ -141,7 +141,7 @@ export async function withIdempotency<T>(
   operation: () => Promise<T>,
   options: IdempotencyOptions = {}
 ): Promise<IdempotencyResult<T>> {
-  const opts = { ...DEFAULT_OPTIONS, ...options }
+  const opts = Object.assign({}, DEFAULT_OPTIONS, options)
 
   // Check if key already exists
   const checkResult = await checkIdempotencyKey<T>(key, opts)
