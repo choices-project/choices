@@ -39,11 +39,10 @@ const DEFAULT_SESSION_OPTIONS: Required<SessionOptions> = {
  */
 export function generateSessionToken(payload: Omit<SessionPayload, 'iat' | 'exp'>): string {
   const now = Math.floor(Date.now() / 1000)
-  const tokenPayload: SessionPayload = {
-    ...payload,
+  const tokenPayload: SessionPayload = Object.assign({}, payload, {
     iat: now,
     exp: now + DEFAULT_SESSION_OPTIONS.maxAge
-  }
+  })
 
   return jwt.sign(tokenPayload, process.env.JWT_SECRET!, {
     algorithm: 'HS256',
@@ -84,7 +83,7 @@ export function verifySessionToken(token: string): SessionPayload | null {
  * Set session cookie with proper security headers
  */
 export function setSessionCookie(token: string, options: SessionOptions = {}): void {
-  const cookieOptions = { ...DEFAULT_SESSION_OPTIONS, ...options }
+  const cookieOptions = Object.assign({}, DEFAULT_SESSION_OPTIONS, options)
   
   cookies().set({
     name: '__Host-session',
