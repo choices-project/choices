@@ -6,7 +6,6 @@
  */
 
 import { useState, useCallback } from 'react';
-import { withOptional } from '@/lib/util/objects';
 import type { 
   PollWizardData, 
   PollWizardState 
@@ -133,8 +132,7 @@ export function usePollWizard() {
   }, [validateStep, isCurrentStepValid]);
 
   const prevStep = useCallback(() => {
-    setWizardState(prev => ({
-      ...prev,
+    setWizardState(prev => Object.assign({}, prev, {
       currentStep: Math.max(prev.currentStep - 1, 0),
       errors: {}
     }));
@@ -155,64 +153,54 @@ export function usePollWizard() {
   }, []);
 
   const addOption = useCallback(() => {
-    setWizardState(prev => ({
-      ...prev,
-      data: {
-        ...prev.data,
+    setWizardState(prev => Object.assign({}, prev, {
+      data: Object.assign({}, prev.data, {
         options: [...prev.data.options, '']
-      }
+      })
     }));
   }, []);
 
   const removeOption = useCallback((index: number) => {
     setWizardState(prev => {
       const newOptions = prev.data.options.filter((_, i) => i !== index);
-      return {
-        ...prev,
-        data: {
-          ...prev.data,
+      return Object.assign({}, prev, {
+        data: Object.assign({}, prev.data, {
           options: newOptions
-        }
-      };
+        })
+      });
     });
   }, []);
 
   const updateOption = useCallback((index: number, value: string) => {
-    setWizardState(prev => ({
-      ...prev,
-      data: {
-        ...prev.data,
+    setWizardState(prev => Object.assign({}, prev, {
+      data: Object.assign({}, prev.data, {
         options: prev.data.options.map((option, i) => i === index ? value : option)
-      }
+      })
     }));
   }, []);
 
   const addTag = useCallback((tag: string) => {
-    setWizardState(prev => ({
-      ...prev,
-      data: {
-        ...prev.data,
+    setWizardState(prev => Object.assign({}, prev, {
+      data: Object.assign({}, prev.data, {
         tags: [...prev.data.tags, tag]
-      }
+      })
     }));
   }, []);
 
   const removeTag = useCallback((tagToRemove: string) => {
     setWizardState(prev => {
       const newTags = prev.data.tags.filter(tag => tag !== tagToRemove);
-      return {
-        ...prev,
-        data: {
-          ...prev.data,
+      return Object.assign({}, prev, {
+        data: Object.assign({}, prev.data, {
           tags: newTags
-        }
-      };
+        })
+      });
     });
   }, []);
 
   // Loading state
   const setLoading = useCallback((loading: boolean) => {
-    setWizardState(prev => ({ ...prev, isLoading: loading }));
+    setWizardState(prev => Object.assign({}, prev, { isLoading: loading }));
   }, []);
 
   // Reset wizard
@@ -228,7 +216,7 @@ export function usePollWizard() {
       // Validate final data before submission
       const finalErrors = validateStep(3, wizardState.data);
       if (Object.keys(finalErrors).length > 0) {
-        setWizardState(prev => ({ ...prev, errors: finalErrors }));
+        setWizardState(prev => Object.assign({}, prev, { errors: finalErrors }));
         return {
           success: false,
           error: 'Please fix validation errors before submitting'
@@ -267,8 +255,7 @@ export function usePollWizard() {
       const result = await response.json();
       
       // Update wizard state to mark as complete
-      setWizardState(prev => ({
-        ...prev,
+      setWizardState(prev => Object.assign({}, prev, {
         isComplete: true,
         progress: 100
       }));
@@ -281,8 +268,7 @@ export function usePollWizard() {
       const errorMessage = error instanceof Error ? error.message : 'Failed to create poll';
       
       // Update wizard state with error
-      setWizardState(prev => ({
-        ...prev,
+      setWizardState(prev => Object.assign({}, prev, {
         errors: { submit: errorMessage }
       }));
       
@@ -334,7 +320,7 @@ export function usePollWizard() {
   // Alias functions for compatibility
   const updateWizardData = updateData;
   const previousStep = prevStep;
-  const updateSettings = (updates: Partial<PollWizardData['settings']>) => updateData({ settings: withOptional(wizardState.data.settings, updates) });
+  const updateSettings = (updates: Partial<PollWizardData['settings']>) => updateData({ settings: Object.assign({}, wizardState.data.settings, updates) });
 
   return {
     wizardState,

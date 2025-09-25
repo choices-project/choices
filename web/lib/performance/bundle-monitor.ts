@@ -37,23 +37,21 @@ class BundleMonitor {
   private observers: ((metrics: BundleMetrics[]) => void)[] = [];
 
   constructor(thresholds?: Partial<BundleThresholds>) {
-    this.thresholds = {
+    this.thresholds = Object.assign({
       maxBundleSize: 512000, // 500KB
       maxChunkSize: 244000,  // 250KB
       warningBundleSize: 400000, // 400KB
       warningChunkSize: 200000,  // 200KB
-      ...thresholds,
-    };
+    }, thresholds);
   }
 
   /**
    * Add bundle metrics
    */
   addMetrics(metrics: Omit<BundleMetrics, 'timestamp'>): void {
-    const bundleMetrics: BundleMetrics = {
-      ...metrics,
+    const bundleMetrics: BundleMetrics = Object.assign({}, metrics, {
       timestamp: Date.now(),
-    };
+    });
 
     this.metrics.push(bundleMetrics);
     this.checkThresholds(bundleMetrics);

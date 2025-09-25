@@ -130,7 +130,7 @@ export class PerformanceMonitor {
   private isInitialized = false;
 
   constructor(config: Partial<PerformanceConfig> = {}) {
-    this.config = { ...DEFAULT_CONFIG, ...config };
+    this.config = Object.assign({}, DEFAULT_CONFIG, config);
     // Initialize supabase in constructor using dynamic import
     this.initializeSupabase();
   }
@@ -590,25 +590,23 @@ export async function trackQuery<T>(
     const result = await queryFn();
     const executionTime = Date.now() - startTime;
     
-    await performanceMonitor.trackQueryPerformance({
+    await performanceMonitor.trackQueryPerformance(Object.assign({
       queryHash,
       querySignature,
       queryType,
       executionTimeMs: executionTime,
-      ...context,
-    });
+    }, context));
     
     return result;
   } catch (error) {
     const executionTime = Date.now() - startTime;
     
-    await performanceMonitor.trackQueryPerformance({
+    await performanceMonitor.trackQueryPerformance(Object.assign({
       queryHash,
       querySignature,
       queryType,
       executionTimeMs: executionTime,
-      ...context,
-    });
+    }, context));
     
     throw error;
   }
@@ -629,27 +627,25 @@ export async function trackCache<T>(
     const result = await cacheFn();
     const responseTime = Date.now() - startTime;
     
-    await performanceMonitor.updateCachePerformance({
+    await performanceMonitor.updateCachePerformance(Object.assign({
       cacheName,
       cacheType,
       hitCount: 1,
       missCount: 0,
       avgResponseTimeMs: responseTime,
-      ...context,
-    });
+    }, context));
     
     return result;
   } catch (error) {
     const responseTime = Date.now() - startTime;
     
-    await performanceMonitor.updateCachePerformance({
+    await performanceMonitor.updateCachePerformance(Object.assign({
       cacheName,
       cacheType,
       hitCount: 0,
       missCount: 1,
       avgResponseTimeMs: responseTime,
-      ...context,
-    });
+    }, context));
     
     throw error;
   }
