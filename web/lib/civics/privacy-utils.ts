@@ -121,7 +121,7 @@ const COOKIE_NAME = 'cx_jurisdictions';
 export async function setJurisdictionCookie(payload: { state?: string; district?: string; county?: string }) {
   // Minimal sealed cookie using a signed value. Replace with iron-session/jose if you prefer AEAD.
   const secret = process.env.SESSION_SECRET ?? 'dev-session-secret-not-for-prod';
-  const body = JSON.stringify({ ...payload, v: 1, iat: Date.now() });
+  const body = JSON.stringify(Object.assign({}, payload, { v: 1, iat: Date.now() }));
   const sig = crypto.createHmac('sha256', secret).update(body).digest('hex');
   const value = Buffer.from(JSON.stringify({ body, sig })).toString('base64url');
 

@@ -56,15 +56,14 @@ export class CacheStrategyManager {
 
   constructor(redisClient: RedisClient, config?: Partial<StrategyConfig>) {
     this.redisClient = redisClient
-    this.config = {
+    this.config = Object.assign({}, {
       defaultTTL: 300, // 5 minutes
       maxTTL: 3600, // 1 hour
       minTTL: 60, // 1 minute
       writeThroughDelay: 100, // 100ms
       writeBehindBatchSize: 100,
       readThroughTimeout: 5000, // 5 seconds
-      ...config
-    }
+    }, config)
 
     // Start background processes
     this.startWriteBehindProcessor()
@@ -508,11 +507,10 @@ export class CacheStrategyManager {
   }> {
     const stats = await this.redisClient.getStats()
     
-    return {
-      ...stats,
+    return Object.assign({}, stats, {
       writeBehindQueueSize: this.writeBehindQueue.size,
       writeThroughQueueSize: this.writeThroughQueue.size
-    }
+    })
   }
 
   /**
