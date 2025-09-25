@@ -126,7 +126,7 @@ describe('VoteValidator', () => {
     });
 
     it('should reject poll data without id', async () => {
-      const invalidPoll = { ...mockPoll, id: '' };
+      const invalidPoll = Object.assign({}, mockPoll, { id: '' });
       const validation = await validator.validateVote(mockVoteData, invalidPoll, 'user-1');
       
       expect(validation.isValid).toBe(false);
@@ -134,7 +134,7 @@ describe('VoteValidator', () => {
     });
 
     it('should reject poll data without voting method', async () => {
-      const invalidPoll = { ...mockPoll, votingMethod: undefined as any };
+      const invalidPoll = Object.assign({}, mockPoll, { votingMethod: undefined as any });
       const validation = await validator.validateVote(mockVoteData, invalidPoll, 'user-1');
       
       expect(validation.isValid).toBe(false);
@@ -144,7 +144,7 @@ describe('VoteValidator', () => {
 
   describe('Business Rules Validation', () => {
     it('should reject vote for inactive poll', async () => {
-      const inactivePoll = { ...mockPoll, status: 'closed' as const };
+      const inactivePoll = Object.assign({}, mockPoll, { status: 'closed' as const });
       const validation = await validator.validateVote(mockVoteData, inactivePoll, 'user-1');
       
       expect(validation.isValid).toBe(false);
@@ -152,7 +152,7 @@ describe('VoteValidator', () => {
     });
 
     it('should reject vote for draft poll', async () => {
-      const draftPoll = { ...mockPoll, status: 'draft' as const };
+      const draftPoll = Object.assign({}, mockPoll, { status: 'draft' as const });
       const validation = await validator.validateVote(mockVoteData, draftPoll, 'user-1');
       
       expect(validation.isValid).toBe(false);
@@ -160,10 +160,9 @@ describe('VoteValidator', () => {
     });
 
     it('should reject vote for expired poll', async () => {
-      const expiredPoll = { 
-        ...mockPoll, 
+      const expiredPoll = Object.assign({}, mockPoll, { 
         endTime: new Date('2024-12-31T23:59:59Z') // Past date
-      };
+      });
       const validation = await validator.validateVote(mockVoteData, expiredPoll, 'user-1');
       
       expect(validation.isValid).toBe(false);
@@ -178,10 +177,9 @@ describe('VoteValidator', () => {
     });
 
     it('should reject vote for locked poll', async () => {
-      const lockedPoll = { 
-        ...mockPoll, 
+      const lockedPoll = Object.assign({}, mockPoll, { 
         lockedAt: new Date('2025-01-01T12:00:00Z') 
-      };
+      });
       const validation = await validator.validateVote(mockVoteData, lockedPoll, 'user-1');
       
       expect(validation.isValid).toBe(false);
@@ -246,10 +244,9 @@ describe('VoteValidator', () => {
         allowMultipleVotes: true
       };
       const { choice, ...approvalVoteData } = mockVoteData;
-      mockVoteData = {
-        ...approvalVoteData,
+      mockVoteData = Object.assign({}, approvalVoteData, {
         approvals: [0, 1]
-      };
+      });
     });
 
     it('should validate valid approval vote', async () => {
