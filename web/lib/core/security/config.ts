@@ -174,8 +174,7 @@ export const PRODUCTION_SECURITY_CONFIG: SecurityConfig = {
 /**
  * Development security configuration (more permissive)
  */
-export const DEVELOPMENT_SECURITY_CONFIG: SecurityConfig = {
-  ...PRODUCTION_SECURITY_CONFIG,
+export const DEVELOPMENT_SECURITY_CONFIG: SecurityConfig = Object.assign({}, PRODUCTION_SECURITY_CONFIG, {
   csp: {
     ...PRODUCTION_SECURITY_CONFIG.csp,
     'script-src': [
@@ -191,7 +190,7 @@ export const DEVELOPMENT_SECURITY_CONFIG: SecurityConfig = {
     ...PRODUCTION_SECURITY_CONFIG.privacy,
     logSensitiveData: true, // More logging in development
   },
-}
+})
 
 /**
  * Get security configuration based on environment
