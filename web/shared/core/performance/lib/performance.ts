@@ -55,7 +55,7 @@ class PerformanceMonitor {
       return result;
     } catch (error) {
       const duration = performance.now() - startTime;
-      this.recordMetric(name, duration, { ...metadata, error: true });
+      this.recordMetric(name, duration, Object.assign({}, metadata, { error: true }));
       throw error;
     }
   }

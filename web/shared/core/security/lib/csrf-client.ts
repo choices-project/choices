@@ -42,11 +42,10 @@ export function createCsrfHeaders(additionalHeaders: Record<string, string> = {}
     return additionalHeaders;
   }
 
-  return {
+  return Object.assign({
     'X-CSRF-Token': csrfToken,
     'Content-Type': 'application/json',
-    ...additionalHeaders,
-  };
+  }, additionalHeaders);
 }
 
 /**
@@ -97,9 +96,8 @@ export async function authenticatedFetch(
   // Add CSRF headers
   const headers = createCsrfHeaders(options.headers as Record<string, string>);
 
-  return fetch(url, {
-    ...options,
+  return fetch(url, Object.assign({}, options, {
     headers,
     credentials: 'include', // Include cookies
-  });
+  }));
 }

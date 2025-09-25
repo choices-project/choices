@@ -294,17 +294,16 @@ class PollService {
         throw new Error('User-generated polls are disabled');
       }
 
-      const newPoll: Poll = {
+      const newPoll: Poll = Object.assign({
         id: `user-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-        ...pollData,
-        status: 'active',
+        status: 'active' as const,
         total_votes: 0,
         participation: 0,
         sponsors: pollData.sponsors || [],
         created_at: new Date().toISOString(),
         is_mock: false,
         created_by: await this.getCurrentUserId()
-      };
+      }, pollData);
 
       // Add to local storage (will be replaced by API call)
       userPolls.push(newPoll);
@@ -586,7 +585,7 @@ class PollService {
   }
 
   getConfig() {
-    return { ...config };
+    return Object.assign({}, config);
   }
 }
 

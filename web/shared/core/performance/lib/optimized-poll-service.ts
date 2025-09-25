@@ -405,7 +405,7 @@ export const pollPerformanceUtils = {
         `${operationName}_time`,
         endTime - startTime,
         'ms',
-        { ...context, success: true }
+        Object.assign({}, context, { success: true })
       )
       
       return result
@@ -416,7 +416,7 @@ export const pollPerformanceUtils = {
         `${operationName}_time`,
         endTime - startTime,
         'ms',
-        { ...context, success: false, error: error instanceof Error ? error.message : String(error) }
+        Object.assign({}, context, { success: false, error: error instanceof Error ? error.message : String(error) })
       )
       
       throw error

@@ -479,7 +479,7 @@ export const privacyUtils = {
    */
   sanitizeForPrivacy(data: Record<string, unknown>, epsilon: number): Record<string, unknown> {
     // Remove or anonymize sensitive fields
-    const sanitized = { ...data }
+    const sanitized = Object.assign({}, data)
     delete sanitized.userId
     delete sanitized.email
     delete sanitized.ipAddress
