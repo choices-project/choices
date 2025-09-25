@@ -3,7 +3,7 @@
  * Integrates with database performance optimization tables and functions
  */
 
-import { logger } from '@/lib/logger';
+import { devLog } from '@/lib/logger';
 
 // Types for performance monitoring
 export type QueryPerformanceData = {
@@ -161,9 +161,9 @@ export class PerformanceMonitor {
       }
 
       this.isInitialized = true;
-      logger.info('✅ Performance monitor initialized');
+      devLog('✅ Performance monitor initialized');
     } catch (error) {
-      logger.error('❌ Failed to initialize performance monitor:', error instanceof Error ? error : new Error(String(error)));
+      devLog('❌ Failed to initialize performance monitor:', error instanceof Error ? error : new Error(String(error)));
       throw error;
     }
   }
@@ -196,7 +196,7 @@ export class PerformanceMonitor {
       });
 
       if (error) {
-        logger.error('Failed to track query performance:', error);
+        devLog('Failed to track query performance:', error);
         return null;
       }
 
@@ -207,7 +207,7 @@ export class PerformanceMonitor {
 
       return result as string | null;
     } catch (error) {
-      logger.error('Error tracking query performance:', error instanceof Error ? error : new Error(String(error)));
+      devLog('Error tracking query performance:', error instanceof Error ? error : new Error(String(error)));
       return null;
     }
   }
@@ -234,7 +234,7 @@ export class PerformanceMonitor {
       });
 
       if (error) {
-        logger.error('Failed to update index usage:', error);
+        devLog('Failed to update index usage:', error);
         return null;
       }
 
@@ -246,7 +246,7 @@ export class PerformanceMonitor {
 
       return result as string | null;
     } catch (error) {
-      logger.error('Error updating index usage:', error instanceof Error ? error : new Error(String(error)));
+      devLog('Error updating index usage:', error instanceof Error ? error : new Error(String(error)));
       return null;
     }
   }
@@ -273,7 +273,7 @@ export class PerformanceMonitor {
       });
 
       if (error) {
-        logger.error('Failed to update connection pool metrics:', error);
+        devLog('Failed to update connection pool metrics:', error);
         return null;
       }
 
@@ -285,7 +285,7 @@ export class PerformanceMonitor {
 
       return result as string | null;
     } catch (error) {
-      logger.error('Error updating connection pool metrics:', error instanceof Error ? error : new Error(String(error)));
+      devLog('Error updating connection pool metrics:', error instanceof Error ? error : new Error(String(error)));
       return null;
     }
   }
@@ -313,7 +313,7 @@ export class PerformanceMonitor {
       });
 
       if (error) {
-        logger.error('Failed to update cache performance:', error);
+        devLog('Failed to update cache performance:', error);
         return null;
       }
 
@@ -325,7 +325,7 @@ export class PerformanceMonitor {
 
       return result as string | null;
     } catch (error) {
-      logger.error('Error updating cache performance:', error instanceof Error ? error : new Error(String(error)));
+      devLog('Error updating cache performance:', error instanceof Error ? error : new Error(String(error)));
       return null;
     }
   }
@@ -345,13 +345,13 @@ export class PerformanceMonitor {
       });
 
       if (error) {
-        logger.error('Failed to run maintenance job:', error);
+        devLog('Failed to run maintenance job:', error);
         return null;
       }
 
       return result as string | null;
     } catch (error) {
-      logger.error('Error running maintenance job:', error instanceof Error ? error : new Error(String(error)));
+      devLog('Error running maintenance job:', error instanceof Error ? error : new Error(String(error)));
       return null;
     }
   }
@@ -368,13 +368,13 @@ export class PerformanceMonitor {
       const { data, error } = await this.supabase.rpc('get_performance_recommendations');
 
       if (error) {
-        logger.error('Failed to get performance recommendations:', error);
+        devLog('Failed to get performance recommendations:', error);
         return [];
       }
 
       return (data as PerformanceRecommendation[]) || [];
     } catch (error) {
-      logger.error('Error getting performance recommendations:', error instanceof Error ? error : new Error(String(error)));
+      devLog('Error getting performance recommendations:', error instanceof Error ? error : new Error(String(error)));
       return [];
     }
   }
@@ -391,13 +391,13 @@ export class PerformanceMonitor {
       const { data, error } = await this.supabase.rpc('cleanup_performance_data');
 
       if (error) {
-        logger.error('Failed to cleanup performance data:', error);
+        devLog('Failed to cleanup performance data:', error);
         return 0;
       }
 
       return (data as number) || 0;
     } catch (error) {
-      logger.error('Error cleaning up performance data:', error instanceof Error ? error : new Error(String(error)));
+      devLog('Error cleaning up performance data:', error instanceof Error ? error : new Error(String(error)));
       return 0;
     }
   }
@@ -432,13 +432,13 @@ export class PerformanceMonitor {
         .single();
 
       if (error) {
-        logger.error('Failed to add performance metric:', error);
+        devLog('Failed to add performance metric:', error);
         return null;
       }
 
       return (data?.id as string) || null;
     } catch (error) {
-      logger.error('Error adding performance metric:', error instanceof Error ? error : new Error(String(error)));
+      devLog('Error adding performance metric:', error instanceof Error ? error : new Error(String(error)));
       return null;
     }
   }
@@ -461,7 +461,7 @@ export class PerformanceMonitor {
         .gte('created_at', timeFilter);
 
       if (queryError) {
-        logger.error('Failed to get query stats:', queryError);
+        devLog('Failed to get query stats:', queryError);
         return null;
       }
 
@@ -472,7 +472,7 @@ export class PerformanceMonitor {
         .gte('updated_at', timeFilter);
 
       if (cacheError) {
-        logger.error('Failed to get cache stats:', cacheError);
+        devLog('Failed to get cache stats:', cacheError);
         return null;
       }
 
@@ -494,7 +494,7 @@ export class PerformanceMonitor {
 
       return stats;
     } catch (error) {
-      logger.error('Error getting performance stats:', error instanceof Error ? error : new Error(String(error)));
+      devLog('Error getting performance stats:', error instanceof Error ? error : new Error(String(error)));
       return null;
     }
   }
@@ -518,9 +518,9 @@ export class PerformanceMonitor {
         jobType: 'analyze',
       });
 
-      logger.info('✅ Automated maintenance completed');
+      devLog('✅ Automated maintenance completed');
     } catch (error) {
-      logger.error('❌ Automated maintenance failed:', error instanceof Error ? error : new Error(String(error)));
+      devLog('❌ Automated maintenance failed:', error instanceof Error ? error : new Error(String(error)));
     }
   }
 
@@ -549,22 +549,22 @@ export class PerformanceMonitor {
   }
 
   private async alertSlowQuery(data: QueryPerformanceData): Promise<void> {
-    logger.warn(`🚨 Slow query detected: ${data.querySignature} (${data.executionTimeMs}ms)`);
+    devLog(`🚨 Slow query detected: ${data.querySignature} (${data.executionTimeMs}ms)`);
     // In production, this would send to your alerting system
   }
 
   private async alertLowIndexEfficiency(data: IndexUsageData, efficiency: number): Promise<void> {
-    logger.warn(`🚨 Low index efficiency: ${data.indexName} on ${data.tableName} (${(efficiency * 100).toFixed(1)}%)`);
+    devLog(`🚨 Low index efficiency: ${data.indexName} on ${data.tableName} (${(efficiency * 100).toFixed(1)}%)`);
     // In production, this would send to your alerting system
   }
 
   private async alertHighConnectionUtilization(data: ConnectionPoolData, utilization: number): Promise<void> {
-    logger.warn(`🚨 High connection utilization: ${data.poolName} (${(utilization * 100).toFixed(1)}%)`);
+    devLog(`🚨 High connection utilization: ${data.poolName} (${(utilization * 100).toFixed(1)}%)`);
     // In production, this would send to your alerting system
   }
 
   private async alertLowCacheHitRate(data: CachePerformanceData, hitRate: number): Promise<void> {
-    logger.warn(`🚨 Low cache hit rate: ${data.cacheName} (${(hitRate * 100).toFixed(1)}%)`);
+    devLog(`🚨 Low cache hit rate: ${data.cacheName} (${(hitRate * 100).toFixed(1)}%)`);
     // In production, this would send to your alerting system
   }
 }

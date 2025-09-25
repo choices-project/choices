@@ -3,7 +3,7 @@
  * Core functionality without complex type issues
  */
 
-import { logger } from '@/lib/logger';
+import { devLog } from '@/lib/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 // Basic types for performance monitoring
@@ -109,9 +109,9 @@ export class SimplePerformanceMonitor {
       }
 
       this.isInitialized = true;
-      logger.info('✅ Performance monitor initialized');
+      devLog('✅ Performance monitor initialized');
     } catch (error) {
-      logger.error('❌ Failed to initialize performance monitor:', error instanceof Error ? error : new Error(String(error)));
+      devLog('❌ Failed to initialize performance monitor:', error instanceof Error ? error : new Error(String(error)));
       throw error;
     }
   }
@@ -145,18 +145,18 @@ export class SimplePerformanceMonitor {
       });
 
       if (error) {
-        logger.error('Failed to track query performance:', error);
+        devLog('Failed to track query performance:', error);
         return null;
       }
 
       // Check for slow query alerts
       if (data.executionTimeMs > this.config.alertThresholds.slowQueryMs) {
-        logger.warn(`🚨 Slow query detected: ${data.querySignature} (${data.executionTimeMs}ms)`);
+        devLog(`🚨 Slow query detected: ${data.querySignature} (${data.executionTimeMs}ms)`);
       }
 
       return result as string | null;
     } catch (error) {
-      logger.error('Error tracking query performance:', error instanceof Error ? error : new Error(String(error)));
+      devLog('Error tracking query performance:', error instanceof Error ? error : new Error(String(error)));
       return null;
     }
   }
@@ -185,19 +185,19 @@ export class SimplePerformanceMonitor {
       });
 
       if (error) {
-        logger.error('Failed to update cache performance:', error);
+        devLog('Failed to update cache performance:', error);
         return null;
       }
 
       // Check for low hit rate alerts
       const hitRate = (data.hitCount + data.missCount) > 0 ? data.hitCount / (data.hitCount + data.missCount) : 0;
       if (hitRate < this.config.alertThresholds.lowCacheHitRate) {
-        logger.warn(`🚨 Low cache hit rate: ${data.cacheName} (${(hitRate * 100).toFixed(1)}%)`);
+        devLog(`🚨 Low cache hit rate: ${data.cacheName} (${(hitRate * 100).toFixed(1)}%)`);
       }
 
       return result as string | null;
     } catch (error) {
-      logger.error('Error updating cache performance:', error instanceof Error ? error : new Error(String(error)));
+      devLog('Error updating cache performance:', error instanceof Error ? error : new Error(String(error)));
       return null;
     }
   }
@@ -218,13 +218,13 @@ export class SimplePerformanceMonitor {
       });
 
       if (error) {
-        logger.error('Failed to run maintenance job:', error);
+        devLog('Failed to run maintenance job:', error);
         return null;
       }
 
       return result as string | null;
     } catch (error) {
-      logger.error('Error running maintenance job:', error instanceof Error ? error : new Error(String(error)));
+      devLog('Error running maintenance job:', error instanceof Error ? error : new Error(String(error)));
       return null;
     }
   }
@@ -242,13 +242,13 @@ export class SimplePerformanceMonitor {
       const { data, error } = await supabaseClient.rpc('get_performance_recommendations');
 
       if (error) {
-        logger.error('Failed to get performance recommendations:', error);
+        devLog('Failed to get performance recommendations:', error);
         return [];
       }
 
       return (data as PerformanceRecommendation[]) || [];
     } catch (error) {
-      logger.error('Error getting performance recommendations:', error instanceof Error ? error : new Error(String(error)));
+      devLog('Error getting performance recommendations:', error instanceof Error ? error : new Error(String(error)));
       return [];
     }
   }
@@ -266,13 +266,13 @@ export class SimplePerformanceMonitor {
       const { data, error } = await supabaseClient.rpc('cleanup_performance_data');
 
       if (error) {
-        logger.error('Failed to cleanup performance data:', error);
+        devLog('Failed to cleanup performance data:', error);
         return 0;
       }
 
       return (data as number) || 0;
     } catch (error) {
-      logger.error('Error cleaning up performance data:', error instanceof Error ? error : new Error(String(error)));
+      devLog('Error cleaning up performance data:', error instanceof Error ? error : new Error(String(error)));
       return 0;
     }
   }
@@ -297,7 +297,7 @@ export class SimplePerformanceMonitor {
         .gte('created_at', timeFilter);
 
       if (queryError) {
-        logger.error('Failed to get query stats:', queryError);
+        devLog('Failed to get query stats:', queryError);
         return null;
       }
 
@@ -308,7 +308,7 @@ export class SimplePerformanceMonitor {
         .gte('updated_at', timeFilter);
 
       if (cacheError) {
-        logger.error('Failed to get cache stats:', cacheError);
+        devLog('Failed to get cache stats:', cacheError);
         return null;
       }
 
@@ -330,7 +330,7 @@ export class SimplePerformanceMonitor {
 
       return stats;
     } catch (error) {
-      logger.error('Error getting performance stats:', error instanceof Error ? error : new Error(String(error)));
+      devLog('Error getting performance stats:', error instanceof Error ? error : new Error(String(error)));
       return null;
     }
   }
@@ -348,9 +348,9 @@ export class SimplePerformanceMonitor {
       // Run analyze job
       await this.runMaintenanceJob('automated_analyze', 'analyze');
 
-      logger.info('✅ Automated maintenance completed');
+      devLog('✅ Automated maintenance completed');
     } catch (error) {
-      logger.error('❌ Automated maintenance failed:', error instanceof Error ? error : new Error(String(error)));
+      devLog('❌ Automated maintenance failed:', error instanceof Error ? error : new Error(String(error)));
     }
   }
 

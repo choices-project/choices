@@ -5,7 +5,7 @@
  * quality checks, deduplication, and consistency validation.
  */
 
-import { logger } from '@/lib/logger';
+import { devLog } from '@/lib/logger';
 import type { 
   NormalizedRepresentative,
   NormalizedBill 
@@ -248,7 +248,7 @@ export class DataValidationPipeline {
             }
           }
         } catch (error) {
-          logger.error('Validation rule failed', { ruleName, error });
+          devLog('Validation rule failed', { ruleName, error });
         }
       }
     }
@@ -310,7 +310,7 @@ export class DataValidationPipeline {
             }
           }
         } catch (error) {
-          logger.error('Validation rule failed', { ruleName, error });
+          devLog('Validation rule failed', { ruleName, error });
         }
       }
     }
