@@ -97,7 +97,7 @@ export class DatabasePerformanceMonitor {
   private isMonitoring: boolean = false
 
   constructor(thresholds?: Partial<PerformanceThresholds>) {
-    this.thresholds = { ...this.thresholds, ...thresholds }
+    this.thresholds = Object.assign({}, this.thresholds, thresholds)
     this.initializeSupabase()
   }
 
@@ -553,11 +553,10 @@ export class DatabasePerformanceMonitor {
    * Add performance recommendation
    */
   private addRecommendation(recommendation: Omit<PerformanceRecommendation, 'id' | 'timestamp'>): void {
-    const rec: PerformanceRecommendation = {
-      ...recommendation,
+    const rec: PerformanceRecommendation = Object.assign({}, recommendation, {
       id: `rec_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       timestamp: Date.now()
-    }
+    })
     
     // Check if similar recommendation already exists
     const existingRec = this.recommendations.find(r => 
@@ -699,7 +698,7 @@ export class DatabasePerformanceMonitor {
    * Update performance thresholds
    */
   updateThresholds(thresholds: Partial<PerformanceThresholds>): void {
-    this.thresholds = { ...this.thresholds, ...thresholds }
+    this.thresholds = Object.assign({}, this.thresholds, thresholds)
     logger.info('Performance thresholds updated', this.thresholds)
   }
 }
