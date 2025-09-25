@@ -78,10 +78,9 @@ export function createSecureServerAction<TInput, TOutput>(
       try {
         // Validate input if schema provided
         if (options.validation) {
-          const validatedInput = options.validation.parse({
-            ...input,
+          const validatedInput = options.validation.parse(Object.assign({}, input, {
             idempotencyKey
-          })
+          }))
           input = validatedInput as TInput
         }
 
@@ -261,14 +260,13 @@ export function logSecurityEvent(
 ) {
   const securityConfig = getSecurityConfig()
   
-  logger.info(`Security Event: ${event}`, {
-    ...details,
+  logger.info(`Security Event: ${event}`, Object.assign({}, details, {
     userId: context.userId,
     userRole: context.userRole,
     ipAddress: securityConfig.privacy.anonymizeIPs ? 'anonymized' : context.ipAddress,
     userAgent: securityConfig.privacy.logSensitiveData ? context.userAgent : 'anonymized',
     timestamp: new Date().toISOString()
-  })
+  }))
 }
 
 /**
