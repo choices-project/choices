@@ -5,6 +5,8 @@
  * It replaces the old @/shared/core/privacy/lib/differential-privacy imports.
  */
 
+import { withOptional } from '@/lib/util/objects';
+
 export type PrivateQueryResult<T = any> = {
   data: T;
   privacyBudget: number;
@@ -97,7 +99,7 @@ export class DifferentialPrivacyManager {
    * Update privacy configuration
    */
   updateConfig(newConfig: Partial<DifferentialPrivacyConfig>): void {
-    this.config = { ...this.config, ...newConfig };
+    this.config = withOptional(this.config, newConfig);
   }
 
   /**

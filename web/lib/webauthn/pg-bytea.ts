@@ -8,6 +8,8 @@
  * backward compatibility while avoiding code duplication.
  */
 
+import { withOptional } from '@/lib/util/objects';
+
 import { devLog } from '@/lib/logger';
 import {
   arrayBufferToBytea,
@@ -91,7 +93,7 @@ export function logCredentialOperation(
   };
 
   if (error) {
-    devLog('WebAuthn credential operation failed:', { ...logData, error: error.message });
+    devLog('WebAuthn credential operation failed:', withOptional(logData, { error: error.message }));
   } else {
     devLog('WebAuthn credential operation:', logData);
   }

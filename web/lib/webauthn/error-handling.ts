@@ -5,6 +5,8 @@
  * Maps WebAuthn-specific errors to user-friendly messages and proper HTTP status codes.
  */
 
+import { withOptional } from '@/lib/util/objects';
+
 // Local SSR guard to avoid restricted imports and missing exports
 const isServer = (): boolean => typeof window === 'undefined';
 
@@ -341,11 +343,11 @@ export function logWebAuthnError(
     message: error.message,
     statusCode: error.statusCode,
     timestamp: new Date().toISOString(),
-    context: {
+    context: withOptional({}, {
       ...context,
       credentialId: context?.credentialId ? 
         context.credentialId.substring(0, 8) + '...' : undefined
-    },
+    }),
     details: error.details
   };
 

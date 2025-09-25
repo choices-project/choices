@@ -12,6 +12,8 @@
 // - Public centroids system
 // - Opt-in discovery mechanisms
 // - Cross-demographic insights with privacy protection
+
+import { withOptional } from '@/lib/util/objects';
 // 
 // Created: January 15, 2025
 // Status: Phase 2 Implementation
@@ -387,11 +389,10 @@ export class PrivacyAwareSocialDiscoveryManager {
     const noise = this.laplaceNoise(0.8);
     const noisyCount = Math.max(0, Math.round(insight.userCount + noise));
     
-    return {
-      ...insight,
+    return withOptional(insight, {
       userCount: noisyCount,
       privacyProtected: true
-    };
+    });
   }
 
   /**
@@ -487,8 +488,8 @@ export class PrivacyAwareSocialDiscoveryManager {
   private calculateSimilarity(interests1: string[], interests2: string[]): number {
     const set1 = new Set(interests1);
     const set2 = new Set(interests2);
-    const intersection = new Set([...set1].filter(x => set2.has(x)));
-    const union = new Set([...set1, ...set2]);
+    const intersection = new Set(Array.from(set1).filter(x => set2.has(x)));
+    const union = new Set([...Array.from(set1), ...Array.from(set2)]);
     
     return intersection.size / union.size;
   }

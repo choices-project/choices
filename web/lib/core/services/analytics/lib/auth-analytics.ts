@@ -556,7 +556,7 @@ export class AuthAnalytics {
 
   // Import events (for data migration)
   importEvents(events: AuthEvent[]): void {
-    this.events.push(...events)
+    this.events.push(...events.filter(event => event !== undefined))
   }
 }
 

@@ -191,11 +191,10 @@ export class DataRetentionManager {
       throw new Error(`Retention policy not found for data type: ${dataType}`);
     }
 
-    const updatedPolicy: RetentionPolicy = {
-      ...existingPolicy,
+    const updatedPolicy: RetentionPolicy = withOptional(existingPolicy, {
       ...policy,
       lastUpdated: new Date()
-    };
+    });
 
     this.policies.set(dataType, updatedPolicy);
     

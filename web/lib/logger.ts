@@ -5,6 +5,8 @@
  * This fixes all TS2554 (argument count mismatch) errors without changing call sites.
  */
 
+import { withOptional } from '@/lib/util/objects';
+
 type Meta = Record<string, unknown> | undefined;
 
 function coerce(messageOrErr: unknown, maybeMeta?: unknown) {
@@ -19,11 +21,11 @@ function logWith(level: 'debug'|'info'|'warn'|'error', ...args: unknown[]) {
   // Accept 1..n args and fold extras into meta for compatibility
   const [first, second, ...rest] = args;
   const base = coerce(first, second);
-  const meta = { ...(base.meta || {}), ...(rest.length ? { extra: rest } : {}) };
+  const meta = withOptional({}, { ...(base.meta || {}), ...(rest.length ? { extra: rest } : {}) });
 
   // Replace with your structured logger if you have one
   // eslint-disable-next-line no-console
-  console[level]({ level, msg: base.msg, ...('err' in (meta || {}) ? {} : {}), meta });
+  console[level](withOptional({ level, msg: base.msg }, { ...('err' in (meta || {}) ? {} : {}), meta }));
 }
 
 export const logger = {

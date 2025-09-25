@@ -13,6 +13,8 @@
 // - K-anonymity enforcement with configurable thresholds
 // - Privacy-aware data aggregation
 // - Budget allocation and monitoring
+
+import { withOptional } from '@/lib/util/objects';
 // 
 // Created: January 15, 2025
 // Status: Phase 2 Implementation
@@ -310,22 +312,20 @@ export class DifferentialPrivacyManager {
           // Apply differential privacy to the count
           const dpResult = this.dpCount(value.count, this.config.defaultEpsilon);
           
-          filtered[key] = {
-            ...value,
+          filtered[key] = withOptional(value, {
             count: dpResult.noisyCount,
             originalCount: value.count,
             privacyProtected: true,
             epsilon: dpResult.epsilon,
             confidence: dpResult.confidence
-          };
+          });
         } else {
           // Suppress the breakdown
-          filtered[key] = {
-            ...value,
+          filtered[key] = withOptional(value, {
             count: 0,
             suppressed: true,
             reason: kAnonymityResult.reason
-          };
+          });
         }
       } else {
         filtered[key] = value;

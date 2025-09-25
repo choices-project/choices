@@ -10,7 +10,7 @@
  */
 export function arrayBufferToBase64url(buffer: ArrayBuffer): string {
   const uint8Array = new Uint8Array(buffer);
-  const base64 = btoa(String.fromCharCode(...uint8Array));
+  const base64 = btoa(String.fromCharCode.apply(null, Array.from(uint8Array)));
   
   // Convert to base64url format
   return base64
