@@ -8,6 +8,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { logger } from '@/lib/logger';
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
+import { withOptional } from '@/lib/util/objects';
 
 // Import PWA managers
 import { 
@@ -101,15 +102,14 @@ export function usePWA(): PWAStatus & PWAActions {
   const initializePWA = useCallback(async () => {
     try {
       console.log('usePWA: Starting initialization...');
-      setStatus(prev => ({ ...prev, loading: true, error: null }));
+      setStatus(prev => withOptional(prev, { loading: true, error: null }));
 
       // Check if PWA feature is enabled
       const pwaEnabled = isFeatureEnabled('PWA');
       console.log('usePWA: PWA feature enabled:', pwaEnabled);
       if (!pwaEnabled) {
         console.log('usePWA: PWA feature is disabled, setting status');
-        setStatus(prev => ({
-          ...prev,
+        setStatus(prev => withOptional(prev, {
           isEnabled: false,
           loading: false,
           error: 'PWA feature is disabled'
@@ -148,15 +148,11 @@ export function usePWA(): PWAStatus & PWAActions {
       };
       
       console.log('usePWA: Setting final status:', finalStatus);
-      setStatus(prev => ({
-        ...prev,
-        ...finalStatus
-      }));
+      setStatus(prev => withOptional(prev, finalStatus));
 
     } catch (error) {
       logger.error('PWA: Initialization failed:', error);
-      setStatus(prev => ({
-        ...prev,
+      setStatus(prev => withOptional(prev, {
         loading: false,
         error: error instanceof Error ? error.message : 'Unknown error'
       }));
@@ -170,8 +166,7 @@ export function usePWA(): PWAStatus & PWAActions {
       
       // Update status after installation attempt
       const installationStatus = pwaInstallationManager.getStatus();
-      setStatus(prev => ({
-        ...prev,
+      setStatus(prev => withOptional(prev, {
         installation: installationStatus
       }));
       
@@ -223,8 +218,7 @@ export function usePWA(): PWAStatus & PWAActions {
       
       // Update offline data count
       const offlineVotes = await getOfflineVotesCount();
-      setStatus(prev => ({
-        ...prev,
+      setStatus(prev => withOptional(prev, {
         offlineVotes,
         hasOfflineData: offlineVotes > 0
       }));
@@ -261,8 +255,7 @@ export function usePWA(): PWAStatus & PWAActions {
       const permission = await Notification.requestPermission();
       const enabled = permission === 'granted';
       
-      setStatus(prev => ({
-        ...prev,
+      setStatus(prev => withOptional(prev, {
         notificationsPermission: permission,
         notificationsEnabled: enabled
       }));
@@ -326,7 +319,7 @@ export function usePWA(): PWAStatus & PWAActions {
   useEffect(() => {
     // Online/offline status
     const handleOnline = () => {
-      setStatus(prev => ({ ...prev, isOnline: true }));
+      setStatus(prev => withOptional(prev, { isOnline: true }));
       // Auto-sync when coming back online
       syncOfflineData().catch(error => {
         logger.error('PWA: Auto-sync failed:', error);
@@ -334,17 +327,17 @@ export function usePWA(): PWAStatus & PWAActions {
     };
 
     const handleOffline = () => {
-      setStatus(prev => ({ ...prev, isOnline: false }));
+      setStatus(prev => withOptional(prev, { isOnline: false }));
     };
 
     // Installation status changes
     const unsubscribeInstallation = pwaInstallationManager.subscribe((installationStatus) => {
-      setStatus(prev => ({ ...prev, installation: installationStatus }));
+      setStatus(prev => withOptional(prev, { installation: installationStatus }));
     });
 
     // Service worker status changes
     const unsubscribeServiceWorker = serviceWorkerManager.subscribe((serviceWorkerStatus) => {
-      setStatus(prev => ({ ...prev, serviceWorker: serviceWorkerStatus }));
+      setStatus(prev => withOptional(prev, { serviceWorker: serviceWorkerStatus }));
     });
 
     // Add event listeners

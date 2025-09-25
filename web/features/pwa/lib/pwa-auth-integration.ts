@@ -7,6 +7,7 @@
 
 import { isFeatureEnabled } from './feature-flags';
 import { devLog } from '@/lib/logger';
+import { withOptional } from '@/lib/util/objects';
 
 export type PWAUser = {
   stableId: string;
@@ -102,11 +103,10 @@ export class PWAAuth {
       return null;
     }
 
-    this.currentUser = {
-      ...this.currentUser,
+    this.currentUser = withOptional(this.currentUser, {
       ...updates,
       lastActive: new Date()
-    };
+    });
 
     this.saveUserToStorage(this.currentUser);
     return this.currentUser;

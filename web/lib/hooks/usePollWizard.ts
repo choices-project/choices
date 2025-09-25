@@ -217,7 +217,7 @@ export function usePollWizard() {
     } finally {
       setLoading(false);
     }
-  }, [setLoading]);
+  }, []);
 
   // Progress calculation
   const progress = [

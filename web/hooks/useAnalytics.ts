@@ -96,7 +96,7 @@ export function useAnalytics(options: UseAnalyticsOptions = {}): UseAnalyticsRet
       setLoading(true);
       setError(null);
 
-      const requestFilters = { ...filters, ...customFilters };
+      const requestFilters = withOptional(filters, customFilters);
       const queryParams = new URLSearchParams({
         period: requestFilters.dateRange || '7d'
       });

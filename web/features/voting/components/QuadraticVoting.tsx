@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { CheckCircle, AlertCircle, Info, DollarSign, TrendingUp, TrendingDown } from 'lucide-react'
+import { withOptional } from '@/lib/util/objects'
 
 type PollOption = {
   id: string
@@ -74,8 +75,7 @@ export default function QuadraticVoting({
     }
 
     setError(null)
-    setAllocations(prev => ({
-      ...prev,
+    setAllocations(prev => withOptional(prev, {
       [optionId]: Math.max(0, credits)
     }))
   }

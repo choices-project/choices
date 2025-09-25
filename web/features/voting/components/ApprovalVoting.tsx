@@ -49,7 +49,7 @@ export default function ApprovalVoting({
     setApprovedOptions(prev => 
       prev.includes(optionId)
         ? prev.filter(id => id !== optionId)
-        : [...prev, optionId]
+        : [...prev, optionId].filter(id => id !== undefined)
     )
   }
 

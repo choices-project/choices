@@ -241,7 +241,7 @@ export default function PollTemplatesPage() {
     return matchesSearch && matchesCategory;
   });
 
-  const sortedTemplates = [...filteredTemplates].sort((a, b) => {
+  const sortedTemplates = [...filteredTemplates].filter(template => template !== undefined).sort((a, b) => {
     let comparison = 0;
     
     switch (sortBy) {
