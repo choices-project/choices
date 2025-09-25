@@ -6,7 +6,7 @@ import { makeWhen } from './helpers/supabase-when';
 export function getMS() {
   const ms = makeMockSupabase(JestMock);   // explicit, stable
   const when = makeWhen(ms.__registerRoute);
-  return { ...ms, when };
+  return Object.assign({}, ms, { when });
 }
 
 afterEach(() => {

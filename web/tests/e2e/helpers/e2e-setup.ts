@@ -75,12 +75,11 @@ export async function cleanupE2ETestData(_testData: E2ETestData): Promise<void> 
  */
 export function createTestUser(overrides: Partial<E2ETestUser> = {}): E2ETestUser {
   const timestamp = Date.now();
-  return {
+  return Object.assign({
     email: `test-${timestamp}@example.com`,
     username: `testuser${timestamp}`,
     password: 'TestPassword123!',
-    ...overrides
-  };
+  }, overrides);
 }
 
 /**
@@ -88,15 +87,14 @@ export function createTestUser(overrides: Partial<E2ETestUser> = {}): E2ETestUse
  */
 export function createTestPoll(overrides: Partial<E2ETestPoll> = {}): E2ETestPoll {
   const timestamp = Date.now();
-  return {
+  return Object.assign({
     title: `Test Poll ${timestamp}`,
     description: `This is a test poll created at ${new Date().toISOString()}`,
     options: ['Option 1', 'Option 2', 'Option 3', 'Option 4'],
     category: 'general',
     privacy: 'public',
     votingMethod: 'single',
-    ...overrides
-  };
+  }, overrides);
 }
 
 /**

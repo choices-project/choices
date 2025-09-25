@@ -198,10 +198,9 @@ export class PrivacyDataManager {
         
         const { error } = await this.supabaseClient
           .from('user_profiles_encrypted')
-          .upsert({
+          .upsert(Object.assign({
             user_id: user.id,
-            ...updateData
-          });
+          }, updateData));
 
         if (error) throw error;
       } else {
@@ -210,10 +209,9 @@ export class PrivacyDataManager {
         
         const { error } = await this.supabaseClient
           .from('private_user_data')
-          .upsert({
+          .upsert(Object.assign({
             user_id: user.id,
-            ...updateData
-          });
+          }, updateData));
 
         if (error) throw error;
       }

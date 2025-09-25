@@ -3,11 +3,10 @@ import type { State } from './supabase-mock';
 export type Register = (m: (s: State) => boolean, r: () => any) => void;
 
 function normalize(s: State) {
-  return {
-    ...s,
+  return Object.assign({}, s, {
     selects: s.selects ?? '*',
     filters: [...s.filters].sort((a,b) => a.column.localeCompare(b.column)),
-  };
+  });
 }
 
 export type MockBuilder = {

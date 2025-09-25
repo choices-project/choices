@@ -293,10 +293,9 @@ export class VirtualList<T> {
   
   constructor(items: T[], options: VirtualListOptions) {
     this.items = items;
-    this.options = {
+    this.options = Object.assign({
       overscan: 5,
-      ...options,
-    };
+    }, options);
   }
   
   getVisibleRange(): { start: number; end: number } {
