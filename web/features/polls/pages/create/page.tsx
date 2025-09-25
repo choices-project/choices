@@ -52,7 +52,12 @@ export default function CreatePollPage() {
       if (result.success) {
         devLog('Poll created successfully:', result.pollId);
         alert(`Poll created successfully! ID: ${result.pollId}`);
-        // TODO: Navigate to the created poll or dashboard
+        // Navigate to the created poll
+        if (result.pollId) {
+          window.location.href = `/polls/${result.pollId}`;
+        } else {
+          window.location.href = '/dashboard';
+        }
       } else {
         devLog('Failed to create poll:', result.error);
         alert(`Failed to create poll: ${result.error}`);
