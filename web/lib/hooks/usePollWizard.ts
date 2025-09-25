@@ -279,7 +279,7 @@ export function usePollWizard() {
     } finally {
       setLoading(false);
     }
-  }, [wizardState.data, validateStep]);
+  }, [wizardState.data, validateStep, setLoading]);
 
   // Progress calculation with dynamic error detection
   const progress = [

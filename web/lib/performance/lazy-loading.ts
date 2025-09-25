@@ -293,7 +293,7 @@ export function useLazyLoading<T>(
     } finally {
       setLoading(false);
     }
-  }, deps);
+  }, [importFn, ...deps]);
   
   React.useEffect(() => {
     load();
