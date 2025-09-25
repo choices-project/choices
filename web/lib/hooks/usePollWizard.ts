@@ -6,6 +6,7 @@
  */
 
 import { useState, useCallback } from 'react';
+import { withOptional } from '@/lib/util/objects';
 import type { 
   PollWizardData, 
   PollWizardState 
@@ -65,8 +66,8 @@ export function usePollWizard() {
         break;
       
       case 1: // Options
-        const validOptions = data.options.filter(option => option.trim().length > 0);
-        if (validOptions.length < 2) {
+        const step1ValidOptions = data.options.filter(option => option.trim().length > 0);
+        if (step1ValidOptions.length < 2) {
           errors.options = 'At least 2 options are required';
         }
         break;
@@ -78,17 +79,42 @@ export function usePollWizard() {
         break;
       
       case 3: // Review
-        // Final validation
-        data.options.forEach((option, index) => {
-          if (!option.trim()) {
-            errors[`option_${index}`] = 'Empty options are not allowed';
-          }
-        });
+        // Final validation - comprehensive check
+        const validOptions = data.options.filter(option => option.trim().length > 0);
+        if (validOptions.length < 2) {
+          errors.options = 'At least 2 valid options are required';
+        }
+        
+        // Check for duplicate options
+        const uniqueOptions = new Set(validOptions.map(opt => opt.toLowerCase().trim()));
+        if (uniqueOptions.size !== validOptions.length) {
+          errors.options = 'Duplicate options are not allowed';
+        }
+        
+        // Validate title length
+        if (data.title.trim().length < 3) {
+          errors.title = 'Title must be at least 3 characters';
+        }
+        if (data.title.trim().length > 200) {
+          errors.title = 'Title must be less than 200 characters';
+        }
+        
+        // Validate description length
+        if (data.description.trim().length > 1000) {
+          errors.description = 'Description must be less than 1000 characters';
+        }
+        
         break;
     }
 
     return errors;
   }, []);
+
+  // Helper function to check if current step is valid
+  const isCurrentStepValid = useCallback((step: number, data: PollWizardData): boolean => {
+    const errors = validateStep(step, data);
+    return Object.keys(errors).length === 0;
+  }, [validateStep]);
 
   // Navigation functions
   const nextStep = useCallback(() => {
@@ -101,10 +127,11 @@ export function usePollWizard() {
       return {
         ...prev,
         currentStep: Math.min(prev.currentStep + 1, prev.totalSteps - 1),
-        errors: {}
+        errors: {},
+        canProceed: prev.currentStep + 1 < prev.totalSteps - 1 || isCurrentStepValid(prev.currentStep + 1, prev.data)
       };
     });
-  }, [validateStep]);
+  }, [validateStep, isCurrentStepValid]);
 
   const prevStep = useCallback(() => {
     setWizardState(prev => ({
@@ -201,36 +228,116 @@ export function usePollWizard() {
     setLoading(true);
     
     try {
-      // TODO: Implement actual poll submission
-      // This is a placeholder implementation
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Validate final data before submission
+      const finalErrors = validateStep(3, wizardState.data);
+      if (Object.keys(finalErrors).length > 0) {
+        setWizardState(prev => ({ ...prev, errors: finalErrors }));
+        return {
+          success: false,
+          error: 'Please fix validation errors before submitting'
+        };
+      }
+
+      // Prepare poll data for API
+      const pollData = {
+        title: wizardState.data.title.trim(),
+        description: wizardState.data.description.trim(),
+        options: wizardState.data.options.filter(option => option.trim().length > 0),
+        voting_method: wizardState.data.settings.votingMethod,
+        privacy_level: wizardState.data.privacyLevel,
+        category: wizardState.data.category,
+        allowMultipleVotes: wizardState.data.settings.allowMultipleVotes,
+        showResults: wizardState.data.settings.showResults,
+        allowComments: wizardState.data.settings.allowComments,
+        tags: wizardState.data.tags,
+        isTemplate: wizardState.data.isTemplate
+      };
+
+      // Submit to API
+      const response = await fetch('/api/polls', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(pollData)
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `HTTP ${response.status}: Failed to create poll`);
+      }
+
+      const result = await response.json();
+      
+      // Update wizard state to mark as complete
+      setWizardState(prev => ({
+        ...prev,
+        isComplete: true,
+        progress: 100
+      }));
       
       return {
         success: true,
-        pollId: `poll_${Date.now()}`
+        pollId: result.id
       };
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to create poll';
+      
+      // Update wizard state with error
+      setWizardState(prev => ({
+        ...prev,
+        errors: { submit: errorMessage }
+      }));
+      
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Failed to create poll'
+        error: errorMessage
       };
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [wizardState.data, validateStep]);
 
-  // Progress calculation
+  // Progress calculation with dynamic error detection
   const progress = [
-    { step: 0, title: 'Basic Information', isCompleted: wizardState.currentStep > 0, isCurrent: wizardState.currentStep === 0, hasError: false, estimatedTime: 2 },
-    { step: 1, title: 'Poll Options', isCompleted: wizardState.currentStep > 1, isCurrent: wizardState.currentStep === 1, hasError: false, estimatedTime: 2 },
-    { step: 2, title: 'Category & Tags', isCompleted: wizardState.currentStep > 2, isCurrent: wizardState.currentStep === 2, hasError: false, estimatedTime: 2 },
-    { step: 3, title: 'Review', isCompleted: wizardState.currentStep > 3, isCurrent: wizardState.currentStep === 3, hasError: false, estimatedTime: 2 }
+    { 
+      step: 0, 
+      title: 'Basic Information', 
+      isCompleted: wizardState.currentStep > 0, 
+      isCurrent: wizardState.currentStep === 0, 
+      hasError: !!(wizardState.errors.title || wizardState.errors.description), 
+      estimatedTime: 2 
+    },
+    { 
+      step: 1, 
+      title: 'Poll Options', 
+      isCompleted: wizardState.currentStep > 1, 
+      isCurrent: wizardState.currentStep === 1, 
+      hasError: !!(wizardState.errors.options || wizardState.errors.option_0 || wizardState.errors.option_1), 
+      estimatedTime: 2 
+    },
+    { 
+      step: 2, 
+      title: 'Category & Tags', 
+      isCompleted: wizardState.currentStep > 2, 
+      isCurrent: wizardState.currentStep === 2, 
+      hasError: !!(wizardState.errors.tags || wizardState.errors.category), 
+      estimatedTime: 2 
+    },
+    { 
+      step: 3, 
+      title: 'Review', 
+      isCompleted: wizardState.currentStep > 3, 
+      isCurrent: wizardState.currentStep === 3, 
+      hasError: !!(wizardState.errors.submit), 
+      estimatedTime: 2 
+    }
   ];
 
   // Alias functions for compatibility
   const updateWizardData = updateData;
   const previousStep = prevStep;
-  const updateSettings = (updates: Partial<PollWizardData['settings']>) => updateData({ settings: { ...wizardState.data.settings, ...updates } });
+  const updateSettings = (updates: Partial<PollWizardData['settings']>) => updateData({ settings: withOptional(wizardState.data.settings, updates) });
 
   return {
     wizardState,
@@ -249,7 +356,8 @@ export function usePollWizard() {
     setLoading,
     resetWizard,
     submitPoll,
-    validateStep: (step: number) => validateStep(step, wizardState.data)
+    validateStep: (step: number) => validateStep(step, wizardState.data),
+    isCurrentStepValid: (step: number) => isCurrentStepValid(step, wizardState.data)
   };
 }
 

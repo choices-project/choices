@@ -43,21 +43,23 @@ export default function CreatePollPage() {
     updateSettings,
     addTag,
     removeTag,
-    setLoading,
+    submitPoll,
   } = usePollWizard();
 
   const handlePublish = async () => {
-    setLoading(true);
     try {
-      // TODO: Implement actual poll creation API call
-      devLog('Creating poll:', wizardState.data);
-      await new Promise(resolve => setTimeout(resolve, 2000)); // Simulate API call
-      alert('Poll created successfully!');
+      const result = await submitPoll();
+      if (result.success) {
+        devLog('Poll created successfully:', result.pollId);
+        alert(`Poll created successfully! ID: ${result.pollId}`);
+        // TODO: Navigate to the created poll or dashboard
+      } else {
+        devLog('Failed to create poll:', result.error);
+        alert(`Failed to create poll: ${result.error}`);
+      }
     } catch (error) {
       devLog('Error creating poll:', error);
       alert('Failed to create poll. Please try again.');
-    } finally {
-      setLoading(false);
     }
   };
 
