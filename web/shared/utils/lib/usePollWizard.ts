@@ -215,12 +215,11 @@ export const usePollWizard = (template?: PollTemplate) => {
       const errors = validateStep(prev.currentStep, newData);
       const canProceed = Object.keys(errors).length === 0;
 
-      return {
-        ...prev,
+      return Object.assign({}, prev, {
         data: newData,
         errors,
         canProceed,
-      };
+      });
     });
   }, [validateStep]);
 
@@ -228,32 +227,30 @@ export const usePollWizard = (template?: PollTemplate) => {
     setWizardState(prev => {
       const newOptions = [...prev.data.options];
       newOptions[index] = value;
-      const newData = { ...prev.data, options: newOptions };
+      const newData = Object.assign({}, prev.data, { options: newOptions });
       const errors = validateStep(prev.currentStep, newData);
       const canProceed = Object.keys(errors).length === 0;
 
-      return {
-        ...prev,
+      return Object.assign({}, prev, {
         data: newData,
         errors,
         canProceed,
-      };
+      });
     });
   }, [validateStep]);
 
   const updateSettings = useCallback((updates: Partial<PollSettings>) => {
     setWizardState(prev => {
-      const newSettings = { ...prev.data.settings, ...updates };
-      const newData = { ...prev.data, settings: newSettings };
+      const newSettings = Object.assign({}, prev.data.settings, updates);
+      const newData = Object.assign({}, prev.data, { settings: newSettings });
       const errors = validateStep(prev.currentStep, newData);
       const canProceed = Object.keys(errors).length === 0;
 
-      return {
-        ...prev,
+      return Object.assign({}, prev, {
         data: newData,
         errors,
         canProceed,
-      };
+      });
     });
   }, [validateStep]);
 
@@ -263,32 +260,30 @@ export const usePollWizard = (template?: PollTemplate) => {
       if (!trimmedTag || prev.data.tags.includes(trimmedTag)) return prev;
       
       const newTags = [...prev.data.tags, trimmedTag];
-      const newData = { ...prev.data, tags: newTags };
+      const newData = Object.assign({}, prev.data, { tags: newTags });
       const errors = validateStep(prev.currentStep, newData);
       const canProceed = Object.keys(errors).length === 0;
 
-      return {
-        ...prev,
+      return Object.assign({}, prev, {
         data: newData,
         errors,
         canProceed,
-      };
+      });
     });
   }, [validateStep]);
 
   const removeTag = useCallback((tagToRemove: string) => {
     setWizardState(prev => {
       const newTags = prev.data.tags.filter(tag => tag !== tagToRemove);
-      const newData = { ...prev.data, tags: newTags };
+      const newData = Object.assign({}, prev.data, { tags: newTags });
       const errors = validateStep(prev.currentStep, newData);
       const canProceed = Object.keys(errors).length === 0;
 
-      return {
-        ...prev,
+      return Object.assign({}, prev, {
         data: newData,
         errors,
         canProceed,
-      };
+      });
     });
   }, [validateStep]);
 
@@ -300,8 +295,7 @@ export const usePollWizard = (template?: PollTemplate) => {
       canProceed: false,
       canGoBack: false,
       progress: 0,
-      data: template ? { 
-        ...DEFAULT_WIZARD_DATA, 
+      data: template ? Object.assign({}, DEFAULT_WIZARD_DATA, {
         title: template.title,
         description: template.description,
         category: template.category,
@@ -311,14 +305,14 @@ export const usePollWizard = (template?: PollTemplate) => {
         allowMultipleVotes: template.defaultSettings.allowMultipleVotes,
         showResults: template.defaultSettings.showResults,
         settings: template.defaultSettings
-      } : DEFAULT_WIZARD_DATA,
+      }) : DEFAULT_WIZARD_DATA,
       errors: {},
       isLoading: false,
     });
   }, [template]);
 
   const setLoading = useCallback((loading: boolean) => {
-    setWizardState(prev => ({ ...prev, isLoading: loading }));
+    setWizardState(prev => Object.assign({}, prev, { isLoading: loading }));
   }, []);
 
   const progress = useMemo(() => {
