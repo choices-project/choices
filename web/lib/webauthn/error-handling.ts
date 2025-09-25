@@ -343,11 +343,10 @@ export function logWebAuthnError(
     message: error.message,
     statusCode: error.statusCode,
     timestamp: new Date().toISOString(),
-    context: withOptional({}, {
-      ...context,
+    context: withOptional({}, Object.assign({}, context, {
       credentialId: context?.credentialId ? 
         context.credentialId.substring(0, 8) + '...' : undefined
-    }),
+    })),
     details: error.details
   };
 

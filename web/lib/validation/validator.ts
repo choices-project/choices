@@ -139,7 +139,7 @@ export function parseWithFallback<T>(
   fallback: T,
   options: ValidationOptions = {}
 ): T {
-  const result = safeParse(schema, data, { ...options, logErrors: true });
+  const result = safeParse(schema, data, Object.assign({}, options, { logErrors: true }));
   
   if (result.success && result.data !== undefined) {
     return result.data;
@@ -167,7 +167,7 @@ export function parseArray<T>(
   const errors: string[] = [];
 
   for (let i = 0; i < data.length; i++) {
-    const result = safeParse(schema, data[i], { ...options, logErrors: false });
+    const result = safeParse(schema, data[i], Object.assign({}, options, { logErrors: false }));
     
     if (result.success && result.data !== undefined) {
       validItems.push(result.data);
@@ -246,7 +246,7 @@ export function validateMultipleResponses<T>(
   for (let i = 0; i < responses.length; i++) {
     const response = responses[i];
     if (!response) continue;
-    const result = validateDatabaseResponse(schema, response, { ...options, logErrors: false });
+    const result = validateDatabaseResponse(schema, response, Object.assign({}, options, { logErrors: false }));
     
     if (result.success && result.data !== undefined) {
       validItems.push(result.data);
@@ -335,7 +335,7 @@ export function validateBatch<T extends Record<string, unknown>>(
   const errors: string[] = [];
 
   for (const [key, schema] of Object.entries(schemas)) {
-    const validationResult = safeParse(schema, data[key], { ...options, logErrors: false });
+    const validationResult = safeParse(schema, data[key], Object.assign({}, options, { logErrors: false }));
     
     if (validationResult.success && validationResult.data !== undefined) {
       (result as Record<string, unknown>)[key] = validationResult.data;

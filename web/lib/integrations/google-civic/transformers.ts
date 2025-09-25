@@ -312,8 +312,7 @@ export function validateTransformedData(data: AddressLookupResult): boolean {
  */
 export function cleanRepresentativeData(representative: TransformedRepresentative): TransformedRepresentative {
   return withOptional(
-    {
-      ...representative,
+    Object.assign({}, representative, {
       name: representative.name.trim(),
       party: representative.party.trim() || 'Unknown',
       office: representative.office.trim(),
@@ -328,7 +327,6 @@ export function cleanRepresentativeData(representative: TransformedRepresentativ
           address: representative.contact.address
         }
       )
-    },
-    {}
+    })
   );
 }

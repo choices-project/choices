@@ -22,7 +22,7 @@ export function withOptional<T extends object>(
   }
   
   // Two parameters: merge objects, filtering null/undefined from extras
-  const out = { ...base } as Record<string, unknown>
+  const out = Object.assign({}, base) as Record<string, unknown>
   for (const [k, v] of Object.entries(extras)) {
     if (v != null) out[k] = v
   }
@@ -48,7 +48,7 @@ export function createPayload<T extends Record<string, unknown>>(data: T): Parti
  * Prevents exactOptionalPropertyTypes violations
  */
 export function mergeOptional<T extends object, U extends object>(base: T, extras: U): T & Partial<U> {
-  const result = { ...base } as Record<string, unknown>
+  const result = Object.assign({}, base) as Record<string, unknown>
   for (const [key, value] of Object.entries(extras)) {
     if (value !== null && value !== undefined) {
       result[key] = value

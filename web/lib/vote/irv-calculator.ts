@@ -245,7 +245,7 @@ export class IRVCalculator {
 
       // Store Round 1 votes for tie-breaking policies
       if (rounds.length === 0) {
-        round1Votes = { ...votes };
+        round1Votes = Object.assign({}, votes);
       }
 
       // compute active vote total for majority threshold (ignore exhausted)

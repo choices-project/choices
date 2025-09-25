@@ -191,10 +191,9 @@ export class DataRetentionManager {
       throw new Error(`Retention policy not found for data type: ${dataType}`);
     }
 
-    const updatedPolicy: RetentionPolicy = withOptional(existingPolicy, {
-      ...policy,
+    const updatedPolicy: RetentionPolicy = withOptional(existingPolicy, Object.assign({}, policy, {
       lastUpdated: new Date()
-    });
+    }));
 
     this.policies.set(dataType, updatedPolicy);
     
@@ -588,11 +587,10 @@ export class DataRetentionManager {
   }
 
   private async logLifecycleEvent(event: Omit<DataLifecycleEvent, 'id' | 'timestamp'>): Promise<void> {
-    const lifecycleEvent: DataLifecycleEvent = {
+    const lifecycleEvent: DataLifecycleEvent = Object.assign({
       id: `event_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       timestamp: new Date(),
-      ...event
-    };
+    }, event);
 
     this.lifecycleEvents.push(lifecycleEvent);
     

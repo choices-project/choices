@@ -52,7 +52,7 @@ export async function verifyTurnstileToken(
   token: string,
   config: Partial<TurnstileConfig> = {}
 ): Promise<TurnstileVerificationResult> {
-  const finalConfig = { ...DEFAULT_TURNSTILE_CONFIG, ...config };
+  const finalConfig = Object.assign({}, DEFAULT_TURNSTILE_CONFIG, config);
 
   // Skip verification if disabled
   if (!finalConfig.enabled) {
@@ -215,7 +215,7 @@ export async function requireTurnstileVerification(
   expectedAction?: string,
   config?: Partial<TurnstileConfig>
 ): Promise<void> {
-  const finalConfig = { ...DEFAULT_TURNSTILE_CONFIG, ...config };
+  const finalConfig = Object.assign({}, DEFAULT_TURNSTILE_CONFIG, config);
 
   // Skip if disabled
   if (!finalConfig.enabled) {

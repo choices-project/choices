@@ -30,10 +30,9 @@ export type WebAuthnSessionOptions = {
  * Create a WebAuthn session token
  */
 export function createWebAuthnSessionToken(sessionData: Omit<WebAuthnSessionData, 'authenticatedAt'>): string {
-  const fullSessionData: WebAuthnSessionData = {
-    ...sessionData,
+  const fullSessionData: WebAuthnSessionData = Object.assign({}, sessionData, {
     authenticatedAt: new Date().toISOString()
-  };
+  });
 
   // Generate a secure session token
   const token = generateSessionToken({

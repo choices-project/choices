@@ -100,8 +100,7 @@ export class DataValidationPipeline {
         const nameParts = rep.name.trim().split(' ');
         return nameParts.length >= 2 && nameParts.every(part => part.length > 0);
       },
-      fixer: (rep: NormalizedRepresentative) => ({
-        ...rep,
+      fixer: (rep: NormalizedRepresentative) => Object.assign({}, rep, {
         name: rep.name.trim().replace(/\s+/g, ' ')
       })
     });
@@ -114,8 +113,7 @@ export class DataValidationPipeline {
         const validParties = ['Republican', 'Democrat', 'Independent', 'Green', 'Libertarian', 'Other'];
         return validParties.includes(rep.party) || rep.party === 'Unknown';
       },
-      fixer: (rep: NormalizedRepresentative) => ({
-        ...rep,
+      fixer: (rep: NormalizedRepresentative) => Object.assign({}, rep, {
         party: this.normalizeParty(rep.party)
       })
     });
@@ -148,15 +146,13 @@ export class DataValidationPipeline {
         }
         return true;
       },
-      fixer: (rep: NormalizedRepresentative) => ({
-        ...rep,
-        contact: {
-          ...rep.contact,
+      fixer: (rep: NormalizedRepresentative) => Object.assign({}, rep, {
+        contact: Object.assign({}, rep.contact, {
           phone: rep.contact.phone?.replace(/[^\d\s\-\(\)]/g, ''),
           email: rep.contact.email?.toLowerCase().trim(),
           website: rep.contact.website?.startsWith('http') ? rep.contact.website : 
                    rep.contact.website ? `https://${rep.contact.website}` : rep.contact.website
-        }
+        })
       })
     });
 

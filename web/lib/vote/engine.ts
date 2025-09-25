@@ -40,15 +40,14 @@ export class VoteEngine {
   private config: VoteEngineConfig;
 
   constructor(config: Partial<VoteEngineConfig> = {}) {
-    this.config = {
+    this.config = Object.assign({
       maxVotesPerPoll: 10000,
       allowMultipleVotes: false,
       requireAuthentication: true,
       minTrustTier: 'T0',
       rateLimitPerUser: 10,
       rateLimitWindowMs: 60000, // 1 minute
-      ...config
-    };
+    }, config);
 
     // Initialize voting strategies
     this.strategies = new Map([
@@ -125,11 +124,10 @@ export class VoteEngine {
       const strategyValidation = await strategy.validateVote(request, poll);
 
       if (!strategyValidation.isValid) {
-        return {
-          ...strategyValidation,
+        return Object.assign({}, strategyValidation, {
           requiresAuthentication: this.config.requireAuthentication,
           requiresTokens: false
-        };
+        });
       }
 
       devLog('Vote validation completed', {
@@ -191,10 +189,9 @@ export class VoteEngine {
         duration: Date.now() - startTime
       });
 
-      return {
-        ...result,
+      return Object.assign({}, result, {
         responseTime: Date.now() - startTime
-      };
+      });
 
     } catch (error) {
       devLog('Vote processing error:', error);
@@ -249,7 +246,7 @@ export class VoteEngine {
    * Update engine configuration
    */
   updateConfig(newConfig: Partial<VoteEngineConfig>): void {
-    this.config = { ...this.config, ...newConfig };
+    this.config = Object.assign({}, this.config, newConfig);
     devLog('VoteEngine configuration updated:', this.config);
   }
 

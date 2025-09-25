@@ -127,10 +127,9 @@ export class TrendingHashtagsTracker {
       const baselinePerDay = (baselineCounts[h.hashtag] ?? 0) / 7;
       // Adjustment factor emphasizes spikes above baseline, bounded for stability
       const factor = 1 + Math.min(0.5, (h.usageCount - baselinePerDay) / (baselinePerDay + 1)) * 0.3;
-      return {
-        ...h,
+      return Object.assign({}, h, {
         trendingScore: Number((h.trendingScore * factor).toFixed(2))
-      };
+      });
     });
 
     // Category breakdown
