@@ -82,7 +82,7 @@ export class RedisClient {
   }
 
   constructor(config: Partial<RedisConfig> = {}) {
-    this.config = {
+    this.config = Object.assign({}, {
       host: 'localhost',
       port: 6379,
       db: 0,
@@ -96,9 +96,8 @@ export class RedisClient {
       retryDelayOnClusterDown: 300,
       enableOfflineQueue: false,
       maxMemoryPolicy: 'allkeys-lru',
-      maxMemory: '256mb',
-      ...config
-    }
+      maxMemory: '256mb'
+    }, config)
   }
 
   /**
@@ -608,7 +607,7 @@ let redisClient: RedisClient | null = null
  */
 export async function getRedisClient(config?: Partial<RedisConfig>): Promise<RedisClient> {
   if (!redisClient) {
-    const finalConfig = { ...defaultRedisConfig, ...config }
+    const finalConfig = Object.assign({}, defaultRedisConfig, config)
     redisClient = new RedisClient(finalConfig)
     await redisClient.connect()
   }
