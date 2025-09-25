@@ -25,7 +25,13 @@ This document tracks all placeholder implementations, mock data, and temporary c
 
 | File | Line | Description | Implementation Needed | Notes |
 |------|------|-------------|----------------------|-------|
-| TBD | TBD | TBD | TBD | TBD |
+| `web/shared/core/services/lib/poll-service.ts` | 58-217 | Extensive mock poll data (6 mock polls) | Real poll data integration | Contains mockPolls array with fake data for testing |
+| `web/shared/core/services/lib/poll-service.ts` | 362 | Comment: "In real implementation, this would call the verification API" | API integration for poll verification | Currently just a comment, needs real implementation |
+| `web/shared/core/services/lib/poll-service.ts` | 386 | Comment: "In real implementation, this would fetch from API" | API integration for data fetching | Currently just a comment, needs real implementation |
+| `web/shared/core/services/lib/poll-service.ts` | 392 | TODO: "Implement with Supabase auth" | Supabase authentication integration | TODO comment for auth implementation |
+| `web/lib/core/feature-flags.ts` | 35-36 | Disabled features: MEDIA_BIAS_ANALYSIS, POLL_NARRATIVE_SYSTEM | Complete feature implementations | Features marked as "not MVP ready" |
+| `web/lib/core/feature-flags.ts` | 153 | Comment: "Experimental features removed - not actually implemented" | Remove or implement experimental features | Comment indicates incomplete feature removal |
+| `web/lib/integrations/google-civic/transformers.ts` | 20 | Comment: "DISABLED: civics features disabled for MVP" | Re-enable civics features | Import commented out for MVP |
 
 ### **🟢 LOW - UI/UX Placeholders**
 *Cosmetic or minor functionality*
