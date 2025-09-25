@@ -98,7 +98,7 @@ export class ConnectionPoolManager {
   private leakDetectionInterval: NodeJS.Timeout | null = null
 
   constructor(config?: Partial<PoolConfig>) {
-    this.config = {
+    this.config = Object.assign({}, {
       minConnections: 2,
       maxConnections: 10,
       acquireTimeoutMillis: 30000,
@@ -108,8 +108,7 @@ export class ConnectionPoolManager {
       validationQueryTimeout: 5000,
       leakDetectionThreshold: 60000, // 1 minute
       connectionTimeoutMillis: 10000,
-      ...config
-    }
+    }, config)
 
     this.initialize()
   }
