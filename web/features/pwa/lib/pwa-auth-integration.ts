@@ -104,7 +104,7 @@ export class PWAAuth {
     }
 
     this.currentUser = withOptional(this.currentUser, {
-      ...updates,
+      ...withOptional(updates),
       lastActive: new Date()
     });
 
