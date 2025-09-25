@@ -203,7 +203,7 @@ describe('VoteValidator', () => {
     });
 
     it('should reject vote with null choice', async () => {
-      const invalidVote = { ...mockVoteData, choice: null as any };
+      const invalidVote = Object.assign({}, mockVoteData, { choice: null as any });
       const validation = await validator.validateVote(invalidVote, mockPoll, 'user-1');
       
       expect(validation.isValid).toBe(false);
@@ -211,7 +211,7 @@ describe('VoteValidator', () => {
     });
 
     it('should reject vote with non-integer choice', async () => {
-      const invalidVote = { ...mockVoteData, choice: 1.5 as any };
+      const invalidVote = Object.assign({}, mockVoteData, { choice: 1.5 as any });
       const validation = await validator.validateVote(invalidVote, mockPoll, 'user-1');
       
       expect(validation.isValid).toBe(false);
@@ -219,7 +219,7 @@ describe('VoteValidator', () => {
     });
 
     it('should reject vote with negative choice', async () => {
-      const invalidVote = { ...mockVoteData, choice: -1 };
+      const invalidVote = Object.assign({}, mockVoteData, { choice: -1 });
       const validation = await validator.validateVote(invalidVote, mockPoll, 'user-1');
       
       expect(validation.isValid).toBe(false);
@@ -227,7 +227,7 @@ describe('VoteValidator', () => {
     });
 
     it('should reject vote with choice exceeding options', async () => {
-      const invalidVote = { ...mockVoteData, choice: 5 };
+      const invalidVote = Object.assign({}, mockVoteData, { choice: 5 });
       const validation = await validator.validateVote(invalidVote, mockPoll, 'user-1');
       
       expect(validation.isValid).toBe(false);
@@ -264,7 +264,7 @@ describe('VoteValidator', () => {
     });
 
     it('should reject vote with empty approvals', async () => {
-      const invalidVote = { ...mockVoteData, approvals: [] };
+      const invalidVote = Object.assign({}, mockVoteData, { approvals: [] });
       const validation = await validator.validateVote(invalidVote, mockPoll, 'user-1');
       
       expect(validation.isValid).toBe(false);
@@ -272,7 +272,7 @@ describe('VoteValidator', () => {
     });
 
     it('should reject vote with non-array approvals', async () => {
-      const invalidVote = { ...mockVoteData, approvals: 'invalid' as any };
+      const invalidVote = Object.assign({}, mockVoteData, { approvals: 'invalid' as any });
       const validation = await validator.validateVote(invalidVote, mockPoll, 'user-1');
       
       expect(validation.isValid).toBe(false);
@@ -280,7 +280,7 @@ describe('VoteValidator', () => {
     });
 
     it('should reject vote with invalid approval indices', async () => {
-      const invalidVote = { ...mockVoteData, approvals: [0, 5] };
+      const invalidVote = Object.assign({}, mockVoteData, { approvals: [0, 5] });
       const validation = await validator.validateVote(invalidVote, mockPoll, 'user-1');
       
       expect(validation.isValid).toBe(false);
@@ -288,7 +288,7 @@ describe('VoteValidator', () => {
     });
 
     it('should reject vote with duplicate approvals', async () => {
-      const invalidVote = { ...mockVoteData, approvals: [0, 0] };
+      const invalidVote = Object.assign({}, mockVoteData, { approvals: [0, 0] });
       const validation = await validator.validateVote(invalidVote, mockPoll, 'user-1');
       
       expect(validation.isValid).toBe(false);
@@ -296,8 +296,8 @@ describe('VoteValidator', () => {
     });
 
     it('should respect max choices limit', async () => {
-      const limitedPoll = { ...mockPoll, votingConfig: { ...mockPoll.votingConfig, maxChoices: 1 } };
-      const invalidVote = { ...mockVoteData, approvals: [0, 1] };
+      const limitedPoll = Object.assign({}, mockPoll, { votingConfig: Object.assign({}, mockPoll.votingConfig, { maxChoices: 1 }) });
+      const invalidVote = Object.assign({}, mockVoteData, { approvals: [0, 1] });
       const validation = await validator.validateVote(invalidVote, limitedPoll, 'user-1');
       
       expect(validation.isValid).toBe(false);
@@ -330,7 +330,7 @@ describe('VoteValidator', () => {
     });
 
     it('should reject vote with incomplete rankings', async () => {
-      const invalidVote = { ...mockVoteData, rankings: [0, 1] };
+      const invalidVote = Object.assign({}, mockVoteData, { rankings: [0, 1] });
       const validation = await validator.validateVote(invalidVote, mockPoll, 'user-1');
       
       expect(validation.isValid).toBe(false);
@@ -338,7 +338,7 @@ describe('VoteValidator', () => {
     });
 
     it('should reject vote with invalid ranking indices', async () => {
-      const invalidVote = { ...mockVoteData, rankings: [0, 1, 5] };
+      const invalidVote = Object.assign({}, mockVoteData, { rankings: [0, 1, 5] });
       const validation = await validator.validateVote(invalidVote, mockPoll, 'user-1');
       
       expect(validation.isValid).toBe(false);
@@ -346,7 +346,7 @@ describe('VoteValidator', () => {
     });
 
     it('should reject vote with duplicate rankings', async () => {
-      const invalidVote = { ...mockVoteData, rankings: [0, 0, 1] };
+      const invalidVote = Object.assign({}, mockVoteData, { rankings: [0, 0, 1] });
       const validation = await validator.validateVote(invalidVote, mockPoll, 'user-1');
       
       expect(validation.isValid).toBe(false);
@@ -492,7 +492,7 @@ describe('VoteValidator', () => {
     it('should require authentication when verification is required', async () => {
       const verifiedPoll = { 
         ...mockPoll, 
-        votingConfig: { ...mockPoll.votingConfig, requireVerification: true } 
+        votingConfig: Object.assign({}, mockPoll.votingConfig, { requireVerification: true }) 
       };
       const validation = await validator.validateVote(mockVoteData, verifiedPoll);
       
