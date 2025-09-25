@@ -293,6 +293,7 @@ export function useLazyLoading<T>(
     } finally {
       setLoading(false);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [importFn, ...deps]);
   
   React.useEffect(() => {
