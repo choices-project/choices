@@ -132,7 +132,7 @@ describe('VoteEngine', () => {
     });
 
     it('should reject vote without authentication when required', async () => {
-      const unauthenticatedRequest = { ...mockVoteRequest };
+      const unauthenticatedRequest = Object.assign({}, mockVoteRequest);
       delete unauthenticatedRequest.userId;
       const validation = await engine.validateVote(unauthenticatedRequest, mockPoll);
       expect(validation.isValid).toBe(false);
@@ -149,10 +149,9 @@ describe('VoteEngine', () => {
     });
 
     it('should reject vote with invalid option', async () => {
-      const invalidRequest = { 
-        ...mockVoteRequest, 
+      const invalidRequest = Object.assign({}, mockVoteRequest, { 
         voteData: { choice: 999 } 
-      };
+      });
       const validation = await engine.validateVote(invalidRequest, mockPoll);
       expect(validation.isValid).toBe(false);
       expect(validation.error).toBe('Choice must be between 0 and 2');

@@ -130,7 +130,7 @@ describe('VoteProcessor', () => {
       // Mock successful poll lookup
       when().table('polls').op('select').select('*').eq('id', pollId).returnsSingle(mockPoll);
 
-      const invalidVoteData = { ...mockVoteData, choice: -1 };
+      const invalidVoteData = Object.assign({}, mockVoteData, { choice: -1 });
       const result = await processor.processVote(invalidVoteData);
       
       expect(result.success).toBe(false);
@@ -184,19 +184,18 @@ describe('VoteProcessor', () => {
       // Mock poll update
       when().table('polls').op('update').eq('id', pollId).returnsList([{ id: pollId, total_votes: 1 }]);
 
-      const validVote = { ...mockVoteData, choice: 0 };
+      const validVote = Object.assign({}, mockVoteData, { choice: 0 });
       const result = await processor.processVote(validVote);
       
       expect(result.success).toBe(true);
     });
 
     it('should validate approval vote data', async () => {
-      const approvalPoll = { ...mockPoll, votingMethod: 'approval' as const };
+      const approvalPoll = Object.assign({}, mockPoll, { votingMethod: 'approval' as const });
       const { choice, ...approvalVoteData } = mockVoteData;
-      const approvalVote = { 
-        ...approvalVoteData, 
+      const approvalVote = Object.assign({}, approvalVoteData, { 
         approvals: [0, 1]
-      };
+      });
 
       const pollId = 'test-poll-123';
       const userId = 'user-456';
@@ -216,12 +215,11 @@ describe('VoteProcessor', () => {
     });
 
     it('should validate ranked vote data', async () => {
-      const rankedPoll = { ...mockPoll, votingMethod: 'ranked' as const };
+      const rankedPoll = Object.assign({}, mockPoll, { votingMethod: 'ranked' as const });
       const { choice, ...rankedVoteData } = mockVoteData;
-      const rankedVote = { 
-        ...rankedVoteData, 
+      const rankedVote = Object.assign({}, rankedVoteData, { 
         rankings: [0, 1, 2]
-      };
+      });
 
       const pollId = 'test-poll-123';
       const userId = 'user-456';
@@ -241,12 +239,11 @@ describe('VoteProcessor', () => {
     });
 
     it('should validate quadratic vote data', async () => {
-      const quadraticPoll = { ...mockPoll, votingMethod: 'quadratic' as const };
+      const quadraticPoll = Object.assign({}, mockPoll, { votingMethod: 'quadratic' as const });
       const { choice, ...quadraticVoteData } = mockVoteData;
-      const quadraticVote = { 
-        ...quadraticVoteData, 
+      const quadraticVote = Object.assign({}, quadraticVoteData, { 
         allocations: { '0': 5, '1': 3 }
-      };
+      });
 
       const pollId = 'test-poll-123';
       const userId = 'user-456';
@@ -266,12 +263,11 @@ describe('VoteProcessor', () => {
     });
 
     it('should validate range vote data', async () => {
-      const rangePoll = { ...mockPoll, votingMethod: 'range' as const };
+      const rangePoll = Object.assign({}, mockPoll, { votingMethod: 'range' as const });
       const { choice, ...rangeVoteData } = mockVoteData;
-      const rangeVote = { 
-        ...rangeVoteData, 
+      const rangeVote = Object.assign({}, rangeVoteData, { 
         ratings: { '0': 8, '1': 6, '2': 4 }
-      };
+      });
 
       const pollId = 'test-poll-123';
       const userId = 'user-456';
@@ -296,7 +292,7 @@ describe('VoteProcessor', () => {
       // Mock poll lookup
       when().table('polls').op('select').select('*').eq('id', pollId).returnsSingle(mockPoll);
 
-      const invalidVote = { ...mockVoteData, choice: 5 }; // Invalid choice
+      const invalidVote = Object.assign({}, mockVoteData, { choice: 5 }); // Invalid choice
       const result = await processor.processVote(invalidVote);
       
       expect(result.success).toBe(false);
@@ -422,7 +418,7 @@ describe('VoteProcessor', () => {
       // Mock poll lookup
       when().table('polls').op('select').select('*').eq('id', pollId).returnsSingle(mockPoll);
 
-      const invalidVote = { ...mockVoteData, choice: -1 };
+      const invalidVote = Object.assign({}, mockVoteData, { choice: -1 });
       const result = await processor.processVote(invalidVote);
       
       expect(result.success).toBe(false);

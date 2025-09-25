@@ -166,7 +166,7 @@ describe('VoteEngine', () => {
     });
 
     it('should reject vote for inactive poll', async () => {
-      const inactivePoll = { ...mockPoll, status: 'closed' as const };
+      const inactivePoll = Object.assign({}, mockPoll, { status: 'closed' as const });
       const request: VoteRequest = {
         pollId: 'test-poll-123',
         userId: 'user-1',
@@ -181,10 +181,9 @@ describe('VoteEngine', () => {
     });
 
     it('should reject vote for expired poll', async () => {
-      const expiredPoll = { 
-        ...mockPoll, 
+      const expiredPoll = Object.assign({}, mockPoll, { 
         endTime: new Date('2024-12-31T23:59:59Z') // Past date
-      };
+      });
       const request: VoteRequest = {
         pollId: 'test-poll-123',
         userId: 'user-1',
@@ -437,10 +436,9 @@ describe('VoteEngine', () => {
     });
 
     it('should handle malformed poll data', async () => {
-      const malformedPoll = {
-        ...mockPoll,
+      const malformedPoll = Object.assign({}, mockPoll, {
         votingMethod: 'invalid' as unknown as VotingMethod
-      };
+      });
       
       const request: VoteRequest = {
         pollId: 'test-poll-123',
