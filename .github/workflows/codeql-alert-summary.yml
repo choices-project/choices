@@ -4,6 +4,12 @@ on:
   pull_request:
     types: [opened, synchronize]
 
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+  security-events: write
+
 jobs:
   codeql-alerts:
     runs-on: ubuntu-latest
