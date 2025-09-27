@@ -4,60 +4,106 @@ on:
   pull_request:
     types: [opened, synchronize]
 
-permissions:
-  contents: read
-  issues: write
-  pull-requests: write
-  security-events: write
-
 jobs:
-  codeql-alerts:
+  summarize:
+    # Ensure CodeQL analyze job has completed first
+    needs: [analyze]                # <-- the job id from your CodeQL workflow
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: read         # read is enough to list alerts
+      actions: read
+      pull-requests: write
+    env:
+      GH_TOKEN: ${{ github.token }} # gh CLI auth
     steps:
-      - name: Get CodeQL Alerts
-        id: get-alerts
+      - name: Compute refs
+        id: refs
         run: |
-          OWNER=choices-project
-          REPO=choices
-          PR=${{ github.event.number }}
-          PR_REF="refs/pull/$PR/merge"
-          
-          # Get PR alerts
-          gh api repos/$OWNER/$REPO/code-scanning/alerts \
-            -F ref="$PR_REF" -F per_page=100 \
-            | jq -r '.[] | [.rule.severity, .rule.name, .most_recent_instance.location.path, .most_recent_instance.location.start_line] | @tsv' > pr_alerts.tsv
-          
-          # Get main alerts for comparison
-          gh api repos/$OWNER/$REPO/code-scanning/alerts -F ref=refs/heads/main -F per_page=100 \
-            | jq -r '.[] | [.rule.severity, .rule.name, .most_recent_instance.location.path, .most_recent_instance.location.start_line] | @tsv' > main_alerts.tsv
-          
-          # Find new/changed alerts
-          comm -13 <(sort main_alerts.tsv) <(sort pr_alerts.tsv) > new_alerts.tsv
-          
-          # Count alerts by severity
-          echo "## CodeQL Alert Summary" > alert_summary.md
-          echo "" >> alert_summary.md
-          echo "### New/Changed Alerts" >> alert_summary.md
-          echo "" >> alert_summary.md
-          echo "| Severity | Rule | Path | Line |" >> alert_summary.md
-          echo "|----------|------|------|------|" >> alert_summary.md
-          cat new_alerts.tsv | while IFS=$'\t' read -r severity rule path line; do
-            echo "| $severity | $rule | $path | $line |" >> alert_summary.md
+          echo "PR=${{ github.event.number }}" >> $GITHUB_OUTPUT
+          echo "PR_REF=refs/pull/${{ github.event.number }}/merge" >> $GITHUB_OUTPUT
+
+      - name: Wait for Code Scanning to attach PR alerts
+        id: wait
+        run: |
+          OWNER="${GITHUB_REPOSITORY%/*}"
+          REPO="${GITHUB_REPOSITORY#*/}"
+          PR_REF="${{ steps.refs.outputs.PR_REF }}"
+          # Poll up to ~5 minutes for alerts to appear on the PR ref
+          for i in $(seq 1 30); do
+            count=$(gh api repos/$OWNER/$REPO/code-scanning/alerts -F ref="$PR_REF" -F per_page=1 | jq 'length')
+            echo "Attempt $i: PR alert count = $count"
+            if [ "$count" -ge 0 ]; then   # count will be 0 until ingestion completes
+              # Optional: also break if the Code Scanning RESULTS check has finished
+              break
+            fi
+            sleep 10
           done
+
+      - name: Fetch PR and main alerts (same shapes)
+        run: |
+          OWNER="${GITHUB_REPOSITORY%/*}"
+          REPO="${GITHUB_REPOSITORY#*/}"
+          PR_REF="${{ steps.refs.outputs.PR_REF }}"
+
+          gh api repos/$OWNER/$REPO/code-scanning/alerts -F ref="$PR_REF" -F per_page=100 \
+            | jq -r '.[] | [.rule.id, .rule.severity, .most_recent_instance.location.path, .most_recent_instance.location.start_line] | @tsv' \
+            > pr.tsv
+
+          gh api repos/$OWNER/$REPO/code-scanning/alerts -F ref=refs/heads/main -F per_page=100 \
+            | jq -r '.[] | [.rule.id, .rule.severity, .most_recent_instance.location.path, .most_recent_instance.location.start_line] | @tsv' \
+            > main.tsv
+
+          # New/changed alerts introduced by PR (compare by rule|path|line)
+          awk -F'\t' '{print $1"|"$3"|"$4"\t"$0}' main.tsv | sort -u > main.sig
+          awk -F'\t' '{print $1"|"$3"|"$4"\t"$0}' pr.tsv   | sort -u > pr.sig
+          comm -13 main.sig pr.sig | cut -f2- > delta.tsv || true
           
-          # Save summary for comment
-          echo "alert_summary<<EOF" >> $GITHUB_OUTPUT
-          cat alert_summary.md >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
-      
+          # Filter to only critical/high alerts (the ones that gate CI)
+          awk -F'\t' '$2 == "critical" || $2 == "high"' delta.tsv > delta-critical-high.tsv || true
+
+      - name: Build PR comment
+        id: build
+        run: |
+          echo "## CodeQL Alert Summary"            >  body.md
+          echo ""                                   >> body.md
+          
+          # Show critical/high alerts first (CI blockers)
+          echo "### 🚨 Critical/High Alerts (CI Blockers)" >> body.md
+          echo ""                                   >> body.md
+          echo "| Severity | Rule | Path | Line |"   >> body.md
+          echo "|---|---|---:|---:|"                >> body.md
+          if [ -s delta-critical-high.tsv ]; then
+            while IFS=$'\t' read -r rule sev path line; do
+              echo "| ${sev} | ${rule} | ${path} | ${line} |" >> body.md
+            done < <(awk -F'\t' '{print $2"\t"$1"\t"$3"\t"$4}' delta-critical-high.tsv)
+          else
+            echo "| _none_ |  |  |  |" >> body.md
+          fi
+          
+          echo ""                                   >> body.md
+          echo "### All New/Changed Alerts"         >> body.md
+          echo ""                                   >> body.md
+          echo "| Severity | Rule | Path | Line |"   >> body.md
+          echo "|---|---|---:|---:|"                >> body.md
+          if [ -s delta.tsv ]; then
+            while IFS=$'\t' read -r rule sev path line; do
+              echo "| ${sev} | ${rule} | ${path} | ${line} |" >> body.md
+            done < <(awk -F'\t' '{print $2"\t"$1"\t"$3"\t"$4}' delta.tsv)
+          else
+            echo "| _none_ |  |  |  |" >> body.md
+          fi
+          
+          echo "body<<EOF" >> $GITHUB_OUTPUT
+          cat body.md     >> $GITHUB_OUTPUT
+          echo "EOF"      >> $GITHUB_OUTPUT
+
       - name: Comment on PR
         uses: actions/github-script@v7
         with:
           script: |
-            const summary = `${{ steps.get-alerts.outputs.alert_summary }}`;
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: summary
+            const body = `${{ steps.build.outputs.body }}`;
+            await github.rest.issues.createComment({
+              owner: context.repo.owner, repo: context.repo.repo,
+              issue_number: context.issue.number, body
             });
