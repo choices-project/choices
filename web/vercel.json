@@ -5,5 +5,7 @@
       "*": false,
       "main": true
     }
-  }
+  },
+  "buildCommand": "cd .. && npm install && cd web && npm run build",
+  "installCommand": "cd .. && npm install"
 }
