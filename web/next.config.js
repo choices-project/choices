@@ -527,4 +527,4 @@ const nextConfig = {
   assetPrefix: process.env.NODE_ENV === 'production' ? '' : '',
 }
 
-export default bundleAnalyzer(nextConfig);
+module.exports = bundleAnalyzer(nextConfig);
