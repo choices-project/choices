@@ -1,0 +1,57 @@
+name: CodeQL Alert Summary
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  codeql-alerts:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get CodeQL Alerts
+        id: get-alerts
+        run: |
+          OWNER=choices-project
+          REPO=choices
+          PR=${{ github.event.number }}
+          PR_REF="refs/pull/$PR/merge"
+          
+          # Get PR alerts
+          gh api repos/$OWNER/$REPO/code-scanning/alerts \
+            -F ref="$PR_REF" -F per_page=100 \
+            | jq -r '.[] | [.rule.severity, .rule.name, .most_recent_instance.location.path, .most_recent_instance.location.start_line] | @tsv' > pr_alerts.tsv
+          
+          # Get main alerts for comparison
+          gh api repos/$OWNER/$REPO/code-scanning/alerts -F ref=refs/heads/main -F per_page=100 \
+            | jq -r '.[] | [.rule.severity, .rule.name, .most_recent_instance.location.path, .most_recent_instance.location.start_line] | @tsv' > main_alerts.tsv
+          
+          # Find new/changed alerts
+          comm -13 <(sort main_alerts.tsv) <(sort pr_alerts.tsv) > new_alerts.tsv
+          
+          # Count alerts by severity
+          echo "## CodeQL Alert Summary" > alert_summary.md
+          echo "" >> alert_summary.md
+          echo "### New/Changed Alerts" >> alert_summary.md
+          echo "" >> alert_summary.md
+          echo "| Severity | Rule | Path | Line |" >> alert_summary.md
+          echo "|----------|------|------|------|" >> alert_summary.md
+          cat new_alerts.tsv | while IFS=$'\t' read -r severity rule path line; do
+            echo "| $severity | $rule | $path | $line |" >> alert_summary.md
+          done
+          
+          # Save summary for comment
+          echo "alert_summary<<EOF" >> $GITHUB_OUTPUT
+          cat alert_summary.md >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+      
+      - name: Comment on PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const summary = `${{ steps.get-alerts.outputs.alert_summary }}`;
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: summary
+            });

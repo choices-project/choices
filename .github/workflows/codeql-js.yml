@@ -11,6 +11,7 @@ on:
 permissions:
   contents: read
   security-events: write
+  actions: read            # fixes "Resource not accessible by integration" in some cases
 
 concurrency:
   group: codeql-${{ github.ref }}
