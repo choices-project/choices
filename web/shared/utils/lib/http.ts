@@ -8,16 +8,37 @@ export function requireTrustedOrigin(req: Request) {
   // Only enforce on state-changing verbs; allow preview/branch URLs
   if (!['POST', 'PUT', 'PATCH', 'DELETE'].includes(req.method)) return;
   
-  const origin = req.headers.get('origin') ?? new URL(req.headers.get('referer') ?? '', 'http://x').origin;
+  const originHeader = req.headers.get('origin');
+  const referer = req.headers.get('referer');
+  let origin = '';
+  
+  try {
+    origin = originHeader || (referer ? new URL(referer).origin : '');
+  } catch {
+    origin = '';
+  }
+
+  const envOrigin = process.env.APP_ORIGIN;
   const allowed = [
-    process.env.APP_ORIGIN!,                   // prod app
+    envOrigin,
     ...(process.env.NODE_ENV === 'development' ? ['http://localhost:3000'] : []),
     ...(process.env.VERCEL ? ['https://*.vercel.app'] : []),
-  ];
-  
-  if (!origin || !allowed.some(p => 
-    origin === p || (p.endsWith('*.vercel.app') && origin.endsWith('.vercel.app'))
-  )) {
+  ].filter((v): v is string => typeof v === 'string' && v.length > 0);
+
+  const isAllowed = origin && allowed.some(p => {
+    if (p === origin) return true;
+    if (p.endsWith('*.vercel.app')) {
+      try {
+        const url = new URL(origin);
+        return url.hostname.endsWith('.vercel.app');
+      } catch {
+        return false;
+      }
+    }
+    return false;
+  });
+
+  if (!isAllowed) {
     throw new Error('Untrusted origin');
   }
 }

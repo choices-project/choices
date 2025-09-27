@@ -74,10 +74,21 @@ export default function PWAInstaller() {
     // Create a toast notification
     const toast = document.createElement('div')
     toast.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-4 rounded-lg shadow-lg z-50 max-w-sm'
-    toast.innerHTML = `
-      <div class="font-semibold">${title}</div>
-      <div class="text-sm opacity-90">${message}</div>
-    `
+    
+    // Create title element
+    const titleEl = document.createElement('div')
+    titleEl.className = 'font-semibold'
+    titleEl.textContent = title
+    
+    // Create message element
+    const messageEl = document.createElement('div')
+    messageEl.className = 'text-sm opacity-90'
+    messageEl.textContent = message
+    
+    // Append elements to toast
+    toast.appendChild(titleEl)
+    toast.appendChild(messageEl)
+    
     document.body.appendChild(toast)
     
     // Remove after 5 seconds
