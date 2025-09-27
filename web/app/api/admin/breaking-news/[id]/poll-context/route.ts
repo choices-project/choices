@@ -170,7 +170,7 @@ export async function GET(
       );
     }
 
-    if (!userProfile || !userProfile || !('verification_tier' in userProfile) || !['T2', 'T3'].includes(userProfile.verification_tier)) {
+    if (!userProfile || !('verification_tier' in userProfile) || !['T2', 'T3'].includes(userProfile.verification_tier)) {
       return NextResponse.json(
         { error: 'Insufficient permissions' },
         { status: 403 }

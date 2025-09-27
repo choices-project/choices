@@ -1,6 +1,7 @@
 import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
-import { DeviceFlowManager } from '@/lib/core/auth/device-flow'
+// QUARANTINED: Device flow feature not ready for production
+// import { DeviceFlowManager } from '@/quarantine/future-features/device-flow/device-flow.ts.disabled'
 import { rateLimiters } from '@/lib/core/security/rate-limit'
 import { logger } from '@/lib/logger'
 
@@ -43,34 +44,40 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Complete device flow
-    const result = await DeviceFlowManager.completeDeviceFlow(userCode, userId)
+    // QUARANTINED: Device flow feature not ready for production
+    return NextResponse.json(
+      { error: 'Device Flow Authentication is not implemented' },
+      { status: 501 }
+    )
 
-    if (!result) {
-      logger.warn('Device flow completion failed', {
-        userCode,
-        userId,
-        ip: rateLimitResult.reputation?.ip || 'unknown'
-      })
+    // Original implementation (quarantined):
+    // const result = await DeviceFlowManager.completeDeviceFlow(userCode, userId)
 
-      return NextResponse.json(
-        { error: 'Failed to complete device flow' },
-        { status: 400 }
-      )
-    }
+    // if (!result) {
+    //   logger.warn('Device flow completion failed', {
+    //     userCode,
+    //     userId,
+    //     ip: rateLimitResult.reputation?.ip || 'unknown'
+    //   })
 
-    // Log successful completion
-    logger.info('Device flow completed successfully', {
-      userCode,
-      userId,
-      ip: rateLimitResult.reputation?.ip || 'unknown'
-    })
+    //   return NextResponse.json(
+    //     { error: 'Failed to complete device flow' },
+    //     { status: 400 }
+    //   )
+    // }
 
-    // Return success response
-    return NextResponse.json({
-      success: true,
-      message: 'Device flow completed successfully'
-    })
+    // // Log successful completion
+    // logger.info('Device flow completed successfully', {
+    //   userCode,
+    //   userId,
+    //   ip: rateLimitResult.reputation?.ip || 'unknown'
+    // })
+
+    // // Return success response
+    // return NextResponse.json({
+    //   success: true,
+    //   message: 'Device flow completed successfully'
+    // })
 
   } catch (error) {
     logger.error('Device flow completion API error', error instanceof Error ? error : new Error('Unknown error'))

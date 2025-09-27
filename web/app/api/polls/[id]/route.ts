@@ -50,13 +50,6 @@ export async function GET(
       }
     }
     
-    if (!supabaseClient) {
-      return NextResponse.json(
-        { error: 'Supabase client not available' },
-        { status: 500 }
-      );
-    }
-    
     // Fetch poll data from polls table
     const { data: poll, error } = await supabaseClient
       .from('polls')
@@ -64,7 +57,7 @@ export async function GET(
       .eq('id', pollId)
       .single();
 
-    if (error || !poll || !('id' in poll)) {
+    if (error || !poll) {
       return NextResponse.json(
         { error: 'Poll not found' },
         { status: 404 }

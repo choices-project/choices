@@ -9,14 +9,7 @@ export const dynamic = 'force-dynamic';
 // GET /api/polls - Get active polls with aggregated results only
 export async function GET(request: NextRequest) {
   try {
-    const supabase = getSupabaseServerClient();
-    
-    if (!supabase) {
-      return NextResponse.json(
-        { error: 'Supabase client not available' },
-        { status: 500 }
-      );
-    }
+    const supabaseClient = await getSupabaseServerClient();
 
     const { searchParams } = new URL(request.url);
     const limit = parseInt(searchParams.get('limit') || '20');
@@ -27,7 +20,6 @@ export async function GET(request: NextRequest) {
 
     try {
       devLog('Fetching active polls from polls table...');
-      const supabaseClient = await supabase;
       const { data: directPolls, error: directError } = await supabaseClient
         .from('polls')
         .select('id, title, total_votes, options, status')
@@ -41,24 +33,17 @@ export async function GET(request: NextRequest) {
       devLog('Found polls:', directPolls.length || 0);
 
       // Manually aggregate results (temporary solution)
-      polls = directPolls && !('error' in directPolls) ? directPolls.filter(poll => 
-        poll && 
-        'id' in poll && 
-        'title' in poll && 
-        'total_votes' in poll && 
-        'options' in poll && 
-        'status' in poll
-      ).map(poll => ({
+      polls = (directPolls ?? []).map(poll => ({
         id: poll.id,
         title: poll.title,
         total_votes: poll.total_votes || 0,
-        aggregated_results: poll.options ? 
+        aggregated_results: Array.isArray(poll.options) ? 
           poll.options.reduce((acc: Record<string, number>, _option: unknown, _index: number) => {
             acc[`option_${_index + 1}`] = 0; // Default to 0 until we can count votes
             return acc;
           }, {}) : {},
         status: poll.status
-      })) : [];
+      }));
     } catch (fallbackError) {
       devLog('Error fetching polls:', fallbackError);
       return NextResponse.json(

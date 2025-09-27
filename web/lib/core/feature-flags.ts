@@ -42,6 +42,7 @@ export const FEATURE_FLAGS = {
   SOCIAL_SIGNUP: false,              // Social OAuth signup (NOT IMPLEMENTED)
   CONTACT_INFORMATION_SYSTEM: false, // Contact information system (PARTIALLY IMPLEMENTED - 50%)
   CIVICS_TESTING_STRATEGY: false,    // Civics testing strategy (NOT IMPLEMENTED)
+  DEVICE_FLOW_AUTH: false,           // OAuth 2.0 Device Authorization Grant flow (PARTIALLY IMPLEMENTED - 80%)
   
   // ===== PERFORMANCE & OPTIMIZATION =====
   PERFORMANCE_OPTIMIZATION: false,   // Image optimization, virtual scrolling, lazy loading

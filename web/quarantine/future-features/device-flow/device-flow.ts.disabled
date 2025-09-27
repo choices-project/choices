@@ -14,14 +14,24 @@
  * @author Choices Platform
  * @version 1.0.0
  * @since 2024-12-27
+ * 
+ * @todo FEATURE INCOMPLETE - Not integrated into main auth flow
+ * @todo CodeQL issues present - Pseudo-patched for incomplete feature
+ * @todo Requires database schema creation before production use
  */
 
 
 import { getSupabaseServerClient } from '@/utils/supabase/server'
 import { logger } from '@/lib/logger'
 import { withOptional } from '@/lib/util/objects'
+import { FEATURE_FLAGS } from '@/lib/core/feature-flags'
 import type { Session } from '@supabase/supabase-js'
 import type { DeviceFlowRecord } from './types'
+
+// Feature flag guard - disable if not enabled
+if (!FEATURE_FLAGS.DEVICE_FLOW_AUTH) {
+  console.warn('Device Flow Authentication is disabled via feature flag')
+}
 
 export type DeviceFlowState = {
   deviceCode: string
@@ -120,8 +130,7 @@ export class DeviceFlowManager {
       const expiresAt = new Date(now.getTime() + this.EXPIRATION_MINUTES * 60 * 1000)
 
       // Store device flow in database
-      const supabaseClient = await supabase;
-      const { error: insertError } = await supabaseClient
+      const { error: insertError } = await supabase
         .from('device_flows')
         .insert({
           device_code: deviceCode,

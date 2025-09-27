@@ -13,7 +13,9 @@ Implement a feature-flagged social sharing system that won't impact MVP bundle s
 ### ✅ **IMPLEMENTED COMPONENTS**
 - **Share API Endpoint**: `web/app/api/share/route.ts` - Complete API for tracking shares
 - **Share Utilities**: `web/lib/share.ts` - Platform-specific share URL generation  
-- **Social Sharing Utils**: `web/lib/social-sharing.ts` - Content generation for sharing
+- **Social Sharing Utils**: `web/quarantine/future-features/social-sharing/social-sharing.ts.disabled` - Content generation for sharing (QUARANTINED)
+- **Social Login Buttons**: `web/quarantine/future-features/social-sharing/SocialLoginButtons.tsx.disabled` - OAuth provider buttons (QUARANTINED)
+- **Social Signup**: `web/quarantine/future-features/social-sharing/SocialSignup.tsx.disabled` - Social signup component (QUARANTINED)
 - **Feature Flag Integration**: Properly integrated with feature flags
 
 ### ❌ **MISSING COMPONENTS**

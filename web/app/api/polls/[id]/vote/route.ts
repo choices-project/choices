@@ -53,10 +53,6 @@ export async function POST(
     } else {
       supabase = await getSupabaseServerClient();
     }
-    
-    if (!supabase) {
-      throw new Error('Supabase client not available')
-    }
 
     // Skip authentication for E2E tests
     let user = null;
@@ -222,10 +218,6 @@ export async function HEAD(
     } else {
       supabase = await getSupabaseServerClient();
     }
-    
-    if (!supabase) {
-      return new NextResponse(null, { status: 204 }) // Not voted
-    }
 
     // Get user; SSR internal fetch might be unauth'd — default to "no vote"
     let user = null;
@@ -290,29 +282,26 @@ export async function GET(
     // E2E bypass for testing
     if (!user && request.headers.get('x-e2e-bypass') === '1') {
       const supabase = await getSupabaseServerClient()
-      if (supabase) {
-        // Use service role to bypass RLS
-        const { data: testUser, error: testUserError } = await supabase
-          .from('user_profiles')
-          .select('user_id, email')
-          .eq('email', 'user@example.com')
-          .single()
-          
-        if (testUserError) {
-          console.error('Error fetching test user for E2E bypass:', testUserError);
-        }
+      // Use service role to bypass RLS
+      const { data: testUser, error: testUserError } = await supabase
+        .from('user_profiles')
+        .select('user_id, email')
+        .eq('email', 'user@example.com')
+        .single()
         
-        
-        if (testUser) {
-          user = { 
-            id: testUser.user_id, 
-            email: testUser.email,
-            app_metadata: {},
-            user_metadata: {},
-            aud: 'authenticated',
-            created_at: new Date().toISOString()
-          } as any
-        }
+      if (testUserError) {
+        console.error('Error fetching test user for E2E bypass:', testUserError);
+      }
+      
+      if (testUser) {
+        user = { 
+          id: testUser.user_id, 
+          email: testUser.email,
+          app_metadata: {},
+          user_metadata: {},
+          aud: 'authenticated',
+          created_at: new Date().toISOString()
+        } as any
       }
     }
     

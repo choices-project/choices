@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { getAvailableProviders } from '@/features/auth/lib/social-auth-config'
 import type { OAuthProvider } from '@/features/auth/types/auth'
 import { devLog } from '@/lib/logger'
+import { FEATURE_FLAGS } from '@/lib/core/feature-flags'
 import { 
   Chrome, 
   Github, 
@@ -41,6 +42,11 @@ export default function SocialLoginButtons({
   isLoading = false,
   className = ''
 }: SocialLoginButtonsProps) {
+  // Feature flag guard
+  if (!FEATURE_FLAGS.SOCIAL_SIGNUP) {
+    return null
+  }
+
   const [loadingProvider, setLoadingProvider] = useState<OAuthProvider | null>(null)
   const availableProviders = getAvailableProviders()
 

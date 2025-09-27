@@ -23,9 +23,9 @@ This is the master documentation for the Choices democratic platform. All docume
 
 ### **For New Developers**
 1. **[Onboarding Guide](ONBOARDING.md)** - Complete setup and development guide
-2. **[Unified Playbook](UNIFIED_PLAYBOOK.md)** - Complete system playbook
-3. **[System Architecture](COMPREHENSIVE_SYSTEM_ARCHITECTURE_DISCOVERY.md)** - Technical architecture
-4. **[Master Implementation Roadmap](implementation/MASTER_IMPLEMENTATION_ROADMAP.md)** - Development roadmap
+2. **[System Architecture](core/SYSTEM_ARCHITECTURE.md)** - Technical architecture
+3. **[Master Implementation Roadmap](implementation/MASTER_IMPLEMENTATION_ROADMAP.md)** - Development roadmap
+4. **[Quarantined Features Index](future-features/QUARANTINED_FEATURES_INDEX.md)** - Future features in quarantine
 
 ### **For AI Agents**
 1. **Read [Onboarding Guide](ONBOARDING.md) first**

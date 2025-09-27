@@ -3,7 +3,16 @@
  * 
  * This module provides utilities for creating viral, activist-themed social shares
  * that position Choices as a "social app with suspiciously activist undertones"
+ * 
+ * @todo FEATURE INCOMPLETE - Requires FEATURE_FLAGS.SOCIAL_SHARING = true
  */
+
+import { FEATURE_FLAGS } from '@/lib/core/feature-flags'
+
+// Feature flag guard - disable if not enabled
+if (!FEATURE_FLAGS.SOCIAL_SHARING) {
+  console.warn('Social Sharing is disabled via feature flag')
+}
 
 export type SocialShareData = {
   title: string

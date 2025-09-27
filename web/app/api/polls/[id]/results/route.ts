@@ -11,17 +11,8 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const supabase = getSupabaseServerClient();
-    
-    if (!supabase) {
-      return NextResponse.json(
-        { error: 'Supabase client not available' },
-        { status: 500 }
-      );
-    }
-
     const pollId = params.id;
-    const supabaseClient = await supabase;
+    const supabaseClient = await getSupabaseServerClient();
 
     // Fetch poll data and calculate aggregated results
     const { data: poll, error: pollError } = await supabaseClient
@@ -46,7 +37,7 @@ export async function GET(
       }, {} as Record<string, number>) : {};
 
     // Additional security: ensure no sensitive data is returned
-    const sanitizedResults = poll && !('error' in poll) ? {
+    const sanitizedResults = {
       id: poll.id,
       title: poll.title,
       total_votes: poll.total_votes || 0,
@@ -55,14 +46,6 @@ export async function GET(
       // Only include safe, public fields
       status: 'active',
       message: 'Aggregated results only - no individual vote data'
-    } : {
-      id: pollId,
-      title: 'Unknown',
-      total_votes: 0,
-      participation: 0,
-      aggregated_results: {},
-      status: 'error',
-      message: 'Poll data not available'
     };
 
     return NextResponse.json({
