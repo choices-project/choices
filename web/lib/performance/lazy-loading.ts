@@ -265,8 +265,7 @@ export function lazyLoadCSS(
  * Create a lazy loading hook for React components
  */
 export function useLazyLoading<T>(
-  importFn: () => Promise<T>,
-  deps: React.DependencyList = []
+  importFn: () => Promise<T>
 ): {
   data: T | null;
   loading: boolean;
@@ -276,9 +275,6 @@ export function useLazyLoading<T>(
   const [data, setData] = React.useState<T | null>(null);
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<Error | null>(null);
-  
-  // Create dependency array without spread
-  const dependencyArray = React.useMemo(() => [importFn, ...deps], [importFn, deps]);
   
   const load = React.useCallback(async () => {
     setLoading(true);
@@ -296,7 +292,7 @@ export function useLazyLoading<T>(
     } finally {
       setLoading(false);
     }
-  }, dependencyArray);
+  }, [importFn]);
   
   React.useEffect(() => {
     load();

@@ -38,10 +38,9 @@ export async function csrfFetch(
       headers.set(key, value);
     });
     
-    return fetch(url, {
-      ...options,
+    return fetch(url, Object.assign({}, options, {
       headers,
-    });
+    }));
   }
   
   // For safe methods (GET, HEAD, OPTIONS), use regular fetch
@@ -56,15 +55,13 @@ export async function csrfPost(
   data: unknown,
   options: Omit<RequestInit, 'method' | 'body'> = {}
 ): Promise<Response> {
-  return csrfFetch(url, {
-    ...options,
+  return csrfFetch(url, Object.assign({}, options, {
     method: 'POST',
-    headers: {
+    headers: Object.assign({
       'Content-Type': 'application/json',
-      ...options.headers,
-    },
+    }, options.headers),
     body: JSON.stringify(data),
-  });
+  }));
 }
 
 /**
@@ -75,15 +72,13 @@ export async function csrfPut(
   data: unknown,
   options: Omit<RequestInit, 'method' | 'body'> = {}
 ): Promise<Response> {
-  return csrfFetch(url, {
-    ...options,
+  return csrfFetch(url, Object.assign({}, options, {
     method: 'PUT',
-    headers: {
+    headers: Object.assign({
       'Content-Type': 'application/json',
-      ...options.headers,
-    },
+    }, options.headers),
     body: JSON.stringify(data),
-  });
+  }));
 }
 
 /**
@@ -94,15 +89,13 @@ export async function csrfPatch(
   data: unknown,
   options: Omit<RequestInit, 'method' | 'body'> = {}
 ): Promise<Response> {
-  return csrfFetch(url, {
-    ...options,
+  return csrfFetch(url, Object.assign({}, options, {
     method: 'PATCH',
-    headers: {
+    headers: Object.assign({
       'Content-Type': 'application/json',
-      ...options.headers,
-    },
+    }, options.headers),
     body: JSON.stringify(data),
-  });
+  }));
 }
 
 /**
@@ -112,8 +105,7 @@ export async function csrfDelete(
   url: string | URL,
   options: Omit<RequestInit, 'method'> = {}
 ): Promise<Response> {
-  return csrfFetch(url, {
-    ...options,
+  return csrfFetch(url, Object.assign({}, options, {
     method: 'DELETE',
-  });
+  }));
 }

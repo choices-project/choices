@@ -40,7 +40,7 @@ describe('VoteProcessor', () => {
     jest.clearAllMocks();
     // Reset mock routes to ensure clean state
     mockSetup.resetAllMocks();
-    processor = new VoteProcessor(() => Promise.resolve(mockSupabaseClient));
+    processor = new VoteProcessor(() => Promise.resolve(mockSupabaseClient as any));
     
     mockPoll = {
       id: 'test-poll-123',
@@ -106,7 +106,7 @@ describe('VoteProcessor', () => {
     });
 
     it('should handle Supabase client unavailable', async () => {
-      const nullClientFactory = jest.fn(() => Promise.resolve(null));
+      const nullClientFactory = jest.fn(() => Promise.resolve(null as any));
       const testProcessor = new VoteProcessor(nullClientFactory);
 
       const result = await testProcessor.processVote(mockVoteData);
