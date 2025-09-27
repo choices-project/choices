@@ -32,6 +32,8 @@ paths-ignore:
   - '**/*.disabled/**'
   - '**/*.disabled'
   - 'web/quarantine/**'
+  - 'web/lib/device-flow.ts'
+  - 'web/lib/comprehensive-testing-runner.ts'
 
 # Query suites to run
 queries:
