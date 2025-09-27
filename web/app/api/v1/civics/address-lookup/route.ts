@@ -11,7 +11,14 @@ import { generateAddressHMAC, setJurisdictionCookie } from '@/lib/civics/privacy
 
 // If using Edge: export const runtime = 'edge';
 
-assertPepperConfig();
+// Check if privacy pepper is configured, return error if not
+let pepperConfigured = false;
+try {
+  assertPepperConfig();
+  pepperConfigured = true;
+} catch {
+  console.warn('Civics address lookup disabled: Privacy pepper configuration not available');
+}
 
 async function lookupJurisdictionFromExternalAPI(address: string) {
   // IMPORTANT: Address lookup requires external API calls because:
@@ -64,6 +71,13 @@ async function lookupJurisdictionFromExternalAPI(address: string) {
 }
 
 export async function POST(req: Request) {
+  if (!pepperConfigured) {
+    return NextResponse.json(
+      { error: 'Civics address lookup is not configured' }, 
+      { status: 503 }
+    );
+  }
+
   const { address } = await req.json();
   if (!address || typeof address !== 'string') {
     return NextResponse.json({ error: 'address required' }, { status: 400 });
