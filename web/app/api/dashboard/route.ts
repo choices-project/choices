@@ -163,7 +163,7 @@ async function getPlatformStats(supabase: any) {
 
     // Get active polls
     const { data: activePolls, error: activePollsError } = await supabase
-      .from('po_polls')
+      .from('polls')
       .select('id')
       .eq('status', 'active')
 

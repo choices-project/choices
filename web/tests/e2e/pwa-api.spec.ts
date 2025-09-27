@@ -174,7 +174,7 @@ test.describe('PWA API Endpoints - V2', () => {
     
     const syncData = await syncResponse.json();
     expect(syncData).toHaveProperty('success', true);
-    expect(syncData).toHaveProperty('synced');
+    expect(syncData).toHaveProperty('syncedCount');
   });
 
   test('should handle PWA notification subscription with V2 setup', async ({ page }) => {

@@ -25,10 +25,10 @@ export async function GET(
 
     // Fetch poll data and calculate aggregated results
     const { data: poll, error: pollError } = await supabaseClient
-      .from('po_polls')
-      .select('poll_id, title, options, total_votes, participation_rate, status')
-      .eq('poll_id', pollId as any)
-      .eq('status', 'active' as any)
+      .from('polls')
+      .select('id, title, options, total_votes, participation, status')
+      .eq('id', pollId)
+      .eq('status', 'active')
       .single();
 
     if (pollError || !poll) {
@@ -47,19 +47,19 @@ export async function GET(
 
     // Additional security: ensure no sensitive data is returned
     const sanitizedResults = poll && !('error' in poll) ? {
-      poll_id: poll.poll_id,
+      id: poll.id,
       title: poll.title,
       total_votes: poll.total_votes || 0,
-      participation_rate: poll.participation_rate || 0,
+      participation: poll.participation || 0,
       aggregated_results: aggregatedResults,
       // Only include safe, public fields
       status: 'active',
       message: 'Aggregated results only - no individual vote data'
     } : {
-      poll_id: pollId,
+      id: pollId,
       title: 'Unknown',
       total_votes: 0,
-      participation_rate: 0,
+      participation: 0,
       aggregated_results: {},
       status: 'error',
       message: 'Poll data not available'

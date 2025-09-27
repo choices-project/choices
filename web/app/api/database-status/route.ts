@@ -33,7 +33,7 @@ export async function GET() {
     
                // Test the connection
            const supabaseClient = await supabase;
-           const { error } = await supabaseClient.from('ia_users').select('count').limit(1);
+           const { error } = await supabaseClient.from('user_profiles').select('count').limit(1);
     
     return NextResponse.json({
       status: {

@@ -277,6 +277,9 @@ export function useLazyLoading<T>(
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<Error | null>(null);
   
+  // Create dependency array without spread
+  const dependencyArray = React.useMemo(() => [importFn, ...deps], [importFn, deps]);
+  
   const load = React.useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -293,8 +296,7 @@ export function useLazyLoading<T>(
     } finally {
       setLoading(false);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [importFn, ...deps]);
+  }, dependencyArray);
   
   React.useEffect(() => {
     load();

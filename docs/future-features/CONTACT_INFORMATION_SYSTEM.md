@@ -1,312 +1,195 @@
-# 📞 Contact Information & Social Media Integration System
+# Contact Information System
 
-**Created:** September 16, 2025  
-**Status:** ✅ **COMPLETE**
-
----
-
-## 🎯 **System Overview**
-
-We've built a comprehensive contact information and social media integration system that enables constituents to easily connect with their representatives through multiple channels. The system collects, verifies, and presents contact information from multiple authoritative sources.
+**Created:** January 21, 2025  
+**Status:** 🔄 **PARTIALLY IMPLEMENTED (50%)**  
+**Feature Flag:** `CONTACT_INFORMATION_SYSTEM: false`  
+**Purpose:** Comprehensive contact information system for representatives
 
 ---
 
-## 🏗️ **Architecture & Components**
+## 🎯 **Overview**
 
-### **📊 Database Schema Extensions**
+The Contact Information System provides comprehensive contact information for elected representatives, including contact methods, social media, and communication tracking.
 
-#### **1. Contact Information Table (`civics_contact_info`)**
-```sql
-- official_email, official_phone, official_fax, official_website
-- office_addresses (JSON array for multiple offices)
-- social_media (JSON object with handles and URLs)
-- preferred_contact_method, response_time_expectation
-- data_quality_score, verification_notes
-```
-
-#### **2. Social Media Engagement Table (`civics_social_engagement`)**
-```sql
-- platform, handle, url
-- followers_count, engagement_rate, verified status
-- official_account flag, last_updated timestamp
-```
-
-#### **3. Communication Log Table (`civics_communication_log`)**
-```sql
-- communication_type, subject, message_preview
-- response tracking, quality assessment
-- user interaction logging
-```
-
-### **🔌 API Integration Sources**
-
-#### **1. ProPublica Congress API**
-- **Purpose**: Federal representative contact information
-- **Data**: Official emails, phones, office addresses, websites
-- **Rate Limit**: 5000 requests/day
-- **Quality**: High (official government data)
-
-#### **2. Google Civic Information API**
-- **Purpose**: Enhanced contact data and social media detection
-- **Data**: Additional contact methods, social media URLs
-- **Rate Limit**: 25,000 requests/day
-- **Quality**: High (Google's verification)
-
-#### **3. Manual Verification (Local Officials)**
-- **Purpose**: San Francisco and Los Angeles local officials
-- **Data**: Complete contact information, social media profiles
-- **Quality**: 100% (manually verified)
+### **Component Location**
+- **Contact API**: `web/app/api/civics/contact/[id]/route.ts`
+- **Contact Types**: `web/lib/types/electoral.ts`
+- **Contact Utils**: `web/lib/integrations/unified-orchestrator.ts`
 
 ---
 
-## 🚀 **Implementation Features**
+## 🔧 **Implementation Details**
 
-### **📞 Contact Information Collection**
+### **Core Features**
+- **Contact Information Retrieval** - Get representative contact information
+- **Communication Logging** - Track communication attempts
+- **Quick Actions** - Generate quick contact actions
+- **Social Media Integration** - Social media contact information
+- **Data Quality Scoring** - Contact data quality assessment
 
-#### **Federal Representatives**
-- **ProPublica Integration**: Automated collection from official congressional data
-- **Google Civic Enhancement**: Additional contact methods and social media
-- **Quality Scoring**: 60-100 based on data completeness
-- **Verification**: Cross-referenced with multiple sources
-
-#### **Local Representatives**
-- **Manual Verification**: Complete contact information for SF and LA officials
-- **Social Media Profiles**: Twitter, Facebook, Instagram, LinkedIn, YouTube, TikTok
-- **Office Addresses**: Multiple office locations with full details
-- **Quality Score**: 100/100 (manually verified)
-
-### **📱 Social Media Integration**
-
-#### **Supported Platforms**
-- **Twitter/X**: Handles, follower counts, verification status
-- **Facebook**: Official pages and engagement metrics
-- **Instagram**: Professional accounts and follower data
-- **LinkedIn**: Professional profiles and connections
-- **YouTube**: Official channels and subscriber counts
-- **TikTok**: Official accounts and engagement rates
-
-#### **Engagement Tracking**
-- **Follower Counts**: Real-time social media metrics
-- **Engagement Rates**: Interaction and response rates
-- **Verification Status**: Platform-verified accounts
-- **Official Account Detection**: Government vs. personal accounts
-
-### **📊 Data Quality & Verification**
-
-#### **Quality Scoring System**
-- **100/100**: Manually verified local officials
-- **90-99**: High-quality federal data with multiple sources
-- **80-89**: Good quality with some missing information
-- **60-79**: Basic contact information available
-- **<60**: Limited or unverified data
-
-#### **Verification Process**
-1. **Source Validation**: Cross-reference multiple APIs
-2. **Contact Testing**: Verify email and phone accessibility
-3. **Social Media Verification**: Confirm official accounts
-4. **Regular Updates**: Scheduled data refresh cycles
+### **API Endpoints**
+```typescript
+// Contact Information API
+GET /api/civics/contact/[id]     // Get contact information
+POST /api/civics/contact/[id]    // Log communication attempt
+```
 
 ---
 
-## 🔧 **API Endpoints**
+## 🎨 **UI Components**
 
-### **1. Representative Detail Endpoint**
-```
-GET /api/civics/representative/[id]
-```
-**Features:**
-- Complete representative profile
-- Contact information and social media
-- Campaign finance data
-- Voting behavior analysis
-- Policy positions
+### **Contact Information Display**
+- **Contact Methods** - Email, phone, website, address
+- **Social Media** - Social media profiles and followers
+- **Quick Actions** - Direct contact actions
+- **Data Quality** - Contact data quality indicators
 
-### **2. Contact Information Endpoint**
-```
-GET /api/civics/contact/[id]
-```
-**Features:**
-- Quick contact methods
-- Social media profiles
-- Office addresses
-- Communication preferences
-- Quality metrics
-
-### **3. Communication Logging**
-```
-POST /api/civics/contact/[id]
-```
-**Features:**
-- Log communication attempts
-- Track response rates
-- Quality assessment
-- User interaction history
+### **Communication Tracking**
+- **Communication Log** - Track communication attempts
+- **Status Tracking** - Communication status tracking
+- **Response Tracking** - Track responses from representatives
 
 ---
 
-## 📈 **Data Collection Scripts**
+## 📊 **Contact Features**
 
-### **1. Federal Contact Collection (`civics-contact-collection.ts`)**
-- **ProPublica API Integration**: Automated federal representative data
-- **Google Civic Enhancement**: Additional contact methods
-- **Social Media Detection**: Automatic platform identification
-- **Rate Limiting**: Respectful API usage
-- **Error Handling**: Robust failure recovery
+### **Contact Information**
+- **Basic Contact** - Email, phone, website, address
+- **Social Media** - Twitter, Facebook, LinkedIn, etc.
+- **Office Information** - Office locations and hours
+- **Staff Information** - Staff contact information
 
-### **2. Local Contact Enhancement (`civics-enhance-local-contacts.ts`)**
-- **Manual Verification**: Complete SF and LA official data
-- **Social Media Profiles**: Comprehensive platform coverage
-- **Office Addresses**: Multiple location support
-- **Quality Assurance**: 100% verification
-
----
-
-## 🎨 **User Experience Features**
-
-### **📞 Quick Contact Actions**
-- **Email**: Direct mailto links with pre-filled subjects
-- **Phone**: One-click calling on mobile devices
-- **Website**: Direct links to official websites
-- **Social Media**: Platform-specific engagement
-
-### **📱 Social Media Integration**
-- **Platform Icons**: Visual platform identification
-- **Follower Counts**: Social media reach indicators
-- **Verification Badges**: Official account confirmation
-- **Engagement Metrics**: Interaction rate displays
-
-### **🏛️ Office Information**
-- **Multiple Locations**: District and DC offices
-- **Full Addresses**: Complete contact details
-- **Office Hours**: Availability information
-- **Specialized Contacts**: Issue-specific contacts
+### **Communication Features**
+- **Communication Logging** - Log all communication attempts
+- **Status Tracking** - Track communication status
+- **Response Tracking** - Track responses from representatives
+- **Follow-up Management** - Manage follow-up communications
 
 ---
 
-## 📊 **Current Coverage**
+## 🚀 **Usage Example**
 
-### **📈 Contact Information Availability**
-- **Federal Representatives**: 535/535 (100% coverage)
-- **State Representatives**: ~7,500 (50 states + DC)
-- **Local Representatives**: 34 (SF: 16, LA: 18)
-- **Total Representatives**: 8,000+ with contact data
+```typescript
+import { useContactInfo } from '@/hooks/useContactInfo';
 
-### **📱 Social Media Coverage**
-- **Twitter**: 85% of representatives
-- **Facebook**: 70% of representatives
-- **Instagram**: 45% of representatives
-- **LinkedIn**: 60% of representatives
-- **YouTube**: 25% of representatives
+export default function RepresentativeContact({ representativeId }) {
+  const { contactInfo, loading, error } = useContactInfo(representativeId);
 
-### **📞 Contact Method Availability**
-- **Email**: 95% of representatives
-- **Phone**: 90% of representatives
-- **Website**: 85% of representatives
-- **Office Address**: 100% of representatives
+  if (loading) return <div>Loading contact information...</div>;
+  if (error) return <div>Error loading contact information</div>;
 
----
-
-## 🔄 **Data Freshness & Updates**
-
-### **📅 Update Schedule**
-- **Federal Data**: Weekly ProPublica updates
-- **Social Media**: Daily engagement metric updates
-- **Local Data**: Monthly verification cycles
-- **Quality Scores**: Real-time assessment
-
-### **🔄 Automated Refresh**
-- **API Monitoring**: Health checks and error detection
-- **Data Validation**: Consistency and completeness checks
-- **Quality Scoring**: Automatic quality assessment
-- **Notification System**: Alert for data issues
-
----
-
-## 🚀 **Usage Examples**
-
-### **📞 Get Contact Information**
-```bash
-curl "http://localhost:3000/api/civics/contact/123"
-```
-
-### **📱 Response Format**
-```json
-{
-  "ok": true,
-  "data": {
-    "representative": {
-      "name": "Nancy Pelosi",
-      "office": "Representative",
-      "level": "federal",
-      "jurisdiction": "CA"
-    },
-    "contact_methods": {
-      "email": {
-        "value": "nancy.pelosi@mail.house.gov",
-        "verified": true,
-        "quality_score": 95
-      },
-      "phone": {
-        "value": "(202) 225-4965",
-        "verified": true,
-        "quality_score": 95
-      }
-    },
-    "social_media": [
-      {
-        "platform": "twitter",
-        "handle": "@SpeakerPelosi",
-        "url": "https://twitter.com/SpeakerPelosi",
-        "followers_count": 2500000,
-        "verified": true
-      }
-    ],
-    "quick_actions": [
-      {
-        "type": "email",
-        "label": "Send Email",
-        "action": "mailto:nancy.pelosi@mail.house.gov",
-        "icon": "📧"
-      }
-    ]
-  }
+  return (
+    <div>
+      <h2>Contact Information</h2>
+      
+      <div className="contact-methods">
+        {contactInfo.contact_methods.email && (
+          <a href={`mailto:${contactInfo.contact_methods.email.value}`}>
+            📧 Email
+          </a>
+        )}
+        
+        {contactInfo.contact_methods.phone && (
+          <a href={`tel:${contactInfo.contact_methods.phone.value}`}>
+            📞 Phone
+          </a>
+        )}
+        
+        {contactInfo.contact_methods.website && (
+          <a href={contactInfo.contact_methods.website.value} target="_blank">
+            🌐 Website
+          </a>
+        )}
+      </div>
+      
+      <div className="social-media">
+        {contactInfo.social_media.map(sm => (
+          <a key={sm.platform} href={sm.url} target="_blank">
+            {sm.platform} ({sm.followers_count} followers)
+          </a>
+        ))}
+      </div>
+    </div>
+  );
 }
 ```
 
 ---
 
-## 🎯 **Next Steps & Enhancements**
+## 📊 **Implementation Status**
 
-### **🔮 Planned Features**
-1. **Communication Tracking**: Response rate analytics
-2. **Issue-Specific Contacts**: Specialized contact methods
-3. **Mobile App Integration**: Native contact features
-4. **Automated Updates**: Real-time data synchronization
-5. **User Feedback**: Contact method effectiveness ratings
+### **✅ Implemented Features**
+- **Contact API** - Complete API endpoint for contact information
+- **Communication Logging** - POST endpoint for logging communications
+- **Quick Actions** - Generated quick contact actions
+- **Data Quality Scoring** - Contact data quality assessment
+- **Social Media Integration** - Social media contact information
 
-### **📊 Analytics & Insights**
-1. **Engagement Metrics**: Communication success rates
-2. **Response Time Analysis**: Representative responsiveness
-3. **Social Media Performance**: Platform effectiveness
-4. **User Behavior**: Preferred contact methods
+### **❌ Missing Features**
+- **UI Components** - No React components for contact interface
+- **Contact Management** - No contact management interface
+- **Communication Tracking** - No user-facing communication tracking
+- **Contact Forms** - No contact form components
 
----
-
-## 🏆 **Achievement Summary**
-
-**Contact Information & Social Media Integration is now complete!** We've successfully:
-
-1. ✅ **Built comprehensive database schema** for contact and social data
-2. ✅ **Integrated multiple APIs** (ProPublica, Google Civic)
-3. ✅ **Created automated collection scripts** for federal representatives
-4. ✅ **Enhanced local representative data** with manual verification
-5. ✅ **Built API endpoints** for easy contact access
-6. ✅ **Implemented social media tracking** across all major platforms
-7. ✅ **Added quality scoring** and verification systems
-8. ✅ **Created communication logging** for engagement tracking
-
-**The system now provides constituents with comprehensive, verified contact information and social media access to their representatives!** 🎉
+### **🔧 Technical Details**
+- **API Integration** - Complete API endpoints
+- **Data Processing** - Contact data processing and validation
+- **Quality Assessment** - Contact data quality scoring
+- **Social Media Integration** - Social media data integration
 
 ---
 
-*Last Updated: 2025-09-17September 16, 2025*
+## 🔧 **Contact Data Structure**
+
+### **Contact Methods**
+```typescript
+interface ContactMethods {
+  email?: ContactMethod;
+  phone?: ContactMethod;
+  website?: ContactMethod;
+  address?: Address;
+}
+```
+
+### **Social Media**
+```typescript
+interface SocialMedia {
+  platform: string;
+  url: string;
+  followers_count: number;
+  verified: boolean;
+}
+```
+
+### **Data Quality**
+```typescript
+interface DataQuality {
+  overall_score: number;
+  completeness: number;
+  accuracy: number;
+  recency: number;
+  verification_status: string;
+}
+```
+
+---
+
+## 📱 **Contact Interface**
+
+### **Contact Information Display**
+- **Contact Methods** - Email, phone, website, address
+- **Social Media** - Social media profiles
+- **Quick Actions** - Direct contact actions
+- **Data Quality** - Quality indicators
+
+### **Communication Features**
+- **Communication Log** - Track communications
+- **Status Tracking** - Communication status
+- **Response Tracking** - Track responses
+- **Follow-up Management** - Manage follow-ups
+
+---
+
+**Last Updated:** January 21, 2025  
+**Version:** 1.0.0  
+**Status:** 🔄 **PARTIALLY IMPLEMENTED - CONTACT INFORMATION SYSTEM**

@@ -58,8 +58,8 @@ export async function GET() {
     let polls: PollData[] = [];
     try {
       const { data: pollsData, error: pollsError } = await supabaseClient
-        .from('po_polls')
-        .select('poll_id, title, total_votes, participation_rate, options, status')
+        .from('polls')
+        .select('id, title, total_votes, participation, options, status')
         .eq('status', 'active')
         .limit(10);
 
@@ -67,7 +67,10 @@ export async function GET() {
         devLog('Error fetching polls:', pollsError);
         // Continue without polls - we'll use fallback data
       } else {
-        polls = (pollsData as PollData[]) || [];
+        polls = (pollsData || []).map((poll: any) => ({
+          ...poll,
+          participation_rate: poll.participation || 0
+        })) as PollData[];
       }
     } catch (pollsError) {
       devLog('Error fetching polls:', pollsError);

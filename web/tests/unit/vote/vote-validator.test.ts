@@ -22,21 +22,11 @@ jest.mock('@/lib/logger', () => ({
 
 // Import V2 test setup
 import { getMS } from '../../setup';
-const { when } = getMS();
-
-// Create mock Supabase client
-const mockClient = {
-  from: jest.fn(() => ({
-    select: jest.fn(() => ({
-      eq: jest.fn(() => ({
-        single: jest.fn(() => Promise.resolve({ data: null, error: null }))
-      }))
-    }))
-  }))
-};
+const mockSetup = getMS();
+const { when, client: mockSupabaseClient } = mockSetup;
 
 jest.mock('@/utils/supabase/server', () => ({
-  getSupabaseServerClient: jest.fn(() => Promise.resolve(mockClient))
+  getSupabaseServerClient: jest.fn(() => Promise.resolve(mockSupabaseClient))
 }));
 
 describe('VoteValidator', () => {
@@ -45,6 +35,10 @@ describe('VoteValidator', () => {
   let mockVoteData: VoteData;
 
   beforeEach(() => {
+    // Reset all mocks before each test
+    jest.clearAllMocks();
+    // Reset mock routes to ensure clean state
+    mockSetup.resetAllMocks();
     validator = new VoteValidator();
     
     mockPoll = {

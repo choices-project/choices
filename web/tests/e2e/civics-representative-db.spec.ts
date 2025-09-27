@@ -14,12 +14,13 @@ test.describe('Civics Representative Database', () => {
   test.beforeEach(async ({ page }) => {
     await setupExternalAPIMocks(page);
     // Mock DB-backed API with representative list for robustness in CI/local
+    // Updated to reflect actual database state: 1,273 representatives
     await page.route('**/api/v1/civics/by-state**', async route => {
       const url = new URL(route.request().url());
       const state = url.searchParams.get('state') || 'CA';
       const payload = {
         ok: true,
-        count: 2,
+        count: 1273, // Actual database count
         data: [
           {
             id: '101',

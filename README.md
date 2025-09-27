@@ -43,6 +43,7 @@ cd web && npm run dev
 
 ### **Documentation**
 - 📖 **[Complete Onboarding Guide](docs/ONBOARDING.md)** - Project setup and development
+- 🎯 **[Master Documentation](docs/MASTER_DOCUMENTATION.md)** - Complete documentation index
 - 🗺️ **[Master Implementation Roadmap](docs/implementation/MASTER_IMPLEMENTATION_ROADMAP.md)** - Current development status
 - 🧪 **[Unified Playbook](docs/UNIFIED_PLAYBOOK.md)** - Complete system documentation
 - 🏗️ **[System Architecture](docs/COMPREHENSIVE_SYSTEM_ARCHITECTURE_DISCOVERY.md)** - Technical architecture

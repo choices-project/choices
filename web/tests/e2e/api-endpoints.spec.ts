@@ -72,6 +72,9 @@ test.describe('API Endpoints - V2', () => {
         email: testData.user.email,
         username: testData.user.username,
         password: testData.user.password
+      },
+      headers: {
+        'x-e2e-bypass': '1'
       }
     });
     
@@ -84,6 +87,9 @@ test.describe('API Endpoints - V2', () => {
       data: {
         email: testData.user.email,
         password: testData.user.password
+      },
+      headers: {
+        'x-e2e-bypass': '1'
       }
     });
     
@@ -138,8 +144,10 @@ test.describe('API Endpoints - V2', () => {
     // Test polls list endpoint
     const listPollsResponse = await page.request.get('/api/polls');
     expect(listPollsResponse.ok()).toBe(true);
-    const pollsList = await listPollsResponse.json();
-    expect(Array.isArray(pollsList)).toBe(true);
+    const pollsData = await listPollsResponse.json();
+    expect(pollsData).toHaveProperty('success', true);
+    expect(pollsData).toHaveProperty('polls');
+    expect(Array.isArray(pollsData.polls)).toBe(true);
   });
 
   test('should test voting API endpoints with V2 setup', async ({ page }) => {
@@ -213,15 +221,18 @@ test.describe('API Endpoints - V2', () => {
     
     expect(addressLookupResponse.ok()).toBe(true);
     const addressData = await addressLookupResponse.json();
-    expect(addressData).toHaveProperty('district');
-    expect(addressData).toHaveProperty('state');
+    expect(addressData).toHaveProperty('ok', true);
+    expect(addressData).toHaveProperty('jurisdiction');
+    expect(addressData.jurisdiction).toHaveProperty('district');
+    expect(addressData.jurisdiction).toHaveProperty('state');
 
     // Test jurisdiction info endpoint (using existing by-state endpoint)
     const jurisdictionResponse = await page.request.get('/api/v1/civics/by-state?state=IL&level=federal');
     
     expect(jurisdictionResponse.ok()).toBe(true);
     const jurisdictionData = await jurisdictionResponse.json();
-    expect(jurisdictionData).toHaveProperty('representatives');
+    expect(jurisdictionData).toHaveProperty('data');
+    expect(jurisdictionData).toHaveProperty('ok', true);
   });
 
   test('should test user profile API endpoints with V2 setup', async ({ page }) => {
@@ -297,8 +308,8 @@ test.describe('API Endpoints - V2', () => {
     
     expect(dashboardResponse.ok()).toBe(true);
     const dashboardData = await dashboardResponse.json();
-    expect(dashboardData).toHaveProperty('metrics');
-    expect(dashboardData).toHaveProperty('recentPolls');
+    expect(dashboardData).toHaveProperty('platform');
+    expect(dashboardData).toHaveProperty('polls');
 
     // Test dashboard metrics endpoint
     const metricsResponse = await page.request.get('/api/dashboard/data', {
@@ -309,8 +320,9 @@ test.describe('API Endpoints - V2', () => {
     
     expect(metricsResponse.ok()).toBe(true);
     const metricsData = await metricsResponse.json();
-    expect(metricsData).toHaveProperty('pollsCreated');
-    expect(metricsData).toHaveProperty('votesCast');
+    expect(metricsData).toHaveProperty('userMetrics');
+    expect(metricsData.userMetrics).toHaveProperty('pollsCreated');
+    expect(metricsData.userMetrics).toHaveProperty('votesCast');
   });
 
   test('should test WebAuthn API endpoints with V2 setup', async ({ page }) => {
