@@ -95,7 +95,7 @@ export async function GET(request: NextRequest) {
 
     // Apply additional search filtering if needed (for fields not in the database)
     let filteredFeedback = feedback || [];
-    if (search.trim() !== '' && feedback) {
+    if (feedback) {
       filteredFeedback = feedback.filter(item => {
         const searchLower = search.toLowerCase();
         return (

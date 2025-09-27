@@ -22,7 +22,14 @@ export async function GET(
       .eq('status', 'active')
       .single();
 
-    if (pollError || !poll) {
+    if (pollError) {
+      return NextResponse.json(
+        { error: 'Poll not found or not active' },
+        { status: 404 }
+      );
+    }
+    
+    if (!poll) {
       return NextResponse.json(
         { error: 'Poll not found or not active' },
         { status: 404 }

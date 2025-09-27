@@ -19,12 +19,15 @@ export default function PerformanceDashboard({ refreshInterval = 30000 }: Perfor
   // Load performance statistics
   const loadPerformanceStats = useCallback(async () => {
     try {
+      setLoading(true)
       const stats = await optimizedPollService.getPerformanceStats(24)
       setPerformanceStats(stats)
       setLastRefresh(new Date())
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to load performance stats'
       setError(errorMessage)
+    } finally {
+      setLoading(false)
     }
   }, [])
 
