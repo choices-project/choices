@@ -15,24 +15,26 @@ export async function GET(req: NextRequest) {
   try {
     const state = req.nextUrl.searchParams.get('state');
     const level = req.nextUrl.searchParams.get('level'); // 'federal' | 'state' | 'local'
-    const chamber = req.nextUrl.searchParams.get('chamber'); // 'us_senate' | 'us_house' | 'state_upper' | 'state_lower'
+    const _chamber = req.nextUrl.searchParams.get('chamber'); // 'us_senate' | 'us_house' | 'state_upper' | 'state_lower'
 
     if (!state) {
       return NextResponse.json({ error: 'State parameter required' }, { status: 400 });
     }
 
+    // Simplified query without problematic join
     let query = supabase
       .from('civics_representatives')
       .select(`
-        *,
-        civics_divisions (
-          ocd_division_id,
-          level,
-          chamber,
-          state,
-          district_number,
-          name
-        )
+        id,
+        name,
+        party,
+        office,
+        level,
+        jurisdiction,
+        district,
+        ocd_division_id,
+        contact,
+        last_updated
       `)
       .eq('jurisdiction', state.toUpperCase());
 
@@ -40,9 +42,8 @@ export async function GET(req: NextRequest) {
       query = query.eq('level', level);
     }
 
-    if (chamber) {
-      query = query.eq('civics_divisions.chamber', chamber);
-    }
+    // Note: chamber filtering removed since it requires the join
+    // This can be added back once the foreign key relationship is fixed
 
     const { data, error } = await query;
 
