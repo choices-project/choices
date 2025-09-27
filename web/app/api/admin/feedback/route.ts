@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
       query = query.eq('sentiment', sentiment as any);
     }
 
-    if (status && status.trim() !== '') {
+    if (status?.trim()) {
       query = query.eq('status', status as any);
     }
 
