@@ -30,18 +30,18 @@ export async function GET(
     }
 
     // Calculate aggregated results (all zeros for now since no votes exist)
-    const aggregatedResults = poll && !('error' in poll) && poll.options ? 
-      poll.options.reduce((acc: any, _option: any, index: any) => {
-        acc[`option_${index + 1}`] = 0; // Default to 0 until we can count votes
-        return acc;
-      }, {} as Record<string, number>) : {};
+    const options = Array.isArray(poll.options) ? poll.options : [];
+    const aggregatedResults = options.reduce((acc: Record<string, number>, _option: unknown, index: number) => {
+      acc[`option_${index + 1}`] = 0; // Default to 0 until we can count votes
+      return acc;
+    }, {});
 
     // Additional security: ensure no sensitive data is returned
     const sanitizedResults = {
       id: poll.id,
       title: poll.title,
-      total_votes: poll.total_votes || 0,
-      participation: poll.participation || 0,
+      total_votes: poll.total_votes ?? 0,
+      participation: poll.participation ?? 0,
       aggregated_results: aggregatedResults,
       // Only include safe, public fields
       status: 'active',

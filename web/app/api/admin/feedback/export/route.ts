@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    if (!userProfile || !userProfile.is_admin) {
+    if (!userProfile.is_admin) {
       return NextResponse.json(
         { error: 'Admin access required' },
         { status: 403 }
@@ -74,7 +74,7 @@ export async function GET(request: NextRequest) {
       query = query.eq('sentiment', sentiment as any);
     }
 
-    if (status) {
+    if (status && status.trim() !== '') {
       query = query.eq('status', status as any);
     }
 
@@ -109,7 +109,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Apply search filter
-    if (search) {
+    if (search.trim() !== '') {
       query = query.or(`title.ilike.%${search}%,description.ilike.%${search}%`);
     }
 

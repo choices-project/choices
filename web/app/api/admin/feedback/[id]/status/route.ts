@@ -46,7 +46,7 @@ export async function PATCH(
       );
     }
 
-    if (!userProfile || !userProfile.is_admin) {
+    if (!userProfile.is_admin) {
       return NextResponse.json(
         { error: 'Admin access required' },
         { status: 403 }

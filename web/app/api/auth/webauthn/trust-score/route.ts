@@ -52,52 +52,8 @@ export async function GET(_request: NextRequest) {
       )
     }
 
-    // If no trust score exists, calculate it
-    if (!trustScore) {
-      const { data: _calculatedScore, error: calculateError } = await supabaseClient
-        .rpc('calculate_biometric_trust_score', { p_user_id: user.id })
-
-      if (calculateError) {
-        devLog('Error calculating trust score:', calculateError)
-        return NextResponse.json(
-          { error: 'Failed to calculate trust score' },
-          { status: 500 }
-        )
-      }
-
-      // Get the calculated score
-      const { data: newTrustScore } = await supabaseClient
-        .from('biometric_trust_scores')
-        .select(`
-          overall_score,
-          base_score,
-          device_consistency_score,
-          behavior_score,
-          location_score,
-          last_calculated_at
-        `)
-        .eq('user_id', String(user.id) as any)
-        .single()
-
-      if (newTrustScore && 'overall_score' in newTrustScore) {
-        devLog('Calculated new trust score for user', {
-          userId: user.id,
-          score: newTrustScore.overall_score
-        })
-        
-        return NextResponse.json({
-          success: true,
-          trustScore: newTrustScore.overall_score,
-          breakdown: {
-            baseScore: newTrustScore.base_score,
-            deviceConsistencyScore: newTrustScore.device_consistency_score,
-            behaviorScore: newTrustScore.behavior_score,
-            locationScore: newTrustScore.location_score
-          },
-          lastCalculated: newTrustScore.last_calculated_at
-        })
-      }
-    } else if (trustScore && 'overall_score' in trustScore) {
+    // If a trust score exists already, return it; otherwise calculate a new one
+    if (trustScore && 'overall_score' in trustScore) {
       devLog('Retrieved trust score for user', {
         userId: user.id,
         score: trustScore.overall_score
@@ -113,6 +69,50 @@ export async function GET(_request: NextRequest) {
           locationScore: trustScore.location_score
         },
         lastCalculated: trustScore.last_calculated_at
+      })
+    }
+    // No trust score exists; calculate it
+    const { data: _calculatedScore, error: calculateError } = await supabaseClient
+      .rpc('calculate_biometric_trust_score', { p_user_id: user.id })
+
+    if (calculateError) {
+      devLog('Error calculating trust score:', calculateError)
+      return NextResponse.json(
+        { error: 'Failed to calculate trust score' },
+        { status: 500 }
+      )
+    }
+
+    // Get the calculated score
+    const { data: newTrustScore } = await supabaseClient
+      .from('biometric_trust_scores')
+      .select(`
+        overall_score,
+        base_score,
+        device_consistency_score,
+        behavior_score,
+        location_score,
+        last_calculated_at
+      `)
+      .eq('user_id', String(user.id) as any)
+      .single()
+
+    if (newTrustScore && 'overall_score' in newTrustScore) {
+      devLog('Calculated new trust score for user', {
+        userId: user.id,
+        score: newTrustScore.overall_score
+      })
+      
+      return NextResponse.json({
+        success: true,
+        trustScore: newTrustScore.overall_score,
+        breakdown: {
+          baseScore: newTrustScore.base_score,
+          deviceConsistencyScore: newTrustScore.device_consistency_score,
+          behaviorScore: newTrustScore.behavior_score,
+          locationScore: newTrustScore.location_score
+        },
+        lastCalculated: newTrustScore.last_calculated_at
       })
     }
 

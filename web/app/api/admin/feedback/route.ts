@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
       query = query.eq('sentiment', sentiment as any);
     }
 
-    if (status) {
+    if (status && status.trim() !== '') {
       query = query.eq('status', status as any);
     }
 
@@ -78,7 +78,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Apply search filter
-    if (search) {
+    if (search.trim() !== '') {
       query = query.or(`title.ilike.%${search}%,description.ilike.%${search}%`);
     }
 
@@ -95,7 +95,7 @@ export async function GET(request: NextRequest) {
 
     // Apply additional search filtering if needed (for fields not in the database)
     let filteredFeedback = feedback || [];
-    if (search && feedback) {
+    if (search.trim() !== '' && feedback) {
       filteredFeedback = feedback.filter(item => {
         const searchLower = search.toLowerCase();
         return (
