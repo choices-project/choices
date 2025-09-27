@@ -53,7 +53,7 @@ export async function GET(_request: NextRequest) {
     }
 
     // If a trust score exists already, return it; otherwise calculate a new one
-    if (trustScore && 'overall_score' in trustScore) {
+    if (trustScore) {
       devLog('Retrieved trust score for user', {
         userId: user.id,
         score: trustScore.overall_score
@@ -97,7 +97,7 @@ export async function GET(_request: NextRequest) {
       .eq('user_id', String(user.id) as any)
       .single()
 
-    if (newTrustScore && 'overall_score' in newTrustScore) {
+    if (newTrustScore) {
       devLog('Calculated new trust score for user', {
         userId: user.id,
         score: newTrustScore.overall_score
