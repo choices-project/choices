@@ -9,5 +9,5 @@ jobs:
         with: { node-version: '20', cache: 'npm' }
       - run: npm ci --workspaces
       - run: node -e "const a=require('child_process').execSync('npx tsc --showConfig',{encoding:'utf8'}); if(!/\"exactOptionalPropertyTypes\": true/.test(a)) process.exit(1)"
-      - run: npm -w web run types:strict
-      - run: npm -w web run lint
+      - run: cd web && npm run types:strict
+      - run: cd web && npm run lint
