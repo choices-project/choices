@@ -30,6 +30,8 @@ paths-ignore:
   - 'web/disabled-pages/**'
   - 'scripts/archive/**'
   - '**/*.disabled/**'
+  - '**/*.disabled'
+  - 'web/quarantine/**'
 
 # Query suites to run
 queries:
