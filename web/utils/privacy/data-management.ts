@@ -10,17 +10,60 @@
 import { getSupabaseBrowserClient } from '../supabase/client';
 import { UserEncryption, EncryptionUtils } from './encryption';
 import { ConsentManager } from './consent';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
-export interface UserDataExport {
-  profile: any;
-  polls: any[];
-  votes: any[];
-  consent: any[];
-  analytics_contributions: any[];
+// Type definitions for user data
+export type UserProfile = {
+  id: string;
+  username?: string;
+  email?: string;
+  created_at: string;
+  updated_at: string;
+};
+
+export type UserPoll = {
+  id: string;
+  title: string;
+  description?: string;
+  created_at: string;
+  status: string;
+};
+
+export type UserVote = {
+  id: string;
+  poll_id: string;
+  choice: number;
+  created_at: string;
+};
+
+export type UserConsent = {
+  id: string;
+  consent_type: string;
+  granted: boolean;
+  granted_at: string;
+};
+
+export type AnalyticsContribution = {
+  id: string;
+  poll_id: string;
+  age_bucket: string;
+  region_bucket: string;
+  education_bucket: string;
+  vote_choice: number;
+  participation_time: string;
+  created_at: string;
+};
+
+export type UserDataExport = {
+  profile: UserProfile;
+  polls: UserPoll[];
+  votes: UserVote[];
+  consent: UserConsent[];
+  analytics_contributions: AnalyticsContribution[];
   exported_at: string;
 }
 
-export interface AnonymizationResult {
+export type AnonymizationResult = {
   success: boolean;
   message: string;
   anonymized_fields: string[];
@@ -29,11 +72,11 @@ export interface AnonymizationResult {
 export class PrivacyDataManager {
   private encryption: UserEncryption;
   private consentManager: ConsentManager;
-  private supabaseClient: any;
+  private supabaseClient: SupabaseClient;
 
-  constructor(supabaseClient?: any) {
+  constructor(supabaseClient?: SupabaseClient) {
     this.encryption = new UserEncryption();
-    this.supabaseClient = supabaseClient || getSupabaseBrowserClient();
+    this.supabaseClient = supabaseClient || (getSupabaseBrowserClient() as unknown as SupabaseClient);
     this.consentManager = new ConsentManager(this.supabaseClient);
   }
 
@@ -42,8 +85,14 @@ export class PrivacyDataManager {
    */
   async exportUserData(): Promise<UserDataExport | null> {
     try {
+      const { data: { user } } = await this.supabaseClient.auth.getUser();
+      if (!user) {
+        console.error('User not authenticated');
+        return null;
+      }
+
       const { data, error } = await this.supabaseClient.rpc('export_user_data', {
-        target_user_id: (await this.supabaseClient.auth.getUser()).data.user?.id
+        target_user_id: user.id
       });
 
       if (error) {
@@ -51,7 +100,7 @@ export class PrivacyDataManager {
         return null;
       }
 
-      return data;
+      return data as UserDataExport;
     } catch (error) {
       console.error('Error exporting user data:', error);
       return null;
@@ -63,8 +112,8 @@ export class PrivacyDataManager {
    */
   async anonymizeUserData(): Promise<AnonymizationResult> {
     try {
-      const userId = (await this.supabaseClient.auth.getUser()).data.user?.id;
-      if (!userId) {
+      const { data: { user } } = await this.supabaseClient.auth.getUser();
+      if (!user) {
         return {
           success: false,
           message: 'User not authenticated',
@@ -73,7 +122,7 @@ export class PrivacyDataManager {
       }
 
       const { error } = await this.supabaseClient.rpc('anonymize_user_data', {
-        target_user_id: userId
+        target_user_id: user.id
       });
 
       if (error) {
@@ -113,12 +162,12 @@ export class PrivacyDataManager {
    */
   async storeEncryptedData(
     dataType: 'demographics' | 'preferences' | 'contact_info' | 'personal_info' | 'behavioral_data' | 'analytics_data',
-    data: any,
+    data: Record<string, unknown>,
     password: string
   ): Promise<boolean> {
     try {
-      const userId = (await this.supabaseClient.auth.getUser()).data.user?.id;
-      if (!userId) {
+      const { data: { user } } = await this.supabaseClient.auth.getUser();
+      if (!user) {
         throw new Error('User not authenticated');
       }
 
@@ -135,9 +184,10 @@ export class PrivacyDataManager {
       const saltBase64 = EncryptionUtils.uint8ArrayToBase64(encryptionResult.salt);
       const ivBase64 = EncryptionUtils.uint8ArrayToBase64(encryptionResult.iv);
 
-      let updateData: any = {
+      const updateData: Record<string, string | number> = {
         encryption_version: 1,
         key_derivation_salt: saltBase64,
+        initialization_vector: ivBase64, // Store IV for decryption
         key_hash: keyHash,
         updated_at: new Date().toISOString()
       };
@@ -148,10 +198,9 @@ export class PrivacyDataManager {
         
         const { error } = await this.supabaseClient
           .from('user_profiles_encrypted')
-          .upsert({
-            user_id: userId,
-            ...updateData
-          });
+          .upsert(Object.assign({
+            user_id: user.id,
+          }, updateData));
 
         if (error) throw error;
       } else {
@@ -160,10 +209,9 @@ export class PrivacyDataManager {
         
         const { error } = await this.supabaseClient
           .from('private_user_data')
-          .upsert({
-            user_id: userId,
-            ...updateData
-          });
+          .upsert(Object.assign({
+            user_id: user.id,
+          }, updateData));
 
         if (error) throw error;
       }
@@ -185,10 +233,10 @@ export class PrivacyDataManager {
   async retrieveEncryptedData(
     dataType: 'demographics' | 'preferences' | 'contact_info' | 'personal_info' | 'behavioral_data' | 'analytics_data',
     password: string
-  ): Promise<any | null> {
+  ): Promise<Record<string, unknown> | null> {
     try {
-      const userId = (await this.supabaseClient.auth.getUser()).data.user?.id;
-      if (!userId) {
+      const { data: { user } } = await this.supabaseClient.auth.getUser();
+      if (!user) {
         throw new Error('User not authenticated');
       }
 
@@ -200,50 +248,51 @@ export class PrivacyDataManager {
       if (['demographics', 'preferences', 'contact_info'].includes(dataType)) {
         const { data, error } = await this.supabaseClient
           .from('user_profiles_encrypted')
-          .select(`encrypted_${dataType}, key_derivation_salt`)
-          .eq('user_id', userId)
+          .select(`encrypted_${dataType}, key_derivation_salt, initialization_vector`)
+          .eq('user_id', user.id)
           .single();
 
         if (error) throw error;
         if (!data) return null;
 
-        encryptedData = data[`encrypted_${dataType}`];
-        salt = data.key_derivation_salt;
+        encryptedData = (data as Record<string, unknown>)[`encrypted_${dataType}`] as string;
+        salt = (data as Record<string, unknown>).key_derivation_salt as string;
+        iv = (data as Record<string, unknown>).initialization_vector as string;
       } else {
         const { data, error } = await this.supabaseClient
           .from('private_user_data')
           .select(`encrypted_${dataType}`)
-          .eq('user_id', userId)
+          .eq('user_id', user.id)
           .single();
 
         if (error) throw error;
         if (!data) return null;
 
-        encryptedData = data[`encrypted_${dataType}`];
+        encryptedData = (data as Record<string, unknown>)[`encrypted_${dataType}`] as string;
         
-        // Get salt from user_profiles_encrypted
+        // Get salt and IV from user_profiles_encrypted
         const { data: profileData } = await this.supabaseClient
           .from('user_profiles_encrypted')
-          .select('key_derivation_salt')
-          .eq('user_id', userId)
+          .select('key_derivation_salt, initialization_vector')
+          .eq('user_id', user.id)
           .single();
         
-        salt = profileData?.key_derivation_salt;
+        salt = (profileData as Record<string, unknown>)?.key_derivation_salt as string;
+        iv = (profileData as Record<string, unknown>)?.initialization_vector as string;
       }
 
-      if (!encryptedData || !salt) return null;
+      if (!encryptedData || !salt || !iv) return null;
 
       // Generate encryption key
       const saltArray = EncryptionUtils.base64ToUint8Array(salt);
       await this.encryption.generateUserKey(password, saltArray);
 
-      // Decrypt data
+      // Decrypt data using the stored IV
       const encryptedDataArray = EncryptionUtils.base64ToArrayBuffer(encryptedData);
-      const ivArray = new Uint8Array(12); // IV is prepended to encrypted data
-      const actualEncryptedData = encryptedDataArray.slice(12);
+      const ivArray = EncryptionUtils.base64ToUint8Array(iv);
       
       const decryptionResult = await this.encryption.decryptData(
-        actualEncryptedData,
+        encryptedDataArray,
         saltArray,
         ivArray
       );
@@ -251,7 +300,7 @@ export class PrivacyDataManager {
       // Clear encryption key from memory
       this.encryption.clearKey();
 
-      return decryptionResult.success ? decryptionResult.decryptedData : null;
+      return decryptionResult.success ? (decryptionResult.decryptedData as Record<string, unknown>) : null;
     } catch (error) {
       console.error('Error retrieving encrypted data:', error);
       this.encryption.clearKey();
@@ -327,16 +376,21 @@ export class PrivacyDataManager {
       const consentSummary = await this.consentManager.getConsentSummary();
       
       // Check encryption status
+      const { data: { user } } = await this.supabaseClient.auth.getUser();
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+
       const { data: profileData } = await this.supabaseClient
         .from('user_profiles_encrypted')
         .select('encrypted_demographics, encrypted_preferences, encrypted_contact_info')
-        .eq('user_id', (await this.supabaseClient.auth.getUser()).data.user?.id)
+        .eq('user_id', user.id)
         .single();
 
       const { data: privateData } = await this.supabaseClient
         .from('private_user_data')
         .select('encrypted_personal_info, encrypted_behavioral_data, encrypted_analytics_data')
-        .eq('user_id', (await this.supabaseClient.auth.getUser()).data.user?.id)
+        .eq('user_id', user.id)
         .single();
 
       return {

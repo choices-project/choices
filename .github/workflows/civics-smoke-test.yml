@@ -1,0 +1,126 @@
+name: Civics Smoke Test
+
+on:
+  pull_request:
+    paths: 
+      - 'web/app/api/v1/civics/**'
+      - 'web/lib/civics/**'
+      - 'web/tests/civics.*.spec.ts'
+      - 'web/k6/civics-smoke.js'
+      - 'web/lib/core/feature-flags.ts'
+  workflow_dispatch: # Allow manual triggering
+
+jobs:
+  civics-smoke-test:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.19.0'
+          cache: 'npm'
+          cache-dependency-path: 'web/package-lock.json'
+
+      - name: Install dependencies
+        run: |
+          cd web
+          npm ci
+
+      - name: Install Playwright
+        run: |
+          cd web
+          npx playwright install --with-deps
+
+      - name: Install K6
+        run: |
+          sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys C5AD17C747E3415A3642D57D77C6C491D6AC1D69
+          echo "deb https://dl.k6.io/deb stable main" | sudo tee /etc/apt/sources.list.d/k6.list
+          sudo apt-get update
+          sudo apt-get install k6
+
+      - name: Build application
+        run: |
+          cd web
+          npm run build
+        env:
+          NODE_ENV: production
+
+      - name: Start application
+        run: |
+          cd web
+          npm start &
+          sleep 10
+        env:
+          NODE_ENV: production
+          PORT: 3001
+
+      - name: Health Check
+        run: |
+          echo "Testing health endpoint..."
+          curl -f http://localhost:3001/api/health/civics || exit 1
+          echo "Health check passed!"
+
+      - name: Run Playwright API Tests
+        run: |
+          cd web
+          npx playwright test --project=api-tests
+        env:
+          BASE_URL: http://localhost:3001
+
+      - name: Run K6 Smoke Test
+        run: |
+          cd web
+          k6 run k6/civics-smoke.js
+        env:
+          BASE_URL: http://localhost:3001
+
+      - name: Run Playwright UI Tests (with mocked APIs)
+        run: |
+          cd web
+          npx playwright test tests/civics.ui.spec.ts
+        env:
+          BASE_URL: http://localhost:3001
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: civics-test-results
+          path: |
+            web/test-results/
+            web/playwright-report/
+          retention-days: 7
+
+      - name: Comment PR with test results
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+            
+            let comment = '## 🧪 Civics Smoke Test Results\n\n';
+            
+            // Check if tests passed
+            if (process.env.GITHUB_JOB_STATUS === 'success') {
+              comment += '✅ **All tests passed!**\n\n';
+              comment += '- ✅ Health check passed\n';
+              comment += '- ✅ Playwright API tests passed\n';
+              comment += '- ✅ K6 load test passed\n';
+              comment += '- ✅ Playwright UI tests passed\n\n';
+              comment += 'The civics address lookup system is ready for deployment.';
+            } else {
+              comment += '❌ **Some tests failed**\n\n';
+              comment += 'Please check the test results and fix any issues before merging.';
+            }
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });

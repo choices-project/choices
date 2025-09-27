@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
+import { useSupabaseAuth } from '@/contexts/AuthContext'
 import { Button } from '@/components/ui/button'
 import { 
   Menu, 
@@ -68,6 +68,7 @@ export default function GlobalNavigation() {
                 <Link
                   key={item.href}
                   href={item.href}
+                  data-testid={item.href === '/polls' ? 'polls-nav' : item.href === '/dashboard' ? 'dashboard-nav' : item.href === '/' ? 'home-nav' : undefined}
                   className={`flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                     isActive(item.href)
                       ? 'text-blue-600 bg-blue-50'
@@ -148,6 +149,7 @@ export default function GlobalNavigation() {
                     key={item.href}
                     href={item.href}
                     onClick={closeMobileMenu}
+                    data-testid={item.href === '/polls' ? 'polls-nav' : item.href === '/dashboard' ? 'dashboard-nav' : item.href === '/' ? 'home-nav' : undefined}
                     className={`flex items-center space-x-2 px-3 py-2 rounded-md text-base font-medium transition-colors ${
                       isActive(item.href)
                         ? 'text-blue-600 bg-blue-50'

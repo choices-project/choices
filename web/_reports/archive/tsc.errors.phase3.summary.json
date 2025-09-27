@@ -1,0 +1,112 @@
+[
+  {
+    "code": "TS2339",
+    "count": 90,
+    "sample": "app/login/page.tsx"
+  },
+  {
+    "code": "TS2307",
+    "count": 44,
+    "sample": "features/pwa/components/PWAUserProfile.tsx"
+  },
+  {
+    "code": "TS2322",
+    "count": 34,
+    "sample": "components/privacy/PrivacyLevelSelector.tsx"
+  },
+  {
+    "code": "TS7006",
+    "count": 21,
+    "sample": "features/polls/components/PrivatePollResults.tsx"
+  },
+  {
+    "code": "TS2345",
+    "count": 12,
+    "sample": "components/auth/SocialLoginButtons.tsx"
+  },
+  {
+    "code": "TS2367",
+    "count": 12,
+    "sample": "components/privacy/PrivacyLevelSelector.tsx"
+  },
+  {
+    "code": "TS2353",
+    "count": 9,
+    "sample": "features/auth/lib/social-auth-config.ts"
+  },
+  {
+    "code": "TS2552",
+    "count": 8,
+    "sample": "lib/core/feature-flags.ts"
+  },
+  {
+    "code": "TS2308",
+    "count": 7,
+    "sample": "lib/core/index.ts"
+  },
+  {
+    "code": "TS2532",
+    "count": 7,
+    "sample": "lib/performance/optimized-poll-service.ts"
+  },
+  {
+    "code": "TS7053",
+    "count": 4,
+    "sample": "components/privacy/PrivacyLevelSelector.tsx"
+  },
+  {
+    "code": "TS2451",
+    "count": 4,
+    "sample": "utils/supabase/__mocks__/server.ts"
+  },
+  {
+    "code": "TS2554",
+    "count": 3,
+    "sample": "features/auth/pages/biometric-setup/page.tsx"
+  },
+  {
+    "code": "TS2551",
+    "count": 2,
+    "sample": "components/auth/SocialLoginButtons.tsx"
+  },
+  {
+    "code": "TS18047",
+    "count": 2,
+    "sample": "features/auth/pages/biometric-setup/page.tsx"
+  },
+  {
+    "code": "TS2538",
+    "count": 2,
+    "sample": "lib/core/services/analytics.ts"
+  },
+  {
+    "code": "TS2344",
+    "count": 2,
+    "sample": "lib/core/services/analytics.ts"
+  },
+  {
+    "code": "TS2561",
+    "count": 2,
+    "sample": "lib/core/services/analytics.ts"
+  },
+  {
+    "code": "TS2459",
+    "count": 1,
+    "sample": "features/civics/sources/civicinfo/index.ts"
+  },
+  {
+    "code": "TS2315",
+    "count": 1,
+    "sample": "features/polls/components/PrivatePollResults.tsx"
+  },
+  {
+    "code": "TS2739",
+    "count": 1,
+    "sample": "hooks/useFeatureFlags.ts"
+  },
+  {
+    "code": "TS2743",
+    "count": 1,
+    "sample": "utils/supabase/__mocks__/server.ts"
+  }
+]

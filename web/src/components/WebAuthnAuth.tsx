@@ -3,9 +3,19 @@
 import { useState } from 'react'
 import { devLog } from '@/lib/logger';
 import { Shield, Key, CheckCircle, AlertCircle } from 'lucide-react'
+import { has, isRecord } from '@/lib/util/guards'
 
-interface WebAuthnAuthProps {
+type WebAuthnAuthProps = {
   onAuthenticated: (_userStableId: string, _sessionToken: string) => void
+}
+
+type WebAuthnBeginResponse = {
+  options: PublicKeyCredentialCreationOptions | PublicKeyCredentialRequestOptions
+  session: string
+}
+
+type WebAuthnFinishResponse = {
+  sessiontoken: string
 }
 
 export default function WebAuthnAuth({ onAuthenticated }: WebAuthnAuthProps) {
@@ -42,12 +52,16 @@ export default function WebAuthnAuth({ onAuthenticated }: WebAuthnAuthProps) {
         throw new Error('Failed to begin registration')
       }
 
-      const beginData = await beginResponse.json()
+      const beginDataRaw = await beginResponse.json()
+      if (!isRecord(beginDataRaw) || !has(beginDataRaw, 'options') || !has(beginDataRaw, 'session')) {
+        throw new Error('Invalid response format')
+      }
+      const beginData = beginDataRaw as WebAuthnBeginResponse
       setStep('registering')
 
       // Step 2: Create credentials using WebAuthn API
       const credential = await navigator.credentials.create({
-        publicKey: beginData.options,
+        publicKey: beginData.options as PublicKeyCredentialCreationOptions,
       }) as PublicKeyCredential
 
       if (!credential) {
@@ -118,7 +132,11 @@ export default function WebAuthnAuth({ onAuthenticated }: WebAuthnAuthProps) {
         throw new Error('Failed to begin login')
       }
 
-      const beginData = await beginResponse.json()
+      const beginDataRaw = await beginResponse.json()
+      if (!isRecord(beginDataRaw) || !has(beginDataRaw, 'options') || !has(beginDataRaw, 'session')) {
+        throw new Error('Invalid response format')
+      }
+      const beginData = beginDataRaw as WebAuthnBeginResponse
       setStep('logging-in')
 
       // Step 2: Get credentials using WebAuthn API
@@ -157,7 +175,11 @@ export default function WebAuthnAuth({ onAuthenticated }: WebAuthnAuthProps) {
         throw new Error('Failed to complete login')
       }
 
-      const finishData = await finishResponse.json()
+      const finishDataRaw = await finishResponse.json()
+      if (!isRecord(finishDataRaw) || !has(finishDataRaw, 'sessiontoken')) {
+        throw new Error('Invalid finish response format')
+      }
+      const finishData = finishDataRaw as WebAuthnFinishResponse
       setStep('success')
       
       setTimeout(() => {
@@ -185,7 +207,7 @@ export default function WebAuthnAuth({ onAuthenticated }: WebAuthnAuthProps) {
           <span className="text-yellow-800 font-medium">WebAuthn Not Supported</span>
         </div>
         <p className="text-yellow-700 mt-2 text-sm">
-          Your browser doesn't support WebAuthn. Please use a modern browser with biometric authentication support.
+          Your browser doesn&apos;t support WebAuthn. Please use a modern browser with biometric authentication support.
         </p>
       </div>
     )
@@ -199,7 +221,7 @@ export default function WebAuthnAuth({ onAuthenticated }: WebAuthnAuthProps) {
             <Shield className="w-6 h-6 text-white" />
           </div>
           <h3 className="text-lg font-semibold text-gray-900">Secure Authentication</h3>
-          <p className="text-gray-600 text-sm">Use your device's biometric authentication or security key</p>
+          <p className="text-gray-600 text-sm">Use your device&apos;s biometric authentication or security key</p>
         </div>
 
         {step === 'input' && (
@@ -267,7 +289,7 @@ export default function WebAuthnAuth({ onAuthenticated }: WebAuthnAuthProps) {
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
             <h4 className="text-lg font-medium text-gray-900 mb-2">Setting up your credentials</h4>
             <p className="text-gray-600 text-sm">
-              Please use your device's biometric authentication or security key to complete registration.
+              Please use your device&apos;s biometric authentication or security key to complete registration.
             </p>
           </div>
         )}
@@ -277,7 +299,7 @@ export default function WebAuthnAuth({ onAuthenticated }: WebAuthnAuthProps) {
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
             <h4 className="text-lg font-medium text-gray-900 mb-2">Authenticating</h4>
             <p className="text-gray-600 text-sm">
-              Please use your device's biometric authentication or security key to sign in.
+              Please use your device&apos;s biometric authentication or security key to sign in.
             </p>
           </div>
         )}

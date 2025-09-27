@@ -49,7 +49,7 @@ export enum WebAuthnErrorType {
   UNKNOWN = 'UNKNOWN'
 }
 
-export interface WebAuthnError {
+export type WebAuthnError = {
   type: WebAuthnErrorType;
   message: string;
   code?: string;
@@ -57,7 +57,7 @@ export interface WebAuthnError {
   suggestedAction?: string;
 }
 
-export interface WebAuthnResult {
+export type WebAuthnResult = {
   success: boolean;
   credential?: PublicKeyCredential;
   error?: WebAuthnError;
@@ -74,7 +74,7 @@ export function arrayBufferToBase64(buffer: ArrayBuffer): string {
   const bytes = new Uint8Array(buffer)
   let binary = ''
   for (let i = 0; i < bytes.byteLength; i++) {
-    binary += String.fromCharCode(bytes[i])
+    binary += String.fromCharCode(bytes[i]!)
   }
   return btoa(binary)
 }

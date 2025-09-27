@@ -6,11 +6,17 @@ import { Vote, ArrowRight, CheckCircle, Lock } from 'lucide-react'
 import Link from 'next/link'
 import { safeNavigate } from '@/lib/ssr-safe'
 
+type Feature = {
+  icon: React.ComponentType<any>;
+  title: string;
+  description: string;
+}
+
 export default function Home() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [userStableId, setUserStableId] = useState('')
 
-  const features = [
+  const features: Feature[] = [
     {
       icon: Shield,
       title: 'Privacy-Preserving',
@@ -112,7 +118,7 @@ export default function Home() {
                     <h3 className="text-lg font-semibold text-gray-900">Welcome!</h3>
                   </div>
                   <p className="text-gray-600 mb-4">
-                    You're logged in as: <span className="font-mono text-sm bg-gray-100 px-2 py-1 rounded">{userStableId}</span>
+                    You&apos;re logged in as: <span className="font-mono text-sm bg-gray-100 px-2 py-1 rounded">{userStableId}</span>
                   </p>
                   <button
                     onClick={() => safeNavigate('/polls')}
@@ -142,7 +148,7 @@ export default function Home() {
           </div>
           
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {features.map((feature: any, index: any) => (
+            {features.map((feature: Feature, index: number) => (
               <div key={index} className="text-center">
                 <div className="w-16 h-16 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl flex items-center justify-center mx-auto mb-4">
                   <feature.icon className="w-8 h-8 text-white" />
@@ -174,7 +180,7 @@ export default function Home() {
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-2">Authenticate</h3>
               <p className="text-gray-600">
-                Use your device's biometric authentication or security key to verify your identity.
+                Use your device&apos;s biometric authentication or security key to verify your identity.
               </p>
             </div>
             

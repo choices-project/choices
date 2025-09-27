@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react'
 import { devLog } from '@/lib/logger';
 import { Vote, Clock, CheckCircle, XCircle, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
-import { iaApi, poApi, Poll } from '../../lib/api'
+import type { Poll } from '../../lib/api';
+import { iaApi, poApi } from '../../lib/api'
 
 export default function PollsPage() {
   const [polls, setPolls] = useState<Poll[]>([])
@@ -154,7 +155,7 @@ export default function PollsPage() {
                 <div className="mb-6">
                   <span className="text-sm font-medium text-gray-700">Sponsored by:</span>
                   <div className="flex flex-wrap gap-2 mt-1">
-                    {selectedPoll.sponsors.map((sponsor: any, index: any) => (
+                    {selectedPoll.sponsors.map((sponsor: string, index: number) => (
                       <span key={index} className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded">
                         {sponsor}
                       </span>
@@ -168,7 +169,7 @@ export default function PollsPage() {
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">Cast Your Vote</h3>
                   <div className="space-y-3">
-                    {selectedPoll.options.map((option: any, index: any) => (
+                    {selectedPoll.options.map((option: string, index: number) => (
                       <button
                         key={index}
                         onClick={() => setUserChoice(index)}
@@ -225,7 +226,7 @@ export default function PollsPage() {
             </div>
 
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {polls.map((poll: any) => (
+              {polls.map((poll: Poll) => (
                 <div key={poll.id} className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-semibold text-gray-900">{poll.title}</h3>
@@ -239,7 +240,7 @@ export default function PollsPage() {
                   
                   <div className="flex items-center justify-between text-xs text-gray-500 mb-4">
                     <span>{poll.options.length} options</span>
-                    <span>{new Date(poll.createdat).toLocaleDateString()}</span>
+                    <span>{new Date(poll.created_at).toLocaleDateString()}</span>
                   </div>
 
                   <button

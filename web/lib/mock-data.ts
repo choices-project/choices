@@ -1,128 +1,54 @@
-// Mock data for admin dashboard and testing
+/**
+ * Mock data utilities
+ * 
+ * This module provides mock data functions for the application.
+ * It replaces the old @/shared/utils/lib/mock-data imports.
+ */
 
-export interface ActivityItem {
-  id: string;
-  type: string;
-  message: string;
-  timestamp: string;
-  user: string;
+export function getMockDemographicsResponse() {
+  return {
+    demographics: {
+      ageGroups: [
+        { range: '18-24', count: 150, percentage: 15 },
+        { range: '25-34', count: 300, percentage: 30 },
+        { range: '35-44', count: 250, percentage: 25 },
+        { range: '45-54', count: 200, percentage: 20 },
+        { range: '55+', count: 100, percentage: 10 }
+      ],
+      genderDistribution: [
+        { gender: 'Male', count: 500, percentage: 50 },
+        { gender: 'Female', count: 450, percentage: 45 },
+        { gender: 'Other', count: 50, percentage: 5 }
+      ],
+      educationLevels: [
+        { level: 'High School', count: 200, percentage: 20 },
+        { level: 'Bachelor\'s', count: 400, percentage: 40 },
+        { level: 'Master\'s', count: 300, percentage: 30 },
+        { level: 'PhD', count: 100, percentage: 10 }
+      ],
+      incomeRanges: [
+        { range: '$0-30k', count: 150, percentage: 15 },
+        { range: '$30k-60k', count: 300, percentage: 30 },
+        { range: '$60k-100k', count: 350, percentage: 35 },
+        { range: '$100k+', count: 200, percentage: 20 }
+      ],
+      geographicDistribution: [
+        { region: 'Northeast', count: 250, percentage: 25 },
+        { region: 'Southeast', count: 300, percentage: 30 },
+        { region: 'Midwest', count: 200, percentage: 20 },
+        { region: 'West', count: 250, percentage: 25 }
+      ],
+      recentVotes: []
+    }
+  };
 }
 
-export interface ChartDataPoint {
-  month: string;
-  count: number;
-}
 
-export interface SystemMetrics {
-  totalUsers: number;
-  activeUsers: number;
-  totalPolls: number;
-  activePolls: number;
-  systemUptime: string;
-  responseTime: string;
-}
 
-export interface Poll {
-  id: string;
-  question: string;
-  options: string[];
-  createdAt: string;
-  votes: number;
-}
 
-export interface Vote {
-  id: string;
-  pollId: string;
-  userId: string;
-  option: string;
-  votedAt: string;
-}
 
-export interface DemographicsData {
-  ageDistribution: Array<{ age: string; count: number }>;
-  locationDistribution: Array<{ location: string; count: number }>;
-  engagementLevels: Array<{ level: string; count: number }>;
-  lastUpdated: string;
-  totalUsers: number;
-  recentPolls: Poll[];
-  recentVotes: Vote[];
-}
 
-export const mockActivityFeed: ActivityItem[] = [
-  {
-    id: '1',
-    type: 'poll_created',
-    message: 'New poll created: "What should we focus on next?"',
-    timestamp: new Date().toISOString(),
-    user: 'Admin User'
-  },
-  {
-    id: '2',
-    type: 'user_registered',
-    message: 'New user registered: john.doe@example.com',
-    timestamp: new Date(Date.now() - 300000).toISOString(),
-    user: 'System'
-  }
-];
 
-export const mockChartData = {
-  users: [
-    { month: 'Jan', count: 120 },
-    { month: 'Feb', count: 150 },
-    { month: 'Mar', count: 180 },
-    { month: 'Apr', count: 200 }
-  ],
-  polls: [
-    { month: 'Jan', count: 45 },
-    { month: 'Feb', count: 52 },
-    { month: 'Mar', count: 68 },
-    { month: 'Apr', count: 75 }
-  ],
-  recentActivity: [
-    { month: 'Jan', count: 25 },
-    { month: 'Feb', count: 32 },
-    { month: 'Mar', count: 28 },
-    { month: 'Apr', count: 35 }
-  ],
-  topicCategories: [
-    { category: 'Politics', count: 45 },
-    { category: 'Technology', count: 32 },
-    { category: 'Environment', count: 28 },
-    { category: 'Health', count: 35 }
-  ]
-};
 
-export const mockSystemMetrics: SystemMetrics = {
-  totalUsers: 1250,
-  activeUsers: 890,
-  totalPolls: 156,
-  activePolls: 23,
-  systemUptime: '99.9%',
-  responseTime: '120ms'
-};
 
-export const getMockDemographicsResponse = (): DemographicsData => ({
-  ageDistribution: [
-    { age: '18-24', count: 120 },
-    { age: '25-34', count: 280 },
-    { age: '35-44', count: 190 },
-    { age: '45-54', count: 150 },
-    { age: '55+', count: 100 }
-  ],
-  locationDistribution: [
-    { location: 'United States', count: 450 },
-    { location: 'Canada', count: 120 },
-    { location: 'United Kingdom', count: 80 },
-    { location: 'Australia', count: 60 },
-    { location: 'Other', count: 130 }
-  ],
-  engagementLevels: [
-    { level: 'High', count: 200 },
-    { level: 'Medium', count: 350 },
-    { level: 'Low', count: 290 }
-  ],
-  lastUpdated: new Date().toISOString(),
-  totalUsers: 840,
-  recentPolls: [],
-  recentVotes: []
-});
+

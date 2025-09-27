@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useContext } from 'react'
 import { useRouter } from 'next/navigation'
-import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
+import { AuthContext } from '@/contexts/AuthContext'
 
 // UI Components
 import { Button } from '@/components/ui/button'
@@ -16,7 +16,7 @@ import { ArrowLeft, Download, FileText, User, Vote, MessageSquare, Settings, Che
 // Utilities
 import { devLog } from '@/lib/logger'
 
-interface ExportOptions {
+type ExportOptions = {
   profile: boolean
   polls: boolean
   votes: boolean
@@ -27,7 +27,7 @@ interface ExportOptions {
   dateRange: 'all' | '30d' | '90d' | '1y'
 }
 
-interface ExportHistory {
+type ExportHistory = {
   id: string
   createdat: string
   format: string
@@ -38,8 +38,12 @@ interface ExportHistory {
 
 export default function DataExportPage() {
   const router = useRouter()
-  const { user } = useSupabaseAuth()
+  const authContext = useContext(AuthContext)
   
+  // Extract user early to avoid "used before declaration" errors
+  const user = authContext?.user
+  
+  // All hooks must be called at the top level
   const [exportOptions, setExportOptions] = useState<ExportOptions>({
     profile: true,
     polls: true,
@@ -50,7 +54,7 @@ export default function DataExportPage() {
     format: 'json',
     dateRange: 'all'
   })
-    const [isExporting, setIsExporting] = useState(false)
+  const [isExporting, setIsExporting] = useState(false)
   const [exportHistory, setExportHistory] = useState<ExportHistory[]>([])
   const [error, setError] = useState<string | null>(null)
 
@@ -159,6 +163,24 @@ export default function DataExportPage() {
   }, [])
 
   const selectedCount = Object.values(exportOptions).filter(Boolean).length - 2 // Exclude format and dateRange
+
+  // Handle case where auth context is not available during pre-rendering
+  if (!authContext || !user) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Data Export</h1>
+          <p className="text-gray-600 mb-6">Please log in to access this page.</p>
+          <a 
+            href="/login"
+            className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
+          >
+            Login
+          </a>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -457,7 +479,7 @@ export default function DataExportPage() {
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-gray-600">
-                  Your exported data contains only the information you've shared with the platform. 
+                  Your exported data contains only the information you&apos;ve shared with the platform. 
                   We never include sensitive information like passwords or payment details.
                 </p>
               </CardContent>

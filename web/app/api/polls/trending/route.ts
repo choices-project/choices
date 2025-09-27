@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
 import { getSupabaseServerClient } from '@/utils/supabase/server'
 import { logger } from '@/lib/logger'
 
@@ -39,7 +40,7 @@ export async function GET(request: NextRequest) {
     }
     
     // Transform data for frontend
-    const transformedPolls = polls?.map(poll => ({
+    const transformedPolls = polls.map(poll => ({
       id: poll.id,
       title: poll.title,
       description: poll.description,
@@ -47,7 +48,7 @@ export async function GET(request: NextRequest) {
       totalVotes: poll.total_votes || 0,
       timeRemaining: getTimeRemaining(poll.end_date),
       isActive: true,
-      options: poll.options?.map(option => ({
+      options: poll.options.map(option => ({
         id: option.id,
         text: option.text,
         votes: option.votes || 0,

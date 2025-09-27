@@ -7,14 +7,14 @@
  * @created September 9, 2025
  */
 
-export interface EncryptionResult {
+export type EncryptionResult = {
   encryptedData: ArrayBuffer;
   salt: Uint8Array;
   iv: Uint8Array;
 }
 
-export interface DecryptionResult {
-  decryptedData: any;
+export type DecryptionResult = {
+  decryptedData: unknown;
   success: boolean;
   error?: string;
 }
@@ -62,7 +62,7 @@ export class UserEncryption {
   /**
    * Encrypt data using the user's key
    */
-  async encryptData(data: any): Promise<EncryptionResult> {
+  async encryptData(data: unknown): Promise<EncryptionResult> {
     if (!this.userKey) {
       throw new Error('User key not initialized. Call generateUserKey first.');
     }
@@ -156,7 +156,7 @@ export class EncryptionUtils {
     const bytes = new Uint8Array(buffer);
     let binary = '';
     for (let i = 0; i < bytes.byteLength; i++) {
-      binary += String.fromCharCode(bytes[i]);
+      binary += String.fromCharCode(bytes[i]!);
     }
     return btoa(binary);
   }
@@ -274,11 +274,15 @@ export class PrivacyUtils {
   /**
    * Anonymize user data for analytics
    */
-  static anonymizeForAnalytics(userData: any): any {
+  static anonymizeForAnalytics(userData: Record<string, unknown>): Record<string, unknown> {
+    const age = typeof userData.age === 'number' ? userData.age : 0;
+    const location = typeof userData.location === 'string' ? userData.location : '';
+    const education = typeof userData.education === 'string' ? userData.education : '';
+    
     return {
-      age_bucket: this.createAgeBucket(userData.age),
-      region_bucket: this.createRegionBucket(userData.location),
-      education_bucket: this.createEducationBucket(userData.education),
+      age_bucket: this.createAgeBucket(age),
+      region_bucket: this.createRegionBucket(location),
+      education_bucket: this.createEducationBucket(education),
       // Remove all identifying information
       user_id: undefined,
       email: undefined,

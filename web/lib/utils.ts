@@ -1,8 +1,23 @@
-import { clsx } from 'clsx';
-import { twMerge } from 'tailwind-merge';
+/**
+ * Utility functions
+ * 
+ * This module provides common utility functions for the application.
+ * It replaces the old @/shared/utils/lib/utils imports.
+ */
 
-type ClassValue = Parameters<typeof clsx>[0]
+import { type ClassValue, clsx } from "clsx"
+import { twMerge } from "tailwind-merge"
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
+
+
+
+
+
+
+
+
+
+

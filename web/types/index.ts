@@ -1,19 +1,51 @@
 
 // Common type definitions
-export interface LoginCredentials {
+
+// Re-export all type modules for easy importing
+export * from './api';
+export * from './webauthn';
+export * from './google-civic';
+export * from './pwa';
+
+// Export poll types (avoiding conflicts with frontend.ts)
+export type {
+  Poll,
+  PollOption,
+  PollSettings,
+  PollResult,
+  OptionResult,
+  ResultMetadata,
+  PollEventHandler,
+  PollListProps,
+  ResultsChartProps
+} from './poll';
+
+// Export frontend types (excluding duplicates)
+export type {
+  ApiResponse,
+  PaginatedResponse,
+  ApiError,
+  WebAuthnAuthProps,
+  WebAuthnCredentialResponse,
+  DashboardData,
+  GeographicData,
+  DemographicsData,
+  EngagementData
+} from './frontend';
+export type LoginCredentials = {
   email: string;
   password: string;
   twoFactorCode?: string;
 }
 
-export interface RegisterData {
+export type RegisterData = {
   email: string;
   password: string;
   confirmPassword: string;
   twoFactorCode?: string;
 }
 
-export interface TrendingTopic {
+export type TrendingTopic = {
   id: string;
   title: string;
   description: string;
@@ -25,7 +57,7 @@ export interface TrendingTopic {
   created_at: string;
 }
 
-export interface ActivityItem {
+export type ActivityItem = {
   id: string;
   title: string;
   type: string;
@@ -35,7 +67,7 @@ export interface ActivityItem {
   user_id?: string;
 }
 
-export interface PollNarrative {
+export type PollNarrative = {
   id: string;
   title: string;
   description: string;
@@ -56,7 +88,7 @@ export interface PollNarrative {
   };
 }
 
-export interface User {
+export type User = {
   id: string;
   email: string;
   stable_id: string;
@@ -64,7 +96,7 @@ export interface User {
   is_active: boolean;
 }
 
-export interface UserProfile {
+export type UserProfile = {
   id: string;
   stable_id: string;
   email: string;
@@ -72,7 +104,7 @@ export interface UserProfile {
   is_active: boolean;
 }
 
-export interface GeneratedPoll {
+export type GeneratedPoll = {
   id: string;
   title: string;
   options: string[];

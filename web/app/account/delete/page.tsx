@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useContext } from 'react'
 import { useRouter } from 'next/navigation'
-import { useSupabaseAuth } from '@/hooks/useSupabaseAuth'
+import { AuthContext } from '@/contexts/AuthContext'
 
 // UI Components
 import { Button } from '@/components/ui/button'
@@ -16,7 +16,7 @@ import { ArrowLeft, Trash2, Download, AlertTriangle, Shield, User, Vote, FileTex
 // Utilities
 import { devLog } from '@/lib/logger'
 
-interface UserData {
+type UserData = {
   profile: {
     displayname: string
     email: string
@@ -45,7 +45,7 @@ interface UserData {
   }>
 }
 
-interface DeletionStep {
+type DeletionStep = {
   id: string
   title: string
   description: string
@@ -55,8 +55,13 @@ interface DeletionStep {
 
 export default function AccountDeletionPage() {
   const router = useRouter()
-  const { user, signOut } = useSupabaseAuth()
+  const authContext = useContext(AuthContext)
   
+  // Extract user and signOut early to avoid "used before declaration" errors
+  const user = authContext?.user
+  const signOut = authContext?.signOut
+  
+  // All hooks must be called at the top level
   const [userData, setUserData] = useState<UserData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isExporting, setIsExporting] = useState(false)
@@ -201,7 +206,9 @@ export default function AccountDeletionPage() {
         )
 
         // Logout and redirect
-        await signOut()
+        if (signOut) {
+          await signOut()
+        }
         router.push('/')
       } else {
         throw new Error('Failed to delete account')
@@ -215,6 +222,24 @@ export default function AccountDeletionPage() {
   }, [user, signOut, router])
 
   const canDelete = deletionSteps.every(step => step.completed || !step.required)
+
+  // Handle case where auth context is not available during pre-rendering
+  if (!authContext || !user || !signOut) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Account Deletion</h1>
+          <p className="text-gray-600 mb-6">Please log in to access this page.</p>
+          <a 
+            href="/login"
+            className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
+          >
+            Login
+          </a>
+        </div>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (

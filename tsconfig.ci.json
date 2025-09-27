@@ -1,0 +1,35 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "noErrorTruncation": true,
+    "exactOptionalPropertyTypes": true,
+    "noUncheckedIndexedAccess": true,
+    "useUnknownInCatchVariables": true,
+    "verbatimModuleSyntax": true,
+    "types": []
+  },
+  "include": [
+    "web/app/**/*",
+    "web/components/**/*",
+    "web/lib/**/*",
+    "web/hooks/**/*",
+    "web/features/**/*",
+    "web/shared/**/*",
+    "web/utils/**/*",
+    "web/middleware.ts",
+    "web/next.config.js",
+    "scripts/**/*"
+  ],
+  "exclude": [
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/__tests__/**",
+    "tests/**",
+    "web/tests/**",
+    "node_modules",
+    "dist",
+    "build",
+    ".next"
+  ]
+}

@@ -1,15 +1,6 @@
 
-
 import type { Metadata } from 'next'
 import './globals.css'
-import { PWAInstallPrompt, OfflineIndicator, PWAUpdatePrompt } from '../components/PWAComponents';
-import EnhancedFeedbackWidget from '../components/EnhancedFeedbackWidget'
-import SiteMessages from '../components/SiteMessages'
-import GlobalNavigation from '../components/GlobalNavigation'
-import FontProvider from '../components/FontProvider'
-
-import ClientOnly from '../components/ClientOnly'
-import { AuthProvider } from '../hooks/AuthProvider'
 
 export const metadata: Metadata = {
   title: 'Choices - Democratic Polling Platform',
@@ -41,47 +32,37 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
+        {/* PWA Manifest */}
         <link rel="manifest" href="/manifest.json" />
-        <link rel="apple-touch-icon" href="/favicon.ico" />
+        
+        {/* PWA Icons */}
+        <link rel="icon" href="/icons/icon-192x192.svg" />
+        <link rel="apple-touch-icon" href="/icons/icon-192x192.svg" />
+        <link rel="apple-touch-icon" sizes="72x72" href="/icons/icon-72x72.svg" />
+        <link rel="apple-touch-icon" sizes="96x96" href="/icons/icon-96x96.svg" />
+        <link rel="apple-touch-icon" sizes="128x128" href="/icons/icon-128x128.svg" />
+        <link rel="apple-touch-icon" sizes="144x144" href="/icons/icon-144x144.svg" />
+        <link rel="apple-touch-icon" sizes="152x152" href="/icons/icon-152x152.svg" />
+        <link rel="apple-touch-icon" sizes="192x192" href="/icons/icon-192x192.svg" />
+        <link rel="apple-touch-icon" sizes="384x384" href="/icons/icon-384x384.svg" />
+        <link rel="apple-touch-icon" sizes="512x512" href="/icons/icon-512x512.svg" />
+        
+        {/* PWA Meta Tags */}
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="Choices" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="msapplication-TileColor" content="#3b82f6" />
-        <meta name="msapplication-tileImage" content="/favicon.ico" />
+        <meta name="msapplication-tileImage" content="/icons/icon-144x144.svg" />
+        <meta name="msapplication-config" content="/browserconfig.xml" />
+        
+        {/* PWA Theme */}
+        <meta name="theme-color" content="#3b82f6" />
+        <meta name="background-color" content="#ffffff" />
       </head>
       <body>
-        <FontProvider>
-          <ClientOnly>
-            <AuthProvider>
-              {/* Global Navigation */}
-              <GlobalNavigation />
-              
-              {/* Site Messages - Display below navigation */}
-              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
-                <SiteMessages />
-              </div>
-              
-              {children}
-              
-              {/* PWA Components - Only render on client side */}
-              <PWAInstallPrompt />
-              <OfflineIndicator />
-              <PWAUpdatePrompt />
-              
-              {/* Enhanced Feedback Widget - Only render on client side */}
-              <EnhancedFeedbackWidget />
-              
-              {/* Navigation Logger - Only in development */}
-              {/* <NavLogger /> */}
-              
-              {/* Hidden elements for PWA functionality */}
-              <div id="install-pwa" style={{ display: 'none' }} />
-              <div id="update-pwa" style={{ display: 'none' }} />
-              <div id="offline-indicator" style={{ display: 'none' }} />
-            </AuthProvider>
-          </ClientOnly>
-        </FontProvider>
+        {/* Minimal root layout - providers moved to route groups */}
+        {children}
       </body>
     </html>
   )

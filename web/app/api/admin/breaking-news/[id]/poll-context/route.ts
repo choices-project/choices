@@ -1,7 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server';
 import { logger } from '@/lib/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
-import { RealTimeNewsService } from '@/lib/real-time-news-service';
+import { RealTimeNewsService } from '@/lib/core/services/real-time-news';
 
 export const dynamic = 'force-dynamic';
 
@@ -169,7 +170,7 @@ export async function GET(
       );
     }
 
-    if (!userProfile || !userProfile || !('verification_tier' in userProfile) || !['T2', 'T3'].includes(userProfile.verification_tier)) {
+    if (!['T2', 'T3'].includes(userProfile.verification_tier)) {
       return NextResponse.json(
         { error: 'Insufficient permissions' },
         { status: 403 }

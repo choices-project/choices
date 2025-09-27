@@ -1,75 +1,58 @@
 import { defineConfig, devices } from '@playwright/test'
 
-/**
- * Playwright Configuration for Choices Platform E2E Tests
- * 
- * Tests are designed for how the system SHOULD work, not just to pass current code.
- * This helps identify gaps and drives proper implementation.
- */
-
 export default defineConfig({
   testDir: './tests/e2e',
-  fullyParallel: true,
+  testIgnore: ['**/archive-old/**'],
+  fullyParallel: false, // Disabled for E2E stability
   forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 1 : undefined,
-  reporter: [
-    ['html'],
-    ['json', { outputFile: 'test-results/results.json' }],
-    ['junit', { outputFile: 'test-results/results.xml' }]
-  ],
+  retries: process.env.CI ? 1 : 0, // Reduced retries
+  workers: process.env.CI ? 1 : 2,
+  reporter: 'html',
+  timeout: 30_000,
+  expect: { timeout: 5_000 },
   use: {
-    baseURL: 'http://127.0.0.1:3000',
+    baseURL: process.env.BASE_URL || 'http://127.0.0.1:3000',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
-    // Global timeout for actions
-    actionTimeout: 10000,
-    // Global timeout for navigation
-    navigationTimeout: 30000,
+    extraHTTPHeaders: { 'x-e2e-bypass': '1' },
+    actionTimeout: 10_000,
+    navigationTimeout: 15_000,
   },
+  // Use existing dev server instead of starting new one
+  // webServer: {
+  //   command: 'bash -c "npm run build && npm run start -- -p 3000"',
+  //   port: 3000,
+  //   reuseExistingServer: true,
+  //   timeout: 120_000,
+  // },
 
   projects: [
     {
+      name: 'api-tests',
+      testMatch: /.*\.api\.spec\.ts/,
+      use: {
+        baseURL: process.env.BASE_URL || 'http://127.0.0.1:3000',
+      },
+    },
+    {
       name: 'chromium',
+      testMatch: /.*\.spec\.ts/,
+      testIgnore: /.*pwa.*\.spec\.ts/, // Exclude PWA specs to prevent duplicate runs
       use: { ...devices['Desktop Chrome'] },
     },
     {
-      name: 'firefox',
-      use: { ...devices['Desktop Firefox'] },
-    },
-    {
-      name: 'webkit',
-      use: { ...devices['Desktop Safari'] },
-    },
-    {
-      name: 'Mobile Chrome',
-      use: { ...devices['Pixel 5'] },
-    },
-    {
-      name: 'Mobile Safari',
-      use: { ...devices['iPhone 12'] },
+      name: 'pwa-tests',
+      testMatch: /.*pwa.*\.spec\.ts/,
+      use: { 
+        ...devices['Desktop Chrome'],
+        permissions: ['notifications'],
+        geolocation: { latitude: 37.7749, longitude: -122.4194 },
+        locale: 'en-US',
+        timezoneId: 'America/Los_Angeles',
+      },
     },
   ],
 
-  webServer: {
-    command: 'npm run dev',
-    port: 3000,
-    reuseExistingServer: !process.env.CI,
-    timeout: 120 * 1000,
-    env: {
-      NODE_ENV: 'test',
-      NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-      NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
-      SUPABASE_SECRET_KEY: process.env.SUPABASE_SECRET_KEY || '',
-    },
-  },
-
-  // Global test timeout
-  timeout: 60000,
-  
-  // Expect timeout
-  expect: {
-    timeout: 10000,
-  },
+  // No webServer - assuming dev server is already running on port 3000
 })

@@ -4,7 +4,7 @@ import { devLog } from '@/lib/logger'
 // Types
 export type UserType = 'newcomer' | 'active' | 'power_user' | 'influencer' | 'admin'
 
-export interface UserBehavior {
+export type UserBehavior = {
   login_frequency: number
   polls_created: number
   votes_cast: number
@@ -17,7 +17,7 @@ export interface UserBehavior {
   is_admin?: boolean
 }
 
-export interface SegmentationData {
+export type SegmentationData = {
   user_type: UserType
   confidence_score: number
   behavior_metrics: UserBehavior
@@ -26,7 +26,7 @@ export interface SegmentationData {
   type_changed_at: string
 }
 
-export interface UserTypeThresholds {
+export type UserTypeThresholds = {
   newcomer: {
     max_polls_created: number
     max_votes_cast: number

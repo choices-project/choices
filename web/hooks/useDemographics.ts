@@ -1,7 +1,7 @@
-import { useState, useEffect, useCallback, createContext, useContext } from 'react'
+import { useState, useEffect } from 'react'
 import { devLog } from '@/lib/logger';
 
-interface DemographicData {
+type DemographicData = {
   totalUsers: number
   recentPolls: Array<{
     poll_id: string

@@ -1,11 +1,12 @@
 'use client'
 
 import { useState, useEffect, useCallback, createContext, useContext } from 'react'
-import { motion, Variants } from 'framer-motion'
+import type { Variants } from 'framer-motion';
+import { motion } from 'framer-motion'
 import { TrendingUp, TrendingDown, Minus, Activity } from 'lucide-react'
 import * as Tooltip from '@radix-ui/react-tooltip'
 
-interface ChartData {
+type ChartData = {
   name: string
   value: number
   color: string
@@ -13,7 +14,7 @@ interface ChartData {
   previousValue?: number
 }
 
-interface ProfessionalChartProps {
+type ProfessionalChartProps = {
   data: ChartData[]
   title?: string
   subtitle?: string

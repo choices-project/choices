@@ -1,9 +1,18 @@
 // API utility functions for communicating with backend services
 
+import type { 
+  WebAuthnCredentialResponse, 
+  DashboardData, 
+  GeographicData, 
+  DemographicsData, 
+  EngagementData 
+} from '../../types/frontend';
+import { safeJson } from '../../lib/http/safeFetch';
+
 const IA_BASE_URL = 'http://localhost:8081/api'
 const PO_BASE_URL = 'http://localhost:8082/api'
 
-export interface TokenResponse {
+export type TokenResponse = {
   token: string
   tag: string
   issued_at: string
@@ -13,7 +22,7 @@ export interface TokenResponse {
   public_key: string
 }
 
-export interface Poll {
+export type Poll = {
   id: string
   title: string
   description: string
@@ -25,7 +34,7 @@ export interface Poll {
   created_at: string
 }
 
-export interface Vote {
+export type Vote = {
   poll_id: string
   token: string
   tag: string
@@ -35,11 +44,9 @@ export interface Vote {
   merkle_proof: string[]
 }
 
-export interface Tally {
-  [key: number]: number
-}
+export type Tally = Record<number, number>
 
-export interface CommitmentLog {
+export type CommitmentLog = {
   leaf_count: number
   root: string
   timestamp: string
@@ -100,7 +107,7 @@ export const iaApi = {
     return response.json()
   },
 
-  async finishRegistration(userStableId: string, session: any, response: any) {
+  async finishRegistration(userStableId: string, session: string, response: WebAuthnCredentialResponse) {
     const apiResponse = await fetch(`${IA_BASE_URL}/v1/webauthn/register/finish`, {
       method: 'POST',
       headers: {
@@ -139,7 +146,7 @@ export const iaApi = {
     return response.json()
   },
 
-  async finishLogin(userStableId: string, session: any, response: any) {
+  async finishLogin(userStableId: string, session: string, response: WebAuthnCredentialResponse) {
     const apiResponse = await fetch(`${IA_BASE_URL}/v1/webauthn/login/finish`, {
       method: 'POST',
       headers: {
@@ -290,23 +297,27 @@ export const poApi = {
       throw new Error(`Failed to verify vote proof: ${response.statusText}`)
     }
 
-    const result = await response.json()
-    return result.verified || false
+    const result = await response.json() as { verified?: boolean }
+    return result.verified ?? false
   },
 
   // Get dashboard data
-  async getDashboardData(): Promise<any> {
+  async getDashboardData(): Promise<DashboardData> {
     const response = await fetch(`${PO_BASE_URL}/v1/dashboard`)
     
     if (!response.ok) {
       throw new Error(`Failed to get dashboard data: ${response.statusText}`)
     }
 
-    return response.json()
+    const result = await safeJson<DashboardData>(`${PO_BASE_URL}/v1/dashboard`)
+    if (!result.ok) {
+      throw new Error(`Failed to get dashboard data: ${result.errors ?? 'Unknown error'}`)
+    }
+    return result.data
   },
 
   // Get geographic data
-  async getGeographicData(): Promise<any> {
+  async getGeographicData(): Promise<GeographicData> {
     const response = await fetch(`${PO_BASE_URL}/v1/dashboard/geographic`)
     
     if (!response.ok) {
@@ -317,7 +328,7 @@ export const poApi = {
   },
 
   // Get demographics data
-  async getDemographicsData(): Promise<any> {
+  async getDemographicsData(): Promise<DemographicsData> {
     const response = await fetch(`${PO_BASE_URL}/v1/dashboard/demographics`)
     
     if (!response.ok) {
@@ -328,7 +339,7 @@ export const poApi = {
   },
 
   // Get engagement data
-  async getEngagementData(): Promise<any> {
+  async getEngagementData(): Promise<EngagementData> {
     const response = await fetch(`${PO_BASE_URL}/v1/dashboard/engagement`)
     
     if (!response.ok) {
@@ -340,9 +351,15 @@ export const poApi = {
 }
 
 // Utility function to handle API errors
-export const handleApiError = (error: any): string => {
+export const handleApiError = (error: unknown): string => {
   if (error instanceof Error) {
-    return error instanceof Error ? error.message : "Unknown error"
+    return error.message
+  }
+  if (typeof error === 'string') {
+    return error
+  }
+  if (error && typeof error === 'object' && 'message' in error) {
+    return String((error as { message: unknown }).message)
   }
   return 'An unexpected error occurred'
 }

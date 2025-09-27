@@ -1,7 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 import { logger } from '@/lib/logger';
-import { withAuth, createRateLimitMiddleware, combineMiddleware } from '@/lib/auth-middleware'
-import { getQueryOptimizer, connectionPoolManager, queryMonitor, withPerformanceMonitoring } from '@/lib/database-optimizer'
+import { withAuth, createRateLimitMiddleware, combineMiddleware } from '@/lib/core/auth/middleware'
+import { getQueryOptimizer, connectionPoolManager, queryMonitor, withPerformanceMonitoring } from '@/lib/core/database/optimizer'
 
 export const dynamic = 'force-dynamic';
 
@@ -111,9 +112,9 @@ export const GET = withAuth(async (request: NextRequest, context) => {
   }
 }, { allowPublic: true }) // Allow public access to health checks
 
-export async function POST(_request: NextRequest) {
+export async function POST(request: NextRequest) {
   try {
-    const { action } = await _request.json();
+    const { action } = await request.json();
 
     switch (action) {
       case 'clear_metrics':

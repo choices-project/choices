@@ -1,332 +1,347 @@
-import { useState, useCallback, useMemo } from 'react';
-import { 
-  PollWizardState, 
+/**
+ * Poll Wizard Hook
+ * 
+ * This module provides a hook for managing poll creation wizard state.
+ * It replaces the old @/shared/utils/lib/usePollWizard imports.
+ */
+
+import { useState, useCallback } from 'react';
+import type { 
   PollWizardData, 
-  PollSettings, 
-  PollTemplate
+  PollWizardState 
 } from '../types/poll-templates';
 
-const DEFAULT_SETTINGS: PollSettings = {
-  allowMultipleVotes: false,
-  allowAnonymousVotes: true,
-  requireEmail: false,
-  showResults: true,
-  allowComments: true,
-  enableNotifications: true,
-  votingMethod: 'single',
-  privacyLevel: 'public',
-  moderationEnabled: false,
-  autoClose: false,
-};
-
-const DEFAULT_WIZARD_DATA: PollWizardData = {
+const INITIAL_WIZARD_DATA: PollWizardData = {
   title: '',
   description: '',
-  options: ['', ''],
-  settings: DEFAULT_SETTINGS,
   category: 'general',
+  options: ['', ''],
   tags: [],
+  privacyLevel: 'public',
+  allowMultipleVotes: false,
+  showResults: true,
+  isTemplate: false,
+  settings: {
+    allowMultipleVotes: false,
+    allowAnonymousVotes: true,
+    requireEmail: false,
+    showResults: true,
+    allowComments: true,
+    enableNotifications: true,
+    votingMethod: 'single',
+    privacyLevel: 'public',
+    moderationEnabled: false,
+    autoClose: false
+  }
 };
 
-export const usePollWizard = (template?: PollTemplate) => {
-  const [wizardState, setWizardState] = useState<PollWizardState>({
-    currentStep: 0,
-    totalSteps: 5,
-    isComplete: false,
-    canProceed: false,
-    canGoBack: false,
-    data: template ? { ...DEFAULT_WIZARD_DATA, template } : DEFAULT_WIZARD_DATA,
-    errors: {},
-    isLoading: false,
-  });
+const INITIAL_WIZARD_STATE: PollWizardState = {
+  currentStep: 0,
+  totalSteps: 4,
+  data: INITIAL_WIZARD_DATA,
+  isLoading: false,
+  errors: {},
+  progress: 0,
+  canGoBack: false,
+  canProceed: false,
+  isComplete: false
+};
 
-  const steps = useMemo(() => [
-    { id: 'basic-info', title: 'Basic Information', type: 'question' as const },
-    { id: 'options', title: 'Poll Options', type: 'options' as const },
-    { id: 'category', title: 'Category & Tags', type: 'question' as const },
-    { id: 'settings', title: 'Advanced Settings', type: 'settings' as const },
-    { id: 'preview', title: 'Preview & Publish', type: 'preview' as const },
-  ], []);
+export function usePollWizard() {
+  const [wizardState, setWizardState] = useState<PollWizardState>(INITIAL_WIZARD_STATE);
 
-  const validateStep = useCallback((stepIndex: number, data: PollWizardData): Record<string, string> => {
+  // Validation function
+  const validateStep = useCallback((step: number, data: PollWizardData): Record<string, string> => {
     const errors: Record<string, string> = {};
 
-    switch (stepIndex) {
-      case 0: // Basic Information
+    switch (step) {
+      case 0: // Basic info
         if (!data.title.trim()) {
-          errors.title = 'Poll title is required';
-        } else if (data.title.length < 3) {
-          errors.title = 'Title must be at least 3 characters';
-        } else if (data.title.length > 100) {
-          errors.title = 'Title must be less than 100 characters';
+          errors.title = 'Title is required';
         }
         if (!data.description.trim()) {
           errors.description = 'Description is required';
         }
         break;
-
-      case 1: // Poll Options
+      
+      case 1: // Options
+        const step1ValidOptions = data.options.filter(option => option.trim().length > 0);
+        if (step1ValidOptions.length < 2) {
+          errors.options = 'At least 2 options are required';
+        }
+        break;
+      
+      case 2: // Settings
+        if (data.category === 'general' && !data.tags.length) {
+          errors.tags = 'At least one tag is required for general polls';
+        }
+        break;
+      
+      case 3: // Review
+        // Final validation - comprehensive check
         const validOptions = data.options.filter(option => option.trim().length > 0);
         if (validOptions.length < 2) {
-          errors.options = 'At least 2 options are required';
-        } else if (validOptions.length > 10) {
-          errors.options = 'Maximum 10 options allowed';
+          errors.options = 'At least 2 valid options are required';
         }
-        data.options.forEach((option, index) => {
-          if (option.trim().length > 0 && option.length > 200) {
-            errors[`option-${index}`] = 'Option text must be less than 200 characters';
-          }
-        });
-        break;
-
-      case 2: // Category & Tags
-        if (!data.category) {
-          errors.category = 'Please select a category';
+        
+        // Check for duplicate options
+        const uniqueOptions = new Set(validOptions.map(opt => opt.toLowerCase().trim()));
+        if (uniqueOptions.size !== validOptions.length) {
+          errors.options = 'Duplicate options are not allowed';
         }
-        if (data.tags.length > 5) {
-          errors.tags = 'Maximum 5 tags allowed';
+        
+        // Validate title length
+        if (data.title.trim().length < 3) {
+          errors.title = 'Title must be at least 3 characters';
         }
-        break;
-
-      case 3: // Advanced Settings
-        if (data.settings.expirationDate && data.settings.expirationDate < new Date()) {
-          errors.expirationDate = 'Expiration date must be in the future';
+        if (data.title.trim().length > 200) {
+          errors.title = 'Title must be less than 200 characters';
         }
-        if (data.settings.maxVotes && data.settings.maxVotes < 1) {
-          errors.maxVotes = 'Maximum votes must be at least 1';
+        
+        // Validate description length
+        if (data.description.trim().length > 1000) {
+          errors.description = 'Description must be less than 1000 characters';
         }
-        break;
-
-      case 4: // Preview & Publish
-        // Final validation - all previous validations should pass
+        
         break;
     }
 
     return errors;
   }, []);
 
-  const updateWizardData = useCallback((updates: Partial<PollWizardData>) => {
-    setWizardState(prev => {
-      const newData = { ...prev.data, ...updates };
-      const errors = validateStep(prev.currentStep, newData);
-      const canProceed = Object.keys(errors).length === 0;
-
-      return {
-        ...prev,
-        data: newData,
-        errors,
-        canProceed,
-        canGoBack: prev.currentStep > 0,
-      };
-    });
+  // Helper function to check if current step is valid
+  const isCurrentStepValid = useCallback((step: number, data: PollWizardData): boolean => {
+    const errors = validateStep(step, data);
+    return Object.keys(errors).length === 0;
   }, [validateStep]);
 
+  // Navigation functions
   const nextStep = useCallback(() => {
     setWizardState(prev => {
-      if (prev.currentStep < prev.totalSteps - 1) {
-        const nextStepIndex = prev.currentStep + 1;
-        const errors = validateStep(nextStepIndex, prev.data);
-        const canProceed = Object.keys(errors).length === 0;
-
-        return {
-          ...prev,
-          currentStep: nextStepIndex,
-          errors,
-          canProceed,
-          canGoBack: true,
-          isComplete: nextStepIndex === prev.totalSteps - 1,
-        };
+      const errors = validateStep(prev.currentStep, prev.data);
+      if (Object.keys(errors).length > 0) {
+        return Object.assign({}, prev, { errors });
       }
-      return prev;
+      
+      return Object.assign({}, prev, {
+        currentStep: Math.min(prev.currentStep + 1, prev.totalSteps - 1),
+        errors: {},
+        canProceed: prev.currentStep + 1 < prev.totalSteps - 1 || isCurrentStepValid(prev.currentStep + 1, prev.data)
+      });
     });
-  }, [validateStep]);
+  }, [validateStep, isCurrentStepValid]);
 
-  const previousStep = useCallback(() => {
-    setWizardState(prev => {
-      if (prev.currentStep > 0) {
-        const prevStepIndex = prev.currentStep - 1;
-        const errors = validateStep(prevStepIndex, prev.data);
-        const canProceed = Object.keys(errors).length === 0;
+  const prevStep = useCallback(() => {
+    setWizardState(prev => Object.assign({}, prev, {
+      currentStep: Math.max(prev.currentStep - 1, 0),
+      errors: {}
+    }));
+  }, []);
 
-        return {
-          ...prev,
-          currentStep: prevStepIndex,
-          errors,
-          canProceed,
-          canGoBack: prevStepIndex > 0,
-          isComplete: false,
-        };
-      }
-      return prev;
-    });
-  }, [validateStep]);
+  const goToStep = useCallback((step: number) => {
+    setWizardState(prev => Object.assign({}, prev, {
+      currentStep: Math.max(0, Math.min(step, prev.totalSteps - 1)),
+      errors: {}
+    }));
+  }, []);
 
-  const goToStep = useCallback((stepIndex: number) => {
-    setWizardState(prev => {
-      if (stepIndex >= 0 && stepIndex < prev.totalSteps) {
-        const errors = validateStep(stepIndex, prev.data);
-        const canProceed = Object.keys(errors).length === 0;
-
-        return {
-          ...prev,
-          currentStep: stepIndex,
-          errors,
-          canProceed,
-          canGoBack: stepIndex > 0,
-          isComplete: stepIndex === prev.totalSteps - 1,
-        };
-      }
-      return prev;
-    });
-  }, [validateStep]);
+  // Data update functions
+  const updateData = useCallback((updates: Partial<PollWizardData>) => {
+    setWizardState(prev => Object.assign({}, prev, {
+      data: Object.assign({}, prev.data, updates)
+    }));
+  }, []);
 
   const addOption = useCallback(() => {
-    setWizardState(prev => {
-      const newOptions = [...prev.data.options, ''];
-      const newData = { ...prev.data, options: newOptions };
-      const errors = validateStep(prev.currentStep, newData);
-      const canProceed = Object.keys(errors).length === 0;
-
-      return {
-        ...prev,
-        data: newData,
-        errors,
-        canProceed,
-      };
-    });
-  }, [validateStep]);
+    setWizardState(prev => Object.assign({}, prev, {
+      data: Object.assign({}, prev.data, {
+        options: [...prev.data.options, '']
+      })
+    }));
+  }, []);
 
   const removeOption = useCallback((index: number) => {
     setWizardState(prev => {
-      if (prev.data.options.length <= 2) return prev; // Minimum 2 options
-      
       const newOptions = prev.data.options.filter((_, i) => i !== index);
-      const newData = { ...prev.data, options: newOptions };
-      const errors = validateStep(prev.currentStep, newData);
-      const canProceed = Object.keys(errors).length === 0;
-
-      return {
-        ...prev,
-        data: newData,
-        errors,
-        canProceed,
-      };
+      return Object.assign({}, prev, {
+        data: Object.assign({}, prev.data, {
+          options: newOptions
+        })
+      });
     });
-  }, [validateStep]);
+  }, []);
 
   const updateOption = useCallback((index: number, value: string) => {
-    setWizardState(prev => {
-      const newOptions = [...prev.data.options];
-      newOptions[index] = value;
-      const newData = { ...prev.data, options: newOptions };
-      const errors = validateStep(prev.currentStep, newData);
-      const canProceed = Object.keys(errors).length === 0;
-
-      return {
-        ...prev,
-        data: newData,
-        errors,
-        canProceed,
-      };
-    });
-  }, [validateStep]);
-
-  const updateSettings = useCallback((updates: Partial<PollSettings>) => {
-    setWizardState(prev => {
-      const newSettings = { ...prev.data.settings, ...updates };
-      const newData = { ...prev.data, settings: newSettings };
-      const errors = validateStep(prev.currentStep, newData);
-      const canProceed = Object.keys(errors).length === 0;
-
-      return {
-        ...prev,
-        data: newData,
-        errors,
-        canProceed,
-      };
-    });
-  }, [validateStep]);
+    setWizardState(prev => Object.assign({}, prev, {
+      data: Object.assign({}, prev.data, {
+        options: prev.data.options.map((option, i) => i === index ? value : option)
+      })
+    }));
+  }, []);
 
   const addTag = useCallback((tag: string) => {
-    setWizardState(prev => {
-      const trimmedTag = tag.trim();
-      if (!trimmedTag || prev.data.tags.includes(trimmedTag)) return prev;
-      
-      const newTags = [...prev.data.tags, trimmedTag];
-      const newData = { ...prev.data, tags: newTags };
-      const errors = validateStep(prev.currentStep, newData);
-      const canProceed = Object.keys(errors).length === 0;
-
-      return {
-        ...prev,
-        data: newData,
-        errors,
-        canProceed,
-      };
-    });
-  }, [validateStep]);
+    setWizardState(prev => Object.assign({}, prev, {
+      data: Object.assign({}, prev.data, {
+        tags: [...prev.data.tags, tag]
+      })
+    }));
+  }, []);
 
   const removeTag = useCallback((tagToRemove: string) => {
     setWizardState(prev => {
       const newTags = prev.data.tags.filter(tag => tag !== tagToRemove);
-      const newData = { ...prev.data, tags: newTags };
-      const errors = validateStep(prev.currentStep, newData);
-      const canProceed = Object.keys(errors).length === 0;
-
-      return {
-        ...prev,
-        data: newData,
-        errors,
-        canProceed,
-      };
+      return Object.assign({}, prev, {
+        data: Object.assign({}, prev.data, {
+          tags: newTags
+        })
+      });
     });
-  }, [validateStep]);
-
-  const resetWizard = useCallback(() => {
-    setWizardState({
-      currentStep: 0,
-      totalSteps: 5,
-      isComplete: false,
-      canProceed: false,
-      canGoBack: false,
-      data: template ? { ...DEFAULT_WIZARD_DATA, template } : DEFAULT_WIZARD_DATA,
-      errors: {},
-      isLoading: false,
-    });
-  }, [template]);
-
-  const setLoading = useCallback((loading: boolean) => {
-    setWizardState(prev => ({ ...prev, isLoading: loading }));
   }, []);
 
-  const progress = useMemo(() => {
-    return steps.map((step, index) => ({
-      step: index,
-      title: step.title,
-      isCompleted: index < wizardState.currentStep,
-      isCurrent: index === wizardState.currentStep,
-      hasError: Object.keys(wizardState.errors).some(key => key.startsWith(step.id)),
-      estimatedTime: 2, // 2 minutes per step
-    }));
-  }, [steps, wizardState.currentStep, wizardState.errors]);
+  // Loading state
+  const setLoading = useCallback((loading: boolean) => {
+    setWizardState(prev => Object.assign({}, prev, { isLoading: loading }));
+  }, []);
+
+  // Reset wizard
+  const resetWizard = useCallback(() => {
+    setWizardState(INITIAL_WIZARD_STATE);
+  }, []);
+
+  // Submit poll
+  const submitPoll = useCallback(async (): Promise<{ success: boolean; pollId?: string; error?: string }> => {
+    setLoading(true);
+    
+    try {
+      // Validate final data before submission
+      const finalErrors = validateStep(3, wizardState.data);
+      if (Object.keys(finalErrors).length > 0) {
+        setWizardState(prev => Object.assign({}, prev, { errors: finalErrors }));
+        return {
+          success: false,
+          error: 'Please fix validation errors before submitting'
+        };
+      }
+
+      // Prepare poll data for API
+      const pollData = {
+        title: wizardState.data.title.trim(),
+        description: wizardState.data.description.trim(),
+        options: wizardState.data.options.filter(option => option.trim().length > 0),
+        voting_method: wizardState.data.settings.votingMethod,
+        privacy_level: wizardState.data.privacyLevel,
+        category: wizardState.data.category,
+        allowMultipleVotes: wizardState.data.settings.allowMultipleVotes,
+        showResults: wizardState.data.settings.showResults,
+        allowComments: wizardState.data.settings.allowComments,
+        tags: wizardState.data.tags,
+        isTemplate: wizardState.data.isTemplate
+      };
+
+      // Submit to API
+      const response = await fetch('/api/polls', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(pollData)
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `HTTP ${response.status}: Failed to create poll`);
+      }
+
+      const result = await response.json();
+      
+      // Update wizard state to mark as complete
+      setWizardState(prev => Object.assign({}, prev, {
+        isComplete: true,
+        progress: 100
+      }));
+      
+      return {
+        success: true,
+        pollId: result.id
+      };
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to create poll';
+      
+      // Update wizard state with error
+      setWizardState(prev => Object.assign({}, prev, {
+        errors: { submit: errorMessage }
+      }));
+      
+      return {
+        success: false,
+        error: errorMessage
+      };
+    } finally {
+      setLoading(false);
+    }
+  }, [wizardState.data, validateStep, setLoading]);
+
+  // Progress calculation with dynamic error detection
+  const progress = [
+    { 
+      step: 0, 
+      title: 'Basic Information', 
+      isCompleted: wizardState.currentStep > 0, 
+      isCurrent: wizardState.currentStep === 0, 
+      hasError: !!(wizardState.errors.title || wizardState.errors.description), 
+      estimatedTime: 2 
+    },
+    { 
+      step: 1, 
+      title: 'Poll Options', 
+      isCompleted: wizardState.currentStep > 1, 
+      isCurrent: wizardState.currentStep === 1, 
+      hasError: !!(wizardState.errors.options || wizardState.errors.option_0 || wizardState.errors.option_1), 
+      estimatedTime: 2 
+    },
+    { 
+      step: 2, 
+      title: 'Category & Tags', 
+      isCompleted: wizardState.currentStep > 2, 
+      isCurrent: wizardState.currentStep === 2, 
+      hasError: !!(wizardState.errors.tags || wizardState.errors.category), 
+      estimatedTime: 2 
+    },
+    { 
+      step: 3, 
+      title: 'Review', 
+      isCompleted: wizardState.currentStep > 3, 
+      isCurrent: wizardState.currentStep === 3, 
+      hasError: !!(wizardState.errors.submit), 
+      estimatedTime: 2 
+    }
+  ];
+
+  // Alias functions for compatibility
+  const updateWizardData = updateData;
+  const previousStep = prevStep;
+  const updateSettings = (updates: Partial<PollWizardData['settings']>) => updateData({ settings: Object.assign({}, wizardState.data.settings, updates) });
 
   return {
     wizardState,
-    steps,
     progress,
     updateWizardData,
     nextStep,
     previousStep,
     goToStep,
+    updateData,
     addOption,
     removeOption,
     updateOption,
     updateSettings,
     addTag,
     removeTag,
-    resetWizard,
     setLoading,
-    validateStep,
+    resetWizard,
+    submitPoll,
+    validateStep: (step: number) => validateStep(step, wizardState.data),
+    isCurrentStepValid: (step: number) => isCurrentStepValid(step, wizardState.data)
   };
-};
+}
+
 

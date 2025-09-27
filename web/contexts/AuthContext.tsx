@@ -1,72 +1,89 @@
 'use client'
 
-import { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react'
-import { User, Session } from '@supabase/supabase-js'
-import { getSupabaseBrowserClient } from '@/utils/supabase/client-minimal'
+import { createContext, useContext, useEffect, useState } from 'react'
+import type { User, Session } from '@supabase/supabase-js'
+import { getSupabaseBrowserClient } from '@/utils/supabase/client'
 
-interface AuthContextType {
+type AuthContextType = {
   user: User | null
   session: Session | null
   loading: boolean
+  isLoading: boolean  // Alias for backward compatibility
   signOut: () => Promise<void>
   refreshSession: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
+export { AuthContext }
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
   
-  const supabase = useMemo(() => {
-    try {
-      return getSupabaseBrowserClient()
-    } catch (error) {
-      console.error('Failed to initialize Supabase client:', error)
-      return null
+  useEffect(() => {
+    let mounted = true
+
+    const initializeAuth = async () => {
+      try {
+        const supabase = await getSupabaseBrowserClient()
+        
+        if (!mounted) return
+
+        // Get initial session
+        const { data: { session } } = await supabase.auth.getSession()
+        if (mounted) {
+          setSession(session)
+          setUser(session?.user ?? null)
+          setLoading(false)
+        }
+
+        // Listen for auth changes
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(
+          async (event: string, session: Session | null) => {
+            if (mounted) {
+              setSession(session)
+              setUser(session?.user ?? null)
+              setLoading(false)
+            }
+          }
+        )
+
+        return () => subscription.unsubscribe()
+      } catch (error) {
+        console.error('Failed to initialize Supabase client:', error)
+        if (mounted) {
+          setLoading(false)
+        }
+      }
+    }
+
+    const cleanup = initializeAuth()
+
+    return () => {
+      mounted = false
+      cleanup.then(cleanupFn => cleanupFn?.())
     }
   }, [])
 
-  useEffect(() => {
-    if (!supabase) {
-      setLoading(false)
-      return
-    }
-
-    // Get initial session
-    const getInitialSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession()
-      setSession(session)
-      setUser(session?.user ?? null)
-      setLoading(false)
-    }
-
-    getInitialSession()
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event: string, session: Session | null) => {
-        setSession(session)
-        setUser(session?.user ?? null)
-        setLoading(false)
-      }
-    )
-
-    return () => subscription.unsubscribe()
-  }, [supabase])
-
   const signOut = async () => {
-    if (supabase) {
+    try {
+      const supabase = await getSupabaseBrowserClient()
       await supabase.auth.signOut()
+    } catch (error) {
+      console.error('Failed to sign out:', error)
     }
   }
 
   const refreshSession = async () => {
-    if (supabase) {
+    try {
+      const supabase = await getSupabaseBrowserClient()
       const { data: { session } } = await supabase.auth.getSession()
       setSession(session)
       setUser(session?.user ?? null)
+    } catch (error) {
+      console.error('Failed to refresh session:', error)
     }
   }
 
@@ -74,6 +91,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     user,
     session,
     loading,
+    isLoading: loading,  // Alias for backward compatibility
     signOut,
     refreshSession,
   }
@@ -92,3 +110,6 @@ export function useAuth() {
   }
   return context
 }
+
+// Alias for backward compatibility
+export const useSupabaseAuth = useAuth

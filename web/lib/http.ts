@@ -1,44 +1,39 @@
 /**
- * HTTP Security Helpers
+ * HTTP utilities
  * 
- * Provides origin validation and CSRF protection for state-changing routes.
+ * This module provides HTTP-related utility functions for the application.
+ * It replaces the old @/shared/utils/lib/http imports.
  */
 
-export function requireTrustedOrigin(req: Request) {
-  // Only enforce on state-changing verbs; allow preview/branch URLs
-  if (!['POST', 'PUT', 'PATCH', 'DELETE'].includes(req.method)) return;
+export function requireTrustedOrigin(request: Request): boolean {
+  const origin = request.headers.get('origin');
+  const host = request.headers.get('host');
   
-  const origin = req.headers.get('origin') ?? new URL(req.headers.get('referer') ?? '', 'http://x').origin;
-  const allowed = [
-    process.env.APP_ORIGIN!,                   // prod app
-    ...(process.env.NODE_ENV === 'development' ? ['http://localhost:3000'] : []),
-    ...(process.env.VERCEL ? ['https://*.vercel.app'] : []),
+  // Allow localhost for development
+  if (host?.includes('localhost') || host?.includes('127.0.0.1')) {
+    return true;
+  }
+  
+  // Add your trusted origins here
+  const trustedOrigins = [
+    'https://yourdomain.com',
+    'https://www.yourdomain.com'
   ];
   
-  if (!origin || !allowed.some(p => 
-    origin === p || (p.endsWith('*.vercel.app') && origin.endsWith('.vercel.app'))
-  )) {
-    throw new Error('Untrusted origin');
-  }
+  return origin ? trustedOrigins.includes(origin) : false;
 }
 
-// Helper for getting client IP
-export function getClientIP(req: Request): string {
-  const forwarded = req.headers.get('x-forwarded-for');
-  const realIP = req.headers.get('x-real-ip');
-  
-  if (forwarded) {
-    return forwarded.split(',')[0].trim();
-  }
-  
-  if (realIP) {
-    return realIP;
-  }
-  
-  return 'unknown';
+export function isLocalhost(ip: string | null): boolean {
+  if (!ip) return false;
+  return ip === '127.0.0.1' || ip === '::1' || ip === 'localhost';
 }
 
-// Helper for getting user agent
-export function getUserAgent(req: Request): string {
-  return req.headers.get('user-agent') || 'unknown';
-}
+
+
+
+
+
+
+
+
+

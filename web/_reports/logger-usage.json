@@ -1,0 +1,2308 @@
+{
+  "byArity": {
+    "1": [
+      {
+        "file": "app/api/auth/sync-user/route.ts",
+        "arity": 1,
+        "snippet": "devLog('User already exists in ia_users table')"
+      },
+      {
+        "file": "app/api/feedback/route.ts",
+        "arity": 1,
+        "snippet": "devLog('Supabase not configured - using mock response')"
+      },
+      {
+        "file": "app/api/feedback/route.ts",
+        "arity": 1,
+        "snippet": "devLog('Schema cache issue or table not ready - using mock response')"
+      },
+      {
+        "file": "app/api/feedback/route.ts",
+        "arity": 1,
+        "snippet": "devLog('Supabase not configured - using mock response')"
+      },
+      {
+        "file": "app/api/feedback/route.ts",
+        "arity": 1,
+        "snippet": "devLog('Schema cache issue or table not ready - using mock response')"
+      },
+      {
+        "file": "app/api/polls/route.ts",
+        "arity": 1,
+        "snippet": "devLog('Fetching active polls from polls table...')"
+      },
+      {
+        "file": "components/Dashboard.tsx",
+        "arity": 1,
+        "snippet": "devLog('Fetching dashboard data...')"
+      },
+      {
+        "file": "components/DemographicVisualization.tsx",
+        "arity": 1,
+        "snippet": "devLog('Loading demographic data...')"
+      },
+      {
+        "file": "components/TopicAnalysis.tsx",
+        "arity": 1,
+        "snippet": "devLog('Topic analysis data updated')"
+      },
+      {
+        "file": "components/TopicAnalysis.tsx",
+        "arity": 1,
+        "snippet": "devLog('Context update requested')"
+      },
+      {
+        "file": "components/onboarding/EnhancedOnboardingFlow.tsx",
+        "arity": 1,
+        "snippet": "devLog('Onboarding started successfully')"
+      },
+      {
+        "file": "components/onboarding/EnhancedOnboardingFlow.tsx",
+        "arity": 1,
+        "snippet": "devLog(`Onboarding step ${step} updated successfully`)"
+      },
+      {
+        "file": "components/onboarding/EnhancedOnboardingFlow.tsx",
+        "arity": 1,
+        "snippet": "devLog('Onboarding completed successfully')"
+      },
+      {
+        "file": "components/onboarding/OnboardingFlow.tsx",
+        "arity": 1,
+        "snippet": "devLog('OnboardingContext updateData called before initialization')"
+      },
+      {
+        "file": "components/onboarding/OnboardingFlow.tsx",
+        "arity": 1,
+        "snippet": "devLog('OnboardingContext setCurrentStep called before initialization')"
+      },
+      {
+        "file": "dev/lib/automated-polls.ts",
+        "arity": 1,
+        "snippet": "devLog('Starting data source refresh...')"
+      },
+      {
+        "file": "dev/lib/automated-polls.ts",
+        "arity": 1,
+        "snippet": "devLog(`Error refreshing data source ${source && !('error' in source)"
+      },
+      {
+        "file": "dev/lib/automated-polls.ts",
+        "arity": 1,
+        "snippet": "devLog(`Refreshing data source: ${source.topic || source.name || 'Unknown'}`)"
+      },
+      {
+        "file": "dev/lib/comprehensive-testing-runner.ts",
+        "arity": 1,
+        "snippet": "devLog('🚀 Starting Comprehensive Testing...')"
+      },
+      {
+        "file": "dev/lib/comprehensive-testing-runner.ts",
+        "arity": 1,
+        "snippet": "devLog('📋 Running MVP Testing Suite...')"
+      },
+      {
+        "file": "dev/lib/comprehensive-testing-runner.ts",
+        "arity": 1,
+        "snippet": "devLog('🌐 Running Cross-Platform Testing Suite...')"
+      },
+      {
+        "file": "dev/lib/comprehensive-testing-runner.ts",
+        "arity": 1,
+        "snippet": "devLog('📱 Running Mobile Compatibility Testing Suite...')"
+      },
+      {
+        "file": "dev/lib/comprehensive-testing-runner.ts",
+        "arity": 1,
+        "snippet": "devLog('✅ Comprehensive Testing Complete!')"
+      },
+      {
+        "file": "dev/lib/comprehensive-testing-runner.ts",
+        "arity": 1,
+        "snippet": "devLog(`📊 Overall Success Rate: ${(report.overallSuccessRate * 100)"
+      },
+      {
+        "file": "dev/lib/comprehensive-testing-runner.ts",
+        "arity": 1,
+        "snippet": "devLog(`🚀 Deployment Status: ${report.overallStatus.toUpperCase()"
+      },
+      {
+        "file": "dev/lib/comprehensive-testing-runner.ts",
+        "arity": 1,
+        "snippet": "devLog('\\n' + '='.repeat(60)"
+      },
+      {
+        "file": "dev/lib/comprehensive-testing-runner.ts",
+        "arity": 1,
+        "snippet": "devLog('📊 COMPREHENSIVE TESTING SUMMARY')"
+      },
+      {
+        "file": "dev/lib/comprehensive-testing-runner.ts",
+        "arity": 1,
+        "snippet": "devLog('='.repeat(60)"
+      },
+      {
+        "file": "dev/lib/comprehensive-testing-runner.ts",
+        "arity": 1,
+        "snippet": "devLog(`\\n🎯 Overall Status: ${report.overallStatus.toUpperCase()"
+      },
+      {
+        "file": "dev/lib/comprehensive-testing-runner.ts",
+        "arity": 1,
+        "snippet": "devLog(`📈 Success Rate: ${(report.overallSuccessRate * 100)"
+      },
+      {
+        "file": "dev/lib/comprehensive-testing-runner.ts",
+        "arity": 1,
+        "snippet": "devLog(`📋 Test Suites: ${report.totalTestSuites}`)"
+      },
+      {
+        "file": "dev/lib/comprehensive-testing-runner.ts",
+        "arity": 1,
+        "snippet": "devLog(`✅ Passed: ${report.passedSuites}`)"
+      },
+      {
+        "file": "dev/lib/comprehensive-testing-runner.ts",
+        "arity": 1,
+        "snippet": "devLog(`⚠️ Warnings: ${report.warningSuites}`)"
+      },
+      {
+        "file": "dev/lib/comprehensive-testing-runner.ts",
+        "arity": 1,
+        "snippet": "devLog(`❌ Failed: ${report.failedSuites}`)"
+      },
+      {
+        "file": "dev/lib/comprehensive-testing-runner.ts",
+        "arity": 1,
+        "snippet": "devLog(`\\n📊 Test Summary:`)"
+      },
+      {
+        "file": "dev/lib/comprehensive-testing-runner.ts",
+        "arity": 1,
+        "snippet": "devLog(`   Total Tests: ${report.summary.totalTests}`)"
+      },
+      {
+        "file": "dev/lib/comprehensive-testing-runner.ts",
+        "arity": 1,
+        "snippet": "devLog(`   Passed: ${report.summary.totalPassed}`)"
+      },
+      {
+        "file": "dev/lib/comprehensive-testing-runner.ts",
+        "arity": 1,
+        "snippet": "devLog(`   Failed: ${report.summary.totalFailed}`)"
+      },
+      {
+        "file": "dev/lib/comprehensive-testing-runner.ts",
+        "arity": 1,
+        "snippet": "devLog(`   Warnings: ${report.summary.totalWarnings}`)"
+      },
+      {
+        "file": "dev/lib/comprehensive-testing-runner.ts",
+        "arity": 1,
+        "snippet": "devLog(`\\n🚀 Deployment Readiness:`)"
+      },
+      {
+        "file": "dev/lib/comprehensive-testing-runner.ts",
+        "arity": 1,
+        "snippet": "devLog(`   ${status} ${label}`)"
+      },
+      {
+        "file": "dev/lib/comprehensive-testing-runner.ts",
+        "arity": 1,
+        "snippet": "devLog(`\\n💡 Recommendations:`)"
+      },
+      {
+        "file": "dev/lib/comprehensive-testing-runner.ts",
+        "arity": 1,
+        "snippet": "devLog(`   ${rec}`)"
+      },
+      {
+        "file": "dev/lib/comprehensive-testing-runner.ts",
+        "arity": 1,
+        "snippet": "devLog('\\n' + '='.repeat(60)"
+      },
+      {
+        "file": "features/auth/pages/callback/route.ts",
+        "arity": 1,
+        "snippet": "devLog(`Redirecting user to: ${finalRedirect}`)"
+      },
+      {
+        "file": "features/auth/pages/callback/route.ts",
+        "arity": 1,
+        "snippet": "devLog('No session returned from code exchange')"
+      },
+      {
+        "file": "features/auth/pages/callback/route.ts",
+        "arity": 1,
+        "snippet": "devLog('No authentication code provided')"
+      },
+      {
+        "file": "features/polls/components/PollShare.tsx",
+        "arity": 1,
+        "snippet": "devLog('Canvas context not available')"
+      },
+      {
+        "file": "features/pwa/components/PWAVotingInterface.tsx",
+        "arity": 1,
+        "snippet": "devLog('PWA: Vote stored offline')"
+      },
+      {
+        "file": "features/pwa/lib/pwa-auth-integration.ts",
+        "arity": 1,
+        "snippet": "devLog('PWA: User not found or not current user')"
+      },
+      {
+        "file": "features/pwa/lib/pwa-auth-integration.ts",
+        "arity": 1,
+        "snippet": "devLog('PWA: WebAuthn not supported')"
+      },
+      {
+        "file": "features/pwa/lib/pwa-auth-integration.ts",
+        "arity": 1,
+        "snippet": "devLog('PWA: WebAuthn enabled successfully')"
+      },
+      {
+        "file": "features/pwa/lib/pwa-auth-integration.ts",
+        "arity": 1,
+        "snippet": "devLog('PWA: User not found or not current user')"
+      },
+      {
+        "file": "features/pwa/lib/pwa-auth-integration.ts",
+        "arity": 1,
+        "snippet": "devLog('PWA: Notifications not supported')"
+      },
+      {
+        "file": "features/pwa/lib/pwa-auth-integration.ts",
+        "arity": 1,
+        "snippet": "devLog('PWA: Push notifications enabled successfully')"
+      },
+      {
+        "file": "features/pwa/lib/pwa-auth-integration.ts",
+        "arity": 1,
+        "snippet": "devLog('PWA: WebAuthn not enabled for user')"
+      },
+      {
+        "file": "features/pwa/lib/pwa-auth-integration.ts",
+        "arity": 1,
+        "snippet": "devLog('PWA: WebAuthn authentication successful')"
+      },
+      {
+        "file": "features/pwa/lib/pwa-auth-integration.ts",
+        "arity": 1,
+        "snippet": "devLog('PWA: User account deleted')"
+      },
+      {
+        "file": "features/testing/pages/analytics-test/page.tsx",
+        "arity": 1,
+        "snippet": "devLog(`Testing analytics fetch for type: ${type}`)"
+      },
+      {
+        "file": "features/webauthn/components/BiometricLogin.tsx",
+        "arity": 1,
+        "snippet": "devLog('BiometricContext: Setting username')"
+      },
+      {
+        "file": "features/webauthn/components/BiometricLogin.tsx",
+        "arity": 1,
+        "snippet": "devLog('Biometric authentication successful')"
+      },
+      {
+        "file": "hooks/useAnalytics.ts",
+        "arity": 1,
+        "snippet": "devLog('No data to export')"
+      },
+      {
+        "file": "hooks/useAnalytics.ts",
+        "arity": 1,
+        "snippet": "devLog('No data to generate report')"
+      },
+      {
+        "file": "hooks/useDeviceDetection.ts",
+        "arity": 1,
+        "snippet": "devLog('Device came online')"
+      },
+      {
+        "file": "hooks/useDeviceDetection.ts",
+        "arity": 1,
+        "snippet": "devLog('Device went offline')"
+      },
+      {
+        "file": "lib/shared/pwa-utils.ts",
+        "arity": 1,
+        "snippet": "devLog('PWA: Feature disabled via feature flags')"
+      },
+      {
+        "file": "lib/shared/pwa-utils.ts",
+        "arity": 1,
+        "snippet": "devLog('PWA: Service Worker registered')"
+      },
+      {
+        "file": "lib/shared/pwa-utils.ts",
+        "arity": 1,
+        "snippet": "devLog('PWA: Install prompt shown')"
+      },
+      {
+        "file": "lib/shared/pwa-utils.ts",
+        "arity": 1,
+        "snippet": "devLog('PWA: User accepted the install prompt')"
+      },
+      {
+        "file": "lib/shared/pwa-utils.ts",
+        "arity": 1,
+        "snippet": "devLog('PWA: User dismissed the install prompt')"
+      },
+      {
+        "file": "lib/shared/pwa-utils.ts",
+        "arity": 1,
+        "snippet": "devLog('PWA: Offline mode activated')"
+      },
+      {
+        "file": "lib/shared/pwa-utils.ts",
+        "arity": 1,
+        "snippet": "devLog(`PWA: Syncing ${offlineVotes.length} offline votes...`)"
+      },
+      {
+        "file": "lib/shared/pwa-utils.ts",
+        "arity": 1,
+        "snippet": "devLog('PWA: Offline votes cleared')"
+      },
+      {
+        "file": "lib/shared/pwa-utils.ts",
+        "arity": 1,
+        "snippet": "devLog('PWA: Notifications not supported')"
+      },
+      {
+        "file": "lib/shared/pwa-utils.ts",
+        "arity": 1,
+        "snippet": "devLog('PWA: Cannot subscribe to push notifications')"
+      },
+      {
+        "file": "lib/shared/pwa-utils.ts",
+        "arity": 1,
+        "snippet": "devLog('PWA: Crypto API not supported')"
+      },
+      {
+        "file": "lib/shared/pwa-utils.ts",
+        "arity": 1,
+        "snippet": "devLog('PWA: Crypto API not supported')"
+      },
+      {
+        "file": "modules/advanced-privacy/index.ts",
+        "arity": 1,
+        "snippet": "devLog('Advanced privacy features are disabled')"
+      },
+      {
+        "file": "modules/advanced-privacy/index.ts",
+        "arity": 1,
+        "snippet": "devLog('Advanced privacy module initialized successfully')"
+      },
+      {
+        "file": "modules/advanced-privacy/privacy-auditor.ts",
+        "arity": 1,
+        "snippet": "devLog('Privacy auditor disabled - advanced privacy features not enabled')"
+      },
+      {
+        "file": "modules/advanced-privacy/privacy-auditor.ts",
+        "arity": 1,
+        "snippet": "devLog('Privacy Auditor initialized successfully')"
+      },
+      {
+        "file": "modules/advanced-privacy/privacy-bridge.ts",
+        "arity": 1,
+        "snippet": "devLog('Initializing Privacy Bridge...')"
+      },
+      {
+        "file": "modules/advanced-privacy/privacy-bridge.ts",
+        "arity": 1,
+        "snippet": "devLog('Advanced privacy features are disabled')"
+      },
+      {
+        "file": "modules/advanced-privacy/privacy-bridge.ts",
+        "arity": 1,
+        "snippet": "devLog('Privacy Bridge initialized successfully')"
+      },
+      {
+        "file": "modules/advanced-privacy/privacy-bridge.ts",
+        "arity": 1,
+        "snippet": "devLog('Backward compatibility layer initialized')"
+      },
+      {
+        "file": "modules/advanced-privacy/privacy-bridge.ts",
+        "arity": 1,
+        "snippet": "devLog('Privacy Bridge cleaned up')"
+      },
+      {
+        "file": "shared/core/services/lib/poll-service.ts",
+        "arity": 1,
+        "snippet": "devLog(`Verifying vote: ${voteId}`)"
+      },
+      {
+        "file": "shared/core/services/lib/poll-service.ts",
+        "arity": 1,
+        "snippet": "devLog('Poll saved to API successfully')"
+      }
+    ],
+    "2": [
+      {
+        "file": "app/account/delete/page.tsx",
+        "arity": 2,
+        "snippet": "devLog('Error loading user data:', error)"
+      },
+      {
+        "file": "app/account/delete/page.tsx",
+        "arity": 2,
+        "snippet": "devLog('Error exporting user data:', error)"
+      },
+      {
+        "file": "app/account/delete/page.tsx",
+        "arity": 2,
+        "snippet": "devLog('Error deleting account:', error)"
+      },
+      {
+        "file": "app/account/export/page.tsx",
+        "arity": 2,
+        "snippet": "devLog('Error exporting data:', error)"
+      },
+      {
+        "file": "app/account/export/page.tsx",
+        "arity": 2,
+        "snippet": "devLog('Error loading export history:', error)"
+      },
+      {
+        "file": "app/admin/feedback/enhanced/page.tsx",
+        "arity": 2,
+        "snippet": "devLog('Error fetching feedback:', data.error)"
+      },
+      {
+        "file": "app/admin/feedback/enhanced/page.tsx",
+        "arity": 2,
+        "snippet": "devLog('Error fetching feedback:', error)"
+      },
+      {
+        "file": "app/admin/feedback/page.tsx",
+        "arity": 2,
+        "snippet": "devLog('Error updating feedback status:', error)"
+      },
+      {
+        "file": "app/admin/feedback/page.tsx",
+        "arity": 2,
+        "snippet": "devLog('Error exporting feedback:', error)"
+      },
+      {
+        "file": "app/admin/feedback/page.tsx",
+        "arity": 2,
+        "snippet": "devLog('Bulk issue generation completed:', { feedbackIds })"
+      },
+      {
+        "file": "app/api/admin/breaking-news/route.ts",
+        "arity": 2,
+        "snippet": "devLog('Error fetching breaking news:', error)"
+      },
+      {
+        "file": "app/api/admin/breaking-news/route.ts",
+        "arity": 2,
+        "snippet": "devLog('Error creating breaking news:', error)"
+      },
+      {
+        "file": "app/api/admin/feedback/[id]/status/route.ts",
+        "arity": 2,
+        "snippet": "devLog('Error fetching user profile:', profileError)"
+      },
+      {
+        "file": "app/api/admin/feedback/[id]/status/route.ts",
+        "arity": 2,
+        "snippet": "devLog('Error updating feedback status:', updateError)"
+      },
+      {
+        "file": "app/api/admin/feedback/[id]/status/route.ts",
+        "arity": 2,
+        "snippet": "devLog('Error in feedback status update API:', error)"
+      },
+      {
+        "file": "app/api/admin/feedback/export/route.ts",
+        "arity": 2,
+        "snippet": "devLog('Error fetching user profile:', profileError)"
+      },
+      {
+        "file": "app/api/admin/feedback/export/route.ts",
+        "arity": 2,
+        "snippet": "devLog('Error fetching feedback for export:', error)"
+      },
+      {
+        "file": "app/api/admin/feedback/export/route.ts",
+        "arity": 2,
+        "snippet": "devLog('Error in feedback export API:', error)"
+      },
+      {
+        "file": "app/api/admin/feedback/route.ts",
+        "arity": 2,
+        "snippet": "devLog('Error fetching feedback:', error)"
+      },
+      {
+        "file": "app/api/admin/feedback/route.ts",
+        "arity": 2,
+        "snippet": "devLog('Error in admin feedback API:', error)"
+      },
+      {
+        "file": "app/api/admin/system-metrics/route.ts",
+        "arity": 2,
+        "snippet": "devLog('Error fetching system metrics:', error)"
+      },
+      {
+        "file": "app/api/analytics/poll/[id]/route.ts",
+        "arity": 2,
+        "snippet": "devLog('Error getting poll analytics:', error)"
+      },
+      {
+        "file": "app/api/analytics/summary/route.ts",
+        "arity": 2,
+        "snippet": "devLog('Error getting analytics summary:', error)"
+      },
+      {
+        "file": "app/api/analytics/user/[id]/route.ts",
+        "arity": 2,
+        "snippet": "devLog('Error getting user analytics:', error)"
+      },
+      {
+        "file": "app/api/auth/sync-user/route.ts",
+        "arity": 2,
+        "snippet": "devLog('Error checking existing user:', checkError)"
+      },
+      {
+        "file": "app/api/auth/sync-user/route.ts",
+        "arity": 2,
+        "snippet": "devLog('Error creating user in ia_users:', createError)"
+      },
+      {
+        "file": "app/api/auth/sync-user/route.ts",
+        "arity": 2,
+        "snippet": "devLog('Successfully created user in ia_users table:', newUser)"
+      },
+      {
+        "file": "app/api/auth/sync-user/route.ts",
+        "arity": 2,
+        "snippet": "devLog('Unexpected error in sync-user:', error)"
+      },
+      {
+        "file": "app/api/auth/webauthn/authenticate/route.ts",
+        "arity": 2,
+        "snippet": "devLog('WebAuthn authentication error:', error)"
+      },
+      {
+        "file": "app/api/auth/webauthn/credentials/route.ts",
+        "arity": 2,
+        "snippet": "devLog('Error getting WebAuthn credentials:', credentialsError)"
+      },
+      {
+        "file": "app/api/auth/webauthn/credentials/route.ts",
+        "arity": 2,
+        "snippet": "devLog('Retrieved WebAuthn credentials for domain', {\n      host: request.headers.get('host')"
+      },
+      {
+        "file": "app/api/auth/webauthn/credentials/route.ts",
+        "arity": 2,
+        "snippet": "devLog('Error getting WebAuthn credentials:', error)"
+      },
+      {
+        "file": "app/api/auth/webauthn/logs/route.ts",
+        "arity": 2,
+        "snippet": "devLog('Error getting auth logs:', logsError)"
+      },
+      {
+        "file": "app/api/auth/webauthn/logs/route.ts",
+        "arity": 2,
+        "snippet": "devLog('Error getting log count:', countError)"
+      },
+      {
+        "file": "app/api/auth/webauthn/logs/route.ts",
+        "arity": 2,
+        "snippet": "devLog('Error in biometric auth logs API:', error)"
+      },
+      {
+        "file": "app/api/auth/webauthn/logs/route.ts",
+        "arity": 2,
+        "snippet": "devLog('Error creating auth log:', createError)"
+      },
+      {
+        "file": "app/api/auth/webauthn/logs/route.ts",
+        "arity": 2,
+        "snippet": "devLog('Error in biometric auth log creation API:', error)"
+      },
+      {
+        "file": "app/api/auth/webauthn/register/route.ts",
+        "arity": 2,
+        "snippet": "devLog('WebAuthn registration error:', error)"
+      },
+      {
+        "file": "app/api/auth/webauthn/register/route.ts",
+        "arity": 2,
+        "snippet": "devLog('User not found for WebAuthn registration:', userId)"
+      },
+      {
+        "file": "app/api/auth/webauthn/register/route.ts",
+        "arity": 2,
+        "snippet": "devLog('Error getting registration options:', error)"
+      },
+      {
+        "file": "app/api/auth/webauthn/register/route.ts",
+        "arity": 2,
+        "snippet": "devLog('User not found for WebAuthn registration verification:', userId)"
+      },
+      {
+        "file": "app/api/auth/webauthn/register/route.ts",
+        "arity": 2,
+        "snippet": "devLog('Error storing WebAuthn credential:', insertError)"
+      },
+      {
+        "file": "app/api/auth/webauthn/register/route.ts",
+        "arity": 2,
+        "snippet": "devLog('WebAuthn credential registered successfully for user:', userId)"
+      },
+      {
+        "file": "app/api/auth/webauthn/register/route.ts",
+        "arity": 2,
+        "snippet": "devLog('Error verifying registration:', error)"
+      },
+      {
+        "file": "app/api/auth/webauthn/trust-score/route.ts",
+        "arity": 2,
+        "snippet": "devLog('Error getting trust score:', trustScoreError)"
+      },
+      {
+        "file": "app/api/auth/webauthn/trust-score/route.ts",
+        "arity": 2,
+        "snippet": "devLog('Error calculating trust score:', calculateError)"
+      },
+      {
+        "file": "app/api/auth/webauthn/trust-score/route.ts",
+        "arity": 2,
+        "snippet": "devLog('Error getting biometric trust score:', error)"
+      },
+      {
+        "file": "app/api/auth/webauthn/trust-score/route.ts",
+        "arity": 2,
+        "snippet": "devLog('Error recalculating trust score:', calculateError)"
+      },
+      {
+        "file": "app/api/auth/webauthn/trust-score/route.ts",
+        "arity": 2,
+        "snippet": "devLog('Error recalculating biometric trust score:', error)"
+      },
+      {
+        "file": "app/api/database-health/route.ts",
+        "arity": 2,
+        "snippet": "devLog('Database health action error:', error)"
+      },
+      {
+        "file": "app/api/demographics/route.ts",
+        "arity": 2,
+        "snippet": "devLog('Error in demographics API:', error)"
+      },
+      {
+        "file": "app/api/feedback/route.ts",
+        "arity": 2,
+        "snippet": "devLog('Database error:', error)"
+      },
+      {
+        "file": "app/api/feedback/route.ts",
+        "arity": 2,
+        "snippet": "devLog('Enhanced feedback API error:', error)"
+      },
+      {
+        "file": "app/api/feedback/route.ts",
+        "arity": 2,
+        "snippet": "devLog('Database error:', error)"
+      },
+      {
+        "file": "app/api/feedback/route.ts",
+        "arity": 2,
+        "snippet": "devLog('Feedback API error:', error)"
+      },
+      {
+        "file": "app/api/onboarding/progress/route.ts",
+        "arity": 2,
+        "snippet": "devLog('Error fetching onboarding progress:', progressError)"
+      },
+      {
+        "file": "app/api/onboarding/progress/route.ts",
+        "arity": 2,
+        "snippet": "devLog('Error fetching user profile:', profileError)"
+      },
+      {
+        "file": "app/api/onboarding/progress/route.ts",
+        "arity": 2,
+        "snippet": "devLog('Error in onboarding progress GET:', error)"
+      },
+      {
+        "file": "app/api/onboarding/progress/route.ts",
+        "arity": 2,
+        "snippet": "devLog('Error updating onboarding progress:', result.error)"
+      },
+      {
+        "file": "app/api/onboarding/progress/route.ts",
+        "arity": 2,
+        "snippet": "devLog('Error fetching updated progress:', progressError)"
+      },
+      {
+        "file": "app/api/onboarding/progress/route.ts",
+        "arity": 2,
+        "snippet": "devLog('Error in onboarding progress POST:', error)"
+      },
+      {
+        "file": "app/api/polls/[id]/results/route.ts",
+        "arity": 2,
+        "snippet": "devLog('Error in poll results API:', error)"
+      },
+      {
+        "file": "app/api/polls/[id]/route.ts",
+        "arity": 2,
+        "snippet": "devLog('Error fetching poll:', error)"
+      },
+      {
+        "file": "app/api/polls/[id]/vote/route.ts",
+        "arity": 2,
+        "snippet": "devLog('Vote submission attempt for poll:', params.id)"
+      },
+      {
+        "file": "app/api/polls/[id]/vote/route.ts",
+        "arity": 2,
+        "snippet": "devLog('Analytics recording failed for vote:', analyticsError)"
+      },
+      {
+        "file": "app/api/polls/route.ts",
+        "arity": 2,
+        "snippet": "devLog('Found polls:', directPolls?.length || 0)"
+      },
+      {
+        "file": "app/api/polls/route.ts",
+        "arity": 2,
+        "snippet": "devLog('Error fetching polls:', fallbackError)"
+      },
+      {
+        "file": "app/api/polls/route.ts",
+        "arity": 2,
+        "snippet": "devLog('Error in polls API:', error)"
+      },
+      {
+        "file": "app/api/polls/route.ts",
+        "arity": 2,
+        "snippet": "devLog('Error creating poll:', pollError)"
+      },
+      {
+        "file": "app/api/polls/route.ts",
+        "arity": 2,
+        "snippet": "devLog('Error in polls API:', error)"
+      },
+      {
+        "file": "app/api/privacy/preferences/route.ts",
+        "arity": 2,
+        "snippet": "devLog('Error fetching privacy preferences:', preferencesError)"
+      },
+      {
+        "file": "app/api/privacy/preferences/route.ts",
+        "arity": 2,
+        "snippet": "devLog('Error in privacy preferences GET:', error)"
+      },
+      {
+        "file": "app/api/privacy/preferences/route.ts",
+        "arity": 2,
+        "snippet": "devLog('Error updating privacy preferences:', result.error)"
+      },
+      {
+        "file": "app/api/privacy/preferences/route.ts",
+        "arity": 2,
+        "snippet": "devLog('Error updating user profile:', profileError)"
+      },
+      {
+        "file": "app/api/privacy/preferences/route.ts",
+        "arity": 2,
+        "snippet": "devLog('Error fetching updated preferences:', fetchError)"
+      },
+      {
+        "file": "app/api/privacy/preferences/route.ts",
+        "arity": 2,
+        "snippet": "devLog('Error in privacy preferences POST:', error)"
+      },
+      {
+        "file": "app/api/profile/route.ts",
+        "arity": 2,
+        "snippet": "devLog('Database error:', error)"
+      },
+      {
+        "file": "app/api/profile/route.ts",
+        "arity": 2,
+        "snippet": "devLog('Profile created successfully:', data && !('error' in data)"
+      },
+      {
+        "file": "app/api/profile/route.ts",
+        "arity": 2,
+        "snippet": "devLog('Profile API error:', error)"
+      },
+      {
+        "file": "app/api/profile/route.ts",
+        "arity": 2,
+        "snippet": "devLog('Database error:', error)"
+      },
+      {
+        "file": "app/api/profile/route.ts",
+        "arity": 2,
+        "snippet": "devLog('Profile API error:', error)"
+      },
+      {
+        "file": "app/api/profile/route.ts",
+        "arity": 2,
+        "snippet": "devLog('Database error:', error)"
+      },
+      {
+        "file": "app/api/profile/route.ts",
+        "arity": 2,
+        "snippet": "devLog('Profile API error:', error)"
+      },
+      {
+        "file": "app/api/trending-polls/route.ts",
+        "arity": 2,
+        "snippet": "devLog('Error fetching trending topics:', trendingError)"
+      },
+      {
+        "file": "app/api/trending-polls/route.ts",
+        "arity": 2,
+        "snippet": "devLog('Error fetching polls:', pollsError)"
+      },
+      {
+        "file": "app/api/trending-polls/route.ts",
+        "arity": 2,
+        "snippet": "devLog('Error fetching polls:', pollsError)"
+      },
+      {
+        "file": "app/api/trending-polls/route.ts",
+        "arity": 2,
+        "snippet": "devLog('Error in trending polls API:', error)"
+      },
+      {
+        "file": "app/api/user/get-id/route.ts",
+        "arity": 2,
+        "snippet": "devLog('Error in get user ID API:', error)"
+      },
+      {
+        "file": "app/api/user/get-id-public/route.ts",
+        "arity": 2,
+        "snippet": "devLog('Error in get user ID public API:', error)"
+      },
+      {
+        "file": "app/device-optimization/page.tsx",
+        "arity": 2,
+        "snippet": "devLog('Network status:', status)"
+      },
+      {
+        "file": "app/device-optimization/page.tsx",
+        "arity": 2,
+        "snippet": "devLog('Error checking network status:', error)"
+      },
+      {
+        "file": "app/device-optimization/page.tsx",
+        "arity": 2,
+        "snippet": "devLog('Error enabling offline mode:', error)"
+      },
+      {
+        "file": "app/profile/biometric-setup/page.tsx",
+        "arity": 2,
+        "snippet": "devLog('Biometric setup error:', err)"
+      },
+      {
+        "file": "app/test-privacy/page.tsx",
+        "arity": 2,
+        "snippet": "devLog('Poll created successfully:', result)"
+      },
+      {
+        "file": "app/test-privacy/page.tsx",
+        "arity": 2,
+        "snippet": "devLog('Error creating poll:', error)"
+      },
+      {
+        "file": "app/test-privacy/page.tsx",
+        "arity": 2,
+        "snippet": "devLog('Vote submitted successfully:', result)"
+      },
+      {
+        "file": "app/test-privacy/page.tsx",
+        "arity": 2,
+        "snippet": "devLog('Error submitting vote:', error)"
+      },
+      {
+        "file": "archive/auth/WebAuthnAuth.tsx",
+        "arity": 2,
+        "snippet": "devLog('Registration error:', error)"
+      },
+      {
+        "file": "archive/auth/WebAuthnAuth.tsx",
+        "arity": 2,
+        "snippet": "devLog('Login error:', error)"
+      },
+      {
+        "file": "archive/auth/webauthn/api/authenticate/route.ts",
+        "arity": 2,
+        "snippet": "devLog('WebAuthn authentication error:', error)"
+      },
+      {
+        "file": "archive/auth/webauthn/api/authenticate/route.ts",
+        "arity": 2,
+        "snippet": "devLog('Error getting credentials for authentication options:', error)"
+      },
+      {
+        "file": "archive/auth/webauthn/api/authenticate/route.ts",
+        "arity": 2,
+        "snippet": "devLog('Error getting authentication options:', error)"
+      },
+      {
+        "file": "archive/auth/webauthn/api/authenticate/route.ts",
+        "arity": 2,
+        "snippet": "devLog('Credential not found for verification:', credential.id)"
+      },
+      {
+        "file": "archive/auth/webauthn/api/authenticate/route.ts",
+        "arity": 2,
+        "snippet": "devLog('User not found for verified credential:', storedCredential.user_id)"
+      },
+      {
+        "file": "archive/auth/webauthn/api/authenticate/route.ts",
+        "arity": 2,
+        "snippet": "devLog('Biometric authentication successful for user:', user.stable_id)"
+      },
+      {
+        "file": "archive/auth/webauthn/api/authenticate/route.ts",
+        "arity": 2,
+        "snippet": "devLog('Error verifying credential:', error)"
+      },
+      {
+        "file": "archive/auth/webauthn/api/register/route.ts",
+        "arity": 2,
+        "snippet": "devLog('WebAuthn registration error:', error)"
+      },
+      {
+        "file": "archive/auth/webauthn/api/register/route.ts",
+        "arity": 2,
+        "snippet": "devLog('User not found for WebAuthn registration:', userId)"
+      },
+      {
+        "file": "archive/auth/webauthn/api/register/route.ts",
+        "arity": 2,
+        "snippet": "devLog('Error getting registration options:', error)"
+      },
+      {
+        "file": "archive/auth/webauthn/api/register/route.ts",
+        "arity": 2,
+        "snippet": "devLog('User not found for WebAuthn registration verification:', userId)"
+      },
+      {
+        "file": "archive/auth/webauthn/api/register/route.ts",
+        "arity": 2,
+        "snippet": "devLog('Error storing WebAuthn credential:', insertError)"
+      },
+      {
+        "file": "archive/auth/webauthn/api/register/route.ts",
+        "arity": 2,
+        "snippet": "devLog('WebAuthn credential registered successfully for user:', userId)"
+      },
+      {
+        "file": "archive/auth/webauthn/api/register/route.ts",
+        "arity": 2,
+        "snippet": "devLog('Error verifying registration:', error)"
+      },
+      {
+        "file": "archive/auth/webauthn/api/trust-score/route.ts",
+        "arity": 2,
+        "snippet": "devLog('Error getting trust score:', trustScoreError)"
+      },
+      {
+        "file": "archive/auth/webauthn/api/trust-score/route.ts",
+        "arity": 2,
+        "snippet": "devLog('Error calculating trust score:', calculateError)"
+      },
+      {
+        "file": "archive/auth/webauthn/api/trust-score/route.ts",
+        "arity": 2,
+        "snippet": "devLog('Error getting biometric trust score:', error)"
+      },
+      {
+        "file": "archive/auth/webauthn/api/trust-score/route.ts",
+        "arity": 2,
+        "snippet": "devLog('Error recalculating trust score:', calculateError)"
+      },
+      {
+        "file": "archive/auth/webauthn/api/trust-score/route.ts",
+        "arity": 2,
+        "snippet": "devLog('Error recalculating biometric trust score:', error)"
+      },
+      {
+        "file": "archive/auth/webauthn.ts",
+        "arity": 2,
+        "snippet": "devLog('Biometric availability check:', available)"
+      },
+      {
+        "file": "archive/auth/webauthn.ts",
+        "arity": 2,
+        "snippet": "devLog('Error checking biometric availability:', error)"
+      },
+      {
+        "file": "components/CreatePoll.tsx",
+        "arity": 2,
+        "snippet": "devLog('Error creating poll:', error)"
+      },
+      {
+        "file": "components/Dashboard.tsx",
+        "arity": 2,
+        "snippet": "devLog('Dashboard data received:', data)"
+      },
+      {
+        "file": "components/Dashboard.tsx",
+        "arity": 2,
+        "snippet": "devLog('Dashboard fetch error:', err)"
+      },
+      {
+        "file": "components/DemographicVisualization.tsx",
+        "arity": 2,
+        "snippet": "devLog('Error loading demographic data:', error)"
+      },
+      {
+        "file": "components/EnhancedFeedbackWidget.tsx",
+        "arity": 2,
+        "snippet": "devLog('Failed to capture screenshot:', error)"
+      },
+      {
+        "file": "components/EnhancedFeedbackWidget.tsx",
+        "arity": 2,
+        "snippet": "devLog('Error submitting feedback:', error)"
+      },
+      {
+        "file": "components/FeedbackWidget.tsx",
+        "arity": 2,
+        "snippet": "devLog('Error submitting feedback:', error)"
+      },
+      {
+        "file": "components/HeroSection.tsx",
+        "arity": 2,
+        "snippet": "devLog('Error fetching trending poll:', error)"
+      },
+      {
+        "file": "components/TopicAnalysis.tsx",
+        "arity": 2,
+        "snippet": "devLog('Topic analysis data updated:', data.question)"
+      },
+      {
+        "file": "components/onboarding/EnhancedOnboardingFlow.tsx",
+        "arity": 2,
+        "snippet": "devLog('Error starting onboarding:', error)"
+      },
+      {
+        "file": "components/onboarding/EnhancedOnboardingFlow.tsx",
+        "arity": 2,
+        "snippet": "devLog('Error updating onboarding step:', error)"
+      },
+      {
+        "file": "components/onboarding/EnhancedOnboardingFlow.tsx",
+        "arity": 2,
+        "snippet": "devLog('Error completing onboarding:', error)"
+      },
+      {
+        "file": "components/onboarding/EnhancedOnboardingFlow.tsx",
+        "arity": 2,
+        "snippet": "devLog('Could not load onboarding progress:', progressError)"
+      },
+      {
+        "file": "components/onboarding/EnhancedOnboardingFlow.tsx",
+        "arity": 2,
+        "snippet": "devLog('Error initializing onboarding:', e)"
+      },
+      {
+        "file": "components/onboarding/OnboardingFlow.tsx",
+        "arity": 2,
+        "snippet": "devLog('Error checking auth status:', error)"
+      },
+      {
+        "file": "components/onboarding/OnboardingFlow.tsx",
+        "arity": 2,
+        "snippet": "devLog('Onboarding completed:', onboardingData)"
+      },
+      {
+        "file": "components/onboarding/steps/AuthStep.tsx",
+        "arity": 2,
+        "snippet": "devLog('Login error:', error)"
+      },
+      {
+        "file": "components/onboarding/steps/AuthStep.tsx",
+        "arity": 2,
+        "snippet": "devLog('Login error:', error)"
+      },
+      {
+        "file": "dev/lib/automated-polls.ts",
+        "arity": 2,
+        "snippet": "devLog('Error fetching trending topics:', error)"
+      },
+      {
+        "file": "dev/lib/automated-polls.ts",
+        "arity": 2,
+        "snippet": "devLog('Error fetching trending topic:', error)"
+      },
+      {
+        "file": "dev/lib/automated-polls.ts",
+        "arity": 2,
+        "snippet": "devLog('Error creating trending topic:', error)"
+      },
+      {
+        "file": "dev/lib/automated-polls.ts",
+        "arity": 2,
+        "snippet": "devLog('Error updating trending topic:', error)"
+      },
+      {
+        "file": "dev/lib/automated-polls.ts",
+        "arity": 2,
+        "snippet": "devLog('Error fetching generated polls:', error)"
+      },
+      {
+        "file": "dev/lib/automated-polls.ts",
+        "arity": 2,
+        "snippet": "devLog('Error fetching generated poll:', error)"
+      },
+      {
+        "file": "dev/lib/automated-polls.ts",
+        "arity": 2,
+        "snippet": "devLog('Error creating generated poll:', error)"
+      },
+      {
+        "file": "dev/lib/automated-polls.ts",
+        "arity": 2,
+        "snippet": "devLog('Error updating generated poll:', error)"
+      },
+      {
+        "file": "dev/lib/automated-polls.ts",
+        "arity": 2,
+        "snippet": "devLog('Error fetching data sources:', error)"
+      },
+      {
+        "file": "dev/lib/automated-polls.ts",
+        "arity": 2,
+        "snippet": "devLog('Error updating data source:', error)"
+      },
+      {
+        "file": "dev/lib/automated-polls.ts",
+        "arity": 2,
+        "snippet": "devLog('Error fetching quality metrics:', error)"
+      },
+      {
+        "file": "dev/lib/automated-polls.ts",
+        "arity": 2,
+        "snippet": "devLog('Error creating quality metrics:', error)"
+      },
+      {
+        "file": "dev/lib/automated-polls.ts",
+        "arity": 2,
+        "snippet": "devLog('Error fetching system configuration:', error)"
+      },
+      {
+        "file": "dev/lib/automated-polls.ts",
+        "arity": 2,
+        "snippet": "devLog('Error updating system configuration:', error)"
+      },
+      {
+        "file": "dev/lib/automated-polls.ts",
+        "arity": 2,
+        "snippet": "devLog('Error during data source refresh:', error)"
+      },
+      {
+        "file": "dev/lib/comprehensive-testing-runner.ts",
+        "arity": 2,
+        "snippet": "devLog('❌ MVP Testing failed:', error)"
+      },
+      {
+        "file": "dev/lib/comprehensive-testing-runner.ts",
+        "arity": 2,
+        "snippet": "devLog('❌ Cross-Platform Testing failed:', error)"
+      },
+      {
+        "file": "dev/lib/comprehensive-testing-runner.ts",
+        "arity": 2,
+        "snippet": "devLog('❌ Mobile Compatibility Testing failed:', error)"
+      },
+      {
+        "file": "dev/lib/github-issue-integration.ts",
+        "arity": 2,
+        "snippet": "devLog('Analyzing feedback for issue generation:', { feedbackId: feedback.id })"
+      },
+      {
+        "file": "dev/lib/github-issue-integration.ts",
+        "arity": 2,
+        "snippet": "devLog('Feedback analysis completed:', analysis)"
+      },
+      {
+        "file": "dev/lib/github-issue-integration.ts",
+        "arity": 2,
+        "snippet": "devLog('Generated GitHub issue:', issue)"
+      },
+      {
+        "file": "dev/lib/github-issue-integration.ts",
+        "arity": 2,
+        "snippet": "devLog('Error creating GitHub issue:', error)"
+      },
+      {
+        "file": "dev/lib/github-issue-integration.ts",
+        "arity": 2,
+        "snippet": "devLog('Linked feedback to GitHub issue:', mapping)"
+      },
+      {
+        "file": "dev/lib/github-issue-integration.ts",
+        "arity": 2,
+        "snippet": "devLog('Error finding related issues:', error)"
+      },
+      {
+        "file": "dev/lib/github-issue-integration.ts",
+        "arity": 2,
+        "snippet": "devLog('Error updating issue status:', error)"
+      },
+      {
+        "file": "dev/lib/media-bias-analysis.ts",
+        "arity": 2,
+        "snippet": "devLog('Error tracking media poll:', error)"
+      },
+      {
+        "file": "dev/lib/media-bias-analysis.ts",
+        "arity": 2,
+        "snippet": "devLog('Error comparing polls:', error)"
+      },
+      {
+        "file": "dev/lib/poll-narrative-system.ts",
+        "arity": 2,
+        "snippet": "devLog('Error creating narrative:', error)"
+      },
+      {
+        "file": "dev/lib/poll-narrative-system.ts",
+        "arity": 2,
+        "snippet": "devLog('Error adding verified fact:', error)"
+      },
+      {
+        "file": "dev/lib/poll-narrative-system.ts",
+        "arity": 2,
+        "snippet": "devLog('Error submitting community fact:', error)"
+      },
+      {
+        "file": "dev/lib/poll-narrative-system.ts",
+        "arity": 2,
+        "snippet": "devLog('Error voting on community fact:', error)"
+      },
+      {
+        "file": "dev/lib/poll-narrative-system.ts",
+        "arity": 2,
+        "snippet": "devLog('Error moderating narrative:', error)"
+      },
+      {
+        "file": "dev/lib/poll-narrative-system.ts",
+        "arity": 2,
+        "snippet": "devLog('Error requesting fact verification:', error)"
+      },
+      {
+        "file": "dev/lib/poll-narrative-system.ts",
+        "arity": 2,
+        "snippet": "devLog('Error getting narrative with context:', error)"
+      },
+      {
+        "file": "dev/lib/poll-narrative-system.ts",
+        "arity": 2,
+        "snippet": "devLog('Error searching narratives:', error)"
+      },
+      {
+        "file": "disabled-pages/[id].disabled/page.tsx",
+        "arity": 2,
+        "snippet": "devLog('Loading poll:', pollId)"
+      },
+      {
+        "file": "disabled-pages/[id].disabled/page.tsx",
+        "arity": 2,
+        "snippet": "devLog('Error loading poll:', error)"
+      },
+      {
+        "file": "disabled-pages/[id].disabled/page.tsx",
+        "arity": 2,
+        "snippet": "devLog('Error checking user vote:', error)"
+      },
+      {
+        "file": "disabled-pages/[id].disabled/page.tsx",
+        "arity": 2,
+        "snippet": "devLog('Error submitting vote:', error)"
+      },
+      {
+        "file": "disabled-pages/page.tsx",
+        "arity": 2,
+        "snippet": "devLog('Error loading account settings:', error)"
+      },
+      {
+        "file": "disabled-pages/page.tsx",
+        "arity": 2,
+        "snippet": "devLog('Error changing password:', error)"
+      },
+      {
+        "file": "disabled-pages/page.tsx",
+        "arity": 2,
+        "snippet": "devLog('Error deleting account:', error)"
+      },
+      {
+        "file": "disabled-pages/page.tsx",
+        "arity": 2,
+        "snippet": "devLog('Error setting up 2FA:', error)"
+      },
+      {
+        "file": "disabled-pages/page.tsx",
+        "arity": 2,
+        "snippet": "devLog('Error enabling 2FA:', error)"
+      },
+      {
+        "file": "disabled-pages/page.tsx",
+        "arity": 2,
+        "snippet": "devLog('Error disabling 2FA:', error)"
+      },
+      {
+        "file": "disabled-pages/page.tsx",
+        "arity": 2,
+        "snippet": "devLog('Error requesting password reset:', error)"
+      },
+      {
+        "file": "disabled-pages/test-ranked-choice.disabled/page.tsx",
+        "arity": 2,
+        "snippet": "devLog('Error submitting vote:', error)"
+      },
+      {
+        "file": "disabled-pages/test-single-choice/page.tsx",
+        "arity": 2,
+        "snippet": "devLog('Error submitting vote:', error)"
+      },
+      {
+        "file": "features/auth/lib/service-role-admin.ts",
+        "arity": 2,
+        "snippet": "devLog('Service role auth error:', error)"
+      },
+      {
+        "file": "features/auth/pages/callback/route.ts",
+        "arity": 2,
+        "snippet": "devLog('Error checking user profile:', error)"
+      },
+      {
+        "file": "features/auth/pages/callback/route.ts",
+        "arity": 2,
+        "snippet": "devLog('User has no profile, redirecting to onboarding')"
+      },
+      {
+        "file": "features/auth/pages/callback/route.ts",
+        "arity": 2,
+        "snippet": "devLog('User has completed onboarding, redirecting to dashboard')"
+      },
+      {
+        "file": "features/auth/pages/callback/route.ts",
+        "arity": 2,
+        "snippet": "devLog('Error in getRedirectDestination:', error)"
+      },
+      {
+        "file": "features/auth/pages/callback/route.ts",
+        "arity": 2,
+        "snippet": "devLog('Session exchange error:', exchangeError)"
+      },
+      {
+        "file": "features/auth/pages/callback/route.ts",
+        "arity": 2,
+        "snippet": "devLog('Successfully authenticated user:', data.user.email)"
+      },
+      {
+        "file": "features/auth/pages/callback/route.ts",
+        "arity": 2,
+        "snippet": "devLog('Unexpected error in auth callback:', error)"
+      },
+      {
+        "file": "features/auth/pages/verify/route.ts",
+        "arity": 2,
+        "snippet": "devLog('Email verification error:', error)"
+      },
+      {
+        "file": "features/auth/pages/verify/route.ts",
+        "arity": 2,
+        "snippet": "devLog('Email verified successfully for:', data.user?.email)"
+      },
+      {
+        "file": "features/auth/pages/verify/route.ts",
+        "arity": 2,
+        "snippet": "devLog('Token exchange error:', error)"
+      },
+      {
+        "file": "features/auth/pages/verify/route.ts",
+        "arity": 2,
+        "snippet": "devLog('Session created successfully for:', data.user?.email)"
+      },
+      {
+        "file": "features/auth/pages/verify/route.ts",
+        "arity": 2,
+        "snippet": "devLog('Unexpected error in verification:', error)"
+      },
+      {
+        "file": "features/polls/components/CreatePollForm.tsx",
+        "arity": 2,
+        "snippet": "devLog('Error creating poll:', error)"
+      },
+      {
+        "file": "features/polls/components/PollShare.tsx",
+        "arity": 2,
+        "snippet": "devLog('Failed to copy link:', error)"
+      },
+      {
+        "file": "features/polls/components/PollShare.tsx",
+        "arity": 2,
+        "snippet": "devLog('Downloading QR code for:', pollUrl)"
+      },
+      {
+        "file": "features/polls/components/PollShare.tsx",
+        "arity": 2,
+        "snippet": "devLog('Error sharing:', error)"
+      },
+      {
+        "file": "features/polls/pages/create/page.tsx",
+        "arity": 2,
+        "snippet": "devLog('Creating poll:', wizardState.data)"
+      },
+      {
+        "file": "features/polls/pages/create/page.tsx",
+        "arity": 2,
+        "snippet": "devLog('Error creating poll:', error)"
+      },
+      {
+        "file": "features/polls/pages/templates/page.tsx",
+        "arity": 2,
+        "snippet": "devLog('Preview template:', template)"
+      },
+      {
+        "file": "features/pwa/components/PWAVotingInterface.tsx",
+        "arity": 2,
+        "snippet": "devLog('Invalid choice:', choice)"
+      },
+      {
+        "file": "features/pwa/components/PWAVotingInterface.tsx",
+        "arity": 2,
+        "snippet": "devLog('Vote failed:', error)"
+      },
+      {
+        "file": "features/pwa/hooks/usePWAUtils.ts",
+        "arity": 2,
+        "snippet": "devLog('Error loading PWA utils:', err)"
+      },
+      {
+        "file": "features/pwa/lib/pwa-auth-integration.ts",
+        "arity": 2,
+        "snippet": "devLog('PWA: User created:', user.pseudonym)"
+      },
+      {
+        "file": "features/pwa/lib/pwa-auth-integration.ts",
+        "arity": 2,
+        "snippet": "devLog('PWA: Feature disabled, cannot enable WebAuthn')"
+      },
+      {
+        "file": "features/pwa/lib/pwa-auth-integration.ts",
+        "arity": 2,
+        "snippet": "devLog('PWA: Failed to enable WebAuthn:', error)"
+      },
+      {
+        "file": "features/pwa/lib/pwa-auth-integration.ts",
+        "arity": 2,
+        "snippet": "devLog('PWA: Feature disabled, cannot enable push notifications')"
+      },
+      {
+        "file": "features/pwa/lib/pwa-auth-integration.ts",
+        "arity": 2,
+        "snippet": "devLog('PWA: Failed to enable push notifications:', error)"
+      },
+      {
+        "file": "features/pwa/lib/pwa-auth-integration.ts",
+        "arity": 2,
+        "snippet": "devLog('PWA: WebAuthn authentication failed:', error)"
+      },
+      {
+        "file": "features/pwa/lib/pwa-auth-integration.ts",
+        "arity": 2,
+        "snippet": "devLog('PWA: Failed to delete user account:', error)"
+      },
+      {
+        "file": "features/pwa/lib/pwa-auth-integration.ts",
+        "arity": 2,
+        "snippet": "devLog('PWA: Failed to save user to storage:', error)"
+      },
+      {
+        "file": "features/pwa/lib/pwa-auth-integration.ts",
+        "arity": 2,
+        "snippet": "devLog('PWA: Failed to load user from storage:', error)"
+      },
+      {
+        "file": "features/testing/pages/test-privacy/page.tsx",
+        "arity": 2,
+        "snippet": "devLog('Poll created successfully:', result)"
+      },
+      {
+        "file": "features/testing/pages/test-privacy/page.tsx",
+        "arity": 2,
+        "snippet": "devLog('Error creating poll:', error)"
+      },
+      {
+        "file": "features/testing/pages/test-privacy/page.tsx",
+        "arity": 2,
+        "snippet": "devLog('Vote submitted successfully:', result)"
+      },
+      {
+        "file": "features/testing/pages/test-privacy/page.tsx",
+        "arity": 2,
+        "snippet": "devLog('Error submitting vote:', error)"
+      },
+      {
+        "file": "features/webauthn/components/BiometricLogin.tsx",
+        "arity": 2,
+        "snippet": "devLog('Error checking biometric support:', error)"
+      },
+      {
+        "file": "features/webauthn/components/BiometricSetup.tsx",
+        "arity": 2,
+        "snippet": "devLog('Existing biometric credentials found:', existingCreds.credentials?.length || 0)"
+      },
+      {
+        "file": "features/webauthn/components/BiometricSetup.tsx",
+        "arity": 2,
+        "snippet": "devLog('Error checking biometric support:', error)"
+      },
+      {
+        "file": "features/webauthn/server/authenticate.ts",
+        "arity": 2,
+        "snippet": "devLog('Error getting credentials for authentication options:', error)"
+      },
+      {
+        "file": "features/webauthn/server/authenticate.ts",
+        "arity": 2,
+        "snippet": "devLog('Error getting authentication options:', error)"
+      },
+      {
+        "file": "features/webauthn/server/authenticate.ts",
+        "arity": 2,
+        "snippet": "devLog('Credential not found for verification:', credential.id)"
+      },
+      {
+        "file": "features/webauthn/server/authenticate.ts",
+        "arity": 2,
+        "snippet": "devLog('User not found for verified credential:', storedCredential.user_id)"
+      },
+      {
+        "file": "features/webauthn/server/authenticate.ts",
+        "arity": 2,
+        "snippet": "devLog('Biometric authentication successful for user:', user.stable_id)"
+      },
+      {
+        "file": "features/webauthn/server/authenticate.ts",
+        "arity": 2,
+        "snippet": "devLog('Error verifying credential:', error)"
+      },
+      {
+        "file": "hooks/useAnalytics.ts",
+        "arity": 2,
+        "snippet": "devLog('Analytics fetch error:', err)"
+      },
+      {
+        "file": "hooks/useDemographics.ts",
+        "arity": 2,
+        "snippet": "devLog('Error fetching demographics:', err)"
+      },
+      {
+        "file": "hooks/useDeviceDetection.ts",
+        "arity": 2,
+        "snippet": "devLog('Error checking storage quota:', error)"
+      },
+      {
+        "file": "hooks/useDeviceDetection.ts",
+        "arity": 2,
+        "snippet": "devLog('Error checking battery level:', error)"
+      },
+      {
+        "file": "hooks/useDeviceDetection.ts",
+        "arity": 2,
+        "snippet": "devLog('Device detected:', deviceInfo)"
+      },
+      {
+        "file": "hooks/useDeviceDetection.ts",
+        "arity": 2,
+        "snippet": "devLog('Capabilities:', capabilities)"
+      },
+      {
+        "file": "hooks/useDeviceDetection.ts",
+        "arity": 2,
+        "snippet": "devLog('Optimization settings:', optimizationSettings)"
+      },
+      {
+        "file": "hooks/useDeviceDetection.ts",
+        "arity": 2,
+        "snippet": "devLog('Error detecting device:', error)"
+      },
+      {
+        "file": "hooks/useDeviceDetection.ts",
+        "arity": 2,
+        "snippet": "devLog('Camera access denied:', error)"
+      },
+      {
+        "file": "hooks/useDeviceDetection.ts",
+        "arity": 2,
+        "snippet": "devLog('Location access denied:', error)"
+      },
+      {
+        "file": "hooks/useDeviceDetection.ts",
+        "arity": 2,
+        "snippet": "devLog('Failed to enable offline mode:', error)"
+      },
+      {
+        "file": "hooks/usePerformanceUtils.ts",
+        "arity": 2,
+        "snippet": "devLog('Error loading performance utils:', err)"
+      },
+      {
+        "file": "hooks/usePrivacyUtils.ts",
+        "arity": 2,
+        "snippet": "devLog('Error loading privacy utils:', err)"
+      },
+      {
+        "file": "hooks/useSupabaseAuth.ts",
+        "arity": 2,
+        "snippet": "devLog('Error getting initial session:', error)"
+      },
+      {
+        "file": "hooks/useSupabaseAuth.ts",
+        "arity": 2,
+        "snippet": "devLog('Error in getInitialSession:', error)"
+      },
+      {
+        "file": "hooks/useSupabaseAuth.ts",
+        "arity": 2,
+        "snippet": "devLog('Sign in error:', error)"
+      },
+      {
+        "file": "hooks/useSupabaseAuth.ts",
+        "arity": 2,
+        "snippet": "devLog('Sign in error:', error)"
+      },
+      {
+        "file": "hooks/useSupabaseAuth.ts",
+        "arity": 2,
+        "snippet": "devLog('Sign up error:', error)"
+      },
+      {
+        "file": "hooks/useSupabaseAuth.ts",
+        "arity": 2,
+        "snippet": "devLog('Sign up error:', error)"
+      },
+      {
+        "file": "hooks/useSupabaseAuth.ts",
+        "arity": 2,
+        "snippet": "devLog('Sign out error:', error)"
+      },
+      {
+        "file": "hooks/useSupabaseAuth.ts",
+        "arity": 2,
+        "snippet": "devLog('Sign out error:', error)"
+      },
+      {
+        "file": "hooks/useSupabaseAuth.ts",
+        "arity": 2,
+        "snippet": "devLog('Reset password error:', error)"
+      },
+      {
+        "file": "hooks/useSupabaseAuth.ts",
+        "arity": 2,
+        "snippet": "devLog('Reset password error:', error)"
+      },
+      {
+        "file": "hooks/useSupabaseAuth.ts",
+        "arity": 2,
+        "snippet": "devLog('Update profile error:', error)"
+      },
+      {
+        "file": "hooks/useSupabaseAuth.ts",
+        "arity": 2,
+        "snippet": "devLog('Update profile error:', error)"
+      },
+      {
+        "file": "hooks/useTestingUtils.ts",
+        "arity": 2,
+        "snippet": "devLog('Error loading testing utils:', err)"
+      },
+      {
+        "file": "hooks/useUserType.ts",
+        "arity": 2,
+        "snippet": "devLog('Error fetching user behavior:', error)"
+      },
+      {
+        "file": "hooks/useUserType.ts",
+        "arity": 2,
+        "snippet": "devLog('Error loading user type:', error)"
+      },
+      {
+        "file": "hooks/useUserType.ts",
+        "arity": 2,
+        "snippet": "devLog('Error updating user type:', error)"
+      },
+      {
+        "file": "hooks/useUserType.ts",
+        "arity": 2,
+        "snippet": "devLog('Error tracking feature usage:', error)"
+      },
+      {
+        "file": "hooks/useUserType.ts",
+        "arity": 2,
+        "snippet": "devLog('Error tracking session:', error)"
+      },
+      {
+        "file": "lib/admin/feedback-tracker.ts",
+        "arity": 2,
+        "snippet": "devLog('Failed to capture screenshot:', error)"
+      },
+      {
+        "file": "lib/core/services/analytics.ts",
+        "arity": 2,
+        "snippet": "devLog('Error calculating trust tier score:', error)"
+      },
+      {
+        "file": "lib/core/services/analytics.ts",
+        "arity": 2,
+        "snippet": "devLog('Error recording poll analytics:', error)"
+      },
+      {
+        "file": "lib/core/services/analytics.ts",
+        "arity": 2,
+        "snippet": "devLog('Error updating poll demographic insights:', error)"
+      },
+      {
+        "file": "lib/core/services/analytics.ts",
+        "arity": 2,
+        "snippet": "devLog('Error updating civic database entry:', error)"
+      },
+      {
+        "file": "lib/core/services/analytics.ts",
+        "arity": 2,
+        "snippet": "devLog('Error getting analytics summary:', error)"
+      },
+      {
+        "file": "lib/core/services/analytics.ts",
+        "arity": 2,
+        "snippet": "devLog('Error getting poll analytics:', error)"
+      },
+      {
+        "file": "lib/core/services/analytics.ts",
+        "arity": 2,
+        "snippet": "devLog('Error getting user analytics:', error)"
+      },
+      {
+        "file": "lib/core/services/hybrid-voting.ts",
+        "arity": 2,
+        "snippet": "devLog('Error checking existing vote:', existingVoteError)"
+      },
+      {
+        "file": "lib/core/services/hybrid-voting.ts",
+        "arity": 2,
+        "snippet": "devLog('Error requesting blinded token:', error)"
+      },
+      {
+        "file": "lib/core/services/hybrid-voting.ts",
+        "arity": 2,
+        "snippet": "devLog('Error submitting vote to PO service:', error)"
+      },
+      {
+        "file": "lib/core/services/real-time-news.ts",
+        "arity": 2,
+        "snippet": "devLog('Error fetching breaking news:', error)"
+      },
+      {
+        "file": "lib/core/services/real-time-news.ts",
+        "arity": 2,
+        "snippet": "devLog('Error fetching breaking news:', error)"
+      },
+      {
+        "file": "lib/core/services/real-time-news.ts",
+        "arity": 2,
+        "snippet": "devLog('Error creating breaking news:', error)"
+      },
+      {
+        "file": "lib/core/services/real-time-news.ts",
+        "arity": 2,
+        "snippet": "devLog('Error fetching news sources:', error)"
+      },
+      {
+        "file": "lib/core/services/real-time-news.ts",
+        "arity": 2,
+        "snippet": "devLog('Error updating news source:', error)"
+      },
+      {
+        "file": "lib/core/services/real-time-news.ts",
+        "arity": 2,
+        "snippet": "devLog('Error generating poll context:', error)"
+      },
+      {
+        "file": "lib/shared/pwa-components.tsx",
+        "arity": 2,
+        "snippet": "devLog('PWA install failed:', error)"
+      },
+      {
+        "file": "lib/shared/pwa-components.tsx",
+        "arity": 2,
+        "snippet": "devLog('Error getting PWA status:', error)"
+      },
+      {
+        "file": "lib/shared/pwa-utils.ts",
+        "arity": 2,
+        "snippet": "devLog('PWA: Service Worker registration failed', error)"
+      },
+      {
+        "file": "lib/shared/pwa-utils.ts",
+        "arity": 2,
+        "snippet": "devLog('PWA: Install failed:', error)"
+      },
+      {
+        "file": "lib/shared/pwa-utils.ts",
+        "arity": 2,
+        "snippet": "devLog('PWA: Back online, syncing data...')"
+      },
+      {
+        "file": "lib/shared/pwa-utils.ts",
+        "arity": 2,
+        "snippet": "devLog('PWA: Gone offline, enabling offline mode...')"
+      },
+      {
+        "file": "lib/shared/pwa-utils.ts",
+        "arity": 2,
+        "snippet": "devLog('PWA: Failed to sync offline data:', error)"
+      },
+      {
+        "file": "lib/shared/pwa-utils.ts",
+        "arity": 2,
+        "snippet": "devLog('PWA: Feature disabled, cannot store offline vote')"
+      },
+      {
+        "file": "lib/shared/pwa-utils.ts",
+        "arity": 2,
+        "snippet": "devLog('PWA: Offline vote stored:', offlineVote)"
+      },
+      {
+        "file": "lib/shared/pwa-utils.ts",
+        "arity": 2,
+        "snippet": "devLog('PWA: Failed to get offline votes:', error)"
+      },
+      {
+        "file": "lib/shared/pwa-utils.ts",
+        "arity": 2,
+        "snippet": "devLog('PWA: Feature disabled, cannot request notifications')"
+      },
+      {
+        "file": "lib/shared/pwa-utils.ts",
+        "arity": 2,
+        "snippet": "devLog('PWA: Push notification subscription successful', subscription)"
+      },
+      {
+        "file": "lib/shared/pwa-utils.ts",
+        "arity": 2,
+        "snippet": "devLog('PWA: Push notification subscription failed:', error)"
+      },
+      {
+        "file": "lib/shared/pwa-utils.ts",
+        "arity": 2,
+        "snippet": "devLog('WebAuthn registration failed:', error)"
+      },
+      {
+        "file": "lib/shared/pwa-utils.ts",
+        "arity": 2,
+        "snippet": "devLog('PWA: Authenticating user with WebAuthn:', userId)"
+      },
+      {
+        "file": "lib/shared/pwa-utils.ts",
+        "arity": 2,
+        "snippet": "devLog('PWA: WebAuthn authentication successful for user:', userId)"
+      },
+      {
+        "file": "lib/shared/pwa-utils.ts",
+        "arity": 2,
+        "snippet": "devLog('PWA: Feature disabled, cannot store encrypted data')"
+      },
+      {
+        "file": "lib/shared/pwa-utils.ts",
+        "arity": 2,
+        "snippet": "devLog('PWA: Failed to store encrypted data:', error)"
+      },
+      {
+        "file": "lib/shared/pwa-utils.ts",
+        "arity": 2,
+        "snippet": "devLog('PWA: Feature disabled, cannot retrieve encrypted data')"
+      },
+      {
+        "file": "lib/shared/pwa-utils.ts",
+        "arity": 2,
+        "snippet": "devLog('PWA: Failed to retrieve encrypted data:', error)"
+      },
+      {
+        "file": "lib/shared/webauthn.ts",
+        "arity": 2,
+        "snippet": "devLog('Biometric availability check:', available)"
+      },
+      {
+        "file": "lib/shared/webauthn.ts",
+        "arity": 2,
+        "snippet": "devLog('Error checking biometric availability:', error)"
+      },
+      {
+        "file": "modules/advanced-privacy/hooks/usePrivacyUtils.ts",
+        "arity": 2,
+        "snippet": "devLog('Error loading privacy utils:', err)"
+      },
+      {
+        "file": "modules/advanced-privacy/hooks/usePrivacyUtils.ts",
+        "arity": 2,
+        "snippet": "devLog('Failed to use privacy budget:', error)"
+      },
+      {
+        "file": "modules/advanced-privacy/hooks/usePrivacyUtils.ts",
+        "arity": 2,
+        "snippet": "devLog('Failed to get remaining budget:', error)"
+      },
+      {
+        "file": "modules/advanced-privacy/hooks/usePrivacyUtils.ts",
+        "arity": 2,
+        "snippet": "devLog('Failed to reset budget:', error)"
+      },
+      {
+        "file": "modules/advanced-privacy/hooks/usePrivacyUtils.ts",
+        "arity": 2,
+        "snippet": "devLog('Failed to run private analysis:', error)"
+      },
+      {
+        "file": "modules/advanced-privacy/hooks/usePrivacyUtils.ts",
+        "arity": 2,
+        "snippet": "devLog('Failed to create ZK proof:', error)"
+      },
+      {
+        "file": "modules/advanced-privacy/hooks/usePrivacyUtils.ts",
+        "arity": 2,
+        "snippet": "devLog('Failed to verify ZK proof:', error)"
+      },
+      {
+        "file": "modules/advanced-privacy/hooks/usePrivacyUtils.ts",
+        "arity": 2,
+        "snippet": "devLog('Failed to run privacy audit:', error)"
+      },
+      {
+        "file": "modules/advanced-privacy/hooks/usePrivacyUtils.ts",
+        "arity": 2,
+        "snippet": "devLog('Failed to run privacy tests:', error)"
+      },
+      {
+        "file": "modules/advanced-privacy/hooks/usePrivacyUtils.ts",
+        "arity": 2,
+        "snippet": "devLog('Failed to generate compliance report:', error)"
+      },
+      {
+        "file": "modules/advanced-privacy/index.ts",
+        "arity": 2,
+        "snippet": "devLog('Failed to initialize privacy module:', error)"
+      },
+      {
+        "file": "modules/advanced-privacy/privacy-auditor.ts",
+        "arity": 2,
+        "snippet": "devLog('Failed to initialize Privacy Auditor:', error)"
+      },
+      {
+        "file": "modules/advanced-privacy/privacy-auditor.ts",
+        "arity": 2,
+        "snippet": "devLog('Privacy audit failed:', error)"
+      },
+      {
+        "file": "modules/advanced-privacy/privacy-auditor.ts",
+        "arity": 2,
+        "snippet": "devLog('Privacy tests failed:', error)"
+      },
+      {
+        "file": "modules/advanced-privacy/privacy-auditor.ts",
+        "arity": 2,
+        "snippet": "devLog('Privacy compliance configuration updated:', this.config)"
+      },
+      {
+        "file": "modules/advanced-privacy/privacy-bridge.ts",
+        "arity": 2,
+        "snippet": "devLog('Failed to initialize Privacy Bridge:', error)"
+      },
+      {
+        "file": "modules/advanced-privacy/privacy-bridge.ts",
+        "arity": 2,
+        "snippet": "devLog('Failed to set up backward compatibility:', error)"
+      },
+      {
+        "file": "modules/advanced-privacy/privacy-bridge.ts",
+        "arity": 2,
+        "snippet": "devLog(`Failed to run ${type} analysis:`, error)"
+      },
+      {
+        "file": "modules/advanced-privacy/privacy-bridge.ts",
+        "arity": 2,
+        "snippet": "devLog(`Failed to create ZK proof of type ${type}:`, error)"
+      },
+      {
+        "file": "modules/advanced-privacy/privacy-bridge.ts",
+        "arity": 2,
+        "snippet": "devLog(`Failed to verify ZK proof ${proofId}:`, error)"
+      },
+      {
+        "file": "modules/advanced-privacy/privacy-bridge.ts",
+        "arity": 2,
+        "snippet": "devLog(`Failed to use privacy budget for ${category}:`, error)"
+      },
+      {
+        "file": "modules/advanced-privacy/privacy-bridge.ts",
+        "arity": 2,
+        "snippet": "devLog(`Failed to get remaining privacy budget for ${category}:`, error)"
+      },
+      {
+        "file": "modules/advanced-privacy/privacy-bridge.ts",
+        "arity": 2,
+        "snippet": "devLog('Failed to reset privacy budget:', error)"
+      },
+      {
+        "file": "modules/advanced-privacy/privacy-bridge.ts",
+        "arity": 2,
+        "snippet": "devLog('Privacy Bridge configuration updated:', this.config)"
+      },
+      {
+        "file": "modules/advanced-privacy/privacy-bridge.ts",
+        "arity": 2,
+        "snippet": "devLog('Failed to cleanup Privacy Bridge:', error)"
+      },
+      {
+        "file": "shared/core/services/lib/poll-service.ts",
+        "arity": 2,
+        "snippet": "devLog('Error fetching polls:', error)"
+      },
+      {
+        "file": "shared/core/services/lib/poll-service.ts",
+        "arity": 2,
+        "snippet": "devLog('Error fetching poll:', error)"
+      },
+      {
+        "file": "shared/core/services/lib/poll-service.ts",
+        "arity": 2,
+        "snippet": "devLog('Error creating poll:', error)"
+      },
+      {
+        "file": "shared/core/services/lib/poll-service.ts",
+        "arity": 2,
+        "snippet": "devLog('Error submitting vote:', error)"
+      },
+      {
+        "file": "shared/core/services/lib/poll-service.ts",
+        "arity": 2,
+        "snippet": "devLog('Error verifying vote:', error)"
+      },
+      {
+        "file": "shared/core/services/lib/poll-service.ts",
+        "arity": 2,
+        "snippet": "devLog(`Mock vote submitted for poll ${pollId}, choice ${choice}`)"
+      },
+      {
+        "file": "src/app/polls/page.tsx",
+        "arity": 2,
+        "snippet": "devLog('Failed to fetch polls:', error)"
+      },
+      {
+        "file": "src/app/polls/page.tsx",
+        "arity": 2,
+        "snippet": "devLog('Failed to get token:', error)"
+      },
+      {
+        "file": "src/app/polls/page.tsx",
+        "arity": 2,
+        "snippet": "devLog('Failed to submit vote:', error)"
+      },
+      {
+        "file": "src/app/results/page.tsx",
+        "arity": 2,
+        "snippet": "devLog('Failed to fetch polls:', error)"
+      },
+      {
+        "file": "src/app/results/page.tsx",
+        "arity": 2,
+        "snippet": "devLog('Failed to load poll results:', error)"
+      },
+      {
+        "file": "src/components/WebAuthnAuth.tsx",
+        "arity": 2,
+        "snippet": "devLog('Registration error:', error)"
+      },
+      {
+        "file": "src/components/WebAuthnAuth.tsx",
+        "arity": 2,
+        "snippet": "devLog('Login error:', error)"
+      }
+    ],
+    "3": [
+      {
+        "file": "app/admin/feedback/page.tsx",
+        "arity": 3,
+        "snippet": "devLog('Feedback status updated successfully', { feedbackId, newStatus })"
+      },
+      {
+        "file": "app/admin/feedback/page.tsx",
+        "arity": 3,
+        "snippet": "devLog('GitHub issue generated:', { feedbackId, issueData })"
+      },
+      {
+        "file": "app/api/auth/webauthn/trust-score/route.ts",
+        "arity": 3,
+        "snippet": "devLog('Calculated new trust score for user', {\n          userId: user.id,\n          score: newTrustScore.overall_score\n       …)"
+      },
+      {
+        "file": "app/api/auth/webauthn/trust-score/route.ts",
+        "arity": 3,
+        "snippet": "devLog('Retrieved trust score for user', {\n        userId: user.id,\n        score: trustScore.overall_score\n      })"
+      },
+      {
+        "file": "app/api/auth/webauthn/trust-score/route.ts",
+        "arity": 3,
+        "snippet": "devLog('Recalculated trust score for user', {\n      userId: user.id,\n      newScore: calculatedScore\n    })"
+      },
+      {
+        "file": "app/api/feedback/route.ts",
+        "arity": 3,
+        "snippet": "devLog('Could not get user, proceeding with anonymous feedback:', userError.message)"
+      },
+      {
+        "file": "archive/auth/webauthn/api/trust-score/route.ts",
+        "arity": 3,
+        "snippet": "devLog('Calculated new trust score for user', {\n          userId: user.id,\n          score: newTrustScore.overall_score\n       …)"
+      },
+      {
+        "file": "archive/auth/webauthn/api/trust-score/route.ts",
+        "arity": 3,
+        "snippet": "devLog('Retrieved trust score for user', {\n        userId: user.id,\n        score: trustScore.overall_score\n      })"
+      },
+      {
+        "file": "archive/auth/webauthn/api/trust-score/route.ts",
+        "arity": 3,
+        "snippet": "devLog('Recalculated trust score for user', {\n      userId: user.id,\n      newScore: calculatedScore\n    })"
+      },
+      {
+        "file": "components/auth/SocialLoginButtons.tsx",
+        "arity": 3,
+        "snippet": "devLog('Social login: Redirecting to', {\n          redirectTo,\n          provider\n        })"
+      },
+      {
+        "file": "components/onboarding/steps/AuthStep.tsx",
+        "arity": 3,
+        "snippet": "devLog('OAuth initiated:', { provider, authData })"
+      },
+      {
+        "file": "dev/lib/automated-polls.ts",
+        "arity": 3,
+        "snippet": "devLog(`Data source refresh completed: ${sourcesRefreshed} sources, ${newTopicsFound} new topics, ${processingTime}ms`)"
+      },
+      {
+        "file": "dev/lib/github-issue-integration.ts",
+        "arity": 3,
+        "snippet": "devLog('GitHub issue created successfully:', { number: result.number, url: result.html_url })"
+      },
+      {
+        "file": "dev/lib/github-issue-integration.ts",
+        "arity": 3,
+        "snippet": "devLog('Issue status updated successfully:', { issueNumber, status })"
+      },
+      {
+        "file": "disabled-pages/test-ranked-choice.disabled/page.tsx",
+        "arity": 3,
+        "snippet": "devLog('Vote submitted:', { pollId, rankings })"
+      },
+      {
+        "file": "disabled-pages/test-single-choice/page.tsx",
+        "arity": 3,
+        "snippet": "devLog('Vote submitted:', { pollId, choice })"
+      },
+      {
+        "file": "features/auth/pages/callback/route.ts",
+        "arity": 3,
+        "snippet": "devLog('OAuth error:', error, errorDescription)"
+      },
+      {
+        "file": "hooks/useSupabaseAuth.ts",
+        "arity": 3,
+        "snippet": "devLog('Auth state changed:', event, session?.user?.id)"
+      },
+      {
+        "file": "lib/shared/pwa-utils.ts",
+        "arity": 3,
+        "snippet": "devLog('WebAuthn authentication failed for user:', userId, error)"
+      }
+    ],
+    "4": [
+      {
+        "file": "app/api/admin/feedback/[id]/status/route.ts",
+        "arity": 4,
+        "snippet": "devLog('Feedback status updated successfully', { \n      feedbackId, \n      newStatus, \n      updatedBy: user.id \n    })"
+      },
+      {
+        "file": "app/api/auth/sync-user/route.ts",
+        "arity": 4,
+        "snippet": "devLog('Syncing user:', {\n      id: user.id,\n      email: user.email,\n      email_confirmed: user.email_confirmed_at\n    })"
+      },
+      {
+        "file": "app/api/profile/route.ts",
+        "arity": 4,
+        "snippet": "devLog('Creating user profile:', {\n      user_id: profileData.user_id,\n      display_name: profileData.display_name,\n      part…)"
+      },
+      {
+        "file": "features/auth/lib/service-role-admin.ts",
+        "arity": 4,
+        "snippet": "devLog('Service role auth attempt:', {\n      method: request.method,\n      url: request.url,\n      userAgent: request.headers.g…)"
+      },
+      {
+        "file": "src/app/polls/page.tsx",
+        "arity": 4,
+        "snippet": "devLog('Vote submitted successfully:', {\n        pollId,\n        voteData,\n        choice\n      })"
+      }
+    ],
+    "5": [
+      {
+        "file": "lib/core/services/hybrid-voting.ts",
+        "arity": 5,
+        "snippet": "devLog('Vote submission attempt:', { pollId, choice, userId, privacyLevel: request.privacyLevel })"
+      }
+    ],
+    "6": [
+      {
+        "file": "lib/core/auth/middleware.ts",
+        "arity": 6,
+        "snippet": "devLog('Rate limit exceeded for:', key, 'requests:', current.count, 'limit:', maxRequests)"
+      }
+    ],
+    "7": [
+      {
+        "file": "app/api/feedback/route.ts",
+        "arity": 7,
+        "snippet": "devLog('Inserting enhanced feedback data:', {\n      user_id: feedbackData.user_id ? 'authenticated' : 'anonymous',\n      type: …)"
+      }
+    ],
+    "8": [
+      {
+        "file": "lib/core/auth/middleware.ts",
+        "arity": 8,
+        "snippet": "devLog('Auth middleware: Processing request for user:', context.user.id, 'with trust tier:', context.user.trust_tier, 'method:'…)"
+      },
+      {
+        "file": "lib/core/security/rate-limit.ts",
+        "arity": 8,
+        "snippet": "devLog('Rate limit check:', {\n      ip,\n      key,\n      allowed,\n      remaining,\n      riskScore: riskAssessment.riskScore,\n …)"
+      }
+    ],
+    "9": [
+      {
+        "file": "app/api/feedback/route.ts",
+        "arity": 9,
+        "snippet": "devLog('Enhanced feedback submitted:', {\n      type,\n      sentiment,\n      page: userJourney?.currentPage,\n      device: userJ…)"
+      }
+    ]
+  },
+  "total": 457
+}

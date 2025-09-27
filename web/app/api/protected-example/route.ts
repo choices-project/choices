@@ -6,7 +6,7 @@
  */
 
 import { NextResponse } from 'next/server';
-import { requireUser } from '@/lib/auth';
+import { requireUser } from '@/lib/core/auth/middleware';
 import { requireTrustedOrigin } from '@/lib/http';
 
 // Cache guards for auth routes
@@ -21,8 +21,7 @@ export async function POST(req: Request) {
     requireTrustedOrigin(req);
     
     // 2. Authentication check
-    const { user, fail } = await requireUser(req);
-    if (!user) return fail();
+    const user = await requireUser(req);
     
     // 3. Parse and validate request body
     const body = await req.json();
@@ -31,7 +30,8 @@ export async function POST(req: Request) {
     const result = {
       message: 'Success!',
       userId: user.id,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      requestData: body // Include request data for audit trail
     };
     
     // 5. Return response with security headers
@@ -43,6 +43,7 @@ export async function POST(req: Request) {
     });
     
   } catch (e: any) {
+    console.error('Protected route error:', e);
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 }
@@ -51,8 +52,7 @@ export async function POST(req: Request) {
 export async function GET(req: Request) {
   try {
     // 1. Authentication check (no origin validation for GET)
-    const { user, fail } = await requireUser(req);
-    if (!user) return fail();
+    const user = await requireUser(req);
     
     // 2. Perform authorized read operation
     const data = {
@@ -70,6 +70,7 @@ export async function GET(req: Request) {
     });
     
   } catch (e: any) {
+    console.error('Protected route GET error:', e);
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 }

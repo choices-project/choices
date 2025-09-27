@@ -1,6 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server';
 import { logger } from '@/lib/logger';
-import { TypeGuardError, assertIsRecord } from '@/lib/types/guards';
+import { TypeGuardError, assertIsRecord } from '@/lib/core/types/guards';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 import type { SupabaseClient } from '@supabase/supabase-js';
 

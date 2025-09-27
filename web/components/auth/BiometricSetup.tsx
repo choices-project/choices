@@ -11,7 +11,7 @@ import {
   isWebAuthnSupported, 
   isBiometricAvailable,
   getUserCredentials
-} from '@/lib/webauthn'
+} from '@/lib/webauthn/client'
 import { devLog } from '@/lib/logger'
 
 // Context for sharing biometric setup state
@@ -36,7 +36,7 @@ export function useBiometricSetupContext() {
   return useContext(BiometricSetupContext);
 }
 
-interface BiometricSetupProps {
+type BiometricSetupProps = {
   userId: string
   username: string
   onSuccess?: () => void
@@ -78,12 +78,12 @@ export default function BiometricSetup({ userId, username, onSuccess, onError }:
 
           if (available) {
             // Check for existing credentials to provide better user feedback
-            const existingCreds = await getUserCredentials(userId)
-            const hasCreds = existingCreds.success && (existingCreds.credentials?.length || 0) > 0
+            const existingCreds = await getUserCredentials()
+            const hasCreds = Array.isArray(existingCreds) && existingCreds.length > 0
             setHasCredentials(hasCreds)
             
             if (hasCreds) {
-              devLog('Existing biometric credentials found:', existingCreds.credentials?.length || 0)
+              devLog('Existing biometric credentials found:', existingCreds.length)
             }
           }
         }
@@ -103,14 +103,14 @@ export default function BiometricSetup({ userId, username, onSuccess, onError }:
     setError(null)
 
     try {
-      const result = await registerBiometric(userId, username)
+      const result = await registerBiometric()
       
       if (result.success) {
         setSuccess(true)
         setHasCredentials(true)
         onSuccess?.()
       } else {
-        const errorMessage = result.error?.message || 'Registration failed'
+        const errorMessage = typeof result.error === 'string' ? result.error : 'Registration failed'
         setError(errorMessage)
         // Use the error parameter properly in the callback
         onError?.()

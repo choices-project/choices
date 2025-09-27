@@ -1,10 +1,11 @@
-import { NextRequest, NextResponse } from 'next/server';
+// NextRequest import removed - not used
+import { NextResponse } from 'next/server';
 import { devLog } from '@/lib/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 import { handleError, getUserMessage, getHttpStatus, AuthenticationError } from '@/lib/error-handler';
 export const dynamic = 'force-dynamic'
 
-export async function POST(_request: NextRequest) {
+export async function POST() {
   try {
     const supabase = getSupabaseServerClient()
     
@@ -89,7 +90,7 @@ export async function POST(_request: NextRequest) {
 
   } catch (error) {
     devLog('Unexpected error in sync-user:', error)
-    const appError = handleError(error as Error, { context: 'sync-user' })
+    const appError = handleError(error as Error)
     const userMessage = getUserMessage(appError)
     const statusCode = getHttpStatus(appError)
     

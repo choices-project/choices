@@ -1,10 +1,11 @@
 import { useState, useEffect, useCallback } from 'react'
 import { devLog } from '@/lib/logger'
+import { withOptional } from '@/lib/util/objects'
 
 // Types
 export type DeviceType = 'mobile' | 'tablet' | 'desktop' | 'tv'
 
-export interface DeviceInfo {
+export type DeviceInfo = {
   type: DeviceType
   os: string
   browser: string
@@ -15,7 +16,7 @@ export interface DeviceInfo {
   user_agent: string
 }
 
-export interface DeviceCapabilities {
+export type DeviceCapabilities = {
   offline_support: boolean
   push_notifications: boolean
   camera_access: boolean
@@ -26,7 +27,7 @@ export interface DeviceCapabilities {
   connection_type?: string
 }
 
-export interface OptimizationSettings {
+export type OptimizationSettings = {
   image_quality: 'low' | 'medium' | 'high'
   animation_enabled: boolean
   real_time_updates: boolean
@@ -112,7 +113,7 @@ export function useDeviceDetection() {
 
     // Check network speed
     if ('connection' in navigator) {
-      const connection = (navigator as any).connection
+      const connection = (navigator as Navigator & { connection?: { effectiveType?: string } }).connection
       if (connection) {
         capabilities.connection_type = connection.effectiveType || 'unknown'
         capabilities.network_speed = connection.effectiveType === 'slow-2g' || connection.effectiveType === '2g' ? 'slow' : 
@@ -123,7 +124,7 @@ export function useDeviceDetection() {
     // Check battery level
     if ('getBattery' in navigator) {
       try {
-        const battery = await (navigator as any).getBattery()
+        const battery = await (navigator as Navigator & { getBattery?: () => Promise<{ level: number }> }).getBattery!()
         capabilities.battery_level = battery.level * 100
       } catch (error) {
         devLog('Error checking battery level:', error)
@@ -228,7 +229,7 @@ export function useDeviceDetection() {
   }, [detectDeviceType, detectOS, detectBrowser, checkCapabilities, getOptimizationSettings])
 
   const updateOptimizationSettings = useCallback((newSettings: Partial<OptimizationSettings>) => {
-    setOptimizationSettings(prev => prev ? { ...prev, ...newSettings } : null)
+    setOptimizationSettings(prev => prev ? withOptional(prev, newSettings) : null)
   }, [])
 
   const checkNetworkStatus = useCallback(async (): Promise<{ online: boolean; speed: 'slow' | 'medium' | 'fast' }> => {
@@ -236,7 +237,7 @@ export function useDeviceDetection() {
     let speed: 'slow' | 'medium' | 'fast' = 'medium'
 
     if ('connection' in navigator) {
-      const connection = (navigator as any).connection
+      const connection = (navigator as Navigator & { connection?: { effectiveType?: string } }).connection
       if (connection) {
         speed = connection.effectiveType === 'slow-2g' || connection.effectiveType === '2g' ? 'slow' : 
                connection.effectiveType === '3g' ? 'medium' : 'fast'

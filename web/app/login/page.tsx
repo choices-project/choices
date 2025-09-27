@@ -1,18 +1,34 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense, useCallback } from 'react'
+import { useFormStatus } from 'react-dom'
 import { logger } from '@/lib/logger';
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Eye, EyeOff, User, Lock, Fingerprint, CheckCircle2, AlertCircle } from 'lucide-react'
-import { clientSession } from '@/lib/client-session'
 import { safeBrowserAccess } from '@/lib/ssr-safe'
+import { loginAction } from '@/app/actions/login'
 
-export default function LoginPage() {
+// Login button component using useFormStatus
+function LoginButton() {
+  const { pending } = useFormStatus(); // disables during server-submit
+  return (
+    <button
+      type="submit"
+      data-testid="login-submit"
+      aria-label="Sign in"
+      disabled={pending}
+      className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-150 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed"
+    >
+      {pending ? 'Signing In...' : 'Sign In'}
+    </button>
+  );
+}
+
+function LoginForm() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
-  const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
   const [biometricSupported, setBiometricSupported] = useState<boolean | null>(null)
@@ -23,8 +39,7 @@ export default function LoginPage() {
   const redirectTo = searchParams.get('redirectTo') || '/dashboard'
 
   // Check biometric support on component mount
-  useEffect(() => {
-    const checkBiometricSupport = async () => {
+  const checkBiometricSupport = useCallback(async () => {
       try {
         // Check if WebAuthn is supported
         const window = safeBrowserAccess.window()
@@ -46,50 +61,14 @@ export default function LoginPage() {
         setBiometricSupported(false)
         setBiometricAvailable(false)
       }
-    }
+    }, [])
     
-    checkBiometricSupport()
-  }, [])
+    useEffect(() => {
+      checkBiometricSupport()
+    }, [checkBiometricSupport])
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
-    setError(null)
-    setMessage(null)
-
-    if (!email.trim()) {
-      setError('Email is required')
-      setLoading(false)
-      return
-    }
-
-    try {
-      setMessage('Signing you in...')
-      
-      const result = await clientSession.login(email.toLowerCase(), password || '')
-
-      if (result.success) {
-        setMessage('🎉 Login successful! Redirecting...')
-        
-        // Redirect to the intended destination
-        setTimeout(() => {
-          router.push(redirectTo)
-        }, 1000)
-      } else {
-        setError(result.error || 'Login failed. Please try again.')
-      }
-    } catch (error) {
-      // narrow 'unknown' → Error
-      const err = error instanceof Error ? error : new Error(String(error));
-      logger.error('Login error:', err)
-      setError('Network error. Please try again.')
-    } finally {
-      setLoading(false)
-    }
-  }
 
   const handleBiometricLogin = async () => {
-    setLoading(true)
     setError(null)
     setMessage(null)
 
@@ -122,7 +101,7 @@ export default function LoginPage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          rpId: safeBrowserAccess.window()?.location?.hostname || 'localhost'
+          rpId: safeBrowserAccess.window()?.location.hostname || 'localhost'
         })
       })
 
@@ -136,7 +115,7 @@ export default function LoginPage() {
       const challenge = Uint8Array.from(atob(authData.challenge), c => c.charCodeAt(0))
       
       // Convert credential IDs from base64 to ArrayBuffer
-      const allowCredentials = authData.allowCredentials.map((cred: any) => ({
+      const allowCredentials = authData.allowCredentials.map((cred: { id: string; transports?: string[] }) => ({
         id: Uint8Array.from(atob(cred.id), c => c.charCodeAt(0)),
         type: 'public-key',
         transports: cred.transports || ['internal']
@@ -201,13 +180,15 @@ export default function LoginPage() {
       logger.error('Biometric login error:', err)
       setError(err.message || 'Biometric authentication failed. Please try again.')
     } finally {
-      setLoading(false)
+      // Loading state handled by useFormStatus
     }
   }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
+        {/* Hydration sentinel for E2E tests */}
+        <div data-testid="login-hydrated" hidden>{'1'}</div>
         <div>
           <h1 className="mt-6 text-center text-4xl font-extrabold text-gray-900">
             Sign in to your account
@@ -217,9 +198,14 @@ export default function LoginPage() {
           </p>
         </div>
 
-        <form onSubmit={handleLogin} className="mt-8 space-y-6">
+        <form action={loginAction} className="mt-8 space-y-6" data-testid="login-form" method="post">
           {error && (
-            <div className="bg-red-50 border border-red-200 rounded-md p-4">
+            <div 
+              className="bg-red-50 border border-red-200 rounded-md p-4" 
+              data-testid="login-error"
+              role="alert"
+              aria-live="assertive"
+            >
               <div className="flex">
                 <AlertCircle className="h-5 w-5 text-red-400" />
                 <div className="ml-3">
@@ -251,10 +237,14 @@ export default function LoginPage() {
                   id="email"
                   name="email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value.toLowerCase())}
+                  onChange={(e) => {
+                    console.log('Email onChange:', e.target.value);
+                    setEmail(e.target.value);
+                  }}
                   required
                   className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                   placeholder="your@email.com"
+                  data-testid="login-email"
                 />
                 <User className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
               </div>
@@ -273,6 +263,7 @@ export default function LoginPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                   placeholder="••••••••"
+                  data-testid="login-password"
                 />
                 <Lock className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
                 <button
@@ -284,7 +275,7 @@ export default function LoginPage() {
                 </button>
               </div>
               <p className="mt-1 text-xs text-gray-500">
-                If you don't have a password, you can use biometric authentication
+                If you don&apos;t have a password, you can use biometric authentication
               </p>
             </div>
           </div>
@@ -306,8 +297,8 @@ export default function LoginPage() {
               <button
                 type="button"
                 onClick={handleBiometricLogin}
-                disabled={loading}
-                className="w-full flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                data-testid="login-webauthn"
               >
                 <Fingerprint className="h-5 w-5 mr-2 text-blue-600" />
                 Sign in with biometric
@@ -315,18 +306,12 @@ export default function LoginPage() {
             </div>
           )}
 
-          <button
-            type="submit"
-            className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-150 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed"
-            disabled={loading || !email}
-          >
-            {loading ? 'Signing In...' : 'Sign In'}
-          </button>
+          <LoginButton />
         </form>
 
         <div className="text-center space-y-2">
           <p className="text-sm text-gray-600">
-            Don't have an account?{' '}
+            Don&apos;t have an account?{' '}
             <Link href="/register" className="text-blue-600 hover:underline">
               Create one
             </Link>
@@ -337,5 +322,20 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-2 text-gray-600">Loading...</p>
+        </div>
+      </div>
+    }>
+      <LoginForm />
+    </Suspense>
   )
 }

@@ -10,7 +10,7 @@ import {
   logSecurityEvent,
   validateFormData,
   type ServerActionContext
-} from '@/lib/auth/server-actions'
+} from '@/lib/core/auth/server-actions'
 
 
 
@@ -37,7 +37,7 @@ const CreatePollSchema = z.object({
 // Enhanced poll creation action with security features
 export const createPoll = createSecureServerAction(
   async (formData: FormData, context: ServerActionContext) => {
-    const supabase = getSupabaseServerClient();
+    const supabase = await getSupabaseServerClient();
     
     // Get authenticated user
     const user = await getAuthenticatedUser(context)
@@ -45,10 +45,7 @@ export const createPoll = createSecureServerAction(
     // Validate form data
     const validatedData = validateFormData(formData, CreatePollSchema)
 
-    // Get Supabase client
-    const supabaseClient = await supabase
-
-    if (!supabaseClient) {
+    if (!supabase) {
       throw new Error('Supabase client not available')
     }
 
@@ -59,7 +56,7 @@ export const createPoll = createSecureServerAction(
 
     // Create poll
     const pollId = uuidv4()
-    const { error: pollError } = await supabaseClient
+    const { error: pollError } = await supabase
       .from('polls')
       .insert({
         id: pollId,
@@ -88,13 +85,13 @@ export const createPoll = createSecureServerAction(
       created_at: new Date().toISOString()
     }))
 
-    const { error: optionsError } = await supabaseClient
+    const { error: optionsError } = await supabase
       .from('poll_options')
       .insert(optionsData)
 
     if (optionsError) {
       // Clean up poll if options creation fails
-      await supabaseClient.from('polls').delete().eq('id', pollId)
+      await supabase.from('polls').delete().eq('id', pollId)
       throw new Error('Failed to create poll options')
     }
 

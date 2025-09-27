@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react'
 
-interface FontProviderProps {
+type FontProviderProps = {
   children: React.ReactNode
 }
 

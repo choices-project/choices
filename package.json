@@ -1,10 +1,27 @@
 {
   "name": "choices-repo",
   "private": true,
+  "engines": {
+    "node": "22.19.0",
+    "npm": "10.9.3"
+  },
+  "volta": {
+    "node": "22.19.0",
+    "npm": "10.9.3"
+  },
   "devDependencies": {
-    "husky": "9.1.7"
+    "@types/jest": "30.0.0",
+    "@types/node": "22.10.2",
+    "husky": "9.1.7",
+    "typescript": "5.9.2"
   },
   "scripts": {
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "ci:install": "npm ci --ignore-scripts",
+    "ci:verify": "npm audit --audit-level=moderate"
+  },
+  "dependencies": {
+    "pg": "8.16.3",
+    "zod": "4.1.8"
   }
 }

@@ -8,7 +8,7 @@ import {
   Lock, Unlock
 } from 'lucide-react'
 
-interface Tier {
+type Tier = {
   level: number;
   name: string;
   price: string;
@@ -19,7 +19,7 @@ interface Tier {
   icon: React.ReactNode;
 }
 
-interface TierSystemProps {
+type TierSystemProps = {
   tiers: Tier[];
   currentTier?: number;
 }
@@ -46,7 +46,7 @@ export function TierSystem({ tiers, currentTier = 0 }: TierSystemProps) {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
         >
-          Start free, upgrade when you're ready. No pressure, no hidden fees.
+          Start free, upgrade when you&apos;re ready. No pressure, no hidden fees.
         </motion.p>
         
         {/* Action Buttons */}

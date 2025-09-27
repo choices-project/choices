@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 import { devLog } from '@/lib/logger';
 
@@ -33,7 +34,10 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    devLog('Retrieved WebAuthn credentials for domain:', request.headers.get('host'), 'Count:', credentials?.length || 0)
+    devLog('Retrieved WebAuthn credentials for domain', {
+      host: request.headers.get('host'),
+      count: credentials.length || 0
+    })
 
     return NextResponse.json({
       success: true,

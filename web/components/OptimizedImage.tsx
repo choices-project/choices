@@ -3,7 +3,7 @@
 import React, { useState, useCallback } from 'react'
 import Image from 'next/image'
 
-interface OptimizedImageProps {
+type OptimizedImageProps = {
   src: string
   alt: string
   width?: number

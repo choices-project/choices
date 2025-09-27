@@ -1,9 +1,10 @@
-import { useState, useEffect, useCallback, createContext, useContext } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { devLog } from '@/lib/logger';
-import { useFeatureFlags } from './useFeatureFlags';
-import { isFeatureEnabled } from '../lib/feature-flags';
+// import { useFeatureFlags } from './useFeatureFlags';
+import { isFeatureEnabled } from '@/lib/core/feature-flags';
+import { withOptional } from '@/lib/util/objects';
 
-interface AnalyticsData {
+type AnalyticsData = {
   period: string;
   summary: {
     totalUsers: number;
@@ -25,20 +26,20 @@ interface AnalyticsData {
   };
 }
 
-interface AnalyticsFilters {
+type AnalyticsFilters = {
   dateRange?: string;
   pollId?: string;
   userType?: string;
   deviceType?: string;
 }
 
-interface UseAnalyticsOptions {
+type UseAnalyticsOptions = {
   autoRefresh?: boolean;
   refreshInterval?: number;
   defaultFilters?: AnalyticsFilters;
 }
 
-interface UseAnalyticsReturn {
+type UseAnalyticsReturn = {
   // Data
   data: AnalyticsData | null;
   loading: boolean;
@@ -72,7 +73,8 @@ export function useAnalytics(options: UseAnalyticsOptions = {}): UseAnalyticsRet
     defaultFilters = {}
   } = options;
 
-  const featureFlags = useFeatureFlags();
+  // const featureFlags = useFeatureFlags();
+  const _featureFlags = { flags: {}, isLoading: false };
   const [data, setData] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -84,7 +86,7 @@ export function useAnalytics(options: UseAnalyticsOptions = {}): UseAnalyticsRet
   const analyticsEnabled = isFeatureEnabled('analytics');
   const aiFeaturesEnabled = isFeatureEnabled('aiFeatures');
 
-  const fetchData = useCallback(async (type: string = 'overview', customFilters?: AnalyticsFilters) => {
+  const fetchData = useCallback(async (_type: string = 'overview', customFilters?: AnalyticsFilters) => {
     if (!analyticsEnabled) {
       setError('Analytics feature is disabled');
       return;
@@ -94,7 +96,7 @@ export function useAnalytics(options: UseAnalyticsOptions = {}): UseAnalyticsRet
       setLoading(true);
       setError(null);
 
-      const requestFilters = { ...filters, ...customFilters };
+      const requestFilters = withOptional(filters, customFilters);
       const queryParams = new URLSearchParams({
         period: requestFilters.dateRange || '7d'
       });
@@ -316,10 +318,10 @@ export function useOverviewAnalytics(options?: UseAnalyticsOptions) {
   
   const fetchOverview = useCallback(() => {
     return analytics.fetchData('overview');
-  }, [analytics.fetchData]);
+  }, [analytics]);
   
   return {
-    ...analytics,
+    ...withOptional(analytics),
     fetchOverview
   };
 }
@@ -328,11 +330,11 @@ export function useTrendsAnalytics(options?: UseAnalyticsOptions) {
   const analytics = useAnalytics(options);
   
   const fetchTrends = useCallback((dateRange?: string) => {
-    return analytics.fetchData('trends', { dateRange });
-  }, [analytics.fetchData]);
+    return analytics.fetchData('trends', withOptional({}, { dateRange }));
+  }, [analytics]);
   
   return {
-    ...analytics,
+    ...withOptional(analytics),
     fetchTrends
   };
 }
@@ -342,10 +344,10 @@ export function usePerformanceAnalytics(options?: UseAnalyticsOptions) {
   
   const fetchPerformance = useCallback(() => {
     return analytics.fetchData('performance');
-  }, [analytics.fetchData]);
+  }, [analytics]);
   
   return {
-    ...analytics,
+    ...withOptional(analytics),
     fetchPerformance
   };
 }

@@ -6,7 +6,7 @@ import {
   getAuthenticatedUser,
   logSecurityEvent,
   type ServerActionContext
-} from '@/lib/auth/server-actions'
+} from '@/lib/core/auth/server-actions'
 
 // Enhanced logout action with security features
 export const logout = createSecureServerAction(

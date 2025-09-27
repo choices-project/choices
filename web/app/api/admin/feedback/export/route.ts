@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 import { devLog } from '@/lib/logger';
 
@@ -27,11 +28,11 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Check admin permissions
+    // Check admin permissions - only admins can access feedback data
     const { data: userProfile, error: profileError } = await supabaseClient
-      .from('ia_users')
-      .select('verification_tier')
-      .eq('stable_id', String(user.id) as any)
+      .from('user_profiles')
+      .select('is_admin')
+      .eq('user_id', String(user.id))
       .single();
 
     if (profileError) {
@@ -42,9 +43,9 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    if (!userProfile || !userProfile || !('verification_tier' in userProfile) || !['T2', 'T3'].includes(userProfile.verification_tier)) {
+    if (!userProfile.is_admin) {
       return NextResponse.json(
-        { error: 'Insufficient permissions' },
+        { error: 'Admin access required' },
         { status: 403 }
       );
     }
@@ -73,7 +74,7 @@ export async function GET(request: NextRequest) {
       query = query.eq('sentiment', sentiment as any);
     }
 
-    if (status) {
+    if (status && status.trim() !== '') {
       query = query.eq('status', status as any);
     }
 
@@ -108,7 +109,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Apply search filter
-    if (search) {
+    if (search.trim() !== '') {
       query = query.or(`title.ilike.%${search}%,description.ilike.%${search}%`);
     }
 

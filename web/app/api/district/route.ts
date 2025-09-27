@@ -1,11 +1,8 @@
-import { NextRequest, NextResponse } from "next/server";
-import { lookupAddress } from "../../../lib/civics/ingest";
+import { NextResponse } from 'next/server'
 
-export async function GET(req: NextRequest) {
-  const url = new URL(req.url);
-  const addr = url.searchParams.get("addr")?.trim();
-  if (!addr) return NextResponse.json({ error: "Missing addr" }, { status: 400 });
-
-  const data = await lookupAddress(addr);
-  return NextResponse.json(data);
+export async function GET() {
+  return NextResponse.json(
+    { error: 'District API temporarily disabled' },
+    { status: 503 }
+  )
 }

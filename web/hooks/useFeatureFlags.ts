@@ -5,20 +5,22 @@
  * re-rendering when flags change.
  */
 
-import { useState, useEffect, useCallback, useMemo, createContext, useContext } from 'react';
-import { 
-  featureFlagManager, 
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import type { 
   FeatureFlag, 
   FeatureFlagManager,
+  FeatureFlagConfig} from '@/lib/core/feature-flags';
+import { 
+  featureFlagManager,
   isFeatureEnabled as _isFeatureEnabled,
   enableFeature as _enableFeature,
   disableFeature as _disableFeature,
   toggleFeature as _toggleFeature,
   getFeatureFlag as _getFeatureFlag,
   getAllFeatureFlags as _getAllFeatureFlags
-} from '../lib/feature-flags';
+} from '@/lib/core/feature-flags';
 
-export interface UseFeatureFlagsReturn {
+export type UseFeatureFlagsReturn = {
   // Flag checking
   isEnabled: (flagId: string) => boolean;
   isDisabled: (flagId: string) => boolean;
@@ -55,7 +57,7 @@ export interface UseFeatureFlagsReturn {
  * Main hook for feature flags
  */
 export function useFeatureFlags(): UseFeatureFlagsReturn {
-  const [flags, setFlags] = useState<Map<string, FeatureFlag>>(new Map());
+  const [, setFlags] = useState<Map<string, FeatureFlag>>(new Map());
   const [loading, setLoading] = useState(true);
 
   // Initialize flags on mount
@@ -64,11 +66,16 @@ export function useFeatureFlags(): UseFeatureFlagsReturn {
     setLoading(false);
 
     // Subscribe to flag changes
-    const unsubscribe = featureFlagManager.subscribe((newFlags) => {
-      setFlags(new Map(newFlags));
+    const subscription = featureFlagManager.subscribe((newFlags) => {
+      setFlags(new Map(Object.entries(newFlags).map(([key, enabled]) => [key, {
+        id: key,
+        name: key.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase()),
+        enabled,
+        description: `Feature flag for ${key.toLowerCase().replace(/_/g, ' ')}`
+      }])));
     });
 
-    return unsubscribe;
+    return subscription.unsubscribe;
   }, []);
 
   // Memoized functions to prevent unnecessary re-renders
@@ -93,7 +100,7 @@ export function useFeatureFlags(): UseFeatureFlagsReturn {
   }, []);
 
   const getFlag = useCallback((flagId: string): FeatureFlag | undefined => {
-    return featureFlagManager.getFlag(flagId);
+    return featureFlagManager.getFlag(flagId) || undefined;
   }, []);
 
   const getAllFlags = useCallback((): Map<string, FeatureFlag> => {
@@ -114,7 +121,7 @@ export function useFeatureFlags(): UseFeatureFlagsReturn {
 
   const systemInfo = useMemo(() => {
     return featureFlagManager.getSystemInfo();
-  }, [flags]);
+  }, []);
 
   return {
     isEnabled,
@@ -252,10 +259,10 @@ export function useFeatureFlagManagement(): {
     environment: string;
     categories: Record<string, number>;
   };
-  updateFlagMetadata: (flagId: string, metadata: Record<string, any>) => boolean;
+  updateFlagMetadata: (flagId: string, metadata: Record<string, unknown>) => boolean;
   reset: () => void;
-  exportConfig: () => any;
-  importConfig: (config: any) => void;
+  exportConfig: () => Record<string, unknown>;
+  importConfig: (config: FeatureFlagConfig) => void;
   loading: boolean;
 } {
   const { getAllFlags, systemInfo, loading, manager } = useFeatureFlags();
@@ -274,7 +281,7 @@ export function useFeatureFlagManagement(): {
     return manager.exportConfig();
   }, [manager]);
 
-  const importConfig = useCallback((config: any) => {
+  const importConfig = useCallback((config: FeatureFlagConfig) => {
     manager.importConfig(config);
   }, [manager]);
 

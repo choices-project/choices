@@ -33,7 +33,7 @@ export async function GET() {
     
                // Test the connection
            const supabaseClient = await supabase;
-           const { error } = await supabaseClient.from('ia_users').select('count').limit(1);
+           const { error } = await supabaseClient.from('user_profiles').select('count').limit(1);
     
     return NextResponse.json({
       status: {
@@ -55,7 +55,7 @@ export async function GET() {
       }
     });
   } catch (error) {
-    const appError = handleError(error as Error, { context: 'database-status' })
+    const appError = handleError(error as Error)
     const userMessage = getUserMessage(appError)
     const statusCode = getHttpStatus(appError)
     

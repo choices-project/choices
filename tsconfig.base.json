@@ -1,24 +1,38 @@
 {
   "compilerOptions": {
     "target": "ES2022",
+    "lib": ["dom", "dom.iterable", "esnext"],
     "module": "ESNext",
-    "moduleResolution": "Bundler",
+    "moduleResolution": "bundler",
     "jsx": "react-jsx",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
+    "allowJs": true,
+    "incremental": true,
+    "resolveJsonModule": true,
     "baseUrl": ".",
     "paths": {
-      "@choices/civics-schemas/*": ["packages/civics-schemas/src/*"],
-      "@choices/civics-client/*": ["packages/civics-client/src/*"],
-      "@choices/civics-sources/*": ["packages/civics-sources/src/*"]
+      "@/*": ["./web/*"],
+      "@/lib/*": ["./web/lib/*"],
+      "@/utils/supabase/server": ["./web/utils/supabase/server"],
+      "@/lib/supabase/server": ["./web/utils/supabase/server"],
+      "@/components/polls/*": ["./web/features/polls/*"],
+      "@/components/voting/*": ["./web/features/voting/*"],
+      "@/components/CreatePoll*": ["./web/features/polls/components/CreatePollForm"],
+      "@/components/admin/layout/*": ["./web/app/(app)/admin/layout/*"]
     },
     "types": ["node"],
-    "allowJs": true,
     "declaration": true,
     "declarationMap": true,
-    "sourceMap": true
+    "sourceMap": true,
+    /* Stricter TypeScript settings for better type safety */
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "noImplicitOverride": true,
+    "verbatimModuleSyntax": true,
+    "useUnknownInCatchVariables": true
   },
   "exclude": [
     "node_modules",

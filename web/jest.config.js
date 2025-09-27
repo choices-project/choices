@@ -1,72 +1,100 @@
 /** @type {import('jest').Config} */
-const config = {
-  // Test environment
-  testEnvironment: 'node',
-  
-  // Setup files
-  setupFilesAfterEnv: ['<rootDir>/tests/setup.ts'],
-  
-  // Test file patterns (no CI tests currently)
-  testMatch: [
-    // No CI tests configured - tests removed per user request
+module.exports = {
+  projects: [
+    {
+      displayName: 'client',
+      testEnvironment: 'jsdom',
+      setupFiles: ['<rootDir>/jest.setup.js'],
+      setupFilesAfterEnv: ['<rootDir>/jest.setup.after.js', '<rootDir>/tests/setup.ts'],
+      testMatch: [
+        '<rootDir>/components/**/*.test.{js,jsx,ts,tsx}',
+        '<rootDir>/components/**/*.spec.{js,jsx,ts,tsx}',
+      ],
+      moduleNameMapper: {
+        '^@/(.*)$': '<rootDir>/$1',
+        '^@/lib/(.*)$': '<rootDir>/lib/$1',
+        '^@/utils/supabase/server$': '<rootDir>/utils/supabase/server',
+        '^@/shared/(.*)$': '<rootDir>/shared/$1',
+        '^@/features/(.*)$': '<rootDir>/features/$1',
+        '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
+        '^@/app/api/health/civics/route$': '<rootDir>/tests/__mocks__/api-route.js',
+        '^@/app/api/v1/civics/address-lookup/route$': '<rootDir>/tests/__mocks__/api-route.js',
+      },
+      testPathIgnorePatterns: [
+        "/node_modules/",
+        "/\\.next/",
+        "/out/",
+        "/build/",
+        "/dist/",
+        ".*\\.disabled",
+        ".*\\.disabled\\..*",
+        ".*/tests\\.disabled/.*",
+        ".*/scripts\\.disabled/.*",
+        ".*/archive/.*",
+        "/app/api/.*"
+      ],
+      collectCoverageFrom: [
+        'components/**/*.{js,jsx,ts,tsx}',
+        'app/**/*.{js,jsx,ts,tsx}',
+        '!**/*.d.ts',
+        '!**/*.disabled',
+        '!**/*.disabled.*',
+        '!**/tests.disabled/**',
+        '!**/scripts.disabled/**',
+        '!**/archive/**'
+      ],
+    },
+    {
+      displayName: 'server',
+      testEnvironment: 'node',
+      setupFiles: ['<rootDir>/jest.setup.js'],
+      setupFilesAfterEnv: ['<rootDir>/jest.setup.after.js', '<rootDir>/tests/setup.ts'],
+      testMatch: [
+        '<rootDir>/tests/unit/**/*.test.{js,jsx,ts,tsx}',
+        '<rootDir>/tests/unit/**/*.spec.{js,jsx,ts,tsx}',
+        '<rootDir>/lib/**/*.test.{js,jsx,ts,tsx}',
+        '<rootDir>/lib/**/*.spec.{js,jsx,ts,tsx}',
+      ],
+      moduleNameMapper: {
+        '^@/(.*)$': '<rootDir>/$1',
+        '^@/lib/(.*)$': '<rootDir>/lib/$1',
+        '^@/utils/supabase/server$': '<rootDir>/utils/supabase/server',
+        '^@/shared/(.*)$': '<rootDir>/shared/$1',
+        '^@/features/(.*)$': '<rootDir>/features/$1',
+      },
+      testPathIgnorePatterns: [
+        "/node_modules/",
+        "/\\.next/",
+        "/out/",
+        "/build/",
+        "/dist/",
+        ".*\\.disabled",
+        ".*\\.disabled\\..*",
+        ".*/tests\\.disabled/.*",
+        ".*/scripts\\.disabled/.*",
+        ".*/archive/.*",
+        "<rootDir>/tests/e2e/" // ← keep Playwright out of Jest
+      ],
+      collectCoverageFrom: [
+        'lib/**/*.{js,jsx,ts,tsx}',
+        'utils/**/*.{js,jsx,ts,tsx}',
+        'shared/**/*.{js,jsx,ts,tsx}',
+        'features/**/*.{js,jsx,ts,tsx}',
+        '!**/*.d.ts',
+        '!**/*.disabled',
+        '!**/*.disabled.*',
+        '!**/tests.disabled/**',
+        '!**/scripts.disabled/**',
+        '!**/archive/**'
+      ],
+    }
   ],
-  testPathIgnorePatterns: [
-    '<rootDir>/tests/e2e/',
-    '<rootDir>/tests/integration/',
-    '<rootDir>/tests/privacy/',
-    '<rootDir>/tests/security/'
-  ],
-  
-  // Exclude problematic test files from TypeScript compilation
-  transformIgnorePatterns: [
-    '<rootDir>/tests/e2e/',
-    '<rootDir>/tests/integration/',
-    '<rootDir>/tests/privacy/',
-    '<rootDir>/tests/security/'
-  ],
-  
-  // Module name mapping for absolute imports
-  moduleNameMapper: {
-    '^@/(.*)$': '<rootDir>/$1',
-    '^@/utils/(.*)$': '<rootDir>/utils/$1',
-    '^@/components/(.*)$': '<rootDir>/components/$1',
-    '^@/tests/(.*)$': '<rootDir>/tests/$1'
-  },
-  
-  // Transform files
-  transform: {
-    '^.+\\.(ts|tsx)$': ['ts-jest', {
-      tsconfig: 'tsconfig.json'
-    }]
-  },
-  
-  // File extensions
-  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json'],
-  
-  // Coverage configuration (disabled for CI tests)
-  collectCoverage: false,
-  
-  // Test timeout
-  testTimeout: 10000,
-  
-  // Clear mocks between tests
-  clearMocks: true,
-  
-  // Restore mocks after each test
-  restoreMocks: true,
-  
-  // Verbose output
-  verbose: true,
-  
-  // Error handling
-  errorOnDeprecated: true,
-  
-  // Global setup
-  globals: {
-    'ts-jest': {
-      useESM: true
+  coverageThreshold: {
+    global: {
+      lines: 80,
+      functions: 80,
+      branches: 70,
+      statements: 80
     }
   }
 };
-
-module.exports = config;

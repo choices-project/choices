@@ -1,0 +1,71 @@
+import { getSupabaseServerClient } from '@/utils/supabase/server';
+import { devLog } from '@/lib/logger';
+import { NextResponse } from 'next/server';
+
+export const dynamic = 'force-dynamic'
+
+export async function GET(request: Request) {
+  const { searchParams, origin } = new URL(request.url)
+  const token = searchParams.get('token')
+  const type = searchParams.get('type')
+  const redirectTo = searchParams.get('redirectTo') ?? '/dashboard'
+
+  if (!token) {
+    return NextResponse.redirect(
+      `${origin}/login?error=${encodeURIComponent('No verification token provided')}`
+    )
+  }
+
+  const supabase = getSupabaseServerClient()
+
+  try {
+    const supabaseClient = await supabase;
+    
+    // Handle different verification types
+    if (type === 'signup' || type === 'email') {
+      // Verify email for signup
+      const { data, error } = await supabaseClient.auth.verifyOtp({
+        token_hash: token,
+        type: 'signup'
+      })
+
+      if (error) {
+        devLog('Email verification error:', error)
+        return NextResponse.redirect(
+          `${origin}/login?error=${encodeURIComponent('Email verification failed. Please try signing up again.')}`
+        )
+      }
+
+      if (data.session) {
+        devLog('Email verified successfully for:', data.user?.email)
+        return NextResponse.redirect(`${origin}${redirectTo}`)
+      }
+    } else {
+      // Try to exchange the token for a session
+      const { data, error } = await supabaseClient.auth.exchangeCodeForSession(token)
+      
+      if (error) {
+        devLog('Token exchange error:', error)
+        return NextResponse.redirect(
+          `${origin}/login?error=${encodeURIComponent('Verification link expired or invalid. Please try signing up again.')}`
+        )
+      }
+
+      if (data.session) {
+        devLog('Session created successfully for:', data.user.email)
+        return NextResponse.redirect(`${origin}${redirectTo}`)
+      }
+    }
+
+    // If we get here, something went wrong
+    return NextResponse.redirect(
+      `${origin}/login?error=${encodeURIComponent('Verification failed. Please try again.')}`
+    )
+
+  } catch (error) {
+    devLog('Unexpected error in verification:', error)
+    return NextResponse.redirect(
+      `${origin}/login?error=${encodeURIComponent('Unexpected error during verification')}`
+    )
+  }
+}

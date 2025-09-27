@@ -2,7 +2,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 
 // Database schema types for type safety
-export interface Database {
+export type Database = {
   public: {
     Tables: {
       user_profiles: {
@@ -107,7 +107,7 @@ export interface Database {
           verification_token?: string
           is_verified: boolean
           voting_method: 'single' | 'approval' | 'ranked' | 'quadratic' | 'range'
-          vote_data: any // JSON data for complex voting methods
+          vote_data: Record<string, unknown> // JSON data for complex voting methods
         }
         Insert: {
           id?: string
@@ -119,7 +119,7 @@ export interface Database {
           verification_token?: string
           is_verified?: boolean
           voting_method: 'single' | 'approval' | 'ranked' | 'quadratic' | 'range'
-          vote_data?: any
+          vote_data?: Record<string, unknown>
         }
         Update: {
           id?: string
@@ -131,7 +131,7 @@ export interface Database {
           verification_token?: string
           is_verified?: boolean
           voting_method?: 'single' | 'approval' | 'ranked' | 'quadratic' | 'range'
-          vote_data?: any
+          vote_data?: Record<string, unknown>
         }
       }
       // Privacy-first tables
@@ -176,21 +176,21 @@ export interface Database {
           action: string
           user_id_hash: string
           created_at: string
-          metadata: any
+          metadata: Record<string, unknown>
         }
         Insert: {
           id?: string
           action: string
           user_id_hash: string
           created_at?: string
-          metadata?: any
+          metadata?: Record<string, unknown>
         }
         Update: {
           id?: string
           action?: string
           user_id_hash?: string
           created_at?: string
-          metadata?: any
+          metadata?: Record<string, unknown>
         }
       }
       user_profiles_encrypted: {
@@ -312,7 +312,7 @@ export interface Database {
           error_type: string
           error_message: string
           stack_trace?: string
-          context?: any
+          context?: Record<string, unknown>
           created_at: string
           severity: 'low' | 'medium' | 'high' | 'critical'
         }
@@ -322,7 +322,7 @@ export interface Database {
           error_type: string
           error_message: string
           stack_trace?: string
-          context?: any
+          context?: Record<string, unknown>
           created_at?: string
           severity?: 'low' | 'medium' | 'high' | 'critical'
         }
@@ -332,7 +332,7 @@ export interface Database {
           error_type?: string
           error_message?: string
           stack_trace?: string
-          context?: any
+          context?: Record<string, unknown>
           created_at?: string
           severity?: 'low' | 'medium' | 'high' | 'critical'
         }
@@ -364,7 +364,7 @@ export interface Database {
         Args: {
           target_user_id: string
         }
-        Returns: any
+        Returns: Record<string, unknown>
       }
       contribute_to_analytics: {
         Args: {
@@ -386,7 +386,7 @@ export interface Database {
 
 let client: SupabaseClient<Database> | undefined
 
-export function getSupabaseBrowserClient(): SupabaseClient<Database> {
+export async function getSupabaseBrowserClient(): Promise<SupabaseClient<Database>> {
   if (typeof window === 'undefined') {
     throw new Error('getSupabaseBrowserClient can only be used in client-side code')
   }
@@ -400,11 +400,11 @@ export function getSupabaseBrowserClient(): SupabaseClient<Database> {
     }
     
     // Use dynamic import to avoid SSR issues
-    const { createBrowserClient } = require('@supabase/ssr')
-    client = createBrowserClient(
+    const { createBrowserClient } = await import('@supabase/ssr')
+    client = createBrowserClient<Database>(
       supabaseUrl,
       supabaseKey,
-    ) as SupabaseClient<Database>
+    )
   }
   return client
 }

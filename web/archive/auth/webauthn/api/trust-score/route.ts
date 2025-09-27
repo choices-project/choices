@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 import { devLog } from '@/lib/logger';
 export const dynamic = 'force-dynamic'
@@ -79,7 +80,10 @@ export async function GET(_request: NextRequest) {
         .single()
 
       if (newTrustScore && 'overall_score' in newTrustScore) {
-        devLog('Calculated new trust score for user:', user.id, 'Score:', newTrustScore.overall_score)
+        devLog('Calculated new trust score for user', {
+          userId: user.id,
+          score: newTrustScore.overall_score
+        })
         
         return NextResponse.json({
           success: true,
@@ -94,7 +98,10 @@ export async function GET(_request: NextRequest) {
         })
       }
     } else if (trustScore && 'overall_score' in trustScore) {
-      devLog('Retrieved trust score for user:', user.id, 'Score:', trustScore.overall_score)
+      devLog('Retrieved trust score for user', {
+        userId: user.id,
+        score: trustScore.overall_score
+      })
       
       return NextResponse.json({
         success: true,
@@ -182,7 +189,10 @@ export async function POST(_request: NextRequest) {
       .eq('user_id', String(user.id) as any)
       .single()
 
-    devLog('Recalculated trust score for user:', user.id, 'New score:', calculatedScore)
+    devLog('Recalculated trust score for user', {
+      userId: user.id,
+      newScore: calculatedScore
+    })
 
     return NextResponse.json({
       success: true,

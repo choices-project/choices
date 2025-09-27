@@ -9,7 +9,7 @@ import {
   logSecurityEvent,
   validateFormData,
   type ServerActionContext
-} from '@/lib/auth/server-actions'
+} from '@/lib/core/auth/server-actions'
 
 
 
@@ -25,7 +25,7 @@ const VoteSchema = z.object({
 // Enhanced voting action with security features
 export const vote = createSecureServerAction(
   async (formData: FormData, context: ServerActionContext) => {
-    const supabase = getSupabaseServerClient();
+    const supabase = await getSupabaseServerClient();
     
     // Get authenticated user
     const user = await getAuthenticatedUser(context)
@@ -33,15 +33,12 @@ export const vote = createSecureServerAction(
     // Validate form data
     const validatedData = validateFormData(formData, VoteSchema)
 
-    // Get Supabase client
-    const supabaseClient = await supabase
-
-    if (!supabaseClient) {
+    if (!supabase) {
       throw new Error('Supabase client not available')
     }
 
     // Check if poll exists and is active
-    const { data: poll, error: pollError } = await supabaseClient
+    const { data: poll, error: pollError } = await supabase
       .from('polls')
       .select('id, owner_id, type, visibility, end_date, allow_multiple_votes')
       .eq('id', validatedData.pollId)
@@ -58,7 +55,7 @@ export const vote = createSecureServerAction(
 
     // Check if user has already voted (unless multiple votes are allowed)
     if (!poll.allow_multiple_votes) {
-      const { data: existingVote } = await supabaseClient
+      const { data: existingVote } = await supabase
         .from('votes')
         .select('id')
         .eq('poll_id', validatedData.pollId)
@@ -71,7 +68,7 @@ export const vote = createSecureServerAction(
     }
 
     // Validate that all option IDs belong to this poll
-    const { data: pollOptions, error: optionsError } = await supabaseClient
+    const { data: pollOptions, error: optionsError } = await supabase
       .from('poll_options')
       .select('id')
       .eq('poll_id', validatedData.pollId)
@@ -95,7 +92,7 @@ export const vote = createSecureServerAction(
       created_at: new Date().toISOString()
     }))
 
-    const { error: voteError } = await supabaseClient
+    const { error: voteError } = await supabase
       .from('votes')
       .insert(voteData)
 
