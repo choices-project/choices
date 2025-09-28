@@ -15,6 +15,16 @@ function byteLenFromPrefixed(v: string): number {
 }
 
 export function assertPepperConfig() {
+  // Only check pepper configuration if civics feature is enabled
+  // This prevents build failures when the feature is disabled
+  const isCivicsEnabled = process.env.CIVICS_ADDRESS_LOOKUP === 'true' || 
+                         process.env.NODE_ENV === 'development' || 
+                         process.env.NODE_ENV === 'test';
+  
+  if (!isCivicsEnabled) {
+    return; // Skip pepper validation if civics feature is disabled
+  }
+
   if (isDev()) {
     if (!process.env.PRIVACY_PEPPER_DEV) {
       throw new Error('PRIVACY_PEPPER_DEV required in dev/test');
