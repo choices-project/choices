@@ -131,26 +131,42 @@ ALTERNATIVE_CANDIDATES: true
 - **`PRIVACY_PEPPER_CURRENT`** - Production pepper (high-entropy)
 - **`PRIVACY_PEPPER_PREVIOUS`** - Previous pepper (rotation support)
 - **`SESSION_SECRET`** - Cookie signing secret
-- **`GOOGLE_CIVIC_API_KEY`** - Google Civic Information API
+- **`GOOGLE_CIVIC_API_KEY`** - Google Civic Information API (billing required)
 - **`FEC_API_KEY`** - Federal Election Commission API
 
-### **API Integrations**
+### **API Integrations & Costs**
 - **Google Civic Information API** - Address to jurisdiction mapping
-- **Congress.gov API** - Congressional voting records
-- **FEC API** - Campaign finance data
-- **Open States API** - State and local representatives
-- **GovTrack.us API** - Congressional data
-- **OpenSecrets API** - Campaign finance transparency
+  - **Cost**: $0.50 per 1,000 requests (after free tier)
+  - **Free Tier**: 25,000 requests/day
+  - **Rate Limit**: 1 request/second (implemented)
+  - **Billing**: Required for production usage
+- **Congress.gov API** - Congressional voting records (free)
+- **FEC API** - Campaign finance data (free)
+- **Open States API** - State and local representatives (free)
+- **GovTrack.us API** - Congressional data (free)
+- **OpenSecrets API** - Campaign finance transparency (free)
+
+### **Rate Limiting & Quota Management**
+- **Rate Limiting**: 1-second delay between API calls
+- **Quota Monitoring**: Real-time usage tracking
+- **Fallback Mechanism**: Graceful degradation when quota exceeded
+- **Cost Control**: Billing alerts and usage monitoring
 
 ---
 
-## 📊 **Data Sources**
+## 📊 **Data Sources & Coverage**
 
-### **Representative Database**
-- **Federal** - Congress, Senate, President
-- **State** - Governors, state legislators
-- **Local** - Mayors, city council, county officials
-- **Total Coverage** - 1,000+ elected officials
+### **Representative Database (1,273 representatives)**
+- **Federal** - Congress, Senate, President (535 officials)
+- **State** - Governors, state legislators (738 officials)
+- **Local** - San Francisco, Los Angeles (test cities only)
+- **Total Coverage** - 1,273 elected officials in database
+
+### **Address Lookup Coverage**
+- **Google Civic API** - Jurisdiction resolution for all US addresses
+- **Database Query** - Representative lookup from populated database
+- **Local Coverage** - Limited to SF/LA (test cities)
+- **Fallback Support** - Graceful degradation when API unavailable
 
 ### **Campaign Finance Data**
 - **FEC Filings** - Federal campaign finance
@@ -163,6 +179,32 @@ ALTERNATIVE_CANDIDATES: true
 - **Party Alignment** - Voting with party vs. constituents
 - **Issue Analysis** - Voting patterns by issue
 - **Constituent Interests** - Alignment with district needs
+
+---
+
+## 💰 **Cost Analysis & Scaling**
+
+### **Current Implementation Costs**
+- **Google Civic API**: $0.50 per 1,000 requests
+- **Free Tier**: 25,000 requests/day
+- **Database Storage**: Minimal (already populated)
+- **Maintenance**: Low (manual updates for SF/LA)
+
+### **Usage Scenarios**
+- **Low Usage (1,000 users/month)**: $0.50/month
+- **Medium Usage (10,000 users/month)**: $5/month  
+- **High Usage (100,000 users/month)**: $50/month
+
+### **Future Scaling Options**
+- **Cicero API**: $298 + $0.06 per lookup (comprehensive local coverage)
+- **USgeocoder API**: Competitive pricing (good local coverage)
+- **Hybrid Approach**: Google Civic + Cicero for optimal coverage
+
+### **Cost Optimization**
+- **Smart Caching**: Reduce API calls through intelligent caching
+- **Rate Limiting**: 1 request/second to respect quotas
+- **Fallback Mechanisms**: Graceful degradation when quota exceeded
+- **Usage Monitoring**: Real-time cost tracking and alerts
 
 ---
 

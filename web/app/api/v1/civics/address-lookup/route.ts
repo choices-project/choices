@@ -3,6 +3,11 @@
  * Feature Flag: CIVICS_ADDRESS_LOOKUP (disabled by default)
  * 
  * Privacy-first address lookup with jurisdiction cookie setting
+ * 
+ * QUOTA MANAGEMENT:
+ * - Free tier: 25,000 requests/day
+ * - Rate limit: ~1 request/second recommended
+ * - Billing required for production usage
  */
 
 import { NextResponse } from 'next/server';
@@ -25,15 +30,48 @@ async function lookupJurisdictionFromExternalAPI(address: string) {
   try {
     // Call Google Civic Information API for jurisdiction resolution
     // This is the correct approach for address → jurisdiction mapping
-    const response = await fetch('https://www.googleapis.com/civicinfo/v2/representatives', {
+    const apiKey = process.env.GOOGLE_CIVIC_API_KEY;
+    if (!apiKey) {
+      console.warn('Google Civic API key not configured, using fallback');
+      return {
+        state: 'IL',
+        district: '13',
+        county: 'Sangamon',
+        fallback: true 
+      };
+    }
+
+    // RATE LIMITING: Add small delay to respect API quotas
+    // Google Civic API recommends ~1 request/second
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    const url = new URL('https://www.googleapis.com/civicinfo/v2/representatives');
+    url.searchParams.set('key', apiKey);
+    url.searchParams.set('address', address);
+    url.searchParams.set('includeOffices', 'true');
+    url.searchParams.set('levels', 'country,administrativeArea1,administrativeArea2,locality');
+    url.searchParams.set('roles', 'legislatorUpperBody,legislatorLowerBody,headOfState,headOfGovernment');
+
+    const response = await fetch(url.toString(), {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
+        'User-Agent': 'Choices-Civics-Platform/1.0', // Identify our requests
       },
-      // Note: In production, you'd need to add API key and proper error handling
     });
     
     if (!response.ok) {
+      // Handle quota exceeded errors specifically
+      if (response.status === 429) {
+        console.warn('Google Civic API quota exceeded, using fallback');
+        return {
+          state: 'IL',
+          district: '13',
+          county: 'Sangamon',
+          fallback: true,
+          quotaExceeded: true
+        };
+      }
       throw new Error(`External API error: ${response.status}`);
     }
     

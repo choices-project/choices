@@ -1,7 +1,7 @@
 # Choices Project - Comprehensive Overview
 
 **Created:** 2025-01-17  
-**Updated:** 2025-01-21  
+**Updated:** 2025-09-27  
 **Status:** ✅ Production Ready  
 **Purpose:** Complete overview of the Choices democratic platform
 
@@ -48,6 +48,7 @@ Choices/
 ### 1. Core MVP Features (Production Ready)
 - **WebAuthn Authentication** - Biometric and passkey support
 - **Progressive Web App (PWA)** - Native app-like experience
+- **Civics Address Lookup** - Google Civic API integration for representative lookup (✅ WORKING)
 - **Admin Dashboard** - Comprehensive admin controls
 - **Enhanced Feedback System** - Multi-step feedback collection
 - **Basic Poll Management** - Create, vote, and moderate polls

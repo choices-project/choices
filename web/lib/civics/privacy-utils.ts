@@ -19,6 +19,16 @@ function decodePepper(v: string): Buffer {
 }
 
 function loadPeppers(): EncodedPepper[] {
+  // Check if civics feature is enabled before loading peppers
+  const isCivicsEnabled = process.env.CIVICS_ADDRESS_LOOKUP === 'true' || 
+                         process.env.NODE_ENV === 'development' || 
+                         process.env.NODE_ENV === 'test';
+  
+  if (!isCivicsEnabled) {
+    // Return a dummy pepper for disabled feature to prevent crashes
+    return [{ raw: Buffer.from('dummy-pepper-for-disabled-feature', 'utf8'), source: 'DEV' }];
+  }
+
   const env = process.env.NODE_ENV;
   const isDev = env === 'development' || env === 'test';
 
