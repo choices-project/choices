@@ -48,6 +48,12 @@ jobs:
           npm run build
         env:
           NODE_ENV: production
+          # Safe fallbacks so forked PRs (no secrets) still compile without calling real services
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || 'https://example.supabase.co' }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'fake-dev-key-for-ci-only' }}
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY || 'dev-only-secret' }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY || 'dev-only-secret' }}
+          PRIVACY_PEPPER_CURRENT: ${{ secrets.PRIVACY_PEPPER_CURRENT || 'base64:fake-pepper-for-ci-only-this-is-a-very-long-fake-pepper-value-that-meets-the-32-byte-minimum-requirement-for-testing-purposes-only' }}
 
       - name: Start application
         run: |
