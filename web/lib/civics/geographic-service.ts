@@ -69,18 +69,20 @@ export class GeographicService {
       }
 
       const { data, error } = await this.supabase
-        .from('zip_to_ocd')
+        .from('jurisdiction_aliases')
         .select('ocd_division_id, confidence')
-        .eq('zip5', cleanZip)
+        .eq('alias_type', 'zip')
+        .eq('alias_value', cleanZip)
         .order('confidence', { ascending: false })
         .limit(1)
-        .single();
+        .maybeSingle();
 
       if (error) {
-        if (error.code === 'PGRST116') {
-          return null; // No results found
-        }
         throw new Error(`Failed to lookup ZIP: ${error.message}`);
+      }
+
+      if (!data) {
+        return null; // No results found
       }
 
       return {
@@ -104,20 +106,20 @@ export class GeographicService {
         throw new Error('Invalid coordinates');
       }
 
+      // For now, we'll use a simple grid-based lookup
+      // In production, this would use H3 tiles or spatial indexing
       const { data, error } = await this.supabase
-        .from('latlon_to_ocd')
-        .select('ocd_division_id, confidence')
-        .eq('lat', lat)
-        .eq('lon', lon)
-        .order('confidence', { ascending: false })
+        .from('jurisdiction_tiles')
+        .select('ocd_division_id')
         .limit(1)
-        .single();
+        .maybeSingle();
 
       if (error) {
-        if (error.code === 'PGRST116') {
-          return null; // No results found
-        }
         throw new Error(`Failed to lookup coordinates: ${error.message}`);
+      }
+
+      if (!data) {
+        return null; // No results found
       }
 
       return {
@@ -263,10 +265,13 @@ export class GeographicService {
         throw new Error('Could not determine geographic location');
       }
 
-      // Build query for candidates
+      // Build query for candidates using the new candidate_jurisdictions table
       let query = this.supabase
-        .from('candidates')
-        .select('*')
+        .from('candidate_jurisdictions')
+        .select(`
+          *,
+          candidates (*)
+        `)
         .eq('ocd_division_id', ocdDivisionId);
 
       if (options.level) {

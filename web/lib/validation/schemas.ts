@@ -16,6 +16,10 @@ const UUIDSchema = z.string().uuid();
 const EmailSchema = z.string().email();
 /** Trust tier enumeration validation */
 const TrustTierSchema = z.enum(['bronze', 'silver', 'gold', 'platinum', 'admin']);
+/** OCD Division ID validation (Open Civic Data format) */
+const OCDDivisionIdSchema = z.string().regex(/^ocd-division\/[a-z0-9:]+$/);
+/** Location source enumeration validation */
+const LocationSourceSchema = z.enum(['browser', 'manual', 'zip']);
 
 /**
  * User Profile Schema
@@ -44,6 +48,22 @@ export const UserProfileSchema = z.object({
   created_at: TimestampSchema,
   /** Last profile update timestamp */
   updated_at: TimestampSchema,
+  /** Optional stored latitude (quantized) */
+  geo_lat: z.number().nullable().optional(),
+  /** Optional stored longitude (quantized) */
+  geo_lon: z.number().nullable().optional(),
+  /** Precision indicator for stored location */
+  geo_precision: z.enum(['exact', 'approximate', 'zip', 'city', 'state', 'unknown']).nullable().optional(),
+  /** Timestamp of last location update */
+  geo_updated_at: TimestampSchema.nullable().optional(),
+  /** Source of captured location (browser/manual/etc.) */
+  geo_source: z.string().nullable().optional(),
+  /** Consent version associated with captured location */
+  geo_consent_version: z.number().nullable().optional(),
+  /** Coarse hash for analytics aggregation */
+  geo_coarse_hash: z.string().nullable().optional(),
+  /** Trust gating preference for location usage */
+  geo_trust_gate: z.enum(['all', 'trusted_only']).nullable().optional(),
 });
 
 /**
@@ -366,3 +386,69 @@ export type QueryPerformanceMetrics = z.infer<typeof QueryPerformanceMetricsSche
 export type IntegrationMetrics = z.infer<typeof IntegrationMetricsSchema>;
 export type AlertRule = z.infer<typeof AlertRuleSchema>;
 export type Alert = z.infer<typeof AlertSchema>;
+
+/**
+ * Civic Jurisdiction Schema
+ * 
+ * Validates jurisdiction data from the civic_jurisdictions table.
+ */
+export const CivicJurisdictionSchema = z.object({
+  id: UUIDSchema,
+  ocd_division_id: OCDDivisionIdSchema,
+  name: z.string().min(1).max(255),
+  type: z.string().min(1).max(100),
+  parent_ocd_id: OCDDivisionIdSchema.nullable(),
+  level: z.number().int().min(0).max(10),
+  created_at: TimestampSchema,
+  updated_at: TimestampSchema,
+});
+
+/**
+ * Jurisdiction Alias Schema
+ * 
+ * Validates jurisdiction alias data for ZIP codes and other identifiers.
+ */
+export const JurisdictionAliasSchema = z.object({
+  id: UUIDSchema,
+  ocd_division_id: OCDDivisionIdSchema,
+  alias_type: z.string().min(1).max(50),
+  alias_value: z.string().min(1).max(100),
+  confidence: z.number().min(0).max(1),
+  created_at: TimestampSchema,
+});
+
+/**
+ * User Location Resolution Schema
+ * 
+ * Validates user location data with privacy-preserving quantization.
+ */
+export const UserLocationResolutionSchema = z.object({
+  id: UUIDSchema,
+  user_id: UUIDSchema,
+  ocd_division_id: OCDDivisionIdSchema,
+  quantized_lat: z.number().min(-90).max(90),
+  quantized_lon: z.number().min(-180).max(180),
+  precision_level: z.number().int().min(1).max(10),
+  consent_given: z.boolean(),
+  consent_timestamp: TimestampSchema,
+  created_at: TimestampSchema,
+});
+
+/**
+ * Location Input Schema
+ * 
+ * Validates location input from the onboarding flow.
+ */
+export const LocationInputSchema = z.object({
+  jurisdictionIds: z.array(OCDDivisionIdSchema).min(1),
+  primaryOcdId: OCDDivisionIdSchema,
+  locationCaptured: z.boolean(),
+  locationSource: LocationSourceSchema,
+  locationCompleted: z.boolean(),
+});
+
+// Export inferred types
+export type CivicJurisdiction = z.infer<typeof CivicJurisdictionSchema>;
+export type JurisdictionAlias = z.infer<typeof JurisdictionAliasSchema>;
+export type UserLocationResolution = z.infer<typeof UserLocationResolutionSchema>;
+export type LocationInput = z.infer<typeof LocationInputSchema>;

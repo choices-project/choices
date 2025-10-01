@@ -1,7 +1,7 @@
 # Choices Project - Comprehensive Overview
 
 **Created:** 2025-01-17  
-**Updated:** 2025-01-21  
+**Updated:** 2025-10-01
 **Status:** ✅ Production Ready  
 **Purpose:** Complete overview of the Choices democratic platform
 
@@ -48,6 +48,10 @@ Choices/
 ### 1. Core MVP Features (Production Ready)
 - **WebAuthn Authentication** - Biometric and passkey support
 - **Progressive Web App (PWA)** - Native app-like experience
+<<<<<<< HEAD
+=======
+- **Civics Address Lookup** - Server-side resolver (Census → Nominatim → Google) with OCD-backed persistence (✅ WORKING)
+>>>>>>> ce50158 (feat: implement browser location capture system)
 - **Admin Dashboard** - Comprehensive admin controls
 - **Enhanced Feedback System** - Multi-step feedback collection
 - **Basic Poll Management** - Create, vote, and moderate polls
@@ -60,7 +64,8 @@ Choices/
 - **Enhanced Voting** - Advanced voting system with offline support
 
 ### 3. Civics & Accountability Features (Implemented)
-- **Civics Address Lookup** - Privacy-first address-based representative lookup
+- **Browser Location Capture** - Privacy-first geolocation capture with canonical jurisdiction storage (✅ IMPLEMENTED)
+- **Civics Address Lookup** - Server-side resolver with OCD-backed persistence
 - **Representative Database** - 1,000+ federal, state, local officials
 - **Campaign Finance** - FEC campaign finance transparency
 - **Voting Records** - Congressional voting records analysis
@@ -83,6 +88,7 @@ Choices/
 - **Input Validation** - Zod schema validation
 - **Session Management** - Secure session handling
 - **Privacy Controls** - Multiple privacy levels
+- **Geolocation Safeguards** - Consent-gated resolver with quantized storage and revocation API
 - **Audit Logging** - Comprehensive logging
 
 ### 6. User Management
@@ -179,10 +185,41 @@ Choices/
 - **audit_logs** - Security and action tracking
 
 ### Civics Integration
-- **elections** - Government elections
-- **candidates** - Political candidates
-- **districts** - Geographic boundaries
-- **voter_registration** - Voter eligibility
+- **civic_jurisdictions** - Canonical OCD divisions (hierarchy + metadata)
+- **jurisdiction_aliases / tiles / geometries** - ZIP, H3 cache, and polygon storage for lookups + visualization
+- **candidate_jurisdictions** - Candidate ↔ jurisdiction mappings
+- **user_location_resolutions / location_consent_audit** - Consent-aware geolocation persistence
+- **elections / candidates / districts / voter_registration** - Domain-specific civics datasets
+
+### Browser Location Capture System (✅ IMPLEMENTED)
+The platform now includes a comprehensive browser location capture system that enables privacy-first geolocation collection and jurisdiction resolution:
+
+#### Core Components
+- **LocationInput.tsx** - Browser geolocation capture with privacy controls
+- **LocationSetupStep.tsx** - Onboarding step for location collection
+- **location-resolver.ts** - Client-side jurisdiction resolution
+- **location-resolver.server.ts** - Server-side location processing and persistence
+- **generate-jurisdictions.ts** - ETL pipeline for jurisdiction data
+
+#### Privacy & Security Features
+- **Quantized Coordinates** - Precision levels 1-10 for privacy protection
+- **Consent Tracking** - Explicit consent with timestamps and audit trails
+- **Feature Flag Gating** - `BROWSER_LOCATION_CAPTURE: true` for gradual rollout
+- **Skip Options** - Users can opt out of location collection
+- **Data Deletion** - Users can remove location data from profile settings
+
+#### Database Schema
+- **7 new tables** for canonical jurisdiction storage
+- **OCD Division IDs** - Open Civic Data standard for jurisdiction identification
+- **H3 Tile Cache** - Spatial indexing for fast lookups
+- **ZIP Code Aliases** - Legacy identifier mappings
+- **User Location Resolutions** - Quantized coordinates with consent metadata
+
+#### Integration Points
+- **Enhanced Onboarding** - Location step integrated into 9-step flow
+- **Profile Management** - Location data accessible in user profiles
+- **Civic Services** - Location data feeds into representative lookup
+- **Geographic Services** - Updated to use new OCD backbone
 
 ## Security Measures
 

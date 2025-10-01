@@ -9,16 +9,17 @@ import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
-import { 
-  User, 
-  Shield, 
-  Download, 
-  Trash2, 
-  Fingerprint, 
+import {
+  User,
+  Shield,
+  Download,
+  Trash2,
+  Fingerprint,
   AlertTriangle,
   CheckCircle,
   XCircle,
-  Info
+  Info,
+  MapPin,
 } from 'lucide-react'
 import { devLog } from '@/lib/logger'
 import BiometricSetup from '@/components/auth/BiometricSetup'
@@ -30,6 +31,17 @@ type UserProfile = {
   verificationtier: string
   createdat: string
   updatedat: string
+}
+
+type LocationSnapshot = {
+  lat: number | null
+  lon: number | null
+  precision: 'exact' | 'approximate' | 'zip' | 'city' | 'state' | 'unknown'
+  updatedAt: string | null
+  source: string | null
+  consentVersion: number | null
+  coarseHash?: string | null
+  trustGate: 'all' | 'trusted_only'
 }
 
 type BiometricCredential = {
@@ -49,12 +61,15 @@ export default function ProfilePage() {
   const [mounted, setMounted] = useState(false)
   const [biometricCredentials, setBiometricCredentials] = useState<BiometricCredential[]>([])
   const [trustScore, setTrustScore] = useState<number | null>(null)
+  const [locationMeta, setLocationMeta] = useState<LocationSnapshot | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [showExportConfirm, setShowExportConfirm] = useState(false)
   const [isExporting, setIsExporting] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [isLocationSaving, setIsLocationSaving] = useState(false)
+  const [isLocationClearing, setIsLocationClearing] = useState(false)
 
   const loadUserData = useCallback(async () => {
     try {
@@ -64,12 +79,18 @@ export default function ProfilePage() {
       }
 
       // Get user profile from API
-      const response = await fetch('/api/profile')
-      if (response.ok) {
-        const data = await response.json()
-        setProfile(data.profile)
+      const profileResponse = await fetch('/api/profile')
+      if (profileResponse.ok) {
+        const profileJson = await profileResponse.json()
+        setProfile(profileJson.profile ?? null)
       } else {
         setError('Failed to load profile data')
+      }
+
+      const locationResponse = await fetch('/api/user/profile')
+      if (locationResponse.ok) {
+        const locationJson = await locationResponse.json()
+        setLocationMeta(locationJson.location ?? null)
       }
 
       // Get biometric credentials from API
@@ -211,6 +232,101 @@ export default function ProfilePage() {
       case 'T3': return 'bg-purple-100 text-purple-800'
       case 'T4': return 'bg-red-100 text-red-800'
       default: return 'bg-gray-100 text-gray-800'
+    }
+  }
+
+  const formatCoordinate = (value: number | null) => {
+    if (typeof value !== 'number' || Number.isNaN(value)) return '—'
+    return value.toFixed(6)
+  }
+
+  const formatPrecision = (value: LocationSnapshot['precision']) => {
+    switch (value) {
+      case 'exact':
+        return 'Precise (±50m)'
+      case 'approximate':
+        return 'Approximate (±500m)'
+      case 'zip':
+        return 'ZIP-level'
+      case 'city':
+        return 'City-level'
+      case 'state':
+        return 'State-level'
+      default:
+        return 'Unknown'
+    }
+  }
+
+  const handleRefreshLocation = async () => {
+    if (!navigator.geolocation) {
+      setError('Geolocation is not supported in this browser')
+      return
+    }
+
+    setIsLocationSaving(true)
+    setError(null)
+    setSuccess(null)
+
+    navigator.geolocation.getCurrentPosition(async (position) => {
+      try {
+        const response = await fetch('/api/v1/civics/address-lookup', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            coords: {
+              lat: position.coords.latitude,
+              lon: position.coords.longitude,
+              accuracy: position.coords.accuracy ?? null,
+            },
+          }),
+        })
+
+        const data = await response.json()
+
+        if (!response.ok) {
+          throw new Error(data?.error || 'Failed to capture location')
+        }
+
+        setLocationMeta(data.location ?? null)
+        setSuccess('Location updated successfully')
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to capture location')
+      } finally {
+        setIsLocationSaving(false)
+      }
+    }, (geoError) => {
+      setIsLocationSaving(false)
+      setError(geoError.message || 'Geolocation request was denied')
+    }, {
+      enableHighAccuracy: true,
+      timeout: 10000,
+      maximumAge: 0,
+    })
+  }
+
+  const handleClearLocation = async () => {
+    setIsLocationClearing(true)
+    setError(null)
+    setSuccess(null)
+
+    try {
+      const response = await fetch('/api/v1/civics/address-lookup', {
+        method: 'DELETE',
+      })
+      const data = await response.json().catch(() => ({}))
+
+      if (!response.ok) {
+        throw new Error(data?.error || 'Failed to remove location')
+      }
+
+      setLocationMeta(null)
+      setSuccess('Stored location removed')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to remove location')
+    } finally {
+      setIsLocationClearing(false)
     }
   }
 
@@ -387,6 +503,100 @@ export default function ProfilePage() {
                   onSuccess={loadUserData}
                   onError={() => setError('Biometric setup failed')}
                 />
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Location Snapshot */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <MapPin className="h-5 w-5" />
+              Stored Location (Optional)
+            </CardTitle>
+            <CardDescription>
+              Your consented location helps personalise civic content. You can revoke it at any time.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {locationMeta ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label>Coordinates (quantised)</Label>
+                  <p className="text-sm text-gray-600 mt-1">
+                    {formatCoordinate(locationMeta.lat)}, {formatCoordinate(locationMeta.lon)}
+                  </p>
+                </div>
+                <div>
+                  <Label>Precision</Label>
+                  <p className="text-sm text-gray-600 mt-1">
+                    {formatPrecision(locationMeta.precision)}
+                  </p>
+                </div>
+                <div>
+                  <Label>Last Updated</Label>
+                  <p className="text-sm text-gray-600 mt-1">
+                    {locationMeta.updatedAt ? new Date(locationMeta.updatedAt).toLocaleString() : 'Unknown'}
+                  </p>
+                </div>
+                <div>
+                  <Label>Source</Label>
+                  <p className="text-sm text-gray-600 mt-1 capitalize">
+                    {locationMeta.source ? locationMeta.source.replace('-', ' ') : 'Unknown'}
+                  </p>
+                </div>
+                <div>
+                  <Label>Consent Version</Label>
+                  <p className="text-sm text-gray-600 mt-1">
+                    {locationMeta.consentVersion ?? '—'}
+                  </p>
+                </div>
+                <div>
+                  <Label>Trust Tier Gate</Label>
+                  <p className="text-sm text-gray-600 mt-1">
+                    {locationMeta.trustGate === 'trusted_only' ? 'Restricted to trusted cohorts' : 'Available to all cohorts'}
+                  </p>
+                </div>
+                <div className="md:col-span-2 flex flex-wrap gap-3 pt-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleRefreshLocation}
+                    disabled={isLocationSaving}
+                  >
+                    {isLocationSaving ? 'Updating…' : 'Refresh Location'}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="text-red-600 hover:text-red-700"
+                    onClick={handleClearLocation}
+                    disabled={isLocationClearing}
+                  >
+                    {isLocationClearing ? 'Removing…' : 'Remove Stored Location'}
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="rounded-lg border border-dashed border-gray-300 p-6 text-center">
+                <p className="text-sm text-gray-600">We haven’t stored a location for this profile yet.</p>
+                <p className="text-xs text-gray-500 mt-2">
+                  You can add one during onboarding or when prompted in civic experiences.
+                </p>
+                <div className="mt-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleRefreshLocation}
+                    disabled={isLocationSaving}
+                  >
+                    {isLocationSaving ? 'Requesting…' : 'Capture Current Location'}
+                  </Button>
+                </div>
               </div>
             )}
           </CardContent>

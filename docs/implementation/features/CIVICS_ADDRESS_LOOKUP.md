@@ -1,15 +1,24 @@
 # Civics Address Lookup System
 
 **Created:** 2025-01-27  
+**Updated:** 2025-10-01  
 **Status:** Production Ready ✅  
-**Feature Flag:** `CIVICS_ADDRESS_LOOKUP: true`  
-**Purpose:** Privacy-first address-based representative lookup system
+**Feature Flags:** `CIVICS_ADDRESS_LOOKUP: true`, `BROWSER_LOCATION_CAPTURE: true`  
+**Purpose:** Privacy-first address-based representative lookup system with browser location capture
 
 ---
 
 ## 🎯 **Overview**
 
-The Civics Address Lookup System provides a privacy-first way for users to discover their elected representatives by entering their address. The system uses advanced privacy techniques including HMAC hashing, geohashing, and k-anonymity to protect user location data while providing accurate representative information.
+The Civics Address Lookup System provides a privacy-first way for users to discover their elected representatives by entering their address or using browser location capture. The system uses advanced privacy techniques including HMAC hashing, geohashing, and k-anonymity to protect user location data while providing accurate representative information.
+
+### **Browser Location Capture Integration** ✅
+The system now includes browser location capture capabilities:
+- **Geolocation API** - Direct browser location access with user consent
+- **Quantized Coordinates** - Privacy-preserving coordinate precision levels
+- **Jurisdiction Resolution** - Automatic mapping to canonical OCD divisions
+- **Consent Tracking** - Explicit user consent with audit trails
+- **Skip Options** - Users can opt out of location collection
 
 ---
 
@@ -34,22 +43,25 @@ The Civics Address Lookup System provides a privacy-first way for users to disco
 ## 🏗️ **Implementation**
 
 ### **Core Components**
-- **`privacy-utils.ts`** - Privacy utilities and HMAC functions
-- **`env-guard.ts`** - Environment configuration validation
-- **`address-lookup/route.ts`** - API endpoint for address lookup
-- **`CandidateAccountabilityCard.tsx`** - Representative information display
+- **`privacy-utils.ts`** - Privacy utilities and HMAC functions (peppered HMAC, deterministic jitter)
+- **`env-guard.ts`** - Environment configuration validation (pepper sanity checks)
+- **`location-resolver.server.ts`** - Server-side resolver chaining Census → Nominatim → Google, persisting OCD-backed records to Supabase
+- **`address-lookup/route.ts`** - Authenticated API endpoint enforcing consent, rate limiting, and cookie derivation
+- **`CandidateAccountabilityCard.tsx` / `CivicsLure.tsx`** - Representative information display fed by stored OCD divisions
+- **`app/(app)/profile/page.tsx`** - Displays stored location snapshot and provides refresh/remove controls
 
 ### **Key Files**
 ```
 web/lib/civics/
 ├── privacy-utils.ts                    # Privacy utilities and HMAC
 ├── env-guard.ts                        # Environment validation
+├── location-resolver.server.ts         # Server resolver + persistence pipeline (NEW)
 ├── geographic-service.ts               # Geographic data processing
 ├── canonical-id-service.ts             # Representative ID management
 └── types.ts                           # TypeScript definitions
 
 web/app/api/v1/civics/
-├── address-lookup/route.ts             # Address lookup API
+├── address-lookup/route.ts             # Location capture API (auth + consent + rate limiting)
 ├── representative/[id]/route.ts        # Representative details
 ├── by-state/route.ts                   # State-based queries
 └── heatmap/route.ts                    # Geographic heatmaps
@@ -57,36 +69,39 @@ web/app/api/v1/civics/
 web/components/civics/
 ├── CandidateAccountabilityCard.tsx     # Representative cards
 ├── RepresentativeCard.tsx              # Basic representative info
-└── AddressLookupForm.tsx               # Address input form
+└── AddressLookupForm.tsx               # Address input form / onboarding integration
 ```
 
 ### **Database Schema**
-- **`representatives`** - Representative information
-- **`campaign_finance`** - Campaign finance data
-- **`voting_records`** - Congressional voting records
-- **`promises`** - Campaign promise tracking
-- **`jurisdictions`** - Geographic jurisdiction mapping
+- **`civic_jurisdictions`** - Canonical OCD divisions (hierarchy metadata, centroids, parents)
+- **`jurisdiction_aliases`** - ZIP/place aliases pointing to OCD IDs with confidence scores
+- **`jurisdiction_geometries`** - GeoJSON boundaries (simplified + canonical) for choropleths
+- **`jurisdiction_tiles`** - H3/S2 tile cache for heatmaps and fast lookups
+- **`candidate_jurisdictions`** - Join table linking candidates to OCD divisions and roles
+- **`user_location_resolutions`** - Quantized coordinates + consent metadata per user (revocable)
+- **`location_consent_audit`** - Immutable audit trail recording grants/revocations/updates
+- **Existing Civics Tables** - `representatives`, `campaign_finance`, `voting_records`, `promises`
 
 ---
 
 ## 🔄 **User Journey Flow**
 
 ### **Address Lookup Process**
-1. **Address Input** → User enters their address
-2. **Privacy Processing** → Address normalized and HMAC hashed
-3. **Geographic Resolution** → Coordinates converted to jurisdiction
-4. **Representative Lookup** → Representatives found for jurisdiction
-5. **Cookie Setting** → Jurisdiction data stored in signed cookie
-6. **Dashboard Integration** → Electorate-specific content displayed
+1. **Capture Request** → User submits address/ZIP or approves browser geolocation
+2. **Consent & Rate Check** → API verifies JWT, demographics consent, and 30s per-user rate limit
+3. **Resolver Chain** → Server queries Census → Nominatim → Google Civic/Geocode, falling back to ZIP alias/tiles
+4. **Persistence** → `user_location_resolutions` updated (quantized coords, hashed address, consent version) + audit log written
+5. **Jurisdiction Cookie** → Cookie derived from OCD division (state/county/district identifiers)
+6. **Downstream Consumption** → Civic & electoral services read canonical OCD IDs for personalization
 
 ### **Data Flow**
 ```
-Address Input → Normalization → HMAC Hash → Geographic Lookup → Representative Query → Cookie Storage → Dashboard Filtering
+Location Input → Consent Check → Server Resolver → Supabase Persistence + Audit → Jurisdiction Cookie → Dashboard Filtering
 ```
 
 ### **Privacy Flow**
 ```
-Raw Address → Normalize → HMAC(pepper + scope) → Geohash + Jitter → Jurisdiction ID → Signed Cookie → SSR Filtering
+Raw Address → Normalize → HMAC(pepper + scope) → Resolver (Census/Nominatim/Google) → OCD Mapping (`civic_jurisdictions`) → Signed Cookie → SSR Filtering
 ```
 
 ---
@@ -131,6 +146,7 @@ ALTERNATIVE_CANDIDATES: true
 - **`PRIVACY_PEPPER_CURRENT`** - Production pepper (high-entropy)
 - **`PRIVACY_PEPPER_PREVIOUS`** - Previous pepper (rotation support)
 - **`SESSION_SECRET`** - Cookie signing secret
+<<<<<<< HEAD
 - **`GOOGLE_CIVIC_API_KEY`** - Google Civic Information API
 - **`FEC_API_KEY`** - Federal Election Commission API
 
@@ -141,6 +157,23 @@ ALTERNATIVE_CANDIDATES: true
 - **Open States API** - State and local representatives
 - **GovTrack.us API** - Congressional data
 - **OpenSecrets API** - Campaign finance transparency
+=======
+- **`GOOGLE_CIVIC_API_KEY`** - Google Civic Information API (optional fallback)
+- **`GOOGLE_MAPS_GEOCODE_API_KEY`** - Google Geocoding fallback (optional, reused if Civic key present)
+- **`FEC_API_KEY`** - Federal Election Commission API
+
+### **API Integrations & Costs**
+- **US Census Geocoder** - Primary free geocoding (no key required)
+- **OpenStreetMap Nominatim** - Secondary free geocoding fallback (fair-use throttling)
+- **Google Civic/Geocode** - Final fallback for hard addresses (billing: $0.50 per 1,000 requests beyond free tier)
+- **Congress.gov / FEC / OpenStates / GovTrack / OpenSecrets** - Downstream civics datasets (free)
+
+### **Rate Limiting & Quota Management**
+- **Per-User Rate Limit**: One location capture every 30 seconds (enforced server-side at `/api/v1/civics/address-lookup`)
+- **Resolver Chain**: Census → Nominatim → Google to minimize paid quota usage
+- **Fallback Mechanisms**: ZIP alias table + H3 tiles when coordinates unavailable
+- **Cost Control**: Google Civic usage monitored; free providers hit first
+>>>>>>> ce50158 (feat: implement browser location capture system)
 
 ---
 
@@ -253,3 +286,5 @@ ALTERNATIVE_CANDIDATES: true
 
 **Last Updated:** 2025-01-27  
 **Next Review:** 2025-04-27 (3 months)
+- **API Response Shape** – `POST /api/v1/civics/address-lookup` returns `{ location: { lat, lon, precision, provider, jurisdictionIds, primaryOcdId, jurisdictionName, aliasConfidence, storedAt, consentVersion } }`; `DELETE` returns `{ location: null }`; `/api/user/profile` exposes a derived `location` bundle for the profile UI.
+- **API Methods** – `POST /api/v1/civics/address-lookup` captures or refreshes location; `DELETE` revokes stored coordinates, clears profile geo fields, and resets the jurisdiction cookie.

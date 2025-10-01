@@ -59,9 +59,25 @@ export async function GET(request: NextRequest) {
     // Get user profile
     const { data, error } = await supabase
       .from('user_profiles')
-      .select('id, user_id, display_name, avatar_url, bio, created_at, updated_at')
+      .select(`
+        id,
+        user_id,
+        display_name,
+        avatar_url,
+        bio,
+        created_at,
+        updated_at,
+        geo_lat,
+        geo_lon,
+        geo_precision,
+        geo_updated_at,
+        geo_source,
+        geo_consent_version,
+        geo_coarse_hash,
+        geo_trust_gate
+      `)
       .eq('user_id', String(user.userId))
-      .single();
+      .maybeSingle();
 
     if (error && error.code !== 'PGRST116') {
       devLog('Database error:', error);
@@ -71,10 +87,25 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    const profile = data || null;
+    const location = profile
+      ? {
+          lat: profile.geo_lat ?? null,
+          lon: profile.geo_lon ?? null,
+          precision: profile.geo_precision ?? 'unknown',
+          updatedAt: profile.geo_updated_at ?? null,
+          source: profile.geo_source ?? null,
+          consentVersion: profile.geo_consent_version ?? null,
+          coarseHash: profile.geo_coarse_hash ?? null,
+          trustGate: profile.geo_trust_gate ?? 'all',
+        }
+      : null;
+
     return NextResponse.json({
       success: true,
-      user: data || null,
-      hasProfile: !!data
+      user: profile,
+      hasProfile: !!profile,
+      location,
     });
 
   } catch (error) {

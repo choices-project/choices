@@ -7,6 +7,7 @@ export type StepId =
   | 'privacy'
   | 'auth'
   | 'demographics'
+  | 'location'
   | 'values'
   | 'interestSelection'
   | 'firstExperience'
@@ -22,6 +23,7 @@ export type StepSlug =
   | 'privacy'
   | 'auth-setup'
   | 'demographics'
+  | 'location-setup'
   | 'values'
   | 'interest-selection'
   | 'first-experience'
@@ -38,6 +40,7 @@ export const STEP_ID_TO_SLUG: Record<StepId, StepSlug> = {
   privacy: 'privacy',
   auth: 'auth-setup',
   demographics: 'demographics',
+  location: 'location-setup',
   values: 'values',
   interestSelection: 'interest-selection',
   firstExperience: 'first-experience',
@@ -85,6 +88,14 @@ export type StepDataMap = {
     employment?: string;
     incomeRange?: string;
     demographics?: Record<string, string>;
+  };
+
+  location: {
+    jurisdictionIds?: string[];
+    primaryOcdId?: string;
+    locationCaptured?: boolean;
+    locationSource?: 'browser' | 'manual' | 'zip';
+    locationCompleted?: boolean;
   };
 
   values: { valuesCompleted?: boolean };
@@ -172,6 +183,7 @@ export const DEFAULT_STEP_ORDER: StepSlug[] = [
   'data-usage',
   'auth-setup',
   'profile-setup',
+  'location-setup',
   'interest-selection',
   'first-experience',
   'complete',
@@ -185,6 +197,7 @@ export const STEP_LABEL: Record<StepSlug, string> = {
   'data-usage': 'Data Usage',
   'auth-setup': 'Auth Setup',
   'profile-setup': 'Profile Setup',
+  'location-setup': 'Location Setup',
   'demographics': 'Demographics',
   'values': 'Values',
   'interest-selection': 'Your Interests',

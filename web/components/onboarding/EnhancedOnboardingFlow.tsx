@@ -29,6 +29,7 @@ import DataUsageStep from './DataUsageStep';
 import DataUsageStepLite from './DataUsageStepLite';
 import AuthSetupStep from './AuthSetupStep';
 import ProfileSetupStep from './ProfileSetupStep';
+import LocationSetupStep from './LocationSetupStep';
 import InterestSelectionStep from './InterestSelectionStep';
 import FirstExperienceStep from './FirstExperienceStep';
 import CompleteStep from './CompleteStep';
@@ -528,6 +529,11 @@ function EnhancedOnboardingFlowInner() {
                 onNext={handleNext}
                 onBack={handleBack}
               />
+            </div>
+          )}
+          {currentStep === 'location-setup' && (
+            <div data-testid="location-setup-step">
+              <LocationSetupStep />
             </div>
           )}
           {currentStep === 'interest-selection' && (

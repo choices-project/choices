@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { Search, MapPin, Zap, Shield, Users } from 'lucide-react';
+import { resolveJurisdictions } from '@/lib/privacy/location-resolver';
 
 type LocationInputProps = {
   onLocationResolved: (jurisdictionIds: string[]) => void;
@@ -64,13 +65,24 @@ export default function LocationInput({ onLocationResolved, onError }: LocationI
         });
       });
 
-      const { latitude, longitude } = position.coords;
-      
-      // Resolve jurisdiction from coordinates
-      const jurisdictionIds = await resolveLocationFromCoords([longitude, latitude]);
-      onLocationResolved(jurisdictionIds);
-      
-    } catch {
+      const { latitude, longitude, accuracy } = position.coords;
+
+      const result = await resolveJurisdictions({
+        coords: {
+          lat: latitude,
+          lon: longitude,
+          accuracy,
+        },
+      });
+
+      if (!result.jurisdictionIds.length) {
+        throw new Error('Jurisdiction lookup failed');
+      }
+
+      onLocationResolved(result.jurisdictionIds);
+
+    } catch (error) {
+      console.error(error);
       onError('Could not get your location. Try entering your address instead.');
     } finally {
       setIsLoading(false);
@@ -83,39 +95,24 @@ export default function LocationInput({ onLocationResolved, onError }: LocationI
 
     setIsLoading(true);
     try {
-      let jurisdictionIds: string[] = [];
+      let result;
 
-      if (input.match(/^\d{5}(-\d{4})?$/)) {
-        // Zip code
-        jurisdictionIds = await resolveLocationFromZip(input);
+      if (input.match(/^\d{5}(?:-\d{4})?$/)) {
+        result = await resolveJurisdictions({ zipCode: input });
       } else {
-        // Address or city/state
-        jurisdictionIds = await resolveLocationFromAddress(input);
+        result = await resolveJurisdictions({ address: input });
       }
 
-      onLocationResolved(jurisdictionIds);
-    } catch {
+      if (!result.jurisdictionIds.length) {
+        throw new Error('No jurisdiction found');
+      }
+      onLocationResolved(result.jurisdictionIds);
+    } catch (error) {
+      console.error(error);
       onError('Could not find that location. Try being more specific or use your zip code.');
     } finally {
       setIsLoading(false);
     }
-  };
-
-  // Mock resolution functions - in real app these would call our location resolver
-  const resolveLocationFromCoords = async (_coords: [number, number]): Promise<string[]> => {
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    return ['ocd-division/country:us/state:ca/county:alameda'];
-  };
-
-  const resolveLocationFromZip = async (_zip: string): Promise<string[]> => {
-    await new Promise(resolve => setTimeout(resolve, 800));
-    return ['ocd-division/country:us/state:ca/county:alameda'];
-  };
-
-  const resolveLocationFromAddress = async (_address: string): Promise<string[]> => {
-    await new Promise(resolve => setTimeout(resolve, 1200));
-    return ['ocd-division/country:us/state:ca/county:alameda'];
   };
 
   return (

@@ -17,6 +17,14 @@ export type Database = {
           avatar_url?: string
           bio?: string
           is_active: boolean
+          geo_lat?: number | null
+          geo_lon?: number | null
+          geo_precision?: 'exact' | 'approximate' | 'zip' | 'city' | 'state' | 'unknown' | null
+          geo_updated_at?: string | null
+          geo_source?: string | null
+          geo_consent_version?: number | null
+          geo_coarse_hash?: string | null
+          geo_trust_gate?: 'all' | 'trusted_only' | null
         }
         Insert: {
           id?: string
@@ -29,6 +37,14 @@ export type Database = {
           avatar_url?: string
           bio?: string
           is_active?: boolean
+          geo_lat?: number | null
+          geo_lon?: number | null
+          geo_precision?: 'exact' | 'approximate' | 'zip' | 'city' | 'state' | 'unknown' | null
+          geo_updated_at?: string | null
+          geo_source?: string | null
+          geo_consent_version?: number | null
+          geo_coarse_hash?: string | null
+          geo_trust_gate?: 'all' | 'trusted_only' | null
         }
         Update: {
           id?: string
@@ -41,6 +57,14 @@ export type Database = {
           avatar_url?: string
           bio?: string
           is_active?: boolean
+          geo_lat?: number | null
+          geo_lon?: number | null
+          geo_precision?: 'exact' | 'approximate' | 'zip' | 'city' | 'state' | 'unknown' | null
+          geo_updated_at?: string | null
+          geo_source?: string | null
+          geo_consent_version?: number | null
+          geo_coarse_hash?: string | null
+          geo_trust_gate?: 'all' | 'trusted_only' | null
         }
       }
       polls: {
@@ -304,6 +328,290 @@ export type Database = {
           created_at?: string
         }
       }
+      civic_jurisdictions: {
+        Row: {
+          ocd_division_id: string
+          name: string
+          level: string
+          jurisdiction_type?: string | null
+          parent_ocd_id?: string | null
+          country_code?: string | null
+          state_code?: string | null
+          county_name?: string | null
+          city_name?: string | null
+          geo_scope?: string | null
+          centroid_lat?: number | null
+          centroid_lon?: number | null
+          bounding_box?: Record<string, unknown> | null
+          population?: number | null
+          source: string
+          last_refreshed: string
+          metadata: Record<string, unknown>
+        }
+        Insert: {
+          ocd_division_id: string
+          name: string
+          level: string
+          jurisdiction_type?: string | null
+          parent_ocd_id?: string | null
+          country_code?: string | null
+          state_code?: string | null
+          county_name?: string | null
+          city_name?: string | null
+          geo_scope?: string | null
+          centroid_lat?: number | null
+          centroid_lon?: number | null
+          bounding_box?: Record<string, unknown> | null
+          population?: number | null
+          source?: string
+          last_refreshed?: string
+          metadata?: Record<string, unknown>
+        }
+        Update: {
+          ocd_division_id?: string
+          name?: string
+          level?: string
+          jurisdiction_type?: string | null
+          parent_ocd_id?: string | null
+          country_code?: string | null
+          state_code?: string | null
+          county_name?: string | null
+          city_name?: string | null
+          geo_scope?: string | null
+          centroid_lat?: number | null
+          centroid_lon?: number | null
+          bounding_box?: Record<string, unknown> | null
+          population?: number | null
+          source?: string
+          last_refreshed?: string
+          metadata?: Record<string, unknown>
+        }
+      }
+      jurisdiction_aliases: {
+        Row: {
+          id: string
+          alias_type: 'zip' | 'place' | 'district' | 'legacy' | 'custom'
+          alias_value: string
+          normalized_value?: string | null
+          ocd_division_id: string
+          confidence: number | null
+          source: string
+          last_refreshed: string
+          metadata: Record<string, unknown>
+        }
+        Insert: {
+          id?: string
+          alias_type: 'zip' | 'place' | 'district' | 'legacy' | 'custom'
+          alias_value: string
+          normalized_value?: string | null
+          ocd_division_id: string
+          confidence?: number | null
+          source?: string
+          last_refreshed?: string
+          metadata?: Record<string, unknown>
+        }
+        Update: {
+          id?: string
+          alias_type?: 'zip' | 'place' | 'district' | 'legacy' | 'custom'
+          alias_value?: string
+          normalized_value?: string | null
+          ocd_division_id?: string
+          confidence?: number | null
+          source?: string
+          last_refreshed?: string
+          metadata?: Record<string, unknown>
+        }
+      }
+      jurisdiction_geometries: {
+        Row: {
+          ocd_division_id: string
+          geometry: Record<string, unknown>
+          geometry_format: string
+          simplified_geometry?: Record<string, unknown> | null
+          area_sq_km?: number | null
+          perimeter_km?: number | null
+          source: string
+          last_refreshed: string
+          metadata: Record<string, unknown>
+        }
+        Insert: {
+          ocd_division_id: string
+          geometry: Record<string, unknown>
+          geometry_format?: string
+          simplified_geometry?: Record<string, unknown> | null
+          area_sq_km?: number | null
+          perimeter_km?: number | null
+          source: string
+          last_refreshed?: string
+          metadata?: Record<string, unknown>
+        }
+        Update: {
+          ocd_division_id?: string
+          geometry?: Record<string, unknown>
+          geometry_format?: string
+          simplified_geometry?: Record<string, unknown> | null
+          area_sq_km?: number | null
+          perimeter_km?: number | null
+          source?: string
+          last_refreshed?: string
+          metadata?: Record<string, unknown>
+        }
+      }
+      jurisdiction_tiles: {
+        Row: {
+          ocd_division_id: string
+          h3_index: string
+          resolution: number
+          source: string
+          created_at: string
+          metadata: Record<string, unknown>
+        }
+        Insert: {
+          ocd_division_id: string
+          h3_index: string
+          resolution: number
+          source?: string
+          created_at?: string
+          metadata?: Record<string, unknown>
+        }
+        Update: {
+          ocd_division_id?: string
+          h3_index?: string
+          resolution?: number
+          source?: string
+          created_at?: string
+          metadata?: Record<string, unknown>
+        }
+      }
+      candidate_jurisdictions: {
+        Row: {
+          id: string
+          candidate_id: string
+          ocd_division_id: string
+          role: 'represents' | 'running_for' | 'former' | 'candidate'
+          effective_from?: string | null
+          effective_to?: string | null
+          source: string
+          metadata: Record<string, unknown>
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          candidate_id: string
+          ocd_division_id: string
+          role: 'represents' | 'running_for' | 'former' | 'candidate'
+          effective_from?: string | null
+          effective_to?: string | null
+          source: string
+          metadata?: Record<string, unknown>
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          candidate_id?: string
+          ocd_division_id?: string
+          role?: 'represents' | 'running_for' | 'former' | 'candidate'
+          effective_from?: string | null
+          effective_to?: string | null
+          source?: string
+          metadata?: Record<string, unknown>
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      user_location_resolutions: {
+        Row: {
+          id: string
+          user_id: string
+          address_hash?: string | null
+          resolved_ocd_id?: string | null
+          lat_q11?: number | null
+          lon_q11?: number | null
+          accuracy_m?: number | null
+          geo_precision: 'exact' | 'approximate' | 'zip' | 'city' | 'state' | 'unknown'
+          source: 'browser' | 'manual' | 'import' | 'support'
+          consent_version: number
+          consent_scope?: string | null
+          coarse_hash?: string | null
+          captured_at: string
+          expires_at?: string | null
+          revoked_at?: string | null
+          metadata: Record<string, unknown>
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          address_hash?: string | null
+          resolved_ocd_id?: string | null
+          lat_q11?: number | null
+          lon_q11?: number | null
+          accuracy_m?: number | null
+          geo_precision: 'exact' | 'approximate' | 'zip' | 'city' | 'state' | 'unknown'
+          source: 'browser' | 'manual' | 'import' | 'support'
+          consent_version?: number
+          consent_scope?: string | null
+          coarse_hash?: string | null
+          captured_at?: string
+          expires_at?: string | null
+          revoked_at?: string | null
+          metadata?: Record<string, unknown>
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          address_hash?: string | null
+          resolved_ocd_id?: string | null
+          lat_q11?: number | null
+          lon_q11?: number | null
+          accuracy_m?: number | null
+          geo_precision?: 'exact' | 'approximate' | 'zip' | 'city' | 'state' | 'unknown'
+          source?: 'browser' | 'manual' | 'import' | 'support'
+          consent_version?: number
+          consent_scope?: string | null
+          coarse_hash?: string | null
+          captured_at?: string
+          expires_at?: string | null
+          revoked_at?: string | null
+          metadata?: Record<string, unknown>
+        }
+      }
+      location_consent_audit: {
+        Row: {
+          id: string
+          user_id: string
+          resolution_id?: string | null
+          action: 'granted' | 'revoked' | 'deleted' | 'regranted'
+          scope: string
+          actor: 'user' | 'system' | 'admin'
+          reason?: string | null
+          created_at: string
+          metadata: Record<string, unknown>
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          resolution_id?: string | null
+          action: 'granted' | 'revoked' | 'deleted' | 'regranted'
+          scope: string
+          actor?: 'user' | 'system' | 'admin'
+          reason?: string | null
+          created_at?: string
+          metadata?: Record<string, unknown>
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          resolution_id?: string | null
+          action?: 'granted' | 'revoked' | 'deleted' | 'regranted'
+          scope?: string
+          actor?: 'user' | 'system' | 'admin'
+          reason?: string | null
+          created_at?: string
+          metadata?: Record<string, unknown>
+        }
+      }
       // webauthn_credentials: Removed - not ready for production
       error_logs: {
         Row: {
@@ -419,5 +727,12 @@ export type PrivacyLog = Database['public']['Tables']['privacy_logs']['Row']
 export type UserProfileEncrypted = Database['public']['Tables']['user_profiles_encrypted']['Row']
 export type PrivateUserData = Database['public']['Tables']['private_user_data']['Row']
 export type AnalyticsContribution = Database['public']['Tables']['analytics_contributions']['Row']
+export type CivicJurisdiction = Database['public']['Tables']['civic_jurisdictions']['Row']
+export type JurisdictionAlias = Database['public']['Tables']['jurisdiction_aliases']['Row']
+export type JurisdictionGeometry = Database['public']['Tables']['jurisdiction_geometries']['Row']
+export type JurisdictionTile = Database['public']['Tables']['jurisdiction_tiles']['Row']
+export type CandidateJurisdiction = Database['public']['Tables']['candidate_jurisdictions']['Row']
+export type UserLocationResolution = Database['public']['Tables']['user_location_resolutions']['Row']
+export type LocationConsentRecord = Database['public']['Tables']['location_consent_audit']['Row']
 export type DemographicAnalytics = Database['public']['Views']['demographic_analytics']['Row']
 // export type WebAuthnCredential = Database['public']['Tables']['webauthn_credentials']['Row'] // Removed - not ready

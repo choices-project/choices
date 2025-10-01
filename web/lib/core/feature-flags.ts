@@ -28,7 +28,8 @@ export const FEATURE_FLAGS = {
   CANDIDATE_ACCOUNTABILITY: true,    // Promise tracking and performance metrics (IMPLEMENTED)
   CANDIDATE_CARDS: true,             // Comprehensive candidate information cards (2 candidates)
   ALTERNATIVE_CANDIDATES: true,      // Platform for non-duopoly candidates (IMPLEMENTED)
-  
+  BROWSER_LOCATION_CAPTURE: true,    // Browser geolocation capture and persistence (IMPLEMENTED)
+
   // ===== FUTURE FEATURES (Development Required) =====
   AUTOMATED_POLLS: false,            // AI-powered poll generation from trending topics
   ADVANCED_PRIVACY: false,           // Zero-knowledge proofs and differential privacy (PARTIALLY IMPLEMENTED - 30%)
@@ -148,7 +149,7 @@ function categorizeFlag(flagId: string): string {
     enhanced: ['ENHANCED_ONBOARDING', 'ENHANCED_PROFILE', 'ENHANCED_AUTH', 'ENHANCED_DASHBOARD', 'ENHANCED_POLLS', 'ENHANCED_VOTING'],
     
     // Future features requiring development
-    future: ['AUTOMATED_POLLS', 'ADVANCED_PRIVACY', 'CIVICS_ADDRESS_LOOKUP', 'SOCIAL_SHARING', 'SOCIAL_SHARING_POLLS', 'SOCIAL_SHARING_CIVICS', 'SOCIAL_SHARING_VISUAL', 'SOCIAL_SHARING_OG', 'SOCIAL_SIGNUP'],
+    future: ['AUTOMATED_POLLS', 'ADVANCED_PRIVACY', 'CIVICS_ADDRESS_LOOKUP', 'BROWSER_LOCATION_CAPTURE', 'SOCIAL_SHARING', 'SOCIAL_SHARING_POLLS', 'SOCIAL_SHARING_CIVICS', 'SOCIAL_SHARING_VISUAL', 'SOCIAL_SHARING_OG', 'SOCIAL_SIGNUP'],
     
     // Performance and optimization
     performance: ['PERFORMANCE_OPTIMIZATION', 'FEATURE_DB_OPTIMIZATION_SUITE', 'ANALYTICS'],
