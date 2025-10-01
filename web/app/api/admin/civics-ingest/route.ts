@@ -16,11 +16,13 @@ import { requireAdminOr401 } from '@/lib/admin-auth';
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SECRET_KEY!,
-  { auth: { persistSession: false } }
-);
+function getSupabaseClient() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SECRET_KEY!,
+    { auth: { persistSession: false } }
+  );
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -49,6 +51,7 @@ export async function POST(request: NextRequest) {
     // Check if we should force refresh or use cached data
     if (!forceRefresh) {
       // Check for recent data (within last 24 hours)
+      const supabase = getSupabaseClient();
       const { data: recentData } = await supabase
         .from('civics_representatives')
         .select('*')
@@ -118,6 +121,7 @@ export async function GET(_request: NextRequest) {
     if (adminCheck) return adminCheck;
 
     // Return ingest status and statistics
+    const supabase = getSupabaseClient();
     const { data: stats, error } = await supabase
       .from('civics_representatives')
       .select('source, created_at')
@@ -217,6 +221,7 @@ async function storeCivicsData(data: any, source: string) {
   const { representatives, divisions, ..._metadata } = data;
   
   let storedCount = 0;
+  const supabase = getSupabaseClient();
   
   // Store representatives
   if (representatives && representatives.length > 0) {
