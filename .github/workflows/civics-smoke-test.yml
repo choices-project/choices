@@ -54,6 +54,9 @@ jobs:
           SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY || 'dev-only-secret' }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY || 'dev-only-secret' }}
           PRIVACY_PEPPER_CURRENT: ${{ secrets.PRIVACY_PEPPER_CURRENT || 'base64:fake-pepper-for-ci-only-this-is-a-very-long-fake-pepper-value-that-meets-the-32-byte-minimum-requirement-for-testing-purposes-only' }}
+          # Additional environment variables for Supabase client initialization
+          SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || 'https://example.supabase.co' }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_SECRET_KEY || 'dev-only-secret' }}
 
       - name: Start application
         run: |
@@ -63,6 +66,14 @@ jobs:
         env:
           NODE_ENV: production
           PORT: 3001
+          # Environment variables for runtime
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || 'https://example.supabase.co' }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'fake-dev-key-for-ci-only' }}
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY || 'dev-only-secret' }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY || 'dev-only-secret' }}
+          PRIVACY_PEPPER_CURRENT: ${{ secrets.PRIVACY_PEPPER_CURRENT || 'base64:fake-pepper-for-ci-only-this-is-a-very-long-fake-pepper-value-that-meets-the-32-byte-minimum-requirement-for-testing-purposes-only' }}
+          SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || 'https://example.supabase.co' }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_SECRET_KEY || 'dev-only-secret' }}
 
       - name: Health Check
         run: |
