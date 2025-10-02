@@ -3,11 +3,13 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SECRET_KEY!,
-  { auth: { persistSession: false } }
-);
+function getSupabaseClient() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SECRET_KEY!,
+    { auth: { persistSession: false } }
+  );
+}
 
 type RepresentativeResponse = {
   id: string;
@@ -54,6 +56,7 @@ export async function GET(
     const representativeId = params.id;
 
     // Get base representative data
+    const supabase = getSupabaseClient();
     const { data: rep, error: repError } = await supabase
       .from('civics_representatives')
       .select(`

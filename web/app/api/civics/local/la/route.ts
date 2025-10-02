@@ -4,11 +4,13 @@ import { createClient } from '@supabase/supabase-js';
 // Force dynamic rendering for this route
 export const dynamic = 'force-dynamic';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SECRET_KEY!,
-  { auth: { persistSession: false } }
-);
+function getSupabaseClient() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SECRET_KEY!,
+    { auth: { persistSession: false } }
+  );
+}
 
 export async function GET() {
   try {
@@ -24,6 +26,7 @@ export async function GET() {
     
     console.log('🏙️ Fetching Los Angeles local representatives...');
     
+    const supabase = getSupabaseClient();
     const { data: representatives, error } = await supabase
       .from('civics_representatives')
       .select('*')

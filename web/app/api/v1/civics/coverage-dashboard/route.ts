@@ -26,11 +26,13 @@ type FreshnessData = {
   stale: number;
 };
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SECRET_KEY!,
-  { auth: { persistSession: false } }
-);
+function getSupabaseClient() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SECRET_KEY!,
+    { auth: { persistSession: false } }
+  );
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -38,6 +40,7 @@ export async function GET(request: NextRequest) {
     console.log(`Coverage dashboard requested from: ${request.headers.get('user-agent') || 'unknown'}`);
     
     // Get coverage by source
+    const supabase = getSupabaseClient();
     const { data: coverageData, error: coverageError } = await supabase
       .from('civics_representatives')
       .select('level, source, jurisdiction, last_updated')

@@ -1,13 +1,29 @@
 # Test Helpers Documentation
 
 ## Overview
-This directory contains the comprehensive Supabase mock factory and testing utilities for unit tests.
+This directory contains the comprehensive Supabase mock factory and testing utilities for unit tests, integration tests, and E2E tests. The testing philosophy is to guide how the system should work, not just conform to current state.
 
 ## Files
 - `supabase-mock.ts` - Main mock factory with chaining support
 - `supabase-when.ts` - when() DSL for 1-line test arrangements
 - `arrange-helpers.ts` - Domain-specific helpers for common patterns
 - `reset-mocks.ts` - Reset utilities for clean test isolation
+
+## New Test Implementations
+
+### Location Capture Testing
+- **Unit Tests**: `tests/unit/location-resolver.test.ts` - Comprehensive location resolution testing
+- **Database Tests**: `tests/unit/location-database.test.ts` - Database integration for location data
+- **Privacy Tests**: `tests/unit/privacy-features.test.ts` - Privacy-first feature testing
+- **Component Tests**: `tests/components/LocationSetupStep.test.tsx` - Location setup component testing
+- **E2E Tests**: `tests/e2e/browser-location-capture.spec.ts` - Complete user journey testing
+
+### Test Coverage Areas
+- **Privacy Enforcement**: Coordinate quantization, HMAC hashing, k-anonymity
+- **User Experience**: Error handling, fallback mechanisms, mobile compatibility
+- **Data Integrity**: Database operations, consent tracking, data retention
+- **Security**: Input validation, rate limiting, audit trails
+- **Performance**: Network handling, database efficiency, user interactions
 
 ## Quick Start
 
@@ -130,6 +146,7 @@ expectOnlyTablesCalled(handles, ['polls','votes']);
 ### RPC args mismatch
 - DSL compares JSON strings
 - Pass same normalized shape in both places
+
 
 
 

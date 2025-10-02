@@ -14,6 +14,27 @@ E2E tests are fundamentally different from unit tests. They test complete user j
 4. **Performance Optimization** - Faster test execution with proper setup
 5. **Reliability Improvements** - More robust test patterns
 
+## 🆕 **New Browser Location Capture E2E Tests**
+
+### **Comprehensive Location Testing**
+The new `browser-location-capture.spec.ts` provides complete E2E testing for:
+
+- **Geolocation API Integration** - Real browser geolocation testing
+- **Address Input Fallback** - Manual address entry testing
+- **Privacy and Consent** - Privacy notice and consent flow testing
+- **Feature Flag Integration** - Feature enable/disable testing
+- **Mobile Experience** - Mobile-specific location capture testing
+- **Data Persistence** - Location data storage and retrieval
+- **Error Recovery** - Graceful error handling and retry mechanisms
+
+### **Test Coverage Areas**
+- **User Journey**: Complete location capture flow from start to finish
+- **Privacy Compliance**: Ensures privacy notices and consent are properly displayed
+- **Error Handling**: Tests geolocation permission denial, timeouts, and network errors
+- **Mobile Compatibility**: Tests mobile-specific geolocation behavior
+- **Data Integrity**: Verifies location data is properly stored and retrieved
+- **Performance**: Ensures location capture doesn't impact user experience
+
 ## 🏗️ **E2E V2 Architecture**
 
 ### **Core Components**
@@ -26,6 +47,8 @@ tests/e2e/helpers/
 tests/e2e/
 ├── enhanced-voting-v2.spec.ts    # Example V2 E2E test
 ├── user-journeys-v2.spec.ts      # Example V2 E2E test
+├── browser-location-capture.spec.ts  # Browser location capture E2E tests
+├── civics-address-lookup.spec.ts     # Address lookup E2E tests
 └── [other V2 upgraded tests]     # All E2E tests upgraded to V2
 ```
 

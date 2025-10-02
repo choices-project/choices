@@ -5,11 +5,13 @@ import { createClient } from '@supabase/supabase-js';
 // Force dynamic rendering since we use nextUrl.searchParams
 export const dynamic = 'force-dynamic';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SECRET_KEY!,
-  { auth: { persistSession: false } }
-);
+function getSupabaseClient() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SECRET_KEY!,
+    { auth: { persistSession: false } }
+  );
+}
 
 export async function GET(req: NextRequest) {
   try {
@@ -21,6 +23,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'State parameter required' }, { status: 400 });
     }
 
+    const supabase = getSupabaseClient();
     let query = supabase
       .from('civics_representatives')
       .select(`

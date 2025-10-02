@@ -2,9 +2,12 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SECRET_KEY!, { auth: { persistSession: false } });
+function getSupabaseClient() {
+  return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SECRET_KEY!, { auth: { persistSession: false } });
+}
 
 export async function GET() {
+  const supabase = getSupabaseClient();
   const { data, error } = await supabase
     .from('civics_representatives')
     .select('name,party,office,contact,ocd_division_id')

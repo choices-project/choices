@@ -1,11 +1,13 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SECRET_KEY!,
-  { auth: { persistSession: false } }
-);
+function getSupabaseClient() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SECRET_KEY!,
+    { auth: { persistSession: false } }
+  );
+}
 
 export async function GET(
   request: NextRequest,
@@ -24,6 +26,7 @@ export async function GET(
     console.log(`📞 Fetching contact information for representative ID: ${representativeId}`);
 
     // Get representative basic information
+    const supabase = getSupabaseClient();
     const { data: representative, error: repError } = await supabase
       .from('civics_representatives')
       .select('id, name, office, level, jurisdiction, party')
@@ -213,6 +216,7 @@ export async function POST(
     }
 
     // Log the communication attempt
+    const supabase = getSupabaseClient();
     const { data: logEntry, error: logError } = await supabase
       .from('civics_communication_log')
       .insert({
