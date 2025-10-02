@@ -20,7 +20,9 @@ export async function GET(req: NextRequest) {
     const chamber = req.nextUrl.searchParams.get('chamber'); // 'us_senate' | 'us_house' | 'state_upper' | 'state_lower'
 
     if (!state) {
-      return NextResponse.json({ error: 'State parameter required' }, { status: 400 });
+      const response = NextResponse.json({ error: 'State parameter required' }, { status: 400 });
+      response.headers.set('Access-Control-Allow-Origin', '*');
+      return response;
     }
 
     const supabase = getSupabaseClient();
@@ -51,20 +53,23 @@ export async function GET(req: NextRequest) {
 
     if (error) {
       console.error('Database error:', error);
-      return NextResponse.json({ error: 'Database error' }, { status: 500 });
+      const response = NextResponse.json({ error: 'Database error' }, { status: 500 });
+      response.headers.set('Access-Control-Allow-Origin', '*');
+      return response;
     }
 
-    return NextResponse.json({ 
-      ok: true, 
-      data: data || [],
-      count: data.length || 0
-    });
+    const response = NextResponse.json(data || [], { status: 200 });
+    response.headers.set('Access-Control-Allow-Origin', '*');
+    response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    return response;
   } catch (e: any) {
     console.error('API error:', e);
-    return NextResponse.json({ 
-      ok: false, 
+    const response = NextResponse.json({ 
       error: 'Service temporarily unavailable' 
     }, { status: 502 });
+    response.headers.set('Access-Control-Allow-Origin', '*');
+    return response;
   }
 }
 

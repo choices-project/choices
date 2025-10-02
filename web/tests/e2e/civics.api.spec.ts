@@ -11,6 +11,9 @@ test.describe('Civics API Tests', () => {
       const data = await response.json()
       expect(data).toHaveProperty('status')
       expect(data.status).toBe('ok')
+      
+      // Check CORS headers
+      expect(response.headers()['access-control-allow-origin']).toBe('*')
     })
 
     test('GET /api/health/civics should return 200', async ({ request }) => {
@@ -23,12 +26,24 @@ test.describe('Civics API Tests', () => {
   })
 
   test.describe('Civics Representatives Endpoints', () => {
-    test('GET /api/civics/by-state should return 200', async ({ request }) => {
+    test('GET /api/civics/by-state should return 400 without state parameter', async ({ request }) => {
       const response = await request.get(`${baseURL}/api/civics/by-state`)
+      expect(response.status()).toBe(400)
+      
+      const data = await response.json()
+      expect(data).toHaveProperty('error')
+      expect(data.error).toBe('State parameter required')
+    })
+
+    test('GET /api/civics/by-state should return 200 with state parameter', async ({ request }) => {
+      const response = await request.get(`${baseURL}/api/civics/by-state?state=CA`)
       expect(response.status()).toBe(200)
       
       const data = await response.json()
       expect(Array.isArray(data)).toBe(true)
+      
+      // Check CORS headers
+      expect(response.headers()['access-control-allow-origin']).toBe('*')
     })
 
     test('GET /api/civics/local/la should return 200', async ({ request }) => {

@@ -62,19 +62,20 @@ export async function GET(request: NextRequest) {
       created_at: new Date().toISOString(), // Generic timestamp
     })) || [];
 
-    return NextResponse.json({
-      success: true,
-      polls: sanitizedPolls,
-      count: sanitizedPolls.length,
-      message: 'Aggregated poll results only - no individual vote data'
-    });
+    const response = NextResponse.json(sanitizedPolls, { status: 200 });
+    response.headers.set('Access-Control-Allow-Origin', '*');
+    response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    return response;
 
   } catch (error) {
     devLog('Error in polls API:', error);
-    return NextResponse.json(
+    const response = NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
     );
+    response.headers.set('Access-Control-Allow-Origin', '*');
+    return response;
   }
 }
 
@@ -267,13 +268,19 @@ export async function POST(request: NextRequest) {
       created_at: poll.created_at
     } : null;
 
-    return NextResponse.json(sanitizedPoll);
+    const response = NextResponse.json(sanitizedPoll, { status: 201 });
+    response.headers.set('Access-Control-Allow-Origin', '*');
+    response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    return response;
 
   } catch (error) {
     devLog('Error in polls API:', error);
-    return NextResponse.json(
+    const response = NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
     );
+    response.headers.set('Access-Control-Allow-Origin', '*');
+    return response;
   }
 }

@@ -7,6 +7,13 @@ test.describe('General API Tests', () => {
     test('GET /api/auth/me should return 401 when not authenticated', async ({ request }) => {
       const response = await request.get(`${baseURL}/api/auth/me`)
       expect(response.status()).toBe(401)
+      
+      const data = await response.json()
+      expect(data).toHaveProperty('error')
+      expect(data.error).toBe('Not authenticated')
+      
+      // Check CORS headers
+      expect(response.headers()['access-control-allow-origin']).toBe('*')
     })
 
     test('POST /api/auth/login should return 400 with invalid credentials', async ({ request }) => {
@@ -37,6 +44,10 @@ test.describe('General API Tests', () => {
       
       const data = await response.json()
       expect(data).toHaveProperty('status')
+      expect(data.status).toBe('ok')
+      
+      // Check CORS headers
+      expect(response.headers()['access-control-allow-origin']).toBe('*')
     })
 
     test('GET /api/stats/public should return 200', async ({ request }) => {
@@ -64,6 +75,9 @@ test.describe('General API Tests', () => {
       
       const data = await response.json()
       expect(Array.isArray(data)).toBe(true)
+      
+      // Check CORS headers
+      expect(response.headers()['access-control-allow-origin']).toBe('*')
     })
 
     test('GET /api/polls/trending should return 200', async ({ request }) => {

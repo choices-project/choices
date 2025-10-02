@@ -10,10 +10,12 @@ export async function GET() {
     const supabase = getSupabaseServerClient()
     
     if (!supabase) {
-      return NextResponse.json(
+      const response = NextResponse.json(
         { error: 'Database connection not available' },
         { status: 500 }
-      )
+      );
+      response.headers.set('Access-Control-Allow-Origin', '*');
+      return response;
     }
 
     const supabaseClient = await supabase
@@ -22,10 +24,12 @@ export async function GET() {
     const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession()
     
     if (sessionError || !session?.user) {
-      return NextResponse.json(
+      const response = NextResponse.json(
         { error: 'Not authenticated' },
         { status: 401 }
-      )
+      );
+      response.headers.set('Access-Control-Allow-Origin', '*');
+      return response;
     }
 
     // Get user profile from user_profiles table
@@ -37,13 +41,15 @@ export async function GET() {
 
     if (profileError || !profile) {
       logger.warn('User profile not found', { userId: session.user.id })
-      return NextResponse.json(
+      const response = NextResponse.json(
         { error: 'User profile not found' },
         { status: 404 }
-      )
+      );
+      response.headers.set('Access-Control-Allow-Origin', '*');
+      return response;
     }
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       success: true,
       user: {
         id: session.user.id,
@@ -55,13 +61,19 @@ export async function GET() {
         bio: profile.bio,
         is_active: profile.is_active
       }
-    })
+    }, { status: 200 });
+    response.headers.set('Access-Control-Allow-Origin', '*');
+    response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    return response;
 
   } catch (error) {
     logger.error('Error getting current user', error instanceof Error ? error : new Error(String(error)))
-    return NextResponse.json(
+    const response = NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
-    )
+    );
+    response.headers.set('Access-Control-Allow-Origin', '*');
+    return response;
   }
 }
