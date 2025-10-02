@@ -16,7 +16,7 @@ import { verifyAuthToken } from '@/lib/core/auth/utils';
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
 import { logWarn } from '@/lib/logger';
 
-assertPepperConfig();
+// assertPepperConfig(); // Moved to route handlers to avoid build-time execution
 
 const RATE_LIMIT_WINDOW_MS = 30_000;
 
@@ -34,6 +34,9 @@ type AddressLookupRequest = {
 };
 
 export async function POST(request: Request) {
+  // Assert pepper configuration at runtime, not build time
+  assertPepperConfig();
+  
   if (!isFeatureEnabled('CIVICS_ADDRESS_LOOKUP') || !isFeatureEnabled('BROWSER_LOCATION_CAPTURE')) {
     return NextResponse.json({ error: 'Location capture is disabled' }, { status: 404 });
   }
