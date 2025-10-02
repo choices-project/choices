@@ -1,5 +1,4 @@
 import type { Metadata } from 'next'
-import './globals.css'
 
 export const metadata: Metadata = {
   title: 'Choices Platform - Democratic Decision Making',
@@ -19,11 +18,9 @@ export default function LandingLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
-      <body>
-        {/* No providers - keep landing bundle pure */}
-        {children}
-      </body>
-    </html>
+    <div className="landing-layout">
+      {/* No providers - keep landing bundle pure */}
+      {children}
+    </div>
   )
 }
