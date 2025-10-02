@@ -64,7 +64,7 @@ test.describe('Civics API Tests', () => {
 
     test('GET /api/civics/representative/[id] should return 200 for valid ID', async ({ request }) => {
       // First get a list of representatives to find a valid ID
-      const listResponse = await request.get(`${baseURL}/api/civics/by-state`)
+      const listResponse = await request.get(`${baseURL}/api/civics/by-state?state=CA`)
       expect(listResponse.status()).toBe(200)
       
       const representatives = await listResponse.json()
@@ -85,7 +85,7 @@ test.describe('Civics API Tests', () => {
 
   test.describe('V1 Civics API Endpoints', () => {
     test('GET /api/v1/civics/by-state should return 200', async ({ request }) => {
-      const response = await request.get(`${baseURL}/api/v1/civics/by-state`)
+      const response = await request.get(`${baseURL}/api/v1/civics/by-state?state=CA`)
       expect(response.status()).toBe(200)
       
       const data = await response.json()
