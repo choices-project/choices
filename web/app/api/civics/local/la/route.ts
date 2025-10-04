@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { isFeatureEnabled } from '@/lib/core/feature-flags';
 
 // Force dynamic rendering for this route
 export const dynamic = 'force-dynamic';
@@ -26,7 +27,23 @@ export async function GET() {
     
     const { data: representatives, error } = await supabase
       .from('civics_representatives')
-      .select('*')
+      .select(`
+        id,
+        name,
+        party,
+        office,
+        level,
+        jurisdiction,
+        district,
+        ocd_division_id,
+        external_id,
+        source,
+        data_origin,
+        valid_from,
+        valid_to,
+        created_at,
+        last_updated
+      `)
       .eq('level', 'local')
       .eq('jurisdiction', 'Los Angeles, CA')
       .order('office', { ascending: true });
@@ -64,11 +81,11 @@ export async function GET() {
       jurisdiction: rep.jurisdiction,
       district: rep.office.includes('District') ? 
         rep.office.match(/District (\d+)/)?.[1] || null : null,
-      contact: rep.contact || null,
-      data_source: rep.data_source || 'manual_verification_la',
-      last_verified: rep.last_verified || null,
-      data_quality_score: rep.data_quality_score || 100,
-      verification_notes: rep.verification_notes || 'Manually verified current LA official'
+      ...(isFeatureEnabled('CIVICS_REPRESENTATIVE_DATABASE') && {
+        last_verified: (rep as any).last_verified || null,
+        data_quality_score: (rep as any).data_quality_score || 100,
+        verification_notes: (rep as any).verification_notes || 'Manually verified current LA official'
+      })
     }));
     
     console.log(`✅ Found ${representatives.length} LA local representatives`);

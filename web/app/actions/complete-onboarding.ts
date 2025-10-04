@@ -9,10 +9,6 @@ import {
   getAuthenticatedUser,
   type ServerActionContext
 } from '@/lib/core/auth/server-actions'
-import { 
-  rotateSessionToken,
-  setSessionCookie 
-} from '@/lib/core/auth/session-cookies'
 
 // Validation schema
 const OnboardingSchema = z.object({
@@ -27,11 +23,7 @@ export async function completeOnboardingAction(formData: FormData) {
   console.log('FormData entries:', Object.fromEntries(formData.entries()));
   console.log('E2E environment:', process.env.E2E);
   
-  // --- E2E isolation: prove redirect mechanics first
-  if (process.env.E2E === 'true') {
-    console.log('E2E bypass: redirecting to dashboard');
-    redirect('/dashboard'); // 303; throws to short-circuit the action
-  }
+  // Always use real authentication - no E2E bypasses
   
   // For production, we'll add the full implementation here
   console.log('Production path not implemented yet');
@@ -47,11 +39,7 @@ export const completeOnboarding = createSecureServerAction(
     console.log('FormData keys:', Array.from(formData.keys()));
     console.log('FormData values:', Array.from(formData.values()));
     
-    // --- E2E isolation: prove redirect mechanics first
-    if (process.env.E2E === 'true') {
-      console.log('E2E bypass: redirecting to dashboard');
-      redirect('/dashboard'); // 303; throws to short-circuit the action
-    }
+    // Always use real authentication - no E2E bypasses
     
     const supabase = getSupabaseServerClient();
     
@@ -90,19 +78,9 @@ export const completeOnboarding = createSecureServerAction(
       throw new Error('Failed to complete onboarding')
     }
 
-    // Rotate session token after privilege change (onboarding completion)
-    const newSessionToken = rotateSessionToken(
-      user.userId,
-      user.userRole,
-      user.userId
-    )
-
-    // Set secure session cookie
-    setSessionCookie(newSessionToken, {
-      maxAge: 60 * 60 * 24 * 7, // 1 week
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax'
-    })
+    // Use Supabase native session management
+    // Supabase handles session cookies automatically
+    // No need for custom JWT session tokens
 
     // Authoritative redirect from server action
     console.log('Onboarding completed successfully, redirecting to dashboard');

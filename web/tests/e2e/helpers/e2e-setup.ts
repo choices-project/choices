@@ -5,11 +5,14 @@
  * This allows E2E tests to use the V2 mock factory for database preparation
  * while still testing real user flows in the browser.
  * 
+ * CRITICAL: Includes email mocking to prevent Supabase email bounces!
+ * 
  * Created: January 21, 2025
- * Updated: January 21, 2025
+ * Updated: January 27, 2025
  */
 
 import type { Page } from '@playwright/test';
+import { setupEmailMocking, createValidTestEmail } from './email-mocking';
 
 export type E2ETestUser = {
   email: string;
@@ -19,6 +22,7 @@ export type E2ETestUser = {
 }
 
 export type E2ETestPoll = {
+  id?: string;
   title: string;
   description: string;
   options: string[];
@@ -72,11 +76,12 @@ export async function cleanupE2ETestData(_testData: E2ETestData): Promise<void> 
 
 /**
  * Create a test user with realistic data
+ * CRITICAL: Uses valid test email addresses to prevent Supabase bounces
  */
 export function createTestUser(overrides: Partial<E2ETestUser> = {}): E2ETestUser {
   const timestamp = Date.now();
   return Object.assign({
-    email: `test-${timestamp}@example.com`,
+    email: createValidTestEmail(`test-${timestamp}`),
     username: `testuser${timestamp}`,
     password: 'TestPassword123!',
   }, overrides);
@@ -88,6 +93,7 @@ export function createTestUser(overrides: Partial<E2ETestUser> = {}): E2ETestUse
 export function createTestPoll(overrides: Partial<E2ETestPoll> = {}): E2ETestPoll {
   const timestamp = Date.now();
   return Object.assign({
+    id: `test-poll-${timestamp}`,
     title: `Test Poll ${timestamp}`,
     description: `This is a test poll created at ${new Date().toISOString()}`,
     options: ['Option 1', 'Option 2', 'Option 3', 'Option 4'],
@@ -124,8 +130,11 @@ export async function waitForPageReady(page: Page): Promise<void> {
  * 
  * This function sets up common external API mocks that E2E tests
  * might need, such as civics API, analytics, etc.
+ * CRITICAL: Includes email mocking to prevent Supabase bounces
  */
 export async function setupExternalAPIMocks(page: Page): Promise<void> {
+  // Set up email mocking FIRST to prevent Supabase email bounces
+  await setupEmailMocking(page);
   // Mock Google Civic Information API
   await page.route('**/google_civic/**', route => {
     route.fulfill({
@@ -185,6 +194,35 @@ export async function setupExternalAPIMocks(page: Page): Promise<void> {
   });
   
   console.log('✅ External API mocks setup complete');
+}
+
+/**
+ * Authenticate E2E test user
+ * 
+ * This function handles authentication for E2E tests by logging in
+ * through the UI. For E2E tests, we'll use a simpler approach that
+ * works with the existing authentication system.
+ */
+export async function authenticateE2EUser(page: Page, user: E2ETestUser): Promise<void> {
+  // Go directly to login page
+  await page.goto('/login');
+  await waitForPageReady(page);
+  
+  // Wait for the login form to be hydrated
+  await page.waitForSelector('[data-testid="login-hydrated"]', { timeout: 10000 });
+  
+  // Wait for the login form to be visible
+  await page.waitForSelector('[data-testid="login-email"]', { timeout: 10000 });
+  
+  // Fill login form
+  await page.fill('[data-testid="login-email"]', user.email);
+  await page.fill('[data-testid="login-password"]', user.password);
+  await page.click('[data-testid="login-submit"]');
+  
+  // Wait for login to complete
+  await page.waitForLoadState('networkidle');
+  
+  console.log('✅ E2E test user authenticated');
 }
 
 /**

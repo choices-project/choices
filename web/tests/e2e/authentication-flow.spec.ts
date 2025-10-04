@@ -303,6 +303,10 @@ test.describe('Authentication Flow - V2', () => {
     await page.goto('/register');
     await waitForPageReady(page);
     
+    // Select password registration method (not passkey)
+    await page.click('button:has-text("Password Account")');
+    await page.waitForSelector('[data-testid="register-button"]', { timeout: 5000 });
+    
     // Try to submit without required fields
     await page.click('[data-testid="register-button"]');
     

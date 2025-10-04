@@ -446,6 +446,27 @@ export async function getSupabaseServerClient(): Promise<SupabaseClient<Database
   )
 }
 
+/**
+ * Service role client for admin operations
+ * Uses the service role key for operations that require elevated permissions
+ */
+export async function getSupabaseServiceRoleClient(): Promise<SupabaseClient<Database>> {
+  const env = validateEnvironment()
+  
+  const { createClient } = await import('@supabase/supabase-js') // dynamic!
+  
+  return createClient<Database>(
+    env.NEXT_PUBLIC_SUPABASE_URL!,
+    env.SUPABASE_SECRET_KEY!,
+    {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      }
+    }
+  )
+}
+
 // Export types for use in other modules
 export type DatabaseTypes = Database
 export type UserProfile = Database['public']['Tables']['user_profiles']['Row']

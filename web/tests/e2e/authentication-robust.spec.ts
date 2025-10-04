@@ -287,10 +287,10 @@ test.describe('Robust Authentication Flow - V2', () => {
     await waitForPageReady(page);
 
     // Check WebAuthn login option
-    await expect(page.locator('[data-testid="webauthn-login-button"]')).toBeVisible();
+    await expect(page.locator('[data-testid="webauthn-login"]')).toBeVisible();
 
     // Test WebAuthn login
-    await page.click('[data-testid="webauthn-login-button"]');
+    await page.click('[data-testid="webauthn-login"]');
     await page.waitForSelector('[data-testid="webauthn-prompt"]');
 
     await expect(page.locator('[data-testid="webauthn-prompt"]')).toBeVisible();

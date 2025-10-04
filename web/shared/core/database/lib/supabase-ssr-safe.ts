@@ -12,7 +12,7 @@ import { createBrowserClient } from '@supabase/ssr'
 import { createServerClient } from '@supabase/ssr'
 import type { cookies } from 'next/headers'
 import { logger } from '@/lib/logger'
-import { isBrowser, isServer } from '@/lib/ssr-safe'
+import { isBrowser, isServer } from '@/shared/utils/lib/ssr-safe'
 import type { Database, UserProfileInsert, UserProfileUpdate, PollInsert, PollUpdate, VoteInsert } from '@/types/database'
 
 // Environment validation

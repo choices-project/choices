@@ -139,8 +139,29 @@ test.describe('Feature Flags - V2', () => {
       poll: testData.poll
     });
 
+    // Debug: Check PWA status
+    const pwaStatus = await page.evaluate(() => {
+      return {
+        serviceWorkerSupported: 'serviceWorker' in navigator,
+        pushManagerSupported: 'PushManager' in window,
+        notificationSupported: 'Notification' in window,
+        online: navigator.onLine
+      };
+    });
+    console.log('PWA Status:', pwaStatus);
+
     // Check that PWA features are enabled
     const pwaElements = await page.locator('[data-testid*="pwa"]').count();
+    console.log('PWA Elements found:', pwaElements);
+    
+    // Check if PWA components are rendered at all
+    const allElements = await page.locator('*').count();
+    console.log('Total elements on page:', allElements);
+    
+    // Check for PWA integration component specifically
+    const pwaIntegration = await page.locator('[data-testid="pwa-integration"]').count();
+    console.log('PWA Integration component:', pwaIntegration);
+
     expect(pwaElements).toBeGreaterThan(0);
 
     // Check that service worker is registered
@@ -460,10 +481,10 @@ test.describe('Feature Flags - V2', () => {
     await page.goto('/login');
     await waitForPageReady(page);
 
-    await expect(page.locator('[data-testid="webauthn-login-button"]')).toBeVisible();
+    await expect(page.locator('[data-testid="webauthn-login"]')).toBeVisible();
 
     // Test WebAuthn login
-    await page.click('[data-testid="webauthn-login-button"]');
+    await page.click('[data-testid="webauthn-login"]');
     await page.waitForSelector('[data-testid="webauthn-prompt"]');
 
     await expect(page.locator('[data-testid="webauthn-prompt"]')).toBeVisible();

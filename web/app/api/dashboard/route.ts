@@ -5,12 +5,8 @@ import { getSupabaseServerClient } from '@/utils/supabase/server'
 
 export const dynamic = 'force-dynamic'
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
-    // Check for E2E bypass header
-    const e2eBypass = request.headers.get('x-e2e-bypass') === '1'
-    const isE2E = process.env.NODE_ENV === 'test' || process.env.E2E === '1'
-    
     // Get Supabase client
     const supabase = getSupabaseServerClient()
     
@@ -23,32 +19,20 @@ export async function GET(request: NextRequest) {
 
     const supabaseClient = await supabase
 
-    // Skip authentication for E2E tests
-    if (!e2eBypass && !isE2E) {
-      // Get current user from Supabase Auth
-      const { data: { user }, error: authError } = await supabaseClient.auth.getUser()
-      
-      if (authError || !user) {
-        return NextResponse.json(
-          { error: 'User not authenticated' },
-          { status: 401 }
-        )
-      }
+    // Always require authentication - no E2E bypasses
+    const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession()
+    
+    if (sessionError || !session?.user) {
+      return NextResponse.json(
+        { error: 'User not authenticated' },
+        { status: 401 }
+      )
     }
 
-    // Get user-specific statistics (only if authenticated)
-    let userStats = null
-    let recentActivity = []
-    let user = null
-    
-    if (!e2eBypass && !isE2E) {
-      const { data: { user: authUser }, error: authError } = await supabaseClient.auth.getUser()
-      if (!authError && authUser) {
-        user = authUser
-        userStats = await getUserStats(supabase, user.id)
-        recentActivity = await getRecentActivity(supabase, user.id)
-      }
-    }
+    // Get user-specific statistics
+    const user = session.user
+    const userStats = await getUserStats(supabase, user.id)
+    const recentActivity = await getRecentActivity(supabase, user.id)
     
     // Get general platform statistics
     const platformStats = await getPlatformStats(supabase)

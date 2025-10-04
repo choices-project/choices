@@ -21,11 +21,6 @@ import {
   generateIdempotencyKey,
   type IdempotencyOptions 
 } from '@/lib/core/auth/idempotency'
-import { 
-  setSessionCookie, 
-  rotateSessionToken,
-  clearSessionCookie
-} from '@/lib/core/auth/session-cookies'
 import { getSecurityConfig } from '@/lib/core/security/config'
 
 // Common validation schemas
@@ -93,20 +88,9 @@ export function createSecureServerAction<TInput, TOutput>(
         // Execute the action
         const result = await action(input, context)
 
-        // Handle session rotation if requested
-        if (options.sessionRotation && context.userId) {
-          const newSessionToken = rotateSessionToken(
-            context.userId,
-            context.userRole || 'user',
-            context.userId
-          )
-          
-          setSessionCookie(newSessionToken, {
-            maxAge: 60 * 60 * 24 * 7, // 1 week
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'lax'
-          })
-        }
+        // Use Supabase native session management
+        // Supabase handles session cookies automatically
+        // No need for custom JWT session tokens
 
         // Log successful action
         logger.info('Server action completed successfully', {
@@ -184,15 +168,9 @@ export async function requireAdmin(context: ServerActionContext): Promise<{
 /**
  * Secure redirect helper with session management
  */
-export function secureRedirect(url: string, sessionToken?: string) {
-  if (sessionToken) {
-    setSessionCookie(sessionToken, {
-      maxAge: 60 * 60 * 24 * 7, // 1 week
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax'
-    })
-  }
-  
+export function secureRedirect(url: string) {
+  // Use Supabase native session management
+  // Supabase handles session cookies automatically
   redirect(url)
 }
 
@@ -200,7 +178,8 @@ export function secureRedirect(url: string, sessionToken?: string) {
  * Logout helper with session cleanup
  */
 export function secureLogout() {
-  clearSessionCookie()
+  // Use Supabase native session management
+  // Supabase handles session cookies automatically
   redirect('/')
 }
 

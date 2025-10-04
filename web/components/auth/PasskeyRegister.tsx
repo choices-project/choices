@@ -69,7 +69,7 @@ export function PasskeyRegister({
       const hasPlatformAuth = await checkPlatformAuthenticator();
       
       // Start WebAuthn registration
-      const response = await fetch('/api/auth/webauthn/register/begin', {
+      const response = await fetch('/api/v1/auth/webauthn/register/options', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -104,21 +104,19 @@ export function PasskeyRegister({
       }
 
       // Complete registration
-      const completeResponse = await fetch('/api/auth/webauthn/register/complete', {
+      const completeResponse = await fetch('/api/v1/auth/webauthn/register/verify', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          credential: {
-            id: credential.id,
-            rawId: Array.from(new Uint8Array(credential.rawId)),
-            response: {
-              attestationObject: Array.from(new Uint8Array((credential.response as AuthenticatorAttestationResponse).attestationObject)),
-              clientDataJSON: Array.from(new Uint8Array(credential.response.clientDataJSON))
-            },
-            type: credential.type
-          }
+          id: credential.id,
+          rawId: Array.from(new Uint8Array(credential.rawId)),
+          response: {
+            attestationObject: Array.from(new Uint8Array((credential.response as AuthenticatorAttestationResponse).attestationObject)),
+            clientDataJSON: Array.from(new Uint8Array(credential.response.clientDataJSON))
+          },
+          type: credential.type
         }),
       });
 
@@ -256,6 +254,7 @@ export function PasskeyRegister({
 
             {/* Register Button */}
             <Button
+              data-testid="webauthn-register"
               onClick={handleRegister}
               disabled={isRegistering}
               className="w-full"

@@ -449,16 +449,16 @@ test.describe('PWA Installation - V2', () => {
     await waitForPageReady(page);
 
     // Check WebAuthn login option
-    await expect(page.locator('[data-testid="webauthn-login-button"]')).toBeVisible();
+    await expect(page.locator('[data-testid="webauthn-login"]')).toBeVisible();
 
     // Test WebAuthn login
-    await page.click('[data-testid="webauthn-login-button"]');
+    await page.click('[data-testid="webauthn-login"]');
     await page.waitForSelector('[data-testid="webauthn-prompt"]');
 
     await expect(page.locator('[data-testid="webauthn-prompt"]')).toBeVisible();
 
-    // Complete WebAuthn authentication
-    await page.click('[data-testid="webauthn-complete-button"]');
+    // Complete WebAuthn authentication using biometric button
+    await page.click('[data-testid="webauthn-biometric-button"]');
     await expect(page.locator('[data-testid="login-success"]')).toBeVisible();
 
     await page.waitForURL('/dashboard');

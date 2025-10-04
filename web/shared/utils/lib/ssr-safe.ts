@@ -40,13 +40,27 @@ type BrowserWindow = {
   screen?: { width: number; height: number };
   innerWidth?: number;
   innerHeight?: number;
-  location?: { href: string; reload(): void };
+  location?: { href: string; reload(): void; origin?: string };
+  URL?: {
+    createObjectURL?: (blob: Blob) => string;
+    revokeObjectURL?: (url: string) => void;
+  };
+  gtag?: (command: string, eventName: string, parameters?: Record<string, any>) => void;
 }
 
-type BrowserDocument = Record<string, never>
+type BrowserDocument = {
+  createElement?: (tagName: string) => HTMLElement;
+  body?: {
+    appendChild?: (child: HTMLElement) => void;
+    removeChild?: (child: HTMLElement) => void;
+  };
+}
 
 type BrowserNavigator = {
   userAgent?: string;
+  clipboard?: {
+    writeText?: (text: string) => Promise<void>;
+  };
 }
 
 // Type guards for browser objects

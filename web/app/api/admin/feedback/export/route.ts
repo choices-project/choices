@@ -62,7 +62,7 @@ export async function GET(request: NextRequest) {
     // Build query
     let query = supabaseClient
       .from('feedback')
-      .select('id, email, verification_tier, created_at, updated_at, display_name, avatar_url, bio, stable_id, is_active')
+      .select('id, email, created_at, updated_at, display_name, avatar_url, bio, user_id, is_active')
       .order('created_at', { ascending: false });
 
     // Apply filters

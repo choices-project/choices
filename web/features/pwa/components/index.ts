@@ -4,9 +4,22 @@
  * This module re-exports all PWA components.
  */
 
-// PWAUserProfile and PWAVotingInterface components not implemented yet
+export { default as PWAInstaller } from './PWAInstaller';
+export { default as NotificationSettings } from './NotificationSettings';
+export { PWAVotingInterface } from './PWAVotingInterface';
+export { PWAUserProfile } from './PWAUserProfile';
+
+// Import the components for the object
+import PWAInstallerComponent from './PWAInstaller';
+import NotificationSettingsComponent from './NotificationSettings';
+import { PWAVotingInterface } from './PWAVotingInterface';
+import { PWAUserProfile } from './PWAUserProfile';
+
 export const PWAComponents = {
-  // Placeholder for future PWA components
+  PWAInstaller: PWAInstallerComponent,
+  NotificationSettings: NotificationSettingsComponent,
+  PWAVotingInterface,
+  PWAUserProfile,
 };
 
 

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { devLog } from '@/lib/logger';
 import { Share2, Copy, Link, Twitter, Facebook, Linkedin, Mail, QrCode, Download } from 'lucide-react'
 import { isFeatureEnabled } from '@/lib/core/feature-flags'
@@ -13,14 +13,27 @@ type PollShareProps = {
 export default function PollShare({ pollId, poll }: PollShareProps) {
   const [copied, setCopied] = useState(false)
   const [showQR, setShowQR] = useState(false)
+  const [pollUrl, setPollUrl] = useState('')
 
-  const pollUrl = `${window.location.origin}/polls/${pollId}`
+  useEffect(() => {
+    // Use SSR-safe browser API access
+    const initUrl = async () => {
+      const { safeWindow } = await import('@/shared/utils/lib/ssr-safe');
+      const origin = safeWindow(w => w.location?.origin, '');
+      setPollUrl(`${origin}/polls/${pollId}`);
+    };
+    initUrl();
+  }, [pollId]);
   const pollTitle = poll?.title || 'Check out this poll!'
   const socialSharingEnabled = isFeatureEnabled('SOCIAL_SHARING')
 
   const handleCopyLink = async () => {
     try {
-      await navigator.clipboard.writeText(pollUrl)
+      const { safeNavigator } = await import('@/shared/utils/lib/ssr-safe');
+      const clipboard = safeNavigator(n => n.clipboard);
+      if (clipboard?.writeText) {
+        await clipboard.writeText(pollUrl);
+      }
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     } catch (error) {
@@ -28,11 +41,16 @@ export default function PollShare({ pollId, poll }: PollShareProps) {
     }
   }
 
-  const handleDownloadQR = () => {
+  const handleDownloadQR = async () => {
     // Implement QR code download functionality
-    const canvas = document.createElement('canvas')
-    const ctx = canvas.getContext('2d')
+    const { safeDocument } = await import('@/shared/utils/lib/ssr-safe');
+    const canvas = safeDocument(d => d.createElement?.('canvas')) as HTMLCanvasElement;
+    if (!canvas) {
+      devLog('Canvas not available')
+      return
+    }
     
+    const ctx = canvas.getContext('2d')
     if (!ctx) {
       devLog('Canvas context not available')
       return

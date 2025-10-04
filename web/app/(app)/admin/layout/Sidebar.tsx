@@ -13,6 +13,7 @@ import {
   MessageCircle,
   Activity,
   Users,
+  Zap,
 } from 'lucide-react';
 
 const navigationItems = [
@@ -35,6 +36,11 @@ const navigationItems = [
     name: 'Analytics',
     href: '/admin/analytics',
     icon: BarChart3,
+  },
+  {
+    name: 'Performance',
+    href: '/admin/performance',
+    icon: Zap,
   },
   {
     name: 'System',

@@ -26,6 +26,8 @@ The Choices platform uses a centralized feature flag system to control feature r
 | `FEATURE_DB_OPTIMIZATION_SUITE` | ✅ Enabled | Features | Database optimization features |
 | `EXPERIMENTAL_COMPONENTS` | ❌ Disabled | Experimental | Experimental React components |
 | `CIVICS_ADDRESS_LOOKUP` | ❌ Disabled | Features | Civics address lookup system |
+| `SOCIAL_SHARING` | ❌ Disabled | Future | Share polls and representatives on social media |
+| `AUTOMATED_POLLS` | ❌ Disabled | Future | AI-powered poll generation |
 
 ## 🏗️ **System Architecture**
 
@@ -177,6 +179,44 @@ web/hooks/useFeatureFlags.ts           # React hook for components
 - **Usage**: Enables experimental component library
 - **Components**: Experimental React components
 - **Safe to disable**: ✅ Yes - experimental features only
+
+### **Future Feature Flags**
+
+#### `SOCIAL_SHARING` ❌
+- **Status**: Disabled by default (future feature)
+- **Purpose**: Share polls and representatives on social media
+- **Dependencies**: Social media APIs, Open Graph generation
+- **Usage**: Enables sharing polls and representatives
+- **Components**:
+  - Social sharing buttons
+  - Open Graph image generation
+  - Social media integration
+- **Database**: Schema prepared in `001_OPTIMIZE_CORE_TABLES.sql`
+- **Safe to disable**: ✅ Yes - removes sharing functionality
+
+#### `AUTOMATED_POLLS` ❌
+- **Status**: Disabled by default (future feature)
+- **Purpose**: AI-powered poll generation
+- **Dependencies**: AI/ML services, content analysis
+- **Usage**: Enables automatic poll creation from trending topics
+- **Components**:
+  - AI poll generation service
+  - Content analysis pipeline
+  - Quality scoring system
+- **Database**: Schema prepared in `001_OPTIMIZE_CORE_TABLES.sql`
+- **Safe to disable**: ✅ Yes - removes automated poll creation
+
+#### `ADVANCED_PRIVACY` ❌
+- **Status**: Disabled by default (future feature)
+- **Purpose**: Zero-knowledge proofs and differential privacy
+- **Dependencies**: Cryptographic libraries, privacy frameworks
+- **Usage**: Enables advanced privacy protection
+- **Components**:
+  - Zero-knowledge proof system
+  - Differential privacy implementation
+  - Advanced encryption
+- **Database**: Schema prepared in `001_OPTIMIZE_CORE_TABLES.sql`
+- **Safe to disable**: ✅ Yes - uses standard privacy features
 
 ## 🔧 **Usage Examples**
 

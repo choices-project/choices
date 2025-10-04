@@ -397,7 +397,7 @@ test.describe('Robust Rate Limiting Bypass - V2', () => {
     await expect(page.locator('[data-testid="webauthn-features"]')).toBeVisible();
 
     // Test WebAuthn login with bypass
-    await page.click('[data-testid="webauthn-login-button"]');
+    await page.click('[data-testid="webauthn-login"]');
     await page.waitForSelector('[data-testid="webauthn-prompt"]');
 
     await expect(page.locator('[data-testid="webauthn-prompt"]')).toBeVisible();

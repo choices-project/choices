@@ -6,7 +6,7 @@
  */
 
 import { headers } from 'next/headers';
-import PollClient from '@/app/(app)/polls/[id]/PollClient';
+import PollClient from '../../../../app/(app)/polls/[id]/PollClient';
 
 export default async function PollPage({ params }: { params: { id: string } }) {
   const h = headers();

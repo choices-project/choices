@@ -1,7 +1,7 @@
 // NextRequest import removed - not used
-import { NextResponse } from 'next/server';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 import { logger } from '@/lib/logger';
+import { createCorsResponse } from '@/lib/utils/cors';
 
 export const dynamic = 'force-dynamic'
 
@@ -10,9 +10,9 @@ export async function GET() {
     const supabase = getSupabaseServerClient()
     
     if (!supabase) {
-      return NextResponse.json(
+      return createCorsResponse(
         { error: 'Database connection not available' },
-        { status: 500 }
+        500
       )
     }
 
@@ -22,9 +22,9 @@ export async function GET() {
     const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession()
     
     if (sessionError || !session?.user) {
-      return NextResponse.json(
+      return createCorsResponse(
         { error: 'Not authenticated' },
-        { status: 401 }
+        401
       )
     }
 
@@ -37,13 +37,13 @@ export async function GET() {
 
     if (profileError || !profile) {
       logger.warn('User profile not found', { userId: session.user.id })
-      return NextResponse.json(
+      return createCorsResponse(
         { error: 'User profile not found' },
-        { status: 404 }
+        404
       )
     }
 
-    return NextResponse.json({
+    return createCorsResponse({
       success: true,
       user: {
         id: session.user.id,
@@ -59,9 +59,9 @@ export async function GET() {
 
   } catch (error) {
     logger.error('Error getting current user', error instanceof Error ? error : new Error(String(error)))
-    return NextResponse.json(
+    return createCorsResponse(
       { error: 'Internal server error' },
-      { status: 500 }
+      500
     )
   }
 }

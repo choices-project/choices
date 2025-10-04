@@ -144,8 +144,8 @@ test.describe('Robust WebAuthn Tests - V2', () => {
     // Wait for WebAuthn prompt
     await page.waitForSelector('[data-testid="webauthn-prompt"]');
     
-    // Complete WebAuthn registration
-    await page.click('[data-testid="webauthn-complete-button"]');
+    // Complete WebAuthn registration using biometric button
+    await page.click('[data-testid="webauthn-biometric-button"]');
     
     // Verify registration success
     await expect(page.locator('[data-testid="registration-success"]')).toBeVisible();
@@ -183,13 +183,13 @@ test.describe('Robust WebAuthn Tests - V2', () => {
     await waitForPageReady(page);
     
     // Click WebAuthn login button
-    await page.click('[data-testid="webauthn-login-button"]');
+    await page.click('[data-testid="login-webauthn"]');
     
     // Wait for WebAuthn authentication prompt
     await page.waitForSelector('[data-testid="webauthn-prompt"]');
     
-    // Complete WebAuthn authentication
-    await page.click('[data-testid="webauthn-complete-button"]');
+    // Complete WebAuthn authentication using biometric button
+    await page.click('[data-testid="webauthn-biometric-button"]');
     
     // Verify authentication success
     await expect(page.locator('[data-testid="login-success"]')).toBeVisible();
@@ -240,7 +240,7 @@ test.describe('Robust WebAuthn Tests - V2', () => {
     await waitForPageReady(page);
     
     // Click WebAuthn login button
-    await page.click('[data-testid="webauthn-login-button"]');
+    await page.click('[data-testid="login-webauthn"]');
     
     // Wait for WebAuthn prompt
     await page.waitForSelector('[data-testid="webauthn-prompt"]');
@@ -368,7 +368,7 @@ test.describe('Robust WebAuthn Tests - V2', () => {
     await page.goto('/login?e2e=1');
     await waitForPageReady(page);
     
-    await page.click('[data-testid="webauthn-login-button"]');
+    await page.click('[data-testid="login-webauthn"]');
     await page.waitForSelector('[data-testid="webauthn-prompt"]');
     await page.click('[data-testid="webauthn-complete-button"]');
     await expect(page.locator('[data-testid="login-success"]')).toBeVisible();
@@ -412,7 +412,7 @@ test.describe('Robust WebAuthn Tests - V2', () => {
     await page.goto('/login?e2e=1');
     await waitForPageReady(page);
     
-    await page.click('[data-testid="webauthn-login-button"]');
+    await page.click('[data-testid="login-webauthn"]');
     await page.waitForSelector('[data-testid="webauthn-prompt"]');
     await page.click('[data-testid="webauthn-complete-button"]');
     await expect(page.locator('[data-testid="login-success"]')).toBeVisible();
@@ -444,7 +444,7 @@ test.describe('Robust WebAuthn Tests - V2', () => {
     await page.goto('/login?e2e=1');
     await waitForPageReady(page);
     
-    await page.click('[data-testid="webauthn-login-button"]');
+    await page.click('[data-testid="login-webauthn"]');
     await page.waitForSelector('[data-testid="webauthn-prompt"]');
     await page.click('[data-testid="webauthn-complete-button"]');
     await expect(page.locator('[data-testid="login-success"]')).toBeVisible();

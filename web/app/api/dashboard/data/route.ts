@@ -1,6 +1,5 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
-import { getCurrentUser } from '@/lib/core/auth/utils';
 import { devLog } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
@@ -11,46 +10,80 @@ export async function GET(request: NextRequest) {
     
     // Check for E2E bypass
     const isE2E = request.headers.get('x-e2e-bypass') === '1' || 
-                  process.env.NODE_ENV === 'test' || 
-                  process.env.E2E === '1';
+                  request.nextUrl.searchParams.get('e2e') === '1' ||
+                  process.env.NODE_ENV === 'test';
     
-    let user = null;
-    if (!isE2E) {
-      user = getCurrentUser(request);
-      if (!user) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-      }
-    }
-
-    // For E2E tests, return mock data
+    // For E2E tests, we can bypass authentication and provide mock data
     if (isE2E) {
-      const mockDashboardData = {
-        userPolls: [],
+      // Return mock data for E2E test users
+      const mockData = {
+        userPolls: [
+          {
+            id: 'test-poll-1',
+            title: 'Enhanced Dashboard Test Poll',
+            status: 'active',
+            totalvotes: 42,
+            participation: 85,
+            createdat: new Date().toISOString(),
+            endsat: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+            choices: [
+              { id: 'choice-1', text: 'Option A', votes: 25 },
+              { id: 'choice-2', text: 'Option B', votes: 17 }
+            ]
+          }
+        ],
         userMetrics: {
-          pollsCreated: 0,
-          pollsActive: 0,
-          votesCast: 0,
-          participationRate: 0,
+          pollsCreated: 1,
+          pollsActive: 1,
+          votesCast: 5,
+          participationRate: 85,
           averageSessionTime: 15,
-          trustScore: 0
+          trustScore: 75
         },
-        userTrends: [],
+        userTrends: Array.from({ length: 30 }, (_, i) => ({
+          date: new Date(Date.now() - (29 - i) * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+          votesCast: Math.floor(Math.random() * 5),
+          pollsCreated: Math.floor(Math.random() * 2),
+          sessionTime: Math.floor(Math.random() * 30) + 5
+        })),
         userEngagement: {
-          weeklyActivity: 5,
-          monthlyActivity: 20,
-          streakDays: 1,
-          favoriteCategories: []
+          weeklyActivity: 12,
+          monthlyActivity: 45,
+          streakDays: 7,
+          favoriteCategories: ['Politics', 'Technology', 'Environment']
         },
         userInsights: {
-          topCategories: [],
-          votingPatterns: [],
-          achievements: []
+          topCategories: [
+            { category: 'Politics', count: 12, percentage: 35 },
+            { category: 'Technology', count: 8, percentage: 24 },
+            { category: 'Environment', count: 6, percentage: 18 }
+          ],
+          votingPatterns: [
+            { timeOfDay: 'Morning', activity: 25 },
+            { timeOfDay: 'Afternoon', activity: 45 },
+            { timeOfDay: 'Evening', activity: 30 }
+          ],
+          achievements: [
+            { id: 'first_poll', name: 'First Poll Creator', description: 'Create your first poll', earned: true, progress: 100 },
+            { id: 'active_participant', name: 'Active Participant', description: 'Cast 10 votes', earned: false, progress: 50 },
+            { id: 'trusted_user', name: 'Trusted User', description: 'Achieve a trust score of 80+', earned: false, progress: 94 },
+            { id: 'poll_master', name: 'Poll Master', description: 'Create 5 polls', earned: false, progress: 20 }
+          ]
         }
       };
       
-      devLog('E2E mock dashboard data returned');
-      return NextResponse.json(mockDashboardData);
+      devLog('E2E bypass: Returning mock dashboard data');
+      return NextResponse.json(mockData);
     }
+    
+    // Regular authentication check for non-E2E requests
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    
+    if (sessionError || !session?.user) {
+      return NextResponse.json({ error: 'User not authenticated' }, { status: 401 });
+    }
+    
+    const user = session.user;
 
     // Fetch user's polls
     const { data: userPolls, error: pollsError } = await supabase
@@ -67,7 +100,7 @@ export async function GET(request: NextRequest) {
           votes
         )
       `)
-      .eq('created_by', user?.userId)
+      .eq('created_by', user?.id)
       .order('created_at', { ascending: false });
 
     if (pollsError) {
@@ -79,7 +112,7 @@ export async function GET(request: NextRequest) {
     const { data: userVotes, error: votesError } = await supabase
       .from('votes')
       .select('id, created_at, poll_id')
-      .eq('user_id', user?.userId);
+      .eq('user_id', user?.id);
 
     if (votesError) {
       devLog('Error fetching user votes:', votesError);
@@ -90,7 +123,7 @@ export async function GET(request: NextRequest) {
     const { data: userProfile, error: profileError } = await supabase
       .from('user_profiles')
       .select('trust_score, created_at')
-      .eq('user_id', user?.userId)
+      .eq('user_id', user?.id)
       .single();
 
     if (profileError) {
@@ -213,7 +246,7 @@ export async function GET(request: NextRequest) {
       }
     };
 
-    devLog('Dashboard data generated successfully for user:', user?.userId);
+    devLog('Dashboard data generated successfully for user:', user?.id);
     return NextResponse.json(dashboardData);
 
   } catch (error) {

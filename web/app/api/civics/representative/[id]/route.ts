@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { isFeatureEnabled } from '@/lib/core/feature-flags';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -26,7 +27,23 @@ export async function GET(
     // Get representative basic information
     const { data: representative, error: repError } = await supabase
       .from('civics_representatives')
-      .select('*')
+      .select(`
+        id,
+        name,
+        party,
+        office,
+        level,
+        jurisdiction,
+        district,
+        ocd_division_id,
+        external_id,
+        source,
+        data_origin,
+        valid_from,
+        valid_to,
+        created_at,
+        last_updated
+      `)
       .eq('id', representativeId)
       .single();
 
@@ -40,29 +57,78 @@ export async function GET(
     // Get contact information
     const { data: contactInfo } = await supabase
       .from('civics_contact_info')
-      .select('*')
+      .select(`
+        id,
+        representative_id,
+        official_email,
+        official_phone,
+        official_fax,
+        official_website,
+        office_addresses,
+        preferred_contact_method,
+        response_time_expectation,
+        data_quality_score,
+        last_verified,
+        created_at,
+        updated_at
+      `)
       .eq('representative_id', representativeId)
       .single();
 
     // Get social media engagement
     const { data: socialMedia } = await supabase
       .from('civics_social_engagement')
-      .select('*')
+      .select(`
+        id,
+        representative_id,
+        platform,
+        handle,
+        followers_count,
+        engagement_rate,
+        created_at,
+        last_updated
+      `)
       .eq('representative_id', representativeId);
 
     // Get campaign finance data (latest election)
     const { data: campaignFinance } = await supabase
       .from('civics_campaign_finance')
-      .select('*')
+      .select(`
+        id,
+        representative_id,
+        candidate_name,
+        candidate_id,
+        cycle,
+        party,
+        state,
+        district,
+        office,
+        raw_data,
+        created_at,
+        updated_at
+      `)
       .eq('representative_id', representativeId)
-      .order('election_year', { ascending: false })
+      .order('cycle', { ascending: false })
       .limit(1)
       .single();
 
     // Get voting behavior summary
     const { data: votingBehavior } = await supabase
       .from('civics_voting_behavior')
-      .select('*')
+      .select(`
+        id,
+        representative_id,
+        analysis_period,
+        total_votes,
+        missed_votes,
+        party_line_votes,
+        bipartisan_votes,
+        attendance_rate,
+        party_loyalty_score,
+        bipartisanship_score,
+        created_at,
+        updated_at
+      `)
       .eq('representative_id', representativeId)
       .eq('analysis_period', 'current_session')
       .single();
@@ -70,7 +136,18 @@ export async function GET(
     // Get recent votes (last 10)
     const { data: recentVotes } = await supabase
       .from('civics_votes')
-      .select('*')
+      .select(`
+        id,
+        representative_id,
+        bill_id,
+        bill_title,
+        vote_date,
+        vote_position,
+        chamber,
+        session,
+        raw_data,
+        created_at
+      `)
       .eq('representative_id', representativeId)
       .order('vote_date', { ascending: false })
       .limit(10);
@@ -78,7 +155,17 @@ export async function GET(
     // Get policy positions
     const { data: policyPositions } = await supabase
       .from('civics_policy_positions')
-      .select('*')
+      .select(`
+        id,
+        representative_id,
+        issue,
+        position,
+        confidence_score,
+        source,
+        source_url,
+        created_at,
+        last_updated
+      `)
       .eq('representative_id', representativeId)
       .order('confidence_score', { ascending: false });
 
@@ -106,79 +193,82 @@ export async function GET(
         last_verified: contactInfo?.last_verified || null
       },
       
-      // Social Media
-      social_media: {
+      // Social Media (only if social sharing features are enabled)
+      social_media: isFeatureEnabled('SOCIAL_SHARING') ? {
         platforms: socialMedia?.map(sm => ({
           platform: sm.platform,
           handle: sm.handle,
-          url: sm.url,
+          url: (sm as any).url,
           followers_count: sm.followers_count,
           engagement_rate: sm.engagement_rate,
-          verified: sm.verified,
-          official_account: sm.official_account,
+          verified: (sm as any).verified,
+          official_account: (sm as any).official_account,
           last_updated: sm.last_updated
         })) || [],
         summary: {
           total_platforms: socialMedia?.length || 0,
-          verified_accounts: socialMedia?.filter(sm => sm.verified).length || 0,
+          verified_accounts: socialMedia?.filter(sm => (sm as any).verified).length || 0,
           total_followers: socialMedia?.reduce((sum, sm) => sum + (sm.followers_count || 0), 0) || 0
         }
-      },
-      
-      // Campaign Finance
-      campaign_finance: campaignFinance ? {
-        election_year: campaignFinance.election_year,
-        total_receipts: campaignFinance.total_receipts,
-        total_disbursements: campaignFinance.total_disbursements,
-        cash_on_hand: campaignFinance.cash_on_hand,
-        individual_contributions: campaignFinance.individual_contributions,
-        pac_contributions: campaignFinance.pac_contributions,
-        self_financing: campaignFinance.self_financing,
-        top_contributors: campaignFinance.top_contributors,
-        industry_contributions: campaignFinance.industry_contributions,
-        last_updated: campaignFinance.last_updated
       } : null,
       
-      // Voting Behavior
-      voting_behavior: votingBehavior ? {
+      // Campaign Finance (only if civics campaign finance is enabled)
+      campaign_finance: isFeatureEnabled('CIVICS_CAMPAIGN_FINANCE') && campaignFinance ? {
+        election_year: (campaignFinance as any).election_year,
+        total_receipts: (campaignFinance as any).total_receipts,
+        total_disbursements: (campaignFinance as any).total_disbursements,
+        cash_on_hand: (campaignFinance as any).cash_on_hand,
+        individual_contributions: (campaignFinance as any).individual_contributions,
+        pac_contributions: (campaignFinance as any).pac_contributions,
+        self_financing: (campaignFinance as any).self_financing,
+        top_contributors: (campaignFinance as any).top_contributors,
+        industry_contributions: (campaignFinance as any).industry_contributions,
+        last_updated: campaignFinance.updated_at
+      } : null,
+      
+      // Voting Behavior (only if civics voting records are enabled)
+      voting_behavior: isFeatureEnabled('CIVICS_VOTING_RECORDS') && votingBehavior ? {
         analysis_period: votingBehavior.analysis_period,
         total_votes: votingBehavior.total_votes,
-        party_unity_score: votingBehavior.party_unity_score,
-        bipartisan_score: votingBehavior.bipartisan_score,
+        missed_votes: votingBehavior.missed_votes,
+        party_line_votes: votingBehavior.party_line_votes,
+        bipartisan_votes: votingBehavior.bipartisan_votes,
+        party_unity_score: (votingBehavior as any).party_unity_score,
+        bipartisan_score: (votingBehavior as any).bipartisan_score,
         attendance_rate: votingBehavior.attendance_rate,
-        ideology_score: votingBehavior.ideology_score,
-        key_vote_positions: votingBehavior.key_vote_positions,
-        last_updated: votingBehavior.last_updated
+        ideology_score: (votingBehavior as any).ideology_score,
+        key_vote_positions: (votingBehavior as any).key_vote_positions,
+        last_updated: votingBehavior.updated_at
       } : null,
       
       // Recent Votes
       recent_votes: recentVotes?.map(vote => ({
-        vote_id: vote.vote_id,
+        vote_id: (vote as any).vote_id,
         bill_id: vote.bill_id,
         bill_title: vote.bill_title,
         vote_date: vote.vote_date,
         vote_position: vote.vote_position,
-        vote_type: vote.vote_type,
-        vote_result: vote.vote_result,
-        party_position: vote.party_position
+        vote_type: (vote as any).vote_type,
+        vote_result: (vote as any).vote_result,
+        party_position: (vote as any).party_position
       })) || [],
       
-      // Policy Positions
-      policy_positions: policyPositions?.map(position => ({
-        issue_category: position.issue_category,
-        issue_name: position.issue_name,
+      // Policy Positions (only if civics voting records are enabled)
+      policy_positions: isFeatureEnabled('CIVICS_VOTING_RECORDS') && policyPositions ? policyPositions.map(position => ({
+        issue_category: (position as any).issue_category,
+        issue_name: (position as any).issue_name,
         position: position.position,
         confidence_score: position.confidence_score,
-        last_vote_date: position.last_vote_date,
-        position_notes: position.position_notes
-      })) || [],
+        last_vote_date: (position as any).last_vote_date,
+        position_notes: (position as any).position_notes
+      })) : [],
       
       // Data Quality Summary
       data_quality: {
-        contact_info_available: representative.contact_info_available || false,
-        social_media_available: representative.social_media_available || false,
-        campaign_finance_available: representative.campaign_finance_available || false,
-        voting_records_available: representative.voting_records_available || false,
+        contact_info_available: (representative as any).contact_info_available || false,
+        social_media_available: (representative as any).social_media_available || false,
+        campaign_finance_available: (representative as any).campaign_finance_available || false,
+        voting_records_available: (representative as any).voting_records_available || false,
         overall_quality_score: Math.round(
           ((contactInfo?.data_quality_score || 0) + 
            (campaignFinance ? 90 : 0) + 
@@ -189,10 +279,10 @@ export async function GET(
       // Metadata
       last_updated: new Date().toISOString(),
       data_sources: [
-        representative.data_source,
-        contactInfo?.data_source,
-        campaignFinance?.data_source,
-        votingBehavior?.data_source
+        (representative as any).data_source,
+        (contactInfo as any)?.data_source,
+        (campaignFinance as any)?.data_source,
+        (votingBehavior as any)?.data_source
       ].filter(Boolean).join(', ')
     };
 

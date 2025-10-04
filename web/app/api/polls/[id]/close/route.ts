@@ -10,7 +10,6 @@
 
 import { type NextRequest, NextResponse } from 'next/server';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
-import { getCurrentUser } from '@/lib/core/auth/utils';
 import { devLog } from '@/lib/logger';
 import { AuthenticationError, ValidationError, NotFoundError, ForbiddenError } from '@/lib/errors';
 
@@ -34,11 +33,14 @@ export async function POST(
       throw new Error('Supabase client not available');
     }
 
-    // Check authentication
-    const user = getCurrentUser(request);
-    if (!user) {
+    // Check authentication using Supabase native sessions
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    
+    if (sessionError || !session?.user) {
       throw new AuthenticationError('Authentication required to close polls');
     }
+    
+    const user = session.user;
 
     // Get poll details
     const { data: poll, error: pollError } = await supabase
@@ -52,7 +54,7 @@ export async function POST(
     }
 
     // Check if user can close this poll
-    if (poll.created_by !== user.userId) {
+    if (poll.created_by !== user.id) {
       // Check if user is admin (this would need to be implemented)
       // For now, only poll creator can close
       throw new ForbiddenError('Only the poll creator can close this poll');
@@ -91,7 +93,7 @@ export async function POST(
     devLog('Poll closed successfully', {
       pollId,
       title: poll.title,
-      closedBy: user.userId,
+      closedBy: user.id,
       baselineAt
     });
 

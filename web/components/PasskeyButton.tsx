@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { beginRegister, beginAuthenticate, isWebAuthnSupported } from '@/lib/webauthn/client';
 import { T } from '@/lib/testing/testIds';
+import WebAuthnPrompt from './auth/WebAuthnPrompt';
 
 type PasskeyButtonProps = {
   mode: 'register' | 'authenticate';
@@ -24,6 +25,7 @@ export function PasskeyButton({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
+  const [showPrompt, setShowPrompt] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -41,7 +43,10 @@ export function PasskeyButton({
 
   const handleClick = async () => {
     if (loading || disabled) return;
+    setShowPrompt(true);
+  };
 
+  const handlePromptComplete = async () => {
     setLoading(true);
     setError(null);
 
@@ -66,7 +71,12 @@ export function PasskeyButton({
       onError?.(errorMsg);
     } finally {
       setLoading(false);
+      setShowPrompt(false);
     }
+  };
+
+  const handlePromptCancel = () => {
+    setShowPrompt(false);
   };
 
   const getButtonText = () => {
@@ -118,6 +128,20 @@ export function PasskeyButton({
         <p className="mt-2 text-xs text-gray-600">
           Passkeys live on your device. We never see your fingerprint, face, or a reusable secret—only a public key.
         </p>
+      )}
+
+      {showPrompt && (
+        <div className="mt-4" data-testid={T.webauthn.prompt}>
+          <WebAuthnPrompt
+            mode={mode}
+            onComplete={handlePromptComplete}
+            onCancel={handlePromptCancel}
+            onError={(error) => {
+              setError(error);
+              onError?.(error);
+            }}
+          />
+        </div>
       )}
     </div>
   );

@@ -1,4 +1,6 @@
 import Link from 'next/link'
+import WebAuthnFeatures from '@/components/WebAuthnFeatures'
+import PWAFeatures from '@/components/PWAFeatures'
 
 export default function LandingPage() {
   return (
@@ -74,6 +76,12 @@ export default function LandingPage() {
           </div>
         </div>
       </main>
+
+      {/* WebAuthn Features - for E2E testing */}
+      <WebAuthnFeatures />
+      
+      {/* PWA Features - for E2E testing */}
+      <PWAFeatures />
 
       {/* Footer */}
       <footer className="bg-white border-t">

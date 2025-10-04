@@ -24,15 +24,21 @@ export async function GET(req: NextRequest) {
     let query = supabase
       .from('civics_representatives')
       .select(`
-        *,
-        civics_divisions (
-          ocd_division_id,
-          level,
-          chamber,
-          state,
-          district_number,
-          name
-        )
+        id,
+        name,
+        party,
+        office,
+        level,
+        jurisdiction,
+        district,
+        ocd_division_id,
+        external_id,
+        source,
+        data_origin,
+        valid_from,
+        valid_to,
+        created_at,
+        last_updated
       `)
       .eq('jurisdiction', state.toUpperCase());
 
@@ -41,7 +47,18 @@ export async function GET(req: NextRequest) {
     }
 
     if (chamber) {
-      query = query.eq('civics_divisions.chamber', chamber);
+      // Filter by chamber using the office field instead of joining with civics_divisions
+      const chamberMapping: Record<string, string[]> = {
+        'us_senate': ['US Senate', 'Senator'],
+        'us_house': ['US House', 'Representative'],
+        'state_upper': ['State Senate', 'Senator'],
+        'state_lower': ['State House', 'State Assembly', 'Representative']
+      };
+      
+      const chamberTerms = chamberMapping[chamber] || [];
+      if (chamberTerms.length > 0) {
+        query = query.or(chamberTerms.map(term => `office.ilike.%${term}%`).join(','));
+      }
     }
 
     const { data, error } = await query;

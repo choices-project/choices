@@ -12,43 +12,8 @@ export async function GET(
   try {
     const pollId = params.id;
     
-    // Check if this is an E2E test
-    const isE2ETest = request.headers.get('x-e2e-bypass') === '1';
-    
-    // Use service role for E2E tests to bypass RLS
-    let supabaseClient;
-    if (isE2ETest) {
-      // Create service role client for E2E tests
-      const { createClient } = await import('@supabase/supabase-js');
-      supabaseClient = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SECRET_KEY!,
-        {
-          auth: {
-            autoRefreshToken: false,
-            persistSession: false
-          }
-        }
-      );
-    } else {
-      try {
-        supabaseClient = await getSupabaseServerClient();
-      } catch (error) {
-        devLog('Error getting Supabase server client:', error);
-        // Fallback to service role client
-        const { createClient } = await import('@supabase/supabase-js');
-        supabaseClient = createClient(
-          process.env.NEXT_PUBLIC_SUPABASE_URL!,
-          process.env.SUPABASE_SECRET_KEY!,
-          {
-            auth: {
-              autoRefreshToken: false,
-              persistSession: false
-            }
-          }
-        );
-      }
-    }
+    // Always use regular client - no E2E bypasses
+    const supabaseClient = await getSupabaseServerClient();
     
     // Fetch poll data from polls table
     const { data: poll, error } = await supabaseClient

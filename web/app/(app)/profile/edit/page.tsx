@@ -23,29 +23,36 @@ import { devLog } from '@/lib/logger'
 import { useAuth } from '@/hooks/useAuth'
 import { cn } from '@/lib/utils'
 
-// Types
+// Types - Updated to match new database schema
 type UserProfile = {
   id: string
-  userid: string
-  displayname: string
-  bio: string | null
-  primaryconcerns: string[]
-  communityfocus: string[]
-  participationstyle: 'observer' | 'contributor' | 'leader'
-  demographics: any
-  privacysettings: PrivacySettings
-  createdat: string
-  updatedat: string
-  avatar?: string
+  user_id: string
+  username: string
+  email: string
+  display_name?: string
+  bio?: string
+  avatar_url?: string
+  trust_tier: 'T0' | 'T1' | 'T2' | 'T3'
+  is_admin: boolean
+  is_active: boolean
+  created_at: string
+  updated_at: string
+  // Enhanced profile fields
+  preferences?: Record<string, any>
+  privacy_settings?: PrivacySettings
+  primary_concerns?: string[]
+  community_focus?: string[]
+  participation_style?: 'observer' | 'contributor' | 'leader'
+  demographics?: Record<string, any>
 }
 
 type PrivacySettings = {
-  profilevisibility: 'public' | 'private' | 'friends'
-  showemail: boolean
-  showactivity: boolean
-  allowmessages: boolean
-  sharedemographics: boolean
-  allowanalytics: boolean
+  profile_visibility: 'public' | 'private' | 'friends'
+  show_email: boolean
+  show_activity: boolean
+  allow_messages: boolean
+  share_demographics: boolean
+  allow_analytics: boolean
 }
 
 type UserProfileUpdate = {
@@ -115,12 +122,12 @@ export default function EditProfilePage() {
     communityfocus: [],
     participationstyle: 'observer',
     privacysettings: {
-      profilevisibility: 'public',
-      showemail: false,
-      showactivity: true,
-      allowmessages: true,
-      sharedemographics: false,
-      allowanalytics: true
+      profile_visibility: 'public',
+      show_email: false,
+      show_activity: true,
+      allow_messages: true,
+      share_demographics: false,
+      allow_analytics: true
     }
   })
 
@@ -487,7 +494,7 @@ export default function EditProfilePage() {
               <CardContent className="space-y-4">
                 <div className="flex justify-center">
                   <Avatar className="h-24 w-24">
-                    <AvatarImage src={avatarPreview || formData.avatar || profile?.avatar || ''} />
+                    <AvatarImage src={avatarPreview || formData.avatar || profile?.avatar_url || ''} />
                     <AvatarFallback>
                       <User className="h-12 w-12" />
                     </AvatarFallback>
@@ -551,9 +558,9 @@ export default function EditProfilePage() {
                 <div>
                   <Label htmlFor="profilevisibility">Profile Visibility</Label>
                   <Select
-                    value={formData.privacysettings.profilevisibility}
-                    onValueChange={(value: 'public' | 'private' | 'friends') => 
-                      handlePrivacyChange('profilevisibility', value)
+                    value={formData.privacysettings.profile_visibility}
+                    onValueChange={(value: 'public' | 'private' | 'friends') =>
+                      handlePrivacyChange('profile_visibility', value)
                     }
                   >
                     <SelectTrigger>
@@ -576,8 +583,8 @@ export default function EditProfilePage() {
                       <p className="text-sm text-gray-500">Allow others to see your email</p>
                     </div>
                     <Switch
-                      checked={formData.privacysettings.showemail}
-                      onChange={(e) => handlePrivacyChange('showemail', e.target.checked)}
+                      checked={formData.privacysettings.show_email}
+                      onChange={(e) => handlePrivacyChange('show_email', e.target.checked)}
                     />
                   </div>
 
@@ -587,8 +594,8 @@ export default function EditProfilePage() {
                       <p className="text-sm text-gray-500">Show your voting and poll activity</p>
                     </div>
                     <Switch
-                      checked={formData.privacysettings.showactivity}
-                      onChange={(e) => handlePrivacyChange('showactivity', e.target.checked)}
+                      checked={formData.privacysettings.show_activity}
+                      onChange={(e) => handlePrivacyChange('show_activity', e.target.checked)}
                     />
                   </div>
 
@@ -598,8 +605,8 @@ export default function EditProfilePage() {
                       <p className="text-sm text-gray-500">Allow other users to message you</p>
                     </div>
                     <Switch
-                      checked={formData.privacysettings.allowmessages}
-                      onChange={(e) => handlePrivacyChange('allowmessages', e.target.checked)}
+                      checked={formData.privacysettings.allow_messages}
+                      onChange={(e) => handlePrivacyChange('allow_messages', e.target.checked)}
                     />
                   </div>
 
@@ -609,8 +616,8 @@ export default function EditProfilePage() {
                       <p className="text-sm text-gray-500">Share demographic data for analytics</p>
                     </div>
                     <Switch
-                      checked={formData.privacysettings.sharedemographics}
-                      onChange={(e) => handlePrivacyChange('sharedemographics', e.target.checked)}
+                      checked={formData.privacysettings.share_demographics}
+                      onChange={(e) => handlePrivacyChange('share_demographics', e.target.checked)}
                     />
                   </div>
 
@@ -620,8 +627,8 @@ export default function EditProfilePage() {
                       <p className="text-sm text-gray-500">Help improve the platform with usage data</p>
                     </div>
                     <Switch
-                      checked={formData.privacysettings.allowanalytics}
-                      onChange={(e) => handlePrivacyChange('allowanalytics', e.target.checked)}
+                      checked={formData.privacysettings.allow_analytics}
+                      onChange={(e) => handlePrivacyChange('allow_analytics', e.target.checked)}
                     />
                   </div>
                 </div>

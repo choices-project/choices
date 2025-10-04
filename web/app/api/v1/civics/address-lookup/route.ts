@@ -5,13 +5,12 @@
  * Privacy-first address lookup with jurisdiction cookie setting
  */
 
-import { NextResponse } from 'next/server';
+import { type NextRequest, NextResponse } from 'next/server';
 import { assertPepperConfig } from '@/lib/civics/env-guard';
 import { generateAddressHMAC, setJurisdictionCookie } from '@/lib/civics/privacy-utils';
+import { isFeatureEnabled } from '@/lib/core/feature-flags';
 
 // If using Edge: export const runtime = 'edge';
-
-assertPepperConfig();
 
 async function lookupJurisdictionFromExternalAPI(address: string) {
   // IMPORTANT: Address lookup requires external API calls because:
@@ -25,12 +24,16 @@ async function lookupJurisdictionFromExternalAPI(address: string) {
   try {
     // Call Google Civic Information API for jurisdiction resolution
     // This is the correct approach for address → jurisdiction mapping
-    const response = await fetch('https://www.googleapis.com/civicinfo/v2/representatives', {
+    const apiKey = process.env.GOOGLE_CIVIC_API_KEY;
+    if (!apiKey) {
+      throw new Error('Google Civic API key not configured');
+    }
+
+    const response = await fetch(`https://www.googleapis.com/civicinfo/v2/representatives?address=${encodeURIComponent(address)}&key=${apiKey}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
       },
-      // Note: In production, you'd need to add API key and proper error handling
     });
     
     if (!response.ok) {
@@ -39,12 +42,33 @@ async function lookupJurisdictionFromExternalAPI(address: string) {
     
     const data = await response.json();
     
-    // Extract jurisdiction information from the response
+    // Extract jurisdiction information from the Google Civic API response
+    const normalizedInput = data.normalizedInput;
+    const offices = data.offices || [];
+    const officials = data.officials || [];
+    
+    // Find congressional district office
+    const congressionalOffice = offices.find((office: any) => 
+      office.name?.toLowerCase().includes('congress') || 
+      office.name?.toLowerCase().includes('house of representatives')
+    );
+    
+    let district = null;
+    if (congressionalOffice) {
+      const official = officials[congressionalOffice.officialIndices?.[0]];
+      if (official?.name) {
+        // Extract district from official name (e.g., "Rep. John Doe (D-IL-13)")
+        const districtMatch = official.name.match(/\([A-Z]-[A-Z]{2}-(\d+)\)/);
+        district = districtMatch ? districtMatch[1] : null;
+      }
+    }
+    
     const jurisdiction = {
-      state: data.state || 'IL',
-      district: data.district || '13', 
-      county: data.county || 'Sangamon',
-      ocd_division_id: data.ocd_division_id || null
+      state: normalizedInput?.state || 'IL',
+      district: district || '13', 
+      county: normalizedInput?.city || 'Unknown',
+      ocd_division_id: normalizedInput?.ocdId || null,
+      normalized_address: normalizedInput?.line1 || address
     };
     
     return jurisdiction;
@@ -63,31 +87,52 @@ async function lookupJurisdictionFromExternalAPI(address: string) {
   }
 }
 
-export async function POST(req: Request) {
-  const { address } = await req.json();
-  if (!address || typeof address !== 'string') {
-    return NextResponse.json({ error: 'address required' }, { status: 400 });
+export async function POST(req: NextRequest) {
+  // Check if feature is enabled
+  if (!isFeatureEnabled('CIVICS_ADDRESS_LOOKUP')) {
+    return NextResponse.json({ error: 'Feature not enabled' }, { status: 403 });
   }
 
-  // Privacy: compute HMAC (not stored here; useful if you key caches by HMAC)
-  const addrH = generateAddressHMAC(address);
-  void addrH; // use for cache keys if needed
+  try {
+    // Assert pepper configuration at runtime
+    assertPepperConfig();
 
-  const juris = await lookupJurisdictionFromExternalAPI(address);
+    const { address } = await req.json();
+    if (!address || typeof address !== 'string') {
+      return NextResponse.json({ error: 'address required' }, { status: 400 });
+    }
 
-  await setJurisdictionCookie(juris);
-  return NextResponse.json({ ok: true, jurisdiction: juris }, { status: 200 });
+    // Privacy: compute HMAC (not stored here; useful if you key caches by HMAC)
+    const addrH = generateAddressHMAC(address);
+    void addrH; // use for cache keys if needed
+
+    const juris = await lookupJurisdictionFromExternalAPI(address);
+
+    await setJurisdictionCookie(juris);
+    return NextResponse.json({ ok: true, jurisdiction: juris }, { status: 200 });
+  } catch (error) {
+    console.error('Address lookup error:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
 }
 
 // Handle unsupported methods
 export async function GET() {
+  if (!isFeatureEnabled('CIVICS_ADDRESS_LOOKUP')) {
+    return NextResponse.json({ error: 'Feature not enabled' }, { status: 403 });
+  }
+  
   return NextResponse.json(
-    { error: 'Method not allowed' }, 
+    { error: 'GET method not supported. Use POST with address in request body.' }, 
     { status: 405 }
   );
 }
 
 export async function PUT() {
+  if (!isFeatureEnabled('CIVICS_ADDRESS_LOOKUP')) {
+    return NextResponse.json({ error: 'Feature not enabled' }, { status: 403 });
+  }
+  
   return NextResponse.json(
     { error: 'Method not allowed' }, 
     { status: 405 }
@@ -95,6 +140,10 @@ export async function PUT() {
 }
 
 export async function DELETE() {
+  if (!isFeatureEnabled('CIVICS_ADDRESS_LOOKUP')) {
+    return NextResponse.json({ error: 'Feature not enabled' }, { status: 403 });
+  }
+  
   return NextResponse.json(
     { error: 'Method not allowed' }, 
     { status: 405 }

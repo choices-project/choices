@@ -42,6 +42,7 @@ export const T = {
     register: 'webauthn-register',
     login: 'webauthn-login',
     prompt: 'webauthn-prompt',
+    features: 'webauthn-features',
     biometricButton: 'webauthn-biometric-button',
     crossDeviceButton: 'webauthn-cross-device-button',
     qr: 'webauthn-qr',

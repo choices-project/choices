@@ -7,7 +7,19 @@ const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env
 export async function GET() {
   const { data, error } = await supabase
     .from('civics_representatives')
-    .select('name,party,office,contact,ocd_division_id')
+    .select(`
+      id,
+      name,
+      party,
+      office,
+      contact,
+      ocd_division_id,
+      district,
+      jurisdiction,
+      level,
+      created_at,
+      last_updated
+    `)
     .eq('level','local')
     .eq('jurisdiction','San Francisco, CA')
     .order('office', { ascending: true });

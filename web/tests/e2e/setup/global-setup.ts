@@ -17,8 +17,7 @@ export default async function globalSetup() {
     execFileSync(process.execPath, [path.resolve('scripts/test-seed.ts')], {
       env: { 
         ...process.env, 
-        NODE_ENV: 'test', 
-        E2E: '1',
+        NODE_ENV: 'production', // Use production-like environment
         NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
         SUPABASE_SECRET_KEY: process.env.SUPABASE_SECRET_KEY
       },

@@ -1,5 +1,5 @@
 import { logger } from '@/lib/logger';
-import { safeNavigate } from '@/lib/ssr-safe';
+import { safeNavigate } from '@/shared/utils/lib/ssr-safe';
 /**
  * Browser detection and compatibility utilities
  */

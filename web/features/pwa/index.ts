@@ -21,15 +21,20 @@ export const getPWAUtils = () => {
     };
   }
   
-  // PWA utilities not implemented yet
-  return Promise.resolve({
-    isPwaSupported: () => false,
-    canInstallPwa: () => false,
-    installPwa: () => Promise.resolve(false),
-    isOffline: () => false,
-    registerServiceWorker: () => Promise.resolve(false),
-    unregisterServiceWorker: () => Promise.resolve(false),
-  });
+  // Use the superior implementation (moved from archive)
+  return import('./lib/pwa-utils').then(module => ({
+    isPwaSupported: () => 'serviceWorker' in navigator,
+    canInstallPwa: () => module.pwaManager.isInstalled() === false && 'beforeinstallprompt' in window,
+    installPwa: () => module.pwaManager.getPWAStatus().then(status => status.installable),
+    isOffline: () => !navigator.onLine,
+    registerServiceWorker: () => module.PWAUtils.registerServiceWorker(),
+    unregisterServiceWorker: () => Promise.resolve(false), // Not implemented in archived version
+    // Additional utilities from superior implementation
+    pwaManager: module.pwaManager,
+    pwaWebAuthn: module.pwaWebAuthn,
+    privacyStorage: module.privacyStorage,
+    PWAUtils: module.PWAUtils,
+  }));
 };
 
 // Re-export PWA components conditionally
@@ -42,8 +47,16 @@ export const getPWAComponents = () => {
     };
   }
   
-  // Dynamically import PWA components only when feature is enabled
-  return import('./components').then(module => module);
+  // Use existing superior PWA components
+  return Promise.resolve({
+    InstallPrompt: () => import('@/features/pwa/components/PWAInstaller').then(m => m.default),
+    OfflineIndicator: () => import('@/components/OfflineIndicator').then(m => m.default),
+    NotificationSettings: () => import('@/features/pwa/components/NotificationSettings').then(m => m.default),
+    NotificationPreferences: () => import('@/components/NotificationPreferences').then(m => m.default),
+    PWAVotingInterface: () => import('@/features/pwa/components/PWAVotingInterface').then(m => m.PWAVotingInterface),
+    PWAUserProfile: () => import('@/features/pwa/components/PWAUserProfile').then(m => m.PWAUserProfile),
+    PWAIntegration: () => import('@/components/PWAIntegration').then(m => m.default),
+  });
 };
 
 // Re-export PWA hooks conditionally
@@ -59,8 +72,11 @@ export const getPWAHooks = () => {
     };
   }
   
-  // Dynamically import PWA hooks only when feature is enabled
-  return import('./hooks/usePWAUtils').then(module => module);
+  // Use existing superior PWA hooks
+  return Promise.resolve({
+    usePWA: () => import('@/hooks/usePWA').then(m => m.usePWA),
+    usePWAUtils: () => import('@/features/pwa/hooks/usePWAUtils').then(m => m.usePWAUtils),
+  });
 };
 
 // Feature status

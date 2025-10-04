@@ -63,7 +63,7 @@ export function PasskeyLogin({
       const hasPlatformAuth = await checkPlatformAuthenticator();
       
       // Start WebAuthn authentication
-      const response = await fetch('/api/auth/webauthn/authenticate/begin', {
+      const response = await fetch('/api/v1/auth/webauthn/authenticate/options', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -98,7 +98,7 @@ export function PasskeyLogin({
       }
 
       // Complete authentication
-      const completeResponse = await fetch('/api/auth/webauthn/authenticate/complete', {
+      const completeResponse = await fetch('/api/v1/auth/webauthn/authenticate/verify', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

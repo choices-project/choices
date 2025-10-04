@@ -15,22 +15,24 @@ export const FEATURE_FLAGS = {
   USER_SUGGESTIONS_MANAGER: false, // Admin can access from laptop for now
   
   // ===== ENHANCED MVP FEATURES (FULLY IMPLEMENTED) =====
-  ENHANCED_ONBOARDING: true,         // Multi-step onboarding system with comprehensive data collection
+  // ENHANCED_ONBOARDING: true,      // DEPRECATED - Replaced by BalancedOnboardingFlow (5-step consolidated system)
   ENHANCED_PROFILE: true,            // Advanced profile management with privacy controls
-  ENHANCED_AUTH: true,               // SSR-safe authentication with advanced utilities (IMPLEMENTED)
-  ENHANCED_DASHBOARD: true,          // Advanced dashboard with analytics and insights (COMPLETED)
+  // ENHANCED_AUTH: true,               // REMOVED: SSR-safe utilities are core infrastructure, not optional features
+  // ENHANCED_DASHBOARD: true,         // REMOVED: Now the default dashboard (no feature flag needed)
   ENHANCED_POLLS: true,              // Advanced poll creation and management system (164 polls active)
   ENHANCED_VOTING: true,             // Advanced voting methods and analytics (3 votes active)
   CIVICS_ADDRESS_LOOKUP: true,       // Address-based representative lookup system (IMPLEMENTED)
-  CIVICS_REPRESENTATIVE_DATABASE: true, // Federal, state, and local representative database (1,273 representatives)
-  CIVICS_CAMPAIGN_FINANCE: true,     // FEC campaign finance data integration (92 FEC records)
-  CIVICS_VOTING_RECORDS: true,       // Congressional voting records and analysis (2,185 voting records)
+  CIVICS_REPRESENTATIVE_DATABASE: false, // Federal, state, and local representative database (PARTIALLY IMPLEMENTED - needs database schema completion)
+  CIVICS_CAMPAIGN_FINANCE: false,     // FEC campaign finance data integration (PARTIALLY IMPLEMENTED - needs database schema completion)
+  CIVICS_VOTING_RECORDS: false,       // Congressional voting records and analysis (PARTIALLY IMPLEMENTED - needs database schema completion)
   CANDIDATE_ACCOUNTABILITY: true,    // Promise tracking and performance metrics (IMPLEMENTED)
   CANDIDATE_CARDS: true,             // Comprehensive candidate information cards (2 candidates)
   ALTERNATIVE_CANDIDATES: true,      // Platform for non-duopoly candidates (IMPLEMENTED)
   
   // ===== FUTURE FEATURES (Development Required) =====
   AUTOMATED_POLLS: false,            // AI-powered poll generation from trending topics
+  DEMOGRAPHIC_FILTERING: false,      // Personalize content based on user demographics (NOT IMPLEMENTED)
+  TRENDING_POLLS: false,             // Identify and surface trending polls and topics (NOT IMPLEMENTED)
   ADVANCED_PRIVACY: false,           // Zero-knowledge proofs and differential privacy (PARTIALLY IMPLEMENTED - 30%)
   MEDIA_BIAS_ANALYSIS: false,        // Media bias detection and analysis (not MVP ready)
   POLL_NARRATIVE_SYSTEM: false,      // AI-powered poll narrative generation (PARTIALLY IMPLEMENTED - 70%)
@@ -145,7 +147,7 @@ function categorizeFlag(flagId: string): string {
     core: ['CORE_AUTH', 'CORE_POLLS', 'CORE_USERS', 'WEBAUTHN', 'PWA', 'ADMIN', 'FEEDBACK_WIDGET'],
     
     // Enhanced MVP features ready for implementation
-    enhanced: ['ENHANCED_ONBOARDING', 'ENHANCED_PROFILE', 'ENHANCED_AUTH', 'ENHANCED_DASHBOARD', 'ENHANCED_POLLS', 'ENHANCED_VOTING'],
+    enhanced: ['ENHANCED_ONBOARDING', 'ENHANCED_PROFILE', 'ENHANCED_DASHBOARD', 'ENHANCED_POLLS', 'ENHANCED_VOTING'],
     
     // Future features requiring development
     future: ['AUTOMATED_POLLS', 'ADVANCED_PRIVACY', 'CIVICS_ADDRESS_LOOKUP', 'SOCIAL_SHARING', 'SOCIAL_SHARING_POLLS', 'SOCIAL_SHARING_CIVICS', 'SOCIAL_SHARING_VISUAL', 'SOCIAL_SHARING_OG', 'SOCIAL_SIGNUP'],

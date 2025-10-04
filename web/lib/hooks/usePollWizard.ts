@@ -147,10 +147,27 @@ export function usePollWizard() {
 
   // Data update functions
   const updateData = useCallback((updates: Partial<PollWizardData>) => {
-    setWizardState(prev => Object.assign({}, prev, {
-      data: Object.assign({}, prev.data, updates)
-    }));
-  }, []);
+    setWizardState(prev => {
+      const newData = Object.assign({}, prev.data, updates);
+      const errors = validateStep(prev.currentStep, newData);
+      const canProceed = Object.keys(errors).length === 0;
+      
+      // Debug logging
+      console.log('🔧 usePollWizard updateData:', {
+        currentStep: prev.currentStep,
+        updates,
+        newData: { title: newData.title, description: newData.description },
+        errors,
+        canProceed
+      });
+      
+      return Object.assign({}, prev, {
+        data: newData,
+        canProceed,
+        errors
+      });
+    });
+  }, [validateStep]);
 
   const addOption = useCallback(() => {
     setWizardState(prev => Object.assign({}, prev, {

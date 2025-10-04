@@ -2,7 +2,6 @@ import type { NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'
 import { devLog } from '@/lib/logger'
 import { getSupabaseServerClient } from '@/utils/supabase/server'
-import { getCurrentUser } from '@/lib/core/auth/utils'
 
 export const dynamic = 'force-dynamic'
 
@@ -18,15 +17,17 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Get current user from JWT token
-    const user = getCurrentUser(request)
+    // Get current user session from cookies
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession()
     
-    if (!user) {
+    if (sessionError || !session?.user) {
       return NextResponse.json(
         { error: 'User not authenticated' },
         { status: 401 }
       )
     }
+
+    const user = session.user
 
     // Parse form data
     const formData = await request.formData()
@@ -57,7 +58,7 @@ export async function POST(request: NextRequest) {
 
     // Upload to Supabase Storage
     const fileExt = avatarFile.name.split('.').pop()
-    const fileName = `${user.userId}-${Date.now()}.${fileExt}`
+    const fileName = `${user.id}-${Date.now()}.${fileExt}`
     const filePath = `avatars/${fileName}`
 
     const { data: uploadData, error: uploadError } = await supabase.storage
@@ -73,7 +74,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Log successful upload for audit trail
-    console.log(`Avatar uploaded successfully: ${uploadData?.path} for user: ${user.userId}`)
+    console.log(`Avatar uploaded successfully: ${uploadData?.path} for user: ${user.id}`)
 
     // Get public URL
     const { data: urlData } = supabase.storage
@@ -84,7 +85,7 @@ export async function POST(request: NextRequest) {
     const { error: updateError } = await supabase
       .from('user_profiles')
       .update({ avatar_url: urlData.publicUrl })
-      .eq('user_id', user.userId)
+      .eq('user_id', user.id)
 
     if (updateError) {
       devLog('Profile update error:', updateError)

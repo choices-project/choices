@@ -10,9 +10,12 @@ import {
   Target,
   Award,
   Zap,
-  Vote
+  Vote,
+  Play
 } from 'lucide-react';
 import { devLog } from '@/lib/logger';
+import PlatformTour from './PlatformTour';
+import FirstTimeUserGuide from './FirstTimeUserGuide';
 
 type DashboardData = {
   userPolls: PollSummary[];
@@ -116,6 +119,10 @@ export default function EnhancedDashboard({
     userType: 'all',
     deviceType: 'all'
   });
+
+  // Tour and guide state
+  const [showPlatformTour, setShowPlatformTour] = useState(false);
+  const [showFirstTimeGuide, setShowFirstTimeGuide] = useState(false);
 
   const dashboardViews = [
     {
@@ -493,6 +500,24 @@ export default function EnhancedDashboard({
               <div className="flex items-center space-x-4">
                 <div className="flex items-center space-x-2">
                   <button
+                    onClick={() => setShowPlatformTour(true)}
+                    className="flex items-center space-x-1 px-3 py-1 text-blue-600 hover:text-blue-800 transition-colors"
+                    data-testid="platform-tour-button"
+                  >
+                    <Play className="h-4 w-4" />
+                    <span className="text-sm">Take a Tour</span>
+                  </button>
+                  <button
+                    onClick={() => setShowFirstTimeGuide(true)}
+                    className="flex items-center space-x-1 px-3 py-1 text-green-600 hover:text-green-800 transition-colors"
+                    data-testid="first-time-guide-button"
+                  >
+                    <Vote className="h-4 w-4" />
+                    <span className="text-sm">Get Started</span>
+                  </button>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <button
                     onClick={handleRefresh}
                     disabled={loading}
                     className="p-2 text-gray-400 hover:text-gray-600 disabled:opacity-50"
@@ -539,6 +564,23 @@ export default function EnhancedDashboard({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {renderCurrentView()}
       </div>
+
+      {/* Tour Components */}
+      <PlatformTour 
+        isOpen={showPlatformTour}
+        onClose={() => setShowPlatformTour(false)}
+        onComplete={() => {
+          devLog('Platform tour completed');
+        }}
+      />
+      
+      <FirstTimeUserGuide
+        isOpen={showFirstTimeGuide}
+        onClose={() => setShowFirstTimeGuide(false)}
+        onComplete={() => {
+          devLog('First time user guide completed');
+        }}
+      />
     </div>
   );
 }

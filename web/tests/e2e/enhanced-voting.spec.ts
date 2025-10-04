@@ -28,6 +28,19 @@ test.describe('Enhanced Voting System - V2', () => {
     poll: ReturnType<typeof createTestPoll>;
   };
 
+  // Helper function to authenticate user
+  async function authenticateUser(page: any, user: any) {
+    await page.goto('/login');
+    await waitForPageReady(page);
+    
+    await page.fill('[data-testid="login-email"]', user.email);
+    await page.fill('[data-testid="login-password"]', user.password);
+    await page.click('[data-testid="login-submit"]');
+    
+    // Wait for successful login
+    await page.waitForURL('/dashboard', { timeout: 10000 });
+  }
+
   test.beforeEach(async ({ page }) => {
     // Create test data using V2 patterns
     testData = {
@@ -68,6 +81,9 @@ test.describe('Enhanced Voting System - V2', () => {
       poll: testData.poll
     });
 
+    // First authenticate the user
+    await authenticateUser(page, testData.user);
+
     // Navigate to specific poll page
     await page.goto(`/polls/${testData.poll.id}`);
     await waitForPageReady(page);
@@ -88,6 +104,9 @@ test.describe('Enhanced Voting System - V2', () => {
       user: testData.user,
       poll: testData.poll
     });
+
+    // First authenticate the user
+    await authenticateUser(page, testData.user);
 
     // Navigate to specific poll page
     await page.goto(`/polls/${testData.poll.id}`);

@@ -7,7 +7,7 @@ import QuadraticVoting from './QuadraticVoting'
 import RangeVoting from './RangeVoting'
 import RankedChoiceVoting from './RankedChoiceVoting'
 import SingleChoiceVoting from './SingleChoiceVoting'
-import { withOptional } from '@/lib/util/objects'
+import { withOptional } from '../../../lib/util/objects'
 
 type VoteResponse = { ok: boolean; id?: string; error?: string };
 type VerificationResponse = { ok: boolean; error?: string };

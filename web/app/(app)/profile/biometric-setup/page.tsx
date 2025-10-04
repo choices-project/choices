@@ -33,7 +33,7 @@ export default function BiometricSetupPage() {
       const { user } = userData
 
       // Get registration options
-      const optionsResponse = await fetch('/api/auth/webauthn/register', {
+      const optionsResponse = await fetch('/api/v1/auth/webauthn/register/options', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -92,7 +92,7 @@ export default function BiometricSetupPage() {
       }
 
       // Register the credential
-      const registerResponse = await fetch('/api/auth/webauthn/register', {
+      const registerResponse = await fetch('/api/v1/auth/webauthn/register/verify', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -32,62 +32,34 @@ export async function POST(
       throw new ValidationError('Poll ID is required')
     }
 
-    // Check if this is an E2E test
-    const isE2ETest = request.headers.get('x-e2e-bypass') === '1';
+    // E2E tests should use real authentication - no bypasses needed
+    const supabase = await getSupabaseServerClient();
     
-    // Use service role for E2E tests to bypass RLS
-    let supabase;
-    if (isE2ETest) {
-      // Create service role client for E2E tests
-      const { createClient } = await import('@supabase/supabase-js');
-      supabase = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SECRET_KEY!,
-        {
-          auth: {
-            autoRefreshToken: false,
-            persistSession: false
-          }
-        }
-      );
-    } else {
-      supabase = await getSupabaseServerClient();
+    // Always require real authentication
+    let user;
+    try {
+      user = await getUser();
+    } catch (error) {
+      console.error('Authentication error during vote:', error);
+      throw new AuthenticationError('Authentication required to vote')
     }
 
-    // Skip authentication for E2E tests
-    let user = null;
-    if (!isE2ETest) {
-      try {
-        user = await getUser();
-      } catch (error) {
-        console.error('Authentication error during vote:', error);
-        throw new AuthenticationError('Authentication required to vote')
-      }
-    } else {
-      // For E2E tests, create a mock user
-      user = {
-        id: '920f13c5-5cac-4e9f-b989-9e225a41b015', // Test user ID from database
-        email: 'user@example.com',
-        app_metadata: {},
-        user_metadata: {},
-        aud: 'authenticated',
-        created_at: new Date().toISOString()
-      } as any;
+    // Check if user is authenticated
+    if (!user) {
+      throw new AuthenticationError('Authentication required to vote')
     }
 
     const supabaseClient = supabase;
     
-    // Verify user is active (skip for E2E tests)
-    if (request.headers.get('x-e2e-bypass') !== '1') {
-      const { data: userProfile } = await supabaseClient
-        .from('user_profiles')
-        .select('is_active')
-        .eq('user_id', user.id)
-        .single()
+    // Verify user is active - always check for real users
+    const { data: userProfile } = await supabaseClient
+      .from('user_profiles')
+      .select('is_active')
+      .eq('user_id', user.id)
+      .single()
 
-      if (!userProfile || !('is_active' in userProfile) || !userProfile.is_active) {
-        throw new AuthenticationError('Active account required to vote')
-      }
+    if (!userProfile || !('is_active' in userProfile) || !userProfile.is_active) {
+      throw new AuthenticationError('Active account required to vote')
     }
 
     const body = await request.json()
@@ -197,40 +169,12 @@ export async function HEAD(
       return new NextResponse(null, { status: 204 }) // Not voted
     }
 
-    // Check if this is an E2E test
-    const isE2ETest = request.headers.get('x-e2e-bypass') === '1';
-    
-    // Use service role for E2E tests to bypass RLS
-    let supabase;
-    if (isE2ETest) {
-      // Create service role client for E2E tests
-      const { createClient } = await import('@supabase/supabase-js');
-      supabase = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SECRET_KEY!,
-        {
-          auth: {
-            autoRefreshToken: false,
-            persistSession: false
-          }
-        }
-      );
-    } else {
-      supabase = await getSupabaseServerClient();
-    }
+    // Always use regular client - no E2E bypasses
+    const supabase = await getSupabaseServerClient();
 
-    // Get user; SSR internal fetch might be unauth'd — default to "no vote"
-    let user = null;
-    if (!isE2ETest) {
-      const { data: auth } = await supabase.auth.getUser()
-      user = auth?.user
-    } else {
-      // For E2E tests, use test user
-      user = {
-        id: '920f13c5-5cac-4e9f-b989-9e225a41b015', // Test user ID from database
-        email: 'user@example.com'
-      } as any;
-    }
+    // Get user - always require real authentication
+    const { data: auth } = await supabase.auth.getUser()
+    const user = auth?.user
     
     if (!user) {
       return new NextResponse(null, { status: 204 }) // unauth => not voted
@@ -276,34 +220,8 @@ export async function GET(
       throw new Error('Supabase client not available')
     }
 
-    // Check authentication
-    let user = await getUser()
-    
-    // E2E bypass for testing
-    if (!user && request.headers.get('x-e2e-bypass') === '1') {
-      const supabase = await getSupabaseServerClient()
-      // Use service role to bypass RLS
-      const { data: testUser, error: testUserError } = await supabase
-        .from('user_profiles')
-        .select('user_id, email')
-        .eq('email', 'user@example.com')
-        .single()
-        
-      if (testUserError) {
-        console.error('Error fetching test user for E2E bypass:', testUserError);
-      }
-      
-      if (testUser) {
-        user = { 
-          id: testUser.user_id, 
-          email: testUser.email,
-          app_metadata: {},
-          user_metadata: {},
-          aud: 'authenticated',
-          created_at: new Date().toISOString()
-        } as any
-      }
-    }
+    // Always require real authentication - no E2E bypasses
+    const user = await getUser()
     
     if (!user) {
       return NextResponse.json(

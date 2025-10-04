@@ -110,30 +110,33 @@ export function AccessibleResultsChart({
   // ============================================================================
 
   useEffect(() => {
-    // Check for reduced motion preference
-    const reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-    setPrefersReducedMotion(reducedMotionQuery.matches);
-    
-    const handleReducedMotionChange = (e: MediaQueryListEvent) => {
-      setPrefersReducedMotion(e.matches);
-    };
-    
-    reducedMotionQuery.addEventListener('change', handleReducedMotionChange);
-    
-    // Check for high contrast preference
-    const highContrastQuery = window.matchMedia('(prefers-contrast: high)');
-    setPrefersHighContrast(highContrastQuery.matches);
-    
-    const handleHighContrastChange = (e: MediaQueryListEvent) => {
-      setPrefersHighContrast(e.matches);
-    };
-    
-    highContrastQuery.addEventListener('change', handleHighContrastChange);
-    
-    return () => {
-      reducedMotionQuery.removeEventListener('change', handleReducedMotionChange);
-      highContrastQuery.removeEventListener('change', handleHighContrastChange);
-    };
+    // Only run on client side
+    if (typeof window !== 'undefined') {
+      // Check for reduced motion preference
+      const reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+      setPrefersReducedMotion(reducedMotionQuery.matches);
+      
+      const handleReducedMotionChange = (e: MediaQueryListEvent) => {
+        setPrefersReducedMotion(e.matches);
+      };
+      
+      reducedMotionQuery.addEventListener('change', handleReducedMotionChange);
+      
+      // Check for high contrast preference
+      const highContrastQuery = window.matchMedia('(prefers-contrast: high)');
+      setPrefersHighContrast(highContrastQuery.matches);
+      
+      const handleHighContrastChange = (e: MediaQueryListEvent) => {
+        setPrefersHighContrast(e.matches);
+      };
+      
+      highContrastQuery.addEventListener('change', handleHighContrastChange);
+      
+      return () => {
+        reducedMotionQuery.removeEventListener('change', handleReducedMotionChange);
+        highContrastQuery.removeEventListener('change', handleHighContrastChange);
+      };
+    }
   }, []);
 
   // ============================================================================

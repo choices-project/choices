@@ -99,12 +99,18 @@ export default function AdminFeedbackPage() {
     try {
       const response = await fetch('/api/admin/feedback/export?' + new URLSearchParams(filters));
       const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `feedback-export-${new Date().toISOString().split('T')[0]}.csv`;
-      a.click();
-      window.URL.revokeObjectURL(url);
+      // Use SSR-safe browser API access
+      const { safeWindow, safeDocument } = await import('@/shared/utils/lib/ssr-safe');
+      const url = safeWindow(w => w.URL?.createObjectURL?.(blob));
+      if (url) {
+        const a = safeDocument(d => d.createElement?.('a')) as HTMLAnchorElement;
+        if (a) {
+          a.href = url;
+          a.download = `feedback-export-${new Date().toISOString().split('T')[0]}.csv`;
+          a.click();
+        }
+        safeWindow(w => w.URL?.revokeObjectURL?.(url));
+      }
     } catch (error) {
       devLog('Error exporting feedback:', error);
     }

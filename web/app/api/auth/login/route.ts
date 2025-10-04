@@ -8,28 +8,22 @@ import {
   createCsrfErrorResponse 
 } from '../_shared'
 
+
 export async function POST(request: NextRequest) {
   try {
-    // Validate CSRF protection for state-changing operation
+    // Always validate CSRF protection for state-changing operation
     if (!validateCsrfProtection(request)) {
       return createCsrfErrorResponse()
     }
 
     // Rate limiting: 10 login attempts per 15 minutes per IP
-    // Skip rate limiting for E2E tests
-    const isE2E = request.headers.get('x-e2e-bypass') === '1' || 
-                  process.env.NODE_ENV === 'test' || 
-                  process.env.E2E === '1'
+    const rateLimitResult = await rateLimiters.auth.check(request)
     
-    if (!isE2E) {
-      const rateLimitResult = await rateLimiters.auth.check(request)
-      
-      if (!rateLimitResult.allowed) {
-        return NextResponse.json(
-          { message: 'Too many login attempts. Please try again later.' },
-          { status: 429 }
-        )
-      }
+    if (!rateLimitResult.allowed) {
+      return NextResponse.json(
+        { message: 'Too many login attempts. Please try again later.' },
+        { status: 429 }
+      )
     }
 
     // Validate request
@@ -48,59 +42,7 @@ export async function POST(request: NextRequest) {
     const supabase = getSupabaseServerClient()
     const supabaseClient = await supabase
 
-    // For E2E tests, mock the response to bypass Supabase validation
-    if (isE2E) {
-      const mockUser = {
-        id: `test-user-${Date.now()}`,
-        email: email.toLowerCase().trim(),
-        user_metadata: {
-          username: 'testuser',
-          display_name: 'Test User'
-        }
-      };
-      
-      const mockSession = {
-        access_token: `mock-token-${Date.now()}`,
-        refresh_token: `mock-refresh-${Date.now()}`,
-        expires_in: 3600,
-        token_type: 'bearer',
-        user: mockUser
-      };
-      
-      // Mock auth data for E2E testing
-      
-      // Create mock profile for E2E
-      const mockProfile = {
-        username: 'testuser',
-        trust_tier: 'T0',
-        display_name: 'Test User',
-        avatar_url: null,
-        bio: null,
-        is_active: true
-      };
-      
-      logger.info('E2E mock login successful', { 
-        userId: mockUser.id, 
-        email: mockUser.email,
-        username: mockProfile.username 
-      });
-
-      return NextResponse.json({
-        success: true,
-        user: {
-          id: mockUser.id,
-          email: mockUser.email,
-          username: mockProfile.username,
-          trust_tier: mockProfile.trust_tier,
-          display_name: mockProfile.display_name,
-          avatar_url: mockProfile.avatar_url,
-          bio: mockProfile.bio,
-          is_active: mockProfile.is_active
-        },
-        session: mockSession,
-        token: mockSession.access_token
-      });
-    }
+    // E2E tests should use real Supabase authentication - no mock responses
 
     // Sign in with Supabase Auth
     const { data: authData, error: authError } = await supabaseClient.auth.signInWithPassword({
@@ -159,7 +101,7 @@ export async function POST(request: NextRequest) {
         is_active: profile.is_active
       },
       session: authData.session,
-      token: authData.session?.access_token // Add token field for E2E compatibility
+      token: authData.session?.access_token
     })
 
   } catch (error) {

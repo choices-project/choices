@@ -7,7 +7,7 @@ import dynamic from 'next/dynamic'
 import { initializePWA } from '@/lib/pwa/init'
 import EnhancedFeedbackWidget from '../../components/EnhancedFeedbackWidget'
 
-const PWAIntegration = dynamic(() => import('../../components/PWAIntegration'), {
+const PWABackground = dynamic(() => import('../../components/PWABackground'), {
   ssr: false,
   loading: () => null
 })
@@ -56,8 +56,8 @@ export default function AppLayout({
           
           {children}
           
-          {/* PWA Integration - Handles all PWA functionality */}
-          <PWAIntegration />
+          {/* PWA Background - Only shows offline indicator when needed */}
+          <PWABackground />
           
           {/* Enhanced Feedback Widget - Only render on client side */}
           <EnhancedFeedbackWidget />

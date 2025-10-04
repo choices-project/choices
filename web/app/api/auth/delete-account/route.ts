@@ -2,11 +2,10 @@ import type { NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'
 import { devLog } from '@/lib/logger'
 import { getSupabaseServerClient } from '@/utils/supabase/server'
-import { getCurrentUser } from '@/lib/core/auth/utils'
 
 export const dynamic = 'force-dynamic'
 
-export async function DELETE(request: NextRequest) {
+export async function DELETE(_request: NextRequest) {
   try {
     // Get Supabase client
     const supabase = await getSupabaseServerClient()
@@ -18,21 +17,23 @@ export async function DELETE(request: NextRequest) {
       )
     }
 
-    // Get current user from JWT token
-    const user = getCurrentUser(request)
+    // Get current user from Supabase native session
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession()
     
-    if (!user) {
+    if (sessionError || !session?.user) {
       return NextResponse.json(
         { error: 'User not authenticated' },
         { status: 401 }
       )
     }
+    
+    const user = session.user
 
     // Delete user profile
     const { error: profileError } = await supabase
       .from('user_profiles')
       .delete()
-      .eq('user_id', user.userId)
+      .eq('user_id', user.id)
 
     if (profileError) {
       devLog('Profile deletion error:', profileError)
@@ -46,7 +47,7 @@ export async function DELETE(request: NextRequest) {
     const { error: votesError } = await supabase
       .from('votes')
       .delete()
-      .eq('user_id', user.userId)
+      .eq('user_id', user.id)
 
     if (votesError) {
       devLog('Votes deletion error:', votesError)
@@ -57,7 +58,7 @@ export async function DELETE(request: NextRequest) {
     const { error: pollsError } = await supabase
       .from('polls')
       .delete()
-      .eq('created_by', user.userId)
+      .eq('created_by', user.id)
 
     if (pollsError) {
       devLog('Polls deletion error:', pollsError)
@@ -68,7 +69,7 @@ export async function DELETE(request: NextRequest) {
     const { error: credentialsError } = await supabase
       .from('webauthn_credentials')
       .delete()
-      .eq('user_id', user.userId)
+      .eq('user_id', user.id)
 
     if (credentialsError) {
       devLog('Credentials deletion error:', credentialsError)
@@ -76,7 +77,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Delete user from Supabase Auth
-    const { error: authError } = await supabase.auth.admin.deleteUser(user.userId)
+    const { error: authError } = await supabase.auth.admin.deleteUser(user.id)
 
     if (authError) {
       devLog('Auth deletion error:', authError)

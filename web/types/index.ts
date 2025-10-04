@@ -91,17 +91,20 @@ export type PollNarrative = {
 export type User = {
   id: string;
   email: string;
-  stable_id: string;
-  verification_tier: string;
-  is_active: boolean;
+  created_at: string;
+  email_confirmed_at?: string;
 }
 
 export type UserProfile = {
-  id: string;
-  stable_id: string;
+  user_id: string;
   email: string;
-  verification_tier: string;
+  username?: string;
+  display_name?: string;
+  trust_tier: 'T0' | 'T1' | 'T2' | 'T3';
+  is_admin: boolean;
   is_active: boolean;
+  created_at: string;
+  updated_at: string;
 }
 
 export type GeneratedPoll = {

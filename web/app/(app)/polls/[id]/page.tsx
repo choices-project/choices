@@ -5,4 +5,4 @@
  * while maintaining the expected URL structure.
  */
 
-export { default } from '@/features/polls/pages/[id]/page';
+export { default } from '../../../../features/polls/pages/[id]/page';

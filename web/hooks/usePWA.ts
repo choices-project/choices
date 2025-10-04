@@ -72,8 +72,8 @@ export type PWAActions = {
 
 export function usePWA(): PWAStatus & PWAActions {
   const [status, setStatus] = useState<PWAStatus>({
-    isSupported: false,
-    isEnabled: false,
+    isSupported: typeof window !== 'undefined' ? ('serviceWorker' in navigator && 'PushManager' in window) : false,
+    isEnabled: isFeatureEnabled('PWA'),
     installation: {
       isInstallable: false,
       isInstalled: false,
@@ -82,16 +82,16 @@ export function usePWA(): PWAStatus & PWAActions {
       deferredPrompt: null
     },
     serviceWorker: {
-      isSupported: false,
+      isSupported: typeof window !== 'undefined' ? 'serviceWorker' in navigator : false,
       isRegistered: false,
       isActive: false,
       isInstalling: false,
       isWaiting: false
     },
-    isOnline: navigator.onLine,
+    isOnline: typeof window !== 'undefined' ? navigator.onLine : true,
     offlineVotes: 0,
     hasOfflineData: false,
-    notificationsSupported: 'Notification' in window,
+    notificationsSupported: typeof window !== 'undefined' ? 'Notification' in window : false,
     notificationsEnabled: false,
     notificationsPermission: 'default',
     loading: true,
@@ -119,12 +119,17 @@ export function usePWA(): PWAStatus & PWAActions {
 
       // Check basic support
       const isSupported = 'serviceWorker' in navigator && 'PushManager' in window;
+      console.log('usePWA: PWA support check:', {
+        serviceWorker: 'serviceWorker' in navigator,
+        pushManager: 'PushManager' in window,
+        isSupported
+      });
       
       // Get installation status
       const installationStatus = pwaInstallationManager.getStatus();
       
-      // Get service worker status
-      const serviceWorkerStatus = await serviceWorkerManager.getStatus();
+      // Register service worker if not already registered
+      const serviceWorkerStatus = await serviceWorkerManager.register();
       
       // Check notification permission
       const notificationsPermission = 'Notification' in window 
@@ -334,14 +339,18 @@ export function usePWA(): PWAStatus & PWAActions {
       setStatus(prev => withOptional(prev, { serviceWorker: serviceWorkerStatus }));
     });
 
-    // Add event listeners
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
+    // Add event listeners (only on client side)
+    if (typeof window !== 'undefined') {
+      window.addEventListener('online', handleOnline);
+      window.addEventListener('offline', handleOffline);
+    }
 
     // Cleanup
     return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('online', handleOnline);
+        window.removeEventListener('offline', handleOffline);
+      }
       unsubscribeInstallation();
       unsubscribeServiceWorker();
     };

@@ -43,6 +43,11 @@ class PWAInstallationManager {
    * Initialize installation manager
    */
   private initialize(): void {
+    // Only initialize on client side
+    if (typeof window === 'undefined') {
+      return;
+    }
+    
     // Check if already installed
     this.checkInstallationStatus();
 
@@ -60,6 +65,13 @@ class PWAInstallationManager {
    * Check if PWA is already installed
    */
   private checkInstallationStatus(): void {
+    // Only check on client side
+    if (typeof window === 'undefined') {
+      this.isInstalled = false;
+      this.notifyListeners();
+      return;
+    }
+    
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
     const isIOSStandalone = (window.navigator as Navigator & { standalone?: boolean }).standalone === true;
     
@@ -93,10 +105,12 @@ class PWAInstallationManager {
     
     this.notifyListeners();
     
-    // Dispatch custom event
-    window.dispatchEvent(new CustomEvent('pwa-installed', {
-      detail: { timestamp: new Date().toISOString() }
-    }));
+    // Dispatch custom event (only on client side)
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('pwa-installed', {
+        detail: { timestamp: new Date().toISOString() }
+      }));
+    }
   }
 
   /**

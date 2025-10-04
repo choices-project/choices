@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { isFeatureEnabled } from '@/lib/core/feature-flags';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -40,14 +41,37 @@ export async function GET(
     // Get contact information
     const { data: contactInfo } = await supabase
       .from('civics_contact_info')
-      .select('*')
+      .select(`
+        id,
+        representative_id,
+        official_email,
+        official_phone,
+        official_fax,
+        official_website,
+        office_addresses,
+        preferred_contact_method,
+        response_time_expectation,
+        data_quality_score,
+        last_verified,
+        created_at,
+        updated_at
+      `)
       .eq('representative_id', representativeId)
       .single();
 
     // Get social media engagement
     const { data: socialMedia } = await supabase
       .from('civics_social_engagement')
-      .select('*')
+      .select(`
+        id,
+        representative_id,
+        platform,
+        handle,
+        followers_count,
+        engagement_rate,
+        created_at,
+        last_updated
+      `)
       .eq('representative_id', representativeId)
       .order('followers_count', { ascending: false });
 
@@ -87,11 +111,8 @@ export async function GET(
       social_media: socialMedia?.map(sm => ({
         platform: sm.platform,
         handle: sm.handle,
-        url: sm.url,
         followers_count: sm.followers_count,
-        engagement_rate: sm.engagement_rate,
-        verified: sm.verified,
-        official_account: sm.official_account
+        engagement_rate: sm.engagement_rate
       })) || [],
       
       communication_preferences: {
@@ -99,12 +120,10 @@ export async function GET(
         response_time_expectation: contactInfo?.response_time_expectation || 'within_week'
       },
       
-      data_quality: {
-        overall_score: contactInfo?.data_quality_score || 0,
-        last_verified: contactInfo?.last_verified || null,
-        data_source: contactInfo?.data_source || 'unknown',
-        verification_notes: contactInfo?.verification_notes || null
-      }
+    data_quality: {
+      overall_score: contactInfo?.data_quality_score || 0,
+      last_verified: contactInfo?.last_verified || null
+    }
     };
 
     // Generate quick contact actions
@@ -137,9 +156,9 @@ export async function GET(
       });
     }
     
-    // Add social media actions
-    contactData.social_media.forEach(sm => {
-      if (sm.url) {
+    // Add social media actions (only if social sharing features are enabled)
+    if (isFeatureEnabled('SOCIAL_SHARING') && contactData.social_media && contactData.social_media.length > 0) {
+      contactData.social_media.forEach(sm => {
         const platformIcons: Record<string, string> = {
           twitter: '🐦',
           facebook: '📘',
@@ -153,12 +172,12 @@ export async function GET(
           type: 'social',
           platform: sm.platform,
           label: `Follow on ${sm.platform.charAt(0).toUpperCase() + sm.platform.slice(1)}`,
-          action: sm.url,
+          action: `https://${sm.platform}.com/${sm.handle}`,
           icon: platformIcons[sm.platform] || '📱',
           followers_count: sm.followers_count
         });
-      }
-    });
+      });
+    }
 
     console.log(`✅ Successfully fetched contact information for ${representative.name}`);
 

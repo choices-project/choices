@@ -24,7 +24,7 @@ export function PasskeyManagement() {
   const loadPasskeys = async () => {
     try {
       // Load passkeys via API endpoint
-      const response = await fetch('/api/auth/webauthn/credentials');
+      const response = await fetch('/api/v1/auth/webauthn/credentials');
       if (response.ok) {
         const data = await response.json();
         setPasskeys(data.credentials || []);

@@ -183,6 +183,7 @@ export default function GlobalNavigation() {
                       size="sm"
                       onClick={handleLogout}
                       className="w-full justify-start flex items-center space-x-2"
+                      data-testid="logout-button"
                     >
                       <LogOut className="h-5 w-5" />
                       <span>Logout</span>

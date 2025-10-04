@@ -81,30 +81,8 @@ export async function GET(request: NextRequest) {
 // POST /api/polls - Create new poll (authenticated users only)
 export async function POST(request: NextRequest) {
   try {
-    // Check if this is an E2E test
-    const isE2ETest = request.headers.get('x-e2e-bypass') === '1';
-    devLog('E2E test detected:', isE2ETest);
-    
-    // Use service role for E2E tests to bypass RLS
-    let supabase;
-    if (isE2ETest) {
-      devLog('Creating service role client for E2E test');
-      // Create service role client for E2E tests
-      const { createClient } = await import('@supabase/supabase-js');
-      supabase = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SECRET_KEY!,
-        {
-          auth: {
-            autoRefreshToken: false,
-            persistSession: false
-          }
-        }
-      );
-      devLog('Service role client created successfully');
-    } else {
-      supabase = await getSupabaseServerClient();
-    }
+    // Always require authentication - no E2E bypasses
+    const supabase = await getSupabaseServerClient();
     
     if (!supabase) {
       return NextResponse.json(
@@ -113,63 +91,28 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check authentication (bypass for E2E tests)
+    // Always require authentication
     let user;
     try {
       user = await getUser();
     } catch (error) {
       console.error('Authentication error during poll creation:', error);
-      // If getUser fails and this is not an E2E test, return auth error
-      if (!isE2ETest) {
-        return NextResponse.json(
-          { error: 'Authentication required to create polls' },
-          { status: 401 }
-        );
-      }
-      // For E2E tests, continue without user
-      user = null;
-    }
-    
-    if (!user && !isE2ETest) {
       return NextResponse.json(
         { error: 'Authentication required to create polls' },
         { status: 401 }
       );
     }
     
-        // For E2E tests, use an existing test user
-        if (isE2ETest && !user) {
-          // Get the existing test user ID from the database
-          const { data: testUser } = await supabase
-            .from('user_profiles')
-            .select('user_id, email')
-            .eq('email', 'user@example.com')
-            .single();
-          
-          if (testUser) {
-            user = {
-              id: testUser.user_id,
-              email: testUser.email,
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString(),
-              aud: 'authenticated',
-              role: 'authenticated'
-            } as any;
-          } else {
-            // Fallback to a hardcoded UUID if test user not found
-            user = {
-              id: '550e8400-e29b-41d4-a716-446655440000',
-              email: 'e2e-test@example.com',
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString(),
-              aud: 'authenticated',
-              role: 'authenticated'
-            } as any;
-          }
-        }
-
-    // Verify user is active (bypass for E2E tests)
-    if (!isE2ETest && user) {
+    // Check if user is authenticated
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Authentication required to create polls' },
+        { status: 401 }
+      );
+    }
+    
+    // Verify user is active
+    if (user) {
       const { data: userProfile } = await supabase
         .from('user_profiles')
         .select('is_active')

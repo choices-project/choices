@@ -35,14 +35,14 @@ export default function RegisterPage() {
       return
     }
 
-    // E2E env returns { ok: true } immediately
+    // Call server action - it will redirect on success
     const result = await serverRegister(fd, { ipAddress: '', userAgent: '', userId: '' })
     if (!result.ok) {
       setError(result.error || 'Registration failed')
       return
     }
 
-    router.replace('/onboarding?step=welcome') // redirect on success
+    // Server action handles redirect, so we don't need to redirect here
   }
 
   const handlePasskeySuccess = () => {

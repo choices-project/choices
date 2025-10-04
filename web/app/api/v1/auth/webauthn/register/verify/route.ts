@@ -18,22 +18,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Passkeys disabled on preview' }, { status: 400 });
     }
 
-    // Check for E2E bypass
-    const isE2E = req.headers.get('x-e2e-bypass') === '1' || 
-                  process.env.NODE_ENV === 'test' || 
-                  process.env.E2E === '1';
-    
-    if (isE2E) {
-      // Return mock success for E2E tests
-      return NextResponse.json({
-        verified: true,
-        credential: {
-          id: 'mock-credential-id',
-          publicKey: 'mock-public-key',
-          counter: 0
-        }
-      });
-    }
+    // E2E tests should use real WebAuthn implementation with virtual authenticators
+    // No bypasses needed - tests should use proper WebAuthn flow
 
     const supabase = await getSupabaseServerClient();
     const { data: { user }, error } = await supabase.auth.getUser();

@@ -61,9 +61,11 @@ export default function SingleChoiceVoting({
     setError(null)
 
     try {
-      // Track analytics with poll ID
-      if (typeof window !== 'undefined' && window.gtag) {
-        window.gtag('event', 'vote_submitted', {
+      // Track analytics with poll ID using SSR-safe access
+      const { safeWindow } = await import('@/shared/utils/lib/ssr-safe');
+      const gtag = safeWindow(w => w.gtag);
+      if (gtag) {
+        gtag('event', 'vote_submitted', {
           poll_id: pollId,
           choice: selectedOption,
           voting_method: 'single_choice'

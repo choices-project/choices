@@ -94,14 +94,20 @@ export default function DataExportPage() {
 
       if (response.ok) {
         const blob = await response.blob()
-        const url = window.URL.createObjectURL(blob)
-        const a = document.createElement('a')
-        a.href = url
-        a.download = `user-data-${user.email}-${new Date().toISOString().split('T')[0]}.${exportOptions.format}`
-        document.body.appendChild(a)
-        a.click()
-        window.URL.revokeObjectURL(url)
-        document.body.removeChild(a)
+        // Use SSR-safe browser API access
+        const { safeWindow, safeDocument } = await import('@/shared/utils/lib/ssr-safe');
+        const url = safeWindow(w => w.URL?.createObjectURL?.(blob));
+        if (url) {
+          const a = safeDocument(d => d.createElement?.('a')) as HTMLAnchorElement;
+          if (a) {
+            a.href = url;
+            a.download = `user-data-${user.email}-${new Date().toISOString().split('T')[0]}.${exportOptions.format}`;
+            safeDocument(d => d.body?.appendChild?.(a));
+            a.click();
+            safeWindow(w => w.URL?.revokeObjectURL?.(url));
+            safeDocument(d => d.body?.removeChild?.(a));
+          }
+        }
 
         // Add to export history
         const newExport: ExportHistory = {
@@ -110,7 +116,7 @@ export default function DataExportPage() {
           format: exportOptions.format.toUpperCase(),
           size: `${(blob.size / 1024).toFixed(1)} KB`,
           status: 'completed',
-          downloadurl: url
+          ...(url && { downloadurl: url })
         }
         setExportHistory(prev => [newExport, ...prev])
       } else {

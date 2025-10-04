@@ -624,8 +624,46 @@ CREATE TABLE user_profiles (
     username TEXT NOT NULL,
     user_id UUID NOT NULL,
     id UUID NOT NULL DEFAULT gen_random_uuid(),
-    geo_precision TEXT
+    geo_precision TEXT,
+    -- Enhanced Profile Fields (Added January 4, 2025)
+    display_name VARCHAR(100),
+    preferences JSONB DEFAULT '{}',
+    privacy_settings JSONB DEFAULT '{
+      "profile_visibility": "public",
+      "show_email": false,
+      "show_activity": true,
+      "allow_messages": true,
+      "share_demographics": false,
+      "allow_analytics": true
+    }',
+    -- Extended Profile Fields (Optional)
+    primary_concerns TEXT[],
+    community_focus TEXT[],
+    participation_style TEXT DEFAULT 'observer',
+    demographics JSONB DEFAULT '{}'
 );
+```
+
+#### **user_profiles Indexes**
+```sql
+-- Core indexes for user_profiles table
+CREATE INDEX idx_user_profiles_user_id ON user_profiles(user_id);
+CREATE INDEX idx_user_profiles_username ON user_profiles(username);
+CREATE INDEX idx_user_profiles_email ON user_profiles(email);
+CREATE INDEX idx_user_profiles_trust_tier ON user_profiles(trust_tier);
+CREATE INDEX idx_user_profiles_is_active ON user_profiles(is_active);
+CREATE INDEX idx_user_profiles_created_at ON user_profiles(created_at);
+CREATE INDEX idx_user_profiles_display_name ON user_profiles(display_name);
+
+-- Composite indexes for common query patterns
+CREATE INDEX idx_user_profiles_admin ON user_profiles(is_admin);
+CREATE INDEX idx_user_profiles_active ON user_profiles(is_active);
+CREATE INDEX idx_user_profiles_admin_active ON user_profiles(is_admin, is_active);
+CREATE INDEX idx_user_profiles_created_active ON user_profiles(created_at, is_active);
+
+-- Conditional index for geo data
+CREATE INDEX idx_user_profiles_geo_updated_at ON user_profiles(geo_updated_at) 
+WHERE geo_updated_at IS NOT NULL;
 ```
 
 #### **user_location_resolutions**

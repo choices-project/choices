@@ -66,15 +66,12 @@ test.describe('API Endpoints - V2', () => {
       poll: testData.poll
     });
 
-    // Test registration endpoint
+    // Test registration endpoint (no bypass needed - should work with real implementation)
     const registerResponse = await page.request.post('/api/auth/register', {
       data: {
         email: testData.user.email,
         username: testData.user.username,
         password: testData.user.password
-      },
-      headers: {
-        'x-e2e-bypass': '1'
       }
     });
     
@@ -82,14 +79,11 @@ test.describe('API Endpoints - V2', () => {
     const registerData = await registerResponse.json();
     expect(registerData).toHaveProperty('success', true);
 
-    // Test login endpoint
+    // Test login endpoint (no bypass needed - should work with real implementation)
     const loginResponse = await page.request.post('/api/auth/login', {
       data: {
         email: testData.user.email,
         password: testData.user.password
-      },
-      headers: {
-        'x-e2e-bypass': '1'
       }
     });
     
@@ -106,48 +100,63 @@ test.describe('API Endpoints - V2', () => {
       poll: testData.poll
     });
 
-    // First authenticate
-    const loginResponse = await page.request.post('/api/auth/login', {
-      data: {
-        email: testData.user.email,
-        password: testData.user.password
-      }
+    // Navigate to login page to establish session context
+    await page.goto('/login');
+    await page.waitForLoadState('networkidle');
+
+    // Fill login form and submit (this will set proper session cookies)
+    await page.fill('[data-testid="login-email"]', testData.user.email);
+    await page.fill('[data-testid="login-password"]', testData.user.password);
+    await page.click('[data-testid="login-submit"]');
+    
+    // Wait for successful login
+    await page.waitForURL('/dashboard', { timeout: 10000 });
+
+    // Test poll creation endpoint (uses real session cookies via browser context)
+    const createPollResponse = await page.evaluate(async (pollData) => {
+      const response = await fetch('/api/polls', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(pollData)
+      });
+      const data = await response.json();
+      return { status: response.status, data };
+    }, {
+      title: testData.poll.title,
+      description: testData.poll.description,
+      options: testData.poll.options,
+      category: testData.poll.category
     });
     
-    const loginData = await loginResponse.json();
-    authToken = loginData.token;
+    expect(createPollResponse.status).toBe(200);
+    expect(createPollResponse.data).toHaveProperty('id');
+    expect(createPollResponse.data.title).toBe(testData.poll.title);
 
-    // Test poll creation endpoint
-    const createPollResponse = await page.request.post('/api/polls', {
-      headers: {
-        'Authorization': `Bearer ${authToken}`
-      },
-      data: {
-        title: testData.poll.title,
-        description: testData.poll.description,
-        options: testData.poll.options,
-        category: testData.poll.category
-      }
+    const pollId = createPollResponse.data.id;
+
+    // Test poll retrieval endpoint (uses real session cookies via browser context)
+    const getPollResponse = await page.evaluate(async (pollId) => {
+      const response = await fetch(`/api/polls/${pollId}`);
+      const data = await response.json();
+      return { status: response.status, data };
+    }, pollId);
+    
+    expect(getPollResponse.status).toBe(200);
+    expect(getPollResponse.data.title).toBe(testData.poll.title);
+
+    // Test polls list endpoint (uses real session cookies via browser context)
+    const listPollsResponse = await page.evaluate(async () => {
+      const response = await fetch('/api/polls');
+      const data = await response.json();
+      return { status: response.status, data };
     });
     
-    expect(createPollResponse.ok()).toBe(true);
-    const pollData = await createPollResponse.json();
-    expect(pollData).toHaveProperty('id');
-    expect(pollData.title).toBe(testData.poll.title);
-
-    // Test poll retrieval endpoint
-    const getPollResponse = await page.request.get(`/api/polls/${pollData.id}`);
-    expect(getPollResponse.ok()).toBe(true);
-    const retrievedPoll = await getPollResponse.json();
-    expect(retrievedPoll.title).toBe(testData.poll.title);
-
-    // Test polls list endpoint
-    const listPollsResponse = await page.request.get('/api/polls');
-    expect(listPollsResponse.ok()).toBe(true);
-    const pollsData = await listPollsResponse.json();
-    expect(pollsData).toHaveProperty('success', true);
-    expect(pollsData).toHaveProperty('polls');
-    expect(Array.isArray(pollsData.polls)).toBe(true);
+    expect(listPollsResponse.status).toBe(200);
+    expect(listPollsResponse.data).toHaveProperty('success', true);
+    expect(listPollsResponse.data).toHaveProperty('polls');
+    expect(Array.isArray(listPollsResponse.data.polls)).toBe(true);
   });
 
   test('should test voting API endpoints with V2 setup', async ({ page }) => {
@@ -157,52 +166,67 @@ test.describe('API Endpoints - V2', () => {
       poll: testData.poll
     });
 
-    // First authenticate
-    const loginResponse = await page.request.post('/api/auth/login', {
-      data: {
-        email: testData.user.email,
-        password: testData.user.password
-      }
+    // Navigate to login page to establish session context
+    await page.goto('/login');
+    await page.waitForLoadState('networkidle');
+
+    // Fill login form and submit (this will set proper session cookies)
+    await page.fill('[data-testid="login-email"]', testData.user.email);
+    await page.fill('[data-testid="login-password"]', testData.user.password);
+    await page.click('[data-testid="login-submit"]');
+    
+    // Wait for successful login
+    await page.waitForURL('/dashboard', { timeout: 10000 });
+
+    // Create a poll first (uses real session cookies via browser context)
+    const createPollResponse = await page.evaluate(async (pollData) => {
+      const response = await fetch('/api/polls', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(pollData)
+      });
+      const data = await response.json();
+      return { status: response.status, data };
+    }, {
+      title: testData.poll.title,
+      description: testData.poll.description,
+      options: testData.poll.options,
+      category: testData.poll.category
     });
     
-    const loginData = await loginResponse.json();
-    authToken = loginData.token;
+    expect(createPollResponse.status).toBe(200);
+    const pollData = createPollResponse.data;
 
-    // Create a poll first
-    const createPollResponse = await page.request.post('/api/polls', {
-      headers: {
-        'Authorization': `Bearer ${authToken}`
-      },
-      data: {
-        title: testData.poll.title,
-        description: testData.poll.description,
-        options: testData.poll.options,
-        category: testData.poll.category
-      }
-    });
+    // Test vote submission endpoint (uses real session cookies via browser context)
+    const voteResponse = await page.evaluate(async (pollId: string, optionId: string) => {
+      const response = await fetch(`/api/polls/${pollId}/vote`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          optionId: optionId,
+          votingMethod: 'single'
+        })
+      });
+      const data = await response.json();
+      return { status: response.status, data };
+    }, pollData.id, pollData.options[0].id);
     
-    const pollData = await createPollResponse.json();
+    expect(voteResponse.status).toBe(200);
+    expect(voteResponse.data).toHaveProperty('success', true);
 
-    // Test vote submission endpoint
-    const voteResponse = await page.request.post(`/api/polls/${pollData.id}/vote`, {
-      headers: {
-        'Authorization': `Bearer ${authToken}`
-      },
-      data: {
-        optionId: pollData.options[0].id,
-        votingMethod: 'single'
-      }
-    });
+    // Test poll results endpoint (uses real session cookies via browser context)
+    const resultsResponse = await page.evaluate(async (pollId) => {
+      const response = await fetch(`/api/polls/${pollId}/results`);
+      const data = await response.json();
+      return { status: response.status, data };
+    }, pollData.id);
     
-    expect(voteResponse.ok()).toBe(true);
-    const voteData = await voteResponse.json();
-    expect(voteData).toHaveProperty('success', true);
-
-    // Test poll results endpoint
-    const resultsResponse = await page.request.get(`/api/polls/${pollData.id}/results`);
-    expect(resultsResponse.ok()).toBe(true);
-    const resultsData = await resultsResponse.json();
-    expect(resultsData).toHaveProperty('results');
+    expect(resultsResponse.status).toBe(200);
+    expect(resultsResponse.data).toHaveProperty('results');
   });
 
   test('should test civics API endpoints with V2 setup', async ({ page }) => {
@@ -242,43 +266,47 @@ test.describe('API Endpoints - V2', () => {
       poll: testData.poll
     });
 
-    // First authenticate
-    const loginResponse = await page.request.post('/api/auth/login', {
-      data: {
-        email: testData.user.email,
-        password: testData.user.password
-      }
-    });
-    
-    const loginData = await loginResponse.json();
-    authToken = loginData.token;
+    // Navigate to login page to establish session context
+    await page.goto('/login');
+    await page.waitForLoadState('networkidle');
 
-    // Test get user profile endpoint
-    const getProfileResponse = await page.request.get('/api/profile', {
-      headers: {
-        'Authorization': `Bearer ${authToken}`
-      }
-    });
+    // Fill login form and submit (this will set proper session cookies)
+    await page.fill('[data-testid="login-email"]', testData.user.email);
+    await page.fill('[data-testid="login-password"]', testData.user.password);
+    await page.click('[data-testid="login-submit"]');
     
-    expect(getProfileResponse.ok()).toBe(true);
-    const profileData = await getProfileResponse.json();
-    expect(profileData).toHaveProperty('email');
-    expect(profileData.email).toBe(testData.user.email);
+    // Wait for successful login
+    await page.waitForURL('/dashboard', { timeout: 10000 });
 
-    // Test update user profile endpoint
-    const updateProfileResponse = await page.request.put('/api/profile', {
-      headers: {
-        'Authorization': `Bearer ${authToken}`
-      },
-      data: {
-        displayName: 'Updated Display Name',
-        bio: 'Updated bio'
-      }
+    // Test get user profile endpoint (uses real session cookies via browser context)
+    const profileResponse = await page.evaluate(async () => {
+      const response = await fetch('/api/profile');
+      const data = await response.json();
+      return { status: response.status, data };
     });
     
-    expect(updateProfileResponse.ok()).toBe(true);
-    const updatedProfileData = await updateProfileResponse.json();
-    expect(updatedProfileData.displayName).toBe('Updated Display Name');
+    expect(profileResponse.status).toBe(200);
+    expect(profileResponse.data).toHaveProperty('email');
+    expect(profileResponse.data.email).toBe(testData.user.email);
+
+    // Test update user profile endpoint (uses real authentication via browser context)
+    const updateResponse = await page.evaluate(async () => {
+      const response = await fetch('/api/profile', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          displayName: 'Updated Display Name',
+          bio: 'Updated bio'
+        })
+      });
+      const data = await response.json();
+      return { status: response.status, data };
+    });
+    
+    expect(updateResponse.status).toBe(200);
+    expect(updateResponse.data.displayName).toBe('Updated Display Name');
   });
 
   test('should test dashboard API endpoints with V2 setup', async ({ page }) => {
@@ -288,7 +316,7 @@ test.describe('API Endpoints - V2', () => {
       poll: testData.poll
     });
 
-    // First authenticate
+    // First authenticate (no bypass needed - should work with real implementation)
     const loginResponse = await page.request.post('/api/auth/login', {
       data: {
         email: testData.user.email,
@@ -332,7 +360,7 @@ test.describe('API Endpoints - V2', () => {
       poll: testData.poll
     });
 
-    // First authenticate
+    // First authenticate (no bypass needed - should work with real implementation)
     const loginResponse = await page.request.post('/api/auth/login', {
       data: {
         email: testData.user.email,
@@ -375,7 +403,7 @@ test.describe('API Endpoints - V2', () => {
       poll: testData.poll
     });
 
-    // First authenticate
+    // First authenticate (no bypass needed - should work with real implementation)
     const loginResponse = await page.request.post('/api/auth/login', {
       data: {
         email: testData.user.email,

@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { ArrowLeft, Share2, CheckCircle, AlertCircle } from 'lucide-react';
-import VotingInterface from '@/features/voting/components/VotingInterface';
+import VotingInterface from '../../../../features/voting/components/VotingInterface';
 import PostCloseBanner from '@/components/PostCloseBanner';
 import ModeSwitch from '@/components/ModeSwitch';
 import type { ResultsMode } from '@/components/ModeSwitch';
@@ -66,10 +66,7 @@ export default function PollClient({ poll }: PollClientProps) {
       try {
         const res = await fetch(`/api/polls/${poll.id}/vote`, { 
           method: 'HEAD', 
-          cache: 'no-store',
-          headers: {
-            'x-e2e-bypass': '1' // Add E2E bypass header for client-side requests
-          }
+          cache: 'no-store'
         });
         if (!cancelled) setHasVoted(res.status === 200);
       } catch {
@@ -118,8 +115,7 @@ export default function PollClient({ poll }: PollClientProps) {
       const response = await fetch(`/api/polls/${poll.id}/vote`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'x-e2e-bypass': '1' // Add E2E bypass header
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({ choice }),
       });
@@ -153,11 +149,17 @@ export default function PollClient({ poll }: PollClientProps) {
   };
 
   const handleShare = async () => {
-    const url = `${window.location.origin}/polls/${pollId}`;
+    // Use SSR-safe browser API access
+    const { safeWindow, safeNavigator } = await import('../../../../shared/utils/lib/ssr-safe');
+    const origin = safeWindow(w => w.location?.origin, '');
+    const url = `${origin}/polls/${pollId}`;
     try {
-      await navigator.clipboard.writeText(url);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      const clipboard = safeNavigator(n => n.clipboard);
+      if (clipboard?.writeText) {
+        await clipboard.writeText(url);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      }
     } catch (err) {
       console.error('Failed to copy URL:', err);
     }

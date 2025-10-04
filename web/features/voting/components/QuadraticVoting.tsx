@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { CheckCircle, AlertCircle, Info, DollarSign, TrendingUp, TrendingDown } from 'lucide-react'
-import { withOptional } from '@/lib/util/objects'
+import { withOptional } from '../../../lib/util/objects'
 
 type PollOption = {
   id: string
@@ -109,9 +109,11 @@ export default function QuadraticVoting({
         throw new Error('Allocations exceed available credits')
       }
       
-      // Track analytics with poll ID
-      if (typeof window !== 'undefined' && window.gtag) {
-        window.gtag('event', 'vote_submitted', {
+      // Track analytics with poll ID using SSR-safe access
+      const { safeWindow } = await import('@/shared/utils/lib/ssr-safe');
+      const gtag = safeWindow(w => w.gtag);
+      if (gtag) {
+        gtag('event', 'vote_submitted', {
           poll_id: pollId,
           allocations: validAllocations,
           voting_method: 'quadratic',
