@@ -223,7 +223,7 @@ async function processStatesInBatches(states: string[], batchSize: number, force
         batchResults.push(stateResult);
         
         // Respect rate limits - wait between states
-        await new Promise(resolve => setTimeout(resolve, 2000)); // 2 second delay
+        await new Promise(resolve => setTimeout(resolve, 500)); // 0.5 second delay
         
       } catch (error) {
         console.error(`❌ Failed to process ${state}:`, error);
@@ -245,8 +245,8 @@ async function processStatesInBatches(states: string[], batchSize: number, force
     
     // Wait between batches to respect rate limits
     if (i < batches.length - 1) {
-      console.log(`⏳ Waiting 10 seconds before next batch...`);
-      await new Promise(resolve => setTimeout(resolve, 10000)); // 10 second delay between batches
+      console.log(`⏳ Waiting 2 seconds before next batch...`);
+      await new Promise(resolve => setTimeout(resolve, 2000)); // 2 second delay between batches
     }
   }
   
@@ -385,7 +385,7 @@ async function processStateData(state: string, forceRefresh: boolean, dryRun: bo
         processedCount++;
         
         // Rate limiting - wait between requests
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        await new Promise(resolve => setTimeout(resolve, 500));
         
       } catch (error) {
         console.error(`Failed to process legislator ${legislator.full_name}:`, error);

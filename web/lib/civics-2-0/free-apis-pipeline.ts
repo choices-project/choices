@@ -196,7 +196,7 @@ export class FreeAPIsPipeline {
 
       // Resolve canonical ID for multi-source reconciliation
       const canonicalResult = await this.resolveCanonicalId(enrichedRep);
-      
+
       devLog('Representative processed successfully', { 
         name: enrichedRep.name, 
         qualityScore: enrichedRep.qualityScore,
