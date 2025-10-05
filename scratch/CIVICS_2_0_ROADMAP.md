@@ -31,17 +31,26 @@
 - **Multi-Source Coverage**: 100% coverage with multiple APIs working together
 - **Geographic Boundaries**: Ready for data visualization and heatmapping
 
-### **📁 ORGANIZED SYSTEM (4 Essential Endpoints)**
+### **📁 FINAL ORGANIZED SYSTEM (All Civics in /api/civics/)**
 ```
 Database: web/database/CIVICS_2_0_SUPABASE_EDITOR.sql
 FREE APIs Pipeline: web/lib/civics-2-0/free-apis-pipeline.ts
 CanonicalIdService: web/lib/civics/canonical-id-service.ts
 
-CIVICS ENDPOINTS (4) - All in /api/civics/:
-├── /api/civics/maximized-api-ingestion/ - Main production ingestion
+CIVICS ENDPOINTS (All in /api/civics/):
+├── /api/civics/execute-comprehensive-ingest/ - Main production ingestion
+├── /api/civics/maximized-api-ingestion/ - Optimized ingestion
 ├── /api/civics/state-level-ingestion/ - State-level processing  
-├── /api/civics/execute-comprehensive-ingest/ - Test ingestion
-└── /api/civics/ingestion-status/ - Status monitoring
+├── /api/civics/phase1-alternative/ - Alternative ingestion
+├── /api/civics/ingestion-status/ - Status monitoring
+├── /api/civics/rate-limit-status/ - API rate limit monitoring
+├── /api/civics/overnight-status/ - Overnight ingestion status
+├── /api/civics/check-supabase-status/ - Database status
+├── /api/civics/by-state/ - Representatives by state
+├── /api/civics/representative/ - Individual representative
+├── /api/civics/contact/ - Contact information
+├── /api/civics/canonical/ - Canonical ID management
+└── /api/civics/local/ - Local representatives
 
 UI Components: web/components/civics-2-0/
 Main Page: web/app/(app)/civics-2-0/page.tsx
