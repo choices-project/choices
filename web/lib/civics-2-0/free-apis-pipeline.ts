@@ -722,14 +722,14 @@ export class FreeAPIsPipeline {
           isPrimary: true
         };
       }
-    } catch (error) {
+    } catch (_error) {
       devLog('Congress photo not available', { bioguideId });
     }
 
     return null;
   }
 
-  private async getWikipediaPhotos(name: string): Promise<PhotoInfo[]> {
+  private async getWikipediaPhotos(_name: string): Promise<PhotoInfo[]> {
     // Implementation for Wikipedia photo search
     // This would use the Wikipedia API to search for photos
     return [];
@@ -1104,12 +1104,12 @@ export class FreeAPIsPipeline {
     
     try {
       // Search for social media profiles using various methods
-      const searchTerms = [
-        name,
-        name.replace(/\s+/g, ''),
-        name.split(' ').join('_'),
-        name.split(' ').join('.')
-      ];
+      // const searchTerms = [
+      //   name,
+      //   name.replace(/\s+/g, ''),
+      //   name.split(' ').join('_'),
+      //   name.split(' ').join('.')
+      // ];
       
       // This would integrate with social media APIs or search services
       // For now, return empty array as this requires external services

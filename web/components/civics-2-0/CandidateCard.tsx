@@ -13,7 +13,7 @@
 
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import Image from 'next/image';
 import { 
   PhoneIcon, 
@@ -21,18 +21,16 @@ import {
   GlobeAltIcon,
   ShareIcon,
   HeartIcon,
-  ChatBubbleLeftIcon,
   UserPlusIcon,
   ChevronDownIcon,
   ChevronUpIcon,
   XMarkIcon
 } from '@heroicons/react/24/outline';
 import { 
-  HeartIcon as HeartSolidIcon,
-  ShareIcon as ShareSolidIcon
+  HeartIcon as HeartSolidIcon
 } from '@heroicons/react/24/solid';
 
-interface RepresentativeData {
+type RepresentativeData = {
   id: string;
   name: string;
   party: string;
@@ -49,7 +47,7 @@ interface RepresentativeData {
   lastUpdated: Date;
 }
 
-interface ContactInfo {
+type ContactInfo = {
   type: 'email' | 'phone' | 'website' | 'fax' | 'address';
   value: string;
   label?: string;
@@ -58,7 +56,7 @@ interface ContactInfo {
   source: string;
 }
 
-interface SocialMediaInfo {
+type SocialMediaInfo = {
   platform: 'twitter' | 'facebook' | 'instagram' | 'youtube' | 'linkedin';
   handle: string;
   url: string;
@@ -67,7 +65,7 @@ interface SocialMediaInfo {
   source: string;
 }
 
-interface PhotoInfo {
+type PhotoInfo = {
   url: string;
   source: 'congress-gov' | 'wikipedia' | 'google-civic' | 'openstates';
   quality: 'high' | 'medium' | 'low';
@@ -78,7 +76,7 @@ interface PhotoInfo {
   height?: number;
 }
 
-interface ActivityInfo {
+type ActivityInfo = {
   type: 'vote' | 'bill' | 'statement' | 'social_media' | 'photo_update';
   title: string;
   description?: string;
@@ -88,7 +86,7 @@ interface ActivityInfo {
   source: string;
 }
 
-interface CampaignFinanceInfo {
+type CampaignFinanceInfo = {
   electionCycle: string;
   totalReceipts: number;
   totalDisbursements: number;
@@ -100,7 +98,7 @@ interface CampaignFinanceInfo {
   selfFinancing: number;
 }
 
-interface CandidateCardProps {
+type CandidateCardProps = {
   representative: RepresentativeData;
   onLike?: (id: string) => void;
   onShare?: (id: string) => void;
@@ -138,7 +136,7 @@ export default function CandidateCard({
   const primaryPhoto = representative.photos.find(photo => photo.isPrimary) || representative.photos[0];
   
   // Get primary contact
-  const primaryContact = representative.contacts.find(contact => contact.isPrimary);
+  // const primaryContact = representative.contacts.find(contact => contact.isPrimary);
   
   // Get social media with most followers
   const topSocialMedia = representative.socialMedia

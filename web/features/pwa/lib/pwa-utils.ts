@@ -111,7 +111,7 @@ export type BeforeInstallPromptEvent = {
 } & Event
 
 declare global {
-  interface WindowEventMap {
+  type WindowEventMap = {
     beforeinstallprompt: BeforeInstallPromptEvent;
   }
 }

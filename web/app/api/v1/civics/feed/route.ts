@@ -12,7 +12,7 @@
 
 import { type NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { freeAPIsPipeline } from '@/lib/civics-2-0/free-apis-pipeline';
+// import { freeAPIsPipeline } from '@/lib/civics-2-0/free-apis-pipeline';
 
 export const dynamic = 'force-dynamic';
 
@@ -27,12 +27,11 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '20');
-    const userId = searchParams.get('userId');
     const state = searchParams.get('state');
-    const interests = searchParams.get('interests')?.split(',') || [];
 
     // Get user preferences if userId provided
     let userPreferences = null;
+    const userId = searchParams.get('userId');
     if (userId) {
       const { data: preferences } = await supabase
         .from('user_civics_preferences')
@@ -44,6 +43,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Generate personalized feed items
+    const interests = searchParams.get('interests')?.split(',') || [];
     const feedItems = await generatePersonalizedFeed({
       page,
       limit,
@@ -77,7 +77,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-interface GenerateFeedOptions {
+type GenerateFeedOptions = {
   page: number;
   limit: number;
   userId?: string | null;

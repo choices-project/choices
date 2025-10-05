@@ -165,7 +165,7 @@ async function testDataIngestion() {
   }
 }
 
-async function createDataIngestionPlan() {
+async function _createDataIngestionPlan() {
   console.log('\n📋 Creating Data Ingestion Plan...');
   
   const plan = {

@@ -13,7 +13,7 @@ import type { Page } from '@playwright/test';
 /**
  * No email mocking needed - we're just testing database functionality
  */
-export async function setupEmailMocking(page: _Page): Promise<void> {
+export async function setupEmailMocking(_page: _Page): Promise<void> {
   // For E2E tests, we don't need to worry about email bounces
   // The registration will work fine in the database
   console.log('🧪 E2E testing - email bounces are not a concern');

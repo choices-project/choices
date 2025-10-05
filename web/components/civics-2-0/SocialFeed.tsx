@@ -13,16 +13,13 @@
 
 'use client';
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { 
   HeartIcon, 
   ChatBubbleLeftIcon, 
   ShareIcon, 
   BookmarkIcon,
-  UserIcon,
-  CalendarIcon,
-  GlobeAltIcon,
   ChevronUpIcon
 } from '@heroicons/react/24/outline';
 import { 
@@ -30,7 +27,7 @@ import {
   BookmarkIcon as BookmarkSolidIcon
 } from '@heroicons/react/24/solid';
 
-interface FeedItem {
+type FeedItem = {
   id: string;
   representativeId: string;
   representativeName: string;
@@ -53,7 +50,7 @@ interface FeedItem {
   metadata: Record<string, any>;
 }
 
-interface SocialFeedProps {
+type SocialFeedProps = {
   userId?: string;
   preferences?: UserPreferences;
   onLike?: (itemId: string) => void;
@@ -63,7 +60,7 @@ interface SocialFeedProps {
   className?: string;
 }
 
-interface UserPreferences {
+type UserPreferences = {
   state?: string;
   district?: string;
   interests?: string[];
@@ -100,7 +97,7 @@ export default function SocialFeed({
   
   // Touch gesture handling
   const [touchStart, setTouchStart] = useState<{ y: number } | null>(null);
-  const [touchEnd, setTouchEnd] = useState<{ y: number } | null>(null);
+  const [, setTouchEnd] = useState<{ y: number } | null>(null);
   const [pullDistance, setPullDistance] = useState(0);
 
   // Load initial feed
@@ -342,7 +339,7 @@ export default function SocialFeed({
 
       {/* Feed items */}
       <div className="space-y-4 p-4">
-        {feedItems.map((item, index) => (
+        {feedItems.map((item, _index) => (
           <div key={item.id} className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
             {/* Header */}
             <div className="p-4 border-b border-gray-100">
