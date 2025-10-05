@@ -8,7 +8,7 @@
  * @date 2025-01-15
  */
 
-import { dev } from '@/lib/dev.logger';
+import { devLog } from '@/lib/logger';
 import { withOptional } from '@/lib/util/objects';
 
 // Types for FEC API responses
@@ -229,7 +229,7 @@ export class FECClient {
     const startTime = Date.now();
     
     try {
-      dev.logger.debug('Making FEC API request', {
+      devLog('Making FEC API request', {
         endpoint,
         params,
         url: url.toString().replace(this.config.apiKey, '***'),
@@ -266,7 +266,7 @@ export class FECClient {
 
       const data = await response.json();
 
-      dev.logger.debug('FEC API response received', {
+      devLog('FEC API response received', {
         endpoint,
         responseTime,
         status: response.status,
@@ -291,7 +291,7 @@ export class FECClient {
         );
       }
 
-      dev.logger.error('FEC API request failed', {
+      devLog('FEC API request failed', {
         endpoint,
         error: error instanceof Error ? error.message : 'Unknown error',
         responseTime

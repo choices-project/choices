@@ -218,17 +218,33 @@ async function storeCivicsData(data: any, source: string) {
   
   let storedCount = 0;
   
-  // Store representatives
+  // Store representatives in new Civics 2.0 schema
   if (representatives && representatives.length > 0) {
     const { error: repError } = await supabase
-      .from('civics_representatives')
+      .from('representatives_core')
       .upsert(
         representatives.map((rep: any) => ({
-          ...rep,
-          source,
-          ingested_at: new Date().toISOString()
+          // Map old fields to new schema
+          name: rep.name,
+          party: rep.party,
+          office: rep.office,
+          level: rep.level,
+          state: rep.jurisdiction || rep.state,
+          district: rep.district,
+          bioguide_id: rep.bioguide_id,
+          openstates_id: rep.openstates_id,
+          fec_id: rep.fec_id,
+          google_civic_id: rep.google_civic_id,
+          primary_email: rep.primary_email,
+          primary_phone: rep.primary_phone,
+          primary_website: rep.primary_website,
+          primary_photo_url: rep.primary_photo_url,
+          active: true,
+          data_quality_score: rep.data_quality_score || 0,
+          data_sources: [source],
+          last_updated: new Date().toISOString()
         })),
-        { onConflict: 'external_id' }
+        { onConflict: 'bioguide_id' }
       );
     
     if (repError) {

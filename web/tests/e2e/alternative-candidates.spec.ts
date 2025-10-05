@@ -34,11 +34,11 @@ test.describe('Alternative Candidates', () => {
   test('shows alternative candidates when toggled', async ({ page }) => {
     await page.goto('/civics');
     await waitForPageReady(page);
-    await expect(page.getByTestId('candidate-accountability-card')).toBeVisible();
+    await expect(page.getByTestId('candidate-accountability-card').first()).toBeVisible();
     // Alternative section header
-    await expect(page.locator('text=Alternative Candidates')).toBeVisible();
+    await expect(page.locator('text=Alternative Candidates').first()).toBeVisible();
     // Open alternatives
-    const toggle = page.getByRole('button', { name: /Show Alternatives/i });
+    const toggle = page.getByRole('button', { name: /Show Alternatives/i }).first();
     if (await toggle.isVisible()) {
       await toggle.click();
     }

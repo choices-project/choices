@@ -15,9 +15,17 @@ export async function GET(
   try {
     const representativeId = params.id;
     
-    if (!representativeId || isNaN(Number(representativeId))) {
+    if (!representativeId) {
       return NextResponse.json(
-        { ok: false, error: 'Invalid representative ID' },
+        { ok: false, error: 'Representative ID is required' },
+        { status: 400 }
+      );
+    }
+    
+    // Validate ID format (should be UUID)
+    if (!representativeId || representativeId.length < 10) {
+      return NextResponse.json(
+        { ok: false, error: 'Invalid representative ID format' },
         { status: 400 }
       );
     }
@@ -29,6 +37,7 @@ export async function GET(
       .from('civics_representatives')
       .select(`
         id,
+        canonical_id,
         name,
         party,
         office,

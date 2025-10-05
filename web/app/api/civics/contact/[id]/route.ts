@@ -15,9 +15,17 @@ export async function GET(
   try {
     const representativeId = params.id;
     
-    if (!representativeId || isNaN(Number(representativeId))) {
+    if (!representativeId) {
       return NextResponse.json(
-        { ok: false, error: 'Invalid representative ID' },
+        { ok: false, error: 'Representative ID is required' },
+        { status: 400 }
+      );
+    }
+    
+    // Validate ID format (should be UUID)
+    if (!representativeId || representativeId.length < 10) {
+      return NextResponse.json(
+        { ok: false, error: 'Invalid representative ID format' },
         { status: 400 }
       );
     }
@@ -27,7 +35,7 @@ export async function GET(
     // Get representative basic information
     const { data: representative, error: repError } = await supabase
       .from('civics_representatives')
-      .select('id, name, office, level, jurisdiction, party')
+      .select('id, canonical_id, name, office, level, jurisdiction, party')
       .eq('id', representativeId)
       .single();
 

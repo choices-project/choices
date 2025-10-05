@@ -4,7 +4,7 @@
  * Comprehensive error handling for Open States API integration
  */
 
-import { dev } from '../../dev.logger';
+import { devLog } from '@/lib/logger';
 
 // Error types
 export type ErrorDetails = {
@@ -93,7 +93,7 @@ export const DEFAULT_RETRY_CONFIG: RetryConfig = {
 
 // Error classification
 export function classifyError(error: any): OpenStatesApiError {
-  dev.logger.debug('Classifying Open States API error', { error });
+  devLog('Classifying Open States API error', { error });
 
   // If it's already an OpenStatesApiError, return it
   if (error instanceof OpenStatesApiError) {
@@ -220,12 +220,12 @@ export async function executeWithRetry<T>(
   
   for (let attempt = 0; attempt <= config.maxRetries; attempt++) {
     try {
-      dev.logger.debug(`Executing ${context} operation`, { attempt: attempt + 1 });
+      devLog(`Executing ${context} operation`, { attempt: attempt + 1 });
       
       const result = await operation();
       
       if (attempt > 0) {
-        dev.logger.info(`${context} operation succeeded after retry`, { 
+        devLog(`${context} operation succeeded after retry`, { 
           attempts: attempt + 1 
         });
       }
@@ -236,7 +236,7 @@ export async function executeWithRetry<T>(
       const classifiedError = classifyError(error);
       lastError = classifiedError;
       
-      dev.logger.warn(`${context} operation failed`, {
+      devLog(`${context} operation failed`, {
         attempt: attempt + 1,
         error: classifiedError.message,
         code: classifiedError.code,
@@ -249,7 +249,7 @@ export async function executeWithRetry<T>(
       
       if (attempt < config.maxRetries) {
         const delay = calculateRetryDelay(attempt, config);
-        dev.logger.debug(`Retrying ${context} operation after delay`, { 
+        devLog(`Retrying ${context} operation after delay`, { 
           delay,
           nextAttempt: attempt + 2 
         });
@@ -259,7 +259,7 @@ export async function executeWithRetry<T>(
     }
   }
   
-  dev.logger.error(`${context} operation failed after all retries`, {
+  devLog(`${context} operation failed after all retries`, {
     attempts: config.maxRetries + 1,
     finalError: lastError!.message,
     code: lastError!.code
@@ -307,7 +307,7 @@ export class ErrorMonitor {
     this.retryCounts.push(retries);
     this.metrics.averageRetries = this.retryCounts.reduce((sum, count) => sum + count, 0) / this.retryCounts.length;
     
-    dev.logger.debug('Recorded Open States API error', {
+    devLog('Recorded Open States API error', {
       code: error.code,
       retries,
       totalErrors: this.metrics.totalErrors

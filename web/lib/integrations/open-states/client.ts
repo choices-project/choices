@@ -8,7 +8,7 @@
  * @date 2025-01-15
  */
 
-import { dev } from '@/lib/dev.logger';
+import { devLog } from '@/lib/logger';
 
 // Types for Open States API responses
 export type OpenStatesState = {
@@ -257,7 +257,7 @@ export class OpenStatesClient {
     const startTime = Date.now();
     
     try {
-      dev.logger.debug('Making Open States API request', {
+      devLog('Making Open States API request', {
         endpoint,
         params,
         url: url.toString().replace(this.config.apiKey, '***'),
@@ -294,7 +294,7 @@ export class OpenStatesClient {
 
       const data = await response.json();
 
-      dev.logger.debug('Open States API response received', {
+      devLog('Open States API response received', {
         endpoint,
         responseTime,
         status: response.status,
@@ -320,7 +320,7 @@ export class OpenStatesClient {
         );
       }
 
-      dev.logger.error('Open States API request failed', {
+      devLog('Open States API request failed', {
         endpoint,
         error: error instanceof Error ? error.message : 'Unknown error',
         responseTime

@@ -24,12 +24,18 @@ export async function GET() {
       }, { status: 200 });
     }
 
-    // Note: Using existing feature flag system instead of environment variable
-
-    // Check PRIVACY_PEPPER
-    if (!process.env.PRIVACY_PEPPER) {
-      issues.push('PRIVACY_PEPPER is not set');
-      status = 'error';
+    // Check PRIVACY_PEPPER_DEV (for development/test)
+    if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test') {
+      if (!process.env.PRIVACY_PEPPER_DEV) {
+        issues.push('PRIVACY_PEPPER_DEV is not set');
+        status = 'warning';
+      }
+    } else {
+      // Production environment checks
+      if (!process.env.PRIVACY_PEPPER_CURRENT) {
+        issues.push('PRIVACY_PEPPER_CURRENT is not set');
+        status = 'error';
+      }
     }
 
     // Check Google Civic API key
@@ -52,7 +58,8 @@ export async function GET() {
       checks: {
         feature_flag: isEnabled,
         environment_variables: {
-          PRIVACY_PEPPER: !!process.env.PRIVACY_PEPPER,
+          PRIVACY_PEPPER_DEV: !!process.env.PRIVACY_PEPPER_DEV,
+          PRIVACY_PEPPER_CURRENT: !!process.env.PRIVACY_PEPPER_CURRENT,
           GOOGLE_CIVIC_API_KEY: !!process.env.GOOGLE_CIVIC_API_KEY
         },
         // TODO: Add more checks when implemented

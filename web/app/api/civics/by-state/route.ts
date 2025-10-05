@@ -39,11 +39,23 @@ export async function GET(req: NextRequest) {
         valid_to,
         created_at,
         last_updated
-      `)
-      .eq('jurisdiction', state.toUpperCase());
+      `);
 
-    if (level) {
-      query = query.eq('level', level);
+    // Handle different levels of government
+    if (level === 'federal') {
+      // Federal representatives have jurisdiction = "US" and state info in name field
+      query = query.eq('level', 'federal').eq('jurisdiction', 'US');
+      
+      // Filter by state using name field (e.g., "Rep. Ken Calvert [R-CA41]")
+      const stateCode = state.toUpperCase();
+      query = query.ilike('name', `%${stateCode}%`);
+    } else {
+      // State and local representatives use jurisdiction field
+      query = query.eq('jurisdiction', state.toUpperCase());
+      
+      if (level) {
+        query = query.eq('level', level);
+      }
     }
 
     if (chamber) {

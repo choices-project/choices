@@ -4,7 +4,7 @@
  * Transforms Open States API responses into unified data structures
  */
 
-import { dev } from '../../dev.logger';
+import { devLog } from '@/lib/logger';
 
 // Open States API types
 export type OpenStatesLegislator = {
@@ -157,7 +157,7 @@ export type OpenStatesVote = {
 // Transform Open States legislator to unified representative
 export function transformOpenStatesLegislator(legislator: OpenStatesLegislator): any {
   try {
-    dev.logger.debug('Transforming Open States legislator', { 
+    devLog('Transforming Open States legislator', { 
       id: legislator.id, 
       name: legislator.name 
     });
@@ -202,14 +202,14 @@ export function transformOpenStatesLegislator(legislator: OpenStatesLegislator):
       lastUpdated: legislator.updated_at
     };
 
-    dev.logger.debug('Open States legislator transformed successfully', { 
+    devLog('Open States legislator transformed successfully', { 
       id: transformed.id 
     });
 
     return transformed;
 
   } catch (error) {
-    dev.logger.error('Failed to transform Open States legislator', { 
+    devLog('Failed to transform Open States legislator', { 
       id: legislator.id, 
       error 
     });
@@ -220,7 +220,7 @@ export function transformOpenStatesLegislator(legislator: OpenStatesLegislator):
 // Transform Open States bill to unified bill
 export function transformOpenStatesBill(bill: OpenStatesBill): any {
   try {
-    dev.logger.debug('Transforming Open States bill', { 
+    devLog('Transforming Open States bill', { 
       id: bill.id, 
       identifier: bill.identifier 
     });
@@ -275,14 +275,14 @@ export function transformOpenStatesBill(bill: OpenStatesBill): any {
       lastUpdated: bill.updated_at
     };
 
-    dev.logger.debug('Open States bill transformed successfully', { 
+    devLog('Open States bill transformed successfully', { 
       id: transformed.id 
     });
 
     return transformed;
 
   } catch (error) {
-    dev.logger.error('Failed to transform Open States bill', { 
+    devLog('Failed to transform Open States bill', { 
       id: bill.id, 
       error 
     });
@@ -293,7 +293,7 @@ export function transformOpenStatesBill(bill: OpenStatesBill): any {
 // Transform Open States vote to unified vote
 export function transformOpenStatesVote(vote: OpenStatesVote): any {
   try {
-    dev.logger.debug('Transforming Open States vote', { 
+    devLog('Transforming Open States vote', { 
       id: vote.id, 
       identifier: vote.identifier 
     });
@@ -322,14 +322,14 @@ export function transformOpenStatesVote(vote: OpenStatesVote): any {
       lastUpdated: vote.updated_at
     };
 
-    dev.logger.debug('Open States vote transformed successfully', { 
+    devLog('Open States vote transformed successfully', { 
       id: transformed.id 
     });
 
     return transformed;
 
   } catch (error) {
-    dev.logger.error('Failed to transform Open States vote', { 
+    devLog('Failed to transform Open States vote', { 
       id: vote.id, 
       error 
     });
@@ -340,7 +340,7 @@ export function transformOpenStatesVote(vote: OpenStatesVote): any {
 // Transform to candidate card format
 export function transformToCandidateCard(legislator: OpenStatesLegislator): any {
   try {
-    dev.logger.debug('Transforming Open States legislator to candidate card', { 
+    devLog('Transforming Open States legislator to candidate card', { 
       id: legislator.id 
     });
 
@@ -363,14 +363,14 @@ export function transformToCandidateCard(legislator: OpenStatesLegislator): any 
       lastUpdated: legislator.updated_at
     };
 
-    dev.logger.debug('Open States candidate card transformed successfully', { 
+    devLog('Open States candidate card transformed successfully', { 
       id: transformed.id 
     });
 
     return transformed;
 
   } catch (error) {
-    dev.logger.error('Failed to transform Open States legislator to candidate card', { 
+    devLog('Failed to transform Open States legislator to candidate card', { 
       id: legislator.id, 
       error 
     });

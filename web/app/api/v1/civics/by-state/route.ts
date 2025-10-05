@@ -26,38 +26,33 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Build query
+    // Build query using new Civics 2.0 schema
     let query = supabase
-      .from('civics_representatives')
+      .from('representatives_core')
       .select(`
         id,
         name,
         office,
         level,
-        jurisdiction,
+        state,
         district,
         party,
+        primary_email,
+        primary_phone,
+        primary_website,
+        primary_photo_url,
+        data_quality_score,
         last_updated,
-        person_id,
-        contact
+        created_at
       `)
-      .eq('valid_to', 'infinity')
+      .eq('active', true)
       .limit(limit);
 
-    // Filter by state
-    if (state !== 'US') {
-      // For federal reps, check if district contains the state
-      if (level === 'federal') {
-        query = query.or(`district.ilike.%${state}%,jurisdiction.ilike.%${state}%`);
-      } else {
-        query = query.eq('jurisdiction', state);
-      }
-    } else {
-      query = query.eq('level', 'federal');
-    }
+    // Filter by state (new schema uses 'state' field)
+    query = query.eq('state', state);
 
     // Filter by level if specified
-    if (level) {
+    if (level && level !== 'all') {
       query = query.eq('level', level);
     }
 
@@ -75,18 +70,18 @@ export async function GET(request: NextRequest) {
           name: rep.name,
           office: rep.office,
           level: rep.level,
-          jurisdiction: rep.jurisdiction,
+          state: rep.state,
           district: rep.district,
           party: rep.party,
           last_updated: rep.last_updated
         };
 
         // Include FEC data if requested
-        if (include.includes('fec') && rep.person_id) {
+        if (include.includes('fec') && rep.id) {
           const { data: fecData } = await supabase
-            .from('civics_fec_minimal')
+            .from('representative_campaign_finance')
             .select('total_receipts, cash_on_hand, election_cycle, last_updated')
-            .eq('person_id', rep.person_id)
+            .eq('representative_id', rep.id)
             .order('election_cycle', { ascending: false })
             .limit(1)
             .single();
@@ -102,33 +97,28 @@ export async function GET(request: NextRequest) {
         }
 
         // Include voting data if requested
-        if (include.includes('votes') && rep.person_id) {
+        if (include.includes('votes') && rep.id) {
           const { data: votesData } = await supabase
-            .from('civics_votes_minimal')
-            .select('vote_id, bill_title, vote_date, vote_position, party_position, last_updated')
-            .eq('person_id', rep.person_id)
+            .from('representative_voting_records')
+            .select('vote_id, bill_title, vote_date, vote_position, result, created_at')
+            .eq('representative_id', rep.id)
             .order('vote_date', { ascending: false })
             .limit(5);
 
           if (votesData && votesData.length > 0) {
-            const partyVotes = votesData.filter(vote => vote.party_position === vote.vote_position);
-            const partyAlignment = partyVotes.length / votesData.length;
-
             response.votes = {
               last_5: votesData,
-              party_alignment: Math.round(partyAlignment * 100) / 100,
-              last_updated: votesData[0]?.last_updated || new Date().toISOString()
+              last_updated: votesData[0]?.created_at || new Date().toISOString()
             };
           }
         }
 
         // Include contact data if requested
-        if (include.includes('contact') && rep.contact) {
-          const contact = typeof rep.contact === 'string' ? JSON.parse(rep.contact) : rep.contact;
+        if (include.includes('contact')) {
           response.contact = {
-            phone: contact.phone,
-            website: contact.website,
-            twitter_url: contact.twitter_url,
+            phone: rep.primary_phone,
+            email: rep.primary_email,
+            website: rep.primary_website,
             last_updated: rep.last_updated
           };
         }
