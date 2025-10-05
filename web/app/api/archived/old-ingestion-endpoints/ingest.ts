@@ -12,7 +12,7 @@
 // export { GoogleCivicClient } from '../integrations/google-civic/client';
 
 // Create a simple lookup function that uses the Google Civic client
-export const lookupAddress = async (address: string) => {
+export const lookupAddress = async (_address: string) => {
   // const { GoogleCivicClient } = await import('../integrations/google-civic/client');
   // const client = new GoogleCivicClient({
   //   apiKey: process.env.GOOGLE_CIVIC_API_KEY || ''

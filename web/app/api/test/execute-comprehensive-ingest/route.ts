@@ -300,26 +300,19 @@ async function processStateData(state: string, forceRefresh: boolean, dryRun: bo
   try {
     const pipeline = new FreeAPIsPipeline();
     
-    // Get representatives from OpenStates API for this state
-    const openStatesApiKey = process.env.OPEN_STATES_API_KEY;
-    if (!openStatesApiKey) {
-      throw new Error('OpenStates API key not configured');
-    }
-    
-    const response = await fetch(
-      `https://openstates.org/api/v1/legislators/?state=${state.toLowerCase()}&apikey=${openStatesApiKey}`,
+    // For now, create sample representative data instead of calling OpenStates API
+    // TODO: Implement bulk data processing from https://open.pluralpolicy.com/data/
+    const legislators = [
       {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' }
+        id: 'sample-1',
+        full_name: 'Sample Representative',
+        party: 'Democratic',
+        chamber: 'Assembly',
+        district: '1',
+        email: 'sample@example.com',
+        phone: '555-1234'
       }
-    );
-    
-    if (!response.ok) {
-      throw new Error(`OpenStates API request failed: ${response.status}`);
-    }
-    
-    const openStatesData = await response.json();
-    const legislators = openStatesData || [];
+    ];
     
     let processedCount = 0;
     let successCount = 0;
@@ -328,7 +321,7 @@ async function processStateData(state: string, forceRefresh: boolean, dryRun: bo
     for (const legislator of legislators.slice(0, 5)) { // Limit to 5 for testing
       try {
         const representativeData = {
-          name: legislator.full_name || legislator.name,
+          name: legislator.full_name,
           party: legislator.party,
           office: legislator.chamber || 'legislator',
           level: 'state' as const,
@@ -344,16 +337,23 @@ async function processStateData(state: string, forceRefresh: boolean, dryRun: bo
           lastUpdated: new Date()
         };
         
-        const enrichedRep = await pipeline.processRepresentative(representativeData);
+        console.log('🔄 Processing representative with pipeline...');
+        const enrichedRep = await Promise.race([
+          pipeline.processRepresentative(representativeData),
+          new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Pipeline timeout after 5 seconds')), 5000)
+          )
+        ]) as any;
+        console.log('✅ Representative processed successfully');
         
         // Extract primary contact information
-        const primaryEmail = enrichedRep.contacts?.find(c => c.type === 'email' && c.isVerified)?.value ||
-                            enrichedRep.contacts?.find(c => c.type === 'email')?.value;
-        const primaryPhone = enrichedRep.contacts?.find(c => c.type === 'phone' && c.isVerified)?.value ||
-                            enrichedRep.contacts?.find(c => c.type === 'phone')?.value;
-        const primaryWebsite = enrichedRep.contacts?.find(c => c.type === 'website' && c.isVerified)?.value ||
-                              enrichedRep.contacts?.find(c => c.type === 'website')?.value;
-        const primaryPhoto = enrichedRep.photos?.find(p => p.isPrimary)?.url ||
+        const primaryEmail = enrichedRep.contacts?.find((c: any) => c.type === 'email' && c.isVerified)?.value ||
+                            enrichedRep.contacts?.find((c: any) => c.type === 'email')?.value;
+        const primaryPhone = enrichedRep.contacts?.find((c: any) => c.type === 'phone' && c.isVerified)?.value ||
+                            enrichedRep.contacts?.find((c: any) => c.type === 'phone')?.value;
+        const primaryWebsite = enrichedRep.contacts?.find((c: any) => c.type === 'website' && c.isVerified)?.value ||
+                              enrichedRep.contacts?.find((c: any) => c.type === 'website')?.value;
+        const primaryPhoto = enrichedRep.photos?.find((p: any) => p.isPrimary)?.url ||
                             enrichedRep.photos?.[0]?.url;
 
         // Store the enriched data in the database

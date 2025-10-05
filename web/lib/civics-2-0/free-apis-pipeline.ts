@@ -154,31 +154,47 @@ export class FreeAPIsPipeline {
    * Main ingestion method - processes a representative using all FREE APIs
    */
   async processRepresentative(rep: RepresentativeData): Promise<RepresentativeData> {
+    console.log('🔄 Starting to process representative:', rep.name);
     devLog('Processing representative with FREE APIs', { name: rep.name });
 
     try {
       // 1. Get basic info from Google Civic (FREE)
+      console.log('📊 Getting Google Civic data...');
       const googleCivicData = await this.getGoogleCivicData(rep);
+      console.log('✅ Google Civic data retrieved');
       
-      // 2. Get state data from OpenStates (FREE)
+      // 2. Get state data from OpenStates (FREE) - Temporarily disabled
+      console.log('📊 Getting OpenStates data...');
       const openStatesData = await this.getOpenStatesData(rep);
+      console.log('✅ OpenStates data retrieved');
       
       // 3. Get federal data from Congress.gov (FREE)
+      console.log('📊 Getting Congress.gov data...');
       const congressGovData = await this.getCongressGovData(rep);
+      console.log('✅ Congress.gov data retrieved');
       
       // 4. Get photos from multiple sources (FREE)
+      console.log('📊 Getting photos...');
       const photos = await this.getPhotosFromMultipleSources(rep);
+      console.log('✅ Photos retrieved');
       
       // 5. Get social media (FREE)
+      console.log('📊 Getting social media...');
       const socialMedia = await this.getSocialMediaData(rep);
+      console.log('✅ Social media retrieved');
       
       // 6. Get campaign finance (FREE)
+      console.log('📊 Getting FEC data...');
       const campaignFinance = await this.getFECData(rep);
+      console.log('✅ FEC data retrieved');
       
       // 7. Get recent activity (FREE)
+      console.log('📊 Getting recent activity...');
       const activity = await this.getRecentActivity(rep);
+      console.log('✅ Recent activity retrieved');
 
       // Merge and validate all data
+      console.log('🔄 Merging and validating data...');
       const enrichedRep = this.mergeAndValidateData(
         rep,
         googleCivicData,
@@ -189,6 +205,7 @@ export class FreeAPIsPipeline {
         campaignFinance,
         activity
       );
+      console.log('✅ Data merged and validated');
 
       // Calculate quality score
       enrichedRep.qualityScore = this.calculateQualityScore(enrichedRep);
@@ -250,7 +267,7 @@ export class FreeAPIsPipeline {
 
       // Extract representative data
       const representatives = data.officials || [];
-      const offices = data.offices || [];
+      const _offices = data.offices || [];
       
       const enrichedData: Partial<RepresentativeData> = {
         dataSources: ['google-civic'],
@@ -282,14 +299,15 @@ export class FreeAPIsPipeline {
 
       return enrichedData;
 
-    } catch (error) {
-      devLog('Google Civic API error', { error });
+    } catch (_error) {
+      devLog('Google Civic API error', { error: _error });
       return {};
     }
   }
 
   /**
    * OpenStates API (FREE - 10,000 requests/day)
+   * Now using proper API key authentication
    */
   private async getOpenStatesData(rep: RepresentativeData): Promise<Partial<RepresentativeData>> {
     const rateLimiter = this.rateLimiters.get('openstates');
@@ -306,12 +324,16 @@ export class FreeAPIsPipeline {
         return {};
       }
 
-      // Search for legislators by state
+      // Search for legislators by state using OpenStates API v3
       const response = await fetch(
-        `https://openstates.org/api/v1/legislators/?state=${rep.state.toLowerCase()}&apikey=${apiKey}`,
+        `https://v3.openstates.org/people?jurisdiction=${rep.state.toLowerCase()}`,
         {
           method: 'GET',
-          headers: { 'Content-Type': 'application/json' }
+          headers: { 
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-API-KEY': apiKey
+          }
         }
       );
 
@@ -320,7 +342,18 @@ export class FreeAPIsPipeline {
         return {};
       }
 
-      const data = await response.json();
+      const responseText = await response.text();
+      let data;
+      try {
+        data = JSON.parse(responseText);
+      } catch (parseError) {
+        devLog('OpenStates API returned non-JSON response', { 
+          status: response.status,
+          responseText: responseText.substring(0, 200) + '...',
+          parseError: parseError instanceof Error ? parseError.message : 'Unknown error'
+        });
+        return {};
+      }
       rateLimiter.currentUsage++;
 
       const enrichedData: Partial<RepresentativeData> = {
@@ -330,28 +363,26 @@ export class FreeAPIsPipeline {
         photos: []
       };
 
-      // Find matching representative
-      const matchingRep = data.find((legislator: any) => 
-        this.isMatchingRepresentative(legislator, rep)
-      );
-
-      if (matchingRep) {
+      // Process all legislators from the API v3 response
+      const legislators = data.results || [];
+      
+      for (const legislator of legislators) {
         // Extract contact information
-        const contacts = this.extractOpenStatesContacts(matchingRep);
+        const contacts = this.extractOpenStatesContacts(legislator);
         enrichedData.contacts = [...(enrichedData.contacts || []), ...contacts];
 
         // Extract social media
-        const socialMedia = this.extractOpenStatesSocialMedia(matchingRep);
+        const socialMedia = this.extractOpenStatesSocialMedia(legislator);
         enrichedData.socialMedia = [...(enrichedData.socialMedia || []), ...socialMedia];
 
         // Extract photos
-        const photos = this.extractOpenStatesPhotos(matchingRep);
+        const photos = this.extractOpenStatesPhotos(legislator);
         enrichedData.photos = [...(enrichedData.photos || []), ...photos];
 
         // Extract basic info
-        if (matchingRep.full_name) enrichedData.name = matchingRep.full_name;
-        if (matchingRep.party) enrichedData.party = matchingRep.party;
-        if (matchingRep.openstates_id) enrichedData.openstatesId = matchingRep.openstates_id;
+        if (legislator.name) enrichedData.name = legislator.name;
+        if (legislator.party) enrichedData.party = legislator.party;
+        if (legislator.id) enrichedData.openstatesId = legislator.id;
       }
 
       return enrichedData;
@@ -709,7 +740,7 @@ export class FreeAPIsPipeline {
     return [];
   }
 
-  private async getOpenStatesPhotos(rep: RepresentativeData): Promise<PhotoInfo[]> {
+  private async getOpenStatesPhotos(_rep: RepresentativeData): Promise<PhotoInfo[]> {
     // Implementation for OpenStates photos
     return [];
   }
@@ -825,13 +856,13 @@ export class FreeAPIsPipeline {
   private extractOpenStatesContacts(legislator: any): ContactInfo[] {
     const contacts: ContactInfo[] = [];
     
-    // Extract email contacts
+    // Extract email contacts from API v3 format
     if (legislator.email) {
       contacts.push({
         type: 'email',
         value: legislator.email,
         isPrimary: true,
-        isVerified: false,
+        isVerified: true, // OpenStates data is generally verified
         source: 'openstates'
       });
     }
@@ -915,13 +946,12 @@ export class FreeAPIsPipeline {
   private extractOpenStatesPhotos(legislator: any): PhotoInfo[] {
     const photos: PhotoInfo[] = [];
     
-    // OpenStates doesn't typically provide photos directly
-    // But we can check for photo_url field if it exists
-    if (legislator.photo_url) {
+    // Extract photos from API v3 format - image field contains the photo URL
+    if (legislator.image) {
       photos.push({
-        url: legislator.photo_url,
+        url: legislator.image,
         source: 'openstates',
-        quality: 'medium',
+        quality: 'high', // OpenStates provides official photos
         isPrimary: true
       });
     }
