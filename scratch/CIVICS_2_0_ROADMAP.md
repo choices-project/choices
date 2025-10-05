@@ -31,17 +31,17 @@
 - **Multi-Source Coverage**: 100% coverage with multiple APIs working together
 - **Geographic Boundaries**: Ready for data visualization and heatmapping
 
-### **📁 STREAMLINED SYSTEM (4 Essential Endpoints)**
+### **📁 ORGANIZED SYSTEM (4 Essential Endpoints)**
 ```
 Database: web/database/CIVICS_2_0_SUPABASE_EDITOR.sql
 FREE APIs Pipeline: web/lib/civics-2-0/free-apis-pipeline.ts
 CanonicalIdService: web/lib/civics/canonical-id-service.ts
 
-ESSENTIAL ENDPOINTS (4):
-├── /api/admin/maximized-api-ingestion/ - Main production ingestion
-├── /api/admin/state-level-ingestion/ - State-level processing  
-├── /api/test/execute-comprehensive-ingest/ - Test ingestion
-└── /api/test/ingestion-status/ - Status monitoring
+CIVICS ENDPOINTS (4) - All in /api/civics/:
+├── /api/civics/maximized-api-ingestion/ - Main production ingestion
+├── /api/civics/state-level-ingestion/ - State-level processing  
+├── /api/civics/execute-comprehensive-ingest/ - Test ingestion
+└── /api/civics/ingestion-status/ - Status monitoring
 
 UI Components: web/components/civics-2-0/
 Main Page: web/app/(app)/civics-2-0/page.tsx
