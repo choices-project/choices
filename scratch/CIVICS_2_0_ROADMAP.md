@@ -31,21 +31,23 @@
 - **Multi-Source Coverage**: 100% coverage with multiple APIs working together
 - **Geographic Boundaries**: Ready for data visualization and heatmapping
 
-### **📁 FINAL ORGANIZED SYSTEM (All Civics in /api/civics/)**
+### **📁 FINAL STREAMLINED SYSTEM (3 Essential Ingestion + 3 Monitoring)**
 ```
 Database: web/database/CIVICS_2_0_SUPABASE_EDITOR.sql
 FREE APIs Pipeline: web/lib/civics-2-0/free-apis-pipeline.ts
 CanonicalIdService: web/lib/civics/canonical-id-service.ts
 
-CIVICS ENDPOINTS (All in /api/civics/):
+ESSENTIAL INGESTION ENDPOINTS (3):
 ├── /api/civics/execute-comprehensive-ingest/ - Main production ingestion
-├── /api/civics/maximized-api-ingestion/ - Optimized ingestion
-├── /api/civics/state-level-ingestion/ - State-level processing  
-├── /api/civics/phase1-alternative/ - Alternative ingestion
+├── /api/civics/maximized-api-ingestion/ - Optimized ingestion  
+└── /api/civics/state-level-ingestion/ - State-level processing
+
+MONITORING ENDPOINTS (3):
 ├── /api/civics/ingestion-status/ - Status monitoring
 ├── /api/civics/rate-limit-status/ - API rate limit monitoring
-├── /api/civics/overnight-status/ - Overnight ingestion status
-├── /api/civics/check-supabase-status/ - Database status
+└── /api/civics/check-supabase-status/ - Database status
+
+DATA ACCESS ENDPOINTS (7):
 ├── /api/civics/by-state/ - Representatives by state
 ├── /api/civics/representative/ - Individual representative
 ├── /api/civics/contact/ - Contact information
