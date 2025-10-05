@@ -223,8 +223,8 @@ export class FreeAPIsPipeline {
         return {};
       }
 
-      // Search for representative by name and state
-      const searchQuery = `${rep.name} ${rep.state}`;
+      // Search for representative by state (Google Civic needs a proper address)
+      const searchQuery = `123 Main St, ${rep.state}`;
       const response = await fetch(
         `https://www.googleapis.com/civicinfo/v2/representatives?address=${encodeURIComponent(searchQuery)}&key=${apiKey}`,
         {
@@ -293,9 +293,15 @@ export class FreeAPIsPipeline {
     }
 
     try {
+      const apiKey = process.env.OPENSTATES_API_KEY;
+      if (!apiKey) {
+        devLog('OpenStates API key not configured');
+        return {};
+      }
+
       // Search for legislators by state
       const response = await fetch(
-        `https://openstates.org/api/v1/legislators/?state=${rep.state.toLowerCase()}`,
+        `https://openstates.org/api/v1/legislators/?state=${rep.state.toLowerCase()}&apikey=${apiKey}`,
         {
           method: 'GET',
           headers: { 'Content-Type': 'application/json' }
