@@ -7,6 +7,8 @@
 
 import { type NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { FreeAPIsPipeline } from '@/lib/civics-2-0/free-apis-pipeline';
+import { CanonicalIdService } from '@/lib/civics/canonical-id-service';
 
 export const dynamic = 'force-dynamic';
 
@@ -178,7 +180,7 @@ async function analyzeCurrentCoverage() {
   };
 }
 
-function determineStatesToProcess(scope: string, coverage: any) {
+function determineStatesToProcess(scope: string, _coverage: any) {
   switch (scope) {
     case 'missing':
       return MISSING_STATES;
@@ -288,45 +290,213 @@ async function processStateData(state: string, forceRefresh: boolean, dryRun: bo
     }
   }
   
-  // TODO: Implement actual data ingestion calls
-  // This would call the existing data ingestion APIs:
-  // - POST /api/admin/civics-ingest with source: 'openstates', jurisdiction: state
-  // - Process the response and store the data
-  // - Handle errors and retries
+  // Use the actual FREE APIs pipeline to get and process representatives
+  console.log(`📊 Processing ${state} with FREE APIs pipeline...`);
   
-  console.log(`📊 Would call data ingestion API for ${state}...`);
-  console.log(`   API: POST /api/admin/civics-ingest`);
-  console.log(`   Source: openstates`);
-  console.log(`   Jurisdiction: ${state}`);
-  
-  // For now, simulate the process
-  const representativeCount = Math.floor(Math.random() * 200) + 100;
-  
-  return {
-    state,
-    success: true,
-    message: `Data ingestion API call simulated for ${state}`,
-    representatives: representativeCount,
-    apiCall: {
-      endpoint: '/api/admin/civics-ingest',
-      method: 'POST',
-      source: 'openstates',
-      jurisdiction: state
+  try {
+    const pipeline = new FreeAPIsPipeline();
+    
+    // Get representatives from OpenStates API for this state
+    const openStatesApiKey = process.env.OPENSTATES_API_KEY;
+    if (!openStatesApiKey) {
+      throw new Error('OpenStates API key not configured');
     }
-  };
+    
+    const response = await fetch(
+      `https://openstates.org/api/v1/legislators/?state=${state.toLowerCase()}&apikey=${openStatesApiKey}`,
+      {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' }
+      }
+    );
+    
+    if (!response.ok) {
+      throw new Error(`OpenStates API request failed: ${response.status}`);
+    }
+    
+    const openStatesData = await response.json();
+    const legislators = openStatesData || [];
+    
+    let processedCount = 0;
+    let successCount = 0;
+    
+    // Process each legislator with the FREE APIs pipeline
+    for (const legislator of legislators.slice(0, 5)) { // Limit to 5 for testing
+      try {
+        const representativeData = {
+          name: legislator.full_name || legislator.name,
+          party: legislator.party,
+          office: legislator.chamber || 'legislator',
+          level: 'state' as const,
+          state: state,
+          district: legislator.district,
+          openstatesId: legislator.id,
+          contacts: [],
+          socialMedia: [],
+          photos: [],
+          activity: [],
+          dataSources: ['openstates'],
+          qualityScore: 0,
+          lastUpdated: new Date()
+        };
+        
+        const enrichedRep = await pipeline.processRepresentative(representativeData);
+        
+        // Store the enriched data in the database
+        const { error: insertError } = await supabase
+          .from('representatives_core')
+          .upsert({
+            name: enrichedRep.name,
+            party: enrichedRep.party,
+            office: enrichedRep.office,
+            level: enrichedRep.level,
+            state: enrichedRep.state,
+            district: enrichedRep.district,
+            openstates_id: enrichedRep.openstatesId,
+            bioguide_id: enrichedRep.bioguideId,
+            fec_id: enrichedRep.fecId,
+            google_civic_id: enrichedRep.googleCivicId,
+            data_quality_score: enrichedRep.qualityScore,
+            data_sources: enrichedRep.dataSources,
+            last_updated: enrichedRep.lastUpdated.toISOString(),
+            active: true
+          }, {
+            onConflict: 'openstates_id'
+          });
+        
+        if (insertError) {
+          console.error(`Failed to store representative ${enrichedRep.name}:`, insertError);
+        } else {
+          successCount++;
+        }
+        
+        processedCount++;
+        
+        // Rate limiting - wait between requests
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+      } catch (error) {
+        console.error(`Failed to process legislator ${legislator.full_name}:`, error);
+      }
+    }
+    
+    return {
+      state,
+      success: true,
+      message: `Processed ${processedCount} legislators with FREE APIs pipeline`,
+      representatives: successCount,
+      processed: processedCount,
+      apiCall: {
+        endpoint: 'FREE APIs Pipeline',
+        method: 'Direct',
+        source: 'openstates + free-apis-pipeline',
+        jurisdiction: state,
+        simulated: false
+      }
+    };
+    
+  } catch (error) {
+    console.error(`FREE APIs pipeline failed for ${state}:`, error);
+    return {
+      state,
+      success: false,
+      message: `FREE APIs pipeline failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      representatives: 0,
+      error: error instanceof Error ? error.message : 'Unknown error'
+    };
+  }
 }
 
 async function populateCanonicalIdsForNewData() {
   console.log('🔗 Populating canonical IDs for new data...');
   
-  // TODO: Implement canonical ID population for new representatives
-  // This would use the CanonicalIdService to create cross-source mappings
-  
-  return {
-    success: true,
-    message: 'Canonical ID population simulated (would use CanonicalIdService)',
-    canonicalIdsCreated: Math.floor(Math.random() * 50) + 10
-  };
+  try {
+    const canonicalIdService = new CanonicalIdService();
+    
+    // Get representatives that need canonical ID population
+    const { data: repsWithoutCanonicalIds, error } = await supabase
+      .from('representatives_core')
+      .select('id, name, bioguide_id, openstates_id, fec_id, google_civic_id, state, district, party, office, level')
+      .or('bioguide_id.is.null,openstates_id.is.null,fec_id.is.null,google_civic_id.is.null')
+      .limit(100);
+    
+    if (error) {
+      console.error('Failed to fetch representatives for canonical ID population:', error);
+      return {
+        success: false,
+        message: `Failed to fetch representatives: ${error.message}`,
+        canonicalIdsCreated: 0
+      };
+    }
+    
+    if (!repsWithoutCanonicalIds || repsWithoutCanonicalIds.length === 0) {
+      console.log('✅ All representatives already have canonical IDs');
+      return {
+        success: true,
+        message: 'All representatives already have canonical IDs',
+        canonicalIdsCreated: 0
+      };
+    }
+    
+    console.log(`🔗 Found ${repsWithoutCanonicalIds.length} representatives needing canonical ID population`);
+    
+    let canonicalIdsCreated = 0;
+    let errors = 0;
+    
+    // Process each representative with the CanonicalIdService
+    for (const rep of repsWithoutCanonicalIds) {
+      try {
+        console.log(`🔍 Processing: ${rep.name}`);
+        
+        // Create source data for the canonical ID service
+        const sourceData = [{
+          source: 'open-states' as const,
+          data: {
+            name: rep.name,
+            office: rep.office,
+            level: rep.level,
+            state: rep.state,
+            district: rep.district,
+            party: rep.party
+          },
+          sourceId: rep.openstates_id || rep.id
+        }];
+        
+        // Resolve entity and create canonical ID
+        const result = await canonicalIdService.resolveEntity(
+          'person' as const,
+          sourceData
+        );
+        
+        console.log(`✅ Created canonical ID: ${result.canonicalId}`);
+        console.log(`   Sources: ${result.crosswalkEntries.length}`);
+        
+        canonicalIdsCreated++;
+        
+      } catch (error) {
+        console.error(`❌ Error processing ${rep.name}:`, error);
+        errors++;
+      }
+    }
+    
+    console.log(`✅ Canonical ID population completed!`);
+    console.log(`   Created: ${canonicalIdsCreated}`);
+    console.log(`   Errors: ${errors}`);
+    
+    return {
+      success: true,
+      message: `Created ${canonicalIdsCreated} canonical IDs for ${repsWithoutCanonicalIds.length} representatives`,
+      canonicalIdsCreated
+    };
+    
+  } catch (error) {
+    console.error('Failed to populate canonical IDs:', error);
+    return {
+      success: false,
+      message: `Failed to populate canonical IDs: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      canonicalIdsCreated: 0
+    };
+  }
 }
 
 async function analyzeRateLimits() {
@@ -352,7 +522,7 @@ async function analyzeRateLimits() {
   };
 }
 
-function generateRecommendations(coverage: any, rateLimits: any) {
+function generateRecommendations(coverage: any, _rateLimits: any) {
   const recommendations = [];
   
   if (coverage.missingStates > 0) {
