@@ -223,7 +223,7 @@ async function processStatesInBatches(states: string[], batchSize: number, force
         batchResults.push(stateResult);
         
         // Respect rate limits - wait between states
-        await new Promise(resolve => setTimeout(resolve, 500)); // 0.5 second delay
+        await new Promise(resolve => setTimeout(resolve, 5000)); // 5 second delay
         
       } catch (error) {
         console.error(`❌ Failed to process ${state}:`, error);
@@ -245,8 +245,8 @@ async function processStatesInBatches(states: string[], batchSize: number, force
     
     // Wait between batches to respect rate limits
     if (i < batches.length - 1) {
-      console.log(`⏳ Waiting 2 seconds before next batch...`);
-      await new Promise(resolve => setTimeout(resolve, 2000)); // 2 second delay between batches
+      console.log(`⏳ Waiting 10 seconds before next batch...`);
+      await new Promise(resolve => setTimeout(resolve, 10000)); // 10 second delay between batches
     }
   }
   
@@ -301,10 +301,15 @@ async function processStateData(state: string, forceRefresh: boolean, dryRun: bo
     }
     
     const response = await fetch(
-      `https://openstates.org/api/v1/legislators/?state=${state.toLowerCase()}&apikey=${openStatesApiKey}`,
+      `https://v3.openstates.org/people?jurisdiction=${state}`,
       {
         method: 'GET',
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'User-Agent': 'Choices-Civics-Platform/1.0',
+          'X-API-KEY': openStatesApiKey
+        }
       }
     );
     
@@ -313,7 +318,7 @@ async function processStateData(state: string, forceRefresh: boolean, dryRun: bo
     }
     
     const openStatesData = await response.json();
-    const legislators = openStatesData || [];
+    const legislators = openStatesData.results || [];
     
     let processedCount = 0;
     let successCount = 0;
@@ -321,8 +326,17 @@ async function processStateData(state: string, forceRefresh: boolean, dryRun: bo
     // Process each legislator with the FREE APIs pipeline (remove testing limit)
     for (const legislator of legislators) {
       try {
+        console.log('🔍 Processing legislator:', {
+          name: legislator.name,
+          full_name: legislator.full_name,
+          party: legislator.party,
+          chamber: legislator.chamber,
+          district: legislator.district,
+          id: legislator.id
+        });
+        
         const representativeData = {
-          name: legislator.full_name || legislator.name,
+          name: legislator.name, // Use the actual name field from OpenStates API
           party: legislator.party,
           office: legislator.chamber || 'legislator',
           level: 'state' as const,
@@ -338,36 +352,100 @@ async function processStateData(state: string, forceRefresh: boolean, dryRun: bo
           lastUpdated: new Date()
         };
         
-        const enrichedRep = await pipeline.processRepresentative(representativeData);
+        // Add timeout to prevent hanging
+        const enrichedRep = await Promise.race([
+          pipeline.processRepresentative(representativeData),
+          new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Pipeline timeout after 30 seconds')), 30000)
+          )
+        ]) as any;
+        
+        // Add delay between API calls to respect rate limits
+        await new Promise(resolve => setTimeout(resolve, 5000)); // 5 second delay
         
         // Extract primary contact information
-        const primaryEmail = enrichedRep.contacts?.find(c => c.type === 'email' && c.isVerified)?.value ||
-                            enrichedRep.contacts?.find(c => c.type === 'email')?.value;
-        const primaryPhone = enrichedRep.contacts?.find(c => c.type === 'phone' && c.isVerified)?.value ||
-                            enrichedRep.contacts?.find(c => c.type === 'phone')?.value;
-        const primaryWebsite = enrichedRep.contacts?.find(c => c.type === 'website' && c.isVerified)?.value ||
-                              enrichedRep.contacts?.find(c => c.type === 'website')?.value;
-        const primaryPhoto = enrichedRep.photos?.find(p => p.isPrimary)?.url ||
+        const primaryEmail = enrichedRep.contacts?.find((c: any) => c.type === 'email' && c.isVerified)?.value ||
+                            enrichedRep.contacts?.find((c: any) => c.type === 'email')?.value;
+        const primaryPhone = enrichedRep.contacts?.find((c: any) => c.type === 'phone' && c.isVerified)?.value ||
+                            enrichedRep.contacts?.find((c: any) => c.type === 'phone')?.value;
+        const primaryWebsite = enrichedRep.contacts?.find((c: any) => c.type === 'website' && c.isVerified)?.value ||
+                              enrichedRep.contacts?.find((c: any) => c.type === 'website')?.value;
+        const primaryPhoto = enrichedRep.photos?.find((p: any) => p.isPrimary)?.url ||
                             enrichedRep.photos?.[0]?.url;
 
-        // Store the enriched data in the database
+        // Store the enriched data in the database with enhanced schema fields
         const { error: insertError } = await supabase
           .from('representatives_core')
           .upsert({
+            // Basic fields
             name: enrichedRep.name,
             party: enrichedRep.party,
             office: enrichedRep.office,
             level: enrichedRep.level,
             state: enrichedRep.state,
             district: enrichedRep.district,
+            
+            // Primary identifiers
             openstates_id: enrichedRep.openstatesId,
             bioguide_id: enrichedRep.bioguideId,
             fec_id: enrichedRep.fecId,
             google_civic_id: enrichedRep.googleCivicId,
+            legiscan_id: enrichedRep.legiscanId,
+            congress_gov_id: enrichedRep.congressGovId,
+            govinfo_id: enrichedRep.govinfoId,
+            wikipedia_url: enrichedRep.wikipediaUrl,
+            ballotpedia_url: enrichedRep.ballotpediaUrl,
+            
+            // Social media handles
+            twitter_handle: enrichedRep.twitterHandle,
+            facebook_url: enrichedRep.facebookUrl,
+            instagram_handle: enrichedRep.instagramHandle,
+            linkedin_url: enrichedRep.linkedinUrl,
+            youtube_channel: enrichedRep.youtubeChannel,
+            
+            // Primary contact information
             primary_email: primaryEmail,
             primary_phone: primaryPhone,
             primary_website: primaryWebsite,
             primary_photo_url: primaryPhoto,
+            
+            // Election data
+            last_election_date: enrichedRep.lastElectionDate?.toISOString(),
+            next_election_date: enrichedRep.nextElectionDate?.toISOString(),
+            term_start_date: enrichedRep.termStartDate?.toISOString(),
+            term_end_date: enrichedRep.termEndDate?.toISOString(),
+            upcoming_elections: enrichedRep.upcomingElections,
+            
+            // Committee and leadership data
+            committee_memberships: enrichedRep.committeeMemberships,
+            caucus_memberships: enrichedRep.caucusMemberships,
+            leadership_positions: enrichedRep.leadershipPositions,
+            
+            // Enhanced contact information
+            official_website: enrichedRep.officialWebsite,
+            campaign_website: enrichedRep.campaignWebsite,
+            office_locations: enrichedRep.officeLocations,
+            
+            // Activity tracking
+            recent_activity: enrichedRep.recentActivity,
+            recent_votes: enrichedRep.recentVotes,
+            recent_bills: enrichedRep.recentBills,
+            
+            // Accountability tracking
+            floor_speeches: enrichedRep.floorSpeeches,
+            committee_statements: enrichedRep.committeeStatements,
+            official_press_releases: enrichedRep.officialPressReleases,
+            voting_explanations: enrichedRep.votingExplanations,
+            social_media_statements: enrichedRep.socialMediaStatements,
+            recent_tweets: enrichedRep.recentTweets,
+            facebook_posts: enrichedRep.facebookPosts,
+            instagram_posts: enrichedRep.instagramPosts,
+            statement_vs_vote_analysis: enrichedRep.statementVsVoteAnalysis,
+            campaign_promises_vs_actions: enrichedRep.campaignPromisesVsActions,
+            constituent_feedback_alignment: enrichedRep.constituentFeedbackAlignment,
+            accountability_score: enrichedRep.accountabilityScore,
+            
+            // Metadata
             data_quality_score: enrichedRep.qualityScore,
             data_sources: enrichedRep.dataSources,
             last_updated: enrichedRep.lastUpdated.toISOString(),
@@ -385,7 +463,7 @@ async function processStateData(state: string, forceRefresh: boolean, dryRun: bo
         processedCount++;
         
         // Rate limiting - wait between requests
-        await new Promise(resolve => setTimeout(resolve, 500));
+        await new Promise(resolve => setTimeout(resolve, 2000)); // 2 second delay
         
       } catch (error) {
         console.error(`Failed to process legislator ${legislator.full_name}:`, error);

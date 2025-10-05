@@ -29,7 +29,7 @@ export async function requireServiceKey(): Promise<NextResponse | null> {
 
     // Test the service key by making a simple query
     const { error } = await supabase
-      .from('civics_representatives')
+      .from('representatives_core')
       .select('id')
       .limit(1);
 
@@ -56,7 +56,7 @@ export async function isServiceKeyValid(): Promise<boolean> {
     );
 
     const { error } = await supabase
-      .from('civics_representatives')
+      .from('representatives_core')
       .select('id')
       .limit(1);
 

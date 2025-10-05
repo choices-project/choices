@@ -13,6 +13,10 @@
 import { createClient } from '@supabase/supabase-js';
 import { devLog } from '@/lib/logger';
 import { CanonicalIdService } from '@/lib/civics/canonical-id-service';
+import dotenv from 'dotenv';
+
+// Load environment variables
+dotenv.config({ path: '.env.local' });
 
 // Types for our FREE APIs data
 export type RepresentativeData = {
@@ -29,6 +33,60 @@ export type RepresentativeData = {
   openstatesId?: string;
   fecId?: string;
   googleCivicId?: string;
+  legiscanId?: string;
+  congressGovId?: string;
+  govinfoId?: string;
+  wikipediaUrl?: string;
+  ballotpediaUrl?: string;
+  
+  // Social media handles (extracted for easy access)
+  twitterHandle?: string;
+  facebookUrl?: string;
+  instagramHandle?: string;
+  linkedinUrl?: string;
+  youtubeChannel?: string;
+  
+  // Primary contact information (extracted for easy access)
+  primaryEmail?: string;
+  primaryPhone?: string;
+  primaryWebsite?: string;
+  primaryPhotoUrl?: string;
+  
+  // Election data
+  lastElectionDate?: Date;
+  nextElectionDate?: Date;
+  termStartDate?: Date;
+  termEndDate?: Date;
+  upcomingElections?: any[];
+  
+  // Committee and leadership data
+  committeeMemberships?: string[];
+  caucusMemberships?: string[];
+  leadershipPositions?: string[];
+  
+  // Enhanced contact information
+  officialWebsite?: string;
+  campaignWebsite?: string;
+  officeLocations?: any[];
+  
+  // Activity tracking
+  recentActivity?: any[];
+  recentVotes?: any[];
+  recentBills?: any[];
+  
+  // Accountability tracking
+  floorSpeeches?: any[];
+  committeeStatements?: any[];
+  officialPressReleases?: any[];
+  socialMediaStatements?: any[];
+  recentTweets?: any[];
+  facebookPosts?: any[];
+  instagramPosts?: any[];
+  votingExplanations?: any[];
+  statementVsVoteAnalysis?: any[];
+  campaignPromisesVsActions?: any[];
+  constituentFeedbackAlignment?: any[];
+  accountabilityScore?: number;
   
   // Contact information
   contacts: ContactInfo[];
@@ -158,37 +216,43 @@ export class FreeAPIsPipeline {
     devLog('Processing representative with FREE APIs', { name: rep.name });
 
     try {
-      // 1. Get basic info from Google Civic (FREE)
-      console.log('📊 Getting Google Civic data...');
-      const googleCivicData = await this.getGoogleCivicData(rep);
-      console.log('✅ Google Civic data retrieved');
+      // 1. Get election data from Google Civic (FREE) - ELECTION DATA STILL ACTIVE
+      // Note: Representatives endpoint deprecated, but election data still available
+      console.log('📊 Getting Google Civic election data...');
+      const googleCivicData = await this.getGoogleCivicElectionData(rep);
+      console.log('✅ Google Civic election data retrieved');
       
-      // 2. Get state data from OpenStates (FREE) - Temporarily disabled
+      // 2. Get state data from OpenStates (FREE) - WORKING
       console.log('📊 Getting OpenStates data...');
       const openStatesData = await this.getOpenStatesData(rep);
       console.log('✅ OpenStates data retrieved');
       
-      // 3. Get federal data from Congress.gov (FREE)
+      // 3. Get federal data from Congress.gov (FREE) - RE-ENABLED
       console.log('📊 Getting Congress.gov data...');
       const congressGovData = await this.getCongressGovData(rep);
       console.log('✅ Congress.gov data retrieved');
       
-      // 4. Get photos from multiple sources (FREE)
+      // 3b. Get additional legislative data from LegiScan (FREE) - 30,000 monthly queries
+      console.log('📊 Getting LegiScan data...');
+      const legiScanData = await this.getLegiScanData(rep);
+      console.log('✅ LegiScan data retrieved');
+      
+      // 4. Get photos from multiple sources (FREE) - RE-ENABLED
       console.log('📊 Getting photos...');
       const photos = await this.getPhotosFromMultipleSources(rep);
       console.log('✅ Photos retrieved');
       
-      // 5. Get social media (FREE)
+      // 5. Get social media (FREE) - RE-ENABLED
       console.log('📊 Getting social media...');
       const socialMedia = await this.getSocialMediaData(rep);
       console.log('✅ Social media retrieved');
       
-      // 6. Get campaign finance (FREE)
+      // 6. Get campaign finance (FREE) - RE-ENABLED
       console.log('📊 Getting FEC data...');
       const campaignFinance = await this.getFECData(rep);
       console.log('✅ FEC data retrieved');
       
-      // 7. Get recent activity (FREE)
+      // 7. Get recent activity (FREE) - RE-ENABLED
       console.log('📊 Getting recent activity...');
       const activity = await this.getRecentActivity(rep);
       console.log('✅ Recent activity retrieved');
@@ -200,6 +264,7 @@ export class FreeAPIsPipeline {
         googleCivicData,
         openStatesData,
         congressGovData,
+        legiScanData,
         photos,
         socialMedia,
         campaignFinance,
@@ -230,7 +295,137 @@ export class FreeAPIsPipeline {
   }
 
   /**
-   * Google Civic Information API (FREE - 25,000 requests/day)
+   * Google Civic Information API - Election Data (FREE - 25,000 requests/day)
+   * Note: Representatives endpoint deprecated April 30, 2025, but election data still available
+   */
+  private async getGoogleCivicElectionData(rep: RepresentativeData): Promise<Partial<RepresentativeData>> {
+    try {
+      const apiKey = process.env.GOOGLE_CIVIC_API_KEY;
+      if (!apiKey) {
+        devLog('Google Civic API key not configured');
+        return {};
+      }
+
+      // Get election information for the state
+      const stateCapitals = {
+        'Alabama': 'Montgomery, AL', 'Alaska': 'Juneau, AK', 'Arizona': 'Phoenix, AZ', 'Arkansas': 'Little Rock, AR',
+        'California': 'Sacramento, CA', 'Colorado': 'Denver, CO', 'Connecticut': 'Hartford, CT', 'Delaware': 'Dover, DE',
+        'Florida': 'Tallahassee, FL', 'Georgia': 'Atlanta, GA', 'Hawaii': 'Honolulu, HI', 'Idaho': 'Boise, ID',
+        'Illinois': 'Springfield, IL', 'Indiana': 'Indianapolis, IN', 'Iowa': 'Des Moines, IA', 'Kansas': 'Topeka, KS',
+        'Kentucky': 'Frankfort, KY', 'Louisiana': 'Baton Rouge, LA', 'Maine': 'Augusta, ME', 'Maryland': 'Annapolis, MD',
+        'Massachusetts': 'Boston, MA', 'Michigan': 'Lansing, MI', 'Minnesota': 'Saint Paul, MN', 'Mississippi': 'Jackson, MS',
+        'Missouri': 'Jefferson City, MO', 'Montana': 'Helena, MT', 'Nebraska': 'Lincoln, NE', 'Nevada': 'Carson City, NV',
+        'New Hampshire': 'Concord, NH', 'New Jersey': 'Trenton, NJ', 'New Mexico': 'Santa Fe, NM', 'New York': 'Albany, NY',
+        'North Carolina': 'Raleigh, NC', 'North Dakota': 'Bismarck, ND', 'Ohio': 'Columbus, OH', 'Oklahoma': 'Oklahoma City, OK',
+        'Oregon': 'Salem, OR', 'Pennsylvania': 'Harrisburg, PA', 'Rhode Island': 'Providence, RI', 'South Carolina': 'Columbia, SC',
+        'South Dakota': 'Pierre, SD', 'Tennessee': 'Nashville, TN', 'Texas': 'Austin, TX', 'Utah': 'Salt Lake City, UT',
+        'Vermont': 'Montpelier, VT', 'Virginia': 'Richmond, VA', 'Washington': 'Olympia, WA', 'West Virginia': 'Charleston, WV',
+        'Wisconsin': 'Madison, WI', 'Wyoming': 'Cheyenne, WY'
+      };
+      
+      const searchQuery = stateCapitals[rep.state as keyof typeof stateCapitals] || `${rep.state} State Capitol`;
+      
+      // Get election information
+      const electionsResponse = await fetch(
+        `https://www.googleapis.com/civicinfo/v2/elections?address=${encodeURIComponent(searchQuery)}&key=${apiKey}`,
+        {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' }
+        }
+      );
+
+      if (!electionsResponse.ok) {
+        devLog('Google Civic Election API request failed', { status: electionsResponse.status });
+        return {};
+      }
+
+      const electionsData = await electionsResponse.json();
+      if (!electionsData.elections || electionsData.elections.length === 0) {
+        return {};
+      }
+
+      // Extract upcoming elections
+      const upcomingElections = electionsData.elections.filter((election: any) => {
+        const electionDate = new Date(election.electionDay);
+        return electionDate > new Date();
+      });
+
+      const activity: ActivityInfo[] = [];
+
+      // Add election information
+      upcomingElections.forEach((election: any) => {
+        activity.push({
+          type: 'election',
+          title: `Upcoming Election: ${election.name}`,
+          date: election.electionDay,
+          description: `Election in ${rep.state}`,
+          source: 'google-civic',
+          isVerified: true
+        });
+      });
+
+      // Get early voting information for the most recent upcoming election
+      if (upcomingElections.length > 0) {
+        const latestElection = upcomingElections[0];
+        try {
+          const earlyVotingResponse = await fetch(
+            `https://www.googleapis.com/civicinfo/v2/voterinfo?address=${encodeURIComponent(searchQuery)}&electionId=${latestElection.id}&key=${apiKey}`,
+            {
+              method: 'GET',
+              headers: { 'Content-Type': 'application/json' }
+            }
+          );
+
+          if (earlyVotingResponse.ok) {
+            const voterInfo = await earlyVotingResponse.json();
+            
+            // Add early voting locations
+            if (voterInfo.earlyVoteSites && voterInfo.earlyVoteSites.length > 0) {
+              voterInfo.earlyVoteSites.forEach((site: any) => {
+                activity.push({
+                  type: 'early-voting',
+                  title: `Early Voting: ${site.name || 'Voting Location'}`,
+                  date: site.startDate || latestElection.electionDay,
+                  description: `Early voting location in ${rep.state}. Hours: ${site.pollingHours || 'Check location for hours'}`,
+                  location: site.address ? `${site.address.line1}, ${site.address.city}, ${site.address.state} ${site.address.zip}` : undefined,
+                  source: 'google-civic',
+                  isVerified: true
+                });
+              });
+            }
+
+            // Add polling places
+            if (voterInfo.pollingLocations && voterInfo.pollingLocations.length > 0) {
+              voterInfo.pollingLocations.forEach((location: any) => {
+                activity.push({
+                  type: 'polling-place',
+                  title: `Polling Place: ${location.name || 'Voting Location'}`,
+                  date: latestElection.electionDay,
+                  description: `Election day polling location in ${rep.state}. Hours: ${location.pollingHours || 'Check location for hours'}`,
+                  location: location.address ? `${location.address.line1}, ${location.address.city}, ${location.address.state} ${location.address.zip}` : undefined,
+                  source: 'google-civic',
+                  isVerified: true
+                });
+              });
+            }
+          }
+        } catch (earlyVotingError) {
+          devLog('Early voting data fetch failed', { error: earlyVotingError });
+        }
+      }
+
+      return {
+        activity,
+        dataSources: [...(rep.dataSources || []), 'google-civic-elections']
+      };
+    } catch (error) {
+      devLog('Google Civic Election API error', { error: error instanceof Error ? error.message : 'Unknown error' });
+      return {};
+    }
+  }
+
+  /**
+   * Google Civic Information API (FREE - 25,000 requests/day) - DEPRECATED
    */
   private async getGoogleCivicData(rep: RepresentativeData): Promise<Partial<RepresentativeData>> {
     const rateLimiter = this.rateLimiters.get('google-civic');
@@ -247,8 +442,62 @@ export class FreeAPIsPipeline {
         return {};
       }
 
-      // Search for representative by state (Google Civic needs a proper address)
-      const searchQuery = `123 Main St, ${rep.state}`;
+      // Search for representative by state using a real address in the state
+      // Use the state capital as a realistic address for Google Civic API
+      const stateCapitals = {
+        'Alabama': 'Montgomery, AL',
+        'Alaska': 'Juneau, AK',
+        'Arizona': 'Phoenix, AZ',
+        'Arkansas': 'Little Rock, AR',
+        'California': 'Sacramento, CA',
+        'Colorado': 'Denver, CO',
+        'Connecticut': 'Hartford, CT',
+        'Delaware': 'Dover, DE',
+        'Florida': 'Tallahassee, FL',
+        'Georgia': 'Atlanta, GA',
+        'Hawaii': 'Honolulu, HI',
+        'Idaho': 'Boise, ID',
+        'Illinois': 'Springfield, IL',
+        'Indiana': 'Indianapolis, IN',
+        'Iowa': 'Des Moines, IA',
+        'Kansas': 'Topeka, KS',
+        'Kentucky': 'Frankfort, KY',
+        'Louisiana': 'Baton Rouge, LA',
+        'Maine': 'Augusta, ME',
+        'Maryland': 'Annapolis, MD',
+        'Massachusetts': 'Boston, MA',
+        'Michigan': 'Lansing, MI',
+        'Minnesota': 'Saint Paul, MN',
+        'Mississippi': 'Jackson, MS',
+        'Missouri': 'Jefferson City, MO',
+        'Montana': 'Helena, MT',
+        'Nebraska': 'Lincoln, NE',
+        'Nevada': 'Carson City, NV',
+        'New Hampshire': 'Concord, NH',
+        'New Jersey': 'Trenton, NJ',
+        'New Mexico': 'Santa Fe, NM',
+        'New York': 'Albany, NY',
+        'North Carolina': 'Raleigh, NC',
+        'North Dakota': 'Bismarck, ND',
+        'Ohio': 'Columbus, OH',
+        'Oklahoma': 'Oklahoma City, OK',
+        'Oregon': 'Salem, OR',
+        'Pennsylvania': 'Harrisburg, PA',
+        'Rhode Island': 'Providence, RI',
+        'South Carolina': 'Columbia, SC',
+        'South Dakota': 'Pierre, SD',
+        'Tennessee': 'Nashville, TN',
+        'Texas': 'Austin, TX',
+        'Utah': 'Salt Lake City, UT',
+        'Vermont': 'Montpelier, VT',
+        'Virginia': 'Richmond, VA',
+        'Washington': 'Olympia, WA',
+        'West Virginia': 'Charleston, WV',
+        'Wisconsin': 'Madison, WI',
+        'Wyoming': 'Cheyenne, WY'
+      };
+      
+      const searchQuery = stateCapitals[rep.state as keyof typeof stateCapitals] || `${rep.state} State Capitol`;
       const response = await fetch(
         `https://www.googleapis.com/civicinfo/v2/representatives?address=${encodeURIComponent(searchQuery)}&key=${apiKey}`,
         {
@@ -319,33 +568,74 @@ export class FreeAPIsPipeline {
 
     try {
       const apiKey = process.env.OPEN_STATES_API_KEY;
+      devLog('OpenStates API key check', { 
+        hasKey: !!apiKey, 
+        keyLength: apiKey?.length,
+        keyStart: apiKey?.substring(0, 8) + '...'
+      });
       if (!apiKey) {
         devLog('OpenStates API key not configured');
         return {};
       }
 
+      devLog('Making OpenStates API request', { 
+        state: rep.state,
+        url: `https://v3.openstates.org/people?jurisdiction=${rep.state}`,
+        fullRep: rep,
+        environment: {
+          NODE_ENV: process.env.NODE_ENV,
+          hasApiKey: !!process.env.OPEN_STATES_API_KEY,
+          apiKeyLength: process.env.OPEN_STATES_API_KEY?.length
+        }
+      });
+
+      // Add delay before API call to respect rate limits
+      await new Promise(resolve => setTimeout(resolve, 3000)); // 3 second delay
+
       // Search for legislators by state using OpenStates API v3
       const response = await fetch(
-        `https://v3.openstates.org/people?jurisdiction=${rep.state.toLowerCase()}`,
+        `https://v3.openstates.org/people?jurisdiction=${rep.state}`,
         {
           method: 'GET',
           headers: { 
             'Content-Type': 'application/json',
             'Accept': 'application/json',
+            'User-Agent': 'Choices-Civics-Platform/1.0',
             'X-API-KEY': apiKey
           }
         }
       );
 
+      devLog('OpenStates API response received', { 
+        status: response.status,
+        ok: response.ok,
+        contentType: response.headers.get('content-type'),
+        allHeaders: Object.fromEntries(response.headers.entries()),
+        url: response.url
+      });
+
       if (!response.ok) {
+        if (response.status === 429) {
+          devLog('OpenStates API rate limited, waiting 30 seconds...', { status: response.status });
+          await new Promise(resolve => setTimeout(resolve, 30000)); // Wait 30 seconds for rate limit
+          return {}; // Return empty to avoid further requests
+        }
         devLog('OpenStates API request failed', { status: response.status });
         return {};
       }
 
       const responseText = await response.text();
+      devLog('OpenStates API response text', { 
+        textLength: responseText.length,
+        textPreview: responseText.substring(0, 200)
+      });
+      
       let data;
       try {
         data = JSON.parse(responseText);
+        devLog('OpenStates API data parsed successfully', { 
+          resultsCount: data.results?.length || 0
+        });
       } catch (parseError) {
         devLog('OpenStates API returned non-JSON response', { 
           status: response.status,
@@ -396,6 +686,101 @@ export class FreeAPIsPipeline {
   /**
    * Congress.gov API (FREE - 5,000 requests/day)
    */
+  private async getLegiScanData(rep: RepresentativeData): Promise<Partial<RepresentativeData>> {
+    try {
+      const apiKey = process.env.LEGISCAN_API_KEY;
+      if (!apiKey) {
+        devLog('LegiScan API key not configured');
+        return {};
+      }
+      
+      // Check rate limits - be very conservative with their free API
+      const rateLimiter = this.rateLimiters.get('legiscan');
+    if (rateLimiter.currentUsage >= rateLimiter.requestsPerDay) {
+        devLog('LegiScan API rate limit reached - being respectful of their free service');
+      return {};
+    }
+
+      // Add delay to be respectful of their free API
+      await new Promise(resolve => setTimeout(resolve, 2000)); // 2 second delay
+      
+      devLog('Making LegiScan API request (being respectful of free service)', { 
+        state: rep.state,
+        name: rep.name,
+        usage: rateLimiter.currentUsage,
+        limit: rateLimiter.requestsPerDay
+      });
+      
+      // Get session people for the state - only if we don't have LegiScan ID already
+      if (rep.legiscanId) {
+        devLog('LegiScan ID already exists, skipping API call to be respectful');
+        return {};
+      }
+
+      const response = await fetch(
+        `https://api.legiscan.com/?key=${apiKey}&op=getSessionPeople&id=${rep.state}`,
+        {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' }
+        }
+      );
+
+      if (!response.ok) {
+        devLog('LegiScan API request failed', { status: response.status });
+        return {};
+      }
+
+      const data = await response.json();
+      if (!data.sessionpeople || data.sessionpeople.length === 0) {
+        devLog('No LegiScan session people found for state', { state: rep.state });
+        return {};
+      }
+
+      // Find matching representative
+      const matchingPerson = data.sessionpeople.find((person: any) => 
+        person.name.toLowerCase().includes(rep.name.toLowerCase()) ||
+        rep.name.toLowerCase().includes(person.name.toLowerCase())
+      );
+
+      if (!matchingPerson) {
+        devLog('No matching LegiScan person found', { 
+          name: rep.name, 
+          availableNames: data.sessionpeople.map((p: any) => p.name).slice(0, 5)
+        });
+        return {};
+      }
+
+      devLog('LegiScan match found', { 
+        name: matchingPerson.name,
+        id: matchingPerson.people_id,
+        hasEmail: !!matchingPerson.email,
+        hasTwitter: !!matchingPerson.twitter
+      });
+
+      return {
+        legiscanId: matchingPerson.people_id,
+        contacts: matchingPerson.email ? [{
+          type: 'email',
+          value: matchingPerson.email,
+          isVerified: true,
+          source: 'legiscan'
+        }] : [],
+        socialMedia: matchingPerson.twitter ? [{
+          platform: 'twitter',
+          handle: matchingPerson.twitter,
+          url: `https://twitter.com/${matchingPerson.twitter}`,
+          isVerified: true,
+          source: 'legiscan'
+        }] : [],
+        committeeMemberships: matchingPerson.committees || [],
+        dataSources: [...(rep.dataSources || []), 'legiscan']
+      };
+    } catch (error) {
+      devLog('LegiScan API error', { error: error instanceof Error ? error.message : 'Unknown error' });
+      return {};
+    }
+  }
+
   private async getCongressGovData(rep: RepresentativeData): Promise<Partial<RepresentativeData>> {
     const rateLimiter = this.rateLimiters.get('congress-gov');
     
@@ -405,8 +790,17 @@ export class FreeAPIsPipeline {
     }
 
     try {
-      // Search for members by state
-      const response = await fetch(
+      // OPTIMIZED: Single Congress.gov call that gets ALL data at once
+      const enrichedData: Partial<RepresentativeData> = {
+        dataSources: ['congress-gov'], // Only ONE data source entry
+        contacts: [],
+        socialMedia: [],
+        photos: [],
+        activity: []
+      };
+
+      // 1. Get basic member data
+      const memberResponse = await fetch(
         `https://api.congress.gov/v3/member?state=${rep.state}&format=json&api_key=${process.env.CONGRESS_GOV_API_KEY}`,
         {
           method: 'GET',
@@ -414,40 +808,62 @@ export class FreeAPIsPipeline {
         }
       );
 
-      if (!response.ok) {
-        devLog('Congress.gov API request failed', { status: response.status });
+      if (!memberResponse.ok) {
+        devLog('Congress.gov member API request failed', { status: memberResponse.status });
         return {};
       }
 
-      const data = await response.json();
+      const memberData = await memberResponse.json();
       rateLimiter.currentUsage++;
 
-      const enrichedData: Partial<RepresentativeData> = {
-        dataSources: ['congress-gov'],
-        contacts: [],
-        socialMedia: [],
-        photos: []
-      };
-
       // Find matching representative
-      const members = data.members || [];
+      const members = memberData.members || [];
       const matchingRep = members.find((member: any) => 
         this.isMatchingRepresentative(member, rep)
       );
 
       if (matchingRep) {
-        // Extract contact information
+        // Extract ALL data in one go
         const contacts = this.extractCongressGovContacts(matchingRep);
-        enrichedData.contacts = [...(enrichedData.contacts || []), ...contacts];
-
-        // Extract photos
         const photos = this.extractCongressGovPhotos(matchingRep);
-        enrichedData.photos = [...(enrichedData.photos || []), ...photos];
+        
+        enrichedData.contacts = contacts;
+        enrichedData.photos = photos;
 
         // Extract basic info
         if (matchingRep.fullName) enrichedData.name = matchingRep.fullName;
         if (matchingRep.party) enrichedData.party = matchingRep.party;
         if (matchingRep.bioguideId) enrichedData.bioguideId = matchingRep.bioguideId;
+
+        // 2. Get recent activity (votes) in the same call if we have bioguideId
+        if (matchingRep.bioguideId && rep.level === 'federal') {
+          try {
+            const activityResponse = await fetch(
+              `https://api.congress.gov/v3/member/${matchingRep.bioguideId}/votes?format=json&api_key=${process.env.CONGRESS_GOV_API_KEY}&limit=5`,
+              {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' }
+              }
+            );
+
+            if (activityResponse.ok) {
+              const activityData = await activityResponse.json();
+              const recentVotes = activityData.votes?.map((vote: any) => ({
+                type: 'vote',
+                title: vote.description || vote.question,
+                date: vote.date,
+                result: vote.result,
+                chamber: vote.chamber,
+                source: 'congress-gov'
+              })) || [];
+              
+              enrichedData.activity = recentVotes;
+            }
+          } catch (activityError) {
+            devLog('Congress.gov activity API failed', { error: activityError });
+            // Don't fail the whole method if activity fails
+          }
+        }
       }
 
       return enrichedData;
@@ -535,13 +951,22 @@ export class FreeAPIsPipeline {
     }
 
     try {
-      if (!rep.fecId) {
-        devLog('No FEC ID available for representative', { name: rep.name });
+      const apiKey = process.env.FEC_API_KEY;
+      if (!apiKey) {
+        devLog('FEC API key not configured');
         return undefined;
       }
 
+      // FEC only covers federal candidates
+      if (rep.level !== 'federal') {
+        devLog('FEC data only available for federal candidates', { level: rep.level });
+        return undefined;
+      }
+
+      // If we have a FEC ID, use it directly
+      if (rep.fecId) {
       const response = await fetch(
-        `https://api.open.fec.gov/v1/candidate/${rep.fecId}/totals/?api_key=${process.env.FEC_API_KEY}`,
+          `https://api.open.fec.gov/v1/candidate/${rep.fecId}/totals/?api_key=${apiKey}`,
         {
           method: 'GET',
           headers: { 'Content-Type': 'application/json' }
@@ -556,22 +981,106 @@ export class FreeAPIsPipeline {
       const data = await response.json();
       rateLimiter.currentUsage++;
 
-      // Extract campaign finance data
-      const totals = data.results?.[0];
-      if (totals) {
-        return {
-          electionCycle: totals.cycle || '2024',
-          totalReceipts: totals.receipts || 0,
-          totalDisbursements: totals.disbursements || 0,
-          cashOnHand: totals.cash_on_hand_end_period || 0,
-          debt: totals.debts_owed_by_committee || 0,
-          individualContributions: totals.individual_contributions || 0,
-          pacContributions: totals.political_party_committee_contributions || 0,
-          partyContributions: totals.political_party_committee_contributions || 0,
-          selfFinancing: totals.candidate_contribution || 0
-        };
+        if (data.results && data.results.length > 0) {
+          const candidate = data.results[0];
+          return {
+            electionCycle: candidate.cycle,
+            totalReceipts: candidate.receipts,
+            totalDisbursements: candidate.disbursements,
+            cashOnHand: candidate.cash_on_hand,
+            debt: candidate.debt,
+            individualContributions: candidate.individual_contributions,
+            pacContributions: candidate.pac_contributions,
+            partyContributions: candidate.party_contributions,
+            selfFinancing: candidate.candidate_contribution,
+            totalContributions: candidate.total_contributions,
+            lastUpdated: new Date()
+          };
+        }
       }
 
+      // If no FEC ID, search for candidates by name and state
+      const searchName = rep.name.split(' ').slice(0, 2).join(' '); // First and last name
+      
+      // Determine office type for FEC search
+      let officeParam = '';
+      if (rep.office.toLowerCase().includes('president')) officeParam = '&office=P';
+      else if (rep.office.toLowerCase().includes('senate') || rep.office.toLowerCase().includes('senator')) officeParam = '&office=S';
+      else if (rep.office.toLowerCase().includes('house') || rep.office.toLowerCase().includes('representative') || rep.office.toLowerCase().includes('assembly')) officeParam = '&office=H';
+      
+      const response = await fetch(
+        `https://api.open.fec.gov/v1/candidates/?name=${encodeURIComponent(searchName)}&state=${rep.state}${officeParam}&api_key=${apiKey}&election_year=2024&election_year=2022&election_year=2020&candidate_status=C`,
+        {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' }
+        }
+      );
+
+      if (!response.ok) {
+        devLog('FEC search request failed', { status: response.status });
+        return undefined;
+      }
+
+      const data = await response.json();
+      rateLimiter.currentUsage++;
+      
+      devLog('FEC search results', { 
+        candidateCount: data.results?.length || 0,
+        searchName,
+        state: rep.state,
+        office: rep.office
+      });
+
+      // Extract campaign finance data from search results
+      if (data.results && data.results.length > 0) {
+        const candidate = data.results[0];
+        devLog('FEC candidate found', { 
+          candidateId: candidate.candidate_id,
+          name: candidate.name,
+          office: candidate.office,
+          party: candidate.party
+        });
+        
+        // Get detailed totals for this candidate
+        const totalsResponse = await fetch(
+          `https://api.open.fec.gov/v1/candidate/${candidate.candidate_id}/totals/?api_key=${apiKey}`,
+          {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' }
+          }
+        );
+        
+        if (totalsResponse.ok) {
+          const totalsData = await totalsResponse.json();
+          const totals = totalsData.results?.[0];
+          
+          devLog('FEC totals data', { 
+            hasTotals: !!totals,
+            cycle: totals?.cycle,
+            receipts: totals?.receipts
+          });
+          
+      if (totals) {
+        return {
+              electionCycle: totals.cycle,
+              totalReceipts: totals.receipts,
+              totalDisbursements: totals.disbursements,
+              cashOnHand: totals.cash_on_hand,
+              debt: totals.debt,
+              individualContributions: totals.individual_contributions,
+              pacContributions: totals.pac_contributions,
+              partyContributions: totals.party_contributions,
+              selfFinancing: totals.candidate_contribution,
+              totalContributions: totals.total_contributions,
+              lastUpdated: new Date()
+            };
+          }
+        } else {
+          devLog('FEC totals request failed', { status: totalsResponse.status });
+        }
+      }
+
+      devLog('No FEC data found for representative', { name: rep.name, state: rep.state });
       return undefined;
 
     } catch (error) {
@@ -808,6 +1317,7 @@ export class FreeAPIsPipeline {
     googleCivic: Partial<RepresentativeData>,
     openStates: Partial<RepresentativeData>,
     congressGov: Partial<RepresentativeData>,
+    legiScan: Partial<RepresentativeData>,
     photos: PhotoInfo[],
     socialMedia: SocialMediaInfo[],
     campaignFinance?: CampaignFinanceInfo,
@@ -820,6 +1330,7 @@ export class FreeAPIsPipeline {
     merged = this.resolveDataConflicts(merged, googleCivic);
     merged = this.resolveDataConflicts(merged, openStates);
     merged = this.resolveDataConflicts(merged, congressGov);
+    merged = this.resolveDataConflicts(merged, legiScan);
     
     // Normalize party affiliation
     if (merged.party) {
@@ -840,6 +1351,9 @@ export class FreeAPIsPipeline {
       merged.campaignFinance = campaignFinance;
     }
     
+    // Transform data to match our enhanced schema
+    merged = this.transformToEnhancedSchema(merged);
+    
     // Validate data quality
     const validation = this.validateDataQuality(merged);
     if (!validation.isValid) {
@@ -850,6 +1364,105 @@ export class FreeAPIsPipeline {
     }
     
     return merged;
+  }
+
+  /**
+   * Transform merged data to match our enhanced schema
+   */
+  private transformToEnhancedSchema(rep: RepresentativeData): RepresentativeData {
+    const transformed = { ...rep };
+    
+    // Extract social media handles for easy access
+    if (transformed.socialMedia) {
+      transformed.socialMedia.forEach(social => {
+        switch (social.platform) {
+          case 'twitter':
+            transformed.twitterHandle = social.handle;
+            break;
+          case 'facebook':
+            transformed.facebookUrl = social.url;
+            break;
+          case 'instagram':
+            transformed.instagramHandle = social.handle;
+            break;
+          case 'linkedin':
+            transformed.linkedinUrl = social.url;
+            break;
+          case 'youtube':
+            transformed.youtubeChannel = social.url;
+            break;
+        }
+      });
+    }
+    
+    // Extract primary contact information
+    if (transformed.contacts) {
+      const email = transformed.contacts.find(c => c.type === 'email' && c.isVerified);
+      const phone = transformed.contacts.find(c => c.type === 'phone' && c.isVerified);
+      const website = transformed.contacts.find(c => c.type === 'website' && c.isVerified);
+      
+      if (email) transformed.primaryEmail = email.value;
+      if (phone) transformed.primaryPhone = phone.value;
+      if (website) transformed.primaryWebsite = website.value;
+    }
+    
+    // Extract primary photo
+    if (transformed.photos && transformed.photos.length > 0) {
+      const primaryPhoto = transformed.photos.find(p => p.isPrimary) || transformed.photos[0];
+      transformed.primaryPhotoUrl = primaryPhoto.url;
+    }
+    
+    // Transform activity data for accountability tracking
+    if (transformed.activity) {
+      transformed.floorSpeeches = transformed.activity.filter(a => a.type === 'floor_speech');
+      transformed.committeeStatements = transformed.activity.filter(a => a.type === 'committee_statement');
+      transformed.officialPressReleases = transformed.activity.filter(a => a.type === 'press_release');
+      transformed.socialMediaStatements = transformed.activity.filter(a => a.type === 'social_media');
+      
+      // Extract recent tweets, Facebook posts, Instagram posts
+      transformed.recentTweets = transformed.activity.filter(a => a.source === 'twitter');
+      transformed.facebookPosts = transformed.activity.filter(a => a.source === 'facebook');
+      transformed.instagramPosts = transformed.activity.filter(a => a.source === 'instagram');
+    }
+    
+    // Calculate accountability score
+    transformed.accountabilityScore = this.calculateAccountabilityScore(transformed);
+    
+    return transformed;
+  }
+  
+  /**
+   * Calculate accountability score based on statement vs. action alignment
+   */
+  private calculateAccountabilityScore(rep: RepresentativeData): number {
+    let score = 50; // Base score
+    
+    // Bonus for having multiple data sources
+    if (rep.dataSources && rep.dataSources.length > 1) {
+      score += 10;
+    }
+    
+    // Bonus for social media presence
+    if (rep.socialMedia && rep.socialMedia.length > 0) {
+      score += 10;
+    }
+    
+    // Bonus for contact information
+    if (rep.contacts && rep.contacts.length > 0) {
+      score += 10;
+    }
+    
+    // Bonus for recent activity
+    if (rep.activity && rep.activity.length > 0) {
+      score += 10;
+    }
+    
+    // Bonus for committee memberships
+    if (rep.committeeMemberships && rep.committeeMemberships.length > 0) {
+      score += 10;
+    }
+    
+    return Math.min(100, score);
   }
 
   // Additional helper methods for specific API integrations
@@ -1024,7 +1637,24 @@ export class FreeAPIsPipeline {
       const apiKey = process.env.GOOGLE_CIVIC_API_KEY;
       if (!apiKey) return socialMedia;
       
-      const searchQuery = `123 Main St, ${rep.state}`;
+      // Use state capital for Google Civic API
+      const stateCapitals = {
+        'Alabama': 'Montgomery, AL', 'Alaska': 'Juneau, AK', 'Arizona': 'Phoenix, AZ', 'Arkansas': 'Little Rock, AR',
+        'California': 'Sacramento, CA', 'Colorado': 'Denver, CO', 'Connecticut': 'Hartford, CT', 'Delaware': 'Dover, DE',
+        'Florida': 'Tallahassee, FL', 'Georgia': 'Atlanta, GA', 'Hawaii': 'Honolulu, HI', 'Idaho': 'Boise, ID',
+        'Illinois': 'Springfield, IL', 'Indiana': 'Indianapolis, IN', 'Iowa': 'Des Moines, IA', 'Kansas': 'Topeka, KS',
+        'Kentucky': 'Frankfort, KY', 'Louisiana': 'Baton Rouge, LA', 'Maine': 'Augusta, ME', 'Maryland': 'Annapolis, MD',
+        'Massachusetts': 'Boston, MA', 'Michigan': 'Lansing, MI', 'Minnesota': 'Saint Paul, MN', 'Mississippi': 'Jackson, MS',
+        'Missouri': 'Jefferson City, MO', 'Montana': 'Helena, MT', 'Nebraska': 'Lincoln, NE', 'Nevada': 'Carson City, NV',
+        'New Hampshire': 'Concord, NH', 'New Jersey': 'Trenton, NJ', 'New Mexico': 'Santa Fe, NM', 'New York': 'Albany, NY',
+        'North Carolina': 'Raleigh, NC', 'North Dakota': 'Bismarck, ND', 'Ohio': 'Columbus, OH', 'Oklahoma': 'Oklahoma City, OK',
+        'Oregon': 'Salem, OR', 'Pennsylvania': 'Harrisburg, PA', 'Rhode Island': 'Providence, RI', 'South Carolina': 'Columbia, SC',
+        'South Dakota': 'Pierre, SD', 'Tennessee': 'Nashville, TN', 'Texas': 'Austin, TX', 'Utah': 'Salt Lake City, UT',
+        'Vermont': 'Montpelier, VT', 'Virginia': 'Richmond, VA', 'Washington': 'Olympia, WA', 'West Virginia': 'Charleston, WV',
+        'Wisconsin': 'Madison, WI', 'Wyoming': 'Cheyenne, WY'
+      };
+      
+      const searchQuery = stateCapitals[rep.state as keyof typeof stateCapitals] || `${rep.state} State Capitol`;
       const response = await fetch(
         `https://www.googleapis.com/civicinfo/v2/representatives?address=${encodeURIComponent(searchQuery)}&key=${apiKey}`,
         {

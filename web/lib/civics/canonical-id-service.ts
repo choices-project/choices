@@ -99,7 +99,7 @@ export class CanonicalIdService {
         onConflict: 'source,source_id'
       })
       .select()
-      .single();
+      .maybeSingle();
 
     if (error) {
       throw new Error(`Failed to upsert crosswalk entry: ${error.message}`);
@@ -157,7 +157,7 @@ export class CanonicalIdService {
       .select('canonical_id')
       .eq('source', source)
       .eq('source_id', sourceId)
-      .single();
+      .maybeSingle();
 
     if (error) {
       if (error.code === 'PGRST116') {
@@ -229,7 +229,7 @@ export class CanonicalIdService {
       .select('canonical_id')
       .eq('canonical_id', canonicalId)
       .limit(1)
-      .single();
+      .maybeSingle();
 
     if (error) {
       if (error.code === 'PGRST116') {
