@@ -294,7 +294,7 @@ async function processStateData(state: string, forceRefresh: boolean, dryRun: bo
   try {
     const pipeline = new FreeAPIsPipeline();
     
-    // Get representatives from OpenStates API for this state
+    // Get representatives from OpenStates API for this state using the pipeline
     const openStatesApiKey = process.env.OPENSTATES_API_KEY;
     if (!openStatesApiKey) {
       throw new Error('OpenStates API key not configured');
@@ -318,8 +318,8 @@ async function processStateData(state: string, forceRefresh: boolean, dryRun: bo
     let processedCount = 0;
     let successCount = 0;
     
-    // Process each legislator with the FREE APIs pipeline
-    for (const legislator of legislators.slice(0, 5)) { // Limit to 5 for testing
+    // Process each legislator with the FREE APIs pipeline (remove testing limit)
+    for (const legislator of legislators) {
       try {
         const representativeData = {
           name: legislator.full_name || legislator.name,
@@ -354,6 +354,7 @@ async function processStateData(state: string, forceRefresh: boolean, dryRun: bo
             bioguide_id: enrichedRep.bioguideId,
             fec_id: enrichedRep.fecId,
             google_civic_id: enrichedRep.googleCivicId,
+            canonical_id: enrichedRep.canonicalId,
             data_quality_score: enrichedRep.qualityScore,
             data_sources: enrichedRep.dataSources,
             last_updated: enrichedRep.lastUpdated.toISOString(),

@@ -5,7 +5,7 @@
  * Transforms raw API responses into structured, normalized data for database storage.
  */
 
-import { logger } from '../logger';
+// import { logger } from '../logger'; // Archived file
 // withOptional not used in this file
 // Define AddressLookupResult locally since it's not exported from civics/ingest
 type AddressLookupResult = {
@@ -325,7 +325,7 @@ export class DataTransformationPipeline {
         }
       };
     } catch (error) {
-      logger.error('Failed to transform Google Civic data', { error, data });
+      console.error('Failed to transform Google Civic data', { error, data });
       return {
         source: 'google-civic',
         level,
