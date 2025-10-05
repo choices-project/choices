@@ -97,7 +97,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     console.log('📊 Analyzing comprehensive data coverage...');
     
@@ -186,14 +186,14 @@ async function analyzeCurrentCoverage() {
 function determineStatesToProcess(scope: string, coverage: any) {
   switch (scope) {
     case 'missing':
-      return coverage.missingStatesList;
+      return MISSING_STATES;
     case 'federal':
       return ALL_STATES; // Federal covers all states
     case 'state':
-      return coverage.missingStatesList;
+      return MISSING_STATES;
     case 'all':
     default:
-      return coverage.missingStatesList;
+      return MISSING_STATES;
   }
 }
 

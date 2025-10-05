@@ -14,7 +14,6 @@ import React, { useState, useEffect } from 'react';
 import { 
   MagnifyingGlassIcon, 
   MapPinIcon, 
-  FunnelIcon,
   UserGroupIcon,
   ChartBarIcon,
   HeartIcon
@@ -22,7 +21,7 @@ import {
 import CandidateCard from '@/components/civics-2-0/CandidateCard';
 import SocialFeed from '@/components/civics-2-0/SocialFeed';
 
-interface RepresentativeData {
+type RepresentativeData = {
   id: string;
   name: string;
   party: string;
@@ -37,27 +36,27 @@ interface RepresentativeData {
   campaignFinance?: CampaignFinanceInfo;
   qualityScore: number;
   lastUpdated: Date;
-}
+};
 
-interface ContactInfo {
+type ContactInfo = {
   type: 'email' | 'phone' | 'website' | 'fax' | 'address';
   value: string;
   label?: string;
   isPrimary: boolean;
   isVerified: boolean;
   source: string;
-}
+};
 
-interface SocialMediaInfo {
+type SocialMediaInfo = {
   platform: 'twitter' | 'facebook' | 'instagram' | 'youtube' | 'linkedin';
   handle: string;
   url: string;
   followersCount: number;
   isVerified: boolean;
   source: string;
-}
+};
 
-interface PhotoInfo {
+type PhotoInfo = {
   url: string;
   source: 'congress-gov' | 'wikipedia' | 'google-civic' | 'openstates';
   quality: 'high' | 'medium' | 'low';
@@ -66,9 +65,9 @@ interface PhotoInfo {
   attribution?: string;
   width?: number;
   height?: number;
-}
+};
 
-interface ActivityInfo {
+type ActivityInfo = {
   type: 'vote' | 'bill' | 'statement' | 'social_media' | 'photo_update';
   title: string;
   description?: string;
@@ -76,9 +75,9 @@ interface ActivityInfo {
   date: Date;
   metadata: Record<string, any>;
   source: string;
-}
+};
 
-interface CampaignFinanceInfo {
+type CampaignFinanceInfo = {
   electionCycle: string;
   totalReceipts: number;
   totalDisbursements: number;
@@ -88,7 +87,7 @@ interface CampaignFinanceInfo {
   pacContributions: number;
   partyContributions: number;
   selfFinancing: number;
-}
+};
 
 export default function Civics2Page() {
   const [activeTab, setActiveTab] = useState<'representatives' | 'feed'>('representatives');
@@ -338,7 +337,7 @@ export default function Civics2Page() {
                 <div>
                   <h2 className="text-xl font-semibold text-gray-900">Civic Feed</h2>
                   <p className="text-sm text-gray-500 mt-1">
-                    Stay updated with your representatives' latest activity
+                    Stay updated with your representatives&apos; latest activity
                   </p>
                 </div>
                 <div className="flex items-center space-x-2 text-sm text-gray-500">
