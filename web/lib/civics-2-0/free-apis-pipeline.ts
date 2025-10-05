@@ -15,7 +15,7 @@ import { devLog } from '@/lib/logger';
 import { CanonicalIdService } from '@/lib/civics/canonical-id-service';
 
 // Types for our FREE APIs data
-export interface RepresentativeData {
+export type RepresentativeData = {
   id?: string;
   name: string;
   party?: string;
@@ -29,7 +29,6 @@ export interface RepresentativeData {
   openstatesId?: string;
   fecId?: string;
   googleCivicId?: string;
-  canonicalId?: string;
   
   // Contact information
   contacts: ContactInfo[];
@@ -46,7 +45,7 @@ export interface RepresentativeData {
   lastUpdated: Date;
 }
 
-export interface ContactInfo {
+export type ContactInfo = {
   type: 'email' | 'phone' | 'website' | 'fax' | 'address';
   value: string;
   label?: string;
@@ -55,7 +54,7 @@ export interface ContactInfo {
   source: string;
 }
 
-export interface SocialMediaInfo {
+export type SocialMediaInfo = {
   platform: 'twitter' | 'facebook' | 'instagram' | 'youtube' | 'linkedin';
   handle: string;
   url: string;
@@ -64,7 +63,7 @@ export interface SocialMediaInfo {
   source: string;
 }
 
-export interface PhotoInfo {
+export type PhotoInfo = {
   url: string;
   source: 'congress-gov' | 'wikipedia' | 'google-civic' | 'openstates';
   quality: 'high' | 'medium' | 'low';
@@ -75,7 +74,7 @@ export interface PhotoInfo {
   height?: number;
 }
 
-export interface ActivityInfo {
+export type ActivityInfo = {
   type: 'vote' | 'bill' | 'statement' | 'social_media' | 'photo_update';
   title: string;
   description?: string;
@@ -85,7 +84,7 @@ export interface ActivityInfo {
   source: string;
 }
 
-export interface CampaignFinanceInfo {
+export type CampaignFinanceInfo = {
   electionCycle: string;
   totalReceipts: number;
   totalDisbursements: number;
@@ -197,13 +196,12 @@ export class FreeAPIsPipeline {
 
       // Resolve canonical ID for multi-source reconciliation
       const canonicalResult = await this.resolveCanonicalId(enrichedRep);
-      enrichedRep.canonicalId = canonicalResult.canonicalId;
-
+      
       devLog('Representative processed successfully', { 
         name: enrichedRep.name, 
         qualityScore: enrichedRep.qualityScore,
         dataSources: enrichedRep.dataSources.length,
-        canonicalId: enrichedRep.canonicalId
+        canonicalId: canonicalResult.canonicalId
       });
 
       return enrichedRep;
@@ -254,7 +252,7 @@ export class FreeAPIsPipeline {
       const representatives = data.officials || [];
       const offices = data.offices || [];
       
-      let enrichedData: Partial<RepresentativeData> = {
+      const enrichedData: Partial<RepresentativeData> = {
         dataSources: ['google-civic'],
         contacts: [],
         socialMedia: [],
@@ -302,7 +300,7 @@ export class FreeAPIsPipeline {
     }
 
     try {
-      const apiKey = process.env.OPENSTATES_API_KEY;
+      const apiKey = process.env.OPEN_STATES_API_KEY;
       if (!apiKey) {
         devLog('OpenStates API key not configured');
         return {};
@@ -325,7 +323,7 @@ export class FreeAPIsPipeline {
       const data = await response.json();
       rateLimiter.currentUsage++;
 
-      let enrichedData: Partial<RepresentativeData> = {
+      const enrichedData: Partial<RepresentativeData> = {
         dataSources: ['openstates'],
         contacts: [],
         socialMedia: [],
@@ -393,7 +391,7 @@ export class FreeAPIsPipeline {
       const data = await response.json();
       rateLimiter.currentUsage++;
 
-      let enrichedData: Partial<RepresentativeData> = {
+      const enrichedData: Partial<RepresentativeData> = {
         dataSources: ['congress-gov'],
         contacts: [],
         socialMedia: [],
@@ -1042,7 +1040,7 @@ export class FreeAPIsPipeline {
     const socialMedia: SocialMediaInfo[] = [];
     
     try {
-      const apiKey = process.env.OPENSTATES_API_KEY;
+      const apiKey = process.env.OPEN_STATES_API_KEY;
       if (!apiKey) return socialMedia;
       
       const response = await fetch(
@@ -1144,7 +1142,7 @@ export class FreeAPIsPipeline {
       // Get recent bills from OpenStates for state representatives
       if (rep.level === 'state' && rep.openstatesId) {
         const response = await fetch(
-          `https://openstates.org/api/v1/bills/?sponsor_id=${rep.openstatesId}&apikey=${process.env.OPENSTATES_API_KEY}`,
+          `https://openstates.org/api/v1/bills/?sponsor_id=${rep.openstatesId}&apikey=${process.env.OPEN_STATES_API_KEY}`,
           {
             method: 'GET',
             headers: { 'Content-Type': 'application/json' }
@@ -1360,6 +1358,7 @@ export class FreeAPIsPipeline {
 
   /**
    * Resolve canonical ID for multi-source reconciliation
+   * Stores mappings in id_crosswalk table instead of representatives_core
    */
   private async resolveCanonicalId(rep: RepresentativeData): Promise<{ canonicalId: string; crosswalkEntries: any[] }> {
     try {
@@ -1472,6 +1471,7 @@ export class FreeAPIsPipeline {
     }
   }
 
+
   private mergePhotos(existing: PhotoInfo[], newPhotos: PhotoInfo[]): PhotoInfo[] {
     const allPhotos = [...existing, ...newPhotos];
     const uniquePhotos = allPhotos.filter((photo, index, self) => 
@@ -1481,7 +1481,7 @@ export class FreeAPIsPipeline {
     return uniquePhotos.sort((a, b) => {
       const qualityOrder = { 'high': 3, 'medium': 2, 'low': 1 };
       return qualityOrder[b.quality] - qualityOrder[a.quality];
-    });
+    }).slice(0, 2); // Collect top 2 photos per person
   }
 
   private mergeSocialMedia(existing: SocialMediaInfo[], newSocial: SocialMediaInfo[]): SocialMediaInfo[] {

@@ -9,6 +9,10 @@ import { type NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { FreeAPIsPipeline } from '@/lib/civics-2-0/free-apis-pipeline';
 import { CanonicalIdService } from '@/lib/civics/canonical-id-service';
+import dotenv from 'dotenv';
+
+// Load environment variables
+dotenv.config({ path: '.env.local' });
 
 export const dynamic = 'force-dynamic';
 
@@ -297,7 +301,7 @@ async function processStateData(state: string, forceRefresh: boolean, dryRun: bo
     const pipeline = new FreeAPIsPipeline();
     
     // Get representatives from OpenStates API for this state
-    const openStatesApiKey = process.env.OPENSTATES_API_KEY;
+    const openStatesApiKey = process.env.OPEN_STATES_API_KEY;
     if (!openStatesApiKey) {
       throw new Error('OpenStates API key not configured');
     }
@@ -342,6 +346,16 @@ async function processStateData(state: string, forceRefresh: boolean, dryRun: bo
         
         const enrichedRep = await pipeline.processRepresentative(representativeData);
         
+        // Extract primary contact information
+        const primaryEmail = enrichedRep.contacts?.find(c => c.type === 'email' && c.isVerified)?.value ||
+                            enrichedRep.contacts?.find(c => c.type === 'email')?.value;
+        const primaryPhone = enrichedRep.contacts?.find(c => c.type === 'phone' && c.isVerified)?.value ||
+                            enrichedRep.contacts?.find(c => c.type === 'phone')?.value;
+        const primaryWebsite = enrichedRep.contacts?.find(c => c.type === 'website' && c.isVerified)?.value ||
+                              enrichedRep.contacts?.find(c => c.type === 'website')?.value;
+        const primaryPhoto = enrichedRep.photos?.find(p => p.isPrimary)?.url ||
+                            enrichedRep.photos?.[0]?.url;
+
         // Store the enriched data in the database
         const { error: insertError } = await supabase
           .from('representatives_core')
@@ -356,6 +370,10 @@ async function processStateData(state: string, forceRefresh: boolean, dryRun: bo
             bioguide_id: enrichedRep.bioguideId,
             fec_id: enrichedRep.fecId,
             google_civic_id: enrichedRep.googleCivicId,
+            primary_email: primaryEmail,
+            primary_phone: primaryPhone,
+            primary_website: primaryWebsite,
+            primary_photo_url: primaryPhoto,
             data_quality_score: enrichedRep.qualityScore,
             data_sources: enrichedRep.dataSources,
             last_updated: enrichedRep.lastUpdated.toISOString(),
