@@ -7,13 +7,13 @@
  * Status: Critical for production use
  */
 
-export interface RateLimit {
+export type RateLimit = {
   daily: number;
   perMinute: number;
   delay: number; // milliseconds between requests
 }
 
-export interface APIUsage {
+export type APIUsage = {
   api: string;
   requestsToday: number;
   requestsThisMinute: number;
@@ -82,16 +82,23 @@ export function recordRequest(api: string): void {
   const thisMinute = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours(), now.getMinutes());
   
   if (!apiUsage[api]) {
+    const rateLimit = RATE_LIMITS[api];
+    if (!rateLimit) {
+      throw new Error(`Unknown API: ${api}`);
+    }
     apiUsage[api] = {
       api,
       requestsToday: 0,
       requestsThisMinute: 0,
       lastRequest: now,
-      rateLimit: RATE_LIMITS[api]
+      rateLimit
     };
   }
   
   const usage = apiUsage[api];
+  if (!usage) {
+    throw new Error(`API usage not initialized for: ${api}`);
+  }
   
   // Reset counters if needed
   if (usage.lastRequest < today) {
@@ -110,7 +117,7 @@ export function getRequiredDelay(api: string): number {
   const usage = apiUsage[api];
   const limit = RATE_LIMITS[api];
   
-  if (!usage || !limit) return limit?.delay || 1000;
+  if (!usage || !limit) return 1000;
   
   const now = new Date();
   const timeSinceLastRequest = now.getTime() - usage.lastRequest.getTime();
@@ -139,7 +146,7 @@ export function getRateLimitStatus(): Record<string, { canMakeRequest: boolean; 
         requestsToday: 0,
         requestsThisMinute: 0,
         lastRequest: new Date(0),
-        rateLimit: RATE_LIMITS[api]
+        rateLimit: RATE_LIMITS[api]!
       }
     };
   }

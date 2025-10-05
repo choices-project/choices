@@ -467,7 +467,7 @@ export default function SocialFeed({
       {/* End of feed */}
       {!hasMore && feedItems.length > 0 && (
         <div className="text-center py-8 text-gray-500">
-          <p>You've reached the end of the feed</p>
+          <p>You&apos;ve reached the end of the feed</p>
           <p className="text-sm mt-1">Check back later for more updates</p>
         </div>
       )}

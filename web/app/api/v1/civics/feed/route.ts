@@ -89,6 +89,9 @@ type GenerateFeedOptions = {
 async function generatePersonalizedFeed(options: GenerateFeedOptions) {
   const { page, limit, userId, state, interests, preferences } = options;
   
+  // Log the feed generation request for debugging
+  console.log('Generating personalized feed for user:', userId, 'with interests:', interests);
+  
   try {
     // Get representatives based on user preferences
     let representativesQuery = supabase

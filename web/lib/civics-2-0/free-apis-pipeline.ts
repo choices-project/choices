@@ -355,12 +355,12 @@ export class FreeAPIsPipeline {
       // Add election information
       upcomingElections.forEach((election: any) => {
         activity.push({
-          type: 'election',
+          type: 'vote',
           title: `Upcoming Election: ${election.name}`,
           date: election.electionDay,
           description: `Election in ${rep.state}`,
           source: 'google-civic',
-          isVerified: true
+          metadata: { electionId: election.id, state: rep.state }
         });
       });
 
@@ -383,13 +383,12 @@ export class FreeAPIsPipeline {
             if (voterInfo.earlyVoteSites && voterInfo.earlyVoteSites.length > 0) {
               voterInfo.earlyVoteSites.forEach((site: any) => {
                 activity.push({
-                  type: 'early-voting',
+                  type: 'vote',
                   title: `Early Voting: ${site.name || 'Voting Location'}`,
                   date: site.startDate || latestElection.electionDay,
-                  description: `Early voting location in ${rep.state}. Hours: ${site.pollingHours || 'Check location for hours'}`,
-                  location: site.address ? `${site.address.line1}, ${site.address.city}, ${site.address.state} ${site.address.zip}` : undefined,
+                  description: `Early voting location in ${rep.state}. Hours: ${site.pollingHours || 'Check location for hours'}. ${site.address ? `${site.address.line1}, ${site.address.city}, ${site.address.state} ${site.address.zip}` : ''}`,
                   source: 'google-civic',
-                  isVerified: true
+                  metadata: { siteId: site.id, address: site.address }
                 });
               });
             }
@@ -398,13 +397,12 @@ export class FreeAPIsPipeline {
             if (voterInfo.pollingLocations && voterInfo.pollingLocations.length > 0) {
               voterInfo.pollingLocations.forEach((location: any) => {
                 activity.push({
-                  type: 'polling-place',
+                  type: 'vote',
                   title: `Polling Place: ${location.name || 'Voting Location'}`,
                   date: latestElection.electionDay,
-                  description: `Election day polling location in ${rep.state}. Hours: ${location.pollingHours || 'Check location for hours'}`,
-                  location: location.address ? `${location.address.line1}, ${location.address.city}, ${location.address.state} ${location.address.zip}` : undefined,
+                  description: `Election day polling location in ${rep.state}. Hours: ${location.pollingHours || 'Check location for hours'}. ${location.address ? `${location.address.line1}, ${location.address.city}, ${location.address.state} ${location.address.zip}` : ''}`,
                   source: 'google-civic',
-                  isVerified: true
+                  metadata: { locationId: location.id, address: location.address }
                 });
               });
             }
@@ -763,6 +761,7 @@ export class FreeAPIsPipeline {
           type: 'email',
           value: matchingPerson.email,
           isVerified: true,
+          isPrimary: true,
           source: 'legiscan'
         }] : [],
         socialMedia: matchingPerson.twitter ? [{
@@ -770,6 +769,7 @@ export class FreeAPIsPipeline {
           handle: matchingPerson.twitter,
           url: `https://twitter.com/${matchingPerson.twitter}`,
           isVerified: true,
+          followersCount: 0,
           source: 'legiscan'
         }] : [],
         committeeMemberships: matchingPerson.committees || [],
@@ -992,9 +992,7 @@ export class FreeAPIsPipeline {
             individualContributions: candidate.individual_contributions,
             pacContributions: candidate.pac_contributions,
             partyContributions: candidate.party_contributions,
-            selfFinancing: candidate.candidate_contribution,
-            totalContributions: candidate.total_contributions,
-            lastUpdated: new Date()
+            selfFinancing: candidate.candidate_contribution
           };
         }
       }
@@ -1070,9 +1068,7 @@ export class FreeAPIsPipeline {
               individualContributions: totals.individual_contributions,
               pacContributions: totals.pac_contributions,
               partyContributions: totals.party_contributions,
-              selfFinancing: totals.candidate_contribution,
-              totalContributions: totals.total_contributions,
-              lastUpdated: new Date()
+              selfFinancing: totals.candidate_contribution
             };
           }
         } else {
@@ -1231,8 +1227,8 @@ export class FreeAPIsPipeline {
           isPrimary: true
         };
       }
-    } catch (_error) {
-      devLog('Congress photo not available', { bioguideId });
+    } catch (error) {
+      devLog('Congress photo not available', { bioguideId, error: error instanceof Error ? error.message : 'Unknown error' });
     }
 
     return null;
@@ -1245,11 +1241,15 @@ export class FreeAPIsPipeline {
   }
 
   private async getGoogleCivicPhotos(rep: RepresentativeData): Promise<PhotoInfo[]> {
+    // Log the representative being processed for debugging
+    devLog('Getting Google Civic photos for', { name: rep.name, state: rep.state });
     // Implementation for Google Civic photos
     return [];
   }
 
-  private async getOpenStatesPhotos(_rep: RepresentativeData): Promise<PhotoInfo[]> {
+  private async getOpenStatesPhotos(rep: RepresentativeData): Promise<PhotoInfo[]> {
+    // Log the representative being processed for debugging
+    devLog('Getting OpenStates photos for', { name: rep.name, state: rep.state });
     // Implementation for OpenStates photos
     return [];
   }
@@ -1409,14 +1409,16 @@ export class FreeAPIsPipeline {
     // Extract primary photo
     if (transformed.photos && transformed.photos.length > 0) {
       const primaryPhoto = transformed.photos.find(p => p.isPrimary) || transformed.photos[0];
-      transformed.primaryPhotoUrl = primaryPhoto.url;
+      if (primaryPhoto) {
+        transformed.primaryPhotoUrl = primaryPhoto.url;
+      }
     }
     
     // Transform activity data for accountability tracking
     if (transformed.activity) {
-      transformed.floorSpeeches = transformed.activity.filter(a => a.type === 'floor_speech');
-      transformed.committeeStatements = transformed.activity.filter(a => a.type === 'committee_statement');
-      transformed.officialPressReleases = transformed.activity.filter(a => a.type === 'press_release');
+      transformed.floorSpeeches = transformed.activity.filter(a => a.type === 'statement');
+      transformed.committeeStatements = transformed.activity.filter(a => a.type === 'statement');
+      transformed.officialPressReleases = transformed.activity.filter(a => a.type === 'statement');
       transformed.socialMediaStatements = transformed.activity.filter(a => a.type === 'social_media');
       
       // Extract recent tweets, Facebook posts, Instagram posts

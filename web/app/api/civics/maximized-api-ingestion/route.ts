@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 import { FreeAPIsPipeline } from '@/lib/civics-2-0/free-apis-pipeline';
 import { createClient } from '@supabase/supabase-js';
 import { requireServiceKey } from '@/lib/service-auth';
@@ -15,6 +16,9 @@ const supabase = createClient(
 
 export async function POST(request: NextRequest) {
   try {
+    // Log the request for debugging
+    console.log('Maximized API ingestion requested from:', request.headers.get('user-agent'));
+    
     // Require service key authentication
     const serviceCheck = await requireServiceKey();
     if (serviceCheck) return serviceCheck;
@@ -96,7 +100,6 @@ export async function POST(request: NextRequest) {
           socialMedia: [],
           photos: [],
           activity: [],
-          campaignFinance: undefined,
           dataSources: [],
           qualityScore: 0,
           lastUpdated: new Date()
@@ -158,7 +161,7 @@ export async function POST(request: NextRequest) {
               wikipedia_url: enrichedRep.wikipediaUrl,
               ballotpedia_url: enrichedRep.ballotpediaUrl,
               congress_gov_id: enrichedRep.congressGovId,
-              govinfo_id: enrichedRep.govInfoId,
+              govinfo_id: enrichedRep.govinfoId,
               last_election_date: enrichedRep.lastElectionDate?.toISOString(),
               next_election_date: enrichedRep.nextElectionDate?.toISOString(),
               term_start_date: enrichedRep.termStartDate?.toISOString(),
@@ -193,9 +196,7 @@ export async function POST(request: NextRequest) {
               individual_contributions: enrichedRep.campaignFinance?.individualContributions,
               pac_contributions: enrichedRep.campaignFinance?.pacContributions,
               party_contributions: enrichedRep.campaignFinance?.partyContributions,
-              self_financing: enrichedRep.campaignFinance?.selfFinancing,
-              total_contributions: enrichedRep.campaignFinance?.totalContributions,
-              fec_last_updated: enrichedRep.campaignFinance?.lastUpdated?.toISOString()
+              self_financing: enrichedRep.campaignFinance?.selfFinancing
             })
             .eq('id', rep.id);
           

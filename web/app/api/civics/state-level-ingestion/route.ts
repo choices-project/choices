@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 import { FreeAPIsPipeline } from '@/lib/civics-2-0/free-apis-pipeline';
 import { createClient } from '@supabase/supabase-js';
 import { requireServiceKey } from '@/lib/service-auth';
@@ -105,6 +106,9 @@ function handleAPIError(api: string, error: any): void {
 
 export async function POST(request: NextRequest) {
   try {
+    // Log the request for debugging
+    console.log('State-level ingestion requested from:', request.headers.get('user-agent'));
+    
     // Require service key authentication
     const serviceCheck = await requireServiceKey();
     if (serviceCheck) return serviceCheck;
@@ -128,6 +132,7 @@ export async function POST(request: NextRequest) {
     
     for (let i = 0; i < STATE_REPRESENTATIVES.length; i++) {
       const rep = STATE_REPRESENTATIVES[i];
+      if (!rep) continue;
       
       try {
         console.log(`\n👤 [${i + 1}/${STATE_REPRESENTATIVES.length}] Processing ${rep.name} (${rep.office}, ${rep.state})...`);
@@ -156,16 +161,11 @@ export async function POST(request: NextRequest) {
             state: rep.state,
             office: rep.office,
             level: rep.level as 'state' | 'federal' | 'local',
-            district: rep.office.includes('Representative') ? '1' : undefined,
-            bioguideId: undefined, // State reps don't have Bioguide IDs
-            openstatesId: undefined, // Skip OpenStates due to rate limit
-            fecId: undefined, // State reps don't have FEC IDs
-            googleCivicId: undefined,
+            district: rep.office.includes('Representative') ? '1' : '',
             contacts: [],
             socialMedia: [],
             photos: [],
             activity: [],
-            campaignFinance: undefined,
             dataSources: [],
             qualityScore: 0,
             lastUpdated: new Date()

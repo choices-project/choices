@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { requireServiceKey } from '@/lib/service-auth';
 import dotenv from 'dotenv';
@@ -14,6 +15,9 @@ const supabase = createClient(
 
 export async function GET(request: NextRequest) {
   try {
+    // Log the request for debugging
+    console.log('Supabase status check requested from:', request.headers.get('user-agent'));
+    
     // Require service key authentication
     const serviceCheck = await requireServiceKey();
     if (serviceCheck) return serviceCheck;
@@ -28,7 +32,7 @@ export async function GET(request: NextRequest) {
     
     // Test database connection
     try {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('representatives_core')
         .select('id')
         .limit(1);
@@ -38,7 +42,7 @@ export async function GET(request: NextRequest) {
       } else {
         status.connection = true;
       }
-    } catch (err) {
+    } catch {
       status.warnings.push(`Connection failed: ${err}`);
     }
     
@@ -55,7 +59,7 @@ export async function GET(request: NextRequest) {
     for (const table of tablesToCheck) {
       try {
         // Try to query the table (this will fail if RLS is blocking)
-        const { data, error } = await supabase
+        const { error } = await supabase
           .from(table)
           .select('*')
           .limit(1);
@@ -78,7 +82,7 @@ export async function GET(request: NextRequest) {
         
         status.tableCounts[table] = count || 0;
         
-      } catch (err) {
+      } catch {
         status.warnings.push(`${table} check failed: ${err}`);
       }
     }
@@ -101,7 +105,7 @@ export async function GET(request: NextRequest) {
       if (!indexData || indexData.length === 0) {
         status.recommendations.push('Add performance indexes to representatives_core');
       }
-    } catch (err) {
+    } catch {
       // Index check failed, not critical
     }
     
