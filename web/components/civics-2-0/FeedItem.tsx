@@ -20,7 +20,6 @@ import {
   ShareIcon, 
   BookmarkIcon,
   EllipsisHorizontalIcon,
-  UserIcon,
   CalendarIcon,
   MapPinIcon
 } from '@heroicons/react/24/outline';
@@ -107,7 +106,7 @@ export default function FeedItem({
     }, 500);
   }, [enableHaptics]);
 
-  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+  const handleTouchMove = useCallback((_e: React.TouchEvent) => {
     if (longPressTimerRef.current) {
       clearTimeout(longPressTimerRef.current);
       longPressTimerRef.current = null;
@@ -144,7 +143,7 @@ export default function FeedItem({
     }
 
     touchStartRef.current = null;
-  }, [isExpanded]);
+  }, [isExpanded, handleLike, handleShare]);
 
   // Engagement handlers
   const handleLike = useCallback(() => {

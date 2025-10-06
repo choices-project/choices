@@ -21,8 +21,6 @@ import {
   ShareIcon,
   HeartIcon,
   UserPlusIcon,
-  ChevronDownIcon,
-  ChevronUpIcon,
   XMarkIcon,
   CheckCircleIcon,
   ClockIcon,
@@ -72,7 +70,6 @@ export default function MobileCandidateCard({
   const [showPhotoModal, setShowPhotoModal] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [touchFeedback, setTouchFeedback] = useState(false);
   
   // Refs
   const cardRef = useRef<HTMLDivElement>(null);
@@ -80,8 +77,6 @@ export default function MobileCandidateCard({
   // Get primary photo with fallback
   const primaryPhoto = representative.photos?.find(photo => photo.isPrimary) || representative.photos?.[0];
   
-  // Get primary contact
-  const primaryContact = representative.contacts?.find(contact => contact.isPrimary);
   
   // Get social media with most followers
   const topSocialMedia = representative.socialMedia
@@ -111,6 +106,7 @@ export default function MobileCandidateCard({
       setIsLikedState(!isLikedState);
       await onLike?.(representative.id || '');
     } catch (error) {
+      console.error('Failed to update like status:', error);
       setError('Failed to update like status');
       setIsLikedState(isLikedState); // Revert on error
     } finally {
@@ -133,6 +129,7 @@ export default function MobileCandidateCard({
         });
       }
     } catch (error) {
+      console.error('Failed to share:', error);
       setError('Failed to share');
     } finally {
       setIsLoading(false);
@@ -146,6 +143,7 @@ export default function MobileCandidateCard({
       setIsFollowingState(!isFollowingState);
       await onFollow?.(representative.id || '');
     } catch (error) {
+      console.error('Failed to update follow status:', error);
       setError('Failed to update follow status');
       setIsFollowingState(isFollowingState); // Revert on error
     } finally {
@@ -158,6 +156,7 @@ export default function MobileCandidateCard({
       triggerHaptic('light');
       onContact?.(representative.id || '', type);
     } catch (error) {
+      console.error('Failed to initiate contact:', error);
       setError('Failed to initiate contact');
     }
   }, [onContact, representative.id, triggerHaptic]);
@@ -245,7 +244,7 @@ export default function MobileCandidateCard({
     >
       <div 
         ref={cardRef}
-        className={`bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden transition-all duration-300 hover:shadow-xl ${className} ${touchFeedback ? 'scale-95' : ''}`}
+        className={`bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden transition-all duration-300 hover:shadow-xl ${className}`}
         role="article"
         aria-label={`Mobile candidate card for ${representative.name}`}
       >
@@ -352,7 +351,8 @@ export default function MobileCandidateCard({
               </div>
 
               {/* Action buttons - vertical stack for mobile */}
-              <div className="flex flex-col space-y-2 ml-3">
+              {showEngagement && (
+                <div className="flex flex-col space-y-2 ml-3">
                 <button
                   onClick={handleLike}
                   disabled={isLoading}
@@ -395,7 +395,8 @@ export default function MobileCandidateCard({
                     <UserPlusIcon className="w-5 h-5" />
                   )}
                 </button>
-              </div>
+                </div>
+              )}
             </div>
           </div>
         </div>

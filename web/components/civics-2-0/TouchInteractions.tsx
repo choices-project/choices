@@ -44,6 +44,8 @@ type TouchState = {
   last: TouchPoint | null;
   longPressTimer: NodeJS.Timeout | null;
   isLongPress: boolean;
+  initialDistance: number | null;
+  lastDistance: number | null;
 }
 
 export default function TouchInteractions({
@@ -67,11 +69,20 @@ export default function TouchInteractions({
     end: null,
     last: null,
     longPressTimer: null,
-    isLongPress: false
+    isLongPress: false,
+    initialDistance: null,
+    lastDistance: null
   });
   
   const [isTouching, setIsTouching] = useState(false);
   const elementRef = useRef<HTMLDivElement>(null);
+
+  // Calculate distance between two touches
+  const calculateDistance = useCallback((touch1: Touch, touch2: Touch) => {
+    const dx = touch1.clientX - touch2.clientX;
+    const dy = touch1.clientY - touch2.clientY;
+    return Math.sqrt(dx * dx + dy * dy);
+  }, []);
 
   // Clear long press timer
   const clearLongPressTimer = useCallback(() => {
@@ -94,12 +105,26 @@ export default function TouchInteractions({
       time: Date.now()
     };
 
+    // Check for pinch gesture (two touches)
+    if (e.touches.length === 2) {
+      const distance = calculateDistance(e.touches[0], e.touches[1]);
+      setTouchState(prev => ({
+        ...prev,
+        initialDistance: distance,
+        lastDistance: distance,
+        isLongPress: false
+      }));
+      return; // Don't process single touch gestures when pinching
+    }
+
     setTouchState(prev => ({
       ...prev,
       start: point,
       end: null,
       last: point,
-      isLongPress: false
+      isLongPress: false,
+      initialDistance: null,
+      lastDistance: null
     }));
 
     setIsTouching(true);
@@ -111,11 +136,32 @@ export default function TouchInteractions({
     }, longPressDelay);
 
     setTouchState(prev => ({ ...prev, longPressTimer: timer }));
-  }, [disabled, onLongPress, longPressDelay]);
+  }, [disabled, onLongPress, longPressDelay, calculateDistance]);
 
   // Handle touch move
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
-    if (disabled || !touchState.start) return;
+    if (disabled) return;
+    
+    // Handle pinch gesture
+    if (e.touches.length === 2 && touchState.initialDistance !== null) {
+      const currentDistance = calculateDistance(e.touches[0], e.touches[1]);
+      const distanceChange = currentDistance - (touchState.lastDistance || touchState.initialDistance);
+      
+      setTouchState(prev => ({ ...prev, lastDistance: currentDistance }));
+      
+      // Trigger pinch callbacks based on distance change
+      if (Math.abs(distanceChange) > 10) { // Threshold for pinch detection
+        if (distanceChange > 0) {
+          onPinchOut?.();
+        } else {
+          onPinchIn?.();
+        }
+      }
+      return;
+    }
+    
+    // Handle single touch move
+    if (!touchState.start) return;
     
     const touch = e.touches[0];
     if (!touch) return;
@@ -139,7 +185,7 @@ export default function TouchInteractions({
         clearLongPressTimer();
       }
     }
-  }, [disabled, touchState.start, clearLongPressTimer]);
+  }, [disabled, touchState.start, touchState.initialDistance, touchState.lastDistance, clearLongPressTimer, calculateDistance, onPinchIn, onPinchOut]);
 
   // Handle touch end
   const handleTouchEnd = useCallback((e: React.TouchEvent) => {
@@ -204,7 +250,9 @@ export default function TouchInteractions({
       end: null,
       last: null,
       longPressTimer: null,
-      isLongPress: false
+      isLongPress: false,
+      initialDistance: null,
+      lastDistance: null
     });
   }, [disabled, touchState.start, touchState.isLongPress, clearLongPressTimer, swipeThreshold, onSwipeLeft, onSwipeRight, onSwipeUp, onSwipeDown, onTap]);
 
@@ -217,7 +265,9 @@ export default function TouchInteractions({
       end: null,
       last: null,
       longPressTimer: null,
-      isLongPress: false
+      isLongPress: false,
+      initialDistance: null,
+      lastDistance: null
     });
   }, [clearLongPressTimer]);
 
@@ -247,11 +297,13 @@ export default function TouchInteractions({
 }
 
 // Hook for touch interactions
-export function useTouchInteractions(options: {
+export function useTouchInteractions(_options: {
   onSwipeLeft?: () => void;
   onSwipeRight?: () => void;
   onSwipeUp?: () => void;
   onSwipeDown?: () => void;
+  onPinchIn?: () => void;
+  onPinchOut?: () => void;
   onLongPress?: () => void;
   onTap?: () => void;
   swipeThreshold?: number;
@@ -300,3 +352,4 @@ export const touchUtils = {
     return distance >= threshold && time <= 300;
   }
 };
+

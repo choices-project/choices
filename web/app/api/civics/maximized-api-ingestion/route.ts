@@ -112,7 +112,14 @@ export async function POST(request: NextRequest) {
             dataSources: enrichedRep.dataSources || [],
             sampleContacts: enrichedRep.contacts?.slice(0, 2) || [],
             sampleSocialMedia: enrichedRep.socialMedia?.slice(0, 2) || [],
-            samplePhotos: enrichedRep.photos?.slice(0, 2) || []
+            samplePhotos: enrichedRep.photos?.slice(0, 2) || [],
+            sampleActivity: enrichedRep.activity?.slice(0, 3) || [],
+            activityDebug: {
+              exists: !!enrichedRep.activity,
+              length: enrichedRep.activity?.length || 0,
+              type: typeof enrichedRep.activity,
+              isArray: Array.isArray(enrichedRep.activity)
+            }
           });
           
           // Track which APIs were used based on data sources
@@ -138,9 +145,9 @@ export async function POST(request: NextRequest) {
           }
           
           // Extract primary contact information
-          const primaryEmail = enrichedRep.contacts?.find((c: any) => c.type === 'email' && c.isVerified)?.value;
-          const primaryPhone = enrichedRep.contacts?.find((c: any) => c.type === 'phone' && c.isVerified)?.value;
-          const primaryWebsite = enrichedRep.contacts?.find((c: any) => c.type === 'website' && c.isVerified)?.value;
+          const primaryEmail = enrichedRep.contacts?.find((c: any) => c.type === 'email')?.value;
+          const primaryPhone = enrichedRep.contacts?.find((c: any) => c.type === 'phone')?.value;
+          const primaryWebsite = enrichedRep.contacts?.find((c: any) => c.type === 'website')?.value;
           const primaryPhoto = enrichedRep.photos?.[0]?.url;
           
           // 1. Create or update primary data in representatives_core
@@ -160,15 +167,15 @@ export async function POST(request: NextRequest) {
             govinfo_id: enrichedRep.govinfoId,
             wikipedia_url: enrichedRep.wikipediaUrl,
             ballotpedia_url: enrichedRep.ballotpediaUrl,
-            primary_email: primaryEmail,
-            primary_phone: primaryPhone,
-            primary_website: primaryWebsite,
-            primary_photo_url: primaryPhoto,
-            twitter_handle: enrichedRep.twitterHandle,
-            facebook_url: enrichedRep.facebookUrl,
-            instagram_handle: enrichedRep.instagramHandle,
-            linkedin_url: enrichedRep.linkedinUrl,
-            youtube_channel: enrichedRep.youtubeChannel,
+              primary_email: primaryEmail,
+              primary_phone: primaryPhone,
+              primary_website: primaryWebsite,
+              primary_photo_url: primaryPhoto,
+              twitter_handle: enrichedRep.twitterHandle,
+              facebook_url: enrichedRep.facebookUrl,
+              instagram_handle: enrichedRep.instagramHandle,
+              linkedin_url: enrichedRep.linkedinUrl,
+              youtube_channel: enrichedRep.youtubeChannel,
             data_quality_score: enrichedRep.qualityScore || 0,
             data_sources: enrichedRep.dataSources || [],
             last_verified: new Date().toISOString(),
@@ -218,8 +225,41 @@ export async function POST(request: NextRequest) {
             continue;
           }
           
+          console.log(`✅ Representative ID for ${rep.name}: ${repId}`);
+          
+          // Debug: Check what data we have in enrichedRep
+          console.log(`🔍 EnrichedRep data for ${rep.name}:`);
+          console.log(`  - Contacts: ${enrichedRep.contacts?.length || 0}`);
+          console.log(`  - Social Media: ${enrichedRep.socialMedia?.length || 0}`);
+          console.log(`  - Photos: ${enrichedRep.photos?.length || 0}`);
+          console.log(`  - Activity: ${enrichedRep.activity?.length || 0}`);
+          console.log(`  - Data Sources: ${enrichedRep.dataSources?.join(', ') || 'none'}`);
+          
+          // Debug: Check photos specifically
+          if (enrichedRep.photos && enrichedRep.photos.length > 0) {
+            console.log(`📸 Photos found in enrichedRep: ${enrichedRep.photos.length}`);
+            enrichedRep.photos.forEach((photo, index) => {
+              console.log(`  ${index + 1}. ${photo.url} (${photo.source})`);
+            });
+          } else {
+            console.log(`📸 No photos found in enrichedRep`);
+          }
+          
+          // Debug: Check activity specifically
+          if (enrichedRep.activity && enrichedRep.activity.length > 0) {
+            console.log(`📈 Activity found in enrichedRep: ${enrichedRep.activity.length}`);
+            enrichedRep.activity.forEach((activity, index) => {
+              console.log(`  ${index + 1}. ${activity.title} (${activity.type})`);
+            });
+          } else {
+            console.log(`📈 No activity found in enrichedRep`);
+          }
+          
           // 2. Store detailed contacts
           if (enrichedRep.contacts && enrichedRep.contacts.length > 0) {
+            console.log(`📞 Storing ${enrichedRep.contacts.length} contacts for ${rep.name}`);
+            console.log(`📞 Contact data:`, JSON.stringify(enrichedRep.contacts, null, 2));
+            
             const contactInserts = enrichedRep.contacts.map((contact: any) => ({
               representative_id: repId,
               type: contact.type,
@@ -231,13 +271,23 @@ export async function POST(request: NextRequest) {
               last_verified: contact.isVerified ? new Date().toISOString() : null
             }));
             
+            console.log(`📞 Using repId: ${repId} for contact inserts`);
+            
+            console.log(`📞 Contact inserts:`, JSON.stringify(contactInserts, null, 2));
+            
             const { error: contactsError } = await supabase
               .from('representative_contacts')
-              .upsert(contactInserts, { onConflict: 'representative_id,type,value' });
+              .insert(contactInserts);
             
-            if (!contactsError) {
+            if (contactsError) {
+              console.error(`❌ Contacts error for ${rep.name}:`, contactsError);
+              results.errors.push(`Contacts error for ${rep.name}: ${contactsError.message}`);
+            } else {
               results.dataCollected.contacts += contactInserts.length;
+              console.log(`✅ Stored ${contactInserts.length} contacts for ${rep.name}`);
             }
+          } else {
+            console.log(`📞 No contacts found for ${rep.name}`);
           }
           
           // 3. Store detailed social media
@@ -254,7 +304,7 @@ export async function POST(request: NextRequest) {
             
             const { error: socialError } = await supabase
               .from('representative_social_media')
-              .upsert(socialInserts, { onConflict: 'representative_id,platform,handle' });
+              .insert(socialInserts);
             
             if (!socialError) {
               results.dataCollected.socialMedia += socialInserts.length;
@@ -263,12 +313,16 @@ export async function POST(request: NextRequest) {
           
           // 4. Store detailed photos (top 2 only)
           if (enrichedRep.photos && enrichedRep.photos.length > 0) {
+            console.log(`📸 Storing ${enrichedRep.photos.length} photos for ${rep.name}`);
+            console.log(`📸 Photo data:`, JSON.stringify(enrichedRep.photos, null, 2));
+            
             const topPhotos = enrichedRep.photos.slice(0, 2);
             const photoInserts = topPhotos.map((photo: any, index: number) => ({
               representative_id: repId,
               url: photo.url,
               source: photo.source,
               ranking: index + 1,
+              quality: photo.quality || 'medium',
               alt_text: photo.altText,
               caption: photo.caption,
               photographer: photo.photographer,
@@ -277,35 +331,76 @@ export async function POST(request: NextRequest) {
               height: photo.height
             }));
             
+            console.log(`📸 Photo inserts:`, JSON.stringify(photoInserts, null, 2));
+            
             const { error: photosError } = await supabase
               .from('representative_photos')
-              .upsert(photoInserts, { onConflict: 'representative_id' });
+              .insert(photoInserts);
             
-            if (!photosError) {
+            if (photosError) {
+              console.error(`❌ Photos error for ${rep.name}:`, photosError);
+              results.errors.push(`Photos error for ${rep.name}: ${photosError.message}`);
+            } else {
               results.dataCollected.photos += photoInserts.length;
+              console.log(`✅ Stored ${photoInserts.length} photos for ${rep.name}`);
             }
+          } else {
+            console.log(`📸 No photos found for ${rep.name}`);
           }
           
           // 5. Store detailed activity
+          console.log(`🔍 DEBUG: About to check activity storage for ${rep.name}`);
+          console.log(`🔍 DEBUG: enrichedRep.activity exists: ${!!enrichedRep.activity}`);
+          console.log(`🔍 DEBUG: enrichedRep.activity length: ${enrichedRep.activity?.length || 0}`);
+          console.log(`🔍 DEBUG: enrichedRep.activity content:`, JSON.stringify(enrichedRep.activity, null, 2));
+          
+          // Add debug info to results for activity storage
+          if (!results.debugInfo) {
+            results.debugInfo = [];
+          }
+          const currentDebugInfo = results.debugInfo.find(info => info.representative === rep.name);
+          if (currentDebugInfo) {
+            currentDebugInfo.activityStorageDebug = {
+              exists: !!enrichedRep.activity,
+              length: enrichedRep.activity?.length || 0,
+              type: typeof enrichedRep.activity,
+              isArray: Array.isArray(enrichedRep.activity),
+              content: enrichedRep.activity?.slice(0, 2) || []
+            };
+          }
+          
           if (enrichedRep.activity && enrichedRep.activity.length > 0) {
+            console.log(`📈 Storing ${enrichedRep.activity.length} activity items for ${rep.name}`);
+            console.log(`📈 Activity data:`, JSON.stringify(enrichedRep.activity, null, 2));
+            
             const activityInserts = enrichedRep.activity.map((activity: any) => ({
               representative_id: repId,
-              type: activity.type,
+              activity_type: activity.type || 'general',
               title: activity.title,
               description: activity.description,
               url: activity.url,
-              date: activity.date?.toISOString(),
+              date: activity.date instanceof Date ? activity.date.toISOString() : 
+                    typeof activity.date === 'string' ? new Date(activity.date).toISOString() : 
+                    new Date().toISOString(),
               metadata: activity.metadata,
               source: activity.source
             }));
             
+            console.log(`📈 Activity inserts:`, JSON.stringify(activityInserts, null, 2));
+            
             const { error: activityError } = await supabase
               .from('representative_activity')
-              .upsert(activityInserts, { onConflict: 'representative_id,type,title,date' });
+              .insert(activityInserts);
             
-            if (!activityError) {
+            if (activityError) {
+              console.error(`❌ Activity error for ${rep.name}:`, activityError);
+              results.errors.push(`Activity error for ${rep.name}: ${activityError.message}`);
+            } else {
               results.dataCollected.activity += activityInserts.length;
+              console.log(`✅ Stored ${activityInserts.length} activity items for ${rep.name}`);
             }
+          } else {
+            console.log(`📈 No activity found for ${rep.name}`);
           }
           
           results.successful++;

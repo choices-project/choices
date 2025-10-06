@@ -194,7 +194,6 @@ export default function ComponentTest() {
               isLiked={isLiked}
               isFollowing={isFollowing}
               variant={variant}
-              showEngagement={true}
             />
           </div>
         </div>

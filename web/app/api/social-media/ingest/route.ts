@@ -4,7 +4,7 @@
  * Created: October 6, 2025
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { type NextRequest, NextResponse } from 'next/server';
 import { SocialMediaService } from '@/lib/social-media/social-media-service';
 
 export async function POST(request: NextRequest) {

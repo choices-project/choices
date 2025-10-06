@@ -49,7 +49,6 @@ type CandidateCardProps = {
   isFollowing?: boolean;
   className?: string;
   variant?: 'default' | 'compact' | 'detailed';
-  showEngagement?: boolean;
 }
 
 export default function EnhancedCandidateCard({
@@ -62,7 +61,6 @@ export default function EnhancedCandidateCard({
   isFollowing = false,
   className = '',
   variant = 'default',
-  showEngagement = true
 }: CandidateCardProps) {
   
   // State management
@@ -83,8 +81,6 @@ export default function EnhancedCandidateCard({
   // Get primary photo with fallback
   const primaryPhoto = representative.photos?.find(photo => photo.isPrimary) || representative.photos?.[0];
   
-  // Get primary contact
-  const primaryContact = representative.contacts?.find(contact => contact.isPrimary);
   
   // Get social media with most followers
   const topSocialMedia = representative.socialMedia
@@ -170,6 +166,7 @@ export default function EnhancedCandidateCard({
       setIsLikedState(!isLikedState);
       await onLike?.(representative.id || '');
     } catch (error) {
+      console.error('Failed to update like status:', error);
       setError('Failed to update like status');
       setIsLikedState(isLikedState); // Revert on error
     } finally {
@@ -191,6 +188,7 @@ export default function EnhancedCandidateCard({
         });
       }
     } catch (error) {
+      console.error('Failed to share:', error);
       setError('Failed to share');
     } finally {
       setIsLoading(false);
@@ -203,6 +201,7 @@ export default function EnhancedCandidateCard({
       setIsFollowingState(!isFollowingState);
       await onFollow?.(representative.id || '');
     } catch (error) {
+      console.error('Failed to update follow status:', error);
       setError('Failed to update follow status');
       setIsFollowingState(isFollowingState); // Revert on error
     } finally {
@@ -214,6 +213,7 @@ export default function EnhancedCandidateCard({
     try {
       onContact?.(representative.id || '', type);
     } catch (error) {
+      console.error('Failed to initiate contact:', error);
       setError('Failed to initiate contact');
     }
   }, [onContact, representative.id]);

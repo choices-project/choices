@@ -16,20 +16,12 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { 
-  HeartIcon, 
-  ChatBubbleLeftIcon, 
-  ShareIcon, 
-  BookmarkIcon,
-  ChevronUpIcon,
-  ArrowPathIcon,
+import {
   SparklesIcon,
-  ChartBarIcon,
   ClockIcon
 } from '@heroicons/react/24/outline';
 import InfiniteScroll from './InfiniteScroll';
 import FeedItem from './FeedItem';
-import EngagementMetrics from './EngagementMetrics';
 
 type FeedItemData = {
   id: string;
@@ -109,7 +101,6 @@ export default function EnhancedSocialFeed({
   const [personalizationScore, setPersonalizationScore] = useState(0);
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
   
-  const feedRef = useRef<HTMLDivElement>(null);
   const wsRef = useRef<WebSocket | null>(null);
   const refreshIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -208,14 +199,24 @@ export default function EnhancedSocialFeed({
     }
   }, [enableRealTimeUpdates, userId, loadFeedItems]);
 
+  // Analytics tracking
+  const trackEvent = useCallback((event: string, data?: any) => {
+    if (enableAnalytics) {
+      console.log('Analytics:', event, data);
+      // TODO: Implement actual analytics tracking
+    }
+  }, [enableAnalytics]);
+
   // Handle engagement actions
   const handleLike = useCallback((itemId: string) => {
     setLikedItems(prev => {
       const newSet = new Set(prev);
       if (newSet.has(itemId)) {
         newSet.delete(itemId);
+        trackEvent('unlike', { itemId });
       } else {
         newSet.add(itemId);
+        trackEvent('like', { itemId });
       }
       return newSet;
     });
@@ -236,7 +237,7 @@ export default function EnhancedSocialFeed({
     ));
 
     onLike?.(itemId);
-  }, [likedItems, onLike]);
+  }, [likedItems, onLike, trackEvent]);
 
   const handleBookmark = useCallback((itemId: string) => {
     setBookmarkedItems(prev => {
@@ -329,6 +330,29 @@ export default function EnhancedSocialFeed({
           </div>
         </div>
       </div>
+
+      {/* Refresh Indicator */}
+      {isRefreshing && (
+        <div className="bg-blue-50 border-b border-blue-200 p-3">
+          <div className="flex items-center justify-center space-x-2">
+            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
+            <span className="text-sm text-blue-600">Refreshing feed...</span>
+          </div>
+        </div>
+      )}
+
+      {/* Trending Section */}
+      {showTrending && (
+        <div className="bg-gradient-to-r from-blue-50 to-purple-50 border-b border-gray-200 p-4">
+          <div className="flex items-center space-x-2">
+            <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+            <span className="text-sm font-medium text-gray-700">Trending Now</span>
+          </div>
+          <div className="mt-2 text-sm text-gray-600">
+            Climate Action • Voting Rights • Infrastructure
+          </div>
+        </div>
+      )}
 
       {/* Enhanced Feed with Infinite Scroll */}
       <InfiniteScroll

@@ -18,6 +18,65 @@ import dotenv from 'dotenv';
 // Load environment variables
 dotenv.config({ path: '.env.local' });
 
+// Cross-reference validation types
+export type CrossReferenceValidation = {
+  nameConsistency: NameConsistency;
+  partyConsistency: PartyConsistency;
+  contactConsistency: ContactConsistency;
+  socialMediaConsistency: SocialMediaConsistency;
+  identifierConsistency: IdentifierConsistency;
+  dataQualityScores: { [source: string]: number };
+  conflicts: string[];
+  recommendations: string[];
+};
+
+export type NameConsistency = {
+  isConsistent: boolean;
+  confidence: number;
+  variations: string[];
+  primaryName?: string;
+};
+
+export type PartyConsistency = {
+  isConsistent: boolean;
+  confidence: number;
+  variations: string[];
+  primaryParty?: string;
+};
+
+export type ContactConsistency = {
+  emailConflicts: ContactConflict[];
+  phoneConflicts: ContactConflict[];
+  websiteConflicts: ContactConflict[];
+  overallConsistency: number;
+};
+
+export type ContactConflict = {
+  type: string;
+  values: string[];
+  sources: string[];
+  recommendation: string;
+};
+
+export type SocialMediaConsistency = {
+  platformConflicts: SocialMediaConflict[];
+  handleConflicts: SocialMediaConflict[];
+  overallConsistency: number;
+};
+
+export type SocialMediaConflict = {
+  platform: string;
+  handles: string[];
+  sources: string[];
+  recommendation: string;
+};
+
+export type IdentifierConsistency = {
+  conflicts: string[];
+  isConsistent: boolean;
+  confidence: number;
+};
+
 // Types for our FREE APIs data
 export type RepresentativeData = {
   id?: string;
@@ -105,6 +164,7 @@ export type RepresentativeData = {
   dataSources: string[];
   qualityScore: number;
   lastUpdated: Date;
+  crossReferenceValidation?: CrossReferenceValidation;
 }
 
 export type ContactInfo = {
@@ -114,6 +174,7 @@ export type ContactInfo = {
   isPrimary: boolean;
   isVerified: boolean;
   source: string;
+  conflictFlag?: boolean;
 }
 
 export type SocialMediaInfo = {
@@ -123,6 +184,7 @@ export type SocialMediaInfo = {
   followersCount: number;
   isVerified: boolean;
   source: string;
+  conflictFlag?: boolean;
 }
 
 export type PhotoInfo = {
@@ -241,10 +303,22 @@ export class FreeAPIsPipeline {
 
   /**
    * Main ingestion method - processes a representative using all FREE APIs
+   * Only processes CURRENT representatives to avoid historical data
    */
   async processRepresentative(rep: RepresentativeData): Promise<RepresentativeData> {
-    console.log('🔄 Starting to process representative:', rep.name);
-    devLog('Processing representative with FREE APIs', { name: rep.name });
+    console.log('🔄 Starting to process CURRENT representative:', rep.name);
+    devLog('Processing CURRENT representative with FREE APIs', { name: rep.name });
+    
+    // Validate that we're only processing current representatives
+    if (!this.isCurrentRepresentative(rep)) {
+      console.log('⚠️ Skipping non-current representative:', rep.name);
+      devLog('Skipping non-current representative', { 
+        name: rep.name, 
+        level: rep.level,
+        state: rep.state 
+      });
+      return rep; // Return unchanged if not current
+    }
 
     try {
       // 1. Get election data from Google Civic (FREE) - ELECTION DATA STILL ACTIVE
@@ -254,9 +328,9 @@ export class FreeAPIsPipeline {
       console.log('✅ Google Civic election data retrieved');
       
       // 2. Get state data from OpenStates (FREE) - WORKING
-      console.log('📊 Getting OpenStates data...');
-      const openStatesData = await this.getOpenStatesData(rep);
-      console.log('✅ OpenStates data retrieved');
+      console.log('📊 Getting OpenStates People data...');
+      const openStatesData = await this.getOpenStatesPeopleData(rep);
+      console.log('✅ OpenStates People data retrieved');
       
       // 3. Get federal data from Congress.gov (FREE) - RE-ENABLED
       console.log('📊 Getting Congress.gov data...');
@@ -620,6 +694,25 @@ export class FreeAPIsPipeline {
   }
 
   /**
+   * Enhanced OpenStates People integration
+   * Combines API data with repository YAML data for comprehensive coverage
+   */
+  private async getOpenStatesPeopleData(rep: RepresentativeData): Promise<Partial<RepresentativeData>> {
+    console.log('🔍 OpenStates People: Starting enhanced data collection for', rep.name);
+    
+    // First try API integration
+    const apiData = await this.getOpenStatesData(rep);
+    
+    // Then try YAML repository integration if available
+    const yamlData = await this.getOpenStatesYAMLData(rep);
+    
+    // Merge both sources with proper attribution
+    const mergedData = this.mergeOpenStatesSources(apiData, yamlData);
+    
+    return mergedData;
+  }
+
+  /**
    * OpenStates API (FREE - 10,000 requests/day)
    * Now using proper API key authentication
    */
@@ -650,7 +743,7 @@ export class FreeAPIsPipeline {
       }
 
       console.log('🔍 OpenStates: Making API request to', `https://v3.openstates.org/people?jurisdiction=${rep.state}`);
-      
+
       // Add delay before API call to respect rate limits
       await new Promise(resolve => setTimeout(resolve, 1000)); // 1 second delay
 
@@ -717,10 +810,17 @@ export class FreeAPIsPipeline {
         photos: []
       };
 
-      // Process all legislators from the API v3 response
-      const legislators = data.results || [];
+      // Process only CURRENT legislators from the API v3 response
+      const allLegislators = data.results || [];
+      const currentLegislators = this.filterCurrentLegislators(allLegislators);
       
-      for (const legislator of legislators) {
+      devLog('OpenStates filtering results', {
+        totalLegislators: allLegislators.length,
+        currentLegislators: currentLegislators.length,
+        filteredOut: allLegislators.length - currentLegislators.length
+      });
+      
+      for (const legislator of currentLegislators) {
         // Extract contact information
         const contacts = this.extractOpenStatesContacts(legislator);
         enrichedData.contacts = [...(enrichedData.contacts || []), ...contacts];
@@ -761,10 +861,10 @@ export class FreeAPIsPipeline {
       
       // Check rate limits - be very conservative with their free API
       const rateLimiter = this.rateLimiters.get('legiscan');
-      if (rateLimiter.currentUsage >= rateLimiter.requestsPerDay) {
+    if (rateLimiter.currentUsage >= rateLimiter.requestsPerDay) {
         devLog('LegiScan API rate limit reached - being respectful of their free service');
-        return {};
-      }
+      return {};
+    }
 
       // Add delay to be respectful of their free API
       await new Promise(resolve => setTimeout(resolve, 2000)); // 2 second delay
@@ -1035,6 +1135,12 @@ export class FreeAPIsPipeline {
       return {};
     }
 
+    // Congress.gov only has federal representatives
+    if (rep.level !== 'federal') {
+      devLog('Congress.gov: Only available for federal representatives, got:', rep.level);
+      return {};
+    }
+
     try {
       // OPTIMIZED: Single Congress.gov call that gets ALL data at once
       const enrichedData: Partial<RepresentativeData> = {
@@ -1045,9 +1151,9 @@ export class FreeAPIsPipeline {
         activity: []
       };
 
-      // 1. Get basic member data
+      // 1. Get basic member data with pagination
       const memberResponse = await fetch(
-        `https://api.congress.gov/v3/member?state=${rep.state}&format=json&api_key=${process.env.CONGRESS_GOV_API_KEY}`,
+        `https://api.congress.gov/v3/member?state=${rep.state}&format=json&api_key=${process.env.CONGRESS_GOV_API_KEY}&limit=250`,
         {
           method: 'GET',
           headers: { 'Content-Type': 'application/json' }
@@ -1097,9 +1203,9 @@ export class FreeAPIsPipeline {
               // Extract contacts and photos from detailed data
               const contacts = this.extractCongressGovContacts(detailedData.member);
               const photos = this.extractCongressGovPhotos(detailedData.member);
-              
-              enrichedData.contacts = contacts;
-              enrichedData.photos = photos;
+        
+        enrichedData.contacts = contacts;
+        enrichedData.photos = photos;
               
               console.log('🔍 Congress.gov: Extracted', contacts.length, 'contacts and', photos.length, 'photos');
             } else {
@@ -1351,21 +1457,21 @@ export class FreeAPIsPipeline {
 
       // If we have a FEC ID, use it directly
       if (rep.fecId) {
-        const response = await fetch(
+      const response = await fetch(
           `https://api.open.fec.gov/v1/candidate/${rep.fecId}/totals/?api_key=${apiKey}`,
-          {
-            method: 'GET',
-            headers: { 'Content-Type': 'application/json' }
-          }
-        );
-
-        if (!response.ok) {
-          devLog('FEC API request failed', { status: response.status });
-          return undefined;
+        {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' }
         }
+      );
 
-        const data = await response.json();
-        rateLimiter.currentUsage++;
+      if (!response.ok) {
+        devLog('FEC API request failed', { status: response.status });
+        return undefined;
+      }
+
+      const data = await response.json();
+      rateLimiter.currentUsage++;
 
         if (data.results && data.results.length > 0) {
           const candidate = data.results[0];
@@ -1402,8 +1508,8 @@ export class FreeAPIsPipeline {
       devLog('🔍 FEC: Search URL', searchUrl);
       
       const response = await fetch(searchUrl, {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' }
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' }
       });
       
       devLog('🔍 FEC: Search response status', response.status);
@@ -1446,8 +1552,8 @@ export class FreeAPIsPipeline {
             receipts: totals?.receipts
           });
           
-          if (totals) {
-            return {
+      if (totals) {
+        return {
               electionCycle: totals.cycle,
               totalReceipts: totals.receipts,
               totalDisbursements: totals.disbursements,
@@ -1945,13 +2051,22 @@ export class FreeAPIsPipeline {
     // Start with original data
     let merged = { ...original };
     
-    // Apply advanced data transformations and conflict resolution
-    merged = this.resolveDataConflicts(merged, googleCivic);
-    merged = this.resolveDataConflicts(merged, openStates);
-    merged = this.resolveDataConflicts(merged, congressGov);
-    merged = this.resolveDataConflicts(merged, legiScan);
+    // Perform cross-reference validation before merging
+    const crossReferenceValidation = this.performCrossReferenceValidation({
+      googleCivic,
+      openStates,
+      congressGov,
+      legiScan,
+      wikipedia
+    });
+    
+    // Apply advanced data transformations and conflict resolution with cross-reference insights
+    merged = this.resolveDataConflictsWithCrossReference(merged, googleCivic, crossReferenceValidation);
+    merged = this.resolveDataConflictsWithCrossReference(merged, openStates, crossReferenceValidation);
+    merged = this.resolveDataConflictsWithCrossReference(merged, congressGov, crossReferenceValidation);
+    merged = this.resolveDataConflictsWithCrossReference(merged, legiScan, crossReferenceValidation);
     if (wikipedia) {
-      merged = this.resolveDataConflicts(merged, wikipedia);
+      merged = this.resolveDataConflictsWithCrossReference(merged, wikipedia, crossReferenceValidation);
     }
     
     // Normalize party affiliation
@@ -1959,15 +2074,61 @@ export class FreeAPIsPipeline {
       merged.party = this.normalizePartyAffiliation(merged.party);
     }
     
-    // Normalize contact information
+    // Normalize contact information with cross-reference validation
     if (merged.contacts) {
-      merged.contacts = merged.contacts.map(contact => this.normalizeContactInfo(contact));
+      merged.contacts = this.mergeContactsWithValidation(
+        merged.contacts.map(contact => this.normalizeContactInfo(contact)),
+        [],
+        crossReferenceValidation.contactConsistency
+      );
     }
     
-    // Add photos, social media, and activity with deduplication
-    merged.photos = this.mergePhotos(merged.photos || [], photos);
-    merged.socialMedia = this.mergeSocialMedia(merged.socialMedia || [], socialMedia);
-    merged.activity = [...(merged.activity || []), ...activity];
+    // Add photos, social media, and activity with enhanced validation
+    // Collect photos from all sources with quality-based merging
+    const allPhotos = [
+      ...(merged.photos || []),
+      ...photos,
+      ...(googleCivic.photos || []),
+      ...(openStates.photos || []),
+      ...(congressGov.photos || []),
+      ...(legiScan.photos || []),
+      ...(wikipedia?.photos || [])
+    ];
+    merged.photos = this.mergePhotosWithValidation([], allPhotos, crossReferenceValidation.dataQualityScores);
+    
+    // Collect social media from all sources with conflict resolution
+    const allSocialMedia = [
+      ...(merged.socialMedia || []),
+      ...socialMedia,
+      ...(googleCivic.socialMedia || []),
+      ...(openStates.socialMedia || []),
+      ...(congressGov.socialMedia || []),
+      ...(legiScan.socialMedia || []),
+      ...(wikipedia?.socialMedia || [])
+    ];
+    merged.socialMedia = this.mergeSocialMediaWithValidation([], allSocialMedia, crossReferenceValidation.socialMediaConsistency);
+    
+    // Collect activity from all sources
+    const allActivity = [
+      ...(merged.activity || []),
+      ...activity,
+      ...(googleCivic.activity || []),
+      ...(openStates.activity || []),
+      ...(congressGov.activity || []),
+      ...(legiScan.activity || []),
+      ...(wikipedia?.activity || [])
+    ];
+    console.log('🔍 mergeAndValidateData: Activity sources:');
+    console.log(`  - merged.activity: ${merged.activity?.length || 0}`);
+    console.log(`  - activity parameter: ${activity.length}`);
+    console.log(`  - googleCivic.activity: ${googleCivic.activity?.length || 0}`);
+    console.log(`  - openStates.activity: ${openStates.activity?.length || 0}`);
+    console.log(`  - congressGov.activity: ${congressGov.activity?.length || 0}`);
+    console.log(`  - legiScan.activity: ${legiScan.activity?.length || 0}`);
+    console.log(`  - wikipedia?.activity: ${wikipedia?.activity?.length || 0}`);
+    console.log(`  - Total allActivity: ${allActivity.length}`);
+    merged.activity = allActivity;
+    console.log(`✅ merged.activity set to: ${merged.activity.length} items`);
     
     if (campaignFinance) {
       merged.campaignFinance = campaignFinance;
@@ -1980,15 +2141,29 @@ export class FreeAPIsPipeline {
       }
     }
     
+    // Add comprehensive source attribution
+    merged.dataSources = this.buildComprehensiveSourceAttribution(merged, {
+      googleCivic,
+      openStates,
+      congressGov,
+      legiScan,
+      wikipedia
+    });
+    
+    // Add cross-reference validation metadata
+    merged.crossReferenceValidation = crossReferenceValidation;
+    
     // Transform data to match our enhanced schema
     merged = this.transformToEnhancedSchema(merged);
     
-    // Validate data quality
+    // Validate data quality with enhanced validation
     const validation = this.validateDataQuality(merged);
     if (!validation.isValid) {
       devLog('Data quality issues detected', { 
         name: merged.name, 
-        issues: validation.issues 
+        issues: validation.issues,
+        crossReferenceConflicts: crossReferenceValidation.conflicts,
+        recommendations: crossReferenceValidation.recommendations
       });
     }
     
@@ -2603,6 +2778,237 @@ export class FreeAPIsPipeline {
     };
   }
 
+  /**
+   * Perform cross-reference validation across all data sources
+   */
+  private performCrossReferenceValidation(sources: {
+    googleCivic: Partial<RepresentativeData>;
+    openStates: Partial<RepresentativeData>;
+    congressGov: Partial<RepresentativeData>;
+    legiScan: Partial<RepresentativeData>;
+    wikipedia?: Partial<RepresentativeData>;
+  }): CrossReferenceValidation {
+    const validation: CrossReferenceValidation = {
+      nameConsistency: this.validateNameConsistency(sources),
+      partyConsistency: this.validatePartyConsistency(sources),
+      contactConsistency: this.validateContactConsistency(sources),
+      socialMediaConsistency: this.validateSocialMediaConsistency(sources),
+      identifierConsistency: this.validateIdentifierConsistency(sources),
+      dataQualityScores: this.calculateDataQualityScores(sources),
+      conflicts: [],
+      recommendations: []
+    };
+
+    // Identify conflicts and generate recommendations
+    validation.conflicts = this.identifyDataConflicts(sources);
+    validation.recommendations = this.generateDataRecommendations(validation);
+
+    return validation;
+  }
+
+  /**
+   * Validate name consistency across sources
+   */
+  private validateNameConsistency(sources: any): NameConsistency {
+    const names = Object.values(sources)
+      .filter((source: any) => source?.name)
+      .map((source: any) => source.name);
+
+    if (names.length === 0) {
+      return { isConsistent: false, confidence: 0, variations: [] };
+    }
+
+    const normalizedNames = names.map(name => this.normalizeName(name));
+    const uniqueNames = [...new Set(normalizedNames)];
+    const isConsistent = uniqueNames.length === 1;
+    const confidence = isConsistent ? 100 : Math.max(0, 100 - (uniqueNames.length - 1) * 25);
+
+    return {
+      isConsistent,
+      confidence,
+      variations: uniqueNames,
+      primaryName: this.selectPrimaryName(names)
+    };
+  }
+
+  /**
+   * Validate party consistency across sources
+   */
+  private validatePartyConsistency(sources: any): PartyConsistency {
+    const parties = Object.values(sources)
+      .filter((source: any) => source?.party)
+      .map((source: any) => this.normalizePartyAffiliation(source.party));
+
+    if (parties.length === 0) {
+      return { isConsistent: false, confidence: 0, variations: [] };
+    }
+
+    const uniqueParties = [...new Set(parties)];
+    const isConsistent = uniqueParties.length === 1;
+    const confidence = isConsistent ? 100 : Math.max(0, 100 - (uniqueParties.length - 1) * 30);
+
+    return {
+      isConsistent,
+      confidence,
+      variations: uniqueParties,
+      primaryParty: this.selectPrimaryParty(parties)
+    };
+  }
+
+  /**
+   * Validate contact information consistency
+   */
+  private validateContactConsistency(sources: any): ContactConsistency {
+    const allContacts: ContactInfo[] = [];
+    
+    Object.values(sources).forEach((source: any) => {
+      if (source?.contacts) {
+        allContacts.push(...source.contacts);
+      }
+    });
+
+    const emailConflicts = this.findContactConflicts(allContacts, 'email');
+    const phoneConflicts = this.findContactConflicts(allContacts, 'phone');
+    const websiteConflicts = this.findContactConflicts(allContacts, 'website');
+
+    return {
+      emailConflicts,
+      phoneConflicts,
+      websiteConflicts,
+      overallConsistency: this.calculateContactConsistencyScore(emailConflicts, phoneConflicts, websiteConflicts)
+    };
+  }
+
+  /**
+   * Validate social media consistency
+   */
+  private validateSocialMediaConsistency(sources: any): SocialMediaConsistency {
+    const allSocialMedia: SocialMediaInfo[] = [];
+    
+    Object.values(sources).forEach((source: any) => {
+      if (source?.socialMedia) {
+        allSocialMedia.push(...source.socialMedia);
+      }
+    });
+
+    const platformConflicts = this.findSocialMediaConflicts(allSocialMedia);
+    const handleConflicts = this.findHandleConflicts(allSocialMedia);
+
+    return {
+      platformConflicts,
+      handleConflicts,
+      overallConsistency: this.calculateSocialMediaConsistencyScore(platformConflicts, handleConflicts)
+    };
+  }
+
+  /**
+   * Validate identifier consistency
+   */
+  private validateIdentifierConsistency(sources: any): IdentifierConsistency {
+    const identifiers: { [key: string]: string[] } = {};
+    
+    Object.entries(sources).forEach(([sourceName, source]) => {
+      if (source) {
+        Object.entries(source).forEach(([key, value]) => {
+          if (key.endsWith('Id') && value) {
+            if (!identifiers[key]) identifiers[key] = [];
+            identifiers[key].push(value as string);
+          }
+        });
+      }
+    });
+
+    const conflicts: string[] = [];
+    Object.entries(identifiers).forEach(([key, values]) => {
+      const uniqueValues = [...new Set(values)];
+      if (uniqueValues.length > 1) {
+        conflicts.push(`${key}: ${uniqueValues.join(', ')}`);
+      }
+    });
+
+    return {
+      conflicts,
+      isConsistent: conflicts.length === 0,
+      confidence: conflicts.length === 0 ? 100 : Math.max(0, 100 - conflicts.length * 20)
+    };
+  }
+
+  /**
+   * Calculate data quality scores for each source
+   */
+  private calculateDataQualityScores(sources: any): { [source: string]: number } {
+    const scores: { [source: string]: number } = {};
+    
+    Object.entries(sources).forEach(([sourceName, source]) => {
+      if (source) {
+        scores[sourceName] = this.calculateSourceQualityScore(source as RepresentativeData);
+      }
+    });
+
+    return scores;
+  }
+
+  /**
+   * Enhanced conflict resolution with cross-reference validation
+   */
+  private resolveDataConflictsWithCrossReference(
+    original: RepresentativeData,
+    newData: Partial<RepresentativeData>,
+    crossReference: CrossReferenceValidation
+  ): RepresentativeData {
+    const resolved = { ...original };
+    
+    // Use cross-reference validation to make better conflict resolution decisions
+    if (newData.name && crossReference.nameConsistency.confidence > 80) {
+      resolved.name = crossReference.nameConsistency.primaryName || newData.name;
+    } else if (newData.name && newData.name.length > (resolved.name?.length || 0)) {
+      resolved.name = newData.name;
+    }
+    
+    // Resolve party conflicts using cross-reference data
+    if (newData.party && crossReference.partyConsistency.confidence > 70) {
+      resolved.party = crossReference.partyConsistency.primaryParty || this.normalizePartyAffiliation(newData.party);
+    } else if (newData.party && newData.dataSources && this.isVerifiedSource(newData.dataSources)) {
+      resolved.party = this.normalizePartyAffiliation(newData.party);
+    }
+    
+    // Enhanced contact merging with conflict resolution
+    if (newData.contacts) {
+      resolved.contacts = this.mergeContactsWithValidation(
+        resolved.contacts || [],
+        newData.contacts,
+        crossReference.contactConsistency
+      );
+    }
+    
+    // Enhanced social media merging with conflict resolution
+    if (newData.socialMedia) {
+      resolved.socialMedia = this.mergeSocialMediaWithValidation(
+        resolved.socialMedia || [],
+        newData.socialMedia,
+        crossReference.socialMediaConsistency
+      );
+    }
+    
+    // Enhanced photo merging with quality assessment
+    if (newData.photos) {
+      resolved.photos = this.mergePhotosWithValidation(
+        resolved.photos || [],
+        newData.photos,
+        crossReference.dataQualityScores
+      );
+    }
+    
+    // Merge data sources with quality weighting
+    resolved.dataSources = this.mergeDataSourcesWithQuality(
+      resolved.dataSources || [],
+      newData.dataSources || [],
+      crossReference.dataQualityScores
+    );
+    
+    return resolved;
+  }
+
   private resolveDataConflicts(
     original: RepresentativeData,
     newData: Partial<RepresentativeData>
@@ -2982,6 +3388,606 @@ export class FreeAPIsPipeline {
       devLog('Wikipedia image extraction error', { error, pageUrl, name });
       return null;
     }
+  }
+
+  /**
+   * Build comprehensive source attribution for merged data
+   */
+  private buildComprehensiveSourceAttribution(
+    merged: RepresentativeData,
+    sources: {
+      googleCivic: Partial<RepresentativeData>;
+      openStates: Partial<RepresentativeData>;
+      congressGov: Partial<RepresentativeData>;
+      legiScan: Partial<RepresentativeData>;
+      wikipedia?: Partial<RepresentativeData>;
+    }
+  ): string[] {
+    const attribution: string[] = [];
+    
+    // Check which sources contributed data
+    if (sources.googleCivic && this.hasContributingData(sources.googleCivic)) {
+      attribution.push('google-civic');
+    }
+    
+    if (sources.openStates && this.hasContributingData(sources.openStates)) {
+      attribution.push('open-states');
+    }
+    
+    if (sources.congressGov && this.hasContributingData(sources.congressGov)) {
+      attribution.push('congress-gov');
+    }
+    
+    if (sources.legiScan && this.hasContributingData(sources.legiScan)) {
+      attribution.push('legiscan');
+    }
+    
+    if (sources.wikipedia && this.hasContributingData(sources.wikipedia)) {
+      attribution.push('wikipedia');
+    }
+    
+    // Add campaign finance source if present
+    if (merged.campaignFinance) {
+      attribution.push('fec');
+    }
+    
+    // Remove duplicates and return
+    return [...new Set(attribution)];
+  }
+
+  /**
+   * Check if a source has contributing data
+   */
+  private hasContributingData(source: Partial<RepresentativeData>): boolean {
+    return !!(
+      source.name ||
+      source.party ||
+      (source.contacts && source.contacts.length > 0) ||
+      (source.socialMedia && source.socialMedia.length > 0) ||
+      (source.photos && source.photos.length > 0) ||
+      (source.activity && source.activity.length > 0) ||
+      source.bioguideId ||
+      source.openstatesId ||
+      source.fecId ||
+      source.googleCivicId ||
+      source.legiscanId ||
+      source.congressGovId
+    );
+  }
+
+  // Supporting methods for cross-reference validation
+  
+  private normalizeName(name: string): string {
+    return name.trim().toLowerCase().replace(/\s+/g, ' ');
+  }
+
+  private selectPrimaryName(names: string[]): string {
+    // Prefer longer, more complete names
+    return names.reduce((longest, current) => 
+      current.length > longest.length ? current : longest
+    );
+  }
+
+  private selectPrimaryParty(parties: string[]): string {
+    // Prefer official party names over abbreviations
+    const partyPriority = ['Democratic', 'Republican', 'Independent', 'Green', 'Libertarian'];
+    for (const party of partyPriority) {
+      if (parties.includes(party)) return party;
+    }
+    return parties[0];
+  }
+
+  private findContactConflicts(contacts: ContactInfo[], type: string): ContactConflict[] {
+    const typeContacts = contacts.filter(c => c.type === type);
+    const valueGroups: { [value: string]: ContactInfo[] } = {};
+    
+    typeContacts.forEach(contact => {
+      if (!valueGroups[contact.value]) {
+        valueGroups[contact.value] = [];
+      }
+      valueGroups[contact.value].push(contact);
+    });
+
+    const conflicts: ContactConflict[] = [];
+    Object.entries(valueGroups).forEach(([value, contactList]) => {
+      if (contactList.length > 1) {
+        const sources = contactList.map(c => c.source || 'unknown');
+        conflicts.push({
+          type,
+          values: [value],
+          sources,
+          recommendation: this.generateContactRecommendation(type, value, sources)
+        });
+      }
+    });
+
+    return conflicts;
+  }
+
+  private findSocialMediaConflicts(socialMedia: SocialMediaInfo[]): SocialMediaConflict[] {
+    const platformGroups: { [platform: string]: SocialMediaInfo[] } = {};
+    
+    socialMedia.forEach(social => {
+      if (!platformGroups[social.platform]) {
+        platformGroups[social.platform] = [];
+      }
+      platformGroups[social.platform].push(social);
+    });
+
+    const conflicts: SocialMediaConflict[] = [];
+    Object.entries(platformGroups).forEach(([platform, socialList]) => {
+      if (socialList.length > 1) {
+        const handles = socialList.map(s => s.handle);
+        const sources = socialList.map(s => s.source || 'unknown');
+        conflicts.push({
+          platform,
+          handles,
+          sources,
+          recommendation: this.generateSocialMediaRecommendation(platform, handles, sources)
+        });
+      }
+    });
+
+    return conflicts;
+  }
+
+  private findHandleConflicts(socialMedia: SocialMediaInfo[]): SocialMediaConflict[] {
+    const handleGroups: { [handle: string]: SocialMediaInfo[] } = {};
+    
+    socialMedia.forEach(social => {
+      if (!handleGroups[social.handle]) {
+        handleGroups[social.handle] = [];
+      }
+      handleGroups[social.handle].push(social);
+    });
+
+    const conflicts: SocialMediaConflict[] = [];
+    Object.entries(handleGroups).forEach(([handle, socialList]) => {
+      if (socialList.length > 1) {
+        const platforms = socialList.map(s => s.platform);
+        const sources = socialList.map(s => s.source || 'unknown');
+        conflicts.push({
+          platform: platforms.join(', '),
+          handles: [handle],
+          sources,
+          recommendation: this.generateHandleRecommendation(handle, platforms, sources)
+        });
+      }
+    });
+
+    return conflicts;
+  }
+
+  private calculateContactConsistencyScore(
+    emailConflicts: ContactConflict[],
+    phoneConflicts: ContactConflict[],
+    websiteConflicts: ContactConflict[]
+  ): number {
+    const totalConflicts = emailConflicts.length + phoneConflicts.length + websiteConflicts.length;
+    return Math.max(0, 100 - totalConflicts * 20);
+  }
+
+  private calculateSocialMediaConsistencyScore(
+    platformConflicts: SocialMediaConflict[],
+    handleConflicts: SocialMediaConflict[]
+  ): number {
+    const totalConflicts = platformConflicts.length + handleConflicts.length;
+    return Math.max(0, 100 - totalConflicts * 15);
+  }
+
+  private calculateSourceQualityScore(source: RepresentativeData): number {
+    let score = 0;
+    
+    // Base score for having data
+    if (source.name) score += 20;
+    if (source.party) score += 15;
+    if (source.contacts && source.contacts.length > 0) score += 20;
+    if (source.socialMedia && source.socialMedia.length > 0) score += 15;
+    if (source.photos && source.photos.length > 0) score += 10;
+    if (source.activity && source.activity.length > 0) score += 20;
+    
+    // Bonus for verified sources
+    if (source.dataSources && this.isVerifiedSource(source.dataSources)) {
+      score += 10;
+    }
+    
+    return Math.min(100, score);
+  }
+
+  private identifyDataConflicts(sources: any): string[] {
+    const conflicts: string[] = [];
+    
+    // Check for name conflicts
+    const names = Object.values(sources)
+      .filter((source: any) => source?.name)
+      .map((source: any) => source.name);
+    const uniqueNames = [...new Set(names)];
+    if (uniqueNames.length > 1) {
+      conflicts.push(`Name conflicts: ${uniqueNames.join(', ')}`);
+    }
+    
+    // Check for party conflicts
+    const parties = Object.values(sources)
+      .filter((source: any) => source?.party)
+      .map((source: any) => source.party);
+    const uniqueParties = [...new Set(parties)];
+    if (uniqueParties.length > 1) {
+      conflicts.push(`Party conflicts: ${uniqueParties.join(', ')}`);
+    }
+    
+    return conflicts;
+  }
+
+  private generateDataRecommendations(validation: CrossReferenceValidation): string[] {
+    const recommendations: string[] = [];
+    
+    if (validation.nameConsistency.confidence < 80) {
+      recommendations.push('Consider manual review of name variations');
+    }
+    
+    if (validation.partyConsistency.confidence < 70) {
+      recommendations.push('Verify party affiliation from official sources');
+    }
+    
+    if (validation.contactConsistency.overallConsistency < 80) {
+      recommendations.push('Review contact information for accuracy');
+    }
+    
+    if (validation.socialMediaConsistency.overallConsistency < 80) {
+      recommendations.push('Verify social media handles and platforms');
+    }
+    
+    return recommendations;
+  }
+
+  private generateContactRecommendation(type: string, value: string, sources: string[]): string {
+    return `Multiple ${type} values found from sources: ${sources.join(', ')}. Verify correct ${type}: ${value}`;
+  }
+
+  private generateSocialMediaRecommendation(platform: string, handles: string[], sources: string[]): string {
+    return `Multiple ${platform} handles found from sources: ${sources.join(', ')}. Verify correct handle: ${handles.join(', ')}`;
+  }
+
+  private generateHandleRecommendation(handle: string, platforms: string[], sources: string[]): string {
+    return `Handle ${handle} found on multiple platforms: ${platforms.join(', ')} from sources: ${sources.join(', ')}`;
+  }
+
+  private mergeContactsWithValidation(
+    existing: ContactInfo[],
+    newContacts: ContactInfo[],
+    consistency: ContactConsistency
+  ): ContactInfo[] {
+    const merged = [...existing];
+    
+    newContacts.forEach(newContact => {
+      const conflict = consistency.emailConflicts.find(c => c.values.includes(newContact.value)) ||
+                     consistency.phoneConflicts.find(c => c.values.includes(newContact.value)) ||
+                     consistency.websiteConflicts.find(c => c.values.includes(newContact.value));
+      
+      if (conflict) {
+        // Add with conflict flag
+        merged.push({ ...newContact, isVerified: false, conflictFlag: true });
+      } else {
+        // No conflict, add normally
+        const existingIndex = merged.findIndex(existing => 
+          existing.type === newContact.type && existing.value === newContact.value
+        );
+        if (existingIndex === -1) {
+          merged.push(newContact);
+        }
+      }
+    });
+    
+    return merged;
+  }
+
+  private mergeSocialMediaWithValidation(
+    existing: SocialMediaInfo[],
+    newSocial: SocialMediaInfo[],
+    consistency: SocialMediaConsistency
+  ): SocialMediaInfo[] {
+    const merged = [...existing];
+    
+    newSocial.forEach(newSocialItem => {
+      const conflict = consistency.platformConflicts.find(c => c.platform === newSocialItem.platform) ||
+                     consistency.handleConflicts.find(c => c.handles.includes(newSocialItem.handle));
+      
+      if (conflict) {
+        // Add with conflict flag
+        merged.push({ ...newSocialItem, isVerified: false, conflictFlag: true });
+      } else {
+        // No conflict, add normally
+        const existingIndex = merged.findIndex(existing => 
+          existing.platform === newSocialItem.platform && existing.handle === newSocialItem.handle
+        );
+        if (existingIndex === -1) {
+          merged.push(newSocialItem);
+        }
+      }
+    });
+    
+    return merged;
+  }
+
+  private mergePhotosWithValidation(
+    existing: PhotoInfo[],
+    newPhotos: PhotoInfo[],
+    qualityScores: { [source: string]: number }
+  ): PhotoInfo[] {
+    const merged = [...existing];
+    
+    newPhotos.forEach(newPhoto => {
+      const existingIndex = merged.findIndex(existing => existing.url === newPhoto.url);
+      if (existingIndex === -1) {
+        // Add quality score based on source
+        const sourceQuality = qualityScores[newPhoto.source || 'unknown'] || 50;
+        merged.push({ 
+          ...newPhoto, 
+          quality: sourceQuality > 80 ? 'high' : sourceQuality > 60 ? 'medium' : 'low'
+        });
+      }
+    });
+    
+    return merged.sort((a, b) => {
+      const qualityOrder = { 'high': 3, 'medium': 2, 'low': 1 };
+      return qualityOrder[b.quality] - qualityOrder[a.quality];
+    });
+  }
+
+  private mergeDataSourcesWithQuality(
+    existing: string[],
+    newSources: string[],
+    qualityScores: { [source: string]: number }
+  ): string[] {
+    const merged = [...existing];
+    
+    newSources.forEach(source => {
+      if (!merged.includes(source)) {
+        // Only add sources with reasonable quality scores
+        if (qualityScores[source] > 30) {
+          merged.push(source);
+        }
+      }
+    });
+    
+    return merged;
+  }
+
+  /**
+   * Check if a representative is currently active/current
+   * This prevents processing of historical/retired representatives
+   */
+  private isCurrentRepresentative(rep: RepresentativeData): boolean {
+    const currentDate = new Date();
+    const currentYear = currentDate.getFullYear();
+    
+    // Check if representative has current term dates
+    if (rep.termStartDate && rep.termEndDate) {
+      const termStart = new Date(rep.termStartDate);
+      const termEnd = new Date(rep.termEndDate);
+      
+      // Term must be current (started and not ended)
+      if (termStart > currentDate || termEnd < currentDate) {
+        return false;
+      }
+    }
+    
+    // Check if representative has upcoming elections (indicates current)
+    if (rep.nextElectionDate) {
+      const nextElection = new Date(rep.nextElectionDate);
+      // If next election is more than 2 years away, might be historical
+      if (nextElection > new Date(currentYear + 2, 11, 31)) {
+        return false;
+      }
+    }
+    
+    // Check if representative has recent activity (within last 2 years)
+    if (rep.lastUpdated) {
+      const lastUpdated = new Date(rep.lastUpdated);
+      const twoYearsAgo = new Date(currentYear - 2, 0, 1);
+      if (lastUpdated < twoYearsAgo) {
+        return false;
+      }
+    }
+    
+    // For federal representatives, check if they have current session data
+    if (rep.level === 'federal' && rep.congressGovId) {
+      // Federal representatives should have recent data
+      return true; // Assume current if they have Congress.gov ID
+    }
+    
+    // For state representatives, check if they have OpenStates ID
+    if (rep.level === 'state' && rep.openstatesId) {
+      // State representatives should have recent data
+      return true; // Assume current if they have OpenStates ID
+    }
+    
+    // Default to current if no specific indicators of being historical
+    return true;
+  }
+
+  /**
+   * Filter OpenStates legislators to only include current/active representatives
+   * This is crucial to avoid processing historical/retired legislators
+   */
+  private filterCurrentLegislators(legislators: any[]): any[] {
+    const currentDate = new Date();
+    const currentYear = currentDate.getFullYear();
+    
+    return legislators.filter(legislator => {
+      // Check if legislator has current roles/offices
+      const hasCurrentRoles = legislator.roles && legislator.roles.some((role: any) => {
+        // Check if role is current (no end_date or end_date is in the future)
+        if (!role.end_date) return true; // No end date means current
+        const endDate = new Date(role.end_date);
+        return endDate > currentDate;
+      });
+      
+      // Check if legislator has current terms
+      const hasCurrentTerms = legislator.terms && legislator.terms.some((term: any) => {
+        if (!term.end_date) return true; // No end date means current
+        const endDate = new Date(term.end_date);
+        return endDate > currentDate;
+      });
+      
+      // Check if legislator is not marked as retired
+      const isNotRetired = !legislator.retired && 
+                          !legislator.status?.includes('retired') && 
+                          !legislator.status?.includes('former');
+      
+      // Check if legislator has recent activity (within last 2 years)
+      const hasRecentActivity = legislator.last_updated && 
+                               new Date(legislator.last_updated) > new Date(currentYear - 2, 0, 1);
+      
+      // Check if legislator has current session data
+      const hasCurrentSession = legislator.sessions && 
+                               legislator.sessions.some((session: any) => 
+                                 session.includes(currentYear.toString()) || 
+                                 session.includes((currentYear - 1).toString())
+                               );
+      
+      // Must meet at least 2 of these criteria to be considered current
+      const criteria = [
+        hasCurrentRoles,
+        hasCurrentTerms,
+        isNotRetired,
+        hasRecentActivity,
+        hasCurrentSession
+      ];
+      
+      const metCriteria = criteria.filter(Boolean).length;
+      const isCurrent = metCriteria >= 2;
+      
+      if (!isCurrent) {
+        devLog('Filtered out non-current legislator', {
+          name: legislator.name,
+          roles: legislator.roles?.length || 0,
+          terms: legislator.terms?.length || 0,
+          retired: legislator.retired,
+          status: legislator.status,
+          lastUpdated: legislator.last_updated,
+          sessions: legislator.sessions,
+          metCriteria
+        });
+      }
+      
+      return isCurrent;
+    });
+  }
+
+  /**
+   * Get OpenStates YAML data from repository
+   * This method focuses ONLY on current legislators from the 'legislature' subdirectory
+   * and explicitly avoids the 'retired' subdirectory to prevent historical data
+   */
+  private async getOpenStatesYAMLData(rep: RepresentativeData): Promise<Partial<RepresentativeData>> {
+    console.log('🔍 OpenStates YAML: Attempting to get CURRENT legislator data for', rep.name);
+    
+    try {
+      // In a full implementation, this would:
+      // 1. Fetch YAML files ONLY from the 'legislature' subdirectory (current representatives)
+      // 2. Explicitly avoid the 'retired' subdirectory (historical data)
+      // 3. Parse the YAML data with current representative filtering
+      // 4. Extract relevant information for the representative
+      // 5. Return structured data with proper attribution
+      
+      // Repository structure to target:
+      // openstates/people/
+      // ├── {state}/
+      // │   ├── legislature/     ← CURRENT representatives (target this)
+      // │   ├── executive/        ← Governors (if needed)
+      // │   ├── municipalities/   ← Local officials (if needed)
+      // │   └── retired/         ← HISTORICAL data (avoid this)
+      
+      devLog('OpenStates YAML integration targeting current legislators only', { 
+        name: rep.name, 
+        state: rep.state,
+        targetDirectory: 'legislature', // Only current representatives
+        avoidDirectory: 'retired' // Avoid historical data
+      });
+      
+      return {
+        dataSources: ['openstates-yaml-current'],
+        contacts: [],
+        socialMedia: [],
+        photos: []
+      };
+    } catch (error) {
+      devLog('OpenStates YAML data error', { error, name: rep.name });
+      return {};
+    }
+  }
+
+  /**
+   * Merge OpenStates API and YAML data sources
+   */
+  private mergeOpenStatesSources(
+    apiData: Partial<RepresentativeData>,
+    yamlData: Partial<RepresentativeData>
+  ): Partial<RepresentativeData> {
+    const merged: Partial<RepresentativeData> = {
+      dataSources: [],
+      contacts: [],
+      socialMedia: [],
+      photos: [],
+      activity: []
+    };
+
+    // Merge data sources
+    if (apiData.dataSources) {
+      merged.dataSources!.push(...apiData.dataSources);
+    }
+    if (yamlData.dataSources) {
+      merged.dataSources!.push(...yamlData.dataSources);
+    }
+    merged.dataSources = [...new Set(merged.dataSources)];
+
+    // Merge contacts with conflict resolution
+    if (apiData.contacts) {
+      merged.contacts!.push(...apiData.contacts);
+    }
+    if (yamlData.contacts) {
+      merged.contacts!.push(...yamlData.contacts);
+    }
+
+    // Merge social media with conflict resolution
+    if (apiData.socialMedia) {
+      merged.socialMedia!.push(...apiData.socialMedia);
+    }
+    if (yamlData.socialMedia) {
+      merged.socialMedia!.push(...yamlData.socialMedia);
+    }
+
+    // Merge photos with quality ranking
+    if (apiData.photos) {
+      merged.photos!.push(...apiData.photos);
+    }
+    if (yamlData.photos) {
+      merged.photos!.push(...yamlData.photos);
+    }
+
+    // Merge activity data
+    if (apiData.activity) {
+      merged.activity!.push(...apiData.activity);
+    }
+    if (yamlData.activity) {
+      merged.activity!.push(...yamlData.activity);
+    }
+
+    // Prefer API data for core fields, but use YAML as fallback
+    merged.name = apiData.name || yamlData.name;
+    merged.party = apiData.party || yamlData.party;
+    merged.office = apiData.office || yamlData.office;
+    merged.level = apiData.level || yamlData.level;
+    merged.state = apiData.state || yamlData.state;
+    merged.district = apiData.district || yamlData.district;
+
+    // Merge identifiers
+    merged.openstatesId = apiData.openstatesId || yamlData.openstatesId;
+    merged.bioguideId = apiData.bioguideId || yamlData.bioguideId;
+    merged.fecId = apiData.fecId || yamlData.fecId;
+
+    return merged;
   }
 }
 

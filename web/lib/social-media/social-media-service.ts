@@ -49,7 +49,7 @@ export type SocialMediaHandle = {
   lastUpdated: Date;
 }
 
-export interface SentimentAnalysis {
+export type SentimentAnalysis = {
   score: number;
   magnitude: number;
   sentiment: 'positive' | 'negative' | 'neutral';
@@ -166,7 +166,7 @@ export class SocialMediaService {
   /**
    * Get Instagram metrics for a representative
    */
-  async getInstagramMetrics(handle: string): Promise<SocialMediaMetrics> {
+  async getInstagramMetrics(_handle: string): Promise<SocialMediaMetrics> {
     try {
       // Instagram Basic Display API
       const response = await fetch(`https://graph.instagram.com/v18.0/me?fields=id,username,media_count,followers_count,follows_count`, {
@@ -214,7 +214,7 @@ export class SocialMediaService {
         throw new Error(`LinkedIn API error: ${response.status}`);
       }
 
-      const data = await response.json();
+      const _data = await response.json();
 
       return {
         platform: 'linkedin',
@@ -345,7 +345,7 @@ export class SocialMediaService {
   /**
    * Analyze sentiment of social media content
    */
-  async analyzeSentiment(content: string): Promise<SentimentAnalysis> {
+  async analyzeSentiment(_content: string): Promise<SentimentAnalysis> {
     // This would integrate with a sentiment analysis service
     // For now, return a placeholder
     return {
