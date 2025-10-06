@@ -11,26 +11,12 @@
  */
 
 import { createClient } from '@supabase/supabase-js';
-// import { devLog } from '@/lib/logger';
-// import { CanonicalIdService } from '@/lib/civics/canonical-id-service';
-// import dotenv from 'dotenv';
-
-// Temporary inline implementations to fix compilation
-const devLog = (message: string, data?: any) => {
-  console.log(`[DEV] ${message}`, data || '');
-};
-
-class CanonicalIdService {
-  static resolveCanonicalId(rep: any) {
-    const name = rep.name?.toLowerCase().replace(/\s+/g, '_') || 'unknown';
-    const state = rep.state || 'unknown';
-    const office = rep.office || 'unknown';
-    return `person_${name}_${state}_${office}`;
-  }
-}
+import { devLog } from '../logger';
+import { CanonicalIdService, canonicalIdService } from '../civics/canonical-id-service';
+import * as dotenv from 'dotenv';
 
 // Load environment variables
-// dotenv.config({ path: '.env.local' });
+dotenv.config({ path: '.env.local' });
 
 // Cross-reference validation types
 export type CrossReferenceValidation = {
@@ -264,7 +250,7 @@ export class FreeAPIsPipeline {
       { auth: { persistSession: false } }
     );
     
-    this.canonicalIdService = new CanonicalIdService();
+    this.canonicalIdService = canonicalIdService;
     this.initializeRateLimiters();
   }
 
@@ -2069,7 +2055,7 @@ export class FreeAPIsPipeline {
     wikipedia?: Partial<RepresentativeData>
   ): RepresentativeData {
     // Start with original data
-    let merged = { ...(original || {}) };
+    let merged: RepresentativeData = { ...(original || {}) } as RepresentativeData;
     
     // Perform cross-reference validation before merging
     const crossReferenceValidation = this.performCrossReferenceValidation({
@@ -2081,12 +2067,12 @@ export class FreeAPIsPipeline {
     });
     
     // Apply advanced data transformations and conflict resolution with cross-reference insights
-    merged = this.resolveDataConflictsWithCrossReference(merged, googleCivic, crossReferenceValidation);
-    merged = this.resolveDataConflictsWithCrossReference(merged, openStates, crossReferenceValidation);
-    merged = this.resolveDataConflictsWithCrossReference(merged, congressGov, crossReferenceValidation);
-    merged = this.resolveDataConflictsWithCrossReference(merged, legiScan, crossReferenceValidation);
+    merged = this.resolveDataConflictsWithCrossReference(merged, googleCivic as Partial<RepresentativeData>, crossReferenceValidation);
+    merged = this.resolveDataConflictsWithCrossReference(merged, openStates as Partial<RepresentativeData>, crossReferenceValidation);
+    merged = this.resolveDataConflictsWithCrossReference(merged, congressGov as Partial<RepresentativeData>, crossReferenceValidation);
+    merged = this.resolveDataConflictsWithCrossReference(merged, legiScan as Partial<RepresentativeData>, crossReferenceValidation);
     if (wikipedia) {
-      merged = this.resolveDataConflictsWithCrossReference(merged, wikipedia, crossReferenceValidation);
+      merged = this.resolveDataConflictsWithCrossReference(merged, wikipedia as Partial<RepresentativeData>, crossReferenceValidation);
     }
     
     // Normalize party affiliation
@@ -2194,7 +2180,7 @@ export class FreeAPIsPipeline {
    * Transform merged data to match our enhanced schema
    */
   private transformToEnhancedSchema(rep: RepresentativeData): RepresentativeData {
-    const transformed = { ...(rep || {}) };
+    const transformed: RepresentativeData = { ...(rep || {}) } as RepresentativeData;
     
     // Extract social media handles for easy access
     if (transformed.socialMedia) {
@@ -2830,7 +2816,7 @@ export class FreeAPIsPipeline {
    * Validate name consistency across sources
    */
   private validateNameConsistency(sources: any): NameConsistency {
-    const names = Object.values(sources)
+    const names = Array.from(Object.values(sources))
       .filter((source: any) => source?.name)
       .map((source: any) => source.name);
 
@@ -2839,7 +2825,7 @@ export class FreeAPIsPipeline {
     }
 
     const normalizedNames = names.map(name => this.normalizeName(name));
-    const uniqueNames = [...new Set(normalizedNames)];
+    const uniqueNames = Array.from(new Set(normalizedNames));
     const isConsistent = uniqueNames.length === 1;
     const confidence = isConsistent ? 100 : Math.max(0, 100 - (uniqueNames.length - 1) * 25);
 
@@ -2855,7 +2841,7 @@ export class FreeAPIsPipeline {
    * Validate party consistency across sources
    */
   private validatePartyConsistency(sources: any): PartyConsistency {
-    const parties = Object.values(sources)
+    const parties = Array.from(Object.values(sources))
       .filter((source: any) => source?.party)
       .map((source: any) => this.normalizePartyAffiliation(source.party));
 
@@ -2863,7 +2849,7 @@ export class FreeAPIsPipeline {
       return { isConsistent: false, confidence: 0, variations: [] };
     }
 
-    const uniqueParties = [...new Set(parties)];
+    const uniqueParties = Array.from(new Set(parties));
     const isConsistent = uniqueParties.length === 1;
     const confidence = isConsistent ? 100 : Math.max(0, 100 - (uniqueParties.length - 1) * 30);
 
@@ -2881,7 +2867,7 @@ export class FreeAPIsPipeline {
   private validateContactConsistency(sources: any): ContactConsistency {
     const allContacts: ContactInfo[] = [];
     
-    Object.values(sources).forEach((source: any) => {
+    Array.from(Object.values(sources)).forEach((source: any) => {
       if (source?.contacts) {
         allContacts.push(...source.contacts);
       }
@@ -2905,7 +2891,7 @@ export class FreeAPIsPipeline {
   private validateSocialMediaConsistency(sources: any): SocialMediaConsistency {
     const allSocialMedia: SocialMediaInfo[] = [];
     
-    Object.values(sources).forEach((source: any) => {
+    Array.from(Object.values(sources)).forEach((source: any) => {
       if (source?.socialMedia) {
         allSocialMedia.push(...source.socialMedia);
       }
@@ -2940,7 +2926,7 @@ export class FreeAPIsPipeline {
 
     const conflicts: string[] = [];
     Object.entries(identifiers).forEach(([key, values]) => {
-      const uniqueValues = [...new Set(values)];
+      const uniqueValues = Array.from(new Set(values));
       if (uniqueValues.length > 1) {
         conflicts.push(`${key}: ${uniqueValues.join(', ')}`);
       }
@@ -3026,7 +3012,7 @@ export class FreeAPIsPipeline {
       crossReference.dataQualityScores
     );
     
-    return resolved;
+    return resolved as RepresentativeData;
   }
 
   private resolveDataConflicts(
@@ -3082,9 +3068,9 @@ export class FreeAPIsPipeline {
     }
     
     // Merge data sources
-    resolved.dataSources = [...new Set([...(resolved.dataSources || []), ...(newData.dataSources || [])])];
+    resolved.dataSources = Array.from(new Set([...(resolved.dataSources || []), ...(newData.dataSources || [])]));
     
-    return resolved;
+    return resolved as RepresentativeData;
   }
 
   private isVerifiedSource(sources: string[]): boolean {
@@ -3452,7 +3438,7 @@ export class FreeAPIsPipeline {
     }
     
     // Remove duplicates and return
-    return [...new Set(attribution)];
+    return Array.from(new Set(attribution));
   }
 
   /**
@@ -3624,21 +3610,21 @@ export class FreeAPIsPipeline {
     const conflicts: string[] = [];
     
     // Check for name conflicts
-    const names = Object.values(sources)
+    const names = Array.from(Object.values(sources))
       .filter((source: any) => source?.name)
       .map((source: any) => source.name)
       .filter((name): name is string => typeof name === 'string');
-    const uniqueNames = [...new Set(names)];
+    const uniqueNames = Array.from(new Set(names));
     if (uniqueNames.length > 1) {
       conflicts.push(`Name conflicts: ${uniqueNames.join(', ')}`);
     }
     
     // Check for party conflicts
-    const parties = Object.values(sources)
+    const parties = Array.from(Object.values(sources))
       .filter((source: any) => source?.party)
       .map((source: any) => source.party)
       .filter((party): party is string => typeof party === 'string');
-    const uniqueParties = [...new Set(parties)];
+    const uniqueParties = Array.from(new Set(parties));
     if (uniqueParties.length > 1) {
       conflicts.push(`Party conflicts: ${uniqueParties.join(', ')}`);
     }
@@ -3694,7 +3680,15 @@ export class FreeAPIsPipeline {
       
       if (conflict) {
         // Add with conflict flag
-        merged.push({ ...(newContact || {}), isVerified: false, conflictFlag: true });
+        merged.push({ 
+          ...(newContact || {}), 
+          type: newContact?.type || 'email',
+          value: newContact?.value || '',
+          source: newContact?.source || 'google-civic',
+          isPrimary: false,
+          isVerified: false, 
+          conflictFlag: true 
+        });
       } else {
         // No conflict, add normally
         const existingIndex = merged.findIndex(existing => 
@@ -3722,7 +3716,16 @@ export class FreeAPIsPipeline {
       
       if (conflict) {
         // Add with conflict flag
-        merged.push({ ...(newSocialItem || {}), isVerified: false, conflictFlag: true });
+        merged.push({ 
+          ...(newSocialItem || {}), 
+          platform: newSocialItem?.platform || 'twitter',
+          handle: newSocialItem?.handle || '',
+          url: newSocialItem?.url || '',
+          source: newSocialItem?.source || 'google-civic',
+          followersCount: newSocialItem?.followersCount || 0,
+          isVerified: false, 
+          conflictFlag: true 
+        });
       } else {
         // No conflict, add normally
         const existingIndex = merged.findIndex(existing => 
@@ -3751,6 +3754,9 @@ export class FreeAPIsPipeline {
         const sourceQuality = qualityScores[newPhoto.source || 'unknown'] || 50;
         merged.push({ 
           ...(newPhoto || {}), 
+          url: newPhoto?.url || '',
+          source: newPhoto?.source || 'google-civic',
+          isPrimary: false,
           quality: sourceQuality > 80 ? 'high' : sourceQuality > 60 ? 'medium' : 'low'
         });
       }
@@ -3993,7 +3999,7 @@ export class FreeAPIsPipeline {
     if (yamlData.dataSources) {
       merged.dataSources!.push(...yamlData.dataSources);
     }
-    merged.dataSources = [...new Set(merged.dataSources)];
+    merged.dataSources = Array.from(new Set(merged.dataSources));
 
     // Merge contacts with conflict resolution
     if (apiData.contacts) {
