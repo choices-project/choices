@@ -12,7 +12,8 @@
 
 import { createClient } from '@supabase/supabase-js';
 import { devLog } from '../logger';
-import { CanonicalIdService, canonicalIdService } from '../civics/canonical-id-service';
+import type { CanonicalIdService } from '../civics/canonical-id-service';
+import { canonicalIdService } from '../civics/canonical-id-service';
 import * as dotenv from 'dotenv';
 
 // Load environment variables
