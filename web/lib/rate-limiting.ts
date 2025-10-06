@@ -131,7 +131,7 @@ export function getRequiredDelay(api: string): number {
 }
 
 export function getAPIStatus(): Record<string, APIUsage> {
-  return { ...apiUsage };
+  return { ...(apiUsage || {}) };
 }
 
 export function getRateLimitStatus(): Record<string, { canMakeRequest: boolean; delayNeeded: number; usage: APIUsage }> {

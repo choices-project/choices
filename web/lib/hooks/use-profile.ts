@@ -87,8 +87,8 @@ export function useUpdateProfile() {
       queryClient.setQueryData(profileQueryKeys.current(), (old: any) => {
         if (!old || !old.data) return old;
         return {
-          ...old,
-          data: { ...old.data, ...newData },
+          ...(old || {}),
+          data: { ...(old.data || {}), ...(newData || {}) },
         };
       });
 

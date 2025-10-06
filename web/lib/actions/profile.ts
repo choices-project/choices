@@ -119,7 +119,7 @@ export async function updateCurrentProfile(updates: ProfileUpdateData): Promise<
     const { error } = await authResult.supabase
       .from('user_profiles')
       .update({
-        ...updates,
+        ...(updates || {}),
         updated_at: new Date().toISOString(),
       })
       .eq('user_id', authResult.user.id)
@@ -139,7 +139,7 @@ export async function updateCurrentProfile(updates: ProfileUpdateData): Promise<
 
     return {
       success: true,
-      data: { ...authResult.user, ...updates },
+      data: { ...(authResult.user || {}), ...(updates || {}) },
     };
 
   } catch (error) {

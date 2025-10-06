@@ -6,7 +6,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { 
   // ChartBarIcon, 
   // UserGroupIcon, 
@@ -57,7 +57,7 @@ export default function TestSocialMediaPage() {
   const [testResults, setTestResults] = useState<any[]>([]);
 
   // Test social media data ingestion
-  const testDataIngestion = async () => {
+  const testDataIngestion = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     setTestResults([]);
@@ -129,7 +129,7 @@ export default function TestSocialMediaPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [representativeId]);
 
   // Load initial data
   useEffect(() => {

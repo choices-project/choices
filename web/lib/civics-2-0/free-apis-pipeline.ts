@@ -365,7 +365,7 @@ export class FreeAPIsPipeline {
       } catch (error) {
         console.log('❌ FEC data failed:', error);
         devLog('❌ FEC data failed:', error);
-        campaignFinance = undefined;
+        campaignFinance = null;
       }
       
       // 7. Get Wikipedia data (FREE) - NEW
@@ -400,7 +400,7 @@ export class FreeAPIsPipeline {
         legiScanData,
         photos,
         socialMedia,
-        campaignFinance,
+        campaignFinance || undefined,
         activity,
         wikipediaData
       );
@@ -943,7 +943,7 @@ export class FreeAPIsPipeline {
           source: 'legiscan'
         }] : [],
         committeeMemberships: matchingPerson.committees || [],
-        ...legislativeData,
+        ...(legislativeData || {}),
         dataSources: [...(rep.dataSources || []), 'legiscan']
       };
     } catch (error) {
@@ -2049,7 +2049,7 @@ export class FreeAPIsPipeline {
     wikipedia?: Partial<RepresentativeData>
   ): RepresentativeData {
     // Start with original data
-    let merged = { ...original };
+    let merged = { ...(original || {}) };
     
     // Perform cross-reference validation before merging
     const crossReferenceValidation = this.performCrossReferenceValidation({
@@ -2057,7 +2057,7 @@ export class FreeAPIsPipeline {
       openStates,
       congressGov,
       legiScan,
-      wikipedia
+      ...(wikipedia && { wikipedia })
     });
     
     // Apply advanced data transformations and conflict resolution with cross-reference insights
@@ -2147,7 +2147,7 @@ export class FreeAPIsPipeline {
       openStates,
       congressGov,
       legiScan,
-      wikipedia
+      ...(wikipedia && { wikipedia })
     });
     
     // Add cross-reference validation metadata
@@ -2174,7 +2174,7 @@ export class FreeAPIsPipeline {
    * Transform merged data to match our enhanced schema
    */
   private transformToEnhancedSchema(rep: RepresentativeData): RepresentativeData {
-    const transformed = { ...rep };
+    const transformed = { ...(rep || {}) };
     
     // Extract social media handles for easy access
     if (transformed.socialMedia) {
@@ -2907,7 +2907,7 @@ export class FreeAPIsPipeline {
   private validateIdentifierConsistency(sources: any): IdentifierConsistency {
     const identifiers: { [key: string]: string[] } = {};
     
-    Object.entries(sources).forEach(([sourceName, source]) => {
+    Object.entries(sources).forEach(([_sourceName, source]) => {
       if (source) {
         Object.entries(source).forEach(([key, value]) => {
           if (key.endsWith('Id') && value) {
@@ -2956,7 +2956,7 @@ export class FreeAPIsPipeline {
     newData: Partial<RepresentativeData>,
     crossReference: CrossReferenceValidation
   ): RepresentativeData {
-    const resolved = { ...original };
+    const resolved = { ...(original || {}) };
     
     // Use cross-reference validation to make better conflict resolution decisions
     if (newData.name && crossReference.nameConsistency.confidence > 80) {
@@ -3013,7 +3013,7 @@ export class FreeAPIsPipeline {
     original: RepresentativeData,
     newData: Partial<RepresentativeData>
   ): RepresentativeData {
-    const resolved = { ...original };
+    const resolved = { ...(original || {}) };
     
     // Resolve name conflicts (prefer longer, more complete names)
     if (newData.name && newData.name.length > (resolved.name?.length || 0)) {
@@ -3474,7 +3474,7 @@ export class FreeAPIsPipeline {
     for (const party of partyPriority) {
       if (parties.includes(party)) return party;
     }
-    return parties[0];
+    return parties[0] || '';
   }
 
   private findContactConflicts(contacts: ContactInfo[], type: string): ContactConflict[] {
@@ -3482,10 +3482,12 @@ export class FreeAPIsPipeline {
     const valueGroups: { [value: string]: ContactInfo[] } = {};
     
     typeContacts.forEach(contact => {
-      if (!valueGroups[contact.value]) {
-        valueGroups[contact.value] = [];
+      if (contact.value) {
+        if (!valueGroups[contact.value]) {
+          valueGroups[contact.value] = [];
+        }
+        valueGroups[contact.value]!.push(contact);
       }
-      valueGroups[contact.value].push(contact);
     });
 
     const conflicts: ContactConflict[] = [];
@@ -3508,10 +3510,12 @@ export class FreeAPIsPipeline {
     const platformGroups: { [platform: string]: SocialMediaInfo[] } = {};
     
     socialMedia.forEach(social => {
-      if (!platformGroups[social.platform]) {
-        platformGroups[social.platform] = [];
+      if (social.platform) {
+        if (!platformGroups[social.platform]) {
+          platformGroups[social.platform] = [];
+        }
+        platformGroups[social.platform]!.push(social);
       }
-      platformGroups[social.platform].push(social);
     });
 
     const conflicts: SocialMediaConflict[] = [];
@@ -3535,10 +3539,12 @@ export class FreeAPIsPipeline {
     const handleGroups: { [handle: string]: SocialMediaInfo[] } = {};
     
     socialMedia.forEach(social => {
-      if (!handleGroups[social.handle]) {
-        handleGroups[social.handle] = [];
+      if (social.handle) {
+        if (!handleGroups[social.handle]) {
+          handleGroups[social.handle] = [];
+        }
+        handleGroups[social.handle]!.push(social);
       }
-      handleGroups[social.handle].push(social);
     });
 
     const conflicts: SocialMediaConflict[] = [];
@@ -3600,7 +3606,8 @@ export class FreeAPIsPipeline {
     // Check for name conflicts
     const names = Object.values(sources)
       .filter((source: any) => source?.name)
-      .map((source: any) => source.name);
+      .map((source: any) => source.name)
+      .filter((name): name is string => typeof name === 'string');
     const uniqueNames = [...new Set(names)];
     if (uniqueNames.length > 1) {
       conflicts.push(`Name conflicts: ${uniqueNames.join(', ')}`);
@@ -3609,7 +3616,8 @@ export class FreeAPIsPipeline {
     // Check for party conflicts
     const parties = Object.values(sources)
       .filter((source: any) => source?.party)
-      .map((source: any) => source.party);
+      .map((source: any) => source.party)
+      .filter((party): party is string => typeof party === 'string');
     const uniqueParties = [...new Set(parties)];
     if (uniqueParties.length > 1) {
       conflicts.push(`Party conflicts: ${uniqueParties.join(', ')}`);
@@ -3666,7 +3674,7 @@ export class FreeAPIsPipeline {
       
       if (conflict) {
         // Add with conflict flag
-        merged.push({ ...newContact, isVerified: false, conflictFlag: true });
+        merged.push({ ...(newContact || {}), isVerified: false, conflictFlag: true });
       } else {
         // No conflict, add normally
         const existingIndex = merged.findIndex(existing => 
@@ -3694,7 +3702,7 @@ export class FreeAPIsPipeline {
       
       if (conflict) {
         // Add with conflict flag
-        merged.push({ ...newSocialItem, isVerified: false, conflictFlag: true });
+        merged.push({ ...(newSocialItem || {}), isVerified: false, conflictFlag: true });
       } else {
         // No conflict, add normally
         const existingIndex = merged.findIndex(existing => 
@@ -3722,7 +3730,7 @@ export class FreeAPIsPipeline {
         // Add quality score based on source
         const sourceQuality = qualityScores[newPhoto.source || 'unknown'] || 50;
         merged.push({ 
-          ...newPhoto, 
+          ...(newPhoto || {}), 
           quality: sourceQuality > 80 ? 'high' : sourceQuality > 60 ? 'medium' : 'low'
         });
       }
@@ -3744,7 +3752,7 @@ export class FreeAPIsPipeline {
     newSources.forEach(source => {
       if (!merged.includes(source)) {
         // Only add sources with reasonable quality scores
-        if (qualityScores[source] > 30) {
+        if ((qualityScores[source] || 0) > 30) {
           merged.push(source);
         }
       }
@@ -3819,15 +3827,15 @@ export class FreeAPIsPipeline {
       const hasCurrentRoles = legislator.roles && legislator.roles.some((role: any) => {
         // Check if role is current (no end_date or end_date is in the future)
         if (!role.end_date) return true; // No end date means current
-        const endDate = new Date(role.end_date);
-        return endDate > currentDate;
+      const endDate = new Date(role.end_date!);
+      return endDate > currentDate;
       });
       
       // Check if legislator has current terms
       const hasCurrentTerms = legislator.terms && legislator.terms.some((term: any) => {
         if (!term.end_date) return true; // No end date means current
-        const endDate = new Date(term.end_date);
-        return endDate > currentDate;
+      const endDate = new Date(term.end_date!);
+      return endDate > currentDate;
       });
       
       // Check if legislator is not marked as retired
@@ -3975,17 +3983,17 @@ export class FreeAPIsPipeline {
     }
 
     // Prefer API data for core fields, but use YAML as fallback
-    merged.name = apiData.name || yamlData.name;
-    merged.party = apiData.party || yamlData.party;
-    merged.office = apiData.office || yamlData.office;
-    merged.level = apiData.level || yamlData.level;
-    merged.state = apiData.state || yamlData.state;
-    merged.district = apiData.district || yamlData.district;
+    merged.name = apiData.name || yamlData.name || '';
+    merged.party = apiData.party || yamlData.party || '';
+    merged.office = apiData.office || yamlData.office || '';
+    merged.level = (apiData.level || yamlData.level || 'state') as 'federal' | 'state' | 'local';
+    merged.state = apiData.state || yamlData.state || '';
+    merged.district = apiData.district || yamlData.district || '';
 
     // Merge identifiers
-    merged.openstatesId = apiData.openstatesId || yamlData.openstatesId;
-    merged.bioguideId = apiData.bioguideId || yamlData.bioguideId;
-    merged.fecId = apiData.fecId || yamlData.fecId;
+    merged.openstatesId = apiData.openstatesId || yamlData.openstatesId || '';
+    merged.bioguideId = apiData.bioguideId || yamlData.bioguideId || '';
+    merged.fecId = apiData.fecId || yamlData.fecId || '';
 
     return merged;
   }

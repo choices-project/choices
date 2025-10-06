@@ -49,6 +49,7 @@ type CandidateCardProps = {
   isFollowing?: boolean;
   className?: string;
   variant?: 'default' | 'compact' | 'detailed';
+  showEngagement?: boolean;
 }
 
 export default function EnhancedCandidateCard({
@@ -61,6 +62,7 @@ export default function EnhancedCandidateCard({
   isFollowing = false,
   className = '',
   variant = 'default',
+  showEngagement: _showEngagement = true,
 }: CandidateCardProps) {
   
   // State management

@@ -113,38 +113,6 @@ export default function FeedItem({
     }
   }, []);
 
-  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
-    if (longPressTimerRef.current) {
-      clearTimeout(longPressTimerRef.current);
-      longPressTimerRef.current = null;
-    }
-
-    if (!touchStartRef.current) return;
-
-    const touch = e.changedTouches[0];
-    if (touch) {
-      const deltaX = touch.clientX - touchStartRef.current.x;
-      const deltaY = touch.clientY - touchStartRef.current.y;
-      const deltaTime = Date.now() - touchStartRef.current.time;
-
-      // Swipe detection
-      if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 50 && deltaTime < 300) {
-        if (deltaX > 0) {
-          // Swipe right - like
-          handleLike();
-        } else {
-          // Swipe left - share
-          handleShare();
-        }
-      } else if (deltaTime < 200) {
-        // Quick tap - toggle expansion
-        setIsExpanded(!isExpanded);
-      }
-    }
-
-    touchStartRef.current = null;
-  }, [isExpanded, handleLike, handleShare]);
-
   // Engagement handlers
   const handleLike = useCallback(() => {
     if (isLoading) return;
@@ -189,6 +157,38 @@ export default function FeedItem({
     onComment?.(item.id);
     setTimeout(() => setIsLoading(false), 200);
   }, [item.id, onComment, enableHaptics, isLoading]);
+
+  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+
+    if (!touchStartRef.current) return;
+
+    const touch = e.changedTouches[0];
+    if (touch) {
+      const deltaX = touch.clientX - touchStartRef.current.x;
+      const deltaY = touch.clientY - touchStartRef.current.y;
+      const deltaTime = Date.now() - touchStartRef.current.time;
+
+      // Swipe detection
+      if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 50 && deltaTime < 300) {
+        if (deltaX > 0) {
+          // Swipe right - like
+          handleLike();
+        } else {
+          // Swipe left - share
+          handleShare();
+        }
+      } else if (deltaTime < 200) {
+        // Quick tap - toggle expansion
+        setIsExpanded(!isExpanded);
+      }
+    }
+
+    touchStartRef.current = null;
+  }, [isExpanded, handleLike, handleShare]);
 
   // Format date
   const formatDate = (date: Date) => {

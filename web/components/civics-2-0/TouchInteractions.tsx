@@ -78,7 +78,7 @@ export default function TouchInteractions({
   const elementRef = useRef<HTMLDivElement>(null);
 
   // Calculate distance between two touches
-  const calculateDistance = useCallback((touch1: Touch, touch2: Touch) => {
+  const calculateDistance = useCallback((touch1: React.Touch, touch2: React.Touch) => {
     const dx = touch1.clientX - touch2.clientX;
     const dy = touch1.clientY - touch2.clientY;
     return Math.sqrt(dx * dx + dy * dy);
@@ -107,14 +107,18 @@ export default function TouchInteractions({
 
     // Check for pinch gesture (two touches)
     if (e.touches.length === 2) {
-      const distance = calculateDistance(e.touches[0], e.touches[1]);
-      setTouchState(prev => ({
-        ...prev,
-        initialDistance: distance,
-        lastDistance: distance,
-        isLongPress: false
-      }));
-      return; // Don't process single touch gestures when pinching
+      const touch1 = e.touches[0];
+      const touch2 = e.touches[1];
+      if (touch1 && touch2) {
+        const distance = calculateDistance(touch1, touch2);
+        setTouchState(prev => ({
+          ...prev,
+          initialDistance: distance,
+          lastDistance: distance,
+          isLongPress: false
+        }));
+        return; // Don't process single touch gestures when pinching
+      }
     }
 
     setTouchState(prev => ({
@@ -144,20 +148,24 @@ export default function TouchInteractions({
     
     // Handle pinch gesture
     if (e.touches.length === 2 && touchState.initialDistance !== null) {
-      const currentDistance = calculateDistance(e.touches[0], e.touches[1]);
-      const distanceChange = currentDistance - (touchState.lastDistance || touchState.initialDistance);
-      
-      setTouchState(prev => ({ ...prev, lastDistance: currentDistance }));
-      
-      // Trigger pinch callbacks based on distance change
-      if (Math.abs(distanceChange) > 10) { // Threshold for pinch detection
-        if (distanceChange > 0) {
-          onPinchOut?.();
-        } else {
-          onPinchIn?.();
+      const touch1 = e.touches[0];
+      const touch2 = e.touches[1];
+      if (touch1 && touch2) {
+        const currentDistance = calculateDistance(touch1, touch2);
+        const distanceChange = currentDistance - (touchState.lastDistance || touchState.initialDistance);
+        
+        setTouchState(prev => ({ ...prev, lastDistance: currentDistance }));
+        
+        // Trigger pinch callbacks based on distance change
+        if (Math.abs(distanceChange) > 10) { // Threshold for pinch detection
+          if (distanceChange > 0) {
+            onPinchOut?.();
+          } else {
+            onPinchIn?.();
+          }
         }
+        return;
       }
-      return;
     }
     
     // Handle single touch move
