@@ -37,7 +37,7 @@ import {
 } from '@heroicons/react/24/solid';
 
 // Import types from the pipeline
-import type { RepresentativeData, ContactInfo, SocialMediaInfo, PhotoInfo, ActivityInfo, CampaignFinanceInfo } from '@/lib/civics-2-0/free-apis-pipeline';
+import type { RepresentativeData } from '@/lib/civics-2-0/free-apis-pipeline';
 
 type CandidateCardProps = {
   representative: RepresentativeData;

@@ -21,7 +21,6 @@ import {
 } from '@heroicons/react/24/outline';
 import EnhancedSocialFeed from '@/components/civics-2-0/EnhancedSocialFeed';
 import FeedItem from '@/components/civics-2-0/FeedItem';
-import InfiniteScroll from '@/components/civics-2-0/InfiniteScroll';
 import EngagementMetrics from '@/components/civics-2-0/EngagementMetrics';
 
 type TestResult = {
@@ -265,7 +264,7 @@ export default function TestEnhancedFeedPage() {
   };
 
   const passedTests = testResults.filter(r => r.status === 'passed').length;
-  const failedTests = testResults.filter(r => r.status === 'failed').length;
+  const _failedTests = testResults.filter(r => r.status === 'failed').length;
   const totalTests = testResults.length;
 
   return (

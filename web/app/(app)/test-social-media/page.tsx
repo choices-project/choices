@@ -8,18 +8,18 @@
 
 import { useState, useEffect } from 'react';
 import { 
-  ChartBarIcon, 
-  UserGroupIcon, 
-  HeartIcon,
-  ShareIcon,
-  ChatBubbleLeftIcon,
-  EyeIcon,
-  ArrowTrendingUpIcon,
+  // ChartBarIcon, 
+  // UserGroupIcon, 
+  // HeartIcon,
+  // ShareIcon,
+  // ChatBubbleLeftIcon,
+  // EyeIcon,
+  // ArrowTrendingUpIcon,
   CheckBadgeIcon,
   ExclamationTriangleIcon
 } from '@heroicons/react/24/outline';
 
-interface SocialMediaMetrics {
+type SocialMediaMetrics = {
   platform: string;
   followersCount: number;
   engagementRate: number;
@@ -30,7 +30,7 @@ interface SocialMediaMetrics {
   dataSource: string;
 }
 
-interface SocialMediaHandle {
+type SocialMediaHandle = {
   platform: string;
   handle: string;
   url: string;
@@ -39,7 +39,7 @@ interface SocialMediaHandle {
   lastUpdated: string;
 }
 
-interface SocialMediaSummary {
+type SocialMediaSummary = {
   totalFollowers: number;
   averageEngagement: number;
   averageSentiment: number;
@@ -134,7 +134,7 @@ export default function TestSocialMediaPage() {
   // Load initial data
   useEffect(() => {
     testDataIngestion();
-  }, [representativeId]);
+  }, [representativeId, testDataIngestion]);
 
   const formatNumber = (num: number) => {
     if (num >= 1000000) {

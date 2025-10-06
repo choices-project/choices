@@ -135,7 +135,7 @@ export default function EnhancedSocialFeed({
         ...(enablePersonalization && { personalization: 'true' })
       });
 
-      const response = await fetch(`/api/v1/civics/feed?${params}`, {
+      const response = await fetch(`/api/civics/by-state?${params}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',

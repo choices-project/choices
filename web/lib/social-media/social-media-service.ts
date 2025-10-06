@@ -7,7 +7,7 @@
 import { createClient } from '@supabase/supabase-js';
 
 // Types for social media data
-export interface SocialMediaMetrics {
+export type SocialMediaMetrics = {
   platform: 'twitter' | 'facebook' | 'instagram' | 'linkedin' | 'youtube';
   followersCount: number;
   engagementRate: number;
@@ -18,7 +18,7 @@ export interface SocialMediaMetrics {
   dataSource: string;
 }
 
-export interface SocialMediaPost {
+export type SocialMediaPost = {
   id: string;
   representativeId: string;
   platform: string;
@@ -38,7 +38,7 @@ export interface SocialMediaPost {
   createdAt: Date;
 }
 
-export interface SocialMediaHandle {
+export type SocialMediaHandle = {
   id: string;
   representativeId: string;
   platform: string;

@@ -57,7 +57,8 @@ export async function POST(request: NextRequest) {
         campaignFinance: 0
       },
       errors: [] as string[],
-      startTime: new Date().toISOString()
+      startTime: new Date().toISOString(),
+      debugInfo: [] as any[]
     };
     
     console.log('🚀 Starting MAXIMIZED API ingestion...');
@@ -176,7 +177,7 @@ export async function POST(request: NextRequest) {
           };
 
           // Try to insert first, if it fails due to duplicate, then update
-          let { data: insertData, error: insertError } = await supabase
+          const { data: insertData, error: insertError } = await supabase
             .from('representatives_core')
             .insert(coreData)
             .select('id')

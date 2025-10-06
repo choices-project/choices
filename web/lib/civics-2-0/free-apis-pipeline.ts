@@ -1065,7 +1065,7 @@ export class FreeAPIsPipeline {
       // Find matching representative
       const members = memberData.members || [];
       console.log(`🔍 Looking for match in ${members.length} members for ${rep.name}`);
-      console.log('🔍 Available members:', members.map(m => m.name).slice(0, 5));
+      console.log('🔍 Available members:', members.map((m: any) => m.name).slice(0, 5));
       
       const matchingRep = members.find((member: any) => 
         this.isMatchingRepresentative(member, rep)
@@ -2913,7 +2913,7 @@ export class FreeAPIsPipeline {
     for (const pattern of handlePatterns) {
       const match = value.match(pattern);
       if (match) {
-        return match[1];
+        return match[1] || null;
       }
     }
 
