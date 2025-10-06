@@ -1,0 +1,101 @@
+table_name,column_name,data_type,is_nullable,column_default
+analytics_contributions,id,uuid,NO,gen_random_uuid()
+analytics_contributions,poll_id,uuid,YES,null
+analytics_contributions,user_id,uuid,YES,null
+analytics_contributions,age_bucket,text,YES,null
+analytics_contributions,region_bucket,text,YES,null
+analytics_contributions,education_bucket,text,YES,null
+analytics_contributions,vote_choice,integer,YES,null
+analytics_contributions,participation_time,interval,YES,null
+analytics_contributions,consent_granted,boolean,YES,false
+analytics_contributions,created_at,timestamp with time zone,YES,now()
+analytics_demographics,id,uuid,NO,uuid_generate_v4()
+analytics_demographics,poll_id,text,NO,null
+analytics_demographics,demographic_key,USER-DEFINED,NO,null
+analytics_demographics,demographic_value,text,NO,null
+analytics_demographics,vote_count,integer,YES,0
+analytics_demographics,created_at,timestamp with time zone,YES,CURRENT_TIMESTAMP
+analytics_events,id,uuid,NO,uuid_generate_v4()
+analytics_events,event_type,USER-DEFINED,NO,null
+analytics_events,poll_id,text,YES,null
+analytics_events,user_id,uuid,YES,null
+analytics_events,metadata,jsonb,YES,null
+analytics_events,created_at,timestamp with time zone,YES,CURRENT_TIMESTAMP
+audit_logs,id,uuid,NO,gen_random_uuid()
+audit_logs,user_id,uuid,YES,null
+audit_logs,action,text,NO,null
+audit_logs,table_name,text,YES,null
+audit_logs,record_id,uuid,YES,null
+audit_logs,old_values,jsonb,YES,null
+audit_logs,new_values,jsonb,YES,null
+audit_logs,ip_address,inet,YES,null
+audit_logs,user_agent,text,YES,null
+audit_logs,created_at,timestamp with time zone,YES,now()
+bias_detection_logs,id,uuid,NO,gen_random_uuid()
+bias_detection_logs,media_poll_id,uuid,YES,null
+bias_detection_logs,detection_type,text,NO,null
+bias_detection_logs,severity,text,YES,'low'::text
+bias_detection_logs,description,text,NO,null
+bias_detection_logs,evidence,jsonb,YES,'[]'::jsonb
+bias_detection_logs,impact_score,numeric,YES,0
+bias_detection_logs,recommendations,jsonb,YES,'[]'::jsonb
+bias_detection_logs,metadata,jsonb,YES,'{}'::jsonb
+bias_detection_logs,created_at,timestamp with time zone,YES,now()
+biometric_auth_logs,id,uuid,NO,gen_random_uuid()
+biometric_auth_logs,user_id,uuid,YES,null
+biometric_auth_logs,credential_id,text,YES,null
+biometric_auth_logs,authentication_result,boolean,NO,null
+biometric_auth_logs,failure_reason,text,YES,null
+biometric_auth_logs,ip_address,inet,YES,null
+biometric_auth_logs,user_agent,text,YES,null
+biometric_auth_logs,device_info,jsonb,YES,null
+biometric_auth_logs,location_info,jsonb,YES,null
+biometric_auth_logs,risk_score,numeric,YES,0.0
+biometric_auth_logs,created_at,timestamp with time zone,YES,now()
+biometric_trust_scores,id,uuid,NO,gen_random_uuid()
+biometric_trust_scores,user_id,uuid,YES,null
+biometric_trust_scores,base_score,numeric,YES,0.0
+biometric_trust_scores,device_consistency_score,numeric,YES,0.0
+biometric_trust_scores,behavior_score,numeric,YES,0.0
+biometric_trust_scores,location_score,numeric,YES,0.0
+biometric_trust_scores,overall_score,numeric,YES,0.0
+biometric_trust_scores,last_calculated_at,timestamp with time zone,YES,now()
+biometric_trust_scores,created_at,timestamp with time zone,YES,now()
+biometric_trust_scores,updated_at,timestamp with time zone,YES,now()
+breaking_news,id,uuid,NO,gen_random_uuid()
+breaking_news,headline,text,NO,null
+breaking_news,summary,text,NO,null
+breaking_news,full_story,text,YES,null
+breaking_news,source_url,text,YES,null
+breaking_news,source_name,text,NO,null
+breaking_news,source_reliability,numeric,YES,0.9
+breaking_news,category,ARRAY,YES,'{}'::text[]
+breaking_news,urgency,text,YES,'medium'::text
+breaking_news,sentiment,text,YES,'neutral'::text
+breaking_news,entities,jsonb,YES,'{}'::jsonb
+breaking_news,metadata,jsonb,YES,'{}'::jsonb
+breaking_news,created_at,timestamp with time zone,YES,now()
+breaking_news,updated_at,timestamp with time zone,YES,now()
+campaign_finance,id,uuid,NO,gen_random_uuid()
+campaign_finance,candidate_id,uuid,YES,null
+campaign_finance,committee_id,text,YES,null
+campaign_finance,committee_name,text,YES,null
+campaign_finance,cycle,integer,NO,null
+campaign_finance,total_receipts,numeric,YES,0.0
+campaign_finance,total_disbursements,numeric,YES,0.0
+campaign_finance,cash_on_hand,numeric,YES,0.0
+campaign_finance,debt,numeric,YES,0.0
+campaign_finance,individual_contributions,numeric,YES,0.0
+campaign_finance,pac_contributions,numeric,YES,0.0
+campaign_finance,party_contributions,numeric,YES,0.0
+campaign_finance,self_financing,numeric,YES,0.0
+campaign_finance,independence_score,numeric,YES,0.0
+campaign_finance,top_donor_percentage,numeric,YES,0.0
+campaign_finance,corporate_donor_percentage,numeric,YES,0.0
+campaign_finance,data_sources,ARRAY,NO,null
+campaign_finance,quality_score,numeric,YES,0.0
+campaign_finance,last_updated,timestamp with time zone,YES,now()
+campaign_finance,created_at,timestamp with time zone,YES,now()
+campaign_finance,provenance,jsonb,YES,'{}'::jsonb
+campaign_finance,license_key,text,YES,null
+candidate_jurisdictions,id,uuid,NO,gen_random_uuid()

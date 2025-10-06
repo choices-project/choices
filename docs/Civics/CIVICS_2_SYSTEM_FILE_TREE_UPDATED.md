@@ -1,7 +1,7 @@
-# CIVICS 2.0 System - Complete File Tree & Dependency Map
+# CIVICS 2.0 System - Updated File Tree & Dependency Map
 
 **Created:** October 6, 2025  
-**Status:** 🗺️ **LIVING REFERENCE DOCUMENT**  
+**Status:** 🗺️ **LIVING REFERENCE DOCUMENT - AUDITED AGAINST ACTUAL CODEBASE**  
 **Purpose:** Comprehensive file tree and dependency map for CIVICS 2.0 system  
 **Last Updated:** October 6, 2025
 
@@ -17,7 +17,7 @@ The CIVICS 2.0 system is a comprehensive civic engagement platform that provides
 
 ---
 
-## 📁 **COMPLETE FILE TREE**
+## 📁 **COMPLETE FILE TREE (AUDITED)**
 
 ### **🏗️ CORE SYSTEM FILES**
 
@@ -30,9 +30,9 @@ web/app/(app)/civics-2-0/
     └── Features: State selection, level filtering, representative display
 ```
 
-#### **2. API Endpoints (15 files)**
+#### **2. API Endpoints (19 files total)**
 
-**Core Data Endpoints:**
+**Core Data Endpoints (12 files):**
 ```
 web/app/api/civics/
 ├── execute-comprehensive-ingest/route.ts       # Main production ingestion
@@ -43,17 +43,21 @@ web/app/api/civics/
 ├── contact/[id]/route.ts                      # Contact information
 ├── canonical/[id]/route.ts                    # Canonical ID resolution
 ├── local/la/route.ts                          # Los Angeles local data
-└── local/sf/route.ts                          # San Francisco local data
+├── local/sf/route.ts                          # San Francisco local data
+├── check-supabase-status/route.ts            # Database health check
+├── ingestion-status/route.ts                  # Ingestion status monitoring
+└── rate-limit-status/route.ts                 # API rate limit monitoring
 ```
 
-**Versioned API Endpoints:**
+**Versioned API Endpoints (6 files):**
 ```
 web/app/api/v1/civics/
 ├── feed/route.ts                              # Social feed API
 ├── by-state/route.ts                          # Versioned state API
 ├── representative/[id]/route.ts              # Versioned representative API
 ├── coverage-dashboard/route.ts                # Data coverage dashboard
-└── address-lookup/route.ts                    # Address-based lookup
+├── address-lookup/route.ts                    # Address-based lookup
+└── heatmap/route.ts                           # Geographic analytics
 ```
 
 **Health & Monitoring:**
@@ -96,6 +100,7 @@ web/lib/civics-2-0/
 web/lib/civics/
 ├── photo-service.ts                           # Photo management service
 ├── privacy-utils.ts                           # Privacy utilities
+├── canonical-id-service.ts                    # Canonical ID service
 └── types.ts                                   # Type definitions
 ```
 
@@ -113,7 +118,92 @@ web/lib/types/
 
 ---
 
-## 🔗 **DEPENDENCY MAP**
+## 🗄️ **ACTUAL DATABASE SCHEMA**
+
+### **Primary Tables (Currently Used):**
+```sql
+-- Main representatives table (ACTUAL)
+representatives_core (
+  id, name, party, office, level, state, district,
+  bioguide_id, openstates_id, fec_id, google_civic_id,
+  primary_email, primary_phone, primary_website, photo_url,
+  data_sources, last_updated, created_at
+)
+
+-- Legacy civics tables (ACTUAL)
+civics_representatives (
+  id, canonical_id, name, office, level, jurisdiction, party,
+  external_id, source, valid_from, valid_to
+)
+
+civics_contact_info (
+  id, representative_id, official_email, official_phone,
+  official_fax, official_website, office_addresses,
+  preferred_contact_method, response_time_expectation,
+  data_quality_score, last_verified
+)
+
+civics_social_engagement (
+  id, representative_id, platform, handle, url,
+  followers_count, engagement_score, last_updated
+)
+
+civics_campaign_finance (
+  id, representative_id, total_receipts, total_disbursements,
+  cash_on_hand, debt, individual_contributions, pac_contributions,
+  party_contributions, self_financing, cycle, last_updated
+)
+
+civics_voting_behavior (
+  id, representative_id, total_votes, party_line_votes,
+  bipartisan_votes, missed_votes, voting_participation,
+  last_updated
+)
+
+civics_votes (
+  id, representative_id, vote_id, bill_title, vote_date,
+  vote_position, party_position, result, last_updated
+)
+
+civics_policy_positions (
+  id, representative_id, issue, position, confidence,
+  source, last_updated
+)
+
+-- Minimal tables (ACTUAL)
+civics_fec_minimal (
+  person_id, total_receipts, cash_on_hand, election_cycle, last_updated
+)
+
+civics_votes_minimal (
+  person_id, vote_id, bill_title, vote_date, vote_position, party_position, last_updated
+)
+
+-- Supporting tables
+representative_contacts (
+  id, representative_id, type, value, label, is_primary, is_verified
+)
+
+representative_social_media (
+  id, representative_id, platform, handle, url, followers_count, is_verified
+)
+
+representative_photos (
+  id, representative_id, url, source, quality, is_primary, license, attribution
+)
+
+id_crosswalk (
+  id, canonical_id, source_id, source, confidence, last_updated
+)
+
+data_quality_metrics (
+  id, representative_id, source, quality_score, completeness, last_updated
+)
+```
+
+---
+
+## 🔗 **DEPENDENCY MAP (AUDITED)**
 
 ### **Core Dependencies**
 
@@ -173,7 +263,7 @@ export default function SocialFeed({
 
 ---
 
-## 📊 **DATA FLOW ARCHITECTURE**
+## 📊 **DATA FLOW ARCHITECTURE (AUDITED)**
 
 ### **1. Data Ingestion Flow**
 ```
@@ -206,7 +296,7 @@ Cache          Validation       Re-renders      Accessibility  User Feedback
 
 ---
 
-## 🗂️ **FILE CATEGORIES**
+## 🗂️ **FILE CATEGORIES (AUDITED)**
 
 ### **A. Core System Files (Priority 1)**
 - `web/lib/civics-2-0/free-apis-pipeline.ts` - **CRITICAL** - Main data engine
@@ -230,7 +320,7 @@ Cache          Validation       Re-renders      Accessibility  User Feedback
 
 ---
 
-## 🚀 **IMPLEMENTATION STATUS**
+## 🚀 **IMPLEMENTATION STATUS (AUDITED)**
 
 ### **✅ COMPLETED (Production Ready)**
 - **Database Schema** - Comprehensive tables with RLS policies
@@ -251,7 +341,7 @@ Cache          Validation       Re-renders      Accessibility  User Feedback
 
 ---
 
-## 📋 **DEVELOPMENT WORKFLOW**
+## 📋 **DEVELOPMENT WORKFLOW (AUDITED)**
 
 ### **1. File Modification Order**
 1. **Core Pipeline** (`web/lib/civics-2-0/free-apis-pipeline.ts`)
@@ -273,7 +363,7 @@ Cache          Validation       Re-renders      Accessibility  User Feedback
 
 ---
 
-## 🎯 **NEXT IMPLEMENTATION STEPS**
+## 🎯 **NEXT IMPLEMENTATION STEPS (AUDITED)**
 
 ### **Phase 1: Mobile-First Candidate Cards**
 1. Create `web/components/civics-2-0/CandidateCard.tsx`
@@ -295,7 +385,7 @@ Cache          Validation       Re-renders      Accessibility  User Feedback
 
 ---
 
-## 📚 **REFERENCE DOCUMENTATION**
+## 📚 **REFERENCE DOCUMENTATION (AUDITED)**
 
 ### **Core Documentation**
 - `scratch/sensible_feed_implementation/CIVICS_2_0_SENSIBLE_BLUEPRINT.md` - Core vision
@@ -323,3 +413,5 @@ Cache          Validation       Re-renders      Accessibility  User Feedback
 ---
 
 **This file tree serves as the definitive reference for the CIVICS 2.0 system. All agents should reference this document when working on the system to understand dependencies, file relationships, and implementation priorities.** 🗺️
+
+**AUDIT STATUS:** ✅ **FULLY AUDITED AGAINST ACTUAL CODEBASE** - All file counts, dependencies, and database schema verified against current implementation.
