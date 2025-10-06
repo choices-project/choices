@@ -306,12 +306,15 @@ export class FreeAPIsPipeline {
    * Only processes CURRENT representatives to avoid historical data
    */
   async processRepresentative(rep: RepresentativeData): Promise<RepresentativeData> {
-    console.log('🔄 Starting to process CURRENT representative:', rep.name);
-    devLog('Processing CURRENT representative with FREE APIs', { name: rep.name });
+    console.log('🔄 Starting to process representative:', rep.name);
+    console.log('🔍 FILTERING CHECK - About to check if current...');
     
     // Validate that we're only processing current representatives
-    if (!this.isCurrentRepresentative(rep)) {
-      console.log('⚠️ Skipping non-current representative:', rep.name);
+    const isCurrent = this.isCurrentRepresentative(rep);
+    console.log(`🔍 FILTERING RESULT: ${rep.name} is ${isCurrent ? 'CURRENT' : 'NOT CURRENT'}`);
+    
+    if (!isCurrent) {
+      console.log('⚠️ SKIPPING non-current representative:', rep.name);
       devLog('Skipping non-current representative', { 
         name: rep.name, 
         level: rep.level,
@@ -319,6 +322,9 @@ export class FreeAPIsPipeline {
       });
       return rep; // Return unchanged if not current
     }
+    
+    console.log('✅ PROCEEDING with current representative:', rep.name);
+    devLog('Processing CURRENT representative with FREE APIs', { name: rep.name });
 
     try {
       // 1. Get election data from Google Civic (FREE) - ELECTION DATA STILL ACTIVE
