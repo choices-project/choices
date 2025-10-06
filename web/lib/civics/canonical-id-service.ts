@@ -166,7 +166,7 @@ export class CanonicalIdService {
       throw new Error(`Failed to find canonical ID: ${error.message}`);
     }
 
-    return data.canonical_id;
+    return data?.canonical_id ?? null;
   }
 
   /**

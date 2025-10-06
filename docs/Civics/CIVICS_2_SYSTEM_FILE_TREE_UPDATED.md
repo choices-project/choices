@@ -366,7 +366,7 @@ Cache          Validation       Re-renders      Accessibility  User Feedback
 ## 🎯 **NEXT IMPLEMENTATION STEPS (AUDITED)**
 
 ### **Phase 1: Mobile-First Candidate Cards**
-1. Create `web/components/civics-2-0/CandidateCard.tsx`
+1. Create `web/components/civics-2-0/EnhancedCandidateCard.tsx`
 2. Create `web/components/civics-2-0/MobileCandidateCard.tsx`
 3. Create `web/components/civics-2-0/ProgressiveDisclosure.tsx`
 4. Create `web/components/civics-2-0/TouchInteractions.tsx`
@@ -404,7 +404,7 @@ Cache          Validation       Re-renders      Accessibility  User Feedback
 
 **Current Status:** ✅ **CLEAN FOUNDATION** - All inferior implementations archived, no broken dependencies
 
-**Next Action:** Start with creating the mobile-first `CandidateCard.tsx` component
+**Next Action:** Start with creating the mobile-first `EnhancedCandidateCard.tsx` component
 
 **Foundation:** ✅ **EXCELLENT** - Rich data pipeline, comprehensive database schema, working API endpoints
 

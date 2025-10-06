@@ -18,8 +18,9 @@ import {
   ChartBarIcon,
   HeartIcon
 } from '@heroicons/react/24/outline';
-import CandidateCard from '@/components/civics-2-0/CandidateCard';
-import SocialFeed from '@/components/civics-2-0/SocialFeed';
+import EnhancedCandidateCard from '@/components/civics-2-0/EnhancedCandidateCard';
+import MobileCandidateCard from '@/components/civics-2-0/MobileCandidateCard';
+import EnhancedSocialFeed from '@/components/civics-2-0/EnhancedSocialFeed';
 
 type RepresentativeData = {
   id: string;
@@ -34,6 +35,7 @@ type RepresentativeData = {
   photos: PhotoInfo[];
   activity: ActivityInfo[];
   campaignFinance?: CampaignFinanceInfo;
+  dataSources: string[];
   qualityScore: number;
   lastUpdated: Date;
 };
@@ -98,6 +100,8 @@ export default function Civics2Page() {
   const [selectedLevel, setSelectedLevel] = useState<'all' | 'federal' | 'state' | 'local'>('all');
   const [likedRepresentatives, setLikedRepresentatives] = useState<Set<string>>(new Set());
   const [followedRepresentatives, setFollowedRepresentatives] = useState<Set<string>>(new Set());
+  const [isMobile, setIsMobile] = useState(false);
+  const [cardVariant, setCardVariant] = useState<'default' | 'compact' | 'detailed'>('default');
 
   const loadRepresentatives = useCallback(async () => {
     setIsLoading(true);
@@ -122,6 +126,18 @@ export default function Civics2Page() {
   useEffect(() => {
     loadRepresentatives();
   }, [loadRepresentatives]);
+
+  // Mobile detection
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   const handleLike = (id: string) => {
     setLikedRepresentatives(prev => {
@@ -290,6 +306,21 @@ export default function Civics2Page() {
                     <option value="local">Local</option>
                   </select>
                 </div>
+                
+                {/* Card Variant Filter (Desktop only) */}
+                {!isMobile && (
+                  <div className="sm:w-32">
+                    <select
+                      value={cardVariant}
+                      onChange={(e) => setCardVariant(e.target.value as any)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                      <option value="default">Default</option>
+                      <option value="compact">Compact</option>
+                      <option value="detailed">Detailed</option>
+                    </select>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -300,18 +331,39 @@ export default function Civics2Page() {
                 <span className="ml-3 text-gray-500">Loading representatives...</span>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className={`grid gap-6 ${
+                isMobile 
+                  ? 'grid-cols-1 max-w-sm mx-auto' 
+                  : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'
+              }`}>
                 {filteredRepresentatives.map((representative) => (
-                  <CandidateCard
-                    key={representative.id}
-                    representative={representative}
-                    onLike={handleLike}
-                    onShare={handleShare}
-                    onFollow={handleFollow}
-                    onContact={handleContact}
-                    isLiked={likedRepresentatives.has(representative.id)}
-                    isFollowing={followedRepresentatives.has(representative.id)}
-                  />
+                  isMobile ? (
+                    <MobileCandidateCard
+                      key={representative.id}
+                      representative={representative}
+                      onLike={handleLike}
+                      onShare={handleShare}
+                      onFollow={handleFollow}
+                      onContact={handleContact}
+                      isLiked={likedRepresentatives.has(representative.id)}
+                      isFollowing={followedRepresentatives.has(representative.id)}
+                      showEngagement={true}
+                      enableHaptics={true}
+                    />
+                  ) : (
+                    <EnhancedCandidateCard
+                      key={representative.id}
+                      representative={representative}
+                      onLike={handleLike}
+                      onShare={handleShare}
+                      onFollow={handleFollow}
+                      onContact={handleContact}
+                      isLiked={likedRepresentatives.has(representative.id)}
+                      isFollowing={followedRepresentatives.has(representative.id)}
+                      variant={cardVariant}
+                      showEngagement={true}
+                    />
+                  )
                 ))}
               </div>
             )}
@@ -347,19 +399,32 @@ export default function Civics2Page() {
               </div>
             </div>
 
-            {/* Social Feed */}
+            {/* Enhanced Social Feed */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-              <SocialFeed
+              <EnhancedSocialFeed
                 userId="current-user" // This would come from auth
                 preferences={{
                   state: selectedState,
                   interests: ['civics', 'politics', 'democracy'],
-                  followedRepresentatives: Array.from(followedRepresentatives)
+                  followedRepresentatives: Array.from(followedRepresentatives),
+                  feedPreferences: {
+                    showVotes: true,
+                    showBills: true,
+                    showStatements: true,
+                    showSocialMedia: true,
+                    showPhotos: true
+                  }
                 }}
                 onLike={(itemId) => console.log('Like:', itemId)}
                 onShare={(itemId) => console.log('Share:', itemId)}
                 onBookmark={(itemId) => console.log('Bookmark:', itemId)}
                 onComment={(itemId) => console.log('Comment:', itemId)}
+                onViewDetails={(itemId) => console.log('View Details:', itemId)}
+                enablePersonalization={true}
+                enableRealTimeUpdates={true}
+                enableAnalytics={false}
+                enableHaptics={true}
+                showTrending={true}
                 className="h-96"
               />
             </div>

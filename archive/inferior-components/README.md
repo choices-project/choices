@@ -17,7 +17,7 @@
   - Limited visual hierarchy
   - No photo management
   - No social media integration
-- **Replaced By:** Mobile-first `CandidateCard.tsx` (Sensible Blueprint)
+- **Replaced By:** Mobile-first `EnhancedCandidateCard.tsx` and `MobileCandidateCard.tsx` (Sensible Blueprint)
 
 ### **Basic Civics Page**
 - **File:** `page.tsx` (from `/app/(app)/civics/`)
@@ -56,7 +56,7 @@
 4. **Replaced by Sensible Blueprint** - Superior mobile-first implementations
 
 ### **SENSIBLE BLUEPRINT REPLACEMENTS:**
-- **Basic RepresentativeCard** → **Mobile-first CandidateCard**
+- **Basic RepresentativeCard** → **Mobile-first EnhancedCandidateCard & MobileCandidateCard**
 - **Basic Civics Page** → **Enhanced mobile-first civics page**
 - **Limited Feed** → **Instagram-like social feed**
 - **Basic API** → **Enhanced feed API with personalization**
@@ -68,7 +68,8 @@
 ### **SENSIBLE BLUEPRINT COMPONENTS:**
 ```
 web/components/civics-2-0/
-├── CandidateCard.tsx                    # Mobile-first candidate cards
+├── EnhancedCandidateCard.tsx           # Enhanced mobile-first candidate cards
+├── MobileCandidateCard.tsx             # Mobile-optimized candidate cards
 ├── SocialFeed.tsx                       # Instagram-like social feed
 ├── ProgressiveDisclosure.tsx            # Progressive disclosure system
 ├── TouchInteractions.tsx               # Touch gesture handling

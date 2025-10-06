@@ -97,6 +97,10 @@ export type RepresentativeData = {
   // Campaign finance
   campaignFinance?: CampaignFinanceInfo;
   
+  // Legislative data (from LegiScan)
+  sessionInfo?: SessionInfo;
+  legislativeStats?: LegislativeStats;
+  
   // Metadata
   dataSources: string[];
   qualityScore: number;
@@ -113,7 +117,7 @@ export type ContactInfo = {
 }
 
 export type SocialMediaInfo = {
-  platform: 'twitter' | 'facebook' | 'instagram' | 'youtube' | 'linkedin';
+  platform: 'twitter' | 'facebook' | 'instagram' | 'youtube' | 'linkedin' | 'tiktok' | 'snapchat' | 'telegram' | 'mastodon' | 'threads';
   handle: string;
   url: string;
   followersCount: number;
@@ -123,17 +127,21 @@ export type SocialMediaInfo = {
 
 export type PhotoInfo = {
   url: string;
-  source: 'congress-gov' | 'wikipedia' | 'google-civic' | 'openstates';
+  source: 'congress-gov' | 'wikipedia' | 'google-civic' | 'openstates' | 'congress-gov-alternative' | 'wikipedia-high-res';
   quality: 'high' | 'medium' | 'low';
   isPrimary: boolean;
   license?: string;
   attribution?: string;
   width?: number;
   height?: number;
+  altText?: string;
+  caption?: string;
+  photographer?: string;
+  usageRights?: string;
 }
 
 export type ActivityInfo = {
-  type: 'vote' | 'bill' | 'statement' | 'social_media' | 'photo_update';
+  type: 'vote' | 'bill' | 'bill_sponsored' | 'bill_cosponsored' | 'statement' | 'social_media' | 'photo_update' | 'committee_meeting' | 'public_statement' | 'social_media_post';
   title: string;
   description?: string;
   url?: string;
@@ -141,6 +149,20 @@ export type ActivityInfo = {
   metadata: Record<string, any>;
   source: string;
 }
+
+export type SessionInfo = {
+  currentSession: any;
+  allSessions: any[];
+  source: string;
+};
+
+export type LegislativeStats = {
+  billsSponsored: number;
+  billsCoSponsored: number;
+  votesCast: number;
+  attendanceRate: number;
+  source: string;
+};
 
 export type CampaignFinanceInfo = {
   electionCycle: string;
@@ -206,6 +228,15 @@ export class FreeAPIsPipeline {
       currentUsage: 0,
       lastReset: Date.now()
     });
+
+    // LegiScan API: 1,000 requests/day
+    this.rateLimiters.set('legiscan', {
+      requestsPerDay: 1000,
+      requestsPerHour: 40,
+      requestsPerMinute: 2,
+      currentUsage: 0,
+      lastReset: Date.now()
+    });
   }
 
   /**
@@ -230,7 +261,7 @@ export class FreeAPIsPipeline {
       // 3. Get federal data from Congress.gov (FREE) - RE-ENABLED
       console.log('📊 Getting Congress.gov data...');
       const congressGovData = await this.getCongressGovData(rep);
-      console.log('✅ Congress.gov data retrieved');
+      console.log('✅ Congress.gov data retrieved:', congressGovData);
       
       // 3b. Get additional legislative data from LegiScan (FREE) - 30,000 monthly queries
       console.log('📊 Getting LegiScan data...');
@@ -249,13 +280,41 @@ export class FreeAPIsPipeline {
       
       // 6. Get campaign finance (FREE) - RE-ENABLED
       console.log('📊 Getting FEC data...');
-      const campaignFinance = await this.getFECData(rep);
-      console.log('✅ FEC data retrieved');
+      devLog('📊 Getting FEC data for', rep.name, rep.level);
+      console.log('🔍 FEC: About to call getFECData method');
+      let campaignFinance;
+      try {
+        console.log('🔍 FEC: Calling getFECData method now');
+        campaignFinance = await this.getFECData(rep);
+        console.log('✅ FEC data retrieved:', campaignFinance);
+        devLog('✅ FEC data retrieved:', campaignFinance);
+      } catch (error) {
+        console.log('❌ FEC data failed:', error);
+        devLog('❌ FEC data failed:', error);
+        campaignFinance = undefined;
+      }
       
-      // 7. Get recent activity (FREE) - RE-ENABLED
+      // 7. Get Wikipedia data (FREE) - NEW
+      console.log('📊 Getting Wikipedia data...');
+      const wikipediaData = await this.getWikipediaData(rep);
+      console.log('✅ Wikipedia data retrieved');
+      
+      // 8. Get recent activity (FREE) - RE-ENABLED
       console.log('📊 Getting recent activity...');
       const activity = await this.getRecentActivity(rep);
       console.log('✅ Recent activity retrieved');
+
+      // Debug: Log what each API returned
+      console.log('🔍 API Data Debug:');
+      console.log('  Google Civic:', googleCivicData);
+      console.log('  OpenStates:', openStatesData);
+      console.log('  Congress.gov:', congressGovData);
+      console.log('  LegiScan:', legiScanData);
+      console.log('  Wikipedia:', wikipediaData);
+      console.log('  Photos:', photos?.length || 0);
+      console.log('  Social Media:', socialMedia?.length || 0);
+      console.log('  Campaign Finance:', campaignFinance);
+      console.log('  Activity:', activity?.length || 0);
 
       // Merge and validate all data
       console.log('🔄 Merging and validating data...');
@@ -268,9 +327,17 @@ export class FreeAPIsPipeline {
         photos,
         socialMedia,
         campaignFinance,
-        activity
+        activity,
+        wikipediaData
       );
       console.log('✅ Data merged and validated');
+      console.log('🔍 Final enriched data:', {
+        contacts: enrichedRep.contacts?.length || 0,
+        socialMedia: enrichedRep.socialMedia?.length || 0,
+        photos: enrichedRep.photos?.length || 0,
+        activity: enrichedRep.activity?.length || 0,
+        dataSources: enrichedRep.dataSources
+      });
 
       // Calculate quality score
       enrichedRep.qualityScore = this.calculateQualityScore(enrichedRep);
@@ -557,38 +624,35 @@ export class FreeAPIsPipeline {
    * Now using proper API key authentication
    */
   private async getOpenStatesData(rep: RepresentativeData): Promise<Partial<RepresentativeData>> {
+    console.log('🔍 OpenStates: Starting data collection for', rep.name);
+    
     const rateLimiter = this.rateLimiters.get('openstates');
+    console.log('🔍 OpenStates: Rate limiter status', { 
+      currentUsage: rateLimiter.currentUsage, 
+      limit: rateLimiter.requestsPerDay 
+    });
     
     if (rateLimiter.currentUsage >= rateLimiter.requestsPerDay) {
-      devLog('OpenStates API rate limit reached');
+      console.log('❌ OpenStates: Rate limit reached');
       return {};
     }
 
     try {
       const apiKey = process.env.OPEN_STATES_API_KEY;
-      devLog('OpenStates API key check', { 
+      console.log('🔍 OpenStates: API key check', { 
         hasKey: !!apiKey, 
-        keyLength: apiKey?.length,
-        keyStart: apiKey?.substring(0, 8) + '...'
+        keyLength: apiKey?.length 
       });
+      
       if (!apiKey) {
-        devLog('OpenStates API key not configured');
+        console.log('❌ OpenStates: API key not configured');
         return {};
       }
 
-      devLog('Making OpenStates API request', { 
-        state: rep.state,
-        url: `https://v3.openstates.org/people?jurisdiction=${rep.state}`,
-        fullRep: rep,
-        environment: {
-          NODE_ENV: process.env.NODE_ENV,
-          hasApiKey: !!process.env.OPEN_STATES_API_KEY,
-          apiKeyLength: process.env.OPEN_STATES_API_KEY?.length
-        }
-      });
-
+      console.log('🔍 OpenStates: Making API request to', `https://v3.openstates.org/people?jurisdiction=${rep.state}`);
+      
       // Add delay before API call to respect rate limits
-      await new Promise(resolve => setTimeout(resolve, 3000)); // 3 second delay
+      await new Promise(resolve => setTimeout(resolve, 1000)); // 1 second delay
 
       // Search for legislators by state using OpenStates API v3
       const response = await fetch(
@@ -603,6 +667,8 @@ export class FreeAPIsPipeline {
           }
         }
       );
+      
+      console.log('🔍 OpenStates: API response status', response.status);
 
       devLog('OpenStates API response received', { 
         status: response.status,
@@ -676,13 +742,14 @@ export class FreeAPIsPipeline {
       return enrichedData;
 
     } catch (error) {
+      console.log('❌ OpenStates API error:', error);
       devLog('OpenStates API error', { error });
       return {};
     }
   }
 
   /**
-   * Congress.gov API (FREE - 5,000 requests/day)
+   * LegiScan API (FREE - 1,000 requests/day) - Enhanced Legislative Data
    */
   private async getLegiScanData(rep: RepresentativeData): Promise<Partial<RepresentativeData>> {
     try {
@@ -694,10 +761,10 @@ export class FreeAPIsPipeline {
       
       // Check rate limits - be very conservative with their free API
       const rateLimiter = this.rateLimiters.get('legiscan');
-    if (rateLimiter.currentUsage >= rateLimiter.requestsPerDay) {
+      if (rateLimiter.currentUsage >= rateLimiter.requestsPerDay) {
         devLog('LegiScan API rate limit reached - being respectful of their free service');
-      return {};
-    }
+        return {};
+      }
 
       // Add delay to be respectful of their free API
       await new Promise(resolve => setTimeout(resolve, 2000)); // 2 second delay
@@ -711,8 +778,8 @@ export class FreeAPIsPipeline {
       
       // Get session people for the state - only if we don't have LegiScan ID already
       if (rep.legiscanId) {
-        devLog('LegiScan ID already exists, skipping API call to be respectful');
-        return {};
+        devLog('LegiScan ID already exists, getting enhanced legislative data');
+        return await this.getLegiScanLegislativeData(rep.legiscanId, apiKey);
       }
 
       const response = await fetch(
@@ -755,6 +822,9 @@ export class FreeAPIsPipeline {
         hasTwitter: !!matchingPerson.twitter
       });
 
+      // Get enhanced legislative data
+      const legislativeData = await this.getLegiScanLegislativeData(matchingPerson.people_id, apiKey);
+
       return {
         legiscanId: matchingPerson.people_id,
         contacts: matchingPerson.email ? [{
@@ -773,10 +843,186 @@ export class FreeAPIsPipeline {
           source: 'legiscan'
         }] : [],
         committeeMemberships: matchingPerson.committees || [],
+        ...legislativeData,
         dataSources: [...(rep.dataSources || []), 'legiscan']
       };
     } catch (error) {
       devLog('LegiScan API error', { error: error instanceof Error ? error.message : 'Unknown error' });
+      return {};
+    }
+  }
+
+  /**
+   * Get enhanced legislative data from LegiScan
+   */
+  private async getLegiScanLegislativeData(peopleId: string, apiKey: string): Promise<Partial<RepresentativeData>> {
+    try {
+      // Get person details with legislative history
+      const personResponse = await fetch(
+        `https://api.legiscan.com/?key=${apiKey}&op=getPerson&id=${peopleId}`,
+        {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' }
+        }
+      );
+
+      if (!personResponse.ok) {
+        devLog('LegiScan person details request failed', { status: personResponse.status });
+        return {};
+      }
+
+      const personData = await personResponse.json();
+      if (!personData.person) {
+        devLog('No LegiScan person details found', { peopleId });
+        return {};
+      }
+
+      const person = personData.person;
+      
+      // Get recent bills sponsored/co-sponsored
+      const billsResponse = await fetch(
+        `https://api.legiscan.com/?key=${apiKey}&op=getPersonBills&id=${peopleId}`,
+        {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' }
+        }
+      );
+
+      let recentBills: any[] = [];
+      if (billsResponse.ok) {
+        const billsData = await billsResponse.json();
+        if (billsData.bills) {
+          // Get the 5 most recent bills
+          recentBills = Object.values(billsData.bills)
+            .sort((a: any, b: any) => new Date(b.introduced).getTime() - new Date(a.introduced).getTime())
+            .slice(0, 5);
+        }
+      }
+
+      // Get voting records
+      const votesResponse = await fetch(
+        `https://api.legiscan.com/?key=${apiKey}&op=getPersonVotes&id=${peopleId}`,
+        {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' }
+        }
+      );
+
+      let recentVotes: any[] = [];
+      if (votesResponse.ok) {
+        const votesData = await votesResponse.json();
+        if (votesData.votes) {
+          // Get the 10 most recent votes
+          recentVotes = Object.values(votesData.votes)
+            .sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime())
+            .slice(0, 10);
+        }
+      }
+
+      devLog('LegiScan legislative data retrieved', {
+        peopleId,
+        billsCount: recentBills.length,
+        votesCount: recentVotes.length,
+        hasCommittees: !!person.committees,
+        hasSessions: !!person.sessions
+      });
+
+      return {
+        // Enhanced contact information
+        contacts: [
+          ...(person.email ? [{
+            type: 'email' as const,
+            value: person.email,
+            isVerified: true,
+            isPrimary: true,
+            source: 'legiscan'
+          }] : []),
+          ...(person.phone ? [{
+            type: 'phone' as const,
+            value: person.phone,
+            isVerified: true,
+            isPrimary: true,
+            source: 'legiscan'
+          }] : []),
+          ...(person.website ? [{
+            type: 'website' as const,
+            value: person.website,
+            isVerified: true,
+            isPrimary: true,
+            source: 'legiscan'
+          }] : [])
+        ],
+        
+        // Enhanced social media
+        socialMedia: [
+          ...(person.twitter ? [{
+            platform: 'twitter' as const,
+            handle: person.twitter,
+            url: `https://twitter.com/${person.twitter}`,
+            isVerified: true,
+            followersCount: 0,
+            source: 'legiscan'
+          }] : []),
+          ...(person.facebook ? [{
+            platform: 'facebook' as const,
+            handle: person.facebook,
+            url: `https://facebook.com/${person.facebook}`,
+            isVerified: true,
+            followersCount: 0,
+            source: 'legiscan'
+          }] : [])
+        ],
+
+        // Legislative activity data
+        activity: [
+          ...recentBills.map(bill => ({
+            type: 'bill_sponsored' as const,
+            title: bill.title,
+            description: bill.description,
+            date: new Date(bill.introduced),
+            source: 'legiscan',
+            metadata: {
+              billNumber: bill.number,
+              status: bill.status,
+              session: bill.session,
+              url: bill.url
+            }
+          })),
+          ...recentVotes.map(vote => ({
+            type: 'vote' as const,
+            title: vote.title,
+            description: `Voted ${vote.vote} on ${vote.title}`,
+            date: new Date(vote.date),
+            source: 'legiscan',
+            metadata: {
+              vote: vote.vote,
+              billNumber: vote.bill_number,
+              session: vote.session
+            }
+          }))
+        ],
+
+        // Committee information
+        committeeMemberships: person.committees || [],
+
+        // Session information
+        sessionInfo: {
+          currentSession: person.sessions?.[0] || null,
+          allSessions: person.sessions || [],
+          source: 'legiscan'
+        },
+
+        // Legislative statistics
+        legislativeStats: {
+          billsSponsored: person.bills_sponsored || 0,
+          billsCoSponsored: person.bills_cosponsored || 0,
+          votesCast: person.votes_cast || 0,
+          attendanceRate: person.attendance_rate || 0,
+          source: 'legiscan'
+        }
+      };
+    } catch (error) {
+      devLog('LegiScan legislative data error', { error: error instanceof Error ? error.message : 'Unknown error' });
       return {};
     }
   }
@@ -818,21 +1064,55 @@ export class FreeAPIsPipeline {
 
       // Find matching representative
       const members = memberData.members || [];
+      console.log(`🔍 Looking for match in ${members.length} members for ${rep.name}`);
+      console.log('🔍 Available members:', members.map(m => m.name).slice(0, 5));
+      
       const matchingRep = members.find((member: any) => 
         this.isMatchingRepresentative(member, rep)
       );
+      console.log('🔍 Matching result:', matchingRep ? 'FOUND' : 'NOT FOUND');
+      if (matchingRep) {
+        console.log('🔍 Matched member:', matchingRep.name, matchingRep.bioguideId);
+      }
 
       if (matchingRep) {
-        // Extract ALL data in one go
-        const contacts = this.extractCongressGovContacts(matchingRep);
-        const photos = this.extractCongressGovPhotos(matchingRep);
+        console.log('🔍 Congress.gov: Found matching representative:', matchingRep.name);
         
-        enrichedData.contacts = contacts;
-        enrichedData.photos = photos;
+        // Get detailed member information using bioguideId
+        if (matchingRep.bioguideId) {
+          try {
+            console.log('🔍 Congress.gov: Getting detailed info for', matchingRep.bioguideId);
+            const detailedResponse = await fetch(
+              `https://api.congress.gov/v3/member/${matchingRep.bioguideId}?format=json&api_key=${process.env.CONGRESS_GOV_API_KEY}`,
+              {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' }
+              }
+            );
+            
+            if (detailedResponse.ok) {
+              const detailedData = await detailedResponse.json();
+              console.log('🔍 Congress.gov: Detailed data received');
+              
+              // Extract contacts and photos from detailed data
+              const contacts = this.extractCongressGovContacts(detailedData.member);
+              const photos = this.extractCongressGovPhotos(detailedData.member);
+              
+              enrichedData.contacts = contacts;
+              enrichedData.photos = photos;
+              
+              console.log('🔍 Congress.gov: Extracted', contacts.length, 'contacts and', photos.length, 'photos');
+            } else {
+              console.log('❌ Congress.gov: Detailed request failed:', detailedResponse.status);
+            }
+          } catch (error) {
+            console.log('❌ Congress.gov: Detailed request error:', error);
+          }
+        }
 
         // Extract basic info
-        if (matchingRep.fullName) enrichedData.name = matchingRep.fullName;
-        if (matchingRep.party) enrichedData.party = matchingRep.party;
+        if (matchingRep.name) enrichedData.name = matchingRep.name;
+        if (matchingRep.partyName) enrichedData.party = matchingRep.partyName;
         if (matchingRep.bioguideId) enrichedData.bioguideId = matchingRep.bioguideId;
 
         // 2. Get recent activity (votes) in the same call if we have bioguideId
@@ -881,10 +1161,10 @@ export class FreeAPIsPipeline {
     const photos: PhotoInfo[] = [];
 
     try {
-      // 1. Congress.gov official photos (FREE)
+      // 1. Congress.gov official photos (FREE) - Enhanced
       if (rep.bioguideId) {
-        const congressPhoto = await this.getCongressPhoto(rep.bioguideId);
-        if (congressPhoto) photos.push(congressPhoto);
+        const congressPhotos = await this.getCongressPhoto(rep.bioguideId);
+        photos.push(...congressPhotos);
       }
 
       // 2. Wikipedia photos (FREE)
@@ -940,46 +1220,152 @@ export class FreeAPIsPipeline {
   }
 
   /**
+   * Wikipedia API (FREE - No rate limits)
+   */
+  private async getWikipediaData(rep: RepresentativeData): Promise<Partial<RepresentativeData>> {
+    console.log('🔍 Wikipedia: Starting data collection for', rep.name);
+    
+    try {
+      // Try different name formats for Wikipedia search
+      const nameFormats = [
+        rep.name,
+        `${rep.name} (politician)`,
+        `${rep.name} (${rep.party})`,
+        `${rep.name} (${rep.state})`
+      ];
+      
+      for (const nameFormat of nameFormats) {
+        console.log('🔍 Wikipedia: Trying name format:', nameFormat);
+        
+        // Add small delay between requests to be respectful of Wikipedia API
+        if (nameFormat !== rep.name) {
+          await new Promise(resolve => setTimeout(resolve, 500)); // 500ms delay
+        }
+        
+        const response = await fetch(
+          `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(nameFormat)}`,
+          {
+            method: 'GET',
+            headers: { 
+              'Content-Type': 'application/json',
+              'Accept-Encoding': 'gzip',
+              'User-Agent': 'Choices-Civics-Platform/1.0 (https://choices.civics.org; contact@choices.civics.org) Wikipedia-API-Integration/1.0'
+            }
+          }
+        );
+        
+        if (response.ok) {
+          const data = await response.json();
+          
+          if (data.title && data.extract) {
+            console.log('✅ Wikipedia: Found page for', nameFormat);
+            
+            return {
+              wikipediaUrl: data.content_urls?.desktop?.page,
+              dataSources: ['wikipedia'],
+              // Add Wikipedia data as activity
+              activity: [{
+                type: 'statement' as const,
+                title: `Wikipedia: ${data.title}`,
+                description: data.extract.substring(0, 200) + '...',
+                url: data.content_urls?.desktop?.page,
+                date: new Date(),
+                source: 'wikipedia',
+                metadata: {
+                  wikipediaTitle: data.title,
+                  wikipediaExtract: data.extract,
+                  wikipediaThumbnail: data.thumbnail?.source
+                }
+              }]
+            };
+          }
+        }
+      }
+      
+      console.log('❌ Wikipedia: No page found for any name format');
+      return {};
+      
+    } catch (error) {
+      console.log('❌ Wikipedia API error:', error);
+      return {};
+    }
+  }
+
+  /**
+   * Convert state name to abbreviation for FEC API
+   */
+  private getStateAbbreviation(stateName: string): string {
+    const stateMap: Record<string, string> = {
+      'Alabama': 'AL', 'Alaska': 'AK', 'Arizona': 'AZ', 'Arkansas': 'AR', 'California': 'CA',
+      'Colorado': 'CO', 'Connecticut': 'CT', 'Delaware': 'DE', 'Florida': 'FL', 'Georgia': 'GA',
+      'Hawaii': 'HI', 'Idaho': 'ID', 'Illinois': 'IL', 'Indiana': 'IN', 'Iowa': 'IA',
+      'Kansas': 'KS', 'Kentucky': 'KY', 'Louisiana': 'LA', 'Maine': 'ME', 'Maryland': 'MD',
+      'Massachusetts': 'MA', 'Michigan': 'MI', 'Minnesota': 'MN', 'Mississippi': 'MS', 'Missouri': 'MO',
+      'Montana': 'MT', 'Nebraska': 'NE', 'Nevada': 'NV', 'New Hampshire': 'NH', 'New Jersey': 'NJ',
+      'New Mexico': 'NM', 'New York': 'NY', 'North Carolina': 'NC', 'North Dakota': 'ND', 'Ohio': 'OH',
+      'Oklahoma': 'OK', 'Oregon': 'OR', 'Pennsylvania': 'PA', 'Rhode Island': 'RI', 'South Carolina': 'SC',
+      'South Dakota': 'SD', 'Tennessee': 'TN', 'Texas': 'TX', 'Utah': 'UT', 'Vermont': 'VT',
+      'Virginia': 'VA', 'Washington': 'WA', 'West Virginia': 'WV', 'Wisconsin': 'WI', 'Wyoming': 'WY',
+      'District of Columbia': 'DC'
+    };
+    
+    return stateMap[stateName] || stateName; // Return original if not found
+  }
+
+  /**
    * FEC API (FREE - 1,000 requests/day)
    */
+
+  /**
+   * Get FEC campaign finance data
+   */
   private async getFECData(rep: RepresentativeData): Promise<CampaignFinanceInfo | undefined> {
+    console.log('🔍 FEC: Starting data collection for', rep.name, rep.level);
+    devLog('🔍 FEC: Starting data collection for', rep.name, rep.level);
+    
     const rateLimiter = this.rateLimiters.get('fec');
+    devLog('🔍 FEC: Rate limiter status', { 
+      currentUsage: rateLimiter.currentUsage, 
+      limit: rateLimiter.requestsPerDay 
+    });
     
     if (rateLimiter.currentUsage >= rateLimiter.requestsPerDay) {
-      devLog('FEC API rate limit reached');
+      devLog('❌ FEC: Rate limit reached');
       return undefined;
     }
 
     try {
       const apiKey = process.env.FEC_API_KEY;
+      devLog('🔍 FEC: API key check', { hasKey: !!apiKey });
+      
       if (!apiKey) {
-        devLog('FEC API key not configured');
+        devLog('❌ FEC: API key not configured');
         return undefined;
       }
 
       // FEC only covers federal candidates
       if (rep.level !== 'federal') {
-        devLog('FEC data only available for federal candidates', { level: rep.level });
+        devLog('❌ FEC: Only available for federal candidates, got:', rep.level);
         return undefined;
       }
 
       // If we have a FEC ID, use it directly
       if (rep.fecId) {
-      const response = await fetch(
+        const response = await fetch(
           `https://api.open.fec.gov/v1/candidate/${rep.fecId}/totals/?api_key=${apiKey}`,
-        {
-          method: 'GET',
-          headers: { 'Content-Type': 'application/json' }
+          {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' }
+          }
+        );
+
+        if (!response.ok) {
+          devLog('FEC API request failed', { status: response.status });
+          return undefined;
         }
-      );
 
-      if (!response.ok) {
-        devLog('FEC API request failed', { status: response.status });
-        return undefined;
-      }
-
-      const data = await response.json();
-      rateLimiter.currentUsage++;
+        const data = await response.json();
+        rateLimiter.currentUsage++;
 
         if (data.results && data.results.length > 0) {
           const candidate = data.results[0];
@@ -999,6 +1385,11 @@ export class FreeAPIsPipeline {
 
       // If no FEC ID, search for candidates by name and state
       const searchName = rep.name.split(' ').slice(0, 2).join(' '); // First and last name
+      devLog('🔍 FEC: Searching for candidate', { searchName, state: rep.state, office: rep.office });
+      
+      // Convert state name to abbreviation for FEC API
+      const stateAbbrev = this.getStateAbbreviation(rep.state);
+      devLog('🔍 FEC: State abbreviation', { original: rep.state, abbreviation: stateAbbrev });
       
       // Determine office type for FEC search
       let officeParam = '';
@@ -1006,13 +1397,16 @@ export class FreeAPIsPipeline {
       else if (rep.office.toLowerCase().includes('senate') || rep.office.toLowerCase().includes('senator')) officeParam = '&office=S';
       else if (rep.office.toLowerCase().includes('house') || rep.office.toLowerCase().includes('representative') || rep.office.toLowerCase().includes('assembly')) officeParam = '&office=H';
       
-      const response = await fetch(
-        `https://api.open.fec.gov/v1/candidates/?name=${encodeURIComponent(searchName)}&state=${rep.state}${officeParam}&api_key=${apiKey}&election_year=2024&election_year=2022&election_year=2020&candidate_status=C`,
-        {
-          method: 'GET',
-          headers: { 'Content-Type': 'application/json' }
-        }
-      );
+      // Use the general candidates endpoint with 'q' parameter for name search
+      const searchUrl = `https://api.open.fec.gov/v1/candidates/?q=${encodeURIComponent(searchName)}&state=${stateAbbrev}${officeParam}&api_key=${apiKey}`;
+      devLog('🔍 FEC: Search URL', searchUrl);
+      
+      const response = await fetch(searchUrl, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      
+      devLog('🔍 FEC: Search response status', response.status);
 
       if (!response.ok) {
         devLog('FEC search request failed', { status: response.status });
@@ -1029,17 +1423,11 @@ export class FreeAPIsPipeline {
         office: rep.office
       });
 
-      // Extract campaign finance data from search results
       if (data.results && data.results.length > 0) {
-        const candidate = data.results[0];
-        devLog('FEC candidate found', { 
-          candidateId: candidate.candidate_id,
-          name: candidate.name,
-          office: candidate.office,
-          party: candidate.party
-        });
-        
-        // Get detailed totals for this candidate
+        const candidate = data.results[0]; // Take the first match
+        devLog('FEC candidate found', { name: candidate.name, id: candidate.candidate_id });
+
+        // Now get detailed totals for this candidate
         const totalsResponse = await fetch(
           `https://api.open.fec.gov/v1/candidate/${candidate.candidate_id}/totals/?api_key=${apiKey}`,
           {
@@ -1058,8 +1446,8 @@ export class FreeAPIsPipeline {
             receipts: totals?.receipts
           });
           
-      if (totals) {
-        return {
+          if (totals) {
+            return {
               electionCycle: totals.cycle,
               totalReceipts: totals.receipts,
               totalDisbursements: totals.disbursements,
@@ -1075,15 +1463,92 @@ export class FreeAPIsPipeline {
           devLog('FEC totals request failed', { status: totalsResponse.status });
         }
       }
-
-      devLog('No FEC data found for representative', { name: rep.name, state: rep.state });
       return undefined;
-
     } catch (error) {
-      devLog('FEC API error', { error });
+      devLog('FEC API error', { error: error instanceof Error ? error.message : 'Unknown error' });
       return undefined;
     }
   }
+
+  /**
+   * Check if a LegiScan person matches our representative
+   */
+  private isMatchingLegiScanPerson(person: any, rep: RepresentativeData): boolean {
+    if (!person.first_name || !person.last_name) return false;
+    
+    const personFullName = `${person.first_name} ${person.last_name}`.toLowerCase();
+    const repName = rep.name.toLowerCase();
+    
+    // Check if names match (allowing for variations)
+    const repWords = repName.split(' ').filter(word => word.length > 1);
+    const personWords = personFullName.split(' ').filter(word => word.length > 1);
+    
+    // Check if all words from rep name are in person name or vice versa
+    const repWordsInPerson = repWords.every(word => personWords.some(pWord => pWord.includes(word) || word.includes(pWord)));
+    const personWordsInRep = personWords.every(word => repWords.some(rWord => rWord.includes(word) || word.includes(rWord)));
+    
+    return repWordsInPerson || personWordsInRep;
+  }
+
+  /**
+   * Get detailed person information from LegiScan
+   */
+  private async getLegiScanPersonDetails(peopleId: string, apiKey: string): Promise<Partial<RepresentativeData>> {
+    try {
+      const response = await fetch(
+        `https://api.legiscan.com/?key=${apiKey}&op=getPerson&id=${peopleId}`,
+        {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' }
+        }
+      );
+
+      if (!response.ok) {
+        devLog('LegiScan person request failed', { status: response.status });
+        return {};
+      }
+
+      const data = await response.json();
+      const person = data.person;
+      
+      if (!person) {
+        devLog('No LegiScan person details found', { peopleId });
+        return {};
+      }
+
+      devLog('LegiScan person details retrieved', {
+        peopleId,
+        name: person.name,
+        party: person.party,
+        role: person.role,
+        district: person.district
+      });
+
+      return {
+        legiscanId: peopleId,
+        contacts: person.email ? [{
+          type: 'email' as const,
+          value: person.email,
+          isVerified: true,
+          isPrimary: true,
+          source: 'legiscan'
+        }] : [],
+        socialMedia: person.twitter ? [{
+          platform: 'twitter' as const,
+          handle: person.twitter,
+          url: `https://twitter.com/${person.twitter}`,
+          isVerified: true,
+          followersCount: 0,
+          source: 'legiscan'
+        }] : [],
+        dataSources: ['legiscan']
+      };
+    } catch (error) {
+      devLog('LegiScan person details error', { error: error instanceof Error ? error.message : 'Unknown error' });
+      return {};
+    }
+  }
+
 
   /**
    * Get recent activity for feed
@@ -1114,50 +1579,112 @@ export class FreeAPIsPipeline {
 
   // Helper methods for data extraction and processing
   private isMatchingRepresentative(apiRep: any, ourRep: RepresentativeData): boolean {
-    // Simple name matching - can be enhanced with fuzzy matching
+    // Enhanced name matching to handle different formats
     const apiName = apiRep.name || apiRep.full_name || apiRep.fullName || '';
     const ourName = ourRep.name;
     
-    return apiName.toLowerCase().includes(ourName.toLowerCase()) ||
-           ourName.toLowerCase().includes(apiName.toLowerCase());
+    // Normalize names by removing punctuation and extra spaces
+    const normalizeName = (name: string) => {
+      return name.toLowerCase()
+        .replace(/[.,]/g, '') // Remove punctuation
+        .replace(/\s+/g, ' ') // Normalize spaces
+        .trim();
+    };
+    
+    const normalizedApiName = normalizeName(apiName);
+    const normalizedOurName = normalizeName(ourName);
+    
+    // Check if either name contains the other
+    const match1 = normalizedApiName.includes(normalizedOurName);
+    const match2 = normalizedOurName.includes(normalizedApiName);
+    
+    // Check if they share the same last name (for cases like "Whitesides, George" vs "George Whitesides")
+    const apiLastName = normalizedApiName.split(' ').pop();
+    const ourLastName = normalizedOurName.split(' ').pop();
+    const lastNameMatch = apiLastName === ourLastName;
+    
+    // Check if they share the same first name (for cases like "Whitesides, George" vs "George Whitesides")
+    const apiFirstName = normalizedApiName.split(' ')[0];
+    const ourFirstName = normalizedOurName.split(' ')[0];
+    const firstNameMatch = apiFirstName === ourFirstName;
+    
+    // Check if the names are the same but in different order
+    const apiWords = normalizedApiName.split(' ').sort();
+    const ourWords = normalizedOurName.split(' ').sort();
+    const sameWords = apiWords.length === ourWords.length && 
+                     apiWords.every((word, index) => word === ourWords[index]);
+    
+    const finalMatch = match1 || match2 || lastNameMatch || (lastNameMatch && firstNameMatch) || sameWords;
+    
+    // Debug logging
+    console.log('🔍 isMatchingRepresentative:', {
+      apiName, 
+      ourName,
+      normalizedApiName,
+      normalizedOurName,
+      match1,
+      match2,
+      lastNameMatch,
+      finalMatch
+    });
+    
+    return finalMatch;
   }
 
   private extractGoogleCivicContacts(official: any): ContactInfo[] {
     const contacts: ContactInfo[] = [];
     
+    // Enhanced email extraction with verification and labels
     if (official.emails) {
-      official.emails.forEach((email: string) => {
+      official.emails.forEach((email: string, index: number) => {
         contacts.push({
           type: 'email',
           value: email,
-          isPrimary: true,
-          isVerified: false,
-          source: 'google-civic'
+          isPrimary: index === 0,
+          isVerified: this.isVerifiedEmail(email),
+          source: 'google-civic',
+          label: this.getEmailLabel(email, index)
         });
       });
     }
 
+    // Enhanced phone extraction with verification and labels
     if (official.phones) {
-      official.phones.forEach((phone: string) => {
+      official.phones.forEach((phone: string, index: number) => {
         contacts.push({
           type: 'phone',
           value: phone,
-          isPrimary: true,
-          isVerified: false,
-          source: 'google-civic'
+          isPrimary: index === 0,
+          isVerified: this.isVerifiedPhone(phone),
+          source: 'google-civic',
+          label: this.getPhoneLabel(phone, index)
         });
       });
     }
 
+    // Enhanced website extraction with verification and labels
     if (official.urls) {
-      official.urls.forEach((url: string) => {
+      official.urls.forEach((url: string, index: number) => {
         contacts.push({
           type: 'website',
           value: url,
-          isPrimary: true,
-          isVerified: false,
-          source: 'google-civic'
+          isPrimary: index === 0,
+          isVerified: this.isVerifiedWebsite(url),
+          source: 'google-civic',
+          label: this.getWebsiteLabel(url, index)
         });
+      });
+    }
+
+    // Extract office address if available
+    if (official.address) {
+      contacts.push({
+        type: 'address',
+        value: this.formatAddress(official.address),
+        isPrimary: true,
+        isVerified: true,
+        source: 'google-civic',
+        label: 'Office Address'
       });
     }
 
@@ -1213,31 +1740,114 @@ export class FreeAPIsPipeline {
     return mapping[channelType] || null;
   }
 
-  private async getCongressPhoto(bioguideId: string): Promise<PhotoInfo | null> {
+  private async getCongressPhoto(bioguideId: string): Promise<PhotoInfo[]> {
+    const photos: PhotoInfo[] = [];
+    
     try {
-      const photoUrl = `https://www.congress.gov/img/member/${bioguideId}.jpg`;
+      // Primary photo from Congress.gov
+      const primaryPhotoUrl = `https://www.congress.gov/img/member/${bioguideId}.jpg`;
+      const primaryResponse = await fetch(primaryPhotoUrl, { method: 'HEAD' });
       
-      // Test if photo exists
-      const response = await fetch(photoUrl, { method: 'HEAD' });
-      if (response.ok) {
-        return {
-          url: photoUrl,
+      if (primaryResponse.ok) {
+        photos.push({
+          url: primaryPhotoUrl,
           source: 'congress-gov',
           quality: 'high',
-          isPrimary: true
-        };
+          isPrimary: true,
+          width: 200, // Standard Congress.gov photo size
+          height: 250,
+          altText: `Official photo of ${bioguideId}`,
+          caption: 'Official Congressional photo',
+          photographer: 'Congress.gov',
+          usageRights: 'Public domain'
+        });
       }
+      
+      // Alternative photo sources
+      const alternativeUrls = [
+        `https://www.congress.gov/img/member/${bioguideId.toLowerCase()}.jpg`,
+        `https://www.congress.gov/img/member/${bioguideId.toUpperCase()}.jpg`
+      ];
+      
+      for (const url of alternativeUrls) {
+        const response = await fetch(url, { method: 'HEAD' });
+        if (response.ok && !photos.some(p => p.url === url)) {
+          photos.push({
+            url: url,
+            source: 'congress-gov-alternative',
+            quality: 'medium',
+            isPrimary: false,
+            width: 200,
+            height: 250,
+            altText: `Alternative photo of ${bioguideId}`,
+            caption: 'Alternative Congressional photo',
+            photographer: 'Congress.gov',
+            usageRights: 'Public domain'
+          });
+        }
+      }
+      
     } catch (error) {
-      devLog('Congress photo not available', { bioguideId, error: error instanceof Error ? error.message : 'Unknown error' });
+      devLog('Congress.gov photo collection error', { error, bioguideId });
     }
-
-    return null;
+    
+    return photos;
   }
 
-  private async getWikipediaPhotos(_name: string): Promise<PhotoInfo[]> {
-    // Implementation for Wikipedia photo search
-    // This would use the Wikipedia API to search for photos
-    return [];
+  private async getWikipediaPhotos(name: string): Promise<PhotoInfo[]> {
+    const photos: PhotoInfo[] = [];
+    
+    try {
+      // Search for Wikipedia page
+      const searchUrl = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(name)}`;
+      const searchResponse = await fetch(searchUrl);
+      
+      if (searchResponse.ok) {
+        const data = await searchResponse.json();
+        
+        // Extract thumbnail if available
+        if (data.thumbnail && data.thumbnail.source) {
+          photos.push({
+            url: data.thumbnail.source,
+            source: 'wikipedia',
+            quality: 'medium',
+            isPrimary: false,
+            width: data.thumbnail.width || 200,
+            height: data.thumbnail.height || 200,
+            altText: `Wikipedia photo of ${name}`,
+            caption: `Wikipedia photo of ${name}`,
+            photographer: 'Wikipedia',
+            usageRights: 'Creative Commons',
+            attribution: 'Wikipedia'
+          });
+        }
+        
+        // Try to get higher resolution image
+        if (data.content_urls && data.content_urls.desktop && data.content_urls.desktop.page) {
+          const pageUrl = data.content_urls.desktop.page;
+          const imageUrl = await this.extractWikipediaImage(pageUrl, name);
+          if (imageUrl) {
+            photos.push({
+              url: imageUrl,
+              source: 'wikipedia-high-res',
+              quality: 'high',
+              isPrimary: true,
+              width: 400,
+              height: 400,
+              altText: `High resolution Wikipedia photo of ${name}`,
+              caption: `High resolution Wikipedia photo of ${name}`,
+              photographer: 'Wikipedia',
+              usageRights: 'Creative Commons',
+              attribution: 'Wikipedia'
+            });
+          }
+        }
+      }
+    } catch (error) {
+      devLog('Wikipedia photo search error', { error, name });
+    }
+    
+    return photos;
   }
 
   private async getGoogleCivicPhotos(rep: RepresentativeData): Promise<PhotoInfo[]> {
@@ -1270,7 +1880,15 @@ export class FreeAPIsPipeline {
     // Rank photos by quality and source preference
     return photos.sort((a, b) => {
       const qualityOrder = { 'high': 3, 'medium': 2, 'low': 1 };
-      const sourceOrder = { 'congress-gov': 4, 'wikipedia': 3, 'google-civic': 2, 'openstates': 1, 'generated': 0 };
+      const sourceOrder = { 
+        'congress-gov': 5, 
+        'wikipedia-high-res': 4, 
+        'wikipedia': 3, 
+        'google-civic': 2, 
+        'openstates': 1, 
+        'congress-gov-alternative': 0,
+        'generated': 0 
+      };
       
       if (a.quality !== b.quality) {
         return qualityOrder[b.quality] - qualityOrder[a.quality];
@@ -1321,7 +1939,8 @@ export class FreeAPIsPipeline {
     photos: PhotoInfo[],
     socialMedia: SocialMediaInfo[],
     campaignFinance?: CampaignFinanceInfo,
-    activity: ActivityInfo[] = []
+    activity: ActivityInfo[] = [],
+    wikipedia?: Partial<RepresentativeData>
   ): RepresentativeData {
     // Start with original data
     let merged = { ...original };
@@ -1331,6 +1950,9 @@ export class FreeAPIsPipeline {
     merged = this.resolveDataConflicts(merged, openStates);
     merged = this.resolveDataConflicts(merged, congressGov);
     merged = this.resolveDataConflicts(merged, legiScan);
+    if (wikipedia) {
+      merged = this.resolveDataConflicts(merged, wikipedia);
+    }
     
     // Normalize party affiliation
     if (merged.party) {
@@ -1349,6 +1971,13 @@ export class FreeAPIsPipeline {
     
     if (campaignFinance) {
       merged.campaignFinance = campaignFinance;
+      // Add FEC to data sources when campaign finance data is found
+      if (!merged.dataSources) {
+        merged.dataSources = [];
+      }
+      if (!merged.dataSources.includes('fec')) {
+        merged.dataSources.push('fec');
+      }
     }
     
     // Transform data to match our enhanced schema
@@ -1540,16 +2169,38 @@ export class FreeAPIsPipeline {
     if (legislator.social_media) {
       Object.entries(legislator.social_media).forEach(([platform, handle]) => {
         if (typeof handle === 'string' && handle.trim()) {
-          const platformKey = this.mapOpenStatesPlatform(platform);
+          const platformKey = this.mapOpenStatesPlatformEnhanced(platform);
           if (platformKey) {
             socialMedia.push({
               platform: platformKey,
               handle: handle,
               url: this.generateSocialMediaUrl(platformKey, handle),
               followersCount: 0, // OpenStates doesn't provide follower counts
-              isVerified: false,
+              isVerified: this.isVerifiedSocialMedia(platformKey, handle),
               source: 'openstates'
             });
+          }
+        }
+      });
+    }
+    
+    // Also check for additional social media in contact details
+    if (legislator.contact_details) {
+      Object.entries(legislator.contact_details).forEach(([type, value]) => {
+        if (typeof value === 'string' && this.isSocialMediaField(type, value)) {
+          const platformKey = this.detectSocialMediaPlatform(value);
+          if (platformKey) {
+            const handle = this.extractSocialMediaHandle(value);
+            if (handle) {
+              socialMedia.push({
+                platform: platformKey,
+                handle: handle,
+                url: this.generateSocialMediaUrl(platformKey, handle),
+                followersCount: 0,
+                isVerified: false,
+                source: 'openstates-contact-details'
+              });
+            }
           }
         }
       });
@@ -1577,33 +2228,28 @@ export class FreeAPIsPipeline {
   private extractCongressGovContacts(member: any): ContactInfo[] {
     const contacts: ContactInfo[] = [];
     
-    // Extract email from Congress.gov data
-    if (member.email) {
+    console.log('🔍 extractCongressGovContacts: Member data keys:', Object.keys(member || {}));
+    console.log('🔍 extractCongressGovContacts: Address info:', member.addressInformation);
+    
+    // Extract phone from Congress.gov data
+    if (member.addressInformation?.phoneNumber) {
+      console.log('🔍 extractCongressGovContacts: Found phone:', member.addressInformation.phoneNumber);
       contacts.push({
-        type: 'email',
-        value: member.email,
+        type: 'phone',
+        value: member.addressInformation.phoneNumber,
         isPrimary: true,
         isVerified: true, // Congress.gov is official
         source: 'congress-gov'
       });
-    }
-    
-    // Extract phone from Congress.gov data
-    if (member.phone) {
-      contacts.push({
-        type: 'phone',
-        value: member.phone,
-        isPrimary: true,
-        isVerified: true,
-        source: 'congress-gov'
-      });
+    } else {
+      console.log('🔍 extractCongressGovContacts: No phone found');
     }
     
     // Extract website from Congress.gov data
-    if (member.url) {
+    if (member.officialWebsiteUrl) {
       contacts.push({
         type: 'website',
-        value: member.url,
+        value: member.officialWebsiteUrl,
         isPrimary: true,
         isVerified: true,
         source: 'congress-gov'
@@ -1616,16 +2262,15 @@ export class FreeAPIsPipeline {
   private extractCongressGovPhotos(member: any): PhotoInfo[] {
     const photos: PhotoInfo[] = [];
     
-    // Congress.gov provides official photos via bioguide_id
-    if (member.bioguideId) {
-      const photoUrl = `https://www.congress.gov/img/member/${member.bioguideId}.jpg`;
+    // Use the actual photo URL from Congress.gov API
+    if (member.depiction?.imageUrl) {
       photos.push({
-        url: photoUrl,
+        url: member.depiction.imageUrl,
         source: 'congress-gov',
         quality: 'high',
         isPrimary: true,
         license: 'Public Domain',
-        attribution: 'Congress.gov'
+        attribution: member.depiction.attribution || 'Congress.gov'
       });
     }
     
@@ -1706,17 +2351,20 @@ export class FreeAPIsPipeline {
       if (!apiKey) return socialMedia;
       
       const response = await fetch(
-        `https://openstates.org/api/v1/legislators/?state=${rep.state.toLowerCase()}&apikey=${apiKey}`,
+        `https://v3.openstates.org/people?jurisdiction=${rep.state}`,
         {
           method: 'GET',
-          headers: { 'Content-Type': 'application/json' }
+          headers: { 
+            'Content-Type': 'application/json',
+            'X-API-Key': apiKey
+          }
         }
       );
       
       if (!response.ok) return socialMedia;
       
       const data = await response.json();
-      const matchingLegislator = data.find((legislator: any) => 
+      const matchingLegislator = data.results?.find((legislator: any) => 
         this.isMatchingRepresentative(legislator, rep)
       );
       
@@ -2174,10 +2822,166 @@ export class FreeAPIsPipeline {
       'facebook': `https://facebook.com/${handle}`,
       'instagram': `https://instagram.com/${handle}`,
       'youtube': `https://youtube.com/@${handle}`,
-      'linkedin': `https://linkedin.com/in/${handle}`
+      'linkedin': `https://linkedin.com/in/${handle}`,
+      'tiktok': `https://tiktok.com/@${handle}`,
+      'snapchat': `https://snapchat.com/add/${handle}`,
+      'telegram': `https://t.me/${handle}`,
+      'mastodon': `https://mastodon.social/@${handle}`,
+      'threads': `https://threads.net/@${handle}`
     };
     
     return urlMappings[platform] || `https://${platform}.com/${handle}`;
+  }
+
+  // Enhanced helper methods for improved data extraction
+  
+  private mapOpenStatesPlatformEnhanced(platform: string): SocialMediaInfo['platform'] | null {
+    const mapping: Record<string, SocialMediaInfo['platform']> = {
+      'twitter': 'twitter',
+      'facebook': 'facebook',
+      'instagram': 'instagram',
+      'youtube': 'youtube',
+      'linkedin': 'linkedin',
+      'tiktok': 'tiktok',
+      'snapchat': 'snapchat',
+      'telegram': 'telegram',
+      'mastodon': 'mastodon',
+      'threads': 'threads'
+    };
+
+    return mapping[platform.toLowerCase()] || null;
+  }
+
+  private isVerifiedSocialMedia(platform: SocialMediaInfo['platform'], handle: string): boolean {
+    // Check if social media handle appears to be verified
+    const verifiedPatterns = {
+      'twitter': /^[A-Za-z0-9_]{1,15}$/,
+      'instagram': /^[A-Za-z0-9._]{1,30}$/,
+      'facebook': /^[A-Za-z0-9.]{1,50}$/,
+      'youtube': /^@[A-Za-z0-9._-]{1,100}$/,
+      'linkedin': /^[A-Za-z0-9-]{1,100}$/,
+      'tiktok': /^@[A-Za-z0-9._]{1,24}$/,
+      'snapchat': /^[A-Za-z0-9._]{3,15}$/,
+      'telegram': /^[A-Za-z0-9_]{5,32}$/,
+      'mastodon': /^@[A-Za-z0-9._-]{1,30}$/,
+      'threads': /^[A-Za-z0-9._]{1,30}$/
+    };
+
+    const pattern = verifiedPatterns[platform];
+    return pattern ? pattern.test(handle) : false;
+  }
+
+  private isSocialMediaField(type: string, value: string): boolean {
+    const socialMediaIndicators = ['twitter', 'facebook', 'instagram', 'youtube', 'linkedin', 'tiktok', 'snapchat'];
+    return socialMediaIndicators.some(indicator => 
+      type.toLowerCase().includes(indicator) || 
+      value.toLowerCase().includes(indicator)
+    );
+  }
+
+  private detectSocialMediaPlatform(value: string): SocialMediaInfo['platform'] | null {
+    const platformPatterns = {
+      'twitter': /twitter\.com\/[A-Za-z0-9_]+/,
+      'facebook': /facebook\.com\/[A-Za-z0-9.]+/,
+      'instagram': /instagram\.com\/[A-Za-z0-9._]+/,
+      'youtube': /youtube\.com\/[A-Za-z0-9._-]+/,
+      'linkedin': /linkedin\.com\/in\/[A-Za-z0-9-]+/,
+      'tiktok': /tiktok\.com\/@[A-Za-z0-9._]+/,
+      'snapchat': /snapchat\.com\/add\/[A-Za-z0-9._]+/
+    };
+
+    for (const [platform, pattern] of Object.entries(platformPatterns)) {
+      if (pattern.test(value)) {
+        return platform as SocialMediaInfo['platform'];
+      }
+    }
+
+    return null;
+  }
+
+  private extractSocialMediaHandle(value: string): string | null {
+    const handlePatterns = [
+      /twitter\.com\/([A-Za-z0-9_]+)/,
+      /facebook\.com\/([A-Za-z0-9.]+)/,
+      /instagram\.com\/([A-Za-z0-9._]+)/,
+      /youtube\.com\/([A-Za-z0-9._-]+)/,
+      /linkedin\.com\/in\/([A-Za-z0-9-]+)/,
+      /tiktok\.com\/@([A-Za-z0-9._]+)/,
+      /snapchat\.com\/add\/([A-Za-z0-9._]+)/
+    ];
+
+    for (const pattern of handlePatterns) {
+      const match = value.match(pattern);
+      if (match) {
+        return match[1];
+      }
+    }
+
+    return null;
+  }
+
+  private isVerifiedEmail(email: string): boolean {
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailPattern.test(email);
+  }
+
+  private isVerifiedPhone(phone: string): boolean {
+    const phonePattern = /^[\+]?[1-9][\d]{0,15}$/;
+    return phonePattern.test(phone.replace(/[\s\-\(\)]/g, ''));
+  }
+
+  private isVerifiedWebsite(url: string): boolean {
+    try {
+      const urlObj = new URL(url);
+      return ['http:', 'https:'].includes(urlObj.protocol);
+    } catch {
+      return false;
+    }
+  }
+
+  private getEmailLabel(email: string, index: number): string {
+    if (index === 0) return 'Primary Email';
+    if (email.includes('campaign')) return 'Campaign Email';
+    if (email.includes('office')) return 'Office Email';
+    return `Email ${index + 1}`;
+  }
+
+  private getPhoneLabel(phone: string, index: number): string {
+    if (index === 0) return 'Primary Phone';
+    if (phone.includes('fax')) return 'Fax';
+    return `Phone ${index + 1}`;
+  }
+
+  private getWebsiteLabel(url: string, index: number): string {
+    if (index === 0) return 'Primary Website';
+    if (url.includes('campaign')) return 'Campaign Website';
+    if (url.includes('office')) return 'Office Website';
+    return `Website ${index + 1}`;
+  }
+
+  private formatAddress(address: any): string {
+    if (typeof address === 'string') return address;
+    
+    const parts = [];
+    if (address.line1) parts.push(address.line1);
+    if (address.line2) parts.push(address.line2);
+    if (address.city) parts.push(address.city);
+    if (address.state) parts.push(address.state);
+    if (address.zip) parts.push(address.zip);
+    
+    return parts.join(', ');
+  }
+
+  private async extractWikipediaImage(pageUrl: string, name: string): Promise<string | null> {
+    try {
+      // This is a simplified implementation
+      // In a real implementation, you would parse the Wikipedia page HTML
+      // and extract the main image URL
+      return null;
+    } catch (error) {
+      devLog('Wikipedia image extraction error', { error, pageUrl, name });
+      return null;
+    }
   }
 }
 

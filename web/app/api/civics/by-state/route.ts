@@ -22,36 +22,52 @@ export async function GET(req: NextRequest) {
     }
 
     let query = supabase
-      .from('civics_representatives')
+      .from('representatives_core')
       .select(`
         id,
         name,
         party,
         office,
         level,
-        jurisdiction,
+        state,
         district,
-        ocd_division_id,
-        external_id,
-        source,
-        data_origin,
-        valid_from,
-        valid_to,
+        bioguide_id,
+        openstates_id,
+        fec_id,
+        google_civic_id,
+        legiscan_id,
+        congress_gov_id,
+        govinfo_id,
+        wikipedia_url,
+        ballotpedia_url,
+        twitter_handle,
+        facebook_url,
+        instagram_handle,
+        linkedin_url,
+        youtube_channel,
+        primary_email,
+        primary_phone,
+        primary_website,
+        primary_photo_url,
+        data_quality_score,
+        data_sources,
+        last_verified,
+        verification_status,
         created_at,
         last_updated
       `);
 
     // Handle different levels of government
     if (level === 'federal') {
-      // Federal representatives have jurisdiction = "US" and state info in name field
-      query = query.eq('level', 'federal').eq('jurisdiction', 'US');
+      // Federal representatives have level = "federal" and state info in name field
+      query = query.eq('level', 'federal');
       
       // Filter by state using name field (e.g., "Rep. Ken Calvert [R-CA41]")
       const stateCode = state.toUpperCase();
       query = query.ilike('name', `%${stateCode}%`);
     } else {
-      // State and local representatives use jurisdiction field
-      query = query.eq('jurisdiction', state.toUpperCase());
+      // State and local representatives use state field
+      query = query.eq('state', state);
       
       if (level) {
         query = query.eq('level', level);

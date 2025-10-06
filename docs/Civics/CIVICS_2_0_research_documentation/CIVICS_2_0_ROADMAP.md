@@ -171,7 +171,7 @@ Social Media APIs    - Free tiers (Twitter, Facebook, Instagram, YouTube)
 
 ### **UI Components (COMPLETED)**
 ```
-CandidateCard.tsx    - Beautiful mobile-first candidate cards
+EnhancedCandidateCard.tsx    - Beautiful mobile-first candidate cards
 SocialFeed.tsx       - Instagram-like social feed
 Civics2Page.tsx      - Main integration page
 ```
@@ -207,7 +207,7 @@ API Testing:
 ├── web/app/api/test/free-apis-data-types-audit/route.ts - Data types audit
 
 UI Components:
-├── web/components/civics-2-0/CandidateCard.tsx - Candidate cards
+├── web/components/civics-2-0/EnhancedCandidateCard.tsx - Enhanced candidate cards
 ├── web/components/civics-2-0/SocialFeed.tsx - Social feed
 ├── web/app/(app)/civics-2-0/page.tsx - Main page
 ├── web/app/(app)/civics-2-0/test/page.tsx - Test page

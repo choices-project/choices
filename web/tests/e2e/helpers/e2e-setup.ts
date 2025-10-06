@@ -81,7 +81,7 @@ export async function cleanupE2ETestData(_testData: E2ETestData): Promise<void> 
 export function createTestUser(overrides: Partial<E2ETestUser> = {}): E2ETestUser {
   const timestamp = Date.now();
   return Object.assign({
-    email: createValidTestEmail(`test-${timestamp}`),
+    email: createValidTestEmail(),
     username: `testuser${timestamp}`,
     password: 'TestPassword123!',
   }, overrides);
@@ -134,7 +134,7 @@ export async function waitForPageReady(page: Page): Promise<void> {
  */
 export async function setupExternalAPIMocks(page: Page): Promise<void> {
   // Set up email mocking FIRST to prevent Supabase email bounces
-  await setupEmailMocking(page);
+  await setupEmailMocking();
   // Mock Google Civic Information API
   await page.route('**/google_civic/**', route => {
     route.fulfill({
