@@ -13,7 +13,7 @@
 
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Image from 'next/image';
 import { 
   HeartIcon, 
@@ -76,7 +76,7 @@ type UserPreferences = {
 
 export default function SocialFeed({
   userId,
-  preferences,
+  preferences: _preferences,
   onLike,
   onShare,
   onBookmark,
@@ -100,39 +100,8 @@ export default function SocialFeed({
   const [, setTouchEnd] = useState<{ y: number } | null>(null);
   const [pullDistance, setPullDistance] = useState(0);
 
-  // Load initial feed
-  useEffect(() => {
-    loadFeedItems(1, true);
-  }, [userId, preferences]);
-
-  // Set up infinite scroll
-  useEffect(() => {
-    if (observerRef.current) {
-      observerRef.current.disconnect();
-    }
-
-    observerRef.current = new IntersectionObserver(
-      (entries) => {
-        if (entries[0]?.isIntersecting && hasMore && !isLoading) {
-          loadFeedItems(page + 1, false);
-        }
-      },
-      { threshold: 0.1 }
-    );
-
-    if (lastItemRef.current) {
-      observerRef.current.observe(lastItemRef.current);
-    }
-
-    return () => {
-      if (observerRef.current) {
-        observerRef.current.disconnect();
-      }
-    };
-  }, [page, hasMore, isLoading]);
-
   // Load feed items
-  const loadFeedItems = async (pageNum: number, isRefresh: boolean = false) => {
+  const loadFeedItems = useCallback(async (pageNum: number, isRefresh: boolean = false) => {
     if (isLoading) return;
 
     setIsLoading(true);
@@ -171,7 +140,38 @@ export default function SocialFeed({
       setIsLoading(false);
       setIsRefreshing(false);
     }
-  };
+  }, [userId, isLoading]);
+
+  // Load initial feed
+  useEffect(() => {
+    loadFeedItems(1, true);
+  }, [loadFeedItems]);
+
+  // Set up infinite scroll
+  useEffect(() => {
+    if (observerRef.current) {
+      observerRef.current.disconnect();
+    }
+
+    observerRef.current = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting && hasMore && !isLoading) {
+          loadFeedItems(page + 1, false);
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (lastItemRef.current) {
+      observerRef.current.observe(lastItemRef.current);
+    }
+
+    return () => {
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+      }
+    };
+  }, [page, hasMore, isLoading, loadFeedItems]);
 
   // Handle pull-to-refresh
   const handleTouchStart = (e: React.TouchEvent) => {

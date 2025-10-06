@@ -42,8 +42,8 @@ export async function GET(request: NextRequest) {
       } else {
         status.connection = true;
       }
-    } catch {
-      status.warnings.push(`Connection failed: ${err}`);
+    } catch (error) {
+      status.warnings.push(`Connection failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
     
     // Check RLS status on key tables
@@ -82,8 +82,8 @@ export async function GET(request: NextRequest) {
         
         status.tableCounts[table] = count || 0;
         
-      } catch {
-        status.warnings.push(`${table} check failed: ${err}`);
+      } catch (error) {
+        status.warnings.push(`${table} check failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
       }
     }
     

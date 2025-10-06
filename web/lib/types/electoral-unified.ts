@@ -4,14 +4,35 @@
  * Purpose: bridge legacy snake_case interfaces to the new unified shapes
  * Zero feature changes; types only.
  * 
- * @author Agent B
- * @date December 19, 2024
  */
 
-import type { UnifiedCampaignFinance, UnifiedVote } from '@/lib/integrations/unified-orchestrator';
+// Types moved from archived unified-orchestrator.ts
+export type CampaignFinance = {
+  totalReceipts: number;
+  totalDisbursements: number;
+  cashOnHand: number;
+  debt: number;
+  individualContributions: number;
+  pacContributions: number;
+  partyContributions: number;
+  selfFinancing: number;
+  cycle: number;
+  lastUpdated: string;
+};
 
-export type CampaignFinance = UnifiedCampaignFinance;
-export type Vote = UnifiedVote;
+export type Vote = {
+  id: string;
+  representativeId: string;
+  billId: string;
+  billTitle: string;
+  question: string;
+  vote: 'yes' | 'no' | 'abstain' | 'not_voting';
+  result: 'passed' | 'failed' | 'tied';
+  date: string;
+  chamber: 'house' | 'senate';
+  partyLineVote: boolean;
+  constituentAlignment: number;
+};
 
 export type Representative = {
   id: string

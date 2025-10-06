@@ -15,7 +15,7 @@ import {
   updateCurrentProfile, 
   updateProfileAvatar, 
   exportUserData 
-} from '@/app/actions/profile';
+} from '@/lib/actions/profile';
 
 /**
  * Fetch current profile from API endpoint

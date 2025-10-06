@@ -10,7 +10,7 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   MagnifyingGlassIcon, 
   MapPinIcon, 
@@ -99,12 +99,7 @@ export default function Civics2Page() {
   const [likedRepresentatives, setLikedRepresentatives] = useState<Set<string>>(new Set());
   const [followedRepresentatives, setFollowedRepresentatives] = useState<Set<string>>(new Set());
 
-  // Load representatives on component mount
-  useEffect(() => {
-    loadRepresentatives();
-  }, [selectedState, selectedLevel]);
-
-  const loadRepresentatives = async () => {
+  const loadRepresentatives = useCallback(async () => {
     setIsLoading(true);
     
     try {
@@ -121,7 +116,12 @@ export default function Civics2Page() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [selectedState, selectedLevel]);
+
+  // Load representatives on component mount
+  useEffect(() => {
+    loadRepresentatives();
+  }, [loadRepresentatives]);
 
   const handleLike = (id: string) => {
     setLikedRepresentatives(prev => {

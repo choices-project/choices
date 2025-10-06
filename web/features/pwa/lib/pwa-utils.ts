@@ -110,11 +110,7 @@ export type BeforeInstallPromptEvent = {
   userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
 } & Event
 
-declare global {
-  type WindowEventMap = {
-    beforeinstallprompt: BeforeInstallPromptEvent;
-  }
-}
+// PWA event types for TypeScript
 
 // PWA Manager class for managing PWA functionality
 export class PWAManager {
