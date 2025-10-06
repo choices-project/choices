@@ -8,6 +8,66 @@ import dotenv from 'dotenv';
 // Load environment variables
 dotenv.config({ path: '.env.local' });
 
+// CRITICAL: Current representative filtering function
+function checkIfCurrentRepresentative(rep: any, currentDate: Date): boolean {
+  console.log(`🔍 Checking if ${rep.name} is current representative...`);
+  console.log(`   Current Date: ${currentDate.toISOString()}`);
+  console.log(`   Term Start: ${rep.termStartDate}`);
+  console.log(`   Term End: ${rep.termEndDate}`);
+  console.log(`   Next Election: ${rep.nextElectionDate}`);
+  console.log(`   Last Updated: ${rep.lastUpdated}`);
+  
+  // Check if representative has current term dates
+  if (rep.termStartDate && rep.termEndDate) {
+    const termStart = new Date(rep.termStartDate);
+    const termEnd = new Date(rep.termEndDate);
+    
+    console.log(`   Term Start Date: ${termStart.toISOString()}`);
+    console.log(`   Term End Date: ${termEnd.toISOString()}`);
+    
+    // Term must be current (started and not ended)
+    if (termStart > currentDate) {
+      console.log(`   ❌ Term hasn't started yet (${termStart.toISOString()} > ${currentDate.toISOString()})`);
+      return false;
+    }
+    if (termEnd < currentDate) {
+      console.log(`   ❌ Term has expired (${termEnd.toISOString()} < ${currentDate.toISOString()})`);
+      return false;
+    }
+    
+    console.log(`   ✅ Term is current (${termStart.toISOString()} <= ${currentDate.toISOString()} <= ${termEnd.toISOString()})`);
+  }
+  
+  // Check if representative has upcoming elections (indicates current)
+  if (rep.nextElectionDate) {
+    const nextElection = new Date(rep.nextElectionDate);
+    console.log(`   Next Election: ${nextElection.toISOString()}`);
+    // If next election is more than 2 years away, might be historical
+    if (nextElection > new Date(currentDate.getFullYear() + 2, 11, 31)) {
+      console.log(`   ❌ Next election too far in future (${nextElection.toISOString()})`);
+      return false;
+    }
+    console.log(`   ✅ Next election is reasonable (${nextElection.toISOString()})`);
+  }
+  
+  // Check if representative has recent activity (within last 2 years)
+  if (rep.lastUpdated) {
+    const lastUpdated = new Date(rep.lastUpdated);
+    const twoYearsAgo = new Date(currentDate.getFullYear() - 2, 0, 1);
+    console.log(`   Last Updated: ${lastUpdated.toISOString()}`);
+    console.log(`   Two Years Ago: ${twoYearsAgo.toISOString()}`);
+    if (lastUpdated < twoYearsAgo) {
+      console.log(`   ❌ Last updated too long ago (${lastUpdated.toISOString()} < ${twoYearsAgo.toISOString()})`);
+      return false;
+    }
+    console.log(`   ✅ Last updated recently (${lastUpdated.toISOString()} >= ${twoYearsAgo.toISOString()})`);
+  }
+  
+  // If we get here, the representative passed all date checks
+  console.log(`   ✅ Representative passed all current checks`);
+  return true;
+}
+
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SECRET_KEY!,
@@ -70,6 +130,19 @@ export async function POST(request: NextRequest) {
       try {
         console.log(`\n👤 Processing ${rep.name} (${rep.office}, ${rep.state})...`);
         
+        // CRITICAL: Check if representative is current before processing
+        const currentDate = new Date();
+        const isCurrent = checkIfCurrentRepresentative(rep, currentDate);
+        
+        if (!isCurrent) {
+          console.log(`⚠️ SKIPPING non-current representative: ${rep.name}`);
+          console.log(`   Term: ${rep.termStartDate || 'N/A'} to ${rep.termEndDate || 'N/A'}`);
+          console.log(`   Current Date: ${currentDate.toISOString()}`);
+          continue; // Skip processing this representative
+        }
+        
+        console.log(`✅ PROCEEDING with current representative: ${rep.name}`);
+        
         // Process representative through pipeline with comprehensive data collection
         const enrichedRep = await pipeline.processRepresentative({
           name: rep.name,
@@ -81,13 +154,17 @@ export async function POST(request: NextRequest) {
           openstatesId: rep.openstates_id,
           fecId: rep.fec_id,
           googleCivicId: rep.google_civic_id,
+          // CRITICAL: Add term date fields for current representative filtering
+          termStartDate: rep.term_start_date,
+          termEndDate: rep.term_end_date,
+          nextElectionDate: rep.next_election_date,
           contacts: [],
           socialMedia: [],
           photos: [],
           activity: [],
           dataSources: [],
           qualityScore: 0,
-          lastUpdated: new Date()
+          lastUpdated: rep.last_updated ? new Date(rep.last_updated) : new Date()
         });
         
         if (enrichedRep) {
