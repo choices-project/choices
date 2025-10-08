@@ -7,11 +7,10 @@
  */
 
 import { createClient } from '@supabase/supabase-js';
-import { devLog } from '../logger';
 import { CurrentElectorateVerifier } from './current-electorate-verifier';
 import OpenStatesIntegration, { type OpenStatesPerson } from './openstates-integration';
 
-export interface SuperiorPipelineConfig {
+export type SuperiorPipelineConfig = {
   // Data sources
   enableCongressGov: boolean;
   enableGoogleCivic: boolean;
@@ -47,7 +46,7 @@ export interface SuperiorPipelineConfig {
   enableMunicipalProcessing: boolean;
 }
 
-export interface SuperiorRepresentativeData {
+export type SuperiorRepresentativeData = {
   // Core identification
   id: string;
   name: string;
@@ -593,6 +592,32 @@ export class SuperiorDataPipeline {
       });
     }
     
+    // OpenStates committee activity from secondary data
+    if (secondaryData?.openStatesPerson?.roles) {
+      secondaryData.openStatesPerson.roles.forEach((role: any) => {
+        if (role.committee) {
+          activity.push({
+            type: 'committee_membership',
+            title: `Committee: ${role.committee}`,
+            description: `Role: ${role.title || 'Member'}`,
+            date: role.start_date,
+            source: 'openstates'
+          });
+        }
+      });
+    }
+    
+    // FEC financial activity from secondary data
+    if (secondaryData?.fecData?.candidate) {
+      activity.push({
+        type: 'campaign_finance',
+        title: 'Campaign Finance Data',
+        description: `FEC ID: ${secondaryData.fecData.candidate.id}`,
+        date: new Date().toISOString(),
+        source: 'fec'
+      });
+    }
+    
     return activity;
   }
   
@@ -623,6 +648,32 @@ export class SuperiorDataPipeline {
       });
     }
     
+    // OpenStates People social media from secondary data
+    if (secondaryData?.openStatesPerson?.social_media) {
+      secondaryData.openStatesPerson.social_media.forEach((sm: any) => {
+        socialMedia.push({
+          platform: sm.platform,
+          handle: sm.handle,
+          url: sm.url,
+          verified: sm.verified || false,
+          source: 'openstates-people'
+        });
+      });
+    }
+    
+    // FEC social media from secondary data
+    if (secondaryData?.fecData?.candidate?.socialMedia) {
+      secondaryData.fecData.candidate.socialMedia.forEach((sm: any) => {
+        socialMedia.push({
+          platform: sm.platform,
+          handle: sm.handle,
+          url: sm.url,
+          verified: false,
+          source: 'fec'
+        });
+      });
+    }
+    
     console.log('🔍 Social Media: Total collected', socialMedia.length, 'items');
     return socialMedia;
   }
@@ -631,6 +682,7 @@ export class SuperiorDataPipeline {
    * Extract campaign finance information
    */
   private extractCampaignFinance(primaryData: any, secondaryData: any): any {
+    // Primary FEC data
     if (primaryData.fec) {
       return {
         totalRaised: primaryData.fec.totalRaised || 0,
@@ -638,6 +690,17 @@ export class SuperiorDataPipeline {
         cashOnHand: primaryData.fec.cashOnHand || 0,
         lastFilingDate: primaryData.fec.lastFilingDate || '',
         source: 'fec'
+      };
+    }
+    
+    // Secondary FEC data from other sources
+    if (secondaryData?.fecData?.candidate) {
+      return {
+        totalRaised: secondaryData.fecData.candidate.totalRaised || 0,
+        totalSpent: secondaryData.fecData.candidate.totalSpent || 0,
+        cashOnHand: secondaryData.fecData.candidate.cashOnHand || 0,
+        lastFilingDate: secondaryData.fecData.candidate.lastFilingDate || '',
+        source: 'fec-secondary'
       };
     }
     

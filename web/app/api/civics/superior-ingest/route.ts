@@ -6,7 +6,7 @@
  * Updated: October 8, 2025
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { type NextRequest, NextResponse } from 'next/server';
 import SuperiorDataPipeline, { type SuperiorPipelineConfig } from '@/lib/civics-2-0/superior-data-pipeline';
 import { CurrentElectorateVerifier } from '@/lib/civics-2-0/current-electorate-verifier';
 
@@ -65,6 +65,8 @@ export async function POST(request: NextRequest) {
         error: "No representatives provided in request body"
       }, { status: 400 });
     }
+    
+    console.log(`   Processing ${representatives.length} representatives for state: ${state || 'all'}, level: ${level || 'all'}`);
     
     // Initialize superior data pipeline
     const superiorPipeline = new SuperiorDataPipeline(SUPERIOR_CONFIG);
@@ -195,6 +197,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       message: 'SUPERIOR civics ingestion API is available',
+      requestedState: state || 'all',
+      requestedLevel: level || 'all',
       systemDate: new Date().toISOString(),
       configuration: {
         openStatesPeopleEnabled: SUPERIOR_CONFIG.enableOpenStatesPeople,

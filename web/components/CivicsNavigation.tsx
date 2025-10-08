@@ -4,11 +4,10 @@ import React, { useState } from 'react';
 import { 
   MapPinIcon, 
   UserGroupIcon, 
-  Cog6ToothIcon,
-  MagnifyingGlassIcon
+  Cog6ToothIcon
 } from '@heroicons/react/24/outline';
 
-interface CivicsNavigationProps {
+type CivicsNavigationProps = {
   onRepresentativesClick: () => void;
   onAddressUpdate: (address: string) => void;
   currentAddress?: string;

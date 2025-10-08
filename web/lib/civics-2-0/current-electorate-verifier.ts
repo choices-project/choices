@@ -6,7 +6,7 @@
  * Updated: October 8, 2025
  */
 
-export interface CurrentElectorateVerification {
+export type CurrentElectorateVerification = {
   systemDate: Date;
   verificationTimestamp: string;
   representativeChecks: RepresentativeCheck[];
@@ -18,7 +18,7 @@ export interface CurrentElectorateVerification {
   };
 }
 
-export interface RepresentativeCheck {
+export type RepresentativeCheck = {
   name: string;
   office: string;
   isCurrent: boolean;

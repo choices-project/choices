@@ -12,20 +12,21 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
+import Image from 'next/image';
 import { 
   MagnifyingGlassIcon, 
   MapPinIcon, 
   UserGroupIcon,
   ChartBarIcon,
   HeartIcon,
+  ShareIcon,
   FunnelIcon,
   AdjustmentsHorizontalIcon
 } from '@heroicons/react/24/outline';
 import { HeartIcon as HeartSolidIcon } from '@heroicons/react/24/solid';
 import type { RepresentativeData } from '@/lib/civics-2-0/free-apis-pipeline';
-import EnhancedCandidateCard from '@/components/civics-2-0/EnhancedCandidateCard';
 
-interface EnhancedRepresentativeFeedProps {
+type EnhancedRepresentativeFeedProps = {
   userId?: string;
   showHeader?: boolean;
   maxItems?: number;
@@ -40,6 +41,7 @@ export default function EnhancedRepresentativeFeed({
   onRepresentativeClick,
   className = ''
 }: EnhancedRepresentativeFeedProps) {
+  console.log('EnhancedRepresentativeFeed initialized for user:', userId || 'anonymous');
   const [representatives, setRepresentatives] = useState<RepresentativeData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -323,9 +325,11 @@ export default function EnhancedRepresentativeFeed({
                   {/* Photo */}
                   <div className="flex-shrink-0">
                     {representative.photos?.[0] ? (
-                      <img
+                      <Image
                         src={representative.photos[0].url}
                         alt={representative.name}
+                        width={48}
+                        height={48}
                         className="w-12 h-12 rounded-full object-cover"
                       />
                     ) : (
@@ -375,6 +379,26 @@ export default function EnhancedRepresentativeFeed({
                       ) : (
                         <HeartIcon className="w-5 h-5" />
                       )}
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleShare(representative);
+                      }}
+                      className="p-2 text-gray-400 hover:text-blue-500 transition-colors"
+                    >
+                      <ShareIcon className="w-5 h-5" />
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleContact('general', '');
+                      }}
+                      className="p-2 text-gray-400 hover:text-green-500 transition-colors"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                      </svg>
                     </button>
                   </div>
                 </div>

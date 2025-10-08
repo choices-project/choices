@@ -13,9 +13,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { 
   MagnifyingGlassIcon, 
-  MapPinIcon, 
   UserGroupIcon,
-  ChartBarIcon,
   HeartIcon
 } from '@heroicons/react/24/outline';
 import type { RepresentativeData } from '@/lib/civics-2-0/free-apis-pipeline';
@@ -391,10 +389,14 @@ export default function Civics2Page() {
                     <EnhancedCandidateCard
                       key={representative.id}
                       representative={representative}
-                      onContact={(id, type) => handleContact(type, '')}
+                      onLike={handleLike}
+                      onFollow={handleFollow}
+                      onContact={handleContact}
                       onShare={() => handleShare(representative)}
+                      isLiked={likedRepresentatives.has(representative.id || '')}
+                      isFollowing={followedRepresentatives.has(representative.id || '')}
                       className="group bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100"
-                      />
+                    />
                 ))}
               </div>
                 </div>

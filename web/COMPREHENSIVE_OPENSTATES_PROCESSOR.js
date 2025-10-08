@@ -210,7 +210,7 @@ class ComprehensiveOpenStatesProcessor {
   }
 
   // Process committee data
-  async processCommittee(committee, stateCode) {
+  async processCommittee(committee, _stateCode) {
     try {
       // Extract committee members and their roles
       if (committee.members && committee.members.length > 0) {

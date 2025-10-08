@@ -11,11 +11,10 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
+import Image from 'next/image';
 import { 
   MagnifyingGlassIcon, 
-  MapPinIcon, 
   UserGroupIcon,
-  ChartBarIcon,
   HeartIcon
 } from '@heroicons/react/24/outline';
 import type { RepresentativeData } from '@/lib/civics-2-0/free-apis-pipeline';
@@ -307,9 +306,11 @@ export default function Civics2Page() {
                         <div className="flex items-start space-x-4">
                           {representative.photos?.[0] ? (
                             <div className="relative">
-                              <img 
+                              <Image 
                                 src={representative.photos[0].url} 
                                 alt={representative.name}
+                                width={80}
+                                height={80}
                                 className="w-20 h-20 rounded-full object-cover border-4 border-white shadow-lg"
                                 onError={(e) => {
                                   e.currentTarget.style.display = 'none';
@@ -400,6 +401,51 @@ export default function Civics2Page() {
                           </div>
                         </div>
                       )}
+
+                      {/* Interactive Actions */}
+                      <div className="px-6 py-4 border-t border-gray-100">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-4">
+                            <button
+                              onClick={() => handleLike(representative.id || '')}
+                              className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors ${
+                                likedRepresentatives.has(representative.id || '')
+                                  ? 'bg-red-50 text-red-600 hover:bg-red-100'
+                                  : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
+                              }`}
+                            >
+                              <HeartIcon className="w-4 h-4" />
+                              <span className="text-sm font-medium">Like</span>
+                            </button>
+                            <button
+                              onClick={() => handleFollow(representative.id || '')}
+                              className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors ${
+                                followedRepresentatives.has(representative.id || '')
+                                  ? 'bg-blue-50 text-blue-600 hover:bg-blue-100'
+                                  : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
+                              }`}
+                            >
+                              <UserGroupIcon className="w-4 h-4" />
+                              <span className="text-sm font-medium">Follow</span>
+                            </button>
+                            <button
+                              onClick={() => handleShare(representative.id || '')}
+                              className="flex items-center space-x-2 px-3 py-2 rounded-lg bg-gray-50 text-gray-600 hover:bg-gray-100 transition-colors"
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
+                              </svg>
+                              <span className="text-sm font-medium">Share</span>
+                            </button>
+                          </div>
+                          <button
+                            onClick={() => handleContact(representative.id || '', 'general')}
+                            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                          >
+                            Contact
+                          </button>
+                        </div>
+                      </div>
 
                       {/* Quality & Sources */}
                       <div className="px-6 py-4 bg-gray-50 border-t border-gray-100">

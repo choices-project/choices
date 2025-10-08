@@ -12,7 +12,7 @@
 // import { load } from 'js-yaml';
 import { CurrentElectorateVerifier } from './current-electorate-verifier';
 
-export interface OpenStatesPerson {
+export type OpenStatesPerson = {
   id: string;
   name: string;
   given_name?: string;
@@ -55,7 +55,7 @@ export interface OpenStatesPerson {
   extras?: Record<string, any>;
 }
 
-export interface OpenStatesIntegrationConfig {
+export type OpenStatesIntegrationConfig = {
   dataPath: string;
   currentDate: Date;
 }

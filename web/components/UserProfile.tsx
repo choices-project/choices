@@ -1,15 +1,15 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { 
   MapPinIcon, 
-  UserGroupIcon, 
-  Cog6ToothIcon,
+  UserGroupIcon,
   CheckIcon,
   PencilIcon
 } from '@heroicons/react/24/outline';
 
-interface UserProfileProps {
+type UserProfileProps = {
   onRepresentativesUpdate: (representatives: any[]) => void;
   onClose: () => void;
 }
@@ -198,9 +198,11 @@ export default function UserProfile({ onRepresentativesUpdate, onClose }: UserPr
                 {representatives.slice(0, 5).map((rep, index) => (
                   <div key={index} className="flex items-center space-x-3 p-3 bg-white rounded-lg">
                     {rep.photos?.[0] ? (
-                      <img 
+                      <Image 
                         src={rep.photos[0].url} 
                         alt={rep.name}
+                        width={40}
+                        height={40}
                         className="w-10 h-10 rounded-full object-cover"
                       />
                     ) : (

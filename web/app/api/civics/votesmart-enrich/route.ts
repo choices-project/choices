@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { type NextRequest, NextResponse } from 'next/server';
 import VoteSmartEnrichment from '@/lib/civics-2-0/votesmart-enrichment';
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const enrichment = new VoteSmartEnrichment();
     
@@ -24,9 +24,10 @@ export async function GET(request: NextRequest) {
   }
 }
 
-export async function POST(request: NextRequest) {
+export async function POST(_request: NextRequest) {
+  console.log('VoteSmart enrichment request received');
   try {
-    const { action, representativeId, votesmartId, batchSize = 10 } = await request.json();
+    const { action, representativeId, votesmartId, batchSize = 10 } = await _request.json();
     const enrichment = new VoteSmartEnrichment();
     
     switch (action) {

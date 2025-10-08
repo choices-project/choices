@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 
-interface UserOnboardingProps {
+type UserOnboardingProps = {
   onComplete: (userData: { address?: string; state?: string; representatives?: any[] }) => void;
   onSkip: () => void;
 }
@@ -10,7 +10,7 @@ interface UserOnboardingProps {
 export default function UserOnboarding({ onComplete, onSkip }: UserOnboardingProps) {
   const [step, setStep] = useState<'welcome' | 'address' | 'loading' | 'complete'>('welcome');
   const [userAddress, setUserAddress] = useState('');
-  const [selectedState, setSelectedState] = useState('CA');
+  const [selectedState] = useState('CA');
   const [addressLoading, setAddressLoading] = useState(false);
   const [representatives, setRepresentatives] = useState<any[]>([]);
 
@@ -73,7 +73,7 @@ export default function UserOnboarding({ onComplete, onSkip }: UserOnboardingPro
             </div>
             <h1 className="text-2xl font-bold text-gray-900 mb-4">Welcome to Civics 2.0!</h1>
             <p className="text-gray-600 mb-8">
-              Let's personalize your experience by finding your local representatives. 
+              Let&apos;s personalize your experience by finding your local representatives. 
               This helps us show you the most relevant political information.
             </p>
             
