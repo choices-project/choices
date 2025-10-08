@@ -303,6 +303,60 @@ export class FreeAPIsPipeline {
   }
 
   /**
+   * Reset all rate limiters to allow fresh API calls
+   */
+  resetRateLimiters(): void {
+    console.log('🔄 Resetting all rate limiters...');
+    
+    // Reset Google Civic API
+    this.rateLimiters.set('google-civic', {
+      requestsPerDay: 25000,
+      requestsPerHour: 1000,
+      requestsPerMinute: 50,
+      currentUsage: 0,
+      lastReset: Date.now()
+    });
+
+    // Reset OpenStates API
+    this.rateLimiters.set('openstates', {
+      requestsPerDay: 10000,
+      requestsPerHour: 400,
+      requestsPerMinute: 20,
+      currentUsage: 0,
+      lastReset: Date.now()
+    });
+
+    // Reset Congress.gov API
+    this.rateLimiters.set('congress-gov', {
+      requestsPerDay: 5000,
+      requestsPerHour: 200,
+      requestsPerMinute: 10,
+      currentUsage: 0,
+      lastReset: Date.now()
+    });
+
+    // Reset FEC API
+    this.rateLimiters.set('fec', {
+      requestsPerDay: 1000,
+      requestsPerHour: 40,
+      requestsPerMinute: 2,
+      currentUsage: 0,
+      lastReset: Date.now()
+    });
+
+    // Reset LegiScan API
+    this.rateLimiters.set('legiscan', {
+      requestsPerDay: 1000,
+      requestsPerHour: 40,
+      requestsPerMinute: 2,
+      currentUsage: 0,
+      lastReset: Date.now()
+    });
+    
+    console.log('✅ All rate limiters reset successfully');
+  }
+
+  /**
    * Main ingestion method - processes a representative using all FREE APIs
    * Only processes CURRENT representatives to avoid historical data
    */
@@ -328,52 +382,58 @@ export class FreeAPIsPipeline {
     devLog('Processing CURRENT representative with FREE APIs', { name: rep.name });
 
     try {
-      // 1. Get election data from Google Civic (FREE) - ELECTION DATA STILL ACTIVE
-      // Note: Representatives endpoint deprecated, but election data still available
-      console.log('📊 Getting Google Civic election data...');
-      const googleCivicData = await this.getGoogleCivicElectionData(rep);
-      console.log('✅ Google Civic election data retrieved');
+      // OPTIMIZED: Parallel API calls for better performance
+      console.log('📊 Starting parallel API data collection...');
       
-      // 2. Get state data from OpenStates (FREE) - WORKING
-      console.log('📊 Getting OpenStates People data...');
-      const openStatesData = await this.getOpenStatesPeopleData(rep);
-      console.log('✅ OpenStates People data retrieved');
-      
-      // 3. Get federal data from Congress.gov (FREE) - RE-ENABLED
-      console.log('📊 Getting Congress.gov data...');
-      const congressGovData = await this.getCongressGovData(rep);
-      console.log('✅ Congress.gov data retrieved:', congressGovData);
-      
-      // 3b. Get additional legislative data from LegiScan (FREE) - 30,000 monthly queries
-      console.log('📊 Getting LegiScan data...');
-      const legiScanData = await this.getLegiScanData(rep);
-      console.log('✅ LegiScan data retrieved');
-      
-      // 4. Get photos from multiple sources (FREE) - RE-ENABLED
-      console.log('📊 Getting photos...');
-      const photos = await this.getPhotosFromMultipleSources(rep);
-      console.log('✅ Photos retrieved');
-      
-      // 5. Get social media (FREE) - RE-ENABLED
-      console.log('📊 Getting social media...');
-      const socialMedia = await this.getSocialMediaData(rep);
-      console.log('✅ Social media retrieved');
-      
-      // 6. Get campaign finance (FREE) - RE-ENABLED
-      console.log('📊 Getting FEC data...');
-      devLog('📊 Getting FEC data for', rep.name, rep.level);
-      console.log('🔍 FEC: About to call getFECData method');
-      let campaignFinance;
-      try {
-        console.log('🔍 FEC: Calling getFECData method now');
-        campaignFinance = await this.getFECData(rep);
-        console.log('✅ FEC data retrieved:', campaignFinance);
-        devLog('✅ FEC data retrieved:', campaignFinance);
-      } catch (error) {
-        console.log('❌ FEC data failed:', error);
-        devLog('❌ FEC data failed:', error);
-        campaignFinance = null;
-      }
+      // Execute all API calls in parallel for maximum efficiency
+      const [
+        googleCivicData,
+        openStatesData,
+        congressGovData,
+        legiScanData,
+        photos,
+        socialMedia,
+        campaignFinance
+      ] = await Promise.allSettled([
+        this.getGoogleCivicElectionData(rep),
+        this.getOpenStatesPeopleData(rep),
+        this.getCongressGovData(rep),
+        this.getLegiScanData(rep),
+        this.getPhotosFromMultipleSources(rep),
+        this.getSocialMediaData(rep),
+        this.getFECData(rep)
+      ]);
+
+      // Get comprehensive enrichment data
+      console.log('📊 Getting comprehensive enrichment data...');
+      const enrichedData = await this.enrichRepresentativeData(rep, {
+        googleCivic: googleCivicData.status === 'fulfilled' ? googleCivicData.value : {},
+        openStates: openStatesData.status === 'fulfilled' ? openStatesData.value : {},
+        congressGov: congressGovData.status === 'fulfilled' ? congressGovData.value : {},
+        legiScan: legiScanData.status === 'fulfilled' ? legiScanData.value : {},
+        photos: photos.status === 'fulfilled' ? photos.value : [],
+        socialMedia: socialMedia.status === 'fulfilled' ? socialMedia.value : [],
+        campaignFinance: campaignFinance.status === 'fulfilled' ? campaignFinance.value : null
+      });
+      console.log('✅ Comprehensive enrichment data retrieved');
+
+      // Log results for each API call
+      console.log('✅ Google Civic election data:', googleCivicData.status === 'fulfilled' ? 'retrieved' : 'failed');
+      console.log('✅ OpenStates People data:', openStatesData.status === 'fulfilled' ? 'retrieved' : 'failed');
+      console.log('✅ Congress.gov data:', congressGovData.status === 'fulfilled' ? 'retrieved' : 'failed');
+      console.log('✅ LegiScan data:', legiScanData.status === 'fulfilled' ? 'retrieved' : 'failed');
+      console.log('✅ Photos:', photos.status === 'fulfilled' ? 'retrieved' : 'failed');
+      console.log('✅ Social media:', socialMedia.status === 'fulfilled' ? 'retrieved' : 'failed');
+      console.log('✅ FEC data:', campaignFinance.status === 'fulfilled' ? 'retrieved' : 'failed');
+
+      // Use enriched data as primary source
+      const googleCivicResult = enrichedData.googleCivic || {};
+      const openStatesResult = enrichedData.openStates || {};
+      const congressGovResult = enrichedData.congressGov || {};
+      const legiScanResult = enrichedData.legiScan || {};
+      const photosResult = enrichedData.photos || [];
+      const socialMediaResult = enrichedData.socialMedia || [];
+      const campaignFinanceResult = enrichedData.campaignFinance || null;
       
       // 7. Get Wikipedia data (FREE) - NEW
       console.log('📊 Getting Wikipedia data...');
@@ -387,27 +447,27 @@ export class FreeAPIsPipeline {
 
       // Debug: Log what each API returned
       console.log('🔍 API Data Debug:');
-      console.log('  Google Civic:', googleCivicData);
-      console.log('  OpenStates:', openStatesData);
-      console.log('  Congress.gov:', congressGovData);
-      console.log('  LegiScan:', legiScanData);
+      console.log('  Google Civic:', googleCivicResult);
+      console.log('  OpenStates:', openStatesResult);
+      console.log('  Congress.gov:', congressGovResult);
+      console.log('  LegiScan:', legiScanResult);
       console.log('  Wikipedia:', wikipediaData);
-      console.log('  Photos:', photos?.length || 0);
-      console.log('  Social Media:', socialMedia?.length || 0);
-      console.log('  Campaign Finance:', campaignFinance);
+      console.log('  Photos:', photosResult?.length || 0);
+      console.log('  Social Media:', socialMediaResult?.length || 0);
+      console.log('  Campaign Finance:', campaignFinanceResult);
       console.log('  Activity:', activity?.length || 0);
 
       // Merge and validate all data
       console.log('🔄 Merging and validating data...');
       const enrichedRep = this.mergeAndValidateData(
         rep,
-        googleCivicData,
-        openStatesData,
-        congressGovData,
-        legiScanData,
-        photos,
-        socialMedia,
-        campaignFinance || undefined,
+        googleCivicResult,
+        openStatesResult,
+        congressGovResult,
+        legiScanResult,
+        photosResult,
+        socialMediaResult,
+        campaignFinanceResult || undefined,
         activity,
         wikipediaData
       );
@@ -473,97 +533,103 @@ export class FreeAPIsPipeline {
       
       const searchQuery = stateCapitals[rep.state as keyof typeof stateCapitals] || `${rep.state} State Capitol`;
       
-      // Get election information
+      // RE-ENABLED: Google Civic provides valuable civic data
+      const enrichedData: Partial<RepresentativeData> = {
+        dataSources: ['google-civic'],
+        contacts: [],
+        socialMedia: [],
+        photos: [],
+        activity: []
+      };
+
+      // Get elections for the state
       const electionsResponse = await fetch(
-        `https://www.googleapis.com/civicinfo/v2/elections?address=${encodeURIComponent(searchQuery)}&key=${apiKey}`,
+        `https://www.googleapis.com/civicinfo/v2/elections?key=${apiKey}`,
         {
           method: 'GET',
           headers: { 'Content-Type': 'application/json' }
         }
       );
 
-      if (!electionsResponse.ok) {
-        devLog('Google Civic Election API request failed', { status: electionsResponse.status });
-        return {};
-      }
-
+      if (electionsResponse.ok) {
       const electionsData = await electionsResponse.json();
-      if (!electionsData.elections || electionsData.elections.length === 0) {
-        return {};
-      }
-
-      // Extract upcoming elections
-      const upcomingElections = electionsData.elections.filter((election: any) => {
-        const electionDate = new Date(election.electionDay);
-        return electionDate > new Date();
-      });
-
-      const activity: ActivityInfo[] = [];
-
-      // Add election information
-      upcomingElections.forEach((election: any) => {
-        activity.push({
+        const upcomingElections = electionsData.elections?.filter((election: any) => 
+          election.electionDay && new Date(election.electionDay) > new Date()
+        ) || [];
+        
+        console.log(`🗳️ Found ${upcomingElections.length} upcoming elections for ${rep.state}`);
+        
+        // Add election information as civic activity (limit to 1 to reduce generic data)
+        for (const election of upcomingElections.slice(0, 1)) { // Limit to 1 to reduce generic data
+          enrichedData.activity?.push({
           type: 'vote',
           title: `Upcoming Election: ${election.name}`,
-          date: election.electionDay,
-          description: `Election in ${rep.state}`,
+            description: `Election scheduled for ${election.electionDay}`,
+            url: `https://www.vote411.org/`,
+            date: new Date(election.electionDay),
           source: 'google-civic',
-          metadata: { electionId: election.id, state: rep.state }
-        });
-      });
+            metadata: {
+              electionId: election.id,
+              electionName: election.name,
+              electionDay: election.electionDay
+            }
+          });
+        }
+      }
 
-      // Get early voting information for the most recent upcoming election
-      if (upcomingElections.length > 0) {
-        const latestElection = upcomingElections[0];
-        try {
-          const earlyVotingResponse = await fetch(
-            `https://www.googleapis.com/civicinfo/v2/voterinfo?address=${encodeURIComponent(searchQuery)}&electionId=${latestElection.id}&key=${apiKey}`,
+      // Get voter information for the state
+      try {
+        const voterInfoResponse = await fetch(
+          `https://www.googleapis.com/civicinfo/v2/voterinfo?address=${encodeURIComponent(searchQuery)}&key=${apiKey}`,
             {
               method: 'GET',
               headers: { 'Content-Type': 'application/json' }
             }
           );
 
-          if (earlyVotingResponse.ok) {
-            const voterInfo = await earlyVotingResponse.json();
-            
-            // Add early voting locations
-            if (voterInfo.earlyVoteSites && voterInfo.earlyVoteSites.length > 0) {
-              voterInfo.earlyVoteSites.forEach((site: any) => {
-                activity.push({
+        if (voterInfoResponse.ok) {
+          const voterInfo = await voterInfoResponse.json();
+          
+          // Extract polling location information
+          if (voterInfo.pollingLocations && voterInfo.pollingLocations.length > 0) {
+            const pollingLocation = voterInfo.pollingLocations[0];
+            enrichedData.activity?.push({
                   type: 'vote',
-                  title: `Early Voting: ${site.name || 'Voting Location'}`,
-                  date: site.startDate || latestElection.electionDay,
-                  description: `Early voting location in ${rep.state}. Hours: ${site.pollingHours || 'Check location for hours'}. ${site.address ? `${site.address.line1}, ${site.address.city}, ${site.address.state} ${site.address.zip}` : ''}`,
+              title: `Polling Location: ${pollingLocation.address?.locationName || 'Voting Location'}`,
+              description: `Vote at ${pollingLocation.address?.line1 || 'Your polling location'}`,
+              url: `https://www.vote411.org/`,
+              date: new Date(),
                   source: 'google-civic',
-                  metadata: { siteId: site.id, address: site.address }
-                });
-              });
-            }
+              metadata: {
+                pollingLocation: pollingLocation.address,
+                hours: pollingLocation.pollingHours
+              }
+            });
+          }
 
-            // Add polling places
-            if (voterInfo.pollingLocations && voterInfo.pollingLocations.length > 0) {
-              voterInfo.pollingLocations.forEach((location: any) => {
-                activity.push({
+          // Extract ballot measures
+          if (voterInfo.contests && voterInfo.contests.length > 0) {
+            for (const contest of voterInfo.contests.slice(0, 2)) { // Limit to 2 contests
+              enrichedData.activity?.push({
                   type: 'vote',
-                  title: `Polling Place: ${location.name || 'Voting Location'}`,
-                  date: latestElection.electionDay,
-                  description: `Election day polling location in ${rep.state}. Hours: ${location.pollingHours || 'Check location for hours'}. ${location.address ? `${location.address.line1}, ${location.address.city}, ${location.address.state} ${location.address.zip}` : ''}`,
+                title: `Ballot Measure: ${contest.title}`,
+                description: contest.description || 'Ballot measure for upcoming election',
+                url: `https://www.vote411.org/`,
+                date: new Date(),
                   source: 'google-civic',
-                  metadata: { locationId: location.id, address: location.address }
-                });
+                metadata: {
+                  contestType: contest.type,
+                  contestTitle: contest.title
+                }
               });
             }
           }
-        } catch (earlyVotingError) {
-          devLog('Early voting data fetch failed', { error: earlyVotingError });
         }
+      } catch (error) {
+        console.log('Google Civic voter info error:', error);
       }
 
-      return {
-        activity,
-        dataSources: [...(rep.dataSources || []), 'google-civic-elections']
-      };
+      return enrichedData;
     } catch (error) {
       devLog('Google Civic Election API error', { error: error instanceof Error ? error.message : 'Unknown error' });
       return {};
@@ -755,6 +821,7 @@ export class FreeAPIsPipeline {
       await new Promise(resolve => setTimeout(resolve, 1000)); // 1 second delay
 
       // Search for legislators by state using OpenStates API v3
+      // Note: OpenStates only has state legislators, not federal representatives
       const response = await fetch(
         `https://v3.openstates.org/people?jurisdiction=${rep.state}`,
         {
@@ -1135,22 +1202,32 @@ export class FreeAPIsPipeline {
   }
 
   private async getCongressGovData(rep: RepresentativeData): Promise<Partial<RepresentativeData>> {
+    console.log('🔍 Congress.gov: Starting data collection for', rep.name);
     const rateLimiter = this.rateLimiters.get('congress-gov');
     
+    console.log('🔍 Congress.gov: Rate limiter status:', {
+      currentUsage: rateLimiter.currentUsage,
+      requestsPerDay: rateLimiter.requestsPerDay,
+      rateLimited: rateLimiter.currentUsage >= rateLimiter.requestsPerDay
+    });
+    
     if (rateLimiter.currentUsage >= rateLimiter.requestsPerDay) {
+      console.log('❌ Congress.gov: Rate limit reached');
       devLog('Congress.gov API rate limit reached');
       return {};
     }
 
     // Congress.gov only has federal representatives
+    console.log('🔍 Congress.gov: Checking level:', rep.level);
     if (rep.level !== 'federal') {
+      console.log('❌ Congress.gov: Only available for federal representatives, got:', rep.level);
       devLog('Congress.gov: Only available for federal representatives, got:', rep.level);
       return {};
     }
 
     try {
       // OPTIMIZED: Single Congress.gov call that gets ALL data at once
-      const enrichedData: Partial<RepresentativeData> = {
+      const _enrichedData: Partial<RepresentativeData> = {
         dataSources: ['congress-gov'], // Only ONE data source entry
         contacts: [],
         socialMedia: [],
@@ -1158,9 +1235,15 @@ export class FreeAPIsPipeline {
         activity: []
       };
 
-      // 1. Get basic member data with pagination
+      // 1. Get specific member data using bioguide ID - MUCH MORE EFFICIENT!
+      console.log('🔍 Congress.gov: Checking bioguideId:', rep.bioguideId);
+      if (!rep.bioguideId) {
+        console.log('❌ Congress.gov: No bioguide ID provided for', rep.name);
+        return {};
+      }
+
       const memberResponse = await fetch(
-        `https://api.congress.gov/v3/member?state=${rep.state}&format=json&api_key=${process.env.CONGRESS_GOV_API_KEY}&limit=250`,
+        `https://api.congress.gov/v3/member/${rep.bioguideId}?format=json&api_key=${process.env.CONGRESS_GOV_API_KEY}`,
         {
           method: 'GET',
           headers: { 'Content-Type': 'application/json' }
@@ -1175,96 +1258,356 @@ export class FreeAPIsPipeline {
       const memberData = await memberResponse.json();
       rateLimiter.currentUsage++;
 
-      // Find matching representative
-      const members = memberData.members || [];
-      console.log(`🔍 Looking for match in ${members.length} members for ${rep.name}`);
-      console.log('🔍 Available members:', members.map((m: any) => m.name).slice(0, 5));
+      console.log(`🔍 Congress.gov: Direct member lookup for ${rep.name} (${rep.bioguideId})`);
+      console.log('🔍 Congress.gov: Response structure:', JSON.stringify(memberData, null, 2));
       
-      const matchingRep = members.find((member: any) => 
-        this.isMatchingRepresentative(member, rep)
-      );
-      console.log('🔍 Matching result:', matchingRep ? 'FOUND' : 'NOT FOUND');
-      if (matchingRep) {
-        console.log('🔍 Matched member:', matchingRep.name, matchingRep.bioguideId);
-      }
+      if (memberData.member) {
+        const matchingRep = memberData.member;
+        console.log('🔍 Congress.gov: Found member:', matchingRep.firstName, matchingRep.lastName, matchingRep.bioguideId);
+        console.log('🔍 Congress.gov: Full member data keys:', Object.keys(matchingRep));
+        console.log('🔍 Congress.gov: officialWebsiteUrl value:', matchingRep.officialWebsiteUrl);
+        
+        // Extract comprehensive data from Congress.gov
+        const enrichedData: Partial<RepresentativeData> = {
+          dataSources: ['congress-gov'],
+          contacts: [],
+          socialMedia: [],
+          photos: [],
+          activity: []
+        };
 
-      if (matchingRep) {
-        console.log('🔍 Congress.gov: Found matching representative:', matchingRep.name);
-        
-        // Get detailed member information using bioguideId
-        if (matchingRep.bioguideId) {
-          try {
-            console.log('🔍 Congress.gov: Getting detailed info for', matchingRep.bioguideId);
-            const detailedResponse = await fetch(
-              `https://api.congress.gov/v3/member/${matchingRep.bioguideId}?format=json&api_key=${process.env.CONGRESS_GOV_API_KEY}`,
-              {
-                method: 'GET',
-                headers: { 'Content-Type': 'application/json' }
-              }
-            );
-            
-            if (detailedResponse.ok) {
-              const detailedData = await detailedResponse.json();
-              console.log('🔍 Congress.gov: Detailed data received');
-              
-              // Extract contacts and photos from detailed data
-              const contacts = this.extractCongressGovContacts(detailedData.member);
-              const photos = this.extractCongressGovPhotos(detailedData.member);
-        
-        enrichedData.contacts = contacts;
-        enrichedData.photos = photos;
-              
-              console.log('🔍 Congress.gov: Extracted', contacts.length, 'contacts and', photos.length, 'photos');
-            } else {
-              console.log('❌ Congress.gov: Detailed request failed:', detailedResponse.status);
-            }
-          } catch (error) {
-            console.log('❌ Congress.gov: Detailed request error:', error);
+        // Extract contact information
+        console.log('🔍 Congress.gov: Checking officialWebsiteUrl:', matchingRep.officialWebsiteUrl);
+        if (matchingRep.officialWebsiteUrl && matchingRep.officialWebsiteUrl.trim() !== '') {
+          console.log('🔍 Congress.gov: Adding website contact:', matchingRep.officialWebsiteUrl);
+          enrichedData.contacts?.push({
+            type: 'website',
+            value: matchingRep.officialWebsiteUrl,
+            isPrimary: true,
+            isVerified: true,
+            source: 'congress-gov'
+          });
+        } else {
+          console.log('❌ Congress.gov: No officialWebsiteUrl found or empty:', matchingRep.officialWebsiteUrl);
+        }
+
+        if (matchingRep.addressInformation) {
+          const address = matchingRep.addressInformation;
+          if (address.officeAddress) {
+            enrichedData.contacts?.push({
+              type: 'address',
+              value: address.officeAddress,
+              isPrimary: true,
+              isVerified: true,
+              source: 'congress-gov'
+            });
+          }
+          if (address.phoneNumber) {
+            enrichedData.contacts?.push({
+              type: 'phone',
+              value: address.phoneNumber,
+              isPrimary: true,
+              isVerified: true,
+              source: 'congress-gov'
+            });
           }
         }
 
-        // Extract basic info
-        if (matchingRep.name) enrichedData.name = matchingRep.name;
-        if (matchingRep.partyName) enrichedData.party = matchingRep.partyName;
-        if (matchingRep.bioguideId) enrichedData.bioguideId = matchingRep.bioguideId;
-
-        // 2. Get recent activity (votes) in the same call if we have bioguideId
-        if (matchingRep.bioguideId && rep.level === 'federal') {
-          try {
-            const activityResponse = await fetch(
-              `https://api.congress.gov/v3/member/${matchingRep.bioguideId}/votes?format=json&api_key=${process.env.CONGRESS_GOV_API_KEY}&limit=5`,
-              {
-                method: 'GET',
-                headers: { 'Content-Type': 'application/json' }
-              }
-            );
-
-            if (activityResponse.ok) {
-              const activityData = await activityResponse.json();
-              const recentVotes = activityData.votes?.map((vote: any) => ({
-                type: 'vote',
-                title: vote.description || vote.question,
-                date: vote.date,
-                result: vote.result,
-                chamber: vote.chamber,
-                source: 'congress-gov'
-              })) || [];
-              
-              enrichedData.activity = recentVotes;
-            }
-          } catch (activityError) {
-            devLog('Congress.gov activity API failed', { error: activityError });
-            // Don't fail the whole method if activity fails
+        // Extract party information
+        if (matchingRep.partyHistory && matchingRep.partyHistory.length > 0) {
+          const currentParty = matchingRep.partyHistory[matchingRep.partyHistory.length - 1];
+          if (currentParty.party) {
+            enrichedData.party = currentParty.party;
           }
         }
-      }
+
+        // Extract legislative activity - fetch sponsored legislation
+        try {
+          const sponsoredResponse = await fetch(
+            `https://api.congress.gov/v3/member/${rep.bioguideId}/sponsored-legislation?format=json&api_key=${process.env.CONGRESS_GOV_API_KEY}&limit=5`,
+            {
+              method: 'GET',
+              headers: { 'Content-Type': 'application/json' }
+            }
+          );
+
+          if (sponsoredResponse.ok) {
+            const sponsoredData = await sponsoredResponse.json();
+            if (sponsoredData.sponsoredLegislation && sponsoredData.sponsoredLegislation.length > 0) {
+              console.log(`🔍 Congress.gov: Found ${sponsoredData.sponsoredLegislation.length} sponsored bills for ${rep.name}`);
+              
+              for (const bill of sponsoredData.sponsoredLegislation.slice(0, 3)) {
+            enrichedData.activity?.push({
+              type: 'bill_sponsored',
+              title: `Sponsored: ${bill.title}`,
+                  description: bill.latestAction?.text || 'Legislation sponsored by this representative',
+                  url: bill.url || `https://www.congress.gov/bill/${bill.congress}-congress/${bill.type.toLowerCase()}-${bill.number}`,
+                  date: new Date(bill.introducedDate),
+              source: 'congress-gov',
+              metadata: {
+                billNumber: bill.number,
+                    billType: bill.type,
+                    congress: bill.congress,
+                    policyArea: bill.policyArea?.name
+              }
+            });
+          }
+            }
+          }
+        } catch (error) {
+          console.log('🔍 Congress.gov: Error fetching sponsored legislation:', error);
+        }
+
+        // Fetch cosponsored legislation
+        try {
+          const cosponsoredResponse = await fetch(
+            `https://api.congress.gov/v3/member/${rep.bioguideId}/cosponsored-legislation?format=json&api_key=${process.env.CONGRESS_GOV_API_KEY}&limit=3`,
+            {
+              method: 'GET',
+              headers: { 'Content-Type': 'application/json' }
+            }
+          );
+
+          if (cosponsoredResponse.ok) {
+            const cosponsoredData = await cosponsoredResponse.json();
+            if (cosponsoredData.cosponsoredLegislation && cosponsoredData.cosponsoredLegislation.length > 0) {
+              console.log(`🔍 Congress.gov: Found ${cosponsoredData.cosponsoredLegislation.length} cosponsored bills for ${rep.name}`);
+              
+              for (const bill of cosponsoredData.cosponsoredLegislation.slice(0, 2)) {
+            enrichedData.activity?.push({
+              type: 'bill_cosponsored',
+              title: `Cosponsored: ${bill.title}`,
+                  description: bill.latestAction?.text || 'Legislation cosponsored by this representative',
+                  url: bill.url || `https://www.congress.gov/bill/${bill.congress}-congress/${bill.type.toLowerCase()}-${bill.number}`,
+                  date: new Date(bill.introducedDate),
+              source: 'congress-gov',
+              metadata: {
+                billNumber: bill.number,
+                    billType: bill.type,
+                    congress: bill.congress,
+                    policyArea: bill.policyArea?.name
+              }
+            });
+          }
+            }
+          }
+        } catch (error) {
+          console.log('🔍 Congress.gov: Error fetching cosponsored legislation:', error);
+        }
+
+        console.log('🔍 Congress.gov: Extracted data:', {
+          contacts: enrichedData.contacts?.length || 0,
+          activity: enrichedData.activity?.length || 0,
+          party: enrichedData.party
+        });
 
       return enrichedData;
+      }
+
+      return {};
 
     } catch (error) {
       devLog('Congress.gov API error', { error });
       return {};
     }
+  }
+
+  /**
+   * Comprehensive enrichment function that combines all API data
+   * Based on lessons learned from simplified ingest route
+   */
+  private async enrichRepresentativeData(rep: RepresentativeData, apiData: any): Promise<any> {
+    console.log('🔍 Enriching representative data for:', rep.name);
+    
+    // Extract comprehensive contacts from multiple sources
+    const contacts = [];
+    
+    // Congress.gov contacts (federal)
+    if (apiData.congressGov?.officialWebsiteUrl) {
+      contacts.push({
+        type: 'website',
+        value: apiData.congressGov.officialWebsiteUrl,
+        source: 'congress-gov',
+        isPrimary: true,
+        isVerified: true
+      });
+    }
+    if (apiData.congressGov?.addressInformation?.officeAddress) {
+      contacts.push({
+        type: 'address',
+        value: apiData.congressGov.addressInformation.officeAddress,
+        source: 'congress-gov',
+        isPrimary: false,
+        isVerified: true
+      });
+    }
+    if (apiData.congressGov?.addressInformation?.phoneNumber) {
+      contacts.push({
+        type: 'phone',
+        value: apiData.congressGov.addressInformation.phoneNumber,
+        source: 'congress-gov',
+        isPrimary: false,
+        isVerified: true
+      });
+    }
+    
+    // OpenStates contacts (state)
+    if (apiData.openStates?.url) {
+      contacts.push({
+        type: 'website',
+        value: apiData.openStates.url,
+        source: 'openstates',
+        isPrimary: true,
+        isVerified: true
+      });
+    }
+    if (apiData.openStates?.email) {
+      contacts.push({
+        type: 'email',
+        value: apiData.openStates.email,
+        source: 'openstates',
+        isPrimary: true,
+        isVerified: true
+      });
+    }
+    
+    // Extract comprehensive activity from multiple sources
+    const activity = [];
+    
+    // Wikipedia biographical activity
+    if (apiData.wikipedia?.extract) {
+      activity.push({
+        type: 'biography',
+        title: `Wikipedia: ${apiData.wikipedia.title}`,
+        description: apiData.wikipedia.extract,
+        url: apiData.wikipedia.content_urls?.desktop?.page,
+        date: new Date().toISOString(),
+        source: 'wikipedia'
+      });
+    }
+    
+    // Congress.gov legislative activity
+    if (apiData.congressGov?.sponsoredLegislation?.bills) {
+      apiData.congressGov.sponsoredLegislation.bills.slice(0, 3).forEach((bill: any) => {
+        activity.push({
+          type: 'bill_sponsored',
+          title: `Sponsored: ${bill.title}`,
+          description: bill.summary,
+          url: bill.url,
+          date: bill.introducedDate,
+          source: 'congress-gov'
+        });
+      });
+    }
+    
+    // Google Civic elections activity
+    if (apiData.googleCivic?.elections) {
+      apiData.googleCivic.elections.slice(0, 3).forEach((election: any) => {
+        activity.push({
+          type: 'election',
+          title: `Election: ${election.name}`,
+          description: `Election on ${election.electionDay}`,
+          date: election.electionDay,
+          source: 'google-civic'
+        });
+      });
+    }
+    
+    // Google Civic voter information activity
+    if (apiData.googleCivic?.voterInfo?.election) {
+      activity.push({
+        type: 'voter_info',
+        title: `Voter Information: ${apiData.googleCivic.voterInfo.election.name}`,
+        description: `Election on ${apiData.googleCivic.voterInfo.election.electionDay}`,
+        date: apiData.googleCivic.voterInfo.election.electionDay,
+        source: 'google-civic'
+      });
+    }
+    
+    // Google Civic polling locations
+    if (apiData.googleCivic?.voterInfo?.pollingLocations) {
+      apiData.googleCivic.voterInfo.pollingLocations.slice(0, 2).forEach((location: any, index: number) => {
+        activity.push({
+          type: 'polling_location',
+          title: `Polling Location ${index + 1}`,
+          description: `Vote at ${location.address?.locationName || 'Polling Location'}`,
+          date: apiData.googleCivic.voterInfo.election?.electionDay,
+          source: 'google-civic'
+        });
+      });
+    }
+    
+    // Google Civic contests (ballot measures, candidates)
+    if (apiData.googleCivic?.voterInfo?.contests) {
+      apiData.googleCivic.voterInfo.contests.slice(0, 3).forEach((contest: any) => {
+        activity.push({
+          type: 'ballot_contest',
+          title: `Ballot: ${contest.office || contest.referendumTitle}`,
+          description: contest.referendumSubtitle || contest.office,
+          date: apiData.googleCivic.voterInfo.election?.electionDay,
+          source: 'google-civic'
+        });
+      });
+    }
+    
+    // Extract photos from Wikipedia
+    const photos = [];
+    if (apiData.wikipedia?.thumbnail?.source) {
+      photos.push({
+        url: apiData.wikipedia.thumbnail.source,
+        source: 'wikipedia',
+        width: apiData.wikipedia.thumbnail.width,
+        height: apiData.wikipedia.thumbnail.height,
+        altText: `Wikipedia photo of ${apiData.wikipedia.title}`,
+        attribution: 'Wikipedia'
+      });
+    }
+    
+    // Calculate comprehensive data quality score
+    let score = 0;
+    const sources = [];
+    if (apiData.congressGov) {
+      score += 40;
+      sources.push('congress-gov');
+    }
+    if (apiData.openStates) {
+      score += 35;
+      sources.push('openstates');
+    }
+    if (apiData.wikipedia) {
+      score += 20;
+      sources.push('wikipedia');
+    }
+    if (apiData.googleCivic) {
+      score += 15;
+      sources.push('google-civic');
+    }
+    if (contacts.length > 0) score += 10;
+    if (photos.length > 0) score += 5;
+    
+    const enrichedData = {
+      googleCivic: apiData.googleCivic || {},
+      openStates: apiData.openStates || {},
+      congressGov: apiData.congressGov || {},
+      legiScan: apiData.legiScan || {},
+      photos: photos,
+      socialMedia: apiData.socialMedia || [],
+      campaignFinance: apiData.campaignFinance || null,
+      contacts: contacts,
+      activity: activity,
+      dataQualityScore: score,
+      dataSources: sources
+    };
+
+    console.log('🔍 Enriched data summary:', {
+      contacts: contacts.length,
+      photos: photos.length,
+      activity: activity.length,
+      dataQualityScore: score,
+      dataSources: sources
+    });
+
+    return enrichedData;
   }
 
   /**
@@ -1309,21 +1652,33 @@ export class FreeAPIsPipeline {
    * Get social media data from FREE sources
    */
   private async getSocialMediaData(rep: RepresentativeData): Promise<SocialMediaInfo[]> {
+    console.log('🔍 Social Media: Starting collection for', rep.name);
     const socialMedia: SocialMediaInfo[] = [];
 
     try {
       // 1. Google Civic channels (FREE)
+      console.log('🔍 Social Media: Getting Google Civic social media...');
       const googleSocial = await this.getGoogleCivicSocialMedia(rep);
+      console.log('🔍 Social Media: Google Civic returned', googleSocial.length, 'items');
       socialMedia.push(...googleSocial);
 
       // 2. OpenStates sources (FREE)
+      console.log('🔍 Social Media: Getting OpenStates social media...');
       const openStatesSocial = await this.getOpenStatesSocialMedia(rep);
+      console.log('🔍 Social Media: OpenStates returned', openStatesSocial.length, 'items');
       socialMedia.push(...openStatesSocial);
 
       // 3. Search for additional social media (FREE)
+      console.log('🔍 Social Media: Searching for additional social media...');
       const additionalSocial = await this.searchSocialMedia(rep.name);
+      console.log('🔍 Social Media: Additional search returned', additionalSocial.length, 'items');
       socialMedia.push(...additionalSocial);
 
+      // 4. Focus on maximizing OpenStates data when available (FREE)
+      console.log('🔍 Social Media: OpenStates provides the best social media coverage when not rate limited');
+      console.log('🔍 Social Media: Current coverage depends on OpenStates API availability');
+
+      console.log('🔍 Social Media: Total collected', socialMedia.length, 'items');
       return this.deduplicateAndRank(socialMedia);
 
     } catch (error) {
@@ -1331,6 +1686,7 @@ export class FreeAPIsPipeline {
       return socialMedia;
     }
   }
+
 
   /**
    * Wikipedia API (FREE - No rate limits)
@@ -1964,17 +2320,34 @@ export class FreeAPIsPipeline {
   }
 
   private async getGoogleCivicPhotos(rep: RepresentativeData): Promise<PhotoInfo[]> {
-    // Log the representative being processed for debugging
-    devLog('Getting Google Civic photos for', { name: rep.name, state: rep.state });
-    // Implementation for Google Civic photos
-    return [];
+    const photos: PhotoInfo[] = [];
+    
+    try {
+      // Google Civic API doesn't provide photos directly
+      // But we can use the representative's name to search for photos
+      if (rep.name) {
+        // For now, return empty array - photos will come from other sources
+        devLog('Google Civic photos not available', { name: rep.name });
+      }
+    } catch (error) {
+      devLog('Error getting Google Civic photos', { error });
+    }
+    
+    return photos;
   }
 
   private async getOpenStatesPhotos(rep: RepresentativeData): Promise<PhotoInfo[]> {
-    // Log the representative being processed for debugging
-    devLog('Getting OpenStates photos for', { name: rep.name, state: rep.state });
-    // Implementation for OpenStates photos
-    return [];
+    const photos: PhotoInfo[] = [];
+    
+    try {
+      // OpenStates API doesn't provide photos directly
+      // Photos will come from Wikipedia and other sources
+      devLog('OpenStates photos not available', { name: rep.name });
+    } catch (error) {
+      devLog('Error getting OpenStates photos', { error });
+    }
+    
+    return photos;
   }
 
   private generateInitialsPhoto(name: string): PhotoInfo {
@@ -3680,7 +4053,8 @@ export class FreeAPIsPipeline {
                      consistency.websiteConflicts.find(c => c.values.includes(newContact.value));
       
       if (conflict) {
-        // Add with conflict flag
+        // Add with conflict flag only if contact has a value
+        if (newContact?.value && newContact.value.trim() !== '') {
         merged.push({ 
           ...(newContact || {}), 
           type: newContact?.type || 'email',
@@ -3690,13 +4064,16 @@ export class FreeAPIsPipeline {
           isVerified: false, 
           conflictFlag: true 
         });
+        }
       } else {
-        // No conflict, add normally
+        // No conflict, add normally only if contact has a value
+        if (newContact.value && newContact.value.trim() !== '') {
         const existingIndex = merged.findIndex(existing => 
           existing.type === newContact.type && existing.value === newContact.value
         );
         if (existingIndex === -1) {
           merged.push(newContact);
+          }
         }
       }
     });

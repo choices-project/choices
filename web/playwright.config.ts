@@ -7,7 +7,10 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0, // Reduced retries
   workers: process.env.CI ? 1 : 2,
-  reporter: 'html',
+  reporter: [
+    ['html', { open: 'never' }], // Generate HTML report but don't auto-open
+    ['list'], // Show progress in terminal
+  ],
   timeout: 60_000,
   expect: { timeout: 10_000 },
   use: {

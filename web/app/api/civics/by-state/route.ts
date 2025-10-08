@@ -1,21 +1,27 @@
-// web/app/api/civics/by-state/route.ts
-import { type NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+/**
+ * Civics Data Retrieval API
+ * Returns representatives by state with enhanced data
+ * 
+ * Created: October 6, 2025
+ * Updated: October 6, 2025
+ */
 
-// Force dynamic rendering since we use nextUrl.searchParams
-export const dynamic = 'force-dynamic';
+import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SECRET_KEY!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
   { auth: { persistSession: false } }
 );
 
-export async function GET(req: NextRequest) {
+export async function GET(request: NextRequest) {
   try {
-    const state = req.nextUrl.searchParams.get('state');
-    const level = req.nextUrl.searchParams.get('level'); // 'federal' | 'state' | 'local'
-    const chamber = req.nextUrl.searchParams.get('chamber'); // 'us_senate' | 'us_house' | 'state_upper' | 'state_lower'
+    const { searchParams } = new URL(request.url);
+    const state = searchParams.get('state');
+    const level = searchParams.get('level');
+    const chamber = searchParams.get('chamber');
+    const limit = parseInt(searchParams.get('limit') || '50');
 
     if (!state) {
       return NextResponse.json({ error: 'State parameter required' }, { status: 400 });
@@ -54,24 +60,17 @@ export async function GET(req: NextRequest) {
         last_verified,
         verification_status,
         created_at,
-        last_updated
-      `);
+        last_updated,
+        enhanced_contacts,
+        enhanced_photos,
+        enhanced_activity,
+        enhanced_social_media
+      `)
+      .eq('state', state)
+      .limit(limit);
 
-    // Handle different levels of government
-    if (level === 'federal') {
-      // Federal representatives have level = "federal" and state info in name field
-      query = query.eq('level', 'federal');
-      
-      // Filter by state using name field (e.g., "Rep. Ken Calvert [R-CA41]")
-      const stateCode = state.toUpperCase();
-      query = query.ilike('name', `%${stateCode}%`);
-    } else {
-      // State and local representatives use state field
-      query = query.eq('state', state);
-      
-      if (level) {
-        query = query.eq('level', level);
-      }
+    if (level) {
+      query = query.eq('level', level);
     }
 
     if (chamber) {
@@ -96,10 +95,50 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Database error' }, { status: 500 });
     }
 
+    // Process the data to include enhanced data in the response
+    const processedData = (data || []).map(rep => ({
+      id: rep.id,
+      name: rep.name,
+      party: rep.party,
+      office: rep.office,
+      level: rep.level,
+      state: rep.state,
+      district: rep.district,
+      bioguide_id: rep.bioguide_id,
+      openstates_id: rep.openstates_id,
+      fec_id: rep.fec_id,
+      google_civic_id: rep.google_civic_id,
+      legiscan_id: rep.legiscan_id,
+      congress_gov_id: rep.congress_gov_id,
+      govinfo_id: rep.govinfo_id,
+      wikipedia_url: rep.wikipedia_url,
+      ballotpedia_url: rep.ballotpedia_url,
+      twitter_handle: rep.twitter_handle,
+      facebook_url: rep.facebook_url,
+      instagram_handle: rep.instagram_handle,
+      linkedin_url: rep.linkedin_url,
+      youtube_channel: rep.youtube_channel,
+      primary_email: rep.primary_email,
+      primary_phone: rep.primary_phone,
+      primary_website: rep.primary_website,
+      primary_photo_url: rep.primary_photo_url,
+      data_quality_score: rep.data_quality_score,
+      data_sources: rep.data_sources,
+      last_verified: rep.last_verified,
+      verification_status: rep.verification_status,
+      created_at: rep.created_at,
+      last_updated: rep.last_updated,
+      // Enhanced data from JSONB columns
+      contacts: rep.enhanced_contacts || [],
+      photos: rep.enhanced_photos || [],
+      activity: rep.enhanced_activity || [],
+      social_media: rep.enhanced_social_media || []
+    }));
+
     return NextResponse.json({ 
       ok: true, 
-      data: data || [],
-      count: data.length || 0
+      data: processedData,
+      count: processedData.length
     });
   } catch (e: any) {
     console.error('API error:', e);
@@ -109,5 +148,3 @@ export async function GET(req: NextRequest) {
     }, { status: 502 });
   }
 }
-
-

@@ -47,15 +47,15 @@ export const FEATURE_FLAGS = {
   DEVICE_FLOW_AUTH: false,           // OAuth 2.0 Device Authorization Grant flow (PARTIALLY IMPLEMENTED - 80%)
   
   // ===== PERFORMANCE & OPTIMIZATION =====
-  PERFORMANCE_OPTIMIZATION: false,   // Image optimization, virtual scrolling, lazy loading
+  PERFORMANCE_OPTIMIZATION: true,   // Image optimization, virtual scrolling, lazy loading (enabled for mobile)
   FEATURE_DB_OPTIMIZATION_SUITE: true, // Database optimization suite - enabled for performance
   ANALYTICS: true,                   // Advanced analytics and user insights
   // Removed experimental features that aren't actually implemented
   
   // ===== SYSTEM FEATURES =====
-  PUSH_NOTIFICATIONS: false,         // Push notifications and alerts (different from feedback widget)
-  THEMES: false,                     // Dark mode and theme customization
-  ACCESSIBILITY: false,              // Advanced accessibility features
+  PUSH_NOTIFICATIONS: true,          // Push notifications and alerts (enabled for mobile PWA)
+  THEMES: true,                      // Dark mode and theme customization (enabled for mobile UX)
+  ACCESSIBILITY: true,               // Advanced accessibility features (enabled for mobile accessibility)
   INTERNATIONALIZATION: false,       // Multi-language support
 } as const;
 

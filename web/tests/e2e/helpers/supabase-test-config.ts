@@ -2,32 +2,24 @@
  * Supabase Test Configuration
  * 
  * This module provides test-specific configuration for Supabase
- * to prevent email bounces and keep Supabase happy during E2E tests.
+ * during E2E tests.
  * 
  * Created: January 27, 2025
- * Status: ✅ CRITICAL FIX FOR SUPABASE
+ * Updated: October 8, 2025
  */
 
 /**
- * Test environment configuration to prevent email bounces
+ * Test environment configuration
  */
 export const SUPABASE_TEST_CONFIG = {
-  // Disable email sending in test environment
-  DISABLE_EMAIL_SENDING: true,
+  // Test environment settings
+  TEST_MODE: true,
   
-  // Use test email addresses that won't bounce
-  TEST_EMAIL_DOMAINS: [
-    'mailinator.com',
-    '10minutemail.com', 
-    'guerrillamail.com',
-    'temp-mail.org'
-  ],
+  // Use test database
+  USE_TEST_DATABASE: true,
   
-  // Auto-confirm emails in test environment
-  AUTO_CONFIRM_EMAILS: true,
-  
-  // Use mock SMTP for testing
-  USE_MOCK_SMTP: true
+  // Disable external API calls in tests
+  DISABLE_EXTERNAL_APIS: true
 };
 
 /**

@@ -86,6 +86,49 @@ test.describe('Civics API Tests', () => {
     })
   })
 
+  test.describe('Superior Data Pipeline Endpoints', () => {
+    test('GET /api/civics/superior-ingest should return 200', async ({ request }) => {
+      const response = await request.get(`${baseURL}/api/civics/superior-ingest`)
+      expect(response.status()).toBe(200)
+      
+      const data = await response.json()
+      expect(data).toHaveProperty('success', true)
+      expect(data).toHaveProperty('configuration')
+      expect(data.configuration).toHaveProperty('openStatesPeopleEnabled', true)
+      expect(data.configuration).toHaveProperty('strictCurrentFiltering', true)
+      expect(data.configuration).toHaveProperty('systemDateVerification', true)
+      expect(data.configuration).toHaveProperty('crossReferenceEnabled', true)
+      expect(data.configuration).toHaveProperty('dataValidationEnabled', true)
+      expect(data.configuration).toHaveProperty('wikipediaEnabled', true)
+    })
+
+    test('POST /api/civics/superior-ingest should process representatives', async ({ request }) => {
+      const testRepresentatives = [
+        {
+          name: 'Nancy Pelosi',
+          office: 'US House',
+          party: 'Democratic',
+          termStartDate: '2023-01-01',
+          termEndDate: '2025-01-01',
+          lastUpdated: '2024-10-08'
+        }
+      ]
+
+      const response = await request.post(`${baseURL}/api/civics/superior-ingest`, {
+        data: { representatives: testRepresentatives }
+      })
+      
+      expect(response.status()).toBe(200)
+      
+      const data = await response.json()
+      expect(data).toHaveProperty('success', true)
+      expect(data).toHaveProperty('currentElectorate')
+      expect(data.currentElectorate).toHaveProperty('totalCurrent')
+      expect(data.currentElectorate).toHaveProperty('nonCurrent')
+      expect(data.currentElectorate).toHaveProperty('accuracy')
+    })
+  })
+
   test.describe('V1 Civics API Endpoints', () => {
     test('GET /api/v1/civics/by-state should return 200', async ({ request }) => {
       const response = await request.get(`${baseURL}/api/v1/civics/by-state?state=CA`)

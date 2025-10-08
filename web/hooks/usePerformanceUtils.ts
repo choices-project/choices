@@ -18,12 +18,19 @@ export function usePerformanceUtils() {
         setLoading(true)
         setError(null)
         
-        // Dynamic imports - only loaded on client side
-        const performanceModule = await import('../lib/performance-monitor-simple')
-        
+        // Performance utilities - using fallback implementation
         setUtils({
-          performanceMonitor: new performanceModule.SimplePerformanceMonitor()
-        })
+          performanceMonitor: {
+            startTiming: (name: string) => console.time(name),
+            endTiming: (name: string) => console.timeEnd(name),
+            measure: (name: string, fn: () => void) => {
+              console.time(name)
+              const result = fn()
+              console.timeEnd(name)
+              return result
+            }
+          }
+        } as any)
       } catch (err) {
         devLog('Error loading performance utils:', err)
         setError(err instanceof Error ? err.message : 'Unknown error')

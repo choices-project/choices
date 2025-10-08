@@ -580,13 +580,27 @@ export default function EnhancedCandidateCard({
                       <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
                     </div>
                     <div className="flex-1">
-                      <p className="text-sm font-medium text-gray-900">{activity.title}</p>
+                      {activity.url ? (
+                        <a 
+                          href={activity.url} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline"
+                        >
+                          {activity.title}
+                        </a>
+                      ) : (
+                        <p className="text-sm font-medium text-gray-900">{activity.title}</p>
+                      )}
                       {activity.description && (
                         <p className="text-xs text-gray-500 mt-1">{activity.description}</p>
                       )}
                       <p className="text-xs text-gray-400 mt-1">
                         <ClockIcon className="w-3 h-3 inline mr-1" />
                         {new Date(activity.date).toLocaleDateString()}
+                        {activity.source && (
+                          <span className="ml-2 text-gray-500">• {activity.source}</span>
+                        )}
                       </p>
                     </div>
                   </div>

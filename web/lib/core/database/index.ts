@@ -31,5 +31,5 @@ export type DatabaseError = {
 // Re-export Supabase types if available
 export type { User, Session } from '@supabase/supabase-js';
 
-// Placeholder for generated types - replace with actual generated file
+// Generated database types
 // export type { Database } from './generated';

@@ -6,7 +6,6 @@ import { useAdminStore } from './store';
 import { mockActivityFeed } from './mock-data';
 import { realTimeService } from './real-time-service';
 
-// Mock data for fallback
 const mockTrendingTopics: TrendingTopic[] = [
   {
     id: '1',

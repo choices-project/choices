@@ -43,7 +43,7 @@ export default function GlobalNavigation() {
   }
 
   const navigationItems = [
-    { href: '/', label: 'Home', icon: Home },
+    { href: '/feed', label: 'Feed', icon: Home },
     { href: '/polls', label: 'Polls', icon: Vote },
     { href: '/dashboard', label: 'Dashboard', icon: BarChart3 },
   ]

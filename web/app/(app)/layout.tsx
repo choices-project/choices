@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react'
 import { AuthProvider } from '@/contexts/AuthContext'
 import dynamic from 'next/dynamic'
 import { initializePWA } from '@/lib/pwa/init'
-import EnhancedFeedbackWidget from '../../components/EnhancedFeedbackWidget'
+// import EnhancedFeedbackWidget from '../../components/EnhancedFeedbackWidget'
 
 const PWABackground = dynamic(() => import('../../components/PWABackground'), {
   ssr: false,
@@ -60,7 +60,7 @@ export default function AppLayout({
           <PWABackground />
           
           {/* Enhanced Feedback Widget - Only render on client side */}
-          <EnhancedFeedbackWidget />
+          {/* <EnhancedFeedbackWidget /> */}
         </AuthProvider>
       </QueryClientProvider>
     </FontProvider>

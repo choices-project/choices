@@ -5,14 +5,11 @@
  * This allows E2E tests to use the V2 mock factory for database preparation
  * while still testing real user flows in the browser.
  * 
- * CRITICAL: Includes email mocking to prevent Supabase email bounces!
- * 
  * Created: January 21, 2025
- * Updated: January 27, 2025
+ * Updated: October 8, 2025
  */
 
 import type { Page } from '@playwright/test';
-import { setupEmailMocking, createValidTestEmail } from './email-mocking';
 
 export type E2ETestUser = {
   email: string;
@@ -76,12 +73,11 @@ export async function cleanupE2ETestData(_testData: E2ETestData): Promise<void> 
 
 /**
  * Create a test user with realistic data
- * CRITICAL: Uses valid test email addresses to prevent Supabase bounces
  */
 export function createTestUser(overrides: Partial<E2ETestUser> = {}): E2ETestUser {
   const timestamp = Date.now();
   return Object.assign({
-    email: createValidTestEmail(),
+    email: `testuser${timestamp}@example.com`,
     username: `testuser${timestamp}`,
     password: 'TestPassword123!',
   }, overrides);
@@ -130,11 +126,8 @@ export async function waitForPageReady(page: Page): Promise<void> {
  * 
  * This function sets up common external API mocks that E2E tests
  * might need, such as civics API, analytics, etc.
- * CRITICAL: Includes email mocking to prevent Supabase bounces
  */
 export async function setupExternalAPIMocks(page: Page): Promise<void> {
-  // Set up email mocking FIRST to prevent Supabase email bounces
-  await setupEmailMocking();
   // Mock Google Civic Information API
   await page.route('**/google_civic/**', route => {
     route.fulfill({

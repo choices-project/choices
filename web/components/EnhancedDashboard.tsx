@@ -11,11 +11,13 @@ import {
   Award,
   Zap,
   Vote,
-  Play
+  Play,
+  Users
 } from 'lucide-react';
 import { devLog } from '@/lib/logger';
 import PlatformTour from './PlatformTour';
 import FirstTimeUserGuide from './FirstTimeUserGuide';
+import EnhancedRepresentativeFeed from './EnhancedRepresentativeFeed';
 
 type DashboardData = {
   userPolls: PollSummary[];
@@ -94,6 +96,7 @@ type EnhancedDashboardProps = {
   onDataUpdate?: (data: DashboardData) => void;
   onError?: (error: string) => void;
   className?: string;
+  userId?: string;
 }
 
 export default function EnhancedDashboard({
@@ -105,7 +108,8 @@ export default function EnhancedDashboard({
   refreshInterval = 30000,
   onDataUpdate,
   onError,
-  className = ""
+  className = "",
+  userId
 }: EnhancedDashboardProps) {
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -152,6 +156,13 @@ export default function EnhancedDashboard({
       description: 'Your participation and activity levels',
       icon: <Activity className="h-5 w-5" />,
       enabled: true
+    },
+    {
+      id: 'representatives',
+      name: 'My Representatives',
+      description: 'Your elected officials and civic engagement',
+      icon: <Users className="h-5 w-5" />,
+      enabled: true
     }
   ];
 
@@ -160,7 +171,6 @@ export default function EnhancedDashboard({
       setLoading(true);
       setError(null);
 
-      // Simulate API call - replace with actual API endpoint
       const response = await fetch('/api/dashboard/data', {
         method: 'GET',
         headers: {
@@ -268,29 +278,47 @@ export default function EnhancedDashboard({
           </div>
         </div>
 
-        {/* My Recent Polls */}
-        <div className="bg-white p-6 rounded-lg shadow-sm border" data-testid="recent-polls-section">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">My Recent Polls</h3>
-          <div className="space-y-4">
-            {userPolls.slice(0, 5).map((poll) => (
-              <div key={poll.id} className="flex items-center justify-between p-4 border rounded-lg">
-                <div className="flex-1">
-                  <h4 className="font-medium text-gray-900">{poll.title}</h4>
-                  <p className="text-sm text-gray-600">
-                    {poll.totalvotes} votes • {poll.participation}% participation
-                  </p>
+        {/* Representatives and Polls Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* My Representatives */}
+          {/* <RepresentativeFeed
+            userId={userId}
+            showHeader={true}
+            maxItems={3}
+            onRepresentativeClick={(rep: any) => {
+              devLog('Representative clicked:', rep.name);
+              // Could navigate to representative detail page
+            }}
+            className="h-fit"
+          /> */}
+          <div className="p-8 text-center text-gray-500">
+            Representative feed component not available
+          </div>
+
+          {/* My Recent Polls */}
+          <div className="bg-white p-6 rounded-lg shadow-sm border" data-testid="recent-polls-section">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">My Recent Polls</h3>
+            <div className="space-y-4">
+              {userPolls.slice(0, 5).map((poll) => (
+                <div key={poll.id} className="flex items-center justify-between p-4 border rounded-lg">
+                  <div className="flex-1">
+                    <h4 className="font-medium text-gray-900">{poll.title}</h4>
+                    <p className="text-sm text-gray-600">
+                      {poll.totalvotes} votes • {poll.participation}% participation
+                    </p>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <span className={`px-2 py-1 text-xs rounded-full ${
+                      poll.status === 'active' 
+                        ? 'bg-green-100 text-green-800' 
+                        : 'bg-gray-100 text-gray-800'
+                    }`}>
+                      {poll.status}
+                    </span>
+                  </div>
                 </div>
-                <div className="flex items-center space-x-2">
-                  <span className={`px-2 py-1 text-xs rounded-full ${
-                    poll.status === 'active' 
-                      ? 'bg-green-100 text-green-800' 
-                      : 'bg-gray-100 text-gray-800'
-                  }`}>
-                    {poll.status}
-                  </span>
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
       </div>
@@ -439,6 +467,22 @@ export default function EnhancedDashboard({
     );
   };
 
+  const renderRepresentativesView = () => {
+    return (
+      <div className="space-y-6">
+        <EnhancedRepresentativeFeed
+          userId={userId || ''}
+          showHeader={true}
+          maxItems={10}
+          onRepresentativeClick={(rep: any) => {
+            devLog('Representative clicked:', rep.name);
+            // Could navigate to representative detail page
+          }}
+        />
+      </div>
+    );
+  };
+
   const renderCurrentView = () => {
     switch (selectedView) {
       case 'overview':
@@ -449,6 +493,8 @@ export default function EnhancedDashboard({
         return renderInsightsView();
       case 'engagement':
         return renderEngagementView();
+      case 'representatives':
+        return renderRepresentativesView();
       default:
         return renderOverviewView();
     }

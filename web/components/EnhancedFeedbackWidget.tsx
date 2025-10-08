@@ -5,6 +5,8 @@ import { devLog } from '@/lib/logger'
 import { getFeedbackTracker } from '@/lib/admin/feedback-tracker'
 import { motion, AnimatePresence } from '@/components/motion/Motion'
 import { FEATURE_FLAGS } from '@/lib/core/feature-flags'
+
+// gtag is declared in global.d.ts files
 import { 
   MessageCircle, 
   X, 
