@@ -29,7 +29,7 @@ import {
   AdjustmentsHorizontalIcon
 } from '@heroicons/react/24/outline';
 import EnhancedCandidateCard from './civics-2-0/EnhancedCandidateCard';
-import EnhancedRepresentativeFeed from './EnhancedRepresentativeFeed';
+import EnhancedSocialFeed from './civics-2-0/EnhancedSocialFeed';
 
 type SuperiorMobileFeedProps = {
   userId?: string;
@@ -396,11 +396,9 @@ export default function SuperiorMobileFeed({ userId, className = '' }: SuperiorM
         );
       case 'representatives':
         return (
-          <EnhancedRepresentativeFeed
+          <EnhancedSocialFeed
             userId={userId || ''}
-            showHeader={true}
-            maxItems={20}
-            onRepresentativeClick={handleRepresentativeClick}
+            onViewDetails={handleRepresentativeClick}
           />
         );
       case 'analytics':

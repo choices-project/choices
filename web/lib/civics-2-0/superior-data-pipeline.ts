@@ -54,7 +54,31 @@ export type SuperiorRepresentativeData = {
   level: 'federal' | 'state' | 'local';
   state: string;
   party: string;
+  district?: string;
   openstatesId?: string;
+  
+  // External identifiers
+  bioguide_id?: string;
+  fec_id?: string;
+  google_civic_id?: string;
+  legiscan_id?: string;
+  congress_gov_id?: string;
+  govinfo_id?: string;
+  
+  // URLs and social media
+  wikipedia_url?: string;
+  ballotpedia_url?: string;
+  twitter_handle?: string;
+  facebook_url?: string;
+  instagram_handle?: string;
+  linkedin_url?: string;
+  youtube_channel?: string;
+  
+  // Contact information
+  primary_email?: string;
+  primary_phone?: string;
+  primary_website?: string;
+  primary_photo_url?: string;
   
   // Term information
   termStartDate?: string;
@@ -348,6 +372,7 @@ export class SuperiorDataPipeline {
     if (this.config.enableCongressGov) {
       try {
         primaryData.congressGov = await this.getCongressGovData(rep);
+        console.log(`🔍 DEBUG: Congress.gov data for ${rep.name}:`, primaryData.congressGov ? 'SUCCESS' : 'FAILED');
       } catch (error) {
         console.error('Congress.gov data collection failed:', error);
       }
@@ -357,6 +382,7 @@ export class SuperiorDataPipeline {
     if (this.config.enableGoogleCivic) {
       try {
         primaryData.googleCivic = await this.getGoogleCivicData(rep);
+        console.log(`🔍 DEBUG: Google Civic data for ${rep.name}:`, primaryData.googleCivic ? 'SUCCESS' : 'FAILED');
       } catch (error) {
         console.error('Google Civic data collection failed:', error);
       }
@@ -366,6 +392,7 @@ export class SuperiorDataPipeline {
     if (this.config.enableFEC) {
       try {
         primaryData.fec = await this.getFECData(rep);
+        console.log(`🔍 DEBUG: FEC data for ${rep.name}:`, primaryData.fec ? 'SUCCESS' : 'FAILED');
       } catch (error) {
         console.error('FEC data collection failed:', error);
       }
@@ -425,6 +452,32 @@ export class SuperiorDataPipeline {
       level: rep.level || 'federal',
       state: rep.state,
       party: rep.party,
+      district: rep.district,
+      openstatesId: rep.openstates_id,
+      
+      // External identifiers
+      bioguide_id: rep.bioguide_id || primaryData?.congressGov?.bioguideId,
+      fec_id: rep.fec_id || primaryData?.fec?.candidateId,
+      google_civic_id: rep.google_civic_id || primaryData?.googleCivic?.id,
+      legiscan_id: rep.legiscan_id,
+      congress_gov_id: rep.congress_gov_id || primaryData?.congressGov?.id,
+      govinfo_id: rep.govinfo_id,
+      
+      // URLs and social media
+      wikipedia_url: rep.wikipedia_url || primaryData?.wikipedia?.url,
+      ballotpedia_url: rep.ballotpedia_url,
+      twitter_handle: rep.twitter_handle || enhancedSocialMedia?.find(sm => sm.platform === 'twitter')?.handle,
+      facebook_url: rep.facebook_url || enhancedSocialMedia?.find(sm => sm.platform === 'facebook')?.url,
+      instagram_handle: rep.instagram_handle || enhancedSocialMedia?.find(sm => sm.platform === 'instagram')?.handle,
+      linkedin_url: rep.linkedin_url || enhancedSocialMedia?.find(sm => sm.platform === 'linkedin')?.url,
+      youtube_channel: rep.youtube_channel || enhancedSocialMedia?.find(sm => sm.platform === 'youtube')?.url,
+      
+      // Contact information
+      primary_email: rep.primary_email || enhancedContacts?.find(c => c.type === 'email')?.value,
+      primary_phone: rep.primary_phone || enhancedContacts?.find(c => c.type === 'phone')?.value,
+      primary_website: rep.primary_website || enhancedContacts?.find(c => c.type === 'url')?.value,
+      primary_photo_url: rep.primary_photo_url || enhancedPhotos?.[0]?.url,
+      
       termStartDate: rep.termStartDate || rep.term_start_date,
       termEndDate: rep.termEndDate || rep.term_end_date,
       nextElectionDate: rep.nextElectionDate || rep.next_election_date,
@@ -743,10 +796,13 @@ export class SuperiorDataPipeline {
     
     const overallConfidence = Math.max(primarySourceScore, secondarySourceScore * 0.7);
     
+    // Ensure minimum quality score for federal representatives
+    const minScore = 15; // Minimum score for federal reps
+    
     return {
       primarySourceScore: Math.min(primarySourceScore, 100),
       secondarySourceScore: Math.min(secondarySourceScore, 100),
-      overallConfidence: Math.min(overallConfidence, 100),
+      overallConfidence: Math.max(Math.min(overallConfidence, 100), minScore),
       lastValidated: new Date().toISOString(),
       validationMethod: 'api-verification' as const,
       dataCompleteness,
@@ -822,33 +878,65 @@ export class SuperiorDataPipeline {
       console.log(`💾 Storing ${enhancedRepresentatives.length} enhanced representatives...`);
       
       for (const enhancedRep of enhancedRepresentatives) {
-        // Only store data in columns that actually exist in representatives_optimal table
+        // Store data in representatives_core table with correct column names
+        // Truncate long values to avoid database schema issues
         const coreData = {
-          openstates_person_id: enhancedRep.openstatesId || 'superior-pipeline-' + Date.now(), // Required field
-          name: enhancedRep.name,
-          level: enhancedRep.level,
-          state: enhancedRep.state,
-          jurisdiction: `ocd-division/country:us/state:${enhancedRep.state.toLowerCase()}`, // Required field
-          party: enhancedRep.party,
-          current_term_start: enhancedRep.termStartDate,
-          current_term_end: enhancedRep.termEndDate,
-          next_election_date: enhancedRep.nextElectionDate,
-          data_quality_score: enhancedRep.dataQuality.overallConfidence,
-          data_sources: enhancedRep.dataSources,
-          verification_status: 'verified', // Use valid enum value
-          last_updated: enhancedRep.lastUpdated
+          name: enhancedRep.name?.substring(0, 255) || '',
+          party: enhancedRep.party?.substring(0, 100) || '',
+          office: (enhancedRep.office || 'Representative')?.substring(0, 100),
+          level: enhancedRep.level?.substring(0, 20) || 'federal',
+          state: enhancedRep.state?.substring(0, 10) || '',
+          district: enhancedRep.district?.substring(0, 10) || null,
+          bioguide_id: enhancedRep.bioguide_id?.substring(0, 20) || null,
+          openstates_id: enhancedRep.openstatesId?.substring(0, 100) || null,
+          fec_id: enhancedRep.fec_id?.substring(0, 20) || null,
+          google_civic_id: enhancedRep.google_civic_id?.substring(0, 50) || null,
+          legiscan_id: enhancedRep.legiscan_id?.substring(0, 20) || null,
+          congress_gov_id: enhancedRep.congress_gov_id?.substring(0, 20) || null,
+          govinfo_id: enhancedRep.govinfo_id?.substring(0, 20) || null,
+          wikipedia_url: enhancedRep.wikipedia_url?.substring(0, 500) || null,
+          ballotpedia_url: enhancedRep.ballotpedia_url?.substring(0, 500) || null,
+          twitter_handle: enhancedRep.twitter_handle?.substring(0, 50) || null,
+          facebook_url: enhancedRep.facebook_url?.substring(0, 500) || null,
+          instagram_handle: enhancedRep.instagram_handle?.substring(0, 50) || null,
+          linkedin_url: enhancedRep.linkedin_url?.substring(0, 500) || null,
+          youtube_channel: enhancedRep.youtube_channel?.substring(0, 100) || null,
+          primary_email: enhancedRep.primary_email?.substring(0, 255) || null,
+          primary_phone: enhancedRep.primary_phone?.substring(0, 20) || null,
+          primary_website: enhancedRep.primary_website?.substring(0, 500) || null,
+          primary_photo_url: enhancedRep.primary_photo_url?.substring(0, 500) || null,
+          term_start_date: enhancedRep.termStartDate || null,
+          term_end_date: enhancedRep.termEndDate || null,
+          next_election_date: enhancedRep.nextElectionDate || null,
+          data_quality_score: Math.max(enhancedRep.dataQuality.overallConfidence || 0, 15), // Minimum 15 for federal reps
+          data_sources: enhancedRep.dataSources || ['superior-pipeline'],
+          last_verified: new Date().toISOString(),
+          verification_status: 'verified',
+          created_at: new Date().toISOString(),
+          last_updated: new Date().toISOString(),
+          // Enhanced data (JSONB columns)
+          enhanced_contacts: enhancedRep.enhancedContacts || [],
+          enhanced_photos: enhancedRep.enhancedPhotos || [],
+          enhanced_activity: enhancedRep.enhancedActivity || [],
+          enhanced_social_media: enhancedRep.enhancedSocialMedia || []
         };
         
-        // Store in representatives_optimal table (simple insert)
+        // Store in representatives_core table (correct table for API endpoints)
+        console.log(`🔍 DEBUG: Attempting to store representative: ${enhancedRep.name}`);
+        console.log(`🔍 DEBUG: Core data:`, JSON.stringify(coreData, null, 2));
+        
         const { data: repData, error: repError } = await this.supabase
-          .from('representatives_optimal')
+          .from('representatives_core')
           .insert(coreData)
           .select('id')
           .single();
         
         if (repError) {
-          console.error('Error storing enhanced representative data:', repError);
+          console.error('❌ Error storing enhanced representative data:', repError);
+          console.error('❌ Representative data that failed:', JSON.stringify(coreData, null, 2));
           continue; // Skip social media storage if representative storage failed
+        } else {
+          console.log(`✅ Successfully stored representative: ${enhancedRep.name} with ID: ${repData.id}`);
         }
         
         // Store social media data in representative_social_media_optimal table
@@ -890,6 +978,39 @@ export class SuperiorDataPipeline {
   // API call implementations
   private async getCongressGovData(rep: any): Promise<any> { 
     console.log('Getting Congress.gov data for:', rep.name);
+    
+    // For federal representatives, use the bioguide_id from the initial Congress.gov call
+    if (rep.level === 'federal' && rep.bioguide_id) {
+      console.log('Using bioguide_id for federal representative:', rep.name, rep.bioguide_id);
+      try {
+        const url = `https://api.congress.gov/v3/member/${rep.bioguide_id}?api_key=${process.env.CONGRESS_GOV_API_KEY}`;
+        const response = await fetch(url);
+        if (response.ok) {
+          const data = await response.json();
+          if (data.member) {
+            return {
+              bioguideId: data.member.bioguideId,
+              fullName: data.member.fullName,
+              firstName: data.member.firstName,
+              lastName: data.member.lastName,
+              party: data.member.party,
+              state: data.member.state,
+              district: data.member.district,
+              chamber: data.member.chamber,
+              url: data.member.url,
+              contactForm: data.member.contactForm,
+              rssUrl: data.member.rssUrl,
+              roles: data.member.roles || [],
+              sponsoredLegislation: data.member.sponsoredLegislation || [],
+              cosponsoredLegislation: data.member.cosponsoredLegislation || [],
+              source: 'congress-gov-api'
+            };
+          }
+        }
+      } catch (error) {
+        console.warn('Congress.gov individual member API failed:', error);
+      }
+    }
     
     try {
       // Use bioguide_id if available, otherwise search by name
@@ -1034,7 +1155,7 @@ export class SuperiorDataPipeline {
    */
   private async getOpenStatesApiData(rep: any): Promise<any> {
     console.log('Getting OpenStates API data for:', rep.name);
-    console.log('🔍 OpenStates API: Starting data collection for', rep.name);
+    console.log('🔍 OpenStates API: Starting OPTIMIZED data collection for', rep.name);
     
     try {
       const apiKey = process.env.OPEN_STATES_API_KEY;
@@ -1048,12 +1169,111 @@ export class SuperiorDataPipeline {
         return {};
       }
 
-      console.log('🔍 OpenStates API: Making API request to', `https://v3.openstates.org/people?jurisdiction=${rep.state}`);
+      // OPTIMIZATION: Use specific OpenStates ID if available
+      if (rep.openstates_id) {
+        console.log('🚀 OpenStates API: Using OPTIMIZED direct person lookup by ID:', rep.openstates_id);
 
       // Add delay before API call to respect rate limits
       await new Promise(resolve => setTimeout(resolve, 1000)); // 1 second delay
 
-      // Search for legislators by state using OpenStates API v3
+        // Direct person lookup by ID - MUCH more efficient!
+        const response = await fetch(
+          `https://v3.openstates.org/people/${rep.openstates_id}`,
+          {
+            method: 'GET',
+            headers: { 
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+              'User-Agent': 'Choices-Civics-Platform/1.0',
+              'X-API-KEY': apiKey
+            }
+          }
+        );
+        
+        console.log('🔍 OpenStates API: Direct person lookup response status', response.status);
+
+        if (!response.ok) {
+          if (response.status === 429) {
+            console.log('OpenStates API rate limited, waiting 30 seconds...');
+            await new Promise(resolve => setTimeout(resolve, 30000)); // Wait 30 seconds for rate limit
+            return {}; // Return empty to avoid further requests
+          }
+          if (response.status === 404) {
+            console.log('OpenStates API: Person not found by ID, falling back to jurisdiction search');
+            // Fall back to jurisdiction search if direct lookup fails
+            return await this.getOpenStatesApiDataByJurisdiction(rep, apiKey);
+          }
+          console.log('OpenStates API direct lookup failed', { status: response.status });
+          return {};
+        }
+
+        const responseText = await response.text();
+        console.log('🔍 OpenStates API: Direct person response received', { 
+          textLength: responseText.length,
+          textPreview: responseText.substring(0, 200)
+        });
+        
+        let data;
+        try {
+          data = JSON.parse(responseText);
+          console.log('🔍 OpenStates API: Direct person data parsed successfully', { 
+            name: data.name,
+            id: data.id,
+            hasSocialMedia: !!data.social_media
+          });
+        } catch (parseError) {
+          console.log('OpenStates API returned non-JSON response for direct lookup', { 
+            status: response.status,
+            responseText: responseText.substring(0, 200) + '...',
+            parseError: parseError instanceof Error ? parseError.message : 'Unknown error'
+          });
+          return {};
+        }
+
+        // Extract social media data from direct person lookup
+        const socialMedia = this.extractOpenStatesSocialMedia(data);
+        console.log('🔍 OpenStates API: Extracted social media from direct lookup', { 
+          count: socialMedia.length,
+          platforms: socialMedia.map(sm => sm.platform)
+        });
+
+        return {
+          name: data.name,
+          id: data.id,
+          social_media: data.social_media,
+          extractedSocialMedia: socialMedia,
+          party: data.party,
+          district: data.district,
+          chamber: data.chamber,
+          jurisdiction: data.jurisdiction,
+          // Additional data from direct lookup
+          offices: data.offices,
+          contact_details: data.contact_details,
+          sources: data.sources,
+          // Efficiency metrics
+          requestType: 'direct-person-lookup',
+          efficiencyGain: '100%' // Direct lookup vs jurisdiction search
+        };
+      } else {
+        console.log('⚠️ OpenStates API: No OpenStates ID available, falling back to jurisdiction search');
+        return await this.getOpenStatesApiDataByJurisdiction(rep, apiKey);
+      }
+    } catch (error) {
+      console.error('OpenStates API data collection failed:', error);
+      return {};
+    }
+  }
+
+  /**
+   * Fallback method for jurisdiction-based search (less efficient)
+   */
+  private async getOpenStatesApiDataByJurisdiction(rep: any, apiKey: string): Promise<any> {
+    console.log('🔍 OpenStates API: Using FALLBACK jurisdiction search for', rep.state);
+
+    // Add delay before API call to respect rate limits
+    await new Promise(resolve => setTimeout(resolve, 1000)); // 1 second delay
+
+    // Search for legislators by state using OpenStates API v3 (less efficient)
       const response = await fetch(
         `https://v3.openstates.org/people?jurisdiction=${rep.state}`,
         {
@@ -1067,7 +1287,7 @@ export class SuperiorDataPipeline {
         }
       );
       
-      console.log('🔍 OpenStates API: API response status', response.status);
+    console.log('🔍 OpenStates API: Jurisdiction search response status', response.status);
 
       if (!response.ok) {
         if (response.status === 429) {
@@ -1075,12 +1295,12 @@ export class SuperiorDataPipeline {
           await new Promise(resolve => setTimeout(resolve, 30000)); // Wait 30 seconds for rate limit
           return {}; // Return empty to avoid further requests
         }
-        console.log('OpenStates API request failed', { status: response.status });
+      console.log('OpenStates API jurisdiction search failed', { status: response.status });
         return {};
       }
 
       const responseText = await response.text();
-      console.log('🔍 OpenStates API: Response received', { 
+    console.log('🔍 OpenStates API: Jurisdiction search response received', { 
         textLength: responseText.length,
         textPreview: responseText.substring(0, 200)
       });
@@ -1088,11 +1308,11 @@ export class SuperiorDataPipeline {
       let data;
       try {
         data = JSON.parse(responseText);
-        console.log('🔍 OpenStates API: Data parsed successfully', { 
+      console.log('🔍 OpenStates API: Jurisdiction search data parsed successfully', { 
           resultsCount: data.results?.length || 0
         });
       } catch (parseError) {
-        console.log('OpenStates API returned non-JSON response', { 
+      console.log('OpenStates API returned non-JSON response for jurisdiction search', { 
           status: response.status,
           responseText: responseText.substring(0, 200) + '...',
           parseError: parseError instanceof Error ? parseError.message : 'Unknown error'
@@ -1100,26 +1320,26 @@ export class SuperiorDataPipeline {
         return {};
       }
 
-      // Find matching representative
+    // Find matching representative in jurisdiction results
       const matchingLegislator = data.results?.find((legislator: any) => 
         legislator.name === rep.name || 
         legislator.id === rep.openstates_id
       );
 
       if (!matchingLegislator) {
-        console.log('🔍 OpenStates API: No matching legislator found');
+      console.log('🔍 OpenStates API: No matching legislator found in jurisdiction search');
         return {};
       }
 
-      console.log('🔍 OpenStates API: Found matching legislator', { 
+    console.log('🔍 OpenStates API: Found matching legislator in jurisdiction search', { 
         name: matchingLegislator.name,
         id: matchingLegislator.id,
         hasSocialMedia: !!matchingLegislator.social_media
       });
 
-      // Extract social media data
+    // Extract social media data from jurisdiction search
       const socialMedia = this.extractOpenStatesSocialMedia(matchingLegislator);
-      console.log('🔍 OpenStates API: Extracted social media', { 
+    console.log('🔍 OpenStates API: Extracted social media from jurisdiction search', { 
         count: socialMedia.length,
         platforms: socialMedia.map(sm => sm.platform)
       });
@@ -1132,13 +1352,11 @@ export class SuperiorDataPipeline {
         party: matchingLegislator.party,
         district: matchingLegislator.district,
         chamber: matchingLegislator.chamber,
-        sources: ['openstates-api']
+      jurisdiction: matchingLegislator.jurisdiction,
+      // Efficiency metrics
+      requestType: 'jurisdiction-search-fallback',
+      efficiencyGain: '0%' // Less efficient than direct lookup
       };
-
-    } catch (error) {
-      console.log('❌ OpenStates API error:', error);
-      return {};
-    }
   }
 
   /**

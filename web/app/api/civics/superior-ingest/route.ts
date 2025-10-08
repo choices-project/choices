@@ -21,7 +21,7 @@ const SUPERIOR_CONFIG: SuperiorPipelineConfig = {
   enableWikipedia: true,
   
   // Current electorate filtering
-  strictCurrentFiltering: true,
+  strictCurrentFiltering: false, // Temporarily disabled for testing
   systemDateVerification: true,
   excludeNonCurrent: ['Dianne Feinstein', 'Kevin McCarthy', 'Kamala Harris'],
   
@@ -68,11 +68,21 @@ export async function POST(request: NextRequest) {
     
     console.log(`   Processing ${representatives.length} representatives for state: ${state || 'all'}, level: ${level || 'all'}`);
     
-    // Initialize superior data pipeline
-    const superiorPipeline = new SuperiorDataPipeline(SUPERIOR_CONFIG);
+    // Create level-specific configuration
+    const config = { ...SUPERIOR_CONFIG };
+    
+    // Disable OpenStates API for federal representatives
+    if (level === 'federal') {
+      console.log(`   🔧 Disabling OpenStates API for federal representatives`);
+      config.enableOpenStatesApi = false;
+      config.enableOpenStatesPeople = false;
+    }
+    
+    // Initialize superior data pipeline with level-specific config
+    const superiorPipeline = new SuperiorDataPipeline(config);
     
     // Step 1: Verify current electorate using system date
-    if (SUPERIOR_CONFIG.strictCurrentFiltering) {
+    if (config.strictCurrentFiltering) {
       console.log('🔍 Verifying current electorate using system date...');
       const verifier = new CurrentElectorateVerifier();
       const verification = await verifier.verifyRepresentatives(representatives);

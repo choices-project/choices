@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
     const state = searchParams.get('state');
     const level = searchParams.get('level');
     const chamber = searchParams.get('chamber');
-    const limit = parseInt(searchParams.get('limit') || '50');
+    const limit = parseInt(searchParams.get('limit') || '200');
 
     if (!state) {
       return NextResponse.json({ error: 'State parameter required' }, { status: 400 });
