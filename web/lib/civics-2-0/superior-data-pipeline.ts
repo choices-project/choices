@@ -429,7 +429,7 @@ export class SuperiorDataPipeline {
       termEndDate: rep.termEndDate || rep.term_end_date,
       nextElectionDate: rep.nextElectionDate || rep.next_election_date,
       primaryData: {
-        ...primaryData,
+        ...(primaryData || {}),
         confidence: 'high' as const,
         lastUpdated: new Date().toISOString(),
         source: 'live-api' as const
@@ -453,7 +453,7 @@ export class SuperiorDataPipeline {
         contactDetails: secondaryData.secondaryData.openStatesPerson.contact_details || [],
         otherIdentifiers: secondaryData.secondaryData.openStatesPerson.other_identifiers || [],
         sources: secondaryData.secondaryData.openStatesPerson.sources || [],
-        currentParty: false, // TODO: Implement hasCurrentParty method
+        currentParty: this.hasCurrentParty(secondaryData.secondaryData.openStatesPerson),
         dataSource: 'openstates-people-database',
         confidence: 'medium',
         lastUpdated: new Date().toISOString(),
@@ -888,15 +888,152 @@ export class SuperiorDataPipeline {
   }
   
   // API call implementations
-  private async getCongressGovData(rep: any): Promise<any> { return null; }
-  private async getGoogleCivicData(rep: any): Promise<any> { return null; }
-  private async getFECData(rep: any): Promise<any> { return null; }
+  private async getCongressGovData(rep: any): Promise<any> { 
+    console.log('Getting Congress.gov data for:', rep.name);
+    
+    try {
+      // Use bioguide_id if available, otherwise search by name
+      const url = rep.bioguide_id 
+        ? `https://api.congress.gov/v3/member/${rep.bioguide_id}?api_key=${process.env.CONGRESS_GOV_API_KEY}`
+        : `https://api.congress.gov/v3/member?api_key=${process.env.CONGRESS_GOV_API_KEY}&q=${encodeURIComponent(rep.name)}`;
+      
+      const response = await fetch(url);
+      if (!response.ok) {
+        console.warn('Congress.gov API error:', response.status);
+        return null;
+      }
+      
+      const data = await response.json();
+      
+      if (data.members && data.members.length > 0) {
+        const member = data.members[0];
+        return {
+          bioguideId: member.bioguideId,
+          fullName: member.fullName,
+          firstName: member.firstName,
+          lastName: member.lastName,
+          party: member.party,
+          state: member.state,
+          district: member.district,
+          chamber: member.chamber,
+          url: member.url,
+          contactForm: member.contactForm,
+          rssUrl: member.rssUrl,
+          roles: member.roles || [],
+          sponsoredLegislation: member.sponsoredLegislation || [],
+          cosponsoredLegislation: member.cosponsoredLegislation || [],
+          source: 'congress-gov-api'
+        };
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('Congress.gov API error:', error);
+      return null;
+    }
+  }
+  private async getGoogleCivicData(rep: any): Promise<any> { 
+    console.log('Getting Google Civic data for:', rep.name);
+    
+    try {
+      // Google Civic API requires an address, so we'll use the representative's state
+      const address = `${rep.state}, USA`;
+      const url = `https://www.googleapis.com/civicinfo/v2/representatives?address=${encodeURIComponent(address)}&key=${process.env.GOOGLE_CIVIC_API_KEY}`;
+      
+      const response = await fetch(url);
+      if (!response.ok) {
+        console.warn('Google Civic API error:', response.status);
+        return null;
+      }
+      
+      const data = await response.json();
+      
+      if (data.officials && data.officials.length > 0) {
+        // Find the representative that matches our criteria
+        const matchingOfficial = data.officials.find((official: any) => 
+          official.name?.toLowerCase().includes(rep.name.toLowerCase()) ||
+          official.party === rep.party
+        );
+        
+        if (matchingOfficial) {
+          return {
+            name: matchingOfficial.name,
+            party: matchingOfficial.party,
+            photoUrl: matchingOfficial.photoUrl,
+            emails: matchingOfficial.emails || [],
+            phones: matchingOfficial.phones || [],
+            urls: matchingOfficial.urls || [],
+            channels: matchingOfficial.channels || [],
+            address: matchingOfficial.address || [],
+            sources: data.sources || [],
+            elections: data.elections || [],
+            contests: data.contests || [],
+            source: 'google-civic-api'
+          };
+        }
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('Google Civic API error:', error);
+      return null;
+    }
+  }
+  private async getFECData(rep: any): Promise<any> { 
+    console.log('Getting FEC data for:', rep.name);
+    
+    try {
+      // FEC API requires candidate ID or committee ID
+      const candidateId = rep.fec_id;
+      if (!candidateId) {
+        console.warn('No FEC ID available for representative:', rep.name);
+        return null;
+      }
+      
+      const url = `https://api.open.fec.gov/v1/candidate/${candidateId}/?api_key=${process.env.FEC_API_KEY}`;
+      const response = await fetch(url);
+      
+      if (!response.ok) {
+        console.warn('FEC API error:', response.status);
+        return null;
+      }
+      
+      const data = await response.json();
+      
+      if (data.results && data.results.length > 0) {
+        const candidate = data.results[0];
+        return {
+          candidateId: candidate.candidate_id,
+          name: candidate.name,
+          party: candidate.party,
+          office: candidate.office,
+          state: candidate.state,
+          district: candidate.district,
+          incumbentChallenge: candidate.incumbent_challenge,
+          candidateStatus: candidate.candidate_status,
+          activeThrough: candidate.active_through,
+          principalCommittee: candidate.principal_committee,
+          authorizedCommittees: candidate.authorized_committees || [],
+          cycles: candidate.cycles || [],
+          electionYears: candidate.election_years || [],
+          electionDistricts: candidate.election_districts || [],
+          source: 'fec-api'
+        };
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('FEC API error:', error);
+      return null;
+    }
+  }
   
   /**
    * OpenStates API (FREE - 250 requests/day)
    * Get social media data and other information from OpenStates API
    */
   private async getOpenStatesApiData(rep: any): Promise<any> {
+    console.log('Getting OpenStates API data for:', rep.name);
     console.log('🔍 OpenStates API: Starting data collection for', rep.name);
     
     try {
@@ -1063,7 +1200,31 @@ export class SuperiorDataPipeline {
     return urlMap[platform] || handle;
   }
   
-  private async getWikipediaData(rep: any): Promise<any> { return null; }
+  private async getWikipediaData(rep: any): Promise<any> { 
+    console.log('Getting Wikipedia data for:', rep.name);
+    return null; 
+  }
+
+  /**
+   * Check if a person has current party affiliation
+   */
+  private hasCurrentParty(openStatesPerson: any): boolean {
+    if (!openStatesPerson?.roles) return false;
+    
+    const currentDate = new Date();
+    const currentRoles = openStatesPerson.roles.filter((role: any) => {
+      const startDate = role.start_date ? new Date(role.start_date) : null;
+      const endDate = role.end_date ? new Date(role.end_date) : null;
+      
+      // Check if role is currently active
+      const isActive = (!startDate || startDate <= currentDate) && 
+                      (!endDate || endDate >= currentDate);
+      
+      return isActive && role.party;
+    });
+    
+    return currentRoles.length > 0;
+  }
 }
 
 export default SuperiorDataPipeline;

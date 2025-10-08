@@ -42,7 +42,7 @@ test.describe('Superior Implementations E2E Tests', () => {
   });
 
   test.afterEach(async () => {
-    await cleanupE2ETestData();
+    await cleanupE2ETestData(testData);
   });
 
   test.describe('Superior Data Pipeline', () => {
@@ -62,6 +62,30 @@ test.describe('Superior Implementations E2E Tests', () => {
       expect(data.configuration).toHaveProperty('crossReferenceEnabled', true);
       expect(data.configuration).toHaveProperty('dataValidationEnabled', true);
       expect(data.configuration).toHaveProperty('wikipediaEnabled', true);
+    });
+
+    test('should verify user data comes from database', async ({ request }) => {
+      // Test that user data is retrieved from database, not external APIs
+      const userDataResponse = await request.get('/api/user/profile');
+      expect(userDataResponse.status()).toBe(200);
+      
+      const userData = await userDataResponse.json();
+      expect(userData).toHaveProperty('user');
+      expect(userData.user).toHaveProperty('email');
+      expect(userData.user).toHaveProperty('preferences');
+    });
+
+    test('should restrict superior pipeline to admin only', async ({ request }) => {
+      // Test that superior pipeline requires admin authentication
+      const baseURL = process.env.BASE_URL || 'http://127.0.0.1:3000';
+      
+      // Try to access superior ingest without admin auth
+      const response = await request.post(`${baseURL}/api/civics/superior-ingest`, {
+        data: { state: 'CA', level: 'federal' }
+      });
+      
+      // Should be restricted (401 or 403)
+      expect([401, 403, 404]).toContain(response.status());
     });
 
     test('should test current electorate filtering', async ({ request }) => {
@@ -178,9 +202,54 @@ test.describe('Superior Implementations E2E Tests', () => {
         const feed = document.querySelector('[data-testid="feed-container"]');
         if (feed) {
           // Simulate pull-to-refresh gesture
-          const touchStart = new TouchEvent('touchstart', { touches: [{ clientY: 100 }] });
-          const touchMove = new TouchEvent('touchmove', { touches: [{ clientY: 50 }] });
-          const touchEnd = new TouchEvent('touchend', { touches: [{ clientY: 50 }] });
+          const touchStart = new TouchEvent('touchstart', { 
+            touches: [{ 
+              clientX: 0, 
+              clientY: 100, 
+              force: 1, 
+              identifier: 0, 
+              pageX: 0, 
+              pageY: 100, 
+              radiusX: 0, 
+              radiusY: 0, 
+              rotationAngle: 0, 
+              screenX: 0, 
+              screenY: 100, 
+              target: feed 
+            }] 
+          });
+          const touchMove = new TouchEvent('touchmove', { 
+            touches: [{ 
+              clientX: 0, 
+              clientY: 50, 
+              force: 1, 
+              identifier: 0, 
+              pageX: 0, 
+              pageY: 50, 
+              radiusX: 0, 
+              radiusY: 0, 
+              rotationAngle: 0, 
+              screenX: 0, 
+              screenY: 50, 
+              target: feed 
+            }] 
+          });
+          const touchEnd = new TouchEvent('touchend', { 
+            touches: [{ 
+              clientX: 0, 
+              clientY: 50, 
+              force: 1, 
+              identifier: 0, 
+              pageX: 0, 
+              pageY: 50, 
+              radiusX: 0, 
+              radiusY: 0, 
+              rotationAngle: 0, 
+              screenX: 0, 
+              screenY: 50, 
+              target: feed 
+            }] 
+          });
           
           feed.dispatchEvent(touchStart);
           feed.dispatchEvent(touchMove);

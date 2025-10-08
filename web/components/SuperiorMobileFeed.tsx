@@ -78,15 +78,7 @@ export default function SuperiorMobileFeed({ userId, className = '' }: SuperiorM
   
   const scrollToTopRef = useRef<HTMLButtonElement>(null);
 
-  // Initialize superior PWA features
-  useEffect(() => {
-    initializeSuperiorPWAFeatures();
-    loadUserPreferences();
-    checkOnlineStatus();
-    requestNotificationPermission();
-    registerServiceWorker();
-    loadAnalyticsData();
-  }, []);
+  // Initialize superior PWA features - moved after function declarations
 
   const initializeSuperiorPWAFeatures = async () => {
     // Check if app is installed
@@ -101,7 +93,7 @@ export default function SuperiorMobileFeed({ userId, className = '' }: SuperiorM
     }
   };
 
-  const loadUserPreferences = () => {
+  const loadUserPreferences = useCallback(() => {
     const savedAddress = localStorage.getItem('userAddress');
     const savedTheme = localStorage.getItem('theme');
     const savedViewMode = localStorage.getItem('viewMode');
@@ -111,9 +103,9 @@ export default function SuperiorMobileFeed({ userId, className = '' }: SuperiorM
     if (savedViewMode) setActiveTab(savedViewMode as any);
     
     loadFeedItems(1);
-  };
+  }, [loadFeedItems]);
 
-  const checkOnlineStatus = () => {
+  const checkOnlineStatus = useCallback(() => {
     setIsOnline(navigator.onLine);
     
     const handleOnline = () => {
@@ -134,9 +126,10 @@ export default function SuperiorMobileFeed({ userId, className = '' }: SuperiorM
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
     };
-  };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [swRegistration]);
 
-  const requestNotificationPermission = async () => {
+  const requestNotificationPermission = useCallback(async () => {
     if ('Notification' in window) {
       const permission = await Notification.requestPermission();
       setNotificationPermission(permission);
@@ -145,7 +138,8 @@ export default function SuperiorMobileFeed({ userId, className = '' }: SuperiorM
         subscribeToNotifications();
       }
     }
-  };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [swRegistration]);
 
   const registerServiceWorker = async () => {
     if ('serviceWorker' in navigator) {
@@ -181,7 +175,7 @@ export default function SuperiorMobileFeed({ userId, className = '' }: SuperiorM
     }
   };
 
-  const syncOfflineData = async () => {
+  const syncOfflineData = useCallback(async () => {
     if (!isOnline) return;
     
     setSyncStatus('syncing');
@@ -201,7 +195,7 @@ export default function SuperiorMobileFeed({ userId, className = '' }: SuperiorM
       console.error('Sync failed:', error);
       setSyncStatus('error');
     }
-  };
+  }, [isOnline, lastSync, userId]);
 
   // loadFeedItems function is already defined above with useCallback
 
@@ -304,6 +298,16 @@ export default function SuperiorMobileFeed({ userId, className = '' }: SuperiorM
       description: 'Manage your profile'
     }
   ];
+
+  // Initialize superior PWA features
+  useEffect(() => {
+    initializeSuperiorPWAFeatures();
+    loadUserPreferences();
+    checkOnlineStatus();
+    requestNotificationPermission();
+    registerServiceWorker();
+    loadAnalyticsData();
+  }, [checkOnlineStatus, loadUserPreferences, requestNotificationPermission]);
 
   const renderContent = () => {
     switch (activeTab) {

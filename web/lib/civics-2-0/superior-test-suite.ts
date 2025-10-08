@@ -214,7 +214,7 @@ export class SuperiorTestSuite {
       let stateProcessingResult = null;
       try {
         stateProcessingResult = await this.openStatesIntegration.processStateData('CA');
-      } catch (error) {
+      } catch {
         // Expected if data doesn't exist
         console.log('   OpenStates data not available for testing');
       }

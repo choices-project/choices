@@ -23,7 +23,7 @@ import {
 } from './helpers/e2e-setup';
 
 test.describe('Superior Mobile PWA E2E Tests', () => {
-  let testData: {
+  let _testData: {
     user: ReturnType<typeof createTestUser>;
   };
 
@@ -106,7 +106,7 @@ test.describe('Superior Mobile PWA E2E Tests', () => {
           try {
             const registration = await navigator.serviceWorker.ready;
             return registration ? 'registered' : 'not registered';
-          } catch (error) {
+          } catch {
             return 'error';
           }
         }
@@ -288,7 +288,7 @@ test.describe('Superior Mobile PWA E2E Tests', () => {
             const registration = await navigator.serviceWorker.ready;
             const subscription = await registration.pushManager.getSubscription();
             return subscription ? 'subscribed' : 'not subscribed';
-          } catch (error) {
+          } catch {
             return 'error';
           }
         }
