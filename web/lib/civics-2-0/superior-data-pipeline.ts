@@ -212,6 +212,9 @@ export class SuperiorDataPipeline {
     results: any;
     enhancedRepresentatives: SuperiorRepresentativeData[];
   }> {
+    console.log(`🔍 DEBUG: processRepresentatives called with ${representatives.length} representatives`);
+    console.log(`🔍 DEBUG: First representative:`, JSON.stringify(representatives[0], null, 2));
+    
     const startTime = new Date();
     const results = {
       totalProcessed: 0,
@@ -366,16 +369,26 @@ export class SuperiorDataPipeline {
    * Collect primary data from live APIs
    */
   private async collectPrimaryData(rep: any): Promise<any> {
+    console.log(`🔍 DEBUG: collectPrimaryData called for ${rep.name}`);
+    console.log(`🔍 DEBUG: Representative data:`, JSON.stringify(rep, null, 2));
+    console.log(`🔍 DEBUG: Config enableCongressGov:`, this.config.enableCongressGov);
+    
     const primaryData: any = {};
     
     // Congress.gov data
     if (this.config.enableCongressGov) {
+      console.log(`🔍 DEBUG: Calling getCongressGovData for ${rep.name}`);
       try {
         primaryData.congressGov = await this.getCongressGovData(rep);
         console.log(`🔍 DEBUG: Congress.gov data for ${rep.name}:`, primaryData.congressGov ? 'SUCCESS' : 'FAILED');
+        if (primaryData.congressGov) {
+          console.log(`🔍 DEBUG: Congress.gov response:`, JSON.stringify(primaryData.congressGov, null, 2));
+        }
       } catch (error) {
         console.error('Congress.gov data collection failed:', error);
       }
+    } else {
+      console.log(`🔍 DEBUG: Congress.gov disabled in config`);
     }
     
     // Google Civic data
@@ -876,6 +889,8 @@ export class SuperiorDataPipeline {
   private async storeEnhancedData(enhancedRepresentatives: SuperiorRepresentativeData[]): Promise<void> {
     try {
       console.log(`💾 Storing ${enhancedRepresentatives.length} enhanced representatives...`);
+      console.log(`🔍 DEBUG: storeEnhancedData called with ${enhancedRepresentatives.length} representatives`);
+      console.log(`🔍 DEBUG: First representative:`, JSON.stringify(enhancedRepresentatives[0], null, 2));
       
       for (const enhancedRep of enhancedRepresentatives) {
         // Store data in representatives_core table with correct column names
@@ -886,7 +901,7 @@ export class SuperiorDataPipeline {
           office: (enhancedRep.office || 'Representative')?.substring(0, 100),
           level: enhancedRep.level?.substring(0, 20) || 'federal',
           state: enhancedRep.state?.substring(0, 10) || '',
-          district: enhancedRep.district?.substring(0, 10) || null,
+          district: enhancedRep.district ? String(enhancedRep.district).substring(0, 10) : null,
           bioguide_id: enhancedRep.bioguide_id?.substring(0, 20) || null,
           openstates_id: enhancedRep.openstatesId?.substring(0, 100) || null,
           fec_id: enhancedRep.fec_id?.substring(0, 20) || null,
@@ -977,17 +992,24 @@ export class SuperiorDataPipeline {
   
   // API call implementations
   private async getCongressGovData(rep: any): Promise<any> { 
-    console.log('Getting Congress.gov data for:', rep.name);
+    console.log('🔍 DEBUG: Getting Congress.gov data for:', rep.name);
+    console.log('🔍 DEBUG: Representative level:', rep.level);
+    console.log('🔍 DEBUG: Representative bioguide_id:', rep.bioguide_id);
+    console.log('🔍 DEBUG: Congress.gov API key available:', !!process.env.CONGRESS_GOV_API_KEY);
     
     // For federal representatives, use the bioguide_id from the initial Congress.gov call
     if (rep.level === 'federal' && rep.bioguide_id) {
-      console.log('Using bioguide_id for federal representative:', rep.name, rep.bioguide_id);
+      console.log('🔍 DEBUG: Using bioguide_id for federal representative:', rep.name, rep.bioguide_id);
       try {
         const url = `https://api.congress.gov/v3/member/${rep.bioguide_id}?api_key=${process.env.CONGRESS_GOV_API_KEY}`;
+        console.log('🔍 DEBUG: Making Congress.gov API call to:', url);
         const response = await fetch(url);
+        console.log('🔍 DEBUG: Congress.gov API response status:', response.status);
         if (response.ok) {
           const data = await response.json();
+          console.log('🔍 DEBUG: Congress.gov API response data:', !!data.member);
           if (data.member) {
+            console.log('🔍 DEBUG: Congress.gov API SUCCESS for:', rep.name);
             return {
               bioguideId: data.member.bioguideId,
               fullName: data.member.fullName,
@@ -1006,10 +1028,14 @@ export class SuperiorDataPipeline {
               source: 'congress-gov-api'
             };
           }
+        } else {
+          console.log('🔍 DEBUG: Congress.gov API FAILED with status:', response.status);
         }
       } catch (error) {
-        console.warn('Congress.gov individual member API failed:', error);
+        console.warn('🔍 DEBUG: Congress.gov individual member API failed:', error);
       }
+    } else {
+      console.log('🔍 DEBUG: Skipping Congress.gov API call - not federal or no bioguide_id');
     }
     
     try {

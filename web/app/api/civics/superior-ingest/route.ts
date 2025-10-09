@@ -50,6 +50,7 @@ const SUPERIOR_CONFIG: SuperiorPipelineConfig = {
 export async function POST(request: NextRequest) {
   try {
     console.log('🚀 SUPERIOR civics ingestion requested');
+    console.log('🔍 DEBUG: Route handler called');
     console.log(`   System Date: ${new Date().toISOString()}`);
     console.log(`   OpenStates People: ${SUPERIOR_CONFIG.enableOpenStatesPeople ? 'Enabled' : 'Disabled'}`);
     console.log(`   Strict Current Filtering: ${SUPERIOR_CONFIG.strictCurrentFiltering ? 'Enabled' : 'Disabled'}`);
@@ -67,9 +68,11 @@ export async function POST(request: NextRequest) {
     }
     
     console.log(`   Processing ${representatives.length} representatives for state: ${state || 'all'}, level: ${level || 'all'}`);
+    console.log(`🔍 DEBUG: First representative data:`, JSON.stringify(representatives[0], null, 2));
     
     // Create level-specific configuration
     const config = { ...SUPERIOR_CONFIG };
+    console.log(`🔍 DEBUG: Original config enableCongressGov:`, config.enableCongressGov);
     
     // Disable OpenStates API for federal representatives
     if (level === 'federal') {
@@ -77,6 +80,7 @@ export async function POST(request: NextRequest) {
       config.enableOpenStatesApi = false;
       config.enableOpenStatesPeople = false;
     }
+    console.log(`🔍 DEBUG: Final config enableCongressGov:`, config.enableCongressGov);
     
     // Initialize superior data pipeline with level-specific config
     const superiorPipeline = new SuperiorDataPipeline(config);
