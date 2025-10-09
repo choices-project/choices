@@ -13,7 +13,8 @@ import {
   LogOut, 
   Vote,
   BarChart3,
-  Home
+  Home,
+  Settings
 } from 'lucide-react'
 
 export default function GlobalNavigation() {
@@ -96,6 +97,17 @@ export default function GlobalNavigation() {
                 >
                   <User className="h-4 w-4" />
                   <span>Profile</span>
+                </Link>
+                <Link
+                  href="/account/privacy"
+                  className={`flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                    isActive('/account/privacy')
+                      ? 'text-blue-600 bg-blue-50'
+                      : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
+                  }`}
+                >
+                  <Settings className="h-4 w-4" />
+                  <span>Privacy</span>
                 </Link>
                 <Button
                   variant="outline"

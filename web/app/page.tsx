@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import WebAuthnFeatures from '@/components/WebAuthnFeatures'
 import PWAFeatures from '@/components/PWAFeatures'
+import { Shield } from 'lucide-react'
 
 export default function LandingPage() {
   return (
@@ -86,8 +87,49 @@ export default function LandingPage() {
       {/* Footer */}
       <footer className="bg-white border-t">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="text-center text-gray-600">
-            <p>&copy; 2024 Choices. All rights reserved.</p>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+            <div className="col-span-1 md:col-span-2">
+              <div className="flex items-center space-x-2 mb-4">
+                <Shield className="h-6 w-6 text-blue-600" />
+                <span className="text-lg font-bold text-gray-900">Choices</span>
+              </div>
+              <p className="text-gray-600 text-sm">
+                Empowering democratic participation through ranked choice voting and transparent civic engagement.
+              </p>
+            </div>
+            
+            <div>
+              <h3 className="font-semibold text-gray-900 mb-3">Platform</h3>
+              <ul className="space-y-2 text-sm text-gray-600">
+                <li><a href="/polls" className="hover:text-blue-600">Polls</a></li>
+                <li><a href="/dashboard" className="hover:text-blue-600">Dashboard</a></li>
+                <li><a href="/civics-2-0" className="hover:text-blue-600">Civics</a></li>
+                <li><a href="/analytics" className="hover:text-blue-600">Analytics</a></li>
+              </ul>
+            </div>
+            
+            <div>
+              <h3 className="font-semibold text-gray-900 mb-3">Privacy & Legal</h3>
+              <ul className="space-y-2 text-sm text-gray-600">
+                <li><a href="/privacy" className="hover:text-blue-600">Privacy Policy</a></li>
+                <li><a href="/account/privacy" className="hover:text-blue-600">Privacy Settings</a></li>
+                <li><a href="/account/export" className="hover:text-blue-600">Data Export</a></li>
+                <li><a href="/account/delete" className="hover:text-blue-600">Delete Account</a></li>
+              </ul>
+            </div>
+          </div>
+          
+          <div className="border-t border-gray-200 mt-8 pt-6">
+            <div className="flex flex-col md:flex-row justify-between items-center">
+              <p className="text-gray-600 text-sm">
+                &copy; 2025 Choices. All rights reserved.
+              </p>
+              <div className="flex space-x-4 mt-4 md:mt-0">
+                <a href="/privacy" className="text-sm text-gray-600 hover:text-blue-600">Privacy</a>
+                <a href="/terms" className="text-sm text-gray-600 hover:text-blue-600">Terms</a>
+                <a href="/contact" className="text-sm text-gray-600 hover:text-blue-600">Contact</a>
+              </div>
+            </div>
           </div>
         </div>
       </footer>

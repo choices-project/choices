@@ -184,6 +184,57 @@ We're committed to protecting your privacy while enabling democratic participati
 ### Questions or Concerns?
 We're here to help. Contact us anytime with privacy questions or concerns. Your privacy and trust are essential to our mission of improving democracy.
 
+## Technical Implementation
+
+### Database Security
+Your privacy data is protected by multiple layers of security:
+
+- **Row Level Security (RLS)**: You can only access your own data
+- **Encryption**: All data encrypted in transit and at rest
+- **Access Controls**: Strict authentication required
+- **Audit Logging**: All data access is tracked and logged
+
+### Data Storage Schema
+We store your privacy preferences in secure, purpose-built database tables:
+
+#### **Your Privacy Settings**
+- **Consent Records**: What you've agreed to share
+- **Data Requests**: When you ask for your data or deletion
+- **Audit Logs**: Security and access records
+- **Analytics Events**: Optional usage data (if you consent)
+
+#### **Data Categories We Track**
+- **Essential Data**: Account info, voting records, representatives (required)
+- **Analytics Data**: Usage patterns, performance data (optional)
+- **Location Data**: State/region for representative accuracy (optional)
+- **Demographic Data**: Age, education for relevant polls (optional)
+
+### Your Data Rights Implementation
+All your rights are technically implemented in our database:
+
+- **Right of Access**: Complete data export functionality
+- **Right to Rectification**: Profile editing capabilities
+- **Right to Erasure**: Account deletion with data removal
+- **Right to Portability**: JSON/CSV data export
+- **Right to Restrict Processing**: Granular consent controls
+- **Right to Object**: Opt-out mechanisms for all data types
+
+### Privacy Controls Available
+You have full control through our user interface:
+
+- **Privacy Settings Page**: `/account/privacy`
+- **Data Export**: `/account/export`
+- **Account Deletion**: `/account/delete`
+- **Consent Management**: Real-time preference updates
+- **Data Retention**: Choose how long we keep your data
+
+### Security Measures
+- **Encryption**: AES-256 encryption for all data
+- **Authentication**: Multi-factor authentication support
+- **Access Logging**: All data access is logged and monitored
+- **Regular Audits**: Security reviews and updates
+- **Incident Response**: Rapid response to any security issues
+
 ---
 
 **This privacy policy is designed to be clear, comprehensive, and user-friendly. We believe in transparent data practices that put you in control.**
