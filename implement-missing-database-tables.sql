@@ -193,8 +193,8 @@ CREATE TABLE IF NOT EXISTS privacy_audit_logs (
 -- 3. FEC SYSTEM TABLES (3 tables)
 -- ============================================================================
 
--- FEC Candidates - FEC candidate data
-CREATE TABLE IF NOT EXISTS fec_candidates (
+-- FEC Candidates - FEC candidate data (v2 to avoid conflicts with existing tables)
+CREATE TABLE IF NOT EXISTS fec_candidates_v2 (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     candidate_id VARCHAR(20) UNIQUE NOT NULL,
     name VARCHAR(255) NOT NULL,
@@ -225,8 +225,8 @@ CREATE TABLE IF NOT EXISTS fec_candidates (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- FEC Committees - FEC committee data
-CREATE TABLE IF NOT EXISTS fec_committees (
+-- FEC Committees - FEC committee data (v2 to avoid conflicts with existing tables)
+CREATE TABLE IF NOT EXISTS fec_committees_v2 (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     committee_id VARCHAR(20) UNIQUE NOT NULL,
     committee_name VARCHAR(500) NOT NULL,
@@ -281,8 +281,8 @@ CREATE TABLE IF NOT EXISTS fec_committees (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- FEC Filings - FEC filing records
-CREATE TABLE IF NOT EXISTS fec_filings (
+-- FEC Filings - FEC filing records (v2 to avoid conflicts with existing tables)
+CREATE TABLE IF NOT EXISTS fec_filings_v2 (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     filing_id VARCHAR(50) UNIQUE NOT NULL,
     committee_id VARCHAR(20) NOT NULL,
@@ -388,20 +388,20 @@ CREATE INDEX IF NOT EXISTS idx_privacy_audit_logs_user_id ON privacy_audit_logs(
 CREATE INDEX IF NOT EXISTS idx_privacy_audit_logs_event_type ON privacy_audit_logs(event_type);
 CREATE INDEX IF NOT EXISTS idx_privacy_audit_logs_timestamp ON privacy_audit_logs(event_timestamp);
 
--- FEC indexes
-CREATE INDEX IF NOT EXISTS idx_fec_candidates_candidate_id ON fec_candidates(candidate_id);
-CREATE INDEX IF NOT EXISTS idx_fec_candidates_name ON fec_candidates(name);
-CREATE INDEX IF NOT EXISTS idx_fec_candidates_office ON fec_candidates(office);
-CREATE INDEX IF NOT EXISTS idx_fec_candidates_state ON fec_candidates(state);
-CREATE INDEX IF NOT EXISTS idx_fec_committees_committee_id ON fec_committees(committee_id);
-CREATE INDEX IF NOT EXISTS idx_fec_committees_name ON fec_committees(committee_name);
-CREATE INDEX IF NOT EXISTS idx_fec_committees_type ON fec_committees(committee_type);
-CREATE INDEX IF NOT EXISTS idx_fec_committees_state ON fec_committees(state);
-CREATE INDEX IF NOT EXISTS idx_fec_filings_filing_id ON fec_filings(filing_id);
-CREATE INDEX IF NOT EXISTS idx_fec_filings_committee_id ON fec_filings(committee_id);
-CREATE INDEX IF NOT EXISTS idx_fec_filings_candidate_id ON fec_filings(candidate_id);
-CREATE INDEX IF NOT EXISTS idx_fec_filings_filing_date ON fec_filings(filing_date);
-CREATE INDEX IF NOT EXISTS idx_fec_filings_type ON fec_filings(filing_type);
+-- FEC indexes (v2 tables)
+CREATE INDEX IF NOT EXISTS idx_fec_candidates_v2_candidate_id ON fec_candidates_v2(candidate_id);
+CREATE INDEX IF NOT EXISTS idx_fec_candidates_v2_name ON fec_candidates_v2(name);
+CREATE INDEX IF NOT EXISTS idx_fec_candidates_v2_office ON fec_candidates_v2(office);
+CREATE INDEX IF NOT EXISTS idx_fec_candidates_v2_state ON fec_candidates_v2(state);
+CREATE INDEX IF NOT EXISTS idx_fec_committees_v2_committee_id ON fec_committees_v2(committee_id);
+CREATE INDEX IF NOT EXISTS idx_fec_committees_v2_name ON fec_committees_v2(committee_name);
+CREATE INDEX IF NOT EXISTS idx_fec_committees_v2_type ON fec_committees_v2(committee_type);
+CREATE INDEX IF NOT EXISTS idx_fec_committees_v2_state ON fec_committees_v2(state);
+CREATE INDEX IF NOT EXISTS idx_fec_filings_v2_filing_id ON fec_filings_v2(filing_id);
+CREATE INDEX IF NOT EXISTS idx_fec_filings_v2_committee_id ON fec_filings_v2(committee_id);
+CREATE INDEX IF NOT EXISTS idx_fec_filings_v2_candidate_id ON fec_filings_v2(candidate_id);
+CREATE INDEX IF NOT EXISTS idx_fec_filings_v2_filing_date ON fec_filings_v2(filing_date);
+CREATE INDEX IF NOT EXISTS idx_fec_filings_v2_type ON fec_filings_v2(filing_type);
 
 -- Ingestion indexes
 CREATE INDEX IF NOT EXISTS idx_ingestion_cursors_source ON ingestion_cursors(source);
@@ -423,9 +423,9 @@ ALTER TABLE analytics_user_engagement ENABLE ROW LEVEL SECURITY;
 ALTER TABLE privacy_consent_records ENABLE ROW LEVEL SECURITY;
 ALTER TABLE privacy_data_requests ENABLE ROW LEVEL SECURITY;
 ALTER TABLE privacy_audit_logs ENABLE ROW LEVEL SECURITY;
-ALTER TABLE fec_candidates ENABLE ROW LEVEL SECURITY;
-ALTER TABLE fec_committees ENABLE ROW LEVEL SECURITY;
-ALTER TABLE fec_filings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE fec_candidates_v2 ENABLE ROW LEVEL SECURITY;
+ALTER TABLE fec_committees_v2 ENABLE ROW LEVEL SECURITY;
+ALTER TABLE fec_filings_v2 ENABLE ROW LEVEL SECURITY;
 ALTER TABLE ingestion_cursors ENABLE ROW LEVEL SECURITY;
 ALTER TABLE ingestion_logs ENABLE ROW LEVEL SECURITY;
 
@@ -452,14 +452,14 @@ CREATE POLICY "Users can view their own data requests" ON privacy_data_requests
 CREATE POLICY "Users can view their own audit logs" ON privacy_audit_logs
     FOR SELECT USING (auth.uid() = user_id);
 
--- FEC RLS policies (public data)
-CREATE POLICY "FEC candidates are publicly readable" ON fec_candidates
+-- FEC RLS policies (public data) - v2 tables
+CREATE POLICY "FEC candidates v2 are publicly readable" ON fec_candidates_v2
     FOR SELECT USING (true);
 
-CREATE POLICY "FEC committees are publicly readable" ON fec_committees
+CREATE POLICY "FEC committees v2 are publicly readable" ON fec_committees_v2
     FOR SELECT USING (true);
 
-CREATE POLICY "FEC filings are publicly readable" ON fec_filings
+CREATE POLICY "FEC filings v2 are publicly readable" ON fec_filings_v2
     FOR SELECT USING (true);
 
 -- Ingestion RLS policies (admin only)
@@ -478,7 +478,7 @@ BEGIN
     RAISE NOTICE '✅ SUCCESS: All 12 missing database tables implemented!';
     RAISE NOTICE '📊 Analytics System: 4 tables with indexes and RLS';
     RAISE NOTICE '🔒 Privacy System: 3 tables with comprehensive consent tracking';
-    RAISE NOTICE '🗳️ FEC System: 3 tables with full campaign finance data';
+    RAISE NOTICE '🗳️ FEC System: 3 tables (v2) with full campaign finance data';
     RAISE NOTICE '📥 Data Ingestion: 2 tables with cursor and logging support';
     RAISE NOTICE '🚀 All systems now have complete database infrastructure!';
 END $$;
