@@ -112,7 +112,7 @@ CREATE TABLE IF NOT EXISTS analytics_user_engagement (
 -- 2. PRIVACY SYSTEM TABLES (3 tables)
 -- ============================================================================
 
--- Privacy Consent Records - User consent tracking
+-- Privacy Consent Records - User consent tracking (GDPR/CCPA Compliant)
 CREATE TABLE IF NOT EXISTS privacy_consent_records (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -133,6 +133,17 @@ CREATE TABLE IF NOT EXISTS privacy_consent_records (
     ip_address INET,
     user_agent TEXT,
     consent_language VARCHAR(10) DEFAULT 'en',
+    -- Legal Compliance Fields
+    gdpr_compliant BOOLEAN DEFAULT TRUE,
+    ccpa_compliant BOOLEAN DEFAULT TRUE,
+    data_protection_officer_notified BOOLEAN DEFAULT FALSE,
+    privacy_impact_assessment_id VARCHAR(100),
+    legal_review_required BOOLEAN DEFAULT FALSE,
+    legal_review_date TIMESTAMP WITH TIME ZONE,
+    legal_review_notes TEXT,
+    regulatory_requirements JSONB, -- Applicable regulations (GDPR, CCPA, etc.)
+    cross_border_transfer_safeguards JSONB, -- SCCs, adequacy decisions, etc.
+    data_subject_rights_implemented JSONB, -- Rights available to user
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -159,6 +170,18 @@ CREATE TABLE IF NOT EXISTS privacy_data_requests (
     retention_exceptions JSONB, -- Legal exceptions to data deletion
     request_source VARCHAR(100), -- 'user_portal', 'email', 'phone', 'mail'
     assigned_to UUID REFERENCES auth.users(id),
+    -- Legal Compliance Fields
+    gdpr_article_applicable VARCHAR(20), -- Article 15, 16, 17, 18, 20, 21
+    ccpa_section_applicable VARCHAR(20), -- Section 1798.105, 1798.110, etc.
+    response_deadline TIMESTAMP WITH TIME ZONE,
+    response_sent_date TIMESTAMP WITH TIME ZONE,
+    response_method VARCHAR(50), -- 'email', 'portal', 'mail', 'phone'
+    identity_verification_method VARCHAR(50), -- 'email', 'phone', 'id_document'
+    identity_verification_status VARCHAR(50) DEFAULT 'pending',
+    identity_verification_date TIMESTAMP WITH TIME ZONE,
+    data_controller_contact VARCHAR(255),
+    supervisory_authority_notified BOOLEAN DEFAULT FALSE,
+    supervisory_authority_notification_date TIMESTAMP WITH TIME ZONE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
