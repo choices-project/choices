@@ -16,13 +16,13 @@ import {
   UserGroupIcon,
   HeartIcon
 } from '@heroicons/react/24/outline';
-import type { RepresentativeData } from '@/lib/civics-2-0/free-apis-pipeline';
+import type { SuperiorRepresentativeData } from '@/lib/civics-2-0/superior-data-pipeline';
 import EnhancedCandidateCard from '@/components/civics-2-0/EnhancedCandidateCard';
 import SuperiorMobileFeed from '@/components/SuperiorMobileFeed';
 
 export default function Civics2Page() {
   const [activeTab, setActiveTab] = useState<'representatives' | 'feed'>('representatives');
-  const [representatives, setRepresentatives] = useState<RepresentativeData[]>([]);
+  const [representatives, setRepresentatives] = useState<SuperiorRepresentativeData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedState, setSelectedState] = useState<string>('CA');
@@ -103,7 +103,7 @@ export default function Civics2Page() {
     console.log('Contacting representative:', id, type);
   };
 
-  const handleShare = (representative: RepresentativeData) => {
+  const handleShare = (representative: SuperiorRepresentativeData) => {
     // Share functionality
     console.log('Sharing representative:', representative.name);
   };

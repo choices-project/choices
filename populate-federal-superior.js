@@ -104,10 +104,10 @@ async function getCurrentCongressMembers() {
 }
 
 async function populateFederalRepresentatives() {
-  console.log('🚀 Starting SUPERIOR federal representatives population...');
-  console.log(`   Using Superior Data Pipeline with concurrent API calls`);
+  console.log('🚀 Starting ENHANCED SUPERIOR federal representatives population...');
+  console.log(`   Using Enhanced Superior Data Pipeline with ID Crosswalk Integration`);
   console.log(`   Sources: Congress.gov, Google Civic, FEC, Wikipedia (OpenStates for state only)`);
-  console.log(`   Features: Cross-reference validation, consensus building, data quality scoring`);
+  console.log(`   Features: ID Crosswalk Integration, Enhanced Deduplication, Cross-reference validation, Canonical ID Resolution`);
   console.log(`   System Date: ${new Date().toISOString()}`);
   
   try {
@@ -174,7 +174,19 @@ async function populateFederalRepresentatives() {
           const response = await makeRequest('http://localhost:3001/api/civics/superior-ingest', {
             body: JSON.stringify({ 
               representatives: batch,
-              level: 'federal'
+              level: 'federal',
+              config: {
+                enableCongressGov: true,
+                enableGoogleCivic: true,
+                enableFEC: true,
+                enableOpenStatesApi: false,
+                enableOpenStatesPeople: false,
+                enableWikipedia: true,
+                strictCurrentFiltering: true,
+                minimumQualityScore: 60,
+                maxConcurrentRequests: 5,
+                rateLimitDelay: 1000
+              }
             })
           });
           
@@ -239,10 +251,12 @@ async function populateFederalRepresentatives() {
     console.log(`   Successful: ${results.successful}`);
     console.log(`   Failed: ${results.failed}`);
     console.log(`   Success Rate: ${((results.successful / federalReps.length) * 100).toFixed(1)}%`);
-    console.log(`\n🔍 SUPERIOR PIPELINE FEATURES USED:`);
+    console.log(`\n🔍 ENHANCED SUPERIOR PIPELINE FEATURES USED:`);
+    console.log(`   ✅ ID Crosswalk Integration for deduplication`);
+    console.log(`   ✅ Enhanced Deduplication with Canonical ID Resolution`);
     console.log(`   ✅ Concurrent API calls across multiple sources`);
     console.log(`   ✅ Cross-reference validation between sources`);
-    console.log(`   ✅ Consensus building for data conflicts`);
+    console.log(`   ✅ Multi-source data validation and consensus building`);
     console.log(`   ✅ Data quality scoring and reliability assessment`);
     console.log(`   ✅ Enhanced data enrichment with contacts, photos, activity`);
     

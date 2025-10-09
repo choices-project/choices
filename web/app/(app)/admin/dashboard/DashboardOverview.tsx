@@ -169,16 +169,16 @@ export const DashboardOverview: React.FC = () => {
                 className="flex items-start space-x-3 p-4 bg-gray-50 rounded-lg"
               >
                 <div className="flex-shrink-0">
-                  {activity.type === 'topiccreated' && (
+                  {activity.label === 'topiccreated' && (
                     <TrendingUp className="h-5 w-5 text-blue-600" />
                   )}
-                  {activity.type === 'pollgenerated' && (
+                  {activity.label === 'pollgenerated' && (
                     <BarChart3 className="h-5 w-5 text-green-600" />
                   )}
-                  {activity.type === 'pollapproved' && (
+                  {activity.label === 'pollapproved' && (
                     <CheckCircle className="h-5 w-5 text-green-600" />
                   )}
-                  {activity.type === 'systemalert' && (
+                  {activity.label === 'systemalert' && (
                     <AlertTriangle className="h-5 w-5 text-yellow-600" />
                   )}
                 </div>

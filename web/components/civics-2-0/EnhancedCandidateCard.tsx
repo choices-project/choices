@@ -37,10 +37,10 @@ import {
 } from '@heroicons/react/24/solid';
 
 // Import types from the pipeline
-import type { RepresentativeData } from '@/lib/civics-2-0/free-apis-pipeline';
+import type { SuperiorRepresentativeData } from '@/lib/civics-2-0/superior-data-pipeline';
 
 type CandidateCardProps = {
-  representative: RepresentativeData;
+  representative: SuperiorRepresentativeData;
   onLike?: (id: string) => void;
   onShare?: (id: string) => void;
   onFollow?: (id: string) => void;
@@ -81,16 +81,16 @@ export default function EnhancedCandidateCard({
   const touchEndRef = useRef<{ x: number; y: number; time: number } | null>(null);
 
   // Get primary photo with fallback
-  const primaryPhoto = representative.photos?.find(photo => photo.isPrimary) || representative.photos?.[0];
+  const primaryPhoto = representative.enhancedPhotos?.find((photo: any) => photo.isPrimary || false) || representative.enhancedPhotos?.[0];
   
   
   // Get social media with most followers
-  const topSocialMedia = representative.socialMedia
-    ?.sort((a, b) => b.followersCount - a.followersCount)
+  const topSocialMedia = representative.enhancedSocialMedia
+    ?.sort((a, b) => (b.followersCount || 0) - (a.followersCount || 0))
     ?.slice(0, 3) || [];
   
   // Get recent activity
-  const recentActivity = representative.activity?.slice(0, 3) || [];
+  const recentActivity = representative.enhancedActivity?.slice(0, 3) || [];
 
   // Enhanced touch gesture handling with better performance
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
@@ -131,16 +131,16 @@ export default function EnhancedCandidateCard({
 
     // Horizontal swipe for photo navigation
     if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > minSwipeDistance) {
-      if (representative.photos && representative.photos.length > 1) {
+      if (representative.enhancedPhotos && representative.enhancedPhotos.length > 1) {
         if (deltaX > 0) {
           // Swipe right - previous photo
           setActivePhotoIndex(prev => 
-            prev > 0 ? prev - 1 : representative.photos.length - 1
+            prev > 0 ? prev - 1 : representative.enhancedPhotos.length - 1
           );
         } else {
           // Swipe left - next photo
           setActivePhotoIndex(prev => 
-            prev < representative.photos.length - 1 ? prev + 1 : 0
+            prev < representative.enhancedPhotos.length - 1 ? prev + 1 : 0
           );
         }
       }
@@ -159,7 +159,7 @@ export default function EnhancedCandidateCard({
 
     touchStartRef.current = null;
     touchEndRef.current = null;
-  }, [representative.photos]);
+  }, [representative.enhancedPhotos]);
 
   // Enhanced interaction handlers with error handling
   const handleLike = useCallback(async () => {
@@ -386,9 +386,9 @@ export default function EnhancedCandidateCard({
           )}
           
           {/* Photo indicators */}
-          {representative.photos && representative.photos.length > 1 && (
+          {representative.enhancedPhotos && representative.enhancedPhotos.length > 1 && (
             <div className="absolute bottom-4 left-4 flex space-x-2">
-              {representative.photos.map((_, index) => (
+              {representative.enhancedPhotos.map((_, index) => (
                 <button
                   key={index}
                   className={`w-2 h-2 rounded-full transition-colors ${
@@ -405,10 +405,10 @@ export default function EnhancedCandidateCard({
           )}
 
           {/* Quality score badge */}
-          <div className={`absolute top-4 right-4 px-2 py-1 rounded-full text-xs font-medium ${getQualityScoreColor(representative.qualityScore)}`}>
+          <div className={`absolute top-4 right-4 px-2 py-1 rounded-full text-xs font-medium ${getQualityScoreColor(representative.dataQuality.overallConfidence)}`}>
             <div className="flex items-center space-x-1">
               <CheckCircleIcon className="w-3 h-3" />
-              <span>{representative.qualityScore}% Complete</span>
+              <span>{representative.dataQuality.overallConfidence}% Complete</span>
             </div>
           </div>
 
@@ -495,11 +495,11 @@ export default function EnhancedCandidateCard({
       {isExpanded && (
         <div className="border-t border-gray-200">
           {/* Contact information */}
-          {representative.contacts && representative.contacts.length > 0 && (
+          {representative.enhancedContacts && representative.enhancedContacts.length > 0 && (
             <div className="p-6 border-b border-gray-200">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Contact Information</h3>
               <div className="space-y-3">
-                {representative.contacts.map((contact, index) => (
+                {representative.enhancedContacts.map((contact, index) => (
                   <div key={index} className="flex items-center space-x-3">
                     <div className="flex-shrink-0">
                       {contact.type === 'email' && <EnvelopeIcon className="w-5 h-5 text-gray-400" />}
@@ -508,8 +508,8 @@ export default function EnhancedCandidateCard({
                     </div>
                     <div className="flex-1">
                       <p className="text-sm text-gray-900">{contact.value}</p>
-                      {contact.label && (
-                        <p className="text-xs text-gray-500">{contact.label}</p>
+                      {contact.type && (
+                        <p className="text-xs text-gray-500">{contact.type}</p>
                       )}
                       {contact.isVerified && (
                         <div className="flex items-center space-x-1 mt-1">
@@ -549,8 +549,8 @@ export default function EnhancedCandidateCard({
                     <div className="flex-1">
                       <p className="text-sm font-medium text-gray-900">@{social.handle}</p>
                       <p className="text-xs text-gray-500">
-                        {social.followersCount.toLocaleString()} followers
-                        {social.isVerified && (
+                        {(social.followersCount || 0).toLocaleString()} followers
+                        {social.verified && (
                           <span className="ml-1 text-green-600">✓</span>
                         )}
                       </p>

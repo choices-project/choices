@@ -12,7 +12,7 @@
 
 import { type NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-// import { freeAPIsPipeline } from '@/lib/civics-2-0/free-apis-pipeline';
+// import { SuperiorDataPipeline } from '@/lib/civics-2-0/superior-data-pipeline';
 
 export const dynamic = 'force-dynamic';
 

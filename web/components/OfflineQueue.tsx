@@ -55,7 +55,7 @@ export default function OfflineQueue({ className = '' }: OfflineQueueProps) {
             <div className="flex items-center space-x-2">
               <Clock className="w-4 h-4 text-gray-400" />
               <span className="text-sm text-gray-700">
-                {item.type === 'vote' ? 'Vote' : 'Comment'} on Poll {item.pollId}
+                {item.label === 'vote' ? 'Vote' : 'Comment'} on Poll {item.pollId}
               </span>
             </div>
             <span className="text-xs text-gray-500">

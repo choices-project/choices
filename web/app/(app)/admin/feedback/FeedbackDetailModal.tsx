@@ -232,7 +232,7 @@ export const FeedbackDetailModal: React.FC<FeedbackDetailModalProps> = ({
                       </div>
                       <div className="flex items-center space-x-2">
                         <Smartphone className="h-4 w-4" />
-                        <span>Type: {feedback.metadata.deviceInfo.type}</span>
+                        <span>Type: {feedback.metadata.deviceInfo.label}</span>
                       </div>
                     </div>
                   </div>

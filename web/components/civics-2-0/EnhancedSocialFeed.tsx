@@ -174,9 +174,9 @@ export default function EnhancedSocialFeed({
 
       ws.onmessage = (event) => {
         const data = JSON.parse(event.data);
-        if (data.type === 'new_item') {
+        if (data.label === 'new_item') {
           setFeedItems(prev => [data.item, ...prev]);
-        } else if (data.type === 'engagement_update') {
+        } else if (data.label === 'engagement_update') {
           setFeedItems(prev => prev.map(item => 
             item.id === data.itemId 
               ? { ...item, engagementMetrics: data.engagementMetrics }

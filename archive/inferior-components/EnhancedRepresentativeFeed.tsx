@@ -24,7 +24,7 @@ import {
   AdjustmentsHorizontalIcon
 } from '@heroicons/react/24/outline';
 import { HeartIcon as HeartSolidIcon } from '@heroicons/react/24/solid';
-import type { RepresentativeData } from '@/lib/civics-2-0/free-apis-pipeline';
+import type { SuperiorRepresentativeData } from '@/lib/civics-2-0/superior-data-pipeline';
 
 type EnhancedRepresentativeFeedProps = {
   userId?: string;

@@ -9,6 +9,8 @@
 import { createClient } from '@supabase/supabase-js';
 import { CurrentElectorateVerifier } from './current-electorate-verifier';
 import OpenStatesIntegration, { type OpenStatesPerson } from './openstates-integration';
+import { type CanonicalIdService, canonicalIdService } from '../civics/canonical-id-service';
+import { devLog } from '@/lib/logger';
 
 export type SuperiorPipelineConfig = {
   // Data sources
@@ -166,6 +168,10 @@ export type SuperiorRepresentativeData = {
   dataSources: string[];
   lastUpdated: string;
   
+  // Canonical ID system
+  canonicalId?: string;
+  crosswalkEntries?: any[];
+  
   // OpenStates People integration
   openStatesPeopleData?: {
     roles: any[];
@@ -185,6 +191,7 @@ export class SuperiorDataPipeline {
   private supabase: any;
   private verifier: CurrentElectorateVerifier;
   private openStatesIntegration: OpenStatesIntegration;
+  private canonicalIdService: CanonicalIdService;
   private config: SuperiorPipelineConfig;
   private processedStates: Set<string>;
   
@@ -205,6 +212,7 @@ export class SuperiorDataPipeline {
       dataPath: config.openStatesPeoplePath,
       currentDate: new Date()
     });
+    this.canonicalIdService = canonicalIdService;
     this.processedStates = new Set();
   }
 
@@ -387,7 +395,12 @@ export class SuperiorDataPipeline {
         // Step 2d: Create comprehensive enhanced data
         const enhancedRep = await this.createEnhancedRepresentative(rep, primaryData, secondaryData);
         
-        // Step 2e: Calculate data quality
+        // Step 2e: Resolve canonical ID for deduplication and cross-source validation
+        const canonicalResult = await this.resolveCanonicalId(enhancedRep);
+        enhancedRep.canonicalId = canonicalResult.canonicalId;
+        enhancedRep.crosswalkEntries = canonicalResult.crosswalkEntries;
+        
+        // Step 2f: Calculate data quality
         const qualityScore = this.calculateDataQuality(enhancedRep);
         results.dataQuality.averageScore += qualityScore;
         
@@ -1042,27 +1055,71 @@ export class SuperiorDataPipeline {
           enhanced_social_media: enhancedRep.enhancedSocialMedia || []
         };
         
-        // Check if representative already exists (by bioguide_id for federal, openstates_id for state)
-        const existingIdentifier = enhancedRep.bioguide_id || enhancedRep.openstatesId;
-        const identifierField = enhancedRep.bioguide_id ? 'bioguide_id' : 'openstates_id';
-        
-        console.log(`🔍 DEBUG: Checking if ${enhancedRep.name} already exists by ${identifierField}: ${existingIdentifier}`);
-        
+        // Enhanced deduplication using canonical ID system
         let existing = null;
         
-        // First try to find by identifier
-        if (existingIdentifier) {
-          const { data: existingById } = await this.supabase
-            .from('representatives_core')
-            .select('id, data_quality_score, data_sources, last_updated')
-            .eq(identifierField, existingIdentifier)
-            .maybeSingle();
-          existing = existingById;
+        // First try to find by canonical ID (most reliable)
+        if (enhancedRep.canonicalId) {
+          console.log(`🔍 DEBUG: Checking for existing representative by canonical ID: ${enhancedRep.canonicalId}`);
+          
+          // Check if canonical ID exists in id_crosswalk table
+          const { data: crosswalkData } = await this.supabase
+            .from('id_crosswalk')
+            .select('canonical_id, source, source_id')
+            .eq('canonical_id', enhancedRep.canonicalId)
+            .limit(1);
+          
+          if (crosswalkData && crosswalkData.length > 0) {
+            // Find representative by any of the source IDs
+            const sourceIds = crosswalkData.map((entry: any) => entry.source_id);
+            const sourceFields = crosswalkData.map((entry: any) => {
+              switch (entry.source) {
+                case 'congress-gov': return 'bioguide_id';
+                case 'open-states': return 'openstates_id';
+                case 'fec': return 'fec_id';
+                case 'google-civic': return 'google_civic_id';
+                default: return null;
+              }
+            }).filter(Boolean);
+            
+            for (let i = 0; i < sourceIds.length; i++) {
+              const field = sourceFields[i];
+              const sourceId = sourceIds[i];
+              if (field && sourceId) {
+                const { data: existingByCanonical } = await this.supabase
+                  .from('representatives_core')
+                  .select('id, data_quality_score, data_sources, last_updated')
+                  .eq(field, sourceId)
+                  .maybeSingle();
+                if (existingByCanonical) {
+                  existing = existingByCanonical;
+                  break;
+                }
+              }
+            }
+          }
         }
         
-        // If not found by identifier, try to find by name and level (fallback for records without bioguide_id)
+        // Fallback: Check by direct identifiers
         if (!existing) {
-          console.log(`🔍 DEBUG: No match by ${identifierField}, trying to find by name and level`);
+          const existingIdentifier = enhancedRep.bioguide_id || enhancedRep.openstatesId;
+          const identifierField = enhancedRep.bioguide_id ? 'bioguide_id' : 'openstates_id';
+          
+          console.log(`🔍 DEBUG: Checking if ${enhancedRep.name} already exists by ${identifierField}: ${existingIdentifier}`);
+          
+          if (existingIdentifier) {
+            const { data: existingById } = await this.supabase
+              .from('representatives_core')
+              .select('id, data_quality_score, data_sources, last_updated')
+              .eq(identifierField, existingIdentifier)
+              .maybeSingle();
+            existing = existingById;
+          }
+        }
+        
+        // Final fallback: Check by name and level
+        if (!existing) {
+          console.log(`🔍 DEBUG: No match by canonical ID or identifiers, trying to find by name and level`);
           const { data: existingByName } = await this.supabase
             .from('representatives_core')
             .select('id, data_quality_score, data_sources, last_updated')
@@ -1797,6 +1854,121 @@ export class SuperiorDataPipeline {
     });
     
     return currentRoles.length > 0;
+  }
+
+  /**
+   * Resolve canonical ID for multi-source reconciliation
+   * Stores mappings in id_crosswalk table for deduplication
+   */
+  private async resolveCanonicalId(rep: SuperiorRepresentativeData): Promise<{ canonicalId: string; crosswalkEntries: any[] }> {
+    try {
+      // Prepare source data for canonical ID resolution
+      const sourceData = [];
+      
+      // Add OpenStates data if available
+      if (rep.openstatesId) {
+        sourceData.push({
+          source: 'open-states' as const,
+          data: {
+            name: rep.name,
+            office: rep.office,
+            level: rep.level,
+            state: rep.state,
+            district: rep.district,
+            party: rep.party
+          },
+          sourceId: rep.openstatesId
+        });
+      }
+      
+      // Add Congress.gov data if available
+      if (rep.bioguide_id) {
+        sourceData.push({
+          source: 'congress-gov' as const,
+          data: {
+            name: rep.name,
+            office: rep.office,
+            level: rep.level,
+            state: rep.state,
+            district: rep.district,
+            party: rep.party
+          },
+          sourceId: rep.bioguide_id
+        });
+      }
+      
+      // Add FEC data if available
+      if (rep.fec_id) {
+        sourceData.push({
+          source: 'fec' as const,
+          data: {
+            name: rep.name,
+            office: rep.office,
+            level: rep.level,
+            state: rep.state,
+            district: rep.district,
+            party: rep.party
+          },
+          sourceId: rep.fec_id
+        });
+      }
+      
+      // Add Google Civic data if available
+      if (rep.google_civic_id) {
+        sourceData.push({
+          source: 'google-civic' as const,
+          data: {
+            name: rep.name,
+            office: rep.office,
+            level: rep.level,
+            state: rep.state,
+            district: rep.district,
+            party: rep.party
+          },
+          sourceId: rep.google_civic_id
+        });
+      }
+      
+      // If no source data available, create a basic entry
+      if (sourceData.length === 0) {
+        sourceData.push({
+          source: 'open-states' as const,
+          data: {
+            name: rep.name,
+            office: rep.office,
+            level: rep.level,
+            state: rep.state,
+            district: rep.district,
+            party: rep.party
+          },
+          sourceId: rep.id || `temp_${Date.now()}`
+        });
+      }
+      
+      // Resolve entity using CanonicalIdService
+      const result = await this.canonicalIdService.resolveEntity(
+        'person' as const,
+        sourceData
+      );
+      
+      devLog('Canonical ID resolved', {
+        name: rep.name,
+        canonicalId: result.canonicalId,
+        sources: result.crosswalkEntries.length
+      });
+      
+      return result;
+      
+    } catch (error) {
+      devLog('Error resolving canonical ID', { name: rep.name, error });
+      
+      // Fallback: generate a basic canonical ID
+      const fallbackId = `person_${rep.name.toLowerCase().replace(/[^a-z0-9]/g, '_')}_${rep.state}_${rep.district || 'unknown'}`;
+      return {
+        canonicalId: fallbackId,
+        crosswalkEntries: []
+      };
+    }
   }
 }
 

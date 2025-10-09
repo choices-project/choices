@@ -275,8 +275,8 @@ export default class OpenStatesIntegration {
   }
 
   private async enhancePersonData(person: OpenStatesPerson, _stateCode: string): Promise<OpenStatesPerson> {
-    // eslint-disable-next-line no-restricted-syntax
-    const enhanced = { ...person } as OpenStatesPerson;
+
+    const enhanced = { ...person } as OpenStatesPerson & Record<string, any>;
     
     // Extract OpenStates ID for efficient API calls
     if (person.id) {

@@ -65,7 +65,7 @@ export default function WebAuthnAuth({ onAuthenticated }: WebAuthnAuthProps) {
           session: beginData.session,
           response: {
             id: credential.id,
-            type: credential.type,
+            type: credential.label,
             rawId: Array.from(new Uint8Array(credential.rawId)),
             response: {
               clientDataJSON: Array.from(new Uint8Array((credential.response as AuthenticatorAttestationResponse).clientDataJSON)),
@@ -141,7 +141,7 @@ export default function WebAuthnAuth({ onAuthenticated }: WebAuthnAuthProps) {
           session: beginData.session,
           response: {
             id: assertion.id,
-            type: assertion.type,
+            type: assertion.label,
             rawId: Array.from(new Uint8Array(assertion.rawId)),
             response: {
               clientDataJSON: Array.from(new Uint8Array((assertion.response as AuthenticatorAssertionResponse).clientDataJSON)),

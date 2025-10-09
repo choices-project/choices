@@ -14,10 +14,10 @@ import ProgressiveDisclosure from './ProgressiveDisclosure';
 import TouchInteractions from './TouchInteractions';
 
 // Import types from the pipeline
-import type { RepresentativeData } from '@/lib/civics-2-0/free-apis-pipeline';
+import type { SuperiorRepresentativeData } from '@/lib/civics-2-0/superior-data-pipeline';
 
 // Mock data for testing
-const mockRepresentative: RepresentativeData = {
+const mockRepresentative: SuperiorRepresentativeData = {
   id: 'test-1',
   name: 'John Smith',
   party: 'Democrat',
@@ -25,11 +25,10 @@ const mockRepresentative: RepresentativeData = {
   level: 'federal',
   state: 'California',
   district: 'CA-12',
-  contacts: [
+  enhancedContacts: [
     {
       type: 'email',
       value: 'john.smith@senate.gov',
-      label: 'Official Email',
       isPrimary: true,
       isVerified: true,
       source: 'congress.gov'
@@ -37,49 +36,44 @@ const mockRepresentative: RepresentativeData = {
     {
       type: 'phone',
       value: '(202) 224-3841',
-      label: 'Washington Office',
       isPrimary: false,
       isVerified: true,
       source: 'congress.gov'
     }
   ],
-  socialMedia: [
+  enhancedSocialMedia: [
     {
       platform: 'twitter',
       handle: 'SenJohnSmith',
       url: 'https://twitter.com/SenJohnSmith',
       followersCount: 125000,
-      isVerified: true,
-      source: 'congress.gov'
+      verified: true,
     },
     {
       platform: 'facebook',
       handle: 'SenatorJohnSmith',
       url: 'https://facebook.com/SenatorJohnSmith',
       followersCount: 89000,
-      isVerified: true,
-      source: 'congress.gov'
+      verified: true,
     }
   ],
-  photos: [
+  enhancedPhotos: [
     {
       url: 'https://example.com/photo1.jpg',
       source: 'congress-gov',
-      quality: 'high',
-      isPrimary: true,
-      license: 'public-domain',
+      altText: 'Official Senate Photo',
       attribution: 'Official Senate Photo',
       width: 400,
       height: 500
     }
   ],
-  activity: [
+  enhancedActivity: [
     {
       type: 'vote',
       title: 'Voted on Infrastructure Bill',
       description: 'Supported the bipartisan infrastructure investment bill',
       url: 'https://congress.gov/vote/123',
-      date: new Date('2024-01-15'),
+      date: new Date('2024-01-15').toISOString(),
       metadata: { vote: 'yea', bill: 'S.1234' },
       source: 'congress.gov'
     },
@@ -88,25 +82,38 @@ const mockRepresentative: RepresentativeData = {
       title: 'Floor Speech on Climate Change',
       description: 'Delivered remarks on the importance of climate action',
       url: 'https://congress.gov/statement/456',
-      date: new Date('2024-01-10'),
+      date: new Date('2024-01-10').toISOString(),
       metadata: { topic: 'climate', duration: '15min' },
       source: 'congress.gov'
     }
   ],
   campaignFinance: {
-    electionCycle: '2024',
-    totalReceipts: 2500000,
-    totalDisbursements: 1800000,
+    totalRaised: 2500000,
+    totalSpent: 1800000,
     cashOnHand: 700000,
-    debt: 0,
-    individualContributions: 2000000,
-    pacContributions: 300000,
-    partyContributions: 200000,
-    selfFinancing: 0
+    lastFilingDate: new Date().toISOString(),
+    source: 'fec.gov'
   },
+  primaryData: {
+    congressGov: { id: 'S001234', name: 'John Smith' },
+    googleCivic: { name: 'John Smith', party: 'Democratic' },
+    fec: { candidateId: 'S6CA00123' },
+    confidence: 'high' as const,
+    lastUpdated: new Date().toISOString(),
+    source: 'live-api' as const
+  },
+  verificationStatus: 'verified' as const,
   dataSources: ['congress.gov', 'fec.gov', 'openstates.org'],
-  qualityScore: 85,
-  lastUpdated: new Date()
+  dataQuality: {
+    primarySourceScore: 85,
+    secondarySourceScore: 80,
+    overallConfidence: 85,
+    lastValidated: new Date().toISOString(),
+    validationMethod: 'api-verification' as const,
+    dataCompleteness: 90,
+    sourceReliability: 85
+  },
+  lastUpdated: new Date().toISOString()
 };
 
 export default function ComponentTest() {

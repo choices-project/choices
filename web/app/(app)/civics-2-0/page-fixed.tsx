@@ -17,11 +17,11 @@ import {
   UserGroupIcon,
   HeartIcon
 } from '@heroicons/react/24/outline';
-import type { RepresentativeData } from '@/lib/civics-2-0/free-apis-pipeline';
+import type { SuperiorRepresentativeData } from '@/lib/civics-2-0/superior-data-pipeline';
 
 export default function Civics2Page() {
   const [activeTab, setActiveTab] = useState<'representatives' | 'feed'>('representatives');
-  const [representatives, setRepresentatives] = useState<RepresentativeData[]>([]);
+  const [representatives, setRepresentatives] = useState<SuperiorRepresentativeData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedState, setSelectedState] = useState<string>('CA');
@@ -304,10 +304,10 @@ export default function Civics2Page() {
                       {/* Header with Photo */}
                       <div className="relative bg-gradient-to-br from-blue-50 to-indigo-50 p-6">
                         <div className="flex items-start space-x-4">
-                          {representative.photos?.[0] ? (
+                          {representative.enhancedPhotos?.[0] ? (
                             <div className="relative">
                               <Image 
-                                src={representative.photos[0].url} 
+                                src={representative.enhancedPhotos[0].url} 
                                 alt={representative.name}
                                 width={80}
                                 height={80}
@@ -351,7 +351,7 @@ export default function Civics2Page() {
                       </div>
 
                       {/* Contact Information */}
-                      {representative.contacts?.length > 0 && (
+                      {representative.enhancedContacts?.length > 0 && (
                         <div className="p-6 border-t border-gray-100">
                           <h4 className="text-sm font-semibold text-gray-900 mb-3 flex items-center">
                             <svg className="w-4 h-4 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -360,20 +360,20 @@ export default function Civics2Page() {
                             Contact Information
                           </h4>
                           <div className="space-y-2">
-                            {representative.contacts.slice(0, 3).map((contact: any, i: number) => (
+                            {representative.enhancedContacts.slice(0, 3).map((contact: any, i: number) => (
                               <div key={i} className="flex items-center space-x-3 p-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
                                 <div className="flex-shrink-0">
-                                  {contact.type === 'phone' && (
+                                  {contact.label === 'phone' && (
                                     <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                                     </svg>
                                   )}
-                                  {contact.type === 'website' && (
+                                  {contact.label === 'website' && (
                                     <svg className="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9v-9m0-9v9" />
                                     </svg>
                                   )}
-                                  {contact.type === 'address' && (
+                                  {contact.label === 'address' && (
                                     <svg className="w-4 h-4 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -381,10 +381,10 @@ export default function Civics2Page() {
                                   )}
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                  <p className="text-sm font-medium text-gray-900 capitalize">{contact.type}</p>
+                                  <p className="text-sm font-medium text-gray-900 capitalize">{contact.label}</p>
                                   <p className="text-sm text-gray-600 truncate">{contact.value}</p>
                                 </div>
-                                {contact.type === 'website' && (
+                                {contact.label === 'website' && (
                                   <a 
                                     href={contact.value} 
                                     target="_blank" 
@@ -457,7 +457,7 @@ export default function Civics2Page() {
                             </div>
                             <div className="flex items-center space-x-2">
                               <span className="text-sm text-gray-600">Quality:</span>
-                              <span className="text-sm font-bold text-blue-600">{representative.qualityScore}/100</span>
+                              <span className="text-sm font-bold text-blue-600">{representative.dataQuality.overallConfidence}/100</span>
                             </div>
                           </div>
                           <div className="text-xs text-gray-500">

@@ -32,12 +32,12 @@ import {
 } from '@heroicons/react/24/solid';
 
 // Import types from the pipeline
-import type { RepresentativeData } from '@/lib/civics-2-0/free-apis-pipeline';
+import type { SuperiorRepresentativeData } from '@/lib/civics-2-0/superior-data-pipeline';
 import TouchInteractions from './TouchInteractions';
 import ProgressiveDisclosure from './ProgressiveDisclosure';
 
 type MobileCandidateCardProps = {
-  representative: RepresentativeData;
+  representative: SuperiorRepresentativeData;
   onLike?: (id: string) => void;
   onShare?: (id: string) => void;
   onFollow?: (id: string) => void;
@@ -75,16 +75,16 @@ export default function MobileCandidateCard({
   const cardRef = useRef<HTMLDivElement>(null);
 
   // Get primary photo with fallback
-  const primaryPhoto = representative.photos?.find(photo => photo.isPrimary) || representative.photos?.[0];
+  const primaryPhoto = representative.enhancedPhotos?.[0];
   
   
   // Get social media with most followers
-  const topSocialMedia = representative.socialMedia
-    ?.sort((a, b) => b.followersCount - a.followersCount)
+  const topSocialMedia = representative.enhancedSocialMedia
+    ?.sort((a, b) => (b.followersCount || 0) - (a.followersCount || 0))
     ?.slice(0, 2) || []; // Show fewer on mobile
   
   // Get recent activity
-  const recentActivity = representative.activity?.slice(0, 2) || []; // Show fewer on mobile
+  const recentActivity = representative.enhancedActivity?.slice(0, 2) || []; // Show fewer on mobile
 
   // Haptic feedback
   const triggerHaptic = useCallback((type: 'light' | 'medium' | 'heavy' = 'light') => {
@@ -170,22 +170,22 @@ export default function MobileCandidateCard({
 
   // Touch gesture handlers
   const handleSwipeLeft = useCallback(() => {
-    if (representative.photos && representative.photos.length > 1) {
+    if (representative.enhancedPhotos && representative.enhancedPhotos.length > 1) {
       triggerHaptic('light');
       setActivePhotoIndex(prev => 
-        prev < representative.photos.length - 1 ? prev + 1 : 0
+        prev < representative.enhancedPhotos.length - 1 ? prev + 1 : 0
       );
     }
-  }, [representative.photos, triggerHaptic]);
+  }, [representative.enhancedPhotos, triggerHaptic]);
 
   const handleSwipeRight = useCallback(() => {
-    if (representative.photos && representative.photos.length > 1) {
+    if (representative.enhancedPhotos && representative.enhancedPhotos.length > 1) {
       triggerHaptic('light');
       setActivePhotoIndex(prev => 
-        prev > 0 ? prev - 1 : representative.photos.length - 1
+        prev > 0 ? prev - 1 : representative.enhancedPhotos.length - 1
       );
     }
-  }, [representative.photos, triggerHaptic]);
+  }, [representative.enhancedPhotos, triggerHaptic]);
 
   const handleSwipeUp = useCallback(() => {
     triggerHaptic('light');
@@ -294,9 +294,9 @@ export default function MobileCandidateCard({
             )}
             
             {/* Photo indicators - smaller on mobile */}
-            {representative.photos && representative.photos.length > 1 && (
+            {representative.enhancedPhotos && representative.enhancedPhotos.length > 1 && (
               <div className="absolute bottom-3 left-3 flex space-x-1">
-                {representative.photos.map((_, index) => (
+                {representative.enhancedPhotos.map((_, index) => (
                   <button
                     key={index}
                     className={`w-1.5 h-1.5 rounded-full transition-colors ${
@@ -313,10 +313,10 @@ export default function MobileCandidateCard({
             )}
 
             {/* Quality score badge - smaller on mobile */}
-            <div className={`absolute top-3 right-3 px-2 py-1 rounded-full text-xs font-medium ${getQualityScoreColor(representative.qualityScore)}`}>
+            <div className={`absolute top-3 right-3 px-2 py-1 rounded-full text-xs font-medium ${getQualityScoreColor(representative.dataQuality.overallConfidence)}`}>
               <div className="flex items-center space-x-1">
                 <CheckCircleIcon className="w-3 h-3" />
-                <span>{representative.qualityScore}%</span>
+                <span>{representative.dataQuality.overallConfidence}%</span>
               </div>
             </div>
 
@@ -417,11 +417,11 @@ export default function MobileCandidateCard({
           contentClassName="p-4"
         >
           {/* Contact information - mobile optimized */}
-          {representative.contacts && representative.contacts.length > 0 && (
+          {representative.enhancedContacts && representative.enhancedContacts.length > 0 && (
             <div className="mb-4">
               <h3 className="text-base font-semibold text-gray-900 mb-3">Contact</h3>
               <div className="space-y-2">
-                {representative.contacts.slice(0, 2).map((contact, index) => (
+                {representative.enhancedContacts.slice(0, 2).map((contact, index) => (
                   <div key={index} className="flex items-center space-x-3">
                     <div className="flex-shrink-0">
                       {contact.type === 'email' && <EnvelopeIcon className="w-4 h-4 text-gray-400" />}
@@ -468,8 +468,8 @@ export default function MobileCandidateCard({
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-gray-900 truncate">@{social.handle}</p>
                       <p className="text-xs text-gray-500">
-                        {social.followersCount.toLocaleString()} followers
-                        {social.isVerified && (
+                        {(social.followersCount || 0).toLocaleString()} followers
+                        {social.verified && (
                           <span className="ml-1 text-green-600">✓</span>
                         )}
                       </p>
