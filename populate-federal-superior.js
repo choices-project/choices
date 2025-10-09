@@ -137,10 +137,22 @@ async function populateFederalRepresentatives() {
     console.log(`\n🔄 Processing ${federalReps.length} federal representatives in batches of ${batchSize}...`);
     console.log(`   Each batch will use concurrent API calls and consensus validation`);
     
+    const totalBatches = Math.ceil(federalReps.length / batchSize);
+    
+    // Progress bar function
+    function updateProgress(current, total, batchNumber, successful, failed) {
+      const percentage = Math.round((current / total) * 100);
+      const progressBar = '█'.repeat(Math.floor(percentage / 2)) + '░'.repeat(50 - Math.floor(percentage / 2));
+      const status = `Batch ${batchNumber}/${totalBatches} | ${current}/${total} reps | ✅${successful} ❌${failed}`;
+      process.stdout.write(`\r📊 Progress: [${progressBar}] ${percentage}% | ${status}`);
+    }
+    
     for (let i = 0; i < federalReps.length; i += batchSize) {
       const batch = federalReps.slice(i, i + batchSize);
       const batchNumber = Math.floor(i / batchSize) + 1;
-      const totalBatches = Math.ceil(federalReps.length / batchSize);
+      
+      // Update progress bar
+      updateProgress(i, federalReps.length, batchNumber, results.successful, results.failed);
       
       console.log(`\n📦 Processing batch ${batchNumber}/${totalBatches} (${batch.length} representatives)...`);
       console.log(`   🔄 Superior pipeline will concurrently call:`);
@@ -179,6 +191,10 @@ async function populateFederalRepresentatives() {
             if (response.results?.errors) {
               results.errors.push(...response.results.errors);
             }
+            
+            // Update progress bar after successful batch
+            updateProgress(i + batch.length, federalReps.length, batchNumber, results.successful, results.failed);
+            
             success = true;
           } else {
             console.log(`   ❌ Batch ${batchNumber} failed: ${response.error}`);
@@ -211,6 +227,9 @@ async function populateFederalRepresentatives() {
         await new Promise(resolve => setTimeout(resolve, 10000));
       }
     }
+    
+    // Final progress update
+    console.log(`\n📊 Final Progress: [██████████████████████████████████████████████████] 100% | Complete | ✅${results.successful} ❌${results.failed}`);
     
     // Final statistics
     console.log(`\n${'='.repeat(80)}`);

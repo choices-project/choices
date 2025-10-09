@@ -188,6 +188,11 @@ export class SuperiorDataPipeline {
   private config: SuperiorPipelineConfig;
   private processedStates: Set<string>;
   
+  // API failure tracking
+  private apiFailureCounts: Record<string, number> = {};
+  private apiLastFailure: Record<string, number> = {};
+  private apiBackoffUntil: Record<string, number> = {};
+  
   constructor(config: SuperiorPipelineConfig) {
     this.config = config;
     this.supabase = createClient(
@@ -201,6 +206,79 @@ export class SuperiorDataPipeline {
       currentDate: new Date()
     });
     this.processedStates = new Set();
+  }
+
+  /**
+   * Check if an API is currently in backoff period
+   */
+  private isApiInBackoff(apiName: string): boolean {
+    const backoffUntil = this.apiBackoffUntil[apiName];
+    if (!backoffUntil) return false;
+    
+    const now = Date.now();
+    if (now < backoffUntil) {
+      const remainingMs = backoffUntil - now;
+      console.log(`⏳ API ${apiName} in backoff for ${Math.ceil(remainingMs / 1000)}s`);
+      return true;
+    }
+    
+    // Backoff period expired, clear it
+    delete this.apiBackoffUntil[apiName];
+    return false;
+  }
+
+  /**
+   * Record API failure and implement exponential backoff
+   */
+  private recordApiFailure(apiName: string, statusCode?: number): void {
+    const now = Date.now();
+    this.apiFailureCounts[apiName] = (this.apiFailureCounts[apiName] || 0) + 1;
+    this.apiLastFailure[apiName] = now;
+    
+    const failureCount = this.apiFailureCounts[apiName];
+    console.log(`❌ API ${apiName} failure #${failureCount} (status: ${statusCode})`);
+    
+    // Implement exponential backoff
+    if (statusCode === 429 || statusCode === 503) {
+      // Rate limit or service unavailable - longer backoff
+      const backoffMs = Math.min(300000, 30000 * Math.pow(2, failureCount - 1)); // Max 5 minutes
+      this.apiBackoffUntil[apiName] = now + backoffMs;
+      console.log(`⏳ API ${apiName} rate limited, backing off for ${Math.ceil(backoffMs / 1000)}s`);
+    } else if (failureCount >= 3) {
+      // Multiple failures - moderate backoff
+      const backoffMs = Math.min(60000, 10000 * failureCount); // Max 1 minute
+      this.apiBackoffUntil[apiName] = now + backoffMs;
+      console.log(`⏳ API ${apiName} multiple failures, backing off for ${Math.ceil(backoffMs / 1000)}s`);
+    }
+  }
+
+  /**
+   * Record API success and reset failure count
+   */
+  private recordApiSuccess(apiName: string): void {
+    if (this.apiFailureCounts[apiName] && this.apiFailureCounts[apiName] > 0) {
+      console.log(`✅ API ${apiName} recovered after ${this.apiFailureCounts[apiName]} failures`);
+    }
+    this.apiFailureCounts[apiName] = 0;
+    delete this.apiLastFailure[apiName];
+    delete this.apiBackoffUntil[apiName];
+  }
+
+  /**
+   * Check if we should skip an API due to failures
+   */
+  private shouldSkipApi(apiName: string): boolean {
+    if (this.isApiInBackoff(apiName)) {
+      return true;
+    }
+    
+    const failureCount = this.apiFailureCounts[apiName] || 0;
+    if (failureCount >= 5) {
+      console.log(`🚫 API ${apiName} disabled after ${failureCount} failures`);
+      return true;
+    }
+    
+    return false;
   }
   
   /**
@@ -376,57 +454,85 @@ export class SuperiorDataPipeline {
     const primaryData: any = {};
     
     // Congress.gov data
-    if (this.config.enableCongressGov) {
+    if (this.config.enableCongressGov && !this.shouldSkipApi('congressGov')) {
       console.log(`🔍 DEBUG: Calling getCongressGovData for ${rep.name}`);
       try {
         primaryData.congressGov = await this.getCongressGovData(rep);
         console.log(`🔍 DEBUG: Congress.gov data for ${rep.name}:`, primaryData.congressGov ? 'SUCCESS' : 'FAILED');
         if (primaryData.congressGov) {
           console.log(`🔍 DEBUG: Congress.gov response:`, JSON.stringify(primaryData.congressGov, null, 2));
+          this.recordApiSuccess('congressGov');
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error('Congress.gov data collection failed:', error);
+        this.recordApiFailure('congressGov', error.status);
       }
+    } else if (this.shouldSkipApi('congressGov')) {
+      console.log(`🔍 DEBUG: Congress.gov API skipped due to failures`);
     } else {
       console.log(`🔍 DEBUG: Congress.gov disabled in config`);
     }
     
-    // Google Civic data
-    if (this.config.enableGoogleCivic) {
+    // Google Civic data (for elections, voter info, and activity data)
+    if (this.config.enableGoogleCivic && !this.shouldSkipApi('googleCivic')) {
       try {
         primaryData.googleCivic = await this.getGoogleCivicData(rep);
         console.log(`🔍 DEBUG: Google Civic data for ${rep.name}:`, primaryData.googleCivic ? 'SUCCESS' : 'FAILED');
-      } catch (error) {
+        if (primaryData.googleCivic) {
+          this.recordApiSuccess('googleCivic');
+        }
+      } catch (error: any) {
         console.error('Google Civic data collection failed:', error);
+        this.recordApiFailure('googleCivic', error.status);
       }
+    } else if (this.shouldSkipApi('googleCivic')) {
+      console.log(`🔍 DEBUG: Google Civic API skipped due to failures`);
     }
     
     // FEC data
-    if (this.config.enableFEC) {
+    if (this.config.enableFEC && !this.shouldSkipApi('fec')) {
       try {
         primaryData.fec = await this.getFECData(rep);
         console.log(`🔍 DEBUG: FEC data for ${rep.name}:`, primaryData.fec ? 'SUCCESS' : 'FAILED');
-      } catch (error) {
+        if (primaryData.fec) {
+          this.recordApiSuccess('fec');
+        }
+      } catch (error: any) {
         console.error('FEC data collection failed:', error);
+        this.recordApiFailure('fec', error.status);
       }
+    } else if (this.shouldSkipApi('fec')) {
+      console.log(`🔍 DEBUG: FEC API skipped due to failures`);
     }
     
     // OpenStates API data
-    if (this.config.enableOpenStatesApi) {
+    if (this.config.enableOpenStatesApi && !this.shouldSkipApi('openStatesApi')) {
       try {
         primaryData.openStatesApi = await this.getOpenStatesApiData(rep);
-      } catch (error) {
+        if (primaryData.openStatesApi) {
+          this.recordApiSuccess('openStatesApi');
+        }
+      } catch (error: any) {
         console.error('OpenStates API data collection failed:', error);
+        this.recordApiFailure('openStatesApi', error.status);
       }
+    } else if (this.shouldSkipApi('openStatesApi')) {
+      console.log(`🔍 DEBUG: OpenStates API skipped due to failures`);
     }
     
     // Wikipedia data
-    if (this.config.enableWikipedia) {
+    if (this.config.enableWikipedia && !this.shouldSkipApi('wikipedia')) {
       try {
         primaryData.wikipedia = await this.getWikipediaData(rep);
-      } catch (error) {
+        if (primaryData.wikipedia) {
+          this.recordApiSuccess('wikipedia');
+        }
+      } catch (error: any) {
         console.error('Wikipedia data collection failed:', error);
+        this.recordApiFailure('wikipedia', error.status);
       }
+    } else if (this.shouldSkipApi('wikipedia')) {
+      console.log(`🔍 DEBUG: Wikipedia API skipped due to failures`);
     }
     
     return primaryData;
@@ -786,12 +892,12 @@ export class SuperiorDataPipeline {
     let primarySourceScore = 0;
     let secondarySourceScore = 0;
     
-    // Primary source scoring
-    if (primaryData.congressGov) primarySourceScore += 40;
-    if (primaryData.googleCivic) primarySourceScore += 35;
-    if (primaryData.fec) primarySourceScore += 20;
-    if (primaryData.openStatesApi) primarySourceScore += 15;
-    if (primaryData.wikipedia) primarySourceScore += 10;
+    // Primary source scoring (adjusted for federal representatives)
+    if (primaryData.congressGov) primarySourceScore += 50; // Congress.gov is primary for federal
+    if (primaryData.fec) primarySourceScore += 20; // FEC is important for federal
+    if (primaryData.googleCivic) primarySourceScore += 15; // Google Civic for elections and voter info
+    if (primaryData.wikipedia) primarySourceScore += 15; // Wikipedia for biographical info
+    // Note: OpenStates API not applicable for federal representatives
     
     // Secondary source scoring
     if (secondaryData?.secondaryData) {
@@ -936,49 +1042,91 @@ export class SuperiorDataPipeline {
           enhanced_social_media: enhancedRep.enhancedSocialMedia || []
         };
         
-        // Store in representatives_core table (correct table for API endpoints)
-        console.log(`🔍 DEBUG: Attempting to store representative: ${enhancedRep.name}`);
-        console.log(`🔍 DEBUG: Core data:`, JSON.stringify(coreData, null, 2));
+        // Check if representative already exists (by bioguide_id for federal, openstates_id for state)
+        const existingIdentifier = enhancedRep.bioguide_id || enhancedRep.openstatesId;
+        const identifierField = enhancedRep.bioguide_id ? 'bioguide_id' : 'openstates_id';
         
-        const { data: repData, error: repError } = await this.supabase
-          .from('representatives_core')
+        console.log(`🔍 DEBUG: Checking if ${enhancedRep.name} already exists by ${identifierField}: ${existingIdentifier}`);
+        
+        let existing = null;
+        
+        // First try to find by identifier
+        if (existingIdentifier) {
+          const { data: existingById } = await this.supabase
+            .from('representatives_core')
+            .select('id, data_quality_score, data_sources, last_updated')
+            .eq(identifierField, existingIdentifier)
+            .maybeSingle();
+          existing = existingById;
+        }
+        
+        // If not found by identifier, try to find by name and level (fallback for records without bioguide_id)
+        if (!existing) {
+          console.log(`🔍 DEBUG: No match by ${identifierField}, trying to find by name and level`);
+          const { data: existingByName } = await this.supabase
+            .from('representatives_core')
+            .select('id, data_quality_score, data_sources, last_updated')
+            .eq('name', enhancedRep.name)
+            .eq('level', enhancedRep.level)
+            .maybeSingle();
+          existing = existingByName;
+        }
+        
+        let repData: any;
+        
+        if (existing) {
+          // Check if we should preserve existing high-quality data
+          const existingQuality = existing.data_quality_score || 0;
+          const newQuality = coreData.data_quality_score || 0;
+          
+          console.log(`🔍 DEBUG: Existing quality: ${existingQuality}, New quality: ${newQuality}`);
+          
+          // Only update if new data is significantly better (at least 10 points higher)
+          // or if existing data is low quality (below 60)
+          if (newQuality > existingQuality + 10 || existingQuality < 60) {
+            console.log(`🔄 Updating existing record for ${enhancedRep.name} (${existingQuality} → ${newQuality})...`);
+            const { data: updateData, error: updateError } = await this.supabase
+              .from('representatives_core')
+              .update(coreData)
+              .eq('id', existing.id)
+              .select('id')
+              .single();
+          
+            if (updateError) {
+              console.error('❌ Error updating enhanced representative data:', updateError);
+              console.error('❌ Representative data that failed:', JSON.stringify(coreData, null, 2));
+              continue; // Skip social media storage if representative update failed
+          } else {
+              repData = updateData;
+              console.log(`✅ Successfully updated representative: ${enhancedRep.name} with ID: ${repData.id}`);
+            }
+          } else {
+            console.log(`🛡️ Preserving existing high-quality data for ${enhancedRep.name} (${existingQuality} ≥ ${newQuality})`);
+            repData = { id: existing.id }; // Use existing ID for social media storage
+          }
+        } else {
+          // Insert new
+          console.log(`➕ Inserting new record for ${enhancedRep.name}...`);
+          const { data: insertData, error: insertError } = await this.supabase
+            .from('representatives_core')
           .insert(coreData)
           .select('id')
           .single();
         
-        if (repError) {
-          console.error('❌ Error storing enhanced representative data:', repError);
-          console.error('❌ Representative data that failed:', JSON.stringify(coreData, null, 2));
-          continue; // Skip social media storage if representative storage failed
-        } else {
-          console.log(`✅ Successfully stored representative: ${enhancedRep.name} with ID: ${repData.id}`);
+          if (insertError) {
+            console.error('❌ Error inserting enhanced representative data:', insertError);
+            console.error('❌ Representative data that failed:', JSON.stringify(coreData, null, 2));
+            continue; // Skip social media storage if representative insertion failed
+          } else {
+            repData = insertData;
+            console.log(`✅ Successfully inserted representative: ${enhancedRep.name} with ID: ${repData.id}`);
+          }
         }
         
-        // Store social media data in representative_social_media_optimal table
+        // Social media data is already stored in the enhanced_social_media JSONB column
         console.log(`🔍 DEBUG: enhancedRep.enhancedSocialMedia = ${JSON.stringify(enhancedRep.enhancedSocialMedia)}`);
         if (enhancedRep.enhancedSocialMedia && enhancedRep.enhancedSocialMedia.length > 0) {
-          console.log(`💾 Storing ${enhancedRep.enhancedSocialMedia.length} social media records for ${enhancedRep.name}`);
-          
-          const socialMediaData = enhancedRep.enhancedSocialMedia.map(sm => ({
-            representative_id: repData.id, // Use the ID from the inserted representative
-            platform: sm.platform,
-            handle: sm.handle,
-            url: sm.url,
-            followers_count: sm.followersCount || 0,
-            is_verified: sm.verified || false,
-            source: 'openstates-api',
-            created_at: new Date().toISOString()
-          }));
-          
-          const { error: smError } = await this.supabase
-            .from('representative_social_media_optimal')
-            .insert(socialMediaData);
-          
-          if (smError) {
-            console.error('Error storing social media data:', smError);
-          } else {
-            console.log(`✅ Successfully stored ${socialMediaData.length} social media records`);
-          }
+          console.log(`✅ Social media data already stored in JSONB column: ${enhancedRep.enhancedSocialMedia.length} records for ${enhancedRep.name}`);
         } else {
           console.log(`🔍 DEBUG: No social media data to store for ${enhancedRep.name}`);
         }
@@ -1030,6 +1178,9 @@ export class SuperiorDataPipeline {
           }
         } else {
           console.log('🔍 DEBUG: Congress.gov API FAILED with status:', response.status);
+          const error = new Error(`Congress.gov API failed with status ${response.status}`);
+          (error as any).status = response.status;
+          throw error;
         }
       } catch (error) {
         console.warn('🔍 DEBUG: Congress.gov individual member API failed:', error);
@@ -1047,7 +1198,9 @@ export class SuperiorDataPipeline {
       const response = await fetch(url);
       if (!response.ok) {
         console.warn('Congress.gov API error:', response.status);
-        return null;
+        const error = new Error(`Congress.gov API failed with status ${response.status}`);
+        (error as any).status = response.status;
+        throw error;
       }
       
       const data = await response.json();
@@ -1083,44 +1236,67 @@ export class SuperiorDataPipeline {
     console.log('Getting Google Civic data for:', rep.name);
     
     try {
-      // Google Civic API requires an address, so we'll use the representative's state
-      const address = `${rep.state}, USA`;
-      const url = `https://www.googleapis.com/civicinfo/v2/representatives?address=${encodeURIComponent(address)}&key=${process.env.GOOGLE_CIVIC_API_KEY}`;
+      // Google Civic API - focus on elections and voter information (not representative lookup)
+      const stateCapitals = {
+        'Alabama': 'Montgomery, AL', 'Alaska': 'Juneau, AK', 'Arizona': 'Phoenix, AZ',
+        'Arkansas': 'Little Rock, AR', 'California': 'Sacramento, CA', 'Colorado': 'Denver, CO',
+        'Connecticut': 'Hartford, CT', 'Delaware': 'Dover, DE', 'Florida': 'Tallahassee, FL',
+        'Georgia': 'Atlanta, GA', 'Hawaii': 'Honolulu, HI', 'Idaho': 'Boise, ID',
+        'Illinois': 'Springfield, IL', 'Indiana': 'Indianapolis, IN', 'Iowa': 'Des Moines, IA',
+        'Kansas': 'Topeka, KS', 'Kentucky': 'Frankfort, KY', 'Louisiana': 'Baton Rouge, LA',
+        'Maine': 'Augusta, ME', 'Maryland': 'Annapolis, MD', 'Massachusetts': 'Boston, MA',
+        'Michigan': 'Lansing, MI', 'Minnesota': 'Saint Paul, MN', 'Mississippi': 'Jackson, MS',
+        'Missouri': 'Jefferson City, MO', 'Montana': 'Helena, MT', 'Nebraska': 'Lincoln, NE',
+        'Nevada': 'Carson City, NV', 'New Hampshire': 'Concord, NH', 'New Jersey': 'Trenton, NJ',
+        'New Mexico': 'Santa Fe, NM', 'New York': 'Albany, NY', 'North Carolina': 'Raleigh, NC',
+        'North Dakota': 'Bismarck, ND', 'Ohio': 'Columbus, OH', 'Oklahoma': 'Oklahoma City, OK',
+        'Oregon': 'Salem, OR', 'Pennsylvania': 'Harrisburg, PA', 'Rhode Island': 'Providence, RI',
+        'South Carolina': 'Columbia, SC', 'South Dakota': 'Pierre, SD', 'Tennessee': 'Nashville, TN',
+        'Texas': 'Austin, TX', 'Utah': 'Salt Lake City, UT', 'Vermont': 'Montpelier, VT',
+        'Virginia': 'Richmond, VA', 'Washington': 'Olympia, WA', 'West Virginia': 'Charleston, WV',
+        'Wisconsin': 'Madison, WI', 'Wyoming': 'Cheyenne, WY'
+      };
       
-      const response = await fetch(url);
-      if (!response.ok) {
-        console.warn('Google Civic API error:', response.status);
+      const address = stateCapitals[rep.state as keyof typeof stateCapitals] || `${rep.state}, USA`;
+      
+      // Get elections data (current and upcoming elections)
+      const electionsUrl = `https://www.googleapis.com/civicinfo/v2/elections?address=${encodeURIComponent(address)}&key=${process.env.GOOGLE_CIVIC_API_KEY}`;
+      console.log(`🔍 DEBUG: Google Civic Elections API calling with address: ${address}`);
+      
+      const electionsResponse = await fetch(electionsUrl);
+      if (!electionsResponse.ok) {
+        console.warn('Google Civic Elections API error:', electionsResponse.status);
         return null;
       }
       
-      const data = await response.json();
+      const electionsData = await electionsResponse.json();
       
-      if (data.officials && data.officials.length > 0) {
-        // Find the representative that matches our criteria
-        const matchingOfficial = data.officials.find((official: any) => 
-          official.name?.toLowerCase().includes(rep.name.toLowerCase()) ||
-          official.party === rep.party
-        );
+      // Get voter information for the most recent election
+      let voterInfo = null;
+      if (electionsData.elections && electionsData.elections.length > 0) {
+        const latestElection = electionsData.elections[electionsData.elections.length - 1];
+        const voterInfoUrl = `https://www.googleapis.com/civicinfo/v2/voterinfo?address=${encodeURIComponent(address)}&electionId=${latestElection.id}&key=${process.env.GOOGLE_CIVIC_API_KEY}`;
         
-        if (matchingOfficial) {
-          return {
-            name: matchingOfficial.name,
-            party: matchingOfficial.party,
-            photoUrl: matchingOfficial.photoUrl,
-            emails: matchingOfficial.emails || [],
-            phones: matchingOfficial.phones || [],
-            urls: matchingOfficial.urls || [],
-            channels: matchingOfficial.channels || [],
-            address: matchingOfficial.address || [],
-            sources: data.sources || [],
-            elections: data.elections || [],
-            contests: data.contests || [],
-            source: 'google-civic-api'
-          };
+        try {
+          const voterResponse = await fetch(voterInfoUrl);
+          if (voterResponse.ok) {
+            voterInfo = await voterResponse.json();
+          }
+        } catch (error) {
+          console.warn('Google Civic Voter Info API error:', error);
         }
       }
       
-      return null;
+      return {
+        elections: electionsData.elections || [],
+        voterInfo: voterInfo,
+        contests: voterInfo?.contests || [],
+        sources: electionsData.sources || [],
+        address: address,
+        source: 'google-civic-api',
+        dataType: 'elections-and-voter-info'
+      };
+      
     } catch (error) {
       console.error('Google Civic API error:', error);
       return null;
@@ -1130,10 +1306,106 @@ export class SuperiorDataPipeline {
     console.log('Getting FEC data for:', rep.name);
     
     try {
-      // FEC API requires candidate ID or committee ID
-      const candidateId = rep.fec_id;
+      // First, try to find the candidate by name and state if no FEC ID is available
+      let candidateId = rep.fec_id;
+      
       if (!candidateId) {
-        console.warn('No FEC ID available for representative:', rep.name);
+        console.log(`🔍 DEBUG: No FEC ID available, searching by name and state for ${rep.name}`);
+        
+        // Convert state name to state code for FEC API
+        const stateCodeMap = {
+          'Alabama': 'AL', 'Alaska': 'AK', 'Arizona': 'AZ', 'Arkansas': 'AR',
+          'California': 'CA', 'Colorado': 'CO', 'Connecticut': 'CT', 'Delaware': 'DE',
+          'Florida': 'FL', 'Georgia': 'GA', 'Hawaii': 'HI', 'Idaho': 'ID',
+          'Illinois': 'IL', 'Indiana': 'IN', 'Iowa': 'IA', 'Kansas': 'KS',
+          'Kentucky': 'KY', 'Louisiana': 'LA', 'Maine': 'ME', 'Maryland': 'MD',
+          'Massachusetts': 'MA', 'Michigan': 'MI', 'Minnesota': 'MN', 'Mississippi': 'MS',
+          'Missouri': 'MO', 'Montana': 'MT', 'Nebraska': 'NE', 'Nevada': 'NV',
+          'New Hampshire': 'NH', 'New Jersey': 'NJ', 'New Mexico': 'NM', 'New York': 'NY',
+          'North Carolina': 'NC', 'North Dakota': 'ND', 'Ohio': 'OH', 'Oklahoma': 'OK',
+          'Oregon': 'OR', 'Pennsylvania': 'PA', 'Rhode Island': 'RI', 'South Carolina': 'SC',
+          'South Dakota': 'SD', 'Tennessee': 'TN', 'Texas': 'TX', 'Utah': 'UT',
+          'Vermont': 'VT', 'Virginia': 'VA', 'Washington': 'WA', 'West Virginia': 'WV',
+          'Wisconsin': 'WI', 'Wyoming': 'WY'
+        };
+        
+        const stateCode = stateCodeMap[rep.state as keyof typeof stateCodeMap] || rep.state;
+        console.log(`🔍 DEBUG: Using state code: ${stateCode} for ${rep.state}`);
+        
+        // Try multiple search strategies
+        const searchStrategies = [
+          // Strategy 1: Exact name and state
+          `https://api.open.fec.gov/v1/candidates/search/?name=${encodeURIComponent(rep.name)}&state=${stateCode}&api_key=${process.env.FEC_API_KEY}`,
+          // Strategy 2: Last name only and state
+          `https://api.open.fec.gov/v1/candidates/search/?name=${encodeURIComponent(rep.name.split(' ').pop() || rep.name)}&state=${stateCode}&api_key=${process.env.FEC_API_KEY}`,
+          // Strategy 3: Name without titles
+          `https://api.open.fec.gov/v1/candidates/search/?name=${encodeURIComponent(rep.name.replace(/^(Rep\.|Sen\.|Congressman|Congresswoman)\s+/i, ''))}&state=${stateCode}&api_key=${process.env.FEC_API_KEY}`
+        ];
+        
+        for (let i = 0; i < searchStrategies.length; i++) {
+          const searchUrl = searchStrategies[i];
+          if (!searchUrl) continue;
+          
+          console.log(`🔍 DEBUG: FEC search strategy ${i + 1}: ${searchUrl}`);
+          const searchResponse = await fetch(searchUrl);
+          
+          if (searchResponse.ok) {
+            const searchData = await searchResponse.json();
+            console.log(`🔍 DEBUG: FEC search returned ${searchData.results?.length || 0} results`);
+            
+            if (searchData.results && searchData.results.length > 0) {
+              // Find the best match using multiple criteria
+              const bestMatch = searchData.results.find((candidate: any) => {
+                const candidateName = candidate.name.toLowerCase();
+                const repName = rep.name.toLowerCase();
+                
+                console.log(`🔍 DEBUG: Comparing FEC candidate "${candidateName}" with representative "${repName}"`);
+                
+                // Check for exact match
+                if (candidateName === repName) {
+                  console.log(`🔍 DEBUG: Exact match found`);
+                  return true;
+                }
+                
+                // Check for last name match
+                const candidateLastName = candidateName.split(',')[0].trim();
+                const repLastName = repName.split(' ').pop();
+                if (candidateLastName === repLastName) {
+                  console.log(`🔍 DEBUG: Last name match found: ${candidateLastName} === ${repLastName}`);
+                  return true;
+                }
+                
+                // Check for first name match (FEC format: "LAST, FIRST")
+                const candidateFirstName = candidateName.split(',')[1]?.trim();
+                const repFirstName = repName.split(' ')[0];
+                if (candidateFirstName === repFirstName) {
+                  console.log(`🔍 DEBUG: First name match found: ${candidateFirstName} === ${repFirstName}`);
+                  return true;
+                }
+                
+                // Check for partial match
+                if (candidateName.includes(repName) || repName.includes(candidateName)) {
+                  console.log(`🔍 DEBUG: Partial match found`);
+                  return true;
+                }
+                
+                return false;
+              });
+              
+              if (bestMatch) {
+                candidateId = bestMatch.candidate_id;
+                console.log(`🔍 DEBUG: Found FEC candidate ID: ${candidateId} for ${rep.name} using strategy ${i + 1}`);
+                break;
+              }
+            }
+          } else {
+            console.log(`🔍 DEBUG: FEC search strategy ${i + 1} failed with status: ${searchResponse.status}`);
+          }
+        }
+      }
+      
+      if (!candidateId) {
+        console.warn('No FEC ID found for representative:', rep.name);
         return null;
       }
       
@@ -1446,7 +1718,64 @@ export class SuperiorDataPipeline {
   
   private async getWikipediaData(rep: any): Promise<any> { 
     console.log('Getting Wikipedia data for:', rep.name);
+    
+    try {
+      // Try different name formats for Wikipedia search
+      const nameFormats = [
+        rep.name,
+        `${rep.name} (politician)`,
+        `${rep.name} (${rep.party})`,
+        `${rep.name} (${rep.state})`,
+        `${rep.name} (U.S. ${rep.chamber === 'Senate' ? 'Senator' : 'Representative'})`
+      ];
+      
+      for (const nameFormat of nameFormats) {
+        console.log(`🔍 DEBUG: Wikipedia trying name format: ${nameFormat}`);
+        
+        // Add small delay between requests to be respectful of Wikipedia API
+        if (nameFormat !== rep.name) {
+          await new Promise(resolve => setTimeout(resolve, 500)); // 500ms delay
+        }
+        
+        const response = await fetch(
+          `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(nameFormat)}`,
+          {
+            method: 'GET',
+            headers: { 
+              'Content-Type': 'application/json',
+              'Accept-Encoding': 'gzip',
+              'User-Agent': 'Choices-Civics-Platform/1.0 (https://choices.civics.org; contact@choices.civics.org) Wikipedia-API-Integration/1.0'
+            }
+          }
+        );
+        
+        if (response.ok) {
+          const data = await response.json();
+          
+          if (data.type === 'standard' && data.extract) {
+            console.log(`🔍 DEBUG: Wikipedia found page for: ${nameFormat}`);
+            return {
+              title: data.title,
+              extract: data.extract,
+              content_urls: data.content_urls,
+              thumbnail: data.thumbnail,
+              pageid: data.pageid,
+              source: 'wikipedia-api',
+              searchTerm: nameFormat
+            };
+          }
+        } else {
+          console.log(`🔍 DEBUG: Wikipedia no page found for: ${nameFormat} (${response.status})`);
+        }
+      }
+      
+      console.log(`🔍 DEBUG: Wikipedia no page found for any name format for: ${rep.name}`);
+      return null;
+      
+    } catch (error) {
+      console.error('Wikipedia API error:', error);
     return null; 
+    }
   }
 
   /**

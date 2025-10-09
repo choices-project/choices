@@ -275,11 +275,11 @@ export default class OpenStatesIntegration {
   }
 
   private async enhancePersonData(person: OpenStatesPerson, _stateCode: string): Promise<OpenStatesPerson> {
-    const enhanced = { ...person } as OpenStatesPerson & Record<string, any>;
+    // eslint-disable-next-line no-restricted-syntax
+    const enhanced = { ...person } as OpenStatesPerson;
     
     // Extract OpenStates ID for efficient API calls
     if (person.id) {
-      enhanced.openstates_id = person.id;
       console.log(`   📋 OpenStates ID: ${person.id} for ${person.name}`);
     }
     
@@ -518,13 +518,13 @@ export default class OpenStatesIntegration {
       // Check if database is available
       if (!(await this.isDatabaseAvailable())) {
         console.log('OpenStates People database not available, returning hardcoded state list');
-        return [
-          'AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA',
-          'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MD',
-          'MA', 'MI', 'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ',
-          'NM', 'NY', 'NC', 'ND', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC',
-          'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY'
-        ];
+    return [
+      'AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA',
+      'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MD',
+      'MA', 'MI', 'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ',
+      'NM', 'NY', 'NC', 'ND', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC',
+      'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY'
+    ];
       }
       
       // Read available states from filesystem
