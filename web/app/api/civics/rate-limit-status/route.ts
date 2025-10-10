@@ -2,7 +2,23 @@ import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 import { requireServiceKey } from '@/lib/service-auth';
 import { getRateLimitStatus, getAPIStatus } from '@/lib/rate-limiting';
-import dotenv from 'dotenv';
+import * as dotenv from 'dotenv';
+
+// Type definitions for rate limit status
+type RateLimitUsage = {
+  requestsToday: number;
+  requestsThisMinute: number;
+  rateLimit: {
+    daily: number;
+    perMinute: number;
+  };
+};
+
+type RateLimitStatus = {
+  canMakeRequest: boolean;
+  delayNeeded: number;
+  usage: RateLimitUsage;
+};
 
 // Load environment variables
 dotenv.config({ path: '.env.local' });
@@ -16,7 +32,7 @@ export async function GET(request: NextRequest) {
     const serviceCheck = await requireServiceKey();
     if (serviceCheck) return serviceCheck;
     
-    const rateLimitStatus = getRateLimitStatus();
+    const rateLimitStatus = getRateLimitStatus() as Record<string, RateLimitStatus>;
     const apiUsage = getAPIStatus();
     
     // Log API usage for debugging

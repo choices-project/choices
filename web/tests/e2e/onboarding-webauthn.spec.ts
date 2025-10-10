@@ -25,7 +25,7 @@ test.describe('Onboarding WebAuthn Integration', () => {
   test.beforeEach(async ({ page }) => {
     // Create test data
     testData = {
-      user: createTestUser('onboarding-webauthn-test')
+      user: createTestUser({ email: 'onboarding-webauthn-test@example.com' })
     };
 
     // Set up external API mocks

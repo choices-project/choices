@@ -447,7 +447,7 @@ export class DifferentialPrivacyManager {
   getAllBudgetStatuses(): Map<string, EpsilonBudgetStatus> {
     const statuses = new Map<string, EpsilonBudgetStatus>();
     
-    for (const [pollId, _] of this.budgets) {
+    for (const [pollId, _] of Array.from(this.budgets.entries())) {
       statuses.set(pollId, this.getBudgetStatus(pollId));
     }
     
@@ -467,7 +467,7 @@ export class DifferentialPrivacyManager {
     let totalUsed = 0;
     let totalAvailable = 0;
     
-    for (const [_, budget] of this.budgets) {
+    for (const [_, budget] of Array.from(this.budgets.entries())) {
       totalUsed += budget.used;
       totalAvailable += budget.total;
     }

@@ -27,9 +27,9 @@ test.describe('Enhanced Voting System - Simple Tests', () => {
     
     // Check for JavaScript errors with detailed logging
     const errors = await page.evaluate(() => {
-      const errorMessages = [];
+      const errorMessages: string[] = [];
       const originalError = console.error;
-      console.error = (...args) => {
+      console.error = (...args: any[]) => {
         errorMessages.push(args.join(' '));
         originalError.apply(console, args);
       };
@@ -69,7 +69,7 @@ test.describe('Enhanced Voting System - Simple Tests', () => {
     
     // Check for JavaScript errors
     const errors = await page.evaluate(() => {
-      return window.console.error ? 'JavaScript errors detected' : 'No JavaScript errors';
+      return typeof window.console.error === 'function' ? 'JavaScript errors detected' : 'No JavaScript errors';
     });
     console.log('JavaScript status:', errors);
     

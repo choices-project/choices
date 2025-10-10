@@ -31,7 +31,7 @@ test.describe('Enhanced Features Verification', () => {
   });
 
   test.afterEach(async () => {
-    await cleanupE2ETestData();
+    await cleanupE2ETestData(testData);
   });
 
   test('should verify core authentication is working properly', async ({ page }) => {

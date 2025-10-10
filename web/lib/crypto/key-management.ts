@@ -388,7 +388,7 @@ export class SecureKeyManager {
     const rotatedKeys: SecureKey[] = [];
     const now = Date.now();
 
-    for (const [keyId, key] of this.keys) {
+    for (const [keyId, key] of Array.from(this.keys.entries())) {
       if (key.expiresAt && key.expiresAt.getTime() < now) {
         try {
           const newKey = await this.rotateKey(keyId);

@@ -157,7 +157,7 @@ export const useAdminStore = create<AdminStore>()(
         });
       },
       
-      addNotification: (notification) => {
+      addNotification: (notification: Omit<Notification, 'id' | 'timestamp' | 'read'>) => {
         const currentState = get();
         const newNotification: Notification = Object.assign({}, notification, {
           id: crypto.randomUUID(),
@@ -165,7 +165,7 @@ export const useAdminStore = create<AdminStore>()(
           read: false,
         });
         
-        set((state) => ({
+        set((state: AdminStore) => ({
           notifications: [
             newNotification,
             ...state.notifications,
@@ -191,10 +191,10 @@ export const useAdminStore = create<AdminStore>()(
       
       markNotificationRead: (id: string) => {
         const currentState = get();
-        const notification = currentState.notifications.find(n => n.id === id);
+        const notification = currentState.notifications.find((n: Notification) => n.id === id);
         
-        set((state) => ({
-          notifications: state.notifications.map(notif =>
+        set((state: AdminStore) => ({
+          notifications: state.notifications.map((notif: Notification) =>
             notif.id === id ? Object.assign({}, notif, { read: true }) : notif
           ),
         }));
@@ -228,10 +228,11 @@ export const useAdminStore = create<AdminStore>()(
         set({ trendingTopics: topics });
         
         // Log topics update for monitoring
+        const uniqueCategories = Array.from(new Set(topics.map(t => t.category)));
         logger.info('Trending topics updated', { 
           action: 'update_trending_topics', 
           count: topics.length,
-          categories: [...new Set(topics.map(t => t.category))],
+          categories: uniqueCategories,
           averageScore: topics.reduce((sum, t) => sum + t.trending_score, 0) / topics.length
         });
         
@@ -253,11 +254,12 @@ export const useAdminStore = create<AdminStore>()(
           return acc;
         }, {} as Record<string, number>);
         
+        const uniqueCategories = Array.from(new Set(polls.map(p => p.category)));
         logger.info('Generated polls updated', { 
           action: 'update_generated_polls', 
           count: polls.length,
           statusBreakdown,
-          categories: [...new Set(polls.map(p => p.category))]
+          categories: uniqueCategories
         });
         
         // Check for polls needing attention
@@ -327,7 +329,7 @@ export const useAdminStore = create<AdminStore>()(
       setLoading: (key: keyof AdminStore['isLoading'], loading: boolean) => {
         const currentState = get();
         
-        set((state) => ({
+        set((state: AdminStore) => ({
           isLoading: { ...state.isLoading, [key]: loading },
         }));
         
@@ -345,7 +347,7 @@ export const useAdminStore = create<AdminStore>()(
       addTopic: (topic: TrendingTopic) => {
         const currentState = get();
         
-        set((state) => ({
+        set((state: AdminStore) => ({
           trendingTopics: [topic, ...state.trendingTopics],
           activityFeed: [
             {
@@ -381,10 +383,10 @@ export const useAdminStore = create<AdminStore>()(
       
       updateTopic: (id: string, updates: Partial<TrendingTopic>) => {
         const currentState = get();
-        const existingTopic = currentState.trendingTopics.find(t => t.id === id);
+        const existingTopic = currentState.trendingTopics.find((t: TrendingTopic) => t.id === id);
         
-        set((state) => ({
-          trendingTopics: state.trendingTopics.map(topic =>
+        set((state: AdminStore) => ({
+          trendingTopics: state.trendingTopics.map((topic: TrendingTopic) =>
             topic.id === id ? Object.assign({}, topic, updates) : topic
           ),
           activityFeed: [
@@ -423,7 +425,7 @@ export const useAdminStore = create<AdminStore>()(
       addPoll: (poll: GeneratedPoll) => {
         const currentState = get();
         
-        set((state) => ({
+        set((state: AdminStore) => ({
           generatedPolls: [poll, ...state.generatedPolls],
           activityFeed: [
             {
@@ -460,10 +462,10 @@ export const useAdminStore = create<AdminStore>()(
       
       updatePoll: (id: string, updates: Partial<GeneratedPoll>) => {
         const currentState = get();
-        const existingPoll = currentState.generatedPolls.find(p => p.id === id);
+        const existingPoll = currentState.generatedPolls.find((p: GeneratedPoll) => p.id === id);
         
-        set((state) => ({
-          generatedPolls: state.generatedPolls.map(poll =>
+        set((state: AdminStore) => ({
+          generatedPolls: state.generatedPolls.map((poll: GeneratedPoll) =>
             poll.id === id ? Object.assign({}, poll, updates) : poll
           ),
           activityFeed: [
@@ -502,7 +504,7 @@ export const useAdminStore = create<AdminStore>()(
       addActivity: (activity: ActivityItem) => {
         const currentState = get();
         
-        set((state) => ({
+        set((state: AdminStore) => ({
           activityFeed: [activity, ...state.activityFeed].slice(0, 50)
         }));
         

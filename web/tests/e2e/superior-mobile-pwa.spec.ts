@@ -23,7 +23,7 @@ import {
 } from './helpers/e2e-setup';
 
 test.describe('Superior Mobile PWA E2E Tests', () => {
-  let _testData: {
+  let testData: {
     user: ReturnType<typeof createTestUser>;
   };
 
@@ -42,7 +42,7 @@ test.describe('Superior Mobile PWA E2E Tests', () => {
   });
 
   test.afterEach(async () => {
-    await cleanupE2ETestData();
+    await cleanupE2ETestData(testData);
   });
 
   test.describe('PWA Installation and Manifest', () => {
@@ -91,7 +91,8 @@ test.describe('Superior Mobile PWA E2E Tests', () => {
       
       // Check for multiple icon sizes
       const iconLinks = page.locator('link[rel="apple-touch-icon"]');
-      await expect(iconLinks).toHaveCount.greaterThan(5); // Multiple sizes
+      const iconCount = await iconLinks.count();
+      expect(iconCount).toBeGreaterThan(5); // Multiple sizes
     });
   });
 
@@ -169,13 +170,52 @@ test.describe('Superior Mobile PWA E2E Tests', () => {
         const feed = document.querySelector('[data-testid="feed-container"]');
         if (feed) {
           const touchStart = new TouchEvent('touchstart', { 
-            touches: [{ clientX: 100, clientY: 200 }] 
+            touches: [{ 
+              clientX: 100, 
+              clientY: 200,
+              force: 1,
+              identifier: 1,
+              pageX: 100,
+              pageY: 200,
+              radiusX: 10,
+              radiusY: 10,
+              rotationAngle: 0,
+              screenX: 100,
+              screenY: 200,
+              target: feed
+            }] 
           });
           const touchMove = new TouchEvent('touchmove', { 
-            touches: [{ clientX: 200, clientY: 200 }] 
+            touches: [{ 
+              clientX: 200, 
+              clientY: 200,
+              force: 1,
+              identifier: 1,
+              pageX: 200,
+              pageY: 200,
+              radiusX: 10,
+              radiusY: 10,
+              rotationAngle: 0,
+              screenX: 200,
+              screenY: 200,
+              target: feed
+            }] 
           });
           const touchEnd = new TouchEvent('touchend', { 
-            touches: [{ clientX: 200, clientY: 200 }] 
+            touches: [{ 
+              clientX: 200, 
+              clientY: 200,
+              force: 1,
+              identifier: 1,
+              pageX: 200,
+              pageY: 200,
+              radiusX: 10,
+              radiusY: 10,
+              rotationAngle: 0,
+              screenX: 200,
+              screenY: 200,
+              target: feed
+            }] 
           });
           
           feed.dispatchEvent(touchStart);
@@ -204,13 +244,52 @@ test.describe('Superior Mobile PWA E2E Tests', () => {
         const feed = document.querySelector('[data-testid="feed-container"]');
         if (feed) {
           const touchStart = new TouchEvent('touchstart', { 
-            touches: [{ clientY: 100 }] 
+            touches: [{ 
+              clientX: 100,
+              clientY: 100,
+              force: 1,
+              identifier: 1,
+              pageX: 100,
+              pageY: 100,
+              radiusX: 10,
+              radiusY: 10,
+              rotationAngle: 0,
+              screenX: 100,
+              screenY: 100,
+              target: feed
+            }] 
           });
           const touchMove = new TouchEvent('touchmove', { 
-            touches: [{ clientY: 50 }] 
+            touches: [{ 
+              clientX: 100,
+              clientY: 50,
+              force: 1,
+              identifier: 1,
+              pageX: 100,
+              pageY: 50,
+              radiusX: 10,
+              radiusY: 10,
+              rotationAngle: 0,
+              screenX: 100,
+              screenY: 50,
+              target: feed
+            }] 
           });
           const touchEnd = new TouchEvent('touchend', { 
-            touches: [{ clientY: 50 }] 
+            touches: [{ 
+              clientX: 100,
+              clientY: 50,
+              force: 1,
+              identifier: 1,
+              pageX: 100,
+              pageY: 50,
+              radiusX: 10,
+              radiusY: 10,
+              rotationAngle: 0,
+              screenX: 100,
+              screenY: 50,
+              target: feed
+            }] 
           });
           
           feed.dispatchEvent(touchStart);

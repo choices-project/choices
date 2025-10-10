@@ -96,7 +96,7 @@ test.describe('Enhanced Dashboard - E2E Tests', () => {
     
     // Check for any text content to understand what's being rendered
     const pageText = await page.textContent('body').catch(() => '');
-    console.log('Page text content:', pageText.substring(0, 500));
+    console.log('Page text content:', pageText?.substring(0, 500) || 'No content');
     
     console.log('Has any dashboard text:', hasAnyDashboard);
     console.log('Has welcome text:', hasWelcomeText);
@@ -113,7 +113,16 @@ test.describe('Enhanced Dashboard - E2E Tests', () => {
 
     // Check for any unhandled promise rejections
     const unhandledRejections = await page.evaluate(() => {
-      return window.console?.warn?.filter?.(msg => msg.includes('unhandled')) || [];
+      // Get console warnings from the page context
+      const consoleWarnings: string[] = [];
+      const originalWarn = console.warn;
+      console.warn = (...args: any[]) => {
+        consoleWarnings.push(args.join(' '));
+        originalWarn.apply(console, args);
+      };
+      
+      // Return warnings that contain 'unhandled'
+      return consoleWarnings.filter(msg => msg.includes('unhandled'));
     });
     if (unhandledRejections && unhandledRejections.length > 0) {
       console.log('Unhandled promise rejections:', unhandledRejections);
@@ -220,17 +229,17 @@ test.describe('Enhanced Dashboard - E2E Tests', () => {
     });
 
     // Login as test user
-    await page.goto('/login');
-    await waitForPageReady(page);
+    await _page.goto('/login');
+    await waitForPageReady(_page);
     
-    await page.fill('[data-testid="login-email"]', testData.user.email);
-    await page.fill('[data-testid="login-password"]', testData.user.password);
-    await page.click('[data-testid="login-submit"]');
-    await page.waitForLoadState('networkidle');
+    await _page.fill('[data-testid="login-email"]', testData.user.email);
+    await _page.fill('[data-testid="login-password"]', testData.user.password);
+    await _page.click('[data-testid="login-submit"]');
+    await _page.waitForLoadState('networkidle');
 
     // Test the enhanced dashboard API directly
     console.log('🔍 Testing enhanced dashboard API...');
-    const apiResponse = await page.request.get('/api/dashboard/data');
+    const apiResponse = await _page.request.get('/api/dashboard/data');
     console.log('API Response status:', apiResponse.status());
     
     if (apiResponse.status() === 200) {
@@ -252,28 +261,28 @@ test.describe('Enhanced Dashboard - E2E Tests', () => {
     }
 
     // Navigate to dashboard and wait for client-side hydration
-    await page.goto('/dashboard');
-    await waitForPageReady(page);
+    await _page.goto('/dashboard');
+    await waitForPageReady(_page);
 
     // Wait for client-side hydration to complete
-    await page.waitForTimeout(10000);
+    await _page.waitForTimeout(10000);
     
     // Check if enhanced dashboard is now visible after hydration
-    const hasEnhancedDashboardAfterHydration = await page.locator('[data-testid="enhanced-dashboard"]').isVisible().catch(() => false);
-    const hasWelcomeTextAfterHydration = await page.locator('text=Welcome to Choices').isVisible().catch(() => false);
+    const hasEnhancedDashboardAfterHydration = await _page.locator('[data-testid="enhanced-dashboard"]').isVisible().catch(() => false);
+    const hasWelcomeTextAfterHydration = await _page.locator('text=Welcome to Choices').isVisible().catch(() => false);
     
     console.log('After hydration - Enhanced dashboard:', hasEnhancedDashboardAfterHydration);
     console.log('After hydration - Welcome text:', hasWelcomeTextAfterHydration);
     
     if (hasEnhancedDashboardAfterHydration) {
       console.log('✅ Enhanced dashboard loaded after client-side hydration');
-      await expect(page.locator('[data-testid="enhanced-dashboard"]')).toBeVisible();
+      await expect(_page.locator('[data-testid="enhanced-dashboard"]')).toBeVisible();
     } else if (hasWelcomeTextAfterHydration) {
       console.log('⚠️ Basic dashboard still visible after hydration - feature flag issue persists');
-      await expect(page.locator('text=Welcome to Choices')).toBeVisible();
+      await expect(_page.locator('text=Welcome to Choices')).toBeVisible();
     } else {
       // Take a screenshot for debugging
-      await page.screenshot({ path: 'dashboard-hydration-debug.png' });
+      await _page.screenshot({ path: 'dashboard-hydration-debug.png' });
       throw new Error('No dashboard content is visible after hydration');
     }
   });

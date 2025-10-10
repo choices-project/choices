@@ -6,7 +6,7 @@
 
 import { type NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import dotenv from 'dotenv';
+import * as dotenv from 'dotenv';
 
 export const dynamic = 'force-dynamic';
 
@@ -128,7 +128,7 @@ export async function GET(_request: NextRequest) {
             .eq('entity_type', 'person');
 
           const canonicalIdCoverage = crosswalkData ? crosswalkData.length : 0;
-          const sourcesInCrosswalk = crosswalkData ? [...new Set(crosswalkData.map(item => item.source))] : [];
+          const sourcesInCrosswalk = crosswalkData ? Array.from(new Set(crosswalkData.map(item => item.source))) : [];
 
           // Check for recent activity
           const recentActivity = [...stateData, ...federalData]

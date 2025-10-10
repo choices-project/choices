@@ -260,7 +260,7 @@ export class SmartCacheManager {
   invalidateByTags(tags: string[]): number {
     let invalidatedCount = 0;
     
-    for (const [key, entry] of this.cache.entries()) {
+    for (const [key, entry] of Array.from(this.cache.entries())) {
       if (entry.tags.some(tag => tags.includes(tag))) {
         this.cache.delete(key);
         invalidatedCount++;
@@ -277,7 +277,7 @@ export class SmartCacheManager {
   invalidateByPattern(pattern: string): number {
     let invalidatedCount = 0;
     
-    for (const [key, entry] of this.cache.entries()) {
+    for (const [key, entry] of Array.from(this.cache.entries())) {
       if (entry.queryPattern === pattern) {
         this.cache.delete(key);
         invalidatedCount++;
@@ -553,7 +553,7 @@ export class SmartCacheManager {
     const now = Date.now();
     let cleanedCount = 0;
     
-    for (const [key, entry] of this.cache.entries()) {
+    for (const [key, entry] of Array.from(this.cache.entries())) {
       if (now - entry.timestamp > entry.ttl) {
         this.cache.delete(key);
         cleanedCount++;

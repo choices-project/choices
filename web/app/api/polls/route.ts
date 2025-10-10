@@ -6,6 +6,21 @@ import { getUser } from '@/lib/core/auth/middleware';
 
 export const dynamic = 'force-dynamic';
 
+// Type definitions for poll data
+type PollOption = {
+  id: string;
+  text: string;
+  votes?: number;
+};
+
+type _PollData = {
+  id: string;
+  title: string;
+  total_votes: number;
+  options: PollOption[];
+  status: string;
+};
+
 // GET /api/polls - Get active polls with aggregated results only
 export async function GET(request: NextRequest) {
   try {
@@ -38,8 +53,8 @@ export async function GET(request: NextRequest) {
         title: poll.title,
         total_votes: poll.total_votes || 0,
         aggregated_results: Array.isArray(poll.options) ? 
-          poll.options.reduce((acc: Record<string, number>, _option: unknown, _index: number) => {
-            acc[`option_${_index + 1}`] = 0; // Default to 0 until we can count votes
+          poll.options.reduce((acc: Record<string, number>, option: PollOption, index: number) => {
+            acc[`option_${index + 1}`] = option.votes || 0;
             return acc;
           }, {}) : {},
         status: poll.status

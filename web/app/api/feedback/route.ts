@@ -4,6 +4,31 @@ import { getSupabaseServerClient } from '@/utils/supabase/server';
 import { devLog } from '@/lib/logger';
 export const dynamic = 'force-dynamic'
 
+// Type definitions for feedback data
+type _FeedbackItem = {
+  id: string;
+  user_id: string;
+  type: string;
+  content: string;
+  sentiment: string;
+  status: string;
+  created_at: string;
+  updated_at: string;
+  user_journey?: {
+    deviceInfo?: {
+      type?: string;
+      browser?: string;
+      os?: string;
+    };
+    pageLoadTime?: number;
+    timeOnPage?: number;
+    errors?: unknown[];
+    sessionId?: string;
+  };
+  metadata?: unknown;
+  ai_analysis?: unknown;
+};
+
 // Security configuration for feedback API
 const securityConfig = {
   maxContentLength: 1000,
@@ -327,9 +352,9 @@ export async function GET(request: NextRequest) {
       id: item.id,
       user_id: item.user_id,
       type: item.type,
-      content: item.content,
+      content: item.description || item.title || '',
+      status: item.status || 'open',
       sentiment: item.sentiment,
-      status: item.status,
       created_at: item.created_at,
       updated_at: item.updated_at,
       userJourney: item.user_journey,

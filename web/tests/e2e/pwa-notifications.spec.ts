@@ -238,7 +238,7 @@ test.describe('PWA Notifications - V2', () => {
     // Simulate notification click
     await page.evaluate(() => {
       if (window.lastNotification && window.lastNotification.onclick) {
-        window.lastNotification.onclick();
+        window.lastNotification.onclick(new Event('click'));
       }
     });
 

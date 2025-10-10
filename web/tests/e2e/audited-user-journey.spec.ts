@@ -594,7 +594,7 @@ test.describe('Audited User Journey', () => {
     await page.waitForTimeout(3000);
     
     // Debug: Check browser console for any errors
-    const consoleLogs = [];
+    const consoleLogs: string[] = [];
     page.on('console', msg => {
       consoleLogs.push(`[${msg.type()}] ${msg.text()}`);
     });

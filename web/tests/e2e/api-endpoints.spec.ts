@@ -200,7 +200,7 @@ test.describe('API Endpoints - V2', () => {
     const pollData = createPollResponse.data;
 
     // Test vote submission endpoint (uses real session cookies via browser context)
-    const voteResponse = await page.evaluate(async (pollId: string, optionId: string) => {
+    const voteResponse = await page.evaluate(async ({ pollId, optionId }: { pollId: string, optionId: string }) => {
       const response = await fetch(`/api/polls/${pollId}/vote`, {
         method: 'POST',
         headers: {
@@ -213,7 +213,7 @@ test.describe('API Endpoints - V2', () => {
       });
       const data = await response.json();
       return { status: response.status, data };
-    }, pollData.id, pollData.options[0].id);
+    }, { pollId: pollData.id, optionId: pollData.options[0].id });
     
     expect(voteResponse.status).toBe(200);
     expect(voteResponse.data).toHaveProperty('success', true);

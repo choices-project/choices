@@ -290,7 +290,7 @@ export class RateLimiter {
     const cutoff = Date.now() - 3600000; // Keep only last hour
     const cutoffSecond = Math.floor(cutoff / 1000);
 
-    for (const [secondKey, requests] of this.requestHistory) {
+    for (const [secondKey, requests] of Array.from(this.requestHistory.entries())) {
       if (parseInt(secondKey) < cutoffSecond) {
         this.requestHistory.delete(secondKey);
       } else {
@@ -400,7 +400,7 @@ export class ApiUsageMonitor {
    */
   getAllUsageMetrics(): Record<string, ApiUsageMetrics> {
     const metrics: Record<string, ApiUsageMetrics> = {};
-    for (const [apiName, rateLimiter] of this.rateLimiters) {
+    for (const [apiName, rateLimiter] of Array.from(this.rateLimiters.entries())) {
       metrics[apiName] = rateLimiter.getUsageMetrics();
     }
     return metrics;
@@ -410,7 +410,7 @@ export class ApiUsageMonitor {
    * Check for quota warnings
    */
   checkQuotaWarnings(): void {
-    for (const [apiName, rateLimiter] of this.rateLimiters) {
+    for (const [apiName, rateLimiter] of Array.from(this.rateLimiters.entries())) {
       const metrics = rateLimiter.getUsageMetrics();
       const status = rateLimiter.getRateLimitStatus();
       
