@@ -2,18 +2,18 @@
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useState, useEffect } from 'react'
-import { AuthProvider } from '@/contexts/AuthContext'
+import { UserStoreProvider } from '@/lib/providers/UserStoreProvider'
 import dynamic from 'next/dynamic'
 import { initializePWA } from '@/lib/pwa/init'
 // import EnhancedFeedbackWidget from '../../components/EnhancedFeedbackWidget'
 
-const PWABackground = dynamic(() => import('../../components/PWABackground'), {
+const PWABackground = dynamic(() => import('@/features/pwa/components/PWABackground'), {
   ssr: false,
   loading: () => null
 })
-import SiteMessages from '../../components/SiteMessages'
-import GlobalNavigation from '../../components/GlobalNavigation'
-import FontProvider from '../../components/FontProvider'
+import SiteMessages from '@/components/shared/SiteMessages'
+import GlobalNavigation from '@/components/shared/GlobalNavigation'
+import FontProvider from '@/components/shared/FontProvider'
 
 export default function AppLayout({
   children,
@@ -45,7 +45,7 @@ export default function AppLayout({
   return (
     <FontProvider>
       <QueryClientProvider client={queryClient}>
-        <AuthProvider>
+        <UserStoreProvider>
           {/* Global Navigation */}
           <GlobalNavigation />
           
@@ -61,7 +61,7 @@ export default function AppLayout({
           
           {/* Enhanced Feedback Widget - Only render on client side */}
           {/* <EnhancedFeedbackWidget /> */}
-        </AuthProvider>
+        </UserStoreProvider>
       </QueryClientProvider>
     </FontProvider>
   )

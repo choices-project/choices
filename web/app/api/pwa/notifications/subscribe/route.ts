@@ -6,12 +6,15 @@
  */
 
 import { type NextRequest, NextResponse } from 'next/server';
-import { logger } from '@/lib/logger';
+import { logger } from '@/lib/utils/logger';
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
+import { createApiLogger } from '@/lib/utils/api-logger';
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
+  const apiLogger = createApiLogger('/api/pwa/notifications/subscribe', 'POST');
+  
   try {
     // Check if PWA feature is enabled
     if (!isFeatureEnabled('PWA')) {
@@ -32,6 +35,7 @@ export async function POST(request: NextRequest) {
     }
 
     logger.info(`PWA: Registering push notification subscription for user ${userId}`);
+    apiLogger.info('Registering push notification subscription', { userId });
 
     // Validate subscription
     const isValidSubscription = await validateSubscription(subscription);
@@ -57,6 +61,7 @@ export async function POST(request: NextRequest) {
     });
 
     logger.info(`PWA: Push notification subscription registered with ID ${subscriptionId}`);
+    apiLogger.info('Push notification subscription registered', { subscriptionId, userId });
 
     return NextResponse.json({
       success: true,
@@ -67,6 +72,7 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     logger.error('PWA: Failed to subscribe to push notifications:', error instanceof Error ? error : new Error(String(error)));
+    apiLogger.error('Failed to subscribe to push notifications', error instanceof Error ? error : new Error(String(error)));
     
     return NextResponse.json({
       success: false,
@@ -259,7 +265,7 @@ async function removeSubscription(userId?: string | null, subscriptionId?: strin
  */
 async function getNotificationPreferences(userId: string): Promise<any> {
   // This would typically query your database
-  console.log(`Getting notification preferences for user: ${userId}`);
+  logger.info('Getting notification preferences for user', { userId });
   return {
     newPolls: true,
     pollResults: true,

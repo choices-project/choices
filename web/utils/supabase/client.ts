@@ -1,4 +1,5 @@
 'use client'
+import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
 // Database schema types for type safety
@@ -421,3 +422,11 @@ export type PrivateUserData = Database['public']['Tables']['private_user_data'][
 export type AnalyticsContribution = Database['public']['Tables']['analytics_contributions']['Row']
 export type DemographicAnalytics = Database['public']['Views']['demographic_analytics']['Row']
 // export type WebAuthnCredential = Database['public']['Tables']['webauthn_credentials']['Row'] // Removed - not ready
+
+// Create Supabase client
+export const createClient = (): SupabaseClient<Database> => {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  
+  return createSupabaseClient<Database>(supabaseUrl, supabaseKey)
+}

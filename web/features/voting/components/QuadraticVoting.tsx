@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { CheckCircle, AlertCircle, Info, DollarSign, TrendingUp, TrendingDown } from 'lucide-react'
-import { withOptional } from '../../../lib/util/objects'
+import { withOptional } from '@/lib/utils/objects'
 
 type PollOption = {
   id: string
@@ -110,7 +110,7 @@ export default function QuadraticVoting({
       }
       
       // Track analytics with poll ID using SSR-safe access
-      const { safeWindow } = await import('@/shared/utils/lib/ssr-safe');
+      const { safeWindow } = await import('@/lib/utils/ssr-safe');
       const gtag = safeWindow(w => w.gtag);
       if (gtag) {
         gtag('event', 'vote_submitted', {

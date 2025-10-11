@@ -6,7 +6,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { FEATURE_FLAGS } from '@/lib/core/feature-flags';
-import { withOptional } from '@/lib/util/objects';
+import { withOptional } from '@/lib/utils/objects';
 import { 
   CheckCircle, 
   X, 
@@ -65,7 +65,8 @@ export default function UserSuggestionsManager() {
         setSuggestions(data.suggestions || []);
       }
     } catch (error) {
-      console.error('Error loading suggestions:', error);
+      console.error('Failed to load user suggestions:', error);
+      // Error loading suggestions - handled by error boundary
     } finally {
       setLoading(false);
     }
@@ -104,7 +105,8 @@ export default function UserSuggestionsManager() {
         );
       }
     } catch (error) {
-      console.error('Error updating suggestion status:', error);
+      console.error('Failed to update suggestion status:', error);
+      // Error updating suggestion status - handled by error boundary
     }
   };
 

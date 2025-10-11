@@ -14,9 +14,9 @@ import {
   Smartphone,
   Download
 } from 'lucide-react'
-import { useFeatureFlags } from '@/hooks/useFeatureFlags'
+import { useFeatureFlags } from "@/hooks/useFeatureFlags"
 import { usePWAUtils } from '../hooks/usePWAUtils'
-import { devLog } from '@/lib/logger';
+import { devLog } from '@/lib/utils/logger';
 
 type Poll = {
   id: string

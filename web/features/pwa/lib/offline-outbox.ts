@@ -1,4 +1,4 @@
-import { logger } from '@/lib/logger';
+import { logger } from '@/lib/utils/logger';
 /**
  * Offline Outbox System for PWA
  * Enables offline voting with automatic background sync

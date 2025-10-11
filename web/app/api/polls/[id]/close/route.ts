@@ -10,7 +10,7 @@
 
 import { type NextRequest, NextResponse } from 'next/server';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
-import { devLog } from '@/lib/logger';
+import { devLog } from '@/lib/utils/logger';
 import { AuthenticationError, ValidationError, NotFoundError, ForbiddenError } from '@/lib/errors';
 
 export const dynamic = 'force-dynamic';

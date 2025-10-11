@@ -1,7 +1,7 @@
 'use client'
 
 import { Suspense } from 'react'
-import BalancedOnboardingFlow from '@/components/onboarding/BalancedOnboardingFlow'
+import BalancedOnboardingFlow from '@/features/onboarding/components/BalancedOnboardingFlow'
 
 function OnboardingContent() {
   return <BalancedOnboardingFlow />

@@ -4,7 +4,7 @@
  * Comprehensive error handling for Open States API integration
  */
 
-import { devLog } from '@/lib/logger';
+import { devLog } from '@/lib/utils/logger';
 
 // Error types
 export type ErrorDetails = {

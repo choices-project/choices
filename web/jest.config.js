@@ -9,6 +9,8 @@ module.exports = {
       testMatch: [
         '<rootDir>/components/**/*.test.{js,jsx,ts,tsx}',
         '<rootDir>/components/**/*.spec.{js,jsx,ts,tsx}',
+        '<rootDir>/features/**/*.test.{js,jsx,ts,tsx}',
+        '<rootDir>/features/**/*.spec.{js,jsx,ts,tsx}',
       ],
       moduleNameMapper: {
         '^@/(.*)$': '<rootDir>/$1',
@@ -54,6 +56,10 @@ module.exports = {
         '<rootDir>/tests/unit/**/*.spec.{js,jsx,ts,tsx}',
         '<rootDir>/lib/**/*.test.{js,jsx,ts,tsx}',
         '<rootDir>/lib/**/*.spec.{js,jsx,ts,tsx}',
+        '<rootDir>/features/**/*.test.{js,jsx,ts,tsx}',
+        '<rootDir>/features/**/*.spec.{js,jsx,ts,tsx}',
+        '<rootDir>/app/**/*.test.{js,jsx,ts,tsx}',
+        '<rootDir>/app/**/*.spec.{js,jsx,ts,tsx}',
       ],
       moduleNameMapper: {
         '^@/(.*)$': '<rootDir>/$1',

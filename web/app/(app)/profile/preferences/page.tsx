@@ -2,8 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { useSupabaseAuth } from '@/contexts/AuthContext';
-import InterestSelection from '@/components/InterestSelection';
-import DataUsageExplanation from '@/components/DataUsageExplanation';
+import InterestSelection from '@/features/onboarding/components/InterestSelection';
+import DataUsageExplanation from '@/components/shared/DataUsageExplanation';
 import { Settings, Heart, Shield, Save } from 'lucide-react';
 
 export default function ProfilePreferencesPage() {

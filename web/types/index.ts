@@ -3,7 +3,7 @@
 
 // Re-export all type modules for easy importing
 export * from './api';
-export * from './webauthn';
+export * from '@/features/auth/types/webauthn';
 export * from './google-civic';
 export * from './pwa';
 

@@ -5,7 +5,7 @@
  */
 
 import type { CongressGovMember, CongressGovBill, CongressGovVote } from './client';
-import { withOptional } from '../../util/objects';
+import { withOptional } from '@/lib/utils/objects';
 
 export type NormalizedRepresentative = {
   id: string;

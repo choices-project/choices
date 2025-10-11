@@ -10,8 +10,12 @@ export {
   devLog,
   logInfo,
   logWarn,
-  logError
-} from '../logger';
+  logError,
+  logApiCall,
+  logDbQuery,
+  logUserAction,
+  logPerformance
+} from '@/lib/utils/logger';
 
 // Default export for convenience
-export { devLog as default } from '../logger';
+export { devLog as default } from '@/lib/utils/logger';

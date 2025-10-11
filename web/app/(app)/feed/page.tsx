@@ -1,6 +1,6 @@
 'use client';
 
-import SuperiorMobileFeed from '@/components/SuperiorMobileFeed';
+import { SuperiorMobileFeed } from '@/features/feeds';
 
 export default function FeedPage() {
   return (

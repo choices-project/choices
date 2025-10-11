@@ -5,8 +5,8 @@
  * with proper validation and error handling.
  */
 
-import { logger } from '../../logger';
-import { withOptional } from '../../util/objects';
+import { logger } from '@/lib/utils/logger';
+import { withOptional } from '@/lib/utils/objects';
 import type { 
   GoogleCivicResponse, 
   GoogleCivicRepresentative, 

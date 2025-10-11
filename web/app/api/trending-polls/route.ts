@@ -1,6 +1,6 @@
 // NextRequest import removed - not used
 import { NextResponse } from 'next/server';
-import { devLog } from '@/lib/logger';
+import { devLog } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 import { handleError, getUserMessage, getHttpStatus } from '@/lib/error-handler';
 

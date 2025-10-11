@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 
-import { logger } from '@/lib/logger';
+import { logger } from '@/lib/utils/logger';
 import { TypeGuardError } from '@/lib/core/types/guards';
 import { logSecurityEvent } from '@/lib/core/auth/server-actions';
 import { getSupabaseServerClient, getSupabaseServiceRoleClient } from '@/utils/supabase/server';

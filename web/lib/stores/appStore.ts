@@ -1,0 +1,514 @@
+/**
+ * App Store - Zustand Implementation
+ * 
+ * Global application state management including theme, sidebar, feature flags,
+ * and app-wide settings. Consolidates scattered local state and Context API usage.
+ * 
+ * Created: October 10, 2025
+ * Status: ✅ ACTIVE
+ */
+
+import { create } from 'zustand';
+import { devtools } from 'zustand/middleware';
+import { immer } from 'zustand/middleware/immer';
+import { persist } from 'zustand/middleware';
+import { withOptional } from '@/lib/utils/objects';
+import type { BaseStore, FeatureFlag } from './types';
+
+// App store state interface
+type AppStore = {
+  // UI State
+  theme: 'light' | 'dark' | 'system';
+  sidebarCollapsed: boolean;
+  sidebarWidth: number;
+  sidebarPinned: boolean;
+  
+  // Feature Flags
+  features: Record<string, boolean>;
+  featureFlags: FeatureFlag[];
+  
+  // App Settings
+  settings: {
+    animations: boolean;
+    haptics: boolean;
+    sound: boolean;
+    autoSave: boolean;
+    language: string;
+    timezone: string;
+    compactMode: boolean;
+    showTooltips: boolean;
+    enableAnalytics: boolean;
+    enableCrashReporting: boolean;
+  };
+  
+  // Navigation State
+  currentRoute: string;
+  previousRoute: string;
+  breadcrumbs: Array<{
+    label: string;
+    href: string;
+    icon?: string;
+  }>;
+  
+  // Loading States
+  isInitializing: boolean;
+  isUpdating: boolean;
+  
+  // Actions - Theme
+  setTheme: (theme: 'light' | 'dark' | 'system') => void;
+  toggleTheme: () => void;
+  
+  // Actions - Sidebar
+  toggleSidebar: () => void;
+  setSidebarCollapsed: (collapsed: boolean) => void;
+  setSidebarWidth: (width: number) => void;
+  setSidebarPinned: (pinned: boolean) => void;
+  
+  // Actions - Feature Flags
+  setFeatureFlag: (flag: string, enabled: boolean) => void;
+  toggleFeatureFlag: (flag: string) => void;
+  setFeatureFlags: (flags: Record<string, boolean>) => void;
+  loadFeatureFlags: (flags: FeatureFlag[]) => void;
+  
+  // Actions - Settings
+  updateSettings: (settings: Partial<AppStore['settings']>) => void;
+  resetSettings: () => void;
+  
+  // Actions - Navigation
+  setCurrentRoute: (route: string) => void;
+  setBreadcrumbs: (breadcrumbs: Array<{ label: string; href: string; icon?: string }>) => void;
+  addBreadcrumb: (breadcrumb: { label: string; href: string; icon?: string }) => void;
+  removeBreadcrumb: (index: number) => void;
+  
+  // Actions - Loading States
+  setInitializing: (initializing: boolean) => void;
+  setUpdating: (updating: boolean) => void;
+} & BaseStore
+
+// Default settings
+const defaultSettings = {
+  animations: true,
+  haptics: true,
+  sound: true,
+  autoSave: true,
+  language: 'en',
+  timezone: 'UTC',
+  compactMode: false,
+  showTooltips: true,
+  enableAnalytics: true,
+  enableCrashReporting: true,
+};
+
+// Create app store with middleware
+export const useAppStore = create<AppStore>()(
+  devtools(
+    persist(
+      immer((set, _get) => ({
+        // Initial state
+        theme: 'system',
+        sidebarCollapsed: false,
+        sidebarWidth: 280,
+        sidebarPinned: false,
+        features: {},
+        featureFlags: [],
+        settings: defaultSettings,
+        currentRoute: '/',
+        previousRoute: '',
+        breadcrumbs: [],
+        isLoading: false,
+        isInitializing: false,
+        isUpdating: false,
+        error: null,
+      
+      // Base store actions
+      setLoading: (loading) => set((state) => {
+        state.isLoading = loading;
+      }),
+      
+      setError: (error) => set((state) => {
+        state.error = error;
+      }),
+      
+      clearError: () => set((state) => {
+        state.error = null;
+      }),
+      
+      // Theme actions
+      setTheme: (theme) => set((state) => {
+        state.theme = theme;
+        
+        // Apply theme to document
+        if (typeof window !== 'undefined') {
+          document.documentElement.setAttribute('data-theme', theme);
+          if (theme === 'dark') {
+            document.documentElement.classList.add('dark');
+          } else {
+            document.documentElement.classList.remove('dark');
+          }
+        }
+        
+        console.log('Theme changed to:', theme);
+      }),
+      
+      toggleTheme: () => set((state) => {
+        const newTheme = state.theme === 'light' ? 'dark' : 'light';
+        state.theme = newTheme;
+        
+        // Apply theme to document
+        if (typeof window !== 'undefined') {
+          document.documentElement.setAttribute('data-theme', newTheme);
+          if (newTheme === 'dark') {
+            document.documentElement.classList.add('dark');
+          } else {
+            document.documentElement.classList.remove('dark');
+          }
+        }
+        
+        console.log('Theme toggled to:', newTheme);
+      }),
+      
+      // Sidebar actions
+      toggleSidebar: () => set((state) => {
+        state.sidebarCollapsed = !state.sidebarCollapsed;
+        console.log('Sidebar toggled:', state.sidebarCollapsed);
+      }),
+      
+      setSidebarCollapsed: (collapsed) => set((state) => {
+        state.sidebarCollapsed = collapsed;
+      }),
+      
+      setSidebarWidth: (width) => set((state) => {
+        state.sidebarWidth = Math.max(200, Math.min(400, width)); // Clamp between 200-400px
+      }),
+      
+      setSidebarPinned: (pinned) => set((state) => {
+        state.sidebarPinned = pinned;
+        if (pinned) {
+          state.sidebarCollapsed = false;
+        }
+      }),
+      
+      // Feature flag actions
+      setFeatureFlag: (flag, enabled) => set((state) => {
+        state.features[flag] = enabled;
+        console.log(`Feature flag ${flag} set to:`, enabled);
+      }),
+      
+      toggleFeatureFlag: (flag) => set((state) => {
+        state.features[flag] = !state.features[flag];
+        console.log(`Feature flag ${flag} toggled to:`, state.features[flag]);
+      }),
+      
+      setFeatureFlags: (flags) => set((state) => {
+        state.features = withOptional(state.features, flags);
+        console.log('Feature flags updated:', flags);
+      }),
+      
+      loadFeatureFlags: (flags) => set((state) => {
+        state.featureFlags = flags;
+        // Initialize features from loaded flags
+        flags.forEach(flag => {
+          state.features[flag.id] = flag.enabled;
+        });
+        console.log('Feature flags loaded:', flags.length);
+      }),
+      
+      // Settings actions
+      updateSettings: (settings) => set((state) => {
+        state.settings = withOptional(state.settings, settings);
+        console.log('App settings updated:', settings);
+      }),
+      
+      resetSettings: () => set((state) => {
+        state.settings = withOptional(defaultSettings);
+        console.log('App settings reset to defaults');
+      }),
+      
+      // Navigation actions
+      setCurrentRoute: (route) => set((state) => {
+        state.previousRoute = state.currentRoute;
+        state.currentRoute = route;
+        console.log('Route changed:', state.previousRoute, '->', route);
+      }),
+      
+      setBreadcrumbs: (breadcrumbs) => set((state) => {
+        state.breadcrumbs = breadcrumbs;
+      }),
+      
+      addBreadcrumb: (breadcrumb) => set((state) => {
+        state.breadcrumbs.push(breadcrumb);
+      }),
+      
+      removeBreadcrumb: (index) => set((state) => {
+        state.breadcrumbs.splice(index, 1);
+      }),
+      
+      // Loading state actions
+      setInitializing: (initializing) => set((state) => {
+        state.isInitializing = initializing;
+      }),
+      
+      setUpdating: (updating) => set((state) => {
+        state.isUpdating = updating;
+      }),
+    })),
+    {
+      name: 'app-store',
+      partialize: (state) => ({
+        theme: state.theme,
+        sidebarCollapsed: state.sidebarCollapsed,
+        sidebarWidth: state.sidebarWidth,
+        sidebarPinned: state.sidebarPinned,
+        features: state.features,
+        settings: state.settings,
+      }),
+    }
+  ),
+  { name: 'app-store' }
+));
+
+// Store selectors for optimized re-renders
+export const useTheme = () => useAppStore(state => state.theme);
+export const useSidebarCollapsed = () => useAppStore(state => state.sidebarCollapsed);
+export const useSidebarWidth = () => useAppStore(state => state.sidebarWidth);
+export const useSidebarPinned = () => useAppStore(state => state.sidebarPinned);
+export const useFeatureFlags = () => useAppStore(state => state.features);
+export const useAppSettings = () => useAppStore(state => state.settings);
+export const useCurrentRoute = () => useAppStore(state => state.currentRoute);
+export const useBreadcrumbs = () => useAppStore(state => state.breadcrumbs);
+export const useAppLoading = () => useAppStore(state => state.isLoading);
+export const useAppError = () => useAppStore(state => state.error);
+
+// Action selectors
+export const useAppActions = () => useAppStore(state => ({
+  setTheme: state.setTheme,
+  toggleTheme: state.toggleTheme,
+  toggleSidebar: state.toggleSidebar,
+  setSidebarCollapsed: state.setSidebarCollapsed,
+  setSidebarWidth: state.setSidebarWidth,
+  setSidebarPinned: state.setSidebarPinned,
+  setFeatureFlag: state.setFeatureFlag,
+  toggleFeatureFlag: state.toggleFeatureFlag,
+  setFeatureFlags: state.setFeatureFlags,
+  loadFeatureFlags: state.loadFeatureFlags,
+  updateSettings: state.updateSettings,
+  resetSettings: state.resetSettings,
+  setCurrentRoute: state.setCurrentRoute,
+  setBreadcrumbs: state.setBreadcrumbs,
+  addBreadcrumb: state.addBreadcrumb,
+  removeBreadcrumb: state.removeBreadcrumb,
+  setInitializing: state.setInitializing,
+  setUpdating: state.setUpdating,
+}));
+
+// Computed selectors
+export const useIsFeatureEnabled = (flag: string) => useAppStore(state => {
+  return state.features[flag] ?? false;
+});
+
+export const useAppTheme = () => useAppStore(state => {
+  if (state.theme === 'system') {
+    return typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  }
+  return state.theme;
+});
+
+export const useAppLanguage = () => useAppStore(state => state.settings.language);
+export const useAppTimezone = () => useAppStore(state => state.settings.timezone);
+export const useAppAnimations = () => useAppStore(state => state.settings.animations);
+export const useAppHaptics = () => useAppStore(state => state.settings.haptics);
+
+// Store utilities
+export const appStoreUtils = {
+  /**
+   * Check if a feature is enabled
+   */
+  isFeatureEnabled: (flag: string) => {
+    const state = useAppStore.getState();
+    return state.features[flag] ?? false;
+  },
+  
+  /**
+   * Get all enabled features
+   */
+  getEnabledFeatures: () => {
+    const state = useAppStore.getState();
+    return Object.entries(state.features)
+      .filter(([_, enabled]) => enabled)
+      .map(([flag, _]) => flag);
+  },
+  
+  /**
+   * Get all disabled features
+   */
+  getDisabledFeatures: () => {
+    const state = useAppStore.getState();
+    return Object.entries(state.features)
+      .filter(([_, enabled]) => !enabled)
+      .map(([flag, _]) => flag);
+  },
+  
+  /**
+   * Get current theme with system preference
+   */
+  getCurrentTheme: () => {
+    const state = useAppStore.getState();
+    if (state.theme === 'system') {
+      return typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+    return state.theme;
+  },
+  
+  /**
+   * Get app configuration
+   */
+  getAppConfig: () => {
+    const state = useAppStore.getState();
+    return {
+      theme: state.theme,
+      sidebar: {
+        collapsed: state.sidebarCollapsed,
+        width: state.sidebarWidth,
+        pinned: state.sidebarPinned,
+      },
+      features: state.features,
+      settings: state.settings,
+      navigation: {
+        currentRoute: state.currentRoute,
+        previousRoute: state.previousRoute,
+        breadcrumbs: state.breadcrumbs,
+      }
+    };
+  },
+  
+  /**
+   * Initialize app store with default values
+   */
+  initialize: () => {
+    const state = useAppStore.getState();
+    
+    // Set initial theme
+    if (typeof window !== 'undefined') {
+      const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      const theme = state.theme === 'system' ? systemTheme : state.theme;
+      document.documentElement.setAttribute('data-theme', theme);
+      if (theme === 'dark') {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    }
+    
+    console.log('App store initialized');
+  }
+};
+
+// Store subscriptions for external integrations
+export const appStoreSubscriptions = {
+  /**
+   * Subscribe to theme changes
+   */
+  onThemeChange: (callback: (theme: string) => void) => {
+    return useAppStore.subscribe(
+      (state, prevState) => {
+        const { theme } = state;
+        const { theme: prevTheme } = prevState;
+        if (theme !== prevTheme) {
+          callback(theme);
+        }
+      }
+    );
+  },
+  
+  /**
+   * Subscribe to sidebar changes
+   */
+  onSidebarChange: (callback: (collapsed: boolean) => void) => {
+    return useAppStore.subscribe(
+      (state, prevState) => {
+        const { sidebarCollapsed } = state;
+        const { sidebarCollapsed: prevCollapsed } = prevState;
+        if (sidebarCollapsed !== prevCollapsed) {
+          callback(sidebarCollapsed);
+        }
+      }
+    );
+  },
+  
+  /**
+   * Subscribe to feature flag changes
+   */
+  onFeatureFlagChange: (flag: string, callback: (enabled: boolean) => void) => {
+    return useAppStore.subscribe(
+      (state, prevState) => {
+        const enabled = state.features[flag];
+        const prevEnabled = prevState.features[flag];
+        if (enabled !== prevEnabled) {
+          callback(enabled);
+        }
+      }
+    );
+  },
+  
+  /**
+   * Subscribe to settings changes
+   */
+  onSettingsChange: (callback: (settings: AppStore['settings']) => void) => {
+    return useAppStore.subscribe(
+      (state, prevState) => {
+        const { settings } = state;
+        const { settings: prevSettings } = prevState;
+        if (settings !== prevSettings) {
+          callback(settings);
+        }
+      }
+    );
+  }
+};
+
+// Store debugging utilities
+export const appStoreDebug = {
+  /**
+   * Log current app state
+   */
+  logState: () => {
+    const state = useAppStore.getState();
+    console.log('App Store State:', {
+      theme: state.theme,
+      sidebarCollapsed: state.sidebarCollapsed,
+      features: state.features,
+      settings: state.settings,
+      currentRoute: state.currentRoute,
+      isLoading: state.isLoading,
+      error: state.error
+    });
+  },
+  
+  /**
+   * Log feature flags
+   */
+  logFeatureFlags: () => {
+    const state = useAppStore.getState();
+    console.log('Feature Flags:', {
+      enabled: Object.entries(state.features).filter(([_, enabled]) => enabled),
+      disabled: Object.entries(state.features).filter(([_, enabled]) => !enabled),
+      total: Object.keys(state.features).length
+    });
+  },
+  
+  /**
+   * Log app settings
+   */
+  logSettings: () => {
+    const state = useAppStore.getState();
+    console.log('App Settings:', state.settings);
+  },
+  
+  /**
+   * Reset store to initial state
+   */
+  reset: () => {
+    useAppStore.getState().resetSettings();
+    console.log('App store reset to initial state');
+  }
+};

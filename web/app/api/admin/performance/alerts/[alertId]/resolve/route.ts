@@ -4,9 +4,9 @@
 
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
-import { requireAdminOr401 } from '@/lib/admin-auth';
-import { performanceMonitor } from '@/lib/admin/performance-monitor';
-import { logger } from '@/lib/logger';
+import { requireAdminOr401 } from '@/features/auth/lib/admin-auth';
+import { performanceMonitor } from '@/features/admin/lib/performance-monitor';
+import { logger } from '@/lib/utils/logger';
 
 export async function POST(
   request: NextRequest,
@@ -37,7 +37,7 @@ export async function POST(
     });
 
   } catch (error) {
-    logger.error('Error resolving performance alert:', error);
+    logger.error('Error resolving performance alert:', error instanceof Error ? error : new Error('Unknown error'));
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

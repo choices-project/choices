@@ -10,6 +10,7 @@
 
 import { type NextRequest, NextResponse } from 'next/server';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
+import { createApiLogger } from '@/lib/utils/api-logger';
 
 export const dynamic = 'force-dynamic';
 
@@ -18,14 +19,16 @@ export const dynamic = 'force-dynamic';
  * Superior implementation using Supabase native sessions
  */
 export async function GET(_request: NextRequest) {
+  const logger = createApiLogger('/api/profile', 'GET');
+  
   try {
-    console.log('[/api/profile GET] Request received');
+    logger.info('Request received');
     
     // Get Supabase client
     const supabase = await getSupabaseServerClient();
     
     if (!supabase) {
-      console.log('[/api/profile GET] Supabase client not configured');
+      logger.error('Supabase client not configured');
       return NextResponse.json(
         { error: 'Supabase not configured' },
         { status: 500 }
@@ -36,7 +39,7 @@ export async function GET(_request: NextRequest) {
     const { data: { session }, error: sessionError } = await supabase.auth.getSession();
     
     if (sessionError || !session?.user) {
-      console.log('[/api/profile GET] User not authenticated', sessionError);
+      logger.warn('User not authenticated', { sessionError });
       return NextResponse.json(
         { error: 'User not authenticated' },
         { status: 401 }
@@ -44,7 +47,7 @@ export async function GET(_request: NextRequest) {
     }
 
     const user = session.user;
-    console.log('[/api/profile GET] User ID:', user.id);
+    logger.info('User authenticated', { userId: user.id });
 
     // Get user profile
     const { data, error } = await supabase
@@ -54,14 +57,14 @@ export async function GET(_request: NextRequest) {
       .single();
 
     if (error && error.code !== 'PGRST116') {
-      console.error('[/api/profile GET] Database error:', error);
+      logger.error('Database error while fetching profile', error);
       return NextResponse.json(
         { error: 'Failed to fetch profile' },
         { status: 500 }
       );
     }
     
-    console.log('[/api/profile GET] Profile data:', data);
+    logger.success('Profile data retrieved successfully', 200, { profileId: data?.id });
 
     const response = NextResponse.json({
       success: true,
@@ -78,7 +81,7 @@ export async function GET(_request: NextRequest) {
     return response;
 
   } catch (error) {
-    console.error('Profile API error:', error);
+    logger.error('Profile API error', error as Error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -91,6 +94,8 @@ export async function GET(_request: NextRequest) {
  * Superior implementation using Supabase native sessions
  */
 export async function POST(request: NextRequest) {
+  const logger = createApiLogger('/api/profile', 'POST');
+  
   try {
     const body = await request.json();
     
@@ -137,7 +142,7 @@ export async function POST(request: NextRequest) {
       .select();
 
     if (error) {
-      console.error('Database error:', error);
+      logger.error('Database error during profile creation', error);
       return NextResponse.json(
         { error: 'Failed to save profile' },
         { status: 500 }
@@ -151,7 +156,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Profile creation error:', error);
+    logger.error('Profile creation error', error as Error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -164,6 +169,8 @@ export async function POST(request: NextRequest) {
  * Superior implementation using Supabase native sessions
  */
 export async function PUT(request: NextRequest) {
+  const logger = createApiLogger('/api/profile', 'PUT');
+  
   try {
     const body = await request.json();
     
@@ -202,7 +209,7 @@ export async function PUT(request: NextRequest) {
       .select();
 
     if (error) {
-      console.error('Database error:', error);
+      logger.error('Database error during profile update', error);
       return NextResponse.json(
         { error: 'Failed to update profile' },
         { status: 500 }
@@ -216,7 +223,7 @@ export async function PUT(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Profile update error:', error);
+    logger.error('Profile update error', error as Error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

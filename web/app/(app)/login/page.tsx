@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Eye, EyeOff, User, Lock, CheckCircle2, AlertCircle } from 'lucide-react'
 import { loginAction } from '@/app/actions/login'
-import { PasskeyButton } from '@/components/PasskeyButton'
+import { PasskeyButton } from '@/features/auth/components/PasskeyButton'
 
 // Login button component using useFormStatus
 function LoginButton() {

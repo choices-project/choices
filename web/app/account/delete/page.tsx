@@ -14,7 +14,7 @@ import { Badge } from '@/components/ui/badge'
 import { ArrowLeft, Trash2, Download, AlertTriangle, Shield, User, Vote, FileText, Clock, CheckCircle, XCircle, AlertCircle } from 'lucide-react'
 
 // Utilities
-import { devLog } from '@/lib/logger'
+import { devLog } from '@/lib/utils/logger'
 
 type UserData = {
   profile: {
@@ -141,7 +141,7 @@ export default function AccountDeletionPage() {
       if (response.ok) {
         const blob = await response.blob()
         // Use SSR-safe browser API access
-        const { safeWindow, safeDocument } = await import('@/shared/utils/lib/ssr-safe');
+        const { safeWindow, safeDocument } = await import('@/lib/utils/ssr-safe');
         const url = safeWindow(w => w.URL?.createObjectURL?.(blob));
         if (url) {
           const a = safeDocument(d => d.createElement?.('a')) as HTMLAnchorElement;

@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Search, X } from 'lucide-react';
-import { withOptional } from '@/lib/util/objects';
+import { withOptional } from '@/lib/utils/objects';
 
 type Filters = {
   type: string;

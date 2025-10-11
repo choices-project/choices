@@ -2,7 +2,7 @@
 // PHASE 2: DATA RETENTION POLICIES IMPLEMENTATION
 // ============================================================================
 
-import { withOptional } from '../util/objects';
+import { withOptional } from '@/lib/utils/objects';
 // Agent A2 - Privacy Specialist
 // 
 // This module implements data retention policies and automatic purging

@@ -8,10 +8,10 @@
  * Agent D - Database Specialist
  */
 
-import { logger } from '../logger'
+import { logger } from '@/lib/utils/logger'
 import { type RedisClient } from './redis-client'
 import { type CacheStrategyManager } from './cache-strategies'
-import { withOptional } from '../util/objects'
+import { withOptional } from '@/lib/utils/objects'
 
 // Invalidation event types
 export type InvalidationEvent = 

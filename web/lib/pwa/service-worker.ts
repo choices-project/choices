@@ -5,7 +5,7 @@
  * with the main application thread.
  */
 
-import { logger } from '@/lib/logger';
+import { logger } from '@/lib/utils/logger';
 
 export type ServiceWorkerStatus = {
   isSupported: boolean;

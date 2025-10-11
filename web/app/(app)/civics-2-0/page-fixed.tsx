@@ -17,7 +17,7 @@ import {
   UserGroupIcon,
   HeartIcon
 } from '@heroicons/react/24/outline';
-import type { SuperiorRepresentativeData } from '@/lib/civics-2-0/superior-data-pipeline';
+import type { SuperiorRepresentativeData } from '@/features/civics/lib/civics-superior/superior-data-pipeline';
 
 export default function Civics2Page() {
   const [activeTab, setActiveTab] = useState<'representatives' | 'feed'>('representatives');

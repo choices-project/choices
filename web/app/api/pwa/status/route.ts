@@ -6,7 +6,7 @@
  */
 
 import { type NextRequest, NextResponse } from 'next/server';
-import { logger } from '@/lib/logger';
+import { logger } from '@/lib/utils/logger';
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
 
 export const dynamic = 'force-dynamic';

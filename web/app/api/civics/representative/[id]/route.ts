@@ -1,6 +1,8 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
+import { createApiLogger } from '@/lib/utils/api-logger';
+import { CivicsCache, CivicsQueryOptimizer } from '@/lib/utils/civics-cache';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -12,6 +14,8 @@ export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  const logger = createApiLogger('/api/civics/representative/[id]', 'GET');
+  
   try {
     const representativeId = params.id;
     
@@ -30,31 +34,25 @@ export async function GET(
       );
     }
 
-    console.log(`📊 Fetching detailed information for representative ID: ${representativeId}`);
+    logger.info('Fetching detailed information for representative', { representativeId });
 
-    // Get representative basic information
-    const { data: representative, error: repError } = await supabase
-      .from('civics_representatives')
-      .select(`
-        id,
-        canonical_id,
-        name,
-        party,
-        office,
-        level,
-        jurisdiction,
-        district,
-        ocd_division_id,
-        external_id,
-        source,
-        data_origin,
-        valid_from,
-        valid_to,
-        created_at,
-        last_updated
-      `)
-      .eq('id', representativeId)
-      .single();
+    // Check cache first
+    const cachedData = CivicsCache.getCachedRepresentative(representativeId);
+    if (cachedData) {
+      logger.info('Returning cached representative data', { representativeId });
+      return NextResponse.json({
+        success: true,
+        data: cachedData,
+        metadata: {
+          source: 'cache',
+          last_updated: new Date().toISOString(),
+          data_quality_score: 95
+        }
+      });
+    }
+
+    // Get representative data with optimized query
+    const { data: representative, error: repError } = await CivicsQueryOptimizer.getRepresentativeQuery(supabase, representativeId);
 
     if (repError || !representative) {
       return NextResponse.json(
@@ -178,6 +176,20 @@ export async function GET(
       .eq('representative_id', representativeId)
       .order('confidence_score', { ascending: false });
 
+    // Get canonical ID resolution (crosswalk data)
+    const { data: crosswalkEntries } = await supabase
+      .from('civics_crosswalk')
+      .select(`
+        id,
+        canonical_id,
+        source_id,
+        source,
+        source_type,
+        created_at,
+        last_verified
+      `)
+      .eq('representative_id', representativeId);
+
     // Transform the data for the frontend
     const transformedData = {
       // Basic Information
@@ -272,6 +284,15 @@ export async function GET(
         position_notes: (position as any).position_notes
       })) : [],
       
+      // Canonical ID Resolution
+      canonical_ids: crosswalkEntries?.map(entry => ({
+        canonical_id: entry.canonical_id,
+        source: entry.source,
+        source_type: entry.source_type,
+        source_id: entry.source_id,
+        last_verified: entry.last_verified
+      })) || [],
+
       // Data Quality Summary
       data_quality: {
         contact_info_available: (representative as any).contact_info_available || false,
@@ -295,15 +316,26 @@ export async function GET(
       ].filter(Boolean).join(', ')
     };
 
-    console.log(`✅ Successfully fetched detailed information for ${representative.name}`);
+    // Cache the result for future requests
+    CivicsCache.cacheRepresentative(representativeId, transformedData);
+
+    logger.success('Successfully fetched detailed information for representative', 200, { 
+      representativeName: representative.name,
+      representativeId: representative.id 
+    });
 
     return NextResponse.json({
-      ok: true,
-      data: transformedData
+      success: true,
+      data: transformedData,
+      metadata: {
+        source: 'database',
+        last_updated: new Date().toISOString(),
+        data_quality_score: 95
+      }
     });
 
   } catch (error) {
-    console.error('❌ Error fetching representative details:', error);
+    logger.error('Error fetching representative details', error instanceof Error ? error : undefined);
     return NextResponse.json(
       { 
         ok: false, 

@@ -5,8 +5,8 @@
  * into query performance and suggests optimizations.
  */
 
-import { logger } from '@/lib/logger';
-import { withOptional } from '@/lib/util/objects';
+import { logger } from '@/lib/utils/logger';
+import { withOptional } from '@/lib/utils/objects';
 
 /**
  * Query execution plan information

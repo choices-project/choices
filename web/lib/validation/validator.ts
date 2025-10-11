@@ -5,8 +5,8 @@
  */
 
 import { type ZodError, type ZodSchema } from 'zod';
-import { logger } from '../logger';
-import { withOptional } from '../util/objects';
+import { logger } from '@/lib/utils/logger';
+import { withOptional } from '@/lib/utils/objects';
 
 /**
  * Result of a validation operation

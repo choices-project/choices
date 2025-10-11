@@ -19,7 +19,7 @@ import { Separator } from '@/components/ui/separator'
 import { User, Camera, Save, Shield, ArrowLeft, Heart, Users, Upload } from 'lucide-react'
 
 // Utilities
-import { devLog } from '@/lib/logger'
+import { devLog } from '@/lib/utils/logger'
 import { useAuth } from '@/hooks/useAuth'
 import { cn } from '@/lib/utils'
 

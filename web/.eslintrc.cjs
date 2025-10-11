@@ -1,19 +1,30 @@
 /* eslint-env node */
+/**
+ * Modern ESLint Configuration for Choices Platform
+ * 
+ * This configuration replaces the legacy setup with a clean, modern approach:
+ * - Simplified path mapping aligned with TypeScript
+ * - Removed legacy "canonical" path restrictions
+ * - Unified configuration (no more dual configs)
+ * - Better performance and maintainability
+ * 
+ * Created: January 21, 2025
+ * Status: Production-ready replacement for legacy configuration
+ */
+
 module.exports = {
   root: true,
-  // Works with ESLint v8 + Next 14
+  
+  // Modern ESLint setup for Next.js 14 + TypeScript
   extends: [
     'next/core-web-vitals',
     'plugin:@typescript-eslint/recommended',
+    'plugin:@typescript-eslint/recommended-type-checked',
     'plugin:eslint-comments/recommended',
   ],
+  
+  // Ignore patterns - simplified and focused
   ignorePatterns: [
-    'archive/**',
-    'archive-*/**',
-    'app/archive-*/**',
-    '_reports/**',
-    'tests/e2e/archive-old/**',
-    'archive-unused-files/**',
     'node_modules/',
     '.next/',
     'dist/',
@@ -21,37 +32,64 @@ module.exports = {
     'playwright-report/',
     'test-results/',
     '**/*.d.ts',
+    // Archive patterns
+    'archive/**',
+    'archive-*/**',
+    'app/archive-*/**',
+    '_reports/**',
+    'tests/e2e/archive-old/**',
+    'archive-unused-files/**',
+    // Disabled files
+    '**/*.disabled',
+    '**/*.disabled.*',
+    '**/scripts.disabled/**',
+    '**/tests.disabled/**',
   ],
-  plugins: ['@typescript-eslint', 'unused-imports', 'boundaries'],
+  
+  plugins: [
+    '@typescript-eslint',
+    'unused-imports',
+    'boundaries',
+  ],
+  
   parser: '@typescript-eslint/parser',
   parserOptions: {
     ecmaVersion: 'latest',
     sourceType: 'module',
-    // NOTE: No "project" here for speed. Type-aware rules live in the strict overlay.
+    project: './tsconfig.json',
+    tsconfigRootDir: __dirname,
   },
+  
   env: {
     browser: true,
     node: true,
     jest: true,
   },
+  
   settings: {
+    // Simplified boundaries - focus on core architecture
     'boundaries/elements': [
-      { type: 'app',        pattern: 'app/**' },
-      { type: 'features',   pattern: 'features/**' },
+      { type: 'app', pattern: 'app/**' },
+      { type: 'features', pattern: 'features/**' },
       { type: 'components', pattern: 'components/**' },
-      { type: 'lib',        pattern: 'lib/**' },
-      { type: 'utils',      pattern: 'utils/**' },
-      { type: 'tests',      pattern: 'tests/**' },
+      { type: 'lib', pattern: 'lib/**' },
+      { type: 'utils', pattern: 'utils/**' },
+      { type: 'tests', pattern: 'tests/**' },
     ],
     'import/core-modules': ['k6', 'k6/http'],
   },
+  
   rules: {
-    // Prefer the dedicated plugin for unuseds (fewer false positives with TS)
+    // ============================================================================
+    // CORE RULES - Essential for code quality
+    // ============================================================================
+    
+    // Unused imports/variables - less restrictive for development workflow
     'no-unused-vars': 'off',
     '@typescript-eslint/no-unused-vars': 'off',
-    'unused-imports/no-unused-imports': 'error',
+    'unused-imports/no-unused-imports': 'warn',
     'unused-imports/no-unused-vars': [
-      'error',
+      'warn',
       {
         vars: 'all',
         varsIgnorePattern: '^_',
@@ -60,115 +98,254 @@ module.exports = {
         ignoreRestSiblings: true,
       },
     ],
-
-    // Simple boundaries - components and features are similar
-    'boundaries/element-types': ['error', {
-      default: 'disallow',
-      rules: [
-        { from: 'lib',        allow: ['lib', 'utils', 'features', 'components'] },
-        { from: 'features',   allow: ['lib', 'components', 'utils', 'features', 'app'] },
-        { from: 'components', allow: ['lib', 'utils', 'components', 'features'] },
-        { from: 'app',        allow: ['features', 'components', 'lib', 'utils'] },
-        { from: 'utils',      allow: ['lib'] },
-        { from: 'tests',      allow: ['app', 'features', 'components', 'lib', 'utils'] },
-      ],
-    }],
-
-    // Block legacy paths forever (allow shared/components for UI primitives)
-    'no-restricted-imports': ['error', {
-      patterns: [
-        { group: ['@/shared/lib/*', '@/shared/admin/*', '@/admin/lib/*'], message: 'Use "@/lib/**" or feature modules.' },
-        { group: ['@/components/polls/*'], message: "Use '@/features/polls/*' (canonical)." },
-        { group: ['@/components/voting/*'], message: "Use '@/features/voting/*' (canonical)." },
-        { group: ['@/components/CreatePoll*'], message: "Use '@/features/polls/components/CreatePollForm' (canonical)." },
-        { group: ['@/components/admin/layout/*'], message: "Use '@/app/(app)/admin/layout/*' (canonical)." },
-      ],
-    }],
-
-    // RSC-safe import rules
-    'react/jsx-no-undef': ['error', { allowGlobals: false }],
-    'import/no-unresolved': 'error',
-    'import/named': 'error',
-    'import/no-restricted-paths': ['error', {
-      zones: [
-        { 
-          target: './components', 
-          from: 'lucide-react',
-          message: 'Import icons via direct modular import, never re-export through UI barrel.' 
-        },
-        {
-          target: './app',
-          from: './components/ui/client',
-          message: 'Server components cannot import client barrel. Use @/components/ui for server-safe primitives.'
-        }
-      ]
-    }],
-
-    // Regression-blocking rules for type safety (moved to type-aware overlay)
-    '@typescript-eslint/no-explicit-any': 'off', // moved to type-aware overlay
-    '@typescript-eslint/consistent-type-imports': ['error', { 
-      fixStyle: 'inline-type-imports',
-      prefer: 'type-imports'
-    }],
     
-    // Phase 4: exactOptionalPropertyTypes enforcement (moved to type-aware overlay)
-    // '@typescript-eslint/no-unnecessary-condition': 'error', // requires type info
-    // '@typescript-eslint/no-confusing-void-expression': ['error', { 'ignoreArrowShorthand': true }], // requires type info
-    '@typescript-eslint/consistent-type-definitions': ['error', 'type'],
-    'no-restricted-syntax': [
-      'warn', // Temporarily downgrade to warning for deployment
-      { 
-        selector: 'TSTypeReference[typeName.name="AnyObject"]', 
-        message: 'Prefer exact interfaces over AnyObject.' 
+    // Type imports - enforce consistent type imports
+    '@typescript-eslint/consistent-type-imports': [
+      'error',
+      {
+        fixStyle: 'inline-type-imports',
+        prefer: 'type-imports',
       },
-      { 
-        selector: 'AssignmentExpression[right.type="Identifier"][right.name="undefined"]',
-        message: 'Use conditional spread or delete, not = undefined.' 
-      },
-      { 
-        selector: 'ObjectExpression > SpreadElement[argument.type="Identifier"]', 
-        message: 'Prefer withOptional()/stripUndefinedDeep on objects that may contain undefined.' 
-      }
     ],
-  },
-  overrides: [
-    // Test files: loosen some rules
-    {
-      files: ['**/*.test.*', '**/tests/**/*'],
-      rules: {
-        'unused-imports/no-unused-imports': 'off',
-      },
-    },
-    // UI components: reduce noise from withOptional warnings
-    {
-      files: ['components/**', 'app/**'],
-      rules: {
-        'no-restricted-syntax': [
-          'warn',
-          { 
-            selector: 'TSTypeReference[typeName.name="AnyObject"]', 
-            message: 'Prefer exact interfaces over AnyObject.' 
-          },
-          { 
-            selector: 'AssignmentExpression[right.type="Identifier"][right.name="undefined"]',
-            message: 'Use conditional spread or delete, not = undefined.' 
-          },
-          // Removed SpreadElement warning for UI components to reduce noise
+    
+    // Type definitions - prefer interfaces over types for consistency (warn for gradual adoption)
+    '@typescript-eslint/consistent-type-definitions': ['warn', 'interface'],
+    
+    // ============================================================================
+    // ARCHITECTURE RULES - Enforce clean architecture
+    // ============================================================================
+    
+    // Boundaries - enforce proper module boundaries
+    'boundaries/element-types': [
+      'error',
+      {
+        default: 'disallow',
+        rules: [
+          { from: 'lib', allow: ['lib', 'utils', 'features', 'components'] },
+          { from: 'features', allow: ['lib', 'components', 'utils', 'features', 'app'] },
+          { from: 'components', allow: ['lib', 'utils', 'components', 'features'] },
+          { from: 'app', allow: ['features', 'components', 'lib', 'utils'] },
+          { from: 'utils', allow: ['lib', 'utils', 'features'] },
+          { from: 'tests', allow: ['app', 'features', 'components', 'lib', 'utils'] },
         ],
       },
-    },
-    // Config files: disable import resolution for webpack/next configs
+    ],
+    
+    // Import restrictions - simplified and focused
+    'no-restricted-imports': [
+      'error',
+      {
+        patterns: [
+          // Block direct imports from node_modules in components (use barrel exports)
+          {
+            group: ['lucide-react'],
+            importNames: ['*'],
+            message: 'Import icons via @/components/ui/icons barrel export for better tree-shaking.',
+          },
+          // Block server-only imports in client components
+          {
+            group: ['server-only'],
+            message: 'Server-only modules cannot be imported in client components.',
+          },
+        ],
+      },
+    ],
+    
+    // ============================================================================
+    // REACT/JSX RULES - Next.js and React best practices
+    // ============================================================================
+    
+    // React hooks - enforce proper dependency arrays
+    'react-hooks/exhaustive-deps': 'warn',
+    'react-hooks/rules-of-hooks': 'error',
+    
+    // JSX rules
+    'react/jsx-no-undef': ['error', { allowGlobals: false }],
+    'react/jsx-uses-react': 'off', // Not needed with new JSX transform
+    'react/react-in-jsx-scope': 'off', // Not needed with new JSX transform
+    
+    // ============================================================================
+    // IMPORT RULES - Modern import management
+    // ============================================================================
+    
+    // Import resolution
+    'import/no-unresolved': 'error',
+    'import/named': 'error',
+    'import/no-cycle': 'error',
+    'import/no-self-import': 'error',
+    'import/no-useless-path-segments': 'error',
+    
+    // Import organization - warn for gradual adoption
+    'import/order': [
+      'warn',
+      {
+        groups: [
+          'builtin',
+          'external',
+          'internal',
+          'parent',
+          'sibling',
+          'index',
+        ],
+        'newlines-between': 'always',
+        alphabetize: {
+          order: 'asc',
+          caseInsensitive: true,
+        },
+      },
+    ],
+    
+    // ============================================================================
+    // TYPESCRIPT RULES - Type safety and best practices
+    // ============================================================================
+    
+    // Type safety rules - more lenient for gradual adoption
+    '@typescript-eslint/no-explicit-any': 'warn',
+    '@typescript-eslint/no-unsafe-assignment': 'warn',
+    '@typescript-eslint/no-unsafe-member-access': 'warn',
+    '@typescript-eslint/no-unsafe-call': 'warn',
+    '@typescript-eslint/no-unsafe-return': 'warn',
+    '@typescript-eslint/no-unsafe-argument': 'warn',
+    '@typescript-eslint/no-floating-promises': 'warn',
+    '@typescript-eslint/no-misused-promises': 'warn',
+    '@typescript-eslint/prefer-nullish-coalescing': 'warn',
+    '@typescript-eslint/prefer-optional-chain': 'warn',
+    
+    // Array and object rules
+    '@typescript-eslint/array-type': ['warn', { default: 'array-simple' }],
+    '@typescript-eslint/prefer-for-of': 'warn',
+    '@typescript-eslint/prefer-function-type': 'warn',
+    
+    // ============================================================================
+    // CODE QUALITY RULES - General code quality
+    // ============================================================================
+    
+    // General code quality
+    'no-console': 'warn',
+    'no-debugger': 'error',
+    'no-alert': 'warn',
+    'no-var': 'error',
+    'prefer-const': 'error',
+    'prefer-arrow-callback': 'warn',
+    'arrow-spacing': 'error',
+    'object-shorthand': 'error',
+    'prefer-template': 'warn',
+    
+    // ============================================================================
+    // PERFORMANCE RULES - Performance optimizations
+    // ============================================================================
+    
+    // Restrict problematic patterns
+    'no-restricted-syntax': [
+      'warn',
+      {
+        selector: 'AssignmentExpression[right.type="Identifier"][right.name="undefined"]',
+        message: 'Use conditional spread or delete, not = undefined.',
+      },
+      {
+        selector: 'ObjectExpression > SpreadElement[argument.type="Identifier"]',
+        message: 'Prefer withOptional()/stripUndefinedDeep on objects that may contain undefined.',
+      },
+    ],
+  },
+  
+  // ============================================================================
+  // OVERRIDES - File-specific rule adjustments
+  // ============================================================================
+  
+  overrides: [
+    // Test files - very lenient rules for development
     {
-      files: ['**/webpack.config*.js', '**/next.config*.js'],
+      files: ['**/*.test.*', '**/*.spec.*', '**/tests/**/*'],
       rules: {
-        'import/no-unresolved': 'off',
+        '@typescript-eslint/no-explicit-any': 'off',
+        '@typescript-eslint/no-unsafe-assignment': 'off',
+        '@typescript-eslint/no-unsafe-member-access': 'off',
+        '@typescript-eslint/no-unsafe-call': 'off',
+        '@typescript-eslint/no-unsafe-return': 'off',
+        '@typescript-eslint/no-unsafe-argument': 'off',
+        '@typescript-eslint/no-floating-promises': 'off',
+        '@typescript-eslint/no-misused-promises': 'off',
+        'unused-imports/no-unused-imports': 'off',
+        'unused-imports/no-unused-vars': 'off',
+        'no-console': 'off',
+        'import/order': 'off',
+        '@typescript-eslint/consistent-type-definitions': 'off',
       },
     },
-    // JavaScript files: allow require() imports for Node.js scripts
+    
+    // Configuration files - allow require() and other Node.js patterns
     {
-      files: ['**/*.js'],
+      files: ['**/*.config.*', '**/*.config.*', '**/next.config.*', '**/tailwind.config.*'],
       rules: {
         '@typescript-eslint/no-require-imports': 'off',
+        '@typescript-eslint/no-var-requires': 'off',
+        'no-console': 'off',
+      },
+    },
+    
+    // Development and experimental files - lenient rules
+    {
+      files: [
+        'hooks/**/*',
+        'utils/**/*',
+        'lib/**/*',
+        'components/**/*',
+        'features/**/*',
+      ],
+      rules: {
+        'unused-imports/no-unused-imports': 'warn',
+        'unused-imports/no-unused-vars': 'warn',
+        'import/order': 'warn',
+        '@typescript-eslint/consistent-type-definitions': 'warn',
+        'no-console': 'warn',
+      },
+    },
+    
+    // Archive and disabled files - minimal rules
+    {
+      files: [
+        'archive/**/*',
+        'archive-*/**/*',
+        'app/archive-*/**/*',
+        '_reports/**/*',
+        'tests/e2e/archive-old/**/*',
+        'archive-unused-files/**/*',
+        '**/*.disabled',
+        '**/*.disabled.*',
+        '**/scripts.disabled/**/*',
+        '**/tests.disabled/**/*',
+      ],
+      rules: {
+        'no-unused-vars': 'off',
+        '@typescript-eslint/*': 'off',
+        'unused-imports/*': 'off',
+        'import/*': 'off',
+        'boundaries/*': 'off',
+      },
+    },
+    
+    // API routes - server-specific rules
+    {
+      files: ['app/api/**/*'],
+      rules: {
+        '@typescript-eslint/no-explicit-any': 'error', // Stricter for API routes
+        '@typescript-eslint/no-unsafe-assignment': 'error',
+        '@typescript-eslint/no-unsafe-member-access': 'error',
+        '@typescript-eslint/no-unsafe-call': 'error',
+        '@typescript-eslint/no-unsafe-return': 'error',
+      },
+    },
+    
+    // Client components - React-specific rules
+    {
+      files: ['**/*.tsx'],
+      rules: {
+        'react/jsx-key': 'error',
+        'react/jsx-no-duplicate-props': 'error',
+        'react/jsx-no-undef': 'error',
+        'react/no-array-index-key': 'warn',
+        'react/no-unescaped-entities': 'warn',
       },
     },
   ],

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { logger } from '@/lib/logger';
+import { logger } from '@/lib/utils/logger';
 import { usePWA } from '@/hooks/usePWA';
 
 type NotificationSettingsProps = {

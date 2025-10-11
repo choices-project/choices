@@ -15,7 +15,7 @@
 
 import { z } from 'zod'
 import { redirect } from 'next/navigation'
-import { logger } from '@/lib/logger'
+import { logger } from '@/lib/utils/logger'
 import { 
   withIdempotency, 
   generateIdempotencyKey,

@@ -1,6 +1,7 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { createApiLogger } from '@/lib/utils/api-logger';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -8,15 +9,24 @@ const supabase = createClient(
 );
 
 export async function GET(req: NextRequest) {
+  const logger = createApiLogger('/api/civics/by-address', 'GET');
+  
   try {
     const { searchParams } = new URL(req.url);
     const address = searchParams.get('address');
 
     if (!address) {
-      return NextResponse.json({ error: 'Address parameter is required' }, { status: 400 });
+      return NextResponse.json({ 
+        success: false,
+        error: 'Address parameter is required',
+        metadata: {
+          source: 'validation',
+          last_updated: new Date().toISOString()
+        }
+      }, { status: 400 });
     }
 
-    console.log(`🔍 Looking up representatives for address: ${address}`);
+    logger.info('Looking up representatives for address', { address });
 
     // Try Google Civic Information API first
     let electoralInfo: ElectoralInfo | null = null;
@@ -28,7 +38,7 @@ export async function GET(req: NextRequest) {
 
       if (civicResponse.ok) {
         const civicData = await civicResponse.json();
-        console.log('✅ Google Civic API response received');
+        logger.info('Google Civic API response received');
         
         if (civicData.officials && civicData.offices) {
           electoralInfo = {
@@ -40,17 +50,17 @@ export async function GET(req: NextRequest) {
           };
         }
       } else {
-        console.log('⚠️ Google Civic API failed, falling back to database lookup');
+        logger.warn('Google Civic API failed, falling back to database lookup');
       }
     } catch (error) {
-      console.log('⚠️ Google Civic API error, falling back to database lookup:', error);
+      logger.warn('Google Civic API error, falling back to database lookup', { error });
     }
 
     // Fallback to database lookup if Google Civic API fails
     if (!electoralInfo) {
-      console.log('🔄 Falling back to database lookup...');
+      logger.info('Falling back to database lookup');
       const state = extractStateFromAddress(address);
-      console.log(`📍 Extracted state: ${state}`);
+      logger.info('Extracted state from address', { state });
       
       // Query representatives from the extracted state
       const { data: representatives, error } = await supabase
@@ -60,7 +70,7 @@ export async function GET(req: NextRequest) {
         .order('level', { ascending: true });
 
       if (error) {
-        console.error('Database query error:', error);
+        logger.error('Database query error', error);
         return NextResponse.json({ error: 'Database query failed' }, { status: 500 });
       }
 
@@ -88,16 +98,25 @@ export async function GET(req: NextRequest) {
       .order('level', { ascending: true });
 
     if (error) {
-      console.error('Database query error:', error);
+      logger.error('Database query error', error);
       return NextResponse.json({ error: 'Database query failed' }, { status: 500 });
     }
 
     if (!representatives || representatives.length === 0) {
-      return NextResponse.json({ 
-        message: 'No representatives found in database',
-        address: electoralInfo.address,
-        state: electoralInfo.state,
-        representatives: []
+      return NextResponse.json({
+        success: true,
+        data: {
+          address: electoralInfo.address,
+          state: electoralInfo.state,
+          districts: electoralInfo.districts,
+          representatives: []
+        },
+        metadata: {
+          source: 'database',
+          last_updated: new Date().toISOString(),
+          data_quality_score: 90,
+          total_representatives: 0
+        }
       });
     }
 
@@ -106,18 +125,26 @@ export async function GET(req: NextRequest) {
       isRepresentativeForDistricts(rep, electoralInfo!)
     );
 
-    console.log(`✅ Found ${matchingRepresentatives.length} matching representatives`);
+    logger.success('Found matching representatives', 200, { count: matchingRepresentatives.length });
 
     return NextResponse.json({
-      message: 'Representatives found',
-      address: electoralInfo.address,
-      state: electoralInfo.state,
-      districts: electoralInfo.districts,
-      representatives: matchingRepresentatives.map(transformRepresentative)
+      success: true,
+      data: {
+        address: electoralInfo.address,
+        state: electoralInfo.state,
+        districts: electoralInfo.districts,
+        representatives: matchingRepresentatives.map(transformRepresentative)
+      },
+      metadata: {
+        source: 'database',
+        last_updated: new Date().toISOString(),
+        data_quality_score: 95,
+        total_representatives: matchingRepresentatives.length
+      }
     });
 
   } catch (error) {
-    console.error('Address lookup error:', error);
+    logger.error('Address lookup error', error as Error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -267,7 +294,7 @@ function extractStateFromAddress(address: string): string {
   }
   
   // Default to California if no match found
-  console.log(`⚠️  No state match found for address: ${address}, defaulting to CA`);
+  // Note: This is a fallback for addresses that don't match any state patterns
   return 'CA';
 }
 

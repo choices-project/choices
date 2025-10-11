@@ -75,7 +75,7 @@ export default function ApprovalVoting({
       }
       
       // Track analytics with poll ID using SSR-safe access
-      const { safeWindow } = await import('@/shared/utils/lib/ssr-safe');
+      const { safeWindow } = await import('@/lib/utils/ssr-safe');
       const gtag = safeWindow(w => w.gtag);
       if (gtag) {
         gtag('event', 'vote_submitted', {

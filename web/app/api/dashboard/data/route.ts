@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
-import { devLog } from '@/lib/logger';
+import { devLog } from '@/lib/utils/logger';
 
 export const dynamic = 'force-dynamic';
 

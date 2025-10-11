@@ -1,6 +1,6 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
-import { requireServiceKey } from '@/lib/service-auth';
+import { requireServiceKey } from '@/features/auth/lib/service-auth';
 import { getRateLimitStatus, getAPIStatus } from '@/lib/rate-limiting';
 import * as dotenv from 'dotenv';
 

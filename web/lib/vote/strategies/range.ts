@@ -8,8 +8,8 @@
  * Updated: September 15, 2025
  */
 
-import { devLog } from '../../logger';
-import { withOptional } from '../../util/objects';
+import { devLog } from '@/lib/utils/logger';
+import { withOptional } from '@/lib/utils/objects';
 import type { 
   VotingStrategy, 
   VoteRequest, 

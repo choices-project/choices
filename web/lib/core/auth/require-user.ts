@@ -7,9 +7,9 @@
 
 import { type NextRequest } from 'next/server';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
-import { devLog } from '@/lib/logger';
+import { devLog } from '@/lib/utils/logger';
 import { validateOrigin } from '@/lib/http/origin';
-import { withOptional } from '@/lib/util/objects';
+import { withOptional } from '@/lib/utils/objects';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 export type User = {

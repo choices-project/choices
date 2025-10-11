@@ -67,7 +67,7 @@ export type DecryptionResult = {
 // SECURE KEY MANAGER CLASS
 // ============================================================================
 
-import { withOptional } from '../util/objects';
+import { withOptional } from '@/lib/utils/objects';
 
 export class SecureKeyManager {
   private keys: Map<string, SecureKey> = new Map();

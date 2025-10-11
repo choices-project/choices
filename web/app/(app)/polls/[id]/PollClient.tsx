@@ -8,9 +8,9 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { ArrowLeft, Share2, CheckCircle, AlertCircle } from 'lucide-react';
 import VotingInterface from '../../../../features/voting/components/VotingInterface';
-import PostCloseBanner from '@/components/PostCloseBanner';
-import ModeSwitch from '@/components/ModeSwitch';
-import type { ResultsMode } from '@/components/ModeSwitch';
+import PostCloseBanner from '@/features/polls/components/PostCloseBanner';
+import ModeSwitch from '@/components/shared/ModeSwitch';
+import type { ResultsMode } from '@/components/shared/ModeSwitch';
 
 type VoteResponse = { ok: boolean; id?: string; error?: string };
 
@@ -150,7 +150,7 @@ export default function PollClient({ poll }: PollClientProps) {
 
   const handleShare = async () => {
     // Use SSR-safe browser API access
-    const { safeWindow, safeNavigator } = await import('../../../../shared/utils/lib/ssr-safe');
+    const { safeWindow, safeNavigator } = await import('@/lib/utils/ssr-safe');
     const origin = safeWindow(w => w.location?.origin, '');
     const url = `${origin}/polls/${pollId}`;
     try {

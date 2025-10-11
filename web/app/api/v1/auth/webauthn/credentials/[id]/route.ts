@@ -5,7 +5,7 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
-import { logger } from '@/lib/logger';
+import { logger } from '@/lib/utils/logger';
 
 export const dynamic = 'force-dynamic';
 
@@ -66,7 +66,7 @@ export async function DELETE(
     });
 
   } catch (error) {
-    logger.error('WebAuthn credential deletion error:', error);
+    logger.error('WebAuthn credential deletion error:', error instanceof Error ? error : undefined);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -135,7 +135,7 @@ export async function PATCH(
     });
 
   } catch (error) {
-    logger.error('WebAuthn credential update error:', error);
+    logger.error('WebAuthn credential update error:', error instanceof Error ? error : undefined);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

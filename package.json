@@ -21,6 +21,7 @@
     "ci:verify": "npm audit --audit-level=moderate"
   },
   "dependencies": {
+    "@supabase/supabase-js": "2.75.0",
     "dotenv": "17.2.3",
     "js-yaml": "4.1.0",
     "pg": "8.16.3",

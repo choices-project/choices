@@ -1,8 +1,8 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { logger } from '@/lib/logger';
-import { optimizedPollService, type PerformanceMetrics } from '@/lib/performance/optimized-poll-service'
+import { logger } from '@/lib/utils/logger';
+import { optimizedPollService, type PerformanceMetrics } from '@/features/polls/lib/optimized-poll-service'
 
 type PerformanceDashboardProps = {
   refreshInterval?: number // in milliseconds

@@ -50,12 +50,12 @@ export const getPWAComponents = () => {
   // Use existing superior PWA components
   return Promise.resolve({
     InstallPrompt: () => import('@/features/pwa/components/PWAInstaller').then(m => m.default),
-    OfflineIndicator: () => import('@/components/OfflineIndicator').then(m => m.default),
+    OfflineIndicator: () => import('@/features/pwa/components/OfflineIndicator').then(m => m.default),
     NotificationSettings: () => import('@/features/pwa/components/NotificationSettings').then(m => m.default),
-    NotificationPreferences: () => import('@/components/NotificationPreferences').then(m => m.default),
+    NotificationPreferences: () => import('@/features/pwa/components/NotificationPreferences').then(m => m.default),
     PWAVotingInterface: () => import('@/features/pwa/components/PWAVotingInterface').then(m => m.PWAVotingInterface),
     PWAUserProfile: () => import('@/features/pwa/components/PWAUserProfile').then(m => m.PWAUserProfile),
-    PWAIntegration: () => import('@/components/PWAIntegration').then(m => m.default),
+    PWAIntegration: () => import('@/features/pwa/components/PWAIntegration').then(m => m.default),
   });
 };
 

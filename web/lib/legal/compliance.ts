@@ -2,7 +2,8 @@
 // PHASE 2: LEGAL COMPLIANCE FRAMEWORK
 // ============================================================================
 
-import { withOptional } from '../util/objects';
+import { withOptional } from '@/lib/utils/objects';
+import { isValidEmail } from '@/lib/utils/format-utils';
 // Agent A2 - Privacy Specialist
 // 
 // This module implements legal compliance frameworks for TCPA/CAN-SPAM
@@ -761,9 +762,8 @@ export function getCOPPARequirements(age: number): {
  * @returns Whether email is valid for CAN-SPAM
  */
 export function validateEmailForCANSPAM(email: string): boolean {
-  // Basic email validation
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailRegex.test(email);
+  // Use centralized email validation
+  return isValidEmail(email);
 }
 
 /**

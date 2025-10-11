@@ -1,7 +1,14 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { logger } from '@/lib/logger';
+import { logger } from '@/lib/utils/logger';
+import { 
+  usePolls, 
+  usePollsActions, 
+  usePollsLoading, 
+  usePollsError 
+} from '@/lib/stores';
+import type { PollOption } from '../types';
 import { BarChart3, TrendingUp, Users, Share2, Download } from 'lucide-react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
 
@@ -32,42 +39,43 @@ type PollData = {
 }
 
 export default function PollResults({ pollId }: PollResultsProps) {
+  const polls = usePolls();
+  const { loadPolls } = usePollsActions();
+  const _pollsLoading = usePollsLoading();
+  const _pollsError = usePollsError();
+  
   const [poll, setPoll] = useState<PollData | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [_pollError, setPollError] = useState<string | null>(null)
+  const [_pollLoading, setPollLoading] = useState(false)
+  
+  const _loading = _pollLoading;
+  const _error = _pollError;
 
   const loadPollResults = useCallback(async () => {
     try {
-      setLoading(true)
-      setError(null)
+      // Use PollsStore to load polls
+      await loadPolls();
       
-      // Fetch poll data and results from API
-      const [pollResponse, resultsResponse] = await Promise.all([
-        fetch(`/api/polls/${pollId}`),
-        fetch(`/api/polls/${pollId}/results`)
-      ])
-      
-      if (!pollResponse.ok) {
-        throw new Error(`Failed to load poll: ${pollResponse.statusText}`)
+      // Find the specific poll
+      const pollData = polls.find(p => p.id === pollId);
+      if (!pollData) {
+        throw new Error('Poll not found');
       }
-      
-      const pollData = await pollResponse.json()
-      const resultsData = await resultsResponse.json()
       
       // Transform API data to match frontend interface
       const poll: PollData = {
-        id: pollData.pollid,
+        id: pollData.id,
         title: pollData.title,
         description: pollData.description || '',
         votingMethod: 'single',
-        totalVotes: pollData.totalvotes || 0,
-        participationRate: pollData.participationrate || 0,
+        totalVotes: pollData.voting?.totalVotes || 0,
+        participationRate: pollData.voting?.uniqueVoters || 0,
         isActive: pollData.status === 'active',
-        results: pollData.options?.map((option: string, index: number) => ({
-          option,
-          votes: resultsData.results?.[index] || 0,
-          percentage: pollData.totalvotes > 0 
-            ? Math.round((resultsData.results?.[index] || 0) / pollData.totalvotes * 100 * 10) / 10
+        results: pollData.options?.map((option: PollOption, _index: number) => ({
+          option: option.text,
+          votes: option.votes || 0,
+          percentage: (pollData.voting?.totalVotes || 0) > 0 
+            ? Math.round((option.votes || 0) / (pollData.voting?.totalVotes || 1) * 100 * 10) / 10
             : 0,
           trend: 'stable' // Default trend since we don't have historical data
         })) || [],
@@ -91,9 +99,9 @@ export default function PollResults({ pollId }: PollResultsProps) {
       setPoll(poll)
     } catch (error) {
       logger.error('Error loading poll results:', error instanceof Error ? error : new Error(String(error)))
-      setError(error instanceof Error ? error.message : 'Failed to load poll results')
+      setPollError(error instanceof Error ? error.message : 'Failed to load poll results')
     } finally {
-      setLoading(false)
+      setPollLoading(false)
     }
   }, [pollId])
 
@@ -103,7 +111,7 @@ export default function PollResults({ pollId }: PollResultsProps) {
 
   const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#06B6D4']
 
-  if (loading) {
+  if (_pollsLoading) {
     return (
       <div className="text-center py-12">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
@@ -112,10 +120,10 @@ export default function PollResults({ pollId }: PollResultsProps) {
     )
   }
 
-  if (error || !poll) {
+  if (_pollsError || !poll) {
     return (
       <div className="text-center py-12">
-        <p className="text-red-600">{error || 'Failed to load results'}</p>
+        <p className="text-red-600">{_pollsError || 'Failed to load results'}</p>
       </div>
     )
   }

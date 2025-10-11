@@ -2,12 +2,18 @@
 
 import React, { useState, useCallback, useEffect } from 'react'
 import { Users, Clock, CheckCircle2, Shield, Lock, Unlock } from 'lucide-react'
+import { 
+  useVotingActions,
+  useVotingLoading,
+  useVotingError
+} from '@/lib/stores'
 import ApprovalVoting from './ApprovalVoting'
 import QuadraticVoting from './QuadraticVoting'
 import RangeVoting from './RangeVoting'
 import RankedChoiceVoting from './RankedChoiceVoting'
 import SingleChoiceVoting from './SingleChoiceVoting'
-import { withOptional } from '../../../lib/util/objects'
+import MultipleChoiceVoting from './MultipleChoiceVoting'
+import { withOptional } from '@/lib/utils/objects'
 
 type VoteResponse = { ok: boolean; id?: string; error?: string };
 type VerificationResponse = { ok: boolean; error?: string };
@@ -31,6 +37,7 @@ type VotingInterfaceProps = {
   isVoting?: boolean;
   hasVoted?: boolean;
   userVote?: number;
+  userMultipleVote?: number[];
   userApprovalVote?: string[];
   userQuadraticVote?: Record<string, number>;
   userRangeVote?: Record<string, number>;
@@ -45,12 +52,17 @@ export default function VotingInterface({
   isVoting = false,
   hasVoted = false,
   userVote,
+  userMultipleVote,
   userApprovalVote,
   userQuadraticVote,
   userRangeVote,
   userRankedVote,
   verificationTier = 'T1'
 }: VotingInterfaceProps) {
+  const { submitBallot: _submitBallot } = useVotingActions();
+  const _votingLoading = useVotingLoading();
+  const _votingError = useVotingError();
+  
   const [timeRemaining, setTimeRemaining] = useState<string>('');
 
   const handleVote = useCallback((n: number) => onVote(n), [onVote]);
@@ -117,6 +129,34 @@ export default function VotingInterface({
       await handleVote(choice);
     },
     [handleVote]
+  );
+
+  const onMultiple = useCallback(
+    async (selections: number[]) => {
+      try {
+        const response = await fetch(`/api/polls/${poll.id}/vote`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ selections }),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Failed to submit vote');
+        }
+
+        const _result = await response.json();
+
+        // Call the original onVote callback to update the UI
+        await onVote(selections.length);
+      } catch (error) {
+        console.error('Multiple choice vote failed:', error);
+        throw error;
+      }
+    },
+    [poll.id, onVote]
   );
 
   // Calculate time remaining with useCallback for optimization
@@ -245,6 +285,22 @@ export default function VotingInterface({
             }, {
               description: poll.description ?? undefined,
               userVote: userRankedVote ?? undefined
+            })}
+          />
+        );
+      case 'multiple_choice':
+        return (
+          <MultipleChoiceVoting
+            {...withOptional({
+              pollId: poll.id,
+              title: poll.title,
+              options: poll.options,
+              onVote: onMultiple,
+              isVoting,
+              hasVoted
+            }, {
+              description: poll.description ?? undefined,
+              userVote: userMultipleVote ?? undefined
             })}
           />
         );

@@ -13,7 +13,7 @@
 // - Data flow privacy analysis
 // - Retention policy enforcement
 
-import { withOptional } from '@/lib/util/objects';
+import { withOptional } from '@/lib/utils/objects';
 // 
 // Created: January 15, 2025
 // Status: Phase 2 Implementation

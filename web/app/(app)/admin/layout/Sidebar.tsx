@@ -3,8 +3,8 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useAdminStore } from '@/lib/admin/store';
-import { useSystemMetrics } from '@/lib/admin/hooks';
+import { useAdminStore } from '@/features/admin/lib/store';
+import { useSystemMetrics } from '@/features/admin/lib/hooks';
 import {
   LayoutDashboard,
   BarChart3,

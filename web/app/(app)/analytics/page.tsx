@@ -12,7 +12,12 @@ import {
   Shield,
   Brain
 } from 'lucide-react';
-import { useAnalytics } from '../../../hooks/useAnalytics';
+import { 
+  useAnalyticsDashboard,
+  useAnalyticsLoading,
+  useAnalyticsError,
+  useAnalyticsActions
+} from '@/lib/stores';
 
 type AnalyticsView = {
   id: string;
@@ -24,21 +29,14 @@ type AnalyticsView = {
 }
 
 export default function AnalyticsPage() {
-  const {
-    data: analyticsData,
-    loading,
-    error,
-    analyticsEnabled,
-    aiFeaturesEnabled,
-    fetchData,
-    refreshData,
-    autoRefresh,
-    setAutoRefresh,
-    exportData
-  } = useAnalytics({
-    autoRefresh: true,
-    refreshInterval: 30000
-  });
+  const analyticsData = useAnalyticsDashboard();
+  const loading = useAnalyticsLoading();
+  const error = useAnalyticsError();
+  const { trackEvent, sendAnalytics, exportAnalytics } = useAnalyticsActions();
+  
+  // Feature flags - these would come from app store in a real implementation
+  const analyticsEnabled = true;
+  const aiFeaturesEnabled = true;
 
   const [selectedView, setSelectedView] = useState<string>('overview');
 
@@ -101,12 +99,15 @@ export default function AnalyticsPage() {
     }
   ];
 
-  // Fetch data when view changes
+  // Track page view when component mounts
   useEffect(() => {
-    if (analyticsEnabled && selectedView !== 'overview') {
-      fetchData(selectedView);
-    }
-  }, [selectedView, analyticsEnabled, fetchData]);
+    trackEvent({
+      type: 'page_view',
+      category: 'analytics',
+      action: 'view_analytics_page',
+      label: 'Analytics Dashboard'
+    });
+  }, [trackEvent]);
 
   if (!analyticsEnabled) {
     return (
@@ -147,7 +148,7 @@ export default function AnalyticsPage() {
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Analytics Error</h1>
           <p className="text-gray-600 mb-4">{error}</p>
           <button
-            onClick={refreshData}
+            onClick={() => sendAnalytics()}
             className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
           >
             Retry
@@ -173,19 +174,19 @@ export default function AnalyticsPage() {
             </div>
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-2">
-                <RefreshCw className={`h-4 w-4 ${autoRefresh ? 'text-green-600' : 'text-gray-400'}`} />
+                <RefreshCw className="h-4 w-4 text-gray-400" />
                 <span className="text-sm text-gray-600">
-                  {autoRefresh ? 'Auto-refresh on' : 'Auto-refresh off'}
+                  Auto-refresh off
                 </span>
               </div>
               <button
-                onClick={() => setAutoRefresh(!autoRefresh)}
+                onClick={() => trackEvent({ type: 'user_action', category: 'analytics', action: 'toggle_auto_refresh' })}
                 className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
               >
-                {autoRefresh ? 'Disable' : 'Enable'} Auto-refresh
+                Enable Auto-refresh
               </button>
               <button
-                onClick={() => exportData('json')}
+                onClick={() => exportAnalytics()}
                 className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
               >
                 Export Data

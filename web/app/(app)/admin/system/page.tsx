@@ -7,7 +7,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { logger } from '@/lib/logger';
+import { logger } from '@/lib/utils/logger';
 import { 
   Settings, 
   Save, 

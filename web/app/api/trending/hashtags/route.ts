@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from 'next/server';
-import { trendingHashtagsTracker } from '@/lib/trending/TrendingHashtags';
-import { devLog } from '@/lib/logger';
+import { trendingHashtagsTracker } from '@/features/feeds/lib/TrendingHashtags';
+import { devLog } from '@/lib/utils/logger';
 
 export async function POST(request: NextRequest) {
   try {

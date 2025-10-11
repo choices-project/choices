@@ -25,7 +25,7 @@ type Candidate = {
 }
 
 // Mock the logger
-jest.mock('@/lib/logger', () => ({
+jest.mock('@/lib/utils/logger', () => ({
   devLog: jest.fn()
 }));
 

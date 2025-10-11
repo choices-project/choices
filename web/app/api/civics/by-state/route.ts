@@ -8,6 +8,8 @@
 
 import { type NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { createApiLogger } from '@/lib/utils/api-logger';
+import { CivicsCache } from '@/lib/utils/civics-cache';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -16,6 +18,8 @@ const supabase = createClient(
 );
 
 export async function GET(request: NextRequest) {
+  const logger = createApiLogger('/api/civics/by-state', 'GET');
+  
   try {
     const { searchParams } = new URL(request.url);
     const state = searchParams.get('state');
@@ -24,7 +28,37 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '200');
 
     if (!state) {
-      return NextResponse.json({ error: 'State parameter required' }, { status: 400 });
+      return NextResponse.json({ 
+        success: false,
+        error: 'State parameter required',
+        metadata: {
+          source: 'validation',
+          last_updated: new Date().toISOString()
+        }
+      }, { status: 400 });
+    }
+
+    logger.info('Fetching representatives by state', { state, level, chamber, limit });
+
+    // Check cache first
+    const cachedData = state ? CivicsCache.getCachedStateLookup(state, level || undefined, chamber || undefined) : null;
+    if (cachedData) {
+      logger.info('Returning cached state data', { state, level, chamber });
+      return NextResponse.json({
+        success: true,
+        data: {
+          state,
+          level: level || 'all',
+          chamber: chamber || 'all',
+          representatives: cachedData
+        },
+        metadata: {
+          source: 'cache',
+          last_updated: new Date().toISOString(),
+          data_quality_score: 95,
+          total_representatives: cachedData.length
+        }
+      });
     }
 
     let query = supabase
@@ -135,16 +169,40 @@ export async function GET(request: NextRequest) {
       social_media: rep.enhanced_social_media || []
     }));
 
+    // Cache the result for future requests
+    if (state) {
+      CivicsCache.cacheStateLookup(state, level || undefined, chamber || undefined, processedData);
+    }
+
+    logger.success('Successfully fetched representatives by state', 200, { 
+      state, 
+      count: processedData.length 
+    });
+
     return NextResponse.json({ 
-      ok: true, 
-      data: processedData,
-      count: processedData.length
+      success: true, 
+      data: {
+        state,
+        level: level || 'all',
+        chamber: chamber || 'all',
+        representatives: processedData
+      },
+      metadata: {
+        source: 'database',
+        last_updated: new Date().toISOString(),
+        data_quality_score: 95,
+        total_representatives: processedData.length
+      }
     });
   } catch (e: any) {
-    console.error('API error:', e);
+    logger.error('API error during state lookup', e);
     return NextResponse.json({ 
-      ok: false, 
-      error: 'Service temporarily unavailable' 
+      success: false,
+      error: 'Service temporarily unavailable',
+      metadata: {
+        source: 'database',
+        last_updated: new Date().toISOString()
+      }
     }, { status: 502 });
   }
 }

@@ -5,8 +5,8 @@
  * democracy platform, enabling community-driven decision making.
  */
 
-import { devLog } from '../logger';
-import { withOptional } from '../util/objects';
+import { devLog } from '@/lib/utils/logger';
+import { withOptional } from '@/lib/utils/objects';
 
 export type RFCData = {
   title: string;

@@ -204,7 +204,7 @@ afterAll(() => {
 });
 
 // Mock privacy-utils module globally to prevent environment variable checks
-jest.mock('@/lib/civics/privacy-utils', () => ({
+jest.mock('@/features/civics/lib/civics/privacy-utils', () => ({
   hmac256: jest.fn(),
   verifyHmacDigest: jest.fn(),
   normalizeAddress: jest.fn(),
@@ -218,9 +218,9 @@ jest.mock('@/lib/civics/privacy-utils', () => ({
   validateAddressInput: jest.fn(),
   isCivicsEnabled: jest.fn(),
   generateRequestId: jest.fn(),
-}));
+}), { virtual: true });
 
 // Mock env-guard module globally to prevent environment variable checks
-jest.mock('@/lib/civics/env-guard', () => ({
+jest.mock('@/features/civics/lib/civics/env-guard', () => ({
   assertPepperConfig: jest.fn(),
-}));
+}), { virtual: true });

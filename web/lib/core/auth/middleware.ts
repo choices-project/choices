@@ -10,11 +10,11 @@
 
 import { type NextRequest, NextResponse } from 'next/server';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
-import { devLog } from '@/lib/logger';
+import { devLog } from '@/lib/utils/logger';
 import { requireTrustedOrigin } from '@/lib/http/origin';
 import { rateLimiters } from '@/lib/core/security/rate-limit';
 import { requireTurnstileVerification } from '@/lib/security/turnstile';
-import { withOptional } from '@/lib/util/objects';
+import { withOptional } from '@/lib/utils/objects';
 import type { SupabaseClient, User } from '@supabase/supabase-js';
 
 export type TrustTier = 'T1' | 'T2' | 'T3';

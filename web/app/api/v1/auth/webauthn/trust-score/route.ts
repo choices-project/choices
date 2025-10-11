@@ -4,7 +4,7 @@
 
 import { NextResponse } from 'next/server';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
-import { logger } from '@/lib/logger';
+import { logger } from '@/lib/utils/logger';
 
 export const dynamic = 'force-dynamic';
 
@@ -68,7 +68,7 @@ export async function GET() {
     });
 
   } catch (error) {
-    logger.error('WebAuthn trust score endpoint error:', error);
+    logger.error('WebAuthn trust score endpoint error:', error instanceof Error ? error : undefined);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

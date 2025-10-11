@@ -14,7 +14,7 @@ import { FeedbackFilters } from './FeedbackFilters';
 import { FeedbackStats } from './FeedbackStats';
 import { FeedbackDetailModal } from './FeedbackDetailModal';
 import { IssueGenerationPanel } from './IssueGenerationPanel';
-import { devLog } from '@/lib/logger';
+import { devLog } from '@/lib/utils/logger';
 
 type Feedback = {
   id: string;
@@ -100,7 +100,7 @@ export default function AdminFeedbackPage() {
       const response = await fetch('/api/admin/feedback/export?' + new URLSearchParams(filters));
       const blob = await response.blob();
       // Use SSR-safe browser API access
-      const { safeWindow, safeDocument } = await import('@/shared/utils/lib/ssr-safe');
+      const { safeWindow, safeDocument } = await import('@/lib/utils/ssr-safe');
       const url = safeWindow(w => w.URL?.createObjectURL?.(blob));
       if (url) {
         const a = safeDocument(d => d.createElement?.('a')) as HTMLAnchorElement;

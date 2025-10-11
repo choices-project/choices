@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { useAdminStore } from '@/lib/admin/store';
+import { useAdminStore } from '@/features/admin/lib/store';
 import {
   Bell,
   Menu,

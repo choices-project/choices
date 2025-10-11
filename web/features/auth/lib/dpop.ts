@@ -10,7 +10,7 @@
  */
 
 
-import { logger } from '@/lib/logger';
+import { logger } from '@/lib/utils/logger';
 
 export type DPoPKeyPair = {
   publicKey: CryptoKey

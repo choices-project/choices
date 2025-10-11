@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
-import { logger } from '@/lib/logger';
+import { logger } from '@/lib/utils/logger';
 
 export const dynamic = 'force-dynamic';
 
@@ -45,7 +45,7 @@ export async function GET() {
     });
 
   } catch (error) {
-    logger.error('Error in interests GET:', error);
+    logger.error('Error in interests GET:', error instanceof Error ? error : undefined);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -101,7 +101,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    logger.info(`User ${user.id} updated interests:`, interests);
+    logger.info(`User ${user.id} updated interests:`, { interests });
 
     return NextResponse.json({
       success: true,
@@ -110,7 +110,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    logger.error('Error in interests POST:', error);
+    logger.error('Error in interests POST:', error instanceof Error ? error : undefined);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

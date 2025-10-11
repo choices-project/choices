@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Fingerprint, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react'
-import { devLog } from '@/lib/logger'
+import { devLog } from '@/lib/utils/logger'
 
 export default function BiometricSetupPage() {
   const [isLoading, setIsLoading] = useState(false)
@@ -33,7 +33,7 @@ export default function BiometricSetupPage() {
       const { user } = userData
 
       // Get registration options
-      const optionsResponse = await fetch('/api/v1/auth/webauthn/register/options', {
+      const optionsResponse = await fetch('/api/v1/aut@/features/auth/types/webauthn/register/options', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -92,7 +92,7 @@ export default function BiometricSetupPage() {
       }
 
       // Register the credential
-      const registerResponse = await fetch('/api/v1/auth/webauthn/register/verify', {
+      const registerResponse = await fetch('/api/v1/aut@/features/auth/types/webauthn/register/verify', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

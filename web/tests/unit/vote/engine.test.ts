@@ -15,7 +15,7 @@ import type { VoteRequest, PollData, VoteData, VotingMethod } from '@/lib/vote/t
 import { when, expectQueryState } from '../../helpers/supabase-when';
 
 // Mock the logger
-jest.mock('@/lib/logger', () => ({
+jest.mock('@/lib/utils/logger', () => ({
   devLog: jest.fn()
 }));
 

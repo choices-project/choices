@@ -14,7 +14,7 @@
  * @since 2024-12-27
  */
 
-import { devLog } from '../../logger'
+import { devLog } from '@/lib/utils/logger'
 
 // Rate limit configuration
 export type RateLimitConfig = {

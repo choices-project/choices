@@ -3,7 +3,7 @@ import type { Metadata } from 'next'
 import './globals.css'
 import dynamic from 'next/dynamic'
 
-const PWABackground = dynamic(() => import('../components/PWABackground'), {
+const PWABackground = dynamic(() => import('@/features/pwa/components/PWABackground'), {
   ssr: false,
   loading: () => null
 })

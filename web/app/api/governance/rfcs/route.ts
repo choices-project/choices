@@ -6,7 +6,7 @@
 
 import { type NextRequest, NextResponse } from 'next/server';
 import { RFCManager } from '@/lib/governance/rfcs';
-import { logger } from '@/lib/logger';
+import { logger } from '@/lib/utils/logger';
 
 export async function GET(request: NextRequest) {
   try {
@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
         }, { status: 400 });
     }
   } catch (error) {
-    logger.error('Failed to get RFCs', { error: error instanceof Error ? error.message : 'Unknown error' });
+    logger.error('Failed to get RFCs', error instanceof Error ? error : new Error('Unknown error'));
     
     return NextResponse.json({
       success: false,
@@ -111,7 +111,7 @@ export async function POST(request: NextRequest) {
         }, { status: 400 });
     }
   } catch (error) {
-    logger.error('Failed to process RFC action', { error: error instanceof Error ? error.message : 'Unknown error' });
+    logger.error('Failed to process RFC action', error instanceof Error ? error : new Error('Unknown error'));
     
     return NextResponse.json({
       success: false,

@@ -9,9 +9,9 @@
  * - Proper error handling and logging
  */
 
-import { logger } from '@/lib/logger'
+import { logger } from '@/lib/utils/logger'
 import { getSupabaseServerClient } from '@/utils/supabase/server'
-import { withOptional } from '@/lib/util/objects'
+import { withOptional } from '@/lib/utils/objects'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
 export type IdempotencyResult<T> = {

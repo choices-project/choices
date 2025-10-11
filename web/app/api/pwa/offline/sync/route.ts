@@ -6,12 +6,41 @@
  */
 
 import { type NextRequest, NextResponse } from 'next/server';
-import { logger } from '@/lib/logger';
+import { logger } from '@/lib/utils/logger';
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
+import { createApiLogger } from '@/lib/utils/api-logger';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
+
+// Types for offline sync
+type OfflineVote = {
+  id: string;
+  pollId: string;
+  optionIds: string[];
+  userId: string;
+  timestamp: string;
+  deviceId: string;
+  metadata?: Record<string, any>;
+};
+
+type VoteSyncResult = {
+  voteId: string;
+  success: boolean;
+  result?: any;
+  error?: string;
+};
+
+type SyncStatus = {
+  lastSync: string;
+  pendingVotes: number;
+  status: 'up_to_date' | 'pending' | 'error';
+  failedVotes?: string[];
+};
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
+  const apiLogger = createApiLogger('/api/pwa/offline/sync', 'POST');
+  
   try {
     // Check if PWA feature is enabled
     if (!isFeatureEnabled('PWA')) {
@@ -22,10 +51,18 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { votes, deviceId, timestamp } = body;
+    const { votes, deviceId, timestamp, userId } = body;
+
+    // Validate required fields
+    if (!userId) {
+      return NextResponse.json({
+        success: false,
+        error: 'User ID is required for offline sync'
+      }, { status: 400 });
+    }
 
     // Log sync attempt for audit trail
-    console.log(`Offline sync attempt from device: ${deviceId} at ${timestamp}`);
+    apiLogger.info('Offline sync attempt', { deviceId, timestamp, userId });
 
     if (!votes || !Array.isArray(votes)) {
       return NextResponse.json({
@@ -34,28 +71,27 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
-    logger.info(`PWA: Syncing ${votes.length} offline votes from device ${deviceId}`);
+    logger.info(`PWA: Syncing ${votes.length} offline votes from device ${deviceId} for user ${userId}`);
 
-    const results = [];
+    const results: VoteSyncResult[] = [];
     let successCount = 0;
     let failureCount = 0;
 
     // Process each offline vote
     for (const vote of votes) {
       try {
-        // Validate vote data
-        if (!vote.pollId || !vote.optionIds || !Array.isArray(vote.optionIds)) {
-          throw new Error('Invalid vote data structure');
+        // Validate vote data structure
+        if (!vote.pollId || !vote.optionIds || !Array.isArray(vote.optionIds) || !vote.userId) {
+          throw new Error('Invalid vote data structure - missing required fields');
         }
 
-        // Here you would typically:
-        // 1. Validate the poll is still active
-        // 2. Check if user hasn't already voted
-        // 3. Record the vote in the database
-        // 4. Update poll statistics
-        
-        // For now, we'll simulate successful vote processing
-        const result = await processOfflineVote(vote);
+        // Validate user ID matches
+        if (vote.userId !== userId) {
+          throw new Error('Vote user ID does not match authenticated user');
+        }
+
+        // Process the offline vote with full validation
+        const result = await processOfflineVote(vote as OfflineVote);
         results.push({
           voteId: vote.id,
           success: true,
@@ -64,7 +100,7 @@ export async function POST(request: NextRequest) {
         successCount++;
 
       } catch (error) {
-        logger.error(`PWA: Failed to sync vote ${vote.id}:`, error);
+        logger.error(`PWA: Failed to sync vote ${vote.id}:`, error instanceof Error ? error : undefined);
         results.push({
           voteId: vote.id,
           success: false,
@@ -75,6 +111,11 @@ export async function POST(request: NextRequest) {
     }
 
     logger.info(`PWA: Sync completed - ${successCount} successful, ${failureCount} failed`);
+
+    // Update sync status in database
+    if (successCount > 0 || failureCount > 0) {
+      await updateSyncStatus(deviceId, successCount, failureCount, results);
+    }
 
     return NextResponse.json({
       success: true,
@@ -137,31 +178,213 @@ export async function GET(request: NextRequest) {
 }
 
 /**
- * Process a single offline vote
+ * Process a single offline vote with full validation and database integration
  */
-async function processOfflineVote(vote: any): Promise<any> {
-  // This is where you would integrate with your actual voting system
-  // For now, we'll return a mock successful result
+async function processOfflineVote(vote: OfflineVote): Promise<any> {
+  const supabase = await getSupabaseServerClient();
   
-  return {
-    pollId: vote.pollId,
-    optionIds: vote.optionIds,
-    timestamp: new Date().toISOString(),
-    processed: true
-  };
+  try {
+    // 1. Validate the poll is still active
+    const { data: poll, error: pollError } = await supabase
+      .from('polls')
+      .select('id, status, closes_at, settings')
+      .eq('id', vote.pollId)
+      .single();
+
+    if (pollError || !poll) {
+      throw new Error(`Poll ${vote.pollId} not found or inaccessible`);
+    }
+
+    if (poll.status !== 'active') {
+      throw new Error(`Poll ${vote.pollId} is no longer active (status: ${poll.status})`);
+    }
+
+    // Check if poll has closed
+    if (poll.closes_at && new Date(poll.closes_at) < new Date()) {
+      throw new Error(`Poll ${vote.pollId} has closed`);
+    }
+
+    // 2. Check if user hasn't already voted on this poll
+    const { data: existingVote, error: voteCheckError } = await supabase
+      .from('votes')
+      .select('id, created_at')
+      .eq('poll_id', vote.pollId)
+      .eq('user_id', vote.userId)
+      .single();
+
+    if (voteCheckError && voteCheckError.code !== 'PGRST116') {
+      throw new Error(`Failed to check existing votes: ${voteCheckError.message}`);
+    }
+
+    if (existingVote) {
+      throw new Error(`User has already voted on poll ${vote.pollId}`);
+    }
+
+    // 3. Validate poll options exist and are valid
+    const { data: pollOptions, error: optionsError } = await supabase
+      .from('poll_options')
+      .select('id')
+      .eq('poll_id', vote.pollId)
+      .in('id', vote.optionIds);
+
+    if (optionsError) {
+      throw new Error(`Failed to validate poll options: ${optionsError.message}`);
+    }
+
+    if (!pollOptions || pollOptions.length !== vote.optionIds.length) {
+      throw new Error('Invalid poll options selected');
+    }
+
+    // 4. Record the vote in the database
+    const { data: newVote, error: voteError } = await supabase
+      .from('votes')
+      .insert({
+        poll_id: vote.pollId,
+        user_id: vote.userId,
+        option_ids: vote.optionIds,
+        created_at: vote.timestamp,
+        metadata: {
+          ...vote.metadata,
+          synced_from_offline: true,
+          device_id: vote.deviceId,
+          original_timestamp: vote.timestamp
+        }
+      })
+      .select()
+      .single();
+
+    if (voteError) {
+      throw new Error(`Failed to record vote: ${voteError.message}`);
+    }
+
+    // 5. Update poll statistics (this would typically be done via a database trigger)
+    // For now, we'll log the successful vote
+    logger.info('Offline vote successfully synced', {
+      voteId: newVote.id,
+      pollId: vote.pollId,
+      userId: vote.userId,
+      optionIds: vote.optionIds,
+      syncedAt: new Date().toISOString()
+    });
+
+    return {
+      voteId: newVote.id,
+      pollId: vote.pollId,
+      optionIds: vote.optionIds,
+      timestamp: newVote.created_at,
+      processed: true,
+      syncedAt: new Date().toISOString()
+    };
+
+  } catch (error) {
+    logger.error('Failed to process offline vote', error instanceof Error ? error : new Error('Unknown error'));
+    throw error;
+  }
 }
 
 /**
- * Get sync status for a device
+ * Get sync status for a device with real database queries
  */
-async function getSyncStatus(deviceId: string): Promise<any> {
-  // This would typically query your database for pending sync operations
-  // For now, we'll return a mock status
-  console.log(`Getting sync status for device: ${deviceId}`);
+async function getSyncStatus(deviceId: string): Promise<SyncStatus> {
+  const supabase = await getSupabaseServerClient();
   
-  return {
-    lastSync: new Date().toISOString(),
-    pendingVotes: 0,
-    status: 'up_to_date'
-  };
+  try {
+    logger.info('Getting sync status for device', { deviceId });
+    
+    // Get the last sync timestamp for this device
+    const { data: lastSync, error: syncError } = await supabase
+      .from('device_sync_status')
+      .select('last_sync, status, failed_votes')
+      .eq('device_id', deviceId)
+      .single();
+
+    if (syncError && syncError.code !== 'PGRST116') {
+      logger.error('Failed to get sync status', syncError);
+      return {
+        lastSync: new Date().toISOString(),
+        pendingVotes: 0,
+        status: 'error',
+        failedVotes: []
+      };
+    }
+
+    // Get pending offline votes for this device
+    const { data: pendingVotes, error: votesError } = await supabase
+      .from('offline_votes')
+      .select('id')
+      .eq('device_id', deviceId)
+      .eq('synced', false);
+
+    if (votesError) {
+      logger.error('Failed to get pending votes', votesError);
+      return {
+        lastSync: lastSync?.last_sync || new Date().toISOString(),
+        pendingVotes: 0,
+        status: 'error',
+        failedVotes: lastSync?.failed_votes || []
+      };
+    }
+
+    const pendingCount = pendingVotes?.length || 0;
+    const status: 'up_to_date' | 'pending' | 'error' = 
+      pendingCount > 0 ? 'pending' : 
+      lastSync?.status === 'error' ? 'error' : 
+      'up_to_date';
+
+    return {
+      lastSync: lastSync?.last_sync || new Date().toISOString(),
+      pendingVotes: pendingCount,
+      status,
+      failedVotes: lastSync?.failed_votes || []
+    };
+
+  } catch (error) {
+    logger.error('Error getting sync status', error instanceof Error ? error : new Error('Unknown error'));
+    
+    return {
+      lastSync: new Date().toISOString(),
+      pendingVotes: 0,
+      status: 'error',
+      failedVotes: []
+    };
+  }
+}
+
+/**
+ * Update sync status in database after sync operation
+ */
+async function updateSyncStatus(
+  deviceId: string, 
+  successCount: number, 
+  failureCount: number, 
+  results: VoteSyncResult[]
+): Promise<void> {
+  const supabase = await getSupabaseServerClient();
+  
+  try {
+    const failedVoteIds = results
+      .filter(result => !result.success)
+      .map(result => result.voteId);
+
+    const { error } = await supabase
+      .from('device_sync_status')
+      .upsert({
+        device_id: deviceId,
+        last_sync: new Date().toISOString(),
+        status: failureCount > 0 ? 'error' : 'up_to_date',
+        failed_votes: failedVoteIds,
+        success_count: successCount,
+        failure_count: failureCount,
+        updated_at: new Date().toISOString()
+      });
+
+    if (error) {
+      logger.error('Failed to update sync status', error);
+    } else {
+      logger.info('Sync status updated successfully');
+    }
+
+  } catch (error) {
+    logger.error('Error updating sync status', error instanceof Error ? error : new Error('Unknown error'));
+  }
 }

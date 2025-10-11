@@ -8,7 +8,7 @@
  * @date 2025-01-15
  */
 
-import { devLog } from '@/lib/logger';
+import { devLog } from '@/lib/utils/logger';
 
 // Types for Open States API responses
 export type OpenStatesState = {

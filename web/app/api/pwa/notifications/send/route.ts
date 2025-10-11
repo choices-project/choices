@@ -6,12 +6,15 @@
  */
 
 import { type NextRequest, NextResponse } from 'next/server';
-import { logger } from '@/lib/logger';
+import { logger } from '@/lib/utils/logger';
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
+import { createApiLogger } from '@/lib/utils/api-logger';
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
+  const apiLogger = createApiLogger('/api/pwa/notifications/send', 'POST');
+  
   try {
     // Check if PWA feature is enabled
     if (!isFeatureEnabled('PWA')) {
@@ -42,6 +45,7 @@ export async function POST(request: NextRequest) {
     }
 
     logger.info(`PWA: Sending push notification - "${title}" to ${targetType}`);
+    apiLogger.info('Sending push notification', { title, targetType, targetUsers: targetUsers?.length || 0 });
 
     // Get target subscriptions
     const subscriptions = await getTargetSubscriptions(targetUsers, targetType);
@@ -85,6 +89,7 @@ export async function POST(request: NextRequest) {
     const results = await sendPushNotifications(subscriptions, payload);
 
     logger.info(`PWA: Push notification sent - ${results.successful} successful, ${results.failed} failed`);
+    apiLogger.info('Push notification sent', { successful: results.successful, failed: results.failed });
 
     return NextResponse.json({
       success: true,
@@ -100,6 +105,7 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     logger.error('PWA: Failed to send push notifications:', error instanceof Error ? error : new Error(String(error)));
+    apiLogger.error('Failed to send push notifications', error instanceof Error ? error : new Error(String(error)));
     
     return NextResponse.json({
       success: false,
@@ -150,7 +156,7 @@ async function getTargetSubscriptions(targetUsers?: string[], targetType: string
   // This would typically query your database for active subscriptions
   // For now, we'll return mock data
   
-  console.log(`Getting subscriptions for target type: ${targetType}`);
+  logger.info('Getting subscriptions for target type', { targetType });
   
   if (targetUsers && targetUsers.length > 0) {
     // Return subscriptions for specific users

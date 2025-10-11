@@ -9,7 +9,7 @@
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
 
 // Export the main AnalyticsService class
-export { AnalyticsService } from '@/lib/types/analytics';
+export { AnalyticsService } from '@/features/analytics/lib/analytics-service';
 
 // Re-export analytics utilities conditionally
 export const getAnalyticsUtils = () => {
@@ -23,7 +23,7 @@ export const getAnalyticsUtils = () => {
   }
   
   // Dynamically import analytics utilities only when feature is enabled
-  return import('./lib/auth-analytics').then(module => module);
+  return import('@/features/analytics/lib/auth-analytics').then(module => module);
 };
 
 // Re-export analytics types conditionally
@@ -37,7 +37,7 @@ export const getAnalyticsTypes = () => {
   }
   
   // Dynamically import analytics types only when feature is enabled
-  return import('./types/analytics').then(module => module);
+  return import('@/features/analytics/types/analytics').then(module => module);
 };
 
 // Feature status

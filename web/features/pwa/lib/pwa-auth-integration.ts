@@ -6,8 +6,8 @@
  */
 
 import { isFeatureEnabled } from './feature-flags';
-import { devLog } from '@/lib/logger';
-import { withOptional } from '@/lib/util/objects';
+import { devLog } from '@/lib/utils/logger';
+import { withOptional } from '@/lib/utils/objects';
 
 export type PWAUser = {
   stableId: string;

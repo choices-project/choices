@@ -5,10 +5,10 @@
  * proper error classification, retry logic, and user-friendly messages.
  */
 
-import { logger } from '@/lib/logger';
+import { logger } from '@/lib/utils/logger';
 import { GoogleCivicApiError } from './client';
 import type { GoogleCivicErrorDetails, RetryConfig, ErrorContext } from '@/lib/types/google-civic';
-import { withOptional } from '@/lib/util/objects';
+import { withOptional } from '@/lib/utils/objects';
 
 // Types imported from scratch/google-civic-types.ts
 

@@ -1,7 +1,7 @@
 import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
 import { getSupabaseServerClient } from '@/utils/supabase/server'
-import { logger } from '@/lib/logger'
+import { logger } from '@/lib/utils/logger'
 import { rateLimiters } from '@/lib/core/security/rate-limit'
 import { 
   validateCsrfProtection, 
@@ -107,9 +107,8 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (profileError) {
-      logger.error('Failed to create user profile', { 
-        error: profileError,
-        user_id: authData.user.id
+      logger.error('Failed to create user profile', profileError, { 
+        user_id: authData.user.id 
       })
       
       // If profile creation fails, log the issue and rely on a secure backend cleanup process

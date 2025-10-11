@@ -14,7 +14,7 @@ import { revalidatePath } from 'next/cache';
 import { 
   requireProfileUser, 
   validateProfileData 
-} from '@/lib/auth/profile-auth';
+} from '@/lib/core/auth/profile-auth';
 
 // Types for superior implementation - matches documented superior implementation
 export type ProfileUser = {

@@ -1,7 +1,7 @@
 import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
 import { getSupabaseServerClient } from '@/utils/supabase/server'
-import { devLog } from '@/lib/logger'
+import { devLog } from '@/lib/utils/logger'
 import { getUser } from '@/lib/core/auth/middleware'
 // import { HybridVotingService } from '@/lib/core/services/hybrid-voting'
 import { AnalyticsService } from '@/lib/core/services/analytics'
@@ -63,7 +63,7 @@ export async function POST(
     }
 
     const body = await request.json()
-    const { choice, approvals, privacy_level = 'public' } = body
+    const { choice, approvals, selections, privacy_level = 'public' } = body
 
 
     // Get poll data to determine voting method
@@ -82,6 +82,10 @@ export async function POST(
     if (pollData.voting_method === 'approval') {
       if (!approvals || !Array.isArray(approvals) || approvals.length === 0) {
         throw new ValidationError('At least one approval is required for approval voting')
+      }
+    } else if (pollData.voting_method === 'multiple') {
+      if (!selections || !Array.isArray(selections) || selections.length === 0) {
+        throw new ValidationError('At least one selection is required for multiple choice voting')
       }
     } else {
       if (!choice || typeof choice !== 'number' || choice < 1) {
@@ -114,6 +118,33 @@ export async function POST(
         message: 'Approval vote submitted successfully',
         pollId,
         voteId: 'approval-vote',
+        privacyLevel: privacy_level,
+        responseTime: Date.now() - Date.now()
+      })
+    } else if (pollData.voting_method === 'multiple') {
+      // For multiple choice voting, store the selections in vote_data
+      const { error: voteError } = await supabaseClient
+        .from('votes')
+        .insert({
+          poll_id: pollId,
+          user_id: user.id,
+          choice: selections.length, // Number of selections
+          voting_method: 'multiple',
+          vote_data: { selections: selections },
+          is_verified: true
+        })
+
+      if (voteError) {
+        devLog('Error storing multiple choice vote:', voteError)
+        throw new Error('Failed to submit multiple choice vote')
+      }
+
+      // Return success response
+      return NextResponse.json({
+        success: true,
+        message: 'Multiple choice vote submitted successfully',
+        pollId,
+        voteId: 'multiple-choice-vote',
         privacyLevel: privacy_level,
         responseTime: Date.now() - Date.now()
       })

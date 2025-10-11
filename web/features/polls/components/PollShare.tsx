@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { devLog } from '@/lib/logger';
+import { devLog } from '@/lib/utils/logger';
 import { Share2, Copy, Link, Twitter, Facebook, Linkedin, Mail, QrCode, Download } from 'lucide-react'
 import { isFeatureEnabled } from '@/lib/core/feature-flags'
 
@@ -18,7 +18,7 @@ export default function PollShare({ pollId, poll }: PollShareProps) {
   useEffect(() => {
     // Use SSR-safe browser API access
     const initUrl = async () => {
-      const { safeWindow } = await import('@/shared/utils/lib/ssr-safe');
+      const { safeWindow } = await import('@/lib/utils/ssr-safe');
       const origin = safeWindow(w => w.location?.origin, '');
       setPollUrl(`${origin}/polls/${pollId}`);
     };
@@ -29,7 +29,7 @@ export default function PollShare({ pollId, poll }: PollShareProps) {
 
   const handleCopyLink = async () => {
     try {
-      const { safeNavigator } = await import('@/shared/utils/lib/ssr-safe');
+      const { safeNavigator } = await import('@/lib/utils/ssr-safe');
       const clipboard = safeNavigator(n => n.clipboard);
       if (clipboard?.writeText) {
         await clipboard.writeText(pollUrl);
@@ -43,7 +43,7 @@ export default function PollShare({ pollId, poll }: PollShareProps) {
 
   const handleDownloadQR = async () => {
     // Implement QR code download functionality
-    const { safeDocument } = await import('@/shared/utils/lib/ssr-safe');
+    const { safeDocument } = await import('@/lib/utils/ssr-safe');
     const canvas = safeDocument(d => d.createElement?.('canvas')) as HTMLCanvasElement;
     if (!canvas) {
       devLog('Canvas not available')

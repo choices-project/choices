@@ -1,7 +1,7 @@
 // NextRequest import removed - not used
 import { NextResponse } from 'next/server'
 import { getSupabaseServerClient } from '@/utils/supabase/server'
-import { logger } from '@/lib/logger'
+import { logger } from '@/lib/utils/logger'
 
 export async function POST() {
   try {

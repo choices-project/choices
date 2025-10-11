@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getOrSetCsrfCookie } from '../_shared';
 import { CSRF_COOKIE } from '../_shared/cookies';
+import { createApiLogger } from '@/lib/utils/api-logger';
 
 export const dynamic = 'force-dynamic';
 
@@ -12,6 +13,8 @@ export const dynamic = 'force-dynamic';
  */
 
 export async function GET() {
+  const logger = createApiLogger('/api/auth/csrf', 'GET');
+  
   try {
     // Get or create CSRF token
     const csrfToken = getOrSetCsrfCookie();
@@ -34,7 +37,7 @@ export async function GET() {
 
     return response;
   } catch (error) {
-    console.error('CSRF token generation error:', error);
+    logger.error('CSRF token generation error', error as Error);
     
     return NextResponse.json(
       { error: 'Failed to generate CSRF token' },

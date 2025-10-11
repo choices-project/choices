@@ -6,7 +6,7 @@
  * type-safe cache operations.
  */
 
-import { logger } from '@/lib/logger';
+import { logger } from '@/lib/utils/logger';
 import { safeParse } from '@/lib/validation/validator';
 
 /**

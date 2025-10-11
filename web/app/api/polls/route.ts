@@ -1,6 +1,6 @@
 import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server';
-import { devLog } from '@/lib/logger';
+import { devLog } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 import { getUser } from '@/lib/core/auth/middleware';
 
@@ -111,7 +111,7 @@ export async function POST(request: NextRequest) {
     try {
       user = await getUser();
     } catch (error) {
-      console.error('Authentication error during poll creation:', error);
+      devLog('Authentication error during poll creation:', error);
       return NextResponse.json(
         { error: 'Authentication required to create polls' },
         { status: 401 }
@@ -153,7 +153,9 @@ export async function POST(request: NextRequest) {
       allowMultipleVotes = false,
       showResults = true,
       allowComments = true,
-      endTime
+      endTime,
+      hashtags = [],
+      primaryHashtag
     } = body;
 
     // Validate required fields
@@ -192,7 +194,9 @@ export async function POST(request: NextRequest) {
         total_votes: 0,
         participation: 0,
         end_time: endTime || null,
-        settings: {
+        hashtags: hashtags || [],
+        primary_hashtag: primaryHashtag || null,
+        poll_settings: {
           allowMultipleVotes,
           showResults,
           allowComments
@@ -222,6 +226,9 @@ export async function POST(request: NextRequest) {
       total_votes: poll.total_votes,
       participation: poll.participation,
       end_time: poll.end_time,
+      hashtags: poll.hashtags || [],
+      primary_hashtag: poll.primary_hashtag,
+      poll_settings: poll.poll_settings,
       created_at: poll.created_at
     } : null;
 

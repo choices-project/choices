@@ -1,7 +1,7 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import { verifyRegistrationResponse } from '@simplewebauthn/server';
 import { isoBase64URL } from '@simplewebauthn/server/helpers';
-import { getRPIDAndOrigins } from '@/lib/webauthn/config';
+import { getRPIDAndOrigins } from '@/features/auth/lib/webauthn/config';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 /**

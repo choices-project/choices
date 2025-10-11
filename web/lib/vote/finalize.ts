@@ -18,8 +18,8 @@
 // ============================================================================
 
 import { IRVCalculator } from './irv-calculator';
-import { logger } from '../logger';
-import { withOptional } from '../util/objects';
+import { logger } from '@/lib/utils/logger';
+import { withOptional } from '@/lib/utils/objects';
 import type { UserRanking } from './irv-calculator';
 import { type MerkleTree, BallotVerificationManager, snapshotChecksum } from '../audit/merkle-tree';
 import { createHash } from 'crypto';

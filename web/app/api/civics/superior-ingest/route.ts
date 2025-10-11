@@ -7,8 +7,9 @@
  */
 
 import { type NextRequest, NextResponse } from 'next/server';
-import SuperiorDataPipeline, { type SuperiorPipelineConfig } from '@/lib/civics-2-0/superior-data-pipeline';
-import { CurrentElectorateVerifier } from '@/lib/civics-2-0/current-electorate-verifier';
+import SuperiorDataPipeline, { type SuperiorPipelineConfig } from '@/features/civics/lib/civics-superior/superior-data-pipeline';
+import { CurrentElectorateVerifier } from '@/features/civics/lib/civics-superior/current-electorate-verifier';
+import { createApiLogger } from '@/lib/utils/api-logger';
 
 // Superior pipeline configuration
 const SUPERIOR_CONFIG: SuperiorPipelineConfig = {
@@ -48,14 +49,16 @@ const SUPERIOR_CONFIG: SuperiorPipelineConfig = {
 };
 
 export async function POST(request: NextRequest) {
+  const logger = createApiLogger('/api/civics/superior-ingest', 'POST');
+  
   try {
-    console.log('🚀 SUPERIOR civics ingestion requested');
-    console.log('🔍 DEBUG: Route handler called');
-    console.log(`   System Date: ${new Date().toISOString()}`);
-    console.log(`   OpenStates People: ${SUPERIOR_CONFIG.enableOpenStatesPeople ? 'Enabled' : 'Disabled'}`);
-    console.log(`   Strict Current Filtering: ${SUPERIOR_CONFIG.strictCurrentFiltering ? 'Enabled' : 'Disabled'}`);
-    console.log(`   Cross-Reference: ${SUPERIOR_CONFIG.enableCrossReference ? 'Enabled' : 'Disabled'}`);
-    console.log(`   Data Validation: ${SUPERIOR_CONFIG.enableDataValidation ? 'Enabled' : 'Disabled'}`);
+    logger.info('SUPERIOR civics ingestion requested', {
+      systemDate: new Date().toISOString(),
+      openStatesPeople: SUPERIOR_CONFIG.enableOpenStatesPeople,
+      strictCurrentFiltering: SUPERIOR_CONFIG.strictCurrentFiltering,
+      crossReference: SUPERIOR_CONFIG.enableCrossReference,
+      dataValidation: SUPERIOR_CONFIG.enableDataValidation
+    });
     
     const body = await request.json();
     const { representatives, state, level } = body;
@@ -67,42 +70,51 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
     
-    console.log(`   Processing ${representatives.length} representatives for state: ${state || 'all'}, level: ${level || 'all'}`);
-    console.log(`🔍 DEBUG: First representative data:`, JSON.stringify(representatives[0], null, 2));
+    logger.info('Processing representatives', {
+      count: representatives.length,
+      state: state || 'all',
+      level: level || 'all',
+      firstRepresentative: representatives[0] ? {
+        name: representatives[0].name,
+        state: representatives[0].state,
+        level: representatives[0].level
+      } : null
+    });
     
     // Create level-specific configuration
     const config = { ...SUPERIOR_CONFIG };
-    console.log(`🔍 DEBUG: Original config enableCongressGov:`, config.enableCongressGov);
+    logger.debug('Original config', { enableCongressGov: config.enableCongressGov });
     
     // Disable OpenStates API for federal representatives
     if (level === 'federal') {
-      console.log(`   🔧 Disabling OpenStates API for federal representatives`);
+      logger.info('Disabling OpenStates API for federal representatives');
       config.enableOpenStatesApi = false;
       config.enableOpenStatesPeople = false;
     }
-    console.log(`🔍 DEBUG: Final config enableCongressGov:`, config.enableCongressGov);
+    logger.debug('Final config', { enableCongressGov: config.enableCongressGov });
     
     // Initialize superior data pipeline with level-specific config
     const superiorPipeline = new SuperiorDataPipeline(config);
     
     // Step 1: Verify current electorate using system date
     if (config.strictCurrentFiltering) {
-      console.log('🔍 Verifying current electorate using system date...');
+      logger.info('Verifying current electorate using system date');
       const verifier = new CurrentElectorateVerifier();
       const verification = await verifier.verifyRepresentatives(representatives);
       
-      console.log(`📊 Current Electorate Verification:`);
-      console.log(`   Total Checked: ${verification.summary.totalChecked}`);
-      console.log(`   Current: ${verification.summary.currentCount}`);
-      console.log(`   Non-Current: ${verification.summary.nonCurrentCount}`);
-      console.log(`   Accuracy: ${verification.summary.accuracy.toFixed(2)}%`);
+      logger.info('Current Electorate Verification', {
+        totalChecked: verification.summary.totalChecked,
+        current: verification.summary.currentCount,
+        nonCurrent: verification.summary.nonCurrentCount,
+        accuracy: verification.summary.accuracy
+      });
       
       // Filter to only current representatives
       const currentRepresentatives = representatives.filter((rep, index) => 
         verification.representativeChecks[index]?.isCurrent
       );
       
-      console.log(`🎯 Filtered to ${currentRepresentatives.length} current representatives`);
+      logger.info('Filtered to current representatives', { count: currentRepresentatives.length });
       
       if (currentRepresentatives.length === 0) {
         return NextResponse.json({
@@ -117,7 +129,7 @@ export async function POST(request: NextRequest) {
     }
     
     // Step 2: Process representatives with superior pipeline
-    console.log(`🔄 Processing ${representatives.length} representatives with SUPERIOR pipeline...`);
+    logger.info('Processing representatives with SUPERIOR pipeline', { count: representatives.length });
     const result = await superiorPipeline.processRepresentatives(representatives);
     
     if (!result.success) {
@@ -181,19 +193,20 @@ export async function POST(request: NextRequest) {
       ]
     };
     
-    console.log(`✅ SUPERIOR civics ingestion completed successfully`);
-    console.log(`   Duration: ${result.results.duration}`);
-    console.log(`   Successful: ${result.results.successful}`);
-    console.log(`   Failed: ${result.results.failed}`);
-    console.log(`   Average Quality: ${result.results.dataQuality.averageScore.toFixed(1)}`);
-    console.log(`   Current Electorate: ${result.results.currentElectorate.totalCurrent}/${result.results.totalProcessed}`);
-    console.log(`   Sources Used: ${response.sources.totalSources}`);
-    console.log(`   Cross-Referenced: ${result.results.sources.crossReferenced}`);
+    logger.success('SUPERIOR civics ingestion completed successfully', 200, {
+      duration: result.results.duration,
+      successful: result.results.successful,
+      failed: result.results.failed,
+      averageQuality: result.results.dataQuality.averageScore,
+      currentElectorate: `${result.results.currentElectorate.totalCurrent}/${result.results.totalProcessed}`,
+      sourcesUsed: response.sources.totalSources,
+      crossReferenced: result.results.sources.crossReferenced
+    });
     
     return NextResponse.json(response);
     
   } catch (error: any) {
-    console.error('SUPERIOR civics ingestion failed:', error);
+    logger.error('SUPERIOR civics ingestion failed', error);
     return NextResponse.json({ 
       success: false, 
       error: error.message,
@@ -203,6 +216,8 @@ export async function POST(request: NextRequest) {
 }
 
 export async function GET(request: NextRequest) {
+  const logger = createApiLogger('/api/civics/superior-ingest', 'GET');
+  
   try {
     const { searchParams } = new URL(request.url);
     const state = searchParams.get('state');
@@ -262,10 +277,10 @@ export async function GET(request: NextRequest) {
     });
     
   } catch (error: any) {
-    console.error('SUPERIOR civics ingestion info failed:', error);
+    logger.error('SUPERIOR civics ingestion info failed', error);
     return NextResponse.json({ 
-      success: false, 
-      error: error.message 
+      success: false,
+      error: error.message
     }, { status: 500 });
   }
 }

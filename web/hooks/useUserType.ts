@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { devLog } from '@/lib/logger'
+import { devLog } from '@/lib/utils/logger'
 
 // Types
 export type UserType = 'newcomer' | 'active' | 'power_user' | 'influencer' | 'admin'

@@ -4,7 +4,7 @@
  * Handles PWA installation prompts, detection, and user experience.
  */
 
-import { logger } from '@/lib/logger';
+import { logger } from '@/lib/utils/logger';
 
 export type BeforeInstallPromptEvent = {
   readonly platforms: string[];

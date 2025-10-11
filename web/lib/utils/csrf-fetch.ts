@@ -9,7 +9,7 @@
  * Updated: January 25, 2025
  */
 
-import { createCsrfHeaders } from '@/shared/core/security/lib/csrf-client';
+import { createCsrfHeaders } from '@/lib/security/csrf-client';
 
 /**
  * CSRF-aware fetch wrapper that automatically includes CSRF tokens

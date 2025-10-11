@@ -5,7 +5,7 @@
  * This includes query optimization, connection management, and performance monitoring.
  */
 
-import { logger } from '@/lib/logger'
+import { logger } from '@/lib/utils/logger'
 import { getSupabaseServerClient } from '@/utils/supabase/server'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import {

@@ -16,7 +16,7 @@ import {
   AlertTriangle,
   Loader2
 } from 'lucide-react'
-import { useProfile, useProfileLoadingStates, useProfileErrorStates, useExportData } from '@/lib/hooks/use-profile'
+import { useProfile, useProfileLoadingStates, useProfileErrorStates, useExportData } from '@/hooks/use-profile'
 import { useAuth } from '@/hooks/useAuth'
 
 export default function ProfilePage() {

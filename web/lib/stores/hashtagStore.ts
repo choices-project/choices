@@ -1,0 +1,881 @@
+/**
+ * Hashtag Store - Zustand Implementation
+ * 
+ * Comprehensive hashtag state management with Zustand integration
+ * Handles hashtag data, search, trending, user interactions, and cross-feature integration
+ * 
+ * Created: October 10, 2025
+ * Status: ✅ INTEGRATED
+ */
+
+import { create } from 'zustand';
+import { devtools } from 'zustand/middleware';
+import { immer } from 'zustand/middleware/immer';
+import { persist } from 'zustand/middleware';
+import { withOptional } from '@/lib/utils/objects';
+import type { BaseStore } from './types';
+import type { 
+  Hashtag,
+  UserHashtag,
+  TrendingHashtag,
+  HashtagSearchQuery,
+  HashtagSearchResult,
+  HashtagSuggestion,
+  HashtagAnalytics,
+  HashtagValidation,
+  HashtagCategory,
+  HashtagUserPreferences,
+  ProfileHashtagIntegration,
+  PollHashtagIntegration,
+  FeedHashtagIntegration
+} from '@/features/hashtags/types';
+
+// Hashtag store state interface
+type HashtagStore = {
+  // Core hashtag data
+  hashtags: Hashtag[];
+  userHashtags: UserHashtag[];
+  trendingHashtags: TrendingHashtag[];
+  
+  // Search and discovery
+  searchResults: HashtagSearchResult | null;
+  suggestions: HashtagSuggestion[];
+  recentSearches: string[];
+  
+  // User preferences and settings
+  userPreferences: HashtagUserPreferences | null;
+  followedHashtags: string[];
+  primaryHashtags: string[];
+  
+  // Loading states
+  isSearching: boolean;
+  isFollowing: boolean;
+  isUnfollowing: boolean;
+  isCreating: boolean;
+  isUpdating: boolean;
+  isDeleting: boolean;
+  
+  // Error states
+  searchError: string | null;
+  followError: string | null;
+  createError: string | null;
+  
+  // Actions - Core hashtag operations
+  setHashtags: (hashtags: Hashtag[]) => void;
+  addHashtag: (hashtag: Hashtag) => void;
+  updateHashtag: (id: string, updates: Partial<Hashtag>) => void;
+  removeHashtag: (id: string) => void;
+  
+  // Actions - Search and discovery
+  searchHashtags: (query: HashtagSearchQuery) => Promise<void>;
+  getTrendingHashtags: (category?: HashtagCategory) => Promise<void>;
+  getSuggestions: (input: string, context?: string) => Promise<void>;
+  clearSearch: () => void;
+  addRecentSearch: (query: string) => void;
+  clearRecentSearches: () => void;
+  
+  // Actions - User interactions
+  followHashtag: (hashtagId: string) => Promise<boolean>;
+  unfollowHashtag: (hashtagId: string) => Promise<boolean>;
+  createHashtag: (name: string, description?: string, category?: HashtagCategory) => Promise<Hashtag | null>;
+  getUserHashtags: () => Promise<void>;
+  setPrimaryHashtags: (hashtagIds: string[]) => void;
+  
+  // Actions - Preferences
+  updateUserPreferences: (preferences: Partial<HashtagUserPreferences>) => Promise<boolean>;
+  getUserPreferences: () => Promise<void>;
+  
+  // Actions - Analytics
+  getHashtagAnalytics: (hashtagId: string, period?: string) => Promise<HashtagAnalytics | null>;
+  getHashtagStats: () => Promise<void>;
+  
+  // Actions - Cross-feature integration
+  getProfileIntegration: (userId: string) => Promise<ProfileHashtagIntegration | null>;
+  getPollIntegration: (pollId: string) => Promise<PollHashtagIntegration | null>;
+  getFeedIntegration: (feedId: string) => Promise<FeedHashtagIntegration | null>;
+  
+  // Actions - Validation
+  validateHashtagName: (name: string) => Promise<HashtagValidation | null>;
+  
+  // Actions - Loading states
+  setSearching: (searching: boolean) => void;
+  setFollowing: (following: boolean) => void;
+  setUnfollowing: (unfollowing: boolean) => void;
+  setCreating: (creating: boolean) => void;
+  setUpdating: (updating: boolean) => void;
+  setDeleting: (deleting: boolean) => void;
+  
+  // Actions - Error handling
+  setSearchError: (error: string | null) => void;
+  setFollowError: (error: string | null) => void;
+  setCreateError: (error: string | null) => void;
+  clearErrors: () => void;
+  
+  // Getters and utilities
+  getHashtagById: (id: string) => Hashtag | undefined;
+  getHashtagByName: (name: string) => Hashtag | undefined;
+  isFollowingHashtag: (hashtagId: string) => boolean;
+  getFollowedHashtags: () => Hashtag[];
+  getTrendingHashtagsByCategory: (category: HashtagCategory) => TrendingHashtag[];
+  getHashtagSuggestions: (input: string) => HashtagSuggestion[];
+  
+  // Reset and cleanup
+  resetHashtagStore: () => void;
+  clearHashtagStore: () => void;
+} & BaseStore
+
+// Create hashtag store with middleware
+export const useHashtagStore = create<HashtagStore>()(
+  devtools(
+    persist(
+      immer((set, get) => ({
+        // Initial state
+        hashtags: [],
+        userHashtags: [],
+        trendingHashtags: [],
+        searchResults: null,
+        suggestions: [],
+        recentSearches: [],
+        userPreferences: null,
+        followedHashtags: [],
+        primaryHashtags: [],
+        isLoading: false,
+        isSearching: false,
+        isFollowing: false,
+        isUnfollowing: false,
+        isCreating: false,
+        isUpdating: false,
+        isDeleting: false,
+        error: null,
+        searchError: null,
+        followError: null,
+        createError: null,
+        
+        // Base store actions
+        setLoading: (loading) => set((state) => {
+          state.isLoading = loading;
+        }),
+        
+        setError: (error) => set((state) => {
+          state.error = error;
+        }),
+        
+        clearError: () => set((state) => {
+          state.error = null;
+        }),
+        
+        // Core hashtag operations
+        setHashtags: (hashtags) => set((state) => {
+          state.hashtags = hashtags;
+        }),
+        
+        addHashtag: (hashtag) => set((state) => {
+          const existingIndex = state.hashtags.findIndex(h => h.id === hashtag.id);
+          if (existingIndex >= 0) {
+            state.hashtags[existingIndex] = hashtag;
+          } else {
+            state.hashtags.push(hashtag);
+          }
+        }),
+        
+        updateHashtag: (id, updates) => set((state) => {
+          const index = state.hashtags.findIndex(h => h.id === id);
+          if (index >= 0) {
+            state.hashtags[index] = withOptional(state.hashtags[index], updates);
+          }
+        }),
+        
+        removeHashtag: (id) => set((state) => {
+          state.hashtags = state.hashtags.filter(h => h.id !== id);
+        }),
+        
+        // Search and discovery
+        searchHashtags: async (query) => {
+          set((state) => {
+            state.isSearching = true;
+            state.searchError = null;
+          });
+          
+          try {
+            const { searchHashtags: searchService } = await import('@/features/hashtags/lib/hashtag-service');
+            const result = await searchService(query);
+            
+            if (result.success && result.data) {
+              set((state) => {
+                state.searchResults = result.data;
+                state.isSearching = false;
+              });
+            } else {
+              set((state) => {
+                state.searchError = result.error || 'Search failed';
+                state.isSearching = false;
+              });
+            }
+          } catch (error) {
+            set((state) => {
+              state.searchError = error instanceof Error ? error.message : 'Search failed';
+              state.isSearching = false;
+            });
+          }
+        },
+        
+        getTrendingHashtags: async (category) => {
+          set((state) => {
+            state.isLoading = true;
+            state.error = null;
+          });
+          
+          try {
+            const { getTrendingHashtags: getTrendingService } = await import('@/features/hashtags/lib/hashtag-service');
+            const result = await getTrendingService(category);
+            
+            if (result.success && result.data) {
+              set((state) => {
+                state.trendingHashtags = result.data;
+                state.isLoading = false;
+              });
+            } else {
+              set((state) => {
+                state.error = result.error || 'Failed to fetch trending hashtags';
+                state.isLoading = false;
+              });
+            }
+          } catch (error) {
+            set((state) => {
+              state.error = error instanceof Error ? error.message : 'Failed to fetch trending hashtags';
+              state.isLoading = false;
+            });
+          }
+        },
+        
+        getSuggestions: async (input, context) => {
+          try {
+            const { getHashtagSuggestions: getSuggestionsService } = await import('@/features/hashtags/lib/hashtag-service');
+            const result = await getSuggestionsService(input, context);
+            
+            if (result.success && result.data) {
+              set((state) => {
+                state.suggestions = result.data;
+              });
+            }
+          } catch (error) {
+            console.error('Failed to get suggestions:', error);
+          }
+        },
+        
+        clearSearch: () => set((state) => {
+          state.searchResults = null;
+          state.suggestions = [];
+          state.searchError = null;
+        }),
+        
+        addRecentSearch: (query) => set((state) => {
+          const recentSearches = state.recentSearches.filter(q => q !== query);
+          recentSearches.unshift(query);
+          state.recentSearches = recentSearches.slice(0, 10); // Keep only last 10
+        }),
+        
+        clearRecentSearches: () => set((state) => {
+          state.recentSearches = [];
+        }),
+        
+        // User interactions
+        followHashtag: async (hashtagId) => {
+          set((state) => {
+            state.isFollowing = true;
+            state.followError = null;
+          });
+          
+          try {
+            const { followHashtag: followService } = await import('@/features/hashtags/lib/hashtag-service');
+            const result = await followService(hashtagId);
+            
+            if (result.success && result.data) {
+              set((state) => {
+                state.userHashtags.push(result.data);
+                state.followedHashtags.push(hashtagId);
+                state.isFollowing = false;
+              });
+              return true;
+            } else {
+              set((state) => {
+                state.followError = result.error || 'Failed to follow hashtag';
+                state.isFollowing = false;
+              });
+              return false;
+            }
+          } catch (error) {
+            set((state) => {
+              state.followError = error instanceof Error ? error.message : 'Failed to follow hashtag';
+              state.isFollowing = false;
+            });
+            return false;
+          }
+        },
+        
+        unfollowHashtag: async (hashtagId) => {
+          set((state) => {
+            state.isUnfollowing = true;
+            state.followError = null;
+          });
+          
+          try {
+            const { unfollowHashtag: unfollowService } = await import('@/features/hashtags/lib/hashtag-service');
+            const result = await unfollowService(hashtagId);
+            
+            if (result.success) {
+              set((state) => {
+                state.userHashtags = state.userHashtags.filter(uh => uh.hashtag_id !== hashtagId);
+                state.followedHashtags = state.followedHashtags.filter(id => id !== hashtagId);
+                state.primaryHashtags = state.primaryHashtags.filter(id => id !== hashtagId);
+                state.isUnfollowing = false;
+              });
+              return true;
+            } else {
+              set((state) => {
+                state.followError = result.error || 'Failed to unfollow hashtag';
+                state.isUnfollowing = false;
+              });
+              return false;
+            }
+          } catch (error) {
+            set((state) => {
+              state.followError = error instanceof Error ? error.message : 'Failed to unfollow hashtag';
+              state.isUnfollowing = false;
+            });
+            return false;
+          }
+        },
+        
+        createHashtag: async (name, description, category) => {
+          set((state) => {
+            state.isCreating = true;
+            state.createError = null;
+          });
+          
+          try {
+            const { createHashtag: createService } = await import('@/features/hashtags/lib/hashtag-service');
+            const result = await createService(name, description, category);
+            
+            if (result.success && result.data) {
+              set((state) => {
+                state.hashtags.push(result.data);
+                state.isCreating = false;
+              });
+              return result.data;
+            } else {
+              set((state) => {
+                state.createError = result.error || 'Failed to create hashtag';
+                state.isCreating = false;
+              });
+              return null;
+            }
+          } catch (error) {
+            set((state) => {
+              state.createError = error instanceof Error ? error.message : 'Failed to create hashtag';
+              state.isCreating = false;
+            });
+            return null;
+          }
+        },
+        
+        getUserHashtags: async () => {
+          set((state) => {
+            state.isLoading = true;
+            state.error = null;
+          });
+          
+          try {
+            const { getUserHashtags: getUserHashtagsService } = await import('@/features/hashtags/lib/hashtag-service');
+            const result = await getUserHashtagsService();
+            
+            if (result.success && result.data) {
+              set((state) => {
+                state.userHashtags = result.data;
+                state.followedHashtags = result.data.map(uh => uh.hashtag_id);
+                state.primaryHashtags = result.data.filter(uh => uh.is_primary).map(uh => uh.hashtag_id);
+                state.isLoading = false;
+              });
+            } else {
+              set((state) => {
+                state.error = result.error || 'Failed to fetch user hashtags';
+                state.isLoading = false;
+              });
+            }
+          } catch (error) {
+            set((state) => {
+              state.error = error instanceof Error ? error.message : 'Failed to fetch user hashtags';
+              state.isLoading = false;
+            });
+          }
+        },
+        
+        setPrimaryHashtags: (hashtagIds) => set((state) => {
+          state.primaryHashtags = hashtagIds;
+        }),
+        
+        // Preferences
+        updateUserPreferences: async (preferences) => {
+          set((state) => {
+            state.isUpdating = true;
+            state.error = null;
+          });
+          
+          try {
+            // TODO: Implement preferences update service
+            set((state) => {
+              state.userPreferences = withOptional(state.userPreferences, preferences);
+              state.isUpdating = false;
+            });
+            return true;
+          } catch (error) {
+            set((state) => {
+              state.error = error instanceof Error ? error.message : 'Failed to update preferences';
+              state.isUpdating = false;
+            });
+            return false;
+          }
+        },
+        
+        getUserPreferences: async () => {
+          set((state) => {
+            state.isLoading = true;
+            state.error = null;
+          });
+          
+          try {
+            // TODO: Implement preferences fetch service
+            set((state) => {
+              state.isLoading = false;
+            });
+          } catch (error) {
+            set((state) => {
+              state.error = error instanceof Error ? error.message : 'Failed to fetch preferences';
+              state.isLoading = false;
+            });
+          }
+        },
+        
+        // Analytics
+        getHashtagAnalytics: async (hashtagId, period = '7d') => {
+          try {
+            const { getHashtagAnalytics: getAnalyticsService } = await import('@/features/hashtags/lib/hashtag-service');
+            const result = await getAnalyticsService(hashtagId, period);
+            
+            if (result.success && result.data) {
+              return result.data;
+            }
+            return null;
+          } catch (error) {
+            console.error('Failed to get hashtag analytics:', error);
+            return null;
+          }
+        },
+        
+        getHashtagStats: async () => {
+          set((state) => {
+            state.isLoading = true;
+            state.error = null;
+          });
+          
+          try {
+            const { getHashtagStats: getStatsService } = await import('@/features/hashtags/lib/hashtag-service');
+            const result = await getStatsService();
+            
+            if (result.success && result.data) {
+              // TODO: Store stats in state
+              set((state) => {
+                state.isLoading = false;
+              });
+            } else {
+              set((state) => {
+                state.error = result.error || 'Failed to fetch hashtag stats';
+                state.isLoading = false;
+              });
+            }
+          } catch (error) {
+            set((state) => {
+              state.error = error instanceof Error ? error.message : 'Failed to fetch hashtag stats';
+              state.isLoading = false;
+            });
+          }
+        },
+        
+        // Cross-feature integration
+        getProfileIntegration: async (userId) => {
+          try {
+            const { getProfileHashtagIntegration: getProfileIntegrationService } = await import('@/features/hashtags/lib/hashtag-service');
+            const result = await getProfileIntegrationService(userId);
+            
+            if (result.success && result.data) {
+              return result.data;
+            }
+            return null;
+          } catch (error) {
+            console.error('Failed to get profile integration:', error);
+            return null;
+          }
+        },
+        
+        getPollIntegration: async (pollId) => {
+          try {
+            const { getPollHashtagIntegration: getPollIntegrationService } = await import('@/features/hashtags/lib/hashtag-service');
+            const result = await getPollIntegrationService(pollId);
+            
+            if (result.success && result.data) {
+              return result.data;
+            }
+            return null;
+          } catch (error) {
+            console.error('Failed to get poll integration:', error);
+            return null;
+          }
+        },
+        
+        getFeedIntegration: async (feedId) => {
+          try {
+            const { getFeedHashtagIntegration: getFeedIntegrationService } = await import('@/features/hashtags/lib/hashtag-service');
+            const result = await getFeedIntegrationService(feedId);
+            
+            if (result.success && result.data) {
+              return result.data;
+            }
+            return null;
+          } catch (error) {
+            console.error('Failed to get feed integration:', error);
+            return null;
+          }
+        },
+        
+        // Validation
+        validateHashtagName: async (name) => {
+          try {
+            const { validateHashtagName: validateService } = await import('@/features/hashtags/lib/hashtag-service');
+            const result = await validateService(name);
+            
+            if (result.success && result.data) {
+              return result.data;
+            }
+            return null;
+          } catch (error) {
+            console.error('Failed to validate hashtag name:', error);
+            return null;
+          }
+        },
+        
+        // Loading states
+        setSearching: (searching) => set((state) => {
+          state.isSearching = searching;
+        }),
+        
+        setFollowing: (following) => set((state) => {
+          state.isFollowing = following;
+        }),
+        
+        setUnfollowing: (unfollowing) => set((state) => {
+          state.isUnfollowing = unfollowing;
+        }),
+        
+        setCreating: (creating) => set((state) => {
+          state.isCreating = creating;
+        }),
+        
+        setUpdating: (updating) => set((state) => {
+          state.isUpdating = updating;
+        }),
+        
+        setDeleting: (deleting) => set((state) => {
+          state.isDeleting = deleting;
+        }),
+        
+        // Error handling
+        setSearchError: (error) => set((state) => {
+          state.searchError = error;
+        }),
+        
+        setFollowError: (error) => set((state) => {
+          state.followError = error;
+        }),
+        
+        setCreateError: (error) => set((state) => {
+          state.createError = error;
+        }),
+        
+        clearErrors: () => set((state) => {
+          state.error = null;
+          state.searchError = null;
+          state.followError = null;
+          state.createError = null;
+        }),
+        
+        // Getters and utilities
+        getHashtagById: (id) => {
+          const state = get();
+          return state.hashtags.find(h => h.id === id);
+        },
+        
+        getHashtagByName: (name) => {
+          const state = get();
+          return state.hashtags.find(h => h.name === name);
+        },
+        
+        isFollowingHashtag: (hashtagId) => {
+          const state = get();
+          return state.followedHashtags.includes(hashtagId);
+        },
+        
+        getFollowedHashtags: () => {
+          const state = get();
+          return state.userHashtags.map(uh => uh.hashtag);
+        },
+        
+        getTrendingHashtagsByCategory: (category) => {
+          const state = get();
+          return state.trendingHashtags.filter(th => th.hashtag.category === category);
+        },
+        
+        getHashtagSuggestions: (input) => {
+          const state = get();
+          return state.suggestions.filter(s => 
+            s.hashtag.name.toLowerCase().includes(input.toLowerCase()) ||
+            s.hashtag.display_name.toLowerCase().includes(input.toLowerCase())
+          );
+        },
+        
+        // Reset and cleanup
+        resetHashtagStore: () => set((state) => {
+          state.hashtags = [];
+          state.userHashtags = [];
+          state.trendingHashtags = [];
+          state.searchResults = null;
+          state.suggestions = [];
+          state.recentSearches = [];
+          state.userPreferences = null;
+          state.followedHashtags = [];
+          state.primaryHashtags = [];
+          state.isLoading = false;
+          state.isSearching = false;
+          state.isFollowing = false;
+          state.isUnfollowing = false;
+          state.isCreating = false;
+          state.isUpdating = false;
+          state.isDeleting = false;
+          state.error = null;
+          state.searchError = null;
+          state.followError = null;
+          state.createError = null;
+        }),
+        
+        clearHashtagStore: () => {
+          get().resetHashtagStore();
+        }
+      })),
+      {
+        name: 'hashtag-store',
+        partialize: (state) => ({
+          hashtags: state.hashtags,
+          userHashtags: state.userHashtags,
+          trendingHashtags: state.trendingHashtags,
+          recentSearches: state.recentSearches,
+          userPreferences: state.userPreferences,
+          followedHashtags: state.followedHashtags,
+          primaryHashtags: state.primaryHashtags
+        })
+      }
+    ),
+    {
+      name: 'hashtag-store'
+    }
+  )
+);
+
+// Hashtag store selectors for common use cases
+export const hashtagSelectors = {
+  // Core hashtag data
+  hashtags: (state: HashtagStore) => state.hashtags,
+  userHashtags: (state: HashtagStore) => state.userHashtags,
+  trendingHashtags: (state: HashtagStore) => state.trendingHashtags,
+  
+  // Search and discovery
+  searchResults: (state: HashtagStore) => state.searchResults,
+  suggestions: (state: HashtagStore) => state.suggestions,
+  recentSearches: (state: HashtagStore) => state.recentSearches,
+  
+  // User data
+  followedHashtags: (state: HashtagStore) => state.followedHashtags,
+  primaryHashtags: (state: HashtagStore) => state.primaryHashtags,
+  userPreferences: (state: HashtagStore) => state.userPreferences,
+  
+  // Loading states
+  isLoading: (state: HashtagStore) => state.isLoading,
+  isSearching: (state: HashtagStore) => state.isSearching,
+  isFollowing: (state: HashtagStore) => state.isFollowing,
+  isUnfollowing: (state: HashtagStore) => state.isUnfollowing,
+  isCreating: (state: HashtagStore) => state.isCreating,
+  isUpdating: (state: HashtagStore) => state.isUpdating,
+  isDeleting: (state: HashtagStore) => state.isDeleting,
+  
+  // Error states
+  hasError: (state: HashtagStore) => !!state.error,
+  error: (state: HashtagStore) => state.error,
+  searchError: (state: HashtagStore) => state.searchError,
+  followError: (state: HashtagStore) => state.followError,
+  createError: (state: HashtagStore) => state.createError,
+  
+  // Statistics
+  followedCount: (state: HashtagStore) => state.followedHashtags.length,
+  trendingCount: (state: HashtagStore) => state.trendingHashtags.length,
+  searchResultCount: (state: HashtagStore) => state.searchResults?.hashtags.length || 0
+};
+
+// Hashtag store hooks for common patterns
+export const useHashtags = () => useHashtagStore((state) => ({
+  hashtags: state.hashtags,
+  userHashtags: state.userHashtags,
+  trendingHashtags: state.trendingHashtags,
+  followedHashtags: state.followedHashtags,
+  primaryHashtags: state.primaryHashtags
+}));
+
+export const useHashtagSearch = () => useHashtagStore((state) => ({
+  searchResults: state.searchResults,
+  suggestions: state.suggestions,
+  recentSearches: state.recentSearches,
+  isSearching: state.isSearching,
+  searchError: state.searchError
+}));
+
+export const useHashtagLoading = () => useHashtagStore((state) => ({
+  isLoading: state.isLoading,
+  isSearching: state.isSearching,
+  isFollowing: state.isFollowing,
+  isUnfollowing: state.isUnfollowing,
+  isCreating: state.isCreating,
+  isUpdating: state.isUpdating,
+  isDeleting: state.isDeleting
+}));
+
+export const useHashtagError = () => useHashtagStore((state) => ({
+  error: state.error,
+  searchError: state.searchError,
+  followError: state.followError,
+  createError: state.createError,
+  hasError: !!(state.error || state.searchError || state.followError || state.createError)
+}));
+
+export const useHashtagActions = () => useHashtagStore((state) => ({
+  searchHashtags: state.searchHashtags,
+  getTrendingHashtags: state.getTrendingHashtags,
+  getSuggestions: state.getSuggestions,
+  followHashtag: state.followHashtag,
+  unfollowHashtag: state.unfollowHashtag,
+  createHashtag: state.createHashtag,
+  getUserHashtags: state.getUserHashtags,
+  clearSearch: state.clearSearch,
+  clearErrors: state.clearErrors
+}));
+
+export const useHashtagStats = () => useHashtagStore((state) => ({
+  followedCount: state.followedHashtags.length,
+  trendingCount: state.trendingHashtags.length,
+  searchResultCount: state.searchResults?.hashtags.length || 0,
+  recentSearchesCount: state.recentSearches.length
+}));
+
+// Hashtag store utilities
+export const hashtagStoreUtils = {
+  // Initialize hashtag store
+  initialize: () => {
+    console.log('Hashtag store initialized');
+  },
+  
+  // Reset hashtag store
+  reset: () => {
+    useHashtagStore.getState().resetHashtagStore();
+    console.log('Hashtag store reset');
+  },
+  
+  // Get hashtag by ID
+  getHashtagById: (id: string) => {
+    return useHashtagStore.getState().getHashtagById(id);
+  },
+  
+  // Get hashtag by name
+  getHashtagByName: (name: string) => {
+    return useHashtagStore.getState().getHashtagByName(name);
+  },
+  
+  // Check if following hashtag
+  isFollowingHashtag: (hashtagId: string) => {
+    return useHashtagStore.getState().isFollowingHashtag(hashtagId);
+  },
+  
+  // Get followed hashtags
+  getFollowedHashtags: () => {
+    return useHashtagStore.getState().getFollowedHashtags();
+  }
+};
+
+// Hashtag store subscriptions
+export const hashtagStoreSubscriptions = {
+  // Subscribe to hashtag changes
+  onHashtagsChange: (callback: (hashtags: Hashtag[]) => void) => {
+    return useHashtagStore.subscribe(
+      (state) => state.hashtags,
+      callback
+    );
+  },
+  
+  // Subscribe to user hashtag changes
+  onUserHashtagsChange: (callback: (userHashtags: UserHashtag[]) => void) => {
+    return useHashtagStore.subscribe(
+      (state) => state.userHashtags,
+      callback
+    );
+  },
+  
+  // Subscribe to trending hashtag changes
+  onTrendingHashtagsChange: (callback: (trendingHashtags: TrendingHashtag[]) => void) => {
+    return useHashtagStore.subscribe(
+      (state) => state.trendingHashtags,
+      callback
+    );
+  },
+  
+  // Subscribe to search results changes
+  onSearchResultsChange: (callback: (searchResults: HashtagSearchResult | null) => void) => {
+    return useHashtagStore.subscribe(
+      (state) => state.searchResults,
+      callback
+    );
+  }
+};
+
+// Hashtag store debugging
+export const hashtagStoreDebug = {
+  // Log current state
+  logState: () => {
+    const state = useHashtagStore.getState();
+    console.log('Hashtag Store State:', {
+      hashtags: state.hashtags.length,
+      userHashtags: state.userHashtags.length,
+      trendingHashtags: state.trendingHashtags.length,
+      followedHashtags: state.followedHashtags.length,
+      isLoading: state.isLoading,
+      isSearching: state.isSearching,
+      isFollowing: state.isFollowing,
+      error: state.error
+    });
+  },
+  
+  // Reset store
+  reset: () => {
+    hashtagStoreUtils.reset();
+  },
+  
+  // Clear all data
+  clearAll: () => {
+    useHashtagStore.getState().clearHashtagStore();
+    console.log('Hashtag store cleared');
+  }
+};

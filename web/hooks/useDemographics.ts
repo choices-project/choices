@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { devLog } from '@/lib/logger';
+import { devLog } from '@/lib/utils/logger';
 
 type DemographicData = {
   totalUsers: number

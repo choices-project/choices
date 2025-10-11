@@ -13,7 +13,7 @@
 // - Opt-in discovery mechanisms
 // - Cross-demographic insights with privacy protection
 
-import { withOptional } from '@/lib/util/objects';
+import { withOptional } from '@/lib/utils/objects';
 // 
 // Created: January 15, 2025
 // Status: Phase 2 Implementation

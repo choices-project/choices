@@ -8,7 +8,7 @@
  * Agent D - Database Specialist
  */
 
-import { logger } from '@/lib/logger'
+import { logger } from '@/lib/utils/logger'
 import { getSupabaseServerClient } from '@/utils/supabase/server'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
@@ -261,7 +261,7 @@ export class DatabasePerformanceMonitor {
         cacheHitRate: (cacheData as { hit_rate?: number }).hit_rate || 0
       }
     } catch (error) {
-      logger.warn('Failed to get database metrics', error instanceof Error ? error : new Error('Unknown error'))
+      logger.warn('Failed to get database metrics', { error: error instanceof Error ? error.message : 'Unknown error' })
       return {}
     }
   }
@@ -283,7 +283,7 @@ export class DatabasePerformanceMonitor {
         timestamp: Date.now()
       }))
     } catch (error) {
-      logger.warn('Failed to get query performance metrics', error instanceof Error ? error : new Error('Unknown error'))
+      logger.warn('Failed to get query performance metrics', { error: error instanceof Error ? error.message : 'Unknown error' })
       return []
     }
   }
@@ -304,7 +304,7 @@ export class DatabasePerformanceMonitor {
         cpuUsage: (data as { cpu_usage?: number }).cpu_usage || 0
       }
     } catch (error) {
-      logger.warn('Failed to get system metrics', error instanceof Error ? error : new Error('Unknown error'))
+      logger.warn('Failed to get system metrics', { error: error instanceof Error ? error.message : 'Unknown error' })
       return {}
     }
   }

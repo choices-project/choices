@@ -3,7 +3,7 @@
  * Add new flags here; remove when dead.
  */
 
-import { withOptional } from '@/lib/util/objects';
+import { withOptional } from '@/lib/utils/objects';
 export const FEATURE_FLAGS = {
   // ===== CORE MVP FEATURES (Always Enabled) =====
   WEBAUTHN: true,
@@ -36,7 +36,7 @@ export const FEATURE_FLAGS = {
   ADVANCED_PRIVACY: false,           // Zero-knowledge proofs and differential privacy (PARTIALLY IMPLEMENTED - 30%)
   MEDIA_BIAS_ANALYSIS: false,        // Media bias detection and analysis (not MVP ready)
   POLL_NARRATIVE_SYSTEM: false,      // AI-powered poll narrative generation (PARTIALLY IMPLEMENTED - 70%)
-  SOCIAL_SHARING: false,             // Master switch for all social features (PARTIALLY IMPLEMENTED - 60%)
+  SOCIAL_SHARING: true,              // Master switch for all social features (IMPLEMENTED - 100%)
   SOCIAL_SHARING_POLLS: false,       // Poll sharing (Twitter, Facebook, LinkedIn) (PARTIALLY IMPLEMENTED - 60%)
   SOCIAL_SHARING_CIVICS: false,      // Representative sharing (PARTIALLY IMPLEMENTED - 60%)
   SOCIAL_SHARING_VISUAL: false,      // Visual content generation (IG, TikTok) (NOT IMPLEMENTED)

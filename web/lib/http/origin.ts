@@ -6,7 +6,7 @@
  * development, staging, and production environments.
  */
 
-import { devLog } from '../logger';
+import { devLog } from '@/lib/utils/logger';
 
 export type OriginConfig = {
   allowedOrigins: string[];

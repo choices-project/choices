@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
-import { devLog } from '@/lib/logger';
+import { devLog } from '@/lib/utils/logger';
 // import { useFeatureFlags } from './useFeatureFlags';
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
-import { withOptional } from '@/lib/util/objects';
+import { withOptional } from '@/lib/utils/objects';
 
 type AnalyticsData = {
   period: string;

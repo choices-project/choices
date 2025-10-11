@@ -1,18 +1,15 @@
 'use client'
 
-import { useContext } from 'react'
-import { AuthContext } from '@/contexts/AuthContext'
+import { useUser, useUserLoading, useUserActions } from '@/lib/stores'
 
 export function useAuth() {
-  const context = useContext(AuthContext)
-  
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider')
-  }
+  const user = useUser();
+  const isLoading = useUserLoading();
+  const { signOut } = useUserActions();
 
   return {
-    user: context.user,
-    isLoading: context.loading,
-    logout: context.signOut
+    user,
+    isLoading,
+    logout: signOut
   }
 }

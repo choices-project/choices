@@ -1,7 +1,7 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { requireServiceKey } from '@/lib/service-auth';
+import { requireServiceKey } from '@/features/auth/lib/service-auth';
 import * as dotenv from 'dotenv';
 
 // Load environment variables

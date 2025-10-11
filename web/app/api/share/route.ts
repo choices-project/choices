@@ -7,19 +7,15 @@
 
 import { type NextRequest, NextResponse } from 'next/server'
 import { isFeatureEnabled } from '@/lib/core/feature-flags'
-
-// TODO: Replace with actual Supabase client when ready
-// import { createClient } from '@supabase/supabase-js'
-
-// const supabase = createClient(
-//   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-//   process.env.SUPABASE_SERVICE_ROLE_KEY!,
-//   { auth: { persistSession: false } }
-// )
+import { createApiLogger } from '@/lib/utils/api-logger'
+import { getSupabaseServiceRoleClient } from '@/utils/supabase/server'
 
 export async function POST(req: NextRequest) {
+  const logger = createApiLogger('/api/share', 'POST');
+  
   // Feature flag check
   if (!isFeatureEnabled('SOCIAL_SHARING')) {
+    logger.warn('Share tracking attempted but feature disabled');
     return NextResponse.json({ error: 'Feature disabled' }, { status: 404 })
   }
 
@@ -49,18 +45,33 @@ export async function POST(req: NextRequest) {
       // Don't store personal data - just aggregate metrics
     }
 
-    // TODO: Insert into Supabase when ready
-    // const { error } = await supabase
-    //   .from('share_events')
-    //   .insert(clientInfo)
+    // Insert into Supabase using analytics_events table
+    const supabase = await getSupabaseServiceRoleClient()
     
-    // if (error) {
-    //   console.error('Share tracking error:', error)
-    //   return NextResponse.json({ error: 'Tracking failed' }, { status: 500 })
-    // }
+    const { error } = await supabase
+      .from('analytics_events')
+      .insert({
+        event_type: 'social_share',
+        event_category: 'engagement',
+        event_data: {
+          platform,
+          placement,
+          content_type,
+          poll_id
+        },
+        page_url: req.url,
+        user_agent: clientInfo.user_agent,
+        ip_address: clientInfo.ip,
+        session_id: req.headers.get('x-session-id') || null,
+        timestamp: clientInfo.timestamp
+      })
+    
+    if (error) {
+      logger.error('Share tracking error:', error)
+      return NextResponse.json({ error: 'Tracking failed' }, { status: 500 })
+    }
 
-    // For now, just log the event
-    console.log('Share event:', clientInfo)
+    logger.info('Share event tracked successfully', { clientInfo })
 
     return NextResponse.json({ 
       success: true,
@@ -68,7 +79,7 @@ export async function POST(req: NextRequest) {
     })
 
   } catch (error) {
-    console.error('Share API error:', error)
+    logger.error('Share API error', error as Error)
     return NextResponse.json({ 
       error: 'Internal server error' 
     }, { status: 500 })
@@ -77,7 +88,10 @@ export async function POST(req: NextRequest) {
 
 // GET endpoint for share analytics (admin only)
 export async function GET(req: NextRequest) {
+  const logger = createApiLogger('/api/share', 'GET');
+  
   if (!isFeatureEnabled('SOCIAL_SHARING')) {
+    logger.warn('Share analytics requested but feature disabled');
     return NextResponse.json({ error: 'Feature disabled' }, { status: 404 })
   }
 
@@ -88,41 +102,81 @@ export async function GET(req: NextRequest) {
     const days = parseInt(searchParams.get('days') || '7')
 
     // Log share analytics request for audit trail
-    console.log(`Share analytics requested for poll: ${pollId}, platform: ${platform}, days: ${days}`);
+    logger.info('Share analytics requested', { pollId, platform, days });
 
-    // TODO: Query Supabase for share analytics
-    // const { data, error } = await supabase
-    //   .from('share_events')
-    //   .select('*')
-    //   .gte('timestamp', new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString())
-    //   .eq(pollId ? 'poll_id' : '1', pollId || '1')
-    //   .eq(platform ? 'platform' : '1', platform || '1')
-
-    // Mock data for now
-    const mockData = {
-      total_shares: 42,
-      platform_breakdown: {
-        x: 15,
-        facebook: 12,
-        linkedin: 8,
-        whatsapp: 4,
-        email: 2,
-        sms: 1
-      },
-      top_polls: [
-        { poll_id: 'abc123', shares: 25, title: 'Climate Action Poll' },
-        { poll_id: 'def456', shares: 17, title: 'Local Elections Poll' }
-      ],
-      conversion_rate: 0.15, // 15% of shares result in votes
-      period_days: days
+    // Query Supabase for share analytics
+    const supabase = await getSupabaseServiceRoleClient()
+    const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString()
+    
+    // Build query filters
+    let query = supabase
+      .from('analytics_events')
+      .select('*')
+      .eq('event_type', 'social_share')
+      .gte('timestamp', startDate)
+    
+    if (pollId) {
+      query = query.eq('event_data->poll_id', pollId)
+    }
+    
+    if (platform) {
+      query = query.eq('event_data->platform', platform)
+    }
+    
+    const { data: shareEvents, error } = await query
+    
+    if (error) {
+      logger.error('Share analytics query error:', error)
+      return NextResponse.json({ error: 'Analytics query failed' }, { status: 500 })
+    }
+    
+    // Process analytics data
+    const totalShares = shareEvents?.length || 0
+    const platformBreakdown: Record<string, number> = {}
+    const pollShares: Record<string, { shares: number; title?: string }> = {}
+    
+    shareEvents?.forEach(event => {
+      const eventData = event.event_data as any
+      const platform = eventData?.platform || 'unknown'
+      const pollId = eventData?.poll_id
+      
+      // Count platform breakdown
+      platformBreakdown[platform] = (platformBreakdown[platform] || 0) + 1
+      
+      // Count poll shares
+      if (pollId) {
+        if (!pollShares[pollId]) {
+          pollShares[pollId] = { shares: 0 }
+        }
+        pollShares[pollId].shares += 1
+      }
+    })
+    
+    // Get top polls (simplified - would need poll titles from polls table)
+    const topPolls = Object.entries(pollShares)
+      .sort(([,a], [,b]) => b.shares - a.shares)
+      .slice(0, 10)
+      .map(([pollId, data]) => ({
+        poll_id: pollId,
+        shares: data.shares,
+        title: `Poll ${pollId}` // Would need to join with polls table for actual titles
+      }))
+    
+    const analyticsData = {
+      total_shares: totalShares,
+      platform_breakdown: platformBreakdown,
+      top_polls: topPolls,
+      conversion_rate: 0.15, // Would need to calculate from actual vote data
+      period_days: days,
+      generated_at: new Date().toISOString()
     }
 
-    return NextResponse.json(mockData)
+    return NextResponse.json(analyticsData)
 
   } catch (error) {
-    console.error('Share analytics error:', error)
+    logger.error('Share analytics error', error as Error)
     return NextResponse.json({ 
-      error: 'Analytics failed' 
+      error: 'Analytics failed'
     }, { status: 500 })
   }
 }

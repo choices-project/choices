@@ -8,8 +8,8 @@
  * Agent D - Database Specialist
  */
 
-import { logger } from '../logger'
-import { withOptional } from '../util/objects'
+import { logger } from '@/lib/utils/logger'
+import { withOptional } from '@/lib/utils/objects'
 
 // Redis client configuration interface
 export type RedisConfig = {
@@ -184,7 +184,7 @@ export class RedisClient {
         maxMemory: this.config.maxMemory
       })
     } catch (error) {
-      logger.warn('Failed to configure Redis settings', error instanceof Error ? error : new Error('Unknown error'))
+      logger.warn('Failed to configure Redis settings', { error: error instanceof Error ? error.message : 'Unknown error' })
     }
   }
 
@@ -464,7 +464,7 @@ export class RedisClient {
         await this.client.sAdd(`tag:${tag}`, key)
       }
     } catch (error) {
-      logger.warn('Failed to store tag mappings', error instanceof Error ? error : new Error('Unknown error'), { key, tags })
+      logger.warn('Failed to store tag mappings', { error: error instanceof Error ? error.message : 'Unknown error', key, tags })
     }
   }
 
@@ -480,7 +480,7 @@ export class RedisClient {
         await this.client.sRem(tagKey, key)
       }
     } catch (error) {
-      logger.warn('Failed to cleanup tag mappings', error instanceof Error ? error : new Error('Unknown error'), { key })
+      logger.warn('Failed to cleanup tag mappings', { error: error instanceof Error ? error.message : 'Unknown error', key })
     }
   }
 

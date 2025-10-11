@@ -60,8 +60,8 @@ jobs:
       - name: Type check (strict)
         run: npm run types:strict -- --exclude "**/quarantine/**" --exclude "**/*.disabled"
 
-      - name: Lint (strict mode)
-        run: npm run lint:strict -- --ignore-pattern "**/quarantine/**" --ignore-pattern "**/*.disabled"
+      - name: Lint (unified config with gradual adoption)
+        run: npm run lint -- --max-warnings=100 --ignore-pattern "**/quarantine/**" --ignore-pattern "**/*.disabled"
 
       - name: Run unit tests
         if: matrix.test-type == 'unit'

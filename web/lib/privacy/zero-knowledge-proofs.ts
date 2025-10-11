@@ -5,7 +5,7 @@
  * It replaces the old @/shared/core/privacy/lib/zero-knowledge-proofs imports.
  */
 
-import { withOptional } from '@/lib/util/objects';
+import { withOptional } from '@/lib/utils/objects';
 
 export type ZKProof = {
   proof: string;

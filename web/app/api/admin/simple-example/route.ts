@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { requireAdminOr401, getAdminUser } from '@/lib/admin-auth'
+import { requireAdminOr401, getAdminUser } from '@/features/auth/lib/admin-auth'
 
 /**
  * Simple Admin API Example

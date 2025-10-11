@@ -8,8 +8,8 @@
  * - Admin dashboard submissions
  */
 
-import { devLog } from '../logger';
-import { withOptional } from '../util/objects';
+import { devLog } from '@/lib/utils/logger';
+import { withOptional } from '@/lib/utils/objects';
 
 export type ParsedFeedback = {
   id: string;

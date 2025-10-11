@@ -16,9 +16,9 @@ import {
   UserGroupIcon,
   HeartIcon
 } from '@heroicons/react/24/outline';
-import type { SuperiorRepresentativeData } from '@/lib/civics-2-0/superior-data-pipeline';
-import EnhancedCandidateCard from '@/components/civics-2-0/EnhancedCandidateCard';
-import SuperiorMobileFeed from '@/components/SuperiorMobileFeed';
+import type { SuperiorRepresentativeData } from '@/features/civics/lib/civics-superior/superior-data-pipeline';
+import EnhancedCandidateCard from '@/features/civics/components/EnhancedCandidateCard';
+import { SuperiorMobileFeed } from '@/features/feeds';
 
 export default function Civics2Page() {
   const [activeTab, setActiveTab] = useState<'representatives' | 'feed'>('representatives');
