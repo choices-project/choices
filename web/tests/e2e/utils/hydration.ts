@@ -9,7 +9,7 @@
  * Version: V2 - Modernized for current testing patterns
  */
 
-import { Page } from '@playwright/test';
+import { type Page } from '@playwright/test';
 
 // ============================================================================
 // TYPES AND INTERFACES

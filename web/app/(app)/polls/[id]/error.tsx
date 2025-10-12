@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+
 import { logger } from '@/lib/utils/logger';
 
 export default function PollRouteError({ error }: { error: Error & { digest?: string } }) {

@@ -6,8 +6,6 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { logger } from '@/lib/utils/logger';
 import { 
   Settings, 
   Save, 
@@ -23,8 +21,11 @@ import {
   Eye,
   EyeOff
 } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
 
-type SystemConfig = {
+import { logger } from '@/lib/utils/logger';
+
+interface SystemConfig {
   general: {
     siteName: string;
     siteDescription: string;

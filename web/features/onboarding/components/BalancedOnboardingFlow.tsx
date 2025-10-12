@@ -4,9 +4,13 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useSupabaseAuth } from '@/contexts/AuthContext';
+import React, { useState, useEffect } from 'react';
+
+import { FeatureWrapper } from '@/components/shared/FeatureWrapper';
+import { PasskeyRegister } from '@/features/auth/components/PasskeyRegister';
+import type { UserDemographics, PrivacyPreferences, OnboardingData } from '@/features/onboarding/types';
+import { useUser, useUserLoading } from '@/lib/stores';
 import { 
   useOnboardingStep,
   useOnboardingData,
@@ -14,12 +18,8 @@ import {
   useOnboardingLoading,
   useOnboardingError
 } from '@/lib/stores';
-import { PasskeyRegister } from '@/features/auth/components/PasskeyRegister';
-import { FeatureWrapper } from '@/components/shared/FeatureWrapper';
-import { getSupabaseBrowserClient } from '@/utils/supabase/client';
 import { withOptional } from '@/lib/utils/objects';
-
-import type { UserDemographics, PrivacyPreferences, OnboardingData } from '@/features/onboarding/types';
+import { getSupabaseBrowserClient } from '@/utils/supabase/client';
 
 
 // Step 1: Welcome & Value Proposition (30 seconds)
@@ -313,7 +313,7 @@ const DemographicsStep: React.FC<{
                   onChange={(e) => setDemographics(withOptional(demographics, {
                     location: withOptional(demographics.location, { district: e.target.value })
                   }))}
-                  placeholder="e.g., 1st District"
+                  placeholder="Enter your congressional district"
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
@@ -433,52 +433,47 @@ const AuthStep: React.FC<{
   onNext: () => void;
   onBack: () => void;
   onSkip: () => void;
-}> = ({ onNext, onBack, onSkip }) => {
-  const [isLoading, setIsLoading] = useState(false);
+  error?: string | null;
+  isLoading?: boolean;
+}> = ({ onNext, onBack, onSkip, error, isLoading }) => {
   const [authMethod, setAuthMethod] = useState<'email' | 'passkey' | 'google' | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
   const handleAuthMethodSelect = (method: 'email' | 'passkey' | 'google') => {
     setAuthMethod(method);
-    setError(null);
+    // Error is managed by the store
     setSuccess(false);
   };
 
   const handlePasskeySuccess = () => {
     setSuccess(true);
-    setIsLoading(false);
     setTimeout(() => {
       onNext();
     }, 1000);
   };
 
   const handlePasskeyError = (error: string) => {
-    setError(error);
-    setIsLoading(false);
+    // Error is managed by the store
+    console.error('Passkey error:', error);
   };
 
   const handleEmailAuth = async () => {
-    setIsLoading(true);
     try {
       // Redirect to registration page for email auth
       const { safeNavigate } = await import('@/lib/utils/ssr-safe');
       safeNavigate('/register');
     } catch {
-      setError('Failed to redirect to registration');
-      setIsLoading(false);
+      console.error('Failed to redirect to registration');
     }
   };
 
   const handleGoogleAuth = async () => {
-    setIsLoading(true);
     try {
       // Redirect to Google OAuth
       const { safeNavigate } = await import('@/lib/utils/ssr-safe');
       safeNavigate('/auth/google');
     } catch {
-      setError('Failed to redirect to Google authentication');
-      setIsLoading(false);
+      console.error('Failed to redirect to Google authentication');
     }
   };
 
@@ -698,7 +693,7 @@ const ProfileStep: React.FC<{
             type="text"
             value={displayName}
             onChange={(e) => setDisplayName(e.target.value)}
-            placeholder="How would you like to be known?"
+            placeholder="Enter your display name"
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
@@ -711,7 +706,7 @@ const ProfileStep: React.FC<{
           <textarea
             value={bio}
             onChange={(e) => setBio(e.target.value)}
-            placeholder="Tell us a bit about yourself..."
+            placeholder="Share a brief description about yourself (optional)"
             rows={3}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
@@ -894,12 +889,13 @@ const CompleteStep: React.FC<{
  */
 const BalancedOnboardingFlow: React.FC = () => {
   const currentStep = useOnboardingStep();
-  const onboardingData = useOnboardingData();
-  const { nextStep: _nextStep, previousStep: _prevStep, updateFormData: _updateOnboardingData, completeOnboarding: _completeOnboarding, setCurrentStep, updateFormData } = useOnboardingActions();
-  const _loading = useOnboardingLoading();
-  const _error = useOnboardingError();
+  const onboardingData = useOnboardingData() as any;
+  const { nextStep, previousStep, updateFormData, completeOnboarding, setCurrentStep } = useOnboardingActions() as any;
+  const loading = useOnboardingLoading();
+  const error = useOnboardingError();
 
-  const { user, isLoading } = useSupabaseAuth();
+  const user = useUser();
+  const isLoading = useUserLoading();
 
   // Check if user has already completed onboarding
   useEffect(() => {
@@ -929,12 +925,12 @@ const BalancedOnboardingFlow: React.FC = () => {
   }, [user, isLoading]);
 
   const handleNext = () => {
-    _nextStep();
+    nextStep();
   };
 
 
   const handleBack = () => {
-    _prevStep();
+    previousStep();
   };
 
   const handleSkip = () => {
@@ -961,9 +957,7 @@ const BalancedOnboardingFlow: React.FC = () => {
       }
 
     // Complete onboarding
-    setOnboardingData(prev => withOptional(prev, {
-      completedSteps: [...prev.completedSteps, currentStep]
-    }));
+    completeOnboarding();
     
     // Redirect to main app
     window.location.href = '/civics';
@@ -1016,7 +1010,7 @@ const BalancedOnboardingFlow: React.FC = () => {
         />
       )}
       {currentStep === 3 && (
-        <AuthStep onNext={handleNext} onBack={handleBack} onSkip={handleNext} />
+        <AuthStep onNext={handleNext} onBack={handleBack} onSkip={handleNext} error={error} isLoading={loading} />
       )}
       {currentStep === 4 && (
         <ProfileStep 

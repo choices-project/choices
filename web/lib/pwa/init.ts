@@ -5,8 +5,9 @@
  * It should be called early in the application lifecycle.
  */
 
-import { logger } from '@/lib/utils/logger';
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
+import { logger } from '@/lib/utils/logger';
+
 import { initializeServiceWorker } from './service-worker';
 
 /**
@@ -107,7 +108,7 @@ function setupUpdateChecks(): void {
         }
       }
     } catch (error) {
-      logger.error('PWA: Update check failed:', error);
+      logger.error('PWA: Update check failed:', error instanceof Error ? error : undefined, { error: error instanceof Error ? error.message : String(error) });
     }
   }, 30 * 60 * 1000); // 30 minutes
 }
@@ -182,6 +183,6 @@ export function trackPWAEvent(eventName: string, properties?: Record<string, any
       detail: { eventName, properties, timestamp: new Date().toISOString() }
     }));
   } catch (error) {
-    logger.error('PWA: Failed to track analytics event:', error);
+    logger.error('PWA: Failed to track analytics event:', error instanceof Error ? error : undefined, { error: error instanceof Error ? error.message : String(error) });
   }
 }

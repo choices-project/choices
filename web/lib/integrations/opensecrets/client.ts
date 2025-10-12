@@ -11,7 +11,7 @@
 import { devLog } from '@/lib/utils/logger';
 
 // Types for OpenSecrets API responses
-export type OpenSecretsCandidate = {
+export interface OpenSecretsCandidate {
   cid: string;
   firstlast: string;
   lastname: string;
@@ -36,7 +36,7 @@ export type OpenSecretsCandidate = {
   birthdate: string;
 }
 
-export type OpenSecretsContributor = {
+export interface OpenSecretsContributor {
   org_name: string;
   total: number;
   pacs: number;
@@ -49,7 +49,7 @@ export type OpenSecretsContributor = {
   cycle: number;
 }
 
-export type OpenSecretsIndustry = {
+export interface OpenSecretsIndustry {
   industry_code: string;
   industry_name: string;
   indivs: number;
@@ -58,7 +58,7 @@ export type OpenSecretsIndustry = {
   cycle: number;
 }
 
-export type OpenSecretsLobbying = {
+export interface OpenSecretsLobbying {
   client: string;
   client_id: string;
   year: number;
@@ -73,7 +73,7 @@ export type OpenSecretsLobbying = {
   report_type_long: string;
 }
 
-export type OpenSecretsBill = {
+export interface OpenSecretsBill {
   bill_id: string;
   bill_number: string;
   bill_title: string;
@@ -106,7 +106,7 @@ export type OpenSecretsBill = {
   }>;
 }
 
-export type OpenSecretsApiResponse<T> = {
+export interface OpenSecretsApiResponse<T> {
   response: {
     legislator?: T[];
     contributors?: T[];
@@ -121,7 +121,7 @@ export type OpenSecretsApiResponse<T> = {
   };
 }
 
-export type OpenSecretsClientConfig = {
+export interface OpenSecretsClientConfig {
   apiKey: string;
   baseUrl?: string;
   rateLimit?: {

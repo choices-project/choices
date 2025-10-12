@@ -1,10 +1,5 @@
 'use client';
 
-import React from 'react';
-import Link from 'next/link';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { 
   Users, 
   BarChart3, 
@@ -13,8 +8,15 @@ import {
   Calendar,
   User
 } from 'lucide-react';
+import Link from 'next/link';
+import React from 'react';
 
-type Poll = {
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+
+
+interface Poll {
   id: string;
   title: string;
   description: string;
@@ -28,7 +30,7 @@ type Poll = {
   votingMethod: 'single' | 'approval' | 'ranked' | 'quadratic' | 'range';
 }
 
-type PollCardProps = {
+interface PollCardProps {
   poll: Poll;
   showActions?: boolean;
   className?: string;

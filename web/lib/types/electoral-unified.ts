@@ -7,7 +7,7 @@
  */
 
 // Types moved from archived unified-orchestrator.ts
-export type CampaignFinance = {
+export interface CampaignFinance {
   totalReceipts: number;
   totalDisbursements: number;
   cashOnHand: number;
@@ -18,9 +18,9 @@ export type CampaignFinance = {
   selfFinancing: number;
   cycle: number;
   lastUpdated: string;
-};
+}
 
-export type Vote = {
+export interface Vote {
   id: string;
   representativeId: string;
   billId: string;
@@ -32,9 +32,9 @@ export type Vote = {
   chamber: 'house' | 'senate';
   partyLineVote: boolean;
   constituentAlignment: number;
-};
+}
 
-export type Representative = {
+export interface Representative {
   id: string
   name: string
   party: string
@@ -78,7 +78,7 @@ export type Representative = {
   platform?: string[]
 }
 
-export type UserLocation = {
+export interface UserLocation {
   address?: string
   city?: string
   stateCode?: string
@@ -102,7 +102,7 @@ export type UserLocation = {
   }
 }
 
-export type ElectoralRace = {
+export interface ElectoralRace {
   raceId: string
   office: string
   jurisdiction: string
@@ -123,7 +123,7 @@ export type ElectoralRace = {
   importance: 'high' | 'medium' | 'low'
 }
 
-export type Candidate = {
+export interface Candidate {
   id: string
   name: string
   party: string
@@ -158,7 +158,7 @@ export type Candidate = {
   platform?: string[]
 }
 
-export type Activity = {
+export interface Activity {
   id: string
   type: 'vote' | 'statement' | 'event'
   title: string

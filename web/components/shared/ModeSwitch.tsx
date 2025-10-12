@@ -1,8 +1,5 @@
 'use client';
 
-import React from 'react';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   BarChart3, 
   Clock, 
@@ -11,10 +8,14 @@ import {
   EyeOff,
   Lock
 } from 'lucide-react';
+import React from 'react';
+
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export type ResultsMode = 'live' | 'baseline' | 'drift';
 
-type ModeSwitchProps = {
+interface ModeSwitchProps {
   mode: ResultsMode;
   onModeChange: (mode: ResultsMode) => void;
   hasBaseline?: boolean;
@@ -152,7 +153,7 @@ export function ModeSwitch({
                 variant={isActive ? "default" : "outline"}
                 className={`
                   flex items-center space-x-1 text-xs
-                  ${isActive ? modeInfo.bgColor + ' ' + modeInfo.color : ''}
+                  ${isActive ? `${modeInfo.bgColor  } ${  modeInfo.color}` : ''}
                   ${!isAvailable ? 'opacity-50' : ''}
                 `}
               >

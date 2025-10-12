@@ -7,7 +7,7 @@
 
 import { withOptional } from '@/lib/utils/objects';
 
-export type PrivateQueryResult<T = any> = {
+export interface PrivateQueryResult<T = any> {
   data: T;
   privacyBudget: number;
   noiseLevel: number;
@@ -19,7 +19,7 @@ export type PrivateQueryResult<T = any> = {
   confidenceInterval?: [number, number];
 }
 
-export type DifferentialPrivacyConfig = {
+export interface DifferentialPrivacyConfig {
   epsilon: number;
   delta: number;
   sensitivity: number;
@@ -189,10 +189,10 @@ export class DifferentialPrivacyManager {
       if (voteData && voteData.length > 0) {
         voteData.forEach((vote: any) => {
           const voteData = vote.vote_data;
-          if (voteData && voteData.selectedOptions) {
+          if (voteData?.selectedOptions) {
             voteData.selectedOptions.forEach((optionId: string) => {
               if (optionCounts.hasOwnProperty(optionId)) {
-                optionCounts[optionId]++;
+                optionCounts[optionId] = (optionCounts[optionId] || 0) + 1;
               }
             });
           }
@@ -215,7 +215,7 @@ export class DifferentialPrivacyManager {
       // Build results with privacy protection
       const results = Object.keys(optionCounts).map((optionId, index) => ({
         optionId,
-        count: Math.max(0, Math.round(noisyCounts[index])), // Ensure non-negative
+        count: Math.max(0, Math.round(noisyCounts[index] || 0)), // Ensure non-negative
         percentage: percentages[index]
       }));
 

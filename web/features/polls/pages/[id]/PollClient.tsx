@@ -8,10 +8,11 @@
 'use client';
 
 import { useState } from 'react';
+
 import { useAuth } from '@/hooks/useAuth';
 import { logger } from '@/lib/logger';
 
-type PollClientProps = {
+interface PollClientProps {
   poll: {
     id: string;
     title: string;

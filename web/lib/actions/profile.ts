@@ -11,13 +11,14 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+
 import { 
   requireProfileUser, 
   validateProfileData 
 } from '@/lib/core/auth/profile-auth';
 
 // Types for superior implementation - matches documented superior implementation
-export type ProfileUser = {
+export interface ProfileUser {
   id: string;
   email: string;
   username?: string;
@@ -31,7 +32,7 @@ export type ProfileUser = {
   updated_at: string;
 }
 
-export type ProfileUpdateData = {
+export interface ProfileUpdateData {
   // Core profile fields
   bio?: string;
   username?: string;
@@ -54,7 +55,7 @@ export type ProfileUpdateData = {
   geo_source?: string;
 }
 
-export type ProfileActionResult = {
+export interface ProfileActionResult {
   success: boolean;
   data?: any;
   error?: string;

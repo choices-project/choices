@@ -10,6 +10,7 @@
 
 import { devLog } from '@/lib/utils/logger';
 import { withOptional } from '@/lib/utils/objects';
+
 import type { 
   VotingStrategy, 
   VoteRequest, 
@@ -89,7 +90,7 @@ export class RangeStrategy implements VotingStrategy {
       }
 
       // Check if at least one option has a non-zero rating
-      const hasNonZeroRating = Object.values(ratings).some(rating => (rating as number) > rangeMin);
+      const hasNonZeroRating = Object.values(ratings).some(rating => (rating) > rangeMin);
       if (!hasNonZeroRating) {
         return {
           isValid: false,
@@ -136,8 +137,8 @@ export class RangeStrategy implements VotingStrategy {
 
       // Calculate total score for audit
       const ratings = voteData.ratings || {};
-      const totalScore = Object.values(ratings).reduce((sum: number, rating) => sum + (rating as number), 0);
-      const averageScore = Object.keys(ratings).length > 0 ? (totalScore as number) / Object.keys(ratings).length : 0;
+      const totalScore = Object.values(ratings).reduce((sum: number, rating) => sum + (rating), 0);
+      const averageScore = Object.keys(ratings).length > 0 ? (totalScore) / Object.keys(ratings).length : 0;
 
       // In a real implementation, this would:
       // 1. Store the vote in the database
@@ -225,7 +226,7 @@ export class RangeStrategy implements VotingStrategy {
         if (vote.ratings && typeof vote.ratings === 'object') {
           totalVotes++;
           Object.entries(vote.ratings).forEach(([optionIndex, rating]) => {
-            const ratingNum = rating as number;
+            const ratingNum = rating;
             const optionIdx = optionIndex.toString();
             // Ensure the option exists in our tracking objects
             if (rangeScores[optionIdx] !== undefined && 

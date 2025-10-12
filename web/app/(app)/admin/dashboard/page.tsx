@@ -1,8 +1,9 @@
 'use client';
 
-import React, { Suspense } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import dynamic from 'next/dynamic';
+import React, { Suspense } from 'react';
+
 import { AdminLayout } from '../layout/AdminLayout';
 
 // Create a client

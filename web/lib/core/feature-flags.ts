@@ -15,7 +15,6 @@ export const FEATURE_FLAGS = {
   USER_SUGGESTIONS_MANAGER: false, // Admin can access from laptop for now
   
   // ===== ENHANCED MVP FEATURES (FULLY IMPLEMENTED) =====
-  // ENHANCED_ONBOARDING: true,      // DEPRECATED - Replaced by BalancedOnboardingFlow (5-step consolidated system)
   ENHANCED_PROFILE: true,            // Advanced profile management with privacy controls
   // ENHANCED_AUTH: true,               // REMOVED: SSR-safe utilities are core infrastructure, not optional features
   // ENHANCED_DASHBOARD: true,         // REMOVED: Now the default dashboard (no feature flag needed)
@@ -60,7 +59,7 @@ export const FEATURE_FLAGS = {
 } as const;
 
 // Define proper types for feature flag system
-export type FeatureFlag = {
+export interface FeatureFlag {
   id: string;
   name: string;
   enabled: boolean;
@@ -69,7 +68,7 @@ export type FeatureFlag = {
   category?: string;
 }
 
-export type FeatureFlagMetadata = {
+export interface FeatureFlagMetadata {
   description?: string;
   category?: string;
   dependencies?: string[];
@@ -77,17 +76,18 @@ export type FeatureFlagMetadata = {
   deprecated?: boolean;
 }
 
-export type FeatureFlagConfig = {
+export interface FeatureFlagConfig {
+  [key: string]: unknown;
   flags: Record<string, boolean>;
   timestamp: string;
   version: string;
 }
 
-export type FeatureFlagSubscription = {
+export interface FeatureFlagSubscription {
   unsubscribe: () => void;
 }
 
-export type FeatureFlagSystemInfo = {
+export interface FeatureFlagSystemInfo {
   totalFlags: number;
   enabledFlags: number;
   disabledFlags: number;
@@ -147,7 +147,7 @@ function categorizeFlag(flagId: string): string {
     core: ['CORE_AUTH', 'CORE_POLLS', 'CORE_USERS', 'WEBAUTHN', 'PWA', 'ADMIN', 'FEEDBACK_WIDGET'],
     
     // Enhanced MVP features ready for implementation
-    enhanced: ['ENHANCED_ONBOARDING', 'ENHANCED_PROFILE', 'ENHANCED_DASHBOARD', 'ENHANCED_POLLS', 'ENHANCED_VOTING'],
+    enhanced: ['ENHANCED_PROFILE', 'ENHANCED_POLLS', 'ENHANCED_VOTING'],
     
     // Future features requiring development
     future: ['AUTOMATED_POLLS', 'ADVANCED_PRIVACY', 'CIVICS_ADDRESS_LOOKUP', 'SOCIAL_SHARING', 'SOCIAL_SHARING_POLLS', 'SOCIAL_SHARING_CIVICS', 'SOCIAL_SHARING_VISUAL', 'SOCIAL_SHARING_OG', 'SOCIAL_SIGNUP'],
@@ -266,7 +266,7 @@ export const featureFlagManager = {
       core: ['WEBAUTHN', 'PWA', 'ADMIN', 'FEEDBACK_WIDGET'],
       
       // Enhanced MVP features ready for implementation
-      enhanced: ['ENHANCED_ONBOARDING', 'ENHANCED_PROFILE', 'ENHANCED_DASHBOARD', 'ENHANCED_POLLS', 'ENHANCED_VOTING', 'CIVICS_ADDRESS_LOOKUP'],
+      enhanced: ['ENHANCED_PROFILE', 'ENHANCED_POLLS', 'ENHANCED_VOTING', 'CIVICS_ADDRESS_LOOKUP'],
       
       // Future features requiring development
       future: ['AUTOMATED_POLLS', 'ADVANCED_PRIVACY', 'SOCIAL_SHARING', 'SOCIAL_SHARING_POLLS', 'SOCIAL_SHARING_CIVICS', 'SOCIAL_SHARING_VISUAL', 'SOCIAL_SHARING_OG', 'SOCIAL_SIGNUP'],
@@ -287,7 +287,7 @@ export const featureFlagManager = {
       enabled: mutableFlags[flagId as FeatureFlagKey] || false,
       description: `Feature flag for ${flagId.toLowerCase().replace(/_/g, ' ')}`,
       key: flagId as FeatureFlagKey,
-      category: category
+      category
     }));
   },
   getSystemInfo: (): FeatureFlagSystemInfo => ({
@@ -297,7 +297,7 @@ export const featureFlagManager = {
     environment: process.env.NODE_ENV || 'development',
     categories: {
       core: 4,        // WEBAUTHN, PWA, ADMIN, FEEDBACK_WIDGET
-      enhanced: 6,    // ENHANCED_ONBOARDING, ENHANCED_PROFILE, ENHANCED_DASHBOARD, ENHANCED_POLLS, ENHANCED_VOTING, CIVICS_ADDRESS_LOOKUP
+      enhanced: 5,    // ENHANCED_PROFILE, ENHANCED_POLLS, ENHANCED_VOTING, CIVICS_ADDRESS_LOOKUP, CIVICS_REPRESENTATIVE_DATABASE
       future: 8,      // AUTOMATED_POLLS, ADVANCED_PRIVACY, SOCIAL_SHARING + 5 sub-features
       performance: 3, // PERFORMANCE_OPTIMIZATION, FEATURE_DB_OPTIMIZATION_SUITE, ANALYTICS
       // experimental: 0, // Removed - not actually implemented
@@ -308,7 +308,6 @@ export const featureFlagManager = {
     // Enhanced dependency check for all features
     const dependencies: Record<string, string[]> = {
       // Enhanced feature dependencies (simplified - no core dependencies needed)
-      'ENHANCED_ONBOARDING': [],
       'ENHANCED_PROFILE': [],
       'ENHANCED_DASHBOARD': [],
       'ENHANCED_POLLS': [],

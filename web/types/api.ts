@@ -5,22 +5,22 @@
 /**
  * Successful API response
  */
-export type ApiOk<T> = { 
+export interface ApiOk<T> { 
   ok: true; 
   data: T;
   message?: string;
-};
+}
 
 /**
  * Error API response
  */
-export type ApiErr = { 
+export interface ApiErr { 
   ok: false; 
   code: string; 
   message: string; 
   errors?: string[];
   details?: Record<string, unknown>;
-};
+}
 
 /**
  * Discriminated union for all API responses

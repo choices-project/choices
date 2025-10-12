@@ -9,8 +9,8 @@
  * Version: V2 - Modernized for current patterns
  */
 
-import { useState, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
+import { useState, useCallback, useMemo } from 'react';
 
 // ============================================================================
 // TYPES AND INTERFACES
@@ -233,7 +233,9 @@ export function usePollWizard() {
     setState(prev => {
       const newOptions = [...prev.data.options];
       const [removed] = newOptions.splice(fromIndex, 1);
-      newOptions.splice(toIndex, 0, removed);
+      if (removed) {
+        newOptions.splice(toIndex, 0, removed);
+      }
 
       return {
         ...prev,

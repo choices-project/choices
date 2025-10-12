@@ -14,11 +14,9 @@ import {
   setupE2ETestData, 
   cleanupE2ETestData, 
   createTestUser, 
-  createTestPoll,
-  waitForPageReady,
-  setupExternalAPIMocks,
-  E2E_CONFIG
-} from './helpers/e2e-setup';
+  getTestData,
+  testDataManager
+} from '../helpers/e2e-setup';
 
 test.describe('API Endpoints - V2', () => {
   let testData: {
@@ -207,7 +205,7 @@ test.describe('API Endpoints - V2', () => {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          optionId: optionId,
+          optionId,
           votingMethod: 'single'
         })
       });

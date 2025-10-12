@@ -9,8 +9,8 @@
  * Status: ✅ ACTIVE
  */
 
-import { createClient } from '../../../utils/supabase/client';
 import { withOptional } from '../../../lib/utils/objects';
+import { createClient } from '../../../utils/supabase/client';
 import type {
   Hashtag,
   HashtagSuggestion,
@@ -1114,5 +1114,52 @@ async function getRecentActivity() {
   } catch (error) {
     console.error('Failed to get recent activity:', error);
     return [];
+  }
+}
+
+/**
+ * Update user preferences
+ */
+export async function updateUserPreferences(preferences: Partial<HashtagUserPreferences>): Promise<HashtagApiResponse<HashtagUserPreferences>> {
+  try {
+    const { data, error } = await supabase
+      .from('hashtag_user_preferences')
+      .upsert(preferences)
+      .select()
+      .single();
+
+    if (error) {
+      return { success: false, error: error.message };
+    }
+
+    return { success: true, data };
+  } catch (error) {
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Failed to update user preferences' 
+    };
+  }
+}
+
+/**
+ * Get user preferences
+ */
+export async function getUserPreferences(): Promise<HashtagApiResponse<HashtagUserPreferences>> {
+  try {
+    const { data, error } = await supabase
+      .from('hashtag_user_preferences')
+      .select('*')
+      .single();
+
+    if (error) {
+      return { success: false, error: error.message };
+    }
+
+    return { success: true, data };
+  } catch (error) {
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Failed to get user preferences' 
+    };
   }
 }

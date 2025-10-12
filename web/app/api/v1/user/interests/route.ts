@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from 'next/server';
-import { getSupabaseServerClient } from '@/utils/supabase/server';
+
 import { logger } from '@/lib/utils/logger';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
@@ -88,7 +89,7 @@ export async function POST(request: NextRequest) {
     const { error: updateError } = await supabase
       .from('users')
       .update({ 
-        interests: interests,
+        interests,
         updated_at: new Date().toISOString()
       })
       .eq('id', user.id);
@@ -106,7 +107,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       message: 'Interests saved successfully',
-      interests: interests
+      interests
     });
 
   } catch (error) {

@@ -11,7 +11,7 @@
 import { devLog } from '@/lib/utils/logger';
 
 // Types for Congress.gov API responses
-export type CongressGovCongress = {
+export interface CongressGovCongress {
   congress: number;
   name: string;
   startYear: string;
@@ -24,7 +24,7 @@ export type CongressGovCongress = {
   }>;
 }
 
-export type CongressGovMember = {
+export interface CongressGovMember {
   bioguideId: string;
   fullName: string;
   firstName: string;
@@ -37,7 +37,7 @@ export type CongressGovMember = {
   apiUri: string;
 }
 
-export type CongressGovBill = {
+export interface CongressGovBill {
   congress: number;
   billId: string;
   billType: string;
@@ -60,7 +60,7 @@ export type CongressGovBill = {
   apiUri: string;
 }
 
-export type CongressGovVote = {
+export interface CongressGovVote {
   rollCall: number;
   congress: number;
   session: number;
@@ -79,7 +79,7 @@ export type CongressGovVote = {
   apiUri: string;
 }
 
-export type CongressGovApiResponse<T> = {
+export interface CongressGovApiResponse<T> {
   results: T[];
   pagination?: {
     count: number;
@@ -88,7 +88,7 @@ export type CongressGovApiResponse<T> = {
   };
 }
 
-export type CongressGovClientConfig = {
+export interface CongressGovClientConfig {
   apiKey: string;
   baseUrl?: string;
   rateLimit?: {

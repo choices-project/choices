@@ -33,7 +33,6 @@
     "sourceMap": true,
     /* Stricter TypeScript settings for better type safety */
     "noUncheckedIndexedAccess": true,
-    "exactOptionalPropertyTypes": true,
     "noImplicitOverride": true,
     "verbatimModuleSyntax": true,
     "useUnknownInCatchVariables": true

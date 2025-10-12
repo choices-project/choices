@@ -10,10 +10,6 @@
 
 'use client';
 
-import { useState, useRef } from 'react';
-import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { 
   Camera, 
   Upload, 
@@ -22,8 +18,14 @@ import {
   AlertTriangle,
   CheckCircle
 } from 'lucide-react';
-import { useProfileAvatar } from '../hooks/use-profile';
+import { useState, useRef } from 'react';
+
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+
+import { useProfileAvatar } from '../hooks/use-profile';
 import type { ProfileAvatarProps } from '../types';
 
 export default function ProfileAvatar({

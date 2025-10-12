@@ -12,11 +12,13 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { persist } from 'zustand/middleware';
+import { shallow } from 'zustand/shallow';
+
 import { logger } from '@/lib/utils/logger';
 import { withOptional } from '@/lib/utils/objects';
 
 // Onboarding data types
-type AuthData = {
+interface AuthData {
   method?: 'email' | 'google' | 'apple' | 'phone';
   email?: string;
   phone?: string;
@@ -27,7 +29,7 @@ type AuthData = {
   marketingOptIn?: boolean;
 }
 
-type ProfileData = {
+interface ProfileData {
   firstName?: string;
   lastName?: string;
   username?: string;
@@ -42,7 +44,7 @@ type ProfileData = {
   website?: string;
 }
 
-type ValuesData = {
+interface ValuesData {
   politicalAffiliation?: string;
   primaryInterests?: string[];
   secondaryInterests?: string[];
@@ -56,7 +58,7 @@ type ValuesData = {
   };
 }
 
-type PreferencesData = {
+interface PreferencesData {
   theme?: 'light' | 'dark' | 'system';
   language?: string;
   timezone?: string;
@@ -67,7 +69,7 @@ type PreferencesData = {
   marketing?: boolean;
 }
 
-type OnboardingStep = {
+interface OnboardingStep {
   id: number;
   title: string;
   description: string;
@@ -79,7 +81,7 @@ type OnboardingStep = {
 }
 
 // Onboarding store state interface
-type OnboardingStore = {
+interface OnboardingStore {
   // Onboarding state
   currentStep: number;
   totalSteps: number;
@@ -236,37 +238,49 @@ export const useOnboardingStore = create<OnboardingStore>()(
           const newStep = Math.max(0, Math.min(step, state.totalSteps - 1));
           const progress = (newStep / state.totalSteps) * 100;
           
-          set({ currentStep: newStep, progress });
-          
           logger.info('Onboarding step changed', {
             from: state.currentStep,
             to: newStep,
             progress: Math.round(progress)
           });
+          
+          return {
+            ...state,
+            currentStep: newStep,
+            progress
+          };
         }),
         
         nextStep: () => set((state) => {
           const nextStep = Math.min(state.currentStep + 1, state.totalSteps - 1);
           const progress = (nextStep / state.totalSteps) * 100;
           
-          set({ currentStep: nextStep, progress });
-          
           logger.info('Onboarding next step', {
             currentStep: nextStep,
             progress: Math.round(progress)
           });
+          
+          return {
+            ...state,
+            currentStep: nextStep,
+            progress
+          };
         }),
         
         previousStep: () => set((state) => {
           const prevStep = Math.max(state.currentStep - 1, 0);
           const progress = (prevStep / state.totalSteps) * 100;
           
-          set({ currentStep: prevStep, progress });
-          
           logger.info('Onboarding previous step', {
             currentStep: prevStep,
             progress: Math.round(progress)
           });
+          
+          return {
+            ...state,
+            currentStep: prevStep,
+            progress
+          };
         }),
         
         goToStep: (step) => {
@@ -275,17 +289,18 @@ export const useOnboardingStore = create<OnboardingStore>()(
         },
         
         completeOnboarding: () => set((state) => {
-          set({
-            isCompleted: true,
-            isActive: false,
-            progress: 100,
-            completedSteps: [...state.completedSteps, state.currentStep]
-          });
-          
           logger.info('Onboarding completed', {
             totalSteps: state.totalSteps,
             completedSteps: state.completedSteps.length + 1
           });
+          
+          return {
+            ...state,
+            isCompleted: true,
+            isActive: false,
+            progress: 100,
+            completedSteps: [...state.completedSteps, state.currentStep]
+          };
         }),
         
         skipOnboarding: () => set({
@@ -468,7 +483,7 @@ export const useOnboardingStore = create<OnboardingStore>()(
           } catch (error) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
             setError(errorMessage);
-            logger.error('Failed to save onboarding progress:', errorMessage);
+            logger.error('Failed to save onboarding progress', error instanceof Error ? error : new Error(errorMessage));
           } finally {
             setSaving(false);
           }
@@ -506,7 +521,7 @@ export const useOnboardingStore = create<OnboardingStore>()(
           } catch (error) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
             setError(errorMessage);
-            logger.error('Failed to load onboarding progress:', errorMessage);
+            logger.error('Failed to load onboarding progress', error instanceof Error ? error : new Error(errorMessage));
           } finally {
             setLoading(false);
           }
@@ -541,7 +556,7 @@ export const useOnboardingStore = create<OnboardingStore>()(
           } catch (error) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
             setError(errorMessage);
-            logger.error('Failed to submit onboarding:', errorMessage);
+            logger.error('Failed to submit onboarding', error instanceof Error ? error : new Error(errorMessage));
           } finally {
             setSubmitting(false);
           }
@@ -585,6 +600,9 @@ export const useOnboardingCompleted = () => useOnboardingStore(state => state.is
 export const useOnboardingSkipped = () => useOnboardingStore(state => state.isSkipped);
 export const useOnboardingActive = () => useOnboardingStore(state => state.isActive);
 export const useOnboardingData = () => useOnboardingStore(state => ({
+  currentStep: state.currentStep,
+  progress: state.progress,
+  isCompleted: state.isCompleted,
   authData: state.authData,
   profileData: state.profileData,
   valuesData: state.valuesData,
@@ -706,11 +724,8 @@ export const onboardingStoreSubscriptions = {
    */
   onProgressChange: (callback: (progress: number) => void) => {
     return useOnboardingStore.subscribe(
-      (state) => state.progress,
-      (progress, prevProgress) => {
-        if (progress !== prevProgress) {
-          callback(progress);
-        }
+      (state) => {
+        callback(state.progress);
       }
     );
   },
@@ -720,11 +735,8 @@ export const onboardingStoreSubscriptions = {
    */
   onStepChange: (callback: (step: number) => void) => {
     return useOnboardingStore.subscribe(
-      (state) => state.currentStep,
-      (step, prevStep) => {
-        if (step !== prevStep) {
-          callback(step);
-        }
+      (state) => {
+        callback(state.currentStep);
       }
     );
   },
@@ -734,11 +746,8 @@ export const onboardingStoreSubscriptions = {
    */
   onCompletionChange: (callback: (isCompleted: boolean) => void) => {
     return useOnboardingStore.subscribe(
-      (state) => state.isCompleted,
-      (isCompleted, prevIsCompleted) => {
-        if (isCompleted !== prevIsCompleted) {
-          callback(isCompleted);
-        }
+      (state) => {
+        callback(state.isCompleted);
       }
     );
   }

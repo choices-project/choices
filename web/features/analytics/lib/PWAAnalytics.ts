@@ -12,10 +12,12 @@
  * Updated: January 27, 2025
  */
 
-import { type AnalyticsEngine } from './AnalyticsEngine';
 import { logger } from '@/lib/utils/logger';
 
-export type PWAInstallationEvent = {
+import { type AnalyticsEngine } from './AnalyticsEngine';
+
+export interface PWAInstallationEvent {
+  [key: string]: unknown;
   eventType: 'install_prompt_shown' | 'install_prompt_accepted' | 'install_prompt_dismissed' | 'app_installed' | 'app_uninstalled';
   platform: string;
   userAgent: string;
@@ -25,7 +27,8 @@ export type PWAInstallationEvent = {
   previousVisits?: number;
 }
 
-export type PWAOfflineEvent = {
+export interface PWAOfflineEvent {
+  [key: string]: unknown;
   eventType: 'offline_entered' | 'offline_exited' | 'offline_action_queued' | 'offline_action_synced' | 'offline_vote_cast';
   actionType?: 'vote' | 'comment' | 'like' | 'share' | 'create_poll';
   offlineDuration?: number;
@@ -34,7 +37,8 @@ export type PWAOfflineEvent = {
   dataSize?: number;
 }
 
-export type PWAPerformanceEvent = {
+export interface PWAPerformanceEvent {
+  [key: string]: unknown;
   eventType: 'service_worker_registered' | 'service_worker_updated' | 'cache_hit' | 'cache_miss' | 'background_sync';
   cacheName?: string;
   cacheSize?: number;
@@ -43,7 +47,8 @@ export type PWAPerformanceEvent = {
   networkStatus?: 'online' | 'offline' | 'slow';
 }
 
-export type PWANotificationEvent = {
+export interface PWANotificationEvent {
+  [key: string]: unknown;
   eventType: 'notification_permission_requested' | 'notification_permission_granted' | 'notification_permission_denied' | 'notification_sent' | 'notification_clicked' | 'notification_dismissed';
   notificationType?: 'poll_created' | 'poll_closed' | 'vote_cast' | 'representative_update' | 'system_announcement';
   clickAction?: string;
@@ -51,7 +56,7 @@ export type PWANotificationEvent = {
   engagementRate?: number;
 }
 
-export type PWAEngagementMetrics = {
+export interface PWAEngagementMetrics {
   totalInstallations: number;
   installationRate: number;
   offlineUsageRate: number;
@@ -62,7 +67,7 @@ export type PWAEngagementMetrics = {
   featureAdoptionRate: Record<string, number>;
 }
 
-export type PWAPlatformMetrics = {
+export interface PWAPlatformMetrics {
   platform: string;
   installRate: number;
   offlineUsage: number;
@@ -186,7 +191,7 @@ class PWAAnalytics {
    * Calculate engagement metrics
    */
   calculateEngagementMetrics(): PWAEngagementMetrics {
-    const installationEvents = this.pwaEvents.filter(e => 'installSource' in e) as PWAInstallationEvent[];
+    const installationEvents = this.pwaEvents.filter(e => 'installSource' in e);
     const offlineEvents = this.pwaEvents.filter(e => 'actionType' in e) as PWAOfflineEvent[];
     const performanceEvents = this.pwaEvents.filter(e => 'cacheName' in e) as PWAPerformanceEvent[];
     const notificationEvents = this.pwaEvents.filter(e => 'notificationType' in e) as PWANotificationEvent[];
@@ -217,7 +222,7 @@ class PWAAnalytics {
     const featureAdoptionRate: Record<string, number> = {};
     const featureCounts = this.analyticsEngine.getFeatureUsage();
     Object.entries(featureCounts).forEach(([feature, count]) => {
-      featureAdoptionRate[feature] = (count as number) / totalSessions;
+      featureAdoptionRate[feature] = (count) / totalSessions;
     });
 
     this.engagementMetrics = {
@@ -251,7 +256,7 @@ class PWAAnalytics {
 
     // Aggregate data by platform
     this.pwaEvents.forEach(event => {
-      const platform = 'platform' in event ? event.platform : 'unknown';
+      const platform = 'platform' in event && typeof event.platform === 'string' ? event.platform : 'unknown';
       if (!platformData.has(platform)) {
         platformData.set(platform, {
           installations: 0,
@@ -308,7 +313,7 @@ class PWAAnalytics {
   /**
    * Get PWA engagement dashboard data
    */
-  getDashboardData(): {
+  async getDashboardData(): Promise<{
     engagement: PWAEngagementMetrics;
     platforms: PWAPlatformMetrics[];
     trends: {
@@ -316,12 +321,12 @@ class PWAAnalytics {
       offlineUsage: Array<{ date: string; rate: number }>;
       performance: Array<{ date: string; score: number }>;
     };
-  } {
+  }> {
     const engagement = this.calculateEngagementMetrics();
     const platforms = Array.from(this.platformMetrics.values());
     
     // Generate trend data (last 30 days)
-    const trends = this.generateTrendData();
+    const trends = await this.generateTrendData();
 
     return {
       engagement,
@@ -473,40 +478,179 @@ class PWAAnalytics {
   /**
    * Generate trend data for dashboard
    */
-  private generateTrendData(): {
+  private async generateTrendData(): Promise<{
     installations: Array<{ date: string; count: number }>;
     offlineUsage: Array<{ date: string; rate: number }>;
     performance: Array<{ date: string; score: number }>;
-  } {
-    // This would generate actual trend data from historical events
-    // For now, return mock data
-    const days = 30;
-    const trends = {
-      installations: [] as Array<{ date: string; count: number }>,
-      offlineUsage: [] as Array<{ date: string; rate: number }>,
-      performance: [] as Array<{ date: string; score: number }>
-    };
+  }> {
+    try {
+      // Get real analytics data from the analytics service
+      const { AnalyticsService } = await import('@/features/analytics/lib/analytics-service');
+      const analyticsService = AnalyticsService.getInstance();
+      
+      // Get analytics summary for trend data
+      const summary = await analyticsService.getAnalyticsSummary();
+      
+      // Get PWA installation events from the last 30 days
+      const installations = await this.getInstallationTrends();
+      
+      // Get offline usage patterns
+      const offlineUsage = await this.getOfflineUsageTrends();
+      
+      // Get performance metrics
+      const performance = await this.getPerformanceTrends();
 
-    for (let i = days - 1; i >= 0; i--) {
-      const date = new Date(Date.now() - i * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-      
-      trends.installations.push({
-        date: date as string,
-        count: Math.floor(Math.random() * 10)
-      });
-      
-      trends.offlineUsage.push({
-        date: date as string,
-        rate: Math.random() * 0.5
-      });
-      
-      trends.performance.push({
-        date: date as string,
-        score: 70 + Math.random() * 30
-      });
+      return {
+        installations,
+        offlineUsage,
+        performance
+      };
+    } catch (error) {
+      // Fallback to empty data structure if analytics service is unavailable
+      return {
+        installations: [],
+        offlineUsage: [],
+        performance: []
+      };
     }
+  }
 
-    return trends;
+  private async getInstallationTrends(): Promise<Array<{ date: string; count: number }>> {
+    try {
+      const supabase = await import('@/utils/supabase/client').then(m => m.getSupabaseClient());
+      if (!supabase) return [];
+
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+      const { data, error } = await supabase
+        .from('analytics_events')
+        .select('created_at')
+        .eq('event_type', 'pwa_install')
+        .gte('created_at', thirtyDaysAgo.toISOString())
+        .order('created_at', { ascending: true });
+
+      if (error) return [];
+
+      // Group by date and count installations
+      const dailyCounts = new Map<string, number>();
+      data?.forEach(event => {
+        const date = new Date(event.created_at).toISOString().split('T')[0];
+        if (date) {
+          dailyCounts.set(date, (dailyCounts.get(date) || 0) + 1);
+        }
+      });
+
+      // Fill in missing dates with 0 counts
+      const result: Array<{ date: string; count: number }> = [];
+      for (let i = 29; i >= 0; i--) {
+        const date = new Date(Date.now() - i * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+        if (date) {
+          result.push({
+            date,
+            count: dailyCounts.get(date) || 0
+          });
+        }
+      }
+
+      return result;
+    } catch (error) {
+      return [];
+    }
+  }
+
+  private async getOfflineUsageTrends(): Promise<Array<{ date: string; rate: number }>> {
+    try {
+      const supabase = await import('@/utils/supabase/client').then(m => m.getSupabaseClient());
+      if (!supabase) return [];
+
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+      const { data, error } = await supabase
+        .from('analytics_events')
+        .select('created_at, event_type')
+        .in('event_type', ['offline_access', 'online_access'])
+        .gte('created_at', thirtyDaysAgo.toISOString())
+        .order('created_at', { ascending: true });
+
+      if (error) return [];
+
+      // Calculate offline usage rate by date
+      const dailyStats = new Map<string, { offline: number; total: number }>();
+      data?.forEach(event => {
+        const date = new Date(event.created_at).toISOString().split('T')[0];
+        if (date) {
+          const stats = dailyStats.get(date) || { offline: 0, total: 0 };
+          stats.total++;
+          if (event.event_type === 'offline_access') {
+            stats.offline++;
+          }
+          dailyStats.set(date, stats);
+        }
+      });
+
+      // Calculate rates
+      const result: Array<{ date: string; rate: number }> = [];
+      for (let i = 29; i >= 0; i--) {
+        const date = new Date(Date.now() - i * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+        if (date) {
+          const stats = dailyStats.get(date);
+          const rate = stats && stats.total > 0 ? stats.offline / stats.total : 0;
+          result.push({ date, rate });
+        }
+      }
+
+      return result;
+    } catch (error) {
+      return [];
+    }
+  }
+
+  private async getPerformanceTrends(): Promise<Array<{ date: string; score: number }>> {
+    try {
+      const supabase = await import('@/utils/supabase/client').then(m => m.getSupabaseClient());
+      if (!supabase) return [];
+
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+      const { data, error } = await supabase
+        .from('analytics_events')
+        .select('created_at, event_data')
+        .eq('event_type', 'performance_metric')
+        .gte('created_at', thirtyDaysAgo.toISOString())
+        .order('created_at', { ascending: true });
+
+      if (error) return [];
+
+      // Calculate average performance score by date
+      const dailyScores = new Map<string, number[]>();
+      data?.forEach(event => {
+        const date = new Date(event.created_at).toISOString().split('T')[0];
+        if (date) {
+          const score = event.event_data?.score || 0;
+          const scores = dailyScores.get(date) || [];
+          scores.push(score);
+          dailyScores.set(date, scores);
+        }
+      });
+
+      // Calculate average scores
+      const result: Array<{ date: string; score: number }> = [];
+      for (let i = 29; i >= 0; i--) {
+        const date = new Date(Date.now() - i * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+        if (date) {
+          const scores = dailyScores.get(date) || [];
+          const avgScore = scores.length > 0 ? scores.reduce((a, b) => a + b, 0) / scores.length : 0;
+          result.push({ date, score: avgScore });
+        }
+      }
+
+      return result;
+    } catch (error) {
+      return [];
+    }
   }
 
   /**

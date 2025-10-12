@@ -7,7 +7,7 @@
 
 import { withOptional } from '@/lib/utils/objects';
 
-export type ErrorResponse = {
+export interface ErrorResponse {
   error: string;
   message: string;
   statusCode: number;
@@ -16,14 +16,16 @@ export type ErrorResponse = {
   timestamp: string;
 }
 
-export type ErrorDetails = {
+export interface ErrorDetails {
+  [key: string]: unknown;
   field?: string;
   value?: unknown;
   constraint?: string;
   context?: ErrorContext;
 }
 
-export type ErrorContext = {
+export interface ErrorContext {
+  [key: string]: unknown;
   userId?: string;
   requestId?: string;
   endpoint?: string;

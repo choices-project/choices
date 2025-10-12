@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+
 import { 
   usePWAInstallation,
   usePWAOffline,
@@ -8,14 +9,15 @@ import {
   usePWALoading,
   usePWAError
 } from '@/lib/stores'
-import OfflineIndicator from './OfflineIndicator'
-import OfflineQueue from './OfflineQueue'
-import OfflineVoting from './OfflineVoting'
-import OfflineSync from './OfflineSync'
+
 import NotificationPermission from './NotificationPermission'
 import NotificationPreferences from './NotificationPreferences'
+import OfflineIndicator from './OfflineIndicator'
+import OfflineQueue from './OfflineQueue'
+import OfflineSync from './OfflineSync'
+import OfflineVoting from './OfflineVoting'
 
-type PWAFeaturesProps = {
+interface PWAFeaturesProps {
   className?: string
   showDetails?: boolean
 }

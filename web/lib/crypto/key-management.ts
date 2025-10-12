@@ -22,7 +22,7 @@
 // TYPES AND INTERFACES
 // ============================================================================
 
-export type SecureKey = {
+export interface SecureKey {
   id: string;
   key: CryptoKey;
   algorithm: string;
@@ -33,7 +33,7 @@ export type SecureKey = {
   version: number;
 }
 
-export type WrappedKey = {
+export interface WrappedKey {
   wrapped: string; // Base64 encoded wrapped key
   iv: number[]; // IV used for wrapping
   salt: number[]; // Salt used for key derivation
@@ -41,14 +41,14 @@ export type WrappedKey = {
   keyId: string;
 }
 
-export type KeyRotationPolicy = {
+export interface KeyRotationPolicy {
   rotationInterval: number; // milliseconds
   maxKeyAge: number; // milliseconds
   autoRotation: boolean;
   backupBeforeRotation: boolean;
 }
 
-export type EncryptionResult = {
+export interface EncryptionResult {
   ciphertext: string;
   iv: number[];
   keyId: string;
@@ -56,7 +56,7 @@ export type EncryptionResult = {
   timestamp: Date;
 }
 
-export type DecryptionResult = {
+export interface DecryptionResult {
   plaintext: string;
   keyId: string;
   algorithm: string;
@@ -205,7 +205,7 @@ export class SecureKeyManager {
     const ciphertext = await crypto.subtle.encrypt(
       {
         name: 'AES-GCM',
-        iv: iv
+        iv
       },
       key.key,
       data
@@ -232,7 +232,7 @@ export class SecureKeyManager {
     const plaintext = await crypto.subtle.decrypt(
       {
         name: 'AES-GCM',
-        iv: iv
+        iv
       },
       key.key,
       ciphertext
@@ -277,7 +277,7 @@ export class SecureKeyManager {
     const kek = await crypto.subtle.deriveKey(
       {
         name: 'PBKDF2',
-        salt: salt,
+        salt,
         iterations: 200_000, // High iteration count for security
         hash: 'SHA-256'
       },
@@ -290,7 +290,7 @@ export class SecureKeyManager {
     const iv = this.generateIV();
     const wrapped = await crypto.subtle.wrapKey('raw', key.key, kek, {
       name: 'AES-GCM',
-      iv: iv
+      iv
     });
 
     return {
@@ -335,7 +335,7 @@ export class SecureKeyManager {
       'raw',
       wrapped,
       kek,
-      { name: 'AES-GCM', iv: iv },
+      { name: 'AES-GCM', iv },
       { name: 'AES-GCM', length: 256 },
       false,
       ['encrypt', 'decrypt']
@@ -490,7 +490,7 @@ export class SecureKeyManager {
     );
   }
 
-  listKeys(): Omit<SecureKey, 'key'>[] {
+  listKeys(): Array<Omit<SecureKey, 'key'>> {
     return Array.from(this.keys.values()).map(key => withOptional(
       {
         id: key.id,
@@ -534,8 +534,8 @@ export async function deriveKeyFromPassphrase(
   return crypto.subtle.deriveKey(
     {
       name: 'PBKDF2',
-      salt: salt,
-      iterations: iterations,
+      salt,
+      iterations,
       hash: 'SHA-256'
     },
     base,

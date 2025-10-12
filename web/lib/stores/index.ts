@@ -12,30 +12,29 @@
 // Store Imports (for internal use)
 // ============================================================================
 
-import { useUserStore } from './userStore';
 import { useAppStore } from './appStore';
-import { useNotificationStore } from './notificationStore';
-
-// Import hooks from simpleStores
-// Import hooks from individual store files
-import { 
-  useUser, 
-  useIsAuthenticated, 
-  useUserActions,
-  userStoreDebug
-} from './userStore';
 import { 
   useTheme, 
   useSidebarCollapsed, 
   useAppActions,
   appStoreDebug
 } from './appStore';
+import { useNotificationStore } from './notificationStore';
+
+// Import hooks from individual store files
 import { 
   useNotifications, 
   useUnreadCount, 
   useNotificationActions,
   notificationStoreDebug
 } from './notificationStore';
+import { 
+  useUser, 
+  useIsAuthenticated, 
+  useUserActions,
+  userStoreDebug
+} from './userStore';
+import { useUserStore } from './userStore';
 
 // ============================================================================
 // Store Exports
@@ -56,11 +55,24 @@ export { useVotingStore } from './votingStore';
 
 // Global System Stores
 export { useFeatureFlagsStore } from './featureFlagsStore';
-export { useGlobalUIStore } from './globalUIStore';
 export { useDeviceStore } from './deviceStore';
-export { usePerformanceStore } from './performanceStore';
+export { 
+  usePerformanceStore,
+  useDatabaseMetrics,
+  useCacheStats,
+  useLastRefresh,
+  useAutoRefresh,
+  useRefreshInterval,
+  usePerformanceActions,
+  usePerformanceLoading,
+  usePerformanceError
+} from './performanceStore';
 export { useProfileStore } from './profileStore';
 export { useHashtagStore } from './hashtagStore';
+
+// New State Management Stores
+export { useUIStore } from './uiStore';
+export { usePollWizardStore } from './pollWizardStore';
 
 // ============================================================================
 // Store Selectors
@@ -81,14 +93,41 @@ export {
   useUserAvatar,
   useUserTheme,
   useUserNotifications,
+  // Profile editing selectors
+  useUserProfileEditData,
+  useUserIsProfileEditing,
+  useUserProfileEditErrors,
+  // Address and representatives selectors
+  useUserCurrentAddress,
+  useUserCurrentState,
+  useUserRepresentatives,
+  useUserShowAddressForm,
+  useUserNewAddress,
+  useUserAddressLoading,
+  useUserSavedSuccessfully,
+  // Avatar selectors
+  useUserAvatarFile,
+  useUserAvatarPreview,
+  useUserIsUploadingAvatar,
 } from './userStore';
 
 // App store selectors
 export {
   useTheme,
+  useSystemTheme,
+  useResolvedTheme,
   useSidebarCollapsed,
   useSidebarWidth,
   useSidebarPinned,
+  useSidebarActiveSection,
+  useActiveModal,
+  useModalData,
+  useModalStack,
+  useIsMobile,
+  useIsTablet,
+  useIsDesktop,
+  useScreenSize,
+  useOrientation,
   useFeatureFlags,
   useAppSettings,
   useCurrentRoute,
@@ -132,6 +171,24 @@ export {
   useAdminActions,
   useAdminStats,
   useRecentActivity,
+  // User management selectors
+  useAdminUsers,
+  useAdminUserFilters,
+  useAdminUserActions,
+  // Dashboard selectors
+  useAdminActiveTab,
+  useAdminDashboardStats,
+  useAdminDashboardActions,
+  // System settings selectors
+  useAdminSystemSettings,
+  useAdminSettingsTab,
+  useAdminIsSavingSettings,
+  useAdminSystemSettingsActions,
+  // Reimport selectors
+  useAdminReimportProgress,
+  useAdminReimportLogs,
+  useAdminIsReimportRunning,
+  useAdminReimportActions,
 } from './adminStore';
 
 // Onboarding store selectors
@@ -271,8 +328,51 @@ export {
   useHashtagError,
   useHashtagActions,
   useHashtagStats,
+  useHashtagFilters,
+  useHashtagCategory,
+  useHashtagSortBy,
+  useHashtagTimeRange,
+  useHashtagSearchQuery,
   hashtagSelectors,
 } from './hashtagStore';
+
+
+// UI store selectors
+export {
+  useModals,
+  useModal,
+  useSidebar,
+  useNavigation,
+  useToasts,
+  useGlobalLoading,
+  usePageLoading,
+  useIsModalOpen,
+  useActiveModals,
+  useToastCount,
+  useCurrentBreadcrumbs,
+  useCanNavigate,
+  useUIActions,
+  useUIDebug,
+  useUISubscription,
+} from './uiStore';
+
+// Poll wizard store selectors
+export {
+  usePollWizardData,
+  usePollWizardStep,
+  usePollWizardProgress,
+  usePollWizardLoading,
+  usePollWizardErrors,
+  usePollWizardCanProceed,
+  usePollWizardCanGoBack,
+  usePollWizardIsComplete,
+  usePollWizardActions,
+  usePollWizardStats,
+  usePollWizardStepData,
+  usePollWizardStepErrors,
+  usePollWizardStepValidation,
+} from './pollWizardStore';
+
 
 // ============================================================================
 // Store Utilities
@@ -368,6 +468,33 @@ export {
   hashtagStoreSubscriptions,
   hashtagStoreDebug,
 } from './hashtagStore';
+
+// Hashtag moderation store
+export { useHashtagModerationStore } from './hashtagModerationStore';
+
+// Hashtag moderation store selectors
+export {
+  useModerationModal,
+  useModerationForm,
+  useModerationQueue,
+  useSelectedModeration,
+  useModerationLoading,
+  useModerationError,
+  useModerationActions,
+  useModerationStats,
+  usePendingFlags,
+  useModerationSubscription,
+  useModerationDebug,
+  moderationStoreUtils,
+} from './hashtagModerationStore';
+
+// Poll wizard store utilities
+export {
+  pollWizardStoreUtils,
+  pollWizardStoreSubscriptions,
+  pollWizardStoreDebug,
+} from './pollWizardStore';
+
 
 // ============================================================================
 // Type Exports
@@ -488,7 +615,7 @@ export const initializeStores = () => {
   // Initialize notification store
   useNotificationStore.getState().clearAll();
   
-  console.log('All stores initialized');
+  // Stores initialized successfully
 };
 
 /**
@@ -500,7 +627,7 @@ export const resetStores = () => {
   useAppStore.getState().resetSettings();
   useNotificationStore.getState().clearAll();
   
-  console.log('All stores reset');
+  // All stores reset successfully
 };
 
 /**
@@ -608,7 +735,7 @@ export const debugAllStores = () => {
   appStoreDebug.logState();
   notificationStoreDebug.logState();
   
-  console.log('Store Statistics:', getStoreStats());
+  // Store statistics retrieved
 };
 
 /**
@@ -619,7 +746,7 @@ export const debugResetAllStores = () => {
   useAppStore.getState().setError(null);
   useNotificationStore.getState().clearAll();
   
-  console.log('All stores reset for debugging');
+  // All stores reset for debugging
 };
 
 // ============================================================================
@@ -651,11 +778,11 @@ export const validateStores = () => {
   }
   
   if (errors.length > 0) {
-    console.error('Store validation errors:', errors);
+    // Store validation errors detected
     return false;
   }
   
-  console.log('All stores validated successfully');
+  // All stores validated successfully
   return true;
 };
 
@@ -678,7 +805,7 @@ export const monitorStorePerformance = () => {
   const duration = endTime - startTime;
   
   if (duration > 10) {
-    console.warn('Slow store access detected:', `${duration.toFixed(2)}ms`);
+    // Slow store access detected
   }
   
   return {

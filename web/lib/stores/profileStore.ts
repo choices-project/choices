@@ -10,10 +10,9 @@
 
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
-import { immer } from 'zustand/middleware/immer';
 import { persist } from 'zustand/middleware';
-import { withOptional } from '@/lib/utils/objects';
-import type { BaseStore } from './types';
+import { immer } from 'zustand/middleware/immer';
+
 import type { 
   ProfileUser, 
   UserProfile, 
@@ -24,13 +23,17 @@ import type {
   AvatarUploadResult,
   ProfileExportData
 } from '@/features/profile/types';
+import { withOptional } from '@/lib/utils/objects';
+
+import type { BaseStore } from './types';
+
 
 // Local type definition
-type ProfileCompleteness = {
+interface ProfileCompleteness {
   isComplete: boolean;
   percentage: number;
   missingFields: string[];
-};
+}
 
 // Profile store state interface
 type ProfileStore = {
@@ -204,7 +207,11 @@ export const useProfileStore = create<ProfileStore>()(
             
             if (result.success) {
               set((state) => {
-                state.preferences = withOptional(state.preferences, preferences);
+                if (state.preferences) {
+                  state.preferences = withOptional(state.preferences, preferences);
+                } else {
+                  state.preferences = preferences;
+                }
                 state.isUpdating = false;
               });
               return true;

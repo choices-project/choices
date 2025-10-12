@@ -5,6 +5,7 @@
 
 import { devLog } from '@/lib/utils/logger'
 import { withOptional } from '@/lib/utils/objects'
+
 import type { UserJourney, FeedbackContext } from '../types'
 
 // Using consolidated types from ../types
@@ -184,7 +185,7 @@ class FeedbackTracker {
       timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
       screenResolution: `${screen.width}x${screen.height}`,
       viewportSize: `${window.innerWidth}x${window.innerHeight}`,
-      userAgent: userAgent // Include user agent for debugging and analytics
+      userAgent // Include user agent for debugging and analytics
     }
   }
   

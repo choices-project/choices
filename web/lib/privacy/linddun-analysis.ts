@@ -23,7 +23,7 @@ import { withOptional } from '@/lib/utils/objects';
 // TYPES AND INTERFACES
 // ============================================================================
 
-export type LINDDUNThreat = {
+export interface LINDDUNThreat {
   dimension: string;
   threat: string;
   mitigation: string;
@@ -32,7 +32,7 @@ export type LINDDUNThreat = {
   status: 'requires_attention' | 'mitigated' | 'acceptable';
 }
 
-export type DataFlow = {
+export interface DataFlow {
   id: string;
   name: string;
   source: string;
@@ -46,7 +46,7 @@ export type DataFlow = {
   anonymization: boolean;
 }
 
-export type ThreatAssessment = {
+export interface ThreatAssessment {
   overallRisk: number;
   threats: LINDDUNThreat[];
   recommendations: string[];
@@ -58,7 +58,7 @@ export type ThreatAssessment = {
   };
 }
 
-export type PrivacyRisk = {
+export interface PrivacyRisk {
   category: string;
   riskLevel: 'low' | 'medium' | 'high' | 'critical';
   description: string;
@@ -68,7 +68,7 @@ export type PrivacyRisk = {
   priority: number;
 }
 
-export type RetentionPolicy = {
+export interface RetentionPolicy {
   dataType: string;
   retentionPeriod: number; // milliseconds
   autoDelete: boolean;
@@ -451,7 +451,7 @@ export class PrivacyThreatAssessmentManager {
    */
   shouldDeleteData(dataType: string, createdAt: Date): boolean {
     const policy = this.getRetentionPolicy(dataType);
-    if (!policy || !policy.autoDelete) {
+    if (!policy?.autoDelete) {
       return false;
     }
 

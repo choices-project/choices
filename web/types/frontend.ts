@@ -3,7 +3,7 @@
 // Purpose: Type definitions for frontend API and components
 
 // API Types
-export type ApiResponse<T = unknown> = {
+export interface ApiResponse<T = unknown> {
   data: T;
   success: boolean;
   message?: string;
@@ -19,14 +19,14 @@ export type PaginatedResponse<T> = {
   };
 } & ApiResponse<T[]>
 
-export type ApiError = {
+export interface ApiError {
   code: string;
   message: string;
   details?: Record<string, unknown>;
 }
 
 // Poll Types
-export type Poll = {
+export interface Poll {
   id: string;
   title: string;
   description: string;
@@ -40,7 +40,7 @@ export type Poll = {
   settings: PollSettings;
 }
 
-export type PollOption = {
+export interface PollOption {
   id: string;
   text: string;
   description?: string;
@@ -48,7 +48,7 @@ export type PollOption = {
   order: number;
 }
 
-export type PollSettings = {
+export interface PollSettings {
   allowMultipleVotes: boolean;
   requireAuthentication: boolean;
   showResults: boolean;
@@ -57,14 +57,14 @@ export type PollSettings = {
 }
 
 // Results Types
-export type PollResult = {
+export interface PollResult {
   pollId: string;
   totalVotes: number;
   results: OptionResult[];
   metadata: ResultMetadata;
 }
 
-export type OptionResult = {
+export interface OptionResult {
   optionId: string;
   optionText: string;
   votes: number;
@@ -72,7 +72,7 @@ export type OptionResult = {
   rank: number;
 }
 
-export type ResultMetadata = {
+export interface ResultMetadata {
   strategy: string;
   processedAt: Date;
   totalRounds: number;
@@ -81,7 +81,7 @@ export type ResultMetadata = {
 }
 
 // Component Props Types
-export type WebAuthnAuthProps = {
+export interface WebAuthnAuthProps {
   onSuccess: (credential: PublicKeyCredential) => void;
   onError: (error: Error) => void;
   mode: 'register' | 'authenticate';
@@ -89,7 +89,7 @@ export type WebAuthnAuthProps = {
   className?: string;
 }
 
-export type PollListProps = {
+export interface PollListProps {
   polls: Poll[];
   loading: boolean;
   error?: string;
@@ -98,7 +98,7 @@ export type PollListProps = {
   hasMore: boolean;
 }
 
-export type ResultsChartProps = {
+export interface ResultsChartProps {
   results: PollResult;
   chartType: 'bar' | 'pie' | 'line';
   showPercentages: boolean;
@@ -106,7 +106,7 @@ export type ResultsChartProps = {
 }
 
 // Event Handler Types
-export type PollEventHandler = {
+export interface PollEventHandler {
   onVote: (pollId: string, selections: string[]) => Promise<void>;
   onShare: (pollId: string) => void;
   onBookmark: (pollId: string) => void;
@@ -114,7 +114,7 @@ export type PollEventHandler = {
 }
 
 // WebAuthn Types
-export type WebAuthnCredentialResponse = {
+export interface WebAuthnCredentialResponse {
   id: string;
   type: string;
   rawId: number[];
@@ -128,7 +128,7 @@ export type WebAuthnCredentialResponse = {
 }
 
 // Dashboard Data Types
-export type DashboardData = {
+export interface DashboardData {
   totalPolls: number;
   activePolls: number;
   closedPolls: number;
@@ -137,21 +137,21 @@ export type DashboardData = {
   // Add more specific fields as needed
 }
 
-export type GeographicData = {
+export interface GeographicData {
   country: string;
   city: string;
   count: number;
   // Add more specific fields as needed
 }
 
-export type DemographicsData = {
+export interface DemographicsData {
   ageGroup: string;
   gender: string;
   count: number;
   // Add more specific fields as needed
 }
 
-export type EngagementData = {
+export interface EngagementData {
   date: string;
   interactions: number;
   // Add more specific fields as needed

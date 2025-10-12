@@ -1,6 +1,5 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
 import { 
   BarChart3, 
   TrendingUp, 
@@ -12,6 +11,8 @@ import {
   Shield,
   Brain
 } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+
 import { 
   useAnalyticsDashboard,
   useAnalyticsLoading,
@@ -19,7 +20,7 @@ import {
   useAnalyticsActions
 } from '@/lib/stores';
 
-type AnalyticsView = {
+interface AnalyticsView {
   id: string;
   name: string;
   description: string;

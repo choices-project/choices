@@ -5,113 +5,62 @@
  * It's loaded only when needed to reduce initial bundle size.
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
+
 import { performanceMetrics } from '@/lib/performance/performance-metrics';
 import { handleLoadError, handleSaveError } from '@/lib/utils/error-handler';
-import { withOptional } from '@/lib/utils/objects';
+import { 
+  useAdminSystemSettings,
+  useAdminSettingsTab,
+  useAdminIsSavingSettings,
+  useAdminSystemSettingsActions,
+  useAdminLoading,
+  useAdminError
+} from '@/lib/stores';
 
-type SystemSettings = {
-  general: {
-    siteName: string;
-    siteDescription: string;
-    maintenanceMode: boolean;
-    allowRegistration: boolean;
-    requireEmailVerification: boolean;
-  };
-  performance: {
-    enableCaching: boolean;
-    cacheTTL: number;
-    enableCompression: boolean;
-    maxFileSize: number;
-  };
-  security: {
-    enableRateLimiting: boolean;
-    maxRequestsPerMinute: number;
-    enableCSP: boolean;
-    enableHSTS: boolean;
-  };
-  notifications: {
-    enableEmailNotifications: boolean;
-    enablePushNotifications: boolean;
-    notificationFrequency: 'immediate' | 'daily' | 'weekly';
-  };
-}
-
-type SystemSettingsProps = {
-  onSettingsUpdate?: (settings: SystemSettings) => void;
+interface SystemSettingsProps {
+  onSettingsUpdate?: (settings: any) => void;
 }
 
 export default function SystemSettings({ onSettingsUpdate }: SystemSettingsProps) {
-  const [settings, setSettings] = useState<SystemSettings | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'general' | 'performance' | 'security' | 'notifications'>('general');
+  // Get state from adminStore
+  const settings = useAdminSystemSettings();
+  const activeTab = useAdminSettingsTab();
+  const saving = useAdminIsSavingSettings();
+  const loading = useAdminLoading();
+  const error = useAdminError();
+  const { 
+    updateSystemSetting, 
+    setSettingsTab, 
+    loadSystemSettings,
+    saveSystemSettings
+  } = useAdminSystemSettingsActions();
 
   useEffect(() => {
     const startTime = performance.now();
     
     const loadSettings = async () => {
       try {
-        setLoading(true);
-        setError(null);
-        
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 600));
-        
-        // Mock data - in real implementation, this would come from an API
-        const mockSettings: SystemSettings = {
-          general: {
-            siteName: 'Choices Platform',
-            siteDescription: 'A modern voting platform for democratic decision making',
-            maintenanceMode: false,
-            allowRegistration: true,
-            requireEmailVerification: true,
-          },
-          performance: {
-            enableCaching: true,
-            cacheTTL: 3600,
-            enableCompression: true,
-            maxFileSize: 10485760, // 10MB
-          },
-          security: {
-            enableRateLimiting: true,
-            maxRequestsPerMinute: 100,
-            enableCSP: true,
-            enableHSTS: true,
-          },
-          notifications: {
-            enableEmailNotifications: true,
-            enablePushNotifications: false,
-            notificationFrequency: 'immediate',
-          },
-        };
-        
-        setSettings(mockSettings);
+        await loadSystemSettings();
         
         const loadTime = performance.now() - startTime;
         performanceMetrics.addMetric('system-settings-load', loadTime);
       } catch (error) {
-        setError(handleLoadError(error, 'system settings').message);
         performanceMetrics.addMetric('system-settings-error', 1);
         // Error loading system settings - handled by error boundary
-      } finally {
-        setLoading(false);
       }
     };
     
     loadSettings();
-  }, []);
+  }, [loadSystemSettings]);
 
   const handleSave = async () => {
     if (!settings) return;
     
-    setSaving(true);
     try {
       const startTime = performance.now();
       
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await saveSystemSettings();
       
       onSettingsUpdate?.(settings);
       
@@ -121,24 +70,17 @@ export default function SystemSettings({ onSettingsUpdate }: SystemSettingsProps
       // Show success message
       // Settings saved successfully - notification handled by parent component
     } catch (error) {
-      setError(handleSaveError(error, 'settings').message);
       performanceMetrics.addMetric('system-settings-save-error', 1);
       // Error saving system settings - handled by error boundary
-    } finally {
-      setSaving(false);
     }
   };
 
-  const handleSettingChange = (section: keyof SystemSettings, key: string, value: any) => {
-    if (!settings) return;
-    
-    setSettings(withOptional(settings, {
-      [section]: withOptional(settings[section], { [key]: value })
-    }));
+  const handleSettingChange = (section: 'general' | 'performance' | 'security' | 'notifications', key: string, value: any) => {
+    updateSystemSetting(section, key, value);
   };
 
-  const handleTabChange = (tab: typeof activeTab) => {
-    setActiveTab(tab);
+  const handleTabChange = (tab: 'general' | 'performance' | 'security' | 'notifications') => {
+    setSettingsTab(tab);
     performanceMetrics.addMetric('settings-tab-switch', 1);
   };
 
@@ -212,7 +154,7 @@ export default function SystemSettings({ onSettingsUpdate }: SystemSettingsProps
           ].map((tab) => (
             <button
               key={tab.id}
-              onClick={() => handleTabChange(tab.id as typeof activeTab)}
+              onClick={() => handleTabChange(tab.id as 'general' | 'performance' | 'security' | 'notifications')}
               className={`py-4 px-1 border-b-2 font-medium text-sm ${
                 activeTab === tab.id
                   ? 'border-blue-500 text-blue-600'

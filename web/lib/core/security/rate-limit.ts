@@ -17,7 +17,7 @@
 import { devLog } from '@/lib/utils/logger'
 
 // Rate limit configuration
-export type RateLimitConfig = {
+export interface RateLimitConfig {
   interval: number // Time window in milliseconds
   uniqueTokenPerInterval: number // Max requests per interval
   maxBurst?: number // Maximum burst allowance
@@ -26,7 +26,7 @@ export type RateLimitConfig = {
 }
 
 // IP reputation data
-export type IPReputation = {
+export interface IPReputation {
   ip: string
   score: number // 0-100, higher = more trusted
   requestCount: number
@@ -38,7 +38,7 @@ export type IPReputation = {
 }
 
 // Device fingerprint data
-export type DeviceFingerprint = {
+export interface DeviceFingerprint {
   userAgent: string
   screenResolution: string
   timezone: string
@@ -50,7 +50,7 @@ export type DeviceFingerprint = {
 }
 
 // Risk assessment result
-export type RiskAssessment = {
+export interface RiskAssessment {
   riskScore: number // 0-100, higher = higher risk
   factors: string[]
   recommendedAction: 'allow' | 'challenge' | 'block'
@@ -58,7 +58,7 @@ export type RiskAssessment = {
 }
 
 // Rate limit result
-export type RateLimitResult = {
+export interface RateLimitResult {
   success: boolean
   allowed: boolean
   remaining: number
@@ -157,7 +157,7 @@ export class EnhancedRateLimiter {
     // Extract basic fingerprint data
     const fingerprint: DeviceFingerprint = {
       userAgent,
-      screenResolution: req.headers.get('sec-ch-viewport-width') + 'x' + req.headers.get('sec-ch-viewport-height') || 'unknown',
+      screenResolution: `${req.headers.get('sec-ch-viewport-width')  }x${  req.headers.get('sec-ch-viewport-height')}` || 'unknown',
       timezone: req.headers.get('sec-ch-prefers-color-scheme') || 'unknown',
       language: acceptLanguage.split(',')[0] || 'unknown',
       platform: this.extractPlatform(userAgent),

@@ -3,12 +3,13 @@
  * Provides DPoP validation for enhanced security
  */
 
+import { createClient } from '@supabase/supabase-js';
 import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server';
-import { logger } from '@/lib/utils/logger';
-import { createClient } from '@supabase/supabase-js';
 
-export type DPoPValidationResult = {
+import { logger } from '@/lib/utils/logger';
+
+export interface DPoPValidationResult {
   valid: boolean;
   error?: string;
   jkt?: string;

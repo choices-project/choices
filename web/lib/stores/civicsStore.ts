@@ -12,11 +12,12 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { persist } from 'zustand/middleware';
+
 import { logger } from '@/lib/utils/logger';
 import { withOptional } from '@/lib/utils/objects';
 
 // Civic data types
-type Representative = {
+interface Representative {
   id: string;
   name: string;
   title: string;
@@ -46,7 +47,7 @@ type Representative = {
   lastUpdated: string;
 }
 
-type District = {
+interface District {
   id: string;
   name: string;
   type: 'congressional' | 'state_house' | 'state_senate' | 'local';
@@ -65,7 +66,7 @@ type District = {
   lastUpdated: string;
 }
 
-type CivicAction = {
+interface CivicAction {
   id: string;
   type: 'contact' | 'petition' | 'event' | 'donation' | 'volunteer';
   title: string;
@@ -84,7 +85,7 @@ type CivicAction = {
   updatedAt: string;
 }
 
-type UserCivicProfile = {
+interface UserCivicProfile {
   userId: string;
   address: {
     street?: string;
@@ -106,7 +107,7 @@ type UserCivicProfile = {
   lastUpdated: string;
 }
 
-type CivicPreferences = {
+interface CivicPreferences {
   showPartyAffiliation: boolean;
   showVotingRecord: boolean;
   showCampaignFinance: boolean;
@@ -128,7 +129,7 @@ type CivicPreferences = {
 }
 
 // Civics store state interface
-type CivicsStore = {
+interface CivicsStore {
   // Civic data
   representatives: Representative[];
   districts: District[];

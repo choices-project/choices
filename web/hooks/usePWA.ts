@@ -6,22 +6,23 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { logger } from '@/lib/utils/logger';
-import { isFeatureEnabled } from '@/lib/core/feature-flags';
-import { withOptional } from '@/lib/utils/objects';
 
-// Import PWA managers
-import { 
-  serviceWorkerManager, 
-  type ServiceWorkerStatus 
-} from '@/lib/pwa/service-worker';
+import { isFeatureEnabled } from '@/lib/core/feature-flags';
 import { 
   pwaInstallationManager, 
   type InstallationStatus, 
   type InstallationResult 
 } from '@/lib/pwa/installation';
+import { 
+  serviceWorkerManager, 
+  type ServiceWorkerStatus 
+} from '@/lib/pwa/service-worker';
+import { logger } from '@/lib/utils/logger';
+import { withOptional } from '@/lib/utils/objects';
 
-export type PWAStatus = {
+// Import PWA managers
+
+export interface PWAStatus {
   // Feature availability
   isSupported: boolean;
   isEnabled: boolean;
@@ -47,9 +48,9 @@ export type PWAStatus = {
   // Loading states
   loading: boolean;
   error: string | null;
-};
+}
 
-export type PWAActions = {
+export interface PWAActions {
   // Installation
   promptInstallation: () => Promise<InstallationResult>;
   
@@ -68,7 +69,7 @@ export type PWAActions = {
   
   // Utility
   refresh: () => Promise<void>;
-};
+}
 
 export function usePWA(): PWAStatus & PWAActions {
   const [status, setStatus] = useState<PWAStatus>({
@@ -156,7 +157,7 @@ export function usePWA(): PWAStatus & PWAActions {
       setStatus(prev => withOptional(prev, finalStatus));
 
     } catch (error) {
-      logger.error('PWA: Initialization failed:', error);
+      logger.error('PWA: Initialization failed:', error instanceof Error ? error : new Error('Unknown error'));
       setStatus(prev => withOptional(prev, {
         loading: false,
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -177,7 +178,7 @@ export function usePWA(): PWAStatus & PWAActions {
       
       return result;
     } catch (error) {
-      logger.error('PWA: Installation prompt failed:', error);
+      logger.error('PWA: Installation prompt failed:', error instanceof Error ? error : new Error('Unknown error'));
       return {
         success: false,
         outcome: 'error',
@@ -199,7 +200,7 @@ export function usePWA(): PWAStatus & PWAActions {
       
       return hasUpdate;
     } catch (error) {
-      logger.error('PWA: Failed to check for updates:', error);
+      logger.error('PWA: Failed to check for updates:', error instanceof Error ? error : new Error('Unknown error'));
       return false;
     }
   }, []);
@@ -209,7 +210,7 @@ export function usePWA(): PWAStatus & PWAActions {
     try {
       await serviceWorkerManager.skipWaiting();
     } catch (error) {
-      logger.error('PWA: Failed to skip waiting:', error);
+      logger.error('PWA: Failed to skip waiting:', error instanceof Error ? error : new Error('Unknown error'));
       throw error;
     }
   }, []);
@@ -226,7 +227,7 @@ export function usePWA(): PWAStatus & PWAActions {
         hasOfflineData: offlineVotes > 0
       }));
     } catch (error) {
-      logger.error('PWA: Failed to sync offline data:', error);
+      logger.error('PWA: Failed to sync offline data:', error instanceof Error ? error : new Error('Unknown error'));
       throw error;
     }
   }, []);
@@ -241,7 +242,7 @@ export function usePWA(): PWAStatus & PWAActions {
         hasOfflineData: false
       }));
     } catch (error) {
-      logger.error('PWA: Failed to clear offline data:', error);
+      logger.error('PWA: Failed to clear offline data:', error instanceof Error ? error : new Error('Unknown error'));
       throw error;
     }
   }, []);
@@ -263,7 +264,7 @@ export function usePWA(): PWAStatus & PWAActions {
       
       return enabled;
     } catch (error) {
-      logger.error('PWA: Failed to request notification permission:', error);
+      logger.error('PWA: Failed to request notification permission:', error instanceof Error ? error : new Error('Unknown error'));
       return false;
     }
   }, []);
@@ -282,7 +283,7 @@ export function usePWA(): PWAStatus & PWAActions {
       
       return true;
     } catch (error) {
-      logger.error('PWA: Failed to subscribe to notifications:', error);
+      logger.error('PWA: Failed to subscribe to notifications:', error instanceof Error ? error : new Error('Unknown error'));
       return false;
     }
   }, [status.notificationsEnabled, requestNotificationPermission]);
@@ -299,7 +300,7 @@ export function usePWA(): PWAStatus & PWAActions {
       
       return true;
     } catch (error) {
-      logger.error('PWA: Failed to unsubscribe from notifications:', error);
+      logger.error('PWA: Failed to unsubscribe from notifications:', error instanceof Error ? error : new Error('Unknown error'));
       return false;
     }
   }, []);
@@ -321,7 +322,7 @@ export function usePWA(): PWAStatus & PWAActions {
       setStatus(prev => withOptional(prev, { isOnline: true }));
       // Auto-sync when coming back online
       syncOfflineData().catch(error => {
-        logger.error('PWA: Auto-sync failed:', error);
+        logger.error('PWA: Auto-sync failed:', error instanceof Error ? error : new Error('Unknown error'));
       });
     };
 
@@ -378,7 +379,7 @@ async function getOfflineVotesCount(): Promise<number> {
     // For now, return 0
     return 0;
   } catch (error) {
-    logger.error('PWA: Failed to get offline votes count:', error);
+    logger.error('PWA: Failed to get offline votes count:', error instanceof Error ? error : new Error('Unknown error'));
     return 0;
   }
 }

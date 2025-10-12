@@ -10,7 +10,7 @@ export type BeforeInstallPromptEvent = {
   }>;
 } & Event
 
-export type PWAFeatures = {
+export interface PWAFeatures {
   installable: boolean;
   offline: boolean;
   pushNotifications: boolean;
@@ -18,7 +18,7 @@ export type PWAFeatures = {
   backgroundSync: boolean;
 }
 
-export type PWAStatus = {
+export interface PWAStatus {
   isStandalone: boolean;
   isOnline: boolean;
   hasServiceWorker: boolean;
@@ -26,7 +26,7 @@ export type PWAStatus = {
   pwaStatus: PWAManagerStatus | null;
 }
 
-export type PWAManagerStatus = {
+export interface PWAManagerStatus {
   isInstalled: boolean;
   hasServiceWorker: boolean;
   hasPushSupport: boolean;
@@ -79,14 +79,14 @@ export const pwaFeatureDetection = {
   }
 };
 
-export type FeatureCardProps = {
+export interface FeatureCardProps {
   title: string;
   description: string;
   icon: React.ComponentType<{ className?: string }>;
   available: boolean;
 }
 
-export type StatusItemProps = {
+export interface StatusItemProps {
   label: string;
   value: string;
   status: 'success' | 'warning' | 'error' | 'info';

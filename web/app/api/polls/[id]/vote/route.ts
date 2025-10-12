@@ -1,7 +1,6 @@
 import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
-import { getSupabaseServerClient } from '@/utils/supabase/server'
-import { devLog } from '@/lib/utils/logger'
+
 import { getUser } from '@/lib/core/auth/middleware'
 // import { HybridVotingService } from '@/lib/core/services/hybrid-voting'
 import { AnalyticsService } from '@/lib/core/services/analytics'
@@ -13,6 +12,8 @@ import {
   getUserMessage, 
   getHttpStatus 
 } from '@/lib/error-handler'
+import { devLog } from '@/lib/utils/logger'
+import { getSupabaseServerClient } from '@/utils/supabase/server'
 
 export const dynamic = 'force-dynamic';
 
@@ -103,7 +104,7 @@ export async function POST(
           user_id: user.id,
           choice: approvals.length, // Number of approvals
           voting_method: 'approval',
-          vote_data: { approvals: approvals },
+          vote_data: { approvals },
           is_verified: true
         })
 
@@ -130,7 +131,7 @@ export async function POST(
           user_id: user.id,
           choice: selections.length, // Number of selections
           voting_method: 'multiple',
-          vote_data: { selections: selections },
+          vote_data: { selections },
           is_verified: true
         })
 
@@ -166,7 +167,7 @@ export async function POST(
       success: true,
       message: 'Vote submitted successfully',
       poll_id: pollId,
-      privacy_level: privacy_level,
+      privacy_level,
       response_time: Date.now(),
       audit_receipt: 'vote-receipt',
       vote_confirmed: true

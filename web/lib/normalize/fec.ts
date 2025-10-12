@@ -5,11 +5,11 @@
  * Normalizes external API types into strict internal model types
  */
 
-import { withOptional } from '@/lib/utils/objects'
 import { isPresent } from '@/lib/utils/clean'
+import { withOptional } from '@/lib/utils/objects'
 
 // External API types (permissive)
-export type FECTotalsWire = {
+export interface FECTotalsWire {
   cycle?: number | null
   total_receipts?: number | null
   cash_on_hand_end_period?: number | null
@@ -17,7 +17,7 @@ export type FECTotalsWire = {
   debts_owed_by_committee?: number | null
 }
 
-export type FECContributionWire = {
+export interface FECContributionWire {
   contributor_id?: string | null
   contributor_name?: string | null
   contributor_type?: string | null
@@ -30,7 +30,7 @@ export type FECContributionWire = {
 }
 
 // Internal model types (strict)
-export type FECMinimal = {
+export interface FECMinimal {
   person_id: string
   fec_candidate_id: string
   election_cycle: number
@@ -41,7 +41,7 @@ export type FECMinimal = {
   data_source: 'fec_api'
 }
 
-export type FECContributionModel = {
+export interface FECContributionModel {
   contributor_id: string
   contributor_name: string
   contributor_type: 'individual' | 'committee' | 'organization'

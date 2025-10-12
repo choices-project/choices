@@ -1,14 +1,15 @@
 'use client';
 
-import React, { useState } from 'react';
 import { 
   MapPinIcon, 
   UserGroupIcon, 
   Cog6ToothIcon
 } from '@heroicons/react/24/outline';
+import React, { useState } from 'react';
+
 import { useCivicsActions, useCivicsLoading } from '@/lib/stores';
 
-type CivicsNavigationProps = {
+interface CivicsNavigationProps {
   onRepresentativesClick: () => void;
   onAddressUpdate: (address: string) => void;
   currentAddress?: string;

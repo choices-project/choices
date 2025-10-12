@@ -8,9 +8,6 @@
 
 'use client';
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { devLog } from '@/lib/utils/logger';
-import type { Candidate } from '@/features/civics/lib/civics/types';
 import {
   HomeIcon,
   UserGroupIcon,
@@ -30,44 +27,66 @@ import {
   BookmarkIcon,
   AdjustmentsHorizontalIcon
 } from '@heroicons/react/24/outline';
-import EnhancedCandidateCard from './EnhancedCandidateCard';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { 
+  useFeeds, 
+  useFeedsActions, 
+  useFeedsLoading,
+  useFeedsError,
+  useFeedPreferences,
+  useFeedFilters
+} from '@/lib/stores';
+
+
+
+import EnhancedCandidateCard from '@/features/civics/components/EnhancedCandidateCard';
+import { devLog } from '@/lib/utils/logger';
+
 import EnhancedSocialFeed from './EnhancedSocialFeed';
 
-type SuperiorMobileFeedProps = {
+interface SuperiorMobileFeedProps {
   userId?: string;
   className?: string;
 }
 
 export default function SuperiorMobileFeed({ userId, className = '' }: SuperiorMobileFeedProps) {
+  // UI state (local)
   const [activeTab, setActiveTab] = useState<'feed' | 'representatives' | 'analytics'>('feed');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [userAddress, setUserAddress] = useState<string>('');
-  const [feedItems, setFeedItems] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [hasMore, setHasMore] = useState(true);
-  const [page, setPage] = useState(1);
+  const [selectedRepresentative, setSelectedRepresentative] = useState<any>(null);
+  const [analyticsData, setAnalyticsData] = useState<any>(null);
   
-  // Load feed items
+  // Get feeds store state and actions
+  const feeds = useFeeds();
+  const { loadFeeds, refreshFeeds, loadMoreFeeds, setFilters } = useFeedsActions();
+  const isLoading = useFeedsLoading();
+  const error = useFeedsError();
+  const preferences = useFeedPreferences();
+  const filters = useFeedFilters();
+  
+  // Local state for pagination
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  
+  // Load feed items using feedsStore
   const loadFeedItems = useCallback(async (pageNumber?: number) => {
     const currentPage = pageNumber || page;
-    setIsLoading(true);
     try {
-      // Simulate loading feed items
-      const newItems = Array.from({ length: 10 }, (_, i) => ({
-        id: `item-${currentPage}-${i}`,
-        title: `Feed Item ${currentPage}-${i}`,
-        content: `This is feed item ${currentPage}-${i}`,
-        timestamp: new Date(),
-      }));
-      setFeedItems(prev => pageNumber === 1 ? newItems : [...prev, ...newItems]);
-      setHasMore(newItems.length === 10);
-      if (pageNumber) setPage(pageNumber);
+      if (pageNumber === 1) {
+        // Refresh feeds
+        await refreshFeeds();
+        setPage(1);
+      } else {
+        // Load more feeds
+        await loadMoreFeeds();
+        setPage(currentPage + 1);
+      }
+      setHasMore(feeds.length === 20); // Assuming 20 items per page
     } catch (error) {
       console.error('Error loading feed items:', error);
-    } finally {
-      setIsLoading(false);
     }
-  }, [page]);
+  }, [page, refreshFeeds, loadMoreFeeds, feeds.length]);
   const [isOnline, setIsOnline] = useState(true);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>('default');
@@ -75,8 +94,6 @@ export default function SuperiorMobileFeed({ userId, className = '' }: SuperiorM
   const [lastSync, setLastSync] = useState<Date | null>(null);
   const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'error'>('idle');
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
-  const [selectedRepresentative, setSelectedRepresentative] = useState<any | null>(null);
-  const [analyticsData, setAnalyticsData] = useState<any>(null);
   
   const scrollToTopRef = useRef<HTMLButtonElement>(null);
 
@@ -104,8 +121,8 @@ export default function SuperiorMobileFeed({ userId, className = '' }: SuperiorM
     if (savedTheme === 'dark') setIsDarkMode(true);
     if (savedViewMode) setActiveTab(savedViewMode as any);
     
-    loadFeedItems(1);
-  }, [loadFeedItems]);
+    loadFeeds('all');
+  }, [loadFeeds]);
 
   const checkOnlineStatus = useCallback(() => {
     setIsOnline(navigator.onLine);
@@ -221,9 +238,8 @@ export default function SuperiorMobileFeed({ userId, className = '' }: SuperiorM
 
   const handleRefresh = async () => {
     setPage(1);
-    setFeedItems([]);
     setHasMore(true);
-    await loadFeedItems(1);
+    await refreshFeeds();
   };
 
   const toggleDarkMode = () => {
@@ -268,14 +284,14 @@ export default function SuperiorMobileFeed({ userId, className = '' }: SuperiorM
     }
   };
 
-  const handleContactRepresentative = (representative: Candidate) => {
-    // Default to email contact if available
-    if (representative.email) {
-      handleContact('email', representative.email);
-    } else if (representative.phone) {
-      handleContact('phone', representative.phone);
-    } else if (representative.website) {
-      handleContact('website', representative.website);
+  const handleContactRepresentative = (id: string, type: string) => {
+    // Handle contact based on type
+    if (type === 'email') {
+      handleContact('email', id);
+    } else if (type === 'phone') {
+      handleContact('phone', id);
+    } else if (type === 'website') {
+      handleContact('website', id);
     }
   };
 
@@ -394,12 +410,12 @@ export default function SuperiorMobileFeed({ userId, className = '' }: SuperiorM
               
               {/* Feed Items */}
               <div className="space-y-3">
-                {feedItems.map((item) => (
+                {feeds.map((item) => (
                   <div key={item.id} className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4">
                     <h4 className="font-medium text-gray-900 dark:text-white">{item.title}</h4>
                     <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{item.content}</p>
                     <div className="flex items-center justify-between mt-3">
-                      <span className="text-xs text-gray-500">{item.timestamp.toLocaleString()}</span>
+                      <span className="text-xs text-gray-500">{new Date(item.publishedAt).toLocaleString()}</span>
                       <div className="flex items-center space-x-2">
                         <button
                           onClick={() => handleBookmark(item)}

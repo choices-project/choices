@@ -12,11 +12,12 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { persist } from 'zustand/middleware';
+
 import { logger } from '@/lib/utils/logger';
 import { withOptional } from '@/lib/utils/objects';
 
 // Feed data types
-type FeedItem = {
+interface FeedItem {
   id: string;
   title: string;
   content: string;
@@ -62,7 +63,7 @@ type FeedItem = {
   };
 }
 
-type FeedCategory = {
+interface FeedCategory {
   id: string;
   name: string;
   description: string;
@@ -72,7 +73,7 @@ type FeedCategory = {
   enabled: boolean;
 }
 
-type FeedFilters = {
+interface FeedFilters {
   categories: string[];
   types: string[];
   sources: string[];
@@ -86,7 +87,7 @@ type FeedFilters = {
   tags: string[];
 }
 
-type FeedPreferences = {
+interface FeedPreferences {
   defaultView: 'list' | 'grid' | 'magazine';
   sortBy: 'newest' | 'oldest' | 'popular' | 'trending' | 'relevance';
   itemsPerPage: number;
@@ -113,7 +114,7 @@ type FeedPreferences = {
   };
 }
 
-type FeedSearch = {
+interface FeedSearch {
   query: string;
   results: FeedItem[];
   totalResults: number;
@@ -125,7 +126,7 @@ type FeedSearch = {
 }
 
 // Feeds store state interface
-type FeedsStore = {
+interface FeedsStore {
   // Feed data
   feeds: FeedItem[];
   filteredFeeds: FeedItem[];
@@ -307,7 +308,7 @@ export const useFeedsStore = create<FeedsStore>()(
           } catch (error) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
             setError(errorMessage);
-            logger.error('Failed to refresh feeds:', errorMessage);
+            logger.error('Failed to refresh feeds:', error instanceof Error ? error : new Error(errorMessage));
           } finally {
             setRefreshing(false);
           }
@@ -326,7 +327,7 @@ export const useFeedsStore = create<FeedsStore>()(
           } catch (error) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
             setError(errorMessage);
-            logger.error('Failed to load more feeds:', errorMessage);
+            logger.error('Failed to load more feeds:', error instanceof Error ? error : new Error(errorMessage));
           } finally {
             setLoading(false);
           }
@@ -405,7 +406,7 @@ export const useFeedsStore = create<FeedsStore>()(
           } catch (error) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
             setError(errorMessage);
-            logger.error('Failed to search feeds:', errorMessage);
+            logger.error('Failed to search feeds:', error instanceof Error ? error : new Error(errorMessage));
           } finally {
             setSearching(false);
           }
@@ -609,7 +610,7 @@ export const useFeedsStore = create<FeedsStore>()(
           } catch (error) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
             setError(errorMessage);
-            logger.error('Failed to load feeds:', errorMessage);
+            logger.error('Failed to load feeds:', error instanceof Error ? error : new Error(errorMessage));
           } finally {
             setLoading(false);
           }
@@ -637,7 +638,7 @@ export const useFeedsStore = create<FeedsStore>()(
           } catch (error) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
             setError(errorMessage);
-            logger.error('Failed to load categories:', errorMessage);
+            logger.error('Failed to load categories:', error instanceof Error ? error : new Error(errorMessage));
           } finally {
             setLoading(false);
           }
@@ -667,7 +668,7 @@ export const useFeedsStore = create<FeedsStore>()(
           } catch (error) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
             setError(errorMessage);
-            logger.error('Failed to save user interaction:', errorMessage);
+            logger.error('Failed to save user interaction:', error instanceof Error ? error : new Error(errorMessage));
           } finally {
             setUpdating(false);
           }
@@ -829,11 +830,8 @@ export const feedsStoreSubscriptions = {
    */
   onFeedsChange: (callback: (feeds: FeedItem[]) => void) => {
     return useFeedsStore.subscribe(
-      (state) => state.feeds,
-      (feeds, prevFeeds) => {
-        if (feeds !== prevFeeds) {
-          callback(feeds);
-        }
+      (state) => {
+        callback(state.feeds);
       }
     );
   },
@@ -843,11 +841,8 @@ export const feedsStoreSubscriptions = {
    */
   onSearchResultsChange: (callback: (results: FeedItem[]) => void) => {
     return useFeedsStore.subscribe(
-      (state) => state.search.results,
-      (results, prevResults) => {
-        if (results !== prevResults) {
-          callback(results);
-        }
+      (state) => {
+        callback(state.search.results);
       }
     );
   },
@@ -857,11 +852,8 @@ export const feedsStoreSubscriptions = {
    */
   onPreferencesChange: (callback: (preferences: FeedPreferences) => void) => {
     return useFeedsStore.subscribe(
-      (state) => state.preferences,
-      (preferences, prevPreferences) => {
-        if (preferences !== prevPreferences) {
-          callback(preferences);
-        }
+      (state) => {
+        callback(state.preferences);
       }
     );
   }

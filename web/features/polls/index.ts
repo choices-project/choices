@@ -85,7 +85,7 @@ export type {
   InterestMatch,
   
   // Hashtag integration types
-  PollHashtagIntegrationData,
+  PollHashtagIntegration as PollHashtagIntegrationType,
   HashtagContent
 } from './types';
 

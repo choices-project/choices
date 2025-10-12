@@ -1,13 +1,14 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { useSupabaseAuth } from '@/contexts/AuthContext';
-import InterestSelection from '@/features/onboarding/components/InterestSelection';
-import DataUsageExplanation from '@/components/shared/DataUsageExplanation';
 import { Settings, Heart, Shield, Save } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+
+import DataUsageExplanation from '@/components/shared/DataUsageExplanation';
+import InterestSelection from '@/features/onboarding/components/InterestSelection';
+import { useUser } from '@/lib/stores';
 
 export default function ProfilePreferencesPage() {
-  const { user } = useSupabaseAuth();
+  const user = useUser();
   const [userInterests, setUserInterests] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [, setSaving] = useState(false);

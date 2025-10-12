@@ -16,7 +16,7 @@
 /**
  * Admin notification for system alerts and user actions
  */
-export type AdminNotification = {
+export interface AdminNotification {
   id: string;
   type: 'info' | 'success' | 'warning' | 'error';
   title: string;
@@ -27,12 +27,12 @@ export type AdminNotification = {
     label: string;
     url: string;
   };
-};
+}
 
 /**
  * Trending topic data for admin dashboard
  */
-export type TrendingTopic = {
+export interface TrendingTopic {
   id: string;
   title: string;
   description: string;
@@ -41,12 +41,12 @@ export type TrendingTopic = {
   created_at: string;
   updated_at: string;
   metadata?: Record<string, any>;
-};
+}
 
 /**
  * Generated poll data for admin management
  */
-export type GeneratedPoll = {
+export interface GeneratedPoll {
   id: string;
   title: string;
   description: string;
@@ -56,12 +56,12 @@ export type GeneratedPoll = {
   created_at: string;
   updated_at: string;
   metadata?: Record<string, any>;
-};
+}
 
 /**
  * System metrics for admin dashboard
  */
-export type SystemMetrics = {
+export interface SystemMetrics {
   total_topics: number;
   total_polls: number;
   active_polls: number;
@@ -72,19 +72,19 @@ export type SystemMetrics = {
     error_rate: number;
     active_users: number;
   };
-};
+}
 
 /**
  * Activity item for admin activity feed
  */
-export type ActivityItem = {
+export interface ActivityItem {
   id: string;
   type: 'topic_created' | 'topic_updated' | 'poll_created' | 'poll_updated' | 'system_alert' | 'user_action';
   title: string;
   description: string;
   timestamp: string;
   metadata?: Record<string, any>;
-};
+}
 
 // ============================================================================
 // Performance Monitoring Types
@@ -93,19 +93,19 @@ export type ActivityItem = {
 /**
  * Performance metric data
  */
-export type PerformanceMetric = {
+export interface PerformanceMetric {
   operation: string;
   duration: number;
   timestamp: string;
   success: boolean;
   error?: string;
   metadata?: Record<string, any>;
-};
+}
 
 /**
  * System performance alert
  */
-export type SystemPerformanceAlert = {
+export interface SystemPerformanceAlert {
   id: string;
   type: 'slow_query' | 'high_error_rate' | 'memory_usage' | 'database_connection';
   severity: 'low' | 'medium' | 'high' | 'critical';
@@ -113,12 +113,12 @@ export type SystemPerformanceAlert = {
   metadata?: Record<string, any>;
   timestamp: string;
   resolved: boolean;
-};
+}
 
 /**
  * Performance report data
  */
-export type PerformanceReport = {
+export interface PerformanceReport {
   period: string;
   totalOperations: number;
   averageResponseTime: number;
@@ -127,7 +127,7 @@ export type PerformanceReport = {
   alerts: SystemPerformanceAlert[];
   recommendations: string[];
   generated_at: string;
-};
+}
 
 // ============================================================================
 // User Management Types
@@ -136,7 +136,7 @@ export type PerformanceReport = {
 /**
  * User data for admin management
  */
-export type AdminUser = {
+export interface AdminUser {
   id: string;
   email: string;
   name: string;
@@ -145,12 +145,12 @@ export type AdminUser = {
   created_at: string;
   last_login?: string;
   metadata?: Record<string, any>;
-};
+}
 
 /**
  * User suggestion for admin review
  */
-export type UserSuggestion = {
+export interface UserSuggestion {
   id: string;
   user_id: string;
   type: 'poll' | 'topic' | 'feature' | 'bug';
@@ -161,7 +161,7 @@ export type UserSuggestion = {
   reviewed_at?: string;
   reviewed_by?: string;
   metadata?: Record<string, any>;
-};
+}
 
 // ============================================================================
 // User Journey & Feedback Types
@@ -170,7 +170,7 @@ export type UserSuggestion = {
 /**
  * User journey data for analytics
  */
-export type UserJourney = {
+export interface UserJourney {
   // Current page context
   currentPage: string;
   currentPath: string;
@@ -203,12 +203,12 @@ export type UserJourney = {
   };
   
   // Error context
-  errors: {
+  errors: Array<{
     type: string;
     message: string;
     stack?: string;
     timestamp: string;
-  }[];
+  }>;
   
   // Device context
   deviceInfo: {
@@ -223,22 +223,22 @@ export type UserJourney = {
   isAuthenticated: boolean;
   userRole?: string;
   userId?: string;
-};
+}
 
 /**
  * Individual journey event
  */
-export type JourneyEvent = {
+export interface JourneyEvent {
   id: string;
   type: string;
   timestamp: string;
   data?: Record<string, any>;
-};
+}
 
 /**
  * Feedback context for user feedback
  */
-export type FeedbackContext = {
+export interface FeedbackContext {
   // Feedback metadata
   feedbackId: string;
   timestamp: string;
@@ -261,12 +261,12 @@ export type FeedbackContext = {
   // Additional context
   screenshot?: string;
   consoleLogs?: string[];
-  networkRequests?: {
+  networkRequests?: Array<{
     url: string;
     method: string;
     status: number;
     duration: number;
-  }[];
+  }>;
   
   // AI analysis fields
   aiAnalysis: {
@@ -278,7 +278,7 @@ export type FeedbackContext = {
     keywords: string[];
     suggestedActions: string[];
   };
-};
+}
 
 // ============================================================================
 // System Settings Types
@@ -287,7 +287,7 @@ export type FeedbackContext = {
 /**
  * System settings configuration
  */
-export type SystemSettings = {
+export interface SystemSettings {
   id: string;
   key: string;
   value: any;
@@ -296,7 +296,7 @@ export type SystemSettings = {
   category: string;
   updated_at: string;
   updated_by: string;
-};
+}
 
 // ============================================================================
 // Audit & Logging Types
@@ -305,7 +305,7 @@ export type SystemSettings = {
 /**
  * Audit log entry
  */
-export type AuditLog = {
+export interface AuditLog {
   id: string;
   user_id: string;
   action: string;
@@ -315,7 +315,7 @@ export type AuditLog = {
   timestamp: string;
   ip_address?: string;
   user_agent?: string;
-};
+}
 
 // ============================================================================
 // Reimport & Data Management Types
@@ -324,7 +324,7 @@ export type AuditLog = {
 /**
  * Reimport progress tracking
  */
-export type ReimportProgress = {
+export interface ReimportProgress {
   id: string;
   type: 'full' | 'incremental' | 'specific';
   status: 'pending' | 'running' | 'completed' | 'failed';
@@ -335,7 +335,7 @@ export type ReimportProgress = {
   started_at: string;
   completed_at?: string;
   metadata?: Record<string, any>;
-};
+}
 
 // ============================================================================
 // Mock Data Types
@@ -344,7 +344,7 @@ export type ReimportProgress = {
 /**
  * Breaking news story for mock data
  */
-export type BreakingNewsStory = {
+export interface BreakingNewsStory {
   id: string;
   title: string;
   summary: string;
@@ -352,19 +352,19 @@ export type BreakingNewsStory = {
   published_at: string;
   category: string;
   trending_score: number;
-};
+}
 
 /**
  * Poll context for mock data
  */
-export type PollContext = {
+export interface PollContext {
   id: string;
   title: string;
   description: string;
   category: string;
   trending_score: number;
   created_at: string;
-};
+}
 
 // ============================================================================
 // Component Props Types
@@ -373,38 +373,38 @@ export type PollContext = {
 /**
  * Admin dashboard component props
  */
-export type AdminDashboardProps = {
+export interface AdminDashboardProps {
   className?: string;
-};
+}
 
 /**
  * Dashboard statistics
  */
-export type DashboardStats = {
+export interface DashboardStats {
   total_users: number;
   active_polls: number;
   trending_topics: number;
   system_health: 'healthy' | 'warning' | 'critical';
-};
+}
 
 /**
  * Performance dashboard props
  */
-export type PerformanceDashboardProps = {
+export interface PerformanceDashboardProps {
   className?: string;
-};
+}
 
 /**
  * Analytics panel props
  */
-export type AnalyticsPanelProps = {
+export interface AnalyticsPanelProps {
   className?: string;
-};
+}
 
 /**
  * Analytics data structure
  */
-export type AnalyticsData = {
+export interface AnalyticsData {
   users: {
     total: number;
     active: number;
@@ -424,29 +424,29 @@ export type AnalyticsData = {
     error_rate: number;
     uptime: number;
   };
-};
+}
 
 /**
  * User management props
  */
-export type UserManagementProps = {
+export interface UserManagementProps {
   className?: string;
-};
+}
 
 /**
  * System settings props
  */
-export type SystemSettingsProps = {
+export interface SystemSettingsProps {
   className?: string;
-};
+}
 
 /**
  * Admin layout props
  */
-export type AdminLayoutProps = {
+export interface AdminLayoutProps {
   children: React.ReactNode;
   className?: string;
-};
+}
 
 // ============================================================================
 // Store Types
@@ -455,7 +455,7 @@ export type AdminLayoutProps = {
 /**
  * Admin store state interface
  */
-export type AdminStore = {
+export interface AdminStore {
   // UI State
   sidebarCollapsed: boolean;
   currentPage: string;
@@ -486,7 +486,7 @@ export type AdminStore = {
   updateSystemMetrics: (metrics: SystemMetrics) => void;
   updateActivityFeed: (activities: ActivityItem[]) => void;
   setLoading: (key: string, loading: boolean) => void;
-};
+}
 
 // ============================================================================
 // API Response Types
@@ -495,13 +495,13 @@ export type AdminStore = {
 /**
  * Generic API response wrapper
  */
-export type ApiResponse<T = any> = {
+export interface ApiResponse<T = any> {
   success: boolean;
   data?: T;
   error?: string;
   message?: string;
   timestamp: string;
-};
+}
 
 /**
  * Paginated response wrapper

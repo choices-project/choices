@@ -6,9 +6,10 @@
  */
 
 import { createClient } from '@supabase/supabase-js';
+
 import type { DataSource } from './types';
 
-export type RawDataRecord = {
+export interface RawDataRecord {
   id: string;
   retrieved_at: string;
   request_url: string;
@@ -33,7 +34,7 @@ export type RawDataRecord = {
   updated_at: string;
 }
 
-export type DataLineageRecord = {
+export interface DataLineageRecord {
   id: string;
   source_table: string;
   source_record_id: string;
@@ -53,7 +54,7 @@ export type DataLineageRecord = {
   created_at: string;
 }
 
-export type DataQualityCheck = {
+export interface DataQualityCheck {
   id: string;
   check_name: string;
   check_type: 'schema' | 'completeness' | 'accuracy' | 'consistency' | 'timeliness' | 'uniqueness' | 'referential_integrity';
@@ -71,7 +72,7 @@ export type DataQualityCheck = {
   created_at: string;
 }
 
-export type DataTransformation = {
+export interface DataTransformation {
   id: string;
   transformation_name: string;
   transformation_version: string;
@@ -91,7 +92,7 @@ export type DataTransformation = {
   created_at: string;
 }
 
-export type DataChecksum = {
+export interface DataChecksum {
   id: string;
   table_name: string;
   record_id: string;
@@ -102,7 +103,7 @@ export type DataChecksum = {
   created_at: string;
 }
 
-export type ProvenanceData = {
+export interface ProvenanceData {
   source_names: DataSource[];
   source_urls: string[];
   retrieved_at: string[];

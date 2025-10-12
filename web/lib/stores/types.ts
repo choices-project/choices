@@ -9,7 +9,7 @@
  */
 
 // Base store interface for common patterns
-export type BaseStore = {
+export interface BaseStore {
   // Common loading states
   isLoading: boolean;
   error: string | null;
@@ -24,7 +24,7 @@ export type BaseStore = {
 export type StoreMiddleware = (config: any) => (set: any, get: any, api: any) => any;
 
 // Store configuration options
-export type StoreConfig = {
+export interface StoreConfig {
   name: string;
   persist?: boolean;
   devtools?: boolean;
@@ -32,7 +32,7 @@ export type StoreConfig = {
 }
 
 // User profile types
-export type UserProfile = {
+export interface UserProfile {
   id: string;
   email: string;
   username: string;
@@ -58,7 +58,7 @@ export type UserProfile = {
 }
 
 // App settings types
-export type AppSettings = {
+export interface AppSettings {
   theme: 'light' | 'dark' | 'system';
   sidebarCollapsed: boolean;
   sidebarWidth: number;
@@ -71,7 +71,7 @@ export type AppSettings = {
 }
 
 // Notification types
-export type Notification = {
+export interface Notification {
   id: string;
   type: 'success' | 'error' | 'warning' | 'info';
   title: string;
@@ -87,7 +87,7 @@ export type Notification = {
 }
 
 // Navigation types
-export type Breadcrumb = {
+export interface Breadcrumb {
   label: string;
   href: string;
   icon?: string;
@@ -95,7 +95,7 @@ export type Breadcrumb = {
 }
 
 // PWA types
-export type PWAState = {
+export interface PWAState {
   isInstalled: boolean;
   isOnline: boolean;
   isUpdateAvailable: boolean;
@@ -105,7 +105,7 @@ export type PWAState = {
 }
 
 // Feature flag types
-export type FeatureFlag = {
+export interface FeatureFlag {
   id: string;
   name: string;
   enabled: boolean;
@@ -115,7 +115,7 @@ export type FeatureFlag = {
 }
 
 // Analytics types
-export type AnalyticsEvent = {
+export interface AnalyticsEvent {
   id: string;
   type: string;
   category: string;
@@ -136,7 +136,7 @@ export type StoreAction<T> = (state: T, ...args: any[]) => void;
 export type StoreSubscription<T> = (state: T, prevState: T) => void;
 
 // Store persistence types
-export type PersistOptions = {
+export interface PersistOptions {
   name: string;
   storage?: any;
   partialize?: (state: any) => any;
@@ -145,7 +145,7 @@ export type PersistOptions = {
 }
 
 // Store devtools types
-export type DevtoolsOptions = {
+export interface DevtoolsOptions {
   name: string;
   enabled?: boolean;
   trace?: boolean;
@@ -153,7 +153,7 @@ export type DevtoolsOptions = {
 }
 
 // Store logging types
-export type LoggingOptions = {
+export interface LoggingOptions {
   enabled: boolean;
   level: 'debug' | 'info' | 'warn' | 'error';
   includeState?: boolean;
@@ -161,7 +161,7 @@ export type LoggingOptions = {
 }
 
 // Store error types
-export type StoreError = {
+export interface StoreError {
   code: string;
   message: string;
   timestamp: string;
@@ -169,7 +169,7 @@ export type StoreError = {
 }
 
 // Store performance types
-export type StorePerformance = {
+export interface StorePerformance {
   actionCount: number;
   lastAction: string;
   averageActionTime: number;
@@ -177,19 +177,19 @@ export type StorePerformance = {
 }
 
 // Store validation types
-export type StoreValidator<T> = {
+export interface StoreValidator<T> {
   validate: (state: T) => boolean;
   errorMessage: string;
 }
 
 // Store middleware chain types
-export type MiddlewareChain = {
+export interface MiddlewareChain {
   middlewares: StoreMiddleware[];
   config: any;
 }
 
 // Store subscription types
-export type StoreSubscriptionConfig = {
+export interface StoreSubscriptionConfig {
   id: string;
   selector: (state: any) => any;
   callback: (value: any, prevValue: any) => void;
@@ -197,7 +197,7 @@ export type StoreSubscriptionConfig = {
 }
 
 // Store batch update types
-export type BatchUpdate = {
+export interface BatchUpdate {
   actions: Array<{
     type: string;
     payload: any;
@@ -207,7 +207,7 @@ export type BatchUpdate = {
 }
 
 // Store cache types
-export type StoreCache = {
+export interface StoreCache {
   key: string;
   value: any;
   timestamp: number;
@@ -216,7 +216,7 @@ export type StoreCache = {
 }
 
 // Store synchronization types
-export type StoreSync = {
+export interface StoreSync {
   enabled: boolean;
   interval: number;
   strategy: 'push' | 'pull' | 'bidirectional';
@@ -224,7 +224,7 @@ export type StoreSync = {
 }
 
 // Store debugging types
-export type StoreDebug = {
+export interface StoreDebug {
   enabled: boolean;
   logLevel: 'debug' | 'info' | 'warn' | 'error';
   includeStack: boolean;
@@ -233,7 +233,7 @@ export type StoreDebug = {
 }
 
 // Store testing types
-export type StoreTest = {
+export interface StoreTest {
   name: string;
   setup: () => void;
   teardown: () => void;
@@ -244,7 +244,7 @@ export type StoreTest = {
 }
 
 // Store documentation types
-export type StoreDocumentation = {
+export interface StoreDocumentation {
   name: string;
   description: string;
   version: string;

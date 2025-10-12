@@ -1,12 +1,35 @@
-// Set up test environment variables FIRST, before any other imports
-process.env.NODE_ENV = 'test';
-process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://test.supabase.co';
-process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = 'test-anon-key';
-process.env.SUPABASE_SERVICE_ROLE_KEY = 'test-service-role-key';
-process.env.NEXTAUTH_SECRET = 'test-secret';
-process.env.NEXTAUTH_URL = 'http://localhost:3000';
+// Jest setup file
+import '@testing-library/jest-dom'
 
-// Set up privacy pepper environment variables for testing
-process.env.PRIVACY_PEPPER_DEV = 'dev-pepper-consistent-for-testing-12345678901234567890';
-process.env.PRIVACY_PEPPER_CURRENT = 'hex:' + 'ab'.repeat(32);
-process.env.PRIVACY_PEPPER_PREVIOUS = 'hex:' + 'cd'.repeat(32);
+// Mock Next.js router
+jest.mock('next/navigation', () => ({
+  useRouter: () => ({
+    push: jest.fn(),
+    replace: jest.fn(),
+    prefetch: jest.fn(),
+    back: jest.fn(),
+    forward: jest.fn(),
+    refresh: jest.fn(),
+  }),
+  useSearchParams: () => ({
+    get: jest.fn(),
+  }),
+  usePathname: () => '/',
+}))
+
+// Mock Next.js headers
+jest.mock('next/headers', () => ({
+  headers: () => ({
+    get: jest.fn(),
+  }),
+  cookies: () => ({
+    get: jest.fn(),
+    set: jest.fn(),
+    delete: jest.fn(),
+  }),
+}))
+
+// Mock environment variables
+process.env.NEXT_PUBLIC_SUPABASE_URL = 'http://localhost:54321'
+process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = 'test-anon-key'
+process.env.SUPABASE_SERVICE_ROLE_KEY = 'test-service-role-key'

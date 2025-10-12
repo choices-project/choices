@@ -1,13 +1,24 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import Image from 'next/image';
 import { 
   MapPinIcon, 
   UserGroupIcon,
   CheckIcon,
   PencilIcon
 } from '@heroicons/react/24/outline';
+import Image from 'next/image';
+import React, { useEffect } from 'react';
+
+import { 
+  useUserCurrentAddress,
+  useUserCurrentState,
+  useUserRepresentatives,
+  useUserShowAddressForm,
+  useUserNewAddress,
+  useUserAddressLoading,
+  useUserSavedSuccessfully,
+  useUserActions
+} from '@/lib/stores';
 
 import type { UserProfileProps } from '../types';
 
@@ -29,16 +40,29 @@ import type { UserProfileProps } from '../types';
  * @returns {JSX.Element} User profile interface
  */
 export default function UserProfile({ onRepresentativesUpdate, onClose }: UserProfileProps) {
-  const [currentAddress, setCurrentAddress] = useState('');
-  const [currentState, setCurrentState] = useState('');
-  const [representatives, setRepresentatives] = useState<any[]>([]);
-  const [showAddressForm, setShowAddressForm] = useState(false);
-  const [newAddress, setNewAddress] = useState('');
-  const [addressLoading, setAddressLoading] = useState(false);
-  const [savedSuccessfully, setSavedSuccessfully] = useState(false);
+  // Get state from userStore
+  const currentAddress = useUserCurrentAddress();
+  const currentState = useUserCurrentState();
+  const representatives = useUserRepresentatives();
+  const showAddressForm = useUserShowAddressForm();
+  const newAddress = useUserNewAddress();
+  const addressLoading = useUserAddressLoading();
+  const savedSuccessfully = useUserSavedSuccessfully();
+  
+  // Get actions from userStore
+  const {
+    setCurrentAddress,
+    setCurrentState,
+    setRepresentatives,
+    setShowAddressForm,
+    setNewAddress,
+    setAddressLoading,
+    setSavedSuccessfully,
+    handleAddressUpdate
+  } = useUserActions();
 
   useEffect(() => {
-    // Load current user data
+    // Load current user data from localStorage
     const savedAddress = localStorage.getItem('userAddress');
     const savedState = localStorage.getItem('userState');
     const savedRepresentatives = localStorage.getItem('userRepresentatives');
@@ -52,9 +76,9 @@ export default function UserProfile({ onRepresentativesUpdate, onClose }: UserPr
         console.error('Failed to parse saved representatives:', e);
       }
     }
-  }, []);
+  }, [setCurrentAddress, setCurrentState, setRepresentatives]);
 
-  const handleAddressUpdate = async () => {
+  const handleAddressUpdateLocal = async () => {
     setAddressLoading(true);
     try {
       const response = await fetch(`/api/civics/by-address?address=${encodeURIComponent(newAddress)}`);
@@ -211,9 +235,9 @@ export default function UserProfile({ onRepresentativesUpdate, onClose }: UserPr
               <div className="space-y-3">
                 {representatives.slice(0, 5).map((rep, index) => (
                   <div key={index} className="flex items-center space-x-3 p-3 bg-white rounded-lg">
-                    {rep.photos?.[0] ? (
+                    {rep.photo ? (
                       <Image 
-                        src={rep.photos[0].url} 
+                        src={rep.photo} 
                         alt={rep.name}
                         width={40}
                         height={40}
@@ -228,7 +252,7 @@ export default function UserProfile({ onRepresentativesUpdate, onClose }: UserPr
                     )}
                     <div className="flex-1 min-w-0">
                       <p className="font-medium text-gray-900 truncate">{rep.name}</p>
-                      <p className="text-sm text-gray-600">{rep.office}</p>
+                      <p className="text-sm text-gray-600">{rep.title}</p>
                     </div>
                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                       rep.party === 'Democratic' 
@@ -300,7 +324,7 @@ export default function UserProfile({ onRepresentativesUpdate, onClose }: UserPr
             
             <form onSubmit={(e) => {
               e.preventDefault();
-              handleAddressUpdate();
+              handleAddressUpdateLocal();
             }} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">

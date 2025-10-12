@@ -1,6 +1,6 @@
 // Mock data for admin dashboard and testing
 
-export type ActivityItem = {
+export interface ActivityItem {
   id: string;
   type: string;
   message: string;
@@ -8,12 +8,12 @@ export type ActivityItem = {
   user: string;
 }
 
-export type ChartDataPoint = {
+export interface ChartDataPoint {
   month: string;
   count: number;
 }
 
-export type SystemMetrics = {
+export interface SystemMetrics {
   totalUsers: number;
   activeUsers: number;
   totalPolls: number;
@@ -22,7 +22,7 @@ export type SystemMetrics = {
   responseTime: string;
 }
 
-export type Poll = {
+export interface Poll {
   id: string;
   question: string;
   options: string[];
@@ -30,7 +30,7 @@ export type Poll = {
   votes: number;
 }
 
-export type Vote = {
+export interface Vote {
   id: string;
   pollId: string;
   userId: string;
@@ -38,7 +38,7 @@ export type Vote = {
   votedAt: string;
 }
 
-export type DemographicsData = {
+export interface DemographicsData {
   ageDistribution: Array<{ age: string; count: number }>;
   locationDistribution: Array<{ location: string; count: number }>;
   engagementLevels: Array<{ level: string; count: number }>;

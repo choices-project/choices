@@ -8,7 +8,7 @@
 import { logger } from '@/lib/utils/logger';
 import { withOptional } from '@/lib/utils/objects';
 
-export type RateLimitConfig = {
+export interface RateLimitConfig {
   requestsPerSecond: number;
   requestsPerMinute: number;
   requestsPerHour: number;
@@ -18,13 +18,13 @@ export type RateLimitConfig = {
   maxBackoffDelay: number;
 }
 
-export type RateLimitStatus = {
+export interface RateLimitStatus {
   remaining: number;
   resetTime: number;
   retryAfter?: number;
 }
 
-export type ApiUsageMetrics = {
+export interface ApiUsageMetrics {
   apiName: string;
   requestsToday: number;
   requestsThisHour: number;
@@ -441,7 +441,7 @@ export class ApiUsageMonitor {
       };
       
       if (metrics.requestsToday >= dailyThreshold * (dailyLimits[apiName as keyof typeof dailyLimits] || 10000)) {
-        logger.error('API quota alert', {
+        logger.error('API quota alert', undefined, {
           apiName,
           requestsToday: metrics.requestsToday,
           threshold: dailyThreshold,

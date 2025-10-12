@@ -7,13 +7,13 @@
 
 import { withOptional } from '@/lib/utils/objects';
 
-export type ZKProof = {
+export interface ZKProof {
   proof: string;
   publicInputs: string[];
   verificationKey: string;
 }
 
-export type ZKProofConfig = {
+export interface ZKProofConfig {
   curve: 'secp256k1' | 'bn254' | 'bls12_381';
   hashFunction: 'sha256' | 'keccak256' | 'poseidon';
   circuitSize: number;

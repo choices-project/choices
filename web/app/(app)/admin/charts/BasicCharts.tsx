@@ -1,16 +1,17 @@
 import React from 'react';
+
 import { Bar, Line, Pie } from '@/components/charts';
 
 // Color palette for charts
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
 
-type ChartData = {
+interface ChartData {
   name: string;
   value: number;
   [key: string]: unknown;
 }
 
-type BasicLineChartProps = {
+interface BasicLineChartProps {
   data: ChartData[];
   dataKey: string;
   title: string;
@@ -39,7 +40,7 @@ export const BasicLineChart: React.FC<BasicLineChartProps> = ({
   );
 };
 
-type BasicBarChartProps = {
+interface BasicBarChartProps {
   data: ChartData[];
   dataKey: string;
   title: string;
@@ -67,7 +68,7 @@ export const BasicBarChart: React.FC<BasicBarChartProps> = ({
   );
 };
 
-type BasicPieChartProps = {
+interface BasicPieChartProps {
   data: ChartData[];
   title: string;
   height?: number;
@@ -93,7 +94,7 @@ export const BasicPieChart: React.FC<BasicPieChartProps> = ({
 };
 
 // Metric card component for quick stats
-type MetricCardProps = {
+interface MetricCardProps {
   title: string;
   value: string | number;
   trend?: string;
@@ -148,7 +149,7 @@ export const MetricCard: React.FC<MetricCardProps> = ({
 };
 
 // Chart wrapper component for consistent styling
-type ChartWrapperProps = {
+interface ChartWrapperProps {
   title: string;
   children: React.ReactNode;
   className?: string;

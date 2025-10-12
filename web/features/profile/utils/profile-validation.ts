@@ -8,15 +8,17 @@
  * Status: ✅ CONSOLIDATED
  */
 
+import { isValidEmail } from '@/lib/utils/format-utils';
+import { withOptional } from '@/lib/utils/objects';
+
 import type { 
   ProfileUpdateData, 
   ProfileValidationResult
 } from '../types';
-import { withOptional } from '@/lib/utils/objects';
 import { 
   PROFILE_CONSTANTS 
 } from '../types';
-import { isValidEmail } from '@/lib/utils/format-utils';
+
 
 // ============================================================================
 // FIELD VALIDATION FUNCTIONS

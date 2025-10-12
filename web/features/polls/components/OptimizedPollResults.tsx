@@ -1,10 +1,12 @@
 'use client'
 
 import { useState, useEffect, useCallback, useMemo } from 'react'
+
 import { logger } from '@/lib/utils/logger';
+
 import { optimizedPollService, type OptimizedPollResult } from '../lib/optimized-poll-service'
 
-type OptimizedPollResultsProps = {
+interface OptimizedPollResultsProps {
   pollId: string
   userId?: string
   includePrivate?: boolean
@@ -70,7 +72,7 @@ export default function OptimizedPollResults({
       setCacheStats(stats)
     } catch (err) {
       const error = err instanceof Error ? err : new Error(String(err))
-      logger.warn('Failed to load cache stats:', error)
+      logger.warn('Failed to load cache stats:', { error: error.message, stack: error.stack })
     }
   }, [])
 

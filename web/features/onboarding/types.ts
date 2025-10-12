@@ -11,7 +11,7 @@
 
 export type OnboardingStep = 'welcome' | 'privacy' | 'demographics' | 'auth' | 'profile' | 'complete';
 
-export type OnboardingData = {
+export interface OnboardingData {
   completedSteps: OnboardingStep[];
   currentStep: OnboardingStep;
   demographics: UserDemographics;
@@ -33,13 +33,13 @@ export type OnboardingData = {
     email?: string;
     socialProvider?: 'google' | 'github';
   };
-};
+}
 
 // ============================================================================
 // USER DEMOGRAPHICS
 // ============================================================================
 
-export type UserDemographics = {
+export interface UserDemographics {
   location: {
     state: string;
     district?: string;
@@ -49,17 +49,17 @@ export type UserDemographics = {
   education: 'high_school' | 'some_college' | 'bachelor' | 'graduate' | '';
   political_engagement: 'casual' | 'moderate' | 'very_engaged' | '';
   preferred_contact: 'email' | 'none' | '';
-};
+}
 
 // ============================================================================
 // PRIVACY PREFERENCES
 // ============================================================================
 
-export type PrivacyPreferences = {
+export interface PrivacyPreferences {
   location_sharing: 'enabled' | 'quantized' | 'disabled';
   demographic_sharing: 'enabled' | 'anonymous' | 'disabled';
   analytics_sharing: 'enabled' | 'limited' | 'disabled';
-};
+}
 
 // ============================================================================
 // AUTHENTICATION
@@ -67,12 +67,12 @@ export type PrivacyPreferences = {
 
 export type AuthMethod = 'email' | 'social' | 'webauthn' | 'anonymous' | 'skip';
 
-export type AuthData = {
+export interface AuthData {
   method: AuthMethod;
   email?: string;
   socialProvider?: 'google' | 'github';
   isAuthenticated: boolean;
-};
+}
 
 // ============================================================================
 // PROFILE DATA
@@ -80,7 +80,7 @@ export type AuthData = {
 
 export type ProfileVisibility = 'public' | 'private' | 'friends_only' | 'anonymous';
 
-export type ProfileData = {
+export interface ProfileData {
   displayName: string;
   profileVisibility: ProfileVisibility;
   notifications: {
@@ -89,48 +89,48 @@ export type ProfileData = {
   };
   bio?: string;
   interests?: string[];
-};
+}
 
 // ============================================================================
 // VALUES & INTERESTS
 // ============================================================================
 
-export type ValuesData = {
+export interface ValuesData {
   primaryConcerns: string[];
   communityFocus: 'local' | 'regional' | 'national' | 'global';
   participationStyle: 'observer' | 'contributor' | 'leader';
-};
+}
 
-export type ValueCategory = {
+export interface ValueCategory {
   title: string;
   icon: React.ReactNode;
   color: string;
-};
+}
 
-export type CommunityOption = {
+export interface CommunityOption {
   value: string;
   label: string;
   description: string;
-};
+}
 
-export type ParticipationOption = {
+export interface ParticipationOption {
   value: 'observer' | 'contributor' | 'leader';
   label: string;
   description: string;
-};
+}
 
 // ============================================================================
 // COMPONENT PROPS
 // ============================================================================
 
-export type AuthSetupStepProps = {
+export interface AuthSetupStepProps {
   data: any;
   onUpdate: (updates: any) => void;
   onNext: () => void;
   onBack: () => void;
-};
+}
 
-export type ProfileSetupStepProps = {
+export interface ProfileSetupStepProps {
   data: {
     displayName?: string;
     profileVisibility?: string;
@@ -147,9 +147,9 @@ export type ProfileSetupStepProps = {
   }) => void;
   onNext: () => void;
   onBack: () => void;
-};
+}
 
-export type ValuesStepProps = {
+export interface ValuesStepProps {
   data: {
     primaryConcerns?: string[];
     communityFocus?: string[];
@@ -167,58 +167,58 @@ export type ValuesStepProps = {
     };
   }) => void;
   onNext: () => void;
-};
+}
 
-export type CompleteStepProps = {
+export interface CompleteStepProps {
   data: any;
   onComplete: () => void;
   onBack: () => void;
   isLoading?: boolean;
-};
+}
 
-export type DataUsageStepLiteProps = {
+export interface DataUsageStepLiteProps {
   onNext: () => void;
   onShowAdvanced?: () => void;
-};
+}
 
-export type LocationInputProps = {
+export interface LocationInputProps {
   onLocationResolved: (jurisdictionIds: string[]) => void;
   onError: (error: string) => void;
-};
+}
 
-export type UserOnboardingProps = {
+export interface UserOnboardingProps {
   onComplete: (userData: { address?: string; state?: string; representatives?: any[] }) => void;
   onSkip: () => void;
-};
+}
 
-export type InterestSelectionProps = {
+export interface InterestSelectionProps {
   initialInterests?: string[];
   onSave?: (interests: string[]) => void;
   className?: string;
-};
+}
 
-export type FirstTimeUserGuideProps = {
+export interface FirstTimeUserGuideProps {
   isOpen: boolean;
   onClose: () => void;
   onComplete?: () => void;
-};
+}
 
-export type PlatformTourProps = {
+export interface PlatformTourProps {
   isOpen: boolean;
   onClose: () => void;
   onComplete?: () => void;
-};
+}
 
-export type UserProfileProps = {
+export interface UserProfileProps {
   onRepresentativesUpdate: (representatives: any[]) => void;
   onClose: () => void;
-};
+}
 
 // ============================================================================
 // TRUST LEVEL SYSTEM
 // ============================================================================
 
-export type Tier = {
+export interface Tier {
   level: number;
   name: string;
   price: string; // Now represents verification method instead of price
@@ -227,18 +227,18 @@ export type Tier = {
   popular?: boolean;
   color: string;
   icon: React.ReactNode;
-};
+}
 
-export type TierSystemProps = {
+export interface TierSystemProps {
   tiers: Tier[];
   currentTier?: number;
-};
+}
 
 // ============================================================================
 // API RESPONSES
 // ============================================================================
 
-export type OnboardingProgressResponse = {
+export interface OnboardingProgressResponse {
   progress: {
     user_id: string;
     current_step: OnboardingStep;
@@ -261,7 +261,7 @@ export type OnboardingProgressResponse = {
       marketing: boolean;
     };
   };
-};
+}
 
 // ============================================================================
 // UTILITY TYPES
@@ -269,16 +269,16 @@ export type OnboardingProgressResponse = {
 
 export type OnboardingAction = 'start' | 'update' | 'complete';
 
-export type OnboardingUpdateRequest = {
+export interface OnboardingUpdateRequest {
   step: OnboardingStep;
   data?: Record<string, any>;
   action: OnboardingAction;
-};
+}
 
-export type OnboardingCompletionRequest = {
+export interface OnboardingCompletionRequest {
   preferences: {
     notifications: boolean;
     dataSharing: boolean;
     theme: 'light' | 'dark' | 'system';
   };
-};
+}

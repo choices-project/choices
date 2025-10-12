@@ -7,8 +7,9 @@
  */
 
 import { type NextRequest, NextResponse } from 'next/server';
-import SuperiorDataPipeline, { type SuperiorPipelineConfig } from '@/features/civics/lib/civics-superior/superior-data-pipeline';
+
 import { CurrentElectorateVerifier } from '@/features/civics/lib/civics-superior/current-electorate-verifier';
+import SuperiorDataPipeline, { type SuperiorPipelineConfig } from '@/features/civics/lib/civics-superior/superior-data-pipeline';
 import { createApiLogger } from '@/lib/utils/api-logger';
 
 // Superior pipeline configuration
@@ -120,7 +121,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({
           success: false,
           error: "No current representatives found after filtering",
-          verification: verification
+          verification
         }, { status: 400 });
       }
       

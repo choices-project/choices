@@ -1,14 +1,6 @@
 'use client'
 
 import { 
-  usePWAInstallation,
-  usePWAOffline,
-  usePWANotifications,
-  usePWALoading,
-  usePWAError,
-  usePWAStore
-} from '@/lib/stores';
-import { 
   Smartphone, 
   Wifi, 
   WifiOff, 
@@ -20,7 +12,16 @@ import {
   Settings
 } from 'lucide-react';
 
-type PWAStatusProps = {
+import { 
+  usePWAInstallation,
+  usePWAOffline,
+  usePWANotifications,
+  usePWALoading,
+  usePWAError,
+  usePWAStore
+} from '@/lib/stores';
+
+interface PWAStatusProps {
   showDetails?: boolean;
   className?: string;
 }
@@ -38,8 +39,8 @@ export default function PWAStatus({ showDetails = false, className = '' }: PWASt
     console.log('PWAStatus: Rendering with status:', {
       isInstalled: installation.isInstalled,
       canInstall: installation.canInstall,
-      loading: loading,
-      error: error
+      loading,
+      error
     });
   }
 

@@ -2,6 +2,11 @@
 
 import React, { useState } from 'react';
 
+import { 
+  useOnboardingStep,
+  useOnboardingActions
+} from '@/lib/stores';
+
 import type { UserOnboardingProps } from '../types';
 
 /**
@@ -23,7 +28,11 @@ import type { UserOnboardingProps } from '../types';
  * @returns {JSX.Element} Civics onboarding interface
  */
 export default function UserOnboarding({ onComplete, onSkip }: UserOnboardingProps) {
-  const [step, setStep] = useState<'welcome' | 'address' | 'loading' | 'complete'>('welcome');
+  // Use onboarding store for step management
+  const currentStep = useOnboardingStep();
+  const { updateFormData, setCurrentStep } = useOnboardingActions();
+  
+  // Keep local state for UI-specific concerns
   const [userAddress, setUserAddress] = useState('');
   const [selectedState] = useState('CA');
   const [addressLoading, setAddressLoading] = useState(false);
@@ -31,21 +40,24 @@ export default function UserOnboarding({ onComplete, onSkip }: UserOnboardingPro
 
   const handleAddressLookup = async () => {
     setAddressLoading(true);
-    setStep('loading');
+    setCurrentStep(2); // loading step
     
     try {
       const response = await fetch(`/api/civics/by-address?address=${encodeURIComponent(userAddress)}`);
       if (!response.ok) throw new Error('Address lookup failed');
       const result = await response.json();
       
-      setRepresentatives(result.data || []);
-      setStep('complete');
+      setRepresentatives(result.data ?? []);
+      setCurrentStep(3); // complete step
+      
+      // Update store with address data
+      updateFormData(2, { address: userAddress, representatives: result.data ?? [] });
       
       // Save to localStorage for future use
       localStorage.setItem('userAddress', userAddress);
-      localStorage.setItem('userRepresentatives', JSON.stringify(result.data || []));
+      localStorage.setItem('userRepresentatives', JSON.stringify(result.data ?? []));
       
-      onComplete({ address: userAddress, representatives: result.data || [] });
+      onComplete({ address: userAddress, representatives: result.data ?? [] });
     } catch (error) {
       console.error('Address lookup failed:', error);
       // Fallback to state-based lookup
@@ -55,28 +67,31 @@ export default function UserOnboarding({ onComplete, onSkip }: UserOnboardingPro
 
   const handleStateLookup = async () => {
     setAddressLoading(true);
-    setStep('loading');
+    setCurrentStep(2); // loading step
     
     try {
       const response = await fetch(`/api/civics/by-state?state=${selectedState}&level=federal&limit=20`);
       if (!response.ok) throw new Error('State lookup failed');
       const result = await response.json();
       
-      setRepresentatives(result.data || []);
-      setStep('complete');
+      setRepresentatives(result.data ?? []);
+      setCurrentStep(3); // complete step
+      
+      // Update store with state data
+      updateFormData(2, { state: selectedState, representatives: result.data ?? [] });
       
       // Save to localStorage for future use
       localStorage.setItem('userState', selectedState);
-      localStorage.setItem('userRepresentatives', JSON.stringify(result.data || []));
+      localStorage.setItem('userRepresentatives', JSON.stringify(result.data ?? []));
       
-      onComplete({ state: selectedState, representatives: result.data || [] });
+      onComplete({ state: selectedState, representatives: result.data ?? [] });
     } catch (error) {
       console.error('State lookup failed:', error);
       onSkip();
     }
   };
 
-  if (step === 'welcome') {
+  if (currentStep === 0) {
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
         <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 p-8">
@@ -94,7 +109,7 @@ export default function UserOnboarding({ onComplete, onSkip }: UserOnboardingPro
             
             <div className="space-y-4">
               <button
-                onClick={() => setStep('address')}
+                onClick={() => setCurrentStep(1)}
                 className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors font-medium"
               >
                 Find My Representatives
@@ -113,7 +128,7 @@ export default function UserOnboarding({ onComplete, onSkip }: UserOnboardingPro
     );
   }
 
-  if (step === 'address') {
+  if (currentStep === 1) {
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
         <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 p-8">
@@ -124,7 +139,7 @@ export default function UserOnboarding({ onComplete, onSkip }: UserOnboardingPro
           
           <form onSubmit={(e) => {
             e.preventDefault();
-            handleAddressLookup();
+            void handleAddressLookup();
           }} className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -134,7 +149,7 @@ export default function UserOnboarding({ onComplete, onSkip }: UserOnboardingPro
                 type="text"
                 value={userAddress}
                 onChange={(e) => setUserAddress(e.target.value)}
-                placeholder="123 Main St, City, State 12345"
+                placeholder="Enter your full address"
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 required
               />
@@ -151,7 +166,7 @@ export default function UserOnboarding({ onComplete, onSkip }: UserOnboardingPro
               
               <button
                 type="button"
-                onClick={() => setStep('welcome')}
+                onClick={() => setCurrentStep(0)}
                 className="px-4 py-3 text-gray-600 hover:text-gray-800 transition-colors"
               >
                 Back
@@ -163,7 +178,7 @@ export default function UserOnboarding({ onComplete, onSkip }: UserOnboardingPro
     );
   }
 
-  if (step === 'loading') {
+  if (currentStep === 2) {
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
         <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 p-8">
@@ -177,7 +192,7 @@ export default function UserOnboarding({ onComplete, onSkip }: UserOnboardingPro
     );
   }
 
-  if (step === 'complete') {
+  if (currentStep === 3) {
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
         <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 p-8">

@@ -5,10 +5,11 @@
  * proper error classification, retry logic, and user-friendly messages.
  */
 
-import { logger } from '@/lib/utils/logger';
-import { GoogleCivicApiError } from './client';
 import type { GoogleCivicErrorDetails, RetryConfig, ErrorContext } from '@/lib/types/google-civic';
+import { logger } from '@/lib/utils/logger';
 import { withOptional } from '@/lib/utils/objects';
+
+import { GoogleCivicApiError } from './client';
 
 // Types imported from scratch/google-civic-types.ts
 
@@ -30,7 +31,7 @@ export class GoogleCivicErrorHandler {
    * Handle Google Civic API errors with proper classification
    */
   handleError(error: unknown, context?: ErrorContext): GoogleCivicApiError {
-    logger.error('Google Civic API error occurred', { error, context });
+    logger.error('Google Civic API error occurred', error instanceof Error ? error : new Error('Unknown error'));
 
     // If it's already our custom error, return as-is
     if (error instanceof GoogleCivicApiError) {
@@ -277,11 +278,11 @@ export class GoogleCivicErrorHandler {
     };
 
     if (error.statusCode >= 500) {
-      logger.error('Google Civic API server error', logData);
+      logger.error('Google Civic API server error', undefined, { error: error.message, statusCode: error.statusCode });
     } else if (error.statusCode >= 400) {
-      logger.warn('Google Civic API client error', logData);
+      logger.warn('Google Civic API client error', { error: error.message, statusCode: error.statusCode });
     } else {
-      logger.info('Google Civic API error', logData);
+      logger.info('Google Civic API error', { error: error.message, statusCode: error.statusCode });
     }
   }
 

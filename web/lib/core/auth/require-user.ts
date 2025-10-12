@@ -5,14 +5,15 @@
  * Provides consistent user authentication with proper error handling.
  */
 
-import { type NextRequest } from 'next/server';
-import { getSupabaseServerClient } from '@/utils/supabase/server';
-import { devLog } from '@/lib/utils/logger';
-import { validateOrigin } from '@/lib/http/origin';
-import { withOptional } from '@/lib/utils/objects';
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { type NextRequest } from 'next/server';
 
-export type User = {
+import { validateOrigin } from '@/lib/http/origin';
+import { devLog } from '@/lib/utils/logger';
+import { withOptional } from '@/lib/utils/objects';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
+
+export interface User {
   id: string;
   email: string;
   trust_tier: 'T1' | 'T2' | 'T3';
@@ -20,24 +21,24 @@ export type User = {
   is_admin?: boolean;
 }
 
-export type UserProfile = {
+export interface UserProfile {
   trust_tier: 'T1' | 'T2' | 'T3';
   username?: string;
 }
 
-export type RequireUserOptions = {
+export interface RequireUserOptions {
   requireOrigin?: boolean;
   allowPublic?: boolean;
   requireAdmin?: boolean;
   requireTrustTier?: 'T1' | 'T2' | 'T3';
 }
 
-export type RequireUserResult = {
+export interface RequireUserResult {
   user: User;
   supabase: SupabaseClient;
 }
 
-export type RequireUserError = {
+export interface RequireUserError {
   error: string;
   status: number;
 }
@@ -156,7 +157,7 @@ export async function requireUser(
       };
 
       const userTier = tierHierarchy[userObj.trust_tier] || 0;
-      const requiredTier = tierHierarchy[requireTrustTier!];
+      const requiredTier = tierHierarchy[requireTrustTier];
 
       if (userTier < (requiredTier || 0)) {
         return {
@@ -270,7 +271,7 @@ export async function requireUserForAction(
     };
 
     const userTier = tierHierarchy[userObj.trust_tier] || 0;
-    const requiredTier = tierHierarchy[options.requireTrustTier!];
+    const requiredTier = tierHierarchy[options.requireTrustTier];
 
     if (userTier < (requiredTier || 0)) {
       return {

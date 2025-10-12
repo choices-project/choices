@@ -1,13 +1,14 @@
 'use client'
 
-import { useState } from 'react'
 import { Shield, Mail, Key, ArrowRight, ArrowLeft, CheckCircle, AlertCircle, Smartphone } from 'lucide-react'
+import { useState } from 'react'
+
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { getSupabaseBrowserClient } from '@/utils/supabase/client'
 import { PasskeyButton } from '@/features/auth/components/PasskeyButton'
+import { getSupabaseBrowserClient } from '@/utils/supabase/client'
 
 import type { AuthSetupStepProps, AuthMethod } from '../types';
 

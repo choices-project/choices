@@ -1,7 +1,5 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
-import { logger } from '@/lib/utils/logger';
 import { 
   AlertCircle, 
   Info, 
@@ -11,8 +9,11 @@ import {
   ChevronDown,
   ChevronUp
 } from 'lucide-react'
+import React, { useState, useEffect } from 'react'
 
-type SiteMessage = {
+import { logger } from '@/lib/utils/logger';
+
+interface SiteMessage {
   id: string
   title: string
   message: string
@@ -23,7 +24,7 @@ type SiteMessage = {
   expires_at?: string
 }
 
-type SiteMessagesProps = {
+interface SiteMessagesProps {
   className?: string
   maxMessages?: number
   showDismiss?: boolean

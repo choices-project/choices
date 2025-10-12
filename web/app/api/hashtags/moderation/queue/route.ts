@@ -9,9 +9,10 @@
 
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
-import { getSupabaseServerClient } from '@/utils/supabase/server';
-import { logger } from '@/lib/utils/logger';
+
 import { getModerationQueue } from '@/features/hashtags/lib/hashtag-moderation';
+import { logger } from '@/lib/utils/logger';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 export async function GET(request: NextRequest) {
   try {

@@ -7,13 +7,13 @@
 
 import { logger } from '@/lib/utils/logger';
 
-type TelemetryCounters = {
+interface TelemetryCounters {
   dbQueryCount: number;
   dbQueryErrors: number;
   cacheHitRate: number;
 }
 
-type TelemetryTimers = {
+interface TelemetryTimers {
   dbQueryDuration: number[];
 }
 

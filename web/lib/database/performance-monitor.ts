@@ -8,12 +8,13 @@
  * Agent D - Database Specialist
  */
 
-import { logger } from '@/lib/utils/logger'
-import { getSupabaseServerClient } from '@/utils/supabase/server'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
+import { logger } from '@/lib/utils/logger'
+import { getSupabaseServerClient } from '@/utils/supabase/server'
+
 // Performance metrics interfaces
-export type DatabaseMetrics = {
+export interface DatabaseMetrics {
   connectionCount: number
   activeConnections: number
   idleConnections: number
@@ -28,7 +29,7 @@ export type DatabaseMetrics = {
   timestamp: number
 }
 
-export type QueryPerformanceMetrics = {
+export interface QueryPerformanceMetrics {
   query: string
   executionTime: number
   rowsReturned: number
@@ -37,7 +38,8 @@ export type QueryPerformanceMetrics = {
   timestamp: number
 }
 
-export type PerformanceAlert = {
+export interface PerformanceAlert {
+  [key: string]: unknown;
   id: string
   type: 'warning' | 'error' | 'critical'
   message: string
@@ -48,7 +50,8 @@ export type PerformanceAlert = {
   resolved: boolean
 }
 
-export type PerformanceRecommendation = {
+export interface PerformanceRecommendation {
+  [key: string]: unknown;
   id: string
   type: 'index' | 'query' | 'configuration' | 'maintenance'
   priority: 'low' | 'medium' | 'high' | 'critical'
@@ -61,7 +64,8 @@ export type PerformanceRecommendation = {
 }
 
 // Performance thresholds
-export type PerformanceThresholds = {
+export interface PerformanceThresholds {
+  [key: string]: unknown;
   slowQueryThreshold: number // milliseconds
   errorRateThreshold: number // percentage
   connectionUtilizationThreshold: number // percentage
@@ -553,10 +557,17 @@ export class DatabasePerformanceMonitor {
    * Add performance recommendation
    */
   private addRecommendation(recommendation: Omit<PerformanceRecommendation, 'id' | 'timestamp'>): void {
-    const rec: PerformanceRecommendation = Object.assign({}, recommendation, {
+    const rec: PerformanceRecommendation = {
       id: `rec_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      timestamp: Date.now()
-    })
+      timestamp: Date.now(),
+      type: recommendation.type as PerformanceRecommendation['type'],
+      priority: recommendation.priority as PerformanceRecommendation['priority'],
+      title: recommendation.title as string,
+      description: recommendation.description as string,
+      impact: recommendation.impact as string,
+      effort: recommendation.effort as PerformanceRecommendation['effort'],
+      estimatedImprovement: recommendation.estimatedImprovement as number
+    }
     
     // Check if similar recommendation already exists
     const existingRec = this.recommendations.find(r => 

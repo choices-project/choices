@@ -12,7 +12,7 @@ import { devLog } from '@/lib/utils/logger';
 
 export type PhotoSource = 'google-civic' | 'open-states' | 'congress-gov' | 'wikipedia' | 'placeholder';
 
-export type RepresentativePhoto = {
+export interface RepresentativePhoto {
   url: string;
   source: PhotoSource;
   quality: 'high' | 'medium' | 'low';
@@ -20,16 +20,16 @@ export type RepresentativePhoto = {
   attribution?: string;
   lastUpdated: string;
   isOfficial: boolean;
-};
+}
 
-export type PhotoEnhancementResult = {
+export interface PhotoEnhancementResult {
   representativeId: string;
   name: string;
   photos: RepresentativePhoto[];
   bestPhoto?: RepresentativePhoto;
   hasOfficialPhoto: boolean;
   fallbackUsed: boolean;
-};
+}
 
 export class CivicsPhotoService {
   private cache = new Map<string, RepresentativePhoto[]>();
@@ -55,7 +55,7 @@ export class CivicsPhotoService {
 
       // Check cache first
       const cached = this.cache.get(representative.id);
-      if (cached && cached[0]?.lastUpdated && this.isCacheValid(cached[0].lastUpdated)) {
+      if (cached?.[0]?.lastUpdated && this.isCacheValid(cached[0].lastUpdated)) {
         return this.buildResult(representative, cached);
       }
 

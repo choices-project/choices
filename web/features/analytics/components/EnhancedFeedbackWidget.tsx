@@ -1,13 +1,5 @@
 'use client'
 
-import React, { useState, useRef, useEffect } from 'react'
-import { devLog } from '@/lib/utils/logger'
-import { getFeedbackTracker } from '@/features/admin/lib/feedback-tracker'
-import { motion, AnimatePresence } from '@/components/motion/Motion'
-import { FEATURE_FLAGS } from '@/lib/core/feature-flags'
-import { withOptional } from '@/lib/utils/objects'
-
-// gtag is declared in global.d.ts files
 import { 
   MessageCircle, 
   X, 
@@ -25,8 +17,22 @@ import {
   Accessibility,
   Upload
 } from 'lucide-react'
+import React, { useState, useRef, useEffect } from 'react'
 
-type FeedbackData = {
+import { motion, AnimatePresence } from '@/components/motion/Motion'
+import { getFeedbackTracker } from '@/features/admin/lib/feedback-tracker'
+import { FEATURE_FLAGS } from '@/lib/core/feature-flags'
+import { 
+  useAnalyticsActions,
+  useAnalyticsLoading,
+  useAnalyticsError
+} from '@/lib/stores/analyticsStore'
+import { devLog } from '@/lib/utils/logger'
+import { withOptional } from '@/lib/utils/objects'
+
+// gtag is declared in global.d.ts files
+
+interface FeedbackData {
   type: 'bug' | 'feature' | 'general' | 'performance' | 'accessibility' | 'security'
   title: string
   description: string
@@ -45,11 +51,15 @@ const EnhancedFeedbackWidget: React.FC = () => {
     sentiment: 'neutral',
     userJourney: {}
   })
-  const [isSubmitting, setIsSubmitting] = useState(false)
   const [showSuccess, setShowSuccess] = useState(false)
   const [capturingScreenshot, setCapturingScreenshot] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [feedbackTracker, setFeedbackTracker] = useState<any>(null)
+  
+  // Get analytics store state and actions
+  const { trackEvent, trackUserAction, setLoading, setError } = useAnalyticsActions()
+  const isLoading = useAnalyticsLoading()
+  const error = useAnalyticsError()
 
   // Initialize feedback tracker on mount
   useEffect(() => {
@@ -80,13 +90,18 @@ const EnhancedFeedbackWidget: React.FC = () => {
       setFeedback(prev => withOptional(prev, { userJourney }))
     }
     
-    // Track analytics
-    if (typeof window !== 'undefined' && window.gtag) {
-      window.gtag('event', 'feedbackwidgetopened', {
-        page: window.location.pathname,
-        sessionid: feedback.userJourney?.sessionId || 'unknown'
-      })
-    }
+    // Track analytics using store
+    trackUserAction('feedback_widget_opened', 'engagement', 'Feedback Widget')
+    trackEvent({
+      type: 'user_action',
+      category: 'engagement',
+      action: 'feedback_widget_opened',
+      label: 'Feedback Widget',
+      metadata: {
+        page: typeof window !== 'undefined' ? window.location.pathname : 'unknown',
+        sessionId: feedback.userJourney?.sessionId || 'unknown'
+      }
+    })
   }
 
   const handleClose = () => {
@@ -144,9 +159,10 @@ const EnhancedFeedbackWidget: React.FC = () => {
   }
 
   const handleSubmit = async () => {
-    if (isSubmitting) return // Prevent double submission
+    if (isLoading) return // Prevent double submission
     
-    setIsSubmitting(true)
+    setLoading(true)
+    setError(null)
     
     try {
       // Generate comprehensive feedback context
@@ -194,14 +210,19 @@ const EnhancedFeedbackWidget: React.FC = () => {
         setShowSuccess(true)
         setStep('success')
         
-        // Track successful submission
-        if (typeof window !== 'undefined' && window.gtag) {
-          window.gtag('event', 'feedbacksubmitted', {
-            feedbacktype: feedback.type,
+        // Track successful submission using analytics store
+        trackUserAction('feedback_submitted', 'engagement', 'Feedback Submission')
+        trackEvent({
+          type: 'user_action',
+          category: 'engagement',
+          action: 'feedback_submitted',
+          label: 'Feedback Submission',
+          metadata: {
+            feedbackType: feedback.type,
             sentiment: feedback.sentiment,
             page: feedback.userJourney?.currentPage || 'unknown'
-          })
-        }
+          }
+        })
 
         // Auto-close after 3 seconds
         setTimeout(() => {
@@ -217,11 +238,23 @@ const EnhancedFeedbackWidget: React.FC = () => {
       setShowSuccess(false)
       setStep('sentiment') // Go back to previous step
       
-      // More user-friendly error message
-      const errorMessage = error instanceof Error ? error instanceof Error ? error.message : "Unknown error" : 'Failed to submit feedback'
-      alert(`Feedback submission failed: ${errorMessage}. Please try again.`)
+      // Set error in analytics store
+      const errorMessage = error instanceof Error ? error.message : 'Failed to submit feedback'
+      setError(errorMessage)
+      
+      // Track error event
+      trackEvent({
+        type: 'error',
+        category: 'feedback',
+        action: 'feedback_submission_failed',
+        label: errorMessage,
+        metadata: {
+          feedbackType: feedback.type,
+          sentiment: feedback.sentiment
+        }
+      })
     } finally {
-      setIsSubmitting(false)
+      setLoading(false)
     }
   }
 
@@ -380,10 +413,10 @@ const EnhancedFeedbackWidget: React.FC = () => {
                       <div className="flex justify-end space-x-3">
                         <button
                           onClick={handleSubmit}
-                          disabled={isSubmitting}
+                          disabled={isLoading}
                           className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
                         >
-                          {isSubmitting ? 'Submitting...' : 'Submit Feedback'}
+                          {isLoading ? 'Submitting...' : 'Submit Feedback'}
                         </button>
                         <button
                           onClick={() => setStep('screenshot')}
@@ -436,10 +469,10 @@ const EnhancedFeedbackWidget: React.FC = () => {
                         
                         <button
                           onClick={handleSubmit}
-                          disabled={isSubmitting}
+                          disabled={isLoading}
                           className="w-full p-3 text-sm text-gray-600 hover:text-gray-800 disabled:opacity-50"
                         >
-                          {isSubmitting ? 'Submitting...' : 'Submit Feedback'}
+                          {isLoading ? 'Submitting...' : 'Submit Feedback'}
                         </button>
                       </div>
                     </motion.div>

@@ -12,11 +12,12 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { persist } from 'zustand/middleware';
+
 import { logger } from '@/lib/utils/logger';
 import { withOptional } from '@/lib/utils/objects';
 
 // PWA data types
-type PWAInstallation = {
+interface PWAInstallation {
   isInstalled: boolean;
   installPrompt: any; // BeforeInstallPromptEvent
   canInstall: boolean;
@@ -25,7 +26,7 @@ type PWAInstallation = {
   version: string;
 }
 
-type PWAOffline = {
+interface PWAOffline {
   isOnline: boolean;
   isOffline: boolean;
   lastOnline: string;
@@ -42,7 +43,7 @@ type PWAOffline = {
   };
 }
 
-type PWAUpdate = {
+interface PWAUpdate {
   isAvailable: boolean;
   isDownloading: boolean;
   isInstalling: boolean;
@@ -54,7 +55,7 @@ type PWAUpdate = {
   updateChannel: 'stable' | 'beta' | 'alpha';
 }
 
-type PWANotification = {
+interface PWANotification {
   id: string;
   type: 'update' | 'offline' | 'install' | 'permission' | 'error';
   title: string;
@@ -69,7 +70,7 @@ type PWANotification = {
   read: boolean;
 }
 
-type PWAPreferences = {
+interface PWAPreferences {
   autoUpdate: boolean;
   offlineMode: boolean;
   backgroundSync: boolean;
@@ -89,7 +90,7 @@ type PWAPreferences = {
   };
 }
 
-type PWAPerformance = {
+interface PWAPerformance {
   loadTime: number;
   timeToInteractive: number;
   firstContentfulPaint: number;
@@ -102,7 +103,7 @@ type PWAPerformance = {
 }
 
 // PWA store state interface
-type PWAStore = {
+interface PWAStore {
   // PWA state
   installation: PWAInstallation;
   offline: PWAOffline;
@@ -213,8 +214,8 @@ export const usePWAStore = create<PWAStore>()(
           version: '1.0.0',
         },
         offline: {
-          isOnline: navigator.onLine,
-          isOffline: !navigator.onLine,
+          isOnline: typeof navigator !== 'undefined' ? navigator.onLine : true,
+          isOffline: typeof navigator !== 'undefined' ? !navigator.onLine : false,
           lastOnline: new Date().toISOString(),
           offlineData: {
             cachedPages: [],

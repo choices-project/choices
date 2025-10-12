@@ -12,11 +12,12 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { persist } from 'zustand/middleware';
+
 import { logger } from '@/lib/utils/logger';
 import { withOptional } from '@/lib/utils/objects';
 
 // Voting data types
-type Ballot = {
+interface Ballot {
   id: string;
   electionId: string;
   title: string;
@@ -43,7 +44,7 @@ type Ballot = {
   };
 }
 
-type BallotContest = {
+interface BallotContest {
   id: string;
   title: string;
   description: string;
@@ -56,7 +57,7 @@ type BallotContest = {
   minSelections: number;
 }
 
-type BallotCandidate = {
+interface BallotCandidate {
   id: string;
   name: string;
   party?: string;
@@ -72,7 +73,7 @@ type BallotCandidate = {
   }>;
 }
 
-type BallotMeasure = {
+interface BallotMeasure {
   id: string;
   title: string;
   description: string;
@@ -89,7 +90,7 @@ type BallotMeasure = {
   };
 }
 
-type VotingRecord = {
+interface VotingRecord {
   id: string;
   ballotId: string;
   contestId: string;
@@ -101,7 +102,7 @@ type VotingRecord = {
   receipt?: string;
 }
 
-type Election = {
+interface Election {
   id: string;
   name: string;
   date: string;
@@ -118,7 +119,7 @@ type Election = {
   };
 }
 
-type ElectionResults = {
+interface ElectionResults {
   contests: Array<{
     contestId: string;
     results: Array<{
@@ -138,7 +139,7 @@ type ElectionResults = {
   };
 }
 
-type VotingPreferences = {
+interface VotingPreferences {
   notifications: {
     electionReminders: boolean;
     ballotDeadlines: boolean;
@@ -163,7 +164,7 @@ type VotingPreferences = {
   };
 }
 
-type VotingSearch = {
+interface VotingSearch {
   query: string;
   results: Array<Ballot | Election>;
   totalResults: number;
@@ -183,7 +184,7 @@ type VotingSearch = {
 }
 
 // Voting store state interface
-type VotingStore = {
+interface VotingStore {
   // Voting data
   ballots: Ballot[];
   elections: Election[];
@@ -411,7 +412,7 @@ export const useVotingStore = create<VotingStore>()(
           } catch (error) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
             setError(errorMessage);
-            logger.error('Failed to cast vote:', errorMessage);
+            logger.error('Failed to cast vote:', error instanceof Error ? error : new Error(errorMessage));
           } finally {
             setVoting(false);
           }
@@ -449,7 +450,7 @@ export const useVotingStore = create<VotingStore>()(
           } catch (error) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
             setError(errorMessage);
-            logger.error('Failed to update vote:', errorMessage);
+            logger.error('Failed to update vote:', error instanceof Error ? error : new Error(errorMessage));
           } finally {
             setVoting(false);
           }
@@ -478,7 +479,7 @@ export const useVotingStore = create<VotingStore>()(
           } catch (error) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
             setError(errorMessage);
-            logger.error('Failed to cancel vote:', errorMessage);
+            logger.error('Failed to cancel vote:', error instanceof Error ? error : new Error(errorMessage));
           } finally {
             setVoting(false);
           }
@@ -523,7 +524,7 @@ export const useVotingStore = create<VotingStore>()(
           } catch (error) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
             setError(errorMessage);
-            logger.error('Failed to search voting data:', errorMessage);
+            logger.error('Failed to search voting data:', error instanceof Error ? error : new Error(errorMessage));
           } finally {
             setSearching(false);
           }
@@ -591,7 +592,7 @@ export const useVotingStore = create<VotingStore>()(
           } catch (error) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
             setError(errorMessage);
-            logger.error('Failed to load ballots:', errorMessage);
+            logger.error('Failed to load ballots:', error instanceof Error ? error : new Error(errorMessage));
           } finally {
             setLoading(false);
           }
@@ -619,7 +620,7 @@ export const useVotingStore = create<VotingStore>()(
           } catch (error) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
             setError(errorMessage);
-            logger.error('Failed to load elections:', errorMessage);
+            logger.error('Failed to load elections:', error instanceof Error ? error : new Error(errorMessage));
           } finally {
             setLoading(false);
           }
@@ -647,7 +648,7 @@ export const useVotingStore = create<VotingStore>()(
           } catch (error) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
             setError(errorMessage);
-            logger.error('Failed to load voting records:', errorMessage);
+            logger.error('Failed to load voting records:', error instanceof Error ? error : new Error(errorMessage));
           } finally {
             setLoading(false);
           }
@@ -673,7 +674,7 @@ export const useVotingStore = create<VotingStore>()(
           } catch (error) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
             setError(errorMessage);
-            logger.error('Failed to load ballot:', errorMessage);
+            logger.error('Failed to load ballot:', error instanceof Error ? error : new Error(errorMessage));
           } finally {
             setLoading(false);
           }
@@ -699,7 +700,7 @@ export const useVotingStore = create<VotingStore>()(
           } catch (error) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
             setError(errorMessage);
-            logger.error('Failed to load election:', errorMessage);
+            logger.error('Failed to load election:', error instanceof Error ? error : new Error(errorMessage));
           } finally {
             setLoading(false);
           }
@@ -735,7 +736,7 @@ export const useVotingStore = create<VotingStore>()(
           } catch (error) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
             setError(errorMessage);
-            logger.error('Failed to submit ballot:', errorMessage);
+            logger.error('Failed to submit ballot:', error instanceof Error ? error : new Error(errorMessage));
           } finally {
             setVoting(false);
           }
@@ -902,11 +903,8 @@ export const votingStoreSubscriptions = {
    */
   onBallotsChange: (callback: (ballots: Ballot[]) => void) => {
     return useVotingStore.subscribe(
-      (state) => state.ballots,
-      (ballots, prevBallots) => {
-        if (ballots !== prevBallots) {
-          callback(ballots);
-        }
+      (state) => {
+        callback(state.ballots);
       }
     );
   },
@@ -916,11 +914,8 @@ export const votingStoreSubscriptions = {
    */
   onElectionsChange: (callback: (elections: Election[]) => void) => {
     return useVotingStore.subscribe(
-      (state) => state.elections,
-      (elections, prevElections) => {
-        if (elections !== prevElections) {
-          callback(elections);
-        }
+      (state) => {
+        callback(state.elections);
       }
     );
   },
@@ -930,11 +925,8 @@ export const votingStoreSubscriptions = {
    */
   onVotingRecordsChange: (callback: (records: VotingRecord[]) => void) => {
     return useVotingStore.subscribe(
-      (state) => state.votingRecords,
-      (records, prevRecords) => {
-        if (records !== prevRecords) {
-          callback(records);
-        }
+      (state) => {
+        callback(state.votingRecords);
       }
     );
   }

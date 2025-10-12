@@ -1,10 +1,11 @@
 'use client'
 
-import { useState, useEffect } from 'react'
 import { WifiOff, CheckCircle, AlertCircle } from 'lucide-react'
+import { useState, useEffect } from 'react'
+
 import { usePWA } from '@/hooks/usePWA'
 
-type OfflineVotingProps = {
+interface OfflineVotingProps {
   pollId: string
   className?: string
 }

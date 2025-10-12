@@ -3,7 +3,7 @@
  * These types are used across multiple components and should be shared
  */
 
-export type FeedItemData = {
+export interface FeedItemData {
   id: string;
   representativeId: string;
   representativeName: string;
@@ -24,9 +24,9 @@ export type FeedItemData = {
   };
   isPublic: boolean;
   metadata: Record<string, any>;
-};
+}
 
-export type UserPreferences = {
+export interface UserPreferences {
   state?: string;
   district?: string;
   interests?: string[];
@@ -38,9 +38,9 @@ export type UserPreferences = {
     showSocialMedia: boolean;
     showPhotos: boolean;
   };
-};
+}
 
-export type EngagementData = {
+export interface EngagementData {
   likes: number;
   shares: number;
   comments: number;
@@ -49,15 +49,15 @@ export type EngagementData = {
   engagementRate?: number;
   trendingScore?: number;
   lastUpdated: Date;
-};
+}
 
-export type TouchPoint = {
+export interface TouchPoint {
   x: number;
   y: number;
   time: number;
-};
+}
 
-export type TouchState = {
+export interface TouchState {
   start: TouchPoint | null;
   end: TouchPoint | null;
   last: TouchPoint | null;
@@ -65,4 +65,4 @@ export type TouchState = {
   isLongPress: boolean;
   initialDistance: number | null;
   lastDistance: number | null;
-};
+}

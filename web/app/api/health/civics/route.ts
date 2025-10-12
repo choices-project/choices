@@ -6,6 +6,7 @@
  */
 
 import { NextResponse } from 'next/server';
+
 import { isCivicsEnabled } from '@/features/civics/lib/civics/privacy-utils';
 
 export async function GET() {

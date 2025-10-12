@@ -9,7 +9,7 @@
 import { devLog } from './logger';
 import { withOptional } from './objects';
 
-export type ApiLogContext = {
+export interface ApiLogContext {
   route: string;
   method: string;
   userId?: string;

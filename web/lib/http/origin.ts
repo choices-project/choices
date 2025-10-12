@@ -8,7 +8,7 @@
 
 import { devLog } from '@/lib/utils/logger';
 
-export type OriginConfig = {
+export interface OriginConfig {
   allowedOrigins: string[];
   allowLocalhost: boolean;
   allowVercelPreview: boolean;

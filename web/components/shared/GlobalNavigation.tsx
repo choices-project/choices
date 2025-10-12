@@ -1,10 +1,5 @@
 'use client'
 
-import { useState } from 'react'
-import Link from 'next/link'
-import { usePathname } from 'next/navigation'
-import { useUser, useUserActions } from '@/lib/stores'
-import { Button } from '@/components/ui/button'
 import { 
   Menu, 
   X, 
@@ -16,6 +11,12 @@ import {
   Home,
   Settings
 } from 'lucide-react'
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
+import { useState } from 'react'
+
+import { Button } from '@/components/ui/button'
+import { useUser, useUserActions } from '@/lib/stores'
 
 export default function GlobalNavigation() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
@@ -140,6 +141,8 @@ export default function GlobalNavigation() {
               onClick={toggleMobileMenu}
               className="p-2"
               aria-label="Toggle mobile menu"
+              data-testid="mobile-menu"
+              aria-expanded={isMobileMenuOpen}
             >
               {isMobileMenuOpen ? (
                 <X className="h-6 w-6" />

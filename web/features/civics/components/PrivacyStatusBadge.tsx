@@ -14,12 +14,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
 
 /**
  * Privacy status information structure
  */
-type PrivacyStatus = {
+interface PrivacyStatus {
   /** Current privacy system status */
   status: 'healthy' | 'warning' | 'error' | 'disabled';
   /** Human-readable status message */

@@ -1,9 +1,9 @@
 import 'server-only';                  // build-time guard
-import { cookies } from 'next/headers'
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { cookies } from 'next/headers'
 
 // Database schema types for type safety
-export type Database = {
+export interface Database {
   public: {
     Tables: {
       user_profiles: {

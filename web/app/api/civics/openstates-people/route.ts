@@ -13,8 +13,9 @@
  * Status: ✅ ACTIVE
  */
 
-import { type NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { type NextRequest, NextResponse } from 'next/server';
+
 import OpenStatesIntegration from '@/features/civics/lib/civics-superior/openstates-integration';
 // import { CurrentElectorateVerifier } from '@/features/civics/lib/civics-superior/current-electorate-verifier';
 

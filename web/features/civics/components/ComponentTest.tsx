@@ -8,14 +8,17 @@
 'use client';
 
 import React, { useState } from 'react';
+
 import { devLog } from '@/lib/utils/logger';
+
+import type { SuperiorRepresentativeData } from '../lib/civics-superior/superior-data-pipeline';
+
 import EnhancedCandidateCard from './EnhancedCandidateCard';
 import MobileCandidateCard from './MobileCandidateCard';
 import ProgressiveDisclosure from './ProgressiveDisclosure';
 import TouchInteractions from './TouchInteractions';
 
 // Import types from the pipeline
-import type { SuperiorRepresentativeData } from '../lib/civics-superior/superior-data-pipeline';
 
 // Mock data for testing
 const mockRepresentative: SuperiorRepresentativeData = {

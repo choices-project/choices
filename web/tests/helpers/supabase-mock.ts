@@ -108,7 +108,7 @@ export function makeMockSupabase(mockLib: MockLib = {} as MockLib) {
 
   const resetAllMocks = () => {
     routes.length = 0;
-    for (const k of Object.keys(handles) as (keyof typeof handles)[]) handles[k].mockReset();
+    for (const k of Object.keys(handles) as Array<keyof typeof handles>) handles[k].mockReset();
     metrics.counts = { single:0, maybeSingle:0, list:0, mutate:0, rpc:0 } as any;
     for (const t of Object.keys(metrics.byTable)) delete metrics.byTable[t];
   };

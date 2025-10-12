@@ -13,20 +13,20 @@
 // WebAuthn Core Types
 // ============================================================================
 
-export type CredentialData = {
+export interface CredentialData {
   id: string
   type: 'public-key'
   rawId: ArrayBuffer
   response: AuthenticatorAttestationResponse | AuthenticatorAssertionResponse
 }
 
-export type WebAuthnError = {
+export interface WebAuthnError {
   name: string
   message: string
   code: number
 }
 
-export type SessionData = {
+export interface SessionData {
   userId: string
   credentialId: string
   expiresAt: Date
@@ -36,7 +36,7 @@ export type SessionData = {
 // WebAuthn Credential Types
 // ============================================================================
 
-export type PublicKeyCredentialCreationOptions = {
+export interface PublicKeyCredentialCreationOptions {
   challenge: ArrayBuffer
   rp: PublicKeyCredentialRpEntity
   user: PublicKeyCredentialUserEntity
@@ -48,7 +48,7 @@ export type PublicKeyCredentialCreationOptions = {
   extensions?: AuthenticationExtensionsClientInputs
 }
 
-export type PublicKeyCredentialRequestOptions = {
+export interface PublicKeyCredentialRequestOptions {
   challenge: ArrayBuffer
   timeout?: number
   rpId?: string
@@ -61,12 +61,12 @@ export type PublicKeyCredentialRequestOptions = {
 // WebAuthn Response Types
 // ============================================================================
 
-export type AuthenticatorAttestationResponse = {
+export interface AuthenticatorAttestationResponse {
   clientDataJSON: ArrayBuffer
   attestationObject: ArrayBuffer
 }
 
-export type AuthenticatorAssertionResponse = {
+export interface AuthenticatorAssertionResponse {
   clientDataJSON: ArrayBuffer
   authenticatorData: ArrayBuffer
   signature: ArrayBuffer
@@ -77,25 +77,25 @@ export type AuthenticatorAssertionResponse = {
 // WebAuthn Entity Types
 // ============================================================================
 
-export type PublicKeyCredentialRpEntity = {
+export interface PublicKeyCredentialRpEntity {
   id?: string
   name: string
   icon?: string
 }
 
-export type PublicKeyCredentialUserEntity = {
+export interface PublicKeyCredentialUserEntity {
   id: ArrayBuffer
   name: string
   displayName: string
   icon?: string
 }
 
-export type PublicKeyCredentialParameters = {
+export interface PublicKeyCredentialParameters {
   type: 'public-key'
   alg: number
 }
 
-export type PublicKeyCredentialDescriptor = {
+export interface PublicKeyCredentialDescriptor {
   type: 'public-key'
   id: ArrayBuffer
   transports?: AuthenticatorTransport[]
@@ -105,7 +105,7 @@ export type PublicKeyCredentialDescriptor = {
 // WebAuthn Selection and Verification Types
 // ============================================================================
 
-export type AuthenticatorSelectionCriteria = {
+export interface AuthenticatorSelectionCriteria {
   authenticatorAttachment?: AuthenticatorAttachment
   userVerification?: UserVerificationRequirement
   requireResidentKey?: boolean
@@ -120,7 +120,7 @@ export type AuthenticatorTransport = 'usb' | 'nfc' | 'ble' | 'internal'
 // WebAuthn Database Types
 // ============================================================================
 
-export type WebAuthnCredential = {
+export interface WebAuthnCredential {
   id: string
   user_id: string
   credential_id: string
@@ -132,7 +132,7 @@ export type WebAuthnCredential = {
   last_used_at?: string
 }
 
-export type WebAuthnSession = {
+export interface WebAuthnSession {
   id: string
   user_id: string
   credential_id: string
@@ -144,20 +144,20 @@ export type WebAuthnSession = {
 // WebAuthn API Response Types
 // ============================================================================
 
-export type WebAuthnRegistrationResponse = {
+export interface WebAuthnRegistrationResponse {
   success: boolean
   credentialId?: string
   error?: string
 }
 
-export type WebAuthnAuthenticationResponse = {
+export interface WebAuthnAuthenticationResponse {
   success: boolean
   userId?: string
   session?: SessionData
   error?: string
 }
 
-export type WebAuthnErrorResponse = {
+export interface WebAuthnErrorResponse {
   success: false
   error: string
   code?: string
@@ -168,7 +168,7 @@ export type WebAuthnErrorResponse = {
 // WebAuthn Configuration Types
 // ============================================================================
 
-export type WebAuthnConfig = {
+export interface WebAuthnConfig {
   rpId: string
   rpName: string
   rpIcon?: string
@@ -177,7 +177,7 @@ export type WebAuthnConfig = {
   attestation?: AttestationConveyancePreference
 }
 
-export type WebAuthnServerConfig = {
+export interface WebAuthnServerConfig {
   rpId: string
   rpName: string
   rpIcon?: string
@@ -195,14 +195,14 @@ export type WebAuthnServerConfig = {
 
 export type WebAuthnOperation = 'registration' | 'authentication'
 
-export type WebAuthnChallenge = {
+export interface WebAuthnChallenge {
   challenge: string
   expiresAt: Date
   operation: WebAuthnOperation
   userId?: string
 }
 
-export type WebAuthnSupportedFeatures = {
+export interface WebAuthnSupportedFeatures {
   isSupported: boolean
   isUserVerifyingPlatformAuthenticatorAvailable: boolean
   isConditionalMediationAvailable: boolean
@@ -214,7 +214,7 @@ export type WebAuthnSupportedFeatures = {
 // WebAuthn Component Types
 // ============================================================================
 
-export type WebAuthnAuthProps = {
+export interface WebAuthnAuthProps {
   onSuccess: (credential: PublicKeyCredential) => void
   onError: (error: Error) => void
   mode: 'register' | 'authenticate'
@@ -222,7 +222,7 @@ export type WebAuthnAuthProps = {
   className?: string
 }
 
-export type WebAuthnCredentialResponse = {
+export interface WebAuthnCredentialResponse {
   id: string
   type: string
   rawId: string // base64url encoded
@@ -235,7 +235,7 @@ export type WebAuthnCredentialResponse = {
   }
 }
 
-export type WebAuthnRegistrationResult = {
+export interface WebAuthnRegistrationResult {
   success: boolean
   credentialId: string
   publicKey: string
@@ -248,7 +248,7 @@ export type WebAuthnRegistrationResult = {
   error?: string
 }
 
-export type WebAuthnAuthenticationResult = {
+export interface WebAuthnAuthenticationResult {
   success: boolean
   userId: string
   credentialId: string
@@ -259,7 +259,7 @@ export type WebAuthnAuthenticationResult = {
   error?: string
 }
 
-export type WebAuthnCredentialInfo = {
+export interface WebAuthnCredentialInfo {
   id: string
   publicKey: string
   counter: number
@@ -285,7 +285,7 @@ export type OAuthProvider =
   | 'instagram' 
   | 'tiktok'
 
-export type SocialLoginOption = {
+export interface SocialLoginOption {
   provider: OAuthProvider
   label: string
   description: string
@@ -302,12 +302,12 @@ export type SocialLoginOption = {
 // General Auth Types
 // ============================================================================
 
-export type AuthError = {
+export interface AuthError {
   code: string
   message: string
 }
 
-export type AuthSession = {
+export interface AuthSession {
   user: {
     id: string
     email: string

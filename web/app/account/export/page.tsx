@@ -1,22 +1,22 @@
 'use client'
 
-import { useState, useCallback, useEffect, useContext } from 'react'
+import { ArrowLeft, Download, FileText, User, Vote, MessageSquare, Settings, CheckCircle, Database, Clock, AlertCircle } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import { AuthContext } from '@/contexts/AuthContext'
-
-// UI Components
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { useState, useCallback, useEffect } from 'react'
 
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { useUser, useUserLoading } from '@/lib/stores'
+
+// UI Components
 
 // Icons
-import { ArrowLeft, Download, FileText, User, Vote, MessageSquare, Settings, CheckCircle, Database, Clock, AlertCircle } from 'lucide-react'
 
 // Utilities
 import { devLog } from '@/lib/utils/logger'
 
-type ExportOptions = {
+interface ExportOptions {
   profile: boolean
   polls: boolean
   votes: boolean
@@ -27,7 +27,7 @@ type ExportOptions = {
   dateRange: 'all' | '30d' | '90d' | '1y'
 }
 
-type ExportHistory = {
+interface ExportHistory {
   id: string
   createdat: string
   format: string
@@ -38,10 +38,8 @@ type ExportHistory = {
 
 export default function DataExportPage() {
   const router = useRouter()
-  const authContext = useContext(AuthContext)
-  
-  // Extract user early to avoid "used before declaration" errors
-  const user = authContext?.user
+  const user = useUser()
+  const isLoading = useUserLoading()
   
   // All hooks must be called at the top level
   const [exportOptions, setExportOptions] = useState<ExportOptions>({
@@ -170,8 +168,8 @@ export default function DataExportPage() {
 
   const selectedCount = Object.values(exportOptions).filter(Boolean).length - 2 // Exclude format and dateRange
 
-  // Handle case where auth context is not available during pre-rendering
-  if (!authContext || !user) {
+  // Handle case where user is not available during pre-rendering
+  if (!user) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">

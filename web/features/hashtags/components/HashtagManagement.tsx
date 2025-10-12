@@ -10,19 +10,22 @@
 
 'use client';
 
-import React, { useState } from 'react';
 import { Search, Plus, Minus, GripVertical, TrendingUp, Users, Hash } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import React, { useState } from 'react';
+
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { cn } from '@/lib/utils';
+
 import { useUserHashtags, useTrendingHashtags, useHashtagSearch, useFollowHashtag, useUnfollowHashtag } from '../hooks/use-hashtags';
-import HashtagDisplay from './HashtagDisplay';
 import type { HashtagManagementProps, UserHashtag, Hashtag, HashtagCategory } from '../types';
+
+import HashtagDisplay from './HashtagDisplay';
 
 export default function HashtagManagement({
   userHashtags = [],
@@ -69,7 +72,7 @@ export default function HashtagManagement({
       await followHashtagMutation.mutateAsync(hashtag.id);
       onFollow?.(hashtag);
     } catch (error) {
-      console.error('Failed to follow hashtag:', error);
+      // Failed to follow hashtag
     }
   };
 
@@ -79,7 +82,7 @@ export default function HashtagManagement({
       await unfollowHashtagMutation.mutateAsync(hashtag.id);
       onUnfollow?.(hashtag);
     } catch (error) {
-      console.error('Failed to unfollow hashtag:', error);
+      // Failed to unfollow hashtag
     }
   };
 
@@ -93,8 +96,10 @@ export default function HashtagManagement({
     if (onReorder) {
       const reorderedHashtags = [...currentUserHashtags];
       const [movedHashtag] = reorderedHashtags.splice(fromIndex, 1);
-      reorderedHashtags.splice(toIndex, 0, movedHashtag);
-      onReorder(reorderedHashtags);
+      if (movedHashtag) {
+        reorderedHashtags.splice(toIndex, 0, movedHashtag);
+        onReorder(reorderedHashtags);
+      }
     }
   };
 
@@ -102,10 +107,10 @@ export default function HashtagManagement({
   const toggleSuggestions = () => {
     if (showSuggestions) {
       // Hide suggestions logic
-      console.log('Hiding suggestions');
+      // Hiding suggestions
     } else {
       // Show suggestions logic
-      console.log('Showing suggestions');
+      // Showing suggestions
     }
   };
 

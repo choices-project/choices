@@ -11,11 +11,12 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { persist } from 'zustand/middleware';
+
 import { logger } from '@/lib/utils/logger';
 import { withOptional } from '@/lib/utils/objects';
 
 // Poll data types
-type Poll = {
+interface Poll {
   id: string;
   title: string;
   description: string;
@@ -78,7 +79,7 @@ type Poll = {
   };
 }
 
-type PollOption = {
+interface PollOption {
   id: string;
   text: string;
   description?: string;
@@ -88,7 +89,7 @@ type PollOption = {
   percentage: number;
 }
 
-type PollComment = {
+interface PollComment {
   id: string;
   pollId: string;
   author: {
@@ -104,8 +105,8 @@ type PollComment = {
   updatedAt: string;
 }
 
-type PollFilters = {
-  status: ('draft' | 'active' | 'closed' | 'archived')[];
+interface PollFilters {
+  status: Array<'draft' | 'active' | 'closed' | 'archived'>;
   category: string[];
   tags: string[];
   author: string[];
@@ -114,10 +115,10 @@ type PollFilters = {
     end: string;
   };
   votingStatus: 'all' | 'voted' | 'not_voted';
-  visibility: ('public' | 'private' | 'unlisted')[];
+  visibility: Array<'public' | 'private' | 'unlisted'>;
 }
 
-type PollPreferences = {
+interface PollPreferences {
   defaultView: 'list' | 'grid' | 'card';
   sortBy: 'newest' | 'oldest' | 'popular' | 'trending' | 'closing_soon';
   itemsPerPage: number;
@@ -143,7 +144,7 @@ type PollPreferences = {
   };
 }
 
-type PollSearch = {
+interface PollSearch {
   query: string;
   results: Poll[];
   totalResults: number;
@@ -155,7 +156,7 @@ type PollSearch = {
 }
 
 // Polls store state interface
-type PollsStore = {
+interface PollsStore {
   // Poll data
   polls: Poll[];
   filteredPolls: Poll[];
@@ -491,7 +492,7 @@ export const usePollsStore = create<PollsStore>()(
             // Update local state
             set((state) => {
               const poll = state.polls.find(p => p.id === pollId);
-              if (!poll || !poll.voting.userVote) return state;
+              if (!poll?.voting.userVote) return state;
               
               return {
                 polls: state.polls.map(p =>

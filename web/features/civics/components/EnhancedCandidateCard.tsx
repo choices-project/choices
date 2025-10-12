@@ -15,8 +15,6 @@
 
 'use client';
 
-import React, { useState, useRef, useCallback, useEffect } from 'react';
-import Image from 'next/image';
 import { 
   PhoneIcon, 
   EnvelopeIcon, 
@@ -35,11 +33,13 @@ import {
   HeartIcon as HeartSolidIcon,
   UserPlusIcon as UserPlusSolidIcon
 } from '@heroicons/react/24/solid';
+import Image from 'next/image';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 
 // Import types from the pipeline
 import type { SuperiorRepresentativeData } from '../lib/civics-superior/superior-data-pipeline';
 
-type CandidateCardProps = {
+interface CandidateCardProps {
   representative: SuperiorRepresentativeData;
   onLike?: (id: string) => void;
   onShare?: (id: string) => void;

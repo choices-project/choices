@@ -1,6 +1,5 @@
 'use client';
 
-import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import {
   Download,
@@ -9,14 +8,18 @@ import {
   AlertCircle,
   Github
 } from 'lucide-react';
-import { FeedbackList } from './FeedbackList';
-import { FeedbackFilters } from './FeedbackFilters';
-import { FeedbackStats } from './FeedbackStats';
-import { FeedbackDetailModal } from './FeedbackDetailModal';
-import { IssueGenerationPanel } from './IssueGenerationPanel';
+import React, { useState } from 'react';
+
 import { devLog } from '@/lib/utils/logger';
 
-type Feedback = {
+import { FeedbackDetailModal } from './FeedbackDetailModal';
+import { FeedbackFilters } from './FeedbackFilters';
+import { FeedbackList } from './FeedbackList';
+import { FeedbackStats } from './FeedbackStats';
+import { IssueGenerationPanel } from './IssueGenerationPanel';
+
+
+interface Feedback {
   id: string;
   userid: string | null;
   type: string;
@@ -52,14 +55,14 @@ export default function AdminFeedbackPage() {
   const { data: feedback, isLoading, error, refetch } = useQuery({
     queryKey: ['admin-feedback', filters],
     queryFn: async () => {
-      const response = await fetch('/api/admin/feedback?' + new URLSearchParams({
+      const response = await fetch(`/api/admin/feedback?${  new URLSearchParams({
         type: filters.type,
         sentiment: filters.sentiment,
         status: filters.status,
         priority: filters.priority,
         dateRange: filters.dateRange,
         search: filters.search
-      }));
+      })}`);
 
       if (!response.ok) {
         throw new Error('Failed to fetch feedback');
@@ -97,7 +100,7 @@ export default function AdminFeedbackPage() {
 
   const handleExport = async () => {
     try {
-      const response = await fetch('/api/admin/feedback/export?' + new URLSearchParams(filters));
+      const response = await fetch(`/api/admin/feedback/export?${  new URLSearchParams(filters)}`);
       const blob = await response.blob();
       // Use SSR-safe browser API access
       const { safeWindow, safeDocument } = await import('@/lib/utils/ssr-safe');

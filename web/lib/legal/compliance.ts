@@ -2,8 +2,8 @@
 // PHASE 2: LEGAL COMPLIANCE FRAMEWORK
 // ============================================================================
 
-import { withOptional } from '@/lib/utils/objects';
 import { isValidEmail } from '@/lib/utils/format-utils';
+import { withOptional } from '@/lib/utils/objects';
 // Agent A2 - Privacy Specialist
 // 
 // This module implements legal compliance frameworks for TCPA/CAN-SPAM
@@ -24,7 +24,7 @@ import { isValidEmail } from '@/lib/utils/format-utils';
 // TYPES AND INTERFACES
 // ============================================================================
 
-export type ConsentRecord = {
+export interface ConsentRecord {
   userId: string;
   type: 'sms' | 'email' | 'analytics' | 'marketing';
   granted: boolean;
@@ -38,7 +38,7 @@ export type ConsentRecord = {
   withdrawable: boolean;
 }
 
-export type CommunicationCompliance = {
+export interface CommunicationCompliance {
   type: 'sms' | 'email';
   recipient: string;
   content: string;
@@ -48,7 +48,7 @@ export type CommunicationCompliance = {
   senderIdentificationRequired: boolean;
 }
 
-export type COPPACompliance = {
+export interface COPPACompliance {
   age: number;
   parentalConsentRequired: boolean;
   guardianConsentRequired: boolean;
@@ -57,7 +57,7 @@ export type COPPACompliance = {
   parentalRights: string[];
 }
 
-export type DataSubjectRights = {
+export interface DataSubjectRights {
   userId: string;
   rights: {
     access: boolean;
@@ -70,7 +70,7 @@ export type DataSubjectRights = {
   requestHistory: DataSubjectRequest[];
 }
 
-export type DataSubjectRequest = {
+export interface DataSubjectRequest {
   id: string;
   type: 'access' | 'rectification' | 'erasure' | 'portability' | 'restriction' | 'objection';
   status: 'pending' | 'in_progress' | 'completed' | 'rejected';
@@ -80,7 +80,7 @@ export type DataSubjectRequest = {
   legalBasis?: string;
 }
 
-export type ComplianceAudit = {
+export interface ComplianceAudit {
   timestamp: Date;
   complianceScore: number;
   violations: ComplianceViolation[];
@@ -88,7 +88,7 @@ export type ComplianceAudit = {
   nextAuditDate: Date;
 }
 
-export type ComplianceViolation = {
+export interface ComplianceViolation {
   type: 'tcpa' | 'can_spam' | 'coppa' | 'gdpr' | 'ccpa';
   severity: 'low' | 'medium' | 'high' | 'critical';
   description: string;
@@ -222,9 +222,9 @@ export class CommunicationComplianceManager {
       // Create compliant email
       const compliantEmail = {
         to: email,
-        subject: subject,
-        body: body,
-        unsubscribeLink: unsubscribeLink,
+        subject,
+        body,
+        unsubscribeLink,
         physicalAddress: "Choices Platform, 123 Main St, City, State 12345", // Required by CAN-SPAM
         senderIdentification: "Choices Platform <noreply@choices-platform.com>",
         replyTo: "support@choices-platform.com"
@@ -546,7 +546,7 @@ export class CommunicationComplianceManager {
   private async validateUnsubscribeToken(token: string): Promise<string | null> {
     // Validate unsubscribe token and return email
     // Implementation would check token validity and return associated email
-    if (!token || !token.startsWith('unsub_')) {
+    if (!token?.startsWith('unsub_')) {
       return null;
     }
     // For now, return a placeholder based on token
@@ -559,7 +559,7 @@ export class CommunicationComplianceManager {
 
   private async getUserIdByEmail(email: string): Promise<string | null> {
     // Get user ID by email address
-    if (!email || !email.includes('@')) {
+    if (!email?.includes('@')) {
       return null;
     }
     const emailHash = email.split('').reduce((a, b) => {
@@ -614,7 +614,7 @@ export class CommunicationComplianceManager {
 
   private async validateParentalConsentToken(token: string): Promise<any> {
     // Validate parental consent token
-    if (!token || !token.startsWith('parental_')) {
+    if (!token?.startsWith('parental_')) {
       return null;
     }
     const tokenHash = token.split('').reduce((a, b) => {

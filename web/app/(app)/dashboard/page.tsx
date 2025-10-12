@@ -1,7 +1,7 @@
 'use client';
 
-import { Suspense } from 'react';
 import dynamic from 'next/dynamic';
+import { Suspense } from 'react';
 
 // Use SuperiorMobileFeed as the main dashboard component
 const SuperiorMobileFeed = dynamic(() => import('@/features/feeds').then(mod => ({ default: mod.SuperiorMobileFeed })), {

@@ -5,9 +5,17 @@
  * Includes comprehensive admin functionality with performance monitoring.
  */
 
-import React, { Suspense, useState, useEffect } from 'react';
+import React, { Suspense, useEffect } from 'react';
+
 import { createLazyComponent } from '@/lib/performance/lazy-loading';
 import { performanceMetrics } from '@/lib/performance/performance-metrics';
+import { 
+  useAdminActiveTab,
+  useAdminDashboardStats,
+  useAdminDashboardActions,
+  useAdminLoading,
+  useAdminError
+} from '@/lib/stores';
 
 // Lazy load heavy admin components
 const UserManagement = createLazyComponent(
@@ -42,7 +50,7 @@ const AuditLogs = createLazyComponent(
   }
 );
 
-type AdminDashboardProps = {
+interface AdminDashboardProps {
   user: {
     id: string;
     email: string;
@@ -51,34 +59,21 @@ type AdminDashboardProps = {
   onLogout: () => void;
 }
 
-type DashboardStats = {
-  totalUsers: number;
-  activePolls: number;
-  totalVotes: number;
-  systemHealth: 'healthy' | 'warning' | 'critical';
-}
-
 export default function AdminDashboard({ user, onLogout }: AdminDashboardProps) {
-  const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'analytics' | 'settings' | 'audit'>('overview');
-  const [stats, setStats] = useState<DashboardStats | null>(null);
-  const [loading, setLoading] = useState(true);
+  // Get state from adminStore
+  const activeTab = useAdminActiveTab();
+  const stats = useAdminDashboardStats();
+  const loading = useAdminLoading();
+  const error = useAdminError();
+  const { setActiveTab, loadDashboardStats } = useAdminDashboardActions();
 
   useEffect(() => {
     // Track admin dashboard load time
     const startTime = performance.now();
     
-    // Simulate loading dashboard stats
     const loadStats = async () => {
       try {
-        // This would typically fetch from an API
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
-        setStats({
-          totalUsers: 1250,
-          activePolls: 23,
-          totalVotes: 15600,
-          systemHealth: 'healthy',
-        });
+        await loadDashboardStats();
         
         const loadTime = performance.now() - startTime;
         performanceMetrics.addMetric('admin-dashboard-load', loadTime);
@@ -86,15 +81,13 @@ export default function AdminDashboard({ user, onLogout }: AdminDashboardProps) 
         // Error loading dashboard stats - use existing error handling
         performanceMetrics.addMetric('admin-dashboard-error', 1);
         throw error; // Let error boundary handle it
-      } finally {
-        setLoading(false);
       }
     };
     
     loadStats();
-  }, []);
+  }, [loadDashboardStats]);
 
-  const handleTabChange = (tab: typeof activeTab) => {
+  const handleTabChange = (tab: 'overview' | 'users' | 'analytics' | 'settings' | 'audit') => {
     setActiveTab(tab);
     performanceMetrics.addMetric('admin-tab-switch', 1);
   };
@@ -155,7 +148,7 @@ export default function AdminDashboard({ user, onLogout }: AdminDashboardProps) 
             ].map((tab) => (
               <button
                 key={tab.id}
-                onClick={() => handleTabChange(tab.id as typeof activeTab)}
+                onClick={() => handleTabChange(tab.id as 'overview' | 'users' | 'analytics' | 'settings' | 'audit')}
                 className={`py-4 px-1 border-b-2 font-medium text-sm ${
                   activeTab === tab.id
                     ? 'border-blue-500 text-blue-600'

@@ -1,11 +1,13 @@
 'use client'
 
-import * as React from 'react'
+import { Shield, Smartphone, Lock } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import * as React from 'react'
+
 import { register as serverRegister } from '@/app/actions/register'
 import { PasskeyButton } from '@/features/auth/components/PasskeyButton'
 import { FEATURE_FLAGS } from '@/lib/core/feature-flags'
-import { Shield, Smartphone, Lock } from 'lucide-react'
+
 
 export default function RegisterPage() {
   const router = useRouter()

@@ -8,9 +8,9 @@
  * backward compatibility while avoiding code duplication.
  */
 
+import { devLog } from '@/lib/utils/logger';
 import { withOptional } from '@/lib/utils/objects';
 
-import { devLog } from '@/lib/utils/logger';
 import {
   arrayBufferToBytea,
   uint8ArrayToBytea,
@@ -87,7 +87,7 @@ export function logCredentialOperation(
 ): void {
   const logData = {
     operation,
-    credentialId: credentialId.substring(0, 8) + '...', // Truncate for privacy
+    credentialId: `${credentialId.substring(0, 8)  }...`, // Truncate for privacy
     userId,
     timestamp: new Date().toISOString(),
   };

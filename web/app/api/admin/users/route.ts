@@ -1,7 +1,8 @@
 import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
-import { logger } from '@/lib/utils/logger';
+
 import { requireAdminOr401 } from '@/features/auth/lib/admin-auth';
+import { logger } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 export const dynamic = 'force-dynamic'

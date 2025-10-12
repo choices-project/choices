@@ -1,8 +1,10 @@
 import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
-import { getSupabaseServerClient } from '@/utils/supabase/server'
-import { logger } from '@/lib/utils/logger'
+
 import { rateLimiters } from '@/lib/core/security/rate-limit'
+import { logger } from '@/lib/utils/logger'
+import { getSupabaseServerClient } from '@/utils/supabase/server'
+
 import { 
   validateCsrfProtection, 
   createCsrfErrorResponse 
@@ -62,10 +64,10 @@ export async function POST(request: NextRequest) {
     // Sign up with Supabase Auth
     const { data: authData, error: authError } = await supabaseClient.auth.signUp({
       email: email.toLowerCase().trim(),
-      password: password,
+      password,
       options: {
         data: {
-          username: username,
+          username,
           display_name: display_name || username
         }
       }
@@ -97,7 +99,7 @@ export async function POST(request: NextRequest) {
       .from('user_profiles')
       .insert({
         user_id: authData.user.id,
-        username: username,
+        username,
         email: email.toLowerCase().trim(),
         display_name: display_name || username,
         trust_tier: 'T0',
@@ -128,7 +130,7 @@ export async function POST(request: NextRequest) {
     logger.info('User registered successfully', { 
       userId: authData.user.id, 
       email: authData.user.email,
-      username: username 
+      username 
     })
 
     return NextResponse.json({

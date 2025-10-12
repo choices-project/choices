@@ -14,7 +14,7 @@ import { logger } from '@/lib/utils/logger';
 // ERROR TYPES
 // ============================================================================
 
-export type AppError = {
+export interface AppError {
   message: string;
   code: string;
   statusCode: number;
@@ -22,7 +22,7 @@ export type AppError = {
   timestamp: Date;
 }
 
-export type ErrorHandlerOptions = {
+export interface ErrorHandlerOptions {
   operation: string;
   context?: Record<string, any>;
   fallbackMessage?: string;
@@ -99,10 +99,7 @@ export async function handleAsyncOperation<T>(
     const appError = normalizeError(error, options);
     
     // Log the error
-    logger[options.logLevel || 'error'](`${options.operation} failed:`, {
-      error: appError,
-      context: options.context
-    });
+    logger[options.logLevel || 'error'](`${options.operation} failed:`, undefined, { ...appError, ...options.context });
     
     return { error: appError };
   }
@@ -122,10 +119,7 @@ export function handleSyncOperation<T>(
     const appError = normalizeError(error, options);
     
     // Log the error
-    logger[options.logLevel || 'error'](`${options.operation} failed:`, {
-      error: appError,
-      context: options.context
-    });
+    logger[options.logLevel || 'error'](`${options.operation} failed:`, undefined, { ...appError, ...options.context });
     
     return { error: appError };
   }

@@ -1,7 +1,8 @@
+import { Shield } from 'lucide-react'
 import Link from 'next/link'
+
 import WebAuthnFeatures from '@/features/auth/components/WebAuthnFeatures'
 import PWAFeatures from '@/features/pwa/components/PWAFeatures'
-import { Shield } from 'lucide-react'
 
 export default function LandingPage() {
   return (

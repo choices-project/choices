@@ -12,6 +12,7 @@
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
+
 import { 
   FEATURE_FLAGS, 
   featureFlagManager,
@@ -25,7 +26,7 @@ import {
 // TYPES
 // ============================================================================
 
-export type FeatureFlagsStore = {
+export interface FeatureFlagsStore {
   // State
   flags: Map<string, FeatureFlag>;
   enabledFlags: string[];
@@ -264,10 +265,11 @@ export const useFeatureFlagsStore = create<FeatureFlagsStore>()(
               // Categorize flags
               const categories: Record<string, string[]> = {};
               allFlags.forEach((flag) => {
-                if (!categories[flag.category]) {
-                  categories[flag.category] = [];
+                const category = flag.category || 'uncategorized';
+                if (!categories[category]) {
+                  categories[category] = [];
                 }
-                categories[flag.category].push(flag.id);
+                categories[category].push(flag.id);
               });
               state.categories = categories;
               state.systemInfo.categories = Object.fromEntries(

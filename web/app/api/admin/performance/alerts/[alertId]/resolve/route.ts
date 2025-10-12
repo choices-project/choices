@@ -4,8 +4,9 @@
 
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
-import { requireAdminOr401 } from '@/features/auth/lib/admin-auth';
+
 import { performanceMonitor } from '@/features/admin/lib/performance-monitor';
+import { requireAdminOr401 } from '@/features/auth/lib/admin-auth';
 import { logger } from '@/lib/utils/logger';
 
 export async function POST(

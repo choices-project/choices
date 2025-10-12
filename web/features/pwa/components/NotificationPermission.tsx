@@ -1,12 +1,13 @@
 'use client'
 
-import { useState, useEffect } from 'react'
 import { Bell, BellOff, CheckCircle, AlertCircle } from 'lucide-react'
+import { useState, useEffect } from 'react'
+
 import { usePWA } from '@/hooks/usePWA'
 
 type NotificationPermissionState = 'default' | 'granted' | 'denied'
 
-type NotificationPermissionProps = {
+interface NotificationPermissionProps {
   className?: string
 }
 

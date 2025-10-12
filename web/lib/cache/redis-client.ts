@@ -12,7 +12,7 @@ import { logger } from '@/lib/utils/logger'
 import { withOptional } from '@/lib/utils/objects'
 
 // Redis client configuration interface
-export type RedisConfig = {
+export interface RedisConfig {
   host: string
   port: number
   password?: string
@@ -31,7 +31,7 @@ export type RedisConfig = {
 }
 
 // Cache entry interface
-export type CacheEntry<T = any> = {
+export interface CacheEntry<T = any> {
   data: T
   expiresAt: number
   createdAt: number
@@ -41,7 +41,7 @@ export type CacheEntry<T = any> = {
 }
 
 // Cache statistics interface
-export type CacheStats = {
+export interface CacheStats {
   hits: number
   misses: number
   hitRate: number
@@ -53,7 +53,7 @@ export type CacheStats = {
 }
 
 // Cache invalidation options
-export type InvalidationOptions = {
+export interface InvalidationOptions {
   pattern?: string
   tags?: string[]
   keys?: string[]
@@ -309,7 +309,7 @@ export class RedisClient {
   /**
    * Get multiple values from cache
    */
-  async mget<T = any>(keys: string[]): Promise<(T | null)[]> {
+  async mget<T = any>(keys: string[]): Promise<Array<T | null>> {
     if (!this.isConnected || keys.length === 0) {
       return keys.map(() => null)
     }

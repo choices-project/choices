@@ -4,7 +4,7 @@
  * Type definitions for Progressive Web App functionality
  */
 
-export type PWAManifest = {
+export interface PWAManifest {
   name: string;
   short_name: string;
   description: string;
@@ -19,12 +19,12 @@ export type PWAManifest = {
   }>;
 }
 
-export type PWAInstallPrompt = {
+export interface PWAInstallPrompt {
   prompt: () => Promise<void>;
   userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
 }
 
-export type PWANotification = {
+export interface PWANotification {
   title: string;
   body: string;
   icon?: string;

@@ -18,7 +18,7 @@
 /**
  * Core poll data structure
  */
-export type Poll = {
+export interface Poll {
   id: string;
   title: string;
   description: string;
@@ -48,7 +48,7 @@ export type Poll = {
 /**
  * Individual poll option
  */
-export type PollOption = {
+export interface PollOption {
   id: string;
   text: string;
   label?: string; // Alias for text
@@ -73,7 +73,7 @@ export type PollTemplateCategory = 'politics' | 'civics' | 'social' | 'environme
 /**
  * Poll configuration settings
  */
-export type PollSettings = {
+export interface PollSettings {
   allowMultipleVotes: boolean;
   allowAnonymousVotes: boolean;
   requireAuthentication: boolean;
@@ -161,7 +161,7 @@ export function isUiVotingMethod(value: string): value is UiVotingMethod {
 /**
  * Poll voting result
  */
-export type PollResult = {
+export interface PollResult {
   pollId: string;
   totalVotes: number;
   results: OptionResult[];
@@ -171,7 +171,7 @@ export type PollResult = {
 /**
  * Individual option result
  */
-export type OptionResult = {
+export interface OptionResult {
   optionId: string;
   optionText: string;
   option?: string; // Alias for optionText
@@ -186,7 +186,7 @@ export type OptionResult = {
 /**
  * Result calculation metadata
  */
-export type ResultMetadata = {
+export interface ResultMetadata {
   strategy: string;
   processedAt: Date;
   totalRounds: number;
@@ -201,7 +201,7 @@ export type ResultMetadata = {
 /**
  * Optimized poll result for performance
  */
-export type OptimizedPollResult = {
+export interface OptimizedPollResult {
   id: string;
   title: string;
   options: string[];
@@ -234,7 +234,7 @@ export type OptimizedPollResult = {
 /**
  * Poll template for creating polls
  */
-export type PollTemplate = {
+export interface PollTemplate {
   id: string;
   name: string;
   title: string;
@@ -261,7 +261,7 @@ export type PollTemplate = {
 /**
  * Poll wizard step definition
  */
-export type PollWizardStep = {
+export interface PollWizardStep {
   id: string;
   title: string;
   description: string;
@@ -275,7 +275,7 @@ export type PollWizardStep = {
 /**
  * Wizard step option
  */
-export type WizardStepOption = {
+export interface WizardStepOption {
   id: string;
   label: string;
   value: string | number | boolean;
@@ -287,7 +287,7 @@ export type WizardStepOption = {
 /**
  * Step validation rules
  */
-export type StepValidation = {
+export interface StepValidation {
   required?: boolean;
   minLength?: number;
   maxLength?: number;
@@ -298,7 +298,7 @@ export type StepValidation = {
 /**
  * Poll wizard state management
  */
-export type PollWizardState = {
+export interface PollWizardState {
   currentStep: number;
   totalSteps: number;
   isComplete: boolean;
@@ -313,7 +313,7 @@ export type PollWizardState = {
 /**
  * Poll wizard data structure
  */
-export type PollWizardData = {
+export interface PollWizardData {
   title: string;
   description: string;
   options: string[];
@@ -335,7 +335,7 @@ export type PollWizardData = {
 /**
  * Poll wizard progress tracking
  */
-export type PollWizardProgress = {
+export interface PollWizardProgress {
   step: number;
   title: string;
   isCompleted: boolean;
@@ -371,7 +371,7 @@ export type PollCategory =
 /**
  * Template category definition
  */
-export type TemplateCategory = {
+export interface TemplateCategory {
   id: PollCategory | string;
   name: string;
   description: string;
@@ -387,7 +387,7 @@ export type TemplateCategory = {
 /**
  * Poll template search parameters
  */
-export type PollTemplateSearch = {
+export interface PollTemplateSearch {
   query: string;
   category?: PollCategory;
   difficulty?: string;
@@ -401,7 +401,7 @@ export type PollTemplateSearch = {
 /**
  * Poll template statistics
  */
-export type PollTemplateStats = {
+export interface PollTemplateStats {
   totalTemplates: number;
   publicTemplates: number;
   userTemplates: number;
@@ -421,7 +421,7 @@ export type PollTemplateStats = {
 /**
  * Poll event handler interface
  */
-export type PollEventHandler = {
+export interface PollEventHandler {
   onVote: (pollId: string, selections: string[]) => Promise<void>;
   onShare: (pollId: string) => void;
   onBookmark: (pollId: string) => void;
@@ -431,7 +431,7 @@ export type PollEventHandler = {
 /**
  * Poll list component props
  */
-export type PollListProps = {
+export interface PollListProps {
   polls: Poll[];
   loading: boolean;
   error?: string;
@@ -443,7 +443,7 @@ export type PollListProps = {
 /**
  * Results chart component props
  */
-export type ResultsChartProps = {
+export interface ResultsChartProps {
   results: PollResult;
   chartType: 'bar' | 'pie' | 'line';
   showPercentages: boolean;
@@ -453,7 +453,7 @@ export type ResultsChartProps = {
 /**
  * Poll card component props
  */
-export type PollCardProps = {
+export interface PollCardProps {
   poll: Poll;
   showActions?: boolean;
   className?: string;
@@ -462,14 +462,14 @@ export type PollCardProps = {
 /**
  * Poll results component props
  */
-export type PollResultsProps = {
+export interface PollResultsProps {
   pollId: string;
 }
 
 /**
  * Optimized poll results component props
  */
-export type OptimizedPollResultsProps = {
+export interface OptimizedPollResultsProps {
   pollId: string;
   userId?: string;
   includePrivate?: boolean;
@@ -481,7 +481,7 @@ export type OptimizedPollResultsProps = {
 /**
  * Private poll results component props
  */
-export type PrivatePollResultsProps = {
+export interface PrivatePollResultsProps {
   poll: Poll;
   userId: string;
   onPrivacyBudgetExceeded?: () => void;
@@ -490,7 +490,7 @@ export type PrivatePollResultsProps = {
 /**
  * Poll share component props
  */
-export type PollShareProps = {
+export interface PollShareProps {
   pollId: string;
   poll?: Poll;
 }
@@ -498,7 +498,7 @@ export type PollShareProps = {
 /**
  * Post-close banner component props
  */
-export type PostCloseBannerProps = {
+export interface PostCloseBannerProps {
   pollStatus: 'closed' | 'locked' | 'post-close';
   baselineAt?: Date;
   lockedAt?: Date;
@@ -516,29 +516,29 @@ export type PostCloseBannerProps = {
 /**
  * User interests for personalized feeds
  */
-export type UserInterests = {
+export interface UserInterests {
   selectedInterests: string[];
   customInterests: string[]; // User-created hashtags
   trendingHashtags: string[]; // Real-time trending
   userHashtags: string[]; // User's custom hashtags
-};
+}
 
 /**
  * Personalized poll feed
  */
-export type PersonalizedPollFeed = {
+export interface PersonalizedPollFeed {
   userId: string;
   generatedAt: string;
   polls: PollRecommendation[];
   interestMatches: InterestMatch[];
   trendingHashtags: string[];
   suggestedInterests: string[];
-};
+}
 
 /**
  * Poll recommendation for feeds
  */
-export type PollRecommendation = {
+export interface PollRecommendation {
   id: string;
   title: string;
   description: string;
@@ -548,16 +548,16 @@ export type PollRecommendation = {
   interestMatches: string[];
   totalVotes: number;
   created_at: string;
-};
+}
 
 /**
  * Interest match for analytics
  */
-export type InterestMatch = {
+export interface InterestMatch {
   interest: string;
   matchCount: number;
   relevanceScore: number;
-};
+}
 
 // ============================================================================
 // PERFORMANCE TYPES
@@ -566,7 +566,7 @@ export type InterestMatch = {
 /**
  * Performance metrics for poll operations
  */
-export type PerformanceMetrics = {
+export interface PerformanceMetrics {
   metricName: string;
   avgValue: number;
   minValue: number;
@@ -613,7 +613,7 @@ export type {
 // HASHTAG INTEGRATION TYPES
 // ============================================================================
 
-export type PollHashtagIntegration = {
+export interface PollHashtagIntegration {
   poll_id: string;
   hashtags: string[];
   primary_hashtag?: string;
@@ -626,7 +626,7 @@ export type PollHashtagIntegration = {
   hashtag_trending_score: number;
 }
 
-export type HashtagContent = {
+export interface HashtagContent {
   id: string;
   hashtag_id: string;
   content_type: 'poll' | 'comment' | 'profile' | 'feed' | 'post';

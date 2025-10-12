@@ -4,7 +4,7 @@
  * This module provides PWA-specific utility functions.
  */
 
-export type PWAConfig = {
+export interface PWAConfig {
   name: string;
   shortName: string;
   description: string;

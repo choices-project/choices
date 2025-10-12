@@ -1,7 +1,8 @@
 import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
-import { getSupabaseServerClient } from '@/utils/supabase/server'
+
 import { logger } from '@/lib/utils/logger'
+import { getSupabaseServerClient } from '@/utils/supabase/server'
 
 export const dynamic = 'force-dynamic'
 
@@ -49,7 +50,7 @@ export async function POST(req: NextRequest) {
       .from('user_profiles')
       .update({
         onboarding_completed: true,
-        preferences: preferences,
+        preferences,
         updated_at: new Date().toISOString()
       } as any)
       .eq('user_id', user.id)

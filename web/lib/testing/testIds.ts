@@ -35,6 +35,10 @@ export const T = {
     email: 'login-email',
     password: 'login-password',
     submit: 'login-submit',
+    form: 'auth-form',
+    toggle: 'auth-toggle',
+    error: 'auth-error',
+    success: 'success-message',
   },
   
   // WebAuthn

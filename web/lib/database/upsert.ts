@@ -6,6 +6,7 @@
  */
 
 import { stripUndefinedDeep } from '@/lib/utils/clean'
+
 import { getSupabaseBrowserClient } from '../../utils/supabase/client'
 
 /**

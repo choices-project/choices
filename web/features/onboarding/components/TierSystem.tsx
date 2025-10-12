@@ -1,12 +1,12 @@
 'use client'
 
-import { useState } from 'react'
 import { motion } from 'framer-motion';
 import { 
   Vote, Users, BarChart3, Shield, 
   Star, Crown, CheckCircle, ArrowRight,
   Lock, Unlock
 } from 'lucide-react'
+import { useState } from 'react'
 
 import type { Tier, TierSystemProps } from '../types';
 

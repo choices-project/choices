@@ -3,7 +3,6 @@
   "compilerOptions": {
     "noEmit": true,
     "noErrorTruncation": true,
-    "exactOptionalPropertyTypes": true,
     "noUncheckedIndexedAccess": true,
     "useUnknownInCatchVariables": true,
     "verbatimModuleSyntax": true,

@@ -11,7 +11,7 @@
 import { getSupabaseBrowserClient } from '@/utils/supabase/client';
 
 // Types for superior implementation
-export type ProfileUser = {
+export interface ProfileUser {
   id: string;
   email: string;
   username?: string;
@@ -23,12 +23,12 @@ export type ProfileUser = {
   updated_at: string;
 }
 
-export type ProfileAuthResult = {
+export interface ProfileAuthResult {
   user: ProfileUser;
   supabase: any;
 }
 
-export type ProfileAuthError = {
+export interface ProfileAuthError {
   error: string;
   code: 'UNAUTHORIZED' | 'INVALID_SESSION' | 'USER_NOT_FOUND' | 'SUPABASE_ERROR';
   details?: any;

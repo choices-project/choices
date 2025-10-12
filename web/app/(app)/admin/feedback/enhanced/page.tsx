@@ -1,7 +1,5 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
-import { devLog } from '@/lib/utils/logger'
 import { 
   MessageCircle, 
   Bug, 
@@ -23,8 +21,11 @@ import {
   Activity,
   X
 } from 'lucide-react'
+import React, { useState, useEffect } from 'react'
 
-type FeedbackItem = {
+import { devLog } from '@/lib/utils/logger'
+
+interface FeedbackItem {
   id: string
   type: 'bug' | 'feature' | 'general' | 'performance' | 'accessibility' | 'security'
   title: string
@@ -47,7 +48,7 @@ type FeedbackItem = {
   tags?: string[]
 }
 
-type Analytics = {
+interface Analytics {
   total: number
   byType: Record<string, number>
   bySentiment: Record<string, number>

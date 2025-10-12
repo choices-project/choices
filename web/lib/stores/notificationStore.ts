@@ -12,14 +12,22 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
-import { withOptional } from '@/lib/utils/objects';
+
+
+import type { AdminNotification } from '@/features/admin/types';
+
 import type { Notification, BaseStore } from './types';
+
 
 // Notification store state interface
 type NotificationStore = {
   // Notifications
   notifications: Notification[];
   unreadCount: number;
+  
+  // Admin notifications
+  adminNotifications: AdminNotification[];
+  adminUnreadCount: number;
   
   // Settings
   settings: {
@@ -43,6 +51,14 @@ type NotificationStore = {
   markAllAsRead: () => void;
   clearAll: () => void;
   clearByType: (type: Notification['type']) => void;
+  
+  // Actions - Admin Notifications
+  addAdminNotification: (notification: Omit<AdminNotification, 'id' | 'timestamp' | 'read'>) => void;
+  removeAdminNotification: (id: string) => void;
+  markAdminNotificationAsRead: (id: string) => void;
+  markAllAdminNotificationsAsRead: () => void;
+  clearAllAdminNotifications: () => void;
+  clearAdminNotificationsByType: (type: AdminNotification['type']) => void;
   
   // Actions - Settings
   updateSettings: (settings: Partial<NotificationStore['settings']>) => void;
@@ -76,6 +92,8 @@ export const useNotificationStore = create<NotificationStore>()(
       // Initial state
       notifications: [],
       unreadCount: 0,
+      adminNotifications: [],
+      adminUnreadCount: 0,
       settings: defaultSettings,
       isLoading: false,
       isAdding: false,
@@ -97,11 +115,12 @@ export const useNotificationStore = create<NotificationStore>()(
       
       // Notification actions
       addNotification: (notification) => set((state) => {
-        const newNotification: Notification = withOptional(notification, {
+        const newNotification: Notification = {
+          ...notification,
           id: `notification_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
           timestamp: new Date().toISOString(),
           read: false,
-        }) as Notification;
+        } as Notification;
         
         // Add to notifications array
         if (state.settings.enableStacking) {
@@ -150,7 +169,6 @@ export const useNotificationStore = create<NotificationStore>()(
           }
         }
         
-        console.log('Notification added:', newNotification.title);
       }),
       
       removeNotification: (id) => set((state) => {
@@ -158,7 +176,6 @@ export const useNotificationStore = create<NotificationStore>()(
         if (notification) {
           state.notifications = state.notifications.filter(n => n.id !== id);
           state.unreadCount = state.notifications.filter(n => !n.read).length;
-          console.log('Notification removed:', notification.title);
         }
       }),
       
@@ -167,37 +184,100 @@ export const useNotificationStore = create<NotificationStore>()(
         if (notification && !notification.read) {
           notification.read = true;
           state.unreadCount = state.notifications.filter(n => !n.read).length;
-          console.log('Notification marked as read:', notification.title);
         }
       }),
       
       markAllAsRead: () => set((state) => {
         state.notifications.forEach(n => n.read = true);
         state.unreadCount = 0;
-        console.log('All notifications marked as read');
       }),
       
       clearAll: () => set((state) => {
         state.notifications = [];
         state.unreadCount = 0;
-        console.log('All notifications cleared');
       }),
       
       clearByType: (type) => set((state) => {
         const beforeCount = state.notifications.length;
         state.notifications = state.notifications.filter(n => n.type !== type);
         state.unreadCount = state.notifications.filter(n => !n.read).length;
-        console.log(`Notifications of type ${type} cleared:`, beforeCount - state.notifications.length);
+      }),
+      
+      // Admin notification actions
+      addAdminNotification: (notification) => set((state) => {
+        const newAdminNotification: AdminNotification = {
+          ...notification,
+          id: `admin_notification_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          timestamp: new Date().toISOString(),
+          read: false,
+        } as AdminNotification;
+        
+        // Add to admin notifications array
+        if (state.settings.enableStacking) {
+          state.adminNotifications.unshift(newAdminNotification);
+        } else {
+          state.adminNotifications = [newAdminNotification];
+        }
+        
+        // Limit admin notifications
+        if (state.adminNotifications.length > state.settings.maxNotifications) {
+          state.adminNotifications = state.adminNotifications.slice(0, state.settings.maxNotifications);
+        }
+        
+        // Update admin unread count
+        state.adminUnreadCount = state.adminNotifications.filter(n => !n.read).length;
+        
+        // Auto-dismiss if enabled (admin notifications have shorter default duration)
+        if (state.settings.enableAutoDismiss && notification.type !== 'error') {
+          setTimeout(() => {
+            const currentState = get();
+            if (currentState.adminNotifications.find(n => n.id === newAdminNotification.id)) {
+              currentState.removeAdminNotification(newAdminNotification.id);
+            }
+          }, 3000); // 3 seconds for admin notifications
+        }
+        
+      }),
+      
+      removeAdminNotification: (id) => set((state) => {
+        const notification = state.adminNotifications.find(n => n.id === id);
+        if (notification) {
+          state.adminNotifications = state.adminNotifications.filter(n => n.id !== id);
+          state.adminUnreadCount = state.adminNotifications.filter(n => !n.read).length;
+        }
+      }),
+      
+      markAdminNotificationAsRead: (id) => set((state) => {
+        const notification = state.adminNotifications.find(n => n.id === id);
+        if (notification && !notification.read) {
+          notification.read = true;
+          state.adminUnreadCount = state.adminNotifications.filter(n => !n.read).length;
+        }
+      }),
+      
+      markAllAdminNotificationsAsRead: () => set((state) => {
+        state.adminNotifications.forEach(n => n.read = true);
+        state.adminUnreadCount = 0;
+      }),
+      
+      clearAllAdminNotifications: () => set((state) => {
+        state.adminNotifications = [];
+        state.adminUnreadCount = 0;
+      }),
+      
+      clearAdminNotificationsByType: (type) => set((state) => {
+        const beforeCount = state.adminNotifications.length;
+        state.adminNotifications = state.adminNotifications.filter(n => n.type !== type);
+        state.adminUnreadCount = state.adminNotifications.filter(n => !n.read).length;
       }),
       
       // Settings actions
       updateSettings: (settings) => set((state) => {
-        state.settings = withOptional(state.settings, settings);
-        console.log('Notification settings updated:', settings);
+        state.settings = { ...state.settings, ...settings };
       }),
       
       resetSettings: () => set((state) => {
-        state.settings = withOptional(defaultSettings);
+        state.settings = { ...defaultSettings };
         console.log('Notification settings reset to defaults');
       }),
       
@@ -236,6 +316,10 @@ export const useNotificationSettings = () => useNotificationStore(state => state
 export const useNotificationLoading = () => useNotificationStore(state => state.isLoading);
 export const useNotificationError = () => useNotificationStore(state => state.error);
 
+// Admin notification selectors
+export const useAdminNotifications = () => useNotificationStore(state => state.adminNotifications);
+export const useAdminUnreadCount = () => useNotificationStore(state => state.adminUnreadCount);
+
 // Action selectors
 export const useNotificationActions = () => useNotificationStore(state => ({
   addNotification: state.addNotification,
@@ -244,6 +328,12 @@ export const useNotificationActions = () => useNotificationStore(state => ({
   markAllAsRead: state.markAllAsRead,
   clearAll: state.clearAll,
   clearByType: state.clearByType,
+  addAdminNotification: state.addAdminNotification,
+  removeAdminNotification: state.removeAdminNotification,
+  markAdminNotificationAsRead: state.markAdminNotificationAsRead,
+  markAllAdminNotificationsAsRead: state.markAllAdminNotificationsAsRead,
+  clearAllAdminNotifications: state.clearAllAdminNotifications,
+  clearAdminNotificationsByType: state.clearAdminNotificationsByType,
   updateSettings: state.updateSettings,
   resetSettings: state.resetSettings,
   setAdding: state.setAdding,
@@ -265,6 +355,15 @@ export const useUnreadNotifications = () => useNotificationStore(state => {
 export const useNotificationPosition = () => useNotificationStore(state => state.settings.position);
 export const useNotificationDuration = () => useNotificationStore(state => state.settings.duration);
 export const useNotificationMaxCount = () => useNotificationStore(state => state.settings.maxNotifications);
+
+// Admin notification computed selectors
+export const useAdminNotificationsByType = (type: AdminNotification['type']) => useNotificationStore(state => {
+  return state.adminNotifications.filter(n => n.type === type);
+});
+
+export const useUnreadAdminNotifications = () => useNotificationStore(state => {
+  return state.adminNotifications.filter(n => !n.read);
+});
 
 // Store utilities
 export const notificationStoreUtils = {
@@ -370,8 +469,8 @@ export const notificationStoreUtils = {
         warning: notifications.filter(n => n.type === 'warning').length,
         info: notifications.filter(n => n.type === 'info').length,
       },
-      oldest: notifications.length > 0 ? notifications[notifications.length - 1].timestamp : null,
-      newest: notifications.length > 0 ? notifications[0].timestamp : null,
+      oldest: notifications.length > 0 ? notifications[notifications.length - 1]?.timestamp : null,
+      newest: notifications.length > 0 ? notifications[0]?.timestamp : null,
     };
   },
   
@@ -392,6 +491,75 @@ export const notificationStoreUtils = {
       oldNotifications.forEach(n => state.removeNotification(n.id));
       console.log(`Cleaned up ${oldNotifications.length} old notifications`);
     }
+  },
+  
+  /**
+   * Create an admin success notification
+   */
+  createAdminSuccess: (title: string, message: string) => {
+    const { addAdminNotification } = useNotificationStore.getState();
+    addAdminNotification({
+      type: 'success',
+      title,
+      message,
+    });
+  },
+  
+  /**
+   * Create an admin error notification
+   */
+  createAdminError: (title: string, message: string) => {
+    const { addAdminNotification } = useNotificationStore.getState();
+    addAdminNotification({
+      type: 'error',
+      title,
+      message,
+    });
+  },
+  
+  /**
+   * Create an admin warning notification
+   */
+  createAdminWarning: (title: string, message: string) => {
+    const { addAdminNotification } = useNotificationStore.getState();
+    addAdminNotification({
+      type: 'warning',
+      title,
+      message,
+    });
+  },
+  
+  /**
+   * Create an admin info notification
+   */
+  createAdminInfo: (title: string, message: string) => {
+    const { addAdminNotification } = useNotificationStore.getState();
+    addAdminNotification({
+      type: 'info',
+      title,
+      message,
+    });
+  },
+  
+  /**
+   * Get admin notification statistics
+   */
+  getAdminStats: () => {
+    const state = useNotificationStore.getState();
+    const notifications = state.adminNotifications;
+    
+    return {
+      total: notifications.length,
+      unread: notifications.filter(n => !n.read).length,
+      byType: {
+        success: notifications.filter(n => n.type === 'success').length,
+        error: notifications.filter(n => n.type === 'error').length,
+        warning: notifications.filter(n => n.type === 'warning').length,
+        info: notifications.filter(n => n.type === 'info').length,
+      },
+      oldest: notifications.length > 0 ? notifications[notifications.length - 1]?.timestamp : null,
+      newest: notifications.length > 0 ? notifications[0]?.timestamp : null,
+    };
   }
 };
 

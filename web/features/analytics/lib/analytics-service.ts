@@ -1,5 +1,6 @@
-import { getSupabaseServerClient } from '@/utils/supabase/server'
 import { devLog } from '@/lib/utils/logger'
+import { getSupabaseServerClient } from '@/utils/supabase/server'
+
 import type {
   TrustTier,
   TrustTierScore,
@@ -515,7 +516,9 @@ export class AnalyticsService {
       trends?.forEach(trend => {
         if (trend.created_at && typeof trend.created_at === 'string') {
           const date = new Date(trend.created_at).toISOString().split('T')[0]
-          dailyCounts.set(date, (dailyCounts.get(date) ?? 0) + 1)
+          if (date) {
+            dailyCounts.set(date, (dailyCounts.get(date) ?? 0) + 1)
+          }
         }
       })
 

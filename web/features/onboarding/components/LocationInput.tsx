@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
 import { Search, MapPin, Zap, Shield, Users } from 'lucide-react';
+import React, { useState } from 'react';
 
 import type { LocationInputProps } from '../types';
 

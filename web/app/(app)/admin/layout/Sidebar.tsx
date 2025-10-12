@@ -1,10 +1,5 @@
 'use client';
 
-import React from 'react';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { useAdminStore } from '@/features/admin/lib/store';
-import { useSystemMetrics } from '@/features/admin/lib/hooks';
 import {
   LayoutDashboard,
   BarChart3,
@@ -15,6 +10,12 @@ import {
   Users,
   Zap,
 } from 'lucide-react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import React from 'react';
+
+import { useSystemMetrics } from '@/features/admin/lib/hooks';
+import { useAdminStore } from '@/features/admin/lib/store';
 
 const navigationItems = [
   {

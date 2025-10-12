@@ -8,9 +8,10 @@
 import * as React from 'react';
 import { lazy } from 'react';
 import type { ComponentType } from 'react';
+
 import { performanceMetrics } from '../lib/performance/performance-metrics';
 
-type CodeSplittingOptions = {
+interface CodeSplittingOptions {
   retryCount?: number;
   retryDelay?: number;
   timeout?: number;

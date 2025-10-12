@@ -4,7 +4,7 @@ import { safeNavigate } from '@/lib/utils/ssr-safe';
  * Browser detection and compatibility utilities
  */
 
-export type BrowserInfo = {
+export interface BrowserInfo {
   name: string
   version: string
   isMobile: boolean

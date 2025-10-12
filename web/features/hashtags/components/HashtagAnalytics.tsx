@@ -8,7 +8,6 @@
  * Status: ✅ ACTIVE
  */
 
-import React, { useState, useEffect } from 'react';
 import {
   TrendingUp,
   Users,
@@ -23,12 +22,23 @@ import {
   Award,
   Activity
 } from 'lucide-react';
-import type {
-  Hashtag,
-  HashtagAnalytics,
-  TrendingHashtag,
-  HashtagCategory
-} from '../types';
+import React, { useState, useEffect } from 'react';
+
+import { 
+  useHashtagStore,
+  useHashtagActions,
+  useHashtagLoading,
+  useHashtagError
+} from '@/lib/stores';
+import { 
+  useAnalyticsStore,
+  useAnalyticsActions,
+  useAnalyticsLoading,
+  useAnalyticsError
+} from '@/lib/stores';
+import { formatUsageCount, formatEngagementRate, formatGrowthRate } from '@/lib/utils/format-utils';
+import { withOptional } from '@/lib/utils/objects';
+
 import {
   calculateHashtagAnalytics,
   calculateTrendingHashtags,
@@ -38,24 +48,27 @@ import {
   getSmartSuggestions,
   getRelatedHashtags
 } from '../lib/hashtag-suggestions';
+import type {
+  Hashtag,
+  HashtagAnalytics,
+  HashtagCategory
+} from '../types';
 import {
   formatTrendingScore,
   getHashtagPerformanceLevel,
   getHashtagCategoryColor,
   getHashtagCategoryIcon
 } from '../utils/hashtag-utils';
-import { formatUsageCount, formatEngagementRate, formatGrowthRate } from '@/lib/utils/format-utils';
-import { withOptional } from '@/lib/utils/objects';
-import { useHashtagStore } from '@/lib/stores';
 
-type HashtagAnalyticsProps = {
+
+interface HashtagAnalyticsProps {
   hashtagId?: string;
   userId?: string;
   showTrending?: boolean;
   showInsights?: boolean;
   showSuggestions?: boolean;
   className?: string;
-};
+}
 
 export default function HashtagAnalytics({
   hashtagId,
@@ -66,22 +79,55 @@ export default function HashtagAnalytics({
   className = ''
 }: HashtagAnalyticsProps) {
   // Zustand store integration
-  const {
-    trendingHashtags,
-    suggestions,
-    isLoading,
-    error,
-    getTrendingHashtags,
-    getSuggestions,
-    getHashtagAnalytics
-  } = useHashtagStore();
+  const { trendingHashtags, suggestions } = useHashtagStore();
+  const { getTrendingHashtags, getSuggestions, getHashtagAnalytics } = useHashtagActions();
+  const { isLoading: hashtagLoading } = useHashtagLoading();
+  const { error: hashtagError } = useHashtagError();
   
-  const [analytics, setAnalytics] = useState<HashtagAnalytics | null>(null);
-  const [insights, setInsights] = useState<any>(null);
+  // Analytics store integration
+  const { dashboard, chartData } = useAnalyticsStore();
+  const { setChartData, setChartConfig, generateReport } = useAnalyticsActions();
+  const analyticsLoading = useAnalyticsLoading();
+  const analyticsError = useAnalyticsError();
+  
+  // Analytics data from store
+  const [analytics, setAnalytics] = useState<{
+    metrics: {
+      usage_count: number;
+      unique_users: number;
+      engagement_rate: number;
+      growth_rate: number;
+      peak_usage?: number;
+      top_content?: string[] | Array<{ id: string; title: string; engagement: number }>;
+    };
+    performance_level: string;
+    period: string;
+    last_updated?: string;
+    hashtag_id?: string;
+  } | null>(null);
+  const trendingData = trendingHashtags || [];
+  
+  // Local state for component-specific data
+  const [insights, setInsights] = useState<{
+    performance: 'low' | 'medium' | 'high' | 'viral';
+    insights: string[];
+    recommendations: string[];
+    score?: number;
+    last_updated?: string;
+    benchmarks?: {
+      category: string;
+      average: number;
+      top: number;
+      current: number;
+    };
+  } | null>(null);
   const [relatedHashtags, setRelatedHashtags] = useState<Hashtag[]>([]);
-  const [trendingData, setTrendingData] = useState<TrendingHashtag[]>([]);
   const [selectedPeriod, setSelectedPeriod] = useState<'24h' | '7d' | '30d' | '90d'>('7d');
   const [selectedCategory, setSelectedCategory] = useState<HashtagCategory | 'all'>('all');
+  
+  // Combined loading and error states
+  const isLoading = hashtagLoading || analyticsLoading;
+  const error = hashtagError || analyticsError;
 
   const loadAnalytics = async () => {
     if (!hashtagId) return;
@@ -95,12 +141,42 @@ export default function HashtagAnalytics({
       ]);
       
       // Merge calculated analytics with fetched data
-      const mergedAnalytics = withOptional(analyticsData || {}, withOptional(calculatedAnalytics || {}, {
+      const mergedAnalytics = {
+        ...(analyticsData || {}),
+        ...(calculatedAnalytics || {}),
         performance_level: getHashtagPerformanceLevel(analyticsData?.metrics?.engagement_rate || 0)
-      }));
+      };
       
+      // Store analytics data in local state
       setAnalytics(mergedAnalytics);
       setInsights(insightsData);
+      
+      // Update analytics store with chart data
+      if (analyticsData?.metrics) {
+        const chartData = [
+          { name: 'Usage', value: analyticsData.metrics.usage_count, color: '#3B82F6' },
+          { name: 'Users', value: analyticsData.metrics.unique_users, color: '#10B981' },
+          { name: 'Engagement', value: analyticsData.metrics.engagement_rate * 100, color: '#8B5CF6' },
+          { name: 'Growth', value: analyticsData.metrics.growth_rate, color: '#F59E0B' }
+        ];
+        
+        setChartData(chartData);
+        setChartConfig({
+          data: chartData,
+          maxValue: Math.max(...chartData.map(d => d.value)),
+          showTrends: true,
+          showConfidence: true,
+          title: `Hashtag Analytics - ${hashtagId}`,
+          subtitle: `Period: ${selectedPeriod}`
+        });
+      }
+      
+      // Generate analytics report
+      const startDate = new Date();
+      const endDate = new Date();
+      startDate.setDate(startDate.getDate() - (selectedPeriod === '24h' ? 1 : selectedPeriod === '7d' ? 7 : selectedPeriod === '30d' ? 30 : 90));
+      
+      await generateReport(startDate.toISOString(), endDate.toISOString());
     } catch (err) {
       console.error('Failed to load analytics:', err);
     }
@@ -122,7 +198,7 @@ export default function HashtagAnalytics({
       if (calculatedTrending && calculatedTrending.length > 0) {
         // Update store with calculated trending hashtags
         console.log('Calculated trending hashtags:', calculatedTrending);
-        setTrendingData(calculatedTrending);
+        // Note: Trending data is now managed by the hashtag store
       }
     } catch (err) {
       console.error('Failed to load trending hashtags:', err);
@@ -153,7 +229,7 @@ export default function HashtagAnalytics({
           display_name: suggestion.hashtag.display_name,
           follower_count: suggestion.hashtag.follower_count || 0,
           usage_count: suggestion.usage_count || 0,
-          category: (suggestion.category || 'other') as HashtagCategory,
+          category: (suggestion.category || 'other'),
           is_trending: suggestion.is_trending || false,
           trend_score: suggestion.hashtag.trend_score || 0,
           is_verified: suggestion.hashtag.is_verified || false,

@@ -17,14 +17,18 @@
 // Status: Phase 1 Implementation
 // ============================================================================
 
-import { IRVCalculator } from './irv-calculator';
+import { createHash } from 'crypto';
+
+import type { SupabaseClient as RealSupabaseClient } from '@supabase/supabase-js';
+
 import { logger } from '@/lib/utils/logger';
 import { withOptional } from '@/lib/utils/objects';
-import type { UserRanking } from './irv-calculator';
-import { type MerkleTree, BallotVerificationManager, snapshotChecksum } from '../audit/merkle-tree';
-import { createHash } from 'crypto';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
-import type { SupabaseClient as RealSupabaseClient } from '@supabase/supabase-js';
+
+import { type MerkleTree, BallotVerificationManager, snapshotChecksum } from '../audit/merkle-tree';
+
+import { IRVCalculator } from './irv-calculator';
+import type { UserRanking } from './irv-calculator';
 import type {
   Poll,
   Ballot,
@@ -41,7 +45,7 @@ import type {
 // FINALIZE POLL MANAGER
 // ============================================================================
 
-type SupabaseVoteData = {
+interface SupabaseVoteData {
   id: string;
   poll_id: string;
   user_id: string;
@@ -51,7 +55,7 @@ type SupabaseVoteData = {
   created_at: string;
 }
 
-type SupabasePollData = {
+interface SupabasePollData {
   id: string;
   title: string;
   description?: string;
@@ -64,7 +68,7 @@ type SupabasePollData = {
   updated_at: string;
 }
 
-type SupabaseSnapshotData = {
+interface SupabaseSnapshotData {
   id: string;
   poll_id: string;
   taken_at: string;
@@ -76,7 +80,7 @@ type SupabaseSnapshotData = {
 }
 
 // Simplified Supabase client interface to avoid complex query chain typing issues
-type SupabaseQueryBuilder = {
+interface SupabaseQueryBuilder {
   select(columns?: string): SupabaseQueryBuilder;
   eq(column: string, value: unknown): SupabaseQueryBuilder;
   lte(column: string, value: string): SupabaseQueryBuilder;
@@ -86,9 +90,9 @@ type SupabaseQueryBuilder = {
   update(data: Record<string, unknown>): SupabaseQueryBuilder;
   upsert(data: Record<string, unknown>, options?: { onConflict?: string }): SupabaseQueryBuilder;
   then(onfulfilled?: (value: { data: unknown; error: unknown }) => void): Promise<{ data: unknown; error: unknown }>;
-};
+}
 
-type _SupabaseClient = {
+interface _SupabaseClient {
   from(table: string): SupabaseQueryBuilder;
   channel(name: string): {
     send(message: { type: string; event: string; payload: Record<string, unknown> }): Promise<void>;
@@ -187,7 +191,7 @@ export class FinalizePollManager {
       };
 
     } catch (error) {
-      logger.error(`Failed to finalize poll ${pollId}:`, error);
+      logger.error(`Failed to finalize poll ${pollId}:`, error instanceof Error ? error : undefined, { error: error instanceof Error ? error.message : String(error) });
       return {
         success: false,
         error: error instanceof Error ? error.message : String(error),
@@ -248,7 +252,7 @@ export class FinalizePollManager {
         }
       );
     } catch (error) {
-      logger.error('Error in getPoll:', error);
+      logger.error('Error in getPoll:', error instanceof Error ? error : undefined, { error: error instanceof Error ? error.message : String(error) });
       return null;
     }
   }
@@ -282,7 +286,7 @@ export class FinalizePollManager {
 
       return this.mapVoteDataToBallots((result.data as SupabaseVoteData[]) || [], closeAt);
     } catch (error) {
-      logger.error('Error in getOfficialBallots:', error);
+      logger.error('Error in getOfficialBallots:', error instanceof Error ? error : undefined, { error: error instanceof Error ? error.message : String(error) });
       return [];
     }
   }
@@ -313,7 +317,7 @@ export class FinalizePollManager {
         isPostClose: true
       }));
     } catch (error) {
-      logger.error('Error in getPostCloseBallots:', error);
+      logger.error('Error in getPostCloseBallots:', error instanceof Error ? error : undefined, { error: error instanceof Error ? error.message : String(error) });
       return [];
     }
   }
@@ -396,7 +400,7 @@ export class FinalizePollManager {
         }
       };
     } catch (error) {
-      logger.error('Error calculating IRV results:', error);
+      logger.error('Error calculating IRV results:', error instanceof Error ? error : undefined, { error: error instanceof Error ? error.message : String(error) });
       throw new Error(`IRV calculation failed: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
@@ -499,7 +503,7 @@ export class FinalizePollManager {
         }
       );
     } catch (error) {
-      logger.error('Error creating snapshot:', error);
+      logger.error('Error creating snapshot:', error instanceof Error ? error : undefined, { error: error instanceof Error ? error.message : String(error) });
       throw error;
     }
   }
@@ -519,7 +523,7 @@ export class FinalizePollManager {
         throw new Error(`Failed to update poll status: ${(error as { message: string }).message}`);
       }
     } catch (error) {
-      logger.error('Error updating poll status:', error);
+      logger.error('Error updating poll status:', error instanceof Error ? error : undefined, { error: error instanceof Error ? error.message : String(error) });
       throw error;
     }
   }
@@ -551,7 +555,7 @@ export class FinalizePollManager {
 
       logger.info(`Broadcasted poll locked event for poll ${pollId}`);
     } catch (error) {
-      logger.error('Error broadcasting poll locked:', error);
+      logger.error('Error broadcasting poll locked:', error instanceof Error ? error : undefined, { error: error instanceof Error ? error.message : String(error) });
       // Don't throw - this is not critical for finalization
     }
   }
@@ -565,11 +569,11 @@ export class FinalizePollManager {
       const replayData = merkleTree.generateReplayData('IRV with deterministic tie-breaking');
       
       // Store replay data (implementation depends on storage system)
-      logger.info('Generated replay data:', replayData);
+      logger.info('Generated replay data:', { replayData });
       
       // In production, this would be stored in a dedicated table or file system
     } catch (error) {
-      logger.error('Error generating replay data:', error);
+      logger.error('Error generating replay data:', error instanceof Error ? error : undefined, { error: error instanceof Error ? error.message : String(error) });
       // Don't throw - this is not critical for finalization
     }
   }
@@ -648,7 +652,7 @@ export class FinalizePollManager {
         }
       );
     } catch (error) {
-      logger.error('Error getting finalization status:', error);
+      logger.error('Error getting finalization status:', error instanceof Error ? error : undefined, { error: error instanceof Error ? error.message : String(error) });
       return { isFinalized: false };
     }
   }

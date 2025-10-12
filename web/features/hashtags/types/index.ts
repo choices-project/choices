@@ -12,7 +12,7 @@
 // CORE HASHTAG TYPES
 // ============================================================================
 
-export type Hashtag = {
+export interface Hashtag {
   id: string;
   name: string;
   display_name: string;
@@ -31,7 +31,7 @@ export type Hashtag = {
   metadata?: Record<string, any>;
 }
 
-export type UserHashtag = {
+export interface UserHashtag {
   id: string;
   user_id: string;
   hashtag_id: string;
@@ -47,7 +47,7 @@ export type UserHashtag = {
   };
 }
 
-export type HashtagUsage = {
+export interface HashtagUsage {
   id: string;
   hashtag_id: string;
   hashtag: Hashtag;
@@ -60,7 +60,7 @@ export type HashtagUsage = {
   engagement_score?: number;
 }
 
-export type TrendingHashtag = {
+export interface TrendingHashtag {
   hashtag: Hashtag;
   trend_score: number;
   growth_rate: number;
@@ -107,7 +107,7 @@ export type HashtagCategory =
   | 'custom'
   | 'other';
 
-export type HashtagCategoryInfo = {
+export interface HashtagCategoryInfo {
   name: HashtagCategory;
   display_name: string;
   description: string;
@@ -119,7 +119,7 @@ export type HashtagCategoryInfo = {
   usage_count: number;
 }
 
-export type HashtagClassification = {
+export interface HashtagClassification {
   hashtag_id: string;
   primary_category: HashtagCategory;
   secondary_categories: HashtagCategory[];
@@ -133,7 +133,7 @@ export type HashtagClassification = {
 // HASHTAG INTERACTIONS AND ENGAGEMENT
 // ============================================================================
 
-export type HashtagFollow = {
+export interface HashtagFollow {
   id: string;
   user_id: string;
   hashtag_id: string;
@@ -147,7 +147,7 @@ export type HashtagFollow = {
   priority: number;
 }
 
-export type HashtagEngagement = {
+export interface HashtagEngagement {
   hashtag_id: string;
   user_id: string;
   engagement_type: 'view' | 'click' | 'share' | 'create' | 'follow' | 'unfollow';
@@ -157,7 +157,7 @@ export type HashtagEngagement = {
   metadata?: Record<string, any>;
 }
 
-export type HashtagAnalytics = {
+export interface HashtagAnalytics {
   hashtag_id: string;
   period: '24h' | '7d' | '30d' | '90d' | '1y';
   metrics: {
@@ -181,7 +181,7 @@ export type HashtagAnalytics = {
 // HASHTAG SEARCH AND DISCOVERY
 // ============================================================================
 
-export type HashtagSearchQuery = {
+export interface HashtagSearchQuery {
   query: string;
   filters?: {
     category?: HashtagCategory;
@@ -196,7 +196,7 @@ export type HashtagSearchQuery = {
   offset?: number;
 }
 
-export type HashtagSearchResult = {
+export interface HashtagSearchResult {
   hashtags: Hashtag[];
   total_count: number;
   suggestions: string[];
@@ -205,7 +205,7 @@ export type HashtagSearchResult = {
   search_time_ms: number;
 }
 
-export type HashtagSuggestion = {
+export interface HashtagSuggestion {
   hashtag: Hashtag;
   reason: 'trending' | 'related' | 'popular' | 'recent' | 'personal' | string;
   confidence: number;
@@ -216,13 +216,20 @@ export type HashtagSuggestion = {
   is_trending?: boolean;
   is_verified?: boolean;
   context?: string;
+  metadata?: {
+    trending_score?: number;
+    related_hashtags?: string[];
+    category_match?: boolean;
+    user_history?: boolean;
+    social_proof?: number;
+  };
 }
 
 // ============================================================================
 // HASHTAG CONTENT INTEGRATION
 // ============================================================================
 
-export type HashtagContent = {
+export interface HashtagContent {
   id: string;
   hashtag_id: string;
   content_type: 'poll' | 'comment' | 'profile' | 'feed' | 'post';
@@ -235,7 +242,7 @@ export type HashtagContent = {
   metadata?: Record<string, any>;
 }
 
-export type HashtagFeed = {
+export interface HashtagFeed {
   hashtag_id: string;
   content: HashtagContent[];
   total_count: number;
@@ -255,7 +262,7 @@ export type HashtagFeed = {
 // HASHTAG RECOMMENDATIONS AND AI
 // ============================================================================
 
-export type HashtagRecommendation = {
+export interface HashtagRecommendation {
   hashtag: Hashtag;
   reason: string;
   confidence_score: number;
@@ -267,7 +274,7 @@ export type HashtagRecommendation = {
   };
 }
 
-export type HashtagSmartSuggestion = {
+export interface HashtagSmartSuggestion {
   input: string;
   suggestions: HashtagSuggestion[];
   auto_complete: string[];
@@ -277,7 +284,7 @@ export type HashtagSmartSuggestion = {
   context_hashtags: string[];
 }
 
-export type HashtagTrendingAlgorithm = {
+export interface HashtagTrendingAlgorithm {
   algorithm_version: string;
   parameters: {
     time_window: number;
@@ -295,7 +302,7 @@ export type HashtagTrendingAlgorithm = {
 // HASHTAG VALIDATION AND MODERATION
 // ============================================================================
 
-export type HashtagValidation = {
+export interface HashtagValidation {
   name: string;
   is_valid: boolean;
   errors: string[];
@@ -309,7 +316,7 @@ export type HashtagValidation = {
   };
 }
 
-export type HashtagModeration = {
+export interface HashtagModeration {
   hashtag_id: string;
   status: 'approved' | 'pending' | 'rejected' | 'flagged';
   moderation_reason?: string;
@@ -320,7 +327,7 @@ export type HashtagModeration = {
   human_review_required: boolean;
 }
 
-export type HashtagFlag = {
+export interface HashtagFlag {
   id: string;
   hashtag_id: string;
   user_id: string;
@@ -336,7 +343,7 @@ export type HashtagFlag = {
 // HASHTAG API RESPONSES
 // ============================================================================
 
-export type HashtagApiResponse<T = any> = {
+export interface HashtagApiResponse<T = any> {
   success: boolean;
   data?: T;
   error?: string;
@@ -348,7 +355,7 @@ export type HashtagApiResponse<T = any> = {
   };
 }
 
-export type HashtagListResponse = {
+export interface HashtagListResponse {
   hashtags: Hashtag[];
   pagination: {
     page: number;
@@ -360,7 +367,7 @@ export type HashtagListResponse = {
   sort?: string;
 }
 
-export type HashtagStatsResponse = {
+export interface HashtagStatsResponse {
   total_hashtags: number;
   trending_count: number;
   verified_count: number;
@@ -378,7 +385,7 @@ export type HashtagStatsResponse = {
 // HASHTAG USER PREFERENCES
 // ============================================================================
 
-export type HashtagUserPreferences = {
+export interface HashtagUserPreferences {
   user_id: string;
   default_categories: HashtagCategory[];
   auto_follow_suggestions: boolean;
@@ -403,7 +410,7 @@ export type HashtagUserPreferences = {
 // HASHTAG CROSS-FEATURE INTEGRATION
 // ============================================================================
 
-export type ProfileHashtagIntegration = {
+export interface ProfileHashtagIntegration {
   user_id: string;
   primary_hashtags: string[];
   interest_hashtags: string[];
@@ -414,7 +421,7 @@ export type ProfileHashtagIntegration = {
   last_updated: string;
 }
 
-export type PollHashtagIntegration = {
+export interface PollHashtagIntegration {
   poll_id: string;
   hashtags: string[];
   primary_hashtag?: string;
@@ -427,7 +434,7 @@ export type PollHashtagIntegration = {
   hashtag_trending_score: number;
 }
 
-export type FeedHashtagIntegration = {
+export interface FeedHashtagIntegration {
   feed_id: string;
   hashtag_filters: string[];
   trending_hashtags: string[];
@@ -444,20 +451,20 @@ export type HashtagSortOption = 'relevance' | 'usage' | 'trending' | 'alphabetic
 export type HashtagFilterOption = 'category' | 'trending' | 'verified' | 'usage_count' | 'date_range';
 export type HashtagNotificationType = 'new_trending' | 'hashtag_update' | 'related_content' | 'weekly_digest';
 
-export type HashtagFilter = {
+export interface HashtagFilter {
   type: HashtagFilterOption;
   value: any;
   label: string;
   active: boolean;
 }
 
-export type HashtagSort = {
+export interface HashtagSort {
   option: HashtagSortOption;
   direction: 'asc' | 'desc';
   label: string;
 }
 
-export type HashtagPagination = {
+export interface HashtagPagination {
   page: number;
   limit: number;
   total: number;
@@ -470,7 +477,7 @@ export type HashtagPagination = {
 // HASHTAG COMPONENT PROPS
 // ============================================================================
 
-export type HashtagInputProps = {
+export interface HashtagInputProps {
   value: string[];
   onChange: (hashtags: string[]) => void;
   placeholder?: string;
@@ -483,7 +490,7 @@ export type HashtagInputProps = {
   className?: string;
 }
 
-export type HashtagDisplayProps = {
+export interface HashtagDisplayProps {
   hashtags: Hashtag[];
   showCount?: boolean;
   showCategory?: boolean;
@@ -494,7 +501,7 @@ export type HashtagDisplayProps = {
   className?: string;
 }
 
-export type HashtagManagementProps = {
+export interface HashtagManagementProps {
   userHashtags: UserHashtag[];
   onFollow: (hashtag: Hashtag) => void;
   onUnfollow: (hashtag: Hashtag) => void;
@@ -503,7 +510,7 @@ export type HashtagManagementProps = {
   className?: string;
 }
 
-export type TrendingHashtagsProps = {
+export interface TrendingHashtagsProps {
   hashtags: TrendingHashtag[];
   onHashtagClick?: (hashtag: Hashtag) => void;
   showGrowthRate?: boolean;
@@ -516,7 +523,7 @@ export type TrendingHashtagsProps = {
 // HASHTAG HOOK TYPES
 // ============================================================================
 
-export type UseHashtagOptions = {
+export interface UseHashtagOptions {
   enabled?: boolean;
   refetchOnWindowFocus?: boolean;
   staleTime?: number;
@@ -548,7 +555,7 @@ export type UseHashtagSuggestionsOptions = UseHashtagOptions & {
 // HASHTAG STORE TYPES
 // ============================================================================
 
-export type HashtagStore = {
+export interface HashtagStore {
   // State
   hashtags: Hashtag[];
   userHashtags: UserHashtag[];

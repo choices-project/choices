@@ -2,6 +2,17 @@
 
 import { useState } from 'react';
 
+import { 
+  usePollWizardData,
+  usePollWizardStep,
+  usePollWizardProgress,
+  usePollWizardErrors,
+  usePollWizardCanProceed,
+  usePollWizardCanGoBack,
+  usePollWizardActions,
+  usePollWizardStats
+} from '@/lib/stores';
+
 const CATEGORIES = [
   { id: 'general', name: 'General', description: 'General purpose polls', icon: '📊' },
   { id: 'business', name: 'Business', description: 'Business and workplace polls', icon: '💼' },
@@ -20,51 +31,65 @@ const CATEGORIES = [
 ];
 
 export default function CreatePollPage() {
-  const [currentStep, setCurrentStep] = useState(0);
-  const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    category: 'general',
-    options: ['', ''],
-    tags: [] as string[],
-    settings: {
-      allowMultipleVotes: false,
-      allowAnonymousVotes: true,
-      showResults: true,
-      allowComments: true,
-      votingMethod: 'single' as const,
-      privacyLevel: 'public' as const,
-      autoClose: false
-    }
-  });
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const [newTag, setNewTag] = useState('');
+  // Get state from pollWizardStore
+  const data = usePollWizardData();
+  const currentStep = usePollWizardStep();
+  const progress = usePollWizardProgress();
+  const errors = usePollWizardErrors();
+  const canProceed = usePollWizardCanProceed();
+  const canGoBack = usePollWizardCanGoBack();
+  const stats = usePollWizardStats();
   
+  // Get actions from pollWizardStore
+  const {
+    nextStep: storeNextStep,
+    prevStep: storePrevStep,
+    goToStep: storeGoToStep,
+    updateData: storeUpdateData,
+    addOption: storeAddOption,
+    removeOption: storeRemoveOption,
+    updateOption: storeUpdateOption,
+    addTag: storeAddTag,
+    removeTag: storeRemoveTag,
+    validateCurrentStep: storeValidateCurrentStep,
+    setLoading: storeSetLoading,
+    setError: storeSetError,
+    clearError: storeClearError,
+    resetWizard: storeResetWizard
+  } = usePollWizardActions();
+  
+  const [newTag, setNewTag] = useState('');
   const totalSteps = 5;
   
   // Enhanced validation with real-time feedback
-  const validateCurrentStep = (setErrorsFlag = false) => {
+  const handleValidateCurrentStep = (setErrorsFlag = false) => {
+    storeValidateCurrentStep();
+    return canProceed;
+  };
+  
+  // Legacy validation function for compatibility
+  const validateCurrentStepLegacy = (setErrorsFlag = false) => {
     const newErrors: Record<string, string> = {};
     
     switch (currentStep) {
       case 0: // Basic info
-        if (!formData.title.trim()) {
+        if (!data.title.trim()) {
           newErrors.title = 'Title is required';
-        } else if (formData.title.trim().length < 5) {
+        } else if (data.title.trim().length < 5) {
           newErrors.title = 'Title must be at least 5 characters';
-        } else if (formData.title.trim().length > 200) {
+        } else if (data.title.trim().length > 200) {
           newErrors.title = 'Title must be 200 characters or less';
         }
-        if (!formData.description.trim()) {
+        if (!data.description.trim()) {
           newErrors.description = 'Description is required';
-        } else if (formData.description.trim().length < 10) {
+        } else if (data.description.trim().length < 10) {
           newErrors.description = 'Description must be at least 10 characters';
-        } else if (formData.description.trim().length > 2000) {
+        } else if (data.description.trim().length > 2000) {
           newErrors.description = 'Description must be 2000 characters or less';
         }
         break;
       case 1: // Options
-        const validOptions = formData.options.filter(option => option.trim().length > 0);
+        const validOptions = data.options.filter(option => option.trim().length > 0);
         if (validOptions.length < 2) {
           newErrors.options = 'At least 2 options are required';
         } else if (validOptions.length > 10) {
@@ -79,12 +104,12 @@ export default function CreatePollPage() {
         }
         break;
       case 2: // Category & Tags
-        if (!formData.category) {
+        if (!data.category) {
           newErrors.category = 'Please select a category';
         }
         // Check tag length
-        for (let i = 0; i < formData.tags.length; i++) {
-          const tag = formData.tags[i];
+        for (let i = 0; i < data.tags.length; i++) {
+          const tag = data.tags[i];
           if (tag && tag.length > 50) {
             newErrors[`tag-${i}`] = 'Each tag must be 50 characters or less';
           }
@@ -93,102 +118,80 @@ export default function CreatePollPage() {
     }
     
     if (setErrorsFlag) {
-      setErrors(newErrors);
+      // Errors are managed by the store
     }
     
     return Object.keys(newErrors).length === 0;
   };
   
-  // Real-time validation - only check, don't set errors
-  const canProceed = validateCurrentStep();
-  
   // Navigation with validation
-  const nextStep = () => {
-    if (validateCurrentStep(true) && currentStep < totalSteps - 1) {
-      setCurrentStep(prev => prev + 1);
+  const handleNext = () => {
+    if (handleValidateCurrentStep() && currentStep < totalSteps - 1) {
+      storeNextStep();
     }
   };
   
-  const previousStep = () => {
+  const handlePrev = () => {
     if (currentStep > 0) {
-      setCurrentStep(prev => prev - 1);
-      setErrors({});
+      storePrevStep();
     }
   };
   
   // Enhanced form data updates
-  const updateFormData = (updates: Partial<typeof formData>) => {
-    setFormData(prev => ({ ...prev, ...updates }));
+  const updateFormData = (updates: Partial<typeof data>) => {
+    storeUpdateData(updates);
   };
   
-  const addOption = () => {
-    if (formData.options.length < 10) {
-      setFormData(prev => ({
-        ...prev,
-        options: [...prev.options, '']
-      }));
+  const handleAddOption = () => {
+    if (data.options.length < 10) {
+      storeAddOption();
     }
   };
   
-  const removeOption = (index: number) => {
-    if (formData.options.length > 2) {
-      setFormData(prev => ({
-        ...prev,
-        options: prev.options.filter((_, i) => i !== index)
-      }));
+  const handleRemoveOption = (index: number) => {
+    if (data.options.length > 2) {
+      storeRemoveOption(index);
     }
   };
   
-  const updateOption = (index: number, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      options: prev.options.map((option, i) => i === index ? value : option)
-    }));
+  const handleUpdateOption = (index: number, value: string) => {
+    storeUpdateOption(index, value);
   };
   
-  const addTag = (tag: string) => {
-    if (tag.trim() && !formData.tags.includes(tag.trim()) && formData.tags.length < 5 && tag.trim().length <= 50) {
-      setFormData(prev => ({
-        ...prev,
-        tags: [...prev.tags, tag.trim()]
-      }));
+  const handleAddTag = (tag: string) => {
+    if (tag.trim() && !data.tags.includes(tag.trim()) && data.tags.length < 5 && tag.trim().length <= 50) {
+      storeAddTag(tag.trim());
     }
   };
   
-  const removeTag = (tag: string) => {
-    setFormData(prev => ({
-      ...prev,
-      tags: prev.tags.filter(t => t !== tag)
-    }));
+  const handleRemoveTag = (tag: string) => {
+    storeRemoveTag(tag);
   };
   
-  const updateSettings = (updates: Partial<typeof formData.settings>) => {
-    setFormData(prev => ({
-      ...prev,
-      settings: { ...prev.settings, ...updates }
-    }));
+  const handleUpdateSettings = (updates: Partial<typeof data.settings>) => {
+    storeUpdateData({ settings: { ...data.settings, ...updates } });
   };
   
   const submitPoll = async () => {
     const newErrors: Record<string, string> = {};
     
     // Final validation for all steps
-    if (!formData.title.trim()) {
+    if (!data.title.trim()) {
       newErrors.title = 'Title is required';
-    } else if (formData.title.trim().length < 5) {
+    } else if (data.title.trim().length < 5) {
       newErrors.title = 'Title must be at least 5 characters';
-    } else if (formData.title.trim().length > 200) {
+    } else if (data.title.trim().length > 200) {
       newErrors.title = 'Title must be 200 characters or less';
     }
-    if (!formData.description.trim()) {
+    if (!data.description.trim()) {
       newErrors.description = 'Description is required';
-    } else if (formData.description.trim().length < 10) {
+    } else if (data.description.trim().length < 10) {
       newErrors.description = 'Description must be at least 10 characters';
-    } else if (formData.description.trim().length > 2000) {
+    } else if (data.description.trim().length > 2000) {
       newErrors.description = 'Description must be 2000 characters or less';
     }
     
-    const validOptions = formData.options.filter(option => option.trim().length > 0);
+    const validOptions = data.options.filter(option => option.trim().length > 0);
     if (validOptions.length < 2) {
       newErrors.options = 'At least 2 options are required';
     } else if (validOptions.length > 10) {
@@ -203,22 +206,22 @@ export default function CreatePollPage() {
       }
     }
     
-    if (!formData.category) {
+    if (!data.category) {
       newErrors.category = 'Please select a category';
     }
     
     // Check tag length
-    for (let i = 0; i < formData.tags.length; i++) {
-      const tag = formData.tags[i];
+    for (let i = 0; i < data.tags.length; i++) {
+      const tag = data.tags[i];
       if (tag && tag.length > 50) {
         newErrors[`tag-${i}`] = 'Each tag must be 50 characters or less';
       }
     }
     
-    setErrors(newErrors);
+    // Errors are managed by the store
     
     if (Object.keys(newErrors).length === 0) {
-      console.log('Poll created successfully:', formData);
+      console.log('Poll created successfully:', data);
       alert('Poll created successfully!');
     }
   };
@@ -234,7 +237,7 @@ export default function CreatePollPage() {
               </label>
               <input
                 id="title"
-                value={formData.title}
+                value={data.title}
                 onChange={(e) => updateFormData({ title: e.target.value })}
                 placeholder="Enter your poll question..."
                 maxLength={200}
@@ -243,8 +246,8 @@ export default function CreatePollPage() {
                 }`}
               />
               <div className="flex justify-between text-sm text-gray-500 mt-1">
-                <span>{formData.title.length}/200 characters</span>
-                {formData.title.length > 180 && (
+                <span>{data.title.length}/200 characters</span>
+                {data.title.length > 180 && (
                   <span className="text-orange-500">Approaching limit</span>
                 )}
               </div>
@@ -259,7 +262,7 @@ export default function CreatePollPage() {
               </label>
               <textarea
                 id="description"
-                value={formData.description}
+                value={data.description}
                 onChange={(e) => updateFormData({ description: e.target.value })}
                 placeholder="Provide more context about your poll..."
                 rows={4}
@@ -269,8 +272,8 @@ export default function CreatePollPage() {
                 }`}
               />
               <div className="flex justify-between text-sm text-gray-500 mt-1">
-                <span>{formData.description.length}/2000 characters</span>
-                {formData.description.length > 1800 && (
+                <span>{data.description.length}/2000 characters</span>
+                {data.description.length > 1800 && (
                   <span className="text-orange-500">Approaching limit</span>
                 )}
               </div>
@@ -293,22 +296,22 @@ export default function CreatePollPage() {
               )}
               
               <div className="space-y-3">
-                {formData.options.map((option, index) => (
+                {data.options.map((option, index) => (
                   <div key={index} className="space-y-1">
                     <div className="flex items-center space-x-2">
                       <input
                         value={option}
-                        onChange={(e) => updateOption(index, e.target.value)}
+                        onChange={(e) => handleUpdateOption(index, e.target.value)}
                         placeholder={`Option ${index + 1}`}
                         maxLength={100}
                         className={`flex-1 p-3 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
                           errors[`option-${index}`] ? 'border-red-500' : 'border-gray-300'
                         }`}
                       />
-                      {formData.options.length > 2 && (
+                      {data.options.length > 2 && (
                         <button
                           type="button"
-                          onClick={() => removeOption(index)}
+                          onClick={() => handleRemoveOption(index)}
                           className="p-2 text-red-500 hover:text-red-700"
                         >
                           ✕
@@ -328,10 +331,10 @@ export default function CreatePollPage() {
                 ))}
               </div>
 
-              {formData.options.length < 10 && (
+              {data.options.length < 10 && (
                 <button
                   type="button"
-                  onClick={addOption}
+                  onClick={handleAddOption}
                   className="mt-4 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
                 >
                   + Add Option
@@ -359,7 +362,7 @@ export default function CreatePollPage() {
                     type="button"
                     onClick={() => updateFormData({ category: category.id })}
                     className={`p-4 border rounded-lg text-left transition-colors ${
-                      formData.category === category.id
+                      data.category === category.id
                         ? 'border-blue-500 bg-blue-50'
                         : 'border-gray-200 hover:border-gray-300'
                     }`}
@@ -381,12 +384,12 @@ export default function CreatePollPage() {
               )}
               
               <div className="flex flex-wrap gap-2 mb-3">
-                {formData.tags.map((tag) => (
+                {data.tags.map((tag) => (
                   <span key={tag} className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
                     {tag}
                     <button
                       type="button"
-                      onClick={() => removeTag(tag)}
+                      onClick={() => handleRemoveTag(tag)}
                       className="ml-1 text-gray-500 hover:text-gray-700"
                     >
                       ✕
@@ -395,7 +398,7 @@ export default function CreatePollPage() {
                 ))}
               </div>
 
-              {formData.tags.length < 5 && (
+              {data.tags.length < 5 && (
                 <div className="space-y-2">
                   <div className="flex space-x-2">
                     <input
@@ -407,7 +410,7 @@ export default function CreatePollPage() {
                         if (e.key === 'Enter') {
                           e.preventDefault();
                           if (newTag.trim()) {
-                            addTag(newTag.trim());
+                            handleAddTag(newTag.trim());
                             setNewTag('');
                           }
                         }
@@ -418,7 +421,7 @@ export default function CreatePollPage() {
                       type="button"
                       onClick={() => {
                         if (newTag.trim()) {
-                          addTag(newTag.trim());
+                          handleAddTag(newTag.trim());
                           setNewTag('');
                         }
                       }}
@@ -450,8 +453,8 @@ export default function CreatePollPage() {
                     <label className="text-sm font-medium">Allow multiple votes</label>
                     <input
                       type="checkbox"
-                      checked={formData.settings.allowMultipleVotes}
-                      onChange={(e) => updateSettings({ allowMultipleVotes: e.target.checked })}
+                      checked={data.settings.allowMultipleVotes}
+                      onChange={(e) => handleUpdateSettings({ allowMultipleVotes: e.target.checked })}
                       className="rounded"
                     />
                   </div>
@@ -460,8 +463,8 @@ export default function CreatePollPage() {
                     <label className="text-sm font-medium">Allow anonymous votes</label>
                     <input
                       type="checkbox"
-                      checked={formData.settings.allowAnonymousVotes}
-                      onChange={(e) => updateSettings({ allowAnonymousVotes: e.target.checked })}
+                      checked={data.settings.allowAnonymousVotes}
+                      onChange={(e) => handleUpdateSettings({ allowAnonymousVotes: e.target.checked })}
                       className="rounded"
                     />
                   </div>
@@ -470,8 +473,8 @@ export default function CreatePollPage() {
                     <label className="text-sm font-medium">Show results immediately</label>
                     <input
                       type="checkbox"
-                      checked={formData.settings.showResults}
-                      onChange={(e) => updateSettings({ showResults: e.target.checked })}
+                      checked={data.settings.showResults}
+                      onChange={(e) => handleUpdateSettings({ showResults: e.target.checked })}
                       className="rounded"
                     />
                   </div>
@@ -480,8 +483,8 @@ export default function CreatePollPage() {
                     <label className="text-sm font-medium">Allow comments</label>
                     <input
                       type="checkbox"
-                      checked={formData.settings.allowComments}
-                      onChange={(e) => updateSettings({ allowComments: e.target.checked })}
+                      checked={data.settings.allowComments}
+                      onChange={(e) => handleUpdateSettings({ allowComments: e.target.checked })}
                       className="rounded"
                     />
                   </div>
@@ -494,8 +497,8 @@ export default function CreatePollPage() {
                   <div>
                     <label className="text-sm font-medium block mb-2">Privacy Level</label>
                     <select
-                      value={formData.settings.privacyLevel}
-                      onChange={(e) => updateSettings({ privacyLevel: e.target.value as any })}
+                      value={data.settings.privacyLevel}
+                      onChange={(e) => handleUpdateSettings({ privacyLevel: e.target.value as any })}
                       className="w-full p-2 border rounded-md"
                     >
                       <option value="public">Public</option>
@@ -507,8 +510,8 @@ export default function CreatePollPage() {
                   <div>
                     <label className="text-sm font-medium block mb-2">Voting Method</label>
                     <select
-                      value={formData.settings.votingMethod}
-                      onChange={(e) => updateSettings({ votingMethod: e.target.value as any })}
+                      value={data.settings.votingMethod}
+                      onChange={(e) => handleUpdateSettings({ votingMethod: e.target.value as any })}
                       className="w-full p-2 border rounded-md"
                     >
                       <option value="single">Single Choice</option>
@@ -522,8 +525,8 @@ export default function CreatePollPage() {
                     <label className="text-sm font-medium">Auto-close when threshold reached</label>
                     <input
                       type="checkbox"
-                      checked={formData.settings.autoClose}
-                      onChange={(e) => updateSettings({ autoClose: e.target.checked })}
+                      checked={data.settings.autoClose}
+                      onChange={(e) => handleUpdateSettings({ autoClose: e.target.checked })}
                       className="rounded"
                     />
                   </div>
@@ -541,14 +544,14 @@ export default function CreatePollPage() {
               <p className="text-gray-600 mb-4">Review your poll before publishing</p>
               <div className="space-y-4">
                 <div>
-                  <h4 className="text-lg font-semibold">{formData.title}</h4>
-                  <p className="text-gray-600 mt-1">{formData.description}</p>
+                  <h4 className="text-lg font-semibold">{data.title}</h4>
+                  <p className="text-gray-600 mt-1">{data.description}</p>
                 </div>
                 
                 <div className="border-t pt-4">
                   <h5 className="font-medium mb-2">Options:</h5>
                   <div className="space-y-2">
-                    {formData.options.filter(opt => opt.trim()).map((option, index) => (
+                    {data.options.filter(opt => opt.trim()).map((option, index) => (
                       <div key={index} className="flex items-center space-x-2">
                         <input type="radio" name="preview" disabled />
                         <span>{option}</span>
@@ -560,9 +563,9 @@ export default function CreatePollPage() {
                 <div className="border-t pt-4">
                   <div className="flex flex-wrap gap-2">
                     <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                      {formData.category}
+                      {data.category}
                     </span>
-                    {formData.tags.map((tag) => (
+                    {data.tags.map((tag) => (
                       <span key={tag} className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                         {tag}
                       </span>
@@ -571,10 +574,10 @@ export default function CreatePollPage() {
                 </div>
                 
                 <div className="text-sm text-gray-500">
-                  <p>Privacy: {formData.settings.privacyLevel}</p>
-                  <p>Voting: {formData.settings.votingMethod}</p>
-                  <p>Multiple votes: {formData.settings.allowMultipleVotes ? 'Yes' : 'No'}</p>
-                  <p>Anonymous: {formData.settings.allowAnonymousVotes ? 'Yes' : 'No'}</p>
+                  <p>Privacy: {data.settings.privacyLevel}</p>
+                  <p>Voting: {data.settings.votingMethod}</p>
+                  <p>Multiple votes: {data.settings.allowMultipleVotes ? 'Yes' : 'No'}</p>
+                  <p>Anonymous: {data.settings.allowAnonymousVotes ? 'Yes' : 'No'}</p>
                 </div>
               </div>
             </div>
@@ -645,7 +648,7 @@ export default function CreatePollPage() {
         {/* Enhanced Navigation */}
         <div className="flex justify-between">
           <button
-            onClick={previousStep}
+            onClick={handlePrev}
             disabled={currentStep === 0}
             className="flex items-center px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
           >
@@ -663,7 +666,7 @@ export default function CreatePollPage() {
               </button>
             ) : (
               <button
-                onClick={nextStep}
+                onClick={handleNext}
                 disabled={!canProceed}
                 className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >

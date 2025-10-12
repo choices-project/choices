@@ -6,12 +6,13 @@
  */
 
 import { logger } from '@/lib/utils/logger';
+
 import { ApplicationError } from '../../errors/base';
 import type { GoogleCivicElectionInfo, GoogleCivicVoterInfo } from '../../types/google-civic';
 
 
 // Processed address lookup result type
-type AddressLookupResult = {
+interface AddressLookupResult {
   district: string;
   state: string;
   representatives: Array<{
@@ -30,9 +31,9 @@ type AddressLookupResult = {
   normalizedAddress: string;
   confidence: number;
   coordinates: undefined;
-};
+}
 
-export type GoogleCivicConfig = {
+export interface GoogleCivicConfig {
   apiKey: string;
   baseUrl?: string;
   timeout?: number;
@@ -44,14 +45,14 @@ export type GoogleCivicConfig = {
   };
 }
 
-export type GoogleCivicAddress = {
+export interface GoogleCivicAddress {
   address: string;
   includeOffices?: boolean;
   levels?: string[];
   roles?: string[];
 }
 
-export type GoogleCivicRepresentative = {
+export interface GoogleCivicRepresentative {
   name: string;
   party?: string;
   phones?: string[];
@@ -64,7 +65,7 @@ export type GoogleCivicRepresentative = {
   }>;
 }
 
-export type GoogleCivicOffice = {
+export interface GoogleCivicOffice {
   name: string;
   divisionId: string;
   levels: string[];
@@ -76,13 +77,13 @@ export type GoogleCivicOffice = {
   officialIndices?: number[];
 }
 
-export type GoogleCivicDivision = {
+export interface GoogleCivicDivision {
   name: string;
   alsoKnownAs?: string[];
   officeIndices?: number[];
 }
 
-export type GoogleCivicResponse = {
+export interface GoogleCivicResponse {
   kind: string;
   normalizedInput: {
     line1: string;
@@ -142,7 +143,7 @@ export class GoogleCivicClient {
 
       return this.transformResponse(response, address);
     } catch (error) {
-      logger.error('Failed to lookup address in Google Civic API', { address, error });
+      logger.error('Failed to lookup address in Google Civic API', error instanceof Error ? error : new Error('Unknown error'));
       throw error;
     }
   }
@@ -162,7 +163,7 @@ export class GoogleCivicClient {
 
       return response as GoogleCivicElectionInfo;
     } catch (error) {
-      logger.error('Failed to get election info from Google Civic API', { address, error });
+      logger.error('Failed to get election info from Google Civic API', error instanceof Error ? error : new Error('Unknown error'));
       throw error;
     }
   }
@@ -184,7 +185,7 @@ export class GoogleCivicClient {
       const response = await this.makeRequest('/voterinfo', params);
       return response as GoogleCivicVoterInfo;
     } catch (error) {
-      logger.error('Failed to get voter info from Google Civic API', { address, electionId, error });
+      logger.error('Failed to get voter info from Google Civic API', error instanceof Error ? error : new Error('Unknown error'));
       throw error;
     }
   }
@@ -288,8 +289,8 @@ export class GoogleCivicClient {
           name: official.name,
           party: official.party || 'Unknown',
           office: office?.name || 'Unknown',
-          district: district,
-          state: state,
+          district,
+          state,
           contact: {
             phone: official.phones?.[0],
             email: official.emails?.[0],
@@ -309,7 +310,7 @@ export class GoogleCivicClient {
         coordinates: undefined // Not provided by this API
       };
     } catch (error) {
-      logger.error('Failed to transform Google Civic API response', { error, response });
+      logger.error('Failed to transform Google Civic API response', error instanceof Error ? error : new Error('Unknown error'));
       throw new GoogleCivicApiError('Failed to process API response', 500, { error });
     }
   }

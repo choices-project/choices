@@ -6,10 +6,10 @@
  * Replaces the discontinued ProPublica Congress API.
  */
 
-import { logger } from '@/lib/utils/logger';
 import { ApplicationError } from '@/lib/errors';
+import { logger } from '@/lib/utils/logger';
 
-export type GovTrackConfig = {
+export interface GovTrackConfig {
   baseUrl?: string;
   timeout?: number;
   retryAttempts?: number;
@@ -20,7 +20,7 @@ export type GovTrackConfig = {
   };
 }
 
-export type GovTrackMember = {
+export interface GovTrackMember {
   id: number;
   first_name: string;
   last_name: string;
@@ -55,7 +55,7 @@ export type GovTrackMember = {
   }>;
 }
 
-export type GovTrackVote = {
+export interface GovTrackVote {
   id: number;
   category: string;
   question: string;
@@ -88,7 +88,7 @@ export type GovTrackVote = {
   updated: string;
 }
 
-export type GovTrackBill = {
+export interface GovTrackBill {
   id: number;
   congress: number;
   bill_type: string;
@@ -129,7 +129,7 @@ export type GovTrackBill = {
   updated: string;
 }
 
-export type GovTrackResponse<T> = {
+export interface GovTrackResponse<T> {
   meta: {
     limit: number;
     offset: number;
@@ -187,7 +187,7 @@ export class GovTrackClient {
 
       return response.objects || [];
     } catch (error) {
-      logger.error('Failed to get current members from GovTrack API', { chamber, error });
+      logger.error('Failed to get current members from GovTrack API', error instanceof Error ? error : undefined, { chamber });
       throw error;
     }
   }
@@ -205,7 +205,7 @@ export class GovTrackClient {
 
       return response;
     } catch (error) {
-      logger.error('Failed to get member from GovTrack API', { memberId, error });
+      logger.error('Failed to get member from GovTrack API', error instanceof Error ? error : undefined, { memberId });
       throw error;
     }
   }
@@ -231,7 +231,7 @@ export class GovTrackClient {
 
       return response.objects || [];
     } catch (error) {
-      logger.error('Failed to get recent votes from GovTrack API', { memberId, error });
+      logger.error('Failed to get recent votes from GovTrack API', error instanceof Error ? error : undefined, { memberId });
       throw error;
     }
   }
@@ -257,7 +257,7 @@ export class GovTrackClient {
 
       return response.objects || [];
     } catch (error) {
-      logger.error('Failed to get recent bills from GovTrack API', { congress, error });
+      logger.error('Failed to get recent bills from GovTrack API', error instanceof Error ? error : undefined, { congress });
       throw error;
     }
   }
@@ -275,7 +275,7 @@ export class GovTrackClient {
 
       return response;
     } catch (error) {
-      logger.error('Failed to get bill from GovTrack API', { billId, error });
+      logger.error('Failed to get bill from GovTrack API', error instanceof Error ? error : undefined, { billId });
       throw error;
     }
   }
@@ -305,7 +305,7 @@ export class GovTrackClient {
 
       return response.objects || [];
     } catch (error) {
-      logger.error('Failed to search members in GovTrack API', { query, chamber, error });
+      logger.error('Failed to search members in GovTrack API', error instanceof Error ? error : undefined, { query, chamber });
       throw error;
     }
   }

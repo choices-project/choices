@@ -12,8 +12,6 @@
 
 'use client';
 
-import React, { useState, useRef, useCallback } from 'react';
-import Image from 'next/image';
 import { 
   HeartIcon, 
   ChatBubbleLeftIcon, 
@@ -27,10 +25,12 @@ import {
   HeartIcon as HeartSolidIcon,
   BookmarkIcon as BookmarkSolidIcon
 } from '@heroicons/react/24/solid';
+import Image from 'next/image';
+import React, { useState, useRef, useCallback } from 'react';
 
 import type { FeedItemData } from '../types';
 
-type FeedItemProps = {
+interface FeedItemProps {
   item: FeedItemData;
   onLike?: (itemId: string) => void;
   onShare?: (itemId: string) => void;
@@ -42,7 +42,7 @@ type FeedItemProps = {
   showEngagement?: boolean;
   enableHaptics?: boolean;
   className?: string;
-};
+}
 
 export default function FeedItem({
   item,

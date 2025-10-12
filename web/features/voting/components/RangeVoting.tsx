@@ -1,16 +1,17 @@
 'use client'
 
-import { useState, useEffect } from 'react'
 import { CheckCircle, AlertCircle, Info, Star } from 'lucide-react'
+import { useState, useEffect } from 'react'
+
 import { withOptional } from '@/lib/utils/objects'
 
-type PollOption = {
+interface PollOption {
   id: string
   text: string
   description?: string
 }
 
-type RangeVotingProps = {
+interface RangeVotingProps {
   pollId: string
   title: string
   description?: string

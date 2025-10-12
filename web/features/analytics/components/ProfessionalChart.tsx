@@ -1,12 +1,20 @@
 'use client'
 
-import { useState, useEffect, useCallback, createContext, useContext } from 'react'
+import * as Tooltip from '@radix-ui/react-tooltip'
 import type { Variants } from 'framer-motion';
 import { motion } from 'framer-motion'
-import { TrendingUp, TrendingDown, Minus, Activity } from 'lucide-react'
-import * as Tooltip from '@radix-ui/react-tooltip'
+import { TrendingUp, TrendingDown, Minus } from 'lucide-react'
+import { useState, useEffect, useCallback } from 'react'
 
-type ChartData = {
+import { 
+  useAnalyticsChartData, 
+  useAnalyticsChartMaxValue, 
+  useAnalyticsChartShowTrends, 
+  useAnalyticsChartShowConfidence,
+  useAnalyticsActions 
+} from '@/lib/stores/analyticsStore'
+
+interface ChartData {
   name: string
   value: number
   color: string
@@ -14,7 +22,7 @@ type ChartData = {
   previousValue?: number
 }
 
-type ProfessionalChartProps = {
+interface ProfessionalChartProps {
   data: ChartData[]
   title?: string
   subtitle?: string
@@ -24,22 +32,24 @@ type ProfessionalChartProps = {
   maxValue?: number
 }
 
-// Context for sharing chart data
-const ChartContext = createContext<{
-  data: ChartData[];
+// Hook to use chart data from analytics store
+export function useChartContext(): {
+  data: any;
   maxValue: number;
   showTrends: boolean;
   showConfidence: boolean;
-}>({
-  data: [],
-  maxValue: 0,
-  showTrends: false,
-  showConfidence: false
-})
-
-// Hook to use chart context
-export function useChartContext() {
-  return useContext(ChartContext)
+} {
+  const data = useAnalyticsChartData();
+  const maxValue = useAnalyticsChartMaxValue();
+  const showTrends = useAnalyticsChartShowTrends();
+  const showConfidence = useAnalyticsChartShowConfidence();
+  
+  return {
+    data,
+    maxValue,
+    showTrends,
+    showConfidence
+  };
 }
 
 export function ProfessionalChart({
@@ -51,37 +61,35 @@ export function ProfessionalChart({
   showConfidence = false,
   maxValue
 }: ProfessionalChartProps) {
-  const [isVisible, setIsVisible] = useState(false)
   const [hoveredItem, setHoveredItem] = useState<string | null>(null)
-  const [isProcessing, setIsProcessing] = useState(false)
+  
+  // Get analytics store actions and state
+  const { setChartData, setChartConfig, setChartMaxValue, setChartShowTrends, setChartShowConfidence } = useAnalyticsActions()
+  const { data: storeData, maxValue: storeMaxValue, showTrends: storeShowTrends, showConfidence: storeShowConfidence } = useChartContext()
 
-  useEffect(() => {
-    setIsVisible(true)
-  }, [])
-
-  // Show processing state when data changes
+  // Update store when props change
   useEffect(() => {
     if (data.length > 0) {
-      setIsProcessing(true)
-      const timer = setTimeout(() => {
-        setIsProcessing(false)
-      }, 500)
-      return () => clearTimeout(timer)
+      setChartData(data);
+      setChartMaxValue(maxValue || Math.max(...data.map(item => item.value)));
+      setChartShowTrends(showTrends);
+      setChartShowConfidence(showConfidence);
     }
-  }, [data])
+  }, [data, maxValue, showTrends, showConfidence, setChartData, setChartMaxValue, setChartShowTrends, setChartShowConfidence]);
+
+  // Use store data or fallback to props
+  const chartData = storeData.length > 0 ? storeData : data
+  const chartMaxValue = storeMaxValue || maxValue || Math.max(...chartData.map((item: any) => item.value))
+  const chartShowTrends = storeShowTrends || showTrends
+  const chartShowConfidence = storeShowConfidence || showConfidence
 
   // Cache data processing to prevent unnecessary re-renders
   const processedData = useCallback(() => {
-    return [...data].sort((a, b) => b.value - a.value)
-  }, [data])
-
-  // Cache max value calculation
-  const calculatedMaxValue = useCallback(() => {
-    return maxValue || Math.max(...data.map(item => item.value))
-  }, [data, maxValue])
+    return [...chartData].sort((a, b) => b.value - a.value)
+  }, [chartData])
 
   const sortedData = processedData()
-  const maxValueCalculated = calculatedMaxValue()
+  const maxValueCalculated = chartMaxValue
 
   const containerVariants: Variants = {
     hidden: { opacity: 0 },
@@ -128,7 +136,7 @@ export function ProfessionalChart({
                 }`}>
                   {item.name}
                 </span>
-                {showTrends && (
+                {chartShowTrends && (
                   <div className="flex items-center gap-1">
                     {trendChange > 0 && <TrendingUp className="h-3 w-3 text-green-500" />}
                     {trendChange < 0 && <TrendingDown className="h-3 w-3 text-red-500" />}
@@ -146,7 +154,7 @@ export function ProfessionalChart({
                 <span className="text-sm font-bold text-gray-900">
                   {item.value}%
                 </span>
-                {showConfidence && (
+                {chartShowConfidence && (
                   <span className="text-xs text-gray-500">
                     ±{item.confidence}
                   </span>
@@ -193,7 +201,7 @@ export function ProfessionalChart({
                     <div className="text-gray-300">
                       Support: {item.value}% | Confidence: ±{item.confidence}
                     </div>
-                    {showTrends && item.previousValue && (
+                    {chartShowTrends && item.previousValue && (
                       <div className="text-gray-300">
                         Change: {trendChange > 0 ? '+' : ''}{trendChange.toFixed(1)}%
                       </div>
@@ -252,24 +260,12 @@ export function ProfessionalChart({
   );
 
   return (
-    <ChartContext.Provider value={{
-      data: sortedData,
-      maxValue: maxValueCalculated,
-      showTrends,
-      showConfidence
-    }}>
-      <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100">
-              {(title || subtitle) && (
+    <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100">
+      {(title || subtitle) && (
         <div className="mb-6">
           <div className="flex items-center gap-2 mb-2">
             {title && (
               <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
-            )}
-            {isProcessing && (
-              <div className="flex items-center gap-1 text-blue-600">
-                <Activity className="w-4 h-4 animate-pulse" />
-                <span className="text-sm">Processing...</span>
-              </div>
             )}
           </div>
           {subtitle && (
@@ -278,14 +274,13 @@ export function ProfessionalChart({
         </div>
       )}
 
-        <motion.div
-          variants={containerVariants}
-          initial="hidden"
-          animate={isVisible ? "visible" : "hidden"}
-        >
-          {type === 'bar' ? renderBarChart() : renderProgressChart()}
-        </motion.div>
-      </div>
-    </ChartContext.Provider>
+      <motion.div
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+      >
+        {type === 'bar' ? renderBarChart() : renderProgressChart()}
+      </motion.div>
+    </div>
   );
 }

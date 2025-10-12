@@ -1,5 +1,6 @@
-import { type NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { type NextRequest, NextResponse } from 'next/server';
+
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
 import { createApiLogger } from '@/lib/utils/api-logger';
 import { CivicsCache, CivicsQueryOptimizer } from '@/lib/utils/civics-cache';
@@ -295,10 +296,10 @@ export async function GET(
 
       // Data Quality Summary
       data_quality: {
-        contact_info_available: (representative as any).contact_info_available || false,
-        social_media_available: (representative as any).social_media_available || false,
-        campaign_finance_available: (representative as any).campaign_finance_available || false,
-        voting_records_available: (representative as any).voting_records_available || false,
+        contact_info_available: (representative).contact_info_available || false,
+        social_media_available: (representative).social_media_available || false,
+        campaign_finance_available: (representative).campaign_finance_available || false,
+        voting_records_available: (representative).voting_records_available || false,
         overall_quality_score: Math.round(
           ((contactInfo?.data_quality_score || 0) + 
            (campaignFinance ? 90 : 0) + 
@@ -309,7 +310,7 @@ export async function GET(
       // Metadata
       last_updated: new Date().toISOString(),
       data_sources: [
-        (representative as any).data_source,
+        (representative).data_source,
         (contactInfo as any)?.data_source,
         (campaignFinance as any)?.data_source,
         (votingBehavior as any)?.data_source

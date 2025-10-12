@@ -23,7 +23,7 @@ import { createHash } from 'crypto';
 // TYPES AND INTERFACES
 // ============================================================================
 
-export type MerkleNode = {
+export interface MerkleNode {
   hash: string;
   left?: MerkleNode;
   right?: MerkleNode;
@@ -31,14 +31,14 @@ export type MerkleNode = {
   isLeaf: boolean;
 }
 
-export type MerkleProof = {
+export interface MerkleProof {
   leaf: string;
   path: string[];
   indices: number[]; // 0 for left, 1 for right
   root: string;
 }
 
-export type BallotCommitment = {
+export interface BallotCommitment {
   ballotId: string;
   hash: string;
   timestamp: Date;
@@ -46,7 +46,7 @@ export type BallotCommitment = {
   merkleProof?: MerkleProof;
 }
 
-export type SnapshotChecksum = {
+export interface SnapshotChecksum {
   pollId: string;
   candidateIds: string[];
   ballotsHash: string;
@@ -56,7 +56,7 @@ export type SnapshotChecksum = {
   timestamp: Date;
 }
 
-export type ReplayData = {
+export interface ReplayData {
   pollId: string;
   ballots: BallotCommitment[];
   merkleRoot: string;

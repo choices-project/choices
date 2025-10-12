@@ -5,11 +5,11 @@
  * that don't require user session authentication.
  */
 
-import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
 // Load environment variables
 import dotenv from 'dotenv';
+import { NextResponse } from 'next/server';
 dotenv.config({ path: '.env.local' });
 
 export async function requireServiceKey(): Promise<NextResponse | null> {

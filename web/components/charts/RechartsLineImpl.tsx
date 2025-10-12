@@ -2,7 +2,7 @@
 
 import { LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer } from 'recharts'
 
-type LineChartProps = {
+interface LineChartProps {
   data: any[]
   dataKey?: string
   xAxisKey?: string

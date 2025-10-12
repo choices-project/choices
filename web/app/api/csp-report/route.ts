@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
     console.error('CSP Violation Report:', {
       timestamp: new Date().toISOString(),
       userAgent: request.headers.get('user-agent'),
-      report: report,
+      report,
     });
     
     // In production, you might want to:

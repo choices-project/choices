@@ -12,11 +12,12 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { persist } from 'zustand/middleware';
+
 import { logger } from '@/lib/utils/logger';
 import { withOptional } from '@/lib/utils/objects';
 
 // Analytics data types
-type AnalyticsEvent = {
+interface AnalyticsEvent {
   id: string;
   type: string;
   category: string;
@@ -32,7 +33,26 @@ type AnalyticsEvent = {
   referrer?: string;
 }
 
-type PerformanceMetrics = {
+// Chart data types for analytics visualization
+interface ChartData {
+  name: string;
+  value: number;
+  color: string;
+  confidence?: number;
+  previousValue?: number;
+}
+
+interface ChartConfig {
+  data: ChartData[];
+  maxValue: number;
+  showTrends: boolean;
+  showConfidence: boolean;
+  title?: string;
+  subtitle?: string;
+  type?: 'bar' | 'progress';
+}
+
+interface PerformanceMetrics {
   pageLoadTime: number;
   timeToInteractive: number;
   firstContentfulPaint: number;
@@ -44,7 +64,7 @@ type PerformanceMetrics = {
   networkLatency?: number;
 }
 
-type UserBehaviorData = {
+interface UserBehaviorData {
   sessionDuration: number;
   pageViews: number;
   interactions: number;
@@ -58,7 +78,7 @@ type UserBehaviorData = {
   os: string;
 }
 
-type AnalyticsPreferences = {
+interface AnalyticsPreferences {
   trackingEnabled: boolean;
   performanceTracking: boolean;
   errorTracking: boolean;
@@ -69,7 +89,7 @@ type AnalyticsPreferences = {
   shareWithThirdParties: boolean;
 }
 
-type AnalyticsDashboard = {
+interface AnalyticsDashboard {
   totalEvents: number;
   uniqueUsers: number;
   sessionCount: number;
@@ -81,12 +101,19 @@ type AnalyticsDashboard = {
 }
 
 // Analytics store state interface
-type AnalyticsStore = {
+interface AnalyticsStore {
   // Analytics data
   events: AnalyticsEvent[];
   performanceMetrics: PerformanceMetrics | null;
   userBehavior: UserBehaviorData | null;
   dashboard: AnalyticsDashboard | null;
+  
+  // Chart data management
+  chartConfig: ChartConfig | null;
+  chartData: ChartData[];
+  chartMaxValue: number;
+  chartShowTrends: boolean;
+  chartShowConfidence: boolean;
   
   // Analytics settings
   preferences: AnalyticsPreferences;
@@ -113,6 +140,15 @@ type AnalyticsStore = {
   setPerformanceMetrics: (metrics: PerformanceMetrics) => void;
   updateUserBehavior: (behavior: Partial<UserBehaviorData>) => void;
   setDashboard: (dashboard: AnalyticsDashboard) => void;
+  
+  // Actions - Chart data management
+  setChartData: (data: ChartData[]) => void;
+  setChartConfig: (config: ChartConfig) => void;
+  updateChartConfig: (config: Partial<ChartConfig>) => void;
+  setChartMaxValue: (maxValue: number) => void;
+  setChartShowTrends: (showTrends: boolean) => void;
+  setChartShowConfidence: (showConfidence: boolean) => void;
+  clearChartData: () => void;
   
   // Actions - Preferences
   updatePreferences: (preferences: Partial<AnalyticsPreferences>) => void;
@@ -155,6 +191,11 @@ export const useAnalyticsStore = create<AnalyticsStore>()(
         performanceMetrics: null,
         userBehavior: null,
         dashboard: null,
+        chartConfig: null,
+        chartData: [],
+        chartMaxValue: 0,
+        chartShowTrends: false,
+        chartShowConfidence: false,
         preferences: defaultPreferences,
         trackingEnabled: true,
         sessionId: `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
@@ -271,6 +312,41 @@ export const useAnalyticsStore = create<AnalyticsStore>()(
         })),
         
         setDashboard: (dashboard) => set({ dashboard }),
+        
+        // Chart data management actions
+        setChartData: (data) => set({ chartData: data }),
+        
+        setChartConfig: (config) => set({ 
+          chartConfig: config,
+          chartData: config.data,
+          chartMaxValue: config.maxValue,
+          chartShowTrends: config.showTrends,
+          chartShowConfidence: config.showConfidence
+        }),
+        
+        updateChartConfig: (config) => set((state) => ({
+          chartConfig: state.chartConfig 
+            ? withOptional(state.chartConfig, config)
+            : withOptional(config) as ChartConfig,
+          chartData: config.data || state.chartData,
+          chartMaxValue: config.maxValue || state.chartMaxValue,
+          chartShowTrends: config.showTrends !== undefined ? config.showTrends : state.chartShowTrends,
+          chartShowConfidence: config.showConfidence !== undefined ? config.showConfidence : state.chartShowConfidence
+        })),
+        
+        setChartMaxValue: (maxValue) => set({ chartMaxValue: maxValue }),
+        
+        setChartShowTrends: (showTrends) => set({ chartShowTrends: showTrends }),
+        
+        setChartShowConfidence: (showConfidence) => set({ chartShowConfidence: showConfidence }),
+        
+        clearChartData: () => set({ 
+          chartConfig: null,
+          chartData: [],
+          chartMaxValue: 0,
+          chartShowTrends: false,
+          chartShowConfidence: false
+        }),
         
         // Preferences actions
         updatePreferences: (preferences) => set((state) => ({
@@ -394,6 +470,13 @@ export const useAnalyticsTracking = () => useAnalyticsStore(state => state.track
 export const useAnalyticsLoading = () => useAnalyticsStore(state => state.isLoading);
 export const useAnalyticsError = () => useAnalyticsStore(state => state.error);
 
+// Chart data selectors
+export const useAnalyticsChartData = () => useAnalyticsStore(state => state.chartData);
+export const useAnalyticsChartConfig = () => useAnalyticsStore(state => state.chartConfig);
+export const useAnalyticsChartMaxValue = () => useAnalyticsStore(state => state.chartMaxValue);
+export const useAnalyticsChartShowTrends = () => useAnalyticsStore(state => state.chartShowTrends);
+export const useAnalyticsChartShowConfidence = () => useAnalyticsStore(state => state.chartShowConfidence);
+
 // Action selectors
 export const useAnalyticsActions = () => useAnalyticsStore(state => ({
   trackEvent: state.trackEvent,
@@ -407,6 +490,13 @@ export const useAnalyticsActions = () => useAnalyticsStore(state => ({
   setPerformanceMetrics: state.setPerformanceMetrics,
   updateUserBehavior: state.updateUserBehavior,
   setDashboard: state.setDashboard,
+  setChartData: state.setChartData,
+  setChartConfig: state.setChartConfig,
+  updateChartConfig: state.updateChartConfig,
+  setChartMaxValue: state.setChartMaxValue,
+  setChartShowTrends: state.setChartShowTrends,
+  setChartShowConfidence: state.setChartShowConfidence,
+  clearChartData: state.clearChartData,
   updatePreferences: state.updatePreferences,
   setTrackingEnabled: state.setTrackingEnabled,
   resetPreferences: state.resetPreferences,
@@ -437,6 +527,14 @@ export const useAnalyticsSession = () => useAnalyticsStore(state => ({
   events: state.events,
   isTracking: state.isTracking,
   isSending: state.isSending,
+}));
+
+// Chart data computed selectors
+export const useAnalyticsChartContext = () => useAnalyticsStore(state => ({
+  data: state.chartData,
+  maxValue: state.chartMaxValue,
+  showTrends: state.chartShowTrends,
+  showConfidence: state.chartShowConfidence,
 }));
 
 // Store utilities
@@ -515,7 +613,9 @@ export const analyticsStoreSubscriptions = {
         const events = state.events;
         if (events.length > prevEvents.length) {
           const newEvent = events[events.length - 1];
-          callback(newEvent);
+          if (newEvent) {
+            callback(newEvent);
+          }
         }
         prevEvents = events;
         return events;

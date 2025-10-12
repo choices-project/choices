@@ -10,21 +10,23 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
 import { Hash, TrendingUp, Eye, Share2, Users } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { withOptional } from '@/lib/utils/objects';
+import React, { useState, useEffect } from 'react';
+
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
-import { useHashtagStore, useHashtagActions, useHashtagStats } from '@/lib/stores';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { HashtagInput, HashtagDisplay } from '@/features/hashtags';
-import type { Poll, PollHashtagIntegration } from '../types';
 import type { Hashtag } from '@/features/hashtags/types';
+import { useHashtagStore, useHashtagActions, useHashtagStats } from '@/lib/stores';
+import { cn } from '@/lib/utils';
+import { withOptional } from '@/lib/utils/objects';
 
-type PollHashtagIntegrationProps = {
+import type { Poll, PollHashtagIntegration } from '../types';
+
+interface PollHashtagIntegrationProps {
   poll: Poll;
   onUpdate: (updates: Partial<Poll>) => void;
   isEditing?: boolean;
@@ -397,7 +399,7 @@ export default function PollHashtagIntegration({
               <div>
                 <p className="font-medium">Engagement Rate:</p>
                 <p className="text-muted-foreground">
-                  {hashtagIntegration?.hashtag_engagement?.total_views > 0 
+                  {hashtagIntegration?.hashtag_engagement?.total_views && hashtagIntegration.hashtag_engagement.total_views > 0 
                     ? Math.round((hashtagIntegration.hashtag_engagement.hashtag_clicks / hashtagIntegration.hashtag_engagement.total_views) * 100)
                     : 0
                   }%

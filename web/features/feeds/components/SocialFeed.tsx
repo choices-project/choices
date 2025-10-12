@@ -13,9 +13,6 @@
 
 'use client';
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { withOptional } from '@/lib/utils/objects';
-import Image from 'next/image';
 import { 
   HeartIcon, 
   ChatBubbleLeftIcon, 
@@ -27,31 +24,18 @@ import {
   HeartIcon as HeartSolidIcon,
   BookmarkIcon as BookmarkSolidIcon
 } from '@heroicons/react/24/solid';
+import Image from 'next/image';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 
-type FeedItem = {
-  id: string;
-  representativeId: string;
-  representativeName: string;
-  representativeParty: string;
-  representativeOffice: string;
-  representativePhoto: string;
-  contentType: 'vote' | 'bill' | 'statement' | 'social_media' | 'photo';
-  title: string;
-  description?: string;
-  imageUrl?: string;
-  url?: string;
-  date: Date;
-  engagementMetrics: {
-    likes: number;
-    shares: number;
-    comments: number;
-    bookmarks: number;
-  };
-  isPublic: boolean;
-  metadata: Record<string, any>;
-}
+import { 
+  useFeeds, 
+  useFeedsActions, 
+  useFeedsLoading 
+} from '@/lib/stores';
 
-type SocialFeedProps = {
+// Using store's FeedItem type from feedsStore
+
+interface SocialFeedProps {
   userId?: string;
   preferences?: UserPreferences;
   onLike?: (itemId: string) => void;
@@ -61,7 +45,7 @@ type SocialFeedProps = {
   className?: string;
 }
 
-type UserPreferences = {
+interface UserPreferences {
   state?: string;
   district?: string;
   interests?: string[];
@@ -76,7 +60,7 @@ type UserPreferences = {
 }
 
 export default function SocialFeed({
-  userId,
+  userId: _userId,
   preferences: _preferences,
   onLike,
   onShare,
@@ -84,13 +68,14 @@ export default function SocialFeed({
   onComment,
   className = ''
 }: SocialFeedProps) {
-  const [feedItems, setFeedItems] = useState<FeedItem[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isRefreshing, setIsRefreshing] = useState(false);
+  // Use Zustand store instead of local state
+  const feeds = useFeeds();
+  const { loadFeeds, likeFeed, bookmarkFeed, refreshFeeds } = useFeedsActions();
+  const isLoading = useFeedsLoading();
+  
+  // Keep local state for UI-specific concerns
   const [hasMore, setHasMore] = useState(true);
   const [page, setPage] = useState(1);
-  const [likedItems, setLikedItems] = useState<Set<string>>(new Set());
-  const [bookmarkedItems, setBookmarkedItems] = useState<Set<string>>(new Set());
   
   const feedRef = useRef<HTMLDivElement>(null);
   const observerRef = useRef<IntersectionObserver | null>(null);
@@ -101,51 +86,28 @@ export default function SocialFeed({
   const [, setTouchEnd] = useState<{ y: number } | null>(null);
   const [pullDistance, setPullDistance] = useState(0);
 
-  // Load feed items
+  // Load feed items using store
   const loadFeedItems = useCallback(async (pageNum: number, isRefresh: boolean = false) => {
     if (isLoading) return;
 
-    setIsLoading(true);
-    if (isRefresh) {
-      setIsRefreshing(true);
-    }
-
     try {
-      const response = await fetch(`/api/v1/civics/feed?page=${pageNum}&limit=20`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(userId && { 'Authorization': `Bearer ${userId}` })
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to load feed');
-      }
-
-      const data = await response.json();
-      const newItems = data.items || [];
-
       if (isRefresh) {
-        setFeedItems(newItems);
+        await refreshFeeds();
         setPage(1);
       } else {
-        setFeedItems(prev => [...prev, ...newItems]);
+        await loadFeeds('all');
         setPage(pageNum);
       }
 
-      setHasMore(newItems.length === 20);
-    } catch (error) {
-      console.error('Error loading feed:', error);
-    } finally {
-      setIsLoading(false);
-      setIsRefreshing(false);
+      setHasMore(feeds.length === 20);
+    } catch {
+      // Error handling - could be logged to monitoring service
     }
-  }, [userId, isLoading]);
+  }, [isLoading, loadFeeds, refreshFeeds, feeds.length]);
 
   // Load initial feed
   useEffect(() => {
-    loadFeedItems(1, true);
+    void loadFeedItems(1, true);
   }, [loadFeedItems]);
 
   // Set up infinite scroll
@@ -157,7 +119,7 @@ export default function SocialFeed({
     observerRef.current = new IntersectionObserver(
       (entries) => {
         if (entries[0]?.isIntersecting && hasMore && !isLoading) {
-          loadFeedItems(page + 1, false);
+          void loadFeedItems(page + 1, false);
         }
       },
       { threshold: 0.1 }
@@ -195,7 +157,7 @@ export default function SocialFeed({
 
   const handleTouchEnd = () => {
     if (pullDistance > 50) {
-      loadFeedItems(1, true);
+      void loadFeedItems(1, true);
     }
     setPullDistance(0);
     setTouchStart(null);
@@ -203,59 +165,27 @@ export default function SocialFeed({
   };
 
   // Handle interactions
-  const handleLike = (itemId: string) => {
-    setLikedItems(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(itemId)) {
-        newSet.delete(itemId);
-      } else {
-        newSet.add(itemId);
-      }
-      return newSet;
-    });
-
-    // Update engagement metrics
-    setFeedItems(prev => prev.map(item => {
-      if (item.id === itemId) {
-        return withOptional(item, {
-          engagementMetrics: withOptional(item.engagementMetrics, {
-            likes: likedItems.has(itemId) 
-              ? item.engagementMetrics.likes - 1 
-              : item.engagementMetrics.likes + 1
-          })
-        });
-      }
-      return item;
-    }));
-
+  const handleLike = useCallback((itemId: string) => {
+    likeFeed(itemId);
     onLike?.(itemId);
-  };
+  }, [likeFeed, onLike]);
 
-  const handleBookmark = (itemId: string) => {
-    setBookmarkedItems(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(itemId)) {
-        newSet.delete(itemId);
-      } else {
-        newSet.add(itemId);
-      }
-      return newSet;
-    });
-
+  const handleBookmark = useCallback((itemId: string) => {
+    bookmarkFeed(itemId);
     onBookmark?.(itemId);
-  };
+  }, [bookmarkFeed, onBookmark]);
 
   const handleShare = (itemId: string) => {
     onShare?.(itemId);
     
     // Native sharing if available
     if (navigator.share) {
-      const item = feedItems.find(item => item.id === itemId);
+      const item = feeds.find(item => item.id === itemId);
       if (item) {
-        navigator.share({
+        void navigator.share({
           title: item.title,
-          text: item.description || '',
-          url: item.url || window.location.href
+          text: item.summary ?? '',
+          url: item.source.url ?? window.location.href
         });
       }
     }
@@ -330,7 +260,7 @@ export default function SocialFeed({
       onTouchEnd={handleTouchEnd}
     >
       {/* Pull-to-refresh indicator */}
-      {isRefreshing && (
+      {isLoading && (
         <div className="flex items-center justify-center py-4 text-gray-500">
           <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
           <span className="ml-2">Refreshing...</span>
@@ -339,36 +269,36 @@ export default function SocialFeed({
 
       {/* Feed items */}
       <div className="space-y-4 p-4">
-        {feedItems.map((item, _index) => (
+        {feeds.map((item, _index) => (
           <div key={item.id} className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
             {/* Header */}
             <div className="p-4 border-b border-gray-100">
               <div className="flex items-center space-x-3">
                 <div className="relative">
-                  <Image
-                    src={item.representativePhoto}
-                    alt={item.representativeName}
-                    width={40}
-                    height={40}
-                    className="rounded-full object-cover"
-                  />
+                 <Image
+                   src={item.author.avatar ?? '/default-avatar.png'}
+                   alt={item.author.name}
+                   width={40}
+                   height={40}
+                   className="rounded-full object-cover"
+                 />
                   <div className="absolute -bottom-1 -right-1">
-                    {getContentTypeIcon(item.contentType)}
+                    {getContentTypeIcon(item.type)}
                   </div>
                 </div>
                 
                 <div className="flex-1">
                   <div className="flex items-center space-x-2">
-                    <h3 className="font-semibold text-gray-900">{item.representativeName}</h3>
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getPartyColor(item.representativeParty)}`}>
-                      {item.representativeParty}
+                    <h3 className="font-semibold text-gray-900">{item.author.name}</h3>
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getPartyColor(item.source.name)}`}>
+                      {item.source.name}
                     </span>
                   </div>
-                  <p className="text-sm text-gray-500">{item.representativeOffice}</p>
+                  <p className="text-sm text-gray-500">{item.category}</p>
                 </div>
                 
                 <div className="text-right">
-                  <p className="text-sm text-gray-500">{formatDate(item.date)}</p>
+                  <p className="text-sm text-gray-500">{formatDate(new Date(item.publishedAt))}</p>
                 </div>
               </div>
             </div>
@@ -376,14 +306,14 @@ export default function SocialFeed({
             {/* Content */}
             <div className="p-4">
               <h4 className="font-semibold text-gray-900 mb-2">{item.title}</h4>
-              {item.description && (
-                <p className="text-gray-600 mb-4">{item.description}</p>
+              {item.summary && (
+                <p className="text-gray-600 mb-4">{item.summary}</p>
               )}
               
-              {item.imageUrl && (
+              {item.metadata.image && (
                 <div className="relative mb-4">
                   <Image
-                    src={item.imageUrl}
+                    src={item.metadata.image}
                     alt={item.title}
                     width={400}
                     height={300}
@@ -400,18 +330,18 @@ export default function SocialFeed({
                   <button
                     onClick={() => handleLike(item.id)}
                     className={`flex items-center space-x-2 transition-colors ${
-                      likedItems.has(item.id) 
+                      item.userInteraction.liked 
                         ? 'text-red-500' 
                         : 'text-gray-500 hover:text-red-500'
                     }`}
                   >
-                    {likedItems.has(item.id) ? (
+                    {item.userInteraction.liked ? (
                       <HeartSolidIcon className="w-5 h-5" />
                     ) : (
                       <HeartIcon className="w-5 h-5" />
                     )}
                     <span className="text-sm font-medium">
-                      {item.engagementMetrics.likes}
+                      {item.engagement.likes}
                     </span>
                   </button>
                   
@@ -421,7 +351,7 @@ export default function SocialFeed({
                   >
                     <ChatBubbleLeftIcon className="w-5 h-5" />
                     <span className="text-sm font-medium">
-                      {item.engagementMetrics.comments}
+                      {item.engagement.comments}
                     </span>
                   </button>
                   
@@ -431,7 +361,7 @@ export default function SocialFeed({
                   >
                     <ShareIcon className="w-5 h-5" />
                     <span className="text-sm font-medium">
-                      {item.engagementMetrics.shares}
+                      {item.engagement.shares}
                     </span>
                   </button>
                 </div>
@@ -439,12 +369,12 @@ export default function SocialFeed({
                 <button
                   onClick={() => handleBookmark(item.id)}
                   className={`transition-colors ${
-                    bookmarkedItems.has(item.id) 
+                    item.userInteraction.bookmarked 
                       ? 'text-blue-500' 
                       : 'text-gray-500 hover:text-blue-500'
                   }`}
                 >
-                  {bookmarkedItems.has(item.id) ? (
+                  {item.userInteraction.bookmarked ? (
                     <BookmarkSolidIcon className="w-5 h-5" />
                   ) : (
                     <BookmarkIcon className="w-5 h-5" />
@@ -465,7 +395,7 @@ export default function SocialFeed({
       )}
 
       {/* End of feed */}
-      {!hasMore && feedItems.length > 0 && (
+      {!hasMore && feeds.length > 0 && (
         <div className="text-center py-8 text-gray-500">
           <p>You&apos;ve reached the end of the feed</p>
           <p className="text-sm mt-1">Check back later for more updates</p>
@@ -473,9 +403,11 @@ export default function SocialFeed({
       )}
 
       {/* Scroll to top button */}
-      {feedItems.length > 5 && (
+      {feeds.length > 5 && (
         <button
-          onClick={() => feedRef.current?.scrollTo({ top: 0, behavior: 'smooth' })}
+          onClick={() => {
+            feedRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+          }}
           className="fixed bottom-4 right-4 p-3 bg-blue-500 text-white rounded-full shadow-lg hover:bg-blue-600 transition-colors"
         >
           <ChevronUpIcon className="w-6 h-6" />

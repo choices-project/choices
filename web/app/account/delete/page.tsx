@@ -1,22 +1,23 @@
 'use client'
 
-import { useState, useCallback, useEffect, useContext } from 'react'
+import { ArrowLeft, Trash2, Download, AlertTriangle, Shield, User, Vote, FileText, Clock, CheckCircle, XCircle, AlertCircle } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import { AuthContext } from '@/contexts/AuthContext'
+import { useState, useCallback, useEffect } from 'react'
+
 
 // UI Components
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { useUser, useUserLoading, useUserActions } from '@/lib/stores'
 
 // Icons
-import { ArrowLeft, Trash2, Download, AlertTriangle, Shield, User, Vote, FileText, Clock, CheckCircle, XCircle, AlertCircle } from 'lucide-react'
 
 // Utilities
 import { devLog } from '@/lib/utils/logger'
 
-type UserData = {
+interface UserData {
   profile: {
     displayname: string
     email: string
@@ -45,7 +46,7 @@ type UserData = {
   }>
 }
 
-type DeletionStep = {
+interface DeletionStep {
   id: string
   title: string
   description: string
@@ -55,11 +56,9 @@ type DeletionStep = {
 
 export default function AccountDeletionPage() {
   const router = useRouter()
-  const authContext = useContext(AuthContext)
-  
-  // Extract user and signOut early to avoid "used before declaration" errors
-  const user = authContext?.user
-  const signOut = authContext?.signOut
+  const user = useUser()
+  const isUserLoading = useUserLoading()
+  const { signOut } = useUserActions()
   
   // All hooks must be called at the top level
   const [userData, setUserData] = useState<UserData | null>(null)
@@ -230,7 +229,7 @@ export default function AccountDeletionPage() {
   const canDelete = deletionSteps.every(step => step.completed || !step.required)
 
   // Handle case where auth context is not available during pre-rendering
-  if (!authContext || !user || !signOut) {
+  if (!user || !signOut) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">

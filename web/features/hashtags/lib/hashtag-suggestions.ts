@@ -10,9 +10,11 @@
  */
 
 import { createClient } from '@supabase/supabase-js';
+
 import type {
   HashtagSuggestion,
-  HashtagCategory
+  HashtagCategory,
+  Hashtag
 } from '../types';
 import {
   extractHashtagsFromText
@@ -115,19 +117,23 @@ export async function getAutoCompleteSuggestions(
     if (error) throw error;
     
     // Convert to suggestions
-    const suggestions: HashtagSuggestion[] = (hashtags || []).map(hashtag => ({
-      hashtag,
-      reason: 'Auto-complete match',
-      confidence: calculateMatchConfidence(normalizedQuery, hashtag.name),
-      source: 'search' as const,
-      metadata: {
-        trending_score: hashtag.trending_score,
-        related_hashtags: hashtag.related_hashtags,
-        category_match: true,
-        user_history: false,
-        social_proof: hashtag.usage_count || 0
-      }
-    }));
+    const suggestions: HashtagSuggestion[] = (hashtags || []).map(hashtag => {
+      const confidence = calculateMatchConfidence(normalizedQuery, hashtag.name);
+      return {
+        hashtag: hashtag as Hashtag,
+        reason: 'Auto-complete match',
+        confidence,
+        confidence_score: confidence,
+        source: 'search' as const,
+        metadata: {
+          trending_score: hashtag.trend_score,
+          related_hashtags: [],
+          category_match: true,
+          user_history: false,
+          social_proof: hashtag.usage_count || 0
+        }
+      };
+    });
     
     // Sort by confidence and usage
     const rankedSuggestions = suggestions
@@ -189,13 +195,14 @@ export async function getRelatedHashtags(
     // Add category-based suggestions
     (categoryHashtags || []).forEach(relatedHashtag => {
       suggestions.push({
-        hashtag: relatedHashtag,
+        hashtag: relatedHashtag as Hashtag,
         reason: `Same category: ${hashtag.category}`,
         confidence: 0.7,
+        confidence_score: 0.7,
         source: 'category' as const,
         metadata: {
-          trending_score: relatedHashtag.trending_score,
-          related_hashtags: relatedHashtag.related_hashtags,
+          trending_score: relatedHashtag.trend_score,
+          related_hashtags: [],
           category_match: true,
           user_history: false,
           social_proof: relatedHashtag.usage_count || 0
@@ -212,6 +219,7 @@ export async function getRelatedHashtags(
           reason: `Frequently used together (${coOccur.co_occurrence_count} times)`,
           confidence: Math.min(0.9, coOccur.co_occurrence_count / 100),
           confidence_score: Math.min(0.9, coOccur.co_occurrence_count / 100),
+          source: 'related' as const,
           category: hashtag.category,
           usage_count: hashtag.usage_count || 0,
           is_trending: hashtag.is_trending || false,
@@ -251,13 +259,14 @@ export async function getTrendingSuggestions(
     if (error) throw error;
     
     return (trending || []).map(hashtag => ({
-      hashtag,
+      hashtag: hashtag as Hashtag,
       reason: 'Currently trending',
       confidence: 0.8,
+      confidence_score: 0.8,
       source: 'trending' as const,
       metadata: {
-        trending_score: hashtag.trending_score,
-        related_hashtags: hashtag.related_hashtags,
+        trending_score: hashtag.trend_score,
+        related_hashtags: [],
         category_match: false,
         user_history: false,
         social_proof: hashtag.usage_count || 0
@@ -307,13 +316,14 @@ async function getContentBasedSuggestions(
     
     (hashtags || []).forEach(hashtag => {
       suggestions.push({
-        hashtag,
+        hashtag: hashtag as Hashtag,
         reason: `Related to "${keyword}"`,
         confidence: 0.6,
+        confidence_score: 0.6,
         source: 'related' as const,
         metadata: {
-          trending_score: hashtag.trending_score,
-          related_hashtags: hashtag.related_hashtags,
+          trending_score: hashtag.trend_score,
+          related_hashtags: [],
           category_match: false,
           user_history: false,
           social_proof: hashtag.usage_count || 0
@@ -341,13 +351,14 @@ async function getCategoryBasedSuggestions(
   if (error) throw error;
   
   return (hashtags || []).map(hashtag => ({
-    hashtag,
+    hashtag: hashtag as Hashtag,
     reason: `Popular in ${category}`,
     confidence: 0.7,
+    confidence_score: 0.7,
     source: 'category' as const,
     metadata: {
-      trending_score: hashtag.trending_score,
-      related_hashtags: hashtag.related_hashtags,
+      trending_score: hashtag.trend_score,
+      related_hashtags: [],
       category_match: true,
       user_history: false,
       social_proof: hashtag.usage_count || 0
@@ -375,13 +386,14 @@ async function getRelatedSuggestions(
   return (coOccurring || []).map(coOccur => {
     const hashtag = Array.isArray(coOccur.hashtags) ? coOccur.hashtags[0] : coOccur.hashtags;
     return {
-      hashtag,
+      hashtag: hashtag as Hashtag,
       reason: `Related to your interests`,
       confidence: Math.min(0.9, coOccur.co_occurrence_count / 50),
+      confidence_score: Math.min(0.9, coOccur.co_occurrence_count / 50),
       source: 'personalized' as const,
       metadata: {
-        trending_score: hashtag.trending_score,
-        related_hashtags: hashtag.related_hashtags,
+        trending_score: hashtag.trend_score,
+        related_hashtags: [],
         category_match: false,
         user_history: true,
         social_proof: hashtag.usage_count || 0
@@ -426,9 +438,10 @@ async function getBehaviorBasedSuggestions(
     
     if (hashtag) {
       suggestions.push({
-        hashtag,
+        hashtag: hashtag as Hashtag,
         reason: `Based on your activity`,
         confidence: Math.min(0.8, engagementCount / 10),
+        confidence_score: Math.min(0.8, engagementCount / 10),
         source: 'personalized' as const,
         metadata: {
           trending_score: hashtag.trending_score,
@@ -483,21 +496,21 @@ function calculateMatchConfidence(query: string, hashtagName: string): number {
 function calculateEditDistance(str1: string, str2: string): number {
   const matrix: number[][] = Array(str2.length + 1).fill(0).map(() => Array(str1.length + 1).fill(0));
   
-  for (let i = 0; i <= str1.length; i++) matrix[0][i] = i;
-  for (let j = 0; j <= str2.length; j++) matrix[j][0] = j;
+  for (let i = 0; i <= str1.length; i++) matrix[0]![i] = i;
+  for (let j = 0; j <= str2.length; j++) matrix[j]![0] = j;
   
   for (let j = 1; j <= str2.length; j++) {
     for (let i = 1; i <= str1.length; i++) {
       const cost = str1[i - 1] === str2[j - 1] ? 0 : 1;
-      matrix[j][i] = Math.min(
-        matrix[j][i - 1] + 1,
-        matrix[j - 1][i] + 1,
-        matrix[j - 1][i - 1] + cost
+      matrix[j]![i] = Math.min(
+        (matrix[j]![i - 1] ?? 0) + 1,
+        (matrix[j - 1]![i] ?? 0) + 1,
+        (matrix[j - 1]![i - 1] ?? 0) + cost
       );
     }
   }
   
-  return matrix[str2.length][str1.length];
+  return matrix[str2.length]![str1.length] ?? 0;
 }
 
 function deduplicateSuggestions(suggestions: HashtagSuggestion[]): HashtagSuggestion[] {

@@ -13,10 +13,11 @@
 // import { readFileSync, readdirSync, statSync } from 'fs';
 // import { join, extname } from 'path';
 // import { load } from 'js-yaml';
-import { CurrentElectorateVerifier } from './current-electorate-verifier';
 import { withOptional } from '@/lib/utils/objects';
 
-export type OpenStatesPerson = {
+import { CurrentElectorateVerifier } from './current-electorate-verifier';
+
+export interface OpenStatesPerson {
   id: string;
   name: string;
   given_name?: string;
@@ -59,7 +60,7 @@ export type OpenStatesPerson = {
   extras?: Record<string, any>;
 }
 
-export type OpenStatesIntegrationConfig = {
+export interface OpenStatesIntegrationConfig {
   dataPath: string;
   currentDate: Date;
 }
@@ -160,7 +161,7 @@ export default class OpenStatesIntegration {
               const content = fs.readFileSync(filePath, 'utf8');
               const person = yaml.load(content) as OpenStatesPerson;
               
-              if (!person || !person.name) {
+              if (!person?.name) {
                 console.log(`   ⚠️  Skipping invalid person data in ${file}`);
                 continue;
               }
@@ -199,7 +200,7 @@ export default class OpenStatesIntegration {
               const content = fs.readFileSync(filePath, 'utf8');
               const committee = yaml.load(content) as any;
               
-              if (committee && committee.members) {
+              if (committee?.members) {
                 console.log(`   📋 Processing committee: ${committee.name || 'Unknown'} (${committee.members.length} members)`);
                 // Extract committee member information
                 for (const member of committee.members) {
@@ -224,7 +225,7 @@ export default class OpenStatesIntegration {
                           member_role: member.role || 'member'
                         } as any]
                       };
-                      currentPeople.push(person as OpenStatesPerson);
+                      currentPeople.push(person);
                       console.log(`   📋 Created new person entry for committee member: ${member.name}`);
                     } else {
                       // Add committee role to existing person

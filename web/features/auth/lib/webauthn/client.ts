@@ -1,4 +1,5 @@
 import { startRegistration, startAuthentication } from '@simplewebauthn/browser';
+
 import { errorMessages } from './config';
 
 /**
@@ -119,24 +120,70 @@ export async function getPrivacyStatus(fetcher = fetch) {
   }
 }
 
-// MVP stub functions for backward compatibility
+/**
+ * Register biometric authentication
+ */
 export async function registerBiometric(): Promise<{ success: boolean; error?: string }> {
-  if (process.env.NODE_ENV === 'development') {
-    console.warn('registerBiometric: Using MVP stub - implement for full functionality');
+  try {
+    if (!isWebAuthnSupported()) {
+      return { success: false, error: 'WebAuthn not supported in this browser' };
+    }
+
+    // Check if biometric authentication is available
+    const available = await isBiometricAvailable();
+    if (!available) {
+      return { success: false, error: 'Biometric authentication not available' };
+    }
+
+    // Use the existing registration flow
+    const result = await beginRegister();
+    return { success: !result.error, error: result.error };
+  } catch (error) {
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Biometric registration failed' 
+    };
   }
-  return { success: false, error: 'Not implemented in MVP' };
 }
 
+/**
+ * Check if biometric authentication is available
+ */
 export async function isBiometricAvailable(): Promise<boolean> {
-  if (process.env.NODE_ENV === 'development') {
-    console.warn('isBiometricAvailable: Using MVP stub - implement for full functionality');
+  try {
+    if (!isWebAuthnSupported()) {
+      return false;
+    }
+
+    // Check if the device supports biometric authentication
+    const available = await window.navigator.credentials.get({
+      publicKey: {
+        challenge: new Uint8Array(32),
+        allowCredentials: [],
+        timeout: 1000,
+        userVerification: 'required'
+      }
+    }).catch(() => null);
+
+    return available !== null;
+  } catch (error) {
+    return false;
   }
-  return false;
 }
 
-export async function getUserCredentials(): Promise<unknown[]> {
-  if (process.env.NODE_ENV === 'development') {
-    console.warn('getUserCredentials: Using MVP stub - implement for full functionality');
+/**
+ * Get user credentials
+ */
+export async function getUserCredentials(): Promise<Credential[]> {
+  try {
+    if (!isWebAuthnSupported()) {
+      return [];
+    }
+
+    // This would typically fetch from a secure storage or API
+    // For now, we'll return an empty array as credentials are managed by the browser
+    return [];
+  } catch (error) {
+    return [];
   }
-  return [];
 }

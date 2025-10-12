@@ -21,7 +21,7 @@
 // TYPES AND INTERFACES
 // ============================================================================
 
-export type WebAuthnCredential = {
+export interface WebAuthnCredential {
   id: string;
   type: 'public-key';
   rawId: ArrayBuffer;
@@ -29,7 +29,7 @@ export type WebAuthnCredential = {
   clientExtensionResults: AuthenticationExtensionsClientOutputs;
 }
 
-export type UserProfile = {
+export interface UserProfile {
   id: string;
   accountAge: number; // milliseconds since account creation
   responseEntropy: number; // measure of response diversity
@@ -40,7 +40,7 @@ export type UserProfile = {
   trustTier: 'T0' | 'T1' | 'T2' | 'T3';
 }
 
-export type ProofOfPersonhoodResult = {
+export interface ProofOfPersonhoodResult {
   verified: boolean;
   confidence: number; // 0-1 scale
   reputationScore: number; // 0-1 scale
@@ -53,7 +53,7 @@ export type ProofOfPersonhoodResult = {
   };
 }
 
-export type ConstituentStatus = {
+export interface ConstituentStatus {
   verified: boolean;
   jurisdiction: string;
   credential: string; // blind-signed credential
@@ -61,7 +61,7 @@ export type ConstituentStatus = {
   verificationMethod: 'address' | 'voter-registration' | 'government-id';
 }
 
-export type ReputationMetrics = {
+export interface ReputationMetrics {
   ageScore: number;
   consistencyScore: number;
   activityScore: number;
@@ -95,7 +95,7 @@ export class ProofOfPersonhoodManager {
 
       const credential = await navigator.credentials.create({
         publicKey: {
-          challenge: challenge,
+          challenge,
           rp: {
             id: this.rpId,
             name: this.rpName
@@ -147,7 +147,7 @@ export class ProofOfPersonhoodManager {
 
       const credential = await navigator.credentials.get({
         publicKey: {
-          challenge: challenge,
+          challenge,
           allowCredentials: [{
             type: 'public-key',
             id: credentialIdBuffer
@@ -195,7 +195,7 @@ export class ProofOfPersonhoodManager {
       const challenge = this.generateChallenge();
       const credential = await navigator.credentials.create({
         publicKey: {
-          challenge: challenge,
+          challenge,
           rp: { name: this.rpName },
           user: {
             id: new TextEncoder().encode('presence-check'),

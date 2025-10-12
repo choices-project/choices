@@ -12,10 +12,10 @@
 
 'use client';
 
-import React, { useRef, useEffect, useCallback, useState } from 'react';
 import { ChevronUpIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
+import React, { useRef, useEffect, useCallback, useState } from 'react';
 
-type InfiniteScrollProps = {
+interface InfiniteScrollProps {
   children: React.ReactNode;
   onLoadMore: () => Promise<void>;
   hasMore: boolean;
@@ -29,7 +29,7 @@ type InfiniteScrollProps = {
   loadingComponent?: React.ReactNode;
   endComponent?: React.ReactNode;
   scrollToTopThreshold?: number;
-};
+}
 
 export default function InfiniteScroll({
   children,

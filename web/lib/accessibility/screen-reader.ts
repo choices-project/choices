@@ -23,20 +23,20 @@
 
 import { withOptional } from '@/lib/utils/objects';
 
-export type ScreenReaderAnnouncement = {
+export interface ScreenReaderAnnouncement {
   message: string;
   priority: 'polite' | 'assertive';
   duration?: number;
   id?: string;
 }
 
-export type FocusManagement = {
+export interface FocusManagement {
   element: HTMLElement;
   previousElement?: HTMLElement;
   restoreFocus?: boolean;
 }
 
-export type ARIAState = {
+export interface ARIAState {
   expanded?: boolean;
   selected?: boolean;
   checked?: boolean;
@@ -203,7 +203,7 @@ export class ScreenReaderSupport {
    */
   static removeLiveRegion(id: string): void {
     const liveRegion = this.liveRegions.get(id);
-    if (liveRegion && liveRegion.parentNode) {
+    if (liveRegion?.parentNode) {
       liveRegion.parentNode.removeChild(liveRegion);
       this.liveRegions.delete(id);
     }
@@ -246,7 +246,7 @@ export class ScreenReaderSupport {
    */
   static restoreFocus(): void {
     const previousElement = this.focusHistory.pop();
-    if (previousElement && previousElement.focus) {
+    if (previousElement?.focus) {
       previousElement.focus();
     }
   }
@@ -458,7 +458,7 @@ export class ScreenReaderSupport {
       '[contenteditable="true"]'
     ];
     
-    return Array.from(container.querySelectorAll(focusableSelectors.join(', '))) as HTMLElement[];
+    return Array.from(container.querySelectorAll(focusableSelectors.join(', ')));
   }
 
   /**

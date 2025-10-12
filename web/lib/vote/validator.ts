@@ -9,12 +9,13 @@
  */
 
 import { devLog } from '@/lib/utils/logger';
+
 import { getSupabaseServerClient } from '../../utils/supabase/server';
+
 import type { 
   VoteData, 
   PollData, 
-  VoteValidation,
-  VotingMethod
+  VoteValidation
 } from './types';
 
 export class VoteValidator {
@@ -122,7 +123,7 @@ export class VoteValidator {
    * Validate voting method specific data
    */
   private async validateVotingMethod(voteData: VoteData, poll: PollData): Promise<VoteValidation> {
-    const method = poll.votingMethod as VotingMethod;
+    const method = poll.votingMethod;
 
     switch (method) {
       case 'single':

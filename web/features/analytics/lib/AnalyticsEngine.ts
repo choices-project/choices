@@ -11,7 +11,8 @@
 import { logger } from '@/lib/utils/logger';
 import { withOptional } from '@/lib/utils/objects';
 
-export type AnalyticsEvent = {
+export interface AnalyticsEvent {
+  [key: string]: unknown;
   type: string;
   category: string;
   action: string;
@@ -21,7 +22,7 @@ export type AnalyticsEvent = {
   sessionId?: string;
 }
 
-export type AnalyticsConfig = {
+export interface AnalyticsConfig {
   enabled: boolean;
   debug: boolean;
   batchSize: number;

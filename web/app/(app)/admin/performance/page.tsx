@@ -4,7 +4,6 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
 import { 
   Activity, 
   AlertTriangle, 
@@ -14,18 +13,20 @@ import {
   Shield,
   BarChart3
 } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+
 import { AdminLayout } from '../layout/AdminLayout';
 
-type PerformanceMetric = {
+interface PerformanceMetric {
   operation: string;
   duration: number;
   timestamp: string;
   success: boolean;
   error?: string;
   metadata?: Record<string, any>;
-};
+}
 
-type SystemPerformanceAlert = {
+interface SystemPerformanceAlert {
   id: string;
   type: 'slow_query' | 'high_error_rate' | 'memory_usage' | 'database_connection';
   severity: 'low' | 'medium' | 'high' | 'critical';
@@ -33,9 +34,9 @@ type SystemPerformanceAlert = {
   timestamp: string;
   resolved: boolean;
   metadata?: Record<string, any>;
-};
+}
 
-type PerformanceReport = {
+interface PerformanceReport {
   period: string;
   totalOperations: number;
   averageResponseTime: number;
@@ -43,7 +44,7 @@ type PerformanceReport = {
   slowestOperations: PerformanceMetric[];
   alerts: SystemPerformanceAlert[];
   recommendations: string[];
-};
+}
 
 export default function PerformanceMonitoringPage() {
   const [performanceData, setPerformanceData] = useState<PerformanceReport | null>(null);

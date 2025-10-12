@@ -1,18 +1,19 @@
 // NextRequest import removed - not used
 import { NextResponse } from 'next/server';
+
+import { handleError, getUserMessage, getHttpStatus } from '@/lib/error-handler';
 import { devLog } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
-import { handleError, getUserMessage, getHttpStatus } from '@/lib/error-handler';
 
-type PollData = {
+interface PollData {
   title: string;
   total_votes: number;
   participation_rate: number;
   options: unknown;
   status: string;
-};
+}
 
-type TopicData = {
+interface TopicData {
   id: string;
   title: string;
   description: string;
@@ -28,7 +29,7 @@ type TopicData = {
     engagement?: string;
     controversy?: string;
   };
-};
+}
 
 export async function GET() {
   try {
@@ -99,7 +100,7 @@ export async function GET() {
         category: topic.category,
         totalVotes: matchingPoll?.total_votes || Math.floor(Math.random() * 5000) + 1000,
         participationRate: matchingPoll?.participation_rate || Math.floor(Math.random() * 30) + 50,
-        options: options,
+        options,
         metadata: {
           engagement: topic.metadata?.engagement || 'medium',
           controversy: topic.metadata?.controversy || 'low',

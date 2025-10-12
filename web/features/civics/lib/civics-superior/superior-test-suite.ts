@@ -10,7 +10,7 @@ import { CurrentElectorateVerifier } from './current-electorate-verifier';
 import OpenStatesIntegration from './openstates-integration';
 import SuperiorDataPipeline from './superior-data-pipeline';
 
-export type TestResult = {
+export interface TestResult {
   testName: string;
   passed: boolean;
   error?: string;
@@ -18,7 +18,7 @@ export type TestResult = {
   details?: any;
 }
 
-export type TestSuiteResult = {
+export interface TestSuiteResult {
   totalTests: number;
   passedTests: number;
   failedTests: number;

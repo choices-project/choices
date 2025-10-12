@@ -5,11 +5,12 @@
  * providing enhanced security and privacy features.
  */
 
-import { isFeatureEnabled } from './feature-flags';
 import { devLog } from '@/lib/utils/logger';
 import { withOptional } from '@/lib/utils/objects';
 
-export type PWAUser = {
+import { isFeatureEnabled } from './feature-flags';
+
+export interface PWAUser {
   stableId: string;
   pseudonym: string;
   trustTier: 'T0' | 'T1' | 'T2' | 'T3';
@@ -27,7 +28,7 @@ export type PWAUser = {
   lastActive: Date;
 }
 
-export type PWAUserProfile = {
+export interface PWAUserProfile {
   stableId: string;
   pseudonym: string;
   trustTier: string;

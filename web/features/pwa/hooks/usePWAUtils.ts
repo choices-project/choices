@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+
 import { devLog } from '@/lib/utils/logger';
 
 // Import types from respective PWA modules
@@ -11,7 +12,7 @@ type PWAWebAuthn = any;
 type PrivacyStorage = any;
 // import type { PWAAnalytics } from '../lib/pwa-analytics'; // Archived PWA feature
 
-type PWAUtils = {
+interface PWAUtils {
   pwaAuth: PWAAuth;
   pwaManager: PWAManager;
   pwaAnalytics: null; // Archived PWA feature

@@ -1,9 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { logger } from '@/lib/utils/logger';
-import { usePWA } from '@/hooks/usePWA';
+
 import { initializeOfflineOutbox } from '@/features/pwa/lib/offline-outbox'
+import { usePWA } from '@/hooks/usePWA';
+import { logger } from '@/lib/utils/logger';
 
 export default function PWAInstaller() {
   const pwa = usePWA();

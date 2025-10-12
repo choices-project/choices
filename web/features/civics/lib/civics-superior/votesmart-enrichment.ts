@@ -118,14 +118,14 @@ export class VoteSmartEnrichment {
   private calculateEnrichedQuality(bio: any, ratings: any, positions: any, votingRecord: any) {
     let score = 50; // Base score from OpenStates
 
-    if (bio && bio.candidate) {
+    if (bio?.candidate) {
       if (bio.candidate.photo) score += 10;
       if (bio.candidate.birthDate) score += 5;
       if (bio.candidate.profession) score += 5;
     }
 
     if (ratings && ratings.length > 0) score += 15;
-    if (positions && positions.issue) score += 10;
+    if (positions?.issue) score += 10;
     if (votingRecord && votingRecord.length > 0) score += 10;
 
     return Math.min(score, 100);

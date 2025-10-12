@@ -23,7 +23,7 @@ import { withOptional } from '@/lib/utils/objects';
 // TYPES AND INTERFACES
 // ============================================================================
 
-export type UserProfile = {
+export interface UserProfile {
   id: string;
   age: number;
   education: string;
@@ -33,7 +33,7 @@ export type UserProfile = {
   demographics: Demographics;
 }
 
-export type Demographics = {
+export interface Demographics {
   ageGroup: string;
   education: string;
   location: string;
@@ -41,14 +41,14 @@ export type Demographics = {
   incomeBracket?: string;
 }
 
-export type VotingRecord = {
+export interface VotingRecord {
   pollId: string;
   ranking: string[];
   timestamp: Date;
   category: string;
 }
 
-export type AggregatedInsight = {
+export interface AggregatedInsight {
   type: 'cross-demographic' | 'geographic' | 'cross-interest' | 'similar-users';
   candidateId: string;
   candidateName: string;
@@ -59,7 +59,7 @@ export type AggregatedInsight = {
   privacyProtected: boolean;
 }
 
-export type SimilarUser = {
+export interface SimilarUser {
   type: 'aggregated';
   sharedInterests: string[];
   userCount: number;
@@ -72,7 +72,7 @@ export type SimilarUser = {
   };
 }
 
-export type ClusterInsight = {
+export interface ClusterInsight {
   clusterId: string;
   similarity: number;
   insights: AggregatedInsight[];
@@ -80,7 +80,7 @@ export type ClusterInsight = {
   privacyProtected: boolean;
 }
 
-export type PublicCentroid = {
+export interface PublicCentroid {
   id: string;
   coordinates: number[];
   userCount: number;
@@ -93,7 +93,7 @@ export type PublicCentroid = {
   };
 }
 
-export type CrossDemographicInsight = {
+export interface CrossDemographicInsight {
   candidateId: string;
   candidateName: string;
   confidence: number;
@@ -102,7 +102,7 @@ export type CrossDemographicInsight = {
   privacyProtected: boolean;
 }
 
-export type GeographicInsight = {
+export interface GeographicInsight {
   candidateId: string;
   candidateName: string;
   confidence: number;
@@ -111,7 +111,7 @@ export type GeographicInsight = {
   privacyProtected: boolean;
 }
 
-export type CrossInterestInsight = {
+export interface CrossInterestInsight {
   candidateId: string;
   candidateName: string;
   confidence: number;

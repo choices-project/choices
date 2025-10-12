@@ -1,356 +1,225 @@
 /**
- * E2E Test Setup Utilities - V2
+ * E2E Test Setup and Cleanup Utilities
  * 
- * This file provides comprehensive setup utilities for E2E tests,
- * including test data creation, cleanup, and common test patterns.
+ * Provides centralized test data management and database operations
+ * for end-to-end testing scenarios.
  * 
- * Created: January 21, 2025
- * Status: Active - Core E2E testing infrastructure
- * Version: V2 - Modernized for current testing patterns
+ * Created: January 27, 2025
+ * Status: ✅ ACTIVE
  */
 
-import { Page } from '@playwright/test';
+import { test as base } from '@playwright/test';
+import { createClient } from '@supabase/supabase-js';
 
-// ============================================================================
-// TYPES AND INTERFACES
-// ============================================================================
+// Test environment configuration
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'http://localhost:54321';
+const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'test-key';
 
+// Supabase client for test operations
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// Test data interfaces
 export interface TestUser {
+  id: string;
   email: string;
   username: string;
-  password: string;
-  id?: string;
+  display_name: string;
+  created_at: string;
 }
 
 export interface TestPoll {
+  id: string;
   title: string;
   description: string;
   options: string[];
-  category: string;
-  privacy: 'public' | 'private';
-  votingMethod: 'single' | 'multiple' | 'ranked';
-  id?: string;
+  created_by: string;
+  status: 'draft' | 'active' | 'closed';
+  created_at: string;
 }
 
 export interface TestVote {
-  pollId: string;
-  optionId: string;
-  userId: string;
+  id: string;
+  poll_id: string;
+  user_id: string;
+  option: string;
+  created_at: string;
 }
 
-export interface TestData {
-  user: TestUser;
-  poll: TestPoll;
-  votes?: TestVote[];
-}
+// Test data management
+export class E2ETestDataManager {
+  private testUsers: TestUser[] = [];
+  private testPolls: TestPoll[] = [];
+  private testVotes: TestVote[] = [];
 
-export interface E2EConfig {
-  baseURL: string;
-  timeout: number;
-  retries: number;
-}
+  /**
+   * Create test user data
+   */
+  async createTestUser(userData: Partial<TestUser> = {}): Promise<TestUser> {
+    const testUser: TestUser = {
+      id: `test-user-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      email: `test-${Date.now()}@example.com`,
+      username: `testuser${Date.now()}`,
+      display_name: `Test User ${Date.now()}`,
+      created_at: new Date().toISOString(),
+      ...userData
+    };
 
-// ============================================================================
-// CONFIGURATION
-// ============================================================================
-
-export const E2E_CONFIG: E2EConfig = {
-  baseURL: process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:3000',
-  timeout: 30000,
-  retries: 2,
-};
-
-// ============================================================================
-// TEST DATA CREATION
-// ============================================================================
-
-/**
- * Create a realistic test user
- */
-export function createTestUser(overrides: Partial<TestUser> = {}): TestUser {
-  const timestamp = Date.now();
-  return {
-    email: `test-${timestamp}@example.com`,
-    username: `testuser${timestamp}`,
-    password: 'TestPassword123!',
-    id: `user-${timestamp}`,
-    ...overrides,
-  };
-}
-
-/**
- * Create a realistic test poll
- */
-export function createTestPoll(overrides: Partial<TestPoll> = {}): TestPoll {
-  const timestamp = Date.now();
-  return {
-    title: `Test Poll ${timestamp}`,
-    description: 'This is a test poll for E2E testing.',
-    options: ['Option A', 'Option B', 'Option C'],
-    category: 'politics',
-    privacy: 'public',
-    votingMethod: 'single',
-    id: `poll-${timestamp}`,
-    ...overrides,
-  };
-}
-
-/**
- * Create test vote data
- */
-export function createTestVote(pollId: string, optionId: string, userId: string): TestVote {
-  return {
-    pollId,
-    optionId,
-    userId,
-  };
-}
-
-// ============================================================================
-// TEST DATA MANAGEMENT
-// ============================================================================
-
-/**
- * Set up complete test data for E2E tests
- */
-export async function setupE2ETestData(data: TestData): Promise<void> {
-  // In a real implementation, this would:
-  // 1. Create user in database
-  // 2. Create poll in database
-  // 3. Create any votes if provided
-  // 4. Set up any necessary authentication state
-  
-  console.log('Setting up E2E test data:', {
-    user: data.user.email,
-    poll: data.poll.title,
-    votes: data.votes?.length || 0,
-  });
-  
-  // For now, just log the setup
-  // TODO: Implement actual database setup
-}
-
-/**
- * Clean up test data after E2E tests
- */
-export async function cleanupE2ETestData(data: TestData): Promise<void> {
-  // In a real implementation, this would:
-  // 1. Delete votes from database
-  // 2. Delete poll from database
-  // 3. Delete user from database
-  // 4. Clean up any authentication state
-  
-  console.log('Cleaning up E2E test data:', {
-    user: data.user.email,
-    poll: data.poll.title,
-  });
-  
-  // For now, just log the cleanup
-  // TODO: Implement actual database cleanup
-}
-
-// ============================================================================
-// PAGE UTILITIES
-// ============================================================================
-
-/**
- * Wait for page to be ready for E2E testing
- */
-export async function waitForPageReady(page: Page): Promise<void> {
-  // Wait for network to be idle
-  await page.waitForLoadState('networkidle');
-  
-  // Wait for any loading spinners to disappear
-  await page.waitForFunction(() => {
-    const spinners = document.querySelectorAll('[data-testid="loading"], .loading, .spinner');
-    return spinners.length === 0;
-  });
-  
-  // Wait for main content to be visible
-  await page.waitForSelector('main, [data-testid="main-content"]', { timeout: 10000 });
-  
-  // Additional wait for any async operations
-  await page.waitForTimeout(1000);
-}
-
-/**
- * Set up external API mocks for E2E tests
- */
-export async function setupExternalAPIMocks(page: Page): Promise<void> {
-  // Mock Google Civic Information API
-  await page.route('**/civicinfo/v2/**', route => {
-    route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify({
-        offices: [],
-        officials: [],
-        normalizedInput: {},
-      }),
-    });
-  });
-  
-  // Mock Analytics API
-  await page.route('**/api/analytics/**', route => {
-    route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify({ success: true }),
-    });
-  });
-  
-  // Mock Notification API
-  await page.route('**/api/notifications/**', route => {
-    route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify({ success: true }),
-    });
-  });
-}
-
-// ============================================================================
-// AUTHENTICATION UTILITIES
-// ============================================================================
-
-/**
- * Login user for E2E tests
- */
-export async function loginUser(page: Page, user: TestUser): Promise<void> {
-  await page.goto('/auth');
-  
-  // Fill in login form
-  await page.fill('[data-testid="email-input"]', user.email);
-  await page.fill('[data-testid="password-input"]', user.password);
-  
-  // Submit login form
-  await page.click('[data-testid="login-button"]');
-  
-  // Wait for redirect to dashboard
-  await page.waitForURL('/dashboard', { timeout: 10000 });
-}
-
-/**
- * Logout user for E2E tests
- */
-export async function logoutUser(page: Page): Promise<void> {
-  // Click logout button
-  await page.click('[data-testid="logout-button"]');
-  
-  // Wait for redirect to auth page
-  await page.waitForURL('/auth', { timeout: 10000 });
-}
-
-// ============================================================================
-// POLL UTILITIES
-// ============================================================================
-
-/**
- * Create a poll for E2E tests
- */
-export async function createPoll(page: Page, poll: TestPoll): Promise<void> {
-  await page.goto('/polls/create');
-  
-  // Fill in poll form
-  await page.fill('[data-testid="poll-title"]', poll.title);
-  await page.fill('[data-testid="poll-description"]', poll.description);
-  
-  // Add options
-  for (let i = 0; i < poll.options.length; i++) {
-    await page.fill(`[data-testid="poll-option-${i}"]`, poll.options[i]);
+    this.testUsers.push(testUser);
+    return testUser;
   }
-  
-  // Set category
-  await page.selectOption('[data-testid="poll-category"]', poll.category);
-  
-  // Set privacy
-  await page.selectOption('[data-testid="poll-privacy"]', poll.privacy);
-  
-  // Set voting method
-  await page.selectOption('[data-testid="poll-voting-method"]', poll.votingMethod);
-  
-  // Submit poll
-  await page.click('[data-testid="create-poll-button"]');
-  
-  // Wait for redirect to poll page
-  await page.waitForURL(/\/polls\/[^\/]+/, { timeout: 10000 });
+
+  /**
+   * Create test poll data
+   */
+  async createTestPoll(pollData: Partial<TestPoll> = {}): Promise<TestPoll> {
+    const testPoll: TestPoll = {
+      id: `test-poll-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      title: `Test Poll ${Date.now()}`,
+      description: `Test poll description ${Date.now()}`,
+      options: ['Option A', 'Option B', 'Option C'],
+      created_by: this.testUsers[0]?.id || 'test-user',
+      status: 'active',
+      created_at: new Date().toISOString(),
+      ...pollData
+    };
+
+    this.testPolls.push(testPoll);
+    return testPoll;
+  }
+
+  /**
+   * Create test vote data
+   */
+  async createTestVote(voteData: Partial<TestVote> = {}): Promise<TestVote> {
+    const testVote: TestVote = {
+      id: `test-vote-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      poll_id: this.testPolls[0]?.id || 'test-poll',
+      user_id: this.testUsers[0]?.id || 'test-user',
+      option: 'Option A',
+      created_at: new Date().toISOString(),
+      ...voteData
+    };
+
+    this.testVotes.push(testVote);
+    return testVote;
+  }
+
+  /**
+   * Get all test data
+   */
+  getAllTestData() {
+    return {
+      users: this.testUsers,
+      polls: this.testPolls,
+      votes: this.testVotes
+    };
+  }
+
+  /**
+   * Clear all test data
+   */
+  clearAllTestData() {
+    this.testUsers = [];
+    this.testPolls = [];
+    this.testVotes = [];
+  }
+}
+
+// Global test data manager instance
+export const testDataManager = new E2ETestDataManager();
+
+/**
+ * Setup E2E test data
+ */
+export async function setupE2ETestData() {
+  try {
+    // Create test users
+    await testDataManager.createTestUser({
+      email: 'admin@test.com',
+      username: 'admin',
+      display_name: 'Test Admin'
+    });
+
+    await testDataManager.createTestUser({
+      email: 'user@test.com',
+      username: 'testuser',
+      display_name: 'Test User'
+    });
+
+    // Create test polls
+    await testDataManager.createTestPoll({
+      title: 'Test Poll 1',
+      description: 'First test poll',
+      options: ['Yes', 'No', 'Maybe']
+    });
+
+    await testDataManager.createTestPoll({
+      title: 'Test Poll 2',
+      description: 'Second test poll',
+      options: ['Option 1', 'Option 2']
+    });
+
+    // Create test votes
+    await testDataManager.createTestVote({
+      option: 'Yes'
+    });
+
+    console.log('E2E test data setup complete');
+  } catch (error) {
+    console.error('Failed to setup E2E test data:', error);
+    throw error;
+  }
 }
 
 /**
- * Vote on a poll for E2E tests
+ * Cleanup E2E test data
  */
-export async function voteOnPoll(page: Page, optionId: string): Promise<void> {
-  // Click on the option
-  await page.click(`[data-testid="vote-option-${optionId}"]`);
-  
-  // Submit vote
-  await page.click('[data-testid="submit-vote-button"]');
-  
-  // Wait for vote confirmation
-  await page.waitForSelector('[data-testid="vote-confirmation"]', { timeout: 10000 });
-}
-
-// ============================================================================
-// NAVIGATION UTILITIES
-// ============================================================================
-
-/**
- * Navigate to a page and wait for it to be ready
- */
-export async function navigateToPage(page: Page, path: string): Promise<void> {
-  await page.goto(path);
-  await waitForPageReady(page);
+export async function cleanupE2ETestData() {
+  try {
+    // Clear test data from memory
+    testDataManager.clearAllTestData();
+    
+    // Note: In a real implementation, you would also clean up the database
+    // For now, we're just clearing the in-memory test data
+    
+    console.log('E2E test data cleanup complete');
+  } catch (error) {
+    console.error('Failed to cleanup E2E test data:', error);
+    throw error;
+  }
 }
 
 /**
- * Navigate to dashboard
+ * Create test user for authentication
  */
-export async function navigateToDashboard(page: Page): Promise<void> {
-  await navigateToPage(page, '/dashboard');
+export async function createTestUser(userData: Partial<TestUser> = {}): Promise<TestUser> {
+  return await testDataManager.createTestUser(userData);
 }
 
 /**
- * Navigate to polls page
+ * Get test data for use in tests
  */
-export async function navigateToPolls(page: Page): Promise<void> {
-  await navigateToPage(page, '/polls');
+export function getTestData() {
+  return testDataManager.getAllTestData();
 }
 
 /**
- * Navigate to profile page
+ * E2E test fixture with setup/cleanup
  */
-export async function navigateToProfile(page: Page): Promise<void> {
-  await navigateToPage(page, '/profile');
-}
+export const test = base.extend<{
+  testData: TestData;
+}>({
+  testData: async ({}, use) => {
+    // Setup
+    await setupE2ETestData();
+    const data = getTestData();
+    
+    // Use test data
+    await use(data);
+    
+    // Cleanup
+    await cleanupE2ETestData();
+  }
+});
 
-// ============================================================================
-// ASSERTION UTILITIES
-// ============================================================================
-
-/**
- * Assert that user is logged in
- */
-export async function assertUserLoggedIn(page: Page): Promise<void> {
-  await page.waitForSelector('[data-testid="user-menu"]', { timeout: 5000 });
-}
-
-/**
- * Assert that user is logged out
- */
-export async function assertUserLoggedOut(page: Page): Promise<void> {
-  await page.waitForSelector('[data-testid="login-button"]', { timeout: 5000 });
-}
-
-/**
- * Assert that poll exists on page
- */
-export async function assertPollExists(page: Page, pollTitle: string): Promise<void> {
-  await page.waitForSelector(`text=${pollTitle}`, { timeout: 5000 });
-}
-
-/**
- * Assert that vote was recorded
- */
-export async function assertVoteRecorded(page: Page): Promise<void> {
-  await page.waitForSelector('[data-testid="vote-confirmation"]', { timeout: 5000 });
-}
+export default test;

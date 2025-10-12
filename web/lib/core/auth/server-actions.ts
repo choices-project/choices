@@ -13,15 +13,16 @@
  * Status: Critical security enhancement
  */
 
-import { z } from 'zod'
 import { redirect } from 'next/navigation'
-import { logger } from '@/lib/utils/logger'
+import { z } from 'zod'
+
 import { 
   withIdempotency, 
   generateIdempotencyKey,
   type IdempotencyOptions 
 } from '@/lib/core/auth/idempotency'
 import { getSecurityConfig } from '@/lib/core/security/config'
+import { logger } from '@/lib/utils/logger'
 
 // Common validation schemas
 export const BaseActionSchema = z.object({
@@ -38,7 +39,7 @@ export const EmailSchema = z.string()
   .optional()
 
 // Server Action wrapper with security features
-export type ServerActionOptions = {
+export interface ServerActionOptions {
   requireAuth?: boolean
   requireAdmin?: boolean
   idempotency?: IdempotencyOptions
@@ -50,7 +51,7 @@ export type ServerActionOptions = {
   }
 }
 
-export type ServerActionContext = {
+export interface ServerActionContext {
   userId?: string
   userRole?: string
   sessionToken?: string
@@ -196,7 +197,7 @@ export function validateFormData<T>(
     return schema.parse(rawData)
   } catch (error) {
     if (error instanceof z.ZodError) {
-      const zodError = error as z.ZodError
+      const zodError = error
       const fieldErrors: Record<string, string> = {}
       
       zodError.issues.forEach((issue) => {

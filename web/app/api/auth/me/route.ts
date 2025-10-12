@@ -1,7 +1,7 @@
 // NextRequest import removed - not used
-import { getSupabaseServerClient } from '@/utils/supabase/server';
-import { logger } from '@/lib/utils/logger';
 import { createCorsResponse } from '@/lib/utils/cors';
+import { logger } from '@/lib/utils/logger';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 export const dynamic = 'force-dynamic'
 

@@ -1,12 +1,13 @@
 'use client'
 
-import { useState, useEffect } from 'react'
 import { Bell, BellOff, Settings, AlertCircle } from 'lucide-react'
+import { useState, useEffect } from 'react'
+
 import { usePWA } from '@/hooks/usePWA'
 import { logger } from '@/lib/utils/logger'
 import { withOptional } from '@/lib/utils/objects'
 
-type NotificationPreferencesProps = {
+interface NotificationPreferencesProps {
   className?: string
 }
 
@@ -47,7 +48,7 @@ export default function NotificationPreferences({ className = '' }: Notification
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to request notification permission.')
-      logger.error('Error requesting notification permission:', err)
+      logger.error('Error requesting notification permission:', err as Error)
     } finally {
       setIsLoading(false)
     }
@@ -69,7 +70,7 @@ export default function NotificationPreferences({ className = '' }: Notification
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to subscribe to push notifications.')
-      logger.error('Error subscribing to push notifications:', err)
+      logger.error('Error subscribing to push notifications:', err as Error)
     } finally {
       setIsLoading(false)
     }
@@ -91,7 +92,7 @@ export default function NotificationPreferences({ className = '' }: Notification
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to unsubscribe from push notifications.')
-      logger.error('Error unsubscribing from push notifications:', err)
+      logger.error('Error unsubscribing from push notifications:', err as Error)
     } finally {
       setIsLoading(false)
     }

@@ -58,7 +58,7 @@ export type ErrorCode =
 export type HttpStatusCode = 
   | 400 | 401 | 403 | 404 | 409 | 429 | 500 | 502 | 503 | 504;
 
-export type ErrorContext = {
+export interface ErrorContext {
   userId?: string;
   requestId?: string;
   endpoint?: string;
@@ -69,7 +69,7 @@ export type ErrorContext = {
   timestamp?: string;
 }
 
-export type ErrorDetails = {
+export interface ErrorDetails {
   field?: string;
   value?: unknown;
   constraint?: string;
@@ -78,7 +78,7 @@ export type ErrorDetails = {
   cause?: Error;
 }
 
-export type ErrorResponse = {
+export interface ErrorResponse {
   error: string;
   message: string;
   statusCode: HttpStatusCode;
@@ -127,7 +127,7 @@ export type ExternalServiceErrorDetails = {
   retryAfter?: number;
 } & ErrorDetails
 
-export type ErrorHandlerConfig = {
+export interface ErrorHandlerConfig {
   logErrors: boolean;
   includeStackTrace: boolean;
   sanitizeErrors: boolean;
@@ -136,7 +136,7 @@ export type ErrorHandlerConfig = {
   errorReportingEndpoint?: string;
 }
 
-export type ErrorMetrics = {
+export interface ErrorMetrics {
   totalErrors: number;
   errorsByCode: Record<ErrorCode, number>;
   errorsByEndpoint: Record<string, number>;
@@ -145,13 +145,13 @@ export type ErrorMetrics = {
   lastErrorAt: string;
 }
 
-export type ErrorBoundaryProps = {
+export interface ErrorBoundaryProps {
   fallback?: React.ComponentType<{ error: Error; resetError: () => void }>;
   onError?: (error: Error, errorInfo: React.ErrorInfo) => void;
   children: React.ReactNode;
 }
 
-export type ErrorBoundaryState = {
+export interface ErrorBoundaryState {
   hasError: boolean;
   error?: Error;
   errorInfo?: React.ErrorInfo;

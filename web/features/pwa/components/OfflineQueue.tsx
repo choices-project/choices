@@ -1,10 +1,11 @@
 'use client'
 
-import { useState, useEffect } from 'react'
 import { Clock, WifiOff } from 'lucide-react'
+import { useState, useEffect } from 'react'
+
 import { usePWA } from '@/hooks/usePWA'
 
-type OfflineQueueProps = {
+interface OfflineQueueProps {
   className?: string
 }
 

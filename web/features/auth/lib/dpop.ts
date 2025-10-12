@@ -12,13 +12,13 @@
 
 import { logger } from '@/lib/utils/logger';
 
-export type DPoPKeyPair = {
+export interface DPoPKeyPair {
   publicKey: CryptoKey
   privateKey: CryptoKey
   jkt: string
 }
 
-export type DPoPProof = {
+export interface DPoPProof {
   jti: string
   htm: string
   htu: string

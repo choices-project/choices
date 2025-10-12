@@ -7,13 +7,13 @@
  * @created September 9, 2025
  */
 
-export type EncryptionResult = {
+export interface EncryptionResult {
   encryptedData: ArrayBuffer;
   salt: Uint8Array;
   iv: Uint8Array;
 }
 
-export type DecryptionResult = {
+export interface DecryptionResult {
   decryptedData: unknown;
   success: boolean;
   error?: string;
@@ -71,7 +71,7 @@ export class UserEncryption {
     const encoded = new TextEncoder().encode(JSON.stringify(data));
     
     const encrypted = await crypto.subtle.encrypt(
-      { name: 'AES-GCM', iv: iv },
+      { name: 'AES-GCM', iv },
       this.userKey,
       encoded
     );
@@ -79,7 +79,7 @@ export class UserEncryption {
     return {
       encryptedData: encrypted,
       salt: this.salt!,
-      iv: iv
+      iv
     };
   }
 
@@ -156,7 +156,7 @@ export class EncryptionUtils {
     const bytes = new Uint8Array(buffer);
     let binary = '';
     for (let i = 0; i < bytes.byteLength; i++) {
-      binary += String.fromCharCode(bytes[i]!);
+      binary += String.fromCharCode(bytes[i] || 0);
     }
     return btoa(binary);
   }

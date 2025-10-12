@@ -4,19 +4,19 @@
  * Type definitions for WebAuthn functionality
  */
 
-export type WebAuthnCredential = {
+export interface WebAuthnCredential {
   id: string;
   type: 'public-key';
   transports: string[];
 }
 
-export type WebAuthnUser = {
+export interface WebAuthnUser {
   id: string;
   name: string;
   displayName: string;
 }
 
-export type WebAuthnOptions = {
+export interface WebAuthnOptions {
   challenge: string;
   rp: {
     name: string;
@@ -31,7 +31,7 @@ export type WebAuthnOptions = {
   attestation: string;
 }
 
-export type WebAuthnAttestation = {
+export interface WebAuthnAttestation {
   id: string;
   rawId: string;
   response: {

@@ -1,68 +1,21 @@
 'use client';
 
-import React, { useState } from 'react';
-
-type ReimportProgress = {
-  totalStates: number;
-  processedStates: number;
-  successfulStates: number;
-  failedStates: number;
-  totalRepresentatives: number;
-  federalRepresentatives: number;
-  stateRepresentatives: number;
-  errors: string[];
-  stateResults: Array<{
-    state: string;
-    success: boolean;
-    representatives: number;
-    duration?: string;
-    error?: string;
-  }>;
-  startTime: string;
-  endTime?: string;
-  duration?: string;
-  successRate?: string;
-}
+import React from 'react';
+import { 
+  useAdminReimportProgress,
+  useAdminReimportLogs,
+  useAdminIsReimportRunning,
+  useAdminReimportActions
+} from '@/lib/stores';
 
 export default function ComprehensiveReimport() {
-  const [isRunning, setIsRunning] = useState(false);
-  const [progress, setProgress] = useState<ReimportProgress | null>(null);
-  const [logs, setLogs] = useState<string[]>([]);
+  // Get state from adminStore
+  const progress = useAdminReimportProgress();
+  const logs = useAdminReimportLogs();
+  const isRunning = useAdminIsReimportRunning();
+  const { startReimport } = useAdminReimportActions();
 
-  const addLog = (message: string) => {
-    setLogs(prev => [...prev, `${new Date().toLocaleTimeString()}: ${message}`]);
-  };
 
-  const startReimport = async () => {
-    setIsRunning(true);
-    setProgress(null);
-    setLogs([]);
-    
-    addLog('🚀 Starting comprehensive reimport...');
-    
-    try {
-      const response = await fetch('/api/civics/comprehensive-reimport', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' }
-      });
-
-      const data = await response.json();
-      
-      if (data.success) {
-        setProgress(data.results);
-        addLog('✅ Comprehensive reimport completed successfully!');
-        addLog(`📊 Processed ${data.results.processedStates}/${data.results.totalStates} states`);
-        addLog(`📊 Added ${data.results.totalRepresentatives} representatives`);
-        addLog(`📊 Success rate: ${data.results.successRate}`);
-      } else {
-        addLog(`❌ Reimport failed: ${data.error}`);
-      }
-    } catch (error) {
-      addLog(`❌ Error: ${error}`);
-    } finally {
-      setIsRunning(false);
-    }
-  };
 
   const getProgressPercentage = () => {
     if (!progress) return 0;
@@ -204,21 +157,23 @@ export default function ComprehensiveReimport() {
       </div>
 
       {/* Final Results */}
-      {progress && progress.endTime && (
+      {progress && progress.processedStates === progress.totalStates && (
         <div className="mt-6 bg-green-50 rounded-lg p-6">
           <h3 className="text-lg font-semibold text-green-800 mb-4">🎉 Reimport Complete!</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="text-center">
-              <div className="text-3xl font-bold text-green-600">{progress.successRate}</div>
+              <div className="text-3xl font-bold text-green-600">
+                {progress.totalStates > 0 ? Math.round((progress.successfulStates / progress.totalStates) * 100) : 0}%
+              </div>
               <div className="text-sm text-green-700">Success Rate</div>
-            </div>
-            <div className="text-center">
-              <div className="text-3xl font-bold text-green-600">{progress.duration}</div>
-              <div className="text-sm text-green-700">Total Duration</div>
             </div>
             <div className="text-center">
               <div className="text-3xl font-bold text-green-600">{progress.totalRepresentatives}</div>
               <div className="text-sm text-green-700">Total Representatives</div>
+            </div>
+            <div className="text-center">
+              <div className="text-3xl font-bold text-green-600">{progress.successfulStates}</div>
+              <div className="text-sm text-green-700">Successful States</div>
             </div>
           </div>
         </div>

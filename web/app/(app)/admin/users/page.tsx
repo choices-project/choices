@@ -1,7 +1,8 @@
 'use client'
 
-import { T } from '@/lib/testing/testIds'
 import { Users, Ban, UserPlus } from 'lucide-react'
+
+import { T } from '@/lib/testing/testIds'
 
 export default function AdminUsersPage() {
   return (

@@ -8,8 +8,9 @@
  * Status: ✅ ACTIVE
  */
 
-import { type NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { type NextRequest, NextResponse } from 'next/server';
+
 import { createApiLogger } from '@/lib/utils/api-logger';
 import { CivicsCache } from '@/lib/utils/civics-cache';
 
@@ -89,9 +90,9 @@ export async function GET(request: NextRequest) {
     
     // Get heatmap data from database with k-anonymity
     const { data: heatmapData, error } = await supabase.rpc('get_heatmap_data', {
-      prefixes: prefixes,
+      prefixes,
       min_count: minCount,
-      precision: precision
+      precision
     });
 
     if (error) {
@@ -167,15 +168,20 @@ function generateGeohashPrefixes(bbox: number[], precision: number): string[] {
   const [minLng, minLat, maxLng, maxLat] = bbox;
   const prefixes: string[] = [];
   
+  // Validate bbox has all required values
+  if (minLng === undefined || minLat === undefined || maxLng === undefined || maxLat === undefined) {
+    throw new Error('Invalid bounding box: missing coordinates');
+  }
+  
   // Simple geohash generation for demo purposes
   // In production, this would use a proper geohash library
-  const lngStep = (maxLng! - minLng!) / 10;
-  const latStep = (maxLat! - minLat!) / 10;
+  const lngStep = (maxLng - minLng) / 10;
+  const latStep = (maxLat - minLat) / 10;
   
   for (let i = 0; i < 10; i++) {
     for (let j = 0; j < 10; j++) {
-      const lng = minLng! + (i * lngStep);
-      const lat = minLat! + (j * latStep);
+      const lng = minLng + (i * lngStep);
+      const lat = minLat + (j * latStep);
       const geohash = generateGeohash(lat, lng, precision);
       prefixes.push(geohash);
     }

@@ -1,18 +1,23 @@
 'use client';
 
-import React, { useEffect } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Sidebar } from './Sidebar';
-import { Header } from './Header';
-import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
+import React, { useEffect } from 'react';
 
-type AdminLayoutProps = {
+import { useUser, useUserLoading } from '@/lib/stores';
+
+import { Header } from './Header';
+import { Sidebar } from './Sidebar';
+
+
+
+interface AdminLayoutProps {
   children: React.ReactNode;
 }
 
 export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
-  const { user, loading } = useAuth();
+  const user = useUser();
+  const loading = useUserLoading();
   const router = useRouter();
 
   // Check if user is admin

@@ -1,5 +1,6 @@
-import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { NextResponse } from 'next/server';
+
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
 
 // Force dynamic rendering for this route

@@ -7,7 +7,7 @@
 
 import { logger } from '@/lib/utils/logger';
 
-export type CacheConfig = {
+export interface CacheConfig {
   defaultTTL: number; // milliseconds
   maxSize: number; // maximum number of entries
   cleanupInterval: number; // milliseconds
@@ -15,7 +15,7 @@ export type CacheConfig = {
   enablePersistence: boolean;
 }
 
-export type CacheEntry<T = unknown> = {
+export interface CacheEntry<T = unknown> {
   key: string;
   data: T;
   timestamp: number;
@@ -26,7 +26,7 @@ export type CacheEntry<T = unknown> = {
   metadata?: Record<string, string | number | boolean>;
 }
 
-export type CacheStats = {
+export interface CacheStats {
   totalEntries: number;
   hitRate: number;
   missRate: number;
@@ -38,7 +38,7 @@ export type CacheStats = {
   newestEntry: number;
 }
 
-export type CacheMetrics = {
+export interface CacheMetrics {
   apiName: string;
   cacheHits: number;
   cacheMisses: number;
@@ -340,7 +340,7 @@ export class ApiResponseCache<T = unknown> {
   /**
    * Calculate storage efficiency
    */
-  private calculateStorageEfficiency(entries: CacheEntry<T>[]): number {
+  private calculateStorageEfficiency(entries: Array<CacheEntry<T>>): number {
     if (entries.length === 0) return 0;
     
     const totalSize = entries.reduce((sum, entry) => sum + this.estimateEntrySize(entry), 0);

@@ -9,16 +9,9 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+
 import { withOptional } from '@/lib/utils/objects';
-import type {
-  Hashtag,
-  UserHashtag,
-  HashtagCategory,
-  UseHashtagOptions,
-  UseHashtagSearchOptions,
-  UseTrendingHashtagsOptions,
-  UseHashtagSuggestionsOptions
-} from '../types';
+
 import {
   getHashtagById,
   getHashtagByName,
@@ -35,6 +28,15 @@ import {
   getHashtagStats,
   validateHashtagName
 } from '../lib/hashtag-service';
+import type {
+  Hashtag,
+  UserHashtag,
+  HashtagCategory,
+  UseHashtagOptions,
+  UseHashtagSearchOptions,
+  UseTrendingHashtagsOptions,
+  UseHashtagSuggestionsOptions
+} from '../types';
 
 // ============================================================================
 // QUERY KEYS
@@ -101,7 +103,7 @@ export function useHashtagSearch(options: UseHashtagSearchOptions) {
     }),
     enabled: !!options.query && (options.enabled !== false),
     staleTime: options.staleTime || 2 * 60 * 1000, // 2 minutes
-    gcTime: options.gcTime || 5 * 60 * 1000, // 5 minutes
+    gcTime: options.cacheTime || 5 * 60 * 1000, // 5 minutes
     refetchOnWindowFocus: options.refetchOnWindowFocus !== false
   });
 }
@@ -115,7 +117,7 @@ export function useTrendingHashtags(options: UseTrendingHashtagsOptions = {}) {
     queryFn: () => getTrendingHashtags(options.category, options.limit),
     enabled: options.enabled !== false,
     staleTime: options.staleTime || 1 * 60 * 1000, // 1 minute
-    gcTime: options.gcTime || 5 * 60 * 1000, // 5 minutes
+    gcTime: options.cacheTime || 5 * 60 * 1000, // 5 minutes
     refetchOnWindowFocus: options.refetchOnWindowFocus !== false,
     refetchInterval: 5 * 60 * 1000 // Refetch every 5 minutes
   });
@@ -134,7 +136,7 @@ export function useHashtagSuggestions(options: UseHashtagSuggestionsOptions) {
     ),
     enabled: !!options.input && options.input.length >= 2 && (options.enabled !== false),
     staleTime: options.staleTime || 30 * 1000, // 30 seconds
-    gcTime: options.gcTime || 2 * 60 * 1000, // 2 minutes
+    gcTime: options.cacheTime || 2 * 60 * 1000, // 2 minutes
     refetchOnWindowFocus: options.refetchOnWindowFocus !== false
   });
 }
@@ -166,7 +168,7 @@ export function useHashtagAnalytics(
     queryFn: () => getHashtagAnalytics(hashtagId, period),
     enabled: !!hashtagId && (options?.enabled !== false),
     staleTime: options?.staleTime || 5 * 60 * 1000, // 5 minutes
-    gcTime: options?.gcTime || 15 * 60 * 1000, // 15 minutes
+    gcTime: options?.cacheTime || 15 * 60 * 1000, // 15 minutes
     refetchOnWindowFocus: options?.refetchOnWindowFocus !== false
   });
 }
@@ -386,7 +388,7 @@ export function useHashtagSearchWithSuggestions(
   const suggestions = useHashtagSuggestions(withOptional({
     input: query,
     limit: 5,
-  }, options));
+  }, options ? { ...options } : {}));
 
   return {
     search,

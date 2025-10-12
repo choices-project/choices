@@ -1,7 +1,5 @@
 'use client';
 
-import React, { useState } from 'react';
-import { logger } from '@/lib/utils/logger';
 import { 
   X, 
   MessageSquare, 
@@ -18,8 +16,11 @@ import {
   Smartphone,
   Send
 } from 'lucide-react';
+import React, { useState } from 'react';
 
-type Feedback = {
+import { logger } from '@/lib/utils/logger';
+
+interface Feedback {
   id: string;
   userid: string | null;
   type: string;
@@ -37,7 +38,7 @@ type Feedback = {
   updatedat: string;
 }
 
-type FeedbackDetailModalProps = {
+interface FeedbackDetailModalProps {
   feedback: Feedback;
   isOpen: boolean;
   onClose: () => void;

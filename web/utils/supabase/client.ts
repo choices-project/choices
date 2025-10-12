@@ -3,7 +3,7 @@ import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
 // Database schema types for type safety
-export type Database = {
+export interface Database {
   public: {
     Tables: {
       user_profiles: {
@@ -430,3 +430,6 @@ export const createClient = (): SupabaseClient<Database> => {
   
   return createSupabaseClient<Database>(supabaseUrl, supabaseKey)
 }
+
+// Alias for compatibility
+export const getSupabaseClient = createClient

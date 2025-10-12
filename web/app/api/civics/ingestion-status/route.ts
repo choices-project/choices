@@ -4,9 +4,9 @@
  * Provides real-time monitoring of data ingestion progress
  */
 
-import { type NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import * as dotenv from 'dotenv';
+import { type NextRequest, NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
 

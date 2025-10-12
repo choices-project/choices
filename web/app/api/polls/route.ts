@@ -1,25 +1,26 @@
 import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server';
+
+import { getUser } from '@/lib/core/auth/middleware';
 import { devLog } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
-import { getUser } from '@/lib/core/auth/middleware';
 
 export const dynamic = 'force-dynamic';
 
 // Type definitions for poll data
-type PollOption = {
+interface PollOption {
   id: string;
   text: string;
   votes?: number;
-};
+}
 
-type _PollData = {
+interface _PollData {
   id: string;
   title: string;
   total_votes: number;
   options: PollOption[];
   status: string;
-};
+}
 
 // GET /api/polls - Get active polls with aggregated results only
 export async function GET(request: NextRequest) {
@@ -188,7 +189,7 @@ export async function POST(request: NextRequest) {
         options: sanitizedOptions,
         voting_method: votingMethod,
         privacy_level: privacyLevel,
-        category: category,
+        category,
         status: 'active',
         created_by: user?.id || '',
         total_votes: 0,

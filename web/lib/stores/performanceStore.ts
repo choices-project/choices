@@ -11,24 +11,41 @@
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
+
 import { withOptional } from '@/lib/utils/objects';
 
 // ============================================================================
 // TYPES
 // ============================================================================
 
-export type PerformanceMetric = {
+export interface PerformanceMetric {
   id: string;
-  type: 'navigation' | 'resource' | 'measure' | 'custom';
+  type: 'navigation' | 'resource' | 'measure' | 'custom' | 'database';
   name: string;
   value: number;
-  unit: 'ms' | 'bytes' | 'count' | 'score';
+  unit: 'ms' | 'bytes' | 'count' | 'score' | 'percentage';
   timestamp: Date;
   url: string;
   metadata?: Record<string, any>;
 }
 
-export type PerformanceAlert = {
+export interface DatabasePerformanceMetric {
+  metricName: string;
+  avgValue: number;
+  minValue: number;
+  maxValue: number;
+  countMeasurements: number;
+  timestamp: Date;
+}
+
+export interface CacheStats {
+  size: number;
+  keys: string[];
+  memoryUsage: number;
+  hitRate: number;
+}
+
+export interface PerformanceAlert {
   id: string;
   type: 'threshold' | 'anomaly' | 'error';
   severity: 'low' | 'medium' | 'high' | 'critical';
@@ -41,7 +58,7 @@ export type PerformanceAlert = {
   metadata?: Record<string, any>;
 }
 
-export type PerformanceThresholds = {
+export interface PerformanceThresholds {
   navigation: {
     fcp: number; // First Contentful Paint
     lcp: number; // Largest Contentful Paint
@@ -59,7 +76,7 @@ export type PerformanceThresholds = {
   };
 }
 
-export type PerformanceReport = {
+export interface PerformanceReport {
   id: string;
   timestamp: Date;
   url: string;
@@ -73,7 +90,7 @@ export type PerformanceReport = {
   generated_at: Date;
 }
 
-export type PerformanceStore = {
+export interface PerformanceStore {
   // State
   metrics: PerformanceMetric[];
   alerts: PerformanceAlert[];
@@ -82,6 +99,13 @@ export type PerformanceStore = {
   isMonitoring: boolean;
   isLoading: boolean;
   error: string | null;
+  
+  // Database performance state
+  databaseMetrics: DatabasePerformanceMetric[];
+  cacheStats: CacheStats | null;
+  lastRefresh: Date | null;
+  autoRefresh: boolean;
+  refreshInterval: number;
   
   // Actions - Metrics
   recordMetric: (metric: Omit<PerformanceMetric, 'id' | 'timestamp'>) => void;
@@ -106,6 +130,16 @@ export type PerformanceStore = {
   generateReport: () => PerformanceReport;
   exportMetrics: (format?: 'json' | 'csv') => string;
   exportReport: (reportId: string, format?: 'json' | 'csv') => string;
+  
+  // Actions - Database Performance
+  setDatabaseMetrics: (metrics: DatabasePerformanceMetric[]) => void;
+  setCacheStats: (stats: CacheStats) => void;
+  setLastRefresh: (date: Date) => void;
+  setAutoRefresh: (enabled: boolean) => void;
+  setRefreshInterval: (interval: number) => void;
+  loadDatabasePerformance: () => Promise<void>;
+  refreshMaterializedViews: () => Promise<void>;
+  performDatabaseMaintenance: () => Promise<void>;
   
   // Actions - Loading & Error
   setLoading: (loading: boolean) => void;
@@ -205,14 +239,22 @@ export const usePerformanceStore = create<PerformanceStore>()(
         isMonitoring: false,
         isLoading: false,
         error: null,
+        
+        // Database performance state
+        databaseMetrics: [],
+        cacheStats: null,
+        lastRefresh: null,
+        autoRefresh: true,
+        refreshInterval: 30000,
 
         // Actions - Metrics
         recordMetric: (metric) => {
           const id = `metric-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-          const newMetric: PerformanceMetric = withOptional(metric, {
+          const newMetric: PerformanceMetric = {
+            ...metric,
             id,
             timestamp: new Date()
-          });
+          };
 
           set((state) => {
             state.metrics.push(newMetric);
@@ -272,11 +314,12 @@ export const usePerformanceStore = create<PerformanceStore>()(
         // Actions - Alerts
         createAlert: (alert) => {
           const id = `alert-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-          const newAlert: PerformanceAlert = withOptional(alert, {
+          const newAlert: PerformanceAlert = {
+            ...alert,
             id,
             timestamp: new Date(),
             resolved: false
-          });
+          };
 
           set((state) => {
             state.alerts.push(newAlert);
@@ -324,7 +367,7 @@ export const usePerformanceStore = create<PerformanceStore>()(
                   if (entry.entryType === 'navigation') {
                     const navEntry = entry as PerformanceNavigationTiming;
                     get().recordNavigationMetric('TTFB', navEntry.responseStart - navEntry.requestStart);
-                    get().recordNavigationMetric('FCP', navEntry.domContentLoadedEventEnd - navEntry.navigationStart);
+                    get().recordNavigationMetric('FCP', navEntry.domContentLoadedEventEnd - navEntry.fetchStart);
                   } else if (entry.entryType === 'resource') {
                     const resourceEntry = entry as PerformanceResourceTiming;
                     get().recordResourceMetric(resourceEntry.name, resourceEntry.duration);
@@ -369,7 +412,7 @@ export const usePerformanceStore = create<PerformanceStore>()(
             } else if (metric.type === 'resource' && metric.name in thresholds.resource) {
               threshold = (thresholds.resource as any)[metric.name];
             } else if (metric.type === 'custom' && metric.name in thresholds.custom) {
-              threshold = thresholds.custom[metric.name];
+              threshold = thresholds.custom[metric.name] || 0;
             }
 
             if (threshold > 0 && metric.value > threshold) {
@@ -462,6 +505,164 @@ export const usePerformanceStore = create<PerformanceStore>()(
           }
           
           return JSON.stringify(report, null, 2);
+        },
+
+        // Actions - Database Performance
+        setDatabaseMetrics: (metrics) => {
+          set((state) => {
+            state.databaseMetrics = metrics;
+          });
+        },
+
+        setCacheStats: (stats) => {
+          set((state) => {
+            state.cacheStats = stats;
+          });
+        },
+
+        setLastRefresh: (date) => {
+          set((state) => {
+            state.lastRefresh = date;
+          });
+        },
+
+        setAutoRefresh: (enabled) => {
+          set((state) => {
+            state.autoRefresh = enabled;
+          });
+        },
+
+        setRefreshInterval: (interval) => {
+          set((state) => {
+            state.refreshInterval = interval;
+          });
+        },
+
+        loadDatabasePerformance: async () => {
+          const { setLoading, setError, setLastRefresh, setDatabaseMetrics, setCacheStats } = get();
+          
+          try {
+            setLoading(true);
+            setError(null);
+            
+            // Fetch performance metrics directly from database
+            const supabase = await import('@/utils/supabase/client').then(m => m.getSupabaseClient());
+            if (!supabase) {
+              throw new Error('Database connection not available');
+            }
+
+            // Get database performance metrics from the last 24 hours
+            const { data: metricsData, error: metricsError } = await supabase
+              .from('performance_metrics')
+              .select('*')
+              .gte('timestamp', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
+              .order('timestamp', { ascending: false });
+
+            if (metricsError) {
+              throw new Error(`Failed to fetch database metrics: ${metricsError.message}`);
+            }
+
+            // Transform metrics data to match DatabasePerformanceMetric interface
+            const databaseMetrics: DatabasePerformanceMetric[] = metricsData?.map(metric => ({
+              metricName: metric.metric_name,
+              avgValue: metric.avg_value,
+              minValue: metric.min_value,
+              maxValue: metric.max_value,
+              countMeasurements: metric.count_measurements,
+              timestamp: new Date(metric.timestamp)
+            })) || [];
+
+            // Get cache statistics
+            const { data: cacheData, error: cacheError } = await supabase
+              .from('cache_stats')
+              .select('*')
+              .order('timestamp', { ascending: false })
+              .limit(1)
+              .single();
+
+            if (cacheError && cacheError.code !== 'PGRST116') {
+              throw new Error(`Failed to fetch cache stats: ${cacheError.message}`);
+            }
+
+            // Transform cache data to match CacheStats interface
+            const cacheStats: CacheStats = cacheData ? {
+              size: cacheData.size || 0,
+              keys: cacheData.keys || [],
+              memoryUsage: cacheData.memory_usage || 0,
+              hitRate: cacheData.hit_rate || 0
+            } : {
+              size: 0,
+              keys: [],
+              memoryUsage: 0,
+              hitRate: 0
+            };
+            
+            setDatabaseMetrics(databaseMetrics);
+            setCacheStats(cacheStats);
+            setLastRefresh(new Date());
+            
+          } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : 'Failed to load database performance';
+            setError(errorMessage);
+          } finally {
+            setLoading(false);
+          }
+        },
+
+        refreshMaterializedViews: async () => {
+          const { setLoading, setError, loadDatabasePerformance } = get();
+          
+          try {
+            setLoading(true);
+            setError(null);
+            
+            // Call optimized poll service to refresh materialized views
+            const response = await fetch('/api/admin/refresh-materialized-views', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+            });
+            
+            if (!response.ok) {
+              throw new Error(`Failed to refresh materialized views: ${response.statusText}`);
+            }
+            
+            // Reload performance data after refresh
+            await loadDatabasePerformance();
+            
+          } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : 'Failed to refresh materialized views';
+            setError(errorMessage);
+          } finally {
+            setLoading(false);
+          }
+        },
+
+        performDatabaseMaintenance: async () => {
+          const { setLoading, setError, loadDatabasePerformance } = get();
+          
+          try {
+            setLoading(true);
+            setError(null);
+            
+            // Call optimized poll service to perform database maintenance
+            const response = await fetch('/api/admin/perform-database-maintenance', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+            });
+            
+            if (!response.ok) {
+              throw new Error(`Failed to perform database maintenance: ${response.statusText}`);
+            }
+            
+            // Reload performance data after maintenance
+            await loadDatabasePerformance();
+            
+          } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : 'Failed to perform database maintenance';
+            setError(errorMessage);
+          } finally {
+            setLoading(false);
+          }
         },
 
         // Actions - Loading & Error
@@ -565,6 +766,13 @@ export const useIsMonitoring = () => usePerformanceStore(state => state.isMonito
 export const usePerformanceLoading = () => usePerformanceStore(state => state.isLoading);
 export const usePerformanceError = () => usePerformanceStore(state => state.error);
 
+// Database Performance Selectors
+export const useDatabaseMetrics = () => usePerformanceStore(state => state.databaseMetrics);
+export const useCacheStats = () => usePerformanceStore(state => state.cacheStats);
+export const useLastRefresh = () => usePerformanceStore(state => state.lastRefresh);
+export const useAutoRefresh = () => usePerformanceStore(state => state.autoRefresh);
+export const useRefreshInterval = () => usePerformanceStore(state => state.refreshInterval);
+
 // ============================================================================
 // ACTIONS
 // ============================================================================
@@ -589,7 +797,16 @@ export const usePerformanceActions = () => usePerformanceStore(state => ({
   setLoading: state.setLoading,
   setError: state.setError,
   clearError: state.clearError,
-  initialize: state.initialize
+  initialize: state.initialize,
+  // Database performance actions
+  setDatabaseMetrics: state.setDatabaseMetrics,
+  setCacheStats: state.setCacheStats,
+  setLastRefresh: state.setLastRefresh,
+  setAutoRefresh: state.setAutoRefresh,
+  setRefreshInterval: state.setRefreshInterval,
+  loadDatabasePerformance: state.loadDatabasePerformance,
+  refreshMaterializedViews: state.refreshMaterializedViews,
+  performDatabaseMaintenance: state.performDatabaseMaintenance
 }));
 
 // ============================================================================

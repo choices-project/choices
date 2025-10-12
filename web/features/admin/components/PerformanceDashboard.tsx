@@ -1,82 +1,58 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
-import { logger } from '@/lib/utils/logger';
-import { optimizedPollService, type PerformanceMetrics } from '@/features/polls/lib/optimized-poll-service'
+import { useEffect, useCallback } from 'react'
 
-type PerformanceDashboardProps = {
+import { 
+  useDatabaseMetrics,
+  useCacheStats,
+  useLastRefresh,
+  useAutoRefresh,
+  useRefreshInterval,
+  usePerformanceActions,
+  usePerformanceLoading,
+  usePerformanceError
+} from '@/lib/stores';
+
+interface PerformanceDashboardProps {
   refreshInterval?: number // in milliseconds
 }
 
 export default function PerformanceDashboard({ refreshInterval = 30000 }: PerformanceDashboardProps) {
-  const [performanceStats, setPerformanceStats] = useState<PerformanceMetrics[]>([])
-  const [cacheStats, setCacheStats] = useState<any>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [lastRefresh, setLastRefresh] = useState<Date>(new Date())
-  const [autoRefresh, setAutoRefresh] = useState(true)
+  // Get state from performanceStore
+  const performanceStats = useDatabaseMetrics();
+  const cacheStats = useCacheStats();
+  const lastRefresh = useLastRefresh();
+  const autoRefresh = useAutoRefresh();
+  const loading = usePerformanceLoading();
+  const error = usePerformanceError();
+  const { 
+    loadDatabasePerformance, 
+    refreshMaterializedViews, 
+    performDatabaseMaintenance,
+    setAutoRefresh,
+    setRefreshInterval
+  } = usePerformanceActions();
 
   // Load performance statistics
   const loadPerformanceStats = useCallback(async () => {
-    try {
-      setLoading(true)
-      const stats = await optimizedPollService.getPerformanceStats(24)
-      setPerformanceStats(stats)
-      setLastRefresh(new Date())
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to load performance stats'
-      setError(errorMessage)
-    } finally {
-      setLoading(false)
-    }
-  }, [])
+    await loadDatabasePerformance();
+  }, [loadDatabasePerformance])
 
-  // Load cache statistics
-  const loadCacheStats = useCallback(() => {
-    try {
-      const stats = optimizedPollService.getCacheStats()
-      setCacheStats(stats)
-    } catch (err) {
-      logger.warn('Failed to load cache stats:', { error: err })
-    }
-  }, [])
 
   // Refresh materialized views
   const handleRefreshMaterializedViews = useCallback(async () => {
-    try {
-      setLoading(true)
-      await optimizedPollService.refreshMaterializedViews()
-      await loadPerformanceStats()
-      loadCacheStats()
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to refresh materialized views'
-      setError(errorMessage)
-    } finally {
-      setLoading(false)
-    }
-  }, [loadPerformanceStats, loadCacheStats])
+    await refreshMaterializedViews();
+  }, [refreshMaterializedViews])
 
   // Perform database maintenance
   const handleDatabaseMaintenance = useCallback(async () => {
-    try {
-      setLoading(true)
-      await optimizedPollService.performDatabaseMaintenance()
-      await loadPerformanceStats()
-      loadCacheStats()
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to perform database maintenance'
-      setError(errorMessage)
-    } finally {
-      setLoading(false)
-    }
-  }, [loadPerformanceStats, loadCacheStats])
+    await performDatabaseMaintenance();
+  }, [performDatabaseMaintenance])
 
   // Load data on mount
   useEffect(() => {
     loadPerformanceStats()
-    loadCacheStats()
-    setLoading(false)
-  }, [loadPerformanceStats, loadCacheStats])
+  }, [loadPerformanceStats])
 
   // Auto-refresh setup
   useEffect(() => {
@@ -84,18 +60,17 @@ export default function PerformanceDashboard({ refreshInterval = 30000 }: Perfor
 
     const interval = setInterval(() => {
       loadPerformanceStats()
-      loadCacheStats()
     }, refreshInterval)
 
     return () => clearInterval(interval)
-  }, [autoRefresh, refreshInterval, loadPerformanceStats, loadCacheStats])
+  }, [autoRefresh, refreshInterval, loadPerformanceStats])
 
   // Calculate performance insights
   const performanceInsights = {
     avgQueryTime: performanceStats.find(s => s.metricName.includes('query_time'))?.avgValue || 0,
     maxQueryTime: performanceStats.find(s => s.metricName.includes('query_time'))?.maxValue || 0,
     totalQueries: performanceStats.find(s => s.metricName.includes('query_time'))?.countMeasurements || 0,
-    cacheHitRate: cacheStats ? (cacheStats.size / (cacheStats.size + 1)) * 100 : 0
+    cacheHitRate: cacheStats?.hitRate || 0
   }
 
   // Performance status
@@ -147,7 +122,6 @@ export default function PerformanceDashboard({ refreshInterval = 30000 }: Perfor
           <button
             onClick={() => {
               loadPerformanceStats()
-              loadCacheStats()
             }}
             className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700"
           >
@@ -241,7 +215,7 @@ export default function PerformanceDashboard({ refreshInterval = 30000 }: Perfor
               {performanceStatus.status}
             </span>
             <span className="text-sm text-gray-600">
-              Last updated: {lastRefresh.toLocaleTimeString()}
+              Last updated: {lastRefresh?.toLocaleTimeString() || 'Never'}
             </span>
           </div>
           <div className="flex space-x-2">
@@ -279,7 +253,7 @@ export default function PerformanceDashboard({ refreshInterval = 30000 }: Perfor
             <div>
               <p className="text-sm font-medium text-gray-500">Memory Usage</p>
               <p className="text-xl font-semibold text-gray-900">
-                {(JSON.stringify(cacheStats).length / 1024).toFixed(2)} KB
+                {(cacheStats.memoryUsage / 1024).toFixed(2)} KB
               </p>
             </div>
           </div>

@@ -1,7 +1,5 @@
 'use client';
 
-import React, { useState } from 'react';
-import { logger } from '@/lib/utils/logger';
 import {
   Github,
   Plus,
@@ -13,8 +11,11 @@ import {
   TrendingUp,
   BarChart3
 } from 'lucide-react';
+import React, { useState } from 'react';
 
-type Feedback = {
+import { logger } from '@/lib/utils/logger';
+
+interface Feedback {
   id: string;
   title: string;
   description: string;
@@ -32,7 +33,7 @@ type Feedback = {
   };
 }
 
-type IssueGenerationPanelProps = {
+interface IssueGenerationPanelProps {
   feedback: Feedback[];
   onIssueGenerated: (_feedbackId: string, _issueData: any) => void;
   onBulkGenerate: (_feedbackIds: string[]) => void;

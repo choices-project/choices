@@ -9,7 +9,7 @@ export type SharePlatform =
   | 'x' | 'facebook' | 'linkedin' | 'reddit'
   | 'whatsapp' | 'telegram' | 'email' | 'sms'
 
-export type ShareInput = {
+export interface ShareInput {
   url: string           // canonical https URL
   text?: string | undefined         // short copy
   hashtags?: string[] | undefined   // no '#'
@@ -166,7 +166,7 @@ export function generateShareText(
 
   // Truncate if over limit
   if (config.maxTextLength > 0 && text.length > config.maxTextLength) {
-    text = text.substring(0, config.maxTextLength - 3) + '...'
+    text = `${text.substring(0, config.maxTextLength - 3)  }...`
   }
 
   return text

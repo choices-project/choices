@@ -1,10 +1,11 @@
 'use client';
 
-import React from 'react';
 import { Search, X } from 'lucide-react';
+import React from 'react';
+
 import { withOptional } from '@/lib/utils/objects';
 
-type Filters = {
+interface Filters {
   type: string;
   sentiment: string;
   status: string;
@@ -13,7 +14,7 @@ type Filters = {
   search: string;
 }
 
-type FeedbackFiltersProps = {
+interface FeedbackFiltersProps {
   filters: Filters;
   onFiltersChange: (_newFilters: Filters) => void;
 }

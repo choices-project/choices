@@ -1,5 +1,5 @@
-import type { Metadata } from 'next'
 import { Shield, Eye, Lock, Download, Trash2, Settings, FileText, Users, Clock } from 'lucide-react'
+import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
   title: 'Privacy Policy - Ranked Choice Democracy',

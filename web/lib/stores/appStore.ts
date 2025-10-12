@@ -10,18 +10,38 @@
 
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
-import { immer } from 'zustand/middleware/immer';
 import { persist } from 'zustand/middleware';
+import { immer } from 'zustand/middleware/immer';
+
 import { withOptional } from '@/lib/utils/objects';
+
 import type { BaseStore, FeatureFlag } from './types';
 
 // App store state interface
 type AppStore = {
   // UI State
   theme: 'light' | 'dark' | 'system';
+  systemTheme: 'light' | 'dark';
+  resolvedTheme: 'light' | 'dark';
   sidebarCollapsed: boolean;
   sidebarWidth: number;
   sidebarPinned: boolean;
+  sidebarActiveSection: string | null;
+  
+  // Modal State
+  activeModal: string | null;
+  modalData: any;
+  modalStack: Array<{
+    id: string;
+    data: any;
+  }>;
+  
+  // Mobile UI State
+  isMobile: boolean;
+  isTablet: boolean;
+  isDesktop: boolean;
+  screenSize: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
+  orientation: 'portrait' | 'landscape';
   
   // Feature Flags
   features: Record<string, boolean>;
@@ -57,12 +77,30 @@ type AppStore = {
   // Actions - Theme
   setTheme: (theme: 'light' | 'dark' | 'system') => void;
   toggleTheme: () => void;
+  updateSystemTheme: (systemTheme: 'light' | 'dark') => void;
   
   // Actions - Sidebar
   toggleSidebar: () => void;
   setSidebarCollapsed: (collapsed: boolean) => void;
   setSidebarWidth: (width: number) => void;
   setSidebarPinned: (pinned: boolean) => void;
+  setSidebarActiveSection: (section: string | null) => void;
+  
+  // Actions - Modal
+  openModal: (id: string, data?: any) => void;
+  closeModal: () => void;
+  closeAllModals: () => void;
+  pushModal: (id: string, data?: any) => void;
+  popModal: () => void;
+  
+  // Actions - Mobile UI
+  setDeviceInfo: (info: {
+    isMobile: boolean;
+    isTablet: boolean;
+    isDesktop: boolean;
+    screenSize: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
+    orientation: 'portrait' | 'landscape';
+  }) => void;
   
   // Actions - Feature Flags
   setFeatureFlag: (flag: string, enabled: boolean) => void;
@@ -106,9 +144,25 @@ export const useAppStore = create<AppStore>()(
       immer((set, _get) => ({
         // Initial state
         theme: 'system',
+        systemTheme: 'light',
+        resolvedTheme: 'light',
         sidebarCollapsed: false,
         sidebarWidth: 280,
         sidebarPinned: false,
+        sidebarActiveSection: null,
+        
+        // Modal state
+        activeModal: null,
+        modalData: null,
+        modalStack: [],
+        
+        // Mobile UI state
+        isMobile: false,
+        isTablet: false,
+        isDesktop: true,
+        screenSize: 'lg',
+        orientation: 'landscape',
+        
         features: {},
         featureFlags: [],
         settings: defaultSettings,
@@ -167,6 +221,13 @@ export const useAppStore = create<AppStore>()(
         console.log('Theme toggled to:', newTheme);
       }),
       
+      updateSystemTheme: (systemTheme) => set((state) => {
+        state.systemTheme = systemTheme;
+        if (state.theme === 'system') {
+          state.resolvedTheme = systemTheme;
+        }
+      }),
+      
       // Sidebar actions
       toggleSidebar: () => set((state) => {
         state.sidebarCollapsed = !state.sidebarCollapsed;
@@ -186,6 +247,68 @@ export const useAppStore = create<AppStore>()(
         if (pinned) {
           state.sidebarCollapsed = false;
         }
+      }),
+      
+      setSidebarActiveSection: (section) => set((state) => {
+        state.sidebarActiveSection = section;
+      }),
+      
+      // Modal actions
+      openModal: (id, data) => set((state) => {
+        state.activeModal = id;
+        state.modalData = data;
+        state.modalStack.push({ id, data });
+      }),
+      
+      closeModal: () => set((state) => {
+        state.modalStack.pop();
+        if (state.modalStack.length > 0) {
+          const previous = state.modalStack[state.modalStack.length - 1];
+          if (previous) {
+            state.activeModal = previous.id;
+            state.modalData = previous.data;
+          }
+        } else {
+          state.activeModal = null;
+          state.modalData = null;
+        }
+      }),
+      
+      closeAllModals: () => set((state) => {
+        state.activeModal = null;
+        state.modalData = null;
+        state.modalStack = [];
+      }),
+      
+      pushModal: (id, data) => set((state) => {
+        state.modalStack.push({ id, data });
+        state.activeModal = id;
+        state.modalData = data;
+      }),
+      
+      popModal: () => set((state) => {
+        if (state.modalStack.length > 0) {
+          state.modalStack.pop();
+          if (state.modalStack.length > 0) {
+            const previous = state.modalStack[state.modalStack.length - 1];
+            if (previous) {
+              state.activeModal = previous.id;
+              state.modalData = previous.data;
+            }
+          } else {
+            state.activeModal = null;
+            state.modalData = null;
+          }
+        }
+      }),
+      
+      // Mobile UI actions
+      setDeviceInfo: (info) => set((state) => {
+        state.isMobile = info.isMobile;
+        state.isTablet = info.isTablet;
+        state.isDesktop = info.isDesktop;
+        state.screenSize = info.screenSize;
+        state.orientation = info.orientation;
       }),
       
       // Feature flag actions
@@ -269,9 +392,25 @@ export const useAppStore = create<AppStore>()(
 
 // Store selectors for optimized re-renders
 export const useTheme = () => useAppStore(state => state.theme);
+export const useSystemTheme = () => useAppStore(state => state.systemTheme);
+export const useResolvedTheme = () => useAppStore(state => state.resolvedTheme);
 export const useSidebarCollapsed = () => useAppStore(state => state.sidebarCollapsed);
 export const useSidebarWidth = () => useAppStore(state => state.sidebarWidth);
 export const useSidebarPinned = () => useAppStore(state => state.sidebarPinned);
+export const useSidebarActiveSection = () => useAppStore(state => state.sidebarActiveSection);
+
+// Modal selectors
+export const useActiveModal = () => useAppStore(state => state.activeModal);
+export const useModalData = () => useAppStore(state => state.modalData);
+export const useModalStack = () => useAppStore(state => state.modalStack);
+
+// Mobile UI selectors
+export const useIsMobile = () => useAppStore(state => state.isMobile);
+export const useIsTablet = () => useAppStore(state => state.isTablet);
+export const useIsDesktop = () => useAppStore(state => state.isDesktop);
+export const useScreenSize = () => useAppStore(state => state.screenSize);
+export const useOrientation = () => useAppStore(state => state.orientation);
+
 export const useFeatureFlags = () => useAppStore(state => state.features);
 export const useAppSettings = () => useAppStore(state => state.settings);
 export const useCurrentRoute = () => useAppStore(state => state.currentRoute);
@@ -283,10 +422,18 @@ export const useAppError = () => useAppStore(state => state.error);
 export const useAppActions = () => useAppStore(state => ({
   setTheme: state.setTheme,
   toggleTheme: state.toggleTheme,
+  updateSystemTheme: state.updateSystemTheme,
   toggleSidebar: state.toggleSidebar,
   setSidebarCollapsed: state.setSidebarCollapsed,
   setSidebarWidth: state.setSidebarWidth,
   setSidebarPinned: state.setSidebarPinned,
+  setSidebarActiveSection: state.setSidebarActiveSection,
+  openModal: state.openModal,
+  closeModal: state.closeModal,
+  closeAllModals: state.closeAllModals,
+  pushModal: state.pushModal,
+  popModal: state.popModal,
+  setDeviceInfo: state.setDeviceInfo,
   setFeatureFlag: state.setFeatureFlag,
   toggleFeatureFlag: state.toggleFeatureFlag,
   setFeatureFlags: state.setFeatureFlags,
@@ -444,7 +591,7 @@ export const appStoreSubscriptions = {
         const enabled = state.features[flag];
         const prevEnabled = prevState.features[flag];
         if (enabled !== prevEnabled) {
-          callback(enabled);
+          callback(enabled ?? false);
         }
       }
     );

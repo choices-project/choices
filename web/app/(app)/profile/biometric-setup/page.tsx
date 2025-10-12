@@ -1,8 +1,9 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
 import { Fingerprint, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { useState, useEffect } from 'react'
+
 import { devLog } from '@/lib/utils/logger'
 
 export default function BiometricSetupPage() {
@@ -59,7 +60,7 @@ export default function BiometricSetupPage() {
       // Create credential
       const credential = await navigator.credentials.create({
         publicKey: {
-          challenge: challenge,
+          challenge,
           rp: optionsData.rp,
           user: {
             id: userId,

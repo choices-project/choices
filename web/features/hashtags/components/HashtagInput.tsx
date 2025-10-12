@@ -10,15 +10,23 @@
 
 'use client';
 
-import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { X, Plus, Hash, TrendingUp, Users, Clock } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import { cn } from '@/lib/utils';
+
 import { useHashtagSuggestions, useHashtagValidation, useCreateHashtag } from '../hooks/use-hashtags';
+import { 
+  useHashtagStore,
+  useHashtagActions,
+  useHashtagLoading,
+  useHashtagError
+} from '@/lib/stores/hashtagStore';
 import type { HashtagInputProps, Hashtag, HashtagSuggestion } from '../types';
 
 export default function HashtagInput({
@@ -39,7 +47,13 @@ export default function HashtagInput({
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Get suggestions based on input
+  // Zustand store integration
+  const { suggestions: hashtagSuggestions } = useHashtagStore();
+  const { getSuggestions, createHashtag } = useHashtagActions();
+  const { isLoading: isStoreLoading } = useHashtagLoading();
+  const error = useHashtagError();
+  
+  // Get suggestions based on input using store
   const { data: suggestionData, isLoading: isSuggestionsLoading } = useHashtagSuggestions({
     input: inputValue,
     limit: 8,
@@ -55,7 +69,8 @@ export default function HashtagInput({
   // Create hashtag mutation
   const createHashtagMutation = useCreateHashtag();
 
-  const allSuggestions = suggestions.length > 0 ? suggestions : (suggestionData?.data || []);
+  // Combine store suggestions with hook suggestions
+  const allSuggestions = hashtagSuggestions.length > 0 ? hashtagSuggestions : (suggestionData?.data || []);
   const isValidInput = validationData?.data?.is_valid || false;
   const hasValidationErrors = (validationData?.data?.errors?.length || 0) > 0;
 
@@ -64,14 +79,16 @@ export default function HashtagInput({
     if (inputValue.length >= 2) {
       setIsOpen(true);
       setSelectedIndex(0);
+      // Get suggestions from store
+      getSuggestions(inputValue, 'input');
     } else {
       setIsOpen(false);
     }
-  }, [inputValue]);
+  }, [inputValue, getSuggestions]);
 
   // Helper function to create hashtag objects
   const createHashtagObject = (name: string): Hashtag => ({
-    id: `temp-${name}`,
+    id: `hashtag-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
     name,
     display_name: name,
     description: `User-created hashtag: ${name}`,
@@ -117,18 +134,10 @@ export default function HashtagInput({
     // Create new hashtag if allowed
     if (allowCustom) {
       try {
-        // Create hashtag object for validation
-        const hashtagObj = createHashtagObject(hashtagName);
+        // Create hashtag using store action
+        const result = await createHashtag(hashtagName, `User-created hashtag: ${hashtagName}`, 'custom');
         
-        // Log the hashtag object for debugging
-        console.log('Creating hashtag:', hashtagObj);
-        
-        const result = await createHashtagMutation.mutateAsync({
-          name: hashtagName,
-          description: hashtagObj.description || undefined
-        });
-
-        if (result.success && result.data) {
+        if (result) {
           onChange([...value, hashtagName]);
           setInputValue('');
           setIsOpen(false);
@@ -137,7 +146,7 @@ export default function HashtagInput({
         console.error('Failed to create hashtag:', error);
       }
     }
-  }, [value, maxTags, allSuggestions, allowCustom, createHashtagMutation, onChange, handleSelectSuggestion]);
+  }, [value, maxTags, allSuggestions, allowCustom, createHashtag, onChange, handleSelectSuggestion]);
 
   // Handle removing hashtag
   const handleRemoveHashtag = useCallback((hashtagToRemove: string) => {
@@ -293,7 +302,7 @@ export default function HashtagInput({
             size="sm"
             className="h-6 w-6 p-0"
             onClick={() => handleAddHashtag(inputValue.trim())}
-            disabled={disabled || !isValidInput || createHashtagMutation.isPending}
+            disabled={disabled || !isValidInput || isStoreLoading}
           >
             <Plus className="h-3 w-3" />
           </Button>

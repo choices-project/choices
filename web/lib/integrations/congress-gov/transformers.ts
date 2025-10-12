@@ -4,10 +4,11 @@
  * Transform raw Congress.gov API responses into normalized data structures
  */
 
-import type { CongressGovMember, CongressGovBill, CongressGovVote } from './client';
 import { withOptional } from '@/lib/utils/objects';
 
-export type NormalizedRepresentative = {
+import type { CongressGovMember, CongressGovBill, CongressGovVote } from './client';
+
+export interface NormalizedRepresentative {
   id: string;
   name: string;
   firstName: string;
@@ -21,7 +22,7 @@ export type NormalizedRepresentative = {
   lastUpdated: string;
 }
 
-export type NormalizedBill = {
+export interface NormalizedBill {
   id: string;
   title: string;
   shortTitle?: string;
@@ -42,7 +43,7 @@ export type NormalizedBill = {
   lastUpdated: string;
 }
 
-export type NormalizedVote = {
+export interface NormalizedVote {
   id: string;
   billId?: string;
   chamber: 'house' | 'senate';

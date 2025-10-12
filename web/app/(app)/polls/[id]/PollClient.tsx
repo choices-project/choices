@@ -1,20 +1,23 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { ArrowLeft, Share2, CheckCircle, AlertCircle } from 'lucide-react';
-import VotingInterface from '../../../../features/voting/components/VotingInterface';
-import PostCloseBanner from '@/features/polls/components/PostCloseBanner';
+import { useParams, useRouter } from 'next/navigation';
+import React, { useState, useEffect, useCallback } from 'react';
+
 import ModeSwitch from '@/components/shared/ModeSwitch';
 import type { ResultsMode } from '@/components/shared/ModeSwitch';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import PostCloseBanner from '@/features/polls/components/PostCloseBanner';
 
-type VoteResponse = { ok: boolean; id?: string; error?: string };
+import VotingInterface from '../../../../features/voting/components/VotingInterface';
 
-type Poll = {
+
+interface VoteResponse { ok: boolean; id?: string; error?: string }
+
+interface Poll {
   id: string;
   title: string;
   description: string;
@@ -29,9 +32,9 @@ type Poll = {
   baselineAt?: string;
   lockedAt?: string;
   allowPostClose?: boolean;
-};
+}
 
-type PollResults = {
+interface PollResults {
   totalVotes: number;
   results: Record<string, number>;
   participation: number;
@@ -39,11 +42,11 @@ type PollResults = {
     ageGroups: Record<string, number>;
     locations: Record<string, number>;
   };
-};
+}
 
-type PollClientProps = {
+interface PollClientProps {
   poll: Poll;
-};
+}
 
 export default function PollClient({ poll }: PollClientProps) {
   const router = useRouter();

@@ -5,11 +5,13 @@
  * images, and other resources to improve initial page load performance.
  */
 
-import { lazy, Suspense } from 'react';
 import type { ComponentType } from 'react';
+import { lazy, Suspense } from 'react';
+import React from 'react';
+
 import { performanceMetrics } from './performance-metrics';
 
-type LazyLoadOptions = {
+interface LazyLoadOptions {
   threshold?: number;
   rootMargin?: string;
   fallback?: React.ReactNode;
@@ -353,4 +355,3 @@ export function createViewportLazyComponent<T extends ComponentType<any>>(
 }
 
 // Export React for the hooks
-import React from 'react';

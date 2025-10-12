@@ -1,6 +1,7 @@
+import { createClient } from '@supabase/supabase-js';
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+
 import { createApiLogger } from '@/lib/utils/api-logger';
 
 const supabase = createClient(
@@ -122,7 +123,7 @@ export async function GET(req: NextRequest) {
 
     // Filter representatives based on electoral districts
     const matchingRepresentatives = representatives.filter(rep => 
-      isRepresentativeForDistricts(rep, electoralInfo!)
+      isRepresentativeForDistricts(rep, electoralInfo)
     );
 
     logger.success('Found matching representatives', 200, { count: matchingRepresentatives.length });
@@ -298,17 +299,17 @@ function extractStateFromAddress(address: string): string {
   return 'CA';
 }
 
-type ElectoralInfo = {
+interface ElectoralInfo {
   address: string;
   state: string;
   districts: DistrictInfo[];
   officials: any[];
   offices: any[];
-};
+}
 
-type DistrictInfo = {
+interface DistrictInfo {
   name: string;
   ocdId: string;
   type: string;
   level: string;
-};
+}

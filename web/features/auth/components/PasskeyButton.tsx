@@ -1,11 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+
 import { beginRegister, beginAuthenticate, isWebAuthnSupported } from '@/features/auth/lib/webauthn/client';
 import { T } from '@/lib/testing/testIds';
+
 import WebAuthnPrompt from './WebAuthnPrompt';
 
-type PasskeyButtonProps = {
+interface PasskeyButtonProps {
   mode: 'register' | 'authenticate';
   primary?: boolean;
   disabled?: boolean;

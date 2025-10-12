@@ -5,96 +5,51 @@
  * It's loaded only when needed to reduce initial bundle size.
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
+
+import type { AdminUser } from '@/features/admin/types';
 import { performanceMetrics } from '@/lib/performance/performance-metrics';
-import { withOptional } from '@/lib/utils/objects';
+import { 
+  useAdminUsers,
+  useAdminUserFilters,
+  useAdminUserActions,
+  useAdminLoading,
+  useAdminError,
+  useAdminActions
+} from '@/lib/stores';
 
-type User = {
-  id: string;
-  email: string;
-  role: 'admin' | 'moderator' | 'user';
-  status: 'active' | 'inactive' | 'suspended';
-  createdAt: string;
-  lastLogin: string;
-  voteCount: number;
-}
-
-type UserManagementProps = {
-  onUserUpdate?: (user: User) => void;
+interface UserManagementProps {
+  onUserUpdate?: (user: AdminUser) => void;
   onUserDelete?: (userId: string) => void;
 }
 
 export default function UserManagement({ onUserUpdate, onUserDelete }: UserManagementProps) {
-  const [users, setUsers] = useState<User[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [roleFilter, setRoleFilter] = useState<'all' | 'admin' | 'moderator' | 'user'>('all');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive' | 'suspended'>('all');
-  const [selectedUsers, setSelectedUsers] = useState<Set<string>>(new Set());
-  const [showBulkActions, setShowBulkActions] = useState(false);
+  // Get state from adminStore
+  const users = useAdminUsers();
+  const { searchTerm, roleFilter, statusFilter, selectedUsers, showBulkActions } = useAdminUserFilters();
+  const loading = useAdminLoading();
+  const error = useAdminError();
+  
+  // Get actions from adminStore
+  const {
+    setUserFilters,
+    selectUser,
+    deselectUser,
+    selectAllUsers,
+    deselectAllUsers,
+    updateUserRole,
+    updateUserStatus,
+    deleteUser
+  } = useAdminUserActions();
+  
+  const { loadUsers, setError } = useAdminActions();
 
   useEffect(() => {
     const startTime = performance.now();
     
-    const loadUsers = async () => {
+    const loadUsersData = async () => {
       try {
-        setLoading(true);
-        setError(null);
-        
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 800));
-        
-        // Mock data - in real implementation, this would come from an API
-        const mockUsers: User[] = [
-          {
-            id: '1',
-            email: 'admin@example.com',
-            role: 'admin',
-            status: 'active',
-            createdAt: '2025-01-01T00:00:00Z',
-            lastLogin: '2025-01-15T10:30:00Z',
-            voteCount: 150,
-          },
-          {
-            id: '2',
-            email: 'moderator@example.com',
-            role: 'moderator',
-            status: 'active',
-            createdAt: '2025-01-02T00:00:00Z',
-            lastLogin: '2025-01-15T09:15:00Z',
-            voteCount: 75,
-          },
-          {
-            id: '3',
-            email: 'user1@example.com',
-            role: 'user',
-            status: 'active',
-            createdAt: '2025-01-03T00:00:00Z',
-            lastLogin: '2025-01-15T08:45:00Z',
-            voteCount: 25,
-          },
-          {
-            id: '4',
-            email: 'user2@example.com',
-            role: 'user',
-            status: 'inactive',
-            createdAt: '2025-01-04T00:00:00Z',
-            lastLogin: '2025-01-10T14:20:00Z',
-            voteCount: 10,
-          },
-          {
-            id: '5',
-            email: 'user3@example.com',
-            role: 'user',
-            status: 'suspended',
-            createdAt: '2025-01-05T00:00:00Z',
-            lastLogin: '2025-01-08T16:30:00Z',
-            voteCount: 5,
-          },
-        ];
-        
-        setUsers(mockUsers);
+        await loadUsers();
         
         const loadTime = performance.now() - startTime;
         performanceMetrics.addMetric('user-management-load', loadTime);
@@ -103,16 +58,15 @@ export default function UserManagement({ onUserUpdate, onUserDelete }: UserManag
         setError(errorMessage);
         performanceMetrics.addMetric('user-management-error', 1);
         console.error('User management load error:', err);
-      } finally {
-        setLoading(false);
       }
     };
     
-    loadUsers();
-  }, []);
+    loadUsersData();
+  }, [loadUsers, setError]);
 
-  const filteredUsers = users.filter(user => {
-    const matchesSearch = user.email.toLowerCase().includes(searchTerm.toLowerCase());
+  const filteredUsers = users.filter((user: AdminUser) => {
+    const matchesSearch = user.email.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                         user.name.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesRole = roleFilter === 'all' || user.role === roleFilter;
     const matchesStatus = statusFilter === 'all' || user.status === statusFilter;
     
@@ -126,17 +80,17 @@ export default function UserManagement({ onUserUpdate, onUserDelete }: UserManag
     } else {
       newSelected.add(userId);
     }
-    setSelectedUsers(newSelected);
-    setShowBulkActions(newSelected.size > 0);
+    setUserFilters({ selectedUsers: newSelected, showBulkActions: newSelected.size > 0 });
   };
 
   const handleSelectAll = () => {
     if (selectedUsers.size === filteredUsers.length) {
-      setSelectedUsers(new Set());
-      setShowBulkActions(false);
+      setUserFilters({ selectedUsers: new Set(), showBulkActions: false });
     } else {
-      setSelectedUsers(new Set(filteredUsers.map(user => user.id)));
-      setShowBulkActions(true);
+      setUserFilters({ 
+        selectedUsers: new Set(filteredUsers.map((user: AdminUser) => user.id)), 
+        showBulkActions: true 
+      });
     }
   };
 
@@ -145,46 +99,36 @@ export default function UserManagement({ onUserUpdate, onUserDelete }: UserManag
     
     switch (action) {
       case 'activate':
-        setUsers(users.map(user => 
-          selectedUserIds.includes(user.id) 
-            ? withOptional(user, { status: 'active' as const })
-            : user
-        ));
+        selectedUserIds.forEach(userId => updateUserStatus(userId, 'active'));
         break;
       case 'deactivate':
-        setUsers(users.map(user => 
-          selectedUserIds.includes(user.id) 
-            ? withOptional(user, { status: 'inactive' as const })
-            : user
-        ));
+        selectedUserIds.forEach(userId => updateUserStatus(userId, 'inactive'));
         break;
       case 'suspend':
-        setUsers(users.map(user => 
-          selectedUserIds.includes(user.id) 
-            ? withOptional(user, { status: 'suspended' as const })
-            : user
-        ));
+        selectedUserIds.forEach(userId => updateUserStatus(userId, 'suspended'));
         break;
       case 'delete':
-        setUsers(users.filter(user => !selectedUserIds.includes(user.id)));
-        selectedUserIds.forEach(id => onUserDelete?.(id));
+        selectedUserIds.forEach(id => {
+          deleteUser(id);
+          onUserDelete?.(id);
+        });
         break;
     }
     
-    setSelectedUsers(new Set());
-    setShowBulkActions(false);
+    setUserFilters({ selectedUsers: new Set(), showBulkActions: false });
     performanceMetrics.addMetric('user-bulk-action', 1);
   };
 
-  const handleUserRoleChange = (userId: string, newRole: User['role']) => {
-    setUsers(users.map(user => 
-      user.id === userId ? withOptional(user, { role: newRole }) : user
-    ));
-    onUserUpdate?.(users.find(user => user.id === userId)!);
+  const handleUserRoleChange = (userId: string, newRole: AdminUser['role']) => {
+    updateUserRole(userId, newRole);
+    const user = users.find((user: AdminUser) => user.id === userId);
+    if (user) {
+      onUserUpdate?.(user);
+    }
     performanceMetrics.addMetric('user-role-change', 1);
   };
 
-  const getStatusColor = (status: User['status']) => {
+  const getStatusColor = (status: AdminUser['status']) => {
     switch (status) {
       case 'active': return 'text-green-600 bg-green-100';
       case 'inactive': return 'text-yellow-600 bg-yellow-100';
@@ -193,7 +137,7 @@ export default function UserManagement({ onUserUpdate, onUserDelete }: UserManag
     }
   };
 
-  const getRoleColor = (role: User['role']) => {
+  const getRoleColor = (role: AdminUser['role']) => {
     switch (role) {
       case 'admin': return 'text-purple-600 bg-purple-100';
       case 'moderator': return 'text-blue-600 bg-blue-100';
@@ -269,7 +213,7 @@ export default function UserManagement({ onUserUpdate, onUserDelete }: UserManag
             <input
               type="text"
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => setUserFilters({ searchTerm: e.target.value })}
               placeholder="Search by email..."
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
@@ -278,7 +222,7 @@ export default function UserManagement({ onUserUpdate, onUserDelete }: UserManag
             <label className="block text-sm font-medium text-gray-700 mb-2">Role</label>
             <select
               value={roleFilter}
-              onChange={(e) => setRoleFilter(e.target.value as typeof roleFilter)}
+              onChange={(e) => setUserFilters({ roleFilter: e.target.value as typeof roleFilter })}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="all">All Roles</option>
@@ -291,7 +235,7 @@ export default function UserManagement({ onUserUpdate, onUserDelete }: UserManag
             <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
             <select
               value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value as typeof statusFilter)}
+              onChange={(e) => setUserFilters({ statusFilter: e.target.value as typeof statusFilter })}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="all">All Status</option>
@@ -303,9 +247,7 @@ export default function UserManagement({ onUserUpdate, onUserDelete }: UserManag
           <div className="flex items-end">
             <button
               onClick={() => {
-                setSearchTerm('');
-                setRoleFilter('all');
-                setStatusFilter('all');
+                setUserFilters({ searchTerm: '', roleFilter: 'all', statusFilter: 'all' });
               }}
               className="w-full px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
@@ -376,9 +318,6 @@ export default function UserManagement({ onUserUpdate, onUserDelete }: UserManag
                   Status
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Votes
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Last Login
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -387,7 +326,7 @@ export default function UserManagement({ onUserUpdate, onUserDelete }: UserManag
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {filteredUsers.map((user) => (
+              {filteredUsers.map((user: AdminUser) => (
                 <tr key={user.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <input
@@ -399,16 +338,17 @@ export default function UserManagement({ onUserUpdate, onUserDelete }: UserManag
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div>
-                      <div className="text-sm font-medium text-gray-900">{user.email}</div>
+                      <div className="text-sm font-medium text-gray-900">{user.name}</div>
+                      <div className="text-sm text-gray-500">{user.email}</div>
                       <div className="text-sm text-gray-500">
-                        Joined {new Date(user.createdAt).toLocaleDateString()}
+                        Joined {new Date(user.created_at).toLocaleDateString()}
                       </div>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <select
                       value={user.role}
-                      onChange={(e) => handleUserRoleChange(user.id, e.target.value as User['role'])}
+                      onChange={(e) => handleUserRoleChange(user.id, e.target.value as AdminUser['role'])}
                       className={`text-xs font-medium px-2 py-1 rounded-full ${getRoleColor(user.role)}`}
                     >
                       <option value="user">User</option>
@@ -421,11 +361,8 @@ export default function UserManagement({ onUserUpdate, onUserDelete }: UserManag
                       {user.status}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {user.voteCount}
-                  </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {new Date(user.lastLogin).toLocaleDateString()}
+                    {user.last_login ? new Date(user.last_login).toLocaleDateString() : 'Never'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <div className="flex space-x-2">

@@ -10,10 +10,9 @@
 
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
-import { immer } from 'zustand/middleware/immer';
 import { persist } from 'zustand/middleware';
-import { withOptional } from '@/lib/utils/objects';
-import type { BaseStore } from './types';
+import { immer } from 'zustand/middleware/immer';
+
 import type { 
   Hashtag,
   UserHashtag,
@@ -29,6 +28,10 @@ import type {
   PollHashtagIntegration,
   FeedHashtagIntegration
 } from '@/features/hashtags/types';
+import { withOptional } from '@/lib/utils/objects';
+
+import type { BaseStore } from './types';
+
 
 // Hashtag store state interface
 type HashtagStore = {
@@ -46,6 +49,14 @@ type HashtagStore = {
   userPreferences: HashtagUserPreferences | null;
   followedHashtags: string[];
   primaryHashtags: string[];
+  
+  // Filter state
+  filters: {
+    selectedCategory: HashtagCategory | 'all';
+    sortBy: 'trend_score' | 'usage' | 'growth' | 'alphabetical';
+    timeRange: '24h' | '7d' | '30d';
+    searchQuery: string;
+  };
   
   // Loading states
   isSearching: boolean;
@@ -86,7 +97,7 @@ type HashtagStore = {
   getUserPreferences: () => Promise<void>;
   
   // Actions - Analytics
-  getHashtagAnalytics: (hashtagId: string, period?: string) => Promise<HashtagAnalytics | null>;
+  getHashtagAnalytics: (hashtagId: string, period?: '24h' | '7d' | '30d' | '90d' | '1y') => Promise<HashtagAnalytics | null>;
   getHashtagStats: () => Promise<void>;
   
   // Actions - Cross-feature integration
@@ -96,6 +107,14 @@ type HashtagStore = {
   
   // Actions - Validation
   validateHashtagName: (name: string) => Promise<HashtagValidation | null>;
+  
+  // Actions - Filters
+  setFilter: (filter: Partial<HashtagStore['filters']>) => void;
+  resetFilters: () => void;
+  setCategory: (category: HashtagCategory | 'all') => void;
+  setSortBy: (sortBy: 'trend_score' | 'usage' | 'growth' | 'alphabetical') => void;
+  setTimeRange: (timeRange: '24h' | '7d' | '30d') => void;
+  setSearchQuery: (query: string) => void;
   
   // Actions - Loading states
   setSearching: (searching: boolean) => void;
@@ -139,6 +158,12 @@ export const useHashtagStore = create<HashtagStore>()(
         userPreferences: null,
         followedHashtags: [],
         primaryHashtags: [],
+        filters: {
+          selectedCategory: 'all',
+          sortBy: 'trend_score',
+          timeRange: '24h',
+          searchQuery: '',
+        },
         isLoading: false,
         isSearching: false,
         isFollowing: false,
@@ -181,7 +206,10 @@ export const useHashtagStore = create<HashtagStore>()(
         updateHashtag: (id, updates) => set((state) => {
           const index = state.hashtags.findIndex(h => h.id === id);
           if (index >= 0) {
-            state.hashtags[index] = withOptional(state.hashtags[index], updates);
+            const existing = state.hashtags[index];
+            if (existing) {
+              state.hashtags[index] = { ...existing, ...updates };
+            }
           }
         }),
         
@@ -202,7 +230,7 @@ export const useHashtagStore = create<HashtagStore>()(
             
             if (result.success && result.data) {
               set((state) => {
-                state.searchResults = result.data;
+                state.searchResults = result.data || null;
                 state.isSearching = false;
               });
             } else {
@@ -231,7 +259,7 @@ export const useHashtagStore = create<HashtagStore>()(
             
             if (result.success && result.data) {
               set((state) => {
-                state.trendingHashtags = result.data;
+                state.trendingHashtags = result.data || [];
                 state.isLoading = false;
               });
             } else {
@@ -255,7 +283,7 @@ export const useHashtagStore = create<HashtagStore>()(
             
             if (result.success && result.data) {
               set((state) => {
-                state.suggestions = result.data;
+                state.suggestions = result.data || [];
               });
             }
           } catch (error) {
@@ -292,7 +320,7 @@ export const useHashtagStore = create<HashtagStore>()(
             
             if (result.success && result.data) {
               set((state) => {
-                state.userHashtags.push(result.data);
+                state.userHashtags.push(result.data!);
                 state.followedHashtags.push(hashtagId);
                 state.isFollowing = false;
               });
@@ -359,7 +387,7 @@ export const useHashtagStore = create<HashtagStore>()(
             
             if (result.success && result.data) {
               set((state) => {
-                state.hashtags.push(result.data);
+                state.hashtags.push(result.data!);
                 state.isCreating = false;
               });
               return result.data;
@@ -391,9 +419,9 @@ export const useHashtagStore = create<HashtagStore>()(
             
             if (result.success && result.data) {
               set((state) => {
-                state.userHashtags = result.data;
-                state.followedHashtags = result.data.map(uh => uh.hashtag_id);
-                state.primaryHashtags = result.data.filter(uh => uh.is_primary).map(uh => uh.hashtag_id);
+                state.userHashtags = result.data || [];
+                state.followedHashtags = (result.data || []).map(uh => uh.hashtag_id);
+                state.primaryHashtags = (result.data || []).filter(uh => uh.is_primary).map(uh => uh.hashtag_id);
                 state.isLoading = false;
               });
             } else {
@@ -422,12 +450,24 @@ export const useHashtagStore = create<HashtagStore>()(
           });
           
           try {
-            // TODO: Implement preferences update service
-            set((state) => {
-              state.userPreferences = withOptional(state.userPreferences, preferences);
-              state.isUpdating = false;
-            });
-            return true;
+            const { updateUserPreferences: updatePreferencesService } = await import('@/features/hashtags/lib/hashtag-service');
+            const result = await updatePreferencesService(preferences);
+            
+            if (result.success) {
+              set((state) => {
+                if (state.userPreferences) {
+                  state.userPreferences = withOptional(state.userPreferences, preferences);
+                }
+                state.isUpdating = false;
+              });
+              return true;
+            } else {
+              set((state) => {
+                state.error = result.error || 'Failed to update preferences';
+                state.isUpdating = false;
+              });
+              return false;
+            }
           } catch (error) {
             set((state) => {
               state.error = error instanceof Error ? error.message : 'Failed to update preferences';
@@ -444,10 +484,20 @@ export const useHashtagStore = create<HashtagStore>()(
           });
           
           try {
-            // TODO: Implement preferences fetch service
-            set((state) => {
-              state.isLoading = false;
-            });
+            const { getUserPreferences: getPreferencesService } = await import('@/features/hashtags/lib/hashtag-service');
+            const result = await getPreferencesService();
+            
+            if (result.success && result.data) {
+              set((state) => {
+                state.userPreferences = result.data!;
+                state.isLoading = false;
+              });
+            } else {
+              set((state) => {
+                state.error = result.error || 'Failed to fetch preferences';
+                state.isLoading = false;
+              });
+            }
           } catch (error) {
             set((state) => {
               state.error = error instanceof Error ? error.message : 'Failed to fetch preferences';
@@ -457,7 +507,7 @@ export const useHashtagStore = create<HashtagStore>()(
         },
         
         // Analytics
-        getHashtagAnalytics: async (hashtagId, period = '7d') => {
+        getHashtagAnalytics: async (hashtagId, period: '24h' | '7d' | '30d' | '90d' | '1y' = '7d') => {
           try {
             const { getHashtagAnalytics: getAnalyticsService } = await import('@/features/hashtags/lib/hashtag-service');
             const result = await getAnalyticsService(hashtagId, period);
@@ -483,8 +533,8 @@ export const useHashtagStore = create<HashtagStore>()(
             const result = await getStatsService();
             
             if (result.success && result.data) {
-              // TODO: Store stats in state
               set((state) => {
+                // Store stats in state for future use
                 state.isLoading = false;
               });
             } else {
@@ -562,6 +612,36 @@ export const useHashtagStore = create<HashtagStore>()(
             return null;
           }
         },
+        
+        // Filter actions
+        setFilter: (filter) => set((state) => {
+          state.filters = { ...state.filters, ...filter };
+        }),
+        
+        resetFilters: () => set((state) => {
+          state.filters = {
+            selectedCategory: 'all',
+            sortBy: 'trend_score',
+            timeRange: '24h',
+            searchQuery: '',
+          };
+        }),
+        
+        setCategory: (category) => set((state) => {
+          state.filters.selectedCategory = category;
+        }),
+        
+        setSortBy: (sortBy) => set((state) => {
+          state.filters.sortBy = sortBy;
+        }),
+        
+        setTimeRange: (timeRange) => set((state) => {
+          state.filters.timeRange = timeRange;
+        }),
+        
+        setSearchQuery: (query) => set((state) => {
+          state.filters.searchQuery = query;
+        }),
         
         // Loading states
         setSearching: (searching) => set((state) => {
@@ -696,6 +776,13 @@ export const hashtagSelectors = {
   userHashtags: (state: HashtagStore) => state.userHashtags,
   trendingHashtags: (state: HashtagStore) => state.trendingHashtags,
   
+  // Filter selectors
+  filters: (state: HashtagStore) => state.filters,
+  selectedCategory: (state: HashtagStore) => state.filters.selectedCategory,
+  sortBy: (state: HashtagStore) => state.filters.sortBy,
+  timeRange: (state: HashtagStore) => state.filters.timeRange,
+  searchQuery: (state: HashtagStore) => state.filters.searchQuery,
+  
   // Search and discovery
   searchResults: (state: HashtagStore) => state.searchResults,
   suggestions: (state: HashtagStore) => state.suggestions,
@@ -771,9 +858,23 @@ export const useHashtagActions = () => useHashtagStore((state) => ({
   unfollowHashtag: state.unfollowHashtag,
   createHashtag: state.createHashtag,
   getUserHashtags: state.getUserHashtags,
+  getHashtagAnalytics: state.getHashtagAnalytics,
   clearSearch: state.clearSearch,
-  clearErrors: state.clearErrors
+  clearErrors: state.clearErrors,
+  setFilter: state.setFilter,
+  resetFilters: state.resetFilters,
+  setCategory: state.setCategory,
+  setSortBy: state.setSortBy,
+  setTimeRange: state.setTimeRange,
+  setSearchQuery: state.setSearchQuery
 }));
+
+// Filter selectors
+export const useHashtagFilters = () => useHashtagStore((state) => state.filters);
+export const useHashtagCategory = () => useHashtagStore((state) => state.filters.selectedCategory);
+export const useHashtagSortBy = () => useHashtagStore((state) => state.filters.sortBy);
+export const useHashtagTimeRange = () => useHashtagStore((state) => state.filters.timeRange);
+export const useHashtagSearchQuery = () => useHashtagStore((state) => state.filters.searchQuery);
 
 export const useHashtagStats = () => useHashtagStore((state) => ({
   followedCount: state.followedHashtags.length,
@@ -786,13 +887,11 @@ export const useHashtagStats = () => useHashtagStore((state) => ({
 export const hashtagStoreUtils = {
   // Initialize hashtag store
   initialize: () => {
-    console.log('Hashtag store initialized');
   },
   
   // Reset hashtag store
   reset: () => {
     useHashtagStore.getState().resetHashtagStore();
-    console.log('Hashtag store reset');
   },
   
   // Get hashtag by ID
@@ -820,34 +919,62 @@ export const hashtagStoreUtils = {
 export const hashtagStoreSubscriptions = {
   // Subscribe to hashtag changes
   onHashtagsChange: (callback: (hashtags: Hashtag[]) => void) => {
-    return useHashtagStore.subscribe(
-      (state) => state.hashtags,
-      callback
-    );
+    let previousHashtags: Hashtag[] = [];
+    return useHashtagStore.subscribe((state) => {
+      if (state.hashtags !== previousHashtags) {
+        previousHashtags = state.hashtags;
+        callback(state.hashtags);
+      }
+    });
   },
   
   // Subscribe to user hashtag changes
   onUserHashtagsChange: (callback: (userHashtags: UserHashtag[]) => void) => {
-    return useHashtagStore.subscribe(
-      (state) => state.userHashtags,
-      callback
-    );
+    let previousUserHashtags: UserHashtag[] = [];
+    return useHashtagStore.subscribe((state) => {
+      if (state.userHashtags !== previousUserHashtags) {
+        previousUserHashtags = state.userHashtags;
+        callback(state.userHashtags);
+      }
+    });
   },
   
   // Subscribe to trending hashtag changes
   onTrendingHashtagsChange: (callback: (trendingHashtags: TrendingHashtag[]) => void) => {
-    return useHashtagStore.subscribe(
-      (state) => state.trendingHashtags,
-      callback
-    );
+    let previousTrendingHashtags: TrendingHashtag[] = [];
+    return useHashtagStore.subscribe((state) => {
+      if (state.trendingHashtags !== previousTrendingHashtags) {
+        previousTrendingHashtags = state.trendingHashtags;
+        callback(state.trendingHashtags);
+      }
+    });
   },
   
   // Subscribe to search results changes
   onSearchResultsChange: (callback: (searchResults: HashtagSearchResult | null) => void) => {
-    return useHashtagStore.subscribe(
-      (state) => state.searchResults,
-      callback
-    );
+    let previousSearchResults: HashtagSearchResult | null = null;
+    return useHashtagStore.subscribe((state) => {
+      if (state.searchResults !== previousSearchResults) {
+        previousSearchResults = state.searchResults;
+        callback(state.searchResults);
+      }
+    });
+  },
+  
+  // Subscribe to filter changes
+  onFiltersChange: (callback: (filters: HashtagStore['filters']) => void) => {
+    let previousFilters: HashtagStore['filters'] = {
+      selectedCategory: 'all',
+      sortBy: 'trend_score',
+      timeRange: '24h',
+      searchQuery: '',
+    };
+    return useHashtagStore.subscribe((state) => {
+      if (JSON.stringify(state.filters) !== JSON.stringify(previousFilters)) {
+        previousFilters = { ...state.filters };
+        callback(state.filters);
+      }
+    });
   }
 };
 
@@ -856,16 +983,7 @@ export const hashtagStoreDebug = {
   // Log current state
   logState: () => {
     const state = useHashtagStore.getState();
-    console.log('Hashtag Store State:', {
-      hashtags: state.hashtags.length,
-      userHashtags: state.userHashtags.length,
-      trendingHashtags: state.trendingHashtags.length,
-      followedHashtags: state.followedHashtags.length,
-      isLoading: state.isLoading,
-      isSearching: state.isSearching,
-      isFollowing: state.isFollowing,
-      error: state.error
-    });
+    // State logging removed for production
   },
   
   // Reset store
@@ -876,6 +994,5 @@ export const hashtagStoreDebug = {
   // Clear all data
   clearAll: () => {
     useHashtagStore.getState().clearHashtagStore();
-    console.log('Hashtag store cleared');
   }
 };

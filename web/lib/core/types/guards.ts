@@ -163,7 +163,7 @@ export function toU8(x: unknown, field = 'value'): Uint8Array {
 
 export function parseHexU8(hex: string): Uint8Array {
   let s = hex.startsWith('0x') ? hex.slice(2) : hex;
-  if (s.length % 2) s = '0' + s;
+  if (s.length % 2) s = `0${  s}`;
   if (!/^[0-9a-fA-F]*$/.test(s)) throw new TypeGuardError('Invalid hex string', hex);
   const out = new Uint8Array(s.length / 2);
   for (let i = 0; i < s.length; i += 2) out[i/2] = parseInt(s.slice(i, i+2), 16);

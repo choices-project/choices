@@ -1,6 +1,5 @@
 'use client';
 
-import React from 'react';
 import { 
   MessageSquare, 
   Bug, 
@@ -13,8 +12,9 @@ import {
   Tag,
   Calendar
 } from 'lucide-react';
+import React from 'react';
 
-type Feedback = {
+interface Feedback {
   id: string;
   userid: string | null;
   type: string;
@@ -32,7 +32,7 @@ type Feedback = {
   updatedat: string;
 }
 
-type FeedbackListProps = {
+interface FeedbackListProps {
   feedback: Feedback[];
   isLoading: boolean;
   onFeedbackSelect: (_item: Feedback) => void;
@@ -101,7 +101,7 @@ export const FeedbackList: React.FC<FeedbackListProps> = ({
 
   const truncateText = (text: string, maxLength: number = 100) => {
     if (text.length <= maxLength) return text;
-    return text.substring(0, maxLength) + '...';
+    return `${text.substring(0, maxLength)  }...`;
   };
 
   if (isLoading) {

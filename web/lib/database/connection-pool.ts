@@ -8,12 +8,13 @@
  * Agent D - Database Specialist
  */
 
-import { logger } from '@/lib/utils/logger'
-import { getSupabaseServerClient } from '@/utils/supabase/server'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
+import { logger } from '@/lib/utils/logger'
+import { getSupabaseServerClient } from '@/utils/supabase/server'
+
 // Connection pool configuration
-export type PoolConfig = {
+export interface PoolConfig {
   minConnections: number
   maxConnections: number
   acquireTimeoutMillis: number
@@ -26,7 +27,7 @@ export type PoolConfig = {
 }
 
 // Connection pool metrics
-export type PoolMetrics = {
+export interface PoolMetrics {
   activeConnections: number
   idleConnections: number
   totalConnections: number
@@ -40,7 +41,7 @@ export type PoolMetrics = {
 }
 
 // Connection wrapper
-type ConnectionWrapper = {
+interface ConnectionWrapper {
   id: string
   connection: SupabaseClient
   createdAt: number
@@ -52,7 +53,7 @@ type ConnectionWrapper = {
 }
 
 // Connection pool statistics
-type PoolStats = {
+interface PoolStats {
   totalCreated: number
   totalDestroyed: number
   totalAcquired: number
@@ -353,7 +354,8 @@ export class ConnectionPoolManager {
       this.stats.totalValidated++
       
       if (error) {
-        logger.warn('Connection validation failed', error, { 
+        logger.warn('Connection validation failed', {
+          error: error as Error,
           connectionId: wrapper.id,
           validationTime
         })

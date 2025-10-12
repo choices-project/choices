@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
-import { getSupabaseServerClient } from '@/utils/supabase/server';
+
 import { createApiLogger } from '@/lib/utils/api-logger';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 export async function POST() {
   const logger = createApiLogger('/api/onboarding/complete', 'POST');

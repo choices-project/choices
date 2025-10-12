@@ -1,11 +1,5 @@
 'use client'
 
-import { useSupabaseAuth } from '@/contexts/AuthContext'
-import { logger } from '@/lib/utils/logger';
-import { useRouter } from 'next/navigation'
-import { useEffect, useState, useCallback } from 'react'
-import Link from 'next/link'
-import { T } from '@/lib/testing/testIds'
 import { 
   Shield, 
   Users, 
@@ -21,8 +15,17 @@ import {
   Zap,
   MessageSquare
 } from 'lucide-react'
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { useEffect, useState, useCallback } from 'react'
 
-type AdminStats = {
+import { useUser, useUserLoading, useUserActions } from '@/lib/stores'
+import { T } from '@/lib/testing/testIds'
+import { logger } from '@/lib/utils/logger';
+
+
+
+interface AdminStats {
   totalUsers: number
   totalPolls: number
   totalVotes: number
@@ -32,7 +35,9 @@ type AdminStats = {
 }
 
 export default function AdminDashboard() {
-  const { user, isLoading, signOut } = useSupabaseAuth()
+  const user = useUser()
+  const isLoading = useUserLoading()
+  const { signOut } = useUserActions()
   const router = useRouter()
   const [stats, setStats] = useState<AdminStats | null>(null)
   const [loading, setLoading] = useState(true)

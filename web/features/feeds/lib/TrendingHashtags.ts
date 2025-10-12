@@ -6,6 +6,7 @@
  */
 
 import { devLog } from '@/lib/utils/logger';
+
 import type { HashtagAnalytics, TrendingHashtag, HashtagUsage } from '../types';
 
 // Types are now imported from ../types

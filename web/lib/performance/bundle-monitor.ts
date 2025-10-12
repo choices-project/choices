@@ -5,7 +5,7 @@
  * Integrates with webpack bundle analyzer and provides real-time monitoring.
  */
 
-type BundleMetrics = {
+interface BundleMetrics {
   name: string;
   size: number;
   gzipSize?: number;
@@ -14,14 +14,14 @@ type BundleMetrics = {
   timestamp: number;
 }
 
-type BundleThresholds = {
+interface BundleThresholds {
   maxBundleSize: number;
   maxChunkSize: number;
   warningBundleSize: number;
   warningChunkSize: number;
 }
 
-type BundleAlert = {
+interface BundleAlert {
   type: 'error' | 'warning' | 'info';
   message: string;
   bundle: string;
@@ -34,7 +34,7 @@ class BundleMonitor {
   private metrics: BundleMetrics[] = [];
   private thresholds: BundleThresholds;
   private alerts: BundleAlert[] = [];
-  private observers: ((metrics: BundleMetrics[]) => void)[] = [];
+  private observers: Array<(metrics: BundleMetrics[]) => void> = [];
 
   constructor(thresholds?: Partial<BundleThresholds>) {
     this.thresholds = Object.assign({
@@ -216,7 +216,7 @@ class BundleMonitor {
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))  } ${  sizes[i]}`;
   }
 
   /**

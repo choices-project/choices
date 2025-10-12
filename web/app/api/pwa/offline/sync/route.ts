@@ -6,13 +6,14 @@
  */
 
 import { type NextRequest, NextResponse } from 'next/server';
-import { logger } from '@/lib/utils/logger';
+
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
 import { createApiLogger } from '@/lib/utils/api-logger';
+import { logger } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 // Types for offline sync
-type OfflineVote = {
+interface OfflineVote {
   id: string;
   pollId: string;
   optionIds: string[];
@@ -20,21 +21,21 @@ type OfflineVote = {
   timestamp: string;
   deviceId: string;
   metadata?: Record<string, any>;
-};
+}
 
-type VoteSyncResult = {
+interface VoteSyncResult {
   voteId: string;
   success: boolean;
   result?: any;
   error?: string;
-};
+}
 
-type SyncStatus = {
+interface SyncStatus {
   lastSync: string;
   pendingVotes: number;
   status: 'up_to_date' | 'pending' | 'error';
   failedVotes?: string[];
-};
+}
 
 export const dynamic = 'force-dynamic';
 

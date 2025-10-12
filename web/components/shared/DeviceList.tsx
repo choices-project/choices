@@ -1,9 +1,10 @@
 'use client'
 
-import React, { useState, useCallback, useMemo } from 'react'
 import { Smartphone, Monitor, Tablet, Laptop, Trash2, Plus, QrCode } from 'lucide-react'
+import React, { useState, useCallback, useMemo, useEffect } from 'react'
+import QRCode from 'qrcode'
 
-type Device = {
+interface Device {
   id: string
   name: string
   type: 'mobile' | 'desktop' | 'tablet' | 'laptop'
@@ -12,7 +13,7 @@ type Device = {
   icon?: string
 }
 
-type DeviceListProps = {
+interface DeviceListProps {
   devices: Device[]
   onAddDevice?: () => void
   onRemoveDevice?: (deviceId: string) => void
@@ -50,6 +51,7 @@ export const DeviceList: React.FC<DeviceListProps> = ({
 }) => {
   const [selectedDevice, setSelectedDevice] = useState<string | null>(null)
   const [showQRCode, setShowQRCode] = useState<string | null>(null)
+  const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>('')
 
   // Memoize devices to prevent unnecessary re-renders
   const memoizedDevices = useMemo(() => devices, [devices])
@@ -66,6 +68,40 @@ export const DeviceList: React.FC<DeviceListProps> = ({
       setShowQRCode(deviceId)
     }
   }, [onGenerateQR])
+
+  // Generate QR code when showQRCode changes
+  useEffect(() => {
+    if (showQRCode) {
+      const generateQR = async () => {
+        try {
+          const device = devices.find(d => d.id === showQRCode)
+          if (device) {
+            const qrData = JSON.stringify({
+              deviceId: device.id,
+              deviceName: device.name,
+              deviceType: device.type,
+              timestamp: new Date().toISOString(),
+              setupUrl: `${window.location.origin}/devices/setup/${device.id}`
+            })
+            
+            const qrDataUrl = await QRCode.toDataURL(qrData, {
+              width: 128,
+              margin: 2,
+              color: {
+                dark: '#000000',
+                light: '#FFFFFF'
+              }
+            })
+            setQrCodeDataUrl(qrDataUrl)
+          }
+        } catch (error) {
+          console.error('Failed to generate QR code:', error)
+        }
+      }
+      
+      generateQR()
+    }
+  }, [showQRCode, devices])
 
   const handleAddDevice = useCallback(() => {
     if (onAddDevice) {
@@ -236,7 +272,15 @@ export const DeviceList: React.FC<DeviceListProps> = ({
             <h3 className="text-lg font-semibold mb-4">QR Code for Device Setup</h3>
             <div className="bg-gray-100 p-4 rounded text-center">
               <div className="w-32 h-32 bg-white mx-auto mb-4 flex items-center justify-center">
-                <span className="text-gray-500">QR Code Placeholder</span>
+                {qrCodeDataUrl ? (
+                  <img 
+                    src={qrCodeDataUrl} 
+                    alt="QR Code for device setup" 
+                    className="w-full h-full object-contain"
+                  />
+                ) : (
+                  <span className="text-gray-500">Generating QR Code...</span>
+                )}
               </div>
               <p className="text-sm text-gray-600">
                 Scan this QR code with your device to complete setup

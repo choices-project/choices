@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server';
+
+import { createApiLogger } from '@/lib/utils/api-logger';
+
 import { getOrSetCsrfCookie } from '../_shared';
 import { CSRF_COOKIE } from '../_shared/cookies';
-import { createApiLogger } from '@/lib/utils/api-logger';
 
 export const dynamic = 'force-dynamic';
 

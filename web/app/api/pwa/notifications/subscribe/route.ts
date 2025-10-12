@@ -6,9 +6,10 @@
  */
 
 import { type NextRequest, NextResponse } from 'next/server';
-import { logger } from '@/lib/utils/logger';
+
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
 import { createApiLogger } from '@/lib/utils/api-logger';
+import { logger } from '@/lib/utils/logger';
 
 export const dynamic = 'force-dynamic';
 
@@ -27,7 +28,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { subscription, userId, preferences } = body;
 
-    if (!subscription || !subscription.endpoint) {
+    if (!subscription?.endpoint) {
       return NextResponse.json({
         success: false,
         error: 'Invalid subscription data'
@@ -229,11 +230,9 @@ export async function PUT(request: NextRequest) {
  */
 async function validateSubscription(subscription: any): Promise<boolean> {
   // Basic validation of subscription object
-  return !!(subscription && 
-           subscription.endpoint && 
+  return !!(subscription?.endpoint && 
            typeof subscription.endpoint === 'string' &&
-           subscription.keys &&
-           subscription.keys.p256dh &&
+           subscription.keys?.p256dh &&
            subscription.keys.auth);
 }
 

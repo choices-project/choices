@@ -3,7 +3,7 @@
  * Comprehensive type definitions for the analytics system
  */
 
-export type TrustTierAnalytics = {
+export interface TrustTierAnalytics {
   id: string
   user_id: string
   poll_id?: string
@@ -25,7 +25,7 @@ export type TrustTierAnalytics = {
   updated_at: string
 }
 
-export type PollDemographicInsights = {
+export interface PollDemographicInsights {
   id: string
   poll_id: string
   total_responses: number
@@ -44,7 +44,7 @@ export type PollDemographicInsights = {
   updated_at: string
 }
 
-export type CivicDatabaseEntry = {
+export interface CivicDatabaseEntry {
   id: string
   user_hash: string
   stable_user_id: string
@@ -64,7 +64,7 @@ export type CivicDatabaseEntry = {
   updated_at: string
 }
 
-export type TrustTierHistoryEntry = {
+export interface TrustTierHistoryEntry {
   trust_tier: TrustTier
   upgrade_date: string
   reason: string
@@ -73,7 +73,7 @@ export type TrustTierHistoryEntry = {
 
 export type TrustTier = 'T0' | 'T1' | 'T2' | 'T3'
 
-export type TrustTierScore = {
+export interface TrustTierScore {
   score: number
   trust_tier: TrustTier
   factors: {
@@ -84,7 +84,7 @@ export type TrustTierScore = {
   }
 }
 
-export type AnalyticsFilters = {
+export interface AnalyticsFilters {
   trust_tiers?: TrustTier[]
   age_groups?: string[]
   geographic_regions?: string[]
@@ -97,7 +97,7 @@ export type AnalyticsFilters = {
   }
 }
 
-export type AnalyticsSummary = {
+export interface AnalyticsSummary {
   total_users: number
   trust_tier_distribution: Record<TrustTier, number>
   average_confidence_level: number
@@ -113,7 +113,7 @@ export type AnalyticsSummary = {
   }
 }
 
-export type PollAnalytics = {
+export interface PollAnalytics {
   poll_id: string
   total_responses: number
   trust_tier_breakdown: Record<TrustTier, number>
@@ -128,7 +128,7 @@ export type PollAnalytics = {
   }
 }
 
-export type UserAnalytics = {
+export interface UserAnalytics {
   user_id: string
   trust_tier: TrustTier
   trust_tier_score: number
@@ -152,7 +152,7 @@ export type UserAnalytics = {
   }
 }
 
-export type AnalyticsExport = {
+export interface AnalyticsExport {
   export_id: string
   export_type: 'poll_analytics' | 'user_analytics' | 'demographic_insights'
   filters: AnalyticsFilters
@@ -161,7 +161,7 @@ export type AnalyticsExport = {
   expires_at: string
 }
 
-export type AnalyticsDashboard = {
+export interface AnalyticsDashboard {
   summary: AnalyticsSummary
   recent_polls: PollAnalytics[]
   top_insights: {

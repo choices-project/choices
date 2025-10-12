@@ -5,7 +5,7 @@
 /**
  * Google Civic API office information
  */
-export type GcOffice = {
+export interface GcOffice {
   name: string;
   divisionId: string;
   officialIndices: number[];
@@ -14,7 +14,7 @@ export type GcOffice = {
 /**
  * Google Civic API official information
  */
-export type GcOfficial = {
+export interface GcOfficial {
   name: string;
   party?: string;
   phones?: string[];
@@ -25,7 +25,7 @@ export type GcOfficial = {
 /**
  * Google Civic API representatives response
  */
-export type GcRepresentatives = {
+export interface GcRepresentatives {
   divisions?: Record<string, { name?: string }>;
   offices?: GcOffice[];
   officials?: GcOfficial[];
@@ -34,9 +34,9 @@ export type GcRepresentatives = {
 /**
  * Google Civic API election information
  */
-export type GcElectionInfo = {
+export interface GcElectionInfo {
   kind: string;
-  elections: {
+  elections: Array<{
     id: string;
     name: string;
     electionDay: string;
@@ -47,13 +47,13 @@ export type GcElectionInfo = {
       name: string;
       scope: string;
     };
-  }[];
+  }>;
 }
 
 /**
  * Google Civic API voter information
  */
-export type GcVoterInfo = {
+export interface GcVoterInfo {
   kind: string;
   election: {
     id: string;
@@ -66,23 +66,23 @@ export type GcVoterInfo = {
 /**
  * Google Civic API error details
  */
-export type GcErrorDetails = {
+export interface GcErrorDetails {
   code?: string;
   message?: string;
   status?: string;
   userMessage?: string;
-  details?: {
+  details?: Array<{
     '@type': string;
     reason: string;
     domain: string;
     metadata?: Record<string, unknown>;
-  }[];
+  }>;
 }
 
 /**
  * Retry configuration for API calls
  */
-export type RetryConfig = {
+export interface RetryConfig {
   maxAttempts: number;
   baseDelay: number;
   maxDelay: number;

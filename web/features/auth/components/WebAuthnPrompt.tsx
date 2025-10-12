@@ -6,7 +6,7 @@
 
 import React, { useState, useEffect } from 'react';
 
-export type FeatureWrapperProps = {
+export interface FeatureWrapperProps {
   children: React.ReactNode;
   className?: string;
   feature?: string;

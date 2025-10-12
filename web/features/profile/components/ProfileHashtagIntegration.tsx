@@ -10,24 +10,26 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
 import { Hash, TrendingUp, Users, Plus, X, Settings } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { withOptional } from '@/lib/utils/objects';
+import React, { useState, useEffect } from 'react';
+
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
-import { useHashtagStore, useHashtagActions, useHashtagStats } from '@/lib/stores';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { HashtagInput, HashtagDisplay, HashtagManagement } from '@/features/hashtags';
+import type { Hashtag } from '@/features/hashtags/types';
+import { useHashtagStore, useHashtagActions, useHashtagStats } from '@/lib/stores';
+import { cn } from '@/lib/utils';
+import { withOptional } from '@/lib/utils/objects';
+
 import type { 
   ProfileHashtagIntegration,
   UserProfile 
 } from '../types';
-import type { Hashtag } from '@/features/hashtags/types';
 
-type ProfileHashtagIntegrationProps = {
+interface ProfileHashtagIntegrationProps {
   profile: UserProfile;
   onUpdate: (updates: Partial<UserProfile>) => void;
   className?: string;
@@ -66,7 +68,7 @@ export default function ProfileHashtagIntegration({
           interest_hashtags: prev?.interest_hashtags || [],
           custom_hashtags: prev?.custom_hashtags || [],
           followed_hashtags: [...(prev?.followed_hashtags || []), hashtag.id],
-          hashtag_preferences: prev?.hashtag_preferences || {},
+          hashtag_preferences: prev?.hashtag_preferences,
           hashtag_activity: prev?.hashtag_activity || [],
           last_updated: new Date().toISOString()
         }));
@@ -79,7 +81,7 @@ export default function ProfileHashtagIntegration({
             interest_hashtags: hashtagIntegration?.interest_hashtags || [],
             custom_hashtags: hashtagIntegration?.custom_hashtags || [],
             followed_hashtags: [...(hashtagIntegration?.followed_hashtags || []), hashtag.id],
-            hashtag_preferences: hashtagIntegration?.hashtag_preferences || {},
+            hashtag_preferences: hashtagIntegration?.hashtag_preferences,
             hashtag_activity: hashtagIntegration?.hashtag_activity || [],
             last_updated: new Date().toISOString()
           }
@@ -96,14 +98,14 @@ export default function ProfileHashtagIntegration({
       const success = await unfollowHashtag(hashtag.id);
       if (success) {
         // Update local state
-        setHashtagIntegration(prev => withOptional(prev || {}, {
+        setHashtagIntegration(prev => withOptional(prev || { user_id: '', last_updated: new Date().toISOString() }, {
           followed_hashtags: (prev?.followed_hashtags || []).filter(id => id !== hashtag.id),
           last_updated: new Date().toISOString()
         }));
         
         // Update profile
         onUpdate({
-          hashtags: withOptional(hashtagIntegration || {}, {
+          hashtags: withOptional(hashtagIntegration || { user_id: '', last_updated: new Date().toISOString() }, {
             followed_hashtags: (hashtagIntegration?.followed_hashtags || []).filter(id => id !== hashtag.id),
             last_updated: new Date().toISOString(),
             user_id: hashtagIntegration?.user_id || ''
@@ -118,7 +120,7 @@ export default function ProfileHashtagIntegration({
   // Handle hashtag reordering
   const handleReorderHashtags = (reorderedHashtags: any[]) => {
     // Update local state with reordered hashtags
-    setHashtagIntegration(prev => withOptional(prev || {}, {
+    setHashtagIntegration(prev => withOptional(prev || { user_id: '', last_updated: new Date().toISOString() }, {
       followed_hashtags: reorderedHashtags.map(h => h.id),
       last_updated: new Date().toISOString(),
       user_id: prev?.user_id || ''
@@ -127,7 +129,7 @@ export default function ProfileHashtagIntegration({
 
   // Handle custom interests update
   const handleCustomInterestsUpdate = (interests: string[]) => {
-    setHashtagIntegration(prev => withOptional(prev || {}, {
+    setHashtagIntegration(prev => withOptional(prev || { user_id: '', last_updated: new Date().toISOString() }, {
       custom_hashtags: interests,
       last_updated: new Date().toISOString(),
       user_id: prev?.user_id || ''
@@ -135,7 +137,7 @@ export default function ProfileHashtagIntegration({
     
     onUpdate({
       custom_interests: interests,
-      hashtags: withOptional(hashtagIntegration || {}, {
+      hashtags: withOptional(hashtagIntegration || { user_id: '', last_updated: new Date().toISOString() }, {
         custom_hashtags: interests,
         last_updated: new Date().toISOString(),
         user_id: hashtagIntegration?.user_id || ''
@@ -145,14 +147,14 @@ export default function ProfileHashtagIntegration({
 
   // Handle primary hashtags update
   const handlePrimaryHashtagsUpdate = (hashtagIds: string[]) => {
-    setHashtagIntegration(prev => withOptional(prev || {}, {
+    setHashtagIntegration(prev => withOptional(prev || { user_id: '', last_updated: new Date().toISOString() }, {
       primary_hashtags: hashtagIds,
       last_updated: new Date().toISOString(),
       user_id: prev?.user_id || ''
     }));
     
     onUpdate({
-      hashtags: withOptional(hashtagIntegration || {}, {
+      hashtags: withOptional(hashtagIntegration || { user_id: '', last_updated: new Date().toISOString() }, {
         primary_hashtags: hashtagIds,
         last_updated: new Date().toISOString(),
         user_id: hashtagIntegration?.user_id || ''
@@ -364,7 +366,7 @@ export default function ProfileHashtagIntegration({
                             size="sm"
                             className="h-4 w-4 p-0 ml-1"
                             onClick={() => {
-                              const newCustom = hashtagIntegration.custom_hashtags.filter((_, i) => i !== index);
+                              const newCustom = (hashtagIntegration?.custom_hashtags || []).filter((_, i) => i !== index);
                               handleCustomInterestsUpdate(newCustom);
                             }}
                           >

@@ -72,24 +72,20 @@ jobs:
         run: npm run test:integration -- --coverage --coverageReporters=lcov --coverageReporters=text
 
       - name: Upload unit test coverage
-        if: matrix.test-type == 'unit' && ${{ secrets.CODECOV_TOKEN != '' }}
-        uses: codecov/codecov-action@v4
+        if: matrix.test-type == 'unit'
+        uses: actions/upload-artifact@v4
         with:
-          file: ./coverage/lcov.info
-          flags: unit-tests
-          name: unit-coverage
-          token: ${{ secrets.CODECOV_TOKEN }}
-          fail_ci_if_error: false
+          name: unit-test-coverage
+          path: ./coverage/
+          retention-days: 7
 
       - name: Upload integration test coverage
-        if: matrix.test-type == 'integration' && ${{ secrets.CODECOV_TOKEN != '' }}
-        uses: codecov/codecov-action@v4
+        if: matrix.test-type == 'integration'
+        uses: actions/upload-artifact@v4
         with:
-          file: ./coverage/lcov.info
-          flags: integration-tests
-          name: integration-coverage
-          token: ${{ secrets.CODECOV_TOKEN }}
-          fail_ci_if_error: false
+          name: integration-test-coverage
+          path: ./coverage/
+          retention-days: 7
 
   # E2E Tests
   e2e-tests:
@@ -330,7 +326,7 @@ jobs:
           echo "- Load Tests: ${{ needs.load-tests.result }}" >> test-summary.md
           echo "" >> test-summary.md
           echo "## Coverage Reports" >> test-summary.md
-          echo "Coverage reports are available in the Codecov dashboard." >> test-summary.md
+          echo "Coverage reports are available in the workflow artifacts." >> test-summary.md
           echo "" >> test-summary.md
           echo "## Test Artifacts" >> test-summary.md
           echo "Detailed test reports are available in the workflow artifacts." >> test-summary.md

@@ -7,10 +7,10 @@
  * Updated: October 11, 2025
  */
 
-import { getSupabaseServerClient } from '@/utils/supabase/server';
 import { logger } from '@/lib/utils/logger';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 
-export type PerformanceMetrics = {
+export interface PerformanceMetrics {
   metricName: string;
   avgValue: number;
   minValue: number;
@@ -263,7 +263,7 @@ export class OptimizedPollService {
           minValue: Math.max(0.5, cacheHitRate * 0.8),
           maxValue: Math.min(1.0, cacheHitRate * 1.2),
           countMeasurements: totalPolls,
-          cacheHitRate: cacheHitRate
+          cacheHitRate
         },
         {
           metricName: 'error_rate',
@@ -271,7 +271,7 @@ export class OptimizedPollService {
           minValue: 0,
           maxValue: Math.min(0.1, errorRate * 2),
           countMeasurements: totalPolls,
-          errorRate: errorRate
+          errorRate
         },
         {
           metricName: 'poll_engagement',
@@ -313,8 +313,8 @@ export class OptimizedPollService {
       hitRate: Math.round(hitRate * 100) / 100,
       missRate: Math.round(missRate * 100) / 100,
       evictions: this.evictionCount,
-      memoryUsage: memoryUsage,
-      averageAge: averageAge
+      memoryUsage,
+      averageAge
     };
   }
 
@@ -501,7 +501,7 @@ export class OptimizedPollService {
 export const optimizedPollService = new OptimizedPollService();
 
 // Additional exports for compatibility
-export type OptimizedPollResult = {
+export interface OptimizedPollResult {
   id: string;
   title: string;
   options: string[];

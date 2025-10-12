@@ -1,7 +1,5 @@
 'use client';
 
-import React from 'react';
-import { useAdminStore } from '@/features/admin/lib/store';
 import {
   Bell,
   Menu,
@@ -10,6 +8,9 @@ import {
   Settings,
   LogOut,
 } from 'lucide-react';
+import React from 'react';
+
+import { useAdminStore } from '@/features/admin/lib/store';
 
 export const Header: React.FC = () => {
   const { notifications, markNotificationRead, toggleSidebar } = useAdminStore();

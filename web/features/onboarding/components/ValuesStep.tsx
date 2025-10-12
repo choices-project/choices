@@ -1,29 +1,29 @@
 'use client'
 
-import { useState, useEffect } from 'react'
 import { Heart, Users, Globe, TrendingUp } from 'lucide-react'
+import { useState, useEffect } from 'react'
 
-type ValueCategory = {
+interface ValueCategory {
   title: string
   icon: React.ReactNode
   color: string
   concerns: string[]
 }
 
-type CommunityOption = {
+interface CommunityOption {
   value: string
   label: string
   description: string
 }
 
-type ParticipationOption = {
+interface ParticipationOption {
   value: 'observer' | 'contributor' | 'leader'
   label: string
   description: string
   icon: React.ReactNode
 }
 
-type ValuesStepProps = {
+interface ValuesStepProps {
   data: {
     primaryConcerns?: string[]
     communityFocus?: string[]

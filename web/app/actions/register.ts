@@ -1,16 +1,16 @@
 'use server';
 
-import { z } from 'zod';
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
+import { z } from 'zod';
 
-import { logger } from '@/lib/utils/logger';
-import { TypeGuardError } from '@/lib/core/types/guards';
 import { logSecurityEvent } from '@/lib/core/auth/server-actions';
-import { getSupabaseServerClient, getSupabaseServiceRoleClient } from '@/utils/supabase/server';
 
 // Import the existing ServerActionContext type
 import type { ServerActionContext } from '@/lib/core/auth/server-actions';
+import { TypeGuardError } from '@/lib/core/types/guards';
+import { logger } from '@/lib/utils/logger';
+import { getSupabaseServerClient, getSupabaseServiceRoleClient } from '@/utils/supabase/server';
 
 const RegisterForm = z.object({
   email: z.string().email('Invalid email'),

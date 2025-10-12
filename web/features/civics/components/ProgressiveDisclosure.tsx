@@ -12,10 +12,10 @@
 
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
 import { ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline';
+import React, { useState, useRef, useEffect } from 'react';
 
-type ProgressiveDisclosureProps = {
+interface ProgressiveDisclosureProps {
   children: React.ReactNode;
   trigger: React.ReactNode;
   isExpanded?: boolean;

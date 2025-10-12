@@ -10,12 +10,6 @@
 
 'use client';
 
-import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { 
   User, 
   Shield, 
@@ -29,8 +23,16 @@ import {
   Calendar,
   Activity
 } from 'lucide-react';
-import { useProfileData, useProfileDisplay, useProfileCompleteness } from '../hooks/use-profile';
+import { useState } from 'react';
+
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/hooks/useAuth';
+
+import { useProfileData, useProfileDisplay, useProfileCompleteness, useProfileLoadingStates } from '../hooks/use-profile';
 import type { ProfilePageProps } from '../types';
 
 export default function ProfilePage({ 
@@ -45,11 +47,11 @@ export default function ProfilePage({
   const { 
     profile, 
     isLoading, 
-    error, 
-    isUpdating: _isUpdating, 
-    isExporting, 
-    isAnyUpdating 
+    error
   } = useProfileData();
+  
+  // Get loading states separately
+  const loadingStates = useProfileLoadingStates();
   const { 
     displayName, 
     initials, 
@@ -259,7 +261,7 @@ export default function ProfilePage({
             <Button 
               variant="outline" 
               onClick={onEdit}
-              disabled={isAnyUpdating}
+              disabled={loadingStates.isAnyUpdating}
             >
               <Edit className="h-4 w-4 mr-2" />
               Edit Profile
@@ -267,7 +269,7 @@ export default function ProfilePage({
             <Button 
               variant="outline" 
               onClick={onSettings}
-              disabled={isAnyUpdating}
+              disabled={loadingStates.isAnyUpdating}
             >
               <Settings className="h-4 w-4 mr-2" />
               Privacy Settings
@@ -275,10 +277,10 @@ export default function ProfilePage({
             <Button 
               variant="outline" 
               onClick={() => setShowExportConfirm(true)}
-              disabled={isAnyUpdating || isExporting}
+              disabled={loadingStates.isAnyUpdating || loadingStates.isExporting}
             >
               <Download className="h-4 w-4 mr-2" />
-              {isExporting ? 'Exporting...' : 'Export Data'}
+              {loadingStates.isExporting ? 'Exporting...' : 'Export Data'}
             </Button>
           </div>
         </CardContent>
@@ -296,10 +298,10 @@ export default function ProfilePage({
             <div className="flex space-x-2">
               <Button 
                 onClick={handleExportData}
-                disabled={isExporting}
+                disabled={loadingStates.isExporting}
                 className="flex-1"
               >
-                {isExporting ? (
+                {loadingStates.isExporting ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                     Exporting...
@@ -314,7 +316,7 @@ export default function ProfilePage({
               <Button 
                 variant="outline" 
                 onClick={() => setShowExportConfirm(false)}
-                disabled={isExporting}
+                disabled={loadingStates.isExporting}
                 className="flex-1"
               >
                 Cancel
@@ -325,7 +327,7 @@ export default function ProfilePage({
       )}
 
       {/* Loading Overlay */}
-      {isAnyUpdating && (
+      {loadingStates.isAnyUpdating && (
         <div className="fixed inset-0 bg-black bg-opacity-25 flex items-center justify-center z-40">
           <div className="bg-white rounded-lg p-6 flex items-center space-x-3">
             <Loader2 className="h-6 w-6 animate-spin" />

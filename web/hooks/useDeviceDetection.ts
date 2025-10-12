@@ -1,11 +1,12 @@
 import { useState, useEffect, useCallback } from 'react'
+
 import { devLog } from '@/lib/utils/logger'
 import { withOptional } from '@/lib/utils/objects'
 
 // Types
 export type DeviceType = 'mobile' | 'tablet' | 'desktop' | 'tv'
 
-export type DeviceInfo = {
+export interface DeviceInfo {
   type: DeviceType
   os: string
   browser: string
@@ -16,7 +17,7 @@ export type DeviceInfo = {
   user_agent: string
 }
 
-export type DeviceCapabilities = {
+export interface DeviceCapabilities {
   offline_support: boolean
   push_notifications: boolean
   camera_access: boolean
@@ -27,7 +28,7 @@ export type DeviceCapabilities = {
   connection_type?: string
 }
 
-export type OptimizationSettings = {
+export interface OptimizationSettings {
   image_quality: 'low' | 'medium' | 'high'
   animation_enabled: boolean
   real_time_updates: boolean

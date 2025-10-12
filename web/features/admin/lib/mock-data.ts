@@ -55,7 +55,7 @@ export const mockChartData = {
 };
 
 // Mock types for disabled services
-export type BreakingNewsStory = {
+export interface BreakingNewsStory {
   id: string;
   title: string;
   content: string;
@@ -63,7 +63,7 @@ export type BreakingNewsStory = {
   source: string;
 }
 
-export type PollContext = {
+export interface PollContext {
   id: string;
   title: string;
   description: string;

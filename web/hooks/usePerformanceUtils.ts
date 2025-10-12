@@ -1,9 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+
 import { devLog } from '@/lib/utils/logger';
 
-type PerformanceUtils = {
+interface PerformanceUtils {
   performanceMonitor: unknown
 }
 

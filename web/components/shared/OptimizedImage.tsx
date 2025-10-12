@@ -1,9 +1,9 @@
 'use client'
 
-import React, { useState, useCallback } from 'react'
 import Image from 'next/image'
+import React, { useState, useCallback } from 'react'
 
-type OptimizedImageProps = {
+interface OptimizedImageProps {
   src: string
   alt: string
   width?: number

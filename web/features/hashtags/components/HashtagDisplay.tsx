@@ -10,13 +10,15 @@
 
 'use client';
 
-import React from 'react';
 import { Hash, TrendingUp, Users, Eye, Plus, Minus, Verified } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import React from 'react';
+
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { cn } from '@/lib/utils';
+
 import type { HashtagDisplayProps, Hashtag, HashtagCategory } from '../types';
 
 export default function HashtagDisplay({

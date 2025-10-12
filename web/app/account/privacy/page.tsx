@@ -1,14 +1,15 @@
 'use client'
 
-import { useState, useEffect } from 'react'
 import { Shield, Eye, Download, Trash2, Settings, Lock, Globe, BarChart3, MapPin, Bell } from 'lucide-react'
+import { useState, useEffect } from 'react'
+
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 // import { Switch } from '@/components/ui/switch' // Switch component not available
-import { Badge } from '@/components/ui/badge'
-import { Alert, AlertDescription } from '@/components/ui/alert'
 
-type PrivacyPreferences = {
+interface PrivacyPreferences {
   allowAnalytics: boolean
   allowLocationTracking: boolean
   allowUsageTracking: boolean

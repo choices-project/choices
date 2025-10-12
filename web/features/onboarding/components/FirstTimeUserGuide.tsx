@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
 import { ArrowRight, Vote, Users, BarChart3, X, CheckCircle } from 'lucide-react';
+import React, { useState } from 'react';
 
 import type { FirstTimeUserGuideProps } from '../types';
 

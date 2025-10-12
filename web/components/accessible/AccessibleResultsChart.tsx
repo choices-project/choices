@@ -18,13 +18,14 @@
 // ============================================================================
 
 import React, { useState, useEffect, useRef } from 'react';
+
 import { ScreenReaderSupport } from '../../lib/accessibility/screen-reader';
 
 // ============================================================================
 // TYPES AND INTERFACES
 // ============================================================================
 
-export type ChartData = {
+export interface ChartData {
   id: string;
   name: string;
   votes: number;
@@ -35,7 +36,7 @@ export type ChartData = {
   round?: number;
 }
 
-export type AccessibleResultsChartProps = {
+export interface AccessibleResultsChartProps {
   data: ChartData[];
   title: string;
   'aria-label': string;

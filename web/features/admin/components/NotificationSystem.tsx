@@ -8,81 +8,39 @@
  * Updated: December 19, 2024
  */
 
-import React, { createContext, useContext, useCallback, useState } from 'react';
+import React from 'react';
+
 import type { AdminNotification } from '@/features/admin/types';
-import { withOptional } from '@/lib/utils/objects';
-
-type NotificationContextType = {
-  notifications: AdminNotification[];
-  addNotification: (notification: Omit<AdminNotification, 'id' | 'timestamp'>) => void;
-  removeNotification: (id: string) => void;
-  clearAllNotifications: () => void;
-  markAsRead: (id: string) => void;
-}
-
-const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
+import { 
+  useAdminNotifications, 
+  useAdminUnreadCount, 
+  useNotificationActions 
+} from '@/lib/stores/notificationStore';
 
 /**
- * Hook to use notification system
+ * Hook to use admin notification system
  */
 export function useNotifications() {
-  const context = useContext(NotificationContext);
-  if (!context) {
-    throw new Error('useNotifications must be used within a NotificationProvider');
-  }
-  return context;
-}
-
-/**
- * Notification provider component
- */
-export function NotificationProvider({ children }: { children: React.ReactNode }) {
-  const [notifications, setNotifications] = useState<AdminNotification[]>([]);
-
-  const removeNotification = useCallback((id: string) => {
-    setNotifications(prev => prev.filter(n => n.id !== id));
-  }, []);
-
-  const addNotification = useCallback((notification: Omit<AdminNotification, 'id' | 'timestamp'>) => {
-    const newNotification: AdminNotification = withOptional({
-      id: crypto.randomUUID(),
-      timestamp: new Date().toISOString(),
-    }, notification);
-
-    setNotifications(prev => [newNotification, ...prev].slice(0, 10)); // Keep only last 10
-
-    // Auto-dismiss after 5 seconds for non-error notifications
-    if (newNotification.type !== 'error') {
-      setTimeout(() => {
-        removeNotification(newNotification.id);
-      }, 5000);
-    }
-  }, [removeNotification]);
-
-  const clearAllNotifications = useCallback(() => {
-    setNotifications([]);
-  }, []);
-
-  const markAsRead = useCallback((id: string) => {
-    setNotifications(prev => 
-      prev.map(n => n.id === id ? withOptional(n, { read: true }) : n)
-    );
-  }, []);
-
-  const value = {
+  const notifications = useAdminNotifications();
+  const unreadCount = useAdminUnreadCount();
+  const { 
+    addAdminNotification, 
+    removeAdminNotification, 
+    clearAllAdminNotifications, 
+    markAdminNotificationAsRead 
+  } = useNotificationActions();
+  
+  return {
     notifications,
-    addNotification,
-    removeNotification,
-    clearAllNotifications,
-    markAsRead
+    unreadCount,
+    addNotification: addAdminNotification,
+    removeNotification: removeAdminNotification,
+    clearAllNotifications: clearAllAdminNotifications,
+    markAsRead: markAdminNotificationAsRead,
   };
-
-  return (
-    <NotificationContext.Provider value={value}>
-      {children}
-    </NotificationContext.Provider>
-  );
 }
+
+// NotificationProvider is no longer needed with Zustand store
 
 /**
  * Individual notification component

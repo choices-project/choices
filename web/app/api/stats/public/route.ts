@@ -1,7 +1,8 @@
 // NextRequest import removed - not used
 import { NextResponse } from 'next/server'
-import { getSupabaseServerClient } from '@/utils/supabase/server'
+
 import { logger } from '@/lib/utils/logger'
+import { getSupabaseServerClient } from '@/utils/supabase/server'
 
 export const dynamic = 'force-dynamic'
 
@@ -45,7 +46,7 @@ export async function GET() {
     
     return NextResponse.json({
       totalPolls: totalPolls || 0,
-      totalVotes: totalVotes,
+      totalVotes,
       activeUsers: activeUsers || 0
     })
     

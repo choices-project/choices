@@ -6,6 +6,7 @@
  */
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
+
 import type { 
   FeatureFlag, 
   FeatureFlagManager,
@@ -20,7 +21,7 @@ import {
   getAllFeatureFlags as _getAllFeatureFlags
 } from '@/lib/core/feature-flags';
 
-export type UseFeatureFlagsReturn = {
+export interface UseFeatureFlagsReturn {
   // Flag checking
   isEnabled: (flagId: string) => boolean;
   isDisabled: (flagId: string) => boolean;

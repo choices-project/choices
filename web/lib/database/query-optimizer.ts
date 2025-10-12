@@ -8,13 +8,15 @@
  * Agent D - Database Specialist
  */
 
-import { logger } from '@/lib/utils/logger'
-import { getSupabaseServerClient } from '../../utils/supabase/server'
 import type { SupabaseClient } from '@supabase/supabase-js'
+
+import { logger } from '@/lib/utils/logger'
+
+import { getSupabaseServerClient } from '../../utils/supabase/server'
 import type { QueryPlan } from '../types/database'
 
 // Query optimization options
-export type QueryOptions = {
+export interface QueryOptions {
   useCache?: boolean
   cacheTTL?: number
   cacheTags?: string[]
@@ -25,7 +27,7 @@ export type QueryOptions = {
 }
 
 // Query performance metrics
-export type QueryMetrics = {
+export interface QueryMetrics {
   query: string
   executionTime: number
   rowsReturned: number
@@ -36,7 +38,7 @@ export type QueryMetrics = {
 }
 
 // Query optimization result
-export type OptimizationResult = {
+export interface OptimizationResult {
   originalQuery: string
   optimizedQuery: string
   optimizations: string[]
@@ -45,7 +47,7 @@ export type OptimizationResult = {
 }
 
 // Query cache entry
-type QueryCacheEntry<T = unknown> = {
+interface QueryCacheEntry<T = unknown> {
   query: string
   result: T
   timestamp: number
@@ -147,7 +149,8 @@ export class AdvancedQueryOptimizer {
           lastError = error instanceof Error ? error : new Error('Unknown error')
           
           if (attempt < retries) {
-            logger.warn('Query execution failed, retrying', lastError, { 
+            logger.warn('Query execution failed, retrying', {
+              error: lastError,
               attempt, 
               maxRetries: retries,
               query: this.sanitizeQuery(query)

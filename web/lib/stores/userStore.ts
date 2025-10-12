@@ -8,13 +8,51 @@
  * Status: ✅ ACTIVE
  */
 
+import type { User, Session } from '@supabase/supabase-js';
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
-import { immer } from 'zustand/middleware/immer';
 import { persist } from 'zustand/middleware';
+import { immer } from 'zustand/middleware/immer';
+
 import { withOptional } from '@/lib/utils/objects';
-import type { User, Session } from '@supabase/supabase-js';
+
 import type { UserProfile, BaseStore } from './types';
+
+// Profile editing types
+export interface ProfileUpdateData {
+  displayname: string;
+  bio: string;
+  username: string;
+  primaryconcerns: string[];
+  communityfocus: string[];
+  participationstyle: 'observer' | 'participant' | 'leader' | 'organizer';
+  privacysettings: {
+    profile_visibility: 'public' | 'private' | 'friends';
+    show_email: boolean;
+    show_activity: boolean;
+    allow_messages: boolean;
+    share_demographics: boolean;
+    allow_analytics: boolean;
+  };
+}
+
+export interface Representative {
+  id: string;
+  name: string;
+  title: string;
+  party: string;
+  district: string;
+  state: string;
+  phone?: string;
+  email?: string;
+  website?: string;
+  photo?: string;
+  socialMedia?: {
+    twitter?: string;
+    facebook?: string;
+    instagram?: string;
+  };
+}
 
 // User store state interface
 type UserStore = {
@@ -25,6 +63,35 @@ type UserStore = {
   
   // User profile data
   profile: UserProfile | null;
+  
+  // Profile editing state
+  profileEditData: ProfileUpdateData | null;
+  isProfileEditing: boolean;
+  profileEditErrors: Record<string, string>;
+  
+  // Address and representatives
+  currentAddress: string;
+  currentState: string;
+  representatives: Representative[];
+  showAddressForm: boolean;
+  newAddress: string;
+  addressLoading: boolean;
+  savedSuccessfully: boolean;
+  
+  // Avatar editing
+  avatarFile: File | null;
+  avatarPreview: string | null;
+  isUploadingAvatar: boolean;
+  
+  // Biometric state
+  biometric: {
+    isSupported: boolean | null;
+    isAvailable: boolean | null;
+    hasCredentials: boolean | null;
+    isRegistering: boolean;
+    error: string | null;
+    success: boolean;
+  };
   
   // Loading states
   isProfileLoading: boolean;
@@ -37,12 +104,51 @@ type UserStore = {
   signOut: () => void;
   clearUser: () => void;
   
+  // Actions - Profile Editing
+  setProfileEditData: (data: ProfileUpdateData) => void;
+  updateProfileEditData: (updates: Partial<ProfileUpdateData>) => void;
+  updateProfileField: (field: keyof ProfileUpdateData, value: any) => void;
+  updateArrayField: (field: 'primaryconcerns' | 'communityfocus', value: string) => void;
+  updatePrivacySetting: (setting: keyof ProfileUpdateData['privacysettings'], value: any) => void;
+  setProfileEditing: (editing: boolean) => void;
+  setProfileEditError: (field: string, error: string) => void;
+  clearProfileEditError: (field: string) => void;
+  clearAllProfileEditErrors: () => void;
+  
+  // Actions - Address and Representatives
+  setCurrentAddress: (address: string) => void;
+  setCurrentState: (state: string) => void;
+  setRepresentatives: (representatives: Representative[]) => void;
+  addRepresentative: (representative: Representative) => void;
+  removeRepresentative: (id: string) => void;
+  setShowAddressForm: (show: boolean) => void;
+  setNewAddress: (address: string) => void;
+  setAddressLoading: (loading: boolean) => void;
+  setSavedSuccessfully: (saved: boolean) => void;
+  lookupAddress: (address: string) => Promise<Representative[]>;
+  handleAddressUpdate: (address: string) => Promise<void>;
+  
+  // Actions - Avatar
+  setAvatarFile: (file: File | null) => void;
+  setAvatarPreview: (preview: string | null) => void;
+  setUploadingAvatar: (uploading: boolean) => void;
+  clearAvatar: () => void;
+  
   // Actions - Profile
   setProfile: (profile: UserProfile | null) => void;
   updateProfile: (updates: Partial<UserProfile>) => void;
   updatePreferences: (preferences: Partial<UserProfile['preferences']>) => void;
   updateSettings: (settings: Partial<UserProfile['settings']>) => void;
   updateMetadata: (metadata: Partial<UserProfile['metadata']>) => void;
+  
+  // Actions - Biometric
+  setBiometricSupported: (supported: boolean) => void;
+  setBiometricAvailable: (available: boolean) => void;
+  setBiometricCredentials: (hasCredentials: boolean) => void;
+  setBiometricRegistering: (registering: boolean) => void;
+  setBiometricError: (error: string | null) => void;
+  setBiometricSuccess: (success: boolean) => void;
+  resetBiometric: () => void;
   
   // Actions - Loading states
   setProfileLoading: (loading: boolean) => void;
@@ -63,6 +169,34 @@ export const useUserStore = create<UserStore>()(
       session: null,
       isAuthenticated: false,
       profile: null,
+      
+      // Profile editing state
+      profileEditData: null,
+      isProfileEditing: false,
+      profileEditErrors: {},
+      
+      // Address and representatives
+      currentAddress: '',
+      currentState: '',
+      representatives: [],
+      showAddressForm: false,
+      newAddress: '',
+      addressLoading: false,
+      savedSuccessfully: false,
+      
+      // Avatar editing
+      avatarFile: null,
+      avatarPreview: null,
+      isUploadingAvatar: false,
+      
+      biometric: {
+        isSupported: null,
+        isAvailable: null,
+        hasCredentials: null,
+        isRegistering: false,
+        error: null,
+        success: false,
+      },
       isLoading: false,
       isProfileLoading: false,
       isUpdating: false,
@@ -88,9 +222,7 @@ export const useUserStore = create<UserStore>()(
         
         // Log authentication state change
         if (user) {
-          console.log('User authenticated:', user.email);
         } else {
-          console.log('User signed out');
         }
       }),
       
@@ -124,7 +256,6 @@ export const useUserStore = create<UserStore>()(
         state.isAuthenticated = false;
         state.error = null;
         
-        console.log('User signed out - state cleared');
       }),
       
       clearUser: () => set((state) => {
@@ -143,7 +274,6 @@ export const useUserStore = create<UserStore>()(
         state.profile = profile;
         
         if (profile) {
-          console.log('User profile loaded:', profile.username);
         }
       }),
       
@@ -183,6 +313,198 @@ export const useUserStore = create<UserStore>()(
         state.isUpdating = updating;
       }),
       
+      // Biometric actions
+      setBiometricSupported: (supported) => set((state) => {
+        state.biometric.isSupported = supported;
+      }),
+      
+      setBiometricAvailable: (available) => set((state) => {
+        state.biometric.isAvailable = available;
+      }),
+      
+      setBiometricCredentials: (hasCredentials) => set((state) => {
+        state.biometric.hasCredentials = hasCredentials;
+      }),
+      
+      setBiometricRegistering: (registering) => set((state) => {
+        state.biometric.isRegistering = registering;
+      }),
+      
+      setBiometricError: (error) => set((state) => {
+        state.biometric.error = error;
+      }),
+      
+      setBiometricSuccess: (success) => set((state) => {
+        state.biometric.success = success;
+      }),
+      
+      resetBiometric: () => set((state) => {
+        state.biometric = {
+          isSupported: null,
+          isAvailable: null,
+          hasCredentials: null,
+          isRegistering: false,
+          error: null,
+          success: false,
+        };
+      }),
+      
+      // Profile editing actions
+      setProfileEditData: (data) => set((state) => {
+        state.profileEditData = data;
+      }),
+      
+      updateProfileEditData: (updates) => set((state) => {
+        if (state.profileEditData) {
+          state.profileEditData = { ...state.profileEditData, ...updates };
+        }
+      }),
+      
+      updateProfileField: (field, value) => set((state) => {
+        if (state.profileEditData) {
+          state.profileEditData[field] = value;
+        }
+      }),
+      
+      updateArrayField: (field, value) => set((state) => {
+        if (state.profileEditData) {
+          const currentArray = state.profileEditData[field] || [];
+          const newArray = currentArray.includes(value)
+            ? currentArray.filter(item => item !== value)
+            : [...currentArray, value];
+          state.profileEditData[field] = newArray;
+        }
+      }),
+      
+      updatePrivacySetting: (setting, value) => set((state) => {
+        if (state.profileEditData) {
+          (state.profileEditData.privacysettings as any)[setting] = value;
+        }
+      }),
+      
+      setProfileEditing: (editing) => set((state) => {
+        state.isProfileEditing = editing;
+      }),
+      
+      setProfileEditError: (field, error) => set((state) => {
+        state.profileEditErrors[field] = error;
+      }),
+      
+      clearProfileEditError: (field) => set((state) => {
+        delete state.profileEditErrors[field];
+      }),
+      
+      clearAllProfileEditErrors: () => set((state) => {
+        state.profileEditErrors = {};
+      }),
+      
+      // Address and representatives actions
+      setCurrentAddress: (address) => set((state) => {
+        state.currentAddress = address;
+      }),
+      
+      setCurrentState: (stateValue) => set((state) => {
+        state.currentState = stateValue;
+      }),
+      
+      setRepresentatives: (representatives) => set((state) => {
+        state.representatives = representatives;
+      }),
+      
+      addRepresentative: (representative) => set((state) => {
+        const existingIndex = state.representatives.findIndex(rep => rep.id === representative.id);
+        if (existingIndex === -1) {
+          state.representatives.push(representative);
+        }
+      }),
+      
+      removeRepresentative: (id) => set((state) => {
+        state.representatives = state.representatives.filter(rep => rep.id !== id);
+      }),
+      
+      setShowAddressForm: (show) => set((state) => {
+        state.showAddressForm = show;
+      }),
+      
+      setNewAddress: (address) => set((state) => {
+        state.newAddress = address;
+      }),
+      
+      setAddressLoading: (loading) => set((state) => {
+        state.addressLoading = loading;
+      }),
+      
+      setSavedSuccessfully: (saved) => set((state) => {
+        state.savedSuccessfully = saved;
+      }),
+      
+      lookupAddress: async (address) => {
+        try {
+          const response = await fetch(`/api/civics/by-address?address=${encodeURIComponent(address)}`);
+          if (!response.ok) {
+            throw new Error('Address lookup failed');
+          }
+          const result = await response.json();
+          return result.data || [];
+        } catch (error) {
+          console.error('Address lookup failed:', error);
+          throw error;
+        }
+      },
+      
+      handleAddressUpdate: async (address) => {
+        const currentState = _get();
+        set((state) => {
+          state.addressLoading = true;
+        });
+        
+        try {
+          const representatives = await currentState.lookupAddress(address);
+          
+          set((state) => {
+            state.currentAddress = address;
+            state.representatives = representatives;
+            state.showAddressForm = false;
+            state.newAddress = '';
+            state.savedSuccessfully = true;
+            state.addressLoading = false;
+          });
+          
+          // Clear success message after 3 seconds
+          setTimeout(() => {
+            set((state) => {
+              state.savedSuccessfully = false;
+            });
+          }, 3000);
+          
+        } catch (error) {
+          console.error('Address update failed:', error);
+          set((state) => {
+            state.addressLoading = false;
+            state.savedSuccessfully = false;
+          });
+          throw error;
+        }
+      },
+      
+      // Avatar actions
+      setAvatarFile: (file) => set((state) => {
+        state.avatarFile = file;
+      }),
+      
+      setAvatarPreview: (preview) => set((state) => {
+        state.avatarPreview = preview;
+      }),
+      
+      setUploadingAvatar: (uploading) => set((state) => {
+        state.isUploadingAvatar = uploading;
+      }),
+      
+      clearAvatar: () => set((state) => {
+        state.avatarFile = null;
+        state.avatarPreview = null;
+      }),
+      
       // Error handling actions
       setUserError: (error) => set((state) => {
         state.error = error;
@@ -217,6 +539,15 @@ export const useUserSettings = () => useUserStore(state => state.profile?.settin
 export const useUserLoading = () => useUserStore(state => state.isLoading);
 export const useUserError = () => useUserStore(state => state.error);
 
+// Biometric selectors
+export const useBiometric = () => useUserStore(state => state.biometric);
+export const useBiometricSupported = () => useUserStore(state => state.biometric.isSupported);
+export const useBiometricAvailable = () => useUserStore(state => state.biometric.isAvailable);
+export const useBiometricCredentials = () => useUserStore(state => state.biometric.hasCredentials);
+export const useBiometricRegistering = () => useUserStore(state => state.biometric.isRegistering);
+export const useBiometricError = () => useUserStore(state => state.biometric.error);
+export const useBiometricSuccess = () => useUserStore(state => state.biometric.success);
+
 // Action selectors
 export const useUserActions = () => useUserStore(state => ({
   setUser: state.setUser,
@@ -233,6 +564,40 @@ export const useUserActions = () => useUserStore(state => ({
   setUpdating: state.setUpdating,
   setUserError: state.setUserError,
   clearUserError: state.clearUserError,
+  setBiometricSupported: state.setBiometricSupported,
+  setBiometricAvailable: state.setBiometricAvailable,
+  setBiometricCredentials: state.setBiometricCredentials,
+  setBiometricRegistering: state.setBiometricRegistering,
+  setBiometricError: state.setBiometricError,
+  setBiometricSuccess: state.setBiometricSuccess,
+  resetBiometric: state.resetBiometric,
+  // Profile editing actions
+  setProfileEditData: state.setProfileEditData,
+  updateProfileEditData: state.updateProfileEditData,
+  updateProfileField: state.updateProfileField,
+  updateArrayField: state.updateArrayField,
+  updatePrivacySetting: state.updatePrivacySetting,
+  setProfileEditing: state.setProfileEditing,
+  setProfileEditError: state.setProfileEditError,
+  clearProfileEditError: state.clearProfileEditError,
+  clearAllProfileEditErrors: state.clearAllProfileEditErrors,
+  // Address and representatives actions
+  setCurrentAddress: state.setCurrentAddress,
+  setCurrentState: state.setCurrentState,
+  setRepresentatives: state.setRepresentatives,
+  addRepresentative: state.addRepresentative,
+  removeRepresentative: state.removeRepresentative,
+  setShowAddressForm: state.setShowAddressForm,
+  setNewAddress: state.setNewAddress,
+  setAddressLoading: state.setAddressLoading,
+  setSavedSuccessfully: state.setSavedSuccessfully,
+  lookupAddress: state.lookupAddress,
+  handleAddressUpdate: state.handleAddressUpdate,
+  // Avatar actions
+  setAvatarFile: state.setAvatarFile,
+  setAvatarPreview: state.setAvatarPreview,
+  setUploadingAvatar: state.setUploadingAvatar,
+  clearAvatar: state.clearAvatar,
 }));
 
 // Computed selectors
@@ -256,6 +621,25 @@ export const useUserTheme = () => useUserStore(state => {
 export const useUserNotifications = () => useUserStore(state => {
   return state.profile?.preferences?.notifications ?? true;
 });
+
+// Profile editing selectors
+export const useUserProfileEditData = () => useUserStore(state => state.profileEditData);
+export const useUserIsProfileEditing = () => useUserStore(state => state.isProfileEditing);
+export const useUserProfileEditErrors = () => useUserStore(state => state.profileEditErrors);
+
+// Address and representatives selectors
+export const useUserCurrentAddress = () => useUserStore(state => state.currentAddress);
+export const useUserCurrentState = () => useUserStore(state => state.currentState);
+export const useUserRepresentatives = () => useUserStore(state => state.representatives);
+export const useUserShowAddressForm = () => useUserStore(state => state.showAddressForm);
+export const useUserNewAddress = () => useUserStore(state => state.newAddress);
+export const useUserAddressLoading = () => useUserStore(state => state.addressLoading);
+export const useUserSavedSuccessfully = () => useUserStore(state => state.savedSuccessfully);
+
+// Avatar selectors
+export const useUserAvatarFile = () => useUserStore(state => state.avatarFile);
+export const useUserAvatarPreview = () => useUserStore(state => state.avatarPreview);
+export const useUserIsUploadingAvatar = () => useUserStore(state => state.isUploadingAvatar);
 
 // Store utilities
 export const userStoreUtils = {
@@ -354,7 +738,7 @@ export const userStoreSubscriptions = {
       (state, prevState) => {
         const preferences = state.profile?.preferences;
         const prevPreferences = prevState.profile?.preferences;
-        if (preferences !== prevPreferences) {
+        if (preferences !== prevPreferences && preferences) {
           callback(preferences);
         }
       }
@@ -369,13 +753,7 @@ export const userStoreDebug = {
    */
   logState: () => {
     const state = useUserStore.getState();
-    console.log('User Store State:', {
-      isAuthenticated: state.isAuthenticated,
-      hasUser: !!state.user,
-      hasProfile: !!state.profile,
-      isLoading: state.isLoading,
-      error: state.error
-    });
+    // State logging removed for production
   },
   
   /**
@@ -384,13 +762,7 @@ export const userStoreDebug = {
   logProfile: () => {
     const state = useUserStore.getState();
     if (state.profile) {
-      console.log('User Profile:', {
-        username: state.profile.username,
-        email: state.user?.email,
-        preferences: state.profile.preferences,
-        settings: state.profile.settings,
-        metadata: state.profile.metadata
-      });
+      // Profile logging removed for production
     }
   },
   
@@ -399,6 +771,5 @@ export const userStoreDebug = {
    */
   reset: () => {
     useUserStore.getState().clearUser();
-    console.log('User store reset to initial state');
   }
 };

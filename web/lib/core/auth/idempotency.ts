@@ -9,19 +9,20 @@
  * - Proper error handling and logging
  */
 
-import { logger } from '@/lib/utils/logger'
-import { getSupabaseServerClient } from '@/utils/supabase/server'
-import { withOptional } from '@/lib/utils/objects'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
-export type IdempotencyResult<T> = {
+import { logger } from '@/lib/utils/logger'
+import { withOptional } from '@/lib/utils/objects'
+import { getSupabaseServerClient } from '@/utils/supabase/server'
+
+export interface IdempotencyResult<T> {
   success: boolean
   data?: T
   error?: string
   isDuplicate: boolean
 }
 
-export type IdempotencyOptions = {
+export interface IdempotencyOptions {
   ttl?: number // Time to live in seconds
   namespace?: string // Namespace for key isolation
 }

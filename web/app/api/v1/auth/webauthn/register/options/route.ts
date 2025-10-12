@@ -1,9 +1,10 @@
-import { type NextRequest, NextResponse } from 'next/server';
 import { generateRegistrationOptions } from '@simplewebauthn/server';
 import { isoBase64URL } from '@simplewebauthn/server/helpers';
+import { type NextRequest, NextResponse } from 'next/server';
+
 import { getRPIDAndOrigins, CHALLENGE_TTL_MS } from '@/features/auth/lib/webauthn/config';
-import { getSupabaseServerClient } from '@/utils/supabase/server';
 import { base64urlToArrayBuffer } from '@/features/auth/lib/webauthn/type-converters';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 /**
  * WebAuthn Registration Options

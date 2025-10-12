@@ -1,30 +1,31 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { User, Camera, Save, Shield, ArrowLeft, Heart, Users, Upload } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import { useState, useEffect, useCallback } from 'react'
+
 // UI Components
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
-import { Switch } from '@/components/ui/switch'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
+import { Switch } from '@/components/ui/switch'
+import { Textarea } from '@/components/ui/textarea'
 
 // Icons
-import { User, Camera, Save, Shield, ArrowLeft, Heart, Users, Upload } from 'lucide-react'
 
 // Utilities
-import { devLog } from '@/lib/utils/logger'
 import { useAuth } from '@/hooks/useAuth'
 import { cn } from '@/lib/utils'
+import { devLog } from '@/lib/utils/logger'
 
 // Types - Updated to match new database schema
-type UserProfile = {
+interface UserProfile {
   id: string
   user_id: string
   username: string
@@ -46,7 +47,7 @@ type UserProfile = {
   demographics?: Record<string, any>
 }
 
-type PrivacySettings = {
+interface PrivacySettings {
   profile_visibility: 'public' | 'private' | 'friends'
   show_email: boolean
   show_activity: boolean
@@ -55,7 +56,7 @@ type PrivacySettings = {
   allow_analytics: boolean
 }
 
-type UserProfileUpdate = {
+interface UserProfileUpdate {
   displayname: string
   bio: string | null
   primaryconcerns: string[]
@@ -65,7 +66,7 @@ type UserProfileUpdate = {
   avatar?: string
 }
 
-type ProfileUpdateResponse = {
+interface ProfileUpdateResponse {
   success: boolean
   profile: UserProfile
   message?: string

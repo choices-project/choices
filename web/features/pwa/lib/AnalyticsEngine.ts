@@ -11,7 +11,7 @@
 import { getAnalyticsEngine } from '@/features/analytics/lib/AnalyticsEngine';
 import { logger } from '@/lib/utils/logger';
 
-export type AnalyticsEvent = {
+export interface AnalyticsEvent {
   name: string;
   properties: Record<string, any>;
   timestamp: Date;

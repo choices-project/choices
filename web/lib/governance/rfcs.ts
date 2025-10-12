@@ -8,7 +8,7 @@
 import { devLog } from '@/lib/utils/logger';
 import { withOptional } from '@/lib/utils/objects';
 
-export type RFCData = {
+export interface RFCData {
   title: string;
   summary: string;
   motivation: string;
@@ -33,7 +33,7 @@ export type RFC = {
   category: string;
 } & RFCData
 
-export type PublicRFC = {
+export interface PublicRFC {
   id: string;
   title: string;
   status: 'Review' | 'Accepted' | 'Rejected';
@@ -52,7 +52,7 @@ export type PublicRFC = {
   category: string;
 }
 
-export type RFCComment = {
+export interface RFCComment {
   id: string;
   rfcId: string;
   author: string;
@@ -62,7 +62,7 @@ export type RFCComment = {
   replies: RFCComment[];
 }
 
-export type RFCVote = {
+export interface RFCVote {
   id: string;
   rfcId: string;
   voter: string;
@@ -71,7 +71,7 @@ export type RFCVote = {
   timestamp: number;
 }
 
-export type RFCNotification = {
+export interface RFCNotification {
   id: string;
   rfcId: string;
   type: 'created' | 'updated' | 'status_changed' | 'comment_added' | 'vote_cast';

@@ -6,7 +6,6 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
 import { 
   BarChart3, 
   TrendingUp, 
@@ -22,8 +21,9 @@ import {
   Target,
   Award
 } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
 
-type AnalyticsData = {
+interface AnalyticsData {
   overview: {
     totalUsers: number;
     activeUsers: number;
@@ -32,29 +32,29 @@ type AnalyticsData = {
     totalVotes: number;
     averageParticipation: number;
   };
-  trends: {
+  trends: Array<{
     date: string;
     users: number;
     polls: number;
     votes: number;
-  }[];
+  }>;
   demographics: {
-    ageGroups: { age: string; count: number; percentage: number }[];
-    locations: { location: string; count: number; percentage: number }[];
-    devices: { device: string; count: number; percentage: number }[];
+    ageGroups: Array<{ age: string; count: number; percentage: number }>;
+    locations: Array<{ location: string; count: number; percentage: number }>;
+    devices: Array<{ device: string; count: number; percentage: number }>;
   };
-  topPolls: {
+  topPolls: Array<{
     id: string;
     title: string;
     votes: number;
     participants: number;
     category: string;
-  }[];
-  userActivity: {
+  }>;
+  userActivity: Array<{
     timeSlot: string;
     activeUsers: number;
     newRegistrations: number;
-  }[];
+  }>;
 }
 
 export default function AnalyticsPage() {
@@ -140,8 +140,8 @@ export default function AnalyticsPage() {
         <div className="animate-pulse">
           <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            {[...Array(4)].map((_, i: number) => (
-              <div key={i} className="h-32 bg-gray-200 rounded-lg"></div>
+            {Array.from({ length: 4 }, (_, i: number) => (
+              <div key={`skeleton-${i}`} className="h-32 bg-gray-200 rounded-lg"></div>
             ))}
           </div>
         </div>
@@ -254,7 +254,7 @@ export default function AnalyticsPage() {
           </div>
           <div className="space-y-4">
             {data?.trends.map((trend, index: number) => (
-              <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+              <div key={`trend-${trend.date}-${index}`} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                 <div className="flex items-center space-x-4">
                   <Calendar className="h-4 w-4 text-gray-400" />
                   <span className="text-sm font-medium text-gray-900">{trend.date}</span>
@@ -301,7 +301,7 @@ export default function AnalyticsPage() {
           </div>
           <div className="space-y-3">
             {data?.demographics.ageGroups.map((group, index: number) => (
-              <div key={index} className="flex items-center justify-between">
+              <div key={`age-group-${group.age}-${index}`} className="flex items-center justify-between">
                 <span className="text-sm text-gray-600">{group.age}</span>
                 <div className="flex items-center space-x-2">
                   <div className="w-20 bg-gray-200 rounded-full h-2">
@@ -325,7 +325,7 @@ export default function AnalyticsPage() {
           </div>
           <div className="space-y-3">
             {data?.demographics.locations.map((location, index: number) => (
-              <div key={index} className="flex items-center justify-between">
+              <div key={`location-${location.location}-${index}`} className="flex items-center justify-between">
                 <span className="text-sm text-gray-600">{location.location}</span>
                 <div className="flex items-center space-x-2">
                   <div className="w-20 bg-gray-200 rounded-full h-2">
@@ -349,7 +349,7 @@ export default function AnalyticsPage() {
           </div>
           <div className="space-y-3">
             {data?.demographics.devices.map((device, index: number) => (
-              <div key={index} className="flex items-center justify-between">
+              <div key={`device-${device.device}-${index}`} className="flex items-center justify-between">
                 <span className="text-sm text-gray-600">{device.device}</span>
                 <div className="flex items-center space-x-2">
                   <div className="w-20 bg-gray-200 rounded-full h-2">
@@ -374,7 +374,7 @@ export default function AnalyticsPage() {
         </div>
         <div className="grid grid-cols-6 gap-4">
           {data?.userActivity.map((activity, index: number) => (
-            <div key={index} className="text-center">
+            <div key={`activity-${activity.timeSlot}-${index}`} className="text-center">
               <div className="bg-blue-100 rounded-lg p-3">
                 <p className="text-sm font-medium text-gray-900">{activity.timeSlot}</p>
                 <p className="text-lg font-bold text-blue-600">{activity.activeUsers}</p>

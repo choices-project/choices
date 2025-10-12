@@ -10,27 +10,29 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
 import { Hash, TrendingUp, Filter, Search, Users, Eye, Share2, Clock, X } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { withOptional } from '@/lib/utils/objects';
+import React, { useState, useEffect } from 'react';
+
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
-import { useHashtagStore, useHashtagActions, useHashtagStats } from '@/lib/stores';
+import { Separator } from '@/components/ui/separator';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { HashtagDisplay } from '@/features/hashtags';
+import type { Hashtag } from '@/features/hashtags/types';
+import { useHashtagStore, useHashtagActions, useHashtagStats } from '@/lib/stores';
+import { cn } from '@/lib/utils';
+import { withOptional } from '@/lib/utils/objects';
+
 import type { 
   FeedItemData, 
   FeedHashtagIntegration, 
   HashtagFilter,
   HashtagSort 
 } from '../types';
-import type { Hashtag } from '@/features/hashtags/types';
 
-type FeedHashtagIntegrationProps = {
+interface FeedHashtagIntegrationProps {
   feedItems: FeedItemData[];
   onFilter: (filters: HashtagFilter[]) => void;
   onSort: (sort: HashtagSort) => void;

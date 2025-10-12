@@ -14,17 +14,19 @@ import {
   type AuthenticationResponseJSON,
   type AuthenticatorTransportFuture
 } from '@simplewebauthn/server';
+
+import { devLog } from '@/lib/utils/logger';
+
 import { 
   arrayBufferToBase64url,
   base64urlToArrayBuffer,
   byteaToArrayBuffer
 } from './type-converters';
-import { devLog } from '@/lib/utils/logger';
 
 /**
  * WebAuthn credential data from database
  */
-export type WebAuthnCredentialData = {
+export interface WebAuthnCredentialData {
   credentialId: string;
   publicKey: string; // BYTEA format
   counter: number;
@@ -40,7 +42,7 @@ export type WebAuthnCredentialData = {
 /**
  * Verification result for registration
  */
-export type RegistrationVerificationResult = {
+export interface RegistrationVerificationResult {
   verified: boolean;
   credentialId: string;
   publicKey: ArrayBuffer;
@@ -56,7 +58,7 @@ export type RegistrationVerificationResult = {
 /**
  * Verification result for authentication
  */
-export type AuthenticationVerificationResult = {
+export interface AuthenticationVerificationResult {
   verified: boolean;
   credentialId: string;
   newCounter: number;
@@ -161,7 +163,7 @@ export async function verifyCredentialAuthentication(
 
     // Log credential ID for debugging (using the converted ArrayBuffer)
     devLog('Verifying credential', {
-      credentialId: credentialData.credentialId.substring(0, 8) + '...',
+      credentialId: `${credentialData.credentialId.substring(0, 8)  }...`,
       credentialIdLength: credentialID.byteLength
     });
 
@@ -288,7 +290,7 @@ export function logCredentialOperation(
 ): void {
   const logData = {
     operation,
-    credentialId: credentialId.substring(0, 8) + '...', // Truncate for security
+    credentialId: `${credentialId.substring(0, 8)  }...`, // Truncate for security
     userId,
     timestamp: new Date().toISOString(),
     error: error?.message

@@ -6,7 +6,7 @@
  */
 
 // Core feed item types
-export type FeedItemData = {
+export interface FeedItemData {
   id: string;
   representativeId: string;
   representativeName: string;
@@ -36,10 +36,10 @@ export type FeedItemData = {
     hashtag_clicks: number;
     hashtag_shares: number;
   };
-};
+}
 
 // User preferences for feed personalization
-export type UserPreferences = {
+export interface UserPreferences {
   state?: string;
   district?: string;
   interests?: string[];
@@ -51,10 +51,10 @@ export type UserPreferences = {
     showSocialMedia: boolean;
     showPhotos: boolean;
   };
-};
+}
 
 // Engagement data types
-export type EngagementData = {
+export interface EngagementData {
   likes: number;
   shares: number;
   comments: number;
@@ -63,16 +63,16 @@ export type EngagementData = {
   engagementRate?: number;
   trendingScore?: number;
   lastUpdated: Date;
-};
+}
 
 // Touch interaction types
-export type TouchPoint = {
+export interface TouchPoint {
   x: number;
   y: number;
   time: number;
-};
+}
 
-export type TouchState = {
+export interface TouchState {
   start: TouchPoint | null;
   end: TouchPoint | null;
   last: TouchPoint | null;
@@ -80,10 +80,10 @@ export type TouchState = {
   isLongPress: boolean;
   initialDistance: number | null;
   lastDistance: number | null;
-};
+}
 
 // Hashtag tracking types
-export type HashtagUsage = {
+export interface HashtagUsage {
   hashtag: string;
   userId: string;
   timestamp: string;
@@ -93,9 +93,9 @@ export type HashtagUsage = {
     category?: string;
     engagement?: number;
   };
-};
+}
 
-export type TrendingHashtag = {
+export interface TrendingHashtag {
   hashtag: string;
   usageCount: number;
   growthRate: number; // percentage change from previous period
@@ -103,34 +103,34 @@ export type TrendingHashtag = {
   categories: string[];
   lastUsed: string;
   trendingScore: number; // calculated score for ranking
-};
+}
 
-export type HashtagAnalytics = {
+export interface HashtagAnalytics {
   totalHashtags: number;
   trendingHashtags: TrendingHashtag[];
   categoryBreakdown: Record<string, number>;
   userEngagement: Record<string, number>;
   viralPotential: TrendingHashtag[];
-};
+}
 
 // Poll feed types
-export type UserInterests = {
+export interface UserInterests {
   selectedInterests: string[];
   customInterests: string[]; // User-created hashtags
   trendingHashtags: string[]; // Real-time trending
   userHashtags: string[]; // User's custom hashtags
-};
+}
 
-export type PersonalizedPollFeed = {
+export interface PersonalizedPollFeed {
   userId: string;
   generatedAt: string;
   polls: PollRecommendation[];
   interestMatches: InterestMatch[];
   trendingHashtags: string[];
   suggestedInterests: string[];
-};
+}
 
-export type PollRecommendation = {
+export interface PollRecommendation {
   id: string;
   title: string;
   description: string;
@@ -140,16 +140,16 @@ export type PollRecommendation = {
   interestMatches: string[];
   totalVotes: number;
   created_at: string;
-};
+}
 
-export type InterestMatch = {
+export interface InterestMatch {
   interest: string;
   matchCount: number;
   relevanceScore: number;
-};
+}
 
 // Feed component props
-export type SocialFeedProps = {
+export interface SocialFeedProps {
   userId?: string;
   preferences?: UserPreferences;
   onLike?: (itemId: string) => void;
@@ -157,9 +157,9 @@ export type SocialFeedProps = {
   onBookmark?: (itemId: string) => void;
   onComment?: (itemId: string) => void;
   className?: string;
-};
+}
 
-export type EnhancedSocialFeedProps = {
+export interface EnhancedSocialFeedProps {
   userId?: string;
   preferences?: UserPreferences;
   onLike?: (itemId: string) => void;
@@ -173,9 +173,9 @@ export type EnhancedSocialFeedProps = {
   enableAnalytics?: boolean;
   enableHaptics?: boolean;
   showTrending?: boolean;
-};
+}
 
-export type FeedItemProps = {
+export interface FeedItemProps {
   item: FeedItemData;
   onLike?: (itemId: string) => void;
   onShare?: (itemId: string) => void;
@@ -187,9 +187,9 @@ export type FeedItemProps = {
   showEngagement?: boolean;
   enableHaptics?: boolean;
   className?: string;
-};
+}
 
-export type InfiniteScrollProps = {
+export interface InfiniteScrollProps {
   children: React.ReactNode;
   onLoadMore: () => Promise<void>;
   hasMore: boolean;
@@ -203,10 +203,10 @@ export type InfiniteScrollProps = {
   loadingComponent?: React.ReactNode;
   endComponent?: React.ReactNode;
   scrollToTopThreshold?: number;
-};
+}
 
 // API response types
-export type FeedApiResponse = {
+export interface FeedApiResponse {
   ok: boolean;
   items: FeedItemData[];
   pagination: {
@@ -221,16 +221,16 @@ export type FeedApiResponse = {
     personalizationScore: number;
     algorithm: string;
   };
-};
+}
 
-export type HashtagApiResponse = {
+export interface HashtagApiResponse {
   success: boolean;
   data: TrendingHashtag[] | HashtagAnalytics;
   type: 'trending' | 'analytics';
-};
+}
 
 // Feed service types
-export type GenerateFeedOptions = {
+export interface GenerateFeedOptions {
   page: number;
   limit: number;
   userId?: string | null;
@@ -239,9 +239,9 @@ export type GenerateFeedOptions = {
   followedRepresentatives?: string[];
   personalization?: boolean;
   preferences?: any;
-};
+}
 
-export type FeedServiceConfig = {
+export interface FeedServiceConfig {
   enablePersonalization: boolean;
   enableRealTimeUpdates: boolean;
   enableAnalytics: boolean;
@@ -249,13 +249,13 @@ export type FeedServiceConfig = {
   showTrending: boolean;
   cacheTimeout: number;
   maxItems: number;
-};
+}
 
 // ============================================================================
 // HASHTAG INTEGRATION TYPES
 // ============================================================================
 
-export type FeedHashtagIntegration = {
+export interface FeedHashtagIntegration {
   feed_id: string;
   hashtag_filters: string[];
   trending_hashtags: string[];
@@ -264,7 +264,7 @@ export type FeedHashtagIntegration = {
   personalized_hashtags: string[];
 }
 
-export type HashtagContent = {
+export interface HashtagContent {
   id: string;
   hashtag_id: string;
   content_type: 'poll' | 'comment' | 'profile' | 'feed' | 'post';
@@ -277,7 +277,7 @@ export type HashtagContent = {
   metadata?: Record<string, any>;
 }
 
-export type HashtagDetailedAnalytics = {
+export interface HashtagDetailedAnalytics {
   hashtag_id: string;
   period: '24h' | '7d' | '30d' | '90d' | '1y';
   metrics: {
@@ -297,7 +297,7 @@ export type HashtagDetailedAnalytics = {
   generated_at: string;
 }
 
-export type HashtagFeed = {
+export interface HashtagFeed {
   hashtag_id: string;
   content: HashtagContent[];
   total_count: number;
@@ -313,14 +313,14 @@ export type HashtagFeed = {
   };
 }
 
-export type HashtagFilter = {
+export interface HashtagFilter {
   type: 'category' | 'trending' | 'verified' | 'usage_count' | 'date_range';
   value: any;
   label: string;
   active: boolean;
 }
 
-export type HashtagSort = {
+export interface HashtagSort {
   option: 'relevance' | 'usage' | 'trending' | 'alphabetical' | 'created';
   direction: 'asc' | 'desc';
   label: string;

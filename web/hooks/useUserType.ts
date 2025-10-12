@@ -1,10 +1,11 @@
 import { useState, useEffect, useCallback } from 'react'
+
 import { devLog } from '@/lib/utils/logger'
 
 // Types
 export type UserType = 'newcomer' | 'active' | 'power_user' | 'influencer' | 'admin'
 
-export type UserBehavior = {
+export interface UserBehavior {
   login_frequency: number
   polls_created: number
   votes_cast: number
@@ -17,7 +18,7 @@ export type UserBehavior = {
   is_admin?: boolean
 }
 
-export type SegmentationData = {
+export interface SegmentationData {
   user_type: UserType
   confidence_score: number
   behavior_metrics: UserBehavior
@@ -26,7 +27,7 @@ export type SegmentationData = {
   type_changed_at: string
 }
 
-export type UserTypeThresholds = {
+export interface UserTypeThresholds {
   newcomer: {
     max_polls_created: number
     max_votes_cast: number

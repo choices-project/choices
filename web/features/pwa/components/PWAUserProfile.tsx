@@ -1,6 +1,5 @@
 'use client'
 
-import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
   User, 
@@ -13,9 +12,11 @@ import {
   RefreshCw,
   Lock
 } from 'lucide-react'
+import { useState, useEffect } from 'react'
+
 import { pwaManager, pwaWebAuthn, privacyStorage } from '../lib/pwa-utils'
 
-type UserProfile = {
+interface UserProfile {
   stableId: string
   pseudonym?: string
   trustTier: 'T0' | 'T1' | 'T2' | 'T3'
@@ -32,7 +33,7 @@ type UserProfile = {
   lastActivity: string
 }
 
-type PWAUserProfileProps = {
+interface PWAUserProfileProps {
   user?: UserProfile
   onUpdate?: (_profile: Partial<UserProfile>) => void
 }
@@ -107,7 +108,7 @@ export function PWAUserProfile({ user, onUpdate: _onUpdate }: PWAUserProfileProp
         alert('WebAuthn registration successful!')
       }
     } catch (error) {
-      alert('WebAuthn registration failed: ' + error)
+      alert(`WebAuthn registration failed: ${  error}`)
     }
   }
 
@@ -135,7 +136,7 @@ export function PWAUserProfile({ user, onUpdate: _onUpdate }: PWAUserProfileProp
       a.click()
       URL.revokeObjectURL(url)
     } catch (error) {
-      alert('Failed to export data: ' + error)
+      alert(`Failed to export data: ${  error}`)
     }
   }
 

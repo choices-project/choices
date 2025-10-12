@@ -1,9 +1,9 @@
 'use client';
 
-import React from 'react';
 import { Shield, MapPin, Users, BarChart3, Eye } from 'lucide-react';
+import React from 'react';
 
-type DataUsageExplanationProps = {
+interface DataUsageExplanationProps {
   className?: string;
 }
 

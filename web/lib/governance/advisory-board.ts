@@ -7,7 +7,7 @@
 
 import { devLog } from '@/lib/utils/logger';
 
-export type AdvisoryBoardMember = {
+export interface AdvisoryBoardMember {
   id: string;
   name: string;
   expertise: string;
@@ -21,7 +21,7 @@ export type AdvisoryBoardMember = {
   publicProfile: boolean;
 }
 
-export type MeetingInvite = {
+export interface MeetingInvite {
   id: string;
   date: string;
   time: string;
@@ -34,7 +34,7 @@ export type MeetingInvite = {
   notes?: MeetingNotes;
 }
 
-export type MeetingAgenda = {
+export interface MeetingAgenda {
   id: string;
   title: string;
   items: AgendaItem[];
@@ -43,7 +43,7 @@ export type MeetingAgenda = {
   objectives: string[];
 }
 
-export type AgendaItem = {
+export interface AgendaItem {
   id: string;
   title: string;
   description: string;
@@ -53,7 +53,7 @@ export type AgendaItem = {
   materials?: string[];
 }
 
-export type MeetingNotes = {
+export interface MeetingNotes {
   id: string;
   meetingId: string;
   public: PublicMeetingNotes;
@@ -65,23 +65,23 @@ export type MeetingNotes = {
   timestamp: number;
 }
 
-export type PublicMeetingNotes = {
+export interface PublicMeetingNotes {
   summary: string;
   keyTopics: string[];
   decisions: PublicDecision[];
   nextMeeting: string;
   publicActionItems: PublicActionItem[];
-  attendees?: { name: string; expertise: string; affiliation: string }[];
+  attendees?: Array<{ name: string; expertise: string; affiliation: string }>;
 }
 
-export type PrivateMeetingNotes = {
+export interface PrivateMeetingNotes {
   detailedDiscussion: string;
   confidentialMatters: string[];
   internalActionItems: ActionItem[];
   sensitiveDecisions: Decision[];
 }
 
-export type PublicDecision = {
+export interface PublicDecision {
   id: string;
   title: string;
   description: string;
@@ -90,7 +90,7 @@ export type PublicDecision = {
   implementation: string;
 }
 
-export type PublicActionItem = {
+export interface PublicActionItem {
   id: string;
   title: string;
   description: string;
@@ -99,7 +99,7 @@ export type PublicActionItem = {
   status: 'pending' | 'in-progress' | 'completed';
 }
 
-export type ActionItem = {
+export interface ActionItem {
   id: string;
   title: string;
   description: string;
@@ -110,7 +110,7 @@ export type ActionItem = {
   confidential: boolean;
 }
 
-export type Decision = {
+export interface Decision {
   id: string;
   title: string;
   description: string;
@@ -424,8 +424,8 @@ export class AdvisoryBoardManager {
       inviteBodyLength: invite.body.length
     });
     
-    // TODO: Integrate with email service (SendGrid, AWS SES, etc.)
-    // await emailService.send(invite);
+    // Send email using configured email service
+    await this.sendEmail(invite);
   }
 
   /**
@@ -550,5 +550,41 @@ Choices Platform Team
    */
   private generateMeetingLink(): string {
     return `https://meet.choices-platform.org/advisory-board-${Date.now()}`;
+  }
+
+  /**
+   * Send email using configured email service
+   */
+  private async sendEmail(invite: { to: string; subject: string; body: string }): Promise<void> {
+    try {
+      // Use SendGrid as the primary email service
+      const response = await fetch('/api/email/send', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          to: invite.to,
+          subject: invite.subject,
+          html: invite.body.replace(/\n/g, '<br>'),
+          text: invite.body,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to send email: ${response.statusText}`);
+      }
+
+      devLog('Email sent successfully', { 
+        to: invite.to, 
+        subject: invite.subject 
+      });
+    } catch (error) {
+      devLog('Failed to send email', { 
+        to: invite.to, 
+        error: error instanceof Error ? error.message : 'Unknown error' 
+      });
+      throw error;
+    }
   }
 }

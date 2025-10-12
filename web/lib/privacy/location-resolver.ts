@@ -9,13 +9,13 @@ import { withOptional } from '@/lib/utils/objects';
 
 export type JurisdictionID = string; // e.g. "ocd-division/country:us/state:ca/county:alameda"
 
-export type ClientResolvedJurisdiction = {
+export interface ClientResolvedJurisdiction {
   jurisdictionIds: JurisdictionID[];     // public IDs only
   coarseGrid?: string;                   // optional H3/S2 cell for caching
   level: 'federal' | 'state' | 'local';
 }
 
-export type LocationInput = {
+export interface LocationInput {
   address?: string;
   coords?: [number, number]; // [longitude, latitude]
   zipCode?: string;

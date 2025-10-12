@@ -1,7 +1,5 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import Link from 'next/link';
 import { 
   Vote, 
   Shield, 
@@ -11,9 +9,12 @@ import {
   CheckCircle2,
   Lock
 } from 'lucide-react';
+import Link from 'next/link';
+import React, { useState, useEffect } from 'react';
+
 import { devLog } from '@/lib/utils/logger';
 
-type HeroSectionProps = {
+interface HeroSectionProps {
   isAuthenticated?: boolean;
   userStats?: {
     totalVotes: number;

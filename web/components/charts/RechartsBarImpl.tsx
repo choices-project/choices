@@ -2,7 +2,7 @@
 
 import { BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer } from 'recharts'
 
-type BarChartProps = {
+interface BarChartProps {
   data: any[]
   dataKey?: string
   xAxisKey?: string

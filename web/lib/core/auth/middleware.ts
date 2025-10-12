@@ -8,35 +8,36 @@
  * - Comprehensive error handling
  */
 
-import { type NextRequest, NextResponse } from 'next/server';
-import { getSupabaseServerClient } from '@/utils/supabase/server';
-import { devLog } from '@/lib/utils/logger';
-import { requireTrustedOrigin } from '@/lib/http/origin';
-import { rateLimiters } from '@/lib/core/security/rate-limit';
-import { requireTurnstileVerification } from '@/lib/security/turnstile';
-import { withOptional } from '@/lib/utils/objects';
 import type { SupabaseClient, User } from '@supabase/supabase-js';
+import { type NextRequest, NextResponse } from 'next/server';
+
+import { rateLimiters } from '@/lib/core/security/rate-limit';
+import { requireTrustedOrigin } from '@/lib/http/origin';
+import { requireTurnstileVerification } from '@/lib/security/turnstile';
+import { devLog } from '@/lib/utils/logger';
+import { withOptional } from '@/lib/utils/objects';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 export type TrustTier = 'T1' | 'T2' | 'T3';
 
-export type AuthUser = {
+export interface AuthUser {
   id: string;
   email: string;
   trust_tier: TrustTier;
   username?: string | null;
 }
 
-export type AuthContext = {
+export interface AuthContext {
   user: AuthUser;
   supabase: SupabaseClient;
 }
 
-export type UserProfile = {
+export interface UserProfile {
   trust_tier: TrustTier;
   username?: string;
 }
 
-export type AuthMiddlewareOptions = {
+export interface AuthMiddlewareOptions {
   requireAuth?: boolean;
   requireTrustTier?: TrustTier;
   requireAdmin?: boolean;
@@ -190,7 +191,7 @@ export function createAuthMiddleware(options: AuthMiddlewareOptions = {}) {
           'T3': 3
         };
 
-        const userTier = tierHierarchy[authUser.trust_tier as TrustTier] || 0;
+        const userTier = tierHierarchy[authUser.trust_tier] || 0;
         const requiredTier = tierHierarchy[requireTrustTier];
 
         if (userTier < requiredTier) {
@@ -293,7 +294,7 @@ export function createRateLimitMiddleware(options: {
     
     // Log rate limit configuration for debugging
     devLog('Rate limit check', {
-      key: key.substring(0, 8) + '...',
+      key: `${key.substring(0, 8)  }...`,
       maxRequests,
       windowMs,
       allowed: rateLimitResult.allowed

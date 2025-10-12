@@ -6,8 +6,9 @@
  * Updated: October 6, 2025
  */
 
-import { type NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { type NextRequest, NextResponse } from 'next/server';
+
 import { createApiLogger } from '@/lib/utils/api-logger';
 import { CivicsCache } from '@/lib/utils/civics-cache';
 

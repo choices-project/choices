@@ -7,7 +7,7 @@
 
 import { createClient } from '@supabase/supabase-js';
 
-export type FECCycle = {
+export interface FECCycle {
   cycle: number;
   cycle_name: string;
   start_date: string;
@@ -19,7 +19,7 @@ export type FECCycle = {
   data_available: boolean;
 }
 
-export type FECCandidate = {
+export interface FECCandidate {
   candidate_id: string;
   name: string;
   office?: string;
@@ -48,7 +48,7 @@ export type FECCandidate = {
   is_processed: boolean;
 }
 
-export type FECCommittee = {
+export interface FECCommittee {
   committee_id: string;
   committee_name: string;
   committee_type?: string;
@@ -101,7 +101,7 @@ export type FECCommittee = {
   is_processed: boolean;
 }
 
-export type FECContribution = {
+export interface FECContribution {
   id: string;
   committee_id: string;
   candidate_id?: string;
@@ -158,7 +158,7 @@ export type FECContribution = {
   provenance: Record<string, any>;
 }
 
-export type FECDisbursement = {
+export interface FECDisbursement {
   id: string;
   committee_id: string;
   candidate_id?: string;
@@ -212,7 +212,7 @@ export type FECDisbursement = {
   provenance: Record<string, any>;
 }
 
-export type FECIndependentExpenditure = {
+export interface FECIndependentExpenditure {
   id: string;
   committee_id: string;
   candidate_id?: string;
@@ -274,7 +274,7 @@ export type FECIndependentExpenditure = {
   provenance: Record<string, any>;
 }
 
-export type CandidateCommittee = {
+export interface CandidateCommittee {
   fec_committee_id: string;
   committee_name: string;
   designation: string;
@@ -285,7 +285,7 @@ export type CandidateCommittee = {
   debt: number;
 }
 
-export type IndependenceScore = {
+export interface IndependenceScore {
   candidate_id: string;
   cycle: number;
   score: number; // 0-1, higher = more independent
@@ -298,7 +298,7 @@ export type IndependenceScore = {
   calculated_at: string;
 }
 
-export type EFileVsProcessedSummary = {
+export interface EFileVsProcessedSummary {
   table_name: string;
   total_records: number;
   efiling_records: number;
@@ -307,7 +307,7 @@ export type EFileVsProcessedSummary = {
   processed_percentage: number;
 }
 
-export type FECIngestCursor = {
+export interface FECIngestCursor {
   source: string;
   cycle: number;
   cursor_type: string;

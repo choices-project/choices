@@ -8,7 +8,6 @@
  * Status: ✅ ACTIVE
  */
 
-import React, { useState, useEffect } from 'react';
 import {
   TrendingUp,
   Flame,
@@ -18,11 +17,19 @@ import {
   ArrowDown,
   Minus
 } from 'lucide-react';
+import React, { useEffect, useCallback } from 'react';
+
+import { 
+  useHashtagStore,
+  useHashtagFilters,
+  useHashtagActions,
+  useHashtagLoading,
+  useHashtagError
+} from '@/lib/stores';
+
 import type {
   HashtagCategory
 } from '../types';
-
-
 import {
   formatUsageCount,
   formatGrowthRate,
@@ -30,9 +37,9 @@ import {
   getHashtagCategoryColor,
   getHashtagCategoryIcon
 } from '../utils/hashtag-utils';
-import { useHashtagStore } from '@/lib/stores';
 
-type HashtagTrendingProps = {
+
+interface HashtagTrendingProps {
   category?: HashtagCategory;
   limit?: number;
   showFilters?: boolean;
@@ -52,17 +59,28 @@ export default function HashtagTrending({
   className = ''
 }: HashtagTrendingProps) {
   // Zustand store integration
-  const {
-    trendingHashtags,
-    isLoading,
-    error,
-    getTrendingHashtags
-  } = useHashtagStore();
+  const { trendingHashtags } = useHashtagStore();
+  const filters = useHashtagFilters();
+  const { getTrendingHashtags, setFilter, setCategory, setSortBy, setTimeRange, setSearchQuery } = useHashtagActions();
+  const { isLoading } = useHashtagLoading();
+  const { error } = useHashtagError();
   
-  const [selectedCategory, setSelectedCategory] = useState<HashtagCategory | 'all'>(category || 'all');
-  const [sortBy, setSortBy] = useState<'trend_score' | 'usage' | 'growth' | 'alphabetical'>('trend_score');
-  const [timeRange, setTimeRange] = useState<'24h' | '7d' | '30d'>('24h');
-  const [searchQuery, setSearchQuery] = useState('');
+  const loadTrendingHashtags = useCallback(async () => {
+    try {
+      await getTrendingHashtags(
+        filters.selectedCategory === 'all' ? undefined : filters.selectedCategory
+      );
+    } catch (err) {
+      console.error('Failed to load trending hashtags:', err);
+    }
+  }, [filters.selectedCategory, getTrendingHashtags]);
+
+  // Initialize filters from props
+  useEffect(() => {
+    if (category && category !== filters.selectedCategory) {
+      setCategory(category);
+    }
+  }, [category, filters.selectedCategory, setCategory]);
 
   useEffect(() => {
     loadTrendingHashtags();
@@ -71,31 +89,21 @@ export default function HashtagTrending({
       const interval = setInterval(loadTrendingHashtags, refreshInterval);
       return () => clearInterval(interval);
     }
-  }, [selectedCategory, timeRange, autoRefresh, refreshInterval, loadTrendingHashtags]);
-
-  const loadTrendingHashtags = useCallback(async () => {
-    try {
-      await getTrendingHashtags(
-        selectedCategory === 'all' ? undefined : selectedCategory
-      );
-    } catch (err) {
-      console.error('Failed to load trending hashtags:', err);
-    }
-  }, [selectedCategory, getTrendingHashtags]);
+  }, [filters.selectedCategory, filters.timeRange, autoRefresh, refreshInterval]);
 
   const getSortedHashtags = () => {
     let sorted = [...trendingHashtags];
     
     // Apply search filter
-    if (searchQuery) {
+    if (filters.searchQuery) {
       sorted = sorted.filter(hashtag => 
-        hashtag.hashtag.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        hashtag.hashtag.description?.toLowerCase().includes(searchQuery.toLowerCase())
+        hashtag.hashtag.name.toLowerCase().includes(filters.searchQuery.toLowerCase()) ||
+        hashtag.hashtag.description?.toLowerCase().includes(filters.searchQuery.toLowerCase())
       );
     }
     
     // Apply sorting
-    switch (sortBy) {
+    switch (filters.sortBy) {
       case 'trend_score':
         sorted.sort((a, b) => b.trend_score - a.trend_score);
         break;
@@ -166,7 +174,7 @@ export default function HashtagTrending({
               <input
                 type="text"
                 placeholder="Search hashtags..."
-                value={searchQuery}
+                value={filters.searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
@@ -174,8 +182,8 @@ export default function HashtagTrending({
             
             {/* Category Filter */}
             <select
-              value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value as any)}
+              value={filters.selectedCategory}
+              onChange={(e) => setCategory(e.target.value as any)}
               className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500"
             >
               <option value="all">All Categories</option>
@@ -191,7 +199,7 @@ export default function HashtagTrending({
             
             {/* Sort By */}
             <select
-              value={sortBy}
+              value={filters.sortBy}
               onChange={(e) => setSortBy(e.target.value as any)}
               className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500"
             >
@@ -203,7 +211,7 @@ export default function HashtagTrending({
             
             {/* Time Range */}
             <select
-              value={timeRange}
+              value={filters.timeRange}
               onChange={(e) => setTimeRange(e.target.value as any)}
               className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500"
             >
@@ -336,8 +344,8 @@ export default function HashtagTrending({
           <TrendingUp className="h-12 w-12 text-gray-400 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-gray-900 mb-2">No trending hashtags</h3>
           <p className="text-gray-600">
-            {searchQuery 
-              ? `No hashtags match "${searchQuery}"`
+            {filters.searchQuery 
+              ? `No hashtags match "${filters.searchQuery}"`
               : 'No hashtags are trending right now'
             }
           </p>

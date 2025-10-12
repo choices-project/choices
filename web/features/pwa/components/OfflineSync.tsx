@@ -1,10 +1,11 @@
 'use client'
 
-import { useState } from 'react'
 import { RefreshCw, CheckCircle, AlertCircle, Clock } from 'lucide-react'
+import { useState } from 'react'
+
 import { usePWA } from '@/hooks/usePWA'
 
-type OfflineSyncProps = {
+interface OfflineSyncProps {
   className?: string
 }
 

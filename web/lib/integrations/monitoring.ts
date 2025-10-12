@@ -6,10 +6,11 @@
  */
 
 import { logger } from '@/lib/utils/logger';
-import type { CacheStats } from './caching';
 import { withOptional } from '@/lib/utils/objects';
 
-export type IntegrationMetrics = {
+import type { CacheStats } from './caching';
+
+export interface IntegrationMetrics {
   apiName: string;
   timestamp: Date;
   requests: {
@@ -44,7 +45,7 @@ export type IntegrationMetrics = {
   };
 }
 
-export type AlertRule = {
+export interface AlertRule {
   id: string;
   name: string;
   apiName: string;
@@ -57,7 +58,7 @@ export type AlertRule = {
   lastTriggered?: Date;
 }
 
-export type Alert = {
+export interface Alert {
   id: string;
   ruleId: string;
   apiName: string;
@@ -70,7 +71,7 @@ export type Alert = {
   resolved: boolean;
 }
 
-export type HealthCheck = {
+export interface HealthCheck {
   apiName: string;
   status: 'healthy' | 'degraded' | 'unhealthy';
   timestamp: Date;
@@ -237,7 +238,7 @@ export class IntegrationMonitor {
 
       this.healthChecks.set(apiName, healthCheck);
       
-      logger.error('Health check failed', { apiName, error: lastError, responseTime });
+      logger.error('Health check failed', lastError as unknown as Error, { apiName, responseTime, lastError: lastError });
       return healthCheck;
     }
   }

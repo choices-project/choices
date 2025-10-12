@@ -1,15 +1,15 @@
 'use client'
 
-import { useState, useEffect } from 'react'
 import { CheckCircle, AlertCircle, Info, CheckSquare } from 'lucide-react'
+import { useState, useEffect } from 'react'
 
-type PollOption = {
+interface PollOption {
   id: string
   text: string
   description?: string
 }
 
-type ApprovalVotingProps = {
+interface ApprovalVotingProps {
   pollId: string
   title: string
   description?: string

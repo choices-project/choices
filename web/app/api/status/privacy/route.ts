@@ -1,4 +1,5 @@
 import { type NextRequest, NextResponse } from 'next/server';
+
 import { getRPIDAndOrigins } from '@/features/auth/lib/webauthn/config';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
@@ -53,7 +54,7 @@ export async function GET(req: NextRequest) {
       details: {
         webauthnEnabled: enabled,
         rpId: rpID,
-        allowedOrigins: allowedOrigins,
+        allowedOrigins,
         tablesExist: webauthnTablesExist
       }
     });

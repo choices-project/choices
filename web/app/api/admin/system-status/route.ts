@@ -1,16 +1,17 @@
 import { NextResponse } from 'next/server';
+
+import { requireAdminOr401 } from '@/features/auth/lib/admin-auth';
 import { logger } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
-import { requireAdminOr401 } from '@/features/auth/lib/admin-auth';
 
 export const dynamic = 'force-dynamic';
 
-type CheckResult = {
+interface CheckResult {
   name: string;
   ok: boolean;
   detail?: string;
   durationMs: number;
-};
+}
 
 async function timed<T>(name: string, fn: () => Promise<T>): Promise<[T | null, CheckResult]> {
   const t0 = performance.now();

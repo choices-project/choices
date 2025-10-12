@@ -1,12 +1,5 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { withOptional } from '@/lib/utils/objects';
 import { 
   Fingerprint, 
   Loader2, 
@@ -18,8 +11,16 @@ import {
   Smartphone,
   Laptop
 } from 'lucide-react';
+import React, { useState } from 'react';
 
-type PasskeyRegisterProps = {
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { withOptional } from '@/lib/utils/objects';
+
+interface PasskeyRegisterProps {
   onSuccess?: (credential: unknown) => void;
   onError?: (error: string) => void;
   className?: string;

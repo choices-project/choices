@@ -13,17 +13,18 @@
 // ============================================================================
 
 import * as crypto from 'node:crypto';
-import { withOptional } from '@/lib/utils/objects';
-import { isPresent } from '@/lib/utils/clean';
 
-export type UserRanking = {
+import { isPresent } from '@/lib/utils/clean';
+import { withOptional } from '@/lib/utils/objects';
+
+export interface UserRanking {
   pollId: string;
   userId: string;
   ranking: string[]; // ordered candidate ids, highest preference first
   createdAt: Date;
 }
 
-export type IRVRound = {
+export interface IRVRound {
   round: number;                 // round number (1-based)
   votes: Record<string, number>; // vote counts for each candidate
   eliminated?: string;           // single eliminated candidate (not array)
@@ -33,7 +34,7 @@ export type IRVRound = {
   exhausted?: number;            // ballots with no remaining choices this round
 }
 
-export type RankedChoiceResults = {
+export interface RankedChoiceResults {
   winner: string | null;
   rounds: IRVRound[];
   totalVotes: number;            // number of ballots (not exhausted count)
@@ -50,7 +51,7 @@ export type RankedChoiceResults = {
 function tiebreakPick(ids: string[], seed?: string): string {
   if (!seed) return [...ids].sort()[0] ?? '';
   const scored = ids.map(id => {
-    const h = crypto.createHash('sha256').update(seed + '::' + id).digest('hex');
+    const h = crypto.createHash('sha256').update(`${seed  }::${  id}`).digest('hex');
     return { id, h };
   });
   scored.sort((a, b) => (a.h < b.h ? -1 : a.h > b.h ? 1 : a.id.localeCompare(b.id)));
@@ -91,12 +92,12 @@ function pickFinalWinner(
   return sorted[0] ?? '';
 }
 
-export type Candidate = {
+export interface Candidate {
   id: string;
   name: string;
   description?: string;
   isWithdrawn?: boolean;
-};
+}
 
 export class IRVCalculator {
   public readonly pollId: string;

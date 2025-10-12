@@ -98,7 +98,7 @@ export function validateProfileData(data: ProfileUpdateData): ProfileValidationR
  * Handles different API response formats
  */
 export function transformApiResponseToProfile(apiData: any): ProfileUser | null {
-  if (!apiData || !apiData.success) {
+  if (!apiData?.success) {
     return null;
   }
 

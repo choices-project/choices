@@ -1,6 +1,5 @@
 'use client';
 
-import React, { useState } from 'react';
 import { 
   MapPin, 
   Users, 
@@ -13,8 +12,9 @@ import {
   CheckCircle,
   AlertTriangle
 } from 'lucide-react';
+import React, { useState } from 'react';
 
-type CivicsLureProps = {
+interface CivicsLureProps {
   userLocation?: string;
   onEngage: () => void;
 }

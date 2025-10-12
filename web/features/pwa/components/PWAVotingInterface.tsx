@@ -1,6 +1,5 @@
 'use client'
 
-import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
   CheckCircle, 
@@ -14,11 +13,14 @@ import {
   Smartphone,
   Download
 } from 'lucide-react'
+import { useState, useEffect } from 'react'
+
 import { useFeatureFlags } from "@/hooks/useFeatureFlags"
-import { usePWAUtils } from '../hooks/usePWAUtils'
 import { devLog } from '@/lib/utils/logger';
 
-type Poll = {
+import { usePWAUtils } from '../hooks/usePWAUtils'
+
+interface Poll {
   id: string
   question: string
   options: string[]
@@ -33,7 +35,7 @@ type Poll = {
 
 type OnVote = (choice: number) => Promise<void> | void;
 
-type PWAVotingInterfaceProps = {
+interface PWAVotingInterfaceProps {
   poll: Poll
   onVote: OnVote
   showResults?: boolean

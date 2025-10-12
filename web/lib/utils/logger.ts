@@ -15,7 +15,7 @@ export enum LogLevel {
   NONE = 4
 }
 
-type LogContext = {
+interface LogContext {
   [key: string]: unknown;
 }
 

@@ -7,7 +7,7 @@
 import { devLog } from '@/lib/utils/logger';
 
 // Error types
-export type ErrorDetails = {
+export interface ErrorDetails {
   code?: string;
   message: string;
   details?: any;
@@ -16,7 +16,7 @@ export type ErrorDetails = {
   statusCode?: number;
 }
 
-export type RetryConfig = {
+export interface RetryConfig {
   maxRetries: number;
   baseDelay: number;
   maxDelay: number;
@@ -269,7 +269,7 @@ export async function executeWithRetry<T>(
 }
 
 // Error monitoring
-export type ErrorMetrics = {
+export interface ErrorMetrics {
   totalErrors: number;
   errorsByCode: Record<string, number>;
   errorsByStatusCode: Record<number, number>;

@@ -8,7 +8,7 @@
  * - User interaction metrics
  */
 
-type PerformanceMetric = {
+interface PerformanceMetric {
   name: string;
   value: number;
   timestamp: number;
@@ -17,7 +17,7 @@ type PerformanceMetric = {
   connection?: string;
 }
 
-type CoreWebVitals = {
+interface CoreWebVitals {
   lcp: number; // Largest Contentful Paint
   fid: number; // First Input Delay
   cls: number; // Cumulative Layout Shift
@@ -25,7 +25,7 @@ type CoreWebVitals = {
   ttfb: number; // Time to First Byte
 }
 
-type BundlePerformance = {
+interface BundlePerformance {
   bundleName: string;
   loadTime: number;
   parseTime: number;
@@ -34,7 +34,7 @@ type BundlePerformance = {
   gzipSize?: number;
 }
 
-type ResourcePerformance = {
+interface ResourcePerformance {
   url: string;
   type: 'script' | 'stylesheet' | 'image' | 'font' | 'other';
   loadTime: number;
@@ -47,7 +47,7 @@ class PerformanceMetricsCollector {
   private coreWebVitals: CoreWebVitals | null = null;
   private bundlePerformance: BundlePerformance[] = [];
   private resourcePerformance: ResourcePerformance[] = [];
-  private observers: ((metrics: PerformanceMetric[]) => void)[] = [];
+  private observers: Array<(metrics: PerformanceMetric[]) => void> = [];
 
   constructor() {
     this.initializeWebVitals();
@@ -65,8 +65,10 @@ class PerformanceMetricsCollector {
     if ('PerformanceObserver' in window) {
       const lcpObserver = new PerformanceObserver((list) => {
         const entries = list.getEntries();
-        const lastEntry = entries[entries.length - 1] as PerformanceEntry;
-        this.addMetric('lcp', lastEntry.startTime);
+        const lastEntry = entries[entries.length - 1];
+        if (lastEntry) {
+          this.addMetric('lcp', lastEntry.startTime);
+        }
       });
       lcpObserver.observe({ entryTypes: ['largest-contentful-paint'] });
 

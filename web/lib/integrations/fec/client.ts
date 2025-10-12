@@ -12,7 +12,7 @@ import { devLog } from '@/lib/utils/logger';
 import { withOptional } from '@/lib/utils/objects';
 
 // Types for FEC API responses
-export type FECCandidate = {
+export interface FECCandidate {
   candidate_id: string;
   name: string;
   party: string;
@@ -33,7 +33,7 @@ export type FECCandidate = {
   principal_committee_name?: string;
 }
 
-export type FECCommittee = {
+export interface FECCommittee {
   committee_id: string;
   name: string;
   committee_type: string;
@@ -58,7 +58,7 @@ export type FECCommittee = {
   last_f1_date: string;
 }
 
-export type FECContribution = {
+export interface FECContribution {
   committee_id: string;
   committee_name: string;
   contributor_id?: string;
@@ -99,7 +99,7 @@ export type FECContribution = {
   back_reference_transaction_id?: string;
 }
 
-export type FECExpenditure = {
+export interface FECExpenditure {
   committee_id: string;
   committee_name: string;
   payee_id?: string;
@@ -138,7 +138,7 @@ export type FECExpenditure = {
   back_reference_transaction_id?: string;
 }
 
-export type FECApiResponse<T> = {
+export interface FECApiResponse<T> {
   results: T[];
   pagination: {
     count: number;
@@ -148,7 +148,7 @@ export type FECApiResponse<T> = {
   };
 }
 
-export type FECClientConfig = {
+export interface FECClientConfig {
   apiKey?: string;
   baseUrl?: string;
   rateLimit?: {

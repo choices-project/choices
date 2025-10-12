@@ -5,6 +5,7 @@
  */
 
 import { getAdminUser } from '@/features/auth/lib/admin-auth';
+
 import { AdminLayout } from './layout/AdminLayout';
 
 // Force dynamic rendering for admin pages

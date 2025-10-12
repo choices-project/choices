@@ -1,11 +1,12 @@
 'use client'
 
+import { Fingerprint, Shield, CheckCircle, XCircle, AlertTriangle } from 'lucide-react'
 import { useState, useEffect, createContext, useContext } from 'react'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
-import { Fingerprint, Shield, CheckCircle, XCircle, AlertTriangle } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   registerBiometric,
   isWebAuthnSupported, 
@@ -36,7 +37,7 @@ export function useBiometricSetupContext() {
   return useContext(BiometricSetupContext);
 }
 
-type BiometricSetupProps = {
+interface BiometricSetupProps {
   userId: string
   username: string
   onSuccess?: () => void

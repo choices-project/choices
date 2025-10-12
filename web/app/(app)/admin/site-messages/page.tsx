@@ -1,8 +1,5 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
-import { logger } from '@/lib/utils/logger';
-import { withOptional } from '@/lib/utils/objects';
 import { 
   MessageSquare, 
   Plus, 
@@ -17,8 +14,12 @@ import {
   Smartphone,
   Monitor
 } from 'lucide-react'
+import React, { useState, useEffect } from 'react'
 
-type SiteMessage = {
+import { logger } from '@/lib/utils/logger';
+import { withOptional } from '@/lib/utils/objects';
+
+interface SiteMessage {
   id: string
   title: string
   message: string
@@ -30,7 +31,8 @@ type SiteMessage = {
   updated_at: string
 }
 
-type MessageFormData = {
+interface MessageFormData {
+  [key: string]: unknown;
   title: string
   message: string
   type: 'info' | 'warning' | 'success' | 'error' | 'feedback'

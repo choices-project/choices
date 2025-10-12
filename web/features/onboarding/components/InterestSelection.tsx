@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
 import { Heart, Save, RotateCcw } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
 
 import type { InterestSelectionProps } from '../types';
 

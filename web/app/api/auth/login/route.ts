@@ -1,8 +1,10 @@
 import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
-import { getSupabaseServerClient } from '@/utils/supabase/server'
-import { logger } from '@/lib/utils/logger'
+
 import { rateLimiters } from '@/lib/core/security/rate-limit'
+import { logger } from '@/lib/utils/logger'
+import { getSupabaseServerClient } from '@/utils/supabase/server'
+
 import { 
   validateCsrfProtection, 
   createCsrfErrorResponse 
@@ -47,7 +49,7 @@ export async function POST(request: NextRequest) {
     // Sign in with Supabase Auth
     const { data: authData, error: authError } = await supabaseClient.auth.signInWithPassword({
       email: email.toLowerCase().trim(),
-      password: password
+      password
     })
 
     if (authError || !authData.user) {

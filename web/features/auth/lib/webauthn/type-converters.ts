@@ -47,18 +47,18 @@ export function base64urlToArrayBuffer(base64url: string): ArrayBuffer {
  */
 export function arrayBufferToBytea(buffer: ArrayBuffer): string {
   const uint8Array = new Uint8Array(buffer);
-  return '\\x' + Array.from(uint8Array)
+  return `\\x${  Array.from(uint8Array)
     .map(byte => byte.toString(16).padStart(2, '0'))
-    .join('');
+    .join('')}`;
 }
 
 /**
  * Convert Uint8Array to PostgreSQL BYTEA format
  */
 export function uint8ArrayToBytea(uint8Array: Uint8Array): string {
-  return '\\x' + Array.from(uint8Array)
+  return `\\x${  Array.from(uint8Array)
     .map(byte => byte.toString(16).padStart(2, '0'))
-    .join('');
+    .join('')}`;
 }
 
 /**

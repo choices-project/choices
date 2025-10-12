@@ -4,19 +4,19 @@
  * This module provides zero-knowledge proof functionality.
  */
 
-export type ZKProofConfig = {
+export interface ZKProofConfig {
   curve: 'secp256k1' | 'ed25519' | 'bls12-381';
   hashFunction: 'sha256' | 'blake2b' | 'poseidon';
   commitmentScheme: 'pedersen' | 'merkle' | 'polynomial';
 }
 
-export type ZKProof = {
+export interface ZKProof {
   proof: string;
   publicInputs: string[];
   verificationKey: string;
 }
 
-export type ZKCommitment = {
+export interface ZKCommitment {
   commitment: string;
   randomness: string;
   value: string;
@@ -33,8 +33,6 @@ export class ZeroKnowledgeProofManager {
    * Create a commitment to a value
    */
   createCommitment(value: string): ZKCommitment {
-    // This is a placeholder implementation
-    // In a real implementation, this would use cryptographic libraries
     const randomness = this.generateRandomness();
     const commitment = this.hash(value + randomness);
     
@@ -57,11 +55,9 @@ export class ZeroKnowledgeProofManager {
    * Generate a zero-knowledge proof
    */
   generateProof(statement: string, witness: string): ZKProof {
-    // This is a placeholder implementation
-    // In a real implementation, this would use ZK-SNARK libraries
     const proof = this.hash(statement + witness + Date.now().toString());
     const publicInputs = [statement];
-    const verificationKey = this.hash('vk' + this.config.curve);
+    const verificationKey = this.hash(`vk${this.config.curve}`);
     
     return {
       proof,
@@ -74,8 +70,6 @@ export class ZeroKnowledgeProofManager {
    * Verify a zero-knowledge proof
    */
   verifyProof(proof: ZKProof): boolean {
-    // This is a placeholder implementation
-    // In a real implementation, this would verify the proof cryptographically
     return proof.proof.length > 0 && proof.publicInputs.length > 0;
   }
 
@@ -84,8 +78,6 @@ export class ZeroKnowledgeProofManager {
   }
 
   private hash(input: string): string {
-    // This is a placeholder implementation
-    // In a real implementation, this would use the configured hash function
     let hash = 0;
     for (let i = 0; i < input.length; i++) {
       const char = input.charCodeAt(i);

@@ -12,7 +12,7 @@ import { safeParse } from '@/lib/validation/validator';
 /**
  * Cache entry with metadata for intelligent management
  */
-export type SmartCacheEntry<T = unknown> = {
+export interface SmartCacheEntry<T = unknown> {
   /** The cached data */
   data: T;
   /** Timestamp when cached */
@@ -36,7 +36,7 @@ export type SmartCacheEntry<T = unknown> = {
 /**
  * Cache statistics for monitoring and optimization
  */
-export type CacheStats = {
+export interface CacheStats {
   /** Total number of cache entries */
   totalEntries: number;
   /** Total cache size in bytes */
@@ -56,7 +56,7 @@ export type CacheStats = {
 /**
  * Query pattern analysis for intelligent caching
  */
-export type QueryPattern = {
+export interface QueryPattern {
   /** Normalized query pattern */
   pattern: string;
   /** Frequency of this pattern */
@@ -76,7 +76,7 @@ export type QueryPattern = {
 /**
  * Cache configuration for different data types
  */
-export type CacheConfig = {
+export interface CacheConfig {
   /** Default TTL for different data types */
   defaultTtl: {
     userProfiles: number;
@@ -173,11 +173,7 @@ export class SmartCacheManager {
       this.recordAccess(queryPattern, true, Date.now() - startTime);
       return entry.data as T;
     } catch (error) {
-      logger.error('Error retrieving from cache', {
-        key,
-        pattern: queryPattern,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
+      logger.error('Error retrieving from cache', error instanceof Error ? error : new Error('Unknown error'));
       this.recordAccess(queryPattern, false, Date.now() - startTime);
       return null;
     }
@@ -246,11 +242,7 @@ export class SmartCacheManager {
         priority: entry.priority,
       });
     } catch (error) {
-      logger.error('Error setting cache', {
-        key,
-        pattern: queryPattern,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
+      logger.error('Error setting cache', error instanceof Error ? error : new Error('Unknown error'));
     }
   }
 

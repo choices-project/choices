@@ -13,12 +13,13 @@
 'use client';
 
 import { useState } from 'react';
+
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
 
 /**
  * Props for the AddressLookupForm component
  */
-type AddressLookupFormProps = {
+interface AddressLookupFormProps {
   /** Callback function when address lookup is submitted */
   onLookup?: (address: string) => void;
   /** Additional CSS classes for styling */

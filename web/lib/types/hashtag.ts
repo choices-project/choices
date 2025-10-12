@@ -12,7 +12,7 @@
 // CORE HASHTAG TYPES
 // ============================================================================
 
-export type Hashtag = {
+export interface Hashtag {
   id: string;
   name: string;
   display_name: string;
@@ -44,12 +44,12 @@ export type Hashtag = {
     genders: Record<string, number>;
     locations: Record<string, number>;
   };
-  time_series_data?: {
+  time_series_data?: Array<{
     date: string;
     usage_count: number;
     engagement_rate: number;
     sentiment_score: number;
-  }[];
+  }>;
   cross_feature_usage?: {
     polls: number;
     profiles: number;
@@ -64,13 +64,13 @@ export type Hashtag = {
   content_policy_violations?: string[];
   last_moderated?: string;
   moderated_by?: string;
-  moderation_history?: {
+  moderation_history?: Array<{
     action: string;
     reason: string;
     timestamp: string;
     moderator: string;
-  }[];
-};
+  }>;
+}
 
 export type HashtagCategory = 
   | 'politics'
@@ -102,7 +102,7 @@ export type HashtagCategory =
   | 'custom'
   | 'other';
 
-export type HashtagValidation = {
+export interface HashtagValidation {
   name: string;
   is_valid: boolean;
   errors: string[];
@@ -114,9 +114,9 @@ export type HashtagValidation = {
     similar_hashtags: string[];
     conflict_reason?: string;
   };
-};
+}
 
-export type HashtagSuggestion = {
+export interface HashtagSuggestion {
   hashtag: Hashtag;
   reason: string;
   confidence: number;
@@ -128,9 +128,9 @@ export type HashtagSuggestion = {
     user_history?: boolean;
     social_proof?: number;
   };
-};
+}
 
-export type TrendingHashtag = {
+export interface TrendingHashtag {
   hashtag: Hashtag;
   trending_score: number;
   growth_rate: number;
@@ -172,9 +172,9 @@ export type TrendingHashtag = {
     peak_prediction: string;
     decline_prediction: string;
   };
-};
+}
 
-export type HashtagAnalytics = {
+export interface HashtagAnalytics {
   hashtag_id: string;
   period: '24h' | '7d' | '30d' | '90d';
   total_usage: number;
@@ -192,12 +192,12 @@ export type HashtagAnalytics = {
     genders: Record<string, number>;
     locations: Record<string, number>;
   };
-  time_series: {
+  time_series: Array<{
     date: string;
     usage_count: number;
     engagement_rate: number;
     sentiment_score: number;
-  }[];
+  }>;
   cross_feature_usage: {
     polls: number;
     profiles: number;
@@ -213,9 +213,9 @@ export type HashtagAnalytics = {
   content_quality_score: number;
   moderation_risk_score: number;
   generated_at: string;
-};
+}
 
-export type HashtagModeration = {
+export interface HashtagModeration {
   id: string;
   hashtag_id: string;
   status: 'pending' | 'approved' | 'rejected' | 'flagged';
@@ -231,12 +231,12 @@ export type HashtagModeration = {
   moderation_notes?: string;
   appeal_count: number;
   appeal_resolved_count: number;
-  moderation_history: {
+  moderation_history: Array<{
     action: string;
     reason: string;
     timestamp: string;
     moderator: string;
-  }[];
+  }>;
   created_at: string;
   updated_at: string;
-};
+}

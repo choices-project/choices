@@ -12,8 +12,6 @@
 
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { withOptional } from '@/lib/utils/objects';
 import { 
   HeartIcon, 
   ChatBubbleLeftIcon, 
@@ -28,10 +26,13 @@ import {
   HeartIcon as HeartSolidIcon,
   BookmarkIcon as BookmarkSolidIcon
 } from '@heroicons/react/24/solid';
+import React, { useState, useEffect, useCallback } from 'react';
+
+import { withOptional } from '@/lib/utils/objects';
 
 import type { EngagementData } from '../lib/types/civics-types';
 
-type EngagementMetricsProps = {
+interface EngagementMetricsProps {
   itemId: string;
   initialMetrics: EngagementData;
   onEngagement?: (action: string, itemId: string, value: number) => void;
@@ -39,7 +40,7 @@ type EngagementMetricsProps = {
   showTrending?: boolean;
   enableHaptics?: boolean;
   className?: string;
-};
+}
 
 export default function EngagementMetrics({
   itemId,

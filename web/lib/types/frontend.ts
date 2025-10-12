@@ -3,7 +3,7 @@
 // Purpose: Comprehensive type definitions to replace 'any' types in frontend components
 
 // API Response Types
-export type ApiResponse<T = unknown> = {
+export interface ApiResponse<T = unknown> {
   data: T;
   success: boolean;
   message?: string;
@@ -19,14 +19,14 @@ export type PaginatedResponse<T> = {
   };
 } & ApiResponse<T[]>
 
-export type ApiError = {
+export interface ApiError {
   code: string;
   message: string;
   details?: Record<string, unknown>;
 }
 
 // Poll Types
-export type Poll = {
+export interface Poll {
   id: string;
   title: string;
   description: string;
@@ -47,7 +47,7 @@ export type Poll = {
   end_time?: string;
 }
 
-export type PollOption = {
+export interface PollOption {
   id: string;
   text: string;
   description?: string;
@@ -55,7 +55,7 @@ export type PollOption = {
   order: number;
 }
 
-export type PollSettings = {
+export interface PollSettings {
   allowMultipleVotes: boolean;
   requireAuthentication: boolean;
   showResults: boolean;
@@ -64,14 +64,14 @@ export type PollSettings = {
 }
 
 // Results Types
-export type PollResult = {
+export interface PollResult {
   pollId: string;
   totalVotes: number;
   results: OptionResult[];
   metadata: ResultMetadata;
 }
 
-export type OptionResult = {
+export interface OptionResult {
   optionId: string;
   optionText: string;
   votes: number;
@@ -79,7 +79,7 @@ export type OptionResult = {
   rank: number;
 }
 
-export type ResultMetadata = {
+export interface ResultMetadata {
   strategy: string;
   processedAt: Date;
   totalRounds: number;
@@ -88,7 +88,7 @@ export type ResultMetadata = {
 }
 
 // Vote Types
-export type Vote = {
+export interface Vote {
   poll_id: string;
   token: string;
   tag: string;
@@ -98,18 +98,18 @@ export type Vote = {
   merkle_proof: string[];
 }
 
-export type Tally = {
+export interface Tally {
   [key: number]: number;
 }
 
-export type CommitmentLog = {
+export interface CommitmentLog {
   leaf_count: number;
   root: string;
   timestamp: string;
 }
 
 // WebAuthn Types
-export type WebAuthnRegistrationOptions = {
+export interface WebAuthnRegistrationOptions {
   challenge: string;
   rp: {
     name: string;
@@ -132,7 +132,7 @@ export type WebAuthnRegistrationOptions = {
   attestation: string;
 }
 
-export type WebAuthnAssertionOptions = {
+export interface WebAuthnAssertionOptions {
   challenge: string;
   timeout: number;
   rpId: string;
@@ -144,7 +144,7 @@ export type WebAuthnAssertionOptions = {
   userVerification: string;
 }
 
-export type WebAuthnCredentialResponse = {
+export interface WebAuthnCredentialResponse {
   id: string;
   type: string;
   rawId: number[];
@@ -158,7 +158,7 @@ export type WebAuthnCredentialResponse = {
 }
 
 // Component Props Types
-export type WebAuthnAuthProps = {
+export interface WebAuthnAuthProps {
   onAuthenticated: (userStableId: string, sessionToken: string) => void;
   onSuccess?: (credential: PublicKeyCredential) => void;
   onError?: (error: Error) => void;
@@ -167,7 +167,7 @@ export type WebAuthnAuthProps = {
   className?: string;
 }
 
-export type PollListProps = {
+export interface PollListProps {
   polls: Poll[];
   loading: boolean;
   error?: string;
@@ -176,7 +176,7 @@ export type PollListProps = {
   hasMore: boolean;
 }
 
-export type ResultsChartProps = {
+export interface ResultsChartProps {
   results: PollResult;
   chartType: 'bar' | 'pie' | 'line';
   showPercentages: boolean;
@@ -184,7 +184,7 @@ export type ResultsChartProps = {
 }
 
 // Event Handler Types
-export type PollEventHandler = {
+export interface PollEventHandler {
   onVote: (pollId: string, selections: string[]) => Promise<void>;
   onShare: (pollId: string) => void;
   onBookmark: (pollId: string) => void;
@@ -192,7 +192,7 @@ export type PollEventHandler = {
 }
 
 // Dashboard Data Types
-export type DashboardData = {
+export interface DashboardData {
   totalPolls: number;
   totalVotes: number;
   activeUsers: number;
@@ -201,7 +201,7 @@ export type DashboardData = {
   userStats: UserStats;
 }
 
-export type ActivityItem = {
+export interface ActivityItem {
   id: string;
   type: 'vote' | 'poll_created' | 'user_joined';
   description: string;
@@ -210,7 +210,7 @@ export type ActivityItem = {
   pollId?: string;
 }
 
-export type UserStats = {
+export interface UserStats {
   totalUsers: number;
   activeUsers: number;
   newUsersToday: number;
@@ -218,13 +218,13 @@ export type UserStats = {
 }
 
 // Geographic Data Types
-export type GeographicData = {
+export interface GeographicData {
   regions: RegionData[];
   totalVotes: number;
   participationRate: number;
 }
 
-export type RegionData = {
+export interface RegionData {
   region: string;
   votes: number;
   percentage: number;
@@ -232,33 +232,33 @@ export type RegionData = {
 }
 
 // Demographics Data Types
-export type DemographicsData = {
+export interface DemographicsData {
   ageGroups: AgeGroupData[];
   educationLevels: EducationData[];
   incomeBrackets: IncomeData[];
   totalResponses: number;
 }
 
-export type AgeGroupData = {
+export interface AgeGroupData {
   ageRange: string;
   count: number;
   percentage: number;
 }
 
-export type EducationData = {
+export interface EducationData {
   level: string;
   count: number;
   percentage: number;
 }
 
-export type IncomeData = {
+export interface IncomeData {
   bracket: string;
   count: number;
   percentage: number;
 }
 
 // Engagement Data Types
-export type EngagementData = {
+export interface EngagementData {
   dailyActiveUsers: number;
   weeklyActiveUsers: number;
   monthlyActiveUsers: number;
@@ -268,7 +268,7 @@ export type EngagementData = {
 }
 
 // Trending Poll Types
-export type TrendingPoll = {
+export interface TrendingPoll {
   id: string;
   title: string;
   description: string;
@@ -285,7 +285,7 @@ export type TrendingPoll = {
 }
 
 // Stats Types
-export type PlatformStats = {
+export interface PlatformStats {
   totalPolls: number;
   totalVotes: number;
   activeUsers: number;

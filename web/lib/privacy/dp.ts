@@ -24,21 +24,21 @@ import { withOptional } from '@/lib/utils/objects';
 // TYPES AND INTERFACES
 // ============================================================================
 
-export type EpsilonBudget = {
+export interface EpsilonBudget {
   total: number;
   used: number;
   remaining: number;
   operations: EpsilonOperation[];
 }
 
-export type EpsilonOperation = {
+export interface EpsilonOperation {
   operation: string;
   epsilon: number;
   timestamp: number;
   context: string;
 }
 
-export type EpsilonBudgetStatus = {
+export interface EpsilonBudgetStatus {
   remaining: number;
   used: number;
   operations: EpsilonOperation[];
@@ -46,7 +46,7 @@ export type EpsilonBudgetStatus = {
   canAllocate: (epsilon: number) => boolean;
 }
 
-export type PrivacyConfig = {
+export interface PrivacyConfig {
   defaultEpsilon: number;
   maxEpsilonPerPoll: number;
   kAnonymityThresholds: {
@@ -58,7 +58,7 @@ export type PrivacyConfig = {
   noiseScale: number;
 }
 
-export type DPCountResult = {
+export interface DPCountResult {
   originalCount: number;
   noisyCount: number;
   epsilon: number;
@@ -66,7 +66,7 @@ export type DPCountResult = {
   privacyLoss: number;
 }
 
-export type KAnonymityResult = {
+export interface KAnonymityResult {
   shouldShow: boolean;
   reason: string;
   threshold: number;

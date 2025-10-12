@@ -7,43 +7,45 @@
  * @created September 9, 2025
  */
 
-import { getSupabaseBrowserClient } from '../supabase/client';
-import { UserEncryption, EncryptionUtils } from './encryption';
-import { ConsentManager } from './consent';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
+import { getSupabaseBrowserClient } from '../supabase/client';
+
+import { ConsentManager } from './consent';
+import { UserEncryption, EncryptionUtils } from './encryption';
+
 // Type definitions for user data
-export type UserProfile = {
+export interface UserProfile {
   id: string;
   username?: string;
   email?: string;
   created_at: string;
   updated_at: string;
-};
+}
 
-export type UserPoll = {
+export interface UserPoll {
   id: string;
   title: string;
   description?: string;
   created_at: string;
   status: string;
-};
+}
 
-export type UserVote = {
+export interface UserVote {
   id: string;
   poll_id: string;
   choice: number;
   created_at: string;
-};
+}
 
-export type UserConsent = {
+export interface UserConsent {
   id: string;
   consent_type: string;
   granted: boolean;
   granted_at: string;
-};
+}
 
-export type AnalyticsContribution = {
+export interface AnalyticsContribution {
   id: string;
   poll_id: string;
   age_bucket: string;
@@ -52,9 +54,9 @@ export type AnalyticsContribution = {
   vote_choice: number;
   participation_time: string;
   created_at: string;
-};
+}
 
-export type UserDataExport = {
+export interface UserDataExport {
   profile: UserProfile;
   polls: UserPoll[];
   votes: UserVote[];
@@ -63,7 +65,7 @@ export type UserDataExport = {
   exported_at: string;
 }
 
-export type AnonymizationResult = {
+export interface AnonymizationResult {
   success: boolean;
   message: string;
   anonymized_fields: string[];

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
-import { getSupabaseServerClient } from '@/utils/supabase/server';
+
 import { handleError, getUserMessage, getHttpStatus } from '@/lib/error-handler';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 export async function GET() {
   try {
@@ -15,7 +16,7 @@ export async function GET() {
           environment: process.env.NODE_ENV,
           databaseType: 'mock',
           databaseEnabled: false,
-          supabaseConfigured: supabaseConfigured,
+          supabaseConfigured,
           connectionSuccess: false
         },
         connectionTest: {

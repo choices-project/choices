@@ -9,6 +9,7 @@
  */
 
 import React from 'react';
+
 import {
   // Store hooks
   useUser,
@@ -16,6 +17,7 @@ import {
   useUserProfile,
   useTheme,
   useSidebarCollapsed,
+  useSidebarWidth,
   useNotifications,
   useUnreadCount,
   
@@ -60,6 +62,7 @@ export function BasicStoreExample() {
 
 export function StoreActionsExample() {
   const appActions = useAppActions();
+  const notificationActions = useNotificationActions();
   
   const handleToggleTheme = () => {
     appActions.toggleTheme();

@@ -1,9 +1,10 @@
 import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
+
 import { requireAdminOr401 } from '@/features/auth/lib/admin-auth'
 import { logger } from '@/lib/utils/logger'
-import { getSupabaseServerClient } from '@/utils/supabase/server'
 import { withOptional } from '@/lib/utils/objects'
+import { getSupabaseServerClient } from '@/utils/supabase/server'
 
 export async function GET(request: NextRequest) {
   // Single admin gate - returns 401 if not admin

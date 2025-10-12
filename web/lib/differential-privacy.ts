@@ -4,13 +4,13 @@
  * This module provides differential privacy functionality.
  */
 
-export type DifferentialPrivacyConfig = {
+export interface DifferentialPrivacyConfig {
   epsilon: number; // Privacy parameter
   delta: number;   // Failure probability
   sensitivity: number; // Global sensitivity
 }
 
-export type NoisyResult = {
+export interface NoisyResult {
   value: number;
   noise: number;
   privacy: DifferentialPrivacyConfig;

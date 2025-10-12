@@ -15,20 +15,20 @@ export type BeforeInstallPromptEvent = {
   prompt(): Promise<void>;
 } & Event;
 
-export type InstallationStatus = {
+export interface InstallationStatus {
   isInstallable: boolean;
   isInstalled: boolean;
   canPrompt: boolean;
   platform: string | null;
   deferredPrompt: BeforeInstallPromptEvent | null;
-};
+}
 
-export type InstallationResult = {
+export interface InstallationResult {
   success: boolean;
   outcome: 'accepted' | 'dismissed' | 'error';
   platform?: string;
   error?: string;
-};
+}
 
 class PWAInstallationManager {
   private deferredPrompt: BeforeInstallPromptEvent | null = null;
@@ -155,7 +155,7 @@ class PWAInstallationManager {
       // Wait for the user to respond
       const choiceResult = await this.deferredPrompt.userChoice;
       
-      logger.info('PWA: Installation choice:', choiceResult.outcome);
+      logger.info('PWA: Installation choice:', { outcome: choiceResult.outcome });
       
       // Clear the deferred prompt
       this.deferredPrompt = null;
@@ -168,7 +168,7 @@ class PWAInstallationManager {
       };
 
     } catch (error) {
-      logger.error('PWA: Installation prompt failed:', error);
+      logger.error('PWA: Installation prompt failed:', error instanceof Error ? error : undefined, { error: error instanceof Error ? error.message : String(error) });
       
       return {
         success: false,
@@ -248,7 +248,7 @@ class PWAInstallationManager {
       try {
         listener(status);
       } catch (error) {
-        logger.error('PWA: Error in installation status listener:', error);
+        logger.error('PWA: Error in installation status listener:', error instanceof Error ? error : undefined, { error: error instanceof Error ? error.message : String(error) });
       }
     });
   }

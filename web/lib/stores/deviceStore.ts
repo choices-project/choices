@@ -11,6 +11,7 @@
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
+
 import { withOptional } from '@/lib/utils/objects';
 
 // ============================================================================
@@ -21,13 +22,13 @@ export type DeviceType = 'mobile' | 'tablet' | 'desktop';
 export type Orientation = 'portrait' | 'landscape';
 export type ConnectionType = 'slow-2g' | '2g' | '3g' | '4g' | '5g' | 'wifi' | 'ethernet' | 'unknown';
 
-export type ScreenSize = {
+export interface ScreenSize {
   width: number;
   height: number;
   aspectRatio: number;
 }
 
-export type DeviceCapabilities = {
+export interface DeviceCapabilities {
   touch: boolean;
   hover: boolean;
   reducedMotion: boolean;
@@ -44,7 +45,7 @@ export type DeviceCapabilities = {
   share: boolean;
 }
 
-export type NetworkInfo = {
+export interface NetworkInfo {
   type: ConnectionType;
   effectiveType: string;
   downlink: number;
@@ -53,7 +54,7 @@ export type NetworkInfo = {
   online: boolean;
 }
 
-export type DeviceStore = {
+export interface DeviceStore {
   // Device Information
   deviceType: DeviceType;
   isMobile: boolean;

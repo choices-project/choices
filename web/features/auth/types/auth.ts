@@ -8,7 +8,7 @@ export type OAuthProvider =
   | 'instagram' 
   | 'tiktok'
 
-export type SocialLoginOption = {
+export interface SocialLoginOption {
   provider: OAuthProvider
   label: string
   description: string
@@ -21,12 +21,12 @@ export type SocialLoginOption = {
   hoverTextColor: string
 }
 
-export type AuthError = {
+export interface AuthError {
   code: string
   message: string
 }
 
-export type AuthSession = {
+export interface AuthSession {
   user: {
     id: string
     email: string

@@ -541,7 +541,7 @@ describe('VoteValidator', () => {
       expect(validation.error).toBe('Validation error');
 
       // Restore original method
-      (validator as any).validateBasicVoteData = originalValidateBasicVoteData as any;
+      (validator as any).validateBasicVoteData = originalValidateBasicVoteData;
     });
 
     it('should handle database errors gracefully', async () => {

@@ -1,11 +1,12 @@
 import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server';
-import { getSupabaseServerClient } from '@/utils/supabase/server';
+
 import { devLog } from '@/lib/utils/logger';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 export const dynamic = 'force-dynamic'
 
 // Type definitions for feedback data
-type _FeedbackItem = {
+interface _FeedbackItem {
   id: string;
   user_id: string;
   type: string;
@@ -27,7 +28,7 @@ type _FeedbackItem = {
   };
   metadata?: unknown;
   ai_analysis?: unknown;
-};
+}
 
 // Security configuration for feedback API
 const securityConfig = {
@@ -137,7 +138,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({
         success: true,
         message: 'Feedback submitted successfully (mock)',
-        feedback_id: 'mock-' + Date.now()
+        feedback_id: `mock-${  Date.now()}`
       })
     }
 
@@ -225,7 +226,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({
           success: true,
           message: 'Feedback submitted successfully (mock - schema cache issue)',
-          feedback_id: 'mock-' + Date.now(),
+          feedback_id: `mock-${  Date.now()}`,
           context: {
             sessionId: userJourney?.sessionId,
             deviceInfo: userJourney?.deviceInfo,

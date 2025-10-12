@@ -23,7 +23,7 @@ import { withOptional } from '@/lib/utils/objects';
 // TYPES AND INTERFACES
 // ============================================================================
 
-export type RetentionPolicy = {
+export interface RetentionPolicy {
   dataType: string;
   retentionPeriod: number; // milliseconds
   autoDelete: boolean;
@@ -36,7 +36,7 @@ export type RetentionPolicy = {
   createdBy: string;
 }
 
-export type DataLifecycleEvent = {
+export interface DataLifecycleEvent {
   id: string;
   dataType: string;
   recordId: string;
@@ -47,7 +47,7 @@ export type DataLifecycleEvent = {
   metadata: Record<string, any>;
 }
 
-export type RetentionAudit = {
+export interface RetentionAudit {
   timestamp: Date;
   dataType: string;
   recordsProcessed: number;
@@ -58,7 +58,7 @@ export type RetentionAudit = {
   success: boolean;
 }
 
-export type DataRetentionStatus = {
+export interface DataRetentionStatus {
   dataType: string;
   totalRecords: number;
   recordsToDelete: number;
@@ -70,7 +70,7 @@ export type DataRetentionStatus = {
   policy: RetentionPolicy;
 }
 
-export type PurgeResult = {
+export interface PurgeResult {
   success: boolean;
   recordsDeleted: number;
   recordsAnonymized: number;
@@ -224,7 +224,7 @@ export class DataRetentionManager {
     exceptions: string[] = []
   ): boolean {
     const policy = this.getRetentionPolicy(dataType);
-    if (!policy || !policy.autoDelete) {
+    if (!policy?.autoDelete) {
       return false;
     }
 
@@ -537,7 +537,7 @@ export class DataRetentionManager {
 
   private async countRecordsToDelete(dataType: string): Promise<number> {
     const policy = this.getRetentionPolicy(dataType);
-    if (!policy || !policy.autoDelete) {
+    if (!policy?.autoDelete) {
       return 0;
     }
 

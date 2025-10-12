@@ -1,6 +1,5 @@
 'use client';
 
-import React from 'react';
 import { 
   MessageSquare, 
   Clock, 
@@ -9,8 +8,9 @@ import {
   TrendingUp,
   Star
 } from 'lucide-react';
+import React from 'react';
 
-type Feedback = {
+interface Feedback {
   id: string;
   type: string;
   sentiment: string;
@@ -19,7 +19,7 @@ type Feedback = {
   createdat: string;
 }
 
-type FeedbackStatsProps = {
+interface FeedbackStatsProps {
   feedback: Feedback[];
 }
 

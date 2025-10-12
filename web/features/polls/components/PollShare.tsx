@@ -1,11 +1,13 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { devLog } from '@/lib/utils/logger';
 import { Share2, Copy, Link, Twitter, Facebook, Linkedin, Mail, QrCode, Download } from 'lucide-react'
-import { isFeatureEnabled } from '@/lib/core/feature-flags'
+import { useState, useEffect } from 'react'
+import QRCode from 'qrcode'
 
-type PollShareProps = {
+import { isFeatureEnabled } from '@/lib/core/feature-flags'
+import { devLog } from '@/lib/utils/logger';
+
+interface PollShareProps {
   pollId: string
   poll?: any
 }
@@ -14,13 +16,30 @@ export default function PollShare({ pollId, poll }: PollShareProps) {
   const [copied, setCopied] = useState(false)
   const [showQR, setShowQR] = useState(false)
   const [pollUrl, setPollUrl] = useState('')
+  const [qrCodeDataUrl, setQrCodeDataUrl] = useState('')
 
   useEffect(() => {
     // Use SSR-safe browser API access
     const initUrl = async () => {
       const { safeWindow } = await import('@/lib/utils/ssr-safe');
       const origin = safeWindow(w => w.location?.origin, '');
-      setPollUrl(`${origin}/polls/${pollId}`);
+      const url = `${origin}/polls/${pollId}`;
+      setPollUrl(url);
+      
+      // Generate QR code
+      try {
+        const qrDataUrl = await QRCode.toDataURL(url, {
+          width: 192,
+          margin: 2,
+          color: {
+            dark: '#000000',
+            light: '#FFFFFF'
+          }
+        });
+        setQrCodeDataUrl(qrDataUrl);
+      } catch (error) {
+        devLog('Failed to generate QR code:', error);
+      }
     };
     initUrl();
   }, [pollId]);
@@ -42,53 +61,25 @@ export default function PollShare({ pollId, poll }: PollShareProps) {
   }
 
   const handleDownloadQR = async () => {
-    // Implement QR code download functionality
-    const { safeDocument } = await import('@/lib/utils/ssr-safe');
-    const canvas = safeDocument(d => d.createElement?.('canvas')) as HTMLCanvasElement;
-    if (!canvas) {
-      devLog('Canvas not available')
+    if (!qrCodeDataUrl) {
+      devLog('QR code not available for download')
       return
     }
     
-    const ctx = canvas.getContext('2d')
-    if (!ctx) {
-      devLog('Canvas context not available')
-      return
-    }
-    
-    // Set canvas size for QR code
-    canvas.width = 256
-    canvas.height = 256
-    
-    // Generate a simple QR-like pattern (in a real implementation, use a QR library)
-    ctx.fillStyle = '#ffffff'
-    ctx.fillRect(0, 0, 256, 256)
-    
-    ctx.fillStyle = '#000000'
-    // Create a simple pattern representing the poll URL
-    for (let i = 0; i < 16; i++) {
-      for (let j = 0; j < 16; j++) {
-        if ((i + j) % 2 === 0) {
-          ctx.fillRect(i * 16, j * 16, 16, 16)
-        }
+    try {
+      const { safeDocument } = await import('@/lib/utils/ssr-safe');
+      const link = safeDocument(d => d.createElement?.('a')) as HTMLAnchorElement;
+      if (!link) {
+        devLog('Link element not available')
+        return
       }
+      
+      link.href = qrCodeDataUrl
+      link.download = `poll-${pollId}-qr-code.png`
+      link.click()
+    } catch (error) {
+      devLog('Failed to download QR code:', error)
     }
-    
-    // Convert canvas to blob and download
-    canvas.toBlob((blob) => {
-      if (blob) {
-        const url = URL.createObjectURL(blob)
-        const a = document.createElement('a')
-        a.href = url
-        a.download = `poll-qr-${pollId}.png`
-        document.body.appendChild(a)
-        a.click()
-        document.body.removeChild(a)
-        URL.revokeObjectURL(url)
-      }
-    }, 'image/png')
-    
-    devLog('Downloading QR code for:', pollUrl)
   }
 
   const handleNativeShare = async () => {
@@ -228,11 +219,18 @@ export default function PollShare({ pollId, poll }: PollShareProps) {
           <div className="text-center">
             <div className="inline-block p-4 bg-gray-100 rounded-lg">
               <div className="w-48 h-48 bg-white border-2 border-gray-300 rounded-lg flex items-center justify-center">
-                <div className="text-center text-gray-500">
-                  <QrCode className="w-16 h-16 mx-auto mb-2" />
-                  <p className="text-sm">QR Code Placeholder</p>
-                  <p className="text-xs">(Would generate actual QR code)</p>
-                </div>
+                {qrCodeDataUrl ? (
+                  <img 
+                    src={qrCodeDataUrl} 
+                    alt="QR Code for poll" 
+                    className="w-full h-full object-contain"
+                  />
+                ) : (
+                  <div className="text-center text-gray-500">
+                    <QrCode className="w-16 h-16 mx-auto mb-2" />
+                    <p className="text-sm">Generating QR Code...</p>
+                  </div>
+                )}
               </div>
             </div>
             <p className="mt-2 text-sm text-gray-600">

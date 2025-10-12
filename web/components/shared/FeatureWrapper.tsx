@@ -7,9 +7,10 @@
 
 import type { ReactNode } from 'react';
 import React from 'react';
+
 import { useFeatureFlag, useFeatureFlagsBatch, useFeatureFlagWithDependencies, useFeatureFlags } from '@/hooks/useFeatureFlags';
 
-export type FeatureWrapperProps = {
+export interface FeatureWrapperProps {
   /** Feature flag ID to check */
   feature: string;
   /** Content to render when feature is enabled */
@@ -70,7 +71,7 @@ export function FeatureWrapper({
   );
 }
 
-export type FeatureWrapperBatchProps = {
+export interface FeatureWrapperBatchProps {
   /** Array of feature flag IDs to check */
   features: string[];
   /** Content to render when all features are enabled */
@@ -137,7 +138,7 @@ export function FeatureWrapperBatch({
   );
 }
 
-export type FeatureWrapperWithDependenciesProps = {
+export interface FeatureWrapperWithDependenciesProps {
   /** Feature flag ID to check */
   feature: string;
   /** Content to render when feature is enabled and dependencies are met */

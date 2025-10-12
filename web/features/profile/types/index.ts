@@ -12,7 +12,7 @@
 // CORE PROFILE TYPES
 // ============================================================================
 
-export type ProfileUser = {
+export interface ProfileUser {
   id: string;
   email: string;
   username?: string;
@@ -26,7 +26,7 @@ export type ProfileUser = {
   updated_at: string;
 }
 
-export type UserProfile = {
+export interface UserProfile {
   id: string;
   user_id: string;
   username: string;
@@ -54,7 +54,7 @@ export type UserProfile = {
   trending_hashtags?: string[];
 }
 
-export type ProfilePreferences = {
+export interface ProfilePreferences {
   theme?: 'light' | 'dark' | 'system';
   language?: string;
   timezone?: string;
@@ -63,7 +63,7 @@ export type ProfilePreferences = {
   voting_preferences?: VotingPreferences;
 }
 
-export type PrivacySettings = {
+export interface PrivacySettings {
   profile_visibility: 'public' | 'private' | 'friends';
   show_email: boolean;
   show_activity: boolean;
@@ -73,7 +73,7 @@ export type PrivacySettings = {
   data_retention?: DataRetentionSettings;
 }
 
-export type NotificationPreferences = {
+export interface NotificationPreferences {
   email_notifications: boolean;
   push_notifications: boolean;
   sms_notifications: boolean;
@@ -82,7 +82,7 @@ export type NotificationPreferences = {
   system_updates: boolean;
 }
 
-export type FeedPreferences = {
+export interface FeedPreferences {
   show_votes: boolean;
   show_bills: boolean;
   show_statements: boolean;
@@ -92,14 +92,14 @@ export type FeedPreferences = {
   trending_topics?: boolean;
 }
 
-export type VotingPreferences = {
+export interface VotingPreferences {
   voting_method: 'single' | 'approval' | 'ranked' | 'range' | 'quadratic';
   privacy_level: 'public' | 'anonymous' | 'private';
   notifications: boolean;
   reminders: boolean;
 }
 
-export type DataRetentionSettings = {
+export interface DataRetentionSettings {
   profile_data: number; // days
   activity_data: number; // days
   analytics_data: number; // days
@@ -110,7 +110,7 @@ export type DataRetentionSettings = {
 // HASHTAG INTEGRATION TYPES
 // ============================================================================
 
-export type ProfileHashtagIntegration = {
+export interface ProfileHashtagIntegration {
   user_id: string;
   primary_hashtags?: string[];
   interest_hashtags?: string[];
@@ -121,7 +121,7 @@ export type ProfileHashtagIntegration = {
   last_updated: string;
 }
 
-export type HashtagUserPreferences = {
+export interface HashtagUserPreferences {
   user_id: string;
   default_categories: string[];
   auto_follow_suggestions: boolean;
@@ -142,7 +142,7 @@ export type HashtagUserPreferences = {
   updated_at: string;
 }
 
-export type HashtagEngagement = {
+export interface HashtagEngagement {
   hashtag_id: string;
   user_id: string;
   engagement_type: 'view' | 'click' | 'share' | 'create' | 'follow' | 'unfollow';
@@ -156,7 +156,7 @@ export type HashtagEngagement = {
 // PROFILE UPDATE TYPES
 // ============================================================================
 
-export type ProfileUpdateData = {
+export interface ProfileUpdateData {
   displayname?: string;
   display_name?: string;
   bio?: string;
@@ -179,14 +179,14 @@ export type ProfileUpdateData = {
   trending_hashtags?: string[];
 }
 
-export type ProfileActionResult = {
+export interface ProfileActionResult {
   success: boolean;
   data?: ProfileUser | UserProfile;
   error?: string;
   message?: string;
 }
 
-export type ProfileValidationResult = {
+export interface ProfileValidationResult {
   isValid: boolean;
   errors: string[];
   warnings: string[];
@@ -196,13 +196,13 @@ export type ProfileValidationResult = {
 // AVATAR TYPES
 // ============================================================================
 
-export type AvatarUploadResult = {
+export interface AvatarUploadResult {
   success: boolean;
   avatar_url?: string;
   error?: string;
 }
 
-export type AvatarValidation = {
+export interface AvatarValidation {
   isValid: boolean;
   error?: string;
   maxSize: number;
@@ -213,7 +213,7 @@ export type AvatarValidation = {
 // PROFILE EXPORT TYPES
 // ============================================================================
 
-export type ProfileExportData = {
+export interface ProfileExportData {
   profile: UserProfile;
   preferences: ProfilePreferences;
   privacy_settings: PrivacySettings;
@@ -224,7 +224,7 @@ export type ProfileExportData = {
   export_version: string;
 }
 
-export type ExportOptions = {
+export interface ExportOptions {
   include_activity: boolean;
   include_voting: boolean;
   include_representatives: boolean;
@@ -239,7 +239,7 @@ export type ExportOptions = {
 // PROFILE COMPONENT PROPS
 // ============================================================================
 
-export type ProfilePageProps = {
+export interface ProfilePageProps {
   user?: ProfileUser;
   isLoading?: boolean;
   error?: string;
@@ -248,7 +248,7 @@ export type ProfilePageProps = {
   onExport?: () => void;
 }
 
-export type ProfileEditProps = {
+export interface ProfileEditProps {
   profile: UserProfile;
   onSave: (updates: ProfileUpdateData) => Promise<void>;
   onCancel: () => void;
@@ -256,7 +256,7 @@ export type ProfileEditProps = {
   error?: string;
 }
 
-export type ProfileAvatarProps = {
+export interface ProfileAvatarProps {
   avatar_url?: string;
   display_name?: string;
   onUpload: (file: File) => Promise<AvatarUploadResult>;
@@ -266,14 +266,14 @@ export type ProfileAvatarProps = {
   allowedTypes?: string[];
 }
 
-export type ProfilePreferencesProps = {
+export interface ProfilePreferencesProps {
   preferences: ProfilePreferences;
   onUpdate: (preferences: ProfilePreferences) => Promise<void>;
   isLoading?: boolean;
   error?: string;
 }
 
-export type ProfilePrivacyProps = {
+export interface ProfilePrivacyProps {
   privacy_settings: PrivacySettings;
   onUpdate: (settings: PrivacySettings) => Promise<void>;
   isLoading?: boolean;
@@ -284,7 +284,7 @@ export type ProfilePrivacyProps = {
 // PROFILE SERVICE TYPES
 // ============================================================================
 
-export type ProfileService = {
+export interface ProfileService {
   getCurrentProfile: () => Promise<ProfileActionResult>;
   updateProfile: (updates: ProfileUpdateData) => Promise<ProfileActionResult>;
   updateAvatar: (file: File) => Promise<AvatarUploadResult>;
@@ -293,7 +293,7 @@ export type ProfileService = {
   deleteProfile: () => Promise<ProfileActionResult>;
 }
 
-export type ProfileCache = {
+export interface ProfileCache {
   profile: UserProfile | null;
   lastUpdated: string;
   isStale: boolean;
@@ -303,7 +303,7 @@ export type ProfileCache = {
 // PROFILE HOOK TYPES
 // ============================================================================
 
-export type UseProfileReturn = {
+export interface UseProfileReturn {
   profile: UserProfile | null;
   isLoading: boolean;
   error: Error | null;
@@ -311,21 +311,21 @@ export type UseProfileReturn = {
   isStale: boolean;
 }
 
-export type UseProfileUpdateReturn = {
+export interface UseProfileUpdateReturn {
   updateProfile: (updates: ProfileUpdateData) => Promise<void>;
   isUpdating: boolean;
   error: Error | null;
   isSuccess: boolean;
 }
 
-export type UseProfileAvatarReturn = {
+export interface UseProfileAvatarReturn {
   uploadAvatar: (file: File) => Promise<AvatarUploadResult>;
   removeAvatar: () => Promise<void>;
   isUploading: boolean;
   error: Error | null;
 }
 
-export type UseProfileExportReturn = {
+export interface UseProfileExportReturn {
   exportData: (options?: ExportOptions) => Promise<ProfileExportData>;
   isExporting: boolean;
   error: Error | null;

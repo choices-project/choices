@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
+
 import { useUserStore } from '@/lib/stores'
 import { getSupabaseBrowserClient } from '@/utils/supabase/client'
 

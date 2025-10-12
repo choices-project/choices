@@ -18,7 +18,7 @@ export function stripUndefinedDeep<T>(input: T): T {
     const out: any = {}
     for (const [k, v] of Object.entries(input)) {
       if (v === undefined) continue
-      out[k] = stripUndefinedDeep(v as any)
+      out[k] = stripUndefinedDeep(v)
     }
     return out
   }
@@ -35,7 +35,7 @@ export const isPresent = <T>(x: T): x is NonNullable<T> => x != null
 /**
  * Filter array to remove null/undefined values with proper typing
  */
-export function filterPresent<T>(arr: (T | null | undefined)[]): T[] {
+export function filterPresent<T>(arr: Array<T | null | undefined>): T[] {
   return arr.filter(isPresent)
 }
 

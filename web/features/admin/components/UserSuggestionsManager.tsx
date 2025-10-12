@@ -4,9 +4,6 @@
 // This component is for admin functionality and should be feature flagged
 // for MVP deployment
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { FEATURE_FLAGS } from '@/lib/core/feature-flags';
-import { withOptional } from '@/lib/utils/objects';
 import { 
   CheckCircle, 
   X, 
@@ -15,8 +12,12 @@ import {
   Search,
   RefreshCw
 } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
 
-type UserSuggestion = {
+import { FEATURE_FLAGS } from '@/lib/core/feature-flags';
+import { withOptional } from '@/lib/utils/objects';
+
+interface UserSuggestion {
   id: string;
   user_id: string;
   type: 'interest_suggestion' | 'demographic_suggestion' | 'poll_suggestion' | 'general_feedback';

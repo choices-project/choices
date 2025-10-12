@@ -10,27 +10,34 @@
 
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
 import { 
   MagnifyingGlassIcon, 
   UserGroupIcon,
   HeartIcon
 } from '@heroicons/react/24/outline';
-import type { SuperiorRepresentativeData } from '@/features/civics/lib/civics-superior/superior-data-pipeline';
+import React, { useState, useEffect, useCallback } from 'react';
+
 import EnhancedCandidateCard from '@/features/civics/components/EnhancedCandidateCard';
+import type { SuperiorRepresentativeData } from '@/features/civics/lib/civics-superior/superior-data-pipeline';
 import { SuperiorMobileFeed } from '@/features/feeds';
+import {
+  useAppStore
+} from '@/lib/stores';
 
 export default function Civics2Page() {
+  // UI state (local)
   const [activeTab, setActiveTab] = useState<'representatives' | 'feed'>('representatives');
-  const [representatives, setRepresentatives] = useState<SuperiorRepresentativeData[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedState, setSelectedState] = useState<string>('CA');
   const [selectedLevel, setSelectedLevel] = useState<'all' | 'federal' | 'state' | 'local'>('federal');
   const [likedRepresentatives, setLikedRepresentatives] = useState<Set<string>>(new Set());
   const [followedRepresentatives, setFollowedRepresentatives] = useState<Set<string>>(new Set());
-  const [isMobile, setIsMobile] = useState<boolean | null>(null);
   const [cardVariant, setCardVariant] = useState<'default' | 'compact' | 'detailed'>('default');
+  
+  // Data state (local for now due to type mismatch)
+  const [representatives, setRepresentatives] = useState<SuperiorRepresentativeData[]>([]);
+  const { isMobile } = useAppStore();
+  const [isLoading, setIsLoading] = useState(true);
 
   const loadRepresentatives = useCallback(async () => {
     setIsLoading(true);
@@ -65,7 +72,7 @@ export default function Civics2Page() {
   useEffect(() => {
     // Mobile detection
     const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
+      // Device detection is handled by appStore
     };
     
     checkMobile();
@@ -111,7 +118,7 @@ export default function Civics2Page() {
   const filteredRepresentatives = representatives.filter(rep => {
     if (!searchQuery) return true;
     return rep.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-           rep.office.toLowerCase().includes(searchQuery.toLowerCase()) ||
+           (rep.office || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
            (rep.party || '').toLowerCase().includes(searchQuery.toLowerCase());
   });
 

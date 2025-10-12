@@ -34,7 +34,7 @@ export function serverOnly<T>(fn: () => T, fallback?: T): T | undefined {
 }
 
 // Type-safe browser API access with proper type guards
-type BrowserWindow = {
+interface BrowserWindow {
   localStorage?: Storage;
   sessionStorage?: Storage;
   screen?: { width: number; height: number };
@@ -48,7 +48,7 @@ type BrowserWindow = {
   gtag?: (command: string, eventName: string, parameters?: Record<string, any>) => void;
 }
 
-type BrowserDocument = {
+interface BrowserDocument {
   createElement?: (tagName: string) => HTMLElement;
   body?: {
     appendChild?: (child: HTMLElement) => void;
@@ -56,7 +56,7 @@ type BrowserDocument = {
   };
 }
 
-type BrowserNavigator = {
+interface BrowserNavigator {
   userAgent?: string;
   clipboard?: {
     writeText?: (text: string) => Promise<void>;
@@ -175,7 +175,7 @@ export const safeReload = (): boolean =>
   }, false) ?? false;
 
 // Event listeners without DOM types in signature
-type EventTargetLike = {
+interface EventTargetLike {
   addEventListener(event: string, handler: unknown, options?: boolean | Record<string, unknown>): void;
   removeEventListener(event: string, handler: unknown, options?: boolean | Record<string, unknown>): void;
 }

@@ -20,10 +20,13 @@
  */
 
 import { createClient } from '@supabase/supabase-js';
+
+import { devLog } from '@/lib/utils/logger';
+
+import { type CanonicalIdService, canonicalIdService } from '../civics/canonical-id-service';
+
 import { CurrentElectorateVerifier } from './current-electorate-verifier';
 import OpenStatesIntegration, { type OpenStatesPerson } from './openstates-integration';
-import { type CanonicalIdService, canonicalIdService } from '../civics/canonical-id-service';
-import { devLog } from '@/lib/utils/logger';
 
 /**
  * Configuration for the Superior Data Pipeline
@@ -31,7 +34,7 @@ import { devLog } from '@/lib/utils/logger';
  * Controls data source integration, quality filtering, and performance settings
  * for the comprehensive representative data processing system.
  */
-export type SuperiorPipelineConfig = {
+export interface SuperiorPipelineConfig {
   /** Data source integration settings */
   enableCongressGov: boolean;
   enableGoogleCivic: boolean;
@@ -73,7 +76,7 @@ export type SuperiorPipelineConfig = {
  * Combines data from multiple sources with quality scoring and current
  * electorate verification for accurate representative profiles.
  */
-export type SuperiorRepresentativeData = {
+export interface SuperiorRepresentativeData {
   /** Core identification fields */
   id: string;
   name: string;
@@ -1350,10 +1353,10 @@ export class SuperiorDataPipeline {
       
       return {
         elections: electionsData.elections || [],
-        voterInfo: voterInfo,
+        voterInfo,
         contests: voterInfo?.contests || [],
         sources: electionsData.sources || [],
-        address: address,
+        address,
         source: 'google-civic-api',
         dataType: 'elections-and-voter-info'
       };
@@ -1583,7 +1586,7 @@ export class SuperiorDataPipeline {
         } catch (parseError) {
           console.log('OpenStates API returned non-JSON response for direct lookup', { 
             status: response.status,
-            responseText: responseText.substring(0, 200) + '...',
+            responseText: `${responseText.substring(0, 200)  }...`,
             parseError: parseError instanceof Error ? parseError.message : 'Unknown error'
           });
           return {};
@@ -1673,7 +1676,7 @@ export class SuperiorDataPipeline {
       } catch (parseError) {
       console.log('OpenStates API returned non-JSON response for jurisdiction search', { 
           status: response.status,
-          responseText: responseText.substring(0, 200) + '...',
+          responseText: `${responseText.substring(0, 200)  }...`,
           parseError: parseError instanceof Error ? parseError.message : 'Unknown error'
         });
         return {};
@@ -1731,7 +1734,7 @@ export class SuperiorDataPipeline {
           if (platformKey) {
             socialMedia.push({
               platform: platformKey,
-              handle: handle,
+              handle,
               url: this.generateSocialMediaUrl(platformKey, handle),
               followersCount: 0, // OpenStates doesn't provide follower counts
               isVerified: false,

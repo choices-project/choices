@@ -1,29 +1,32 @@
 'use client'
 
+import { BarChart3, TrendingUp, Users, Share2, Download } from 'lucide-react'
 import { useState, useEffect, useCallback } from 'react'
-import { logger } from '@/lib/utils/logger';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
+
 import { 
   usePolls, 
   usePollsActions, 
   usePollsLoading, 
   usePollsError 
 } from '@/lib/stores';
-import type { PollOption } from '../types';
-import { BarChart3, TrendingUp, Users, Share2, Download } from 'lucide-react'
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
+import { logger } from '@/lib/utils/logger';
 
-type PollResultsProps = {
+import type { PollOption } from '../types';
+
+
+interface PollResultsProps {
   pollId: string
 }
 
-type PollResult = {
+interface PollResult {
   option: string
   votes: number
   percentage: number
   trend: 'up' | 'down' | 'stable'
 }
 
-type PollData = {
+interface PollData {
   id: string
   title: string
   description?: string

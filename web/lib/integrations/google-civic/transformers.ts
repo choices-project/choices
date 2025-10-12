@@ -7,22 +7,72 @@
 
 import { logger } from '@/lib/utils/logger';
 import { withOptional } from '@/lib/utils/objects';
+
 import type { 
   GoogleCivicResponse, 
   GoogleCivicRepresentative, 
   GoogleCivicOffice,
   GoogleCivicDivision 
 } from './client';
-// import type { 
-//   AddressLookupResult, 
-//   Representative,
-//   CandidateCardV1 
-// } from '../../../features/civics/schemas'; // DISABLED: civics features disabled for MVP
+import type { 
+  Candidate,
+  Election,
+  GeographicLookup
+} from '../../../features/civics/lib/civics/types';
 
-// Temporary stub types until civics features are re-enabled
-type AddressLookupResult = any;
-type Representative = any;
-type CandidateCardV1 = any;
+// Proper types for Google Civic API integration
+export interface AddressLookupResult {
+  district: string;
+  state: string;
+  representatives: TransformedRepresentative[];
+  normalizedAddress: string;
+  confidence: number;
+  coordinates?: { lat: number; lng: number };
+}
+
+export interface Representative {
+  id: string;
+  name: string;
+  party: string;
+  office: string;
+  district: string;
+  state: string;
+  contact: {
+    phone?: string;
+    email?: string;
+    website?: string;
+    address?: string;
+  };
+  photoUrl?: string;
+  socialMedia?: {
+    twitter?: string;
+    facebook?: string;
+    instagram?: string;
+  };
+  channels?: Array<{
+    type: string;
+    id: string;
+  }>;
+}
+
+export interface CandidateCardV1 {
+  id: string;
+  name: string;
+  party: string;
+  office: string;
+  district: string;
+  state: string;
+  imageUrl: string;
+  bio?: string;
+  website: string;
+  socialMedia?: {
+    twitter?: string;
+    facebook?: string;
+    instagram?: string;
+  };
+  positions?: Array<{ issue: string; stance: string; source?: string }>;
+  recentVotes?: Array<{ bill: string; vote: 'yes' | 'no' | 'abstain'; date: string }>;
+}
 
 export type TransformedRepresentative = {
   source: 'google-civic';
@@ -79,7 +129,7 @@ export function transformAddressLookup(
       coordinates: undefined // Google Civic API doesn't provide coordinates
     };
   } catch (error) {
-    logger.error('Failed to transform address lookup response', { error, response });
+    logger.error('Failed to transform address lookup response', error instanceof Error ? error : new Error(String(error)));
     throw new Error(`Failed to transform address lookup: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 }
@@ -302,7 +352,7 @@ export function validateTransformedData(data: AddressLookupResult): boolean {
 
     return true;
   } catch (error) {
-    logger.error('Error validating transformed data', { error, data });
+    logger.error('Error validating transformed data', error instanceof Error ? error : new Error(String(error)));
     return false;
   }
 }

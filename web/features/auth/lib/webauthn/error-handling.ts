@@ -48,7 +48,7 @@ export enum WebAuthnErrorType {
 /**
  * WebAuthn error details interface
  */
-export type WebAuthnErrorDetails = {
+export interface WebAuthnErrorDetails {
   [key: string]: unknown;
 }
 
@@ -345,7 +345,7 @@ export function logWebAuthnError(
     timestamp: new Date().toISOString(),
     context: withOptional({}, Object.assign({}, context, {
       credentialId: context?.credentialId ? 
-        context.credentialId.substring(0, 8) + '...' : undefined
+        `${context.credentialId.substring(0, 8)  }...` : undefined
     })),
     details: error.details
   };
@@ -449,7 +449,7 @@ async function persistWebAuthnError(data: unknown): Promise<void> {
     // Ensure directory exists
     await fsPromises.mkdir(dir, { recursive: true });
     // Append JSON line
-    const line = JSON.stringify(data) + '\n';
+    const line = `${JSON.stringify(data)  }\n`;
     await fsPromises.appendFile(file, line, { encoding: 'utf-8' });
   } catch (err) {
     // Last resort: non-throwing debug log

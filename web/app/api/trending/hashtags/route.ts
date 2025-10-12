@@ -1,4 +1,5 @@
 import { type NextRequest, NextResponse } from 'next/server';
+
 import { trendingHashtagsTracker } from '@/features/feeds/lib/TrendingHashtags';
 import { devLog } from '@/lib/utils/logger';
 

@@ -11,7 +11,7 @@ import { withOptional } from '@/lib/utils/objects';
 /**
  * Query execution plan information
  */
-export type QueryPlan = {
+export interface QueryPlan {
   /** Unique identifier for this query plan */
   id: string;
   /** The SQL query */
@@ -39,7 +39,7 @@ export type QueryPlan = {
 /**
  * Query optimization suggestion
  */
-export type QueryOptimization = {
+export interface QueryOptimization {
   /** Type of optimization */
   type: 'index' | 'join' | 'filter' | 'limit' | 'select' | 'cache';
   /** Priority level (1-5, 5 being highest) */
@@ -57,7 +57,7 @@ export type QueryOptimization = {
 /**
  * Query performance metrics
  */
-export type QueryMetrics = {
+export interface QueryMetrics {
   /** Average execution time */
   averageExecutionTime: number;
   /** 95th percentile execution time */
@@ -75,7 +75,7 @@ export type QueryMetrics = {
 /**
  * Index recommendation
  */
-export type IndexRecommendation = {
+export interface IndexRecommendation {
   /** Table name */
   table: string;
   /** Column names for the index */

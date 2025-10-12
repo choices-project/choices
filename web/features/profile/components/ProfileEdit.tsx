@@ -10,17 +10,6 @@
 
 'use client';
 
-import { useState } from 'react';
-import { withOptional } from '@/lib/utils/objects';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { 
   User, 
   Camera, 
@@ -33,8 +22,29 @@ import {
   AlertTriangle,
   CheckCircle
 } from 'lucide-react';
-import { useProfileUpdate, useProfileAvatar, useProfileDisplay } from '../hooks/use-profile';
+import React, { useState } from 'react';
+
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
+import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/hooks/useAuth';
+import { 
+  useUserProfileEditData,
+  useUserIsProfileEditing,
+  useUserProfileEditErrors,
+  useUserAvatarFile,
+  useUserAvatarPreview,
+  useUserIsUploadingAvatar,
+  useUserActions
+} from '@/lib/stores';
+
+import { useProfileUpdate, useProfileAvatar, useProfileDisplay } from '../hooks/use-profile';
 import type { ProfileEditProps, ProfileUpdateData } from '../types';
 
 // Constants for form options
@@ -76,53 +86,71 @@ export default function ProfileEdit({
   const { uploadAvatar, isUploading: _isUploadingAvatar } = useProfileAvatar();
   const { displayName, initials } = useProfileDisplay();
   
-  // Form state
-  const [formData, setFormData] = useState<ProfileUpdateData>({
-    displayname: profile.display_name || '',
-    bio: profile.bio || '',
-    username: profile.username || '',
-    primaryconcerns: profile.primary_concerns || [],
-    communityfocus: profile.community_focus || [],
-    participationstyle: profile.participation_style || 'observer',
-    privacysettings: profile.privacy_settings || {
-      profile_visibility: 'public',
-      show_email: false,
-      show_activity: true,
-      allow_messages: true,
-      share_demographics: false,
-      allow_analytics: true
-    }
-  });
-
-  // Avatar state
-  const [avatarFile, setAvatarFile] = useState<File | null>(null);
-  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
-  const [isUploadingAvatarLocal, setIsUploadingAvatarLocal] = useState(false);
-
-  // Error and success states
+  // Get state from userStore
+  const formData = useUserProfileEditData();
+  const isEditing = useUserIsProfileEditing();
+  const errors = useUserProfileEditErrors();
+  const avatarFile = useUserAvatarFile();
+  const avatarPreview = useUserAvatarPreview();
+  const isUploadingAvatar = useUserIsUploadingAvatar();
+  
+  // Get actions from userStore
+  const {
+    setProfileEditData,
+    updateProfileEditData,
+    updateArrayField,
+    setProfileEditing,
+    setProfileEditError,
+    clearProfileEditError,
+    setAvatarFile,
+    setAvatarPreview,
+    setUploadingAvatar,
+    clearAvatar
+  } = useUserActions();
+  
+  // Local UI state (not in store)
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+
+  // Initialize form data in store
+  React.useEffect(() => {
+    setProfileEditData({
+      displayname: profile.display_name || '',
+      bio: profile.bio || '',
+      username: profile.username || '',
+      primaryconcerns: profile.primary_concerns || [],
+      communityfocus: profile.community_focus || [],
+      participationstyle: (profile.participation_style || 'observer') as 'observer' | 'leader' | 'participant' | 'organizer',
+      privacysettings: profile.privacy_settings || {
+        profile_visibility: 'public',
+        show_email: false,
+        show_activity: true,
+        allow_messages: true,
+        share_demographics: false,
+        allow_analytics: true
+      }
+    });
+  }, [profile, setProfileEditData]);
 
   // Use external props if provided, otherwise use hooks
   const finalLoading = externalLoading !== undefined ? externalLoading : isUpdating;
   const _finalError = externalError || updateError;
+  
+  // Guard clause for null formData
+  if (!formData) {
+    return <div>Loading...</div>;
+  }
 
   // Handle form field changes
   const handleFieldChange = (field: keyof ProfileUpdateData, value: any) => {
-    setFormData(prev => withOptional(prev, {
-      [field]: value
-    }));
+    updateProfileEditData({ [field]: value });
     setError(null);
     setSuccess(null);
   };
 
   // Handle array field changes (concerns, focus)
   const handleArrayFieldChange = (field: 'primaryconcerns' | 'communityfocus', value: string) => {
-    setFormData(prev => withOptional(prev, {
-      [field]: prev[field]?.includes(value) 
-        ? prev[field]?.filter(item => item !== value)
-        : [...(prev[field] || []), value]
-    }));
+    updateArrayField(field, value);
   };
 
   // Handle avatar file selection
@@ -142,7 +170,7 @@ export default function ProfileEdit({
   const handleAvatarUpload = async () => {
     if (!avatarFile) return;
 
-    setIsUploadingAvatarLocal(true);
+    setUploadingAvatar(true);
     try {
       const result = await uploadAvatar(avatarFile);
       if (result.success) {
@@ -155,7 +183,7 @@ export default function ProfileEdit({
     } catch {
       setError('Failed to update avatar');
     } finally {
-      setIsUploadingAvatarLocal(false);
+      setUploadingAvatar(false);
     }
   };
 
@@ -166,9 +194,9 @@ export default function ProfileEdit({
     setSuccess(null);
 
     try {
-      await updateProfile(formData);
+      await updateProfile(formData as any);
       setSuccess('Profile updated successfully');
-      onSave?.(formData);
+      onSave?.(formData as any);
     } catch {
       setError('Failed to update profile');
     }
@@ -176,13 +204,13 @@ export default function ProfileEdit({
 
   // Handle cancel
   const handleCancel = () => {
-    setFormData({
+    setProfileEditData({
       displayname: profile.display_name || '',
       bio: profile.bio || '',
       username: profile.username || '',
       primaryconcerns: profile.primary_concerns || [],
       communityfocus: profile.community_focus || [],
-      participationstyle: profile.participation_style || 'observer',
+      participationstyle: (profile.participation_style || 'observer') as 'observer' | 'leader' | 'participant' | 'organizer',
       privacysettings: profile.privacy_settings || {
         profile_visibility: 'public',
         show_email: false,
@@ -266,10 +294,10 @@ export default function ProfileEdit({
                   <Button 
                     type="button" 
                     onClick={handleAvatarUpload}
-                    disabled={isUploadingAvatarLocal}
+                    disabled={isUploadingAvatar}
                     size="sm"
                   >
-                    {isUploadingAvatarLocal ? (
+                    {isUploadingAvatar ? (
                       <>
                         <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                         Uploading...

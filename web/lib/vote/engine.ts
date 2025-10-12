@@ -10,11 +10,12 @@
 
 import { devLog } from '@/lib/utils/logger';
 import { withOptional } from '@/lib/utils/objects';
-import { SingleChoiceStrategy } from './strategies/single-choice';
+
 import { ApprovalStrategy } from './strategies/approval';
-import { RankedStrategy } from './strategies/ranked';
 import { QuadraticStrategy } from './strategies/quadratic';
 import { RangeStrategy } from './strategies/range';
+import { RankedStrategy } from './strategies/ranked';
+import { SingleChoiceStrategy } from './strategies/single-choice';
 import type { 
   VoteRequest, 
   VoteResponse, 
@@ -26,7 +27,7 @@ import type {
   VotingMethod
 } from './types';
 
-export type VoteEngineConfig = {
+export interface VoteEngineConfig {
   maxVotesPerPoll: number;
   allowMultipleVotes: boolean;
   requireAuthentication: boolean;

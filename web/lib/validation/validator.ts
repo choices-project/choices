@@ -5,13 +5,14 @@
  */
 
 import { type ZodError, type ZodSchema } from 'zod';
+
 import { logger } from '@/lib/utils/logger';
 import { withOptional } from '@/lib/utils/objects';
 
 /**
  * Result of a validation operation
  */
-export type ValidationResult<T> = {
+export interface ValidationResult<T> {
   /** Whether the validation was successful */
   success: boolean;
   /** The validated data (only present if success is true) */
@@ -25,7 +26,7 @@ export type ValidationResult<T> = {
 /**
  * Options for validation operations
  */
-export type ValidationOptions = {
+export interface ValidationOptions {
   /** Whether to log validation errors to the logger */
   logErrors?: boolean;
   /** Whether to throw an error on validation failure */
@@ -77,8 +78,7 @@ export function safeParse<T>(
       ).join(', ')}`;
 
       if (logErrors) {
-        logger.error('Schema validation failed', {
-          error: errorMessage,
+        logger.error('Schema validation failed', new Error(errorMessage), {
           issues: result.error.issues,
           data: typeof data === 'object' ? JSON.stringify(data, null, 2) : data,
         });
@@ -97,8 +97,7 @@ export function safeParse<T>(
     const errorMessage = error instanceof Error ? error.message : 'Unknown validation error';
     
     if (logErrors) {
-      logger.error('Validation parsing failed', {
-        error: errorMessage,
+      logger.error('Validation parsing failed', new Error(errorMessage), {
         data: typeof data === 'object' ? JSON.stringify(data, null, 2) : data,
       });
     }
@@ -217,8 +216,7 @@ export function validateDatabaseResponse<T>(
     const errorMessage = `Database error: ${response.error.message}`;
     
     if (options.logErrors) {
-      logger.error('Database response validation failed due to database error', {
-        error: errorMessage,
+      logger.error('Database response validation failed due to database error', new Error(errorMessage), {
         databaseError: response.error,
       });
     }
@@ -310,8 +308,7 @@ export function validateAndTransform<T, U>(
     const errorMessage = error instanceof Error ? error.message : 'Transform failed';
     
     if (options.logErrors) {
-      logger.error('Data transformation failed', {
-        error: errorMessage,
+      logger.error('Data transformation failed', new Error(errorMessage), {
         originalData: validationResult.data,
       });
     }

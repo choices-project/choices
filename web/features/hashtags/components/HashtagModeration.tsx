@@ -13,11 +13,6 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { 
   Flag, 
   Shield, 
@@ -30,7 +25,22 @@ import {
   Calendar,
   Copy
 } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { logger } from '@/lib/utils/logger';
+import { 
+  useHashtagModerationStore,
+  useModerationForm,
+  useModerationActions,
+  useModerationLoading,
+  useModerationError,
+  type HashtagFlagType
+} from '@/lib/stores/hashtagModerationStore';
+
 import type { 
   HashtagModeration, 
   HashtagFlag, 
@@ -41,7 +51,7 @@ import type {
 // TYPES
 // ============================================================================
 
-export type HashtagModerationProps = {
+export interface HashtagModerationProps {
   hashtagId: string;
   hashtag?: Hashtag;
   showUserActions?: boolean;
@@ -50,14 +60,14 @@ export type HashtagModerationProps = {
   className?: string;
 }
 
-export type ModerationQueueProps = {
+export interface ModerationQueueProps {
   status?: HashtagModeration['status'];
   limit?: number;
   onModerationAction?: (hashtagId: string, action: string) => void;
   className?: string;
 }
 
-export type FlagHashtagProps = {
+export interface FlagHashtagProps {
   hashtagId: string;
   onFlag?: (flag: HashtagFlag) => void;
   className?: string;
@@ -68,17 +78,38 @@ export type FlagHashtagProps = {
 // ============================================================================
 
 export function FlagHashtag({ hashtagId, onFlag, className }: FlagHashtagProps) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [flagType, setFlagType] = useState<HashtagFlag['flag_type']>('inappropriate');
-  const [reason, setReason] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  // Zustand store integration
+  const { 
+    isOpen, 
+    flagType, 
+    reason, 
+    isSubmitting, 
+    error,
+    setIsOpen, 
+    setFlagType, 
+    setReason, 
+    setIsSubmitting, 
+    setError, 
+    submitFlag 
+  } = useHashtagModerationStore(state => ({
+    isOpen: state.isOpen,
+    flagType: state.flagType,
+    reason: state.reason,
+    isSubmitting: state.isSubmitting,
+    error: state.error,
+    setIsOpen: state.setIsOpen,
+    setFlagType: state.setFlagType,
+    setReason: state.setReason,
+    setIsSubmitting: state.setIsSubmitting,
+    setError: state.setError,
+    submitFlag: state.submitFlag
+  }));
 
-  const flagTypes = [
+  const flagTypes: Array<{ value: HashtagFlagType; label: string; icon: any }> = [
     { value: 'inappropriate', label: 'Inappropriate Content', icon: AlertTriangle },
     { value: 'spam', label: 'Spam', icon: Flag },
     { value: 'misleading', label: 'Misleading', icon: XCircle },
-    { value: 'duplicate', label: 'Duplicate', icon: Copy },
+    { value: 'harassment', label: 'Harassment', icon: AlertTriangle },
     { value: 'other', label: 'Other', icon: AlertTriangle }
   ];
 
@@ -90,25 +121,27 @@ export function FlagHashtag({ hashtagId, onFlag, className }: FlagHashtagProps) 
     setError(null);
 
     try {
-      const response = await fetch('/api/hashtags/flag', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          hashtagId,
-          flagType,
-          reason: reason.trim()
-        })
-      });
-
-      const result = await response.json();
-
-      if (result.success) {
-        onFlag?.(result.data);
-        setIsOpen(false);
-        setReason('');
-      } else {
-        setError(result.error || 'Failed to flag hashtag');
+      // Use the store's submitFlag action
+      await submitFlag(hashtagId);
+      
+      // Call the onFlag callback if provided
+      if (onFlag) {
+        // Map store type to component type
+        const componentFlagType = flagType === 'harassment' ? 'other' : flagType;
+        onFlag({
+          id: crypto.randomUUID(),
+          hashtag_id: hashtagId,
+          flag_type: componentFlagType as 'inappropriate' | 'spam' | 'misleading' | 'duplicate' | 'other',
+          reason: reason.trim(),
+          user_id: 'current-user', // This should come from auth context
+          created_at: new Date().toISOString(),
+          status: 'pending'
+        });
       }
+
+      // Close modal and reset form on success
+      setIsOpen(false);
+      setReason('');
     } catch (err) {
       setError('Network error. Please try again.');
       logger.error('Error flagging hashtag:', err instanceof Error ? err : new Error(String(err)));
@@ -158,7 +191,7 @@ export function FlagHashtag({ hashtagId, onFlag, className }: FlagHashtagProps) 
                       name="flagType"
                       value={type.value}
                       checked={flagType === type.value}
-                      onChange={(e) => setFlagType(e.target.value as HashtagFlag['flag_type'])}
+                      onChange={(e) => setFlagType(e.target.value as HashtagFlagType)}
                       className="rounded"
                     />
                     <Icon className="w-4 h-4" />

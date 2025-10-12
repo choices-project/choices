@@ -12,7 +12,7 @@
 // FEATURE FLAG TYPES
 // ============================================================================
 
-export type FeatureFlag = {
+export interface FeatureFlag {
   id: string;
   name: string;
   enabled: boolean;
@@ -33,24 +33,23 @@ export type FeatureFlagKey =
   | 'EXPERIMENTAL_ANALYTICS'
   | 'ADVANCED_PRIVACY';
 
-export type FeatureFlagConfig = {
+export interface FeatureFlagConfig {
+  [key: string]: unknown;
   flags: Record<FeatureFlagKey, boolean>;
   timestamp: string;
   version: string;
 }
 
-export type FeatureFlagMetadata = {
+export interface FeatureFlagMetadata {
   description?: string;
   category?: string;
   dependencies?: FeatureFlagKey[];
   tags?: string[];
 }
 
-export type FeatureFlagCallback = {
-  (flag: string, value: boolean): void;
-}
+export type FeatureFlagCallback = (flag: string, value: boolean) => void;
 
-export type FeatureFlagEvaluation = {
+export interface FeatureFlagEvaluation {
   flag: string;
   value: boolean;
   reason: 'default' | 'targeting' | 'override';
@@ -61,7 +60,7 @@ export type FeatureFlagEvaluation = {
 // REAL-TIME NEWS TYPES
 // ============================================================================
 
-export type BreakingNewsStory = {
+export interface BreakingNewsStory {
   id: string;
   headline: string;
   summary: string;
@@ -78,7 +77,7 @@ export type BreakingNewsStory = {
   updatedAt: Date;
 }
 
-export type NewsEntity = {
+export interface NewsEntity {
   name: string;
   type: 'person' | 'organization' | 'location' | 'event' | 'policy' | 'concept';
   confidence: number;
@@ -87,7 +86,7 @@ export type NewsEntity = {
   metadata?: Record<string, unknown>;
 }
 
-export type NewsMetadata = {
+export interface NewsMetadata {
   keywords: string[];
   controversy: number;
   timeSensitivity: 'low' | 'medium' | 'high';
@@ -97,7 +96,7 @@ export type NewsMetadata = {
   complexity?: 'low' | 'medium' | 'high';
 }
 
-export type NewsSource = {
+export interface NewsSource {
   id: string;
   name: string;
   domain: string;
@@ -113,7 +112,7 @@ export type NewsSource = {
   successRate: number;
 }
 
-export type PollContext = {
+export interface PollContext {
   storyId: string;
   question: string;
   context: string;
@@ -125,7 +124,7 @@ export type PollContext = {
   timeToLive: number;
 }
 
-export type PollOption = {
+export interface PollOption {
   id: string;
   text: string;
   description?: string;
@@ -144,14 +143,14 @@ export enum PrivacyLevel {
   MAXIMUM = 'maximum'
 }
 
-export type VoteRequest = {
+export interface VoteRequest {
   pollId: string;
   choice: number;
   privacyLevel: PrivacyLevel;
   userId?: string;
 }
 
-export type VoteResponse = {
+export interface VoteResponse {
   success: boolean;
   message: string;
   pollId: string;
@@ -161,30 +160,30 @@ export type VoteResponse = {
   responseTime: number;
 }
 
-export type VoteValidation = {
+export interface VoteValidation {
   isValid: boolean;
   error?: string;
   requiresAuthentication: boolean;
   requiresTokens: boolean;
 }
 
-export type PollPrivacySettings = {
+export interface PollPrivacySettings {
   privacy_level: PrivacyLevel;
   requires_authentication: boolean;
   uses_blinded_tokens: boolean;
 }
 
-export type BlindedTokenResponse = {
+export interface BlindedTokenResponse {
   token: string;
   tag: string;
 }
 
-export type POServiceResponse = {
+export interface POServiceResponse {
   vote_id: string;
   audit_receipt: string;
 }
 
-export type UserVerificationTier = {
+export interface UserVerificationTier {
   verification_tier: string;
 }
 
@@ -192,7 +191,7 @@ export type UserVerificationTier = {
 // MONITORING TYPES
 // ============================================================================
 
-export type IntegrationMetrics = {
+export interface IntegrationMetrics {
   apiName: string;
   timestamp: Date;
   requests: {
@@ -227,7 +226,7 @@ export type IntegrationMetrics = {
   };
 }
 
-export type AlertRule = {
+export interface AlertRule {
   id: string;
   name: string;
   apiName: string;
@@ -240,7 +239,7 @@ export type AlertRule = {
   lastTriggered?: Date;
 }
 
-export type Alert = {
+export interface Alert {
   id: string;
   ruleId: string;
   apiName: string;
@@ -253,7 +252,7 @@ export type Alert = {
   resolved: boolean;
 }
 
-export type HealthCheck = {
+export interface HealthCheck {
   apiName: string;
   status: 'healthy' | 'degraded' | 'unhealthy';
   timestamp: Date;
@@ -267,7 +266,7 @@ export type HealthCheck = {
 // CACHING TYPES
 // ============================================================================
 
-export type CacheConfig = {
+export interface CacheConfig {
   defaultTTL: number;
   maxSize: number;
   cleanupInterval: number;
@@ -275,7 +274,7 @@ export type CacheConfig = {
   enablePersistence: boolean;
 }
 
-export type CacheEntry<T = unknown> = {
+export interface CacheEntry<T = unknown> {
   key: string;
   data: T;
   timestamp: number;
@@ -286,7 +285,7 @@ export type CacheEntry<T = unknown> = {
   metadata?: Record<string, unknown>;
 }
 
-export type CacheStats = {
+export interface CacheStats {
   totalEntries: number;
   hitRate: number;
   missRate: number;
@@ -298,7 +297,7 @@ export type CacheStats = {
   newestEntry: number;
 }
 
-export type CacheMetrics = {
+export interface CacheMetrics {
   apiName: string;
   cacheHits: number;
   cacheMisses: number;
@@ -312,7 +311,7 @@ export type CacheMetrics = {
 // PRE-LAUNCH CHECKLIST TYPES
 // ============================================================================
 
-export type ChecklistItem = {
+export interface ChecklistItem {
   category: string;
   item: string;
   weight: 'critical' | 'high' | 'medium' | 'low';
@@ -321,7 +320,7 @@ export type ChecklistItem = {
   dependencies?: string[];
 }
 
-export type ChecklistItemResult = {
+export interface ChecklistItemResult {
   category: string;
   item: string;
   weight: 'critical' | 'high' | 'medium' | 'low';
@@ -333,7 +332,7 @@ export type ChecklistItemResult = {
   verifiedBy?: string;
 }
 
-export type ChecklistResult = {
+export interface ChecklistResult {
   items: ChecklistItemResult[];
   summary: {
     total: number;
@@ -356,83 +355,83 @@ export type ChecklistResult = {
 // MOCK DATA TYPES FOR VERIFICATION
 // ============================================================================
 
-export type RLSPolicy = {
+export interface RLSPolicy {
   table: string;
   operation: string;
   denies: boolean;
 }
 
-export type PollSnapshot = {
+export interface PollSnapshot {
   checksum: string;
   merkleRoot: string;
 }
 
-export type WebAuthnStatus = {
+export interface WebAuthnStatus {
   working: boolean;
 }
 
-export type DPBudgetLedger = {
+export interface DPBudgetLedger {
   visible: boolean;
   accurate: boolean;
 }
 
-export type KAnonymityGates = {
+export interface KAnonymityGates {
   enforced: boolean;
 }
 
-export type RetentionPolicies = {
+export interface RetentionPolicies {
   implemented: boolean;
 }
 
-export type WCAGCompliance = {
+export interface WCAGCompliance {
   level: string;
 }
 
-export type Chart = {
+export interface Chart {
   colorSafe: boolean;
 }
 
-export type LowBandwidthForm = {
+export interface LowBandwidthForm {
   available: boolean;
 }
 
-export type RateLimitingStatus = {
+export interface RateLimitingStatus {
   working: boolean;
   alertsFiring: boolean;
 }
 
-export type ChaosTestResult = {
+export interface ChaosTestResult {
   success: boolean;
 }
 
-export type SLOMetrics = {
+export interface SLOMetrics {
   status: 'healthy' | 'unhealthy';
 }
 
-export type RedDashboard = {
+export interface RedDashboard {
   operational: boolean;
 }
 
-export type LoadTestResults = {
+export interface LoadTestResults {
   success: boolean;
   ballots: number;
 }
 
-export type ActivePoll = {
+export interface ActivePoll {
   hasUnofficialBadge: boolean;
 }
 
-export type MethodologyPage = {
+export interface MethodologyPage {
   live: boolean;
   accessible: boolean;
 }
 
-export type CryptoPolicy = {
+export interface CryptoPolicy {
   documented: boolean;
   implemented: boolean;
 }
 
-export type ConstituentStatus = {
+export interface ConstituentStatus {
   working: boolean;
 }
 
@@ -440,14 +439,14 @@ export type ConstituentStatus = {
 // API RESPONSE TYPES
 // ============================================================================
 
-export type ApiResponse<T = unknown> = {
+export interface ApiResponse<T = unknown> {
   success: boolean;
   data?: T;
   error?: string;
   message?: string;
 }
 
-export type ErrorResponse = {
+export interface ErrorResponse {
   error: string;
   message?: string;
   details?: Record<string, unknown>;

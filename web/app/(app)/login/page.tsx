@@ -1,10 +1,11 @@
 'use client'
 
+import { Eye, EyeOff, User, Lock, CheckCircle2, AlertCircle } from 'lucide-react'
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { useState, Suspense } from 'react'
 import { useFormStatus } from 'react-dom'
-import { useRouter } from 'next/navigation'
-import Link from 'next/link'
-import { Eye, EyeOff, User, Lock, CheckCircle2, AlertCircle } from 'lucide-react'
+
 import { loginAction } from '@/app/actions/login'
 import { PasskeyButton } from '@/features/auth/components/PasskeyButton'
 

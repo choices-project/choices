@@ -4,7 +4,7 @@ import { logger } from '@/lib/utils/logger';
  * Handles authentication state and session management on the client side
  */
 
-export type ClientUser = {
+export interface ClientUser {
   id: string
   stableId: string
   username: string

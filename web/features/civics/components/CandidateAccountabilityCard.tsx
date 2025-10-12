@@ -1,7 +1,5 @@
 'use client';
 
-import React, { useState } from 'react';
-import Image from 'next/image';
 import { 
   TrendingUp, 
   CheckCircle, 
@@ -18,9 +16,12 @@ import {
   Mail,
   Twitter
 } from 'lucide-react';
+import Image from 'next/image';
+import React, { useState } from 'react';
+
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
 
-type Promise = {
+interface Promise {
   id: string;
   title: string;
   description: string;
@@ -29,9 +30,9 @@ type Promise = {
   dateCompleted?: string;
   evidence?: string;
   source?: string;
-};
+}
 
-type CampaignFinance = {
+interface CampaignFinance {
   totalRaised: number;
   totalSpent: number;
   cashOnHand: number;
@@ -47,9 +48,9 @@ type CampaignFinance = {
     transactions: number;
     lastTransaction: string;
   };
-};
+}
 
-type VotingRecord = {
+interface VotingRecord {
   totalVotes: number;
   partyAlignment: number; // percentage
   constituentAlignment: number; // percentage
@@ -66,18 +67,18 @@ type VotingRecord = {
     vote: 'yes' | 'no' | 'abstain';
     impact: 'high' | 'medium' | 'low';
   }>;
-};
+}
 
-type PerformanceMetrics = {
+interface PerformanceMetrics {
   constituentSatisfaction: number; // 0-100
   responseRate: number; // 0-100
   townHalls: number;
   lastTownHall: string;
   socialMediaEngagement: number;
   transparencyScore: number; // 0-100
-};
+}
 
-type AlternativeCandidate = {
+interface AlternativeCandidate {
   id: string;
   name: string;
   party: string;
@@ -89,9 +90,9 @@ type AlternativeCandidate = {
     sources: string[];
   };
   visibility: 'high' | 'medium' | 'low';
-};
+}
 
-type Representative = {
+interface Representative {
   id: string;
   name: string;
   title: string;
@@ -112,9 +113,9 @@ type Representative = {
   committees?: string[];
   tenure: string;
   nextElection: string;
-};
+}
 
-type CandidateAccountabilityCardProps = {
+interface CandidateAccountabilityCardProps {
   representative: Representative;
   promises?: Promise[];
   campaignFinance?: CampaignFinance;
@@ -122,7 +123,7 @@ type CandidateAccountabilityCardProps = {
   performanceMetrics?: PerformanceMetrics;
   alternativeCandidates?: AlternativeCandidate[];
   className?: string;
-};
+}
 
 export function CandidateAccountabilityCard({
   representative,

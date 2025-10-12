@@ -13,11 +13,12 @@
 'use client';
 
 import React, { useRef, useCallback, useState, useEffect } from 'react';
+
 import { withOptional } from '@/lib/utils/objects';
 
 type TouchGesture = 'swipe-left' | 'swipe-right' | 'swipe-up' | 'swipe-down' | 'pinch-in' | 'pinch-out' | 'long-press' | 'tap';
 
-type TouchInteractionsProps = {
+interface TouchInteractionsProps {
   children: React.ReactNode;
   onSwipeLeft?: () => void;
   onSwipeRight?: () => void;

@@ -14,7 +14,7 @@ import { logger } from '@/lib/utils/logger';
  * Status: Critical PWA enhancement for user experience
  */
 
-export type OfflineVote = {
+export interface OfflineVote {
   id: string
   pollId: string
   optionIds: string[]
@@ -25,7 +25,7 @@ export type OfflineVote = {
   error?: string
 }
 
-export type OutboxStats = {
+export interface OutboxStats {
   pending: number
   syncing: number
   completed: number
@@ -33,7 +33,7 @@ export type OutboxStats = {
   total: number
 }
 
-export type SyncResult = {
+export interface SyncResult {
   success: boolean
   syncedCount: number
   failedCount: number

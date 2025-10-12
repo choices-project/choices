@@ -6,6 +6,7 @@
  */
 
 import { type NextRequest, NextResponse } from 'next/server'
+
 import { isFeatureEnabled } from '@/lib/core/feature-flags'
 import { createApiLogger } from '@/lib/utils/api-logger'
 import { getSupabaseServiceRoleClient } from '@/utils/supabase/server'
@@ -136,7 +137,7 @@ export async function GET(req: NextRequest) {
     const pollShares: Record<string, { shares: number; title?: string }> = {}
     
     shareEvents?.forEach(event => {
-      const eventData = event.event_data as any
+      const eventData = event.event_data
       const platform = eventData?.platform || 'unknown'
       const pollId = eventData?.poll_id
       

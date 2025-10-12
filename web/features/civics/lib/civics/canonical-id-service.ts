@@ -6,6 +6,7 @@
  */
 
 import { createClient } from '@supabase/supabase-js';
+
 import type {
   IdCrosswalk,
   CanonicalIdMapping,
@@ -138,7 +139,7 @@ export class CanonicalIdService {
     const sources: Record<DataSource, string> = {} as Record<DataSource, string>;
     
     for (const entry of entries) {
-      sources[entry.source as DataSource] = entry.source_id;
+      sources[entry.source] = entry.source_id;
     }
 
     return {
@@ -217,7 +218,7 @@ export class CanonicalIdService {
    */
   async getEntitySources(canonicalId: string): Promise<DataSource[]> {
     const entries = await this.getCrosswalkEntries(canonicalId);
-    return entries.map(entry => entry.source as DataSource);
+    return entries.map(entry => entry.source);
   }
 
   /**
@@ -317,14 +318,14 @@ export class CanonicalIdService {
     
     // Check required fields
     for (const field of requiredFields) {
-      if (data[field] && data[field].toString().trim()) {
+      if (data[field]?.toString().trim()) {
         score += 1;
       }
     }
     
     // Check optional fields
     for (const field of optionalFields) {
-      if (data[field] && data[field].toString().trim()) {
+      if (data[field]?.toString().trim()) {
         score += 0.5;
       }
     }

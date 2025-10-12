@@ -280,7 +280,7 @@ export class BatchProcessor<T> {
 /**
  * Create a virtual list for large datasets
  */
-export type VirtualListOptions = {
+export interface VirtualListOptions {
   itemHeight: number;
   containerHeight: number;
   overscan?: number;
@@ -358,7 +358,7 @@ export class PerformanceObserver {
 /**
  * Create a performance budget checker
  */
-export type PerformanceBudget = {
+export interface PerformanceBudget {
   name: string;
   threshold: number;
   type: 'max' | 'min';

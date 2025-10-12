@@ -1,10 +1,11 @@
 'use client'
 
-import { useState, useEffect } from 'react'
 import { WifiOff, Wifi, AlertCircle, CheckCircle } from 'lucide-react'
+import { useState, useEffect } from 'react'
+
 import { usePWA } from '@/hooks/usePWA'
 
-type OfflineIndicatorProps = {
+interface OfflineIndicatorProps {
   showDetails?: boolean
   className?: string
 }

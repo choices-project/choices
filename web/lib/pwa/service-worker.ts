@@ -7,7 +7,8 @@
 
 import { logger } from '@/lib/utils/logger';
 
-export type ServiceWorkerStatus = {
+export interface ServiceWorkerStatus {
+  [key: string]: unknown;
   isSupported: boolean;
   isRegistered: boolean;
   isActive: boolean;
@@ -15,12 +16,12 @@ export type ServiceWorkerStatus = {
   isWaiting: boolean;
   registration?: ServiceWorkerRegistration;
   error?: string;
-};
+}
 
-export type ServiceWorkerMessage = {
+export interface ServiceWorkerMessage {
   type: string;
   data?: any;
-};
+}
 
 class ServiceWorkerManager {
   private registration: ServiceWorkerRegistration | null = null;
@@ -68,7 +69,7 @@ class ServiceWorkerManager {
       return status;
 
     } catch (error) {
-      logger.error('PWA: Service worker registration failed:', error);
+      logger.error('PWA: Service worker registration failed:', error instanceof Error ? error : undefined, { error: error instanceof Error ? error.message : String(error) });
       
       const status: ServiceWorkerStatus = {
         isSupported: true,
@@ -97,7 +98,7 @@ class ServiceWorkerManager {
       logger.info('PWA: Service worker unregistered');
       return result;
     } catch (error) {
-      logger.error('PWA: Failed to unregister service worker:', error);
+      logger.error('PWA: Failed to unregister service worker:', error instanceof Error ? error : undefined, { error: error instanceof Error ? error.message : String(error) });
       return false;
     }
   }
@@ -150,7 +151,7 @@ class ServiceWorkerManager {
       await this.registration.update();
       return this.updateAvailable;
     } catch (error) {
-      logger.error('PWA: Failed to check for updates:', error);
+      logger.error('PWA: Failed to check for updates:', error instanceof Error ? error : undefined, { error: error instanceof Error ? error.message : String(error) });
       return false;
     }
   }
@@ -202,7 +203,7 @@ class ServiceWorkerManager {
       const response = await this.sendMessage({ type: 'GET_VERSION' });
       return response.version || null;
     } catch (error) {
-      logger.error('PWA: Failed to get service worker version:', error);
+      logger.error('PWA: Failed to get service worker version:', error instanceof Error ? error : undefined, { error: error instanceof Error ? error.message : String(error) });
       return null;
     }
   }
@@ -271,7 +272,7 @@ class ServiceWorkerManager {
       try {
         listener(status);
       } catch (error) {
-        logger.error('PWA: Error in status listener:', error);
+        logger.error('PWA: Error in status listener:', error instanceof Error ? error : undefined, { error: error instanceof Error ? error.message : String(error) });
       }
     });
   }

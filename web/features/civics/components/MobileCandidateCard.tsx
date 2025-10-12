@@ -12,8 +12,6 @@
 
 'use client';
 
-import React, { useState, useRef, useCallback } from 'react';
-import Image from 'next/image';
 import { 
   PhoneIcon, 
   EnvelopeIcon, 
@@ -30,13 +28,15 @@ import {
   HeartIcon as HeartSolidIcon,
   UserPlusIcon as UserPlusSolidIcon
 } from '@heroicons/react/24/solid';
+import Image from 'next/image';
+import React, { useState, useRef, useCallback } from 'react';
 
 // Import types from the pipeline
-import type { SuperiorRepresentativeData } from '@/features/civics/lib/civics-superior/superior-data-pipeline';
-import TouchInteractions from '@/features/civics/components/TouchInteractions';
 import ProgressiveDisclosure from '@/features/civics/components/ProgressiveDisclosure';
+import TouchInteractions from '@/features/civics/components/TouchInteractions';
+import type { SuperiorRepresentativeData } from '@/features/civics/lib/civics-superior/superior-data-pipeline';
 
-type MobileCandidateCardProps = {
+interface MobileCandidateCardProps {
   representative: SuperiorRepresentativeData;
   onLike?: (id: string) => void;
   onShare?: (id: string) => void;

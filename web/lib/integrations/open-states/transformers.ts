@@ -7,7 +7,7 @@
 import { devLog } from '@/lib/utils/logger';
 
 // Open States API types
-export type OpenStatesLegislator = {
+export interface OpenStatesLegislator {
   id: string;
   name: string;
   first_name: string;
@@ -47,7 +47,7 @@ export type OpenStatesLegislator = {
   }>;
 }
 
-export type OpenStatesBill = {
+export interface OpenStatesBill {
   id: string;
   identifier: string;
   title: string;
@@ -128,7 +128,7 @@ export type OpenStatesBill = {
   updated_at: string;
 }
 
-export type OpenStatesVote = {
+export interface OpenStatesVote {
   id: string;
   identifier: string;
   motion_text: string;

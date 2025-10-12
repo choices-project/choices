@@ -9,7 +9,9 @@
  */
 
 import React, { useEffect } from 'react';
+
 import { withOptional } from '@/lib/utils/objects';
+
 import {
   // Onboarding selectors
   useOnboardingStep,
@@ -18,6 +20,7 @@ import {
   useOnboardingLoading,
   useOnboardingError,
   useOnboardingActions,
+  useOnboardingData,
   useOnboardingStats,
   useCurrentStepData,
   useStepValidation,
@@ -311,6 +314,9 @@ export function OnboardingIntegrationExample() {
     profileData,
     valuesData,
     preferencesData,
+  } = useOnboardingData();
+  
+  const {
     completeOnboarding,
     submitOnboarding,
     setError,
@@ -330,6 +336,7 @@ export function OnboardingIntegrationExample() {
             theme: preferencesData.theme || 'system',
             notifications: preferencesData.notifications ?? true,
             language: preferencesData.language || 'en',
+            timezone: preferencesData.timezone || 'UTC',
           },
           settings: {
             privacy: preferencesData.privacy || 'private',

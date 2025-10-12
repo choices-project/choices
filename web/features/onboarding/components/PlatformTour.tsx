@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
 import { X, ChevronLeft, ChevronRight } from 'lucide-react';
+import React, { useState } from 'react';
 
 import type { PlatformTourProps } from '../types';
 

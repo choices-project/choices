@@ -7,13 +7,13 @@
  * Status: Critical for production use
  */
 
-export type RateLimit = {
+export interface RateLimit {
   daily: number;
   perMinute: number;
   delay: number; // milliseconds between requests
 }
 
-export type APIUsage = {
+export interface APIUsage {
   api: string;
   requestsToday: number;
   requestsThisMinute: number;
@@ -146,7 +146,7 @@ export function getRateLimitStatus(): Record<string, { canMakeRequest: boolean; 
         requestsToday: 0,
         requestsThisMinute: 0,
         lastRequest: new Date(0),
-        rateLimit: RATE_LIMITS[api]!
+        rateLimit: RATE_LIMITS[api] as RateLimit
       }
     };
   }

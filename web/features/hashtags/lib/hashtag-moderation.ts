@@ -12,8 +12,9 @@
  * Status: ✅ ACTIVE
  */
 
-import { getSupabaseServerClient } from '@/utils/supabase/server';
 import { logger } from '@/lib/utils/logger';
+import { getSupabaseClient } from '@/utils/supabase/client';
+
 import type { 
   HashtagModeration, 
   HashtagFlag, 
@@ -65,7 +66,7 @@ const MODERATION_CONSTANTS = {
  */
 export async function getHashtagModeration(hashtagId: string): Promise<HashtagApiResponse<HashtagModeration>> {
   try {
-    const supabase = await getSupabaseServerClient();
+    const supabase = await getSupabaseClient();
     
     const { data, error } = await supabase
       .from('hashtag_moderation')
@@ -106,7 +107,7 @@ export async function flagHashtag(
   reason: string
 ): Promise<HashtagApiResponse<HashtagFlag>> {
   try {
-    const supabase = await getSupabaseServerClient();
+    const supabase = await getSupabaseClient();
     
     // Check if user has already flagged this hashtag recently
     const { data: existingFlags } = await supabase
@@ -130,7 +131,7 @@ export async function flagHashtag(
         hashtag_id: hashtagId,
         user_id: (await supabase.auth.getUser()).data.user?.id,
         flag_type: flagType,
-        reason: reason,
+        reason,
         status: 'pending'
       })
       .select()
@@ -169,7 +170,7 @@ export async function moderateHashtag(
   reason?: string
 ): Promise<HashtagApiResponse<HashtagModeration>> {
   try {
-    const supabase = await getSupabaseServerClient();
+    const supabase = await getSupabaseClient();
     const userId = (await supabase.auth.getUser()).data.user?.id;
     
     if (!userId) {
@@ -238,7 +239,7 @@ export async function getModerationQueue(
   limit: number = 50
 ): Promise<HashtagApiResponse<Array<Hashtag & { moderation: HashtagModeration }>>> {
   try {
-    const supabase = await getSupabaseServerClient();
+    const supabase = await getSupabaseClient();
     
     let query = supabase
       .from('hashtag_moderation')
@@ -298,7 +299,7 @@ export async function getModerationQueue(
  */
 export async function triggerAutoModeration(hashtagId: string): Promise<void> {
   try {
-    const supabase = await getSupabaseServerClient();
+    const supabase = await getSupabaseClient();
     
     // Get hashtag details
     const { data: hashtag } = await supabase
@@ -394,7 +395,7 @@ export async function calculateAutoModerationScore(hashtag: any): Promise<number
  */
 export async function checkForDuplicates(hashtagName: string): Promise<HashtagApiResponse<Hashtag[]>> {
   try {
-    const supabase = await getSupabaseServerClient();
+    const supabase = await getSupabaseClient();
     
     // Normalize the name for comparison
     const normalizedName = hashtagName.toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -450,21 +451,21 @@ function calculateSimilarity(str1: string, str2: string): number {
 function levenshteinDistance(str1: string, str2: string): number {
   const matrix: number[][] = Array(str2.length + 1).fill(0).map(() => Array(str1.length + 1).fill(0));
   
-  for (let i = 0; i <= str1.length; i++) matrix[0][i] = i;
-  for (let j = 0; j <= str2.length; j++) matrix[j][0] = j;
+  for (let i = 0; i <= str1.length; i++) matrix[0]![i] = i;
+  for (let j = 0; j <= str2.length; j++) matrix[j]![0] = j;
   
   for (let j = 1; j <= str2.length; j++) {
     for (let i = 1; i <= str1.length; i++) {
       const indicator = str1[i - 1] === str2[j - 1] ? 0 : 1;
-      matrix[j][i] = Math.min(
-        matrix[j][i - 1] + 1,
-        matrix[j - 1][i] + 1,
-        matrix[j - 1][i - 1] + indicator
+      matrix[j]![i] = Math.min(
+        (matrix[j]![i - 1] ?? 0) + 1,
+        (matrix[j - 1]![i] ?? 0) + 1,
+        (matrix[j - 1]![i - 1] ?? 0) + indicator
       );
     }
   }
   
-  return matrix[str2.length][str1.length];
+  return matrix[str2.length]![str1.length] ?? 0;
 }
 
 // ============================================================================
@@ -486,7 +487,7 @@ export async function getModerationStats(): Promise<HashtagApiResponse<{
   top_flag_types: Array<{ type: string; count: number }>;
 }>> {
   try {
-    const supabase = await getSupabaseServerClient();
+    const supabase = await getSupabaseClient();
     
     // Get basic counts
     const [

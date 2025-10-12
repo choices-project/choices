@@ -11,6 +11,7 @@
 'use client';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+
 import { 
   updateCurrentProfile, 
   updateProfileAvatar, 
@@ -85,7 +86,7 @@ export function useUpdateProfile() {
 
       // Optimistically update
       queryClient.setQueryData(profileQueryKeys.current(), (old: any) => {
-        if (!old || !old.data) return old;
+        if (!old?.data) return old;
         return {
           ...(old || {}),
           data: { ...(old.data || {}), ...(newData || {}) },

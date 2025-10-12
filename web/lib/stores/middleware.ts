@@ -9,6 +9,7 @@
  */
 
 import { logger } from '../utils/logger';
+
 import type { StoreMiddleware, StoreConfig, PersistOptions } from './types';
 
 /**
@@ -148,7 +149,7 @@ export const validationMiddleware = (validators: Array<(state: any) => boolean>)
       for (const validator of validators) {
         if (!validator(state)) {
           logger.warn('Store state validation failed', {
-            state: state,
+            state,
             validators: validators.length
           });
         }

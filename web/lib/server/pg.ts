@@ -1,10 +1,10 @@
 import { Pool } from 'pg';
 
 // Client-safe interface; no 'pg' in client code.
-export type DatabaseConfig = {
+export interface DatabaseConfig {
   connectionString: string;
   ssl?: boolean | { rejectUnauthorized: boolean };
-};
+}
 
 export const databaseConfig: DatabaseConfig = {
   connectionString: process.env.DATABASE_URL ?? '',

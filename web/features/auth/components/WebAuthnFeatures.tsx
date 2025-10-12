@@ -1,8 +1,10 @@
 'use client';
 
 import React from 'react';
-import { FeatureWrapper } from './WebAuthnPrompt';
+
 import { T } from '@/lib/testing/testIds';
+
+import { FeatureWrapper } from './WebAuthnPrompt';
 
 /**
  * WebAuthn Features Component

@@ -16,12 +16,12 @@ import type { User, Session } from '@supabase/supabase-js'
 // User and Session Types
 // ============================================================================
 
-export type UserSession = {
+export interface UserSession {
   user: User | null
   session: Session | null
 }
 
-export type AuthContext = {
+export interface AuthContext {
   user: User | null
   session: Session | null
   loading: boolean
@@ -31,13 +31,13 @@ export type AuthContext = {
 // Device Flow Types
 // ============================================================================
 
-export type DeviceFlowRequest = {
+export interface DeviceFlowRequest {
   provider: 'google' | 'github' | 'facebook' | 'twitter' | 'linkedin' | 'discord'
   redirectTo?: string
   scopes?: string[]
 }
 
-export type DeviceFlowResponse = {
+export interface DeviceFlowResponse {
   success: boolean
   deviceCode?: string
   userCode?: string
@@ -47,14 +47,14 @@ export type DeviceFlowResponse = {
   error?: string
 }
 
-export type DeviceFlowVerification = {
+export interface DeviceFlowVerification {
   success: boolean
   userId?: string
   session?: Session
   error?: string
 }
 
-export type DeviceFlowState = {
+export interface DeviceFlowState {
   deviceCode: string
   userCode: string
   verificationUri: string
@@ -71,7 +71,7 @@ export type DeviceFlowState = {
 // Database Types
 // ============================================================================
 
-export type DeviceFlowRecord = {
+export interface DeviceFlowRecord {
   device_code: string
   user_code: string
   provider: string
@@ -90,13 +90,13 @@ export type DeviceFlowRecord = {
 // Middleware Types
 // ============================================================================
 
-export type MiddlewareContext = {
+export interface MiddlewareContext {
   req: Request
   res: Response
   user?: User
 }
 
-export type RateLimitConfig = {
+export interface RateLimitConfig {
   maxRequests: number
   windowMs: number
   key: string
@@ -106,13 +106,13 @@ export type RateLimitConfig = {
 // Error Types
 // ============================================================================
 
-export type AuthError = {
+export interface AuthError {
   message: string
   code?: string
   statusCode?: number
 }
 
-export type ValidationError = {
+export interface ValidationError {
   field: string
   message: string
   value?: unknown
@@ -122,7 +122,7 @@ export type ValidationError = {
 // API Response Types
 // ============================================================================
 
-export type ApiResponse<T = unknown> = {
+export interface ApiResponse<T = unknown> {
   success: boolean
   data?: T
   error?: string
@@ -142,7 +142,7 @@ export type PaginatedResponse<T = unknown> = {
 // Security Types
 // ============================================================================
 
-export type SecurityHeaders = {
+export interface SecurityHeaders {
   'Content-Security-Policy'?: string
   'X-Frame-Options'?: string
   'X-Content-Type-Options'?: string
@@ -150,7 +150,7 @@ export type SecurityHeaders = {
   'Permissions-Policy'?: string
 }
 
-export type RateLimitInfo = {
+export interface RateLimitInfo {
   limit: number
   remaining: number
   reset: number

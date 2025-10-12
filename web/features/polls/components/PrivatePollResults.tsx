@@ -1,16 +1,17 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { logger } from '@/lib/utils/logger';
-import { differentialPrivacy, type PrivateQueryResult } from '@/lib/privacy/differential-privacy'
 
-type PollOption = {
+import { differentialPrivacy, type PrivateQueryResult } from '@/lib/privacy/differential-privacy'
+import { logger } from '@/lib/utils/logger';
+
+interface PollOption {
   id: string
   label: string
   description?: string
 }
 
-type Poll = {
+interface Poll {
   id: string
   title: string
   description?: string
@@ -20,14 +21,14 @@ type Poll = {
   options: PollOption[]
 }
 
-type PrivatePollResultsProps = {
+interface PrivatePollResultsProps {
   poll: Poll
   userId: string
   onPrivacyBudgetExceeded?: () => void
 }
 
 export default function PrivatePollResults({ poll, userId, onPrivacyBudgetExceeded }: PrivatePollResultsProps) {
-  const [results, setResults] = useState<PrivateQueryResult<{ optionId: string; count: number; percentage: number }[]> | null>(null)
+  const [results, setResults] = useState<PrivateQueryResult<Array<{ optionId: string; count: number; percentage: number }>> | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [privacyBudget, setPrivacyBudget] = useState<number | null>(null)

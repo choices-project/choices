@@ -1,26 +1,28 @@
 'use client';
 
-import React, { useState, useCallback, useEffect } from 'react'
 import { Users, Clock, CheckCircle2, Shield, Lock, Unlock } from 'lucide-react'
+import React, { useState, useCallback, useEffect } from 'react'
+
 import { 
   useVotingActions,
   useVotingLoading,
   useVotingError
 } from '@/lib/stores'
+import { withOptional } from '@/lib/utils/objects'
+
 import ApprovalVoting from './ApprovalVoting'
+import MultipleChoiceVoting from './MultipleChoiceVoting'
 import QuadraticVoting from './QuadraticVoting'
 import RangeVoting from './RangeVoting'
 import RankedChoiceVoting from './RankedChoiceVoting'
 import SingleChoiceVoting from './SingleChoiceVoting'
-import MultipleChoiceVoting from './MultipleChoiceVoting'
-import { withOptional } from '@/lib/utils/objects'
 
-type VoteResponse = { ok: boolean; id?: string; error?: string };
-type VerificationResponse = { ok: boolean; error?: string };
+interface VoteResponse { ok: boolean; id?: string; error?: string }
+interface VerificationResponse { ok: boolean; error?: string }
 type OnVote = (n: number) => Promise<VoteResponse>;
 type OnVerify = (id: string) => Promise<VerificationResponse>;
 
-type Poll = {
+interface Poll {
   id: string;
   title: string;
   description?: string;
@@ -30,7 +32,7 @@ type Poll = {
   totalVotes: number;
 }
 
-type VotingInterfaceProps = {
+interface VotingInterfaceProps {
   poll: Poll;
   onVote: OnVote;
   onVerify?: OnVerify;

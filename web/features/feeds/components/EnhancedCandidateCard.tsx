@@ -7,8 +7,6 @@
 
 'use client';
 
-import React from 'react';
-import Image from 'next/image';
 import { 
   PhoneIcon, 
   EnvelopeIcon, 
@@ -18,9 +16,11 @@ import {
   BuildingOfficeIcon,
   MapPinIcon
 } from '@heroicons/react/24/outline';
+import Image from 'next/image';
+import React from 'react';
 // import type { Candidate } from '@/features/civics/lib/civics/types'; // Unused import
 
-type _Representative = {
+interface _Representative {
   id: string;
   name: string;
   title: string;
@@ -41,7 +41,7 @@ type _Representative = {
   };
 }
 
-type EnhancedCandidateCardProps = {
+interface EnhancedCandidateCardProps {
   representative: _Representative;
   onContact?: (representative: _Representative) => void;
   onShare?: (representative: _Representative) => void;

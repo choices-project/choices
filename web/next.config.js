@@ -1,5 +1,5 @@
 // @ts-check
-import withBundleAnalyzer from '@next/bundle-analyzer';
+const withBundleAnalyzer = require('@next/bundle-analyzer');
 
 const bundleAnalyzer = withBundleAnalyzer({
   enabled: process.env.ANALYZE === 'true',
@@ -140,7 +140,7 @@ const nextConfig = {
     // Module resolution optimizations
     config.resolve.alias = {
       ...config.resolve.alias,
-      '@': new URL('./', import.meta.url).pathname
+      '@': require('path').resolve(__dirname, './')
     }
 
     // Bundle size optimizations
@@ -527,4 +527,4 @@ const nextConfig = {
   assetPrefix: process.env.NODE_ENV === 'production' ? '' : '',
 }
 
-export default bundleAnalyzer(nextConfig);
+module.exports = bundleAnalyzer(nextConfig);

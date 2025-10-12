@@ -10,13 +10,16 @@
 
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
-import Image from 'next/image';
 import { 
   MagnifyingGlassIcon, 
   UserGroupIcon,
-  HeartIcon
+  HeartIcon,
+  ChatBubbleLeftIcon,
+  ShareIcon
 } from '@heroicons/react/24/outline';
+import Image from 'next/image';
+import React, { useState, useEffect, useCallback } from 'react';
+
 import type { SuperiorRepresentativeData } from '@/features/civics/lib/civics-superior/superior-data-pipeline';
 
 export default function Civics2Page() {
@@ -474,10 +477,98 @@ export default function Civics2Page() {
         )}
 
         {activeTab === 'feed' && (
-          <div className="text-center py-12">
-            <HeartIcon className="mx-auto h-12 w-12 text-gray-400" />
-            <h3 className="mt-2 text-sm font-medium text-gray-900">Social Feed</h3>
-            <p className="mt-1 text-sm text-gray-500">Coming soon...</p>
+          <div className="space-y-6">
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Community Feed</h3>
+              <div className="space-y-4">
+                <div className="border border-gray-200 rounded-lg p-4">
+                  <div className="flex items-center space-x-3 mb-3">
+                    <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
+                      <span className="text-white font-semibold">JD</span>
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-900">John Doe</p>
+                      <p className="text-sm text-gray-500">2 hours ago</p>
+                    </div>
+                  </div>
+                  <p className="text-gray-700 mb-3">
+                    Just voted on the infrastructure bill. Excited to see how this will impact our local roads and bridges! 🚧
+                  </p>
+                  <div className="flex items-center space-x-4 text-sm text-gray-500">
+                    <button className="flex items-center space-x-1 hover:text-red-500">
+                      <HeartIcon className="w-4 h-4" />
+                      <span>12</span>
+                    </button>
+                    <button className="flex items-center space-x-1 hover:text-blue-500">
+                      <ChatBubbleLeftIcon className="w-4 h-4" />
+                      <span>3</span>
+                    </button>
+                    <button className="flex items-center space-x-1 hover:text-green-500">
+                      <ShareIcon className="w-4 h-4" />
+                      <span>Share</span>
+                    </button>
+                  </div>
+                </div>
+                
+                <div className="border border-gray-200 rounded-lg p-4">
+                  <div className="flex items-center space-x-3 mb-3">
+                    <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
+                      <span className="text-white font-semibold">SM</span>
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-900">Sarah Miller</p>
+                      <p className="text-sm text-gray-500">4 hours ago</p>
+                    </div>
+                  </div>
+                  <p className="text-gray-700 mb-3">
+                    Attended the town hall meeting last night. Great discussion about local education funding. Our representative really listened to our concerns.
+                  </p>
+                  <div className="flex items-center space-x-4 text-sm text-gray-500">
+                    <button className="flex items-center space-x-1 hover:text-red-500">
+                      <HeartIcon className="w-4 h-4" />
+                      <span>8</span>
+                    </button>
+                    <button className="flex items-center space-x-1 hover:text-blue-500">
+                      <ChatBubbleLeftIcon className="w-4 h-4" />
+                      <span>5</span>
+                    </button>
+                    <button className="flex items-center space-x-1 hover:text-green-500">
+                      <ShareIcon className="w-4 h-4" />
+                      <span>Share</span>
+                    </button>
+                  </div>
+                </div>
+                
+                <div className="border border-gray-200 rounded-lg p-4">
+                  <div className="flex items-center space-x-3 mb-3">
+                    <div className="w-10 h-10 bg-purple-500 rounded-full flex items-center justify-center">
+                      <span className="text-white font-semibold">MJ</span>
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-900">Mike Johnson</p>
+                      <p className="text-sm text-gray-500">1 day ago</p>
+                    </div>
+                  </div>
+                  <p className="text-gray-700 mb-3">
+                    New poll just dropped about climate change policies. What do you think about the proposed carbon tax? #ClimateAction #Voting
+                  </p>
+                  <div className="flex items-center space-x-4 text-sm text-gray-500">
+                    <button className="flex items-center space-x-1 hover:text-red-500">
+                      <HeartIcon className="w-4 h-4" />
+                      <span>15</span>
+                    </button>
+                    <button className="flex items-center space-x-1 hover:text-blue-500">
+                      <ChatBubbleLeftIcon className="w-4 h-4" />
+                      <span>7</span>
+                    </button>
+                    <button className="flex items-center space-x-1 hover:text-green-500">
+                      <ShareIcon className="w-4 h-4" />
+                      <span>Share</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </div>

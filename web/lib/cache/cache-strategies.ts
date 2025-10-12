@@ -9,6 +9,7 @@
  */
 
 import { logger } from '@/lib/utils/logger'
+
 import { type RedisClient } from './redis-client'
 import type { CacheStats } from './redis-client'
 
@@ -16,7 +17,7 @@ import type { CacheStats } from './redis-client'
 export type CacheStrategy = 'write-through' | 'write-behind' | 'cache-aside' | 'read-through'
 
 // Cache operation options
-export type CacheOptions = {
+export interface CacheOptions {
   ttl?: number
   tags?: string[]
   strategy?: CacheStrategy
@@ -25,7 +26,7 @@ export type CacheOptions = {
 }
 
 // Cache operation result
-export type CacheResult<T> = {
+export interface CacheResult<T> {
   data: T | null
   fromCache: boolean
   cacheHit: boolean
@@ -33,7 +34,7 @@ export type CacheResult<T> = {
 }
 
 // Cache strategy configuration
-export type StrategyConfig = {
+export interface StrategyConfig {
   defaultTTL: number
   maxTTL: number
   minTTL: number

@@ -1,9 +1,10 @@
 'use client'
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { useState, useEffect } from 'react'
-import { UserStoreProvider } from '@/lib/providers/UserStoreProvider'
 import dynamic from 'next/dynamic'
+import { useState, useEffect } from 'react'
+
+import { UserStoreProvider } from '@/lib/providers/UserStoreProvider'
 import { initializePWA } from '@/lib/pwa/init'
 // import EnhancedFeedbackWidget from '../../components/EnhancedFeedbackWidget'
 

@@ -1,7 +1,5 @@
 'use client';
 
-import React, { useState } from 'react';
-import Image from 'next/image';
 import { 
   X, 
   Heart, 
@@ -16,8 +14,10 @@ import {
   ExternalLink,
   ChevronRight
 } from 'lucide-react';
+import Image from 'next/image';
+import React, { useState } from 'react';
 
-type BurgerMenuProps = {
+interface BurgerMenuProps {
   isOpen: boolean;
   onClose: () => void;
   user?: {

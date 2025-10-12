@@ -1,10 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
+
+import { isFeatureEnabled } from '@/lib/core/feature-flags';
 import { devLog } from '@/lib/utils/logger';
 // import { useFeatureFlags } from './useFeatureFlags';
-import { isFeatureEnabled } from '@/lib/core/feature-flags';
 import { withOptional } from '@/lib/utils/objects';
 
-type AnalyticsData = {
+interface AnalyticsData {
   period: string;
   summary: {
     totalUsers: number;
@@ -26,20 +27,21 @@ type AnalyticsData = {
   };
 }
 
-type AnalyticsFilters = {
+interface AnalyticsFilters {
+  [key: string]: unknown;
   dateRange?: string;
   pollId?: string;
   userType?: string;
   deviceType?: string;
 }
 
-type UseAnalyticsOptions = {
+interface UseAnalyticsOptions {
   autoRefresh?: boolean;
   refreshInterval?: number;
   defaultFilters?: AnalyticsFilters;
 }
 
-type UseAnalyticsReturn = {
+interface UseAnalyticsReturn {
   // Data
   data: AnalyticsData | null;
   loading: boolean;
@@ -186,7 +188,7 @@ export function useAnalytics(options: UseAnalyticsOptions = {}): UseAnalyticsRet
       type,
       summary: generateReportSummary(data, type),
       recommendations: generateRecommendations(data, type),
-      data: data
+      data
     };
 
     const reportStr = JSON.stringify(report, null, 2);
@@ -234,12 +236,12 @@ function convertToCSV(data: AnalyticsData): string {
   
   // Summary section
   lines.push('Section,Metric,Value');
-  lines.push('Summary,Total Users,' + data.summary.totalUsers);
-  lines.push('Summary,Total Polls,' + data.summary.totalPolls);
-  lines.push('Summary,Total Votes,' + data.summary.totalVotes);
-  lines.push('Summary,Active Users,' + data.summary.activeUsers);
-  lines.push('Summary,New Polls,' + data.summary.newPolls);
-  lines.push('Summary,New Votes,' + data.summary.newVotes);
+  lines.push(`Summary,Total Users,${  data.summary.totalUsers}`);
+  lines.push(`Summary,Total Polls,${  data.summary.totalPolls}`);
+  lines.push(`Summary,Total Votes,${  data.summary.totalVotes}`);
+  lines.push(`Summary,Active Users,${  data.summary.activeUsers}`);
+  lines.push(`Summary,New Polls,${  data.summary.newPolls}`);
+  lines.push(`Summary,New Votes,${  data.summary.newVotes}`);
   
   // Trends section
   lines.push('Trends,User Growth,');

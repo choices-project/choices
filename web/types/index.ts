@@ -32,20 +32,20 @@ export type {
   DemographicsData,
   EngagementData
 } from './frontend';
-export type LoginCredentials = {
+export interface LoginCredentials {
   email: string;
   password: string;
   twoFactorCode?: string;
 }
 
-export type RegisterData = {
+export interface RegisterData {
   email: string;
   password: string;
   confirmPassword: string;
   twoFactorCode?: string;
 }
 
-export type TrendingTopic = {
+export interface TrendingTopic {
   id: string;
   title: string;
   description: string;
@@ -57,7 +57,7 @@ export type TrendingTopic = {
   created_at: string;
 }
 
-export type ActivityItem = {
+export interface ActivityItem {
   id: string;
   title: string;
   type: string;
@@ -67,7 +67,7 @@ export type ActivityItem = {
   user_id?: string;
 }
 
-export type PollNarrative = {
+export interface PollNarrative {
   id: string;
   title: string;
   description: string;
@@ -88,14 +88,14 @@ export type PollNarrative = {
   };
 }
 
-export type User = {
+export interface User {
   id: string;
   email: string;
   created_at: string;
   email_confirmed_at?: string;
 }
 
-export type UserProfile = {
+export interface UserProfile {
   user_id: string;
   email: string;
   username?: string;
@@ -107,7 +107,7 @@ export type UserProfile = {
   updated_at: string;
 }
 
-export type GeneratedPoll = {
+export interface GeneratedPoll {
   id: string;
   title: string;
   options: string[];

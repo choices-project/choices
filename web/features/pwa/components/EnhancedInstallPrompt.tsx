@@ -14,16 +14,17 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
 import { X, Download, Smartphone, Monitor, Sparkles, Zap, Shield, Clock } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { analyticsEngine } from '@/features/analytics/lib/AnalyticsEngine';
 import { usePWA } from '@/hooks/usePWA';
 import { logger } from '@/lib/utils/logger';
-import { analyticsEngine } from '@/features/analytics/lib/AnalyticsEngine';
 
-type EnhancedInstallPromptProps = {
+interface EnhancedInstallPromptProps {
   onInstall?: () => void;
   onDismiss?: () => void;
   variant?: 'default' | 'minimal' | 'detailed';
@@ -151,7 +152,7 @@ export default function EnhancedInstallPrompt({
         });
       }
     } catch (error) {
-      logger.error('PWA: Install prompt failed:', error);
+      logger.error('PWA: Install prompt failed:', error as Error);
     } finally {
       setIsAnimating(false);
     }

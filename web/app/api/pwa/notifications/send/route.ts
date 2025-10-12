@@ -6,9 +6,10 @@
  */
 
 import { type NextRequest, NextResponse } from 'next/server';
-import { logger } from '@/lib/utils/logger';
+
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
 import { createApiLogger } from '@/lib/utils/api-logger';
+import { logger } from '@/lib/utils/logger';
 
 export const dynamic = 'force-dynamic';
 

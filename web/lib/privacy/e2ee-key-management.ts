@@ -10,14 +10,14 @@
 
 import { logger } from '@/lib/utils/logger';
 
-export type E2EEKeyBag = {
+export interface E2EEKeyBag {
   localCEK: CryptoKey;
   wrappedCEK?: ArrayBuffer; // For sync across devices
   salt?: Uint8Array;
   iterations?: number;
 }
 
-export type KeyManagementConfig = {
+export interface KeyManagementConfig {
   enableSync: boolean;
   passphrase?: string;
   deviceName?: string;
@@ -42,7 +42,7 @@ export class E2EEKeyManager {
       await this.loadOrGenerateLocalCEK();
       logger.info('E2EE Key Manager initialized');
     } catch (error) {
-      logger.error('Failed to initialize E2EE Key Manager', {
+      logger.error('Failed to initialize E2EE Key Manager', error instanceof Error ? error : undefined, {
         error: error instanceof Error ? error.message : 'Unknown error'
       });
       throw error;
@@ -158,7 +158,7 @@ export class E2EEKeyManager {
 
       logger.info('Restored CEK from wrapped key');
     } catch (error) {
-      logger.error('Failed to restore CEK from wrapped key', {
+      logger.error('Failed to restore CEK from wrapped key', error instanceof Error ? error : undefined, {
         error: error instanceof Error ? error.message : 'Unknown error'
       });
       throw new Error('Invalid passphrase or corrupted wrapped key');
@@ -185,7 +185,7 @@ export class E2EEKeyManager {
 
       logger.info('Crypto-shredding completed - all keys permanently deleted');
     } catch (error) {
-      logger.error('Failed to crypto-shred keys', {
+      logger.error('Failed to crypto-shred keys', error instanceof Error ? error : undefined, {
         error: error instanceof Error ? error.message : 'Unknown error'
       });
       throw error;
@@ -242,7 +242,7 @@ export class E2EEKeyManager {
 
       logger.info('Generated new local CEK');
     } catch (error) {
-      logger.error('Failed to load or generate local CEK', {
+      logger.error('Failed to load or generate local CEK', error instanceof Error ? error : undefined, {
         error: error instanceof Error ? error.message : 'Unknown error'
       });
       throw error;

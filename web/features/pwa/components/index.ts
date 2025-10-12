@@ -10,10 +10,10 @@ export { PWAVotingInterface } from './PWAVotingInterface';
 export { PWAUserProfile } from './PWAUserProfile';
 
 // Import the components for the object
-import PWAInstallerComponent from './PWAInstaller';
 import NotificationSettingsComponent from './NotificationSettings';
-import { PWAVotingInterface } from './PWAVotingInterface';
+import PWAInstallerComponent from './PWAInstaller';
 import { PWAUserProfile } from './PWAUserProfile';
+import { PWAVotingInterface } from './PWAVotingInterface';
 
 export const PWAComponents = {
   PWAInstaller: PWAInstallerComponent,

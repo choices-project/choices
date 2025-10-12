@@ -14,7 +14,7 @@ import { useEffect, useMemo, useRef } from 'react';
 export function useDebouncedCallback<T extends (...args: any[]) => void>(
   fn: T,
   delay: number,
-  deps: ReadonlyArray<unknown> = []
+  deps: readonly unknown[] = []
 ): T {
   const fnRef = useRef(fn);
 

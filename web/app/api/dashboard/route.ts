@@ -1,5 +1,6 @@
 import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
+
 import { logger } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server'
 
@@ -45,7 +46,7 @@ export async function GET(_request: NextRequest) {
       } : null,
       stats: userStats,
       platform: platformStats,
-      recentActivity: recentActivity,
+      recentActivity,
       polls: await getActivePolls(supabase)
     }
 

@@ -113,9 +113,9 @@ function FeatureFlagComponent() {
   - Export/import functionality for configuration
 
 #### **3. Feature Flag Hooks (`web/hooks/useFeatureFlags.ts`)**
-- **Purpose**: Legacy hook system (being replaced by Zustand store)
-- **Status**: Deprecated in favor of Zustand store
-- **Migration**: Components should use Zustand store selectors
+- **Purpose**: Legacy hook system (replaced by Zustand store)
+- **Status**: Migrated to Zustand store
+- **Current Usage**: Components use Zustand store selectors
 
 ### **Supporting Components**
 

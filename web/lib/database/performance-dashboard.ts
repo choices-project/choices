@@ -5,14 +5,14 @@
  * operations, query performance, and cache efficiency.
  */
 
-import { logger } from '@/lib/utils/logger';
-import { smartCache } from '@/lib/database/smart-cache';
 import { queryAnalyzer } from '@/lib/database/query-analyzer';
+import { smartCache } from '@/lib/database/smart-cache';
+import { logger } from '@/lib/utils/logger';
 
 /**
  * Dashboard metrics for real-time monitoring
  */
-export type DashboardMetrics = {
+export interface DashboardMetrics {
   /** Timestamp of the metrics */
   timestamp: number;
   /** Cache performance metrics */
@@ -50,7 +50,7 @@ export type DashboardMetrics = {
 /**
  * Dashboard configuration
  */
-export type DashboardConfig = {
+export interface DashboardConfig {
   /** Refresh interval in milliseconds */
   refreshInterval: number;
   /** Number of data points to keep in history */
@@ -477,9 +477,7 @@ export class PerformanceDashboard {
       try {
         subscriber(metrics);
       } catch (error) {
-        logger.error('Error notifying dashboard subscriber', {
-          error: error instanceof Error ? error.message : 'Unknown error',
-        });
+        logger.error('Error notifying dashboard subscriber', error as Error);
       }
     }
   }

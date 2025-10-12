@@ -1,7 +1,5 @@
 'use client';
 
-import React, { useState } from 'react';
-// FEATURE_FLAGS removed - not used in this component
 import { 
   TrendingUp, 
   Users, 
@@ -10,8 +8,10 @@ import {
   Award,
   Zap
 } from 'lucide-react';
+import React, { useState } from 'react';
+// FEATURE_FLAGS removed - not used in this component
 
-type PollSuggestion = {
+interface PollSuggestion {
   id: string;
   title: string;
   description: string;
@@ -25,7 +25,7 @@ type PollSuggestion = {
   expectedEngagement: 'low' | 'medium' | 'high';
 }
 
-type WeeklySelection = {
+interface WeeklySelection {
   week: string;
   selectedPolls: PollSuggestion[];
   totalVotes: number;

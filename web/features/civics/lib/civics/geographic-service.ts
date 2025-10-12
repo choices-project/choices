@@ -6,12 +6,14 @@
  */
 
 import { createClient } from '@supabase/supabase-js';
+
 import { logger } from '@/lib/utils/logger';
+
 import type {
   GeographicLookup
 } from './types';
 
-export type DistrictInfo = {
+export interface DistrictInfo {
   district_number: string;
   ocd_division_id: string;
   census_cycle: number;
@@ -19,7 +21,7 @@ export type DistrictInfo = {
   is_current: boolean;
 }
 
-export type RedistrictingChange = {
+export interface RedistrictingChange {
   id: string;
   state: string;
   district_type: string;
@@ -33,7 +35,7 @@ export type RedistrictingChange = {
   created_at: string;
 }
 
-export type GeographicSearchResult = {
+export interface GeographicSearchResult {
   ocd_division_id: string;
   confidence: number;
   source: 'zip' | 'latlon' | 'manual';

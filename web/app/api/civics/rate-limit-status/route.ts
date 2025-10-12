@@ -1,24 +1,25 @@
+import * as dotenv from 'dotenv';
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
+
 import { requireServiceKey } from '@/features/auth/lib/service-auth';
 import { getRateLimitStatus, getAPIStatus } from '@/lib/rate-limiting';
-import * as dotenv from 'dotenv';
 
 // Type definitions for rate limit status
-type RateLimitUsage = {
+interface RateLimitUsage {
   requestsToday: number;
   requestsThisMinute: number;
   rateLimit: {
     daily: number;
     perMinute: number;
   };
-};
+}
 
-type RateLimitStatus = {
+interface RateLimitStatus {
   canMakeRequest: boolean;
   delayNeeded: number;
   usage: RateLimitUsage;
-};
+}
 
 // Load environment variables
 dotenv.config({ path: '.env.local' });

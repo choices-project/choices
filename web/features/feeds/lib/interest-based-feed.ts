@@ -4,31 +4,32 @@
 
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
-import { getSupabaseServerClient } from '@/utils/supabase/server';
-import { logger } from '@/lib/utils/logger';
+
 import { FEATURE_FLAGS } from '@/lib/core/feature-flags';
+import { logger } from '@/lib/utils/logger';
+import { getSupabaseClient } from '@/utils/supabase/client';
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';
 
 // Types for interest-based feeds
-export type UserInterests = {
+export interface UserInterests {
   selectedInterests: string[];
   customInterests: string[]; // User-created hashtags
   trendingHashtags: string[]; // Real-time trending
   userHashtags: string[]; // User's custom hashtags
-};
+}
 
-export type PersonalizedPollFeed = {
+export interface PersonalizedPollFeed {
   userId: string;
   generatedAt: string;
   polls: PollRecommendation[];
   interestMatches: InterestMatch[];
   trendingHashtags: string[];
   suggestedInterests: string[];
-};
+}
 
-export type PollRecommendation = {
+export interface PollRecommendation {
   id: string;
   title: string;
   description: string;
@@ -38,13 +39,13 @@ export type PollRecommendation = {
   interestMatches: string[];
   totalVotes: number;
   created_at: string;
-};
+}
 
-export type InterestMatch = {
+export interface InterestMatch {
   interest: string;
   matchCount: number;
   relevanceScore: number;
-};
+}
 
 // Interest-Based Poll Feed Service
 export class InterestBasedPollFeed {
@@ -63,7 +64,7 @@ export class InterestBasedPollFeed {
   ): Promise<PersonalizedPollFeed> {
     
     try {
-      const supabase = await getSupabaseServerClient();
+      const supabase = await getSupabaseClient();
       this.supabase = supabase;
       
       // 1. Get user's interest tags
@@ -365,7 +366,7 @@ export async function GET(request: NextRequest) {
     const feedService = new InterestBasedPollFeed();
     
     // Get user profile data
-    const supabase = await getSupabaseServerClient();
+    const supabase = await getSupabaseClient();
     const { data: userProfile } = await supabase
       .from('user_profiles')
       .select('*')
@@ -407,13 +408,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    const supabase = await getSupabaseServerClient();
+    const supabase = await getSupabaseClient();
     
     switch (action) {
       case 'follow':
         await supabase.from('user_hashtags').upsert({
           user_id: userId,
-          hashtag: hashtag,
+          hashtag,
           is_following: true
         });
         break;
@@ -428,7 +429,7 @@ export async function POST(request: NextRequest) {
       case 'create':
         await supabase.from('user_hashtags').insert({
           user_id: userId,
-          hashtag: hashtag,
+          hashtag,
           is_custom: true,
           is_following: true
         });

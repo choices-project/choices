@@ -1,24 +1,25 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { ArrowLeft, BarChart3, Users, Target, Award, Eye, Vote, Filter, Download, RefreshCw, AlertCircle } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import { useSupabaseAuth } from '@/contexts/AuthContext'
+import { useState, useEffect, useCallback } from 'react'
+
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { useUser } from '@/lib/stores'
+import { cn } from '@/lib/utils'
+import { logger } from '@/lib/utils/logger'
 import { withOptional } from '@/lib/utils/objects'
 
 // UI Components
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Alert, AlertDescription } from '@/components/ui/alert'
 
 // Icons
-import { ArrowLeft, BarChart3, Users, Target, Award, Eye, Vote, Filter, Download, RefreshCw, AlertCircle } from 'lucide-react'
 
 // Utilities
-import { logger } from '@/lib/utils/logger'
-import { cn } from '@/lib/utils'
 
-type PollAnalytics = {
+interface PollAnalytics {
   pollid: string
   title: string
   totalvotes: number
@@ -46,7 +47,7 @@ type PollAnalytics = {
   recommendations: string[]
 }
 
-type AnalyticsFilters = {
+interface AnalyticsFilters {
   timeRange: '7d' | '30d' | '90d' | 'all'
   pollType: 'all' | 'public' | 'private'
   status: 'all' | 'active' | 'closed'
@@ -54,7 +55,7 @@ type AnalyticsFilters = {
 
 export default function PollAnalyticsPage() {
   const router = useRouter()
-  const { user } = useSupabaseAuth()
+  const user = useUser()
   
   const [analytics, setAnalytics] = useState<PollAnalytics[]>([])
   const [selectedPoll, setSelectedPoll] = useState<string>('')
