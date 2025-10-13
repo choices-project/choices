@@ -82,6 +82,7 @@ import { BrowserRouter } from 'react-router-dom';
 import userEvent from '@testing-library/user-event';
 import PWAFeatures from '@/features/pwa/components/PWAFeatures';
 import { T } from '@/lib/testing/testIds';
+import { usePWAInstallation, usePWAOffline } from '@/lib/stores';
 
 // Mock Notification API
 Object.defineProperty(window, 'Notification', {
@@ -113,9 +114,21 @@ global.fetch = jest.fn(() =>
 );
 
 describe('PWA Features - Comprehensive Testing', () => {
+  // Enable fake timers to fix timer-related issues
+  jest.useFakeTimers()
+  
   beforeEach(() => {
     jest.clearAllMocks();
     (fetch as jest.Mock).mockClear();
+    // Clear all timers before each test
+    jest.clearAllTimers();
+  });
+
+  afterEach(() => {
+    // Clean up timers after each test
+    jest.runOnlyPendingTimers();
+    jest.useRealTimers();
+    jest.useFakeTimers();
   });
 
   describe('Component Rendering', () => {
@@ -127,8 +140,8 @@ describe('PWA Features - Comprehensive Testing', () => {
       );
 
       // Check for basic PWA elements
-      expect(screen.getByTestId(T.pwa.status)).toBeInTheDocument();
-      expect(screen.getByTestId(T.pwa.installButton)).toBeInTheDocument();
+      expect(screen.getByTestId('pwa-features')).toBeInTheDocument();
+      expect(screen.getByTestId('offline-features')).toBeInTheDocument();
     });
 
     it('should not render when PWA is already installed and no features available', () => {
@@ -147,7 +160,8 @@ describe('PWA Features - Comprehensive Testing', () => {
         </BrowserRouter>
       );
 
-      expect(screen.getByTestId(T.pwa.installedStatus)).toBeInTheDocument();
+      // When PWA is installed and no features available, component returns null
+      expect(screen.queryByTestId('pwa-features')).not.toBeInTheDocument();
     });
 
     it('should render with custom className', () => {
@@ -157,7 +171,7 @@ describe('PWA Features - Comprehensive Testing', () => {
         </BrowserRouter>
       );
 
-      const container = screen.getByTestId(T.pwa.status);
+      const container = screen.getByTestId('pwa-features');
       expect(container).toHaveClass('custom-class');
     });
   });
@@ -179,22 +193,21 @@ describe('PWA Features - Comprehensive Testing', () => {
         </BrowserRouter>
       );
 
-      expect(screen.getByTestId(T.pwa.offlineIndicator)).toBeInTheDocument();
+      expect(screen.getByTestId('offline-features')).toBeInTheDocument();
     });
 
     it('should show offline polls when cached pages exist', () => {
       // Mock offline data with cached pages
-      jest.doMock('@/features/pwa/hooks/useOffline', () => ({
-        useOffline: () => ({
-          isOnline: false,
-          offlineData: {
-            cachedPages: ['poll-1', 'poll-2'],
-            queuedActions: [],
-          },
-          syncOfflineData: jest.fn(),
-          clearOfflineData: jest.fn(),
-        }),
-      }));
+      const { usePWAOffline } = require('@/lib/stores');
+      usePWAOffline.mockReturnValue({
+        isOnline: false,
+        offlineData: {
+          cachedPages: ['poll-1', 'poll-2'],
+          queuedActions: [],
+        },
+        syncOfflineData: jest.fn(),
+        clearOfflineData: jest.fn(),
+      });
 
       render(
         <BrowserRouter>
@@ -202,7 +215,7 @@ describe('PWA Features - Comprehensive Testing', () => {
         </BrowserRouter>
       );
 
-      expect(screen.getByTestId(T.pwa.offlinePolls)).toBeInTheDocument();
+      expect(screen.getByTestId('offline-polls')).toBeInTheDocument();
     });
 
     it('should show offline queue when queued actions exist', () => {
@@ -297,17 +310,15 @@ describe('PWA Features - Comprehensive Testing', () => {
   describe('PWA Installation', () => {
     it('should handle PWA installation', async () => {
       const user = userEvent.setup();
-      const mockInstall = jest.fn();
+      const mockInstall = jest.fn().mockResolvedValue(undefined);
       
       // Mock installation hook
-      jest.doMock('@/features/pwa/hooks/usePWAInstallation', () => ({
-        usePWAInstallation: () => ({
-          isInstalled: false,
-          canInstall: true,
-          install: mockInstall,
-          isInstalling: false,
-        }),
-      }));
+      (usePWAInstallation as jest.Mock).mockReturnValue({
+        isInstalled: false,
+        canInstall: true,
+        install: mockInstall,
+        isInstalling: false,
+      });
 
       render(
         <BrowserRouter>
@@ -318,8 +329,11 @@ describe('PWA Features - Comprehensive Testing', () => {
       const installButton = screen.getByTestId(T.pwa.installButton);
       await user.click(installButton);
       
-      expect(mockInstall).toHaveBeenCalled();
-    });
+      // Wait for async operation
+      await waitFor(() => {
+        expect(mockInstall).toHaveBeenCalled();
+      });
+    }, 5000);
 
     it('should show installation progress', () => {
       // Mock installing state
@@ -367,20 +381,18 @@ describe('PWA Features - Comprehensive Testing', () => {
   describe('Offline Data Management', () => {
     it('should sync offline data when online', async () => {
       const user = userEvent.setup();
-      const mockSyncOfflineData = jest.fn();
+      const mockSyncOfflineData = jest.fn().mockResolvedValue(undefined);
       
       // Mock offline hook with sync function
-      jest.doMock('@/features/pwa/hooks/useOffline', () => ({
-        useOffline: () => ({
-          isOnline: true,
-          offlineData: {
-            cachedPages: ['poll-1'],
-            queuedActions: ['action-1'],
-          },
-          syncOfflineData: mockSyncOfflineData,
-          clearOfflineData: jest.fn(),
-        }),
-      }));
+      (usePWAOffline as jest.Mock).mockReturnValue({
+        isOnline: true,
+        offlineData: {
+          cachedPages: ['poll-1'],
+          queuedActions: ['action-1'],
+        },
+        syncOfflineData: mockSyncOfflineData,
+        clearOfflineData: jest.fn(),
+      });
 
       render(
         <BrowserRouter>
@@ -391,25 +403,26 @@ describe('PWA Features - Comprehensive Testing', () => {
       const syncButton = screen.getByTestId(T.pwa.syncButton);
       await user.click(syncButton);
       
-      expect(mockSyncOfflineData).toHaveBeenCalled();
-    });
+      // Wait for async operation
+      await waitFor(() => {
+        expect(mockSyncOfflineData).toHaveBeenCalled();
+      });
+    }, 5000);
 
     it('should clear offline data', async () => {
       const user = userEvent.setup();
-      const mockClearOfflineData = jest.fn();
+      const mockClearOfflineData = jest.fn().mockResolvedValue(undefined);
       
       // Mock offline hook with clear function
-      jest.doMock('@/features/pwa/hooks/useOffline', () => ({
-        useOffline: () => ({
-          isOnline: false,
-          offlineData: {
-            cachedPages: ['poll-1'],
-            queuedActions: ['action-1'],
-          },
-          syncOfflineData: jest.fn(),
-          clearOfflineData: mockClearOfflineData,
-        }),
-      }));
+      (usePWAOffline as jest.Mock).mockReturnValue({
+        isOnline: false,
+        offlineData: {
+          cachedPages: ['poll-1'],
+          queuedActions: ['action-1'],
+        },
+        syncOfflineData: jest.fn(),
+        clearOfflineData: mockClearOfflineData,
+      });
 
       render(
         <BrowserRouter>
@@ -420,8 +433,11 @@ describe('PWA Features - Comprehensive Testing', () => {
       const clearButton = screen.getByTestId(T.pwa.clearButton);
       await user.click(clearButton);
       
-      expect(mockClearOfflineData).toHaveBeenCalled();
-    });
+      // Wait for async operation
+      await waitFor(() => {
+        expect(mockClearOfflineData).toHaveBeenCalled();
+      });
+    }, 5000);
   });
 
   describe('Notification Management', () => {
@@ -628,6 +644,8 @@ describe('PWA Features - Comprehensive Testing', () => {
     });
   });
 });
+
+
 
 
 

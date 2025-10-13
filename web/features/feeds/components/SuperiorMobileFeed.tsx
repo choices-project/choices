@@ -27,7 +27,7 @@ import {
   BookmarkIcon,
   AdjustmentsHorizontalIcon
 } from '@heroicons/react/24/outline';
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { 
   useFeeds, 
   useFeedsActions, 
@@ -96,7 +96,8 @@ export default function SuperiorMobileFeed({ userId, className = '' }: SuperiorM
       }
       // Use current feeds length instead of dependency
       const currentFeedsLength = feeds.length;
-      setHasMore(currentFeedsLength === 20); // Assuming 20 items per page
+      // Reduce page size for better performance
+      setHasMore(currentFeedsLength === 10); // Reduced from 20 to 10 items per page
     } catch (error) {
       console.error('Error loading feed items:', error);
       setError('Failed to load feed items. Please try again.');
@@ -234,25 +235,30 @@ export default function SuperiorMobileFeed({ userId, className = '' }: SuperiorM
 
   // loadFeedItems function is already defined above with useCallback
 
-  const loadAnalyticsData = async () => {
+  const loadAnalyticsData = useCallback(async () => {
     try {
       const response = await fetch('/api/civics/analytics');
       if (response && response.ok) {
-      const data = await response.json();
-      if (data.success) {
-        setAnalyticsData(data.analytics);
+        const data = await response.json();
+        if (data.success) {
+          setAnalyticsData(data.analytics);
         }
       }
     } catch (error) {
       console.error('Error loading analytics data:', error);
     }
-  };
+  }, []);
 
-  const handleLoadMore = async () => {
+  const handleLoadMore = useCallback(async () => {
     if (hasMore && !isLoading) {
       await loadFeedItems(page + 1);
     }
-  };
+  }, [hasMore, isLoading, page, loadFeedItems]);
+
+  // Memoize feed items to prevent unnecessary re-renders
+  const memoizedFeeds = useMemo(() => {
+    return feeds.slice(0, 50); // Limit to 50 items for performance
+  }, [feeds]);
 
   const handleRefresh = async () => {
     setPage(1);
@@ -273,9 +279,9 @@ export default function SuperiorMobileFeed({ userId, className = '' }: SuperiorM
     }
   };
 
-  const scrollToTop = () => {
+  const scrollToTop = useCallback(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
+  }, []);
 
   const handleRepresentativeClick = (representative: any) => {
     setSelectedRepresentative(representative);
@@ -534,7 +540,7 @@ export default function SuperiorMobileFeed({ userId, className = '' }: SuperiorM
               
               {/* Feed Items */}
               <div className="space-y-3" role="feed" aria-label="Civic activity feed">
-                {Array.isArray(feeds) && feeds.length > 0 ? feeds.map((item) => (
+                {Array.isArray(memoizedFeeds) && memoizedFeeds.length > 0 ? memoizedFeeds.map((item) => (
                     <article 
                       key={item.id} 
                       className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4"
@@ -837,7 +843,7 @@ export default function SuperiorMobileFeed({ userId, className = '' }: SuperiorM
             </div>
             {syncStatus === 'syncing' && (
               <div 
-                data-testid={T.accessibility.status} 
+                data-testid="sync-indicator" 
                 className="flex items-center space-x-1"
                 role="status"
                 aria-live="polite"
@@ -848,7 +854,7 @@ export default function SuperiorMobileFeed({ userId, className = '' }: SuperiorM
             )}
             {isLoading && (
               <div 
-                data-testid={T.accessibility.status} 
+                data-testid="loading-indicator" 
                 className="flex items-center space-x-1"
                 role="status"
                 aria-live="polite"
@@ -1107,7 +1113,7 @@ export default function SuperiorMobileFeed({ userId, className = '' }: SuperiorM
         <div 
           role="status" 
           className="fixed top-4 right-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded z-50"
-          data-testid={T.accessibility.status}
+          data-testid="status-message"
         >
           {statusMessage}
         </div>

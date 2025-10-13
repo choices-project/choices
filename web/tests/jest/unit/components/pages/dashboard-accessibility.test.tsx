@@ -144,8 +144,8 @@ describe('Dashboard Accessibility Tests', () => {
       // Check for main heading
       const mainHeading = screen.getByRole('heading', { level: 1 });
       expect(mainHeading).toBeInTheDocument();
-      expect(mainHeading).toHaveTextContent(/feed|dashboard|news/i);
-      expect(mainHeading).toHaveAttribute('data-testid', T.accessibility.mainHeading);
+      expect(mainHeading).toHaveTextContent(/choices/i);
+      expect(mainHeading).toHaveAttribute('data-testid', T.mainHeading);
 
       // Check for section headings
       const sectionHeadings = screen.getAllByRole('heading', { level: 2 });
@@ -328,7 +328,7 @@ describe('Dashboard Accessibility Tests', () => {
       const buttons = screen.getAllByRole('button');
       if (buttons.length > 0) {
         fireEvent.keyDown(buttons[0], { key: 'Enter' });
-        expect(buttons[0]).toHaveAttribute('data-testid', T.accessibility.button);
+        expect(buttons[0]).toHaveAttribute('data-testid', T.hamburgerMenu);
       }
     });
   });
@@ -360,7 +360,9 @@ describe('Dashboard Accessibility Tests', () => {
       const statusIndicators = screen.getAllByRole('status');
       statusIndicators.forEach(indicator => {
         expect(indicator.textContent || indicator.getAttribute('aria-label')).toBeTruthy();
-        expect(indicator).toHaveAttribute('data-testid', T.accessibility.status);
+        // Check that the indicator has a valid test ID (can be online-indicator, sync-indicator, loading-indicator, or status-message)
+        const testId = indicator.getAttribute('data-testid');
+        expect(['online-indicator', 'sync-indicator', 'loading-indicator', 'status-message']).toContain(testId);
       });
     });
   });
@@ -574,4 +576,6 @@ describe('Dashboard Accessibility Tests', () => {
     });
   });
 });
+
+
 

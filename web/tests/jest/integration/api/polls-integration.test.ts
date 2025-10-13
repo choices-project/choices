@@ -41,7 +41,7 @@ describe('Integration Tests - API + Database', () => {
     console.log('Integration: Logging in with real test user...');
     const { data, error } = await supabase.auth.signInWithPassword({
       email: 'test@example.com',
-      password: 'testpassword'
+      password: 'TestPassword123!'
     });
 
     if (error) {

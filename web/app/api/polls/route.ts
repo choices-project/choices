@@ -25,9 +25,12 @@ interface _PollData {
 // GET /api/polls - Get active polls with aggregated results only
 export async function GET(request: NextRequest) {
   try {
+    console.log('🔍 API Route: Calling getSupabaseServerClient...');
     const supabaseClient = await getSupabaseServerClient();
+    console.log('🔍 API Route: Supabase client result:', !!supabaseClient);
     
     if (!supabaseClient) {
+      console.log('🔍 API Route: Supabase client is null/undefined');
       return NextResponse.json(
         { error: 'Supabase client not available' },
         { status: 500 }
@@ -95,7 +98,11 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     devLog('Error in polls API:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { 
+        error: 'Internal server error',
+        details: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined
+      },
       { status: 500 }
     );
   }

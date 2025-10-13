@@ -12,6 +12,13 @@
 import { createClient } from '@supabase/supabase-js';
 import { config } from 'dotenv';
 
+// Simple logger for the script
+const logger = {
+  info: (message: string) => console.log(message),
+  error: (message: string) => console.error(message),
+  warn: (message: string) => console.warn(message)
+};
+
 // Load environment variables
 config({ path: '.env.local' });
 

@@ -193,6 +193,7 @@ const PrivacyStep: React.FC<{
           <button
             onClick={onBack}
             className="text-gray-500 hover:text-gray-700 transition-colors"
+            aria-label="Go back to previous step"
           >
             ← Back
           </button>
@@ -200,6 +201,7 @@ const PrivacyStep: React.FC<{
             onClick={onNext}
             data-testid={T.privacyNext}
             className="bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+            aria-label="Continue to next step"
           >
             Continue
           </button>

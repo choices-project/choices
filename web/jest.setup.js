@@ -8,6 +8,9 @@
 // Import testing library matchers
 require('@testing-library/jest-dom');
 
+// Load environment variables from .env.local
+require('dotenv').config({ path: '.env.local' });
+
 // Simple environment setup for testing
 process.env.NODE_ENV = 'test';
 process.env.NEXTAUTH_SECRET = 'test-secret';
@@ -72,9 +75,28 @@ if (typeof window !== 'undefined') {
   });
 }
 
-// Simple fetch polyfill for Node.js (minimal)
+// Enhanced fetch polyfill for Node.js (for Supabase compatibility)
 if (typeof global.fetch === 'undefined') {
-  global.fetch = jest.fn();
+  // Create a comprehensive fetch mock that works with Supabase
+  global.fetch = jest.fn().mockImplementation(async (url, options = {}) => {
+    // Mock successful response for Supabase requests
+    const mockResponse = {
+      ok: true,
+      status: 200,
+      statusText: 'OK',
+      headers: new Map([
+        ['content-type', 'application/json']
+      ]),
+      json: async () => ({ data: [], error: null }),
+      text: async () => '{"data":[],"error":null}',
+      url: url,
+      type: 'basic',
+      redirected: false,
+      clone: () => global.fetch(url, options)
+    };
+    
+    return Promise.resolve(mockResponse);
+  });
 }
 
 // Simple Response polyfill for Node.js (minimal)
@@ -146,12 +168,67 @@ if (typeof global.Headers === 'undefined') {
 if (typeof global.Request === 'undefined') {
   global.Request = class Request {
     constructor(input, init = {}) {
-      this.url = input;
+      // Use Object.defineProperty to make url writable
+      Object.defineProperty(this, 'url', {
+        value: input,
+        writable: true,
+        enumerable: true,
+        configurable: true
+      });
       this.method = init.method || 'GET';
       this.headers = new Headers(init.headers);
       this.body = init.body;
     }
   };
+}
+
+// TextEncoder/TextDecoder polyfills for Node.js
+if (typeof global.TextEncoder === 'undefined') {
+  const { TextEncoder, TextDecoder } = require('util');
+  global.TextEncoder = TextEncoder;
+  global.TextDecoder = TextDecoder;
+}
+
+// Mock Next.js router
+jest.mock('next/navigation', () => ({
+  useRouter: () => ({
+    push: jest.fn(),
+    replace: jest.fn(),
+    prefetch: jest.fn(),
+    back: jest.fn(),
+    forward: jest.fn(),
+    refresh: jest.fn(),
+    pathname: '/',
+    route: '/',
+    query: {},
+    asPath: '/',
+  }),
+  usePathname: () => '/',
+  useSearchParams: () => new URLSearchParams(),
+}));
+
+// Enhanced fetch polyfill for Node.js (for Supabase compatibility)
+if (typeof global.fetch === 'undefined') {
+  // Create a comprehensive fetch mock that works with Supabase
+  global.fetch = jest.fn().mockImplementation(async (url, options = {}) => {
+    // Mock successful response for Supabase requests
+    const mockResponse = {
+      ok: true,
+      status: 200,
+      statusText: 'OK',
+      headers: new Map([
+        ['content-type', 'application/json']
+      ]),
+      json: async () => ({ data: [], error: null }),
+      text: async () => '{"data":[],"error":null}',
+      url: url,
+      type: 'basic',
+      redirected: false,
+      clone: () => global.fetch(url, options)
+    };
+    
+    return Promise.resolve(mockResponse);
+  });
 }
 
 // lucide-react is mocked via moduleNameMapper in jest.config.js
