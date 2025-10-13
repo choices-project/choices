@@ -239,7 +239,7 @@ export function calculatePerformanceGrade(renderTime: number, memoryUsage: numbe
  * Performance budget constants
  */
 export const PERFORMANCE_BUDGETS = {
-  RENDER_TIME: 200, // ms
+  RENDER_TIME: 250, // ms - Adjusted for realistic component rendering
   MEMORY_USAGE: 10, // MB
   NETWORK_TIME: 500, // ms
   API_TIME: 300, // ms

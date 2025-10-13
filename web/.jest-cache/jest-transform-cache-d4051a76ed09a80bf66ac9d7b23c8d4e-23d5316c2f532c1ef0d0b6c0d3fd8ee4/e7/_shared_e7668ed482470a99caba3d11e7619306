@@ -1,0 +1,43 @@
+2c536d74554210336de3fe0fe6d6c405
+/**
+ * Shared Authentication Utilities
+ * 
+ * Common authentication functions used across API routes
+ */ "use strict";
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+function _export(target, all) {
+    for(var name in all)Object.defineProperty(target, name, {
+        enumerable: true,
+        get: all[name]
+    });
+}
+_export(exports, {
+    createCsrfErrorResponse: function() {
+        return createCsrfErrorResponse;
+    },
+    validateCsrfProtection: function() {
+        return validateCsrfProtection;
+    }
+});
+const _server = require("next/server");
+function validateCsrfProtection(request) {
+    // In test environment, always allow
+    if (process.env.NODE_ENV === "test" || process.env.NODE_ENV === "development") {
+        return true;
+    }
+    // In production, validate CSRF token
+    const csrfToken = request.headers.get("x-csrf-token");
+    const cookieToken = request.cookies.get("csrf-token")?.value;
+    return csrfToken === cookieToken;
+}
+function createCsrfErrorResponse() {
+    return _server.NextResponse.json({
+        error: "CSRF token validation failed"
+    }, {
+        status: 403
+    });
+}
+
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIi9Vc2Vycy9hbGF1Z2hpbmdraXRzdW5lL3NyYy9DaG9pY2VzL3dlYi9hcHAvYXBpL2F1dGgvX3NoYXJlZC50cyJdLCJzb3VyY2VzQ29udGVudCI6WyIvKipcbiAqIFNoYXJlZCBBdXRoZW50aWNhdGlvbiBVdGlsaXRpZXNcbiAqIFxuICogQ29tbW9uIGF1dGhlbnRpY2F0aW9uIGZ1bmN0aW9ucyB1c2VkIGFjcm9zcyBBUEkgcm91dGVzXG4gKi9cblxuaW1wb3J0IHsgTmV4dFJlcXVlc3QsIE5leHRSZXNwb25zZSB9IGZyb20gJ25leHQvc2VydmVyJztcblxuLyoqXG4gKiBWYWxpZGF0ZSBDU1JGIHByb3RlY3Rpb24gZm9yIHN0YXRlLWNoYW5naW5nIG9wZXJhdGlvbnNcbiAqIEluIGEgcmVhbCBpbXBsZW1lbnRhdGlvbiwgdGhpcyB3b3VsZCB2YWxpZGF0ZSBDU1JGIHRva2Vuc1xuICogRm9yIG5vdywgd2UnbGwgYWxsb3cgYWxsIHJlcXVlc3RzIGluIHRlc3QgZW52aXJvbm1lbnRcbiAqL1xuZXhwb3J0IGZ1bmN0aW9uIHZhbGlkYXRlQ3NyZlByb3RlY3Rpb24ocmVxdWVzdDogTmV4dFJlcXVlc3QpOiBib29sZWFuIHtcbiAgLy8gSW4gdGVzdCBlbnZpcm9ubWVudCwgYWx3YXlzIGFsbG93XG4gIGlmIChwcm9jZXNzLmVudi5OT0RFX0VOViA9PT0gJ3Rlc3QnIHx8IHByb2Nlc3MuZW52Lk5PREVfRU5WID09PSAnZGV2ZWxvcG1lbnQnKSB7XG4gICAgcmV0dXJuIHRydWU7XG4gIH1cbiAgXG4gIC8vIEluIHByb2R1Y3Rpb24sIHZhbGlkYXRlIENTUkYgdG9rZW5cbiAgY29uc3QgY3NyZlRva2VuID0gcmVxdWVzdC5oZWFkZXJzLmdldCgneC1jc3JmLXRva2VuJyk7XG4gIGNvbnN0IGNvb2tpZVRva2VuID0gcmVxdWVzdC5jb29raWVzLmdldCgnY3NyZi10b2tlbicpPy52YWx1ZTtcbiAgXG4gIHJldHVybiBjc3JmVG9rZW4gPT09IGNvb2tpZVRva2VuO1xufVxuXG4vKipcbiAqIENyZWF0ZSBDU1JGIGVycm9yIHJlc3BvbnNlXG4gKi9cbmV4cG9ydCBmdW5jdGlvbiBjcmVhdGVDc3JmRXJyb3JSZXNwb25zZSgpOiBOZXh0UmVzcG9uc2Uge1xuICByZXR1cm4gTmV4dFJlc3BvbnNlLmpzb24oXG4gICAgeyBlcnJvcjogJ0NTUkYgdG9rZW4gdmFsaWRhdGlvbiBmYWlsZWQnIH0sXG4gICAgeyBzdGF0dXM6IDQwMyB9XG4gICk7XG59XG4iXSwibmFtZXMiOlsiY3JlYXRlQ3NyZkVycm9yUmVzcG9uc2UiLCJ2YWxpZGF0ZUNzcmZQcm90ZWN0aW9uIiwicmVxdWVzdCIsInByb2Nlc3MiLCJlbnYiLCJOT0RFX0VOViIsImNzcmZUb2tlbiIsImhlYWRlcnMiLCJnZXQiLCJjb29raWVUb2tlbiIsImNvb2tpZXMiLCJ2YWx1ZSIsIk5leHRSZXNwb25zZSIsImpzb24iLCJlcnJvciIsInN0YXR1cyJdLCJtYXBwaW5ncyI6IkFBQUE7Ozs7Q0FJQzs7Ozs7Ozs7Ozs7SUF5QmVBLHVCQUF1QjtlQUF2QkE7O0lBaEJBQyxzQkFBc0I7ZUFBdEJBOzs7d0JBUDBCO0FBT25DLFNBQVNBLHVCQUF1QkMsT0FBb0I7SUFDekQsb0NBQW9DO0lBQ3BDLElBQUlDLFFBQVFDLEdBQUcsQ0FBQ0MsUUFBUSxLQUFLLFVBQVVGLFFBQVFDLEdBQUcsQ0FBQ0MsUUFBUSxLQUFLLGVBQWU7UUFDN0UsT0FBTztJQUNUO0lBRUEscUNBQXFDO0lBQ3JDLE1BQU1DLFlBQVlKLFFBQVFLLE9BQU8sQ0FBQ0MsR0FBRyxDQUFDO0lBQ3RDLE1BQU1DLGNBQWNQLFFBQVFRLE9BQU8sQ0FBQ0YsR0FBRyxDQUFDLGVBQWVHO0lBRXZELE9BQU9MLGNBQWNHO0FBQ3ZCO0FBS08sU0FBU1Q7SUFDZCxPQUFPWSxvQkFBWSxDQUFDQyxJQUFJLENBQ3RCO1FBQUVDLE9BQU87SUFBK0IsR0FDeEM7UUFBRUMsUUFBUTtJQUFJO0FBRWxCIn0=

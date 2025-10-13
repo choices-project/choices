@@ -10,6 +10,10 @@ import { createClient } from '@supabase/supabase-js';
 import { NextRequest } from 'next/server';
 import { GET, POST } from '@/app/api/polls/route';
 
+// Set real Supabase credentials directly for testing
+process.env.NEXT_PUBLIC_SUPABASE_URL = 'REDACTED';
+process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = 'REDACTED';
+
 // Use real Supabase client with real credentials
 let supabase: any;
 

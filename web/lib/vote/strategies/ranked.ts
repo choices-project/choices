@@ -180,7 +180,31 @@ export class RankedStrategy implements VotingStrategy {
     try {
       const startTime = Date.now();
       
-      // Initialize tracking objects
+      // Import IRV calculator for proper ranked choice implementation
+      const { IRVCalculator } = await import('../irv-calculator');
+      
+      // Convert poll options to candidates format
+      const candidates = poll.options.map(option => ({
+        id: option.id,
+        name: option.text,
+        description: option.description || ''
+      }));
+
+      // Convert votes to user rankings format
+      const userRankings = votes
+        .filter(vote => vote.voteData.rankings && vote.voteData.rankings.length > 0)
+        .map(vote => ({
+          pollId: poll.id,
+          userId: vote.userId,
+          ranking: vote.voteData.rankings.map(index => poll.options[index]?.id).filter(Boolean),
+          createdAt: new Date(vote.timestamp)
+        }));
+
+      // Create IRV calculator and calculate results
+      const calculator = new IRVCalculator(poll.id, candidates);
+      const irvResults = calculator.calculateResults(userRankings);
+
+      // Convert IRV results to our format
       const optionVotes: Record<string, number> = {};
       const optionPercentages: Record<string, number> = {};
 
@@ -190,18 +214,15 @@ export class RankedStrategy implements VotingStrategy {
         optionPercentages[option.id] = 0;
       });
 
-      // Process each vote to count first choices
-      votes.forEach(vote => {
-        if (vote.voteData.rankings && vote.voteData.rankings.length > 0) {
-          const firstChoice = vote.voteData.rankings[0];
-          const optionId = poll.options[firstChoice]?.id;
-          if (optionId) {
-            optionVotes[optionId]++;
-          }
-        }
-      });
+      // Count votes from first round
+      if (irvResults.rounds.length > 0) {
+        const firstRound = irvResults.rounds[0];
+        Object.entries(firstRound.votes).forEach(([optionId, votes]) => {
+          optionVotes[optionId] = votes;
+        });
+      }
 
-      const totalVotes = votes.length;
+      const totalVotes = irvResults.totalVotes;
 
       // Calculate percentages
       if (totalVotes > 0) {
@@ -211,20 +232,10 @@ export class RankedStrategy implements VotingStrategy {
         });
       }
 
-      // Find winner (highest first choice votes)
-      let winner: string | undefined;
-      let winnerVotes = 0;
-      let winnerPercentage = 0;
-
-      if (totalVotes > 0) {
-        Object.entries(optionVotes).forEach(([optionId, votes]) => {
-          if (votes > winnerVotes) {
-            winner = optionId;
-            winnerVotes = votes;
-            winnerPercentage = optionPercentages[optionId] || 0;
-          }
-        });
-      }
+      // Get winner from IRV results
+      const winner = irvResults.winner;
+      const winnerVotes = winner ? optionVotes[winner] || 0 : 0;
+      const winnerPercentage = winner ? optionPercentages[winner] || 0 : 0;
 
       const results: PollResults = {
         winner,
@@ -236,12 +247,13 @@ export class RankedStrategy implements VotingStrategy {
         abstentionPercentage: 0
       };
 
-      devLog('Ranked results calculated', {
+      devLog('Ranked results calculated with IRV', {
         pollId: poll.id,
         totalVotes,
         winner,
         winnerVotes,
         winnerPercentage,
+        rounds: irvResults.rounds.length,
         calculationTime: Date.now() - startTime
       });
 
@@ -254,7 +266,11 @@ export class RankedStrategy implements VotingStrategy {
         calculatedAt: new Date().toISOString(),
         metadata: {
           calculationTime: Date.now() - startTime,
-          method: 'ranked'
+          method: 'ranked',
+          rounds: irvResults.rounds.length,
+          eliminated: irvResults.rounds
+            .filter(round => round.eliminated)
+            .map(round => round.eliminated!)
         }
       };
 

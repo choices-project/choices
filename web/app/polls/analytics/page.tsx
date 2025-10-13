@@ -81,16 +81,16 @@ export default function PollAnalyticsPage() {
         status: filters.status
       })
 
-      const response = await fetch(`/api/polls/analytics?${queryParams}`)
+      const response = await fetch(`/api/analytics?type=poll&${queryParams}`)
       if (!response.ok) {
         throw new Error('Failed to load analytics data')
       }
 
       const data = await response.json()
-      setAnalytics(data.analytics)
+      setAnalytics(data.data || [])
       
-      if (data.analytics.length > 0 && !selectedPoll) {
-        setSelectedPoll(data.analytics[0].pollid)
+      if (data.data && data.data.length > 0 && !selectedPoll) {
+        setSelectedPoll(data.data[0].pollid)
       }
     } catch (error) {
       logger.error('Error loading analytics', error instanceof Error ? error : new Error(String(error)))

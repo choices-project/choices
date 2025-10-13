@@ -52,15 +52,15 @@ export function PrivacyStatusBadge() {
   useEffect(() => {
     const checkPrivacyStatus = async () => {
       try {
-        // Call actual health check API
+        // Call consolidated health check API
         try {
-          const response = await fetch('/api/health/civics');
+          const response = await fetch('/api/health?type=civics');
           if (response.ok) {
             const data = await response.json();
             setStatus({
               status: data.status || 'healthy',
               message: data.message || 'Privacy protections active',
-              details: data.details || {
+              details: data.checks || {
                 pepper: true,
                 rls: true,
                 auth: true

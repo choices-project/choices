@@ -222,16 +222,16 @@ describe('Hashtag Moderation System - Basic Verification', () => {
   it('should validate API endpoint structure', () => {
     // Test that our API endpoints have the correct structure
     const apiEndpoints = {
-      flag: '/api/hashtags/flag',
-      moderate: '/api/hashtags/moderate',
-      queue: '/api/hashtags/moderation/queue',
-      status: '/api/hashtags/[id]/moderation'
+      flag: '/api/hashtags?action=flag',
+      moderate: '/api/hashtags?action=moderate',
+      queue: '/api/hashtags?action=moderation-queue',
+      status: '/api/hashtags?action=moderation'
     };
 
-    expect(apiEndpoints.flag).toBe('/api/hashtags/flag');
-    expect(apiEndpoints.moderate).toBe('/api/hashtags/moderate');
-    expect(apiEndpoints.queue).toBe('/api/hashtags/moderation/queue');
-    expect(apiEndpoints.status).toBe('/api/hashtags/[id]/moderation');
+    expect(apiEndpoints.flag).toBe('/api/hashtags?action=flag');
+    expect(apiEndpoints.moderate).toBe('/api/hashtags?action=moderate');
+    expect(apiEndpoints.queue).toBe('/api/hashtags?action=moderation-queue');
+    expect(apiEndpoints.status).toBe('/api/hashtags?action=moderation');
   });
 
   it('should validate component props structure', () => {

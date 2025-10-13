@@ -1,0 +1,27 @@
+e99bab5972ab33acd102aa8bf68cd812
+// Mock for lucide-react to avoid ESM import issues in Jest
+"use strict";
+const React = require("react");
+const createMockIcon = (name)=>{
+    return function MockIcon(props) {
+        return React.createElement("div", {
+            "data-testid": `${name.toLowerCase()}-icon`,
+            ...props
+        }, name);
+    };
+};
+module.exports = {
+    Bell: createMockIcon("Bell"),
+    Menu: createMockIcon("Menu"),
+    Home: createMockIcon("Home"),
+    Settings: createMockIcon("Settings"),
+    Fingerprint: createMockIcon("Fingerprint"),
+    X: createMockIcon("X"),
+    Shield: createMockIcon("Shield"),
+    User: createMockIcon("User"),
+    LogOut: createMockIcon("LogOut"),
+    Vote: createMockIcon("Vote"),
+    BarChart3: createMockIcon("BarChart3")
+};
+
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIi9Vc2Vycy9hbGF1Z2hpbmdraXRzdW5lL3NyYy9DaG9pY2VzL3dlYi9fX21vY2tzX18vbHVjaWRlLXJlYWN0LmpzIl0sInNvdXJjZXNDb250ZW50IjpbIi8vIE1vY2sgZm9yIGx1Y2lkZS1yZWFjdCB0byBhdm9pZCBFU00gaW1wb3J0IGlzc3VlcyBpbiBKZXN0XG5jb25zdCBSZWFjdCA9IHJlcXVpcmUoJ3JlYWN0Jyk7XG5cbmNvbnN0IGNyZWF0ZU1vY2tJY29uID0gKG5hbWUpID0+IHtcbiAgcmV0dXJuIGZ1bmN0aW9uIE1vY2tJY29uKHByb3BzKSB7XG4gICAgcmV0dXJuIFJlYWN0LmNyZWF0ZUVsZW1lbnQoJ2RpdicsIHtcbiAgICAgICdkYXRhLXRlc3RpZCc6IGAke25hbWUudG9Mb3dlckNhc2UoKX0taWNvbmAsXG4gICAgICAuLi5wcm9wc1xuICAgIH0sIG5hbWUpO1xuICB9O1xufTtcblxubW9kdWxlLmV4cG9ydHMgPSB7XG4gIEJlbGw6IGNyZWF0ZU1vY2tJY29uKCdCZWxsJyksXG4gIE1lbnU6IGNyZWF0ZU1vY2tJY29uKCdNZW51JyksXG4gIEhvbWU6IGNyZWF0ZU1vY2tJY29uKCdIb21lJyksXG4gIFNldHRpbmdzOiBjcmVhdGVNb2NrSWNvbignU2V0dGluZ3MnKSxcbiAgRmluZ2VycHJpbnQ6IGNyZWF0ZU1vY2tJY29uKCdGaW5nZXJwcmludCcpLFxuICBYOiBjcmVhdGVNb2NrSWNvbignWCcpLFxuICBTaGllbGQ6IGNyZWF0ZU1vY2tJY29uKCdTaGllbGQnKSxcbiAgVXNlcjogY3JlYXRlTW9ja0ljb24oJ1VzZXInKSxcbiAgTG9nT3V0OiBjcmVhdGVNb2NrSWNvbignTG9nT3V0JyksXG4gIFZvdGU6IGNyZWF0ZU1vY2tJY29uKCdWb3RlJyksXG4gIEJhckNoYXJ0MzogY3JlYXRlTW9ja0ljb24oJ0JhckNoYXJ0MycpLFxuICAvLyBBZGQgb3RoZXIgY29tbW9ubHkgdXNlZCBpY29ucyBhcyBuZWVkZWRcbn07XG5cblxuIl0sIm5hbWVzIjpbIlJlYWN0IiwicmVxdWlyZSIsImNyZWF0ZU1vY2tJY29uIiwibmFtZSIsIk1vY2tJY29uIiwicHJvcHMiLCJjcmVhdGVFbGVtZW50IiwidG9Mb3dlckNhc2UiLCJtb2R1bGUiLCJleHBvcnRzIiwiQmVsbCIsIk1lbnUiLCJIb21lIiwiU2V0dGluZ3MiLCJGaW5nZXJwcmludCIsIlgiLCJTaGllbGQiLCJVc2VyIiwiTG9nT3V0IiwiVm90ZSIsIkJhckNoYXJ0MyJdLCJtYXBwaW5ncyI6IkFBQUEsMkRBQTJEOztBQUMzRCxNQUFNQSxRQUFRQyxRQUFRO0FBRXRCLE1BQU1DLGlCQUFpQixDQUFDQztJQUN0QixPQUFPLFNBQVNDLFNBQVNDLEtBQUs7UUFDNUIsT0FBT0wsTUFBTU0sYUFBYSxDQUFDLE9BQU87WUFDaEMsZUFBZSxDQUFDLEVBQUVILEtBQUtJLFdBQVcsR0FBRyxLQUFLLENBQUM7WUFDM0MsR0FBR0YsS0FBSztRQUNWLEdBQUdGO0lBQ0w7QUFDRjtBQUVBSyxPQUFPQyxPQUFPLEdBQUc7SUFDZkMsTUFBTVIsZUFBZTtJQUNyQlMsTUFBTVQsZUFBZTtJQUNyQlUsTUFBTVYsZUFBZTtJQUNyQlcsVUFBVVgsZUFBZTtJQUN6QlksYUFBYVosZUFBZTtJQUM1QmEsR0FBR2IsZUFBZTtJQUNsQmMsUUFBUWQsZUFBZTtJQUN2QmUsTUFBTWYsZUFBZTtJQUNyQmdCLFFBQVFoQixlQUFlO0lBQ3ZCaUIsTUFBTWpCLGVBQWU7SUFDckJrQixXQUFXbEIsZUFBZTtBQUU1QiJ9

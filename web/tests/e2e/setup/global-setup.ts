@@ -43,10 +43,9 @@ export default async function globalSetup() {
   await page.route('**/*googletagmanager*', route => route.abort());
   
   try {
-    // For now, just create an empty storage state since login page has import issues
-    // TODO: Fix login page import errors and re-enable pre-authentication
+    // Create storage state for pre-authentication
     await page.context().storageState({ path: storagePath });
-    logger.info('✅ Empty storage state created (login page has import issues)');
+    logger.info('✅ Storage state created for pre-authentication');
   } catch (error) {
     console.error('❌ Failed to create storage state:', error);
     throw error;

@@ -18,15 +18,6 @@ const customJestConfig = {
     '<rootDir>/tests/jest/**/*.test.{js,jsx,ts,tsx}',
     '<rootDir>/tests/jest/**/*.spec.{js,jsx,ts,tsx}',
   ],
-  moduleNameMapper: {
-    '^@/(.*)$': '<rootDir>/$1',
-    '^@/features/(.*)$': '<rootDir>/features/$1',
-    '^@/components/(.*)$': '<rootDir>/components/$1',
-    '^@/lib/(.*)$': '<rootDir>/lib/$1',
-    '^@/hooks/(.*)$': '<rootDir>/hooks/$1',
-    '^@/types/(.*)$': '<rootDir>/types/$1',
-    '^@/utils/(.*)$': '<rootDir>/utils/$1',
-  },
   collectCoverageFrom: [
     'app/**/*.{js,jsx,ts,tsx}',
     'lib/**/*.{js,jsx,ts,tsx}',
@@ -50,16 +41,22 @@ const customJestConfig = {
   transformIgnorePatterns: [
     'node_modules/(?!(lucide-react|@radix-ui|@headlessui|@floating-ui)/)',
   ],
-  // Force transform ESM modules
-  extensionsToTreatAsEsm: ['.ts', '.tsx'],
-  globals: {
-    'ts-jest': {
-      useESM: true,
-    },
+  // Specifically transform lucide-react ESM modules
+  moduleNameMapper: {
+    '^@/(.*)$': '<rootDir>/$1',
+    '^@/features/(.*)$': '<rootDir>/features/$1',
+    '^@/components/(.*)$': '<rootDir>/components/$1',
+    '^@/lib/(.*)$': '<rootDir>/lib/$1',
+    '^@/hooks/(.*)$': '<rootDir>/hooks/$1',
+    '^@/types/(.*)$': '<rootDir>/types/$1',
+    '^@/utils/(.*)$': '<rootDir>/utils/$1',
+    '^lucide-react$': '<rootDir>/__mocks__/lucide-react.js',
+    '^lucide-react/dist/esm/icons/(.*)$': '<rootDir>/__mocks__/lucide-react.js',
   },
-  // Module transformation
+  // Force transform lucide-react and other ESM modules
   transform: {
-    '^.+\\.(js|jsx|ts|tsx)$': ['babel-jest', { configFile: './babel.config.js' }],
+    '^.+\\.(js|jsx|ts|tsx)$': ['babel-jest', { presets: ['next/babel'] }],
+    '^.+\\.mjs$': ['babel-jest', { presets: ['next/babel'] }],
   },
   // Test timeout
   testTimeout: 10000,

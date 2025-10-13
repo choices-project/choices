@@ -26,6 +26,13 @@ interface _PollData {
 export async function GET(request: NextRequest) {
   try {
     const supabaseClient = await getSupabaseServerClient();
+    
+    if (!supabaseClient) {
+      return NextResponse.json(
+        { error: 'Supabase client not available' },
+        { status: 500 }
+      );
+    }
 
     const { searchParams } = new URL(request.url);
     const limit = parseInt(searchParams.get('limit') || '20');

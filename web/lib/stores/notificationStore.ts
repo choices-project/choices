@@ -147,26 +147,30 @@ export const useNotificationStore = create<NotificationStore>()(
           }, newNotification.duration || state.settings.duration);
         }
         
-        // Play sound if enabled
+        // Play sound if enabled (defer to avoid act() warnings)
         if (state.settings.enableSound && typeof window !== 'undefined') {
-          try {
-            const audio = new Audio('/sounds/notification.mp3');
-            audio.volume = 0.3;
-            audio.play().catch(() => {
-              // Ignore audio play errors
-            });
-          } catch {
-            // Ignore audio errors
-          }
+          setTimeout(() => {
+            try {
+              const audio = new Audio('/sounds/notification.mp3');
+              audio.volume = 0.3;
+              audio.play().catch(() => {
+                // Ignore audio play errors
+              });
+            } catch {
+              // Ignore audio errors
+            }
+          }, 0);
         }
         
-        // Haptic feedback if enabled
+        // Haptic feedback if enabled (defer to avoid act() warnings)
         if (state.settings.enableHaptics && typeof window !== 'undefined' && 'vibrate' in navigator) {
-          try {
-            navigator.vibrate(50);
-          } catch {
-            // Ignore vibration errors
-          }
+          setTimeout(() => {
+            try {
+              navigator.vibrate(50);
+            } catch {
+              // Ignore vibration errors
+            }
+          }, 0);
         }
         
       }),

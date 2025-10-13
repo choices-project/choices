@@ -321,7 +321,7 @@ export function ModerationQueue({
       if (status) params.append('status', status);
       params.append('limit', limit.toString());
 
-      const response = await fetch(`/api/hashtags/moderation/queue?${params}`);
+      const response = await fetch(`/api/hashtags?action=moderation-queue&${params}`);
       const result = await response.json();
 
       if (result.success) {
@@ -343,7 +343,7 @@ export function ModerationQueue({
 
   const handleModerationAction = async (hashtagId: string, action: string) => {
     try {
-      const response = await fetch('/api/hashtags/moderate', {
+      const response = await fetch('/api/hashtags?action=moderate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -486,7 +486,7 @@ export default function HashtagModeration({
     setError(null);
 
     try {
-      const response = await fetch(`/api/hashtags/${hashtagId}/moderation`);
+      const response = await fetch(`/api/hashtags?action=moderation&hashtagId=${hashtagId}`);
       const result = await response.json();
 
       if (result.success) {
@@ -583,7 +583,7 @@ export default function HashtagModeration({
 
   async function handleModerationAction(status: string) {
     try {
-      const response = await fetch('/api/hashtags/moderate', {
+      const response = await fetch('/api/hashtags?action=moderate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

@@ -49,6 +49,11 @@ export default function PWAFeatures({ className = '', showDetails = false }: PWA
     }
   }, [])
 
+  // Handle undefined store hooks gracefully
+  if (!installation || !offline) {
+    return null
+  }
+
   if (!installation.isInstalled && !installation.canInstall) {
     return null
   }
@@ -61,21 +66,21 @@ export default function PWAFeatures({ className = '', showDetails = false }: PWA
       </div>
 
       {/* Offline Polls */}
-      {offline.offlineData.cachedPages.length > 0 && (
+      {offline.offlineData?.cachedPages?.length > 0 && (
         <div data-testid="offline-polls">
           <OfflineVoting pollId="test-poll" />
         </div>
       )}
 
       {/* Offline Queue */}
-      {offline.offlineData.queuedActions.length > 0 && (
+      {offline.offlineData?.queuedActions?.length > 0 && (
         <div data-testid="offline-queue">
           <OfflineQueue />
         </div>
       )}
 
       {/* Offline Sync */}
-      {offline.offlineData.cachedPages.length > 0 && (
+      {offline.offlineData?.cachedPages?.length > 0 && (
         <div data-testid="offline-sync">
           <OfflineSync />
         </div>

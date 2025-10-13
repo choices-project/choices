@@ -1,41 +1,205 @@
-import type { NextRequest} from 'next/server';
-import { NextResponse } from 'next/server'
+/**
+ * Consolidated Analytics API Endpoint
+ * 
+ * This endpoint consolidates all analytics functionality:
+ * - General analytics with auth
+ * - Public statistics
+ * - Analytics summary
+ * - Poll-specific analytics
+ * - User-specific analytics
+ * 
+ * Usage:
+ * GET /api/analytics - General analytics (requires admin auth)
+ * GET /api/analytics?type=public - Public statistics (no auth required)
+ * GET /api/analytics?type=summary - Analytics summary (no auth required)
+ * GET /api/analytics?type=poll&id={pollId} - Poll-specific analytics (requires admin auth)
+ * GET /api/analytics?type=user&id={userId} - User-specific analytics (requires admin auth)
+ */
 
-import { withAuth, createRateLimitMiddleware, combineMiddleware } from '@/lib/core/auth/middleware'
-import { getQueryOptimizer, withPerformanceMonitoring } from '@/lib/core/database/optimizer'
+import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
+import { withAuth, createRateLimitMiddleware, combineMiddleware } from '@/lib/core/auth/middleware';
+import { getQueryOptimizer, withPerformanceMonitoring } from '@/lib/core/database/optimizer';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 import { logger } from '@/lib/utils/logger';
+import { AnalyticsService } from '@/lib/services/analytics-service';
 
-export const dynamic = 'force-dynamic'
+export const dynamic = 'force-dynamic';
 
 // Rate limiting: 60 requests per minute per IP
 const rateLimitMiddleware = createRateLimitMiddleware({
   maxRequests: 60,
   windowMs: 60 * 1000
-})
+});
 
 // Combined middleware: rate limiting + admin auth
-const middleware = combineMiddleware(rateLimitMiddleware)
+const middleware = combineMiddleware(rateLimitMiddleware);
 
-export const GET = withAuth(async (request: NextRequest, _context) => {
+export const GET = withAuth(async (request: NextRequest, context) => {
   try {
-    // Apply rate limiting
-    const rateLimitResult = await middleware(request)
-    if (rateLimitResult) {
-      return rateLimitResult
+    const { searchParams } = new URL(request.url);
+    const type = searchParams.get('type') || 'general';
+    const id = searchParams.get('id');
+    const period = searchParams.get('period') || '7d';
+
+    // Public statistics (no auth required)
+    if (type === 'public') {
+      try {
+        const supabase = await getSupabaseServerClient();
+        
+        // Get total polls
+        const { count: totalPolls, error: pollsError } = await supabase
+          .from('polls')
+          .select('*', { count: 'exact', head: true })
+          .eq('is_active', true);
+        
+        if (pollsError) {
+          logger.error('Error fetching total polls:', pollsError);
+        }
+        
+        // Get total votes across all polls
+        const { data: pollsWithVotes, error: votesError } = await supabase
+          .from('polls')
+          .select('total_votes')
+          .eq('is_active', true);
+        
+        if (votesError) {
+          logger.error('Error fetching total votes:', votesError);
+        }
+        
+        const totalVotes = pollsWithVotes?.reduce((sum: number, poll: { total_votes: number | null }) => sum + (poll.total_votes || 0), 0) || 0;
+        
+        // Get active users (users who have voted in the last 30 days)
+        const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+        const { count: activeUsers, error: usersError } = await supabase
+          .from('votes')
+          .select('user_id', { count: 'exact', head: true })
+          .gte('created_at', thirtyDaysAgo)
+          .not('user_id', 'is', null);
+        
+        if (usersError) {
+          logger.error('Error fetching active users:', usersError);
+        }
+        
+        return NextResponse.json({
+          totalPolls: totalPolls || 0,
+          totalVotes,
+          activeUsers: activeUsers || 0,
+          generatedAt: new Date().toISOString(),
+          type: 'public'
+        });
+        
+      } catch (error) {
+        const err = error instanceof Error ? error : new Error(String(error));
+        logger.error('Error in public stats API:', err);
+        return NextResponse.json({
+          totalPolls: 0,
+          totalVotes: 0,
+          activeUsers: 0,
+          error: 'Failed to fetch public statistics'
+        }, { status: 500 });
+      }
     }
 
-    // Get query parameters
-    const { searchParams } = new URL(request.url)
-    const period = searchParams.get('period') || '7d' // 7d, 30d, 90d, 1y
+    // Analytics summary (no auth required)
+    if (type === 'summary') {
+      try {
+        const analyticsService = AnalyticsService.getInstance();
+        const summary = await analyticsService.getAnalyticsSummary();
 
+        return NextResponse.json({
+          success: true,
+          data: summary,
+          generatedAt: new Date().toISOString(),
+          type: 'summary'
+        });
+
+      } catch (error) {
+        logger.error('Error getting analytics summary:', error);
+        return NextResponse.json(
+          { error: 'Failed to get analytics summary' },
+          { status: 500 }
+        );
+      }
+    }
+
+    // Poll-specific analytics (requires admin auth)
+    if (type === 'poll') {
+      if (!id) {
+        return NextResponse.json(
+          { error: 'Poll ID is required for poll analytics' },
+          { status: 400 }
+        );
+      }
+
+      try {
+        const analyticsService = AnalyticsService.getInstance();
+        const pollAnalytics = await analyticsService.getPollAnalytics(id);
+
+        return NextResponse.json({
+          success: true,
+          data: pollAnalytics,
+          generatedAt: new Date().toISOString(),
+          type: 'poll',
+          pollId: id
+        });
+
+      } catch (error) {
+        logger.error('Error getting poll analytics:', error);
+        return NextResponse.json(
+          { error: 'Failed to get poll analytics' },
+          { status: 500 }
+        );
+      }
+    }
+
+    // User-specific analytics (requires admin auth)
+    if (type === 'user') {
+      if (!id) {
+        return NextResponse.json(
+          { error: 'User ID is required for user analytics' },
+          { status: 400 }
+        );
+      }
+
+      try {
+        const analyticsService = AnalyticsService.getInstance();
+        const userAnalytics = await analyticsService.getUserAnalytics(id);
+
+        return NextResponse.json({
+          success: true,
+          data: userAnalytics,
+          generatedAt: new Date().toISOString(),
+          type: 'user',
+          userId: id
+        });
+
+      } catch (error) {
+        logger.error('Error getting user analytics:', error);
+        return NextResponse.json(
+          { error: 'Failed to get user analytics' },
+          { status: 500 }
+        );
+      }
+    }
+
+    // General analytics (requires admin auth)
+    if (type === 'general') {
+    // Apply rate limiting
+      const rateLimitResult = await middleware(request);
+    if (rateLimitResult) {
+        return rateLimitResult;
+    }
+
+      try {
     // Use optimized analytics query with performance monitoring
-    const queryOptimizer = await getQueryOptimizer()
+        const queryOptimizer = await getQueryOptimizer();
     const getAnalyticsOptimized = withPerformanceMonitoring(
       () => queryOptimizer.getAnalytics(period),
       'analytics_query'
-    )
+        );
 
-    const analyticsData = await getAnalyticsOptimized()
+        const analyticsData = await getAnalyticsOptimized();
 
     return NextResponse.json({
       ...analyticsData,
@@ -43,17 +207,43 @@ export const GET = withAuth(async (request: NextRequest, _context) => {
       performance: {
         queryOptimized: true,
         cacheEnabled: true
+          },
+          type: 'general',
+          period
+        });
+
+      } catch (error) {
+        const err = error instanceof Error ? error : new Error(String(error));
+        logger.error('Analytics API error:', err);
+        
+        return NextResponse.json(
+          { message: 'Internal server error' },
+          { status: 500 }
+        );
       }
-    })
+    }
+
+    // Invalid type parameter
+    return NextResponse.json({
+      error: 'Invalid type parameter. Valid types: general, public, summary, poll, user',
+      generatedAt: new Date().toISOString()
+    }, { status: 400 });
 
   } catch (error) {
-    // narrow 'unknown' → Error
     const err = error instanceof Error ? error : new Error(String(error));
-    logger.error('Analytics API error:', err)
+    logger.error('Analytics API error:', err);
     
     return NextResponse.json(
       { message: 'Internal server error' },
       { status: 500 }
-    )
+    );
   }
-}, { requireAdmin: true })
+}, { requireAdmin: true });
+
+// Handle unsupported methods
+export async function POST() {
+  return NextResponse.json({
+    error: 'Method not allowed. Use GET for analytics queries.',
+    generatedAt: new Date().toISOString()
+  }, { status: 405 });
+}

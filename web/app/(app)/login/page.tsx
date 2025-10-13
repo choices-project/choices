@@ -16,7 +16,7 @@ function LoginButton() {
   return (
     <button
       type="submit"
-      data-testid="login-submit"
+      data-testid={T.login.submit}
       aria-label="Sign in"
       disabled={pending}
       className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-150 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed"
@@ -40,7 +40,7 @@ function LoginForm() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         {/* Hydration sentinel for E2E tests */}
-        <div data-testid="login-hydrated" hidden>{'1'}</div>
+        <div data-testid={T.loginHydrated} hidden>{'1'}</div>
         <div>
           <h1 className="mt-6 text-center text-4xl font-extrabold text-gray-900">
             Sign in to your account
@@ -50,11 +50,11 @@ function LoginForm() {
           </p>
         </div>
 
-        <form action={loginAction} className="mt-8 space-y-6" data-testid="login-form">
+        <form action={loginAction} className="mt-8 space-y-6" data-testid={T.loginForm}>
           {error && (
             <div 
               className="bg-red-50 border border-red-200 rounded-md p-4" 
-              data-testid="login-error"
+              data-testid={T.loginError}
               role="alert"
               aria-live="assertive"
             >
@@ -96,7 +96,7 @@ function LoginForm() {
                   required
                   className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                   placeholder="your@email.com"
-                  data-testid="login-email"
+                  data-testid={T.login.email}
                 />
                 <User className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
               </div>
@@ -115,7 +115,7 @@ function LoginForm() {
                   onChange={(e) => setPassword(e.target.value)}
                   className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                   placeholder="••••••••"
-                  data-testid="login-password"
+                  data-testid={T.login.password}
                 />
                 <Lock className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
                 <button

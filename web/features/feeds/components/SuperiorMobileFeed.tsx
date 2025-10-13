@@ -198,7 +198,7 @@ export default function SuperiorMobileFeed({ userId, className = '' }: SuperiorM
       });
       
       // Send subscription to server
-      await fetch('/api/pwa/notifications/subscribe', {
+      await fetch('/api/pwa?action=subscribe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(subscription)
@@ -215,7 +215,7 @@ export default function SuperiorMobileFeed({ userId, className = '' }: SuperiorM
     
     setSyncStatus('syncing');
     try {
-      const response = await fetch('/api/pwa/offline/sync', {
+      const response = await fetch('/api/pwa?action=sync', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId, lastSync: lastSync?.toISOString() })
@@ -338,6 +338,36 @@ export default function SuperiorMobileFeed({ userId, className = '' }: SuperiorM
   const handleBookmark = (representative: any) => {
     devLog('Bookmark representative:', representative.name);
     // Implement bookmark functionality
+    try {
+      // Get existing bookmarks from localStorage
+      const existingBookmarks = JSON.parse(localStorage.getItem('bookmarkedRepresentatives') || '[]');
+      
+      // Check if already bookmarked
+      const isBookmarked = existingBookmarks.some((bookmark: any) => bookmark.id === representative.id);
+      
+      if (isBookmarked) {
+        // Remove bookmark
+        const updatedBookmarks = existingBookmarks.filter((bookmark: any) => bookmark.id !== representative.id);
+        localStorage.setItem('bookmarkedRepresentatives', JSON.stringify(updatedBookmarks));
+        alert('Representative removed from bookmarks');
+      } else {
+        // Add bookmark
+        const bookmarkData = {
+          id: representative.id,
+          name: representative.name,
+          office: representative.office,
+          state: representative.state,
+          party: representative.party,
+          bookmarkedAt: new Date().toISOString()
+        };
+        existingBookmarks.push(bookmarkData);
+        localStorage.setItem('bookmarkedRepresentatives', JSON.stringify(existingBookmarks));
+        alert('Representative bookmarked!');
+      }
+    } catch (error) {
+      devLog('Bookmark operation failed:', error);
+      alert('Failed to bookmark representative');
+    }
   };
 
   // Accessibility helper functions
@@ -746,10 +776,10 @@ export default function SuperiorMobileFeed({ userId, className = '' }: SuperiorM
     <div className={`min-h-screen bg-gray-50 dark:bg-gray-900 ${className}`}>
       {/* Mobile Header */}
       <div className="md:hidden flex items-center justify-between p-4 bg-white dark:bg-gray-800 shadow-sm">
-        <button 
+        <button
           type="button"
           onClick={() => setSidebarOpen(true)} 
-          data-testid={T.accessibility.button}
+          data-testid={T.hamburgerMenu}
           className="p-3 rounded-md text-gray-700 dark:text-gray-300 min-w-[44px] min-h-[44px]"
           aria-label="Open navigation menu"
           aria-expanded={sidebarOpen}
@@ -761,13 +791,13 @@ export default function SuperiorMobileFeed({ userId, className = '' }: SuperiorM
           className="text-xl font-bold text-gray-900 dark:text-white"
           data-testid={T.accessibility.mainHeading}
         >
-          Feed Dashboard
+          Choices
         </h1>
         <div className="flex items-center space-x-2">
           <button 
             type="button"
             onClick={toggleDarkMode}
-            data-testid={T.accessibility.button}
+            data-testid={T.themeToggle}
             className="p-3 rounded-md text-gray-700 dark:text-gray-300 min-w-[44px] min-h-[44px]"
             aria-label={`Switch to ${isDarkMode ? 'light' : 'dark'} mode`}
             tabIndex={0}
@@ -792,7 +822,7 @@ export default function SuperiorMobileFeed({ userId, className = '' }: SuperiorM
           <div className="flex items-center space-x-4">
             <div 
               className="flex items-center space-x-1" 
-              data-testid={T.accessibility.status}
+              data-testid={T.onlineIndicator}
               role="status"
               aria-live="polite"
             >

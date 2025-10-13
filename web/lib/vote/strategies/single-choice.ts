@@ -151,17 +151,21 @@ export class SingleChoiceStrategy implements VotingStrategy {
         optionPercentages[option.id] = 0;
       });
 
-      // Process each vote
+      // Process each vote and count only valid votes
+      let validVoteCount = 0;
       votes.forEach(vote => {
-        if (typeof vote.voteData.choice === 'number') {
-          const optionId = poll.options[vote.voteData.choice]?.id;
+        // Handle both voteData.choice and direct choice property
+        const choice = vote.voteData?.choice ?? vote.choice;
+        if (typeof choice === 'number') {
+          const optionId = poll.options[choice]?.id;
           if (optionId) {
             optionVotes[optionId]++;
+            validVoteCount++;
           }
         }
       });
 
-      const totalVotes = votes.length;
+      const totalVotes = validVoteCount;
 
       // Calculate percentages
       if (totalVotes > 0) {
@@ -187,7 +191,7 @@ export class SingleChoiceStrategy implements VotingStrategy {
       }
 
       const results: PollResults = {
-        winner,
+        winner: totalVotes > 0 ? winner : null,
         winnerVotes,
         winnerPercentage,
         optionVotes,

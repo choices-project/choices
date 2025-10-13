@@ -101,6 +101,9 @@ type UserStore = {
   setUser: (user: User | null) => void;
   setSession: (session: Session | null) => void;
   setAuthenticated: (authenticated: boolean) => void;
+  setUserAndAuth: (user: User | null, authenticated: boolean) => void;
+  setSessionAndDerived: (session: Session | null) => void;
+  initializeAuth: (user: User | null, session: Session | null, authenticated: boolean) => void;
   signOut: () => void;
   clearUser: () => void;
   
@@ -215,37 +218,89 @@ export const useUserStore = create<UserStore>()(
         state.error = null;
       }),
       
-      // Authentication actions
+      // Authentication actions - Fixed architecture to prevent infinite loops
       setUser: (user) => set((state) => {
-        state.user = user;
-        state.isAuthenticated = !!user;
-        
-        // Log authentication state change
-        if (user) {
-        } else {
+        // Only update if the user is actually different
+        if (state.user !== user) {
+          state.user = user;
+          // Don't automatically set isAuthenticated here to prevent cascading updates
+          // Let the calling code explicitly set authentication state
         }
       }),
       
       setSession: (session) => set((state) => {
-        state.session = session;
-        
-        // Update authentication state based on session
-        if (session?.user) {
-          state.user = session.user;
-          state.isAuthenticated = true;
-        } else {
-          state.user = null;
-          state.isAuthenticated = false;
+        // Only update session if it's actually different
+        if (state.session !== session) {
+          state.session = session;
+          // Don't automatically update user/authentication to prevent cascading updates
+          // Let the calling code explicitly manage these relationships
         }
       }),
       
       setAuthenticated: (authenticated) => set((state) => {
-        state.isAuthenticated = authenticated;
+        // Only update if the authentication state is actually different
+        if (state.isAuthenticated !== authenticated) {
+          state.isAuthenticated = authenticated;
+          
+          if (!authenticated) {
+            state.user = null;
+            state.session = null;
+            state.profile = null;
+          }
+        }
+      }),
+      
+      // New method to safely set user and authentication together
+      setUserAndAuth: (user, authenticated) => set((state) => {
+        const userChanged = state.user !== user;
+        const authChanged = state.isAuthenticated !== authenticated;
         
-        if (!authenticated) {
-          state.user = null;
-          state.session = null;
-          state.profile = null;
+        if (userChanged || authChanged) {
+          state.user = user;
+          state.isAuthenticated = authenticated;
+          
+          // Clear related state if not authenticated
+          if (!authenticated) {
+            state.session = null;
+            state.profile = null;
+          }
+        }
+      }),
+      
+      // New method to safely set session and derived state together
+      setSessionAndDerived: (session) => set((state) => {
+        if (state.session !== session) {
+          state.session = session;
+          
+          // Only update derived state if session actually changed
+          const newUser = session?.user || null;
+          const newAuthenticated = !!newUser;
+          
+          if (state.user !== newUser) {
+            state.user = newUser;
+          }
+          if (state.isAuthenticated !== newAuthenticated) {
+            state.isAuthenticated = newAuthenticated;
+          }
+        }
+      }),
+      
+      // New method to safely initialize authentication state
+      initializeAuth: (user, session, authenticated) => set((state) => {
+        // Only update if any of the values are actually different
+        const userChanged = state.user !== user;
+        const sessionChanged = state.session !== session;
+        const authChanged = state.isAuthenticated !== authenticated;
+        
+        if (userChanged || sessionChanged || authChanged) {
+          state.user = user;
+          state.session = session;
+          state.isAuthenticated = authenticated;
+          
+          // Clear related state if not authenticated
+          if (!authenticated) {
+            state.profile = null;
+          }
         }
       }),
       
@@ -548,57 +603,105 @@ export const useBiometricRegistering = () => useUserStore(state => state.biometr
 export const useBiometricError = () => useUserStore(state => state.biometric.error);
 export const useBiometricSuccess = () => useUserStore(state => state.biometric.success);
 
-// Action selectors
-export const useUserActions = () => useUserStore(state => ({
-  setUser: state.setUser,
-  setSession: state.setSession,
-  setAuthenticated: state.setAuthenticated,
-  signOut: state.signOut,
-  clearUser: state.clearUser,
-  setProfile: state.setProfile,
-  updateProfile: state.updateProfile,
-  updatePreferences: state.updatePreferences,
-  updateSettings: state.updateSettings,
-  updateMetadata: state.updateMetadata,
-  setProfileLoading: state.setProfileLoading,
-  setUpdating: state.setUpdating,
-  setUserError: state.setUserError,
-  clearUserError: state.clearUserError,
-  setBiometricSupported: state.setBiometricSupported,
-  setBiometricAvailable: state.setBiometricAvailable,
-  setBiometricCredentials: state.setBiometricCredentials,
-  setBiometricRegistering: state.setBiometricRegistering,
-  setBiometricError: state.setBiometricError,
-  setBiometricSuccess: state.setBiometricSuccess,
-  resetBiometric: state.resetBiometric,
+// Action selectors - FIXED: Use individual selectors to prevent infinite re-renders
+export const useUserActions = () => {
+  const setUser = useUserStore(state => state.setUser);
+  const setSession = useUserStore(state => state.setSession);
+  const setAuthenticated = useUserStore(state => state.setAuthenticated);
+  const signOut = useUserStore(state => state.signOut);
+  const clearUser = useUserStore(state => state.clearUser);
+  const setProfile = useUserStore(state => state.setProfile);
+  const updateProfile = useUserStore(state => state.updateProfile);
+  const updatePreferences = useUserStore(state => state.updatePreferences);
+  const updateSettings = useUserStore(state => state.updateSettings);
+  const updateMetadata = useUserStore(state => state.updateMetadata);
+  const setProfileLoading = useUserStore(state => state.setProfileLoading);
+  const setUpdating = useUserStore(state => state.setUpdating);
+  const setUserError = useUserStore(state => state.setUserError);
+  const clearUserError = useUserStore(state => state.clearUserError);
+  const setBiometricSupported = useUserStore(state => state.setBiometricSupported);
+  const setBiometricAvailable = useUserStore(state => state.setBiometricAvailable);
+  const setBiometricCredentials = useUserStore(state => state.setBiometricCredentials);
+  const setBiometricRegistering = useUserStore(state => state.setBiometricRegistering);
+  const setBiometricError = useUserStore(state => state.setBiometricError);
+  const setBiometricSuccess = useUserStore(state => state.setBiometricSuccess);
+  const resetBiometric = useUserStore(state => state.resetBiometric);
   // Profile editing actions
-  setProfileEditData: state.setProfileEditData,
-  updateProfileEditData: state.updateProfileEditData,
-  updateProfileField: state.updateProfileField,
-  updateArrayField: state.updateArrayField,
-  updatePrivacySetting: state.updatePrivacySetting,
-  setProfileEditing: state.setProfileEditing,
-  setProfileEditError: state.setProfileEditError,
-  clearProfileEditError: state.clearProfileEditError,
-  clearAllProfileEditErrors: state.clearAllProfileEditErrors,
+  const setProfileEditData = useUserStore(state => state.setProfileEditData);
+  const updateProfileEditData = useUserStore(state => state.updateProfileEditData);
+  const updateProfileField = useUserStore(state => state.updateProfileField);
+  const updateArrayField = useUserStore(state => state.updateArrayField);
+  const updatePrivacySetting = useUserStore(state => state.updatePrivacySetting);
+  const setProfileEditing = useUserStore(state => state.setProfileEditing);
+  const setProfileEditError = useUserStore(state => state.setProfileEditError);
+  const clearProfileEditError = useUserStore(state => state.clearProfileEditError);
+  const clearAllProfileEditErrors = useUserStore(state => state.clearAllProfileEditErrors);
   // Address and representatives actions
-  setCurrentAddress: state.setCurrentAddress,
-  setCurrentState: state.setCurrentState,
-  setRepresentatives: state.setRepresentatives,
-  addRepresentative: state.addRepresentative,
-  removeRepresentative: state.removeRepresentative,
-  setShowAddressForm: state.setShowAddressForm,
-  setNewAddress: state.setNewAddress,
-  setAddressLoading: state.setAddressLoading,
-  setSavedSuccessfully: state.setSavedSuccessfully,
-  lookupAddress: state.lookupAddress,
-  handleAddressUpdate: state.handleAddressUpdate,
+  const setCurrentAddress = useUserStore(state => state.setCurrentAddress);
+  const setCurrentState = useUserStore(state => state.setCurrentState);
+  const setRepresentatives = useUserStore(state => state.setRepresentatives);
+  const addRepresentative = useUserStore(state => state.addRepresentative);
+  const removeRepresentative = useUserStore(state => state.removeRepresentative);
+  const setShowAddressForm = useUserStore(state => state.setShowAddressForm);
+  const setNewAddress = useUserStore(state => state.setNewAddress);
+  const setAddressLoading = useUserStore(state => state.setAddressLoading);
+  const setSavedSuccessfully = useUserStore(state => state.setSavedSuccessfully);
+  const lookupAddress = useUserStore(state => state.lookupAddress);
+  const handleAddressUpdate = useUserStore(state => state.handleAddressUpdate);
   // Avatar actions
-  setAvatarFile: state.setAvatarFile,
-  setAvatarPreview: state.setAvatarPreview,
-  setUploadingAvatar: state.setUploadingAvatar,
-  clearAvatar: state.clearAvatar,
-}));
+  const setAvatarFile = useUserStore(state => state.setAvatarFile);
+  const setAvatarPreview = useUserStore(state => state.setAvatarPreview);
+  const setUploadingAvatar = useUserStore(state => state.setUploadingAvatar);
+  const clearAvatar = useUserStore(state => state.clearAvatar);
+  
+  return {
+    setUser,
+    setSession,
+    setAuthenticated,
+    signOut,
+    clearUser,
+    setProfile,
+    updateProfile,
+    updatePreferences,
+    updateSettings,
+    updateMetadata,
+    setProfileLoading,
+    setUpdating,
+    setUserError,
+    clearUserError,
+    setBiometricSupported,
+    setBiometricAvailable,
+    setBiometricCredentials,
+    setBiometricRegistering,
+    setBiometricError,
+    setBiometricSuccess,
+    resetBiometric,
+    setProfileEditData,
+    updateProfileEditData,
+    updateProfileField,
+    updateArrayField,
+    updatePrivacySetting,
+    setProfileEditing,
+    setProfileEditError,
+    clearProfileEditError,
+    clearAllProfileEditErrors,
+    setCurrentAddress,
+    setCurrentState,
+    setRepresentatives,
+    addRepresentative,
+    removeRepresentative,
+    setShowAddressForm,
+    setNewAddress,
+    setAddressLoading,
+    setSavedSuccessfully,
+    lookupAddress,
+    handleAddressUpdate,
+    setAvatarFile,
+    setAvatarPreview,
+    setUploadingAvatar,
+    clearAvatar,
+  };
+};
 
 // Computed selectors
 export const useUserDisplayName = () => useUserStore(state => {

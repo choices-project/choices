@@ -144,7 +144,7 @@ describe('Zustand Store Tests', () => {
       }
       
       act(() => {
-        result.current.setUser(mockUser)
+        result.current.setUserAndAuth(mockUser, true)
       })
       
       expect(result.current.user).toEqual(mockUser)
@@ -160,7 +160,7 @@ describe('Zustand Store Tests', () => {
       }
       
       act(() => {
-        result.current.setUser(mockUser)
+        result.current.setUserAndAuth(mockUser, true)
       })
       
       expect(result.current.isAuthenticated).toBe(true)
@@ -430,11 +430,11 @@ describe('Zustand Store Tests', () => {
       
       // Set user
       act(() => {
-        userResult.result.current.setUser({
+        userResult.result.current.setUserAndAuth({
           id: 'user-1',
           name: 'Test User',
           email: 'test@example.com'
-        })
+        }, true)
       })
       
       // Update app settings

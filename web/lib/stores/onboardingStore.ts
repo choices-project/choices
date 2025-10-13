@@ -458,7 +458,7 @@ export const useOnboardingStore = create<OnboardingStore>()(
             setError(null);
             
             const state = get();
-            const response = await fetch('/api/onboarding/progress', {
+            const response = await fetch('/api/profile?action=onboarding-progress', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
@@ -496,7 +496,7 @@ export const useOnboardingStore = create<OnboardingStore>()(
             setLoading(true);
             setError(null);
             
-            const response = await fetch('/api/onboarding/progress');
+            const response = await fetch('/api/profile?action=onboarding-progress');
             
             if (!response.ok) {
               throw new Error('Failed to load onboarding progress');
@@ -535,7 +535,7 @@ export const useOnboardingStore = create<OnboardingStore>()(
             setError(null);
             
             const state = get();
-            const response = await fetch('/api/onboarding/complete', {
+            const response = await fetch('/api/profile?action=complete-onboarding', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
@@ -599,61 +599,114 @@ export const useOnboardingProgress = () => useOnboardingStore(state => state.pro
 export const useOnboardingCompleted = () => useOnboardingStore(state => state.isCompleted);
 export const useOnboardingSkipped = () => useOnboardingStore(state => state.isSkipped);
 export const useOnboardingActive = () => useOnboardingStore(state => state.isActive);
-export const useOnboardingData = () => useOnboardingStore(state => ({
-  currentStep: state.currentStep,
-  progress: state.progress,
-  isCompleted: state.isCompleted,
-  authData: state.authData,
-  profileData: state.profileData,
-  valuesData: state.valuesData,
-  preferencesData: state.preferencesData,
-}));
+// FIXED: Use individual selectors to prevent infinite re-renders
+export const useOnboardingData = () => {
+  const currentStep = useOnboardingStore(state => state.currentStep);
+  const progress = useOnboardingStore(state => state.progress);
+  const isCompleted = useOnboardingStore(state => state.isCompleted);
+  const authData = useOnboardingStore(state => state.authData);
+  const profileData = useOnboardingStore(state => state.profileData);
+  const valuesData = useOnboardingStore(state => state.valuesData);
+  const preferencesData = useOnboardingStore(state => state.preferencesData);
+  
+  return {
+    currentStep,
+    progress,
+    isCompleted,
+    authData,
+    profileData,
+    valuesData,
+    preferencesData,
+  };
+};
 export const useOnboardingLoading = () => useOnboardingStore(state => state.isLoading);
 export const useOnboardingError = () => useOnboardingStore(state => state.error);
 
-// Action selectors
-export const useOnboardingActions = () => useOnboardingStore(state => ({
-  setCurrentStep: state.setCurrentStep,
-  nextStep: state.nextStep,
-  previousStep: state.previousStep,
-  goToStep: state.goToStep,
-  completeOnboarding: state.completeOnboarding,
-  skipOnboarding: state.skipOnboarding,
-  restartOnboarding: state.restartOnboarding,
-  updateFormData: state.updateFormData,
-  updateAuthData: state.updateAuthData,
-  updateProfileData: state.updateProfileData,
-  updateValuesData: state.updateValuesData,
-  updatePreferencesData: state.updatePreferencesData,
-  clearStepData: state.clearStepData,
-  clearAllData: state.clearAllData,
-  markStepCompleted: state.markStepCompleted,
-  markStepSkipped: state.markStepSkipped,
-  markStepIncomplete: state.markStepIncomplete,
-  canProceedToNextStep: state.canProceedToNextStep,
-  getStepValidationErrors: state.getStepValidationErrors,
-  setLoading: state.setLoading,
-  setSaving: state.setSaving,
-  setSubmitting: state.setSubmitting,
-  setError: state.setError,
-  clearError: state.clearError,
-  saveProgress: state.saveProgress,
-  loadProgress: state.loadProgress,
-  submitOnboarding: state.submitOnboarding,
-  validateStep: state.validateStep,
-  validateAllSteps: state.validateAllSteps,
-}));
+// Action selectors - FIXED: Use individual selectors to prevent infinite re-renders
+export const useOnboardingActions = () => {
+  const setCurrentStep = useOnboardingStore(state => state.setCurrentStep);
+  const nextStep = useOnboardingStore(state => state.nextStep);
+  const previousStep = useOnboardingStore(state => state.previousStep);
+  const goToStep = useOnboardingStore(state => state.goToStep);
+  const completeOnboarding = useOnboardingStore(state => state.completeOnboarding);
+  const skipOnboarding = useOnboardingStore(state => state.skipOnboarding);
+  const restartOnboarding = useOnboardingStore(state => state.restartOnboarding);
+  const updateFormData = useOnboardingStore(state => state.updateFormData);
+  const updateAuthData = useOnboardingStore(state => state.updateAuthData);
+  const updateProfileData = useOnboardingStore(state => state.updateProfileData);
+  const updateValuesData = useOnboardingStore(state => state.updateValuesData);
+  const updatePreferencesData = useOnboardingStore(state => state.updatePreferencesData);
+  const clearStepData = useOnboardingStore(state => state.clearStepData);
+  const clearAllData = useOnboardingStore(state => state.clearAllData);
+  const markStepCompleted = useOnboardingStore(state => state.markStepCompleted);
+  const markStepSkipped = useOnboardingStore(state => state.markStepSkipped);
+  const markStepIncomplete = useOnboardingStore(state => state.markStepIncomplete);
+  const canProceedToNextStep = useOnboardingStore(state => state.canProceedToNextStep);
+  const getStepValidationErrors = useOnboardingStore(state => state.getStepValidationErrors);
+  const setLoading = useOnboardingStore(state => state.setLoading);
+  const setSaving = useOnboardingStore(state => state.setSaving);
+  const setSubmitting = useOnboardingStore(state => state.setSubmitting);
+  const setError = useOnboardingStore(state => state.setError);
+  const clearError = useOnboardingStore(state => state.clearError);
+  const saveProgress = useOnboardingStore(state => state.saveProgress);
+  const loadProgress = useOnboardingStore(state => state.loadProgress);
+  const submitOnboarding = useOnboardingStore(state => state.submitOnboarding);
+  const validateStep = useOnboardingStore(state => state.validateStep);
+  const validateAllSteps = useOnboardingStore(state => state.validateAllSteps);
+  
+  return {
+    setCurrentStep,
+    nextStep,
+    previousStep,
+    goToStep,
+    completeOnboarding,
+    skipOnboarding,
+    restartOnboarding,
+    updateFormData,
+    updateAuthData,
+    updateProfileData,
+    updateValuesData,
+    updatePreferencesData,
+    clearStepData,
+    clearAllData,
+    markStepCompleted,
+    markStepSkipped,
+    markStepIncomplete,
+    canProceedToNextStep,
+    getStepValidationErrors,
+    setLoading,
+    setSaving,
+    setSubmitting,
+    setError,
+    clearError,
+    saveProgress,
+    loadProgress,
+    submitOnboarding,
+    validateStep,
+    validateAllSteps,
+  };
+};
 
-// Computed selectors
-export const useOnboardingStats = () => useOnboardingStore(state => ({
-  totalSteps: state.totalSteps,
-  currentStep: state.currentStep,
-  completedSteps: state.completedSteps.length,
-  skippedSteps: state.skippedSteps.length,
-  progress: state.progress,
-  isCompleted: state.isCompleted,
-  isSkipped: state.isSkipped,
-}));
+// Computed selectors - FIXED: Use individual selectors to prevent infinite re-renders
+export const useOnboardingStats = () => {
+  const totalSteps = useOnboardingStore(state => state.totalSteps);
+  const currentStep = useOnboardingStore(state => state.currentStep);
+  const completedSteps = useOnboardingStore(state => state.completedSteps.length);
+  const skippedSteps = useOnboardingStore(state => state.skippedSteps.length);
+  const progress = useOnboardingStore(state => state.progress);
+  const isCompleted = useOnboardingStore(state => state.isCompleted);
+  const isSkipped = useOnboardingStore(state => state.isSkipped);
+  
+  return {
+    totalSteps,
+    currentStep,
+    completedSteps,
+    skippedSteps,
+    progress,
+    isCompleted,
+    isSkipped,
+  };
+};
 
 export const useCurrentStepData = () => useOnboardingStore(state => 
   state.stepData[state.currentStep] || {}

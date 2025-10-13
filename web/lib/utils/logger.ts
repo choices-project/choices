@@ -22,10 +22,12 @@ interface LogContext {
 class Logger {
   private level: LogLevel;
   private isDevelopment: boolean;
+  private seen: Set<object>;
 
   constructor() {
     this.isDevelopment = process.env.NODE_ENV === 'development';
     this.level = this.isDevelopment ? LogLevel.DEBUG : LogLevel.ERROR;
+    this.seen = new Set();
   }
 
   private shouldLog(level: LogLevel): boolean {
@@ -34,7 +36,26 @@ class Logger {
 
   private formatMessage(level: string, message: string, context?: LogContext): string {
     const timestamp = new Date().toISOString();
-    const contextStr = context ? ` ${JSON.stringify(context)}` : '';
+    let contextStr = '';
+    
+    if (context) {
+      try {
+        contextStr = ` ${JSON.stringify(context)}`;
+      } catch (error) {
+        // Handle circular references and other JSON.stringify errors
+        contextStr = ` ${JSON.stringify(context, (key, value) => {
+          if (typeof value === 'object' && value !== null) {
+            if (this.seen.has(value)) {
+              return '[Circular]';
+            }
+            this.seen.add(value);
+          }
+          return value;
+        })}`;
+        this.seen.clear();
+      }
+    }
+    
     return `[${timestamp}] ${level}: ${message}${contextStr}`;
   }
 

@@ -45,7 +45,7 @@ jest.mock('@/utils/supabase/server', () => ({
 }));
 
 // Mock authentication
-jest.mock('@/lib/core/auth/server-actions', () => ({
+jest.mock('@/lib/core/auth/middleware', () => ({
   getUser: jest.fn(() => Promise.resolve({
     id: 'user-123',
     email: 'test@example.com',

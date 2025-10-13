@@ -212,7 +212,7 @@ export const useHashtagModerationStore = create<HashtagModerationStore>()(
             };
             
             // Submit flag to API
-            const response = await fetch('/api/hashtags/flags', {
+            const response = await fetch('/api/hashtags?action=flag', {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
@@ -248,7 +248,7 @@ export const useHashtagModerationStore = create<HashtagModerationStore>()(
           
           try {
             // Approve flag via API
-            const response = await fetch(`/api/hashtags/flags/${flagId}/approve`, {
+            const response = await fetch(`/api/hashtags?action=approve&flagId=${flagId}`, {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
@@ -291,7 +291,7 @@ export const useHashtagModerationStore = create<HashtagModerationStore>()(
           
           try {
             // Reject flag via API
-            const response = await fetch(`/api/hashtags/flags/${flagId}/reject`, {
+            const response = await fetch(`/api/hashtags?action=reject&flagId=${flagId}`, {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
@@ -335,7 +335,7 @@ export const useHashtagModerationStore = create<HashtagModerationStore>()(
           
           try {
             // Load moderation queue from API
-            const response = await fetch('/api/hashtags/moderation/queue', {
+            const response = await fetch('/api/hashtags?action=moderation-queue', {
               method: 'GET',
               headers: {
                 'Content-Type': 'application/json',

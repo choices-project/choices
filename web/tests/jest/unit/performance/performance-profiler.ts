@@ -658,6 +658,7 @@ export class PerformanceProfiler {
       metrics: this.metrics,
       analysis: this.generatePerformanceAnalysis(),
       insights: this.getPerformanceInsights(),
+      patterns: this.analyzePerformancePatterns(),
     }, null, 2);
   }
 
@@ -694,6 +695,119 @@ export class PerformanceProfiler {
   }
 
   /**
+   * Track component lifecycle events
+   */
+  trackComponentLifecycle(componentName: string, event: 'mount' | 'update' | 'unmount', duration: number): void {
+    logger.info(`🔄 Component Lifecycle: ${componentName} ${event} took ${duration}ms`);
+    
+    // Record lifecycle metrics
+    this.recordMetrics({
+      componentName,
+      renderCount: 1,
+      totalRenderTime: duration,
+      averageRenderTime: duration,
+      maxRenderTime: duration,
+      minRenderTime: duration,
+      memoryPeak: 0,
+      memoryAverage: 0,
+      reRenderTriggers: [],
+      performanceBottlenecks: [],
+      optimizationScore: this.calculateOptimizationScore(duration, 0, 1),
+      recommendations: [],
+      renderTime: duration,
+      performanceGrade: this.calculatePerformanceGrade(duration)
+    });
+  }
+
+  /**
+   * Analyze performance patterns across multiple runs
+   */
+  analyzePerformancePatterns(): {
+    trendingUp: string[];
+    trendingDown: string[];
+    stable: string[];
+    volatile: string[];
+  } {
+    const trendingUp: string[] = [];
+    const trendingDown: string[] = [];
+    const stable: string[] = [];
+    const volatile: string[] = [];
+
+    // Group metrics by component
+    const componentMetrics = new Map<string, ProfilerMetrics[]>();
+    this.metrics.forEach(metric => {
+      if (!componentMetrics.has(metric.componentName)) {
+        componentMetrics.set(metric.componentName, []);
+      }
+      componentMetrics.get(metric.componentName)!.push(metric);
+    });
+
+    // Analyze patterns for each component
+    componentMetrics.forEach((metrics, componentName) => {
+      if (metrics.length < 3) {
+        stable.push(`${componentName}: insufficient data`);
+        return;
+      }
+
+      const renderTimes = metrics.map(m => m.averageRenderTime);
+      const trend = this.calculateTrend(renderTimes);
+      const volatility = this.calculateVolatility(renderTimes);
+
+      if (trend > 0.1) {
+        trendingUp.push(`${componentName}: +${(trend * 100).toFixed(1)}% trend`);
+      } else if (trend < -0.1) {
+        trendingDown.push(`${componentName}: ${(trend * 100).toFixed(1)}% trend`);
+      } else if (volatility > 0.3) {
+        volatile.push(`${componentName}: ${(volatility * 100).toFixed(1)}% volatility`);
+      } else {
+        stable.push(`${componentName}: stable performance`);
+      }
+    });
+
+    return { trendingUp, trendingDown, stable, volatile };
+  }
+
+  /**
+   * Calculate trend from array of values
+   */
+  private calculateTrend(values: number[]): number {
+    if (values.length < 2) return 0;
+    
+    const firstHalf = values.slice(0, Math.floor(values.length / 2));
+    const secondHalf = values.slice(Math.floor(values.length / 2));
+    
+    const firstAvg = firstHalf.reduce((sum, val) => sum + val, 0) / firstHalf.length;
+    const secondAvg = secondHalf.reduce((sum, val) => sum + val, 0) / secondHalf.length;
+    
+    return (secondAvg - firstAvg) / firstAvg;
+  }
+
+  /**
+   * Calculate volatility (standard deviation / mean)
+   */
+  private calculateVolatility(values: number[]): number {
+    if (values.length < 2) return 0;
+    
+    const mean = values.reduce((sum, val) => sum + val, 0) / values.length;
+    const variance = values.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / values.length;
+    const stdDev = Math.sqrt(variance);
+    
+    return stdDev / mean;
+  }
+
+  /**
+   * Calculate performance grade based on render time
+   */
+  calculatePerformanceGrade(renderTime: number): 'A+' | 'A' | 'B' | 'C' | 'D' | 'F' {
+    if (renderTime <= 50) return 'A+';
+    if (renderTime <= 100) return 'A';
+    if (renderTime <= 150) return 'B';
+    if (renderTime <= 200) return 'C';
+    if (renderTime <= 300) return 'D';
+    return 'F';
+  }
+
+  /**
    * Convert performance grade to numeric score
    */
   private convertGradeToScore(grade: string): number {
@@ -711,4 +825,6 @@ export class PerformanceProfiler {
 
 // Global performance profiler instance
 export const performanceProfiler = new PerformanceProfiler();
+
+
 

@@ -1,18 +1,19 @@
 import { test, expect } from '@playwright/test';
+import { T } from '@/lib/testing/testIds';
 
 test.describe('Debug Toggle Button', () => {
   test('debug toggle button click', async ({ page }) => {
     await page.goto('/auth');
     
     // Wait for page to load
-    await page.waitForSelector('[data-testid="auth-toggle"]');
+    await page.waitForSelector('[data-testid="${T.login.toggle}"]');
     
     // Check initial state
-    const initialText = await page.locator('[data-testid="auth-toggle"]').textContent();
+    const initialText = await page.locator('[data-testid="${T.login.toggle}"]').textContent();
     logger.info('Initial button text:', initialText);
     
     // Try clicking the button
-    await page.locator('[data-testid="auth-toggle"]').click();
+    await page.locator('[data-testid="${T.login.toggle}"]').click();
     
     // Wait a moment
     await page.waitForTimeout(1000);
@@ -20,7 +21,7 @@ test.describe('Debug Toggle Button', () => {
     // Try direct state manipulation as workaround
     const stateChanged = await page.evaluate(() => {
       // Try to find React component and trigger state change directly
-      const button = document.querySelector('[data-testid="auth-toggle"]');
+      const button = document.querySelector('[data-testid="${T.login.toggle}"]');
       if (!button) return false;
       
       // Try to trigger a custom event that React might listen to
@@ -38,7 +39,7 @@ test.describe('Debug Toggle Button', () => {
     logger.info('Direct state manipulation attempted:', stateChanged);
     
     // Check if text changed
-    const afterClickText = await page.locator('[data-testid="auth-toggle"]').textContent();
+    const afterClickText = await page.locator('[data-testid="${T.login.toggle}"]').textContent();
     logger.info('After click button text:', afterClickText);
     
     // Check if display name field appears

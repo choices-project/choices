@@ -1,128 +1,174 @@
 /**
- * Simple Polls CRUD API Tests
+ * Polls CRUD API Tests - SIMPLE VERSION
  * 
- * Tests the polls API endpoints with minimal mocking
- * Focuses on actual functionality rather than heavy mocks
+ * This is a simplified test that focuses on the core functionality
+ * without complex mocking. We'll start here and evolve the tests.
  */
 
-import { describe, it, expect, beforeEach, jest } from '@jest/globals';
+import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import { NextRequest } from 'next/server';
+import { GET, POST } from '@/app/api/polls/route';
 
-// Test the actual API route structure
-describe('Polls API Route Structure', () => {
-  it('should have proper GET route handler', async () => {
-    // Test that the route file exists and can be imported
-    const { GET } = await import('@/app/api/polls/route');
-    expect(typeof GET).toBe('function');
-  });
-
-  it('should have proper POST route handler', async () => {
-    // Test that the route file exists and can be imported
-    const { POST } = await import('@/app/api/polls/route');
-    expect(typeof POST).toBe('function');
-  });
-
-  it('should handle GET request structure', async () => {
-    const { GET } = await import('@/app/api/polls/route');
-    
-    // Create a basic GET request using NextRequest
-    const request = new NextRequest('http://localhost:3000/api/polls');
-
-    // Mock the required dependencies
-    jest.doMock('@/utils/supabase/server', () => ({
-      getSupabaseServerClient: jest.fn().mockResolvedValue({
-        from: jest.fn().mockReturnValue({
-          select: jest.fn().mockReturnValue({
-            eq: jest.fn().mockReturnValue({
-              limit: jest.fn().mockResolvedValue({
-                data: [],
-                error: null,
-              }),
-            }),
-          }),
+// Simple mock that just returns what we need
+const mockSupabaseClient = {
+  from: jest.fn(() => ({
+    select: jest.fn(() => ({
+      eq: jest.fn(() => ({
+        limit: jest.fn().mockResolvedValue({
+          data: [
+            {
+              id: 'poll-1',
+              title: 'Test Poll 1',
+              total_votes: 10,
+              options: [
+                { id: 'opt-1', text: 'Option 1', votes: 6 },
+                { id: 'opt-2', text: 'Option 2', votes: 4 }
+              ],
+              status: 'active'
+            }
+          ],
+          error: null,
         }),
+      })),
+    })),
+    insert: jest.fn(() => ({
+      select: jest.fn().mockResolvedValue({
+        data: [{ 
+          id: 'poll-123', 
+          title: 'New Test Poll',
+          total_votes: 0,
+          options: [
+            { id: 'opt-new-1', text: 'New Option 1', votes: 0 },
+            { id: 'opt-new-2', text: 'New Option 2', votes: 0 }
+          ],
+          status: 'active'
+        }],
+        error: null,
       }),
-    }));
+    })),
+  })),
+};
 
-    jest.doMock('@/lib/utils/logger', () => ({
-      devLog: jest.fn(),
-    }));
+// Mock the Supabase server client
+jest.mock('@/utils/supabase/server', () => ({
+  getSupabaseServerClient: jest.fn(() => Promise.resolve(mockSupabaseClient)),
+}));
 
-    try {
-      const response = await GET(request);
-      expect(response).toBeDefined();
-    } catch (error) {
-      // Expected to fail due to missing dependencies
-      expect(error).toBeDefined();
-    }
+// Mock authentication middleware
+jest.mock('@/lib/core/auth/middleware', () => ({
+  getUser: jest.fn(() => Promise.resolve({
+    id: 'user-123',
+    email: 'test@example.com',
+    role: 'user'
+  })),
+}));
+
+// Mock logger
+jest.mock('@/lib/utils/logger', () => ({
+  devLog: jest.fn(),
+}));
+
+describe('Polls CRUD API - SIMPLE', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
   });
 
-  it('should handle POST request structure', async () => {
-    const { POST } = await import('@/app/api/polls/route');
-    
-    // Create a basic POST request
-    const request = new NextRequest('http://localhost:3000/api/polls', {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-      },
-      body: JSON.stringify({
-        title: 'Test Poll',
-        options: ['Option 1', 'Option 2'],
-      }),
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
+  describe('GET /api/polls - List Polls', () => {
+    it('should return list of polls', async () => {
+      const request = new NextRequest('http://localhost:3000/api/polls');
+      
+      const response = await GET(request);
+      const responseData = await response.json();
+
+      // Debug: Let's see what we actually get
+      console.log('Response status:', response.status);
+      console.log('Response data:', responseData);
+
+      // For now, just check that we get a response
+      // We'll evolve this to check the exact structure later
+      expect(response.status).toBe(200);
+      expect(responseData).toHaveProperty('success');
+      expect(responseData).toHaveProperty('polls');
     });
 
-    // Mock dependencies
-    jest.doMock('@/utils/supabase/server', () => ({
-      getSupabaseServerClient: jest.fn().mockResolvedValue({
-        from: jest.fn().mockReturnValue({
-          select: jest.fn().mockReturnValue({
-            eq: jest.fn().mockReturnValue({
-              single: jest.fn().mockResolvedValue({
-                data: { is_active: true },
-                error: null,
-              }),
-            }),
-          }),
-          insert: jest.fn().mockResolvedValue({
-            data: [{ id: 'test-poll-id' }],
-            error: null,
-          }),
+    it('should handle errors gracefully', async () => {
+      // Mock an error
+      mockSupabaseClient.from().select().eq().limit.mockResolvedValueOnce({
+        data: null,
+        error: { message: 'Database error' },
+      });
+
+      const request = new NextRequest('http://localhost:3000/api/polls');
+      
+      const response = await GET(request);
+      const responseData = await response.json();
+
+      expect(response.status).toBe(500);
+      expect(responseData.error).toBe('Failed to fetch polls');
+    });
+  });
+
+  describe('POST /api/polls - Create Poll', () => {
+    beforeEach(() => {
+      // Mock user profile check
+      mockSupabaseClient.from().select().eq().single.mockResolvedValue({
+        data: { is_active: true },
+        error: null,
+      });
+    });
+
+    it('should create a new poll with valid data', async () => {
+      const request = new NextRequest('http://localhost:3000/api/polls', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title: 'New Test Poll',
+          options: [
+            { text: 'New Option 1' },
+            { text: 'New Option 2' }
+          ]
         }),
-      }),
-    }));
+      });
 
-    jest.doMock('@/lib/utils/auth', () => ({
-      getUser: jest.fn().mockResolvedValue({ id: 'test-user-id' }),
-    }));
-
-    jest.doMock('@/lib/utils/logger', () => ({
-      devLog: jest.fn(),
-    }));
-
-    try {
       const response = await POST(request);
-      expect(response).toBeDefined();
-    } catch (error) {
-      // Expected to fail due to missing dependencies
-      expect(error).toBeDefined();
-    }
-  });
-});
+      const responseData = await response.json();
 
-describe('Polls API Route Integration', () => {
-  it('should have proper error handling structure', () => {
-    // Test that the route has proper error handling
-    expect(true).toBe(true); // Placeholder for actual error handling tests
-  });
+      // For now, just check that we get a response
+      // We'll evolve this to check the exact structure later
+      expect(response.status).toBe(201);
+      expect(responseData).toHaveProperty('poll');
+    });
 
-  it('should have proper authentication integration', () => {
-    // Test that the route has proper authentication
-    expect(true).toBe(true); // Placeholder for actual auth tests
-  });
+    it('should reject poll creation without authentication', async () => {
+      // Mock no authentication
+      const { getUser } = require('@/lib/core/auth/middleware');
+      getUser.mockResolvedValueOnce(null);
 
-  it('should have proper validation structure', () => {
-    // Test that the route has proper validation
-    expect(true).toBe(true); // Placeholder for actual validation tests
+      const request = new NextRequest('http://localhost:3000/api/polls', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title: 'Unauthorized Poll',
+          options: [
+            { text: 'Option 1' },
+            { text: 'Option 2' }
+          ]
+        }),
+      });
+
+      const response = await POST(request);
+      const responseData = await response.json();
+
+      expect(response.status).toBe(401);
+      expect(responseData.error).toBe('Authentication required to create polls');
+    });
   });
 });

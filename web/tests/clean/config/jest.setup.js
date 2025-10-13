@@ -33,7 +33,7 @@ jest.mock('next/navigation', () => ({
 // Mock Next.js image
 jest.mock('next/image', () => ({
   __esModule: true,
-  default: (props: any) => {
+  default: (props) => {
     // eslint-disable-next-line @next/next/no-img-element
     return <img {...props} />;
   },
@@ -42,7 +42,7 @@ jest.mock('next/image', () => ({
 // Mock Next.js link
 jest.mock('next/link', () => ({
   __esModule: true,
-  default: ({ children, href, ...props }: any) => {
+  default: ({ children, href, ...props }) => {
     return (
       <a href={href} {...props}>
         {children}
@@ -320,7 +320,7 @@ jest.mock('@/lib/utils/pwa', () => ({
 Object.defineProperty(global, 'crypto', {
   value: {
     randomUUID: () => 'test-uuid-' + Math.random().toString(36).substr(2, 9),
-    getRandomValues: (arr: any) => arr.map(() => Math.floor(Math.random() * 256)),
+    getRandomValues: (arr) => arr.map(() => Math.floor(Math.random() * 256)),
   },
 });
 
@@ -387,7 +387,7 @@ global.performance = {
   getEntriesByName: jest.fn(() => []),
   clearMarks: jest.fn(),
   clearMeasures: jest.fn(),
-} as any;
+};
 
 // Custom matchers
 expect.extend({

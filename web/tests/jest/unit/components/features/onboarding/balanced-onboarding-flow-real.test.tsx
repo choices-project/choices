@@ -326,21 +326,6 @@ describe('Balanced Onboarding Flow Component Tests - Real Functionality', () => 
   });
 });
 
- * Balanced Onboarding Flow Component Tests - REAL FUNCTIONALITY
- * 
- * Tests the actual BalancedOnboardingFlow component with real functionality:
- * - Real state management and step navigation
- * - Real form validation and data persistence
- * - Real user interactions and business logic
- * - Real error handling and edge cases
- */
-
-import { describe, it, expect, beforeEach } from '@jest/globals';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { BrowserRouter } from 'react-router-dom';
-import React from 'react';
-import BalancedOnboardingFlow from '@/features/onboarding/components/BalancedOnboardingFlow';
-
 // Use real functionality - minimal mocking only for test environment setup
 
 // Mock localStorage for component functionality

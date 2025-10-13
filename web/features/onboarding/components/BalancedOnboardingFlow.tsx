@@ -20,6 +20,7 @@ import {
 } from '@/lib/stores';
 import { withOptional } from '@/lib/utils/objects';
 import { getSupabaseBrowserClient } from '@/utils/supabase/client';
+import { T } from '@/lib/testing/testIds';
 
 
 // Step 1: Welcome & Value Proposition (30 seconds)
@@ -66,7 +67,7 @@ const WelcomeStep: React.FC<{
         <div className="space-y-4">
           <button
             onClick={onNext}
-            data-testid="welcome-next"
+            data-testid={T.welcomeNext}
             className="w-full bg-blue-600 text-white py-4 px-8 rounded-lg font-semibold text-lg hover:bg-blue-700 transition-colors"
           >
             Get Started
@@ -197,7 +198,7 @@ const PrivacyStep: React.FC<{
           </button>
           <button
             onClick={onNext}
-            data-testid="privacy-next"
+            data-testid={T.privacyNext}
             className="bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
           >
             Continue
@@ -244,9 +245,9 @@ const DemographicsStep: React.FC<{
                   State
                 </label>
                 <select
-                  value={demographics.location.state}
+                  value={demographics?.location?.state || ''}
                   onChange={(e) => setDemographics(withOptional(demographics, {
-                    location: withOptional(demographics.location, { state: e.target.value })
+                    location: withOptional(demographics?.location || {}, { state: e.target.value })
                   }))}
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
@@ -309,9 +310,9 @@ const DemographicsStep: React.FC<{
                 </label>
                 <input
                   type="text"
-                  value={demographics.location.district || ''}
+                  value={demographics?.location?.district || ''}
                   onChange={(e) => setDemographics(withOptional(demographics, {
-                    location: withOptional(demographics.location, { district: e.target.value })
+                    location: withOptional(demographics?.location || {}, { district: e.target.value })
                   }))}
                   placeholder="Enter your congressional district"
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -339,7 +340,7 @@ const DemographicsStep: React.FC<{
                   Age Range
                 </label>
                 <select
-                  value={demographics.age_range}
+                  value={demographics?.age_range || ''}
                   onChange={(e) => setDemographics(withOptional(demographics, {
                     age_range: e.target.value as UserDemographics['age_range']
                   }))}
@@ -360,7 +361,7 @@ const DemographicsStep: React.FC<{
                   Education Level
                 </label>
                 <select
-                  value={demographics.education}
+                  value={demographics?.education || ''}
                   onChange={(e) => setDemographics(withOptional(demographics, {
                     education: e.target.value as UserDemographics['education']
                   }))}
@@ -379,7 +380,7 @@ const DemographicsStep: React.FC<{
                   Political Engagement
                 </label>
                 <select
-                  value={demographics.political_engagement}
+                  value={demographics?.political_engagement || ''}
                   onChange={(e) => setDemographics(withOptional(demographics, {
                     political_engagement: e.target.value as UserDemographics['political_engagement']
                   }))}
@@ -412,7 +413,7 @@ const DemographicsStep: React.FC<{
             </button>
             <button
               onClick={onNext}
-              data-testid="profile-next"
+              data-testid={T.profileNext}
               className="bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
             >
               Continue
@@ -506,7 +507,7 @@ const AuthStep: React.FC<{
             </div>
 
             <FeatureWrapper feature="WEBAUTHN">
-              <div data-testid="onboarding-passkey-setup">
+              <div data-testid={T.onboardingPasskeySetup}>
                 <PasskeyRegister
                   onSuccess={handlePasskeySuccess}
                   onError={handlePasskeyError}
@@ -572,7 +573,7 @@ const AuthStep: React.FC<{
             <button
               onClick={() => handleAuthMethodSelect('passkey')}
               disabled={isLoading}
-              data-testid="auth-passkey-option"
+              data-testid={T.authPasskeyOption}
               className="w-full flex items-center space-x-4 p-6 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors disabled:opacity-50"
             >
               <span className="text-3xl">🔐</span>
@@ -586,7 +587,7 @@ const AuthStep: React.FC<{
           <button
             onClick={handleEmailAuth}
             disabled={isLoading}
-            data-testid="auth-email-option"
+            data-testid={T.authEmailOption}
             className="w-full flex items-center space-x-4 p-6 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors disabled:opacity-50"
           >
             <span className="text-3xl">📧</span>
@@ -599,7 +600,7 @@ const AuthStep: React.FC<{
           <button
             onClick={handleGoogleAuth}
             disabled={isLoading}
-            data-testid="auth-google-option"
+            data-testid={T.authGoogleOption}
             className="w-full flex items-center space-x-4 p-6 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors disabled:opacity-50"
           >
             <span className="text-3xl">📱</span>
@@ -812,7 +813,7 @@ const CompleteStep: React.FC<{
               <div className="text-2xl mb-2">🏛️</div>
               <h4 className="font-semibold text-gray-900">Your Representatives</h4>
               <p className="text-sm text-gray-600">
-                Based on your location: {demographics.location.state}
+                Based on your location: {demographics?.location?.state || 'Not specified'}
               </p>
             </div>
             <div className="text-center p-4 bg-green-50 rounded-lg">
@@ -835,7 +836,7 @@ const CompleteStep: React.FC<{
         <div className="space-y-4 mb-8">
           <button
             onClick={handleFindRepresentatives}
-            data-testid="complete-onboarding"
+            data-testid={T.completeOnboarding}
             className="w-full bg-blue-600 text-white py-4 px-8 rounded-lg font-semibold text-lg hover:bg-blue-700 transition-colors"
           >
             Find My Representatives
@@ -980,24 +981,39 @@ const BalancedOnboardingFlow: React.FC = () => {
   }
 
   return (
-    <div className="balanced-onboarding">
+    <div className="balanced-onboarding" data-testid="balanced-onboarding">
       {/* E2E Test Compatibility: Hidden buttons for test automation */}
       <div style={{ position: 'absolute', left: '-9999px', top: '-9999px' }}>
-        <button data-testid="tour-next" onClick={handleNext}>Tour Next</button>
-        <button data-testid="data-usage-next" onClick={handleNext}>Data Usage Next</button>
-        <button data-testid="interests-next" onClick={handleNext}>Interests Next</button>
-        <button data-testid="experience-next" onClick={handleNext}>Experience Next</button>
+        <button data-testid={T.tourNext} onClick={handleNext}>Tour Next</button>
+        <button data-testid={T.dataUsageNext} onClick={handleNext}>Data Usage Next</button>
+        <button data-testid={T.interestsNext} onClick={handleNext}>Interests Next</button>
+        <button data-testid={T.experienceNext} onClick={handleNext}>Experience Next</button>
       </div>
+
+      <nav role="navigation" aria-label="Onboarding progress">
+        <div className="sr-only">
+          Step {currentStep + 1} of 6: {
+            currentStep === 0 ? 'Welcome' :
+            currentStep === 1 ? 'Privacy' :
+            currentStep === 2 ? 'Demographics' :
+            currentStep === 3 ? 'Authentication' :
+            currentStep === 4 ? 'Profile' :
+            'Complete'
+          }
+        </div>
+      </nav>
+
+      <main role="main" aria-label="Onboarding flow" aria-live="polite">
 
       {currentStep === 0 && (
         <WelcomeStep onNext={handleNext} onSkip={handleSkip} />
       )}
       {currentStep === 1 && (
-        <PrivacyStep 
-          onNext={handleNext} 
+        <PrivacyStep
+          onNext={handleNext}
           onBack={handleBack}
-          privacy={onboardingData.privacy}
-          setPrivacy={(privacy) => updateFormData(0, { privacy })}
+          privacy={onboardingData?.privacy || { location_sharing: 'disabled', demographic_sharing: 'disabled', analytics_sharing: 'disabled' }}
+          setPrivacy={(privacy) => updateFormData(2, { privacy })}
         />
       )}
       {currentStep === 2 && (
@@ -1005,7 +1021,7 @@ const BalancedOnboardingFlow: React.FC = () => {
           onNext={handleNext} 
           onBack={handleBack}
           onSkip={handleNext}
-          demographics={onboardingData.demographics}
+          demographics={onboardingData?.demographics || {}}
           setDemographics={(demographics) => updateFormData(0, { demographics })}
         />
       )}
@@ -1017,16 +1033,17 @@ const BalancedOnboardingFlow: React.FC = () => {
           onNext={handleNext} 
           onBack={handleBack}
           onSkip={handleSkip}
-          profile={onboardingData.profile}
+          profile={onboardingData?.profile || {}}
           onUpdate={(profile) => updateFormData(0, { profile })}
         />
       )}
       {currentStep === 5 && (
         <CompleteStep 
           onFinish={handleFinish}
-          demographics={onboardingData.demographics}
+          demographics={onboardingData?.demographics || {}}
         />
       )}
+      </main>
     </div>
   );
 };

@@ -15,6 +15,7 @@ import { useUser, useUserLoading } from '@/lib/stores';
 import { loginAction } from '@/app/actions/login';
 import { register } from '@/app/actions/register';
 import { T } from '@/lib/testing/testIds';
+import { logger } from '@/lib/utils/logger';
 
 export default function AuthPage() {
   const router = useRouter();

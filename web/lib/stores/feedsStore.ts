@@ -734,17 +734,28 @@ export const useFeedsError = () => useFeedsStore(state => state.error);
 // Action selectors - FIXED: Use individual selectors to prevent infinite re-renders
 export const useFeedsActions = () => useFeedsStore(state => state);
 
-// Computed selectors
-export const useFeedsStats = () => useFeedsStore(state => ({
-  totalFeeds: state.feeds.length,
-  filteredFeeds: state.filteredFeeds.length,
-  totalCategories: state.categories.length,
-  enabledCategories: state.categories.filter(cat => cat.enabled).length,
-  searchResults: state.search.results.length,
-  isLoading: state.isLoading,
-  isSearching: state.isSearching,
-  error: state.error,
-}));
+// Computed selectors - FIXED: Use individual selectors to prevent infinite re-renders
+export const useFeedsStats = () => {
+  const totalFeeds = useFeedsStore(state => state.feeds.length);
+  const filteredFeeds = useFeedsStore(state => state.filteredFeeds.length);
+  const totalCategories = useFeedsStore(state => state.categories.length);
+  const enabledCategories = useFeedsStore(state => state.categories.filter(cat => cat.enabled).length);
+  const searchResults = useFeedsStore(state => state.search.results.length);
+  const isLoading = useFeedsStore(state => state.isLoading);
+  const isSearching = useFeedsStore(state => state.isSearching);
+  const error = useFeedsStore(state => state.error);
+  
+  return {
+    totalFeeds,
+    filteredFeeds,
+    totalCategories,
+    enabledCategories,
+    searchResults,
+    isLoading,
+    isSearching,
+    error,
+  };
+};
 
 export const useBookmarkedFeeds = () => useFeedsStore(state => 
   state.feeds.filter(feed => feed.userInteraction.bookmarked)

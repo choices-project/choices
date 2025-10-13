@@ -12,6 +12,7 @@
  */
 
 import { test, expect } from '@playwright/test';
+import { T } from '@/lib/testing/testIds';
 
 test.describe('Enhanced Authentication Flow', () => {
   test.beforeEach(async ({ page }) => {
@@ -26,18 +27,17 @@ test.describe('Enhanced Authentication Flow', () => {
     await page.goto('/auth');
     const loadTime = Date.now() - startTime;
     
-    // Verify fast loading (should be under 2 seconds) - temporarily disabled for debugging
-    // TODO: Optimize performance to meet <2s target
-    // expect(loadTime).toBeLessThan(2000);
+    // Verify fast loading (should be under 2 seconds)
+    expect(loadTime).toBeLessThan(2000);
     logger.info(`Page load time: ${loadTime}ms`);
   });
 
   test('should sign up with email with enhanced UX', async ({ page }) => {
     // Wait for the form to appear (client-side hydration)
-    await page.waitForSelector('[data-testid="auth-form"]', { timeout: 10000 });
+    await page.waitForSelector(`[data-testid="${T.login.form}"]`, { timeout: 10000 });
     
     // Test accessibility - ensure proper ARIA labels and roles
-    await expect(page.locator('[data-testid="auth-form"]')).toHaveAttribute('role', 'form');
+    await expect(page.locator(`[data-testid="${T.login.form}"]`)).toHaveAttribute('role', 'form');
     await expect(page.locator('input[name="email"]')).toHaveAttribute('aria-label', 'Email address');
     await expect(page.locator('input[name="password"]')).toHaveAttribute('aria-label', 'Password');
     
@@ -46,7 +46,7 @@ test.describe('Enhanced Authentication Flow', () => {
     await expect(page.locator('button:has-text("Don\'t have an account? Sign Up")')).toBeFocused();
     
     // Debug: Check toggle button text before clicking
-    const toggleButton = page.locator('[data-testid="auth-toggle"]');
+    const toggleButton = page.locator(`[data-testid="${T.login.toggle}"]`);
     const toggleText = await toggleButton.textContent();
     logger.info('Toggle button text before click:', toggleText);
     
@@ -55,7 +55,7 @@ test.describe('Enhanced Authentication Flow', () => {
     
     // Debug: Check if button is actually clickable
     const buttonInfo = await page.evaluate(() => {
-      const button = document.querySelector('[data-testid="auth-toggle"]') as HTMLButtonElement;
+      const button = document.querySelector(`[data-testid="${T.login.toggle}"]`) as HTMLButtonElement;
       if (!button) return { found: false };
       
       const rect = button.getBoundingClientRect();
@@ -75,7 +75,7 @@ test.describe('Enhanced Authentication Flow', () => {
     logger.info('Button info:', buttonInfo);
     
     // Try force clicking the button
-    await page.locator('[data-testid="auth-toggle"]').click({ force: true });
+    await page.locator(`[data-testid="${T.login.toggle}"]`).click({ force: true });
     
     // Debug: Wait a moment and check what's on the page
     await page.waitForTimeout(500);
@@ -91,7 +91,7 @@ test.describe('Enhanced Authentication Flow', () => {
     // Try to trigger state change directly via React DevTools
     const stateChanged = await page.evaluate(() => {
       // Try to find the React component and trigger state change
-      const button = document.querySelector('[data-testid="auth-toggle"]');
+      const button = document.querySelector(`[data-testid="${T.login.toggle}"]`);
       if (!button) return false;
       
       // Try to dispatch a custom event
@@ -113,7 +113,7 @@ test.describe('Enhanced Authentication Flow', () => {
     await expect(page.locator('input[name="confirmPassword"]')).toBeVisible();
     
     // Verify smooth transition with loading state
-    await expect(page.locator('[data-testid="auth-form"]')).toHaveClass(/transition/);
+    await expect(page.locator('[data-testid="${T.login.form}"]')).toHaveClass(/transition/);
     
     // Test progressive enhancement - form should work without JavaScript
     await page.evaluate(() => {
@@ -126,39 +126,39 @@ test.describe('Enhanced Authentication Flow', () => {
     
     // Test real-time validation
     await page.locator('input[name="email"]').blur();
-    await expect(page.locator('[data-testid="email-validation"]')).toHaveText('✓ Valid email format');
+    await expect(page.locator('[data-testid="${T.emailValidation}"]')).toHaveText('✓ Valid email format');
     
     await page.fill('input[name="password"]', 'password123');
     
     // Test password strength indicator
-    await expect(page.locator('[data-testid="password-strength"]')).toHaveText('Strong');
+    await expect(page.locator('[data-testid="${T.passwordStrength}"]')).toHaveText('Strong');
     
     await page.fill('input[name="confirmPassword"]', 'password123');
     
     // Test password confirmation matching
-    await expect(page.locator('[data-testid="password-match"]')).toHaveText('✓ Passwords match');
+    await expect(page.locator('[data-testid="${T.passwordMatch}"]')).toHaveText('✓ Passwords match');
     
     await page.fill('input[name="displayName"]', 'New User');
     
     // Test display name validation
-    await expect(page.locator('[data-testid="display-name-validation"]')).toHaveText('✓ Display name is available');
+    await expect(page.locator('[data-testid="${T.displayNameValidation}"]')).toHaveText('✓ Display name is available');
     
     // Test form submission with loading state
     await page.click('button:has-text("Sign Up")');
     
     // Verify loading state
-    await expect(page.locator('[data-testid="submit-button"]')).toHaveAttribute('aria-busy', 'true');
-    await expect(page.locator('[data-testid="submit-button"]')).toBeDisabled();
+    await expect(page.locator('[data-testid="${T.submitButton}"]')).toHaveAttribute('aria-busy', 'true');
+    await expect(page.locator('[data-testid="${T.submitButton}"]')).toBeDisabled();
     
     // Should show success message with animation
     await expect(page.locator('text=Account created successfully')).toBeVisible();
-    await expect(page.locator('[data-testid="success-message"]')).toHaveClass(/animate-in/);
+    await expect(page.locator('[data-testid="${T.successMessage}"]')).toHaveClass(/animate-in/);
     
     // Should redirect to onboarding or dashboard
     await expect(page).toHaveURL(/\/onboarding|\/dashboard/);
     
     // Test that user is properly authenticated
-    await expect(page.locator('[data-testid="user-menu"]')).toBeVisible();
+    await expect(page.locator('[data-testid="${T.userMenu}"]')).toBeVisible();
   });
 
   test('should handle sign up validation errors with enhanced UX', async ({ page }) => {
@@ -166,23 +166,23 @@ test.describe('Enhanced Authentication Flow', () => {
     await page.click('button:has-text("Don\'t have an account? Sign Up")');
     
     // Test accessibility of error states
-    await expect(page.locator('[data-testid="auth-form"]')).toHaveAttribute('aria-live', 'polite');
+    await expect(page.locator('[data-testid="${T.login.form}"]')).toHaveAttribute('aria-live', 'polite');
     
     // Try to submit without filling fields
     await page.click('button:has-text("Sign Up")');
     
     // Should show validation errors with proper ARIA attributes
-    await expect(page.locator('[data-testid="email-error"]')).toBeVisible();
-    await expect(page.locator('[data-testid="email-error"]')).toHaveAttribute('role', 'alert');
-    await expect(page.locator('[data-testid="email-error"]')).toHaveText('Email is required');
+    await expect(page.locator('[data-testid="${T.emailError}"]')).toBeVisible();
+    await expect(page.locator('[data-testid="${T.emailError}"]')).toHaveAttribute('role', 'alert');
+    await expect(page.locator('[data-testid="${T.emailError}"]')).toHaveText('Email is required');
     
-    await expect(page.locator('[data-testid="password-error"]')).toBeVisible();
-    await expect(page.locator('[data-testid="password-error"]')).toHaveAttribute('role', 'alert');
-    await expect(page.locator('[data-testid="password-error"]')).toHaveText('Password is required');
+    await expect(page.locator('[data-testid="${T.passwordError}"]')).toBeVisible();
+    await expect(page.locator('[data-testid="${T.passwordError}"]')).toHaveAttribute('role', 'alert');
+    await expect(page.locator('[data-testid="${T.passwordError}"]')).toHaveText('Password is required');
     
-    await expect(page.locator('[data-testid="display-name-error"]')).toBeVisible();
-    await expect(page.locator('[data-testid="display-name-error"]')).toHaveAttribute('role', 'alert');
-    await expect(page.locator('[data-testid="display-name-error"]')).toHaveText('Display name is required');
+    await expect(page.locator('[data-testid="${T.displayNameError}"]')).toBeVisible();
+    await expect(page.locator('[data-testid="${T.displayNameError}"]')).toHaveAttribute('role', 'alert');
+    await expect(page.locator('[data-testid="${T.displayNameError}"]')).toHaveText('Display name is required');
     
     // Test focus management - should focus first error field
     await expect(page.locator('input[name="email"]')).toBeFocused();
@@ -191,42 +191,42 @@ test.describe('Enhanced Authentication Flow', () => {
     await page.fill('input[name="email"]', 'invalid-email');
     
     // Test real-time validation feedback
-    await expect(page.locator('[data-testid="email-validation"]')).toHaveText('✗ Invalid email format');
-    await expect(page.locator('[data-testid="email-validation"]')).toHaveClass(/error/);
+    await expect(page.locator('[data-testid="${T.emailValidation}"]')).toHaveText('✗ Invalid email format');
+    await expect(page.locator('[data-testid="${T.emailValidation}"]')).toHaveClass(/error/);
     
     await page.fill('input[name="password"]', 'short');
     
     // Test password strength feedback
-    await expect(page.locator('[data-testid="password-strength"]')).toHaveText('Weak');
-    await expect(page.locator('[data-testid="password-strength"]')).toHaveClass(/weak/);
+    await expect(page.locator('[data-testid="${T.passwordStrength}"]')).toHaveText('Weak');
+    await expect(page.locator('[data-testid="${T.passwordStrength}"]')).toHaveClass(/weak/);
     
     await page.fill('input[name="confirmPassword"]', 'different');
     
     // Test password mismatch feedback
-    await expect(page.locator('[data-testid="password-match"]')).toHaveText('✗ Passwords do not match');
-    await expect(page.locator('[data-testid="password-match"]')).toHaveClass(/error/);
+    await expect(page.locator('[data-testid="${T.passwordMatch}"]')).toHaveText('✗ Passwords do not match');
+    await expect(page.locator('[data-testid="${T.passwordMatch}"]')).toHaveClass(/error/);
     
     await page.fill('input[name="displayName"]', '');
     
     // Test display name validation
-    await expect(page.locator('[data-testid="display-name-validation"]')).toHaveText('✗ Display name is required');
-    await expect(page.locator('[data-testid="display-name-validation"]')).toHaveClass(/error/);
+    await expect(page.locator('[data-testid="${T.displayNameValidation}"]')).toHaveText('✗ Display name is required');
+    await expect(page.locator('[data-testid="${T.displayNameValidation}"]')).toHaveClass(/error/);
     
     // Test form submission with validation errors
     await page.click('button:has-text("Sign Up")');
     
     // Should show comprehensive error summary
-    await expect(page.locator('[data-testid="error-summary"]')).toBeVisible();
-    await expect(page.locator('[data-testid="error-summary"]')).toHaveAttribute('role', 'alert');
-    await expect(page.locator('[data-testid="error-summary"]')).toHaveText('Please fix the following errors:');
+    await expect(page.locator('[data-testid="${T.errorSummary}"]')).toBeVisible();
+    await expect(page.locator('[data-testid="${T.errorSummary}"]')).toHaveAttribute('role', 'alert');
+    await expect(page.locator('[data-testid="${T.errorSummary}"]')).toHaveText('Please fix the following errors:');
     
     // Test error recovery - fix one field at a time
     await page.fill('input[name="email"]', 'valid@example.com');
-    await expect(page.locator('[data-testid="email-validation"]')).toHaveText('✓ Valid email format');
-    await expect(page.locator('[data-testid="email-validation"]')).toHaveClass(/success/);
+    await expect(page.locator('[data-testid="${T.emailValidation}"]')).toHaveText('✓ Valid email format');
+    await expect(page.locator('[data-testid="${T.emailValidation}"]')).toHaveClass(/success/);
     
     // Test that error count decreases
-    await expect(page.locator('[data-testid="error-count"]')).toHaveText('3 errors remaining');
+    await expect(page.locator('[data-testid="${T.errorCount}"]')).toHaveText('3 errors remaining');
     
     // Test keyboard navigation through errors
     await page.keyboard.press('Tab');
@@ -234,17 +234,17 @@ test.describe('Enhanced Authentication Flow', () => {
     
     // Test error message persistence
     await page.locator('input[name="password"]').blur();
-    await expect(page.locator('[data-testid="password-error"]')).toBeVisible();
+    await expect(page.locator('[data-testid="${T.passwordError}"]')).toBeVisible();
     
     // Test error message clearing when fixed
     await page.fill('input[name="password"]', 'password123');
-    await expect(page.locator('[data-testid="password-strength"]')).toHaveText('Strong');
-    await expect(page.locator('[data-testid="password-error"]')).not.toBeVisible();
+    await expect(page.locator('[data-testid="${T.passwordStrength}"]')).toHaveText('Strong');
+    await expect(page.locator('[data-testid="${T.passwordError}"]')).not.toBeVisible();
   });
 
   test('should sign in with email with enhanced UX', async ({ page }) => {
     // Test accessibility of sign-in form
-    await expect(page.locator('[data-testid="auth-form"]')).toHaveAttribute('role', 'form');
+    await expect(page.locator('[data-testid="${T.login.form}"]')).toHaveAttribute('role', 'form');
     await expect(page.locator('input[name="email"]')).toHaveAttribute('aria-label', 'Email address');
     await expect(page.locator('input[name="password"]')).toHaveAttribute('aria-label', 'Password');
     
@@ -257,34 +257,34 @@ test.describe('Enhanced Authentication Flow', () => {
     
     // Test real-time email validation
     await page.locator('input[name="email"]').blur();
-    await expect(page.locator('[data-testid="email-validation"]')).toHaveText('✓ Valid email format');
+    await expect(page.locator('[data-testid="${T.emailValidation}"]')).toHaveText('✓ Valid email format');
     
     await page.fill('input[name="password"]', 'password123');
     
     // Test password visibility toggle
-    await page.click('[data-testid="password-toggle"]');
+    await page.click('[data-testid="${T.passwordToggle}"]');
     await expect(page.locator('input[name="password"]')).toHaveAttribute('type', 'text');
     
-    await page.click('[data-testid="password-toggle"]');
+    await page.click('[data-testid="${T.passwordToggle}"]');
     await expect(page.locator('input[name="password"]')).toHaveAttribute('type', 'password');
     
     // Test form submission with loading state
     await page.click('button:has-text("Sign In")');
     
     // Verify loading state
-    await expect(page.locator('[data-testid="submit-button"]')).toHaveAttribute('aria-busy', 'true');
-    await expect(page.locator('[data-testid="submit-button"]')).toBeDisabled();
+    await expect(page.locator('[data-testid="${T.submitButton}"]')).toHaveAttribute('aria-busy', 'true');
+    await expect(page.locator('[data-testid="${T.submitButton}"]')).toBeDisabled();
     
     // Should show success message with animation
     await expect(page.locator('text=Login successful')).toBeVisible();
-    await expect(page.locator('[data-testid="success-message"]')).toHaveClass(/animate-in/);
+    await expect(page.locator('[data-testid="${T.successMessage}"]')).toHaveClass(/animate-in/);
     
     // Should redirect to dashboard
     await expect(page).toHaveURL('/dashboard');
     
     // Test that user is properly authenticated
-    await expect(page.locator('[data-testid="user-menu"]')).toBeVisible();
-    await expect(page.locator('[data-testid="user-avatar"]')).toBeVisible();
+    await expect(page.locator('[data-testid="${T.userMenu}"]')).toBeVisible();
+    await expect(page.locator('[data-testid="${T.userAvatar}"]')).toBeVisible();
   });
 
   test('should handle sign in validation errors', async ({ page }) => {
@@ -473,17 +473,17 @@ test.describe('Enhanced Authentication Flow', () => {
     await page.click('button:has-text("Sign In")');
     
     // Should show error message with proper ARIA attributes
-    await expect(page.locator('[data-testid="error-message"]')).toBeVisible();
-    await expect(page.locator('[data-testid="error-message"]')).toHaveAttribute('role', 'alert');
-    await expect(page.locator('[data-testid="error-message"]')).toHaveText('An error occurred. Please try again');
+    await expect(page.locator('[data-testid="${T.errorMessage}"]')).toBeVisible();
+    await expect(page.locator('[data-testid="${T.errorMessage}"]')).toHaveAttribute('role', 'alert');
+    await expect(page.locator('[data-testid="${T.errorMessage}"]')).toHaveText('An error occurred. Please try again');
     
     // Should show retry button
-    await expect(page.locator('[data-testid="retry-button"]')).toBeVisible();
-    await expect(page.locator('[data-testid="retry-button"]')).toHaveAttribute('aria-label', 'Retry sign in');
+    await expect(page.locator('[data-testid="${T.retryButton}"]')).toBeVisible();
+    await expect(page.locator('[data-testid="${T.retryButton}"]')).toHaveAttribute('aria-label', 'Retry sign in');
     
     // Test error recovery
-    await page.click('[data-testid="retry-button"]');
-    await expect(page.locator('[data-testid="error-message"]')).not.toBeVisible();
+    await page.click('[data-testid="${T.retryButton}"]');
+    await expect(page.locator('[data-testid="${T.errorMessage}"]')).not.toBeVisible();
   });
 
   test('should work on mobile devices with enhanced UX', async ({ page }) => {
@@ -491,19 +491,19 @@ test.describe('Enhanced Authentication Flow', () => {
     await page.setViewportSize({ width: 375, height: 667 });
     
     // Test mobile-specific features
-    await expect(page.locator('[data-testid="mobile-menu"]')).toBeVisible();
-    await expect(page.locator('[data-testid="mobile-menu"]')).toHaveAttribute('aria-label', 'Mobile menu');
+    await expect(page.locator('[data-testid="${T.mobileMenu}"]')).toBeVisible();
+    await expect(page.locator('[data-testid="${T.mobileMenu}"]')).toHaveAttribute('aria-label', 'Mobile menu');
     
     // Test touch interactions
-    await page.tap('[data-testid="auth-form"]');
-    await expect(page.locator('[data-testid="auth-form"]')).toBeFocused();
+    await page.tap('[data-testid="${T.login.form}"]');
+    await expect(page.locator('[data-testid="${T.login.form}"]')).toBeFocused();
     
     // Test mobile keyboard
     await page.fill('input[name="email"]', 'test@example.com');
     await expect(page.locator('input[name="email"]')).toHaveValue('test@example.com');
     
     // Test mobile password visibility
-    await page.tap('[data-testid="password-toggle"]');
+    await page.tap('[data-testid="${T.passwordToggle}"]');
     await expect(page.locator('input[name="password"]')).toHaveAttribute('type', 'text');
     
     // Test mobile form submission
@@ -532,7 +532,7 @@ test.describe('Enhanced Authentication Flow', () => {
     await expect(page.locator('input[name="email"]')).toHaveClass(/focus-visible/);
     
     // Test screen reader support
-    await expect(page.locator('[data-testid="auth-form"]')).toHaveAttribute('aria-labelledby');
+    await expect(page.locator('[data-testid="${T.login.form}"]')).toHaveAttribute('aria-labelledby');
     await expect(page.locator('input[name="email"]')).toHaveAttribute('aria-describedby');
     
     // Test keyboard navigation
@@ -544,15 +544,15 @@ test.describe('Enhanced Authentication Flow', () => {
     
     // Test escape key functionality
     await page.keyboard.press('Escape');
-    await expect(page.locator('[data-testid="auth-form"]')).not.toBeFocused();
+    await expect(page.locator('[data-testid="${T.login.form}"]')).not.toBeFocused();
     
     // Test high contrast mode
     await page.emulateMedia({ colorScheme: 'dark' });
-    await expect(page.locator('[data-testid="auth-form"]')).toBeVisible();
+    await expect(page.locator('[data-testid="${T.login.form}"]')).toBeVisible();
     
     // Test reduced motion
     await page.emulateMedia({ reducedMotion: 'reduce' });
-    await expect(page.locator('[data-testid="auth-form"]')).toBeVisible();
+    await expect(page.locator('[data-testid="${T.login.form}"]')).toBeVisible();
   });
 
   test('should handle progressive enhancement', async ({ page }) => {
@@ -573,7 +573,7 @@ test.describe('Enhanced Authentication Flow', () => {
 
   test('should handle security best practices', async ({ page }) => {
     // Test CSRF protection
-    const csrfToken = await page.locator('[data-testid="csrf-token"]').textContent();
+    const csrfToken = await page.locator('[data-testid="${T.csrfToken}"]').textContent();
     expect(csrfToken).toBeTruthy();
     
     // Test rate limiting
@@ -584,7 +584,7 @@ test.describe('Enhanced Authentication Flow', () => {
     }
     
     // Should show rate limiting message
-    await expect(page.locator('[data-testid="rate-limit-message"]')).toBeVisible();
+    await expect(page.locator('[data-testid="${T.rateLimitMessage}"]')).toBeVisible();
     await expect(page.locator('button:has-text("Sign In")')).toBeDisabled();
     
     // Test password security

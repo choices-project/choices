@@ -61,9 +61,12 @@ export class QuadraticStrategy implements VotingStrategy {
           };
         }
         
-        // Check if option exists
-        const optionExists = poll.options.some(option => option.id === optionId);
-        if (!optionExists) {
+        // Check if option exists (handle both option IDs and indices)
+        const optionIndex = parseInt(optionId, 10);
+        const optionExists = !isNaN(optionIndex) && optionIndex >= 0 && optionIndex < poll.options.length;
+        const optionExistsById = poll.options.some(option => option.id === optionId);
+        
+        if (!optionExists && !optionExistsById) {
           return {
             valid: false,
             isValid: false,

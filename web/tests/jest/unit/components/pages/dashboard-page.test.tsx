@@ -12,6 +12,7 @@ import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import SuperiorMobileFeed from '@/features/feeds/components/SuperiorMobileFeed';
+import { T } from '@/lib/testing/testIds';
 
 // Mock Next.js router
 jest.mock('next/navigation', () => ({
@@ -229,8 +230,8 @@ describe('SuperiorMobileFeed - Real Component Testing', () => {
 
       // Test real component elements
       expect(screen.getByText('Choices')).toBeInTheDocument();
-      expect(screen.getByTestId('hamburger-menu')).toBeInTheDocument();
-      expect(screen.getByTestId('theme-toggle')).toBeInTheDocument();
+      expect(screen.getByTestId(T.hamburgerMenu)).toBeInTheDocument();
+      expect(screen.getByTestId(T.themeToggle)).toBeInTheDocument();
     });
 
     it('should display real feed data from the store', () => {
@@ -253,7 +254,7 @@ describe('SuperiorMobileFeed - Real Component Testing', () => {
       );
 
       // Test real online status using test ID to avoid duplicate text issues
-      expect(screen.getByTestId('online-indicator')).toBeInTheDocument();
+      expect(screen.getByTestId(T.onlineIndicator)).toBeInTheDocument();
     });
   });
 
@@ -265,7 +266,7 @@ describe('SuperiorMobileFeed - Real Component Testing', () => {
         </BrowserRouter>
       );
 
-      const themeToggle = screen.getByTestId('theme-toggle');
+      const themeToggle = screen.getByTestId(T.themeToggle);
       fireEvent.click(themeToggle);
 
       // Test that theme toggle actually works
@@ -279,7 +280,7 @@ describe('SuperiorMobileFeed - Real Component Testing', () => {
         </BrowserRouter>
       );
 
-      const hamburgerMenu = screen.getByTestId('hamburger-menu');
+      const hamburgerMenu = screen.getByTestId(T.hamburgerMenu);
       fireEvent.click(hamburgerMenu);
 
       // Test that hamburger menu actually works
@@ -460,8 +461,8 @@ describe('SuperiorMobileFeed - Real Component Testing', () => {
       );
 
       // Test real accessibility features
-      expect(screen.getByTestId('theme-toggle')).toBeInTheDocument();
-      expect(screen.getByTestId('hamburger-menu')).toBeInTheDocument();
+      expect(screen.getByTestId(T.themeToggle)).toBeInTheDocument();
+      expect(screen.getByTestId(T.hamburgerMenu)).toBeInTheDocument();
     });
 
     it('should support keyboard navigation', () => {
@@ -472,7 +473,7 @@ describe('SuperiorMobileFeed - Real Component Testing', () => {
       );
 
       // Test keyboard navigation
-      const themeToggle = screen.getByTestId('theme-toggle');
+      const themeToggle = screen.getByTestId(T.themeToggle);
       themeToggle.focus();
       expect(document.activeElement).toBe(themeToggle);
     });
@@ -509,64 +510,11 @@ describe('SuperiorMobileFeed - Real Component Testing', () => {
         </BrowserRouter>
       );
 
-        rerender(
-          <BrowserRouter>
-          <SuperiorMobileFeed userId="test-user-1" />
-          </BrowserRouter>
-        );
-
-      // Test that component handles re-renders efficiently
-      expect(screen.getByText('Choices')).toBeInTheDocument();
-    });
-    });
-
-    it('should handle multiple re-renders efficiently', async () => {
-      const { rerender } = render(
-        <BrowserRouter>
-          <SuperiorMobileFeed userId="test-user-1" />
-        </BrowserRouter>
-      );
-
-      // Test multiple re-renders
       rerender(
         <BrowserRouter>
-          <SuperiorMobileFeed userId="test-user-2" />
-        </BrowserRouter>
-      );
-
-        rerender(
-          <BrowserRouter>
-          <SuperiorMobileFeed userId="test-user-1" />
-          </BrowserRouter>
-        );
-
-      // Test that component handles re-renders efficiently
-      expect(screen.getByText('Choices')).toBeInTheDocument();
-    });
-  });
-});
-      expect(renderTime).toBeLessThan(2000); // 2s threshold for real component
-    });
-
-    it('should handle multiple re-renders efficiently', async () => {
-      const { rerender } = render(
-        <BrowserRouter>
           <SuperiorMobileFeed userId="test-user-1" />
         </BrowserRouter>
       );
-
-      // Test multiple re-renders
-      rerender(
-        <BrowserRouter>
-          <SuperiorMobileFeed userId="test-user-2" />
-        </BrowserRouter>
-      );
-
-        rerender(
-          <BrowserRouter>
-          <SuperiorMobileFeed userId="test-user-1" />
-          </BrowserRouter>
-        );
 
       // Test that component handles re-renders efficiently
       expect(screen.getByText('Choices')).toBeInTheDocument();

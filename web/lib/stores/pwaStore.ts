@@ -245,7 +245,7 @@ export const usePWAStore = create<PWAStore>()(
         
         // Installation actions
         setInstallation: (installation) => set((state) => ({
-          installation: withOptional(state.installation, installation)
+          installation: { ...state.installation, ...installation }
         })),
         
         setInstallPrompt: (prompt) => set((state) => ({

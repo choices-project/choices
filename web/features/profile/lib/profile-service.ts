@@ -204,7 +204,7 @@ export async function updateProfile(updates: ProfileUpdateData): Promise<Profile
     // Transform data for API
     const apiData = transformProfileUpdateToApi(updates);
 
-    const response = await fetch('/api/profile/update', {
+    const response = await fetch('/api/profile?action=update', {
       method: 'PUT',
       credentials: 'include',
       headers: {
@@ -266,7 +266,7 @@ export async function updateProfileAvatar(file: File): Promise<AvatarUploadResul
     const formData = new FormData();
     formData.append('avatar', file);
 
-    const response = await fetch('/api/profile/avatar', {
+    const response = await fetch('/api/profile?action=avatar', {
       method: 'POST',
       credentials: 'include',
       body: formData,

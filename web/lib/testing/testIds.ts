@@ -298,6 +298,58 @@ export const T = {
   systemStatus: 'system-status',
   deletePollButton: 'delete-poll-button',
   moderatePollButton: 'moderate-poll-button',
+  
+  // Navigation & UI Components
+  hamburgerMenu: 'hamburger-menu',
+  themeToggle: 'theme-toggle',
+  onlineIndicator: 'online-indicator',
+  mainHeading: 'main-heading',
+  button: 'button',
+  status: 'status',
+  
+  // Test Toggle (for debugging)
+  testToggle: 'test-toggle',
+  
+  // Login Form
+  loginHydrated: 'login-hydrated',
+  loginForm: 'login-form',
+  loginError: 'login-error',
+  
+  // Onboarding Passkey Setup
+  onboardingPasskeySetup: 'onboarding-passkey-setup',
+  authPasskeyOption: 'auth-passkey-option',
+  authEmailOption: 'auth-email-option',
+  authGoogleOption: 'auth-google-option',
+  
+  // Onboarding Flow Steps
+  welcomeNext: 'welcome-next',
+  privacyNext: 'privacy-next',
+  profileNext: 'profile-next',
+  tourNext: 'tour-next',
+  dataUsageNext: 'data-usage-next',
+  interestsNext: 'interests-next',
+  experienceNext: 'experience-next',
+  
+  // Form Validation & UI Elements
+  emailValidation: 'email-validation',
+  passwordStrength: 'password-strength',
+  passwordMatch: 'password-match',
+  displayNameValidation: 'display-name-validation',
+  submitButton: 'submit-button',
+  successMessage: 'success-message',
+  userMenu: 'user-menu',
+  userAvatar: 'user-avatar',
+  emailError: 'email-error',
+  passwordError: 'password-error',
+  displayNameError: 'display-name-error',
+  errorSummary: 'error-summary',
+  errorCount: 'error-count',
+  passwordToggle: 'password-toggle',
+  errorMessage: 'error-message',
+  retryButton: 'retry-button',
+  mobileMenu: 'mobile-menu',
+  csrfToken: 'csrf-token',
+  rateLimitMessage: 'rate-limit-message',
 } as const;
 
 export type TestId = typeof T[keyof typeof T];
