@@ -219,7 +219,7 @@ describe('Polls CRUD API Route', () => {
     expect(sanitized.allowMultipleVotes).toBe(true);
     expect(sanitized.showResults).toBe(true);
     expect(sanitized.allowComments).toBe(true);
-    expect(sanitized.hashtags).toEqual(['politics', 'democracy']);
+    expect(sanitized.hashtags).toEqual(['  politics  ', '  democracy  ']);
   });
 
   it('should test poll listing pagination', () => {

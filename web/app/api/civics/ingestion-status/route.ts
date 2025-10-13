@@ -21,7 +21,7 @@ const supabase = createClient(
 
 export async function GET(_request: NextRequest) {
   try {
-    console.log('🔍 Checking ingestion status...');
+    logger.info('🔍 Checking ingestion status...');
     
     // Check database connection
     const { error: connectionError } = await supabase

@@ -41,7 +41,7 @@ describe('Feature Integration Error Prevention', () => {
     });
     
     if (problematicFiles.length > 0) {
-      console.log('Files with hashtag integration issues:', problematicFiles);
+      logger.info('Files with hashtag integration issues:', problematicFiles);
     }
     
     expect(problematicFiles).toHaveLength(0);
@@ -75,7 +75,7 @@ describe('Feature Integration Error Prevention', () => {
     });
     
     if (problematicFiles.length > 0) {
-      console.log('Files with missing analytics tracking:', problematicFiles);
+      logger.info('Files with missing analytics tracking:', problematicFiles);
     }
     
     expect(problematicFiles).toHaveLength(0);
@@ -115,7 +115,7 @@ describe('Feature Integration Error Prevention', () => {
     });
     
     if (problematicFiles.length > 0) {
-      console.log('Files with inconsistent state management:', problematicFiles);
+      logger.info('Files with inconsistent state management:', problematicFiles);
     }
     
     expect(problematicFiles).toHaveLength(0);
@@ -149,7 +149,7 @@ describe('Feature Integration Error Prevention', () => {
     });
     
     if (problematicFiles.length > 0) {
-      console.log('Files with inconsistent error handling:', problematicFiles);
+      logger.info('Files with inconsistent error handling:', problematicFiles);
     }
     
     expect(problematicFiles).toHaveLength(0);

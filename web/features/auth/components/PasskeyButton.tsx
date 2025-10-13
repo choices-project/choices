@@ -168,7 +168,7 @@ export function EmailLinkButton({
     setLoading(true);
     try {
       // Implement email link functionality
-      console.log('Email link clicked');
+      logger.info('Email link clicked');
       onSuccess?.();
     } catch (err) {
       onError?.(err instanceof Error ? err.message : 'Email link failed');

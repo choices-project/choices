@@ -35,9 +35,9 @@ export default function AppLayout({
 
   // Initialize PWA functionality
   useEffect(() => {
-    console.log('PWA: Starting initialization...')
+    logger.info('PWA: Starting initialization...')
     initializePWA().then(() => {
-      console.log('PWA: Initialization completed successfully')
+      logger.info('PWA: Initialization completed successfully')
     }).catch(error => {
       console.error('PWA: Failed to initialize PWA:', error)
     })

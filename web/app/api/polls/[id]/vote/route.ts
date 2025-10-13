@@ -25,7 +25,7 @@ export async function POST(
 ) {
   try {
     devLog('Vote submission attempt for poll:', params.id)
-    console.log('POST vote API called with pollId:', params.id);
+    devLog('POST vote API called with pollId:', params.id);
     
     const pollId = params.id
 

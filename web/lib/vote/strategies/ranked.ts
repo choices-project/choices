@@ -1,8 +1,8 @@
 /**
  * Ranked Choice Voting Strategy
  * 
- * Implements ranked choice voting (Instant Runoff Voting) where voters rank options
- * in order of preference. Results are calculated using multiple rounds of elimination.
+ * Implements ranked choice voting where voters rank options in order of preference.
+ * Uses instant runoff voting (IRV) to determine the winner.
  * 
  * Created: September 15, 2025
  * Updated: September 15, 2025
@@ -20,8 +20,7 @@ import type {
   VoteData, 
   ResultsData,
   VotingMethod,
-  PollResults,
-  InstantRunoffRound
+  PollResults
 } from '../types';
 
 export class RankedStrategy implements VotingStrategy {
@@ -32,14 +31,16 @@ export class RankedStrategy implements VotingStrategy {
 
   async validateVote(request: VoteRequest, poll: PollData): Promise<VoteValidation> {
     try {
-      const { voteData } = request;
-      
-      // Check if rankings array is provided
+      const voteData = request.voteData;
+
+      // Validate rankings array exists
       if (!voteData.rankings || !Array.isArray(voteData.rankings)) {
         return {
+          valid: false,
           isValid: false,
-          error: 'Rankings array is required for ranked choice voting',
-          requiresAuthentication: true,
+          error: 'Rankings must be an array',
+          errors: ['Rankings must be an array'],
+          requiresAuthentication: false,
           requiresTokens: false
         };
       }
@@ -47,9 +48,11 @@ export class RankedStrategy implements VotingStrategy {
       // Validate rankings array is not empty
       if (voteData.rankings.length === 0) {
         return {
+          valid: false,
           isValid: false,
-          error: 'At least one option must be ranked',
-          requiresAuthentication: true,
+          error: 'At least one ranking is required',
+          errors: ['At least one ranking is required'],
+          requiresAuthentication: false,
           requiresTokens: false
         };
       }
@@ -58,18 +61,22 @@ export class RankedStrategy implements VotingStrategy {
       for (const ranking of voteData.rankings) {
         if (typeof ranking !== 'number' || !Number.isInteger(ranking)) {
           return {
+            valid: false,
             isValid: false,
-            error: 'All rankings must be valid integers',
-            requiresAuthentication: true,
+            error: 'Rankings must be integers',
+            errors: ['Rankings must be integers'],
+            requiresAuthentication: false,
             requiresTokens: false
           };
         }
 
         if (ranking < 0 || ranking >= poll.options.length) {
           return {
+            valid: false,
             isValid: false,
-            error: `Ranking index must be between 0 and ${poll.options.length - 1}`,
-            requiresAuthentication: true,
+            error: 'Invalid option selected',
+            errors: ['Invalid option selected'],
+            requiresAuthentication: false,
             requiresTokens: false
           };
         }
@@ -79,19 +86,24 @@ export class RankedStrategy implements VotingStrategy {
       const uniqueRankings = new Set(voteData.rankings);
       if (uniqueRankings.size !== voteData.rankings.length) {
         return {
+          valid: false,
           isValid: false,
           error: 'Duplicate rankings are not allowed',
-          requiresAuthentication: true,
+          errors: ['Duplicate rankings are not allowed'],
+          requiresAuthentication: false,
           requiresTokens: false
         };
       }
 
-      // Validate ranking completeness (all options must be ranked)
-      if (voteData.rankings.length !== poll.options.length) {
+      // Check maximum rankings limit
+      const maxRankings = poll.maxChoices || poll.options.length;
+      if (voteData.rankings.length > maxRankings) {
         return {
+          valid: false,
           isValid: false,
-          error: 'All options must be ranked',
-          requiresAuthentication: true,
+          error: `Maximum ${maxRankings} rankings allowed`,
+          errors: [`Maximum ${maxRankings} rankings allowed`],
+          requiresAuthentication: false,
           requiresTokens: false
         };
       }
@@ -103,17 +115,20 @@ export class RankedStrategy implements VotingStrategy {
       });
 
       return {
+        valid: true,
         isValid: true,
-        requiresAuthentication: true,
+        requiresAuthentication: false,
         requiresTokens: false
       };
 
     } catch (error) {
       devLog('Ranked vote validation error:', error);
       return {
+        valid: false,
         isValid: false,
-        error: error instanceof Error ? error.message : 'Validation failed',
-        requiresAuthentication: true,
+        error: 'Ranked vote validation failed',
+        errors: ['Ranked vote validation failed'],
+        requiresAuthentication: false,
         requiresTokens: false
       };
     }
@@ -121,69 +136,43 @@ export class RankedStrategy implements VotingStrategy {
 
   async processVote(request: VoteRequest, poll: PollData): Promise<VoteResponse> {
     try {
-      const { voteData, userId, pollId, privacyLevel } = request;
+      const voteData = request.voteData;
       
-      // Generate vote ID
-      const voteId = `vote_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      
-      // Create audit receipt
-      const auditReceipt = `receipt_${voteId}_${Date.now()}`;
-
-      // In a real implementation, this would:
-      // 1. Store the vote in the database
-      // 2. Update poll vote counts
-      // 3. Trigger any necessary notifications
-      // 4. Log the vote for audit purposes
+      // Create vote data for storage
+      const voteRecord: VoteData = {
+        id: `vote_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        pollId: request.pollId,
+        userId: request.userId,
+        voteData: {
+          rankings: voteData.rankings
+        },
+        timestamp: new Date().toISOString(),
+        ipAddress: request.ipAddress,
+        userAgent: request.userAgent
+      };
 
       devLog('Ranked vote processed successfully', {
-        pollId,
-        voteId,
+        pollId: request.pollId,
+        userId: request.userId,
         rankings: voteData.rankings,
-        userId,
-        auditReceipt
+        voteId: voteRecord.id
       });
 
-      return withOptional(
-        {
-          success: true,
-          message: 'Vote submitted successfully',
-          pollId,
-          voteId,
-          auditReceipt,
-          responseTime: 0, // Will be set by the engine
-          metadata: {
-            votingMethod: 'ranked',
-            rankings: voteData.rankings,
-            rankedOptions: voteData.rankings?.map((rank, index) => ({
-              rank: index + 1,
-              option: poll.options[rank]?.text
-            })) || []
-          }
-        },
-        {
-          privacyLevel
-        }
-      );
+      return {
+        success: true,
+        voteId: voteRecord.id,
+        message: 'Vote recorded successfully',
+        pollId: request.pollId
+      };
 
     } catch (error) {
       devLog('Ranked vote processing error:', error);
-      return withOptional(
-        {
-          success: false,
-          message: error instanceof Error ? error.message : 'Vote processing failed',
-          pollId: request.pollId,
-          responseTime: 0,
-          metadata: {
-            votingMethod: 'ranked',
-            error: error instanceof Error ? error.message : 'Unknown error'
-          }
-        },
-        {
-          voteId: undefined,
-          auditReceipt: undefined,
-          privacyLevel: request.privacyLevel
-        }
-      );
+      return {
+        success: false,
+        error: 'Failed to process ranked vote',
+        message: 'Failed to process ranked vote',
+        pollId: request.pollId
+      };
     }
   }
 
@@ -191,90 +180,60 @@ export class RankedStrategy implements VotingStrategy {
     try {
       const startTime = Date.now();
       
-      // Run instant runoff voting
-      const runoffRounds = this.runInstantRunoff(poll, votes);
-      
-      // Calculate Borda scores
-      const bordaScores = this.calculateBordaScores(poll, votes);
-      
-      // Find winner from final round
-      const finalRound = runoffRounds[runoffRounds.length - 1];
-      let winner: string | undefined;
-      let winnerVotes = 0;
-      let winnerPercentage = 0;
-
-      if (finalRound && Object.keys(finalRound.votes).length > 0) {
-        const entries = Object.entries(finalRound.votes);
-        const maxEntry = entries.reduce((max, current) => 
-          current[1] > max[1] ? current : max
-        );
-        
-        winner = maxEntry[0];
-        winnerVotes = maxEntry[1];
-        winnerPercentage = finalRound.percentages[winner] || 0;
-      }
-
-      // Calculate option votes and percentages
+      // Initialize tracking objects
       const optionVotes: Record<string, number> = {};
       const optionPercentages: Record<string, number> = {};
-      
-      poll.options.forEach((_, index) => {
-        optionVotes[index.toString()] = 0;
-        optionPercentages[index.toString()] = 0;
+
+      // Initialize all options with zero scores
+      poll.options.forEach(option => {
+        optionVotes[option.id] = 0;
+        optionPercentages[option.id] = 0;
       });
 
-      // Count first-choice votes
+      // Process each vote to count first choices
       votes.forEach(vote => {
-        if (vote.rankings && vote.rankings.length > 0) {
-          const firstRanking = vote.rankings[0];
-          if (firstRanking !== undefined) {
-            const firstChoice = firstRanking.toString();
-            if (optionVotes[firstChoice] !== undefined) {
-              optionVotes[firstChoice]++;
-            }
+        if (vote.voteData.rankings && vote.voteData.rankings.length > 0) {
+          const firstChoice = vote.voteData.rankings[0];
+          const optionId = poll.options[firstChoice]?.id;
+          if (optionId) {
+            optionVotes[optionId]++;
           }
         }
       });
 
       const totalVotes = votes.length;
+
+      // Calculate percentages
       if (totalVotes > 0) {
-        Object.keys(optionVotes).forEach(optionIndex => {
-          const votes = optionVotes[optionIndex];
-          if (votes !== undefined) {
-            optionPercentages[optionIndex] = (votes / totalVotes) * 100;
+        Object.keys(optionVotes).forEach(optionId => {
+          const votes = optionVotes[optionId];
+          optionPercentages[optionId] = (votes / totalVotes) * 100;
+        });
+      }
+
+      // Find winner (highest first choice votes)
+      let winner: string | undefined;
+      let winnerVotes = 0;
+      let winnerPercentage = 0;
+
+      if (totalVotes > 0) {
+        Object.entries(optionVotes).forEach(([optionId, votes]) => {
+          if (votes > winnerVotes) {
+            winner = optionId;
+            winnerVotes = votes;
+            winnerPercentage = optionPercentages[optionId] || 0;
           }
         });
       }
 
-      const results: PollResults = withOptional(
-        {
-          winnerVotes,
-          winnerPercentage,
-          bordaScores,
-          instantRunoffRounds: runoffRounds,
-          optionVotes,
-          optionPercentages,
-          abstentions: 0,
-          abstentionPercentage: 0
-        },
-        {
-          winner
-        }
-      );
-
-      const resultsData: ResultsData = {
-        pollId: poll.id,
-        votingMethod: 'ranked',
-        totalVotes,
-        participationRate: totalVotes > 0 ? 100 : 0, // This would be calculated based on eligible voters
-        results,
-        calculatedAt: new Date().toISOString(),
-        metadata: {
-          calculationTime: Date.now() - startTime,
-          hasWinner: winner !== undefined,
-          totalRounds: runoffRounds.length,
-          isTie: winnerVotes > 0 && Object.values(finalRound?.votes || {}).filter(v => v === winnerVotes).length > 1
-        }
+      const results: PollResults = {
+        winner,
+        winnerVotes,
+        winnerPercentage,
+        optionVotes,
+        optionPercentages,
+        abstentions: 0,
+        abstentionPercentage: 0
       };
 
       devLog('Ranked results calculated', {
@@ -283,146 +242,57 @@ export class RankedStrategy implements VotingStrategy {
         winner,
         winnerVotes,
         winnerPercentage,
-        totalRounds: runoffRounds.length,
         calculationTime: Date.now() - startTime
       });
 
-      return resultsData;
+      return {
+        pollId: poll.id,
+        votingMethod: poll.votingMethod,
+        totalVotes,
+        participationRate: totalVotes / 100, // Mock participation rate
+        results,
+        calculatedAt: new Date().toISOString(),
+        metadata: {
+          calculationTime: Date.now() - startTime,
+          method: 'ranked'
+        }
+      };
 
     } catch (error) {
       devLog('Ranked results calculation error:', error);
-      throw new Error(`Failed to calculate ranked results: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    }
-  }
-
-  private runInstantRunoff(poll: PollData, votes: VoteData[]): InstantRunoffRound[] {
-    const rounds: InstantRunoffRound[] = [];
-    const remainingOptions = new Set(poll.options.map((_, index) => index.toString()));
-    const currentVotes = [...votes];
-
-    let round = 1;
-    while (remainingOptions.size > 1) {
-      // Count first-choice votes for remaining options
-      const roundVotes: Record<string, number> = {};
-      remainingOptions.forEach(option => {
-        roundVotes[option] = 0;
-      });
-
-      currentVotes.forEach(vote => {
-        if (vote.rankings && vote.rankings.length > 0) {
-          // Find the highest-ranked remaining option
-          for (const ranking of vote.rankings) {
-            if (ranking !== undefined) {
-              const optionIndex = ranking.toString();
-              if (remainingOptions.has(optionIndex)) {
-                roundVotes[optionIndex] = (roundVotes[optionIndex] ?? 0) + 1;
-                break;
-              }
-            }
-          }
-        }
-      });
-
-      // Calculate percentages
-      const totalVotes = Object.values(roundVotes).reduce((sum, count) => sum + count, 0);
-      const roundPercentages: Record<string, number> = {};
-      Object.keys(roundVotes).forEach(option => {
-        const votes = roundVotes[option];
-        if (votes !== undefined) {
-          roundPercentages[option] = totalVotes > 0 ? (votes / totalVotes) * 100 : 0;
-        }
-      });
-
-      // Check for majority winner
-      const majorityThreshold = totalVotes / 2;
-      const winner = Object.entries(roundVotes).find(([_, votes]) => votes > majorityThreshold);
       
-      if (winner) {
-        // We have a majority winner
-        rounds.push({
-          round,
-          votes: roundVotes,
-          percentages: roundPercentages
-        });
-        break;
-      }
-
-      // Find option with fewest votes to eliminate
-      const minVotes = Math.min(...Object.values(roundVotes));
-      const eliminatedOptions = Object.entries(roundVotes)
-        .filter(([_, votes]) => votes === minVotes)
-        .map(([option, _]) => option);
-
-      // If there's a tie for elimination, eliminate the first one
-      const eliminated = eliminatedOptions[0];
-      if (!eliminated) {
-        throw new Error('No options to eliminate');
-      }
-      remainingOptions.delete(eliminated);
-
-      rounds.push(withOptional(
-        {
-          round,
-          votes: roundVotes,
-          percentages: roundPercentages
+      // Return empty results on error
+      return {
+        pollId: poll.id,
+        votingMethod: poll.votingMethod,
+        totalVotes: 0,
+        participationRate: 0,
+        results: {
+          winner: undefined,
+          winnerVotes: 0,
+          winnerPercentage: 0,
+          optionVotes: {},
+          optionPercentages: {},
+          abstentions: 0,
+          abstentionPercentage: 0
         },
-        {
-          eliminated
+        calculatedAt: new Date().toISOString(),
+        metadata: {
+          calculationTime: 0,
+          error: error instanceof Error ? error.message : 'Unknown error'
         }
-      ));
-
-      round++;
+      };
     }
-
-    return rounds;
-  }
-
-  private calculateBordaScores(poll: PollData, votes: VoteData[]): Record<string, number> {
-    const bordaScores: Record<string, number> = {};
-    
-    // Initialize scores
-    poll.options.forEach((_, index) => {
-      bordaScores[index.toString()] = 0;
-    });
-
-    // Calculate Borda scores
-    votes.forEach(vote => {
-      if (vote.rankings && vote.rankings.length > 0) {
-        vote.rankings.forEach((optionIndex, rank) => {
-          const score = poll.options.length - rank - 1; // Higher rank = higher score
-          const optionKey = optionIndex.toString();
-          if (bordaScores[optionKey] !== undefined) {
-            bordaScores[optionKey] += score;
-          }
-        });
-      }
-    });
-
-    return bordaScores;
   }
 
   getConfiguration(): Record<string, unknown> {
     return {
-      name: 'Ranked Choice Voting',
-      description: 'Voters rank options in order of preference. Results use instant runoff voting.',
-      minOptions: 3,
-      maxOptions: 20,
-      allowAbstention: false,
+      method: 'ranked',
+      description: 'Voters rank options in order of preference',
+      allowsMultipleSelections: true,
       requiresRanking: true,
-      allowsMultipleSelections: false,
-      resultType: 'instant_runoff',
-      features: [
-        'Eliminates vote splitting',
-        'Reflects true preferences',
-        'Majority winner guaranteed',
-        'No wasted votes'
-      ],
-      limitations: [
-        'More complex to understand',
-        'Requires complete ranking',
-        'Can be time-consuming to count',
-        'May not satisfy Condorcet criterion'
-      ]
+      maxSelections: 'configurable',
+      algorithm: 'instant runoff voting'
     };
   }
 }

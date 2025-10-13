@@ -39,7 +39,7 @@ describe('Store Type Safety', () => {
     });
     
     if (problematicStores.length > 0) {
-      console.log('Stores needing index signatures:', problematicStores);
+      logger.info('Stores needing index signatures:', problematicStores);
     }
     
     expect(problematicStores).toHaveLength(0);
@@ -68,7 +68,7 @@ describe('Store Type Safety', () => {
     });
     
     if (problematicStores.length > 0) {
-      console.log('Stores with untyped actions:', problematicStores);
+      logger.info('Stores with untyped actions:', problematicStores);
     }
     
     expect(problematicStores).toHaveLength(0);
@@ -94,7 +94,7 @@ describe('Store Type Safety', () => {
     });
     
     if (problematicStores.length > 0) {
-      console.log('Stores with improper subscriptions:', problematicStores);
+      logger.info('Stores with improper subscriptions:', problematicStores);
     }
     
     expect(problematicStores).toHaveLength(0);
@@ -123,7 +123,7 @@ describe('Store Type Safety', () => {
     });
     
     if (problematicStores.length > 0) {
-      console.log('Stores with missing error handling:', problematicStores);
+      logger.info('Stores with missing error handling:', problematicStores);
     }
     
     expect(problematicStores).toHaveLength(0);
@@ -151,7 +151,7 @@ describe('Store Type Safety', () => {
     });
     
     if (problematicFiles.length > 0) {
-      console.log('Files with improper store imports:', problematicFiles);
+      logger.info('Files with improper store imports:', problematicFiles);
     }
     
     expect(problematicFiles).toHaveLength(0);

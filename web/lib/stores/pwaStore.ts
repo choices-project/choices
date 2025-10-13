@@ -289,7 +289,7 @@ export const usePWAStore = create<PWAStore>()(
           }
         },
         
-        uninstallPWA: async () => {
+        uninstallPWA: () => {
           const { setInstalling, setError } = get();
           
           try {
@@ -461,7 +461,7 @@ export const usePWAStore = create<PWAStore>()(
           }
         },
         
-        installUpdate: async () => {
+        installUpdate: () => {
           const { setUpdating, setError } = get();
           
           try {
@@ -665,7 +665,7 @@ export const usePWAStore = create<PWAStore>()(
           }
         },
         
-        exportData: async () => {
+        exportData: () => {
           const { setLoading, setError } = get();
           
           try {
@@ -698,7 +698,7 @@ export const usePWAStore = create<PWAStore>()(
           }
         },
         
-        importData: async (data) => {
+        importData: (data) => {
           const { setLoading, setError } = get();
           
           try {
@@ -936,7 +936,7 @@ export const pwaStoreDebug = {
    */
   logState: () => {
     const state = usePWAStore.getState();
-    console.log('PWA Store State:', {
+    logger.debug('PWA Store State', {
       isInstalled: state.installation.isInstalled,
       canInstall: state.installation.canInstall,
       isOnline: state.offline.isOnline,
@@ -954,7 +954,7 @@ export const pwaStoreDebug = {
    */
   logSummary: () => {
     const summary = pwaStoreUtils.getPWASummary();
-    console.log('PWA Summary:', summary);
+    logger.debug('PWA Summary', summary);
   },
   
   /**
@@ -962,7 +962,7 @@ export const pwaStoreDebug = {
    */
   logOfflineCapability: () => {
     const capability = pwaStoreUtils.getOfflineCapability();
-    console.log('Offline Capability:', capability);
+    logger.debug('Offline Capability', capability);
   },
   
   /**
@@ -971,6 +971,6 @@ export const pwaStoreDebug = {
   reset: () => {
     usePWAStore.getState().resetPreferences();
     usePWAStore.getState().clearNotifications();
-    console.log('PWA store reset');
+    logger.info('PWA store reset');
   }
 };

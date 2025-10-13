@@ -8,7 +8,7 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 async function getTableStructure() {
   try {
-    console.log('🔍 Getting representatives_core table structure...');
+    logger.info('🔍 Getting representatives_core table structure...');
     
     // Get a sample record to see the structure
     const { data, error } = await supabase
@@ -22,25 +22,25 @@ async function getTableStructure() {
     }
     
     if (data && data.length > 0) {
-      console.log('📊 Sample record structure:');
-      console.log(JSON.stringify(data[0], null, 2));
+      logger.info('📊 Sample record structure:');
+      logger.info(JSON.stringify(data[0], null, 2));
       
       // Check for enhanced JSONB columns
       const record = data[0];
-      console.log('\n🔍 Enhanced data columns:');
-      console.log('enhanced_contacts:', record.enhanced_contacts ? '✅ Present' : '❌ Missing');
-      console.log('enhanced_photos:', record.enhanced_photos ? '✅ Present' : '❌ Missing');
-      console.log('enhanced_activity:', record.enhanced_activity ? '✅ Present' : '❌ Missing');
-      console.log('enhanced_social_media:', record.enhanced_social_media ? '✅ Present' : '❌ Missing');
+      logger.info('\n🔍 Enhanced data columns:');
+      logger.info('enhanced_contacts:', record.enhanced_contacts ? '✅ Present' : '❌ Missing');
+      logger.info('enhanced_photos:', record.enhanced_photos ? '✅ Present' : '❌ Missing');
+      logger.info('enhanced_activity:', record.enhanced_activity ? '✅ Present' : '❌ Missing');
+      logger.info('enhanced_social_media:', record.enhanced_social_media ? '✅ Present' : '❌ Missing');
       
       if (record.enhanced_contacts) {
-        console.log('\n📞 Enhanced contacts sample:', record.enhanced_contacts);
+        logger.info('\n📞 Enhanced contacts sample:', record.enhanced_contacts);
       }
       if (record.enhanced_photos) {
-        console.log('\n📸 Enhanced photos sample:', record.enhanced_photos);
+        logger.info('\n📸 Enhanced photos sample:', record.enhanced_photos);
       }
       if (record.enhanced_activity) {
-        console.log('\n📋 Enhanced activity sample:', record.enhanced_activity);
+        logger.info('\n📋 Enhanced activity sample:', record.enhanced_activity);
       }
     }
     
@@ -50,7 +50,7 @@ async function getTableStructure() {
       .select('*', { count: 'exact', head: true });
     
     if (!countError) {
-      console.log(`\n📊 Total records in representatives_core: ${count}`);
+      logger.info(`\n📊 Total records in representatives_core: ${count}`);
     }
     
   } catch (err) {

@@ -10,6 +10,7 @@ import { type NextRequest, NextResponse } from 'next/server';
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
 import { createApiLogger } from '@/lib/utils/api-logger';
 import { logger } from '@/lib/utils/logger';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
@@ -154,40 +155,49 @@ export async function GET(request: NextRequest) {
  * Get target subscriptions based on criteria
  */
 async function getTargetSubscriptions(targetUsers?: string[], targetType: string = 'all'): Promise<any[]> {
-  // This would typically query your database for active subscriptions
-  // For now, we'll return mock data
+  const supabase = await getSupabaseServerClient();
   
   logger.info('Getting subscriptions for target type', { targetType });
   
+  let query = supabase
+    .from('push_subscriptions')
+    .select(`
+      id,
+      user_id,
+      endpoint,
+      p256dh_key,
+      auth_key,
+      user_notification_preferences!inner(
+        push_enabled,
+        poll_notifications,
+        system_notifications,
+        marketing_notifications
+      )
+    `)
+    .eq('user_notification_preferences.push_enabled', true);
+  
   if (targetUsers && targetUsers.length > 0) {
-    // Return subscriptions for specific users
-    return targetUsers.map(userId => ({
-      id: `sub_${userId}`,
-      userId,
-      subscription: {
-        endpoint: `https://fcm.googleapis.com/fcm/send/mock_${userId}`,
-        keys: {
-          p256dh: 'mock_p256dh_key',
-          auth: 'mock_auth_key'
-        }
-      }
-    }));
+    query = query.in('user_id', targetUsers);
   }
-
-  // Return all active subscriptions (mock)
-  return [
-    {
-      id: 'sub_all_1',
-      userId: 'user_1',
-      subscription: {
-        endpoint: 'https://fcm.googleapis.com/fcm/send/mock_1',
-        keys: {
-          p256dh: 'mock_p256dh_key_1',
-          auth: 'mock_auth_key_1'
-        }
+  
+  const { data: subscriptions, error } = await query;
+  
+  if (error) {
+    logger.error('PWA: Failed to get target subscriptions:', error);
+    return [];
+  }
+  
+  return subscriptions.map(sub => ({
+    id: sub.id,
+    userId: sub.user_id,
+    subscription: {
+      endpoint: sub.endpoint,
+      keys: {
+        p256dh: sub.p256dh_key,
+        auth: sub.auth_key
       }
     }
-  ];
+  }));
 }
 
 /**
@@ -263,14 +273,60 @@ async function simulatePushNotification(subscription: any, payload: any): Promis
  * Log notification for tracking
  */
 async function logNotification(notification: any): Promise<void> {
-  // This would typically store in your database
-  logger.info('PWA: Logging notification:', notification);
+  const supabase = await getSupabaseServerClient();
+  
+  const { error } = await supabase
+    .from('notification_logs')
+    .insert({
+      subscription_id: notification.subscriptionId,
+      user_id: notification.userId,
+      title: notification.title,
+      message: notification.message,
+      sent_at: notification.sentAt,
+      status: notification.status,
+      error_message: notification.error || null
+    });
+    
+  if (error) {
+    logger.error('PWA: Failed to log notification:', error);
+  } else {
+    logger.info('PWA: Logged notification:', notification);
+  }
 }
 
 /**
  * Get notification history
  */
 async function getNotificationHistory(userId?: string | null, limit: number = 10): Promise<any[]> {
+  const supabase = await getSupabaseServerClient();
+  
+  let query = supabase
+    .from('notification_logs')
+    .select('*')
+    .order('sent_at', { ascending: false })
+    .limit(limit);
+    
+  if (userId) {
+    query = query.eq('user_id', userId);
+  }
+  
+  const { data: notifications, error } = await query;
+  
+  if (error) {
+    logger.error('PWA: Failed to get notification history:', error);
+    return [];
+  }
+  
+  return notifications.map(notif => ({
+    id: notif.id,
+    title: notif.title,
+    message: notif.message,
+    sentAt: notif.sent_at,
+    status: notif.status,
+    userId: notif.user_id
+  }));
+}
+
   // This would typically query your database
   // For now, we'll return mock data
   return [
@@ -291,4 +347,3 @@ async function getNotificationHistory(userId?: string | null, limit: number = 10
       userId: userId || 'user_1'
     }
   ].slice(0, limit);
-}

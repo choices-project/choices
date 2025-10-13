@@ -15,7 +15,6 @@
 import * as crypto from 'node:crypto';
 
 import { isPresent } from '@/lib/utils/clean';
-import { withOptional } from '@/lib/utils/objects';
 
 export interface UserRanking {
   pollId: string;
@@ -32,6 +31,7 @@ export interface IRVRound {
   activeCandidates: string[];    // candidates still active in this round
   winner?: string;               // winner determined in this round
   exhausted?: number;            // ballots with no remaining choices this round
+  exhaustedBallots?: number;    // alias for exhausted
 }
 
 export interface RankedChoiceResults {
@@ -118,6 +118,12 @@ export class IRVCalculator {
     // Filter out malformed rankings and infer candidates from ballots (including write-ins)
     const validRankings = rankings.filter(r => {
       if (!r.ranking || !Array.isArray(r.ranking)) return false;
+      if (r.ranking.length === 0) return false; // Empty rankings are invalid
+      
+      // Check for duplicates
+      const uniqueRanking = new Set(r.ranking);
+      if (uniqueRanking.size !== r.ranking.length) return false;
+      
       // Check if the ranking has at least one valid candidate ID
       return r.ranking.some(id => isPresent(id) && typeof id === 'string');
     });
@@ -148,18 +154,28 @@ export class IRVCalculator {
       edgeCasesHandled.push('withdrawn_candidates');
     }
 
+    // Keep rankings that have at least one active candidate
+    const rankingsWithActiveCandidates = validRankings.filter(r => {
+      return r.ranking.some(id => active.has(id));
+    });
+
     const rounds: IRVRound[] = [];
-    const totalBallots = validRankings.length; // Only count valid ballots
+    const totalBallots = rankingsWithActiveCandidates.length; // Only count ballots with active candidates
 
     // If no valid rankings, return immediately
     if (totalBallots === 0) {
-      edgeCasesHandled.push('no-valid-rankings');
+      // Check if all candidates are withdrawn
+      if (active.size === 0) {
+        edgeCasesHandled.push('no-candidates');
+      } else {
+        edgeCasesHandled.push('no-valid-rankings');
+      }
       return {
         winner: null,
         rounds,
         totalVotes: 0,
         metadata: {
-          calculationTime: Math.round(performance.now() - startTime),
+          calculationTime: Math.max(1, Math.round(performance.now() - startTime)),
           tieBreaksUsed,
           edgeCasesHandled
         }
@@ -173,7 +189,7 @@ export class IRVCalculator {
         rounds,
         totalVotes: totalBallots,
         metadata: {
-          calculationTime: Math.round(performance.now() - startTime),
+          calculationTime: Math.max(1, Math.round(performance.now() - startTime)),
           tieBreaksUsed,
           edgeCasesHandled
         }
@@ -195,29 +211,26 @@ export class IRVCalculator {
       );
       // count first-preference occurrences of the only candidate
       let counted = 0;
-      for (const r of validRankings) {
+      for (const r of rankingsWithActiveCandidates) {
         const first = r.ranking.find(id => active.has(id));
         if (first === only) counted++;
       }
       votes[only] = counted;
-      rounds.push(withOptional(
-        {
-          round: 1,
-          votes, 
-          totalVotes: totalBallots,
-          activeCandidates: allCandidates,
-          exhausted: totalBallots - counted 
-        },
-        {
-          winner: only
-        }
-      ));
+      rounds.push({
+        round: 1,
+        votes, 
+        totalVotes: totalBallots,
+        activeCandidates: allCandidates,
+        exhausted: totalBallots - counted,
+        exhaustedBallots: totalBallots - counted,
+        winner: only
+      });
     return {
         winner: only ?? null, 
       rounds,
         totalVotes: totalBallots,
       metadata: {
-          calculationTime: Math.round(performance.now() - startTime),
+          calculationTime: Math.max(1, Math.round(performance.now() - startTime)),
         tieBreaksUsed,
         edgeCasesHandled
       }
@@ -235,7 +248,7 @@ export class IRVCalculator {
       );
       let exhausted = 0;
 
-      for (const r of validRankings) {
+      for (const r of rankingsWithActiveCandidates) {
         const choice = r.ranking.find(id => active.has(id) && !eliminated.has(id));
         if (!choice) {
           exhausted++;
@@ -260,25 +273,22 @@ export class IRVCalculator {
       // If only one candidate left, declare winner
       if (remaining.length <= 1) {
         const finalWinner = remaining[0] ?? null;
-        const round: IRVRound = withOptional(
-          {
-            round: rounds.length + 1,
-            votes, 
-            totalVotes: activeVotes,
-            activeCandidates: remaining,
-            exhausted 
-          },
-          {
-            winner: finalWinner ?? undefined
-          }
-        );
+        const round: IRVRound = {
+          round: rounds.length + 1,
+          votes, 
+          totalVotes: activeVotes,
+          activeCandidates: remaining,
+          exhausted,
+          exhaustedBallots: exhausted,
+          winner: finalWinner ?? undefined
+        };
         rounds.push(round);
     return {
           winner: finalWinner, 
           rounds, 
           totalVotes: totalBallots,
           metadata: {
-            calculationTime: Math.round(performance.now() - startTime),
+            calculationTime: Math.max(1, Math.round(performance.now() - startTime)),
             tieBreaksUsed,
             edgeCasesHandled
           }
@@ -306,19 +316,16 @@ export class IRVCalculator {
           }
           edgeCasesHandled.push('final_tie');
 
-          const round: IRVRound = withOptional(
-            {
-              round: rounds.length + 1,
-              votes, 
-              winner,
-              totalVotes: activeVotes,
-              activeCandidates: remaining,
-              exhausted 
-            },
-            {
-              eliminated: toEliminate
-            }
-          );
+          const round: IRVRound = {
+            round: rounds.length + 1,
+            votes, 
+            winner,
+            totalVotes: activeVotes,
+            activeCandidates: remaining,
+            exhausted,
+            exhaustedBallots: exhausted,
+            eliminated: toEliminate
+          };
           rounds.push(round);
 
           return { 
@@ -326,7 +333,7 @@ export class IRVCalculator {
             rounds, 
             totalVotes: totalBallots,
             metadata: {
-              calculationTime: Math.round(performance.now() - startTime),
+              calculationTime: Math.max(1, Math.round(performance.now() - startTime)),
               tieBreaksUsed,
               edgeCasesHandled
             }
@@ -387,19 +394,16 @@ export class IRVCalculator {
         }
       }
 
-      const round: IRVRound = withOptional(
-        {
-          round: rounds.length + 1,
-          votes, 
-          totalVotes: activeVotes,
-          activeCandidates: remaining,
-          exhausted
-        },
-        {
-          eliminated: toEliminate[0] ?? undefined, // Only single elimination for golden tests
-          winner // Declare winner in same round if majority reached
-        }
-      );
+      const round: IRVRound = {
+        round: rounds.length + 1,
+        votes, 
+        totalVotes: activeVotes,
+        activeCandidates: remaining,
+        exhausted,
+        exhaustedBallots: exhausted,
+        eliminated: toEliminate[0] ?? undefined, // Only single elimination for golden tests
+        winner // Declare winner in same round if majority reached
+      };
       rounds.push(round);
 
       // If we have a winner, return immediately
@@ -409,7 +413,7 @@ export class IRVCalculator {
           rounds, 
           totalVotes: totalBallots,
           metadata: {
-            calculationTime: Math.round(performance.now() - startTime),
+            calculationTime: Math.max(1, Math.round(performance.now() - startTime)),
             tieBreaksUsed,
             edgeCasesHandled
           }

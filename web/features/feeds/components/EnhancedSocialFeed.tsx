@@ -118,11 +118,11 @@ export default function EnhancedSocialFeed({
         if (data.label === 'new_item') {
           // Use store action to add new feed item
           // This would need to be implemented in the store
-          console.log('New item received:', data.item);
+          logger.info('New item received:', data.item);
         } else if (data.label === 'engagement_update') {
           // Use store action to update engagement
           // This would need to be implemented in the store
-          console.log('Engagement update received:', data);
+          logger.info('Engagement update received:', data);
         }
       };
 
@@ -143,7 +143,7 @@ export default function EnhancedSocialFeed({
   // Analytics tracking
   const trackEvent = useCallback((event: string, data?: any) => {
     if (enableAnalytics) {
-      console.log('Analytics:', event, data);
+      logger.info('Analytics:', event, data);
       // Implement analytics tracking for social media interactions
       try {
         // Track social media click event

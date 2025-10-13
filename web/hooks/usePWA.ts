@@ -102,14 +102,14 @@ export function usePWA(): PWAStatus & PWAActions {
   // Initialize PWA
   const initializePWA = useCallback(async () => {
     try {
-      console.log('usePWA: Starting initialization...');
+      logger.info('usePWA: Starting initialization...');
       setStatus(prev => withOptional(prev, { loading: true, error: null }));
 
       // Check if PWA feature is enabled
       const pwaEnabled = isFeatureEnabled('PWA');
-      console.log('usePWA: PWA feature enabled:', pwaEnabled);
+      logger.info('usePWA: PWA feature enabled:', pwaEnabled);
       if (!pwaEnabled) {
-        console.log('usePWA: PWA feature is disabled, setting status');
+        logger.info('usePWA: PWA feature is disabled, setting status');
         setStatus(prev => withOptional(prev, {
           isEnabled: false,
           loading: false,
@@ -120,7 +120,7 @@ export function usePWA(): PWAStatus & PWAActions {
 
       // Check basic support
       const isSupported = 'serviceWorker' in navigator && 'PushManager' in window;
-      console.log('usePWA: PWA support check:', {
+      logger.info('usePWA: PWA support check:', {
         serviceWorker: 'serviceWorker' in navigator,
         pushManager: 'PushManager' in window,
         isSupported
@@ -153,7 +153,7 @@ export function usePWA(): PWAStatus & PWAActions {
         error: null
       };
       
-      console.log('usePWA: Setting final status:', finalStatus);
+      logger.info('usePWA: Setting final status:', finalStatus);
       setStatus(prev => withOptional(prev, finalStatus));
 
     } catch (error) {

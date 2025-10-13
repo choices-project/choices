@@ -726,7 +726,7 @@ export const civicsStoreDebug = {
    */
   logState: () => {
     const state = useCivicsStore.getState();
-    console.log('Civics Store State:', {
+    logger.debug('Civics Store State', {
       representatives: state.representatives.length,
       districts: state.districts.length,
       civicActions: state.civicActions.length,
@@ -743,7 +743,7 @@ export const civicsStoreDebug = {
    */
   logSummary: () => {
     const summary = civicsStoreUtils.getCivicsSummary();
-    console.log('Civics Summary:', summary);
+    logger.debug('Civics Summary', summary);
   },
   
   /**
@@ -755,7 +755,7 @@ export const civicsStoreDebug = {
       acc[rep.party] = (acc[rep.party] || 0) + 1;
       return acc;
     }, {} as Record<string, number>);
-    console.log('Representatives by Party:', byParty);
+    logger.debug('Representatives by Party', byParty);
   },
   
   /**
@@ -764,6 +764,6 @@ export const civicsStoreDebug = {
   reset: () => {
     useCivicsStore.getState().clearUserCivicProfile();
     useCivicsStore.getState().resetPreferences();
-    console.log('Civics store reset');
+    logger.info('Civics store reset');
   }
 };

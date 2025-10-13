@@ -34,13 +34,13 @@ export const FeedbackStats: React.FC<FeedbackStatsProps> = ({ feedback }) => {
     const neutral = feedback.filter(f => f.sentiment === 'neutral').length;
     const highPriority = feedback.filter(f => f.priority === 'high' || f.priority === 'urgent').length;
     
-    // Calculate response time (average time from open to inprogress)
+    // Calculate response time (time from creation to first status change)
     const responseTimes = feedback
-      .filter(f => f.status !== 'open')
+      .filter(f => f.status !== 'open' && f.updatedat && f.updatedat !== f.createdat)
       .map(f => {
-        // For now, use createdat as proxy for response time
-        // In a real implementation, you'd track status change timestamps
-        return new Date(f.createdat).getTime();
+        const createdTime = new Date(f.createdat).getTime();
+        const updatedTime = new Date(f.updatedat).getTime();
+        return updatedTime - createdTime; // Response time in milliseconds
       });
     
     const avgResponseTime = responseTimes.length > 0 

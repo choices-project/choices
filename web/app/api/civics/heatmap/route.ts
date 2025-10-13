@@ -25,16 +25,15 @@ export async function GET(request: NextRequest) {
   
   try {
     const { searchParams } = new URL(request.url);
-    const bboxStr = searchParams.get('bbox');
-    const precision = (Number(searchParams.get('precision')) as 5 | 6 | 7) || 5;
+    const state = searchParams.get('state');
+    const districtType = searchParams.get('type') || 'all'; // congressional, state_senate, state_house, all
     const minCount = Number(searchParams.get('min_count')) || 5; // k-anonymity threshold
     
-    // Validate bbox parameter
-    const bbox = bboxStr?.split(',').map(Number);
-    if (!bbox || bbox.length !== 4) {
+    // Validate state parameter
+    if (!state) {
       return NextResponse.json({ 
         success: false,
-        error: 'Invalid bbox parameter. Expected format: min_lng,min_lat,max_lng,max_lat',
+        error: 'State parameter is required. Expected format: ?state=CA',
         metadata: {
           source: 'validation',
           last_updated: new Date().toISOString()
@@ -42,11 +41,12 @@ export async function GET(request: NextRequest) {
       }, { status: 400 });
     }
 
-    // Validate precision
-    if (![5, 6, 7].includes(precision)) {
+    // Validate district type
+    const validTypes = ['congressional', 'state_senate', 'state_house', 'all'];
+    if (!validTypes.includes(districtType)) {
       return NextResponse.json({ 
         success: false,
-        error: 'Invalid precision parameter. Must be 5, 6, or 7',
+        error: `Invalid type parameter. Must be one of: ${validTypes.join(', ')}`,
         metadata: {
           source: 'validation',
           last_updated: new Date().toISOString()
@@ -54,26 +54,13 @@ export async function GET(request: NextRequest) {
       }, { status: 400 });
     }
 
-    // Validate bbox bounds
-    const [minLng, minLat, maxLng, maxLat] = bbox;
-    if (!minLng || !minLat || !maxLng || !maxLat || minLng >= maxLng || minLat >= maxLat) {
-      return NextResponse.json({ 
-        success: false,
-        error: 'Invalid bbox bounds. min_lng < max_lng and min_lat < max_lat required',
-        metadata: {
-          source: 'validation',
-          last_updated: new Date().toISOString()
-        }
-      }, { status: 400 });
-    }
-
-    logger.info('Generating heatmap data', { bbox, precision, minCount });
+    logger.info('Generating district-based heatmap data', { state, districtType, minCount });
 
     // Check cache first
-    const cacheKey = `heatmap:${bbox.join(',')}:${precision}:${minCount}`;
+    const cacheKey = `heatmap:${state}:${districtType}:${minCount}`;
     const cachedData = CivicsCache.get(cacheKey);
     if (cachedData) {
-      logger.info('Returning cached heatmap data', { bbox, precision });
+      logger.info('Returning cached heatmap data', { state, districtType });
       return NextResponse.json({
         success: true,
         data: cachedData,
@@ -85,61 +72,28 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // Generate geohash prefixes for the bounding box
-    const prefixes = generateGeohashPrefixes(bbox, precision);
-    
-    // Get heatmap data from database with k-anonymity
-    const { data: heatmapData, error } = await supabase.rpc('get_heatmap_data', {
-      prefixes,
-      min_count: minCount,
-      precision
-    });
+    // Get district-based heatmap data from database
+    const heatmapData = await getDistrictHeatmapData(supabase, state, districtType, minCount);
 
-    if (error) {
-      logger.warn('Database RPC failed, using fallback data', { error: error.message });
-      
-      // Fallback to generated data if RPC fails
-      const fallbackData = generateFallbackHeatmapData(prefixes, minCount);
-      
-      // Cache the fallback data
-      CivicsCache.set(cacheKey, fallbackData, 5 * 60 * 1000); // 5 minutes cache
-      
-      return NextResponse.json({
-        success: true,
-        data: {
-          bbox,
-          precision,
-          min_count: minCount,
-          total_cells: fallbackData.length,
-          cells: fallbackData,
-          privacy_note: 'Data aggregated with k-anonymity protection'
-        },
-        metadata: {
-          source: 'fallback',
-          last_updated: new Date().toISOString(),
-          data_quality_score: 80
-        }
-      });
-    }
+    // Cache the data
+    CivicsCache.set(cacheKey, heatmapData, 15 * 60 * 1000); // 15 minutes cache
 
-    // Cache the real data
-    CivicsCache.set(cacheKey, heatmapData, 10 * 60 * 1000); // 10 minutes cache
-
-    logger.success('Heatmap data generated successfully', 200, { 
-      bbox, 
-      precision, 
-      cellCount: heatmapData?.length || 0 
+    logger.success('District heatmap data generated successfully', 200, { 
+      state, 
+      districtType, 
+      districtCount: heatmapData?.length || 0 
     });
 
     return NextResponse.json({
       success: true,
       data: {
-        bbox,
-        precision,
+        state,
+        district_type: districtType,
         min_count: minCount,
-        total_cells: heatmapData?.length || 0,
-        cells: heatmapData || [],
-        privacy_note: 'Data aggregated with k-anonymity protection'
+        total_districts: heatmapData?.length || 0,
+        districts: heatmapData || [],
+        privacy_note: 'Data aggregated by district with k-anonymity protection',
+        engagement_metrics: await getEngagementMetrics(supabase, state, districtType)
       },
       metadata: {
         source: 'database',
@@ -162,8 +116,191 @@ export async function GET(request: NextRequest) {
 }
 
 /**
- * Generate geohash prefixes for a bounding box
+ * Get district-based heatmap data from database
  */
+async function getDistrictHeatmapData(supabase: any, state: string, districtType: string, minCount: number) {
+  try {
+    // Build query based on district type
+    let query = supabase
+      .from('representatives_core')
+      .select(`
+        district,
+        state,
+        level,
+        office,
+        name,
+        party,
+        bioguide_id
+      `)
+      .eq('state', state.toUpperCase());
+
+    // Filter by district type if not 'all'
+    if (districtType !== 'all') {
+      if (districtType === 'congressional') {
+        query = query.eq('level', 'federal');
+      } else if (districtType === 'state_senate') {
+        query = query.eq('level', 'state').like('office', '%Senate%');
+      } else if (districtType === 'state_house') {
+        query = query.eq('level', 'state').like('office', '%House%');
+      }
+    }
+
+    const { data: representatives, error } = await query;
+
+    if (error) {
+      console.error('Error fetching representatives:', error);
+      return [];
+    }
+
+    // Get user engagement data for each district
+    const districtData = await Promise.all(
+      (representatives || []).map(async (rep: any) => {
+        const engagementData = await getDistrictEngagement(supabase, rep.district, rep.state, rep.level);
+        
+        return {
+          district: rep.district,
+          state: rep.state,
+          level: rep.level,
+          office: rep.office,
+          representative: {
+            name: rep.name,
+            party: rep.party,
+            bioguide_id: rep.bioguide_id
+          },
+          engagement: engagementData,
+          // Only include districts that meet k-anonymity threshold
+          ...(engagementData.total_users >= minCount ? {
+            total_users: engagementData.total_users,
+            active_users: engagementData.active_users,
+            polls_created: engagementData.polls_created,
+            votes_cast: engagementData.votes_cast,
+            engagement_score: engagementData.engagement_score
+          } : {})
+        };
+      })
+    );
+
+    // Filter out districts that don't meet k-anonymity threshold
+    return districtData.filter(district => district.total_users >= minCount);
+
+  } catch (error) {
+    console.error('Error generating district heatmap data:', error);
+    return [];
+  }
+}
+
+/**
+ * Get engagement metrics for a specific district
+ */
+async function getDistrictEngagement(supabase: any, district: string, state: string, level: string) {
+  try {
+    // Get users who have looked up this district via address lookup
+    const { data: addressLookups } = await supabase
+      .from('user_address_lookups')
+      .select('user_id, created_at')
+      .eq('state', state.toUpperCase())
+      .eq('district', district);
+
+    const userIds = addressLookups?.map((lookup: any) => lookup.user_id) || [];
+
+    if (userIds.length === 0) {
+      return {
+        total_users: 0,
+        active_users: 0,
+        polls_created: 0,
+        votes_cast: 0,
+        engagement_score: 0
+      };
+    }
+
+    // Get user activity metrics
+    const { data: userActivity } = await supabase
+      .from('user_profiles')
+      .select('user_id, total_polls_created, total_votes_cast, engagement_score')
+      .in('user_id', userIds);
+
+    const { data: recentActivity } = await supabase
+      .from('votes')
+      .select('user_id')
+      .in('user_id', userIds)
+      .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString());
+
+    const totalUsers = userIds.length;
+    const activeUsers = new Set(recentActivity?.map((vote: any) => vote.user_id) || []).size;
+    const pollsCreated = userActivity?.reduce((sum: number, user: any) => sum + (user.total_polls_created || 0), 0) || 0;
+    const votesCast = userActivity?.reduce((sum: number, user: any) => sum + (user.total_votes_cast || 0), 0) || 0;
+    const avgEngagementScore = userActivity?.length > 0 
+      ? userActivity.reduce((sum: number, user: any) => sum + (user.engagement_score || 0), 0) / userActivity.length 
+      : 0;
+
+    return {
+      total_users: totalUsers,
+      active_users: activeUsers,
+      polls_created: pollsCreated,
+      votes_cast: votesCast,
+      engagement_score: Math.round(avgEngagementScore)
+    };
+
+  } catch (error) {
+    console.error('Error getting district engagement:', error);
+    return {
+      total_users: 0,
+      active_users: 0,
+      polls_created: 0,
+      votes_cast: 0,
+      engagement_score: 0
+    };
+  }
+}
+
+/**
+ * Get overall engagement metrics for the state/district type
+ */
+async function getEngagementMetrics(supabase: any, state: string, districtType: string) {
+  try {
+    // Get total users who have done address lookups in this state
+    const { data: stateLookups } = await supabase
+      .from('user_address_lookups')
+      .select('user_id')
+      .eq('state', state.toUpperCase());
+
+    const userIds = stateLookups?.map((lookup: any) => lookup.user_id) || [];
+
+    if (userIds.length === 0) {
+      return {
+        total_civic_users: 0,
+        total_engagement_score: 0,
+        civic_participation_rate: 0
+      };
+    }
+
+    // Get user profiles for engagement metrics
+    const { data: userProfiles } = await supabase
+      .from('user_profiles')
+      .select('engagement_score, total_polls_created, total_votes_cast')
+      .in('user_id', userIds);
+
+    const totalCivicUsers = userIds.length;
+    const totalEngagementScore = userProfiles?.reduce((sum: number, user: any) => sum + (user.engagement_score || 0), 0) || 0;
+    const avgEngagementScore = totalCivicUsers > 0 ? totalEngagementScore / totalCivicUsers : 0;
+    const civicParticipationRate = totalCivicUsers > 0 ? Math.round((userProfiles?.length || 0) / totalCivicUsers * 100) : 0;
+
+    return {
+      total_civic_users: totalCivicUsers,
+      total_engagement_score: Math.round(avgEngagementScore),
+      civic_participation_rate: civicParticipationRate
+    };
+
+  } catch (error) {
+    console.error('Error getting engagement metrics:', error);
+    return {
+      total_civic_users: 0,
+      total_engagement_score: 0,
+      civic_participation_rate: 0
+    };
+  }
+}
+
 function generateGeohashPrefixes(bbox: number[], precision: number): string[] {
   const [minLng, minLat, maxLng, maxLat] = bbox;
   const prefixes: string[] = [];
@@ -222,4 +359,70 @@ function generateFallbackHeatmapData(prefixes: string[], minCount: number): any[
     lng: Math.random() * 360 - 180,
     precision: prefix.length
   }));
+}
+
+
+    const totalUsers = userIds.length;
+    const activeUsers = new Set(recentActivity?.map((vote: any) => vote.user_id) || []).size;
+    const pollsCreated = userActivity?.reduce((sum: number, user: any) => sum + (user.total_polls_created || 0), 0) || 0;
+    const votesCast = userActivity?.reduce((sum: number, user: any) => sum + (user.total_votes_cast || 0), 0) || 0;
+    const avgEngagementScore = userActivity?.length > 0 
+      ? userActivity.reduce((sum: number, user: any) => sum + (user.engagement_score || 0), 0) / userActivity.length 
+      : 0;
+
+    return {
+      total_users: totalUsers,
+      active_users: activeUsers,
+      polls_created: pollsCreated,
+      votes_cast: votesCast,
+      engagement_score: Math.round(avgEngagementScore)
+    };
+
+
+/**
+ * Get overall engagement metrics for the state/district type
+ */
+async function getEngagementMetrics(supabase: any, state: string, districtType: string) {
+  try {
+    // Get total users who have done address lookups in this state
+    const { data: stateLookups } = await supabase
+      .from('user_address_lookups')
+      .select('user_id')
+      .eq('state', state.toUpperCase());
+
+    const userIds = stateLookups?.map((lookup: any) => lookup.user_id) || [];
+
+    if (userIds.length === 0) {
+      return {
+        total_civic_users: 0,
+        total_engagement_score: 0,
+        civic_participation_rate: 0
+      };
+    }
+
+    // Get user profiles for engagement metrics
+    const { data: userProfiles } = await supabase
+      .from('user_profiles')
+      .select('engagement_score, total_polls_created, total_votes_cast')
+      .in('user_id', userIds);
+
+    const totalCivicUsers = userIds.length;
+    const totalEngagementScore = userProfiles?.reduce((sum: number, user: any) => sum + (user.engagement_score || 0), 0) || 0;
+    const avgEngagementScore = totalCivicUsers > 0 ? totalEngagementScore / totalCivicUsers : 0;
+    const civicParticipationRate = totalCivicUsers > 0 ? Math.round((userProfiles?.length || 0) / totalCivicUsers * 100) : 0;
+
+    return {
+      total_civic_users: totalCivicUsers,
+      total_engagement_score: Math.round(avgEngagementScore),
+      civic_participation_rate: civicParticipationRate
+    };
+
+  } catch (error) {
+    console.error('Error getting engagement metrics:', error);
+    return {
+      total_civic_users: 0,
+      total_engagement_score: 0,
+      civic_participation_rate: 0
+    };
+  }
 }

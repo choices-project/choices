@@ -40,7 +40,7 @@ describe('Type Safety Enforcement', () => {
     });
     
     if (problematicFiles.length > 0) {
-      console.log('Files with any types:', problematicFiles);
+      logger.info('Files with any types:', problematicFiles);
     }
     
     expect(problematicFiles).toHaveLength(0);

@@ -43,7 +43,7 @@ describe('Analytics Error Prevention', () => {
     });
     
     if (problematicFiles.length > 0) {
-      console.log('Analytics files with missing error handling:', problematicFiles);
+      logger.info('Analytics files with missing error handling:', problematicFiles);
     }
     
     expect(problematicFiles).toHaveLength(0);
@@ -74,7 +74,7 @@ describe('Analytics Error Prevention', () => {
     });
     
     if (problematicFiles.length > 0) {
-      console.log('Analytics files with type issues:', problematicFiles);
+      logger.info('Analytics files with type issues:', problematicFiles);
     }
     
     expect(problematicFiles).toHaveLength(0);
@@ -105,7 +105,7 @@ describe('Analytics Error Prevention', () => {
     });
     
     if (problematicFiles.length > 0) {
-      console.log('Analytics files with silent failures:', problematicFiles);
+      logger.info('Analytics files with silent failures:', problematicFiles);
     }
     
     expect(problematicFiles).toHaveLength(0);
@@ -139,7 +139,7 @@ describe('Analytics Error Prevention', () => {
     });
     
     if (problematicFiles.length > 0) {
-      console.log('Analytics files with state management issues:', problematicFiles);
+      logger.info('Analytics files with state management issues:', problematicFiles);
     }
     
     expect(problematicFiles).toHaveLength(0);

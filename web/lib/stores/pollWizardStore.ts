@@ -604,7 +604,7 @@ export const pollWizardStoreDebug = {
    */
   logState: () => {
     const state = usePollWizardStore.getState();
-    console.log('Poll Wizard Store State:', {
+    logger.debug('Poll Wizard Store State', {
       currentStep: state.currentStep,
       totalSteps: state.totalSteps,
       progress: state.progress,
@@ -619,7 +619,7 @@ export const pollWizardStoreDebug = {
    */
   logWizardData: () => {
     const state = usePollWizardStore.getState();
-    console.log('Poll Wizard Data:', {
+    logger.debug('Poll Wizard Data', {
       title: state.data.title,
       description: state.data.description,
       category: state.data.category,
@@ -634,6 +634,6 @@ export const pollWizardStoreDebug = {
    */
   reset: () => {
     usePollWizardStore.getState().resetWizard();
-    console.log('Poll wizard store reset to initial state');
+    logger.info('Poll wizard store reset to initial state');
   }
 };

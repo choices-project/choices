@@ -20,25 +20,25 @@ const OnboardingSchema = z.object({
 
 // Simple server action for E2E testing
 export async function completeOnboardingAction(formData: FormData) {
-  console.log('=== COMPLETE ONBOARDING ACTION CALLED ===');
-  console.log('FormData entries:', Object.fromEntries(formData.entries()));
-  console.log('E2E environment:', process.env.E2E);
+  logger.info('=== COMPLETE ONBOARDING ACTION CALLED ===');
+  logger.info('FormData entries:', Object.fromEntries(formData.entries()));
+  logger.info('E2E environment:', process.env.E2E);
   
   // Always use real authentication - no E2E bypasses
   
   // For production, we'll add the full implementation here
-  console.log('Production path not implemented yet');
+  logger.info('Production path not implemented yet');
   redirect('/dashboard'); // authoritative redirect
 }
 
 // Enhanced onboarding completion action with security features
 export const completeOnboarding = createSecureServerAction(
   async (formData: FormData, context: ServerActionContext) => {
-    console.log('=== COMPLETE ONBOARDING SERVER ACTION CALLED ===');
-    console.log('FormData entries:', Object.fromEntries(formData.entries()));
-    console.log('E2E environment:', process.env.E2E);
-    console.log('FormData keys:', Array.from(formData.keys()));
-    console.log('FormData values:', Array.from(formData.values()));
+    logger.info('=== COMPLETE ONBOARDING SERVER ACTION CALLED ===');
+    logger.info('FormData entries:', Object.fromEntries(formData.entries()));
+    logger.info('E2E environment:', process.env.E2E);
+    logger.info('FormData keys:', Array.from(formData.keys()));
+    logger.info('FormData values:', Array.from(formData.values()));
     
     // Always use real authentication - no E2E bypasses
     
@@ -46,11 +46,11 @@ export const completeOnboarding = createSecureServerAction(
     
     // Get authenticated user
     const user = await getAuthenticatedUser(context)
-    console.log('Authenticated user:', user?.userId);
+    logger.info('Authenticated user:', user?.userId);
     
     // Validate form data
     const validatedData = validateFormData(formData, OnboardingSchema)
-    console.log('Validated data:', validatedData);
+    logger.info('Validated data:', validatedData);
 
     // Get Supabase client
     const supabaseClient = await supabase
@@ -75,7 +75,7 @@ export const completeOnboarding = createSecureServerAction(
       })
 
     if (updateError) {
-      console.log('Profile update error:', updateError);
+      logger.info('Profile update error:', updateError);
       throw new Error('Failed to complete onboarding')
     }
 
@@ -84,7 +84,7 @@ export const completeOnboarding = createSecureServerAction(
     // No need for custom JWT session tokens
 
     // Authoritative redirect from server action
-    console.log('Onboarding completed successfully, redirecting to dashboard');
+    logger.info('Onboarding completed successfully, redirecting to dashboard');
     redirect('/dashboard'); // 303; throws to short-circuit the action
   },
   {

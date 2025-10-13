@@ -70,14 +70,14 @@ export async function getCurrentProfile(): Promise<ProfileActionResult> {
     const authResult = await requireProfileUser();
     
     if ('error' in authResult) {
-      console.log('[getCurrentProfile] Auth error:', authResult.error);
+      logger.info('[getCurrentProfile] Auth error:', authResult.error);
       return {
         success: false,
         error: authResult.error,
       };
     }
 
-    console.log('[getCurrentProfile] Success, user:', JSON.stringify(authResult.user, null, 2));
+    logger.info('[getCurrentProfile] Success, user:', JSON.stringify(authResult.user, null, 2));
     return {
       success: true,
       data: authResult.user,

@@ -164,7 +164,7 @@ export async function setupE2ETestData() {
       option: 'Yes'
     });
 
-    console.log('E2E test data setup complete');
+    logger.info('E2E test data setup complete');
   } catch (error) {
     console.error('Failed to setup E2E test data:', error);
     throw error;
@@ -182,7 +182,7 @@ export async function cleanupE2ETestData() {
     // Note: In a real implementation, you would also clean up the database
     // For now, we're just clearing the in-memory test data
     
-    console.log('E2E test data cleanup complete');
+    logger.info('E2E test data cleanup complete');
   } catch (error) {
     console.error('Failed to cleanup E2E test data:', error);
     throw error;

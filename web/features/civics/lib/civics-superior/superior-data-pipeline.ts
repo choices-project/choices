@@ -393,7 +393,7 @@ export class SuperiorDataPipeline {
     for (const rep of representatives) {
       try {
         results.totalProcessed++;
-        console.log(`\n🔄 Processing representative ${results.totalProcessed}/${representatives.length}: ${rep.name}`);
+        logger.info(`\n🔄 Processing representative ${results.totalProcessed}/${representatives.length}: ${rep.name}`);
         
         // Step 2a: Collect primary data from live APIs
         const primaryData = await this.collectPrimaryData(rep);
@@ -455,7 +455,7 @@ export class SuperiorDataPipeline {
         enhancedRepresentatives.push(enhancedRep);
         results.successful++;
         
-        console.log(`   ✅ Successfully processed ${rep.name} (Quality: ${qualityScore.toFixed(1)})`);
+        logger.info(`   ✅ Successfully processed ${rep.name} (Quality: ${qualityScore.toFixed(1)})`);
         
       } catch (error: any) {
         console.error(`   ❌ Error processing ${rep.name}:`, error);
@@ -837,7 +837,7 @@ export class SuperiorDataPipeline {
     
     // OpenStates API social media (primary source for social media)
     if (primaryData.openStatesApi?.extractedSocialMedia) {
-      console.log('🔍 Social Media: Adding OpenStates API social media', {
+      logger.info('🔍 Social Media: Adding OpenStates API social media', {
         count: primaryData.openStatesApi.extractedSocialMedia.length
       });
       socialMedia.push(...primaryData.openStatesApi.extractedSocialMedia);
@@ -882,7 +882,7 @@ export class SuperiorDataPipeline {
       });
     }
     
-    console.log('🔍 Social Media: Total collected', socialMedia.length, 'items');
+    logger.info('🔍 Social Media: Total collected', socialMedia.length, 'items');
     return socialMedia;
   }
   
@@ -1241,7 +1241,7 @@ export class SuperiorDataPipeline {
             };
           }
         } else {
-          console.log('🔍 DEBUG: Congress.gov API FAILED with status:', response.status);
+          logger.info('🔍 DEBUG: Congress.gov API FAILED with status:', response.status);
           const error = new Error(`Congress.gov API failed with status ${response.status}`);
           (error as any).status = response.status;
           throw error;
@@ -1250,7 +1250,7 @@ export class SuperiorDataPipeline {
         console.warn('🔍 DEBUG: Congress.gov individual member API failed:', error);
       }
     } else {
-      console.log('🔍 DEBUG: Skipping Congress.gov API call - not federal or no bioguide_id');
+      logger.info('🔍 DEBUG: Skipping Congress.gov API call - not federal or no bioguide_id');
     }
     
     try {
@@ -1297,7 +1297,7 @@ export class SuperiorDataPipeline {
     }
   }
   private async getGoogleCivicData(rep: any): Promise<any> { 
-    console.log('Getting Google Civic data for:', rep.name);
+    logger.info('Getting Google Civic data for:', rep.name);
     
     try {
       // Google Civic API - focus on elections and voter information (not representative lookup)
@@ -1325,7 +1325,7 @@ export class SuperiorDataPipeline {
       
       // Get elections data (current and upcoming elections)
       const electionsUrl = `https://www.googleapis.com/civicinfo/v2/elections?address=${encodeURIComponent(address)}&key=${process.env.GOOGLE_CIVIC_API_KEY}`;
-      console.log(`🔍 DEBUG: Google Civic Elections API calling with address: ${address}`);
+      logger.info(`🔍 DEBUG: Google Civic Elections API calling with address: ${address}`);
       
       const electionsResponse = await fetch(electionsUrl);
       if (!electionsResponse.ok) {
@@ -1367,14 +1367,14 @@ export class SuperiorDataPipeline {
     }
   }
   private async getFECData(rep: any): Promise<any> { 
-    console.log('Getting FEC data for:', rep.name);
+    logger.info('Getting FEC data for:', rep.name);
     
     try {
       // First, try to find the candidate by name and state if no FEC ID is available
       let candidateId = rep.fec_id;
       
       if (!candidateId) {
-        console.log(`🔍 DEBUG: No FEC ID available, searching by name and state for ${rep.name}`);
+        logger.info(`🔍 DEBUG: No FEC ID available, searching by name and state for ${rep.name}`);
         
         // Convert state name to state code for FEC API
         const stateCodeMap = {
@@ -1394,7 +1394,7 @@ export class SuperiorDataPipeline {
         };
         
         const stateCode = stateCodeMap[rep.state as keyof typeof stateCodeMap] || rep.state;
-        console.log(`🔍 DEBUG: Using state code: ${stateCode} for ${rep.state}`);
+        logger.info(`🔍 DEBUG: Using state code: ${stateCode} for ${rep.state}`);
         
         // Try multiple search strategies
         const searchStrategies = [
@@ -1410,12 +1410,12 @@ export class SuperiorDataPipeline {
           const searchUrl = searchStrategies[i];
           if (!searchUrl) continue;
           
-          console.log(`🔍 DEBUG: FEC search strategy ${i + 1}: ${searchUrl}`);
+          logger.info(`🔍 DEBUG: FEC search strategy ${i + 1}: ${searchUrl}`);
           const searchResponse = await fetch(searchUrl);
           
           if (searchResponse.ok) {
             const searchData = await searchResponse.json();
-            console.log(`🔍 DEBUG: FEC search returned ${searchData.results?.length || 0} results`);
+            logger.info(`🔍 DEBUG: FEC search returned ${searchData.results?.length || 0} results`);
             
             if (searchData.results && searchData.results.length > 0) {
               // Find the best match using multiple criteria
@@ -1423,11 +1423,11 @@ export class SuperiorDataPipeline {
                 const candidateName = candidate.name.toLowerCase();
                 const repName = rep.name.toLowerCase();
                 
-                console.log(`🔍 DEBUG: Comparing FEC candidate "${candidateName}" with representative "${repName}"`);
+                logger.info(`🔍 DEBUG: Comparing FEC candidate "${candidateName}" with representative "${repName}"`);
                 
                 // Check for exact match
                 if (candidateName === repName) {
-                  console.log(`🔍 DEBUG: Exact match found`);
+                  logger.info(`🔍 DEBUG: Exact match found`);
                   return true;
                 }
                 
@@ -1435,7 +1435,7 @@ export class SuperiorDataPipeline {
                 const candidateLastName = candidateName.split(',')[0].trim();
                 const repLastName = repName.split(' ').pop();
                 if (candidateLastName === repLastName) {
-                  console.log(`🔍 DEBUG: Last name match found: ${candidateLastName} === ${repLastName}`);
+                  logger.info(`🔍 DEBUG: Last name match found: ${candidateLastName} === ${repLastName}`);
                   return true;
                 }
                 
@@ -1443,13 +1443,13 @@ export class SuperiorDataPipeline {
                 const candidateFirstName = candidateName.split(',')[1]?.trim();
                 const repFirstName = repName.split(' ')[0];
                 if (candidateFirstName === repFirstName) {
-                  console.log(`🔍 DEBUG: First name match found: ${candidateFirstName} === ${repFirstName}`);
+                  logger.info(`🔍 DEBUG: First name match found: ${candidateFirstName} === ${repFirstName}`);
                   return true;
                 }
                 
                 // Check for partial match
                 if (candidateName.includes(repName) || repName.includes(candidateName)) {
-                  console.log(`🔍 DEBUG: Partial match found`);
+                  logger.info(`🔍 DEBUG: Partial match found`);
                   return true;
                 }
                 
@@ -1458,12 +1458,12 @@ export class SuperiorDataPipeline {
               
               if (bestMatch) {
                 candidateId = bestMatch.candidate_id;
-                console.log(`🔍 DEBUG: Found FEC candidate ID: ${candidateId} for ${rep.name} using strategy ${i + 1}`);
+                logger.info(`🔍 DEBUG: Found FEC candidate ID: ${candidateId} for ${rep.name} using strategy ${i + 1}`);
                 break;
               }
             }
           } else {
-            console.log(`🔍 DEBUG: FEC search strategy ${i + 1} failed with status: ${searchResponse.status}`);
+            logger.info(`🔍 DEBUG: FEC search strategy ${i + 1} failed with status: ${searchResponse.status}`);
           }
         }
       }
@@ -1516,24 +1516,24 @@ export class SuperiorDataPipeline {
    * Get social media data and other information from OpenStates API
    */
   private async getOpenStatesApiData(rep: any): Promise<any> {
-    console.log('Getting OpenStates API data for:', rep.name);
-    console.log('🔍 OpenStates API: Starting OPTIMIZED data collection for', rep.name);
+    logger.info('Getting OpenStates API data for:', rep.name);
+    logger.info('🔍 OpenStates API: Starting OPTIMIZED data collection for', rep.name);
     
     try {
       const apiKey = process.env.OPEN_STATES_API_KEY;
-      console.log('🔍 OpenStates API: API key check', { 
+      logger.info('🔍 OpenStates API: API key check', { 
         hasKey: !!apiKey, 
         keyLength: apiKey?.length 
       });
       
       if (!apiKey) {
-        console.log('❌ OpenStates API: API key not configured');
+        logger.info('❌ OpenStates API: API key not configured');
         return {};
       }
 
       // OPTIMIZATION: Use specific OpenStates ID if available
       if (rep.openstates_id) {
-        console.log('🚀 OpenStates API: Using OPTIMIZED direct person lookup by ID:', rep.openstates_id);
+        logger.info('🚀 OpenStates API: Using OPTIMIZED direct person lookup by ID:', rep.openstates_id);
 
       // Add delay before API call to respect rate limits
       await new Promise(resolve => setTimeout(resolve, 1000)); // 1 second delay
@@ -1552,25 +1552,25 @@ export class SuperiorDataPipeline {
           }
         );
         
-        console.log('🔍 OpenStates API: Direct person lookup response status', response.status);
+        logger.info('🔍 OpenStates API: Direct person lookup response status', response.status);
 
         if (!response.ok) {
           if (response.status === 429) {
-            console.log('OpenStates API rate limited, waiting 30 seconds...');
+            logger.info('OpenStates API rate limited, waiting 30 seconds...');
             await new Promise(resolve => setTimeout(resolve, 30000)); // Wait 30 seconds for rate limit
             return {}; // Return empty to avoid further requests
           }
           if (response.status === 404) {
-            console.log('OpenStates API: Person not found by ID, falling back to jurisdiction search');
+            logger.info('OpenStates API: Person not found by ID, falling back to jurisdiction search');
             // Fall back to jurisdiction search if direct lookup fails
             return await this.getOpenStatesApiDataByJurisdiction(rep, apiKey);
           }
-          console.log('OpenStates API direct lookup failed', { status: response.status });
+          logger.info('OpenStates API direct lookup failed', { status: response.status });
           return {};
         }
 
         const responseText = await response.text();
-        console.log('🔍 OpenStates API: Direct person response received', { 
+        logger.info('🔍 OpenStates API: Direct person response received', { 
           textLength: responseText.length,
           textPreview: responseText.substring(0, 200)
         });
@@ -1578,13 +1578,13 @@ export class SuperiorDataPipeline {
         let data;
         try {
           data = JSON.parse(responseText);
-          console.log('🔍 OpenStates API: Direct person data parsed successfully', { 
+          logger.info('🔍 OpenStates API: Direct person data parsed successfully', { 
             name: data.name,
             id: data.id,
             hasSocialMedia: !!data.social_media
           });
         } catch (parseError) {
-          console.log('OpenStates API returned non-JSON response for direct lookup', { 
+          logger.info('OpenStates API returned non-JSON response for direct lookup', { 
             status: response.status,
             responseText: `${responseText.substring(0, 200)  }...`,
             parseError: parseError instanceof Error ? parseError.message : 'Unknown error'
@@ -1594,7 +1594,7 @@ export class SuperiorDataPipeline {
 
         // Extract social media data from direct person lookup
         const socialMedia = this.extractOpenStatesSocialMedia(data);
-        console.log('🔍 OpenStates API: Extracted social media from direct lookup', { 
+        logger.info('🔍 OpenStates API: Extracted social media from direct lookup', { 
           count: socialMedia.length,
           platforms: socialMedia.map(sm => sm.platform)
         });
@@ -1617,7 +1617,7 @@ export class SuperiorDataPipeline {
           efficiencyGain: '100%' // Direct lookup vs jurisdiction search
         };
       } else {
-        console.log('⚠️ OpenStates API: No OpenStates ID available, falling back to jurisdiction search');
+        logger.info('⚠️ OpenStates API: No OpenStates ID available, falling back to jurisdiction search');
         return await this.getOpenStatesApiDataByJurisdiction(rep, apiKey);
       }
     } catch (error) {
@@ -1630,7 +1630,7 @@ export class SuperiorDataPipeline {
    * Fallback method for jurisdiction-based search (less efficient)
    */
   private async getOpenStatesApiDataByJurisdiction(rep: any, apiKey: string): Promise<any> {
-    console.log('🔍 OpenStates API: Using FALLBACK jurisdiction search for', rep.state);
+    logger.info('🔍 OpenStates API: Using FALLBACK jurisdiction search for', rep.state);
 
     // Add delay before API call to respect rate limits
     await new Promise(resolve => setTimeout(resolve, 1000)); // 1 second delay
@@ -1649,20 +1649,20 @@ export class SuperiorDataPipeline {
         }
       );
       
-    console.log('🔍 OpenStates API: Jurisdiction search response status', response.status);
+    logger.info('🔍 OpenStates API: Jurisdiction search response status', response.status);
 
       if (!response.ok) {
         if (response.status === 429) {
-          console.log('OpenStates API rate limited, waiting 30 seconds...');
+          logger.info('OpenStates API rate limited, waiting 30 seconds...');
           await new Promise(resolve => setTimeout(resolve, 30000)); // Wait 30 seconds for rate limit
           return {}; // Return empty to avoid further requests
         }
-      console.log('OpenStates API jurisdiction search failed', { status: response.status });
+      logger.info('OpenStates API jurisdiction search failed', { status: response.status });
         return {};
       }
 
       const responseText = await response.text();
-    console.log('🔍 OpenStates API: Jurisdiction search response received', { 
+    logger.info('🔍 OpenStates API: Jurisdiction search response received', { 
         textLength: responseText.length,
         textPreview: responseText.substring(0, 200)
       });
@@ -1670,11 +1670,11 @@ export class SuperiorDataPipeline {
       let data;
       try {
         data = JSON.parse(responseText);
-      console.log('🔍 OpenStates API: Jurisdiction search data parsed successfully', { 
+      logger.info('🔍 OpenStates API: Jurisdiction search data parsed successfully', { 
           resultsCount: data.results?.length || 0
         });
       } catch (parseError) {
-      console.log('OpenStates API returned non-JSON response for jurisdiction search', { 
+      logger.info('OpenStates API returned non-JSON response for jurisdiction search', { 
           status: response.status,
           responseText: `${responseText.substring(0, 200)  }...`,
           parseError: parseError instanceof Error ? parseError.message : 'Unknown error'
@@ -1689,11 +1689,11 @@ export class SuperiorDataPipeline {
       );
 
       if (!matchingLegislator) {
-      console.log('🔍 OpenStates API: No matching legislator found in jurisdiction search');
+      logger.info('🔍 OpenStates API: No matching legislator found in jurisdiction search');
         return {};
       }
 
-    console.log('🔍 OpenStates API: Found matching legislator in jurisdiction search', { 
+    logger.info('🔍 OpenStates API: Found matching legislator in jurisdiction search', { 
         name: matchingLegislator.name,
         id: matchingLegislator.id,
         hasSocialMedia: !!matchingLegislator.social_media
@@ -1701,7 +1701,7 @@ export class SuperiorDataPipeline {
 
     // Extract social media data from jurisdiction search
       const socialMedia = this.extractOpenStatesSocialMedia(matchingLegislator);
-    console.log('🔍 OpenStates API: Extracted social media from jurisdiction search', { 
+    logger.info('🔍 OpenStates API: Extracted social media from jurisdiction search', { 
         count: socialMedia.length,
         platforms: socialMedia.map(sm => sm.platform)
       });
@@ -1781,7 +1781,7 @@ export class SuperiorDataPipeline {
   }
   
   private async getWikipediaData(rep: any): Promise<any> { 
-    console.log('Getting Wikipedia data for:', rep.name);
+    logger.info('Getting Wikipedia data for:', rep.name);
     
     try {
       // Try different name formats for Wikipedia search
@@ -1794,7 +1794,7 @@ export class SuperiorDataPipeline {
       ];
       
       for (const nameFormat of nameFormats) {
-        console.log(`🔍 DEBUG: Wikipedia trying name format: ${nameFormat}`);
+        logger.info(`🔍 DEBUG: Wikipedia trying name format: ${nameFormat}`);
         
         // Add small delay between requests to be respectful of Wikipedia API
         if (nameFormat !== rep.name) {
@@ -1817,7 +1817,7 @@ export class SuperiorDataPipeline {
           const data = await response.json();
           
           if (data.type === 'standard' && data.extract) {
-            console.log(`🔍 DEBUG: Wikipedia found page for: ${nameFormat}`);
+            logger.info(`🔍 DEBUG: Wikipedia found page for: ${nameFormat}`);
             return {
               title: data.title,
               extract: data.extract,
@@ -1829,11 +1829,11 @@ export class SuperiorDataPipeline {
             };
           }
         } else {
-          console.log(`🔍 DEBUG: Wikipedia no page found for: ${nameFormat} (${response.status})`);
+          logger.info(`🔍 DEBUG: Wikipedia no page found for: ${nameFormat} (${response.status})`);
         }
       }
       
-      console.log(`🔍 DEBUG: Wikipedia no page found for any name format for: ${rep.name}`);
+      logger.info(`🔍 DEBUG: Wikipedia no page found for any name format for: ${rep.name}`);
       return null;
       
     } catch (error) {

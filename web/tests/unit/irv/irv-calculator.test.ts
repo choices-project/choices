@@ -213,9 +213,9 @@ describe('IRV Calculator', () => {
       const result = runGoldenTestCase(testCase);
       
       if (!result.passed) {
-        console.log('Golden test case errors:', result.errors);
-        console.log('Actual results:', JSON.stringify(result.actualResults, null, 2));
-        console.log('Expected results:', JSON.stringify(result.expectedResults, null, 2));
+        logger.info('Golden test case errors:', result.errors);
+        logger.info('Actual results:', JSON.stringify(result.actualResults, null, 2));
+        logger.info('Expected results:', JSON.stringify(result.expectedResults, null, 2));
       }
       
       expect(result.passed).toBe(true);
@@ -228,9 +228,9 @@ describe('IRV Calculator', () => {
       const result = runGoldenTestCase(testCase);
       
       if (!result.passed) {
-        console.log('Tie-breaking test case errors:', result.errors);
-        console.log('Actual results:', JSON.stringify(result.actualResults, null, 2));
-        console.log('Expected results:', JSON.stringify(result.expectedResults, null, 2));
+        logger.info('Tie-breaking test case errors:', result.errors);
+        logger.info('Actual results:', JSON.stringify(result.actualResults, null, 2));
+        logger.info('Expected results:', JSON.stringify(result.expectedResults, null, 2));
       }
       
       expect(result.passed).toBe(true);
@@ -243,9 +243,9 @@ describe('IRV Calculator', () => {
       const result = runGoldenTestCase(testCase);
       
       if (!result.passed) {
-        console.log('Exhausted ballots test case errors:', result.errors);
-        console.log('Actual results:', JSON.stringify(result.actualResults, null, 2));
-        console.log('Expected results:', JSON.stringify(result.expectedResults, null, 2));
+        logger.info('Exhausted ballots test case errors:', result.errors);
+        logger.info('Actual results:', JSON.stringify(result.actualResults, null, 2));
+        logger.info('Expected results:', JSON.stringify(result.expectedResults, null, 2));
       }
       
       expect(result.passed).toBe(true);
@@ -258,9 +258,9 @@ describe('IRV Calculator', () => {
       const result = runGoldenTestCase(testCase);
       
       if (!result.passed) {
-        console.log('Write-in candidates test case errors:', result.errors);
-        console.log('Actual results:', JSON.stringify(result.actualResults, null, 2));
-        console.log('Expected results:', JSON.stringify(result.expectedResults, null, 2));
+        logger.info('Write-in candidates test case errors:', result.errors);
+        logger.info('Actual results:', JSON.stringify(result.actualResults, null, 2));
+        logger.info('Expected results:', JSON.stringify(result.expectedResults, null, 2));
       }
       
       expect(result.passed).toBe(true);
@@ -273,9 +273,9 @@ describe('IRV Calculator', () => {
       const result = runGoldenTestCase(testCase);
       
       if (!result.passed) {
-        console.log('Fully exhausted ballots test case errors:', result.errors);
-        console.log('Actual results:', JSON.stringify(result.actualResults, null, 2));
-        console.log('Expected results:', JSON.stringify(result.expectedResults, null, 2));
+        logger.info('Fully exhausted ballots test case errors:', result.errors);
+        logger.info('Actual results:', JSON.stringify(result.actualResults, null, 2));
+        logger.info('Expected results:', JSON.stringify(result.expectedResults, null, 2));
       }
       
       expect(result.passed).toBe(true);
@@ -288,9 +288,9 @@ describe('IRV Calculator', () => {
       const result = runGoldenTestCase(testCase);
       
       if (!result.passed) {
-        console.log('Withdrawn candidates test case errors:', result.errors);
-        console.log('Actual results:', JSON.stringify(result.actualResults, null, 2));
-        console.log('Expected results:', JSON.stringify(result.expectedResults, null, 2));
+        logger.info('Withdrawn candidates test case errors:', result.errors);
+        logger.info('Actual results:', JSON.stringify(result.actualResults, null, 2));
+        logger.info('Expected results:', JSON.stringify(result.expectedResults, null, 2));
       }
       
       expect(result.passed).toBe(true);
@@ -303,9 +303,9 @@ describe('IRV Calculator', () => {
       const result = runGoldenTestCase(testCase);
       
       if (!result.passed) {
-        console.log('Tie storm test case errors:', result.errors);
-        console.log('Actual results:', JSON.stringify(result.actualResults, null, 2));
-        console.log('Expected results:', JSON.stringify(result.expectedResults, null, 2));
+        logger.info('Tie storm test case errors:', result.errors);
+        logger.info('Actual results:', JSON.stringify(result.actualResults, null, 2));
+        logger.info('Expected results:', JSON.stringify(result.expectedResults, null, 2));
       }
       
       expect(result.passed).toBe(true);
@@ -318,9 +318,9 @@ describe('IRV Calculator', () => {
       const result = runGoldenTestCase(testCase);
       
       if (!result.passed) {
-        console.log('All same first choice test case errors:', result.errors);
-        console.log('Actual results:', JSON.stringify(result.actualResults, null, 2));
-        console.log('Expected results:', JSON.stringify(result.expectedResults, null, 2));
+        logger.info('All same first choice test case errors:', result.errors);
+        logger.info('Actual results:', JSON.stringify(result.actualResults, null, 2));
+        logger.info('Expected results:', JSON.stringify(result.expectedResults, null, 2));
       }
       
       expect(result.passed).toBe(true);

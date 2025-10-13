@@ -36,7 +36,7 @@ describe('Unused Variable Prevention', () => {
     });
     
     if (problematicFiles.length > 0) {
-      console.log('Files with unused error variables:', problematicFiles);
+      logger.info('Files with unused error variables:', problematicFiles);
     }
     
     expect(problematicFiles).toHaveLength(0);
@@ -65,7 +65,7 @@ describe('Unused Variable Prevention', () => {
     });
     
     if (problematicFiles.length > 0) {
-      console.log('Files with unused state variables:', problematicFiles);
+      logger.info('Files with unused state variables:', problematicFiles);
     }
     
     expect(problematicFiles).toHaveLength(0);
@@ -100,7 +100,7 @@ describe('Unused Variable Prevention', () => {
     });
     
     if (problematicFiles.length > 0) {
-      console.log('Files with unused imports:', problematicFiles);
+      logger.info('Files with unused imports:', problematicFiles);
     }
     
     expect(problematicFiles).toHaveLength(0);
@@ -134,7 +134,7 @@ describe('Unused Variable Prevention', () => {
     });
     
     if (problematicFiles.length > 0) {
-      console.log('Files with unused parameters:', problematicFiles);
+      logger.info('Files with unused parameters:', problematicFiles);
     }
     
     expect(problematicFiles).toHaveLength(0);

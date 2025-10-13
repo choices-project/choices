@@ -32,7 +32,7 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey, {
 });
 
 async function seedTestUsers() {
-  console.log('🌱 Seeding test users...');
+  logger.info('🌱 Seeding test users...');
   
   const testUsers = [
     {
@@ -66,7 +66,7 @@ async function seedTestUsers() {
 
       if (authError) {
         if (authError.message.includes('already registered')) {
-          console.log(`✅ User ${userData.email} already exists`);
+          logger.info(`✅ User ${userData.email} already exists`);
           continue;
         }
         throw authError;
@@ -94,7 +94,7 @@ async function seedTestUsers() {
         continue;
       }
 
-      console.log(`✅ Created user: ${userData.email} (${authData.user.id})`);
+      logger.info(`✅ Created user: ${userData.email} (${authData.user.id})`);
     } catch (error) {
       console.error(`❌ Failed to create user ${userData.email}:`, error);
       // Continue with other users
@@ -103,7 +103,7 @@ async function seedTestUsers() {
 }
 
 async function seedTestPolls() {
-  console.log('🗳️ Seeding test polls...');
+  logger.info('🗳️ Seeding test polls...');
   
   // Get a test user to create polls
   const { data: users } = await supabase
@@ -112,7 +112,7 @@ async function seedTestPolls() {
     .limit(1);
 
   if (!users || users.length === 0) {
-    console.log('⚠️ No users found, skipping poll creation');
+    logger.info('⚠️ No users found, skipping poll creation');
     return;
   }
 
@@ -152,7 +152,7 @@ async function seedTestPolls() {
         continue;
       }
 
-      console.log(`✅ Created poll: ${pollData.title} (${data.id})`);
+      logger.info(`✅ Created poll: ${pollData.title} (${data.id})`);
     } catch (error) {
       console.error(`❌ Failed to create poll "${pollData.title}":`, error);
     }
@@ -161,12 +161,12 @@ async function seedTestPolls() {
 
 async function main() {
   try {
-    console.log('🚀 Starting E2E test data seeding...');
+    logger.info('🚀 Starting E2E test data seeding...');
     
     await seedTestUsers();
     await seedTestPolls();
     
-    console.log('🎉 E2E test data seeding completed!');
+    logger.info('🎉 E2E test data seeding completed!');
   } catch (error) {
     console.error('❌ Seeding failed:', error);
     process.exit(1);

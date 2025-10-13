@@ -14,6 +14,7 @@ import { persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 
 import { withOptional } from '@/lib/utils/objects';
+import { logger } from '@/lib/utils/logger';
 
 import type { BaseStore, FeatureFlag } from './types';
 
@@ -201,7 +202,7 @@ export const useAppStore = create<AppStore>()(
           }
         }
         
-        console.log('Theme changed to:', theme);
+        logger.info('Theme changed', { theme });
       }),
       
       toggleTheme: () => set((state) => {
@@ -218,7 +219,7 @@ export const useAppStore = create<AppStore>()(
           }
         }
         
-        console.log('Theme toggled to:', newTheme);
+        logger.info('Theme toggled', { newTheme });
       }),
       
       updateSystemTheme: (systemTheme) => set((state) => {
@@ -231,7 +232,7 @@ export const useAppStore = create<AppStore>()(
       // Sidebar actions
       toggleSidebar: () => set((state) => {
         state.sidebarCollapsed = !state.sidebarCollapsed;
-        console.log('Sidebar toggled:', state.sidebarCollapsed);
+        logger.debug('Sidebar toggled', { collapsed: state.sidebarCollapsed });
       }),
       
       setSidebarCollapsed: (collapsed) => set((state) => {
@@ -314,17 +315,17 @@ export const useAppStore = create<AppStore>()(
       // Feature flag actions
       setFeatureFlag: (flag, enabled) => set((state) => {
         state.features[flag] = enabled;
-        console.log(`Feature flag ${flag} set to:`, enabled);
+        logger.info('Feature flag set', { flag, enabled });
       }),
       
       toggleFeatureFlag: (flag) => set((state) => {
         state.features[flag] = !state.features[flag];
-        console.log(`Feature flag ${flag} toggled to:`, state.features[flag]);
+        logger.info('Feature flag toggled', { flag, enabled: state.features[flag] });
       }),
       
       setFeatureFlags: (flags) => set((state) => {
-        state.features = withOptional(state.features, flags);
-        console.log('Feature flags updated:', flags);
+        state.features = { ...state.features, ...flags };
+        logger.info('Feature flags updated', { flags });
       }),
       
       loadFeatureFlags: (flags) => set((state) => {
@@ -333,25 +334,25 @@ export const useAppStore = create<AppStore>()(
         flags.forEach(flag => {
           state.features[flag.id] = flag.enabled;
         });
-        console.log('Feature flags loaded:', flags.length);
+        logger.info('Feature flags loaded', { count: flags.length });
       }),
       
       // Settings actions
       updateSettings: (settings) => set((state) => {
-        state.settings = withOptional(state.settings, settings);
-        console.log('App settings updated:', settings);
+        state.settings = { ...state.settings, ...settings };
+        logger.info('App settings updated', { settings });
       }),
       
       resetSettings: () => set((state) => {
-        state.settings = withOptional(defaultSettings);
-        console.log('App settings reset to defaults');
+        state.settings = { ...defaultSettings };
+        logger.info('App settings reset to defaults');
       }),
       
       // Navigation actions
       setCurrentRoute: (route) => set((state) => {
         state.previousRoute = state.currentRoute;
         state.currentRoute = route;
-        console.log('Route changed:', state.previousRoute, '->', route);
+        logger.debug('Route changed', { from: state.previousRoute, to: route });
       }),
       
       setBreadcrumbs: (breadcrumbs) => set((state) => {
@@ -546,7 +547,7 @@ export const appStoreUtils = {
       }
     }
     
-    console.log('App store initialized');
+    logger.info('App store initialized');
   }
 };
 
@@ -620,7 +621,7 @@ export const appStoreDebug = {
    */
   logState: () => {
     const state = useAppStore.getState();
-    console.log('App Store State:', {
+    logger.debug('App Store State', {
       theme: state.theme,
       sidebarCollapsed: state.sidebarCollapsed,
       features: state.features,
@@ -636,7 +637,7 @@ export const appStoreDebug = {
    */
   logFeatureFlags: () => {
     const state = useAppStore.getState();
-    console.log('Feature Flags:', {
+    logger.debug('Feature Flags', {
       enabled: Object.entries(state.features).filter(([_, enabled]) => enabled),
       disabled: Object.entries(state.features).filter(([_, enabled]) => !enabled),
       total: Object.keys(state.features).length
@@ -648,7 +649,7 @@ export const appStoreDebug = {
    */
   logSettings: () => {
     const state = useAppStore.getState();
-    console.log('App Settings:', state.settings);
+    logger.debug('App Settings', state.settings);
   },
   
   /**
@@ -656,6 +657,6 @@ export const appStoreDebug = {
    */
   reset: () => {
     useAppStore.getState().resetSettings();
-    console.log('App store reset to initial state');
+    logger.info('App store reset to initial state');
   }
 };

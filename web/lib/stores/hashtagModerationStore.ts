@@ -232,7 +232,7 @@ export const useHashtagModerationStore = create<HashtagModerationStore>()(
               state.reason = '';
             });
             
-            console.log('Flag submitted:', flag);
+            logger.info('Flag submitted', { flag });
           } catch (error) {
             set((state) => {
               state.isSubmitting = false;

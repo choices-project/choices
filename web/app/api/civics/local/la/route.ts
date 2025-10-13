@@ -2,6 +2,7 @@ import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
 
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
+import { logger } from '@/lib/utils/logger';
 
 // Force dynamic rendering for this route
 export const dynamic = 'force-dynamic';
@@ -16,7 +17,7 @@ export async function GET() {
   try {
     // Skip database operations during build
     if (process.env.NODE_ENV === 'production' && process.env.SUPABASE_SECRET_KEY === 'dev-only-secret') {
-      console.log('🏙️ Skipping database fetch during build...');
+      logger.info('Skipping database fetch during build');
       return NextResponse.json({
         ok: true,
         representatives: [],
@@ -24,7 +25,7 @@ export async function GET() {
       });
     }
     
-    console.log('🏙️ Fetching Los Angeles local representatives...');
+    logger.info('Fetching Los Angeles local representatives');
     
     const { data: representatives, error } = await supabase
       .from('civics_representatives')
@@ -89,7 +90,7 @@ export async function GET() {
       })
     }));
     
-    console.log(`✅ Found ${representatives.length} LA local representatives`);
+    logger.info('Found LA local representatives', { count: representatives.length });
     
     return NextResponse.json({
       ok: true,

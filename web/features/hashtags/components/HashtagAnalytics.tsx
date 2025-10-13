@@ -197,7 +197,7 @@ export default function HashtagAnalytics({
       // Merge calculated trending data with store data
       if (calculatedTrending && calculatedTrending.length > 0) {
         // Update store with calculated trending hashtags
-        console.log('Calculated trending hashtags:', calculatedTrending);
+        logger.info('Calculated trending hashtags:', calculatedTrending);
         // Note: Trending data is now managed by the hashtag store
       }
     } catch (err) {
@@ -220,8 +220,8 @@ export default function HashtagAnalytics({
       
       // Merge smart suggestions with related hashtags
       if (smartSuggestions && relatedHashtags) {
-        console.log('Smart suggestions:', smartSuggestions);
-        console.log('Related hashtags:', relatedHashtags);
+        logger.info('Smart suggestions:', smartSuggestions);
+        logger.info('Related hashtags:', relatedHashtags);
         // Convert HashtagSuggestion[] to Hashtag[]
         const hashtags: Hashtag[] = relatedHashtags.map(suggestion => ({
           id: suggestion.hashtag.id,

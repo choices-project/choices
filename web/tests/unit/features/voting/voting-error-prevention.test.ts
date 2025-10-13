@@ -41,7 +41,7 @@ describe('Voting Error Prevention', () => {
     });
     
     if (problematicFiles.length > 0) {
-      console.log('Voting files with missing input validation:', problematicFiles);
+      logger.info('Voting files with missing input validation:', problematicFiles);
     }
     
     expect(problematicFiles).toHaveLength(0);
@@ -75,7 +75,7 @@ describe('Voting Error Prevention', () => {
     });
     
     if (problematicFiles.length > 0) {
-      console.log('Voting files with missing error handling:', problematicFiles);
+      logger.info('Voting files with missing error handling:', problematicFiles);
     }
     
     expect(problematicFiles).toHaveLength(0);
@@ -109,7 +109,7 @@ describe('Voting Error Prevention', () => {
     });
     
     if (problematicFiles.length > 0) {
-      console.log('Voting files with state management issues:', problematicFiles);
+      logger.info('Voting files with state management issues:', problematicFiles);
     }
     
     expect(problematicFiles).toHaveLength(0);
@@ -143,7 +143,7 @@ describe('Voting Error Prevention', () => {
     });
     
     if (problematicFiles.length > 0) {
-      console.log('Voting files with missing duplicate prevention:', problematicFiles);
+      logger.info('Voting files with missing duplicate prevention:', problematicFiles);
     }
     
     expect(problematicFiles).toHaveLength(0);

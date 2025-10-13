@@ -760,7 +760,7 @@ export const onboardingStoreDebug = {
    */
   logState: () => {
     const state = useOnboardingStore.getState();
-    console.log('Onboarding Store State:', {
+    logger.debug('Onboarding Store State', {
       currentStep: state.currentStep,
       totalSteps: state.totalSteps,
       progress: state.progress,
@@ -778,7 +778,7 @@ export const onboardingStoreDebug = {
    */
   logSummary: () => {
     const summary = onboardingStoreUtils.getOnboardingSummary();
-    console.log('Onboarding Summary:', summary);
+    logger.debug('Onboarding Summary', summary);
   },
   
   /**
@@ -786,7 +786,7 @@ export const onboardingStoreDebug = {
    */
   logStepData: (step: number) => {
     const stepData = onboardingStoreUtils.getStepData(step);
-    console.log(`Step ${step} Data:`, stepData);
+    logger.debug('Step Data', { step, stepData });
   },
   
   /**
@@ -794,6 +794,6 @@ export const onboardingStoreDebug = {
    */
   reset: () => {
     useOnboardingStore.getState().restartOnboarding();
-    console.log('Onboarding store reset');
+    logger.info('Onboarding store reset');
   }
 };

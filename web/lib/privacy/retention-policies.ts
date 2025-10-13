@@ -328,7 +328,7 @@ export class DataRetentionManager {
    * Run scheduled cleanup for all data types
    */
   private async runScheduledCleanup(): Promise<void> {
-    console.log('Starting scheduled data retention cleanup...');
+    logger.info('Starting scheduled data retention cleanup...');
     
     const cleanupPromises = Array.from(this.policies.keys()).map(dataType => 
       this.scheduleDataPurge(dataType)
@@ -336,7 +336,7 @@ export class DataRetentionManager {
     
     try {
       await Promise.all(cleanupPromises);
-      console.log('Scheduled data retention cleanup completed');
+      logger.info('Scheduled data retention cleanup completed');
     } catch (error) {
       console.error('Error during scheduled cleanup:', error);
     }
@@ -595,7 +595,7 @@ export class DataRetentionManager {
     this.lifecycleEvents.push(lifecycleEvent);
     
     // In production, this would be stored in a database
-    console.log('Data lifecycle event logged:', lifecycleEvent);
+    logger.info('Data lifecycle event logged:', lifecycleEvent);
   }
 }
 

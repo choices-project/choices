@@ -25,6 +25,7 @@ export interface VoteRequest {
 export interface VoteResponse {
   success: boolean;
   message?: string;
+  error?: string;
   pollId: string;
   voteId?: string;
   auditReceipt?: string;
@@ -34,8 +35,10 @@ export interface VoteResponse {
 }
 
 export interface VoteValidation {
-  isValid: boolean;
+  valid: boolean;
+  isValid?: boolean;
   error?: string;
+  errors?: string[];
   requiresAuthentication: boolean;
   requiresTokens: boolean;
 }
@@ -111,7 +114,7 @@ export interface VoteResult {
   metadata?: Record<string, unknown>;
 }
 
-export type VotingMethod = 'single' | 'approval' | 'ranked' | 'quadratic' | 'range';
+export type VotingMethod = 'single' | 'single-choice' | 'approval' | 'ranked' | 'ranked-choice' | 'quadratic' | 'range';
 
 export interface PollResults {
   winner?: string;
@@ -288,3 +291,5 @@ export interface SnapshotData {
   checksum: string;
   merkleRoot: string;
 }
+  checksum: string;
+  merkleRoot: string;

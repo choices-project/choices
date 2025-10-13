@@ -92,18 +92,18 @@ export default class OpenStatesIntegration {
         // 2. It has no end date (ongoing) OR end date is in the future
         const isCurrent = startDate <= this.currentDate && (!endDate || endDate > this.currentDate);
         
-        console.log(`   🔍 Checking role for ${person.name}: start=${role.start_date}, end=${role.end_date || 'none'}, current=${isCurrent}`);
+        logger.info(`   🔍 Checking role for ${person.name}: start=${role.start_date}, end=${role.end_date || 'none'}, current=${isCurrent}`);
         
         return isCurrent;
       });
       
       const isCurrent = currentRoles.length > 0;
-      console.log(`   ${isCurrent ? '✅' : '❌'} ${person.name}: ${isCurrent ? 'CURRENT' : 'NON-CURRENT'} (${currentRoles.length} current roles)`);
+      logger.info(`   ${isCurrent ? '✅' : '❌'} ${person.name}: ${isCurrent ? 'CURRENT' : 'NON-CURRENT'} (${currentRoles.length} current roles)`);
       
       return isCurrent;
     }
     
-    console.log(`   ❌ ${person.name}: NO ROLES`);
+    logger.info(`   ❌ ${person.name}: NO ROLES`);
     return false;
   }
 
@@ -115,16 +115,16 @@ export default class OpenStatesIntegration {
    * Process state data and return only current representatives with comprehensive data
    */
   async processStateData(stateCode: string): Promise<OpenStatesPerson[]> {
-    console.log(`🔍 Processing OpenStates People Database for ${stateCode}...`);
-    console.log(`   System Date: ${this.currentDate.toISOString()}`);
-    console.log(`   Data Path: ${this.dataPath}`);
-    console.log(`   NOTE: This is the OpenStates People Database (offline), NOT the OpenStates API`);
-    console.log(`   GOAL: Extract all current legislators and committee information for efficient API usage`);
+    logger.info(`🔍 Processing OpenStates People Database for ${stateCode}...`);
+    logger.info(`   System Date: ${this.currentDate.toISOString()}`);
+    logger.info(`   Data Path: ${this.dataPath}`);
+    logger.info(`   NOTE: This is the OpenStates People Database (offline), NOT the OpenStates API`);
+    logger.info(`   GOAL: Extract all current legislators and committee information for efficient API usage`);
     
     // Check if we're running in a browser environment
     if (typeof window !== 'undefined') {
-      console.log('⚠️  OpenStates People Database integration requires server-side execution');
-      console.log('   This should be called from API routes, not client-side code');
+      logger.info('⚠️  OpenStates People Database integration requires server-side execution');
+      logger.info('   This should be called from API routes, not client-side code');
       return [];
     }
     
@@ -139,12 +139,12 @@ export default class OpenStatesIntegration {
       const statePath = path.join(this.dataPath, stateCodeLower);
       const currentPeople: OpenStatesPerson[] = [];
       
-      console.log(`   Checking state path: ${statePath}`);
+      logger.info(`   Checking state path: ${statePath}`);
       
       if (!fs.existsSync(statePath)) {
-        console.log(`⚠️  OpenStates People Database path not found: ${statePath}`);
-        console.log(`   This is expected if OpenStates People Database is not available`);
-        console.log(`   Falling back to empty results - OpenStates API and other live APIs will be used instead`);
+        logger.info(`⚠️  OpenStates People Database path not found: ${statePath}`);
+        logger.info(`   This is expected if OpenStates People Database is not available`);
+        logger.info(`   Falling back to empty results - OpenStates API and other live APIs will be used instead`);
         return currentPeople;
       }
       
@@ -152,7 +152,7 @@ export default class OpenStatesIntegration {
       const legislaturePath = path.join(statePath, 'legislature');
       if (fs.existsSync(legislaturePath)) {
         const files = fs.readdirSync(legislaturePath);
-        console.log(`   Found ${files.length} legislature files`);
+        logger.info(`   Found ${files.length} legislature files`);
         
         for (const file of files) {
           if (file.endsWith('.yml')) {
@@ -162,7 +162,7 @@ export default class OpenStatesIntegration {
               const person = yaml.load(content) as OpenStatesPerson;
               
               if (!person?.name) {
-                console.log(`   ⚠️  Skipping invalid person data in ${file}`);
+                logger.info(`   ⚠️  Skipping invalid person data in ${file}`);
                 continue;
               }
               
@@ -170,9 +170,9 @@ export default class OpenStatesIntegration {
               if (this.isCurrentPerson(person) && !this.isKnownNonCurrent(person)) {
                 // Add person to current people (will be enhanced after committee processing)
                 currentPeople.push(person);
-                console.log(`   ✅ Current: ${person.name} (${person.roles?.[0]?.type || 'Unknown'}) - ID: ${person.id}`);
+                logger.info(`   ✅ Current: ${person.name} (${person.roles?.[0]?.type || 'Unknown'}) - ID: ${person.id}`);
               } else {
-                console.log(`   ❌ Non-current: ${person.name} (${person.roles?.[0]?.type || 'Unknown'})`);
+                logger.info(`   ❌ Non-current: ${person.name} (${person.roles?.[0]?.type || 'Unknown'})`);
               }
             } catch (error) {
               console.error(`   ⚠️  Error processing ${file}:`, error);
@@ -181,16 +181,16 @@ export default class OpenStatesIntegration {
           }
         }
       } else {
-        console.log(`   No legislature directory found at: ${legislaturePath}`);
+        logger.info(`   No legislature directory found at: ${legislaturePath}`);
       }
       
       // Process committee data if available
       const committeePath = path.join(statePath, 'committees');
       if (fs.existsSync(committeePath)) {
-        console.log(`   📋 Processing committee data for ${stateCode}...`);
+        logger.info(`   📋 Processing committee data for ${stateCode}...`);
         const committeeFiles = fs.readdirSync(committeePath);
-        console.log(`   📋 Found ${committeeFiles.length} committee files`);
-        console.log(`   📋 Current people count before committee processing: ${currentPeople.length}`);
+        logger.info(`   📋 Found ${committeeFiles.length} committee files`);
+        logger.info(`   📋 Current people count before committee processing: ${currentPeople.length}`);
         
         // Process committee files to extract member information
         for (const file of committeeFiles) {
@@ -201,11 +201,11 @@ export default class OpenStatesIntegration {
               const committee = yaml.load(content) as any;
               
               if (committee?.members) {
-                console.log(`   📋 Processing committee: ${committee.name || 'Unknown'} (${committee.members.length} members)`);
+                logger.info(`   📋 Processing committee: ${committee.name || 'Unknown'} (${committee.members.length} members)`);
                 // Extract committee member information
                 for (const member of committee.members) {
                   if (member.person_id) {
-                    console.log(`   📋 Processing member: ${member.name} (${member.role}) - ID: ${member.person_id}`);
+                    logger.info(`   📋 Processing member: ${member.name} (${member.role}) - ID: ${member.person_id}`);
                     // Find existing person or create new entry
                     let person = currentPeople.find(p => p.id === member.person_id);
                     if (!person) {
@@ -226,10 +226,10 @@ export default class OpenStatesIntegration {
                         } as any]
                       };
                       currentPeople.push(person);
-                      console.log(`   📋 Created new person entry for committee member: ${member.name}`);
+                      logger.info(`   📋 Created new person entry for committee member: ${member.name}`);
                     } else {
                       // Add committee role to existing person
-                      console.log(`   📋 Found existing person: ${person.name}, adding committee role`);
+                      logger.info(`   📋 Found existing person: ${person.name}, adding committee role`);
                       if (!person.roles) person.roles = [];
                       const roleType = member.role === 'chair' ? 'committee_chair' : 
                                      member.role === 'vice chair' ? 'committee_vice_chair' : 
@@ -242,7 +242,7 @@ export default class OpenStatesIntegration {
                         end_date: member.end_date,
                         member_role: member.role || 'member'
                       } as any);
-                      console.log(`   📋 Added committee role: ${roleType} - ${member.role}`);
+                      logger.info(`   📋 Added committee role: ${roleType} - ${member.role}`);
                     }
                   }
                 }
@@ -253,11 +253,11 @@ export default class OpenStatesIntegration {
           }
         }
       } else {
-        console.log(`   📋 No committee directory found at: ${committeePath}`);
+        logger.info(`   📋 No committee directory found at: ${committeePath}`);
       }
       
-      console.log(`📋 Committee processing completed for ${stateCode}`);
-      console.log(`✨ Enhancing person data for ${currentPeople.length} current representatives...`);
+      logger.info(`📋 Committee processing completed for ${stateCode}`);
+      logger.info(`✨ Enhancing person data for ${currentPeople.length} current representatives...`);
       
       // Enhance all person data AFTER committee processing is complete
       const enhancedPeople: OpenStatesPerson[] = [];
@@ -266,12 +266,12 @@ export default class OpenStatesIntegration {
         enhancedPeople.push(enhancedPerson);
       }
       
-      console.log(`✅ Processed ${enhancedPeople.length} current representatives for ${stateCode}`);
+      logger.info(`✅ Processed ${enhancedPeople.length} current representatives for ${stateCode}`);
       return enhancedPeople;
     } catch (error) {
       console.error('❌ Error in OpenStates People Database integration:', error);
-      console.log('   This is expected if OpenStates People Database is not available');
-      console.log('   The system will fall back to OpenStates API and other live APIs for data collection');
+      logger.info('   This is expected if OpenStates People Database is not available');
+      logger.info('   The system will fall back to OpenStates API and other live APIs for data collection');
       return [];
     }
   }
@@ -282,7 +282,7 @@ export default class OpenStatesIntegration {
     
     // Extract OpenStates ID for efficient API calls
     if (person.id) {
-      console.log(`   📋 OpenStates ID: ${person.id} for ${person.name}`);
+      logger.info(`   📋 OpenStates ID: ${person.id} for ${person.name}`);
     }
     
     // Extract current role information
@@ -301,7 +301,7 @@ export default class OpenStatesIntegration {
           start_date: currentRole.start_date,
           end_date: currentRole.end_date
         };
-        console.log(`   🏛️  Current Role: ${currentRole.type} - ${currentRole.title || 'Unknown'}`);
+        logger.info(`   🏛️  Current Role: ${currentRole.type} - ${currentRole.title || 'Unknown'}`);
       }
     }
     
@@ -330,10 +330,10 @@ export default class OpenStatesIntegration {
     if (person.party) {
       if (Array.isArray(person.party) && person.party.length > 0) {
         enhanced.party_affiliation = person.party[0].name || person.party[0];
-        console.log(`   🏛️  Party: ${enhanced.party_affiliation}`);
+        logger.info(`   🏛️  Party: ${enhanced.party_affiliation}`);
       } else {
         enhanced.party_affiliation = person.party;
-        console.log(`   🏛️  Party: ${person.party}`);
+        logger.info(`   🏛️  Party: ${person.party}`);
       }
     }
     
@@ -363,14 +363,14 @@ export default class OpenStatesIntegration {
     
     // Extract committee memberships
     if (person.roles) {
-      console.log(`   📋 Checking roles for ${person.name}: ${person.roles.length} total roles`);
+      logger.info(`   📋 Checking roles for ${person.name}: ${person.roles.length} total roles`);
       const committeeRoles = person.roles.filter(role => 
         role.type === 'committee_member' || 
         role.type === 'committee_chair' ||
         role.type === 'committee_vice_chair'
       );
       
-      console.log(`   📋 Committee roles found: ${committeeRoles.length}`);
+      logger.info(`   📋 Committee roles found: ${committeeRoles.length}`);
       if (committeeRoles.length > 0) {
         enhanced.committee_memberships = committeeRoles.map(role => ({
           committee: role.title, // Committee name is stored in title
@@ -379,13 +379,13 @@ export default class OpenStatesIntegration {
           start_date: role.start_date,
           end_date: role.end_date
         }));
-        console.log(`   📋 Committee Memberships: ${committeeRoles.length} committees`);
-        console.log(`   📋 Committee details:`, committeeRoles.map(r => `${r.type} - ${r.title}`));
+        logger.info(`   📋 Committee Memberships: ${committeeRoles.length} committees`);
+        logger.info(`   📋 Committee details:`, committeeRoles.map(r => `${r.type} - ${r.title}`));
       } else {
-        console.log(`   📋 No committee roles found for ${person.name}`);
+        logger.info(`   📋 No committee roles found for ${person.name}`);
       }
     } else {
-      console.log(`   📋 No roles found for ${person.name}`);
+      logger.info(`   📋 No roles found for ${person.name}`);
     }
     
     return enhanced;
@@ -507,7 +507,7 @@ export default class OpenStatesIntegration {
       const dataPath = path.join(this.dataPath);
       return fs.existsSync(dataPath);
     } catch (error) {
-      console.log('OpenStates People database not available:', error);
+      logger.info('OpenStates People database not available:', error);
       return false;
     }
   }
@@ -519,7 +519,7 @@ export default class OpenStatesIntegration {
     try {
       // Check if database is available
       if (!(await this.isDatabaseAvailable())) {
-        console.log('OpenStates People database not available, returning hardcoded state list');
+        logger.info('OpenStates People database not available, returning hardcoded state list');
     return [
       'AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA',
       'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MD',
@@ -539,10 +539,10 @@ export default class OpenStatesIntegration {
         return fs.statSync(itemPath).isDirectory();
       }).map(state => state.toUpperCase()); // Convert to uppercase for consistency
       
-      console.log(`Found ${states.length} available states in OpenStates People database`);
+      logger.info(`Found ${states.length} available states in OpenStates People database`);
       return states;
     } catch (error) {
-      console.log('Error reading available states, returning hardcoded list:', error);
+      logger.info('Error reading available states, returning hardcoded list:', error);
       return [
         'AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA',
         'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MD',
@@ -638,15 +638,15 @@ export default class OpenStatesIntegration {
     details: any;
   }> {
     try {
-      console.log('🧪 Testing OpenStates Integration...');
+      logger.info('🧪 Testing OpenStates Integration...');
       
       const status = await this.getIntegrationStatus();
       const availableStates = await this.getAvailableStates();
       
-      console.log('✅ OpenStates Integration test completed');
-      console.log(`   Available: ${status.isAvailable}`);
-      console.log(`   States: ${availableStates.length}`);
-      console.log(`   Fallback Mode: ${status.fallbackMode}`);
+      logger.info('✅ OpenStates Integration test completed');
+      logger.info(`   Available: ${status.isAvailable}`);
+      logger.info(`   States: ${availableStates.length}`);
+      logger.info(`   Fallback Mode: ${status.fallbackMode}`);
       
       return {
         success: true,

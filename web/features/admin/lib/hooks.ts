@@ -5,8 +5,9 @@ import { devLog } from '@/lib/utils/logger';
 
 import type { TrendingTopic, GeneratedPoll, SystemMetrics } from '../types';
 
-import { mockActivityFeed } from './mock-data';
-import type { BreakingNewsStory, PollContext } from './mock-data';
+// Removed mock data imports - using real data only
+// import { mockActivityFeed } from './mock-data';
+// import type { BreakingNewsStory, PollContext } from './mock-data';
 import { realTimeService } from './real-time-service';
 import { useAdminStore } from './store';
 
@@ -196,9 +197,9 @@ export const useTrendingTopics = () => {
       updateTrendingTopics(query.data);
       setLoading('topics', false);
       
-      // Initialize activity feed with mock data if empty
+      // Initialize activity feed with empty data if no real data
       if (query.data === mockTrendingTopics) {
-        updateActivityFeed(mockActivityFeed as any);
+        updateActivityFeed([]);
       }
       
       // Invalidate related queries when trending topics update
@@ -502,3 +503,5 @@ export const useRealTimeSubscriptions = () => {
     }
   };
 };
+
+

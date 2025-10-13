@@ -221,7 +221,7 @@ export default function CreatePollPage() {
     // Errors are managed by the store
     
     if (Object.keys(newErrors).length === 0) {
-      console.log('Poll created successfully:', data);
+      logger.info('Poll created successfully:', data);
       alert('Poll created successfully!');
     }
   };

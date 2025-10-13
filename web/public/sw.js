@@ -25,16 +25,16 @@ const API_CACHE_PATTERNS = [
 
 // Install event - cache static assets
 self.addEventListener('install', (event) => {
-  console.log('Service Worker: Installing...');
+  logger.info('Service Worker: Installing...');
   
   event.waitUntil(
     caches.open(STATIC_CACHE)
       .then((cache) => {
-        console.log('Service Worker: Caching static assets');
+        logger.info('Service Worker: Caching static assets');
         return cache.addAll(STATIC_ASSETS);
       })
       .then(() => {
-        console.log('Service Worker: Static assets cached');
+        logger.info('Service Worker: Static assets cached');
         return self.skipWaiting();
       })
       .catch((error) => {
@@ -45,7 +45,7 @@ self.addEventListener('install', (event) => {
 
 // Activate event - clean up old caches
 self.addEventListener('activate', (event) => {
-  console.log('Service Worker: Activating...');
+  logger.info('Service Worker: Activating...');
   
   event.waitUntil(
     caches.keys()
@@ -53,14 +53,14 @@ self.addEventListener('activate', (event) => {
         return Promise.all(
           cacheNames.map((cacheName) => {
             if (cacheName !== STATIC_CACHE && cacheName !== DYNAMIC_CACHE) {
-              console.log('Service Worker: Deleting old cache', cacheName);
+              logger.info('Service Worker: Deleting old cache', cacheName);
               return caches.delete(cacheName);
             }
           })
         );
       })
       .then(() => {
-        console.log('Service Worker: Activated');
+        logger.info('Service Worker: Activated');
         return self.clients.claim();
       })
   );
@@ -121,7 +121,7 @@ async function handleApiRequest(request) {
     
     return networkResponse;
   } catch (error) {
-    console.log('Service Worker: Network failed for API request, trying cache');
+    logger.info('Service Worker: Network failed for API request, trying cache');
     
     // Fallback to cache
     const cachedResponse = await caches.match(request);
@@ -158,7 +158,7 @@ async function handleStaticAsset(request) {
     }
     return networkResponse;
   } catch (error) {
-    console.log('Service Worker: Failed to fetch static asset', request.url);
+    logger.info('Service Worker: Failed to fetch static asset', request.url);
     return new Response('Offline', { status: 503 });
   }
 }
@@ -240,7 +240,7 @@ function isStaticAsset(request) {
 
 // Background sync for offline actions
 self.addEventListener('sync', (event) => {
-  console.log('Service Worker: Background sync triggered');
+  logger.info('Service Worker: Background sync triggered');
   
   if (event.tag === 'background-sync') {
     event.waitUntil(doBackgroundSync());
@@ -249,7 +249,7 @@ self.addEventListener('sync', (event) => {
 
 async function doBackgroundSync() {
   // Sync offline actions when connection is restored
-  console.log('Service Worker: Syncing offline actions');
+  logger.info('Service Worker: Syncing offline actions');
   
   // This would sync any offline actions like votes, comments, etc.
   // Implementation depends on your offline action storage strategy
@@ -257,7 +257,7 @@ async function doBackgroundSync() {
 
 // Push notifications
 self.addEventListener('push', (event) => {
-  console.log('Service Worker: Push notification received');
+  logger.info('Service Worker: Push notification received');
   
   const options = {
     body: event.data ? event.data.text() : 'New update available',
@@ -289,7 +289,7 @@ self.addEventListener('push', (event) => {
 
 // Notification click handling
 self.addEventListener('notificationclick', (event) => {
-  console.log('Service Worker: Notification clicked');
+  logger.info('Service Worker: Notification clicked');
   
   event.notification.close();
   

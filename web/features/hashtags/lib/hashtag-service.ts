@@ -941,7 +941,7 @@ async function calculateUsage7d(hashtag: Hashtag): Promise<number> {
 }
 
 function determineSuggestionReason(hashtag: Hashtag, input: string): 'trending' | 'related' | 'popular' | 'recent' | 'personal' {
-  console.log(`Determining suggestion reason for hashtag: ${hashtag.name}, input: ${input}`);
+  logger.info(`Determining suggestion reason for hashtag: ${hashtag.name}, input: ${input}`);
   if (hashtag.is_trending) return 'trending';
   if (hashtag.usage_count > 1000) return 'popular';
   return 'related';

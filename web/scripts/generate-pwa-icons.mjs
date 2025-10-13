@@ -37,7 +37,7 @@ sizes.forEach(size => {
   // For now, we'll create SVG files and note that PNG conversion is needed
   const svgPath = path.join(iconsDir, `icon-${size}x${size}.svg`);
   fs.writeFileSync(svgPath, svg);
-  console.log(`Generated ${svgPath}`);
+  logger.info(`Generated ${svgPath}`);
 });
 
 // Create shortcut icons
@@ -60,7 +60,7 @@ shortcuts.forEach(name => {
   const svg = createShortcutIcon(name, 96);
   const filePath = path.join(iconsDir, `shortcut-${name}.svg`);
   fs.writeFileSync(filePath, svg);
-  console.log(`Generated ${filePath}`);
+  logger.info(`Generated ${filePath}`);
 });
 
 // Create action icons for notifications
@@ -84,13 +84,13 @@ actions.forEach(name => {
   const svg = createActionIcon(name, 24);
   const filePath = path.join(iconsDir, `action-${name}.svg`);
   fs.writeFileSync(filePath, svg);
-  console.log(`Generated ${filePath}`);
+  logger.info(`Generated ${filePath}`);
 });
 
-console.log('\nPWA icons generated successfully!');
-console.log('Generated files:');
-console.log('- Main app icons (72x72 to 512x512)');
-console.log('- Shortcut icons (create, mypolls)');
-console.log('- Action icons (view, dismiss)');
-console.log('\nNote: These are SVG files. For production, convert to PNG format.');
-console.log('You can use tools like ImageMagick or online converters to convert SVG to PNG.');
+logger.info('\nPWA icons generated successfully!');
+logger.info('Generated files:');
+logger.info('- Main app icons (72x72 to 512x512)');
+logger.info('- Shortcut icons (create, mypolls)');
+logger.info('- Action icons (view, dismiss)');
+logger.info('\nNote: These are SVG files. For production, convert to PNG format.');
+logger.info('You can use tools like ImageMagick or online converters to convert SVG to PNG.');

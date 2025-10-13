@@ -364,7 +364,7 @@ export function logWebAuthnError(
   } else if (error.statusCode >= 400) {
     console.warn('WebAuthn client error:', logData);
   } else {
-    console.log('WebAuthn error:', logData);
+    logger.info('WebAuthn error:', logData);
   }
 }
 

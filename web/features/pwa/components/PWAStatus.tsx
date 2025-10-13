@@ -36,7 +36,7 @@ export default function PWAStatus({ showDetails = false, className = '' }: PWASt
 
   // Debug logging for tests
   if (typeof window !== 'undefined') {
-    console.log('PWAStatus: Rendering with status:', {
+    logger.info('PWAStatus: Rendering with status:', {
       isInstalled: installation.isInstalled,
       canInstall: installation.canInstall,
       loading,
@@ -45,7 +45,7 @@ export default function PWAStatus({ showDetails = false, className = '' }: PWASt
   }
 
   if (!installation.isInstalled && !installation.canInstall) {
-    console.log('PWAStatus: Not rendering - isInstalled:', installation.isInstalled, 'canInstall:', installation.canInstall);
+    logger.info('PWAStatus: Not rendering - isInstalled:', installation.isInstalled, 'canInstall:', installation.canInstall);
     return null;
   }
 

@@ -2,7 +2,7 @@
  * Range Voting Strategy
  * 
  * Implements range voting where voters rate each option on a scale.
- * Results show the average rating for each option, with the highest average winning.
+ * Results show average ratings for each option, with the highest rated option winning.
  * 
  * Created: September 15, 2025
  * Updated: September 15, 2025
@@ -31,95 +31,83 @@ export class RangeStrategy implements VotingStrategy {
 
   async validateVote(request: VoteRequest, poll: PollData): Promise<VoteValidation> {
     try {
-      const { voteData } = request;
-      
-      // Check if ratings object is provided
+      const voteData = request.voteData;
+
+      // Validate ratings object exists
       if (!voteData.ratings || typeof voteData.ratings !== 'object') {
         return {
+          valid: false,
           isValid: false,
-          error: 'Ratings object is required for range voting',
-          requiresAuthentication: true,
+          error: 'Range voting requires ratings',
+          errors: ['Range voting requires ratings'],
+          requiresAuthentication: false,
           requiresTokens: false
         };
       }
 
+      // Validate ratings are numbers within range
       const ratings = voteData.ratings;
-      const rangeMin = poll.votingConfig.rangeMin || 0;
-      const rangeMax = poll.votingConfig.rangeMax || 10;
+      const minRating = poll.settings?.minRating || 0;
+      const maxRating = poll.settings?.maxRating || 10;
       
-      // Validate all ratings are within range
-      for (const [optionIndex, rating] of Object.entries(ratings)) {
-        if (typeof rating !== 'number' || isNaN(rating)) {
+      for (const [optionId, rating] of Object.entries(ratings)) {
+        if (typeof rating !== 'number') {
           return {
+            valid: false,
             isValid: false,
-            error: 'All ratings must be valid numbers',
-            requiresAuthentication: true,
+            error: 'Ratings must be numbers',
+            errors: ['Ratings must be numbers'],
+            requiresAuthentication: false,
             requiresTokens: false
           };
         }
-
-        if (rating < rangeMin || rating > rangeMax) {
+        
+        if (rating < minRating || rating > maxRating) {
           return {
+            valid: false,
             isValid: false,
-            error: `Rating must be between ${rangeMin} and ${rangeMax}`,
-            requiresAuthentication: true,
+            error: `Ratings must be between ${minRating} and ${maxRating}`,
+            errors: [`Ratings must be between ${minRating} and ${maxRating}`],
+            requiresAuthentication: false,
             requiresTokens: false
           };
         }
-
-        // Validate option index is valid
-        const optionIdx = parseInt(optionIndex);
-        if (optionIdx < 0 || optionIdx >= poll.options.length) {
+        
+        // Check if option exists
+        const optionExists = poll.options.some(option => option.id === optionId);
+        if (!optionExists) {
           return {
+            valid: false,
             isValid: false,
-            error: `Invalid option index: ${optionIndex}`,
-            requiresAuthentication: true,
+            error: 'Invalid option selected',
+            errors: ['Invalid option selected'],
+            requiresAuthentication: false,
             requiresTokens: false
           };
         }
-      }
-
-      // Check if all options are rated
-      if (Object.keys(ratings).length !== poll.options.length) {
-        return {
-          isValid: false,
-          error: 'All options must be rated',
-          requiresAuthentication: true,
-          requiresTokens: false
-        };
-      }
-
-      // Check if at least one option has a non-zero rating
-      const hasNonZeroRating = Object.values(ratings).some(rating => (rating) > rangeMin);
-      if (!hasNonZeroRating) {
-        return {
-          isValid: false,
-          error: 'At least one option must have a rating above the minimum',
-          requiresAuthentication: true,
-          requiresTokens: false
-        };
       }
 
       devLog('Range vote validated successfully', {
         pollId: request.pollId,
-        ratings,
-        rangeMin,
-        rangeMax,
+        ratings: voteData.ratings,
         userId: request.userId
       });
 
       return {
+        valid: true,
         isValid: true,
-        requiresAuthentication: true,
+        requiresAuthentication: false,
         requiresTokens: false
       };
 
     } catch (error) {
       devLog('Range vote validation error:', error);
       return {
+        valid: false,
         isValid: false,
-        error: error instanceof Error ? error.message : 'Validation failed',
-        requiresAuthentication: true,
+        error: 'Range vote validation failed',
+        errors: ['Range vote validation failed'],
+        requiresAuthentication: false,
         requiresTokens: false
       };
     }
@@ -127,76 +115,43 @@ export class RangeStrategy implements VotingStrategy {
 
   async processVote(request: VoteRequest, poll: PollData): Promise<VoteResponse> {
     try {
-      const { voteData, userId, pollId, privacyLevel } = request;
+      const voteData = request.voteData;
       
-      // Generate vote ID
-      const voteId = `vote_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      
-      // Create audit receipt
-      const auditReceipt = `receipt_${voteId}_${Date.now()}`;
-
-      // Calculate total score for audit
-      const ratings = voteData.ratings || {};
-      const totalScore = Object.values(ratings).reduce((sum: number, rating) => sum + (rating), 0);
-      const averageScore = Object.keys(ratings).length > 0 ? (totalScore) / Object.keys(ratings).length : 0;
-
-      // In a real implementation, this would:
-      // 1. Store the vote in the database
-      // 2. Update poll vote counts
-      // 3. Trigger any necessary notifications
-      // 4. Log the vote for audit purposes
+      // Create vote data for storage
+      const voteRecord: VoteData = {
+        id: `vote_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        pollId: request.pollId,
+        userId: request.userId,
+        voteData: {
+          ratings: voteData.ratings
+        },
+        timestamp: new Date().toISOString(),
+        ipAddress: request.ipAddress,
+        userAgent: request.userAgent
+      };
 
       devLog('Range vote processed successfully', {
-        pollId,
-        voteId,
-        ratings,
-        totalScore,
-        averageScore,
-        userId,
-        auditReceipt
+        pollId: request.pollId,
+        userId: request.userId,
+        ratings: voteData.ratings,
+        voteId: voteRecord.id
       });
 
-      return withOptional(
-        {
-          success: true,
-          message: 'Vote submitted successfully',
-          pollId,
-          voteId,
-          auditReceipt,
-          responseTime: 0, // Will be set by the engine
-          metadata: {
-            votingMethod: 'range',
-            ratings,
-            totalScore,
-            averageScore,
-            rangeMin: poll.votingConfig.rangeMin || 0,
-            rangeMax: poll.votingConfig.rangeMax || 10
-          }
-        },
-        {
-          privacyLevel
-        }
-      );
+      return {
+        success: true,
+        voteId: voteRecord.id,
+        message: 'Vote recorded successfully',
+        pollId: request.pollId
+      };
 
     } catch (error) {
       devLog('Range vote processing error:', error);
-      return withOptional(
-        {
-          success: false,
-          message: error instanceof Error ? error.message : 'Vote processing failed',
-          pollId: request.pollId,
-          responseTime: 0,
-          metadata: {
-            votingMethod: 'range',
-            error: error instanceof Error ? error.message : 'Unknown error'
-          }
-        },
-        {
-          voteId: undefined,
-          auditReceipt: undefined,
-          privacyLevel: request.privacyLevel
-        }
-      );
+      return {
+        success: false,
+        error: 'Failed to process range vote',
+        message: 'Failed to process range vote',
+        pollId: request.pollId
+      };
     }
   }
 
@@ -204,58 +159,49 @@ export class RangeStrategy implements VotingStrategy {
     try {
       const startTime = Date.now();
       
-      // Calculate range scores and averages for each option
-      const rangeScores: Record<string, number> = {};
-      const rangeAverages: Record<string, number> = {};
+      // Initialize tracking objects
+      const totalRatings: Record<string, number> = {};
+      const ratingCounts: Record<string, number> = {};
+      const averageRatings: Record<string, number> = {};
       const optionVotes: Record<string, number> = {};
       const optionPercentages: Record<string, number> = {};
-      const ratingCounts: Record<string, number> = {};
-      
-      // Initialize scores
-      poll.options.forEach((_, index) => {
-        rangeScores[index.toString()] = 0;
-        rangeAverages[index.toString()] = 0;
-        optionVotes[index.toString()] = 0;
-        optionPercentages[index.toString()] = 0;
-        ratingCounts[index.toString()] = 0;
+
+      // Initialize all options with zero scores
+      poll.options.forEach(option => {
+        totalRatings[option.id] = 0;
+        ratingCounts[option.id] = 0;
+        averageRatings[option.id] = 0;
+        optionVotes[option.id] = 0;
+        optionPercentages[option.id] = 0;
       });
 
-      // Calculate scores from votes
-      let totalVotes = 0;
+      // Process each vote
       votes.forEach(vote => {
-        if (vote.ratings && typeof vote.ratings === 'object') {
-          totalVotes++;
-          Object.entries(vote.ratings).forEach(([optionIndex, rating]) => {
-            const ratingNum = rating;
-            const optionIdx = optionIndex.toString();
-            // Ensure the option exists in our tracking objects
-            if (rangeScores[optionIdx] !== undefined && 
-                ratingCounts[optionIdx] !== undefined && 
-                optionVotes[optionIdx] !== undefined) {
-              rangeScores[optionIdx] += ratingNum;
-              ratingCounts[optionIdx]++;
-              optionVotes[optionIdx]++;
+        if (vote.voteData.ratings) {
+          Object.entries(vote.voteData.ratings).forEach(([optionId, rating]) => {
+            if (typeof rating === 'number') {
+              totalRatings[optionId] += rating;
+              ratingCounts[optionId]++;
+              optionVotes[optionId]++;
             }
           });
         }
       });
 
-      // Calculate averages
-      Object.keys(rangeScores).forEach(optionIndex => {
-        const count = ratingCounts[optionIndex];
-        const score = rangeScores[optionIndex];
-        if (count !== undefined && score !== undefined && count > 0) {
-          rangeAverages[optionIndex] = score / count;
+      // Calculate average ratings
+      Object.keys(totalRatings).forEach(optionId => {
+        if (ratingCounts[optionId] > 0) {
+          averageRatings[optionId] = totalRatings[optionId] / ratingCounts[optionId];
         }
       });
 
-      // Calculate percentages (based on vote count)
+      const totalVotes = votes.length;
+
+      // Calculate percentages
       if (totalVotes > 0) {
-        Object.keys(optionVotes).forEach(optionIndex => {
-          const votes = optionVotes[optionIndex];
-          if (votes !== undefined) {
-            optionPercentages[optionIndex] = (votes / totalVotes) * 100;
-          }
+        Object.keys(optionVotes).forEach(optionId => {
+          const votes = optionVotes[optionId];
+          optionPercentages[optionId] = (votes / totalVotes) * 100;
         });
       }
 
@@ -265,46 +211,23 @@ export class RangeStrategy implements VotingStrategy {
       let winnerPercentage = 0;
 
       if (totalVotes > 0) {
-        Object.entries(rangeAverages).forEach(([optionIndex, average]) => {
-          if (average > winnerVotes) {
-            winner = optionIndex;
-            winnerVotes = average;
-            winnerPercentage = optionPercentages[optionIndex] ?? 0;
+        Object.entries(averageRatings).forEach(([optionId, rating]) => {
+          if (rating > winnerVotes) {
+            winner = optionId;
+            winnerVotes = rating;
+            winnerPercentage = optionPercentages[optionId] || 0;
           }
         });
       }
 
-      const results: PollResults = withOptional(
-        {
-          winnerVotes,
-          winnerPercentage,
-          rangeScores,
-          rangeAverages,
-          optionVotes,
-          optionPercentages,
-          abstentions: 0,
-          abstentionPercentage: 0
-        },
-        {
-          winner
-        }
-      );
-
-      const resultsData: ResultsData = {
-        pollId: poll.id,
-        votingMethod: 'range',
-        totalVotes,
-        participationRate: totalVotes > 0 ? 100 : 0, // This would be calculated based on eligible voters
-        results,
-        calculatedAt: new Date().toISOString(),
-        metadata: {
-          calculationTime: Date.now() - startTime,
-          hasWinner: winner !== undefined,
-          isTie: winnerVotes > 0 && Object.values(rangeAverages).filter(a => a === winnerVotes).length > 1,
-          averageRating: totalVotes > 0 ? Object.values(rangeScores).reduce((sum, score) => sum + score, 0) / (Object.values(ratingCounts).reduce((sum, count) => sum + count, 0) || 1) : 0,
-          rangeMin: poll.votingConfig.rangeMin || 0,
-          rangeMax: poll.votingConfig.rangeMax || 10
-        }
+      const results: PollResults = {
+        winner,
+        winnerVotes,
+        winnerPercentage,
+        optionVotes,
+        optionPercentages,
+        abstentions: 0,
+        abstentionPercentage: 0
       };
 
       devLog('Range results calculated', {
@@ -316,39 +239,54 @@ export class RangeStrategy implements VotingStrategy {
         calculationTime: Date.now() - startTime
       });
 
-      return resultsData;
+      return {
+        pollId: poll.id,
+        votingMethod: poll.votingMethod,
+        totalVotes,
+        participationRate: totalVotes / 100, // Mock participation rate
+        results,
+        calculatedAt: new Date().toISOString(),
+        metadata: {
+          calculationTime: Date.now() - startTime,
+          method: 'range'
+        }
+      };
 
     } catch (error) {
       devLog('Range results calculation error:', error);
-      throw new Error(`Failed to calculate range results: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      
+      // Return empty results on error
+      return {
+        pollId: poll.id,
+        votingMethod: poll.votingMethod,
+        totalVotes: 0,
+        participationRate: 0,
+        results: {
+          winner: undefined,
+          winnerVotes: 0,
+          winnerPercentage: 0,
+          optionVotes: {},
+          optionPercentages: {},
+          abstentions: 0,
+          abstentionPercentage: 0
+        },
+        calculatedAt: new Date().toISOString(),
+        metadata: {
+          calculationTime: 0,
+          error: error instanceof Error ? error.message : 'Unknown error'
+        }
+      };
     }
   }
 
   getConfiguration(): Record<string, unknown> {
     return {
-      name: 'Range Voting',
-      description: 'Voters rate each option on a scale. The option with the highest average rating wins.',
-      minOptions: 2,
-      maxOptions: 20,
-      allowAbstention: false,
-      requiresRanking: false,
+      method: 'range',
+      description: 'Voters rate each option on a scale',
       allowsMultipleSelections: true,
-      resultType: 'highest_average',
-      features: [
-        'Captures intensity of preference',
-        'Allows nuanced expression',
-        'Good for satisfaction surveys',
-        'Provides detailed feedback'
-      ],
-      limitations: [
-        'Requires rating all options',
-        'Can be time-consuming',
-        'May not reflect true preferences',
-        'Susceptible to strategic voting'
-      ],
-      defaultRangeMin: 0,
-      defaultRangeMax: 10,
-      allowDecimals: true
+      requiresRanking: false,
+      maxSelections: 'all options',
+      ratingScale: 'configurable'
     };
   }
 }

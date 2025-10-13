@@ -5,17 +5,19 @@
  * It replaces the old @/shared/core/performance/lib/performance imports.
  */
 
+import { logger } from '@/lib/utils/logger';
+
 export const performanceUtils = {
   measureAsync: async <T>(fn: () => Promise<T>, label: string): Promise<T> => {
     const start = performance.now();
     try {
       const result = await fn();
       const end = performance.now();
-      console.log(`${label} took ${end - start} milliseconds`);
+      logger.performance(label, end - start);
       return result;
     } catch (error) {
       const end = performance.now();
-      console.error(`${label} failed after ${end - start} milliseconds:`, error);
+      logger.error(`${label} failed`, error instanceof Error ? error : new Error(String(error)), { duration: end - start });
       throw error;
     }
   },
@@ -25,11 +27,11 @@ export const performanceUtils = {
     try {
       const result = fn();
       const end = performance.now();
-      console.log(`${label} took ${end - start} milliseconds`);
+      logger.performance(label, end - start);
       return result;
     } catch (error) {
       const end = performance.now();
-      console.error(`${label} failed after ${end - start} milliseconds:`, error);
+      logger.error(`${label} failed`, error instanceof Error ? error : new Error(String(error)), { duration: end - start });
       throw error;
     }
   },

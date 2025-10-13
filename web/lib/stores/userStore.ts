@@ -279,28 +279,28 @@ export const useUserStore = create<UserStore>()(
       
       updateProfile: (updates) => set((state) => {
         if (state.profile) {
-          state.profile = withOptional(state.profile, updates);
+          state.profile = { ...state.profile, ...updates };
           state.profile.metadata.updatedAt = new Date().toISOString();
         }
       }),
       
       updatePreferences: (preferences) => set((state) => {
         if (state.profile) {
-          state.profile.preferences = withOptional(state.profile.preferences, preferences);
+          state.profile.preferences = { ...state.profile.preferences, ...preferences };
           state.profile.metadata.updatedAt = new Date().toISOString();
         }
       }),
       
       updateSettings: (settings) => set((state) => {
         if (state.profile) {
-          state.profile.settings = withOptional(state.profile.settings, settings);
+          state.profile.settings = { ...state.profile.settings, ...settings };
           state.profile.metadata.updatedAt = new Date().toISOString();
         }
       }),
       
       updateMetadata: (metadata) => set((state) => {
         if (state.profile) {
-          state.profile.metadata = withOptional(state.profile.metadata, metadata);
+          state.profile.metadata = { ...state.profile.metadata, ...metadata };
         }
       }),
       

@@ -169,10 +169,19 @@ export default function FeedItem({
     touchStartRef.current = null;
   }, [isExpanded, handleLike, handleShare]);
 
-  // Format date
-  const formatDate = (date: Date) => {
+  // Format date - handle both Date objects and date strings with null safety
+  const formatDate = (date: Date | string | null | undefined) => {
+    if (!date) return 'Unknown date';
+    
     const now = new Date();
-    const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
+    const dateObj = typeof date === 'string' ? new Date(date) : date;
+    
+    // Check if dateObj is valid
+    if (!dateObj || isNaN(dateObj.getTime())) {
+      return 'Invalid date';
+    }
+    
+    const diffInHours = Math.floor((now.getTime() - dateObj.getTime()) / (1000 * 60 * 60));
     
     if (diffInHours < 1) return 'Just now';
     if (diffInHours < 24) return `${diffInHours}h ago`;
@@ -326,7 +335,7 @@ export default function FeedItem({
                   <HeartIcon className="w-5 h-5" />
                 )}
                 <span className="text-sm font-medium">
-                  {item.engagementMetrics.likes}
+                  {item.engagementMetrics?.likes || 0}
                 </span>
               </button>
               
@@ -340,7 +349,7 @@ export default function FeedItem({
               >
                 <ChatBubbleLeftIcon className="w-5 h-5" />
                 <span className="text-sm font-medium">
-                  {item.engagementMetrics.comments}
+                  {item.engagementMetrics?.comments || 0}
                 </span>
               </button>
               
@@ -354,7 +363,7 @@ export default function FeedItem({
               >
                 <ShareIcon className="w-5 h-5" />
                 <span className="text-sm font-medium">
-                  {item.engagementMetrics.shares}
+                  {item.engagementMetrics?.shares || 0}
                 </span>
               </button>
             </div>

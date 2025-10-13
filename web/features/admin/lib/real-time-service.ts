@@ -32,7 +32,7 @@ export const realTimeService = {
    */
   unsubscribe: (subscriptionId: string) => {
     // Mock unsubscription - in production, this would properly clean up the subscription
-    console.log(`Unsubscribing from: ${subscriptionId}`);
+    logger.info(`Unsubscribing from: ${subscriptionId}`);
   }
 };
 

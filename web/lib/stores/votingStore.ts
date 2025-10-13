@@ -14,7 +14,6 @@ import { devtools } from 'zustand/middleware';
 import { persist } from 'zustand/middleware';
 
 import { logger } from '@/lib/utils/logger';
-import { withOptional } from '@/lib/utils/objects';
 
 // Voting data types
 interface Ballot {
@@ -250,6 +249,8 @@ interface VotingStore {
   loadBallot: (id: string) => Promise<void>;
   loadElection: (id: string) => Promise<void>;
   submitBallot: (ballotId: string, votes: Record<string, string[]>) => Promise<void>;
+  clearUserVotingSession: () => void;
+  reset: () => void;
   
   // Actions - Loading states
   setLoading: (loading: boolean) => void;
@@ -332,7 +333,7 @@ export const useVotingStore = create<VotingStore>()(
         
         updateBallot: (id, updates) => set((state) => ({
           ballots: state.ballots.map(ballot =>
-            ballot.id === id ? withOptional(ballot, updates) : ballot
+            ballot.id === id ? { ...ballot, ...updates } : ballot
           )
         })),
         
@@ -353,7 +354,7 @@ export const useVotingStore = create<VotingStore>()(
         
         updateElection: (id, updates) => set((state) => ({
           elections: state.elections.map(election =>
-            election.id === id ? withOptional(election, updates) : election
+            election.id === id ? { ...election, ...updates } : election
           )
         })),
         
@@ -372,7 +373,7 @@ export const useVotingStore = create<VotingStore>()(
         
         updateVotingRecord: (id, updates) => set((state) => ({
           votingRecords: state.votingRecords.map(record =>
-            record.id === id ? withOptional(record, updates) : record
+            record.id === id ? { ...record, ...updates } : record
           )
         })),
         
@@ -438,7 +439,7 @@ export const useVotingStore = create<VotingStore>()(
             set((state) => ({
               votingRecords: state.votingRecords.map(record =>
                 record.id === recordId 
-                  ? withOptional(record, { selections })
+                  ? { ...record, selections }
                   : record
               )
             }));
@@ -546,20 +547,46 @@ export const useVotingStore = create<VotingStore>()(
         })),
         
         setFilters: (filters) => set((state) => ({
-          search: withOptional(state.search, {
-            filters: withOptional(state.search.filters, filters)
-          })
+          search: {
+            ...state.search,
+            filters: { ...state.search.filters, ...filters }
+          }
         })),
         
         clearFilters: () => set((state) => ({
-          search: withOptional(state.search, {
+          search: {
+            ...state.search,
             filters: defaultFilters
-          })
+          }
         })),
+        
+        clearUserVotingSession: () => set((state) => ({
+          ballots: [],
+          selectedBallot: null,
+          currentBallot: null,
+          search: {
+            ...state.search,
+            filters: defaultFilters
+          }
+        })),
+        
+        reset: () => {
+          useVotingStore.getState().clearFilters();
+          useVotingStore.getState().resetPreferences();
+          useVotingStore.setState({
+            ballots: [],
+            selectedBallot: null,
+            currentBallot: null,
+            votingRecords: [],
+            selectedElection: null,
+            elections: []
+          });
+          logger.info('Voting store reset');
+        },
         
         // Preferences actions
         updatePreferences: (preferences) => set((state) => ({
-          preferences: withOptional(state.preferences, preferences)
+          preferences: { ...state.preferences, ...preferences }
         })),
         
         resetPreferences: () => set({ preferences: defaultPreferences }),
@@ -939,7 +966,7 @@ export const votingStoreDebug = {
    */
   logState: () => {
     const state = useVotingStore.getState();
-    console.log('Voting Store State:', {
+    logger.debug('Voting Store State', {
       totalBallots: state.ballots.length,
       totalElections: state.elections.length,
       totalVotingRecords: state.votingRecords.length,
@@ -957,7 +984,7 @@ export const votingStoreDebug = {
    */
   logSummary: () => {
     const summary = votingStoreUtils.getVotingSummary();
-    console.log('Voting Summary:', summary);
+    logger.debug('Voting Summary', summary);
   },
   
   /**
@@ -969,7 +996,7 @@ export const votingStoreDebug = {
       acc[election.type] = (acc[election.type] || 0) + 1;
       return acc;
     }, {} as Record<string, number>);
-    console.log('Elections by Type:', byType);
+    logger.debug('Elections by Type', byType);
   },
   
   /**
@@ -978,6 +1005,14 @@ export const votingStoreDebug = {
   reset: () => {
     useVotingStore.getState().clearFilters();
     useVotingStore.getState().resetPreferences();
-    console.log('Voting store reset');
+    useVotingStore.setState({
+      ballots: [],
+      selectedBallot: null,
+      currentBallot: null,
+      votingRecords: [],
+      selectedElection: null,
+      elections: []
+    });
+    logger.info('Voting store reset');
   }
 };

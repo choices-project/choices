@@ -14,7 +14,7 @@ export default function TestTogglePage() {
           type="button"
           onClick={() => {
             alert('BUTTON CLICKED!');
-            console.log('Button clicked!');
+            logger.info('Button clicked!');
             setIsSignUp(!isSignUp);
           }}
           className="bg-blue-600 text-white px-4 py-2 rounded"

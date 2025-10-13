@@ -3,13 +3,17 @@ import { devtools } from 'zustand/middleware';
 
 import { logger } from '@/lib/utils/logger';
 
+import { FEATURE_FLAGS, featureFlagManager } from '@/lib/core/feature-flags';
+
 import type {
   AdminNotification,
   TrendingTopic,
   GeneratedPoll,
   SystemMetrics,
   ActivityItem,
-  AdminStore
+  AdminStore,
+  FeatureFlag,
+  FeatureFlagConfig
 } from '../types';
 
 // Store implementation
@@ -32,6 +36,22 @@ export const useAdminStore = create<AdminStore>()(
       },
       activityItems: [],
       activityFeed: [],
+      
+      // Feature Flag State
+      featureFlags: {
+        flags: { ...FEATURE_FLAGS },
+        enabledFlags: Object.keys(FEATURE_FLAGS).filter(key => FEATURE_FLAGS[key as keyof typeof FEATURE_FLAGS]),
+        disabledFlags: Object.keys(FEATURE_FLAGS).filter(key => !FEATURE_FLAGS[key as keyof typeof FEATURE_FLAGS]),
+        categories: {
+          core: ['WEBAUTHN', 'PWA', 'ADMIN', 'FEEDBACK_WIDGET'],
+          enhanced: ['ENHANCED_PROFILE', 'ENHANCED_POLLS', 'ENHANCED_VOTING'],
+          civics: ['CIVICS_ADDRESS_LOOKUP', 'CIVICS_REPRESENTATIVE_DATABASE', 'CIVICS_CAMPAIGN_FINANCE'],
+          future: ['AUTOMATED_POLLS', 'DEMOGRAPHIC_FILTERING', 'TRENDING_POLLS'],
+          performance: ['PERFORMANCE_OPTIMIZATION', 'FEATURE_DB_OPTIMIZATION_SUITE']
+        },
+        isLoading: false,
+        error: null
+      },
       
       // UI Actions
       /**
@@ -286,6 +306,150 @@ export const useAdminStore = create<AdminStore>()(
       setLoading: (key: string, loading: boolean) => {
         // Legacy method - no longer used but kept for compatibility
         logger.info('Legacy setLoading called', { key, loading });
+      },
+      
+      // Feature Flag Actions
+      enableFeatureFlag: (flagId: string) => {
+        const success = featureFlagManager.enable(flagId);
+        if (success) {
+          set((state) => {
+            const newFlags = { ...state.featureFlags.flags, [flagId]: true };
+            const enabledFlags = Object.keys(newFlags).filter(key => newFlags[key]);
+            const disabledFlags = Object.keys(newFlags).filter(key => !newFlags[key]);
+            
+            return {
+              featureFlags: {
+                ...state.featureFlags,
+                flags: newFlags,
+                enabledFlags,
+                disabledFlags
+              }
+            };
+          });
+          
+          logger.info('Feature flag enabled', { flagId, action: 'enable_flag' });
+        }
+        return success;
+      },
+      
+      disableFeatureFlag: (flagId: string) => {
+        const success = featureFlagManager.disable(flagId);
+        if (success) {
+          set((state) => {
+            const newFlags = { ...state.featureFlags.flags, [flagId]: false };
+            const enabledFlags = Object.keys(newFlags).filter(key => newFlags[key]);
+            const disabledFlags = Object.keys(newFlags).filter(key => !newFlags[key]);
+            
+            return {
+              featureFlags: {
+                ...state.featureFlags,
+                flags: newFlags,
+                enabledFlags,
+                disabledFlags
+              }
+            };
+          });
+          
+          logger.info('Feature flag disabled', { flagId, action: 'disable_flag' });
+        }
+        return success;
+      },
+      
+      toggleFeatureFlag: (flagId: string) => {
+        const success = featureFlagManager.toggle(flagId);
+        if (success) {
+          set((state) => {
+            const newFlags = { ...state.featureFlags.flags, [flagId]: !state.featureFlags.flags[flagId] };
+            const enabledFlags = Object.keys(newFlags).filter(key => newFlags[key]);
+            const disabledFlags = Object.keys(newFlags).filter(key => !newFlags[key]);
+            
+            return {
+              featureFlags: {
+                ...state.featureFlags,
+                flags: newFlags,
+                enabledFlags,
+                disabledFlags
+              }
+            };
+          });
+          
+          logger.info('Feature flag toggled', { flagId, action: 'toggle_flag' });
+        }
+        return success;
+      },
+      
+      isFeatureFlagEnabled: (flagId: string) => {
+        return featureFlagManager.isEnabled(flagId);
+      },
+      
+      getFeatureFlag: (flagId: string) => {
+        return featureFlagManager.getFlag(flagId);
+      },
+      
+      getAllFeatureFlags: () => {
+        const state = get();
+        return Object.entries(state.featureFlags.flags).map(([key, enabled]) => ({
+          id: key,
+          name: key.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase()),
+          enabled,
+          description: `Feature flag for ${key.toLowerCase().replace(/_/g, ' ')}`,
+          key,
+          category: state.featureFlags.categories.core.includes(key) ? 'core' :
+                   state.featureFlags.categories.enhanced.includes(key) ? 'enhanced' :
+                   state.featureFlags.categories.civics.includes(key) ? 'civics' :
+                   state.featureFlags.categories.future.includes(key) ? 'future' :
+                   state.featureFlags.categories.performance.includes(key) ? 'performance' : 'general'
+        }));
+      },
+      
+      exportFeatureFlagConfig: () => {
+        return featureFlagManager.exportConfig();
+      },
+      
+      importFeatureFlagConfig: (config: FeatureFlagConfig) => {
+        try {
+          featureFlagManager.importConfig(config);
+          set((state) => ({
+            featureFlags: {
+              ...state.featureFlags,
+              flags: { ...config.flags },
+              enabledFlags: Object.keys(config.flags).filter(key => config.flags[key]),
+              disabledFlags: Object.keys(config.flags).filter(key => !config.flags[key])
+            }
+          }));
+          
+          logger.info('Feature flag config imported', { config, action: 'import_config' });
+          return true;
+        } catch (error) {
+          logger.error('Failed to import feature flag config', { error, action: 'import_config' });
+          return false;
+        }
+      },
+      
+      resetFeatureFlags: () => {
+        featureFlagManager.reset();
+        set((state) => ({
+          featureFlags: {
+            ...state.featureFlags,
+            flags: { ...FEATURE_FLAGS },
+            enabledFlags: Object.keys(FEATURE_FLAGS).filter(key => FEATURE_FLAGS[key as keyof typeof FEATURE_FLAGS]),
+            disabledFlags: Object.keys(FEATURE_FLAGS).filter(key => !FEATURE_FLAGS[key as keyof typeof FEATURE_FLAGS])
+          }
+        }));
+        
+        logger.info('Feature flags reset to defaults', { action: 'reset_flags' });
+      },
+      
+      setFeatureFlagLoading: (loading: boolean) => {
+        set((state) => ({
+          featureFlags: { ...state.featureFlags, isLoading: loading }
+        }));
+      },
+      
+      setFeatureFlagError: (error: string | null) => {
+        set((state) => ({
+          featureFlags: { ...state.featureFlags, error }
+        }));
       }
     }),
     {

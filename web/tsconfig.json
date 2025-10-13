@@ -18,6 +18,11 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
+    /* Stricter TypeScript settings for better type safety */
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "verbatimModuleSyntax": true,
+    "useUnknownInCatchVariables": true,
     "plugins": [
       {
         "name": "next"
@@ -27,7 +32,18 @@
     "paths": {
       "@/*": [
         "./*"
-      ]
+      ],
+      "@/features/*": ["./features/*"],
+      "@/components/*": ["./components/*"],
+      "@/lib/*": ["./lib/*"],
+      "@/hooks/*": ["./hooks/*"],
+      "@/types/*": ["./types/*"],
+      "@/utils/supabase/server": ["./utils/supabase/server"],
+      "@/lib/supabase/server": ["./utils/supabase/server"],
+      "@/components/polls/*": ["./features/polls/*"],
+      "@/components/voting/*": ["./features/voting/*"],
+      "@/components/CreatePoll*": ["./features/polls/components/CreatePollForm"],
+      "@/components/admin/layout/*": ["./app/(app)/admin/layout/*"]
     }
   },
   "include": [

@@ -130,7 +130,7 @@ export const logPerformance = (operation: string, duration: number, context?: Lo
 export const devLog = (message: string, ...args: unknown[]) => {
   if (process.env.NODE_ENV === 'development') {
     // eslint-disable-next-line no-console
-    console.log(`[DEV] ${message}`, ...args);
+    logger.info(`[DEV] ${message}`, ...args);
   }
 };
 

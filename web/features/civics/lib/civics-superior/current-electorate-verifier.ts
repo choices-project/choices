@@ -44,24 +44,24 @@ export class CurrentElectorateVerifier {
     const currentDate = new Date();
     const currentYear = currentDate.getFullYear();
     
-    console.log(`🔍 VERIFYING: ${rep.name} is current representative...`);
-    console.log(`   System Date: ${currentDate.toISOString()}`);
-    console.log(`   Term Start: ${rep.termStartDate || rep.term_start_date}`);
-    console.log(`   Term End: ${rep.termEndDate || rep.term_end_date}`);
-    console.log(`   Next Election: ${rep.nextElectionDate || rep.next_election_date}`);
-    console.log(`   Last Updated: ${rep.lastUpdated || rep.last_updated}`);
+    logger.info(`🔍 VERIFYING: ${rep.name} is current representative...`);
+    logger.info(`   System Date: ${currentDate.toISOString()}`);
+    logger.info(`   Term Start: ${rep.termStartDate || rep.term_start_date}`);
+    logger.info(`   Term End: ${rep.termEndDate || rep.term_end_date}`);
+    logger.info(`   Next Election: ${rep.nextElectionDate || rep.next_election_date}`);
+    logger.info(`   Last Updated: ${rep.lastUpdated || rep.last_updated}`);
     
     // Check if representative has current term dates
     if (rep.termStartDate || rep.term_start_date) {
       const termStart = new Date(rep.termStartDate || rep.term_start_date);
       const termEnd = new Date(rep.termEndDate || rep.term_end_date);
       
-      console.log(`   Term Start Date: ${termStart.toISOString()}`);
-      console.log(`   Term End Date: ${termEnd.toISOString()}`);
+      logger.info(`   Term Start Date: ${termStart.toISOString()}`);
+      logger.info(`   Term End Date: ${termEnd.toISOString()}`);
       
       // Term must be current (started and not ended)
       if (termStart > currentDate) {
-        console.log(`   ❌ Term hasn't started yet (${termStart.toISOString()} > ${currentDate.toISOString()})`);
+        logger.info(`   ❌ Term hasn't started yet (${termStart.toISOString()} > ${currentDate.toISOString()})`);
         return {
           name: rep.name,
           office: rep.office || rep.office_name,
@@ -75,7 +75,7 @@ export class CurrentElectorateVerifier {
         };
       }
       if (termEnd < currentDate) {
-        console.log(`   ❌ Term has expired (${termEnd.toISOString()} < ${currentDate.toISOString()})`);
+        logger.info(`   ❌ Term has expired (${termEnd.toISOString()} < ${currentDate.toISOString()})`);
         return {
           name: rep.name,
           office: rep.office || rep.office_name,
@@ -89,16 +89,16 @@ export class CurrentElectorateVerifier {
         };
       }
       
-      console.log(`   ✅ Term is current (${termStart.toISOString()} <= ${currentDate.toISOString()} <= ${termEnd.toISOString()})`);
+      logger.info(`   ✅ Term is current (${termStart.toISOString()} <= ${currentDate.toISOString()} <= ${termEnd.toISOString()})`);
     }
     
     // Check if representative has upcoming elections (indicates current)
     if (rep.nextElectionDate || rep.next_election_date) {
       const nextElection = new Date(rep.nextElectionDate || rep.next_election_date);
-      console.log(`   Next Election: ${nextElection.toISOString()}`);
+      logger.info(`   Next Election: ${nextElection.toISOString()}`);
       // If next election is more than 2 years away, might be historical
       if (nextElection > new Date(currentYear + 2, 11, 31)) {
-        console.log(`   ❌ Next election too far in future (${nextElection.toISOString()})`);
+        logger.info(`   ❌ Next election too far in future (${nextElection.toISOString()})`);
         return {
           name: rep.name,
           office: rep.office || rep.office_name,
@@ -111,17 +111,17 @@ export class CurrentElectorateVerifier {
           systemDateUsed: currentDate
         };
       }
-      console.log(`   ✅ Next election is reasonable (${nextElection.toISOString()})`);
+      logger.info(`   ✅ Next election is reasonable (${nextElection.toISOString()})`);
     }
     
     // Check if representative has recent activity (within last 2 years)
     if (rep.lastUpdated || rep.last_updated) {
       const lastUpdated = new Date(rep.lastUpdated || rep.last_updated);
       const twoYearsAgo = new Date(currentYear - 2, 0, 1);
-      console.log(`   Last Updated: ${lastUpdated.toISOString()}`);
-      console.log(`   Two Years Ago: ${twoYearsAgo.toISOString()}`);
+      logger.info(`   Last Updated: ${lastUpdated.toISOString()}`);
+      logger.info(`   Two Years Ago: ${twoYearsAgo.toISOString()}`);
       if (lastUpdated < twoYearsAgo) {
-        console.log(`   ❌ Last updated too long ago (${lastUpdated.toISOString()} < ${twoYearsAgo.toISOString()})`);
+        logger.info(`   ❌ Last updated too long ago (${lastUpdated.toISOString()} < ${twoYearsAgo.toISOString()})`);
         return {
           name: rep.name,
           office: rep.office || rep.office_name,
@@ -134,7 +134,7 @@ export class CurrentElectorateVerifier {
           systemDateUsed: currentDate
         };
       }
-      console.log(`   ✅ Last updated recently (${lastUpdated.toISOString()} >= ${twoYearsAgo.toISOString()})`);
+      logger.info(`   ✅ Last updated recently (${lastUpdated.toISOString()} >= ${twoYearsAgo.toISOString()})`);
     }
     
     // Check for known non-current officials
@@ -145,7 +145,7 @@ export class CurrentElectorateVerifier {
     ];
     
     if (nonCurrentNames.includes(rep.name)) {
-      console.log(`   ❌ Known non-current official: ${rep.name}`);
+      logger.info(`   ❌ Known non-current official: ${rep.name}`);
       return {
         name: rep.name,
         office: rep.office || rep.office_name,
@@ -160,7 +160,7 @@ export class CurrentElectorateVerifier {
     }
     
     // If we get here, the representative passed all date checks
-    console.log(`   ✅ Representative passed all current checks`);
+    logger.info(`   ✅ Representative passed all current checks`);
     return {
       name: rep.name,
       office: rep.office || rep.office_name,
@@ -180,8 +180,8 @@ export class CurrentElectorateVerifier {
   verifyRepresentatives(representatives: any[]): CurrentElectorateVerification {
     const representativeChecks: RepresentativeCheck[] = [];
     
-    console.log(`🔍 VERIFYING ${representatives.length} representatives using system date...`);
-    console.log(`   System Date: ${this.systemDate.toISOString()}`);
+    logger.info(`🔍 VERIFYING ${representatives.length} representatives using system date...`);
+    logger.info(`   System Date: ${this.systemDate.toISOString()}`);
     
     for (const rep of representatives) {
       const check = this.verifyCurrentRepresentative(rep);
@@ -203,11 +203,11 @@ export class CurrentElectorateVerifier {
       }
     };
     
-    console.log(`📊 VERIFICATION SUMMARY:`);
-    console.log(`   Total Checked: ${verification.summary.totalChecked}`);
-    console.log(`   Current: ${verification.summary.currentCount}`);
-    console.log(`   Non-Current: ${verification.summary.nonCurrentCount}`);
-    console.log(`   Accuracy: ${verification.summary.accuracy.toFixed(2)}%`);
+    logger.info(`📊 VERIFICATION SUMMARY:`);
+    logger.info(`   Total Checked: ${verification.summary.totalChecked}`);
+    logger.info(`   Current: ${verification.summary.currentCount}`);
+    logger.info(`   Non-Current: ${verification.summary.nonCurrentCount}`);
+    logger.info(`   Accuracy: ${verification.summary.accuracy.toFixed(2)}%`);
     
     return verification;
   }

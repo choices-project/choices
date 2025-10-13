@@ -17,6 +17,7 @@ import { createClient } from '@supabase/supabase-js';
 import { type NextRequest, NextResponse } from 'next/server';
 
 import OpenStatesIntegration from '@/features/civics/lib/civics-superior/openstates-integration';
+import { logger } from '@/lib/utils/logger';
 // import { CurrentElectorateVerifier } from '@/features/civics/lib/civics-superior/current-electorate-verifier';
 
 const supabase = createClient(
@@ -29,15 +30,16 @@ export async function POST(_request: NextRequest) {
   const startTime = new Date().toISOString();
   
   try {
-    console.log('🚀 OpenStates People Database Population requested');
-    console.log(`   System Date: ${new Date().toISOString()}`);
-    console.log(`   NOTE: This uses the OpenStates People Database (offline), NOT the OpenStates API`);
-    console.log(`   📊 Processing will show detailed progress for each step`);
+    logger.info('OpenStates People Database Population requested', {
+      systemDate: new Date().toISOString(),
+      note: 'This uses the OpenStates People Database (offline), NOT the OpenStates API',
+      processing: 'Processing will show detailed progress for each step'
+    });
     
     const body = await _request.json();
     const { state, states, limit, clear } = body;
     
-    console.log(`📥 Request parameters:`, { state, states, limit, clear });
+    logger.info('Request parameters', { state, states, limit, clear });
     
     // Initialize OpenStates integration
     const openStatesIntegration = new OpenStatesIntegration({
@@ -46,46 +48,46 @@ export async function POST(_request: NextRequest) {
     });
     
     // Test integration first
-    console.log('🧪 Testing OpenStates integration...');
+    logger.info('Testing OpenStates integration');
     const integrationTest = await openStatesIntegration.testIntegration();
-    console.log('   Integration Test Result:', integrationTest);
+    logger.debug('Integration Test Result', integrationTest);
     
     if (!integrationTest.success) {
-      console.log('❌ Integration test failed, aborting');
+      logger.error('Integration test failed, aborting', new Error(integrationTest.details || 'Integration test failed'));
       return NextResponse.json({
         success: false,
         error: 'OpenStates integration test failed',
         details: integrationTest.details
       }, { status: 500 });
     }
-    console.log('✅ Integration test passed');
+    logger.info('Integration test passed');
     
     // Get available states
-    console.log('📊 Getting available states...');
+    logger.info('📊 Getting available states...');
     const availableStates = await openStatesIntegration.getAvailableStates();
-    console.log(`   Found ${availableStates.length} available states`);
+    logger.info(`   Found ${availableStates.length} available states`);
     
     // Determine which states to process
-    console.log('🎯 Determining states to process...');
+    logger.info('🎯 Determining states to process...');
     let statesToProcess: string[] = [];
     if (states && Array.isArray(states)) {
       statesToProcess = states.filter(state => availableStates.includes(state));
-      console.log(`   Requested states: ${states.join(', ')}`);
-      console.log(`   Valid states: ${statesToProcess.join(', ')}`);
+      logger.info(`   Requested states: ${states.join(', ')}`);
+      logger.info(`   Valid states: ${statesToProcess.join(', ')}`);
     } else if (state && availableStates.includes(state)) {
       statesToProcess = [state];
-      console.log(`   Single state requested: ${state}`);
+      logger.info(`   Single state requested: ${state}`);
     } else {
       // Default to first few states for testing
       statesToProcess = availableStates.slice(0, 3);
-      console.log(`   No specific states requested, using first 3: ${statesToProcess.join(', ')}`);
+      logger.info(`   No specific states requested, using first 3: ${statesToProcess.join(', ')}`);
     }
     
-    console.log(`🎯 Final states to process: ${statesToProcess.join(', ')}`);
+    logger.info(`🎯 Final states to process: ${statesToProcess.join(', ')}`);
     
     // Clear existing data if requested
     if (clear) {
-      console.log(`🗑️  Clearing existing data for states: ${statesToProcess.join(', ')}`);
+      logger.info(`🗑️  Clearing existing data for states: ${statesToProcess.join(', ')}`);
       for (const stateCode of statesToProcess) {
         const { error } = await supabase
           .from('representatives_core')
@@ -95,7 +97,7 @@ export async function POST(_request: NextRequest) {
         if (error) {
           console.error(`❌ Error clearing data for ${stateCode}:`, error);
         } else {
-          console.log(`✅ Cleared existing data for ${stateCode}`);
+          logger.info(`✅ Cleared existing data for ${stateCode}`);
         }
       }
     }
@@ -112,49 +114,49 @@ export async function POST(_request: NextRequest) {
     };
     
     // Process each state
-    console.log(`\n🔄 Starting state processing...`);
+    logger.info(`\n🔄 Starting state processing...`);
     for (const stateCode of statesToProcess) {
       try {
-        console.log(`\n🔍 Processing state: ${stateCode}`);
-        console.log(`   📂 Reading OpenStates People Database files...`);
+        logger.info(`\n🔍 Processing state: ${stateCode}`);
+        logger.info(`   📂 Reading OpenStates People Database files...`);
         
         // Get current representatives from OpenStates People database
         const representatives = await openStatesIntegration.getCurrentRepresentatives(stateCode);
-        console.log(`   📊 Found ${representatives.length} current representatives for ${stateCode}`);
+        logger.info(`   📊 Found ${representatives.length} current representatives for ${stateCode}`);
         
         if (representatives.length === 0) {
-          console.log(`   ⚠️  No current representatives found for ${stateCode}, skipping`);
+          logger.info(`   ⚠️  No current representatives found for ${stateCode}, skipping`);
           continue;
         }
         
         const processLimit = limit || representatives.length;
-        console.log(`   🎯 Processing ${Math.min(processLimit, representatives.length)} representatives (limit: ${processLimit})`);
+        logger.info(`   🎯 Processing ${Math.min(processLimit, representatives.length)} representatives (limit: ${processLimit})`);
         
         // Process each representative
         for (let i = 0; i < Math.min(processLimit, representatives.length); i++) {
           const person = representatives[i];
           if (!person) {
-            console.log(`   [${i + 1}/${Math.min(processLimit, representatives.length)}] ⚠️ Skipping null person...`);
+            logger.info(`   [${i + 1}/${Math.min(processLimit, representatives.length)}] ⚠️ Skipping null person...`);
             continue;
           }
           
           try {
-            console.log(`   [${i + 1}/${Math.min(processLimit, representatives.length)}] 🔄 Processing ${person.name || 'Unknown'}...`);
+            logger.info(`   [${i + 1}/${Math.min(processLimit, representatives.length)}] 🔄 Processing ${person.name || 'Unknown'}...`);
             
             // Extract contact information
-            console.log(`      📞 Extracting contact information...`);
+            logger.info(`      📞 Extracting contact information...`);
             const contacts = openStatesIntegration.getContactInfo(person);
-            console.log(`      📱 Extracting social media links...`);
+            logger.info(`      📱 Extracting social media links...`);
             const socialMedia = openStatesIntegration.getSocialMediaLinks(person);
-            console.log(`      📚 Extracting official sources...`);
+            logger.info(`      📚 Extracting official sources...`);
             const sources = openStatesIntegration.getOfficialSources(person);
-            console.log(`      🏛️  Extracting current roles...`);
+            logger.info(`      🏛️  Extracting current roles...`);
             const roles = openStatesIntegration.getCurrentRoles(person);
-            console.log(`      📋 Extracting committee memberships...`);
+            logger.info(`      📋 Extracting committee memberships...`);
             const committeeMemberships = (person as any).committee_memberships || [];
             
             // Calculate data quality score
-            console.log(`      📊 Calculating data quality score...`);
+            logger.info(`      📊 Calculating data quality score...`);
             let qualityScore = 0;
             if (person?.name) qualityScore += 20;
             if (person?.party) qualityScore += 15;
@@ -164,10 +166,10 @@ export async function POST(_request: NextRequest) {
             if (person?.biography) qualityScore += 10;
             if (person?.image) qualityScore += 10;
             if (committeeMemberships.length > 0) qualityScore += 10;
-            console.log(`      📊 Quality score: ${qualityScore}/100 (contacts: ${contacts.length}, social: ${socialMedia.length}, sources: ${sources.length}, committees: ${committeeMemberships.length})`);
+            logger.info(`      📊 Quality score: ${qualityScore}/100 (contacts: ${contacts.length}, social: ${socialMedia.length}, sources: ${sources.length}, committees: ${committeeMemberships.length})`);
             
             // Prepare data for database storage
-            console.log(`      💾 Preparing data for database storage...`);
+            logger.info(`      💾 Preparing data for database storage...`);
             const representativeData = {
               name: person?.name || 'Unknown',
               party: person?.party || 'Unknown',
@@ -249,13 +251,13 @@ export async function POST(_request: NextRequest) {
             };
             
             // Debug: Log what's being stored
-            console.log(`      🐛 DEBUG: enhanced_activity length: ${representativeData.enhanced_activity.length}`);
+            logger.info(`      🐛 DEBUG: enhanced_activity length: ${representativeData.enhanced_activity.length}`);
             if (representativeData.enhanced_activity.length > 0) {
-              console.log(`      🐛 DEBUG: First activity type: ${representativeData.enhanced_activity[0].type}`);
+              logger.info(`      🐛 DEBUG: First activity type: ${representativeData.enhanced_activity[0].type}`);
             }
             
             // Check if representative already exists
-            console.log(`      🔍 Checking if ${person.name} already exists in database...`);
+            logger.info(`      🔍 Checking if ${person.name} already exists in database...`);
             const { data: existing } = await supabase
               .from('representatives_core')
               .select('id')
@@ -264,7 +266,7 @@ export async function POST(_request: NextRequest) {
             
             if (existing) {
               // Update existing
-              console.log(`      🔄 Updating existing record for ${person.name}...`);
+              logger.info(`      🔄 Updating existing record for ${person.name}...`);
               const { error } = await supabase
                 .from('representatives_core')
                 .update(representativeData)
@@ -274,10 +276,10 @@ export async function POST(_request: NextRequest) {
                 console.error(`      ❌ DATABASE ERROR for ${person.name}:`, error);
                 throw error;
               }
-              console.log(`      ✅ Updated ${person.name} in database`);
+              logger.info(`      ✅ Updated ${person.name} in database`);
             } else {
               // Insert new
-              console.log(`      ➕ Inserting new record for ${person.name}...`);
+              logger.info(`      ➕ Inserting new record for ${person.name}...`);
               const { error } = await supabase
                 .from('representatives_core')
                 .insert(representativeData);
@@ -286,7 +288,7 @@ export async function POST(_request: NextRequest) {
                 console.error(`      ❌ DATABASE ERROR for ${person.name}:`, error);
                 throw error;
               }
-              console.log(`      ✅ Inserted ${person.name} into database`);
+              logger.info(`      ✅ Inserted ${person.name} into database`);
             }
             
             results.representatives.push({
@@ -300,7 +302,7 @@ export async function POST(_request: NextRequest) {
             });
             
             results.successful++;
-            console.log(`      ✅ Successfully processed ${person.name} (${results.successful}/${results.processed + 1} successful)`);
+            logger.info(`      ✅ Successfully processed ${person.name} (${results.successful}/${results.processed + 1} successful)`);
             
           } catch (error: any) {
             console.error(`      ❌ Error processing ${person.name}:`, error);
@@ -309,7 +311,7 @@ export async function POST(_request: NextRequest) {
           }
           
           results.processed++;
-          console.log(`   📊 Progress: ${results.processed}/${Math.min(processLimit, representatives.length)} processed, ${results.successful} successful, ${results.failed} failed`);
+          logger.info(`   📊 Progress: ${results.processed}/${Math.min(processLimit, representatives.length)} processed, ${results.successful} successful, ${results.failed} failed`);
         }
         
       } catch (error: any) {
@@ -319,8 +321,8 @@ export async function POST(_request: NextRequest) {
     }
     
     const duration = Math.round((Date.now() - new Date(results.startTime).getTime()) / 1000);
-    console.log(`\n🎉 Processing completed in ${duration} seconds`);
-    console.log(`📊 Final Results: ${results.processed} processed, ${results.successful} successful, ${results.failed} failed`);
+    logger.info(`\n🎉 Processing completed in ${duration} seconds`);
+    logger.info(`📊 Final Results: ${results.processed} processed, ${results.successful} successful, ${results.failed} failed`);
     
     return NextResponse.json({
       success: true,
@@ -344,7 +346,7 @@ export async function POST(_request: NextRequest) {
 
 export async function GET(_request: NextRequest) {
   try {
-    console.log('🔍 OpenStates Population Status requested');
+    logger.info('🔍 OpenStates Population Status requested');
     
     // Initialize OpenStates integration
     const openStatesIntegration = new OpenStatesIntegration({

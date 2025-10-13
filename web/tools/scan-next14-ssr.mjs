@@ -93,52 +93,52 @@ function rel(p) {
 }
 
 function printResults(r) {
-  const hr = () => console.log('-'.repeat(60));
+  const hr = () => logger.info('-'.repeat(60));
   let fail = false;
 
-  console.log('\nNext.js 14 SSR scan\n');
+  logger.info('\nNext.js 14 SSR scan\n');
   hr();
   
   if (r.serverComponentCookies.length) {
-    console.log('ℹ️  Server Components using cookies() (may be OK in Next.js 14):');
-    r.serverComponentCookies.forEach(f => console.log(`  - ${f}`));
+    logger.info('ℹ️  Server Components using cookies() (may be OK in Next.js 14):');
+    r.serverComponentCookies.forEach(f => logger.info(`  - ${f}`));
   } else {
-    console.log('✅ No server components using cookies() detected.');
+    logger.info('✅ No server components using cookies() detected.');
   }
 
   hr();
   if (r.clientComponentServerCode.length) {
     fail = true;
-    console.log('❌ Client components with server-only code:');
-    r.clientComponentServerCode.forEach(f => console.log(`  - ${f}`));
+    logger.info('❌ Client components with server-only code:');
+    r.clientComponentServerCode.forEach(f => logger.info(`  - ${f}`));
   } else {
-    console.log('✅ No client components with server-only code detected.');
+    logger.info('✅ No client components with server-only code detected.');
   }
 
   hr();
   if (r.badSupabaseImport.length) {
-    console.log('⚠️  Server importing `@supabase/supabase-js` (should use @supabase/ssr):');
-    r.badSupabaseImport.forEach(f => console.log(`  - ${f}`));
+    logger.info('⚠️  Server importing `@supabase/supabase-js` (should use @supabase/ssr):');
+    r.badSupabaseImport.forEach(f => logger.info(`  - ${f}`));
   } else {
-    console.log('✅ No server imports of @supabase/supabase-js detected.');
+    logger.info('✅ No server imports of @supabase/supabase-js detected.');
   }
 
   hr();
   if (r.potentialSSRIssues.length) {
     fail = true;
-    console.log('❌ Potential SSR issues:');
-    r.potentialSSRIssues.forEach(f => console.log(`  - ${f}`));
+    logger.info('❌ Potential SSR issues:');
+    r.potentialSSRIssues.forEach(f => logger.info(`  - ${f}`));
   } else {
-    console.log('✅ No potential SSR issues detected.');
+    logger.info('✅ No potential SSR issues detected.');
   }
 
   hr();
   if (r.buildErrors.length) {
     fail = true;
-    console.log('❌ Potential build errors:');
-    r.buildErrors.forEach(f => console.log(`  - ${f}`));
+    logger.info('❌ Potential build errors:');
+    r.buildErrors.forEach(f => logger.info(`  - ${f}`));
   } else {
-    console.log('✅ No potential build errors detected.');
+    logger.info('✅ No potential build errors detected.');
   }
 
   hr();

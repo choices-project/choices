@@ -41,21 +41,21 @@ export default function Civics2Page() {
 
   const loadRepresentatives = useCallback(async () => {
     setIsLoading(true);
-    console.log('🔄 Loading representatives...');
+    logger.info('🔄 Loading representatives...');
     
     try {
       const response = await fetch(`/api/civics/by-state?state=${selectedState}&level=${selectedLevel}&limit=20`);
-      console.log('📡 Response status:', response.status);
+      logger.info('📡 Response status:', response.status);
       
       if (!response.ok) {
         throw new Error(`Failed to load representatives: ${response.status}`);
       }
 
       const data = await response.json();
-      console.log('✅ API Response:', data);
-      console.log('📊 Setting representatives:', data.data?.length || 0);
+      logger.info('✅ API Response:', data);
+      logger.info('📊 Setting representatives:', data.data?.length || 0);
       setRepresentatives(data.data || []);
-      console.log('🎯 Representatives state updated');
+      logger.info('🎯 Representatives state updated');
     } catch (error) {
       console.error('❌ Error loading representatives:', error);
     } finally {
@@ -107,12 +107,12 @@ export default function Civics2Page() {
 
   const handleContact = (id: string, type: string) => {
     // Contact functionality
-    console.log('Contacting representative:', id, type);
+    logger.info('Contacting representative:', id, type);
   };
 
   const handleShare = (representative: SuperiorRepresentativeData) => {
     // Share functionality
-    console.log('Sharing representative:', representative.name);
+    logger.info('Sharing representative:', representative.name);
   };
 
   const filteredRepresentatives = representatives.filter(rep => {

@@ -1,0 +1,56 @@
+717644f2cc2ed6ef00163af9d6e727b2
+/**
+ * Authentication Shared Utilities
+ * 
+ * Centralized exports for cookie management and CSRF protection
+ * Used across all authentication API routes for consistency
+ */ // Cookie management
+"use strict";
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+function _export(target, all) {
+    for(var name in all)Object.defineProperty(target, name, {
+        enumerable: true,
+        get: all[name]
+    });
+}
+_export(exports, {
+    CSRF_COOKIE: function() {
+        return _cookies.CSRF_COOKIE;
+    },
+    SESSION_COOKIE: function() {
+        return _cookies.SESSION_COOKIE;
+    },
+    clearCsrfCookie: function() {
+        return _cookies.clearCsrfCookie;
+    },
+    clearSessionCookie: function() {
+        return _cookies.clearSessionCookie;
+    },
+    createCsrfErrorResponse: function() {
+        return _csrf.createCsrfErrorResponse;
+    },
+    getOrSetCsrfCookie: function() {
+        return _csrf.getOrSetCsrfCookie;
+    },
+    requiresCsrfProtection: function() {
+        return _csrf.requiresCsrfProtection;
+    },
+    setCsrfCookie: function() {
+        return _cookies.setCsrfCookie;
+    },
+    setSessionCookie: function() {
+        return _cookies.setSessionCookie;
+    },
+    validateCsrfProtection: function() {
+        return _csrf.validateCsrfProtection;
+    },
+    verifyCsrfToken: function() {
+        return _csrf.verifyCsrfToken;
+    }
+});
+const _cookies = require("./cookies");
+const _csrf = require("./csrf");
+
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIi9Vc2Vycy9hbGF1Z2hpbmdraXRzdW5lL3NyYy9DaG9pY2VzL3dlYi9hcHAvYXBpL2F1dGgvX3NoYXJlZC9pbmRleC50cyJdLCJzb3VyY2VzQ29udGVudCI6WyIvKipcbiAqIEF1dGhlbnRpY2F0aW9uIFNoYXJlZCBVdGlsaXRpZXNcbiAqIFxuICogQ2VudHJhbGl6ZWQgZXhwb3J0cyBmb3IgY29va2llIG1hbmFnZW1lbnQgYW5kIENTUkYgcHJvdGVjdGlvblxuICogVXNlZCBhY3Jvc3MgYWxsIGF1dGhlbnRpY2F0aW9uIEFQSSByb3V0ZXMgZm9yIGNvbnNpc3RlbmN5XG4gKi9cblxuLy8gQ29va2llIG1hbmFnZW1lbnRcbmV4cG9ydCB7XG4gIFNFU1NJT05fQ09PS0lFLFxuICBDU1JGX0NPT0tJRSxcbiAgc2V0U2Vzc2lvbkNvb2tpZSxcbiAgY2xlYXJTZXNzaW9uQ29va2llLFxuICBzZXRDc3JmQ29va2llLFxuICBjbGVhckNzcmZDb29raWUsXG59IGZyb20gXCIuL2Nvb2tpZXNcIjtcblxuLy8gQ1NSRiBwcm90ZWN0aW9uXG5leHBvcnQge1xuICBnZXRPclNldENzcmZDb29raWUsXG4gIHZlcmlmeUNzcmZUb2tlbixcbiAgcmVxdWlyZXNDc3JmUHJvdGVjdGlvbixcbiAgdmFsaWRhdGVDc3JmUHJvdGVjdGlvbixcbiAgY3JlYXRlQ3NyZkVycm9yUmVzcG9uc2UsXG59IGZyb20gXCIuL2NzcmZcIjtcbiJdLCJuYW1lcyI6WyJDU1JGX0NPT0tJRSIsIlNFU1NJT05fQ09PS0lFIiwiY2xlYXJDc3JmQ29va2llIiwiY2xlYXJTZXNzaW9uQ29va2llIiwiY3JlYXRlQ3NyZkVycm9yUmVzcG9uc2UiLCJnZXRPclNldENzcmZDb29raWUiLCJyZXF1aXJlc0NzcmZQcm90ZWN0aW9uIiwic2V0Q3NyZkNvb2tpZSIsInNldFNlc3Npb25Db29raWUiLCJ2YWxpZGF0ZUNzcmZQcm90ZWN0aW9uIiwidmVyaWZ5Q3NyZlRva2VuIl0sIm1hcHBpbmdzIjoiQUFBQTs7Ozs7Q0FLQyxHQUVELG9CQUFvQjs7Ozs7Ozs7Ozs7O0lBR2xCQSxXQUFXO2VBQVhBLG9CQUFXOztJQURYQyxjQUFjO2VBQWRBLHVCQUFjOztJQUtkQyxlQUFlO2VBQWZBLHdCQUFlOztJQUZmQyxrQkFBa0I7ZUFBbEJBLDJCQUFrQjs7SUFXbEJDLHVCQUF1QjtlQUF2QkEsNkJBQXVCOztJQUp2QkMsa0JBQWtCO2VBQWxCQSx3QkFBa0I7O0lBRWxCQyxzQkFBc0I7ZUFBdEJBLDRCQUFzQjs7SUFSdEJDLGFBQWE7ZUFBYkEsc0JBQWE7O0lBRmJDLGdCQUFnQjtlQUFoQkEseUJBQWdCOztJQVdoQkMsc0JBQXNCO2VBQXRCQSw0QkFBc0I7O0lBRnRCQyxlQUFlO2VBQWZBLHFCQUFlOzs7eUJBTFY7c0JBU0EifQ==

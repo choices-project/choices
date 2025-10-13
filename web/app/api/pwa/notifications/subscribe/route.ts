@@ -10,6 +10,7 @@ import { type NextRequest, NextResponse } from 'next/server';
 import { isFeatureEnabled } from '@/lib/core/feature-flags';
 import { createApiLogger } from '@/lib/utils/api-logger';
 import { logger } from '@/lib/utils/logger';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
@@ -240,22 +241,69 @@ async function validateSubscription(subscription: any): Promise<boolean> {
  * Store push subscription in database
  */
 async function storeSubscription(data: any): Promise<string> {
-  // This would typically store in your database
-  // For now, we'll return a mock subscription ID
-  const subscriptionId = `sub_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  const supabase = await getSupabaseServerClient();
   
-  logger.info(`PWA: Storing subscription ${subscriptionId} for user ${data.userId}`);
+  // Store subscription in push_subscriptions table
+  const { data: subscription, error: subscriptionError } = await supabase
+    .from('push_subscriptions')
+    .insert({
+      user_id: data.userId,
+      endpoint: data.subscription.endpoint,
+      p256dh_key: data.subscription.keys.p256dh,
+      auth_key: data.subscription.keys.auth
+    })
+    .select('id')
+    .single();
+    
+  if (subscriptionError) {
+    logger.error('PWA: Failed to store subscription:', subscriptionError);
+    throw new Error('Failed to store subscription');
+  }
   
-  return subscriptionId;
+  // Store notification preferences
+  const { error: preferencesError } = await supabase
+    .from('user_notification_preferences')
+    .upsert({
+      user_id: data.userId,
+      push_enabled: true,
+      poll_notifications: data.preferences?.newPolls ?? true,
+      system_notifications: data.preferences?.systemUpdates ?? false,
+      marketing_notifications: data.preferences?.weeklyDigest ?? true
+    });
+    
+  if (preferencesError) {
+    logger.error('PWA: Failed to store notification preferences:', preferencesError);
+    // Don't throw here - subscription is more important
+  }
+  
+  logger.info(`PWA: Stored subscription ${subscription.id} for user ${data.userId}`);
+  return subscription.id;
 }
 
 /**
  * Remove push subscription from database
  */
 async function removeSubscription(userId?: string | null, subscriptionId?: string | null): Promise<boolean> {
-  // This would typically remove from your database
-  logger.info(`PWA: Removing subscription for user ${userId || subscriptionId}`);
+  const supabase = await getSupabaseServerClient();
   
+  let query = supabase.from('push_subscriptions').delete();
+  
+  if (subscriptionId) {
+    query = query.eq('id', subscriptionId);
+  } else if (userId) {
+    query = query.eq('user_id', userId);
+  } else {
+    return false;
+  }
+  
+  const { error } = await query;
+  
+  if (error) {
+    logger.error('PWA: Failed to remove subscription:', error);
+    return false;
+  }
+  
+  logger.info(`PWA: Removed subscription for user ${userId || subscriptionId}`);
   return true;
 }
 
@@ -263,14 +311,32 @@ async function removeSubscription(userId?: string | null, subscriptionId?: strin
  * Get notification preferences for user
  */
 async function getNotificationPreferences(userId: string): Promise<any> {
-  // This would typically query your database
-  logger.info('Getting notification preferences for user', { userId });
+  const supabase = await getSupabaseServerClient();
+  
+  const { data: preferences, error } = await supabase
+    .from('user_notification_preferences')
+    .select('*')
+    .eq('user_id', userId)
+    .single();
+    
+  if (error) {
+    logger.error('PWA: Failed to get notification preferences:', error);
+    // Return default preferences
+    return {
+      newPolls: true,
+      pollResults: true,
+      systemUpdates: false,
+      weeklyDigest: true,
+      lastUpdated: new Date().toISOString()
+    };
+  }
+  
   return {
-    newPolls: true,
-    pollResults: true,
-    systemUpdates: false,
-    weeklyDigest: true,
-    lastUpdated: new Date().toISOString()
+    newPolls: preferences.poll_notifications,
+    pollResults: preferences.poll_notifications,
+    systemUpdates: preferences.system_notifications,
+    weeklyDigest: preferences.marketing_notifications,
+    lastUpdated: preferences.updated_at
   };
 }
 
@@ -278,8 +344,24 @@ async function getNotificationPreferences(userId: string): Promise<any> {
  * Update notification preferences for user
  */
 async function updateNotificationPreferences(userId: string, preferences: any): Promise<boolean> {
-  // This would typically update your database
-  logger.info(`PWA: Updating preferences for user ${userId}:`, preferences);
+  const supabase = await getSupabaseServerClient();
   
+  const { error } = await supabase
+    .from('user_notification_preferences')
+    .upsert({
+      user_id: userId,
+      push_enabled: preferences.pushEnabled ?? true,
+      poll_notifications: preferences.newPolls ?? true,
+      system_notifications: preferences.systemUpdates ?? false,
+      marketing_notifications: preferences.weeklyDigest ?? true,
+      updated_at: new Date().toISOString()
+    });
+    
+  if (error) {
+    logger.error('PWA: Failed to update notification preferences:', error);
+    return false;
+  }
+  
+  logger.info(`PWA: Updated preferences for user ${userId}:`, preferences);
   return true;
 }

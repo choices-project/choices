@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { logger } from '@/lib/utils/logger';
 
 // VoteSmart API integration for data enrichment
 export class VoteSmartEnrichment {
@@ -75,7 +76,7 @@ export class VoteSmartEnrichment {
   // Enrich representative with VoteSmart data
   async enrichRepresentative(representativeId: string, votesmartId: string) {
     try {
-      console.log(`🔍 Enriching representative ${representativeId} with VoteSmart ${votesmartId}`);
+      logger.info(`🔍 Enriching representative ${representativeId} with VoteSmart ${votesmartId}`);
 
       // Get all VoteSmart data in parallel
       const [bio, ratings, positions, votingRecord] = await Promise.all([
@@ -105,7 +106,7 @@ export class VoteSmartEnrichment {
         return false;
       }
 
-      console.log(`✅ Successfully enriched representative ${representativeId}`);
+      logger.info(`✅ Successfully enriched representative ${representativeId}`);
       return true;
 
     } catch (error) {
@@ -150,7 +151,7 @@ export class VoteSmartEnrichment {
 
   // Batch enrich multiple representatives
   async batchEnrichRepresentatives(representatives: any[]) {
-    console.log(`🚀 Starting batch enrichment for ${representatives.length} representatives`);
+    logger.info(`🚀 Starting batch enrichment for ${representatives.length} representatives`);
 
     let successCount = 0;
     let errorCount = 0;
@@ -169,7 +170,7 @@ export class VoteSmartEnrichment {
       await new Promise(resolve => setTimeout(resolve, 100));
     }
 
-    console.log(`✅ Batch enrichment complete: ${successCount} success, ${errorCount} errors`);
+    logger.info(`✅ Batch enrichment complete: ${successCount} success, ${errorCount} errors`);
     return { successCount, errorCount };
   }
 
@@ -186,7 +187,7 @@ export class VoteSmartEnrichment {
 
   // Update representatives with VoteSmart IDs from OpenStates data
   async updateVoteSmartIds() {
-    console.log('🔍 Updating VoteSmart IDs from OpenStates data...');
+    logger.info('🔍 Updating VoteSmart IDs from OpenStates data...');
 
     const { data: representatives, error } = await this.supabase
       .from('representatives_optimal')
@@ -217,7 +218,7 @@ export class VoteSmartEnrichment {
       }
     }
 
-    console.log(`✅ Updated ${updatedCount} representatives with VoteSmart IDs`);
+    logger.info(`✅ Updated ${updatedCount} representatives with VoteSmart IDs`);
   }
 }
 

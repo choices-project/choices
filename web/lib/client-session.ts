@@ -53,7 +53,7 @@ export const clientSession = {
         return { success: false, error: issues.join(' ') };
       }
       // This is a placeholder implementation; do not log plaintext passwords
-      console.log('Login attempt:', { email, password: '***' });
+      logger.info('Login attempt:', { email, password: '***' });
 
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));

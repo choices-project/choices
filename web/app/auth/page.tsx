@@ -50,12 +50,12 @@ export default function AuthPage() {
   // Native DOM event handler as workaround for Playwright onClick issues
   const handleToggle = (e: Event) => {
     e.preventDefault();
-    console.log('Native toggle clicked! Current isSignUp:', isSignUp);
+    logger.info('Native toggle clicked! Current isSignUp:', isSignUp);
     setIsSignUp(!isSignUp);
     setError(null);
     setMessage(null);
     setFormData({ email: '', password: '', confirmPassword: '', displayName: '' });
-    console.log('Native toggle after setState! New isSignUp should be:', !isSignUp);
+    logger.info('Native toggle after setState! New isSignUp should be:', !isSignUp);
   };
 
   // React event handler for regular onClick

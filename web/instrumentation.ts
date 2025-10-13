@@ -1,6 +1,6 @@
 export function register() {
   // Verify this runs in Vercel logs:
-  console.log('[instrumentation] runtime=', process.env.NEXT_RUNTIME);
+  logger.info('[instrumentation] runtime=', process.env.NEXT_RUNTIME);
 
   if (process.env.NEXT_RUNTIME === 'nodejs') {
     if (typeof (globalThis as any).self === 'undefined') {

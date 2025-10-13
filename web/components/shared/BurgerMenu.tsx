@@ -35,7 +35,7 @@ export default function BurgerMenu({ isOpen, onClose, user }: BurgerMenuProps) {
       id: 'profile',
       label: 'My Profile',
       icon: <User className="w-5 h-5" />,
-      action: () => console.log('Profile clicked')
+      action: () => logger.info('Profile clicked')
     },
     {
       id: 'settings',
@@ -96,7 +96,7 @@ export default function BurgerMenu({ isOpen, onClose, user }: BurgerMenuProps) {
       icon: <Share2 className="w-6 h-6" />,
       color: 'bg-pink-100 text-pink-600',
       skills: ['Social media', 'Content creation', 'Outreach'],
-      action: () => console.log('Share clicked')
+      action: () => logger.info('Share clicked')
     }
   ];
 
@@ -105,19 +105,19 @@ export default function BurgerMenu({ isOpen, onClose, user }: BurgerMenuProps) {
       id: 'privacy',
       label: 'Privacy Settings',
       icon: <Settings className="w-5 h-5" />,
-      action: () => console.log('Privacy settings')
+      action: () => logger.info('Privacy settings')
     },
     {
       id: 'notifications',
       label: 'Notifications',
       icon: <Users className="w-5 h-5" />,
-      action: () => console.log('Notifications')
+      action: () => logger.info('Notifications')
     },
     {
       id: 'account',
       label: 'Account Settings',
       icon: <User className="w-5 h-5" />,
-      action: () => console.log('Account settings')
+      action: () => logger.info('Account settings')
     }
   ];
 

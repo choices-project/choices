@@ -10,6 +10,7 @@ import {
   isBlockedUserAgent, 
   anonymizeIP 
 } from '@/lib/core/security/config'
+import { logger } from '@/lib/utils/logger'
 
 /**
  * Security Middleware
@@ -229,7 +230,7 @@ export function middleware(request: NextRequest) {
   // Add security logging
   if (process.env.NODE_ENV === 'production') {
     const logIP = SECURITY_CONFIG.privacy.anonymizeIPs ? anonymizeIP(clientIP) : clientIP
-    console.log('Security: Request processed', {
+    logger.info('Security: Request processed', {
       ip: logIP,
       path: pathname,
       method: request.method,

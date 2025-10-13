@@ -29,7 +29,7 @@ test.describe('Enhanced Authentication Flow', () => {
     // Verify fast loading (should be under 2 seconds) - temporarily disabled for debugging
     // TODO: Optimize performance to meet <2s target
     // expect(loadTime).toBeLessThan(2000);
-    console.log(`Page load time: ${loadTime}ms`);
+    logger.info(`Page load time: ${loadTime}ms`);
   });
 
   test('should sign up with email with enhanced UX', async ({ page }) => {
@@ -48,7 +48,7 @@ test.describe('Enhanced Authentication Flow', () => {
     // Debug: Check toggle button text before clicking
     const toggleButton = page.locator('[data-testid="auth-toggle"]');
     const toggleText = await toggleButton.textContent();
-    console.log('Toggle button text before click:', toggleText);
+    logger.info('Toggle button text before click:', toggleText);
     
     // Debug: Take screenshot to check for overlays
     await page.screenshot({ path: 'debug-auth-page.png' });
@@ -72,7 +72,7 @@ test.describe('Enhanced Authentication Flow', () => {
         rect: { x: rect.x, y: rect.y, width: rect.width, height: rect.height }
       };
     });
-    console.log('Button info:', buttonInfo);
+    logger.info('Button info:', buttonInfo);
     
     // Try force clicking the button
     await page.locator('[data-testid="auth-toggle"]').click({ force: true });
@@ -82,11 +82,11 @@ test.describe('Enhanced Authentication Flow', () => {
     
     // Debug: Check toggle button text after clicking
     const toggleTextAfter = await toggleButton.textContent();
-    console.log('Toggle button text after click:', toggleTextAfter);
+    logger.info('Toggle button text after click:', toggleTextAfter);
     
     // Debug: Check if display name field appears (which should appear in sign-up mode)
     const displayNameVisible = await page.locator('input[name="displayName"]').isVisible();
-    console.log('Display name field visible:', displayNameVisible);
+    logger.info('Display name field visible:', displayNameVisible);
     
     // Try to trigger state change directly via React DevTools
     const stateChanged = await page.evaluate(() => {
@@ -107,7 +107,7 @@ test.describe('Enhanced Authentication Flow', () => {
         setTimeout(() => resolve(true), 100);
       });
     });
-    console.log('Custom event dispatched:', stateChanged);
+    logger.info('Custom event dispatched:', stateChanged);
     
     // Wait for the confirm password field to appear (state update)
     await expect(page.locator('input[name="confirmPassword"]')).toBeVisible();

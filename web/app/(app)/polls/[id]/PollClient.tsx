@@ -111,7 +111,7 @@ export default function PollClient({ poll }: PollClientProps) {
       };
     }
 
-    console.log('Submitting vote for poll:', poll.id, 'choice:', choice);
+    logger.info('Submitting vote for poll:', poll.id, 'choice:', choice);
     setIsVoting(true);
     try {
       // Submit vote to API

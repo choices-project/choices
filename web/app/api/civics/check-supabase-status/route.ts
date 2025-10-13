@@ -18,7 +18,7 @@ const supabase = createClient(
 export async function GET(request: NextRequest) {
   try {
     // Log the request for debugging
-    console.log('Supabase status check requested from:', request.headers.get('user-agent'));
+    logger.info('Supabase status check requested from:', request.headers.get('user-agent'));
     
     // Require service key authentication
     const serviceCheck = await requireServiceKey();

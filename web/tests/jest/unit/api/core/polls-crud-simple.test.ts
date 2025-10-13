@@ -5,7 +5,7 @@
  * Focuses on actual functionality rather than heavy mocks
  */
 
-import { describe, it, expect, beforeEach } from '@jest/globals';
+import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { NextRequest } from 'next/server';
 
 // Test the actual API route structure
@@ -25,7 +25,7 @@ describe('Polls API Route Structure', () => {
   it('should handle GET request structure', async () => {
     const { GET } = await import('@/app/api/polls/route');
     
-    // Create a basic GET request
+    // Create a basic GET request using NextRequest
     const request = new NextRequest('http://localhost:3000/api/polls');
 
     // Mock the required dependencies

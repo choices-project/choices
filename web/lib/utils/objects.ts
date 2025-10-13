@@ -1,58 +1,70 @@
-/**
- * Object Utilities for Exact Optional Property Types
- * 
- * Handles strict TypeScript optional property handling
- * Prevents "undefined not assignable to optional property" errors
- */
-
-/**
- * Conditionally spread properties only if they are not null/undefined
- * Prevents exactOptionalPropertyTypes violations
- * Handles both single object filtering and multi-object merging
- */
-export function withOptional<T extends object>(
-  base: T,
-  extras?: Record<string, unknown>
-): T {
-  if (!extras) {
-    // Single parameter: filter undefined values from the object
-    return Object.fromEntries(
-      Object.entries(base).filter(([_, value]) => value !== undefined)
-    ) as T;
-  }
-  
-  // Two parameters: merge objects, filtering null/undefined from extras
-  const out = Object.assign({}, base) as Record<string, unknown>
-  for (const [k, v] of Object.entries(extras)) {
-    if (v != null) out[k] = v
-  }
-  return out as T
-}
-
-/**
- * Create an object with only defined properties
- * Useful for API payloads with optional fields
- */
-export function createPayload<T extends Record<string, unknown>>(data: T): Partial<T> {
+// Utility functions for object manipulation
+export const withOptional = <T extends Record<string, any>>(
+  obj: T,
+  keys: (keyof T)[] | string
+): Partial<T> => {
   const result: Partial<T> = {}
-  for (const [key, value] of Object.entries(data)) {
-    if (value !== null && value !== undefined) {
-      (result as Record<string, unknown>)[key] = value
+  const keysArray = Array.isArray(keys) ? keys : [keys]
+  keysArray.forEach(key => {
+    if (obj[key] !== undefined) {
+      result[key] = obj[key]
     }
-  }
+  })
   return result
 }
 
-/**
- * Merge objects with null/undefined filtering
- * Prevents exactOptionalPropertyTypes violations
- */
-export function mergeOptional<T extends object, U extends object>(base: T, extras: U): T & Partial<U> {
-  const result = Object.assign({}, base) as Record<string, unknown>
-  for (const [key, value] of Object.entries(extras)) {
-    if (value !== null && value !== undefined) {
-      result[key] = value
+export const pick = <T extends Record<string, any>, K extends keyof T>(
+  obj: T,
+  keys: K[]
+): Pick<T, K> => {
+  const result = {} as Pick<T, K>
+  keys.forEach(key => {
+    if (key in obj) {
+      result[key] = obj[key]
     }
-  }
-  return result as T & Partial<U>
+  })
+  return result
+}
+
+export const omit = <T extends Record<string, any>, K extends keyof T>(
+  obj: T,
+  keys: K[]
+): Omit<T, K> => {
+  const result = { ...obj }
+  keys.forEach(key => {
+    delete result[key]
+  })
+  return result
+}
+
+export const isEmpty = (obj: any): boolean => {
+  if (obj == null) return true
+  if (Array.isArray(obj)) return obj.length === 0
+  if (typeof obj === 'object') return Object.keys(obj).length === 0
+  return false
+}
+
+export const deepMerge = <T extends Record<string, any>>(
+  target: T,
+  source: Partial<T>
+): T => {
+  const result = { ...target }
+  Object.keys(source).forEach(key => {
+    const sourceValue = source[key as keyof T]
+    const targetValue = result[key as keyof T]
+    
+    if (
+      sourceValue &&
+      typeof sourceValue === 'object' &&
+      !Array.isArray(sourceValue) &&
+      targetValue &&
+      typeof targetValue === 'object' &&
+      !Array.isArray(targetValue)
+    ) {
+      result[key as keyof T] = deepMerge(targetValue, sourceValue) as T[keyof T]
+    } else {
+      result[key as keyof T] = sourceValue as T[keyof T]
+    }
+  })
+  return result
 }

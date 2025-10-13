@@ -183,7 +183,7 @@ export class DifferentialPrivacyManager {
     });
 
     // Log the usage
-    console.log(`Epsilon usage tracked: ${operation} used ${epsilon} (${budget.remaining} remaining)`);
+    logger.info(`Epsilon usage tracked: ${operation} used ${epsilon} (${budget.remaining} remaining)`);
   }
 
   /**

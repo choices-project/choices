@@ -665,7 +665,7 @@ export const analyticsStoreDebug = {
    */
   logState: () => {
     const state = useAnalyticsStore.getState();
-    console.log('Analytics Store State:', {
+    logger.debug('Analytics Store State', {
       totalEvents: state.events.length,
       sessionId: state.sessionId,
       trackingEnabled: state.trackingEnabled,
@@ -682,7 +682,7 @@ export const analyticsStoreDebug = {
    */
   logSummary: () => {
     const summary = analyticsStoreUtils.getAnalyticsSummary();
-    console.log('Analytics Summary:', summary);
+    logger.debug('Analytics Summary', summary);
   },
   
   /**
@@ -690,7 +690,7 @@ export const analyticsStoreDebug = {
    */
   logRecentEvents: (limit: number = 5) => {
     const events = analyticsStoreUtils.getRecentEvents(limit);
-    console.log('Recent Analytics Events:', events);
+    logger.debug('Recent Analytics Events', events);
   },
   
   /**
@@ -699,6 +699,6 @@ export const analyticsStoreDebug = {
   reset: () => {
     useAnalyticsStore.getState().clearEvents();
     useAnalyticsStore.getState().resetPreferences();
-    console.log('Analytics store reset');
+    logger.info('Analytics store reset');
   }
 };

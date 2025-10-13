@@ -3,7 +3,7 @@ import { execSync } from 'child_process';
 
 try {
   const out = execSync('npm run types:strict', { encoding: 'utf8' });
-  console.log(out);
+  logger.info(out);
 } catch (e) {
   const txt = e.stdout || e.stderr || String(e);
   fs.writeFileSync('.ts-errors.txt', txt);
@@ -13,8 +13,8 @@ try {
     const m = L.match(/error (TS\d+)/);
     if (m) codes[m[1]] = (codes[m[1]] || 0) + 1;
   }
-  console.log('By TS code:');
-  Object.entries(codes).sort((a,b)=>b[1]-a[1]).forEach(([k,v])=>console.log(v, k));
-  console.log('\nTS2532 (possibly undefined):', (txt.match(/TS2532/g) || []).length);
-  console.log('exactOptionalPropertyTypes:', (txt.match(/exactOptionalPropertyTypes/g) || []).length);
+  logger.info('By TS code:');
+  Object.entries(codes).sort((a,b)=>b[1]-a[1]).forEach(([k,v])=>logger.info(v, k));
+  logger.info('\nTS2532 (possibly undefined):', (txt.match(/TS2532/g) || []).length);
+  logger.info('exactOptionalPropertyTypes:', (txt.match(/exactOptionalPropertyTypes/g) || []).length);
 }

@@ -716,13 +716,13 @@ export const useProfileStats = () => useProfileStore((state) => ({
 export const profileStoreUtils = {
   // Initialize profile store
   initialize: () => {
-    console.log('Profile store initialized');
+    logger.info('Profile store initialized');
   },
   
   // Reset profile store
   reset: () => {
     useProfileStore.getState().resetProfile();
-    console.log('Profile store reset');
+    logger.info('Profile store reset');
   },
   
   // Get profile completeness
@@ -792,7 +792,7 @@ export const profileStoreDebug = {
   // Log current state
   logState: () => {
     const state = useProfileStore.getState();
-    console.log('Profile Store State:', {
+    logger.debug('Profile Store State', {
       profile: state.profile,
       isProfileLoaded: state.isProfileLoaded,
       isProfileComplete: state.isProfileComplete,
@@ -811,6 +811,6 @@ export const profileStoreDebug = {
   // Clear all data
   clearAll: () => {
     useProfileStore.getState().clearProfile();
-    console.log('Profile store cleared');
+    logger.info('Profile store cleared');
   }
 };

@@ -3,6 +3,7 @@
 import { redirect } from 'next/navigation'
 
 import { getSupabaseServerClient } from '@/utils/supabase/server'
+import { logger } from '@/lib/utils/logger'
 
 /**
  * Modern Supabase Authentication Login Action
@@ -14,8 +15,8 @@ import { getSupabaseServerClient } from '@/utils/supabase/server'
  * Status: ✅ SUPERIOR IMPLEMENTATION
  */
 export async function loginAction(formData: FormData) {
-  console.log('=== MODERN SUPABASE LOGIN ACTION CALLED ===');
-  console.log('FormData entries:', Object.fromEntries(formData.entries()));
+  logger.info('Modern Supabase login action called');
+  logger.debug('FormData entries', Object.fromEntries(formData.entries()));
 
   // Extract form data
   const email = formData.get('email') as string;
@@ -47,7 +48,7 @@ export async function loginAction(formData: FormData) {
     throw new Error('Authentication failed');
   }
 
-  console.log('✅ User authenticated successfully:', authData.user.id);
+  logger.info('User authenticated successfully', { userId: authData.user.id });
   
   // Check if user has completed onboarding
   const { data: profile, error: profileError } = await supabase
@@ -66,10 +67,10 @@ export async function loginAction(formData: FormData) {
   
   // Redirect based on onboarding status
   if (profile?.onboarding_completed) {
-    console.log('✅ User has completed onboarding, redirecting to dashboard');
+    logger.info('User has completed onboarding, redirecting to dashboard');
     redirect('/dashboard');
   } else {
-    console.log('✅ User needs onboarding, redirecting to onboarding');
+    logger.info('User needs onboarding, redirecting to onboarding');
     redirect('/onboarding');
   }
 }

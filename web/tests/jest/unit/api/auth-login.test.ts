@@ -106,13 +106,13 @@ describe('Auth Login API Route', () => {
     const emptyEmailRequest = { email: '', password: 'password123' };
     const emptyEmailResult = validateLoginRequest(emptyEmailRequest);
     expect(emptyEmailResult.valid).toBe(false);
-    expect(emptyEmailResult.error).toBe('Email and password cannot be empty');
+    expect(emptyEmailResult.error).toBe('Email and password are required');
 
     // Test empty password
     const emptyPasswordRequest = { email: 'test@example.com', password: '' };
     const emptyPasswordResult = validateLoginRequest(emptyPasswordRequest);
     expect(emptyPasswordResult.valid).toBe(false);
-    expect(emptyPasswordResult.error).toBe('Email and password cannot be empty');
+    expect(emptyPasswordResult.error).toBe('Email and password are required');
   });
 
   it('should test email normalization', () => {

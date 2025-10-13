@@ -35,7 +35,7 @@ describe('Context API Migration', () => {
     });
     
     if (problematicFiles.length > 0) {
-      console.log('Files with useAuth() calls:', problematicFiles);
+      logger.info('Files with useAuth() calls:', problematicFiles);
     }
     
     expect(problematicFiles).toHaveLength(0);
@@ -66,7 +66,7 @@ describe('Context API Migration', () => {
     });
     
     if (problematicFiles.length > 0) {
-      console.log('Files with Context API usage:', problematicFiles);
+      logger.info('Files with Context API usage:', problematicFiles);
     }
     
     expect(problematicFiles).toHaveLength(0);
@@ -101,7 +101,7 @@ describe('Context API Migration', () => {
     });
     
     if (problematicFiles.length > 0) {
-      console.log('Files with improper store imports:', problematicFiles);
+      logger.info('Files with improper store imports:', problematicFiles);
     }
     
     expect(problematicFiles).toHaveLength(0);
@@ -132,7 +132,7 @@ describe('Context API Migration', () => {
     });
     
     if (problematicFiles.length > 0) {
-      console.log('Files with inconsistent store usage:', problematicFiles);
+      logger.info('Files with inconsistent store usage:', problematicFiles);
     }
     
     expect(problematicFiles).toHaveLength(0);
@@ -158,7 +158,7 @@ describe('Context API Migration', () => {
     });
     
     if (problematicStores.length > 0) {
-      console.log('Stores with improper subscriptions:', problematicStores);
+      logger.info('Stores with improper subscriptions:', problematicStores);
     }
     
     expect(problematicStores).toHaveLength(0);

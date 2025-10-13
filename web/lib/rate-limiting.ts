@@ -7,6 +7,8 @@
  * Status: Critical for production use
  */
 
+import { logger } from '@/lib/utils/logger';
+
 export interface RateLimit {
   daily: number;
   perMinute: number;
@@ -157,13 +159,13 @@ export function getRateLimitStatus(): Record<string, { canMakeRequest: boolean; 
 export async function waitForRateLimit(api: string): Promise<void> {
   const delay = getRequiredDelay(api);
   if (delay > 0) {
-    console.log(`⏳ Waiting ${delay}ms for ${api} rate limit...`);
+    logger.debug(`Waiting ${delay}ms for ${api} rate limit`, { api, delay });
     await new Promise(resolve => setTimeout(resolve, delay));
   }
 }
 
 export function logAPIUsage(): void {
-  console.log('\n📊 API Usage Status:');
+  logger.info('API Usage Status');
   const status = getRateLimitStatus();
   
   for (const [api, info] of Object.entries(status)) {
@@ -171,6 +173,6 @@ export function logAPIUsage(): void {
     const statusIcon = canMakeRequest ? '✅' : '❌';
     const delayText = delayNeeded > 0 ? ` (wait ${Math.ceil(delayNeeded/1000)}s)` : '';
     
-    console.log(`  ${statusIcon} ${api}: ${usage.requestsToday}/${usage.rateLimit.daily} today, ${usage.requestsThisMinute}/${usage.rateLimit.perMinute} this minute${delayText}`);
+    logger.debug(`API Status: ${api}`, { requestsToday: usage.requestsToday, dailyLimit: usage.rateLimit.daily, requestsThisMinute: usage.requestsThisMinute, perMinuteLimit: usage.rateLimit.perMinute, delayText });
   }
 }

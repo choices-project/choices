@@ -8,6 +8,7 @@ import { useFormStatus } from 'react-dom'
 
 import { loginAction } from '@/app/actions/login'
 import { PasskeyButton } from '@/features/auth/components/PasskeyButton'
+import { logger } from '@/lib/utils/logger'
 
 // Login button component using useFormStatus
 function LoginButton() {
@@ -89,7 +90,7 @@ function LoginForm() {
                   name="email"
                   value={email}
                   onChange={(e) => {
-                    console.log('Email onChange:', e.target.value);
+                    logger.info('Email onChange:', { value: e.target.value });
                     setEmail(e.target.value);
                   }}
                   required
@@ -191,3 +192,5 @@ export default function LoginPage() {
     </Suspense>
   )
 }
+
+

@@ -5,6 +5,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { logger } from '@/lib/utils/logger';
 
 export interface FeatureWrapperProps {
   children: React.ReactNode;
@@ -67,15 +68,37 @@ export const FeatureWrapper: React.FC<FeatureWrapperProps> = ({
   };
 
   const handleRegistration = async () => {
-    // WebAuthn registration logic would go here
-    // This is a placeholder for the actual implementation
-    console.log('WebAuthn registration initiated for feature:', feature);
+    try {
+      // Use the existing WebAuthn registration implementation
+      const { beginRegister } = await import('@/features/auth/lib/webauthn/client');
+      const result = await beginRegister();
+      
+      if (result.error) {
+        throw new Error(result.error);
+      }
+      
+      logger.info('WebAuthn registration completed for feature:', { feature });
+    } catch (error) {
+      logger.error('WebAuthn registration failed:', error instanceof Error ? error : new Error(String(error)));
+      throw error;
+    }
   };
 
   const handleAuthentication = async () => {
-    // WebAuthn authentication logic would go here
-    // This is a placeholder for the actual implementation
-    console.log('WebAuthn authentication initiated for feature:', feature);
+    try {
+      // Use the existing WebAuthn authentication implementation
+      const { beginAuthenticate } = await import('@/features/auth/lib/webauthn/client');
+      const result = await beginAuthenticate();
+      
+      if (result.error) {
+        throw new Error(result.error);
+      }
+      
+      logger.info('WebAuthn authentication completed for feature:', { feature });
+    } catch (error) {
+      logger.error('WebAuthn authentication failed:', error instanceof Error ? error : new Error(String(error)));
+      throw error;
+    }
   };
 
   return (

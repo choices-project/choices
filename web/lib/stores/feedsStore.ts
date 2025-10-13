@@ -283,10 +283,10 @@ export const useFeedsStore = create<FeedsStore>()(
         
         updateFeed: (id, updates) => set((state) => ({
           feeds: state.feeds.map(feed =>
-            feed.id === id ? withOptional(feed, updates) : feed
+            feed.id === id ? { ...feed, ...updates } : feed
           ),
           filteredFeeds: state.filteredFeeds.map(feed =>
-            feed.id === id ? withOptional(feed, updates) : feed
+            feed.id === id ? { ...feed, ...updates } : feed
           ),
         })),
         
@@ -296,56 +296,78 @@ export const useFeedsStore = create<FeedsStore>()(
         })),
         
         refreshFeeds: async () => {
-          const { setRefreshing, setError, loadFeeds } = get();
+          const { isRefreshing } = get();
+          if (isRefreshing) return; // Prevent multiple simultaneous calls
           
           try {
-            setRefreshing(true);
-            setError(null);
+            set({ isRefreshing: true, error: null });
             
-            await loadFeeds();
+            const response = await fetch('/api/feeds', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ category: null }),
+            });
+            
+            if (!response.ok) {
+              throw new Error('Failed to refresh feeds');
+            }
+            
+            const feeds = await response.json();
+            set({ feeds, filteredFeeds: feeds, isRefreshing: false });
             
             logger.info('Feeds refreshed successfully');
           } catch (error) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-            setError(errorMessage);
+            set({ error: errorMessage, isRefreshing: false });
             logger.error('Failed to refresh feeds:', error instanceof Error ? error : new Error(errorMessage));
-          } finally {
-            setRefreshing(false);
           }
         },
         
         loadMoreFeeds: async () => {
-          const { setLoading, setError, loadFeeds } = get();
+          const { isLoading } = get();
+          if (isLoading) return; // Prevent multiple simultaneous calls
           
           try {
-            setLoading(true);
-            setError(null);
+            set({ isLoading: true, error: null });
             
-            await loadFeeds();
+            const response = await fetch('/api/feeds', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ category: null }),
+            });
+            
+            if (!response.ok) {
+              throw new Error('Failed to load more feeds');
+            }
+            
+            const newFeeds = await response.json();
+            set((state) => ({
+              feeds: [...state.feeds, ...newFeeds],
+              filteredFeeds: [...state.filteredFeeds, ...newFeeds],
+              isLoading: false
+            }));
             
             logger.info('More feeds loaded');
           } catch (error) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-            setError(errorMessage);
+            set({ error: errorMessage, isLoading: false });
             logger.error('Failed to load more feeds:', error instanceof Error ? error : new Error(errorMessage));
-          } finally {
-            setLoading(false);
           }
         },
         
         // Filtering and search actions
         setFilters: (filters) => set((state) => {
-          const newFilters = withOptional(state.filters, filters);
+          const newFilters = { ...state.filters, ...filters };
           
           // Apply filters to feeds
           const filtered = state.feeds.filter(feed => {
-            if (newFilters.categories.length > 0 && !newFilters.categories.includes(feed.category)) {
+            if (newFilters.categories && newFilters.categories.length > 0 && !newFilters.categories.includes(feed.category)) {
               return false;
             }
-            if (newFilters.types.length > 0 && !newFilters.types.includes(feed.type)) {
+            if (newFilters.types && newFilters.types.length > 0 && !newFilters.types.includes(feed.type)) {
               return false;
             }
-            if (newFilters.sources.length > 0 && !newFilters.sources.includes(feed.source.name)) {
+            if (newFilters.sources && newFilters.sources.length > 0 && !newFilters.sources.includes(feed.source.name)) {
               return false;
             }
             if (newFilters.readStatus === 'read' && !feed.userInteraction.read) {
@@ -354,7 +376,7 @@ export const useFeedsStore = create<FeedsStore>()(
             if (newFilters.readStatus === 'unread' && feed.userInteraction.read) {
               return false;
             }
-            if (newFilters.tags.length > 0 && !newFilters.tags.some(tag => feed.tags.includes(tag))) {
+            if (newFilters.tags && newFilters.tags.length > 0 && !newFilters.tags.some(tag => feed.tags.includes(tag))) {
               return false;
             }
             return true;
@@ -431,18 +453,20 @@ export const useFeedsStore = create<FeedsStore>()(
         likeFeed: (id) => set((state) => ({
           feeds: state.feeds.map(feed =>
             feed.id === id 
-              ? withOptional(feed, { 
-                  userInteraction: withOptional(feed.userInteraction, { liked: true }),
-                  engagement: withOptional(feed.engagement, { likes: feed.engagement.likes + 1 })
-                })
+              ? { 
+                  ...feed,
+                  userInteraction: { ...feed.userInteraction, liked: true },
+                  engagement: { ...feed.engagement, likes: feed.engagement.likes + 1 }
+                }
               : feed
           ),
           filteredFeeds: state.filteredFeeds.map(feed =>
             feed.id === id 
-              ? withOptional(feed, { 
-                  userInteraction: withOptional(feed.userInteraction, { liked: true }),
+              ? { 
+                  ...feed,
+                  userInteraction: { ...feed.userInteraction, liked: true },
                   engagement: { ...feed.engagement, likes: feed.engagement.likes + 1 }
-                })
+                }
               : feed
           ),
         })),
@@ -450,18 +474,20 @@ export const useFeedsStore = create<FeedsStore>()(
         unlikeFeed: (id) => set((state) => ({
           feeds: state.feeds.map(feed =>
             feed.id === id 
-              ? withOptional(feed, { 
-                  userInteraction: withOptional(feed.userInteraction, { liked: false }),
-                  engagement: withOptional(feed.engagement, { likes: Math.max(0, feed.engagement.likes - 1) })
-                })
+              ? { 
+                  ...feed,
+                  userInteraction: { ...feed.userInteraction, liked: false },
+                  engagement: { ...feed.engagement, likes: Math.max(0, feed.engagement.likes - 1) }
+                }
               : feed
           ),
           filteredFeeds: state.filteredFeeds.map(feed =>
             feed.id === id 
-              ? withOptional(feed, { 
-                  userInteraction: withOptional(feed.userInteraction, { liked: false }),
-                  engagement: withOptional(feed.engagement, { likes: Math.max(0, feed.engagement.likes - 1) })
-                })
+              ? { 
+                  ...feed,
+                  userInteraction: { ...feed.userInteraction, liked: false },
+                  engagement: { ...feed.engagement, likes: Math.max(0, feed.engagement.likes - 1) }
+                }
               : feed
           ),
         })),
@@ -469,18 +495,20 @@ export const useFeedsStore = create<FeedsStore>()(
         shareFeed: (id) => set((state) => ({
           feeds: state.feeds.map(feed =>
             feed.id === id 
-              ? withOptional(feed, { 
-                  userInteraction: withOptional(feed.userInteraction, { shared: true }),
-                  engagement: withOptional(feed.engagement, { shares: feed.engagement.shares + 1 })
-                })
+              ? { 
+                  ...feed,
+                  userInteraction: { ...feed.userInteraction, shared: true },
+                  engagement: { ...feed.engagement, shares: feed.engagement.shares + 1 }
+                }
               : feed
           ),
           filteredFeeds: state.filteredFeeds.map(feed =>
             feed.id === id 
-              ? withOptional(feed, { 
-                  userInteraction: withOptional(feed.userInteraction, { shared: true }),
-                  engagement: withOptional(feed.engagement, { shares: feed.engagement.shares + 1 })
-                })
+              ? { 
+                  ...feed,
+                  userInteraction: { ...feed.userInteraction, shared: true },
+                  engagement: { ...feed.engagement, shares: feed.engagement.shares + 1 }
+                }
               : feed
           ),
         })),
@@ -488,12 +516,12 @@ export const useFeedsStore = create<FeedsStore>()(
         bookmarkFeed: (id) => set((state) => ({
           feeds: state.feeds.map(feed =>
             feed.id === id 
-              ? withOptional(feed, { userInteraction: withOptional(feed.userInteraction, { bookmarked: true }) })
+              ? { ...feed, userInteraction: { ...feed.userInteraction, bookmarked: true } }
               : feed
           ),
           filteredFeeds: state.filteredFeeds.map(feed =>
             feed.id === id 
-              ? withOptional(feed, { userInteraction: withOptional(feed.userInteraction, { bookmarked: true }) })
+              ? { ...feed, userInteraction: { ...feed.userInteraction, bookmarked: true } }
               : feed
           ),
         })),
@@ -501,12 +529,12 @@ export const useFeedsStore = create<FeedsStore>()(
         unbookmarkFeed: (id) => set((state) => ({
           feeds: state.feeds.map(feed =>
             feed.id === id 
-              ? withOptional(feed, { userInteraction: withOptional(feed.userInteraction, { bookmarked: false }) })
+              ? { ...feed, userInteraction: { ...feed.userInteraction, bookmarked: false } }
               : feed
           ),
           filteredFeeds: state.filteredFeeds.map(feed =>
             feed.id === id 
-              ? withOptional(feed, { userInteraction: withOptional(feed.userInteraction, { bookmarked: false }) })
+              ? { ...feed, userInteraction: { ...feed.userInteraction, bookmarked: false } }
               : feed
           ),
         })),
@@ -514,22 +542,26 @@ export const useFeedsStore = create<FeedsStore>()(
         markAsRead: (id) => set((state) => ({
           feeds: state.feeds.map(feed =>
             feed.id === id 
-              ? withOptional(feed, { 
-                  userInteraction: withOptional(feed.userInteraction, { 
+              ? { 
+                  ...feed,
+                  userInteraction: { 
+                    ...feed.userInteraction, 
                     read: true, 
                     readAt: new Date().toISOString() 
-                  })
-                })
+                  }
+                }
               : feed
           ),
           filteredFeeds: state.filteredFeeds.map(feed =>
             feed.id === id 
-              ? withOptional(feed, { 
-                  userInteraction: withOptional(feed.userInteraction, { 
+              ? { 
+                  ...feed,
+                  userInteraction: { 
+                    ...feed.userInteraction, 
                     read: true, 
                     readAt: new Date().toISOString() 
-                  })
-                })
+                  }
+                }
               : feed
           ),
         })),
@@ -537,22 +569,26 @@ export const useFeedsStore = create<FeedsStore>()(
         markAsUnread: (id) => set((state) => ({
           feeds: state.feeds.map(feed =>
             feed.id === id 
-              ? withOptional(feed, { 
-                  userInteraction: withOptional(feed.userInteraction, { 
+              ? { 
+                  ...feed,
+                  userInteraction: { 
+                    ...feed.userInteraction, 
                     read: false, 
                     readAt: undefined 
-                  })
-                })
+                  }
+                }
               : feed
           ),
           filteredFeeds: state.filteredFeeds.map(feed =>
             feed.id === id 
-              ? withOptional(feed, { 
-                  userInteraction: withOptional(feed.userInteraction, { 
+              ? { 
+                  ...feed,
+                  userInteraction: { 
+                    ...feed.userInteraction, 
                     read: false, 
                     readAt: undefined 
-                  })
-                })
+                  }
+                }
               : feed
           ),
         })),
@@ -563,7 +599,7 @@ export const useFeedsStore = create<FeedsStore>()(
         toggleCategory: (categoryId) => set((state) => ({
           categories: state.categories.map(category =>
             category.id === categoryId 
-              ? withOptional(category, { enabled: !category.enabled })
+              ? { ...category, enabled: !category.enabled }
               : category
           )
         })),
@@ -572,7 +608,7 @@ export const useFeedsStore = create<FeedsStore>()(
         
         // Preferences actions
         updatePreferences: (preferences) => set((state) => ({
-          preferences: withOptional(state.preferences, preferences)
+          preferences: { ...state.preferences, ...preferences }
         })),
         
         resetPreferences: () => set({ preferences: defaultPreferences }),
@@ -584,11 +620,8 @@ export const useFeedsStore = create<FeedsStore>()(
         
         // Data operations
         loadFeeds: async (category) => {
-          const { setLoading, setError } = get();
-          
           try {
-            setLoading(true);
-            setError(null);
+            set({ isLoading: true, error: null });
             
             const response = await fetch('/api/feeds', {
               method: 'POST',
@@ -596,32 +629,28 @@ export const useFeedsStore = create<FeedsStore>()(
               body: JSON.stringify({ category }),
             });
             
-            if (!response.ok) {
-              throw new Error('Failed to load feeds');
+            if (response && response.ok) {
+              const feeds = await response.json();
+              set({ feeds, filteredFeeds: feeds, isLoading: false });
+              
+              logger.info('Feeds loaded', {
+                category,
+                count: feeds.length
+              });
+            } else {
+              // No fallback data - just set empty state
+              set({ feeds: [], filteredFeeds: [], isLoading: false });
             }
-            
-            const feeds = await response.json();
-            set({ feeds, filteredFeeds: feeds });
-            
-            logger.info('Feeds loaded', {
-              category,
-              count: feeds.length
-            });
           } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-            setError(errorMessage);
-            logger.error('Failed to load feeds:', error instanceof Error ? error : new Error(errorMessage));
-          } finally {
-            setLoading(false);
+            // No fallback data - just set empty state on error
+            set({ feeds: [], filteredFeeds: [], isLoading: false });
+            logger.info('API error, using empty state:', { error: error instanceof Error ? error.message : 'Unknown error' });
           }
         },
         
         loadCategories: async () => {
-          const { setLoading, setError } = get();
-          
           try {
-            setLoading(true);
-            setError(null);
+            set({ isLoading: true, error: null });
             
             const response = await fetch('/api/feeds/categories');
             
@@ -630,26 +659,21 @@ export const useFeedsStore = create<FeedsStore>()(
             }
             
             const categories = await response.json();
-            set({ categories });
+            set({ categories, isLoading: false });
             
             logger.info('Feed categories loaded', {
               count: categories.length
             });
           } catch (error) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-            setError(errorMessage);
+            set({ error: errorMessage, isLoading: false });
             logger.error('Failed to load categories:', error instanceof Error ? error : new Error(errorMessage));
-          } finally {
-            setLoading(false);
           }
         },
         
         saveUserInteraction: async (feedId, interaction) => {
-          const { setUpdating, setError } = get();
-          
           try {
-            setUpdating(true);
-            setError(null);
+            set({ isUpdating: true, error: null });
             
             const response = await fetch('/api/feeds/interactions', {
               method: 'POST',
@@ -661,16 +685,15 @@ export const useFeedsStore = create<FeedsStore>()(
               throw new Error('Failed to save user interaction');
             }
             
+            set({ isUpdating: false });
             logger.info('User interaction saved', {
               feedId,
               interaction
             });
           } catch (error) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-            setError(errorMessage);
+            set({ error: errorMessage, isUpdating: false });
             logger.error('Failed to save user interaction:', error instanceof Error ? error : new Error(errorMessage));
-          } finally {
-            setUpdating(false);
           }
         },
         
@@ -708,43 +731,8 @@ export const useFeedFilters = () => useFeedsStore(state => state.filters);
 export const useFeedsLoading = () => useFeedsStore(state => state.isLoading);
 export const useFeedsError = () => useFeedsStore(state => state.error);
 
-// Action selectors
-export const useFeedsActions = () => useFeedsStore(state => ({
-  setFeeds: state.setFeeds,
-  addFeed: state.addFeed,
-  updateFeed: state.updateFeed,
-  removeFeed: state.removeFeed,
-  refreshFeeds: state.refreshFeeds,
-  loadMoreFeeds: state.loadMoreFeeds,
-  setFilters: state.setFilters,
-  clearFilters: state.clearFilters,
-  searchFeeds: state.searchFeeds,
-  setSearchQuery: state.setSearchQuery,
-  clearSearch: state.clearSearch,
-  likeFeed: state.likeFeed,
-  unlikeFeed: state.unlikeFeed,
-  shareFeed: state.shareFeed,
-  bookmarkFeed: state.bookmarkFeed,
-  unbookmarkFeed: state.unbookmarkFeed,
-  markAsRead: state.markAsRead,
-  markAsUnread: state.markAsUnread,
-  setCategories: state.setCategories,
-  toggleCategory: state.toggleCategory,
-  setSelectedCategory: state.setSelectedCategory,
-  updatePreferences: state.updatePreferences,
-  resetPreferences: state.resetPreferences,
-  setCurrentView: state.setCurrentView,
-  setSelectedFeed: state.setSelectedFeed,
-  loadFeeds: state.loadFeeds,
-  loadCategories: state.loadCategories,
-  saveUserInteraction: state.saveUserInteraction,
-  setLoading: state.setLoading,
-  setSearching: state.setSearching,
-  setRefreshing: state.setRefreshing,
-  setUpdating: state.setUpdating,
-  setError: state.setError,
-  clearError: state.clearError,
-}));
+// Action selectors - FIXED: Use individual selectors to prevent infinite re-renders
+export const useFeedsActions = () => useFeedsStore(state => state);
 
 // Computed selectors
 export const useFeedsStats = () => useFeedsStore(state => ({
@@ -866,7 +854,7 @@ export const feedsStoreDebug = {
    */
   logState: () => {
     const state = useFeedsStore.getState();
-    console.log('Feeds Store State:', {
+    logger.debug('Feeds Store State', {
       totalFeeds: state.feeds.length,
       filteredFeeds: state.filteredFeeds.length,
       categories: state.categories.length,
@@ -883,7 +871,7 @@ export const feedsStoreDebug = {
    */
   logSummary: () => {
     const summary = feedsStoreUtils.getFeedsSummary();
-    console.log('Feeds Summary:', summary);
+    logger.debug('Feeds Summary', summary);
   },
   
   /**
@@ -895,7 +883,7 @@ export const feedsStoreDebug = {
       acc[feed.category] = (acc[feed.category] || 0) + 1;
       return acc;
     }, {} as Record<string, number>);
-    console.log('Feeds by Category:', byCategory);
+    logger.debug('Feeds by Category', byCategory);
   },
   
   /**
@@ -904,6 +892,6 @@ export const feedsStoreDebug = {
   reset: () => {
     useFeedsStore.getState().clearFilters();
     useFeedsStore.getState().resetPreferences();
-    console.log('Feeds store reset');
+    logger.info('Feeds store reset');
   }
 };

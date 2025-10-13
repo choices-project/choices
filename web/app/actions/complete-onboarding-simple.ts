@@ -11,7 +11,7 @@ const OnboardingSchema = z.object({
 
 // Simple onboarding completion action for testing
 export const completeOnboarding = async (formData: FormData) => {
-  console.log('completeOnboarding server action called with formData:', Object.fromEntries(formData.entries()));
+  logger.info('completeOnboarding server action called with formData:', Object.fromEntries(formData.entries()));
   
   try {
     // Validate form data
@@ -20,14 +20,14 @@ export const completeOnboarding = async (formData: FormData) => {
       dataSharing: formData.get('dataSharing') === 'true',
       theme: formData.get('theme') as 'light' | 'dark' | 'system'
     });
-    console.log('Validated data:', validatedData);
+    logger.info('Validated data:', validatedData);
     
     // For now, just return success without database operations
-    console.log('Onboarding completed successfully (simplified version)');
+    logger.info('Onboarding completed successfully (simplified version)');
     return { success: true, message: 'Onboarding completed' };
     
   } catch (error) {
-    console.log('Error in completeOnboarding:', error);
+    logger.info('Error in completeOnboarding:', error);
     throw new Error('Failed to complete onboarding');
   }
 }

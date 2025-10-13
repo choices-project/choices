@@ -78,8 +78,8 @@ export class SuperiorTestSuite {
     const startTime = Date.now();
     const results: TestResult[] = [];
     
-    console.log('🧪 Starting SUPERIOR Test Suite...');
-    console.log(`   System Date: ${new Date().toISOString()}`);
+    logger.info('🧪 Starting SUPERIOR Test Suite...');
+    logger.info(`   System Date: ${new Date().toISOString()}`);
     
     // Test 1: Current Electorate Verification
     const currentElectorateTest = await this.testCurrentElectorateVerification();
@@ -125,12 +125,12 @@ export class SuperiorTestSuite {
       superiorMobileFeed: mobileFeedTest.passed
     };
     
-    console.log(`\n📊 SUPERIOR Test Suite Complete:`);
-    console.log(`   Total Tests: ${results.length}`);
-    console.log(`   Passed: ${passedTests}`);
-    console.log(`   Failed: ${failedTests}`);
-    console.log(`   Duration: ${totalDuration}ms`);
-    console.log(`   Success Rate: ${((passedTests / results.length) * 100).toFixed(1)}%`);
+    logger.info(`\n📊 SUPERIOR Test Suite Complete:`);
+    logger.info(`   Total Tests: ${results.length}`);
+    logger.info(`   Passed: ${passedTests}`);
+    logger.info(`   Failed: ${failedTests}`);
+    logger.info(`   Duration: ${totalDuration}ms`);
+    logger.info(`   Success Rate: ${((passedTests / results.length) * 100).toFixed(1)}%`);
     
     return {
       totalTests: results.length,
@@ -149,7 +149,7 @@ export class SuperiorTestSuite {
     const startTime = Date.now();
     
     try {
-      console.log('🔍 Testing Current Electorate Verification...');
+      logger.info('🔍 Testing Current Electorate Verification...');
       
       // Test with sample representatives
       const testRepresentatives = [
@@ -205,7 +205,7 @@ export class SuperiorTestSuite {
     const startTime = Date.now();
     
     try {
-      console.log('🔍 Testing OpenStates Integration...');
+      logger.info('🔍 Testing OpenStates Integration...');
       
       // Test system date info - method doesn't exist, using current date
       const systemDateInfo = { currentDate: new Date() };
@@ -216,7 +216,7 @@ export class SuperiorTestSuite {
         stateProcessingResult = await this.openStatesIntegration.processStateData('CA');
       } catch {
         // Expected if data doesn't exist
-        console.log('   OpenStates data not available for testing');
+        logger.info('   OpenStates data not available for testing');
       }
       
       const passed = Boolean(systemDateInfo.currentDate instanceof Date &&
@@ -251,7 +251,7 @@ export class SuperiorTestSuite {
     const startTime = Date.now();
     
     try {
-      console.log('🔍 Testing Superior Data Pipeline...');
+      logger.info('🔍 Testing Superior Data Pipeline...');
       
       // Test with sample representative
       const testRepresentative = {
@@ -298,7 +298,7 @@ export class SuperiorTestSuite {
     const startTime = Date.now();
     
     try {
-      console.log('🔍 Testing Comprehensive Candidate Cards...');
+      logger.info('🔍 Testing Comprehensive Candidate Cards...');
       
       // Test with sample representative data
       const testRepresentative = {
@@ -359,7 +359,7 @@ export class SuperiorTestSuite {
     const startTime = Date.now();
     
     try {
-      console.log('🔍 Testing Superior Mobile Feed...');
+      logger.info('🔍 Testing Superior Mobile Feed...');
       
       // Test PWA features
       const hasServiceWorker = 'serviceWorker' in navigator;
@@ -401,7 +401,7 @@ export class SuperiorTestSuite {
     const startTime = Date.now();
     
     try {
-      console.log('🔍 Testing System Date Verification...');
+      logger.info('🔍 Testing System Date Verification...');
       
       const currentDate = new Date();
       const systemDateInfo = this.verifier.getSystemDateInfo();
@@ -442,7 +442,7 @@ export class SuperiorTestSuite {
     const startTime = Date.now();
     
     try {
-      console.log('🔍 Testing Data Quality Assessment...');
+      logger.info('🔍 Testing Data Quality Assessment...');
       
       // Test with sample data quality metrics
       const testDataQuality = {
@@ -482,7 +482,7 @@ export class SuperiorTestSuite {
     const startTime = Date.now();
     
     try {
-      console.log('🔍 Testing Cross-Reference Validation...');
+      logger.info('🔍 Testing Cross-Reference Validation...');
       
       // Test with sample data for cross-reference
       const primaryData = {

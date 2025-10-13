@@ -13,7 +13,7 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 async function exportPublicSchema() {
   try {
-    console.log('🔍 Querying public schema tables...');
+    logger.info('🔍 Querying public schema tables...');
     
     // Query to get all public schema tables with their structure
     const { data, error } = await supabase.rpc('get_public_schema_info');
@@ -22,7 +22,7 @@ async function exportPublicSchema() {
       console.error('Error querying schema:', error);
       
       // Fallback: try a direct SQL query
-      console.log('🔄 Trying direct SQL query...');
+      logger.info('🔄 Trying direct SQL query...');
       const { data: directData, error: directError } = await supabase
         .from('information_schema.tables')
         .select('*')
@@ -33,12 +33,12 @@ async function exportPublicSchema() {
         return;
       }
       
-      console.log('📊 Found public tables:', directData);
+      logger.info('📊 Found public tables:', directData);
       return;
     }
     
-    console.log('✅ Schema exported successfully');
-    console.log(JSON.stringify(data, null, 2));
+    logger.info('✅ Schema exported successfully');
+    logger.info(JSON.stringify(data, null, 2));
     
   } catch (err) {
     console.error('❌ Error:', err);

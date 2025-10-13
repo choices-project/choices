@@ -19,7 +19,7 @@ for (const file of files) {
   
   // Check if file contains await cookies()
   if (code.includes('await cookies()')) {
-    console.log(`Fixing: ${rel(file)}`);
+    logger.info(`Fixing: ${rel(file)}`);
     
     // Replace await cookies() with cookies()
     const newCode = code.replace(/await\s+cookies\(\)/g, 'cookies()');
@@ -32,12 +32,12 @@ for (const file of files) {
     const count = matches ? matches.length : 0;
     totalFixed += count;
     
-    console.log(`  - Fixed ${count} instances`);
+    logger.info(`  - Fixed ${count} instances`);
   }
 }
 
-console.log(`\n✅ Total files fixed: ${files.filter(f => fs.readFileSync(f, 'utf8').includes('await cookies()')).length}`);
-console.log(`✅ Total instances fixed: ${totalFixed}`);
+logger.info(`\n✅ Total files fixed: ${files.filter(f => fs.readFileSync(f, 'utf8').includes('await cookies()')).length}`);
+logger.info(`✅ Total instances fixed: ${totalFixed}`);
 
 // ---- helpers ----
 function walk(dir) {

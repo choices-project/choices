@@ -109,7 +109,7 @@ async function globalSetup(config: FullConfig) {
         });
 
         if (response.ok()) {
-          console.log(`✅ Global setup: Feature flags configured for ${projectName}`);
+          logger.info(`✅ Global setup: Feature flags configured for ${projectName}`);
         } else {
           console.warn(`⚠️ Global setup: Failed to configure flags for ${projectName}:`, await response.text());
         }
@@ -118,7 +118,7 @@ async function globalSetup(config: FullConfig) {
       }
     }
 
-    console.log('🎯 Global setup completed successfully');
+    logger.info('🎯 Global setup completed successfully');
   } catch (error) {
     console.error('❌ Global setup failed:', error);
     throw error;

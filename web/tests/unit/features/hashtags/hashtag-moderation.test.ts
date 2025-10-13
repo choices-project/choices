@@ -270,7 +270,7 @@ describe('Hashtag Moderation System', () => {
         showUserActions: true,
         showAdminActions: false,
         onModerationUpdate: (moderation: any) => {
-          console.log('Moderation updated:', moderation);
+          logger.info('Moderation updated:', moderation);
         },
         className: 'test-class'
       };

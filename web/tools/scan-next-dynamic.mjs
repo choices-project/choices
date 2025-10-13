@@ -131,37 +131,37 @@ function rel(p) {
   return path.relative(process.cwd(), p);
 }
 function printResults(r) {
-  const hr = () => console.log('-'.repeat(60));
+  const hr = () => logger.info('-'.repeat(60));
   let fail = false;
 
-  console.log('\nNext 15 Dynamic API scan\n');
+  logger.info('\nNext 15 Dynamic API scan\n');
   hr();
   if (r.topLevelDynamicCalls.length) {
     fail = true;
-    console.log('❌ Top-level Dynamic API calls (move into a function):');
+    logger.info('❌ Top-level Dynamic API calls (move into a function):');
     for (const { file, calls } of r.topLevelDynamicCalls) {
-      console.log(`  - ${file}  [${calls.join(', ')}]`);
+      logger.info(`  - ${file}  [${calls.join(', ')}]`);
     }
   } else {
-    console.log('✅ No top-level Dynamic API calls detected.');
+    logger.info('✅ No top-level Dynamic API calls detected.');
   }
 
   hr();
   if (r.needsForceDynamic.length) {
-    console.log('⚠️  Files likely need `export const dynamic = \'force-dynamic\'` (and `runtime = \'nodejs\'` if using Supabase SSR):');
-    r.needsForceDynamic.forEach(f => console.log(`  - ${f}`));
+    logger.info('⚠️  Files likely need `export const dynamic = \'force-dynamic\'` (and `runtime = \'nodejs\'` if using Supabase SSR):');
+    r.needsForceDynamic.forEach(f => logger.info(`  - ${f}`));
   } else {
-    console.log('✅ All cookie/headers users appear to declare dynamic rendering.');
+    logger.info('✅ All cookie/headers users appear to declare dynamic rendering.');
   }
 
   hr();
   if (r.badSupabaseImport.length) {
     fail = true;
-    console.log('❌ Server importing `@supabase/supabase-js` without `"use client"`:');
-    r.badSupabaseImport.forEach(f => console.log(`  - ${f}`));
-    console.log('   Fix: move to a client component or switch to @supabase/ssr server clients.');
+    logger.info('❌ Server importing `@supabase/supabase-js` without `"use client"`:');
+    r.badSupabaseImport.forEach(f => logger.info(`  - ${f}`));
+    logger.info('   Fix: move to a client component or switch to @supabase/ssr server clients.');
   } else {
-    console.log('✅ No server imports of @supabase/supabase-js detected.');
+    logger.info('✅ No server imports of @supabase/supabase-js detected.');
   }
 
   hr();

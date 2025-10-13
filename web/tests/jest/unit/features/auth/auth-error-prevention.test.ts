@@ -41,7 +41,7 @@ describe('Authentication Error Prevention', () => {
     });
     
     if (problematicFiles.length > 0) {
-      console.log('Auth files with missing WebAuthn error handling:', problematicFiles);
+      logger.info('Auth files with missing WebAuthn error handling:', problematicFiles);
     }
     
     expect(problematicFiles).toHaveLength(0);
@@ -75,7 +75,7 @@ describe('Authentication Error Prevention', () => {
     });
     
     if (problematicFiles.length > 0) {
-      console.log('Auth files with state management issues:', problematicFiles);
+      logger.info('Auth files with state management issues:', problematicFiles);
     }
     
     expect(problematicFiles).toHaveLength(0);
@@ -109,7 +109,7 @@ describe('Authentication Error Prevention', () => {
     });
     
     if (problematicFiles.length > 0) {
-      console.log('Auth files with missing user feedback:', problematicFiles);
+      logger.info('Auth files with missing user feedback:', problematicFiles);
     }
     
     expect(problematicFiles).toHaveLength(0);
@@ -142,7 +142,7 @@ describe('Authentication Error Prevention', () => {
     });
     
     if (problematicFiles.length > 0) {
-      console.log('Auth files with security issues:', problematicFiles);
+      logger.info('Auth files with security issues:', problematicFiles);
     }
     
     expect(problematicFiles).toHaveLength(0);

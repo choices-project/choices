@@ -27,15 +27,15 @@ export async function register(
   context: ServerActionContext
 ): Promise<{ ok: true } | { ok: false; error: string; fieldErrors?: Record<string, string> }> {
   try {
-    console.log('Register function called with formData:', Array.from(formData.entries()));
-    console.log('Register function called with context:', context);
+    logger.info('Register function called with formData:', Array.from(formData.entries()));
+    logger.info('Register function called with context:', context);
     
     // Always use real Supabase for registration
-    console.log('NEXT_PUBLIC_SUPABASE_URL:', process.env.NEXT_PUBLIC_SUPABASE_URL);
-    console.log('NODE_ENV:', process.env.NODE_ENV);
+    logger.info('NEXT_PUBLIC_SUPABASE_URL:', process.env.NEXT_PUBLIC_SUPABASE_URL);
+    logger.info('NODE_ENV:', process.env.NODE_ENV);
     
     const supabase = await getSupabaseServerClient();
-    console.log('Supabase client created:', !!supabase);
+    logger.info('Supabase client created:', !!supabase);
     
     // ---- context usage (security + provenance) ----
     const h = headers();
@@ -58,8 +58,8 @@ export async function register(
     };
     
     // Debug logging
-    console.log('Register payload received:', payload);
-    console.log('FormData entries:', Array.from(formData.entries()));
+    logger.info('Register payload received:', payload);
+    logger.info('FormData entries:', Array.from(formData.entries()));
     
     const data = RegisterForm.parse(payload);
 
@@ -68,10 +68,10 @@ export async function register(
     
     // Note: We don't need to check for existing users here
     // Supabase signUp will handle duplicates and return appropriate errors
-    console.log('Proceeding with user registration');
+    logger.info('Proceeding with user registration');
 
     // Check for existing username in user_profiles table
-    console.log('Checking for existing username:', data.username.toLowerCase());
+    logger.info('Checking for existing username:', data.username.toLowerCase());
     const { data: existingUsername, error: usernameError } = await supabase
       .from('user_profiles')
       .select('user_id')
@@ -89,7 +89,7 @@ export async function register(
       return { ok: false, error: 'Username already taken' };
     }
     
-    console.log('No existing username found, proceeding with user creation');
+    logger.info('No existing username found, proceeding with user creation');
 
     // Create user in Supabase Auth using signup (more standard approach)
     const { data: authUserData, error: authError } = await supabase.auth.signUp({
@@ -135,7 +135,7 @@ export async function register(
       return { ok: false, error: `Failed to create user profile: ${profileError.message}` };
     }
     
-    console.log('✅ User profile created successfully');
+    logger.info('✅ User profile created successfully');
 
     // Use Supabase native session management
     // Supabase handles session cookies automatically
@@ -151,12 +151,12 @@ export async function register(
     }, context);
 
     // ---- navigate via Server Actions redirect (no client race conditions) ----
-    console.log('✅ Registration completed successfully, redirecting to onboarding');
+    logger.info('✅ Registration completed successfully, redirecting to onboarding');
     redirect('/onboarding');
   } catch (err) {
     // Check if this is a Next.js redirect (expected behavior)
     if (err instanceof Error && err.message === 'NEXT_REDIRECT') {
-      console.log('✅ Registration completed successfully, redirecting to onboarding');
+      logger.info('✅ Registration completed successfully, redirecting to onboarding');
       // Re-throw the redirect error so Next.js can handle it
       throw err;
     }

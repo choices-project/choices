@@ -4,6 +4,7 @@ import { NextResponse } from 'next/server';
 
 import { requireServiceKey } from '@/features/auth/lib/service-auth';
 import { getRateLimitStatus, getAPIStatus } from '@/lib/rate-limiting';
+import { logger } from '@/lib/utils/logger';
 
 // Type definitions for rate limit status
 interface RateLimitUsage {
@@ -27,7 +28,7 @@ dotenv.config({ path: '.env.local' });
 export async function GET(request: NextRequest) {
   try {
     // Log the request for debugging
-    console.log('Rate limit status requested from:', request.headers.get('user-agent'));
+    logger.debug('Rate limit status requested', { userAgent: request.headers.get('user-agent') });
     
     // Require service key authentication
     const serviceCheck = await requireServiceKey();
@@ -37,7 +38,7 @@ export async function GET(request: NextRequest) {
     const apiUsage = getAPIStatus();
     
     // Log API usage for debugging
-    console.log('Current API usage:', Object.keys(apiUsage).length, 'APIs tracked');
+    logger.debug('Current API usage', { count: Object.keys(apiUsage).length, note: 'APIs tracked' });
     
     // Calculate overall health
     const totalAPIs = Object.keys(rateLimitStatus).length;

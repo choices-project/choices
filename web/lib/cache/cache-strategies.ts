@@ -257,7 +257,7 @@ export class CacheStrategyManager {
     
     // Log metadata for cache analytics if provided
     if (metadata) {
-      console.log('Cache multiGet with metadata:', metadata)
+      logger.info('Cache multiGet with metadata:', metadata)
     }
     const results: Record<string, CacheResult<T>> = {}
 
@@ -340,7 +340,7 @@ export class CacheStrategyManager {
     
     // Log metadata for cache warming analytics if provided
     if (metadata) {
-      console.log('Cache warming with metadata:', metadata)
+      logger.info('Cache warming with metadata:', metadata)
     }
     let warmed = 0
     let failed = 0

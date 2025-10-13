@@ -1,8 +1,8 @@
 /**
  * Quadratic Voting Strategy
  * 
- * Implements quadratic voting where voters allocate credits across options.
- * The cost of votes increases quadratically with the number of votes for an option.
+ * Implements quadratic voting where voters allocate tokens across options.
+ * The cost of votes increases quadratically with the number of votes allocated to an option.
  * 
  * Created: September 15, 2025
  * Updated: September 15, 2025
@@ -31,90 +31,87 @@ export class QuadraticStrategy implements VotingStrategy {
 
   async validateVote(request: VoteRequest, poll: PollData): Promise<VoteValidation> {
     try {
-      const { voteData } = request;
-      
-      // Check if allocations object is provided
+      const voteData = request.voteData;
+
+      // Validate allocations object exists
       if (!voteData.allocations || typeof voteData.allocations !== 'object') {
         return {
+          valid: false,
           isValid: false,
-          error: 'Allocations object is required for quadratic voting',
-          requiresAuthentication: true,
+          error: 'Quadratic voting requires allocations',
+          errors: ['Quadratic voting requires allocations'],
+          requiresAuthentication: false,
           requiresTokens: false
         };
       }
 
+      // Validate allocations are numbers
       const allocations = voteData.allocations;
-      const totalCredits = poll.votingConfig.quadraticCredits || 100;
+      let totalTokens = 0;
       
-      // Validate all allocations are valid numbers
-      let totalSpent = 0;
-      for (const [optionIndex, credits] of Object.entries(allocations)) {
-        if (typeof credits !== 'number' || !Number.isInteger(credits) || credits < 0) {
+      for (const [optionId, tokens] of Object.entries(allocations)) {
+        if (typeof tokens !== 'number' || tokens < 0) {
           return {
+            valid: false,
             isValid: false,
-            error: 'All allocations must be non-negative integers',
-            requiresAuthentication: true,
+            error: 'Allocations must be non-negative numbers',
+            errors: ['Allocations must be non-negative numbers'],
+            requiresAuthentication: false,
             requiresTokens: false
           };
         }
-
-        // Validate option index is valid
-        const optionIdx = parseInt(optionIndex);
-        if (optionIdx < 0 || optionIdx >= poll.options.length) {
+        
+        // Check if option exists
+        const optionExists = poll.options.some(option => option.id === optionId);
+        if (!optionExists) {
           return {
+            valid: false,
             isValid: false,
-            error: `Invalid option index: ${optionIndex}`,
-            requiresAuthentication: true,
+            error: 'Invalid option selected',
+            errors: ['Invalid option selected'],
+            requiresAuthentication: false,
             requiresTokens: false
           };
         }
-
-        // Calculate quadratic cost
-        const cost = credits * credits;
-        totalSpent += cost;
+        
+        totalTokens += tokens;
       }
 
-      // Validate total spending doesn't exceed credits
-      if (totalSpent > totalCredits) {
+      // Check token budget
+      const maxTokens = poll.settings?.maxTokens || 100;
+      if (totalTokens > maxTokens) {
         return {
+          valid: false,
           isValid: false,
-          error: `Total spending (${totalSpent}) exceeds available credits (${totalCredits})`,
-          requiresAuthentication: true,
-          requiresTokens: false
-        };
-      }
-
-      // Check if at least one option has votes
-      const hasVotes = Object.values(allocations).some(credits => (credits) > 0);
-      if (!hasVotes) {
-        return {
-          isValid: false,
-          error: 'At least one option must receive votes',
-          requiresAuthentication: true,
+          error: `Exceeds maximum token budget of ${maxTokens}`,
+          errors: [`Exceeds maximum token budget of ${maxTokens}`],
+          requiresAuthentication: false,
           requiresTokens: false
         };
       }
 
       devLog('Quadratic vote validated successfully', {
         pollId: request.pollId,
-        allocations,
-        totalSpent,
-        totalCredits,
+        allocations: voteData.allocations,
+        totalTokens,
         userId: request.userId
       });
 
       return {
+        valid: true,
         isValid: true,
-        requiresAuthentication: true,
+        requiresAuthentication: false,
         requiresTokens: false
       };
 
     } catch (error) {
       devLog('Quadratic vote validation error:', error);
       return {
+        valid: false,
         isValid: false,
-        error: error instanceof Error ? error.message : 'Validation failed',
-        requiresAuthentication: true,
+        error: 'Quadratic vote validation failed',
+        errors: ['Quadratic vote validation failed'],
+        requiresAuthentication: false,
         requiresTokens: false
       };
     }
@@ -122,69 +119,43 @@ export class QuadraticStrategy implements VotingStrategy {
 
   async processVote(request: VoteRequest, poll: PollData): Promise<VoteResponse> {
     try {
-      const { voteData, userId, pollId, privacyLevel } = request;
+      const voteData = request.voteData;
       
-      // Generate vote ID
-      const voteId = `vote_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      
-      // Create audit receipt
-      const auditReceipt = `receipt_${voteId}_${Date.now()}`;
-
-      // Calculate total spending for audit
-      const allocations = voteData.allocations || {};
-      const totalSpent = Object.values(allocations).reduce((sum: number, credits) => {
-        return sum + (credits) * (credits);
-      }, 0);
-
-      // In a real implementation, this would:
-      // 1. Store the vote in the database
-      // 2. Update poll vote counts
-      // 3. Trigger any necessary notifications
-      // 4. Log the vote for audit purposes
+      // Create vote data for storage
+      const voteRecord: VoteData = {
+        id: `vote_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        pollId: request.pollId,
+        userId: request.userId,
+        voteData: {
+          allocations: voteData.allocations
+        },
+        timestamp: new Date().toISOString(),
+        ipAddress: request.ipAddress,
+        userAgent: request.userAgent
+      };
 
       devLog('Quadratic vote processed successfully', {
-        pollId,
-        voteId,
-        allocations,
-        totalSpent,
-        userId,
-        auditReceipt
+        pollId: request.pollId,
+        userId: request.userId,
+        allocations: voteData.allocations,
+        voteId: voteRecord.id
       });
 
-      return withOptional({
+      return {
         success: true,
-        message: 'Vote submitted successfully',
-        pollId,
-        voteId,
-        auditReceipt,
-        responseTime: 0, // Will be set by the engine
-        metadata: {
-          votingMethod: 'quadratic',
-          allocations,
-          totalSpent,
-          totalCredits: poll.votingConfig.quadraticCredits || 100,
-          remainingCredits: (poll.votingConfig.quadraticCredits || 100) - (totalSpent)
-        }
-      }, {
-        privacyLevel
-      });
+        voteId: voteRecord.id,
+        message: 'Vote recorded successfully',
+        pollId: request.pollId
+      };
 
     } catch (error) {
       devLog('Quadratic vote processing error:', error);
-      return withOptional({
+      return {
         success: false,
-        message: error instanceof Error ? error.message : 'Vote processing failed',
-        pollId: request.pollId,
-        responseTime: 0,
-        metadata: {
-          votingMethod: 'quadratic',
-          error: error instanceof Error ? error.message : 'Unknown error'
-        }
-      }, {
-        voteId: undefined,
-        auditReceipt: undefined,
-        privacyLevel: request.privacyLevel
-      });
+        error: 'Failed to process quadratic vote',
+        message: 'Failed to process quadratic vote',
+        pollId: request.pollId
+      };
     }
   }
 
@@ -192,98 +163,63 @@ export class QuadraticStrategy implements VotingStrategy {
     try {
       const startTime = Date.now();
       
-      // Calculate quadratic scores for each option
-      const quadraticScores: Record<string, number> = {};
-      const quadraticSpending: Record<string, number> = {};
+      // Initialize tracking objects
+      const totalScores: Record<string, number> = {};
       const optionVotes: Record<string, number> = {};
       const optionPercentages: Record<string, number> = {};
-      
-      // Initialize scores
-      poll.options.forEach((_, index) => {
-        quadraticScores[index.toString()] = 0;
-        quadraticSpending[index.toString()] = 0;
-        optionVotes[index.toString()] = 0;
-        optionPercentages[index.toString()] = 0;
+
+      // Initialize all options with zero scores
+      poll.options.forEach(option => {
+        totalScores[option.id] = 0;
+        optionVotes[option.id] = 0;
+        optionPercentages[option.id] = 0;
       });
 
-      // Calculate scores from votes
-      let totalVotes = 0;
+      // Process each vote
       votes.forEach(vote => {
-        if (vote.allocations && typeof vote.allocations === 'object') {
-          totalVotes++;
-          Object.entries(vote.allocations).forEach(([optionIndex, credits]) => {
-            const creditsNum = credits;
-            if (creditsNum > 0) {
-              const optionIdx = optionIndex.toString();
-              // Ensure the option exists in our tracking objects
-              if (quadraticScores[optionIdx] !== undefined && 
-                  quadraticSpending[optionIdx] !== undefined && 
-                  optionVotes[optionIdx] !== undefined) {
-                quadraticScores[optionIdx] += creditsNum;
-                quadraticSpending[optionIdx] += creditsNum * creditsNum;
-                optionVotes[optionIdx]++;
-              }
+        if (vote.voteData.allocations) {
+          Object.entries(vote.voteData.allocations).forEach(([optionId, tokens]) => {
+            if (typeof tokens === 'number' && tokens > 0) {
+              totalScores[optionId] += tokens;
+              optionVotes[optionId]++;
             }
           });
         }
       });
 
+      const totalVotes = votes.length;
+
       // Calculate percentages
       if (totalVotes > 0) {
-        Object.keys(quadraticScores).forEach(optionIndex => {
-          const votes = optionVotes[optionIndex];
-          if (votes !== undefined) {
-            optionPercentages[optionIndex] = (votes / totalVotes) * 100;
-          }
+        Object.keys(optionVotes).forEach(optionId => {
+          const votes = optionVotes[optionId];
+          optionPercentages[optionId] = (votes / totalVotes) * 100;
         });
       }
 
-      // Find winner (highest quadratic score)
+      // Find winner (highest total score)
       let winner: string | undefined;
       let winnerVotes = 0;
       let winnerPercentage = 0;
 
       if (totalVotes > 0) {
-        Object.entries(quadraticScores).forEach(([optionIndex, score]) => {
+        Object.entries(totalScores).forEach(([optionId, score]) => {
           if (score > winnerVotes) {
-            winner = optionIndex;
+            winner = optionId;
             winnerVotes = score;
-            winnerPercentage = optionPercentages[optionIndex] ?? 0;
+            winnerPercentage = optionPercentages[optionId] || 0;
           }
         });
       }
 
-      const results: PollResults = withOptional(
-        {
-          winnerVotes,
-          winnerPercentage,
-          quadraticScores,
-          quadraticSpending,
-          optionVotes,
-          optionPercentages,
-          abstentions: 0,
-          abstentionPercentage: 0
-        },
-        {
-          winner
-        }
-      );
-
-      const resultsData: ResultsData = {
-        pollId: poll.id,
-        votingMethod: 'quadratic',
-        totalVotes,
-        participationRate: totalVotes > 0 ? 100 : 0, // This would be calculated based on eligible voters
-        results,
-        calculatedAt: new Date().toISOString(),
-        metadata: {
-          calculationTime: Date.now() - startTime,
-          hasWinner: winner !== undefined,
-          isTie: winnerVotes > 0 && Object.values(quadraticScores).filter(s => s === winnerVotes).length > 1,
-          totalCreditsAllocated: Object.values(quadraticScores).reduce((sum, score) => sum + score, 0),
-          totalCreditsSpent: Object.values(quadraticSpending).reduce((sum, spent) => sum + spent, 0),
-          averageCreditsPerVote: totalVotes > 0 ? Object.values(quadraticScores).reduce((sum, score) => sum + score, 0) / totalVotes : 0
-        }
+      const results: PollResults = {
+        winner,
+        winnerVotes,
+        winnerPercentage,
+        optionVotes,
+        optionPercentages,
+        abstentions: 0,
+        abstentionPercentage: 0
       };
 
       devLog('Quadratic results calculated', {
@@ -295,38 +231,54 @@ export class QuadraticStrategy implements VotingStrategy {
         calculationTime: Date.now() - startTime
       });
 
-      return resultsData;
+      return {
+        pollId: poll.id,
+        votingMethod: poll.votingMethod,
+        totalVotes,
+        participationRate: totalVotes / 100, // Mock participation rate
+        results,
+        calculatedAt: new Date().toISOString(),
+        metadata: {
+          calculationTime: Date.now() - startTime,
+          method: 'quadratic'
+        }
+      };
 
     } catch (error) {
       devLog('Quadratic results calculation error:', error);
-      throw new Error(`Failed to calculate quadratic results: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      
+      // Return empty results on error
+      return {
+        pollId: poll.id,
+        votingMethod: poll.votingMethod,
+        totalVotes: 0,
+        participationRate: 0,
+        results: {
+          winner: undefined,
+          winnerVotes: 0,
+          winnerPercentage: 0,
+          optionVotes: {},
+          optionPercentages: {},
+          abstentions: 0,
+          abstentionPercentage: 0
+        },
+        calculatedAt: new Date().toISOString(),
+        metadata: {
+          calculationTime: 0,
+          error: error instanceof Error ? error.message : 'Unknown error'
+        }
+      };
     }
   }
 
   getConfiguration(): Record<string, unknown> {
     return {
-      name: 'Quadratic Voting',
-      description: 'Voters allocate credits across options. Cost increases quadratically with votes.',
-      minOptions: 2,
-      maxOptions: 20,
-      allowAbstention: true,
-      requiresRanking: false,
+      method: 'quadratic',
+      description: 'Voters allocate tokens across options with quadratic cost',
       allowsMultipleSelections: true,
-      resultType: 'highest_score',
-      features: [
-        'Allows intensity of preference',
-        'Prevents vote buying',
-        'Encourages diverse participation',
-        'Good for budget allocation'
-      ],
-      limitations: [
-        'More complex to understand',
-        'Requires credit management',
-        'Can be gamed with coordination',
-        'May favor wealthy participants'
-      ],
-      defaultCredits: 100,
-      maxCreditsPerOption: 10
+      requiresRanking: false,
+      maxSelections: 'token budget',
+      costFunction: 'quadratic'
     };
   }
 }

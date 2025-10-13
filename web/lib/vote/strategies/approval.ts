@@ -31,14 +31,16 @@ export class ApprovalStrategy implements VotingStrategy {
 
   async validateVote(request: VoteRequest, poll: PollData): Promise<VoteValidation> {
     try {
-      const { voteData } = request;
-      
-      // Check if approvals array is provided
+      const voteData = request.voteData;
+
+      // Validate approvals array exists and is not empty
       if (!voteData.approvals || !Array.isArray(voteData.approvals)) {
         return {
+          valid: false,
           isValid: false,
-          error: 'Approvals array is required for approval voting',
-          requiresAuthentication: true,
+          error: 'Approval votes must be an array',
+          errors: ['Approval votes must be an array'],
+          requiresAuthentication: false,
           requiresTokens: false
         };
       }
@@ -46,9 +48,11 @@ export class ApprovalStrategy implements VotingStrategy {
       // Validate approvals array is not empty
       if (voteData.approvals.length === 0) {
         return {
+          valid: false,
           isValid: false,
-          error: 'At least one option must be approved',
-          requiresAuthentication: true,
+          error: 'At least one approval is required',
+          errors: ['At least one approval is required'],
+          requiresAuthentication: false,
           requiresTokens: false
         };
       }
@@ -57,18 +61,22 @@ export class ApprovalStrategy implements VotingStrategy {
       for (const approval of voteData.approvals) {
         if (typeof approval !== 'number' || !Number.isInteger(approval)) {
           return {
+            valid: false,
             isValid: false,
-            error: 'All approvals must be valid integers',
-            requiresAuthentication: true,
+            error: 'Approval votes must be integers',
+            errors: ['Approval votes must be integers'],
+            requiresAuthentication: false,
             requiresTokens: false
           };
         }
 
         if (approval < 0 || approval >= poll.options.length) {
           return {
+            valid: false,
             isValid: false,
-            error: `Approval index must be between 0 and ${poll.options.length - 1}`,
-            requiresAuthentication: true,
+            error: 'Invalid option selected',
+            errors: ['Invalid option selected'],
+            requiresAuthentication: false,
             requiresTokens: false
           };
         }
@@ -78,20 +86,24 @@ export class ApprovalStrategy implements VotingStrategy {
       const uniqueApprovals = new Set(voteData.approvals);
       if (uniqueApprovals.size !== voteData.approvals.length) {
         return {
+          valid: false,
           isValid: false,
           error: 'Duplicate approvals are not allowed',
-          requiresAuthentication: true,
+          errors: ['Duplicate approvals are not allowed'],
+          requiresAuthentication: false,
           requiresTokens: false
         };
       }
 
       // Check maximum approvals limit
-      const maxApprovals = poll.votingConfig.maxChoices || poll.options.length;
+      const maxApprovals = poll.maxChoices || poll.options.length;
       if (voteData.approvals.length > maxApprovals) {
         return {
+          valid: false,
           isValid: false,
           error: `Maximum ${maxApprovals} approvals allowed`,
-          requiresAuthentication: true,
+          errors: [`Maximum ${maxApprovals} approvals allowed`],
+          requiresAuthentication: false,
           requiresTokens: false
         };
       }
@@ -103,17 +115,20 @@ export class ApprovalStrategy implements VotingStrategy {
       });
 
       return {
+        valid: true,
         isValid: true,
-        requiresAuthentication: true,
+        requiresAuthentication: false,
         requiresTokens: false
       };
 
     } catch (error) {
       devLog('Approval vote validation error:', error);
       return {
+        valid: false,
         isValid: false,
-        error: error instanceof Error ? error.message : 'Validation failed',
-        requiresAuthentication: true,
+        error: 'Approval vote validation failed',
+        errors: ['Approval vote validation failed'],
+        requiresAuthentication: false,
         requiresTokens: false
       };
     }
@@ -121,60 +136,43 @@ export class ApprovalStrategy implements VotingStrategy {
 
   async processVote(request: VoteRequest, poll: PollData): Promise<VoteResponse> {
     try {
-      const { voteData, userId, pollId, privacyLevel } = request;
+      const voteData = request.voteData;
       
-      // Generate vote ID
-      const voteId = `vote_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      
-      // Create audit receipt
-      const auditReceipt = `receipt_${voteId}_${Date.now()}`;
-
-      // In a real implementation, this would:
-      // 1. Store the vote in the database
-      // 2. Update poll vote counts
-      // 3. Trigger any necessary notifications
-      // 4. Log the vote for audit purposes
+      // Create vote data for storage
+      const voteRecord: VoteData = {
+        id: `vote_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        pollId: request.pollId,
+        userId: request.userId,
+        voteData: {
+          approvals: voteData.approvals
+        },
+        timestamp: new Date().toISOString(),
+        ipAddress: request.ipAddress,
+        userAgent: request.userAgent
+      };
 
       devLog('Approval vote processed successfully', {
-        pollId,
-        voteId,
+        pollId: request.pollId,
+        userId: request.userId,
         approvals: voteData.approvals,
-        userId,
-        auditReceipt
+        voteId: voteRecord.id
       });
 
-      return withOptional({
+      return {
         success: true,
-        message: 'Vote submitted successfully',
-        pollId,
-        voteId,
-        auditReceipt,
-        responseTime: 0, // Will be set by the engine
-        metadata: {
-          votingMethod: 'approval',
-          approvals: voteData.approvals,
-          approvedOptions: voteData.approvals?.map(index => poll.options[index]?.text) || []
-        }
-      }, {
-        privacyLevel
-      });
+        voteId: voteRecord.id,
+        message: 'Vote recorded successfully',
+        pollId: request.pollId
+      };
 
     } catch (error) {
       devLog('Approval vote processing error:', error);
-      return withOptional({
+      return {
         success: false,
-        message: error instanceof Error ? error.message : 'Vote processing failed',
-        pollId: request.pollId,
-        responseTime: 0,
-        metadata: {
-          votingMethod: 'approval',
-          error: error instanceof Error ? error.message : 'Unknown error'
-        }
-      }, {
-        voteId: undefined,
-        auditReceipt: undefined,
-        privacyLevel: request.privacyLevel
-      });
+        error: 'Failed to process approval vote',
+        message: 'Failed to process approval vote',
+        pollId: request.pollId
+      };
     }
   }
 
@@ -182,45 +180,45 @@ export class ApprovalStrategy implements VotingStrategy {
     try {
       const startTime = Date.now();
       
-      // Count approval votes for each option
+      // Initialize tracking objects
       const approvalScores: Record<string, number> = {};
-      const approvalPercentages: Record<string, number> = {};
       const optionVotes: Record<string, number> = {};
+      const approvalPercentages: Record<string, number> = {};
       const optionPercentages: Record<string, number> = {};
-      
-      // Initialize scores
-      poll.options.forEach((_, index) => {
-        approvalScores[index.toString()] = 0;
-        approvalPercentages[index.toString()] = 0;
-        optionVotes[index.toString()] = 0;
-        optionPercentages[index.toString()] = 0;
+
+      // Initialize all options with zero scores
+      poll.options.forEach(option => {
+        approvalScores[option.id] = 0;
+        optionVotes[option.id] = 0;
+        approvalPercentages[option.id] = 0;
+        optionPercentages[option.id] = 0;
       });
 
-      // Count approvals
-      let totalVotes = 0;
+      // Process each vote
       votes.forEach(vote => {
-        if (vote.approvals && Array.isArray(vote.approvals)) {
-          totalVotes++;
-          vote.approvals.forEach(approval => {
-            if (approval !== undefined && approval >= 0 && approval < poll.options.length) {
-              const key = approval.toString();
-              approvalScores[key] = (approvalScores[key] ?? 0) + 1;
-              optionVotes[key] = (optionVotes[key] ?? 0) + 1;
+        if (vote.voteData.approvals) {
+          vote.voteData.approvals.forEach(approval => {
+            const optionId = poll.options[approval]?.id;
+            if (optionId) {
+              approvalScores[optionId]++;
+              optionVotes[optionId]++;
             }
           });
         }
       });
 
+      const totalVotes = votes.length;
+
       // Calculate percentages
       if (totalVotes > 0) {
-        Object.keys(approvalScores).forEach(optionIndex => {
-          const approvalScore = approvalScores[optionIndex];
-          const optionVote = optionVotes[optionIndex];
+        Object.keys(approvalScores).forEach(optionId => {
+          const approvalScore = approvalScores[optionId];
+          const optionVote = optionVotes[optionId];
           if (approvalScore !== undefined) {
-            approvalPercentages[optionIndex] = (approvalScore / totalVotes) * 100;
+            approvalPercentages[optionId] = (approvalScore / totalVotes) * 100;
           }
           if (optionVote !== undefined) {
-            optionPercentages[optionIndex] = (optionVote / totalVotes) * 100;
+            optionPercentages[optionId] = (optionVote / totalVotes) * 100;
           }
         });
       }
@@ -231,42 +229,23 @@ export class ApprovalStrategy implements VotingStrategy {
       let winnerPercentage = 0;
 
       if (totalVotes > 0) {
-        Object.entries(approvalScores).forEach(([optionIndex, score]) => {
+        Object.entries(approvalScores).forEach(([optionId, score]) => {
           if (score > winnerVotes) {
-            winner = optionIndex;
+            winner = optionId;
             winnerVotes = score;
-            const percentage = approvalPercentages[optionIndex];
-            winnerPercentage = percentage ?? 0;
+            winnerPercentage = approvalPercentages[optionId] || 0;
           }
         });
       }
 
-      const results: PollResults = withOptional({
+      const results: PollResults = {
+        winner,
         winnerVotes,
         winnerPercentage,
-        approvalScores,
-        approvalPercentages,
         optionVotes,
         optionPercentages,
         abstentions: 0,
         abstentionPercentage: 0
-      }, {
-        winner
-      });
-
-      const resultsData: ResultsData = {
-        pollId: poll.id,
-        votingMethod: 'approval',
-        totalVotes,
-        participationRate: totalVotes > 0 ? 100 : 0, // This would be calculated based on eligible voters
-        results,
-        calculatedAt: new Date().toISOString(),
-        metadata: {
-          calculationTime: Date.now() - startTime,
-          hasWinner: winner !== undefined,
-          isTie: winnerVotes > 0 && Object.values(approvalScores).filter(s => s === winnerVotes).length > 1,
-          averageApprovals: totalVotes > 0 ? votes.reduce((sum, vote) => sum + (vote.approvals?.length || 0), 0) / totalVotes : 0
-        }
       };
 
       devLog('Approval results calculated', {
@@ -278,35 +257,53 @@ export class ApprovalStrategy implements VotingStrategy {
         calculationTime: Date.now() - startTime
       });
 
-      return resultsData;
+      return {
+        pollId: poll.id,
+        votingMethod: poll.votingMethod,
+        totalVotes,
+        participationRate: totalVotes / 100, // Mock participation rate
+        results,
+        calculatedAt: new Date().toISOString(),
+        metadata: {
+          calculationTime: Date.now() - startTime,
+          method: 'approval'
+        }
+      };
 
     } catch (error) {
       devLog('Approval results calculation error:', error);
-      throw new Error(`Failed to calculate approval results: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      
+      // Return empty results on error
+      return {
+        pollId: poll.id,
+        votingMethod: poll.votingMethod,
+        totalVotes: 0,
+        participationRate: 0,
+        results: {
+          winner: undefined,
+          winnerVotes: 0,
+          winnerPercentage: 0,
+          optionVotes: {},
+          optionPercentages: {},
+          abstentions: 0,
+          abstentionPercentage: 0
+        },
+        calculatedAt: new Date().toISOString(),
+        metadata: {
+          calculationTime: 0,
+          error: error instanceof Error ? error.message : 'Unknown error'
+        }
+      };
     }
   }
 
   getConfiguration(): Record<string, unknown> {
     return {
-      name: 'Approval Voting',
-      description: 'Voters can approve (vote for) multiple options. The option with the most approvals wins.',
-      minOptions: 2,
-      maxOptions: 100,
-      allowAbstention: true,
-      requiresRanking: false,
+      method: 'approval',
+      description: 'Voters can approve multiple options',
       allowsMultipleSelections: true,
-      resultType: 'highest_score',
-      features: [
-        'Allows multiple selections',
-        'Simple to understand',
-        'Reduces vote splitting',
-        'Good for consensus building'
-      ],
-      limitations: [
-        'No intensity of preference',
-        'May not reflect true preferences',
-        'Can lead to strategic voting'
-      ]
+      requiresRanking: false,
+      maxSelections: 'unlimited'
     };
   }
 }

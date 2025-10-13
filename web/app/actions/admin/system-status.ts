@@ -105,16 +105,37 @@ export const systemStatus = createSecureServerAction(
           )
 
         case 'clear_cache':
-          // Clear system cache (placeholder for cache clearing logic)
-          // In a real implementation, you would clear Redis cache, CDN cache, etc.
+          // Clear system cache using real cache management
+          const { CivicsCache } = await import('@/lib/utils/civics-cache')
+          const { CacheStrategyManager } = await import('@/lib/cache/cache-strategies')
+          const { RedisClient } = await import('@/lib/cache/redis-client')
+          
+          // Clear civics cache
+          CivicsCache.clearAll()
+          
+          // Clear Redis cache using cache strategy manager
+          const redisClient = new RedisClient()
+          const cacheManager = new CacheStrategyManager(redisClient)
+          const invalidationResult = await cacheManager.invalidate('*', {
+            reason: 'admin_cache_clear',
+            tags: ['system', 'admin']
+          })
           
           // Log admin cache clear
           logSecurityEvent('ADMIN_CACHE_CLEAR', {
             adminId: admin.userId,
-            action: 'clear_cache'
+            action: 'clear_cache',
+            invalidatedKeys: invalidationResult.invalidated,
+            errors: invalidationResult.errors
           }, context)
 
-          return createSuccessResponse({}, 'System cache cleared successfully')
+          return createSuccessResponse({
+            civicsCache: 'cleared',
+            redisCache: {
+              invalidatedKeys: invalidationResult.invalidated,
+              errors: invalidationResult.errors
+            }
+          }, 'System cache cleared successfully')
 
         default:
           throw new Error('Invalid action')

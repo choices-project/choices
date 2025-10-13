@@ -455,7 +455,7 @@ export class SecureKeyManager {
 
   private async createKeyBackup(keyId: string): Promise<void> {
     // Implementation would depend on backup storage system
-    console.log(`Creating backup for key: ${keyId}`);
+    logger.info(`Creating backup for key: ${keyId}`);
   }
 
   // ============================================================================

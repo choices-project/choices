@@ -1109,7 +1109,7 @@ export const pollsStoreDebug = {
    */
   logState: () => {
     const state = usePollsStore.getState();
-    console.log('Polls Store State:', {
+    logger.debug('Polls Store State', {
       totalPolls: state.polls.length,
       filteredPolls: state.filteredPolls.length,
       comments: state.comments.length,
@@ -1127,7 +1127,7 @@ export const pollsStoreDebug = {
    */
   logSummary: () => {
     const summary = pollsStoreUtils.getPollsSummary();
-    console.log('Polls Summary:', summary);
+    logger.debug('Polls Summary', summary);
   },
   
   /**
@@ -1139,7 +1139,7 @@ export const pollsStoreDebug = {
       acc[poll.status] = (acc[poll.status] || 0) + 1;
       return acc;
     }, {} as Record<string, number>);
-    console.log('Polls by Status:', byStatus);
+    logger.debug('Polls by Status', byStatus);
   },
   
   /**
@@ -1148,6 +1148,6 @@ export const pollsStoreDebug = {
   reset: () => {
     usePollsStore.getState().clearFilters();
     usePollsStore.getState().resetPreferences();
-    console.log('Polls store reset');
+    logger.info('Polls store reset');
   }
 };

@@ -57,7 +57,7 @@ const colors = {
 
 // Utility functions
 function log(message, color = 'reset') {
-  console.log(`${colors[color]}${message}${colors.reset}`);
+  logger.info(`${colors[color]}${message}${colors.reset}`);
 }
 
 function logSection(title) {

@@ -157,7 +157,7 @@ export function usePollWizard() {
       const canProceed = Object.keys(errors).length === 0;
       
       // Debug logging
-      console.log('🔧 usePollWizard updateData:', {
+      logger.info('🔧 usePollWizard updateData:', {
         currentStep: prev.currentStep,
         updates,
         newData: { title: newData.title, description: newData.description },

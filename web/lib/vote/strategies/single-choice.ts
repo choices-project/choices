@@ -1,8 +1,8 @@
 /**
  * Single Choice Voting Strategy
  * 
- * Implements single-choice voting where voters select exactly one option.
- * Results show the option with the most votes as the winner.
+ * Implements single choice voting where voters select exactly one option.
+ * Results show vote counts for each option, with the highest voted option winning.
  * 
  * Created: September 15, 2025
  * Updated: September 15, 2025
@@ -31,24 +31,28 @@ export class SingleChoiceStrategy implements VotingStrategy {
 
   async validateVote(request: VoteRequest, poll: PollData): Promise<VoteValidation> {
     try {
-      const { voteData } = request;
-      
-      // Check if choice is provided
-      if (voteData.choice === undefined || voteData.choice === null) {
+      const voteData = request.voteData;
+
+      // Validate choice exists and is a number
+      if (typeof voteData.choice !== 'number') {
         return {
+          valid: false,
           isValid: false,
           error: 'Choice is required for single-choice voting',
-          requiresAuthentication: true,
+          errors: ['Choice is required for single-choice voting'],
+          requiresAuthentication: false,
           requiresTokens: false
         };
       }
 
-      // Validate choice is a number
-      if (typeof voteData.choice !== 'number' || !Number.isInteger(voteData.choice)) {
+      // Validate choice is a valid integer
+      if (!Number.isInteger(voteData.choice)) {
         return {
+          valid: false,
           isValid: false,
-          error: 'Choice must be a valid integer',
-          requiresAuthentication: true,
+          error: 'Choice must be an integer',
+          errors: ['Choice must be an integer'],
+          requiresAuthentication: false,
           requiresTokens: false
         };
       }
@@ -56,17 +60,13 @@ export class SingleChoiceStrategy implements VotingStrategy {
       // Validate choice is within valid range
       if (voteData.choice < 0 || voteData.choice >= poll.options.length) {
         return {
+          valid: false,
           isValid: false,
           error: `Choice must be between 0 and ${poll.options.length - 1}`,
-          requiresAuthentication: true,
+          errors: ['Invalid option selected'],
+          requiresAuthentication: false,
           requiresTokens: false
         };
-      }
-
-      // Check if user has already voted (if not allowing multiple votes)
-      if (!poll.votingConfig.allowMultipleVotes && request.userId) {
-        // This would typically check the database, but for now we'll assume it's valid
-        // In a real implementation, you'd query the votes table here
       }
 
       devLog('Single choice vote validated successfully', {
@@ -76,17 +76,20 @@ export class SingleChoiceStrategy implements VotingStrategy {
       });
 
       return {
+        valid: true,
         isValid: true,
-        requiresAuthentication: true,
+        requiresAuthentication: false,
         requiresTokens: false
       };
 
     } catch (error) {
       devLog('Single choice vote validation error:', error);
       return {
+        valid: false,
         isValid: false,
-        error: error instanceof Error ? error.message : 'Validation failed',
-        requiresAuthentication: true,
+        error: 'Single choice vote validation failed',
+        errors: ['Single choice vote validation failed'],
+        requiresAuthentication: false,
         requiresTokens: false
       };
     }
@@ -94,66 +97,43 @@ export class SingleChoiceStrategy implements VotingStrategy {
 
   async processVote(request: VoteRequest, poll: PollData): Promise<VoteResponse> {
     try {
-      const { voteData, userId, pollId, privacyLevel } = request;
+      const voteData = request.voteData;
       
-      // Generate vote ID
-      const voteId = `vote_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      
-      // Create audit receipt
-      const auditReceipt = `receipt_${voteId}_${Date.now()}`;
-
-      // In a real implementation, this would:
-      // 1. Store the vote in the database
-      // 2. Update poll vote counts
-      // 3. Trigger any necessary notifications
-      // 4. Log the vote for audit purposes
+      // Create vote data for storage
+      const voteRecord: VoteData = {
+        id: `vote_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        pollId: request.pollId,
+        userId: request.userId,
+        voteData: {
+          choice: voteData.choice
+        },
+        timestamp: new Date().toISOString(),
+        ipAddress: request.ipAddress,
+        userAgent: request.userAgent
+      };
 
       devLog('Single choice vote processed successfully', {
-        pollId,
-        voteId,
+        pollId: request.pollId,
+        userId: request.userId,
         choice: voteData.choice,
-        userId,
-        auditReceipt
+        voteId: voteRecord.id
       });
 
-      return withOptional(
-        {
-          success: true,
-          message: 'Vote submitted successfully',
-          pollId,
-          voteId,
-          auditReceipt,
-          responseTime: 0, // Will be set by the engine
-          metadata: {
-            votingMethod: 'single'
-          }
-        },
-        {
-          privacyLevel,
-          choice: voteData.choice,
-          optionText: poll.options[voteData.choice || 0]
-        }
-      );
+      return {
+        success: true,
+        voteId: voteRecord.id,
+        message: 'Vote recorded successfully',
+        pollId: request.pollId
+      };
 
     } catch (error) {
       devLog('Single choice vote processing error:', error);
-      return withOptional(
-        {
-          success: false,
-          message: error instanceof Error ? error.message : 'Vote processing failed',
-          pollId: request.pollId,
-          responseTime: 0,
-          metadata: {
-            votingMethod: 'single',
-            error: error instanceof Error ? error.message : 'Unknown error'
-          }
-        },
-        {
-          voteId: undefined,
-          auditReceipt: undefined,
-          privacyLevel: request.privacyLevel
-        }
-      );
+      return {
+        success: false,
+        error: 'Failed to process single choice vote',
+        message: 'Failed to process single choice vote',
+        pollId: request.pollId
+      };
     }
   }
 
@@ -161,79 +141,59 @@ export class SingleChoiceStrategy implements VotingStrategy {
     try {
       const startTime = Date.now();
       
-      // Count votes for each option
+      // Initialize tracking objects
       const optionVotes: Record<string, number> = {};
       const optionPercentages: Record<string, number> = {};
-      
-      // Initialize vote counts
-      poll.options.forEach((_, index) => {
-        optionVotes[index.toString()] = 0;
-        optionPercentages[index.toString()] = 0;
+
+      // Initialize all options with zero scores
+      poll.options.forEach(option => {
+        optionVotes[option.id] = 0;
+        optionPercentages[option.id] = 0;
       });
 
-      // Count votes
-      let totalVotes = 0;
+      // Process each vote
       votes.forEach(vote => {
-        if (vote.choice !== undefined && vote.choice >= 0 && vote.choice < poll.options.length) {
-          const choiceKey = vote.choice.toString();
-          if (optionVotes[choiceKey] !== undefined) {
-            optionVotes[choiceKey]++;
-            totalVotes++;
+        if (typeof vote.voteData.choice === 'number') {
+          const optionId = poll.options[vote.voteData.choice]?.id;
+          if (optionId) {
+            optionVotes[optionId]++;
           }
         }
       });
 
+      const totalVotes = votes.length;
+
       // Calculate percentages
       if (totalVotes > 0) {
-        Object.keys(optionVotes).forEach(optionIndex => {
-          const votes = optionVotes[optionIndex];
-          if (votes !== undefined) {
-            optionPercentages[optionIndex] = (votes / totalVotes) * 100;
-          }
+        Object.keys(optionVotes).forEach(optionId => {
+          const votes = optionVotes[optionId];
+          optionPercentages[optionId] = (votes / totalVotes) * 100;
         });
       }
 
-      // Find winner
+      // Find winner (highest vote count)
       let winner: string | undefined;
       let winnerVotes = 0;
       let winnerPercentage = 0;
 
       if (totalVotes > 0) {
-        Object.entries(optionVotes).forEach(([optionIndex, votes]) => {
+        Object.entries(optionVotes).forEach(([optionId, votes]) => {
           if (votes > winnerVotes) {
-            winner = optionIndex;
+            winner = optionId;
             winnerVotes = votes;
-            winnerPercentage = optionPercentages[optionIndex] ?? 0;
+            winnerPercentage = optionPercentages[optionId] || 0;
           }
         });
       }
 
-      const results: PollResults = withOptional(
-        {
-          winnerVotes,
-          winnerPercentage,
-          optionVotes,
-          optionPercentages,
-          abstentions: 0,
-          abstentionPercentage: 0
-        },
-        {
-          winner
-        }
-      );
-
-      const resultsData: ResultsData = {
-        pollId: poll.id,
-        votingMethod: 'single',
-        totalVotes,
-        participationRate: totalVotes > 0 ? 100 : 0, // This would be calculated based on eligible voters
-        results,
-        calculatedAt: new Date().toISOString(),
-        metadata: {
-          calculationTime: Date.now() - startTime,
-          hasWinner: winner !== undefined,
-          isTie: winnerVotes > 0 && Object.values(optionVotes).filter(v => v === winnerVotes).length > 1
-        }
+      const results: PollResults = {
+        winner,
+        winnerVotes,
+        winnerPercentage,
+        optionVotes,
+        optionPercentages,
+        abstentions: 0,
+        abstentionPercentage: 0
       };
 
       devLog('Single choice results calculated', {
@@ -245,35 +205,54 @@ export class SingleChoiceStrategy implements VotingStrategy {
         calculationTime: Date.now() - startTime
       });
 
-      return resultsData;
+      return {
+        pollId: poll.id,
+        votingMethod: poll.votingMethod,
+        totalVotes,
+        participationRate: totalVotes / 100, // Mock participation rate
+        results,
+        calculatedAt: new Date().toISOString(),
+        metadata: {
+          calculationTime: Date.now() - startTime,
+          method: 'single'
+        }
+      };
 
     } catch (error) {
       devLog('Single choice results calculation error:', error);
-      throw new Error(`Failed to calculate single choice results: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      
+      // Return empty results on error
+      return {
+        pollId: poll.id,
+        votingMethod: poll.votingMethod,
+        totalVotes: 0,
+        participationRate: 0,
+        results: {
+          winner: undefined,
+          winnerVotes: 0,
+          winnerPercentage: 0,
+          optionVotes: {},
+          optionPercentages: {},
+          abstentions: 0,
+          abstentionPercentage: 0
+        },
+        calculatedAt: new Date().toISOString(),
+        metadata: {
+          calculationTime: 0,
+          error: error instanceof Error ? error.message : 'Unknown error'
+        }
+      };
     }
   }
 
   getConfiguration(): Record<string, unknown> {
     return {
-      name: 'Single Choice Voting',
-      description: 'Voters select exactly one option. The option with the most votes wins.',
-      minOptions: 2,
-      maxOptions: 100,
-      allowAbstention: false,
-      requiresRanking: false,
+      method: 'single',
+      description: 'Voters select exactly one option',
       allowsMultipleSelections: false,
-      resultType: 'winner',
-      features: [
-        'Simple and intuitive',
-        'Fast to count',
-        'Clear winner determination',
-        'Suitable for binary decisions'
-      ],
-      limitations: [
-        'May not reflect true preferences',
-        'Can lead to vote splitting',
-        'No consideration of second choices'
-      ]
+      requiresRanking: false,
+      maxSelections: 1,
+      algorithm: 'plurality'
     };
   }
 }

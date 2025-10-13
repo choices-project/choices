@@ -514,3 +514,270 @@ export type PaginatedResponse<T = any> = ApiResponse<T[]> & {
     totalPages: number;
   };
 };
+
+// ============================================================================
+// Feature Flag Management Types
+// ============================================================================
+
+/**
+ * Feature flag configuration for admin management
+ */
+export interface FeatureFlag {
+  id: string;
+  name: string;
+  enabled: boolean;
+  description: string;
+  category: string;
+  key: string;
+}
+
+/**
+ * Feature flag configuration export/import
+ */
+export interface FeatureFlagConfig {
+  flags: Record<string, boolean>;
+  timestamp: string;
+  version: string;
+}
+
+/**
+ * Feature flag management state
+ */
+export interface FeatureFlagState {
+  flags: Record<string, boolean>;
+  enabledFlags: string[];
+  disabledFlags: string[];
+  categories: Record<string, string[]>;
+  isLoading: boolean;
+  error: string | null;
+}
+
+// ============================================================================
+// Admin Store Interface
+// ============================================================================
+
+/**
+ * Main admin store interface
+ */
+export interface AdminStore {
+  // UI State
+  sidebarCollapsed: boolean;
+  currentPage: string;
+  notifications: AdminNotification[];
+  
+  // Data State
+  trendingTopics: TrendingTopic[];
+  generatedPolls: GeneratedPoll[];
+  systemMetrics: SystemMetrics;
+  activityItems: ActivityItem[];
+  activityFeed: ActivityItem[];
+  
+  // Feature Flag State
+  featureFlags: FeatureFlagState;
+  
+  // UI Actions
+  toggleSidebar: () => void;
+  setCurrentPage: (page: string) => void;
+  addNotification: (notification: Omit<AdminNotification, 'id' | 'timestamp'>) => void;
+  removeNotification: (id: string) => void;
+  markNotificationAsRead: (id: string) => void;
+  clearAllNotifications: () => void;
+  
+  // Data Actions
+  setTrendingTopics: (topics: TrendingTopic[]) => void;
+  setGeneratedPolls: (polls: GeneratedPoll[]) => void;
+  setSystemMetrics: (metrics: SystemMetrics) => void;
+  setActivityItems: (items: ActivityItem[]) => void;
+  setActivityFeed: (items: ActivityItem[]) => void;
+  
+  // Feature Flag Actions
+  enableFeatureFlag: (flagId: string) => boolean;
+  disableFeatureFlag: (flagId: string) => boolean;
+  toggleFeatureFlag: (flagId: string) => boolean;
+  isFeatureFlagEnabled: (flagId: string) => boolean;
+  getFeatureFlag: (flagId: string) => FeatureFlag | null;
+  getAllFeatureFlags: () => FeatureFlag[];
+  exportFeatureFlagConfig: () => FeatureFlagConfig;
+  importFeatureFlagConfig: (config: FeatureFlagConfig) => boolean;
+  resetFeatureFlags: () => void;
+  setFeatureFlagLoading: (loading: boolean) => void;
+  setFeatureFlagError: (error: string | null) => void;
+}
+
+// ============================================================================
+// Feature Flag Management Types
+// ============================================================================
+
+/**
+ * Feature flag configuration for admin management
+ */
+export interface FeatureFlag {
+  id: string;
+  name: string;
+  enabled: boolean;
+  description: string;
+  category: string;
+  key: string;
+}
+
+/**
+ * Feature flag configuration export/import
+ */
+export interface FeatureFlagConfig {
+  flags: Record<string, boolean>;
+  timestamp: string;
+  version: string;
+}
+
+/**
+ * Feature flag management state
+ */
+export interface FeatureFlagState {
+  flags: Record<string, boolean>;
+  enabledFlags: string[];
+  disabledFlags: string[];
+  categories: Record<string, string[]>;
+  isLoading: boolean;
+  error: string | null;
+}
+
+// ============================================================================
+// Admin Store Interface
+// ============================================================================
+
+/**
+ * Main admin store interface
+ */
+export interface AdminStore {
+  // UI State
+  sidebarCollapsed: boolean;
+  currentPage: string;
+  notifications: AdminNotification[];
+  
+  // Data State
+  trendingTopics: TrendingTopic[];
+  generatedPolls: GeneratedPoll[];
+  systemMetrics: SystemMetrics;
+  activityItems: ActivityItem[];
+  activityFeed: ActivityItem[];
+  
+  // Feature Flag State
+  featureFlags: FeatureFlagState;
+  
+  // UI Actions
+  toggleSidebar: () => void;
+  setCurrentPage: (page: string) => void;
+  addNotification: (notification: Omit<AdminNotification, 'id' | 'timestamp'>) => void;
+  removeNotification: (id: string) => void;
+  markNotificationAsRead: (id: string) => void;
+  clearAllNotifications: () => void;
+  
+  // Data Actions
+  setTrendingTopics: (topics: TrendingTopic[]) => void;
+  setGeneratedPolls: (polls: GeneratedPoll[]) => void;
+  setSystemMetrics: (metrics: SystemMetrics) => void;
+  setActivityItems: (items: ActivityItem[]) => void;
+  setActivityFeed: (items: ActivityItem[]) => void;
+  
+  // Feature Flag Actions
+  enableFeatureFlag: (flagId: string) => boolean;
+  disableFeatureFlag: (flagId: string) => boolean;
+  toggleFeatureFlag: (flagId: string) => boolean;
+  isFeatureFlagEnabled: (flagId: string) => boolean;
+  getFeatureFlag: (flagId: string) => FeatureFlag | null;
+  getAllFeatureFlags: () => FeatureFlag[];
+  exportFeatureFlagConfig: () => FeatureFlagConfig;
+  importFeatureFlagConfig: (config: FeatureFlagConfig) => boolean;
+  resetFeatureFlags: () => void;
+  setFeatureFlagLoading: (loading: boolean) => void;
+  setFeatureFlagError: (error: string | null) => void;
+}
+
+// ============================================================================
+// Feature Flag Management Types
+// ============================================================================
+
+/**
+ * Feature flag configuration for admin management
+ */
+export interface FeatureFlag {
+  id: string;
+  name: string;
+  enabled: boolean;
+  description: string;
+  category: string;
+  key: string;
+}
+
+/**
+ * Feature flag configuration export/import
+ */
+export interface FeatureFlagConfig {
+  flags: Record<string, boolean>;
+  timestamp: string;
+  version: string;
+}
+
+/**
+ * Feature flag management state
+ */
+export interface FeatureFlagState {
+  flags: Record<string, boolean>;
+  enabledFlags: string[];
+  disabledFlags: string[];
+  categories: Record<string, string[]>;
+  isLoading: boolean;
+  error: string | null;
+}
+
+// ============================================================================
+// Admin Store Interface
+// ============================================================================
+
+/**
+ * Main admin store interface
+ */
+export interface AdminStore {
+  // UI State
+  sidebarCollapsed: boolean;
+  currentPage: string;
+  notifications: AdminNotification[];
+  
+  // Data State
+  trendingTopics: TrendingTopic[];
+  generatedPolls: GeneratedPoll[];
+  systemMetrics: SystemMetrics;
+  activityItems: ActivityItem[];
+  activityFeed: ActivityItem[];
+  
+  // Feature Flag State
+  featureFlags: FeatureFlagState;
+  
+  // UI Actions
+  toggleSidebar: () => void;
+  setCurrentPage: (page: string) => void;
+  addNotification: (notification: Omit<AdminNotification, 'id' | 'timestamp'>) => void;
+  removeNotification: (id: string) => void;
+  markNotificationAsRead: (id: string) => void;
+  clearAllNotifications: () => void;
+  
+  // Data Actions
+  setTrendingTopics: (topics: TrendingTopic[]) => void;
+  setGeneratedPolls: (polls: GeneratedPoll[]) => void;
+  setSystemMetrics: (metrics: SystemMetrics) => void;
+  setActivityItems: (items: ActivityItem[]) => void;
+  setActivityFeed: (items: ActivityItem[]) => void;
+  
+  // Feature Flag Actions
+  enableFeatureFlag: (flagId: string) => boolean;
+  disableFeatureFlag: (flagId: string) => boolean;
+  toggleFeatureFlag: (flagId: string) => boolean;
+  isFeatureFlagEnabled: (flagId: string) => boolean;
+  getFeatureFlag: (flagId: string) => FeatureFlag | null;
+  getAllFeatureFlags: () => FeatureFlag[];
+  exportFeatureFlagConfig: () => FeatureFlagConfig;
+  importFeatureFlagConfig: (config: FeatureFlagConfig) => boolean;
+  resetFeatureFlags: () => void;
+  setFeatureFlagLoading: (loading: boolean) => void;
+  setFeatureFlagError: (error: string | null) => void;
+}

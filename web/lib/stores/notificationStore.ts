@@ -278,7 +278,7 @@ export const useNotificationStore = create<NotificationStore>()(
       
       resetSettings: () => set((state) => {
         state.settings = { ...defaultSettings };
-        console.log('Notification settings reset to defaults');
+        logger.info('Notification settings reset to defaults');
       }),
       
       // Loading state actions
@@ -489,7 +489,7 @@ export const notificationStoreUtils = {
     
     if (oldNotifications.length > 0) {
       oldNotifications.forEach(n => state.removeNotification(n.id));
-      console.log(`Cleaned up ${oldNotifications.length} old notifications`);
+      logger.debug('Cleaned up old notifications', { count: oldNotifications.length });
     }
   },
   
@@ -606,7 +606,7 @@ export const notificationStoreDebug = {
    */
   logState: () => {
     const state = useNotificationStore.getState();
-    console.log('Notification Store State:', {
+    logger.debug('Notification Store State', {
       total: state.notifications.length,
       unread: state.unreadCount,
       settings: state.settings,
@@ -620,7 +620,7 @@ export const notificationStoreDebug = {
    */
   logNotifications: () => {
     const state = useNotificationStore.getState();
-    console.log('All Notifications:', state.notifications);
+    logger.debug('All Notifications', state.notifications);
   },
   
   /**
@@ -628,7 +628,7 @@ export const notificationStoreDebug = {
    */
   logStats: () => {
     const stats = notificationStoreUtils.getStats();
-    console.log('Notification Statistics:', stats);
+    logger.debug('Notification Statistics', stats);
   },
   
   /**
@@ -636,6 +636,6 @@ export const notificationStoreDebug = {
    */
   clearAll: () => {
     useNotificationStore.getState().clearAll();
-    console.log('All notifications cleared');
+    logger.info('All notifications cleared');
   }
 };

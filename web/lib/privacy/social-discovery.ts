@@ -352,7 +352,7 @@ export class PrivacyAwareSocialDiscoveryManager {
       // Publish centroids for client-side computation
       await this.publishCentroids(newCentroids);
       
-      console.log(`Updated ${newCentroids.length} public centroids for poll ${pollId}`);
+      logger.info(`Updated ${newCentroids.length} public centroids for poll ${pollId}`);
     } catch (error) {
       console.error('Error updating public centroids:', error);
     }
@@ -529,7 +529,7 @@ export class PrivacyAwareSocialDiscoveryManager {
   private async publishCentroids(centroids: PublicCentroid[]): Promise<void> {
     // Publish centroids for client-side computation
     // This would typically involve storing in a public endpoint or CDN
-    console.log(`Published ${centroids.length} centroids for client-side computation`);
+    logger.info(`Published ${centroids.length} centroids for client-side computation`);
   }
 
   private laplaceNoise(epsilon: number): number {

@@ -14,4 +14,4 @@ function fixFile(sf: SourceFile): void {
 }
 
 project.getSourceFiles(['lib/**/*.ts', 'app/**/*.ts', 'features/**/*.ts']).forEach(fixFile);
-project.save().then(() => console.log('codemod done'));
+project.save().then(() => logger.info('codemod done'));
