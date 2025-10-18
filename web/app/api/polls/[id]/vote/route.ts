@@ -21,13 +21,13 @@ export const dynamic = 'force-dynamic';
 // POST /api/polls/[id]/vote - Submit a vote (authenticated users only)
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    devLog('Vote submission attempt for poll:', params.id)
-    devLog('POST vote API called with pollId:', params.id);
-    
-    const pollId = params.id
+    const { id } = await params;
+    const pollId = id;
+    devLog('Vote submission attempt for poll:', { pollId })
+    devLog('POST vote API called with pollId:', { pollId });
 
     if (!pollId) {
       throw new ValidationError('Poll ID is required')
@@ -109,7 +109,7 @@ export async function POST(
         })
 
       if (voteError) {
-        devLog('Error storing approval vote:', voteError)
+        devLog('Error storing approval vote:', { error: voteError.message })
         throw new Error('Failed to submit approval vote')
       }
 
@@ -136,7 +136,7 @@ export async function POST(
         })
 
       if (voteError) {
-        devLog('Error storing multiple choice vote:', voteError)
+        devLog('Error storing multiple choice vote:', { error: voteError.message })
         throw new Error('Failed to submit multiple choice vote')
       }
 
@@ -158,8 +158,9 @@ export async function POST(
     try {
       const analyticsService = AnalyticsService.getInstance()
       await analyticsService.recordPollAnalytics(user.id, pollId)
-    } catch (analyticsError) {
-      devLog('Analytics recording failed for vote:', analyticsError)
+    } catch (analyticsError: any) {
+      const errorMessage = analyticsError instanceof Error ? analyticsError.message : String(analyticsError);
+      devLog('Analytics recording failed for vote:', { error: errorMessage });
       // Don't fail the vote if analytics fails
     }
 
@@ -192,10 +193,11 @@ export async function POST(
 // HEAD /api/polls/[id]/vote - Check if user has voted (returns boolean only)
 export async function HEAD(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const pollId = params.id
+    const { id } = await params;
+    const pollId = id
 
     if (!pollId) {
       return new NextResponse(null, { status: 204 }) // Not voted
@@ -237,10 +239,11 @@ export async function HEAD(
 // GET /api/polls/[id]/vote - Check if user has voted (returns boolean only)
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const pollId = params.id
+    const { id } = await params;
+    const pollId = id
 
     if (!pollId) {
       throw new ValidationError('Poll ID is required')

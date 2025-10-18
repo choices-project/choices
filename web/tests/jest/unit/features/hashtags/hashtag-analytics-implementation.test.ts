@@ -372,7 +372,7 @@ function createMockHashtag(overrides: Partial<any> = {}): any {
 /**
  * Create mock usage data for testing
  */
-function createMockUsageData(count: number, timeOffset: number = 0): any[] {
+function createMockUsageData(count: number, timeOffset = 0): any[] {
   return Array.from({ length: count }, (_, i) => ({
     id: `usage-${i}`,
     hashtag_id: 'test-id',

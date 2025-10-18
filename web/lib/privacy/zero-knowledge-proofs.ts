@@ -5,7 +5,6 @@
  * It replaces the old @/shared/core/privacy/lib/zero-knowledge-proofs imports.
  */
 
-import { withOptional } from '@/lib/utils/objects';
 
 export interface ZKProof {
   proof: string;
@@ -124,7 +123,7 @@ export class ZeroKnowledgeProofManager {
    * Update configuration
    */
   updateConfig(newConfig: Partial<ZKProofConfig>): void {
-    this.config = withOptional(this.config, newConfig);
+    this.config = { ...this.config, ...newConfig };
   }
 }
 

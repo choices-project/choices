@@ -53,6 +53,7 @@ class Logger {
           return value;
         })}`;
         this.seen.clear();
+        console.warn('JSON.stringify failed:', error);
       }
     }
     
@@ -148,10 +149,10 @@ export const logPerformance = (operation: string, duration: number, context?: Lo
 };
 
 // Development-only logging (replaces logger.info)
-export const devLog = (message: string, ...args: unknown[]) => {
+export const devLog = (message: string, context?: LogContext) => {
   if (process.env.NODE_ENV === 'development') {
-    // eslint-disable-next-line no-console
-    logger.info(`[DEV] ${message}`, ...args);
+     
+    logger.info(`[DEV] ${message}`, context);
   }
 };
 

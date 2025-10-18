@@ -9,7 +9,6 @@
  */
 
 import { devLog } from '@/lib/utils/logger';
-import { withOptional } from '@/lib/utils/objects';
 
 // Types for FEC API responses
 export interface FECCandidate {
@@ -474,17 +473,11 @@ export class FECClient {
 export function createFECClient(): FECClient {
   const apiKey = process.env.FEC_API_KEY; // Optional for FEC API
   
-  return new FECClient(
-    withOptional(
-      {
-        rateLimit: {
-          requestsPerHour: 1000, // Official limit
-          requestsPerMinute: 20 // Conservative limit
-        }
-      },
-      {
-        apiKey
-      }
-    )
-  );
+  return new FECClient({
+    rateLimit: {
+      requestsPerHour: 1000, // Official limit
+      requestsPerMinute: 20 // Conservative limit
+    },
+    ...(apiKey && { apiKey })
+  });
 }

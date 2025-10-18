@@ -14,10 +14,11 @@
  */
 
 import { type NextRequest, NextResponse } from 'next/server';
-import { getSupabaseServerClient } from '@/utils/supabase/server';
+
 import { trendingHashtagsTracker } from '@/features/feeds/lib/TrendingHashtags';
 import { logger } from '@/lib/utils/logger';
 import { devLog } from '@/lib/utils/logger';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
@@ -171,7 +172,7 @@ async function getTrendingPolls(limit: number) {
     });
     
   } catch (error) {
-    logger.error('Error in trending polls API:', error);
+    logger.error('Error in trending polls API', error as Error);
     return NextResponse.json({ polls: [] }, { status: 500 });
   }
 }
@@ -207,7 +208,7 @@ async function getTrendingHashtags(request: NextRequest, limit: number) {
     });
 
   } catch (error) {
-    devLog('Error fetching trending hashtags:', error);
+    devLog('Error fetching trending hashtags:', { error });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -235,7 +236,7 @@ async function getTrendingTopics(limit: number) {
       .limit(limit);
 
     if (trendingError) {
-      devLog('Error fetching trending topics:', trendingError);
+      devLog('Error fetching trending topics:', { error: trendingError });
       throw new Error('Failed to fetch trending topics');
     }
 
@@ -249,7 +250,7 @@ async function getTrendingTopics(limit: number) {
         .limit(10);
 
       if (pollsError) {
-        devLog('Error fetching polls:', pollsError);
+        devLog('Error fetching polls:', { error: pollsError });
         // Continue without polls - we'll use fallback data
       } else {
         polls = (pollsData || []).map((poll: any) => ({
@@ -258,7 +259,7 @@ async function getTrendingTopics(limit: number) {
         })) as PollData[];
       }
     } catch (pollsError) {
-      devLog('Error fetching polls:', pollsError);
+      devLog('Error fetching polls:', { error: pollsError });
       // Continue without polls - we'll use fallback data
     }
 
@@ -281,8 +282,8 @@ async function getTrendingTopics(limit: number) {
         title: poll.title,
         description: topic.description,
         category: topic.category,
-        totalVotes: poll.total_votes,
-        participationRate: poll.participation_rate,
+        totalVotes: (poll as any).total_votes || 0,
+        participationRate: (poll as any).participation_rate || 0,
         trendingScore: topic.trending_score,
         velocity: topic.velocity,
         momentum: topic.momentum,
@@ -294,7 +295,7 @@ async function getTrendingTopics(limit: number) {
           id: option.id,
           text: option.text,
           votes: option.votes,
-          percentage: poll.total_votes > 0 ? Math.round((option.votes / poll.total_votes) * 100) : 0
+          percentage: (poll as any).total_votes > 0 ? Math.round((option.votes / (poll as any).total_votes) * 100) : 0
         })),
         metadata: topic.metadata
       };
@@ -309,7 +310,7 @@ async function getTrendingTopics(limit: number) {
     });
 
   } catch (error) {
-    devLog('Error in trending topics API:', error);
+    devLog('Error in trending topics API:', { error });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -348,7 +349,7 @@ async function trackHashtags(request: NextRequest) {
     });
 
   } catch (error) {
-    devLog('Error tracking hashtags:', error);
+    devLog('Error tracking hashtags:', { error });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

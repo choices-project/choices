@@ -4,6 +4,8 @@
  * This module provides PWA-specific utility functions.
  */
 
+import { logger } from '@/lib/utils/logger';
+
 export interface PWAConfig {
   name: string;
   shortName: string;
@@ -53,10 +55,10 @@ export class PWAUtils {
     if ('serviceWorker' in navigator) {
       try {
         const registration = await navigator.serviceWorker.register('/sw.js');
-        logger.info('Service Worker registered:', registration);
+        logger.info('Service Worker registered:', { scope: registration.scope, active: !!registration.active });
         return true;
       } catch (error) {
-        console.error('Service Worker registration failed:', error);
+        logger.error('Service Worker registration failed:', error instanceof Error ? error : new Error(String(error)));
         return false;
       }
     }
@@ -93,7 +95,7 @@ export class PWAUtils {
     }
   }
 
-  static async getCachedData(key: string): Promise<any | null> {
+  static async getCachedData(key: string): Promise<unknown> {
     if (typeof window !== 'undefined' && 'caches' in window) {
       const cache = await caches.open('choices-cache');
       const response = await cache.match(key);
@@ -114,26 +116,26 @@ export type BeforeInstallPromptEvent = {
 
 // PWA Manager class for managing PWA functionality
 export class PWAManager {
-  async getDeviceFingerprint(): Promise<any> {
+  getDeviceFingerprint(): Promise<any> {
     if (typeof window === 'undefined') {
-      return {
+      return Promise.resolve({
         platform: 'server',
         screenResolution: '0x0',
         language: 'en',
         timezone: 'UTC',
         webAuthn: false,
         standalone: false
-      };
+      });
     }
     
-    return {
+    return Promise.resolve({
       platform: navigator.platform,
       screenResolution: `${screen.width}x${screen.height}`,
       language: navigator.language,
       timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
       webAuthn: 'credentials' in navigator,
       standalone: window.matchMedia('(display-mode: standalone)').matches
-    };
+    });
   }
 
   async requestNotificationPermission(): Promise<boolean> {
@@ -146,31 +148,49 @@ export class PWAManager {
 
   async subscribeToPushNotifications(): Promise<void> {
     if (typeof window !== 'undefined' && 'serviceWorker' in navigator && 'PushManager' in window) {
-      const _registration = await navigator.serviceWorker.ready;
-      // Implementation would go here
+      const registration = await navigator.serviceWorker.ready;
+      
+      // Use existing push notification subscription flow
+      try {
+        const subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || null
+        });
+        
+        // Send subscription to existing server endpoint
+        await fetch('/api/pwa/notifications/subscribe', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(subscription)
+        });
+        
+        logger.info('Push notifications enabled:', { endpoint: subscription.endpoint });
+      } catch (error) {
+        logger.error('Failed to subscribe to push notifications:', error instanceof Error ? error : new Error(String(error)));
+      }
     }
   }
 
-  async getPWAStatus(): Promise<any> {
+  getPWAStatus(): Promise<any> {
     if (typeof window === 'undefined') {
-      return {
+      return Promise.resolve({
         installable: false,
         offline: false,
         pushNotifications: false,
         webAuthn: false,
         serviceWorker: false,
         offlineVotes: 0
-      };
+      });
     }
     
-    return {
+    return Promise.resolve({
       installable: 'beforeinstallprompt' in window,
       offline: 'serviceWorker' in navigator,
       pushNotifications: 'PushManager' in window,
       webAuthn: 'credentials' in navigator,
       serviceWorker: 'serviceWorker' in navigator,
       offlineVotes: 0
-    };
+    });
   }
 
   isInstalled(): boolean {
@@ -179,57 +199,119 @@ export class PWAManager {
            (window.navigator as Navigator & { standalone?: boolean }).standalone === true;
   }
 
-  async storeOfflineVote(vote: any): Promise<void> {
+  storeOfflineVote(vote: any): Promise<void> {
     // Store offline vote in local storage
-    const offlineVotes = JSON.parse(localStorage.getItem('offlineVotes') || '[]');
+    const offlineVotes = JSON.parse(localStorage.getItem('offlineVotes') ?? '[]');
     offlineVotes.push(vote);
     localStorage.setItem('offlineVotes', JSON.stringify(offlineVotes));
+    return Promise.resolve();
+  }
+
+  private urlBase64ToUint8Array(base64String: string): Uint8Array {
+    const padding = '='.repeat((4 - base64String.length % 4) % 4);
+    const base64 = (base64String + padding)
+      .replace(/-/g, '+')
+      .replace(/_/g, '/');
+    
+    const rawData = window.atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
+    
+    for (let i = 0; i < rawData.length; ++i) {
+      outputArray[i] = rawData.charCodeAt(i);
+    }
+    return outputArray;
   }
 }
 
-// PWA WebAuthn class for biometric authentication
+// PWA WebAuthn class - delegates to existing WebAuthn implementation
 export class PWAWebAuthn {
+  // Use existing WebAuthn implementation instead of duplicating
   async registerUser(username: string): Promise<any> {
-    if (!('credentials' in navigator)) {
-      throw new Error('WebAuthn not supported');
+    // Delegate to existing WebAuthn registration flow
+    const response = await fetch('/api/v1/auth/webauthn/register/options', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to get registration options');
     }
     
-    // Implementation would go here
-    return { id: 'mock-credential-id', username };
+    const options = await response.json();
+    return navigator.credentials.create({ publicKey: options });
   }
 
   async authenticateUser(): Promise<any> {
-    if (!('credentials' in navigator)) {
-      throw new Error('WebAuthn not supported');
+    // Delegate to existing WebAuthn authentication flow
+    const response = await fetch('/api/v1/auth/webauthn/authenticate/options', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to get authentication options');
     }
     
-    // Implementation would go here
-    return { success: true };
+    const options = await response.json();
+    return navigator.credentials.get({ publicKey: options });
   }
 }
 
-// Privacy Storage class for encrypted local storage
+// Privacy Storage class - delegates to existing encryption system
 export class PrivacyStorage {
+  // Use existing encryption system instead of duplicating
   async storeEncryptedData(key: string, data: any): Promise<void> {
-    if ('crypto' in window && 'subtle' in (window as Window & { crypto: Crypto }).crypto) {
-      // Implementation would go here
+    try {
+      // Delegate to existing privacy data management system
+      const response = await fetch('/api/privacy/encrypt', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key, data })
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to encrypt data');
+      }
+      
+      const result = await response.json();
+      localStorage.setItem(key, result.encryptedData);
+    } catch (error) {
+      logger.error('Failed to encrypt data:', error instanceof Error ? error : new Error(String(error)));
+      // Fallback to unencrypted storage
       localStorage.setItem(key, JSON.stringify(data));
     }
   }
 
   async getEncryptedData(key: string): Promise<any> {
-    if ('crypto' in window && 'subtle' in (window as Window & { crypto: Crypto }).crypto) {
+    try {
+      const encryptedData = localStorage.getItem(key);
+      if (!encryptedData) return null;
+      
+      // Delegate to existing decryption system
+      const response = await fetch('/api/privacy/decrypt', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key, encryptedData })
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to decrypt data');
+      }
+      
+      return await response.json();
+    } catch (error) {
+      logger.error('Failed to decrypt data:', error instanceof Error ? error : new Error(String(error)));
+      // Fallback to unencrypted data
       const data = localStorage.getItem(key);
       return data ? JSON.parse(data) : null;
     }
-    return null;
   }
 
   clearAllEncryptedData(): void {
     // Clear all encrypted data
     const keys = Object.keys(localStorage);
     keys.forEach(key => {
-      if (key.startsWith('encrypted_')) {
+      if (key.startsWith('pwa_encrypted_')) {
         localStorage.removeItem(key);
       }
     });

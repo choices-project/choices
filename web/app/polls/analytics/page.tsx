@@ -11,7 +11,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useUser } from '@/lib/stores'
 import { cn } from '@/lib/utils'
 import { logger } from '@/lib/utils/logger'
-import { withOptional } from '@/lib/utils/objects'
 
 // UI Components
 
@@ -238,7 +237,7 @@ export default function PollAnalyticsPage() {
                 <label className="text-sm font-medium mb-2 block">Time Range</label>
                 <select
                   value={filters.timeRange}
-                  onChange={(e) => setFilters(prev => withOptional(prev, { timeRange: e.target.value as '7d' | '30d' | '90d' | 'all' }))}
+                  onChange={(e) => setFilters(prev => ({ ...prev, timeRange: e.target.value as '7d' | '30d' | '90d' | 'all' }))}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="7d">Last 7 days</option>
@@ -251,7 +250,7 @@ export default function PollAnalyticsPage() {
                 <label className="text-sm font-medium mb-2 block">Poll Type</label>
                 <select
                   value={filters.pollType}
-                  onChange={(e) => setFilters(prev => withOptional(prev, { pollType: e.target.value as 'all' | 'public' | 'private' }))}
+                  onChange={(e) => setFilters(prev => ({ ...prev, pollType: e.target.value as 'all' | 'public' | 'private' }))}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="all">All polls</option>
@@ -263,7 +262,7 @@ export default function PollAnalyticsPage() {
                 <label className="text-sm font-medium mb-2 block">Status</label>
                 <select
                   value={filters.status}
-                  onChange={(e) => setFilters(prev => withOptional(prev, { status: e.target.value as 'all' | 'active' | 'closed' }))}
+                  onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value as 'all' | 'active' | 'closed' }))}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="all">All status</option>

@@ -148,7 +148,7 @@ export async function POST(request: NextRequest) {
     const { data: { user }, error: userError } = await supabaseClient.auth.getUser()
     
     if (userError) {
-      devLog('Could not get user, proceeding with anonymous feedback:', userError.message)
+      devLog('Could not get user, proceeding with anonymous feedback:', { error: userError.message })
     }
 
     // Check daily feedback limit for authenticated users
@@ -193,7 +193,7 @@ export async function POST(request: NextRequest) {
           totalPageViews: userJourney?.totalPageViews
         },
         security: {
-          ipAddress: request.ip || request.headers.get('x-forwarded-for')?.split(',')[0] || 'unknown',
+          ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0] || 'unknown',
           userAgent: request.headers.get('user-agent') || 'unknown',
           timestamp: new Date().toISOString()
         }
@@ -216,7 +216,7 @@ export async function POST(request: NextRequest) {
       .select()
 
     if (error) {
-      devLog('Database error:', error)
+      devLog('Database error:', { error })
       // If table doesn't exist or schema cache issue, use mock response for testing
       const errorMessage = error instanceof Error ? error.message : "Unknown error";
       if (errorMessage.includes('relation "feedback" does not exist') || 
@@ -270,7 +270,7 @@ export async function POST(request: NextRequest) {
     })
 
   } catch (error) {
-    devLog('Enhanced feedback API error:', error)
+    devLog('Enhanced feedback API error:', { error })
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -323,7 +323,7 @@ export async function GET(request: NextRequest) {
     const { data, error } = await query
 
     if (error) {
-      devLog('Database error:', error)
+      devLog('Database error:', { error })
       // If table doesn't exist or schema cache issue, return empty mock response
       const errorMessage = error instanceof Error ? error.message : "Unknown error";
       if (errorMessage.includes('relation "feedback" does not exist') || 
@@ -379,7 +379,7 @@ export async function GET(request: NextRequest) {
     })
 
   } catch (error) {
-    devLog('Feedback API error:', error)
+    devLog('Feedback API error:', { error })
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

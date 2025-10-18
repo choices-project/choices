@@ -15,7 +15,6 @@
  */
 
 import { logger } from '@/lib/utils/logger'
-import { withOptional } from '@/lib/utils/objects'
 
 // Analytics event types
 export enum AuthEventType {
@@ -196,7 +195,7 @@ export class AuthAnalytics {
       metadata?: Record<string, unknown>
     } = {}
   ): Promise<void> {
-    const event: AuthEvent = withOptional({
+    const event: AuthEvent = {
       id: this.generateEventId(),
       eventType,
       success,
@@ -207,8 +206,7 @@ export class AuthAnalytics {
         deviceType: 'unknown',
         browser: 'unknown',
         platform: 'unknown'
-      }
-    }, {
+      },
       userId: context.userId,
       authMethod,
       duration: options.duration,
@@ -216,7 +214,7 @@ export class AuthAnalytics {
       errorMessage: options.errorMessage,
       riskScore: options.riskScore,
       metadata: options.metadata
-    })
+    }
 
     // Add to events
     this.events.push(event)
@@ -243,11 +241,11 @@ export class AuthAnalytics {
 
   // Convenience methods for common events
   async trackRegistrationAttempt(context: AuthContext, metadata?: Record<string, unknown>): Promise<void> {
-    await this.trackAuthEvent(AuthEventType.REGISTRATION_ATTEMPT, AuthMethod.PASSWORD, false, context, withOptional({}, { metadata }))
+    await this.trackAuthEvent(AuthEventType.REGISTRATION_ATTEMPT, AuthMethod.PASSWORD, false, context, { ...{}, metadata })
   }
 
   async trackRegistrationSuccess(context: AuthContext, duration?: number): Promise<void> {
-    await this.trackAuthEvent(AuthEventType.REGISTRATION_SUCCESS, AuthMethod.PASSWORD, true, context, withOptional({}, { duration }))
+    await this.trackAuthEvent(AuthEventType.REGISTRATION_SUCCESS, AuthMethod.PASSWORD, true, context, { ...{}, duration })
   }
 
   async trackRegistrationFailure(context: AuthContext, errorCode: string, errorMessage: string): Promise<void> {
@@ -255,11 +253,11 @@ export class AuthAnalytics {
   }
 
   async trackLoginAttempt(context: AuthContext, authMethod: AuthMethod, metadata?: Record<string, unknown>): Promise<void> {
-    await this.trackAuthEvent(AuthEventType.LOGIN_ATTEMPT, authMethod, false, context, withOptional({}, { metadata }))
+    await this.trackAuthEvent(AuthEventType.LOGIN_ATTEMPT, authMethod, false, context, { ...{}, metadata })
   }
 
   async trackLoginSuccess(context: AuthContext, authMethod: AuthMethod, duration?: number): Promise<void> {
-    await this.trackAuthEvent(AuthEventType.LOGIN_SUCCESS, authMethod, true, context, withOptional({}, { duration }))
+    await this.trackAuthEvent(AuthEventType.LOGIN_SUCCESS, authMethod, true, context, { ...{}, duration })
   }
 
   async trackLoginFailure(context: AuthContext, authMethod: AuthMethod, errorCode: string, errorMessage: string): Promise<void> {
@@ -271,7 +269,7 @@ export class AuthAnalytics {
   }
 
   async trackBiometricSetupSuccess(context: AuthContext, duration?: number): Promise<void> {
-    await this.trackAuthEvent(AuthEventType.BIOMETRIC_SETUP_SUCCESS, AuthMethod.BIOMETRIC, true, context, withOptional({}, { duration }))
+    await this.trackAuthEvent(AuthEventType.BIOMETRIC_SETUP_SUCCESS, AuthMethod.BIOMETRIC, true, context, { ...{}, duration })
   }
 
   async trackBiometricSetupFailure(context: AuthContext, errorCode: string, errorMessage: string): Promise<void> {
@@ -283,7 +281,7 @@ export class AuthAnalytics {
   }
 
   async trackBiometricAuthSuccess(context: AuthContext, duration?: number): Promise<void> {
-    await this.trackAuthEvent(AuthEventType.BIOMETRIC_AUTH_SUCCESS, AuthMethod.BIOMETRIC, true, context, withOptional({}, { duration }))
+    await this.trackAuthEvent(AuthEventType.BIOMETRIC_AUTH_SUCCESS, AuthMethod.BIOMETRIC, true, context, { ...{}, duration })
   }
 
   async trackBiometricAuthFailure(context: AuthContext, errorCode: string, errorMessage: string): Promise<void> {
@@ -295,7 +293,7 @@ export class AuthAnalytics {
   }
 
   async trackDeviceFlowSuccess(context: AuthContext, duration?: number): Promise<void> {
-    await this.trackAuthEvent(AuthEventType.DEVICE_FLOW_SUCCESS, AuthMethod.DEVICE_FLOW, true, context, withOptional({}, { duration }))
+    await this.trackAuthEvent(AuthEventType.DEVICE_FLOW_SUCCESS, AuthMethod.DEVICE_FLOW, true, context, { ...{}, duration })
   }
 
   async trackDeviceFlowFailure(context: AuthContext, errorCode: string, errorMessage: string): Promise<void> {
@@ -307,7 +305,7 @@ export class AuthAnalytics {
   }
 
   async trackPasswordResetSuccess(context: AuthContext, duration?: number): Promise<void> {
-    await this.trackAuthEvent(AuthEventType.PASSWORD_RESET_SUCCESS, AuthMethod.PASSWORD, true, context, withOptional({}, { duration }))
+    await this.trackAuthEvent(AuthEventType.PASSWORD_RESET_SUCCESS, AuthMethod.PASSWORD, true, context, { ...{}, duration })
   }
 
   async trackPasswordResetFailure(context: AuthContext, errorCode: string, errorMessage: string): Promise<void> {
@@ -521,14 +519,14 @@ export class AuthAnalytics {
   }
 
   // Get recent events
-  getRecentEvents(limit: number = 100): AuthEvent[] {
+  getRecentEvents(limit = 100): AuthEvent[] {
     return this.events
       .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
       .slice(0, limit)
   }
 
   // Get events by type
-  getEventsByType(eventType: AuthEventType, limit: number = 100): AuthEvent[] {
+  getEventsByType(eventType: AuthEventType, limit = 100): AuthEvent[] {
     return this.events
       .filter(e => e.eventType === eventType)
       .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
@@ -536,7 +534,7 @@ export class AuthAnalytics {
   }
 
   // Get events by user
-  getEventsByUser(userId: string, limit: number = 100): AuthEvent[] {
+  getEventsByUser(userId: string, limit = 100): AuthEvent[] {
     return this.events
       .filter(e => e.userId === userId)
       .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
@@ -549,7 +547,7 @@ export class AuthAnalytics {
   }
 
   // Get events by auth method
-  getEventsByAuthMethod(authMethod: AuthMethod, limit: number = 100): AuthEvent[] {
+  getEventsByAuthMethod(authMethod: AuthMethod, limit = 100): AuthEvent[] {
     return this.events
       .filter(e => e.authMethod === authMethod)
       .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())

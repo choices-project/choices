@@ -26,7 +26,7 @@ export async function isAdmin(): Promise<boolean> {
 }
 
 /** Non-throwing: great for APIs and guards */
-export async function getAdminUser(): Promise<any | null> {
+export async function getAdminUser(): Promise<{ id: string; email?: string } | null> {
   const supabase = await getSupabaseServerClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;

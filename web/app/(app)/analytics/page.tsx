@@ -384,20 +384,23 @@ function DemographicsView({ data }: { data: any }) {
         <div className="bg-white rounded-xl shadow-sm border p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Device Types</h3>
           <div className="space-y-3">
-            {Object.entries(data.demographics?.deviceTypes || {}).map(([device, percentage]) => (
-              <div key={device} className="flex items-center justify-between">
-                <span className="text-sm text-gray-600 capitalize">{device}</span>
-                <div className="flex items-center space-x-2">
-                  <div className="w-16 bg-gray-200 rounded-full h-2">
-                    <div
-                      className="bg-green-600 h-2 rounded-full"
-                      style={{ width: `${percentage}%` }}
-                    />
+            {Object.entries(data.demographics?.deviceTypes || {}).map(([device, percentage]) => {
+              const percentageValue = typeof percentage === 'number' ? percentage : 0;
+              return (
+                <div key={device} className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600 capitalize">{device}</span>
+                  <div className="flex items-center space-x-2">
+                    <div className="w-16 bg-gray-200 rounded-full h-2">
+                      <div
+                        className="bg-green-600 h-2 rounded-full"
+                        style={{ width: `${percentageValue}%` }}
+                      />
+                    </div>
+                    <span className="text-sm font-medium text-gray-900">{percentageValue}%</span>
                   </div>
-                  <span className="text-sm font-medium text-gray-900">{String(percentage)}%</span>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </div>
@@ -496,20 +499,23 @@ function EngagementView({ data }: { data: any }) {
         <div className="bg-white rounded-xl shadow-sm border p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Feature Usage</h3>
           <div className="space-y-3">
-            {Object.entries(data.engagement?.featureUsage || {}).map(([feature, percentage]) => (
-              <div key={feature} className="flex items-center justify-between">
-                <span className="text-sm text-gray-600 capitalize">{feature}</span>
-                <div className="flex items-center space-x-2">
-                  <div className="w-16 bg-gray-200 rounded-full h-2">
-                    <div
-                      className="bg-purple-600 h-2 rounded-full"
-                      style={{ width: `${percentage}%` }}
-                    />
+            {Object.entries(data.engagement?.featureUsage || {}).map(([feature, percentage]) => {
+              const percentageValue = typeof percentage === 'number' ? percentage : 0;
+              return (
+                <div key={feature} className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600 capitalize">{feature}</span>
+                  <div className="flex items-center space-x-2">
+                    <div className="w-16 bg-gray-200 rounded-full h-2">
+                      <div
+                        className="bg-purple-600 h-2 rounded-full"
+                        style={{ width: `${percentageValue}%` }}
+                      />
+                    </div>
+                    <span className="text-sm font-medium text-gray-900">{percentageValue}%</span>
                   </div>
-                  <span className="text-sm font-medium text-gray-900">{String(percentage)}%</span>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </div>

@@ -14,7 +14,6 @@ import { devtools } from 'zustand/middleware';
 import { persist } from 'zustand/middleware';
 
 import { logger } from '@/lib/utils/logger';
-import { withOptional } from '@/lib/utils/objects';
 
 // Feed data types
 interface FeedItem {
@@ -814,7 +813,7 @@ export const feedsStoreUtils = {
   /**
    * Get recent feeds
    */
-  getRecentFeeds: (limit: number = 10) => {
+  getRecentFeeds: (limit = 10) => {
     const state = useFeedsStore.getState();
     return state.feeds
       .sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime())

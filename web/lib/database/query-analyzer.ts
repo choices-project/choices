@@ -6,7 +6,6 @@
  */
 
 import { logger } from '@/lib/utils/logger';
-import { withOptional } from '@/lib/utils/objects';
 
 /**
  * Query execution plan information
@@ -113,7 +112,7 @@ export class QueryAnalyzer {
     const complexity = this.calculateComplexity(query);
     const suggestions = this.generateOptimizations(query, pattern, executionTime, rowsReturned, rowsExamined, usedIndex);
 
-    const plan = withOptional({
+    const plan = {
       id: this.generateQueryId(query),
       query,
       pattern,
@@ -123,10 +122,8 @@ export class QueryAnalyzer {
       usedIndex: usedIndex || false,
       complexity,
       suggestions,
-      timestamp: Date.now(),
-    }, {
-      indexName
-    }) as QueryPlan;
+      timestamp: Date.now()
+    } as QueryPlan;
 
     this.queryHistory.push(plan);
     this.updatePerformanceMetrics(pattern, plan);
@@ -171,7 +168,7 @@ export class QueryAnalyzer {
   /**
    * Get slow queries
    */
-  getSlowQueries(threshold: number = 1000): QueryPlan[] {
+  getSlowQueries(threshold = 1000): QueryPlan[] {
     return this.queryHistory
       .filter(plan => plan.executionTime > threshold)
       .sort((a, b) => b.executionTime - a.executionTime);

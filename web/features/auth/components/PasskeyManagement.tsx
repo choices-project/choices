@@ -2,7 +2,10 @@
 
 import { useState, useEffect } from 'react';
 
-import { beginRegister } from '@/features/auth/lib/webauthn/client';
+// Dynamic imports to avoid build-time decorator issues
+// import { beginRegister } from '@/features/auth/lib/webauthn/client';
+import { logger } from '@/lib/utils/logger';
+
 
 import { WebAuthnPrivacyBadge } from './WebAuthnPrivacyBadge';
 
@@ -43,8 +46,10 @@ export function PasskeyManagement() {
   const handleAddPasskey = async () => {
     try {
       setError(null);
+      // Dynamic import to avoid build-time decorator issues
+      const { beginRegister } = await import('@/features/auth/lib/webauthn/client');
       const result = await beginRegister();
-      if (result.ok) {
+      if (result.success) {
         await loadPasskeys();
       } else {
         setError('Failed to add passkey');
@@ -57,7 +62,7 @@ export function PasskeyManagement() {
   const handleRenamePasskey = async (id: string, newLabel: string) => {
     try {
       // Implement rename functionality
-      logger.info('Rename passkey:', id, newLabel);
+      logger.info('Rename passkey', { id, newLabel });
     } catch {
       setError('Failed to rename passkey');
     }
@@ -66,7 +71,7 @@ export function PasskeyManagement() {
   const handleRevokePasskey = async (id: string) => {
     try {
       // Implement revoke functionality
-      logger.info('Revoke passkey:', id);
+      logger.info('Revoke passkey', { id });
       await loadPasskeys();
     } catch {
       setError('Failed to revoke passkey');

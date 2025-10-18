@@ -26,8 +26,19 @@ export default function OptimizedPollResults({
   const [results, setResults] = useState<OptimizedPollResult | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [performanceMetrics, setPerformanceMetrics] = useState<any>(null)
-  const [cacheStats, setCacheStats] = useState<any>(null)
+  const [performanceMetrics, setPerformanceMetrics] = useState<{
+    loadTime: number;
+    cacheHit: boolean;
+    timestamp: string;
+  } | null>(null)
+  const [cacheStats, setCacheStats] = useState<{
+    size: number;
+    hitRate: number;
+    missRate: number;
+    evictions: number;
+    memoryUsage: number;
+    averageAge: number;
+  } | null>(null)
 
   // Memoized poll results loading function
   const loadPollResults = useCallback(async () => {
@@ -66,7 +77,7 @@ export default function OptimizedPollResults({
   }, [pollId, userId, includePrivate, onResultsLoaded, onError])
 
   // Load cache statistics
-  const loadCacheStats = useCallback(async () => {
+  const loadCacheStats = useCallback(() => {
     try {
       const stats = optimizedPollService.getCacheStats()
       setCacheStats(stats)
@@ -78,7 +89,7 @@ export default function OptimizedPollResults({
 
   // Load results on mount and when dependencies change
   useEffect(() => {
-    loadPollResults()
+    void loadPollResults()
     loadCacheStats()
   }, [loadPollResults, loadCacheStats])
 
@@ -86,12 +97,12 @@ export default function OptimizedPollResults({
   const sortedOptions = useMemo(() => {
     if (!results?.results) return []
     
-    return [...results.results].sort((a, b) => (b.voteCount || b.votes) - (a.voteCount || a.votes))
+    return [...results.results].sort((a, b) => (b.voteCount ?? b.votes) - (a.voteCount ?? a.votes))
   }, [results?.results])
 
   // Memoized total votes for performance
   const totalVotes = useMemo(() => {
-    return results?.totalVotes || 0
+    return results?.totalVotes ?? 0
   }, [results?.totalVotes])
 
   // Memoized poll status display
@@ -111,7 +122,7 @@ export default function OptimizedPollResults({
   // Handle refresh
   const handleRefresh = useCallback(async () => {
     await loadPollResults()
-    await loadCacheStats()
+    loadCacheStats()
   }, [loadPollResults, loadCacheStats])
 
   if (loading) {
@@ -145,7 +156,7 @@ export default function OptimizedPollResults({
         </div>
         <div className="mt-4">
           <button
-            onClick={handleRefresh}
+            onClick={() => void handleRefresh()}
             className="bg-red-100 text-red-800 px-3 py-2 rounded-md text-sm font-medium hover:bg-red-200"
           >
             Try Again
@@ -185,8 +196,8 @@ export default function OptimizedPollResults({
                   <span className="ml-2">{cacheStats.size} items</span>
                 </div>
                 <div>
-                  <span className="text-blue-600">Cache Keys:</span>
-                  <span className="ml-2">{cacheStats.keys.length}</span>
+                  <span className="text-blue-600">Hit Rate:</span>
+                  <span className="ml-2">{(cacheStats.hitRate * 100).toFixed(1)}%</span>
                 </div>
               </>
             )}
@@ -224,7 +235,7 @@ export default function OptimizedPollResults({
             </span>
             {userId && (
               <span className="text-gray-600">
-                Budget: {results.privacyBudgetRemaining?.toFixed(2) || '0.00'} ε
+                Budget: {results.privacyBudgetRemaining?.toFixed(2) ?? '0.00'} ε
               </span>
             )}
           </div>
@@ -256,21 +267,21 @@ export default function OptimizedPollResults({
         <h3 className="text-lg font-semibold text-gray-900">Results</h3>
         <div className="space-y-3">
           {sortedOptions.map((option) => (
-            <div key={option.optionId || option.option} className="bg-white border border-gray-200 rounded-lg p-4">
+            <div key={option.optionId ?? option.option} className="bg-white border border-gray-200 rounded-lg p-4">
               <div className="flex items-center justify-between mb-2">
-                <h4 className="font-medium text-gray-900">{option.label || option.option}</h4>
+                <h4 className="font-medium text-gray-900">{option.label ?? option.option}</h4>
                 <span className="text-sm text-gray-600">
-                  {option.voteCount || option.votes} votes ({(option.votePercentage || option.percentage).toFixed(1)}%)
+                  {option.voteCount ?? option.votes} votes ({(option.votePercentage ?? option.percentage).toFixed(1)}%)
                 </span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2">
                 <div
                   className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                  style={{ width: `${option.votePercentage || option.percentage}%` }}
+                  style={{ width: `${option.votePercentage ?? option.percentage}%` }}
                 ></div>
               </div>
               <div className="mt-2 text-xs text-gray-500">
-                {option.uniqueVoters || 0} unique voters
+                {option.uniqueVoters ?? 0} unique voters
               </div>
             </div>
           ))}
@@ -280,7 +291,7 @@ export default function OptimizedPollResults({
       {/* Refresh Button */}
       <div className="flex justify-end">
         <button
-          onClick={handleRefresh}
+          onClick={() => void handleRefresh()}
           className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700 transition-colors"
         >
           Refresh Results

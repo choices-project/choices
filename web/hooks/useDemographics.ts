@@ -41,7 +41,7 @@ export function useDemographics() {
         const demographicData = await response.json()
         setData(demographicData)
       } catch (err) {
-        devLog('Error fetching demographics:', err)
+        devLog('Error fetching demographics:', { error: err instanceof Error ? err.message : String(err) })
         setError(err instanceof Error ? err.message : 'Unknown error')
       } finally {
         setLoading(false)

@@ -14,9 +14,10 @@
  * GET /api/dashboard?include=activity - Recent activity only (requires auth)
  */
 
-import { NextRequest, NextResponse } from 'next/server';
-import { getSupabaseServerClient } from '@/utils/supabase/server';
+import { type NextRequest, NextResponse } from 'next/server';
+
 import { logger } from '@/lib/utils/logger';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
@@ -134,7 +135,7 @@ async function getUserStats(supabase: any, userId: string) {
     };
 
   } catch (error) {
-    logger.error('Error in getUserStats:', error);
+    logger.error('Error in getUserStats', error as Error);
     return {
       pollsCreated: 0,
       totalVotes: 0,
@@ -188,7 +189,7 @@ async function getPlatformStats(supabase: any) {
     };
 
   } catch (error) {
-    logger.error('Error in getPlatformStats:', error);
+    logger.error('Error in getPlatformStats', error as Error);
     return {
       totalPolls: 0,
       totalVotes: 0,
@@ -259,7 +260,7 @@ async function getRecentActivity(supabase: any, userId: string) {
     };
 
   } catch (error) {
-    logger.error('Error in getRecentActivity:', error);
+    logger.error('Error in getRecentActivity', error as Error);
     return {
       votes: [],
       comments: [],
@@ -298,7 +299,7 @@ async function getActivePolls(supabase: any) {
     return polls || [];
 
   } catch (error) {
-    logger.error('Error in getActivePolls:', error);
+    logger.error('Error in getActivePolls', error as Error);
     return [];
   }
 }
@@ -329,7 +330,7 @@ async function getDetailedStats(supabase: any, userId: string) {
     };
 
   } catch (error) {
-    logger.error('Error in getDetailedStats:', error);
+    logger.error('Error in getDetailedStats', error as Error);
     return {
       votingPatterns: {},
       engagementScore: 0,
@@ -379,7 +380,7 @@ async function calculateVotingPatterns(supabase: any, userId: string) {
     return patterns;
 
   } catch (error) {
-    logger.error('Error in calculateVotingPatterns:', error);
+    logger.error('Error in calculateVotingPatterns', error as Error);
     return {};
   }
 }

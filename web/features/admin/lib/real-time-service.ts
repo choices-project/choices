@@ -5,6 +5,8 @@
  * In production, this would connect to WebSocket or Server-Sent Events.
  */
 
+import { logger } from '@/lib/utils/logger';
+
 export const realTimeService = {
   /**
    * Subscribe to admin updates

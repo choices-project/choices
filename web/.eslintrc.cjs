@@ -15,7 +15,7 @@
 module.exports = {
   root: true,
   
-  // Modern ESLint setup for Next.js 14 + TypeScript
+  // Modern ESLint setup for Next.js 15 + TypeScript 5.8
   extends: [
     'next/core-web-vitals',
     'plugin:@typescript-eslint/recommended',
@@ -59,6 +59,18 @@ module.exports = {
     '**/performance/**/*.js',
     '**/error-prevention/**/*.js',
     '**/eslint/**/*.js',
+    // Configuration files that cause parsing errors
+    '**/*.config.js',
+    '**/*.config.ts',
+    '**/next.config.js',
+    '**/tailwind.config.js',
+    '**/postcss.config.js',
+    '**/babel.config.js',
+    '**/jest.config.js',
+    '**/playwright*.config.ts',
+    '**/middleware.ts',
+    '**/temp-*.ts',
+    '**/temp-*.js',
   ],
   
   plugins: [
@@ -214,17 +226,17 @@ module.exports = {
     // TYPESCRIPT RULES - Type safety and best practices
     // ============================================================================
     
-    // Type safety rules - more lenient for gradual adoption
-    '@typescript-eslint/no-explicit-any': 'warn',
-    '@typescript-eslint/no-unsafe-assignment': 'warn',
-    '@typescript-eslint/no-unsafe-member-access': 'warn',
-    '@typescript-eslint/no-unsafe-call': 'warn',
-    '@typescript-eslint/no-unsafe-return': 'warn',
-    '@typescript-eslint/no-unsafe-argument': 'warn',
-    '@typescript-eslint/no-floating-promises': 'warn',
-    '@typescript-eslint/no-misused-promises': 'warn',
-    '@typescript-eslint/prefer-nullish-coalescing': 'warn',
-    '@typescript-eslint/prefer-optional-chain': 'warn',
+    // Type safety rules - stricter for TypeScript 5.8
+    '@typescript-eslint/no-explicit-any': 'error',
+    '@typescript-eslint/no-unsafe-assignment': 'error',
+    '@typescript-eslint/no-unsafe-member-access': 'error',
+    '@typescript-eslint/no-unsafe-call': 'error',
+    '@typescript-eslint/no-unsafe-return': 'error',
+    '@typescript-eslint/no-unsafe-argument': 'error',
+    '@typescript-eslint/no-floating-promises': 'error',
+    '@typescript-eslint/no-misused-promises': 'error',
+    '@typescript-eslint/prefer-nullish-coalescing': 'error',
+    '@typescript-eslint/prefer-optional-chain': 'error',
     
     // Array and object rules
     '@typescript-eslint/array-type': ['warn', { default: 'array-simple' }],
@@ -373,15 +385,6 @@ module.exports = {
       },
     },
     
-    // Configuration files - allow require() and other Node.js patterns
-    {
-      files: ['**/*.config.*', '**/*.config.*', '**/next.config.*', '**/tailwind.config.*'],
-      rules: {
-        '@typescript-eslint/no-require-imports': 'off',
-        '@typescript-eslint/no-var-requires': 'off',
-        'no-console': 'off',
-      },
-    },
     
     // Development and experimental files - lenient rules
     {

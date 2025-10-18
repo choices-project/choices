@@ -6,6 +6,8 @@
  * Updated: October 8, 2025
  */
 
+import { logger } from '@/lib/utils/logger';
+
 import { CurrentElectorateVerifier } from './current-electorate-verifier';
 import OpenStatesIntegration from './openstates-integration';
 import SuperiorDataPipeline from './superior-data-pipeline';

@@ -8,9 +8,10 @@
 import { describe, it, expect, beforeAll, afterAll } from '@jest/globals';
 import { createClient } from '@supabase/supabase-js';
 
-// Set real Supabase credentials directly for testing
-process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://muqwrehywjrbaeerjgfb.supabase.co';
-process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = 'sb_publishable_tJOpGO2IPjujJDQou44P_g_BgbTFBfc';
+// Load Supabase credentials from environment variables
+// These should be set in .env.local or CI environment
+process.env.NEXT_PUBLIC_SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
+process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
 
 // Test configuration
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;

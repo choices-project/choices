@@ -9,7 +9,8 @@
  * Status: ✅ ACTIVE
  */
 
-import { withOptional } from '../../../lib/utils/objects';
+import { logger } from '@/lib/utils/logger';
+
 import { createClient } from '../../../utils/supabase/client';
 import type {
   Hashtag,
@@ -40,11 +41,13 @@ const supabase = createClient();
  */
 export async function getHashtagById(id: string): Promise<HashtagApiResponse<Hashtag>> {
   try {
-    const { data, error } = await supabase
+    const result = await supabase
       .from('hashtags')
       .select('*')
       .eq('id', id)
       .single();
+    
+    const { data, error } = result;
 
     if (error) {
       return { success: false, error: error.message };
@@ -66,11 +69,13 @@ export async function getHashtagByName(name: string): Promise<HashtagApiResponse
   try {
     const normalizedName = name.toLowerCase().replace(/^#/, '');
     
-    const { data, error } = await supabase
+    const result = await supabase
       .from('hashtags')
       .select('*')
       .eq('name', normalizedName)
       .single();
+    
+    const { data, error } = result;
 
     if (error) {
       return { success: false, error: error.message };
@@ -102,7 +107,7 @@ export async function createHashtag(
       return { success: false, error: 'Hashtag already exists' };
     }
 
-    const { data, error } = await supabase
+    const result = await supabase
       .from('hashtags')
       .insert({
         name: normalizedName,
@@ -118,6 +123,8 @@ export async function createHashtag(
       })
       .select()
       .single();
+    
+    const { data, error } = result;
 
     if (error) {
       return { success: false, error: error.message };
@@ -140,14 +147,17 @@ export async function updateHashtag(
   updates: Partial<Hashtag>
 ): Promise<HashtagApiResponse<Hashtag>> {
   try {
-    const { data, error } = await supabase
+    const result = await supabase
       .from('hashtags')
-      .update(withOptional(updates, {
+      .update({
+        ...updates,
         updated_at: new Date().toISOString()
-      }))
+      })
       .eq('id', id)
       .select()
       .single();
+    
+    const { data, error } = result;
 
     if (error) {
       return { success: false, error: error.message };
@@ -227,7 +237,7 @@ export async function searchHashtags(query: HashtagSearchQuery): Promise<Hashtag
     }
 
     // Apply sorting
-    const sortField = query.sort || 'relevance';
+    const sortField = query.sort ?? 'relevance';
     switch (sortField) {
       case 'usage':
         supabaseQuery = supabaseQuery.order('usage_count', { ascending: false });
@@ -279,7 +289,7 @@ export async function searchHashtags(query: HashtagSearchQuery): Promise<Hashtag
  */
 export async function getTrendingHashtags(
   category?: HashtagCategory,
-  limit: number = 20
+  limit = 20
 ): Promise<HashtagApiResponse<TrendingHashtag[]>> {
   try {
     let supabaseQuery = supabase
@@ -328,7 +338,7 @@ export async function getTrendingHashtags(
 export async function getHashtagSuggestions(
   input: string,
   context?: string,
-  limit: number = 10
+  limit = 10
 ): Promise<HashtagApiResponse<HashtagSuggestion[]>> {
   try {
     const normalizedInput = input.toLowerCase().replace(/^#/, '');
@@ -941,7 +951,7 @@ async function calculateUsage7d(hashtag: Hashtag): Promise<number> {
 }
 
 function determineSuggestionReason(hashtag: Hashtag, input: string): 'trending' | 'related' | 'popular' | 'recent' | 'personal' {
-  logger.info(`Determining suggestion reason for hashtag: ${hashtag.name}, input: ${input}`);
+  logger.info(`Determining suggestion reason for hashtag: ${hashtag.name}, input: ${input}`, { hashtagName: hashtag.name, input });
   if (hashtag.is_trending) return 'trending';
   if (hashtag.usage_count > 1000) return 'popular';
   return 'related';

@@ -372,7 +372,7 @@ export type PollCategory =
  * Template category definition
  */
 export interface TemplateCategory {
-  id: PollCategory | string;
+  id: PollCategory;
   name: string;
   description: string;
   icon: string;

@@ -3,7 +3,7 @@
 // ============================================================================
 
 import { isValidEmail } from '@/lib/utils/format-utils';
-import { withOptional } from '@/lib/utils/objects';
+import { logger } from '@/lib/utils/logger';
 // Agent A2 - Privacy Specialist
 // 
 // This module implements legal compliance frameworks for TCPA/CAN-SPAM
@@ -421,18 +421,14 @@ export class CommunicationComplianceManager {
   ): Promise<string> {
     const requestId = this.generateRequestId();
     
-    const request: DataSubjectRequest = withOptional(
-      {
-        id: requestId,
-        type,
-        status: 'pending' as const,
-        requestedAt: new Date(),
-        legalBasis: this.getLegalBasisForRequest(type)
-      },
-      {
-        response: undefined
-      }
-    );
+    const request: DataSubjectRequest = {
+      id: requestId,
+      type,
+      status: 'pending' as const,
+      requestedAt: new Date(),
+      legalBasis: this.getLegalBasisForRequest(type),
+      // response is optional and will be set later
+    };
 
     // Store request
     await this.storeDataSubjectRequest(userId, request);

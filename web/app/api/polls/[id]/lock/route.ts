@@ -19,10 +19,11 @@ export const dynamic = 'force-dynamic';
 // POST /api/polls/[id]/lock - Lock a poll
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const pollId = params.id;
+    const { id } = await params;
+    const pollId = id;
 
     if (!pollId) {
       throw new ValidationError('Poll ID is required');
@@ -84,7 +85,7 @@ export async function POST(
       .eq('id', pollId);
 
     if (updateError) {
-      devLog('Error locking poll:', updateError);
+      devLog('Error locking poll:', { error: updateError });
       throw new Error('Failed to lock poll');
     }
 
@@ -107,7 +108,7 @@ export async function POST(
     });
 
   } catch (error) {
-    devLog('Error in poll lock API:', error);
+    devLog('Error in poll lock API:', { error });
     
     if (error instanceof AuthenticationError) {
       return NextResponse.json(
@@ -147,10 +148,11 @@ export async function POST(
 // DELETE /api/polls/[id]/lock - Unlock a poll
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const pollId = params.id;
+    const { id } = await params;
+    const pollId = id;
 
     if (!pollId) {
       throw new ValidationError('Poll ID is required');
@@ -206,7 +208,7 @@ export async function DELETE(
       .eq('id', pollId);
 
     if (updateError) {
-      devLog('Error unlocking poll:', updateError);
+      devLog('Error unlocking poll:', { error: updateError });
       throw new Error('Failed to unlock poll');
     }
 
@@ -228,7 +230,7 @@ export async function DELETE(
     });
 
   } catch (error) {
-    devLog('Error in poll unlock API:', error);
+    devLog('Error in poll unlock API:', { error });
     
     if (error instanceof AuthenticationError) {
       return NextResponse.json(

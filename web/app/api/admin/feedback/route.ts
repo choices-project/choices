@@ -87,7 +87,7 @@ export async function GET(request: NextRequest) {
     const { data: feedback, error } = await query;
 
     if (error) {
-      devLog('Error fetching feedback:', error);
+      devLog('Error fetching feedback:', { error });
       return NextResponse.json(
         { error: 'Failed to fetch feedback' },
         { status: 500 }
@@ -126,7 +126,7 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    devLog('Error in admin feedback API:', error);
+    devLog('Error in admin feedback API:', { error });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

@@ -7,7 +7,7 @@
 import { ApplicationError, type ErrorDetails } from './base';
 
 export class InternalServerError extends ApplicationError {
-  constructor(message: string = 'Internal server error', details?: ErrorDetails) {
+  constructor(message = 'Internal server error', details?: ErrorDetails) {
     super(message, 500, 'INTERNAL_SERVER_ERROR', details);
   }
 }

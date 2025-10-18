@@ -22,7 +22,7 @@ import { CSRF_COOKIE } from "./cookies";
  * @param length - Number of bytes to generate (default: 32)
  * @returns Hex-encoded random string
  */
-function generateCsrfToken(length: number = 32): string {
+function generateCsrfToken(length = 32): string {
   return randomBytes(length).toString("hex");
 }
 
@@ -31,8 +31,8 @@ function generateCsrfToken(length: number = 32): string {
  * 
  * @returns CSRF token string
  */
-export function getOrSetCsrfCookie(): string {
-  const cookieStore = cookies();
+export async function getOrSetCsrfCookie(): Promise<string> {
+  const cookieStore = await cookies();
   const existingToken = cookieStore.get(CSRF_COOKIE)?.value;
   
   if (existingToken) {
@@ -61,12 +61,12 @@ export function getOrSetCsrfCookie(): string {
  * @param headerToken - Token from X-CSRF-Token header
  * @returns true if tokens match, false otherwise
  */
-export function verifyCsrfToken(headerToken?: string): boolean {
+export async function verifyCsrfToken(headerToken?: string): Promise<boolean> {
   if (!headerToken) {
     return false;
   }
   
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const cookieToken = cookieStore.get(CSRF_COOKIE)?.value;
   
   if (!cookieToken) {
@@ -94,7 +94,7 @@ export function requiresCsrfProtection(method: string): boolean {
  * @param request - Request object containing method and headers
  * @returns true if CSRF validation passes or is not required
  */
-export function validateCsrfProtection(request: Request): boolean {
+export async function validateCsrfProtection(request: Request): Promise<boolean> {
   const method = request.method;
   
   // Skip CSRF check for safe methods
@@ -115,7 +115,7 @@ export function validateCsrfProtection(request: Request): boolean {
   const headerToken = request.headers.get("x-csrf-token");
   
   // Verify token
-  return verifyCsrfToken(headerToken || undefined);
+  return await verifyCsrfToken(headerToken || undefined);
 }
 
 /**

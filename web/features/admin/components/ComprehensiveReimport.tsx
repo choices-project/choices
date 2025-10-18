@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+
 import { 
   useAdminReimportProgress,
   useAdminReimportLogs,
@@ -22,7 +23,7 @@ export default function ComprehensiveReimport() {
     return (progress.processedStates / progress.totalStates) * 100;
   };
 
-  const getProgressBar = (percentage: number, width: number = 50) => {
+  const getProgressBar = (percentage: number, width = 50) => {
     const filled = Math.round((percentage / 100) * width);
     const empty = width - filled;
     return `[${'█'.repeat(filled)}${'░'.repeat(empty)}]`;

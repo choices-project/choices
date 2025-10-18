@@ -6,7 +6,8 @@
  */
 
 import { usePWAOffline as usePWAOfflineStore } from '@/lib/stores';
+import type { PWAOffline } from '@/lib/stores/pwaStore';
 
-export function useOffline() {
+export function useOffline(): PWAOffline {
   return usePWAOfflineStore();
 }

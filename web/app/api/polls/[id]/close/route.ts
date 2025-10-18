@@ -19,10 +19,11 @@ export const dynamic = 'force-dynamic';
 // POST /api/polls/[id]/close - Close a poll and set baseline
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const pollId = params.id;
+    const { id } = await params;
+    const pollId = id;
 
     if (!pollId) {
       throw new ValidationError('Poll ID is required');
@@ -86,7 +87,7 @@ export async function POST(
       .eq('id', pollId);
 
     if (updateError) {
-      devLog('Error closing poll:', updateError);
+      devLog('Error closing poll:', { error: updateError });
       throw new Error('Failed to close poll');
     }
 
@@ -110,7 +111,7 @@ export async function POST(
     });
 
   } catch (error) {
-    devLog('Error in poll close API:', error);
+    devLog('Error in poll close API:', { error });
     
     if (error instanceof AuthenticationError) {
       return NextResponse.json(

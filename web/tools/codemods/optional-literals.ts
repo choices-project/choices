@@ -1,5 +1,7 @@
 import { Project, SyntaxKind, type SourceFile, type Node, type PropertyAssignment } from 'ts-morph';
 
+import { logger } from '@/lib/logger';
+
 const project = new Project({ tsConfigFilePath: 'tsconfig.json' });
 
 function fixFile(sf: SourceFile): void {

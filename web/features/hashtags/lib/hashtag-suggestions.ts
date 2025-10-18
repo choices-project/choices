@@ -11,6 +11,8 @@
 
 import { createClient } from '@supabase/supabase-js';
 
+import { logger } from '@/lib/utils/logger';
+
 import type {
   HashtagSuggestion,
   HashtagCategory,
@@ -88,7 +90,7 @@ export async function getSmartSuggestions(
     
     return rankedSuggestions.slice(0, limit);
   } catch (error) {
-    console.error('Failed to get smart suggestions:', error);
+    logger.error('Failed to get smart suggestions:', error instanceof Error ? error : new Error(String(error)));
     throw error;
   }
 }
@@ -99,7 +101,7 @@ export async function getSmartSuggestions(
 export async function getAutoCompleteSuggestions(
   query: string,
   userId?: string,
-  limit: number = 5
+  limit = 5
 ): Promise<HashtagSuggestion[]> {
   try {
     if (!query || query.length < 1) return [];
@@ -118,19 +120,19 @@ export async function getAutoCompleteSuggestions(
     
     // Convert to suggestions
     const suggestions: HashtagSuggestion[] = (hashtags || []).map(hashtag => {
-      const confidence = calculateMatchConfidence(normalizedQuery, hashtag.name);
+      const confidence = calculateMatchConfidence(normalizedQuery, String(hashtag.name));
       return {
         hashtag: hashtag as Hashtag,
-        reason: 'Auto-complete match',
+        reason: 'related',
         confidence,
         confidence_score: confidence,
         source: 'search' as const,
         metadata: {
-          trending_score: hashtag.trend_score,
+          trending_score: Number(hashtag.trend_score),
           related_hashtags: [],
           category_match: true,
           user_history: false,
-          social_proof: hashtag.usage_count || 0
+          social_proof: Number(hashtag.usage_count) || 0
         }
       };
     });
@@ -140,13 +142,13 @@ export async function getAutoCompleteSuggestions(
       .sort((a, b) => {
         const confidenceDiff = b.confidence - a.confidence;
         if (Math.abs(confidenceDiff) > 0.1) return confidenceDiff;
-        return (b.usage_count || 0) - (a.usage_count || 0);
+        return (b.usage_count ?? 0) - (a.usage_count ?? 0);
       })
       .slice(0, limit);
     
     return rankedSuggestions;
   } catch (error) {
-    console.error('Failed to get auto-complete suggestions:', error);
+    logger.error('Failed to get auto-complete suggestions:', error instanceof Error ? error : new Error(String(error)));
     throw error;
   }
 }
@@ -156,7 +158,7 @@ export async function getAutoCompleteSuggestions(
  */
 export async function getRelatedHashtags(
   hashtagId: string,
-  limit: number = 10
+  limit = 10
 ): Promise<HashtagSuggestion[]> {
   try {
     // Get hashtag details
@@ -196,7 +198,7 @@ export async function getRelatedHashtags(
     (categoryHashtags || []).forEach(relatedHashtag => {
       suggestions.push({
         hashtag: relatedHashtag as Hashtag,
-        reason: `Same category: ${hashtag.category}`,
+        reason: 'related',
         confidence: 0.7,
         confidence_score: 0.7,
         source: 'category' as const,
@@ -216,7 +218,7 @@ export async function getRelatedHashtags(
         const hashtag = coOccur.hashtags[0];
         suggestions.push({
           hashtag,
-          reason: `Frequently used together (${coOccur.co_occurrence_count} times)`,
+          reason: 'related',
           confidence: Math.min(0.9, coOccur.co_occurrence_count / 100),
           confidence_score: Math.min(0.9, coOccur.co_occurrence_count / 100),
           source: 'related' as const,
@@ -244,7 +246,7 @@ export async function getRelatedHashtags(
  */
 export async function getTrendingSuggestions(
   excludeHashtagIds: string[] = [],
-  limit: number = 10
+  limit = 10
 ): Promise<HashtagSuggestion[]> {
   try {
     // Get trending hashtags from the last 24 hours
@@ -260,7 +262,7 @@ export async function getTrendingSuggestions(
     
     return (trending || []).map(hashtag => ({
       hashtag: hashtag as Hashtag,
-      reason: 'Currently trending',
+        reason: 'trending',
       confidence: 0.8,
       confidence_score: 0.8,
       source: 'trending' as const,
@@ -317,7 +319,7 @@ async function getContentBasedSuggestions(
     (hashtags || []).forEach(hashtag => {
       suggestions.push({
         hashtag: hashtag as Hashtag,
-        reason: `Related to "${keyword}"`,
+        reason: 'related',
         confidence: 0.6,
         confidence_score: 0.6,
         source: 'related' as const,
@@ -352,7 +354,7 @@ async function getCategoryBasedSuggestions(
   
   return (hashtags || []).map(hashtag => ({
     hashtag: hashtag as Hashtag,
-    reason: `Popular in ${category}`,
+    reason: 'popular',
     confidence: 0.7,
     confidence_score: 0.7,
     source: 'category' as const,
@@ -387,7 +389,7 @@ async function getRelatedSuggestions(
     const hashtag = Array.isArray(coOccur.hashtags) ? coOccur.hashtags[0] : coOccur.hashtags;
     return {
       hashtag: hashtag as Hashtag,
-      reason: `Related to your interests`,
+      reason: 'personal',
       confidence: Math.min(0.9, coOccur.co_occurrence_count / 50),
       confidence_score: Math.min(0.9, coOccur.co_occurrence_count / 50),
       source: 'personalized' as const,
@@ -439,7 +441,7 @@ async function getBehaviorBasedSuggestions(
     if (hashtag) {
       suggestions.push({
         hashtag: hashtag as Hashtag,
-        reason: `Based on your activity`,
+        reason: 'personal',
         confidence: Math.min(0.8, engagementCount / 10),
         confidence_score: Math.min(0.8, engagementCount / 10),
         source: 'personalized' as const,

@@ -43,7 +43,7 @@ export async function GET(_request: NextRequest) {
 
     return NextResponse.json({ metrics });
   } catch (error) {
-    devLog('Error fetching system metrics:', error);
+    devLog('Error fetching system metrics:', { error });
     return NextResponse.json(
       { error: 'Failed to fetch system metrics' },
       { status: 500 }

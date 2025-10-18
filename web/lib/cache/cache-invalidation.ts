@@ -9,7 +9,6 @@
  */
 
 import { logger } from '@/lib/utils/logger'
-import { withOptional } from '@/lib/utils/objects'
 
 import { type CacheStrategyManager } from './cache-strategies'
 import { type RedisClient } from './redis-client'
@@ -66,7 +65,7 @@ export class CacheInvalidationManager {
   private rules: Map<string, InvalidationRule> = new Map()
   private dependencies: Map<string, CacheDependency> = new Map()
   private eventQueue: Array<{ event: InvalidationEvent; data: any; timestamp: number }> = []
-  private isProcessing: boolean = false
+  private isProcessing = false
 
   constructor(redisClient: RedisClient, strategyManager: CacheStrategyManager) {
     this.redisClient = redisClient
@@ -312,18 +311,18 @@ export class CacheInvalidationManager {
     } catch (err) {
       success = false
       error = err instanceof Error ? err.message : 'Unknown error'
+      logger.error('Cache invalidation failed', err instanceof Error ? err : new Error('Unknown error'), { ruleId: rule.id })
     }
 
-    return withOptional({
+    return {
       ruleId: rule.id,
       event: rule.event,
       invalidatedKeys,
       invalidatedTags,
       executionTime: Date.now() - startTime,
-      success
-    }, {
-      error
-    })
+      success,
+      error: success ? undefined : error
+    };
   }
 
   /**
@@ -397,7 +396,7 @@ export class CacheInvalidationManager {
   /**
    * Manual invalidation by key
    */
-  async invalidateByKey(key: string, reason: string = 'manual'): Promise<boolean> {
+  async invalidateByKey(key: string, reason = 'manual'): Promise<boolean> {
     try {
       const result = await this.redisClient.del(key)
       
@@ -413,7 +412,7 @@ export class CacheInvalidationManager {
   /**
    * Manual invalidation by pattern
    */
-  async invalidateByPattern(pattern: string, reason: string = 'manual'): Promise<number> {
+  async invalidateByPattern(pattern: string, reason = 'manual'): Promise<number> {
     try {
       const result = await this.redisClient.invalidateByPattern(pattern)
       
@@ -429,7 +428,7 @@ export class CacheInvalidationManager {
   /**
    * Manual invalidation by tags
    */
-  async invalidateByTags(tags: string[], reason: string = 'manual'): Promise<number> {
+  async invalidateByTags(tags: string[], reason = 'manual'): Promise<number> {
     try {
       const result = await this.redisClient.invalidateByTags(tags)
       
@@ -448,7 +447,7 @@ export class CacheInvalidationManager {
   async scheduleInvalidation(
     key: string,
     delayMs: number,
-    reason: string = 'scheduled'
+    reason = 'scheduled'
   ): Promise<void> {
     setTimeout(async () => {
       await this.invalidateByKey(key, reason)
@@ -462,7 +461,7 @@ export class CacheInvalidationManager {
    */
   async bulkInvalidate(
     keys: string[],
-    reason: string = 'bulk'
+    reason = 'bulk'
   ): Promise<{ success: number; failed: number }> {
     let success = 0
     let failed = 0

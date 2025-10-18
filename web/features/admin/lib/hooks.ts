@@ -3,7 +3,7 @@ import React from 'react';
 
 import { devLog } from '@/lib/utils/logger';
 
-import type { TrendingTopic, GeneratedPoll, SystemMetrics } from '../types';
+import type { TrendingTopic, GeneratedPoll, SystemMetrics, BreakingNewsStory, PollContext } from '../types';
 
 // Removed mock data imports - using real data only
 // import { mockActivityFeed } from './mock-data';
@@ -59,7 +59,7 @@ const fetchTrendingTopics = async (): Promise<TrendingTopic[]> => {
     devLog('Fetched trending topics from API', { count: data.topics?.length || 0 });
     return data.topics || mockTrendingTopics;
   } catch (error) {
-    devLog('Error fetching trending topics, using mock data', error);
+    devLog('Error fetching trending topics, using mock data', { error });
     return mockTrendingTopics;
   }
 };
@@ -74,7 +74,7 @@ const fetchGeneratedPolls = async (): Promise<GeneratedPoll[]> => {
     devLog('Fetched generated polls from API', { count: data.polls?.length || 0 });
     return data.polls || mockGeneratedPolls;
   } catch (error) {
-    devLog('Error fetching generated polls, using mock data', error);
+    devLog('Error fetching generated polls, using mock data', { error });
     return mockGeneratedPolls;
   }
 };
@@ -86,10 +86,10 @@ const fetchSystemMetrics = async (): Promise<SystemMetrics> => {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
     const data = await response.json();
-    devLog('Fetched system metrics from API', data.metrics);
+    devLog('Fetched system metrics from API', { metrics: data.metrics });
     return data.metrics || mockSystemMetrics;
   } catch (error) {
-    devLog('Error fetching system metrics, using mock data', error);
+    devLog('Error fetching system metrics, using mock data', { error });
     return mockSystemMetrics;
   }
 };
@@ -150,7 +150,7 @@ const fetchBreakingNews = async (): Promise<BreakingNewsStory[]> => {
     devLog('Fetched breaking news from API', { count: data.stories?.length || 0 });
     return data.stories || [];
   } catch (error) {
-    devLog('Error fetching breaking news, using empty array', error);
+    devLog('Error fetching breaking news, using empty array', { error });
     return [];
   }
 };

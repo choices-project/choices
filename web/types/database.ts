@@ -173,7 +173,7 @@ export interface Database {
           error_type: string
           error_message: string
           stack_trace: string | null
-          context: any | null
+          context: unknown
           created_at: string
           severity: 'low' | 'medium' | 'high' | 'critical'
         }
@@ -183,7 +183,7 @@ export interface Database {
           error_type: string
           error_message: string
           stack_trace?: string | null
-          context?: any | null
+          context?: unknown
           created_at?: string
           severity?: 'low' | 'medium' | 'high' | 'critical'
         }
@@ -193,7 +193,7 @@ export interface Database {
           error_type?: string
           error_message?: string
           stack_trace?: string | null
-          context?: any | null
+          context?: unknown
           created_at?: string
           severity?: 'low' | 'medium' | 'high' | 'critical'
         }

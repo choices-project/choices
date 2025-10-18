@@ -78,7 +78,7 @@ export class ProofOfPersonhoodManager {
   private rpName: string;
   private origin: string;
 
-  constructor(rpId: string = 'choices-platform.com', rpName: string = 'Choices Platform') {
+  constructor(rpId = 'choices-platform.com', rpName = 'Choices Platform') {
     this.rpId = rpId;
     this.rpName = rpName;
     this.origin = typeof window !== 'undefined' ? window.location.origin : 'https://choices-platform.com';
@@ -95,7 +95,7 @@ export class ProofOfPersonhoodManager {
 
       const credential = await navigator.credentials.create({
         publicKey: {
-          challenge,
+          challenge: challenge as BufferSource,
           rp: {
             id: this.rpId,
             name: this.rpName
@@ -147,7 +147,7 @@ export class ProofOfPersonhoodManager {
 
       const credential = await navigator.credentials.get({
         publicKey: {
-          challenge,
+          challenge: challenge as BufferSource,
           allowCredentials: [{
             type: 'public-key',
             id: credentialIdBuffer
@@ -195,7 +195,7 @@ export class ProofOfPersonhoodManager {
       const challenge = this.generateChallenge();
       const credential = await navigator.credentials.create({
         publicKey: {
-          challenge,
+          challenge: challenge as BufferSource,
           rp: { name: this.rpName },
           user: {
             id: new TextEncoder().encode('presence-check'),
@@ -385,7 +385,9 @@ export class ProofOfPersonhoodManager {
   // ============================================================================
 
   private generateChallenge(): Uint8Array {
-    return crypto.getRandomValues(new Uint8Array(32));
+    const challenge = new Uint8Array(32);
+    crypto.getRandomValues(challenge);
+    return challenge;
   }
 
   private base64ToArrayBuffer(base64: string): ArrayBuffer {

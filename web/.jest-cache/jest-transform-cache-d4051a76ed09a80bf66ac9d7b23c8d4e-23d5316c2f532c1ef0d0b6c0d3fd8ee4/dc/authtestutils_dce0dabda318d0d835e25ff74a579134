@@ -1,0 +1,56 @@
+ccd42ce387c3002bbf2e5ef9b2efb678
+// Mock auth utilities for testing
+"use strict";
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+function _export(target, all) {
+    for(var name in all)Object.defineProperty(target, name, {
+        enumerable: true,
+        get: all[name]
+    });
+}
+_export(exports, {
+    checkPermissions: function() {
+        return checkPermissions;
+    },
+    getUser: function() {
+        return getUser;
+    },
+    requireAuth: function() {
+        return requireAuth;
+    },
+    validateSession: function() {
+        return validateSession;
+    }
+});
+const _globals = require("@jest/globals");
+const getUser = _globals.jest.fn().mockResolvedValue({
+    user: {
+        id: "test-user-id",
+        email: "test@example.com",
+        name: "Test User"
+    },
+    error: null
+});
+const requireAuth = _globals.jest.fn().mockImplementation((handler)=>{
+    return async (req, res)=>{
+        const user = await getUser();
+        if (!user.user) {
+            return res.status(401).json({
+                error: "Unauthorized"
+            });
+        }
+        return handler(req, res);
+    };
+});
+const checkPermissions = _globals.jest.fn().mockResolvedValue(true);
+const validateSession = _globals.jest.fn().mockResolvedValue({
+    valid: true,
+    user: {
+        id: "test-user-id",
+        email: "test@example.com"
+    }
+});
+
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIi9Vc2Vycy9hbGF1Z2hpbmdraXRzdW5lL3NyYy9DaG9pY2VzL3dlYi90ZXN0cy9qZXN0L2hlbHBlcnMvYXV0aC10ZXN0LXV0aWxzLnRzIl0sInNvdXJjZXNDb250ZW50IjpbIi8vIE1vY2sgYXV0aCB1dGlsaXRpZXMgZm9yIHRlc3RpbmdcbmltcG9ydCB7IGplc3QgfSBmcm9tICdAamVzdC9nbG9iYWxzJztcblxuZXhwb3J0IGNvbnN0IGdldFVzZXIgPSBqZXN0LmZuKCkubW9ja1Jlc29sdmVkVmFsdWUoe1xuICB1c2VyOiB7XG4gICAgaWQ6ICd0ZXN0LXVzZXItaWQnLFxuICAgIGVtYWlsOiAndGVzdEBleGFtcGxlLmNvbScsXG4gICAgbmFtZTogJ1Rlc3QgVXNlcicsXG4gIH0sXG4gIGVycm9yOiBudWxsLFxufSlcblxuZXhwb3J0IGNvbnN0IHJlcXVpcmVBdXRoID0gamVzdC5mbigpLm1vY2tJbXBsZW1lbnRhdGlvbigoaGFuZGxlcikgPT4ge1xuICByZXR1cm4gYXN5bmMgKHJlcTogYW55LCByZXM6IGFueSkgPT4ge1xuICAgIGNvbnN0IHVzZXIgPSBhd2FpdCBnZXRVc2VyKClcbiAgICBpZiAoIXVzZXIudXNlcikge1xuICAgICAgcmV0dXJuIHJlcy5zdGF0dXMoNDAxKS5qc29uKHsgZXJyb3I6ICdVbmF1dGhvcml6ZWQnIH0pXG4gICAgfVxuICAgIHJldHVybiBoYW5kbGVyKHJlcSwgcmVzKVxuICB9XG59KVxuXG5leHBvcnQgY29uc3QgY2hlY2tQZXJtaXNzaW9ucyA9IGplc3QuZm4oKS5tb2NrUmVzb2x2ZWRWYWx1ZSh0cnVlKVxuXG5leHBvcnQgY29uc3QgdmFsaWRhdGVTZXNzaW9uID0gamVzdC5mbigpLm1vY2tSZXNvbHZlZFZhbHVlKHtcbiAgdmFsaWQ6IHRydWUsXG4gIHVzZXI6IHtcbiAgICBpZDogJ3Rlc3QtdXNlci1pZCcsXG4gICAgZW1haWw6ICd0ZXN0QGV4YW1wbGUuY29tJyxcbiAgfSxcbn0pIl0sIm5hbWVzIjpbImNoZWNrUGVybWlzc2lvbnMiLCJnZXRVc2VyIiwicmVxdWlyZUF1dGgiLCJ2YWxpZGF0ZVNlc3Npb24iLCJqZXN0IiwiZm4iLCJtb2NrUmVzb2x2ZWRWYWx1ZSIsInVzZXIiLCJpZCIsImVtYWlsIiwibmFtZSIsImVycm9yIiwibW9ja0ltcGxlbWVudGF0aW9uIiwiaGFuZGxlciIsInJlcSIsInJlcyIsInN0YXR1cyIsImpzb24iLCJ2YWxpZCJdLCJtYXBwaW5ncyI6IkFBQUEsa0NBQWtDOzs7Ozs7Ozs7Ozs7SUFzQnJCQSxnQkFBZ0I7ZUFBaEJBOztJQW5CQUMsT0FBTztlQUFQQTs7SUFTQUMsV0FBVztlQUFYQTs7SUFZQUMsZUFBZTtlQUFmQTs7O3lCQXZCUTtBQUVkLE1BQU1GLFVBQVVHLGFBQUksQ0FBQ0MsRUFBRSxHQUFHQyxpQkFBaUIsQ0FBQztJQUNqREMsTUFBTTtRQUNKQyxJQUFJO1FBQ0pDLE9BQU87UUFDUEMsTUFBTTtJQUNSO0lBQ0FDLE9BQU87QUFDVDtBQUVPLE1BQU1ULGNBQWNFLGFBQUksQ0FBQ0MsRUFBRSxHQUFHTyxrQkFBa0IsQ0FBQyxDQUFDQztJQUN2RCxPQUFPLE9BQU9DLEtBQVVDO1FBQ3RCLE1BQU1SLE9BQU8sTUFBTU47UUFDbkIsSUFBSSxDQUFDTSxLQUFLQSxJQUFJLEVBQUU7WUFDZCxPQUFPUSxJQUFJQyxNQUFNLENBQUMsS0FBS0MsSUFBSSxDQUFDO2dCQUFFTixPQUFPO1lBQWU7UUFDdEQ7UUFDQSxPQUFPRSxRQUFRQyxLQUFLQztJQUN0QjtBQUNGO0FBRU8sTUFBTWYsbUJBQW1CSSxhQUFJLENBQUNDLEVBQUUsR0FBR0MsaUJBQWlCLENBQUM7QUFFckQsTUFBTUgsa0JBQWtCQyxhQUFJLENBQUNDLEVBQUUsR0FBR0MsaUJBQWlCLENBQUM7SUFDekRZLE9BQU87SUFDUFgsTUFBTTtRQUNKQyxJQUFJO1FBQ0pDLE9BQU87SUFDVDtBQUNGIn0=

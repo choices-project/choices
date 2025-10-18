@@ -186,7 +186,7 @@ export default function FeedItem({
     if (diffInHours < 1) return 'Just now';
     if (diffInHours < 24) return `${diffInHours}h ago`;
     if (diffInHours < 48) return 'Yesterday';
-    return date.toLocaleDateString();
+    return new Date(date).toLocaleDateString();
   };
 
   // Get content type icon
@@ -231,7 +231,7 @@ export default function FeedItem({
       'Libertarian': 'text-yellow-600 bg-yellow-50 border-yellow-200'
     };
     
-    return partyColors[party] || 'text-gray-600 bg-gray-50 border-gray-200';
+    return partyColors[party] ?? 'text-gray-600 bg-gray-50 border-gray-200';
   };
 
   return (
@@ -335,7 +335,7 @@ export default function FeedItem({
                   <HeartIcon className="w-5 h-5" />
                 )}
                 <span className="text-sm font-medium">
-                  {item.engagementMetrics?.likes || 0}
+                  {item.engagementMetrics?.likes ?? 0}
                 </span>
               </button>
               
@@ -349,7 +349,7 @@ export default function FeedItem({
               >
                 <ChatBubbleLeftIcon className="w-5 h-5" />
                 <span className="text-sm font-medium">
-                  {item.engagementMetrics?.comments || 0}
+                  {item.engagementMetrics?.comments ?? 0}
                 </span>
               </button>
               
@@ -363,7 +363,7 @@ export default function FeedItem({
               >
                 <ShareIcon className="w-5 h-5" />
                 <span className="text-sm font-medium">
-                  {item.engagementMetrics?.shares || 0}
+                  {item.engagementMetrics?.shares ?? 0}
                 </span>
               </button>
             </div>

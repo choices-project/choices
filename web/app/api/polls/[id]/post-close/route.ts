@@ -19,10 +19,11 @@ export const dynamic = 'force-dynamic';
 // POST /api/polls/[id]/post-close - Enable post-close voting
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const pollId = params.id;
+    const { id } = await params;
+    const pollId = id;
 
     if (!pollId) {
       throw new ValidationError('Poll ID is required');
@@ -87,7 +88,7 @@ export async function POST(
       .eq('id', pollId);
 
     if (updateError) {
-      devLog('Error enabling post-close voting:', updateError);
+      devLog('Error enabling post-close voting:', { error: updateError });
       throw new Error('Failed to enable post-close voting');
     }
 
@@ -110,7 +111,7 @@ export async function POST(
     });
 
   } catch (error) {
-    devLog('Error in post-close enable API:', error);
+    devLog('Error in post-close enable API:', { error });
     
     if (error instanceof AuthenticationError) {
       return NextResponse.json(
@@ -150,10 +151,11 @@ export async function POST(
 // DELETE /api/polls/[id]/post-close - Disable post-close voting
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const pollId = params.id;
+    const { id } = await params;
+    const pollId = id;
 
     if (!pollId) {
       throw new ValidationError('Poll ID is required');
@@ -213,7 +215,7 @@ export async function DELETE(
       .eq('id', pollId);
 
     if (updateError) {
-      devLog('Error disabling post-close voting:', updateError);
+      devLog('Error disabling post-close voting:', { error: updateError });
       throw new Error('Failed to disable post-close voting');
     }
 
@@ -234,7 +236,7 @@ export async function DELETE(
     });
 
   } catch (error) {
-    devLog('Error in post-close disable API:', error);
+    devLog('Error in post-close disable API:', { error });
     
     if (error instanceof AuthenticationError) {
       return NextResponse.json(

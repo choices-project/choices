@@ -31,14 +31,14 @@ export async function GET(request: Request) {
       })
 
       if (error) {
-        devLog('Email verification error:', error)
+        devLog('Email verification error:', { error })
         return NextResponse.redirect(
           `${origin}/login?error=${encodeURIComponent('Email verification failed. Please try signing up again.')}`
         )
       }
 
       if (data.session) {
-        devLog('Email verified successfully for:', data.user?.email)
+        devLog('Email verified successfully for:', { email: data.user?.email })
         return NextResponse.redirect(`${origin}${redirectTo}`)
       }
     } else {
@@ -46,14 +46,14 @@ export async function GET(request: Request) {
       const { data, error } = await supabaseClient.auth.exchangeCodeForSession(token)
       
       if (error) {
-        devLog('Token exchange error:', error)
+        devLog('Token exchange error:', { error })
         return NextResponse.redirect(
           `${origin}/login?error=${encodeURIComponent('Verification link expired or invalid. Please try signing up again.')}`
         )
       }
 
       if (data.session) {
-        devLog('Session created successfully for:', data.user.email)
+        devLog('Session created successfully for:', { email: data.user.email })
         return NextResponse.redirect(`${origin}${redirectTo}`)
       }
     }
@@ -64,7 +64,7 @@ export async function GET(request: Request) {
     )
 
   } catch (error) {
-    devLog('Unexpected error in verification:', error)
+    devLog('Unexpected error in verification:', { error })
     return NextResponse.redirect(
       `${origin}/login?error=${encodeURIComponent('Unexpected error during verification')}`
     )

@@ -8,10 +8,11 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const pollId = params.id;
+    const { id } = await params;
+    const pollId = id;
     
     // Always use regular client - no E2E bypasses
     const supabaseClient = await getSupabaseServerClient();
@@ -48,7 +49,7 @@ export async function GET(
 
     return NextResponse.json(sanitizedPoll);
   } catch (error) {
-    devLog('Error fetching poll:', error);
+    devLog('Error fetching poll:', { error });
     return NextResponse.json(
       { error: 'Failed to fetch poll data' },
       { status: 500 }

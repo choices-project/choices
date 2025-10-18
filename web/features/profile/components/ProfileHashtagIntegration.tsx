@@ -22,7 +22,6 @@ import { HashtagInput, HashtagDisplay, HashtagManagement } from '@/features/hash
 import type { Hashtag } from '@/features/hashtags/types';
 import { useHashtagStore, useHashtagActions, useHashtagStats } from '@/lib/stores';
 import { cn } from '@/lib/utils';
-import { withOptional } from '@/lib/utils/objects';
 
 import type { 
   ProfileHashtagIntegration,
@@ -98,18 +97,20 @@ export default function ProfileHashtagIntegration({
       const success = await unfollowHashtag(hashtag.id);
       if (success) {
         // Update local state
-        setHashtagIntegration(prev => withOptional(prev || { user_id: '', last_updated: new Date().toISOString() }, {
+        setHashtagIntegration(prev => ({
+          ...(prev || { user_id: '', last_updated: new Date().toISOString() }),
           followed_hashtags: (prev?.followed_hashtags || []).filter(id => id !== hashtag.id),
           last_updated: new Date().toISOString()
         }));
         
         // Update profile
         onUpdate({
-          hashtags: withOptional(hashtagIntegration || { user_id: '', last_updated: new Date().toISOString() }, {
+          hashtags: {
+            ...(hashtagIntegration || { user_id: '', last_updated: new Date().toISOString() }),
             followed_hashtags: (hashtagIntegration?.followed_hashtags || []).filter(id => id !== hashtag.id),
             last_updated: new Date().toISOString(),
             user_id: hashtagIntegration?.user_id || ''
-          })
+          }
         });
       }
     } catch (error) {
@@ -120,7 +121,8 @@ export default function ProfileHashtagIntegration({
   // Handle hashtag reordering
   const handleReorderHashtags = (reorderedHashtags: any[]) => {
     // Update local state with reordered hashtags
-    setHashtagIntegration(prev => withOptional(prev || { user_id: '', last_updated: new Date().toISOString() }, {
+    setHashtagIntegration(prev => ({
+      ...(prev || { user_id: '', last_updated: new Date().toISOString() }),
       followed_hashtags: reorderedHashtags.map(h => h.id),
       last_updated: new Date().toISOString(),
       user_id: prev?.user_id || ''
@@ -129,7 +131,8 @@ export default function ProfileHashtagIntegration({
 
   // Handle custom interests update
   const handleCustomInterestsUpdate = (interests: string[]) => {
-    setHashtagIntegration(prev => withOptional(prev || { user_id: '', last_updated: new Date().toISOString() }, {
+    setHashtagIntegration(prev => ({
+      ...(prev || { user_id: '', last_updated: new Date().toISOString() }),
       custom_hashtags: interests,
       last_updated: new Date().toISOString(),
       user_id: prev?.user_id || ''
@@ -137,28 +140,31 @@ export default function ProfileHashtagIntegration({
     
     onUpdate({
       custom_interests: interests,
-      hashtags: withOptional(hashtagIntegration || { user_id: '', last_updated: new Date().toISOString() }, {
+      hashtags: {
+        ...(hashtagIntegration || { user_id: '', last_updated: new Date().toISOString() }),
         custom_hashtags: interests,
         last_updated: new Date().toISOString(),
         user_id: hashtagIntegration?.user_id || ''
-      })
+      }
     });
   };
 
   // Handle primary hashtags update
   const handlePrimaryHashtagsUpdate = (hashtagIds: string[]) => {
-    setHashtagIntegration(prev => withOptional(prev || { user_id: '', last_updated: new Date().toISOString() }, {
+    setHashtagIntegration(prev => ({
+      ...(prev || { user_id: '', last_updated: new Date().toISOString() }),
       primary_hashtags: hashtagIds,
       last_updated: new Date().toISOString(),
       user_id: prev?.user_id || ''
     }));
     
     onUpdate({
-      hashtags: withOptional(hashtagIntegration || { user_id: '', last_updated: new Date().toISOString() }, {
+      hashtags: {
+        ...(hashtagIntegration || { user_id: '', last_updated: new Date().toISOString() }),
         primary_hashtags: hashtagIds,
         last_updated: new Date().toISOString(),
         user_id: hashtagIntegration?.user_id || ''
-      })
+      }
     });
   };
 

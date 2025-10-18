@@ -224,7 +224,7 @@ export function useUserType(userId?: string) {
       const data = await response.json()
       return data.behavior
     } catch (error) {
-      devLog('Error fetching user behavior:', error)
+      devLog('Error fetching user behavior:', { error: error instanceof Error ? error.message : String(error) })
       // Return default behavior for new users
       return {
         login_frequency: 0,
@@ -265,7 +265,7 @@ export function useUserType(userId?: string) {
 
       setSegmentationData(segmentationData)
     } catch (error) {
-      devLog('Error loading user type:', error)
+      devLog('Error loading user type:', { error: error instanceof Error ? error.message : String(error) })
       setError('Failed to load user type data')
     } finally {
       setIsLoading(false)
@@ -289,7 +289,7 @@ export function useUserType(userId?: string) {
         throw new Error('Failed to update user type')
       }
     } catch (error) {
-      devLog('Error updating user type:', error)
+      devLog('Error updating user type:', { error: error instanceof Error ? error.message : String(error) })
       setError('Failed to update user type')
     }
   }, [userId, loadUserType])
@@ -304,7 +304,7 @@ export function useUserType(userId?: string) {
         body: JSON.stringify({ user_id: userId, feature })
       })
     } catch (error) {
-      devLog('Error tracking feature usage:', error)
+      devLog('Error tracking feature usage:', { error: error instanceof Error ? error.message : String(error) })
     }
   }, [userId])
 
@@ -318,7 +318,7 @@ export function useUserType(userId?: string) {
         body: JSON.stringify({ user_id: userId, duration })
       })
     } catch (error) {
-      devLog('Error tracking session:', error)
+      devLog('Error tracking session:', { error: error instanceof Error ? error.message : String(error) })
     }
   }, [userId])
 

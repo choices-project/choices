@@ -64,8 +64,8 @@ export class AdvancedQueryOptimizer {
   private supabase!: SupabaseClient
   private queryCache: Map<string, QueryCacheEntry<unknown>> = new Map()
   private metrics: QueryMetrics[] = []
-  private maxCacheSize: number = 1000
-  private maxMetricsHistory: number = 10000
+  private maxCacheSize = 1000
+  private maxMetricsHistory = 10000
 
   constructor() {
     this.initializeSupabase()
@@ -388,7 +388,7 @@ export class AdvancedQueryOptimizer {
   /**
    * Get from cache
    */
-  private getFromCache(key: string): unknown | null {
+  private getFromCache(key: string): unknown {
     const entry = this.queryCache.get(key)
     
     if (!entry) {

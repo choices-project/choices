@@ -92,7 +92,7 @@ export class GeographicService {
         metadata: { zip_code: cleanZip }
       };
     } catch (error) {
-      throw new Error(`ZIP lookup failed: ${error}`);
+      throw new Error(`ZIP lookup failed: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -129,7 +129,7 @@ export class GeographicService {
         metadata: { latitude: lat, longitude: lon }
       };
     } catch (error) {
-      throw new Error(`Coordinate lookup failed: ${error}`);
+      throw new Error(`Coordinate lookup failed: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -155,7 +155,7 @@ export class GeographicService {
 
       return data || [];
     } catch (error) {
-      throw new Error(`District lookup failed: ${error}`);
+      throw new Error(`District lookup failed: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -185,7 +185,7 @@ export class GeographicService {
 
       return data || [];
     } catch (error) {
-      throw new Error(`Redistricting history lookup failed: ${error}`);
+      throw new Error(`Redistricting history lookup failed: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -210,7 +210,7 @@ export class GeographicService {
 
       return !!data;
     } catch (error) {
-      throw new Error(`OCD validation failed: ${error}`);
+      throw new Error(`OCD validation failed: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -234,7 +234,7 @@ export class GeographicService {
 
       return data;
     } catch (error) {
-      throw new Error(`Geographic lookup failed: ${error}`);
+      throw new Error(`Geographic lookup failed: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -291,7 +291,7 @@ export class GeographicService {
 
       return data || [];
     } catch (error) {
-      throw new Error(`Geographic candidate search failed: ${error}`);
+      throw new Error(`Geographic candidate search failed: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -350,7 +350,7 @@ export class GeographicService {
 
       return data || [];
     } catch (error) {
-      throw new Error(`Geographic election search failed: ${error}`);
+      throw new Error(`Geographic election search failed: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -381,7 +381,7 @@ export class GeographicService {
       });
       return mappings.length;
     } catch (error) {
-      throw new Error(`ZIP mapping import failed: ${error}`);
+      throw new Error(`ZIP mapping import failed: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -413,7 +413,7 @@ export class GeographicService {
       });
       return mappings.length;
     } catch (error) {
-      throw new Error(`Lat/Lon mapping import failed: ${error}`);
+      throw new Error(`Lat/Lon mapping import failed: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -454,7 +454,7 @@ export class GeographicService {
         coverage_by_state: coverageByState
       };
     } catch (error) {
-      throw new Error(`Geographic stats failed: ${error}`);
+      throw new Error(`Geographic stats failed: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 }

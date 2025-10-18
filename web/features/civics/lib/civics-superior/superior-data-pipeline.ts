@@ -13,14 +13,11 @@
  * - Rate limiting and API failure handling
  * - Privacy-preserving data storage
  * 
- * @fileoverview Superior data pipeline for representative information
- * @version 2.0.0
- * @since 2024-10-08
- * @author Civics Platform Team
  */
 
 import { createClient } from '@supabase/supabase-js';
 
+import { logger } from '@/lib/utils/logger';
 import { devLog } from '@/lib/utils/logger';
 
 import { type CanonicalIdService, canonicalIdService } from '../civics/canonical-id-service';
@@ -295,12 +292,12 @@ export class SuperiorDataPipeline {
       // Rate limit or service unavailable - longer backoff
       const backoffMs = Math.min(300000, 30000 * Math.pow(2, failureCount - 1)); // Max 5 minutes
       this.apiBackoffUntil[apiName] = now + backoffMs;
-      devLog(`API ${apiName} rate limited, backing off for ${Math.ceil(backoffMs / 1000)}s`);
+      devLog(`API ${apiName} rate limited, backing off for ${Math.ceil(backoffMs / 1000)}s`, { apiName, backoffMs });
     } else if (failureCount >= 3) {
       // Multiple failures - moderate backoff
       const backoffMs = Math.min(60000, 10000 * failureCount); // Max 1 minute
       this.apiBackoffUntil[apiName] = now + backoffMs;
-      devLog(`API ${apiName} multiple failures, backing off for ${Math.ceil(backoffMs / 1000)}s`);
+      devLog(`API ${apiName} multiple failures, backing off for ${Math.ceil(backoffMs / 1000)}s`, { apiName, backoffMs });
     }
   }
 
@@ -500,7 +497,7 @@ export class SuperiorDataPipeline {
           this.recordApiSuccess('congressGov');
         }
       } catch (error: any) {
-        devLog('Congress.gov data collection failed:', error);
+        devLog('Congress.gov data collection failed:', { error });
         this.recordApiFailure('congressGov', error.status);
       }
     } else if (this.shouldSkipApi('congressGov')) {
@@ -518,7 +515,7 @@ export class SuperiorDataPipeline {
           this.recordApiSuccess('googleCivic');
         }
       } catch (error: any) {
-        devLog('Google Civic data collection failed:', error);
+        devLog('Google Civic data collection failed:', { error });
         this.recordApiFailure('googleCivic', error.status);
       }
     } else if (this.shouldSkipApi('googleCivic')) {
@@ -534,7 +531,7 @@ export class SuperiorDataPipeline {
           this.recordApiSuccess('fec');
         }
       } catch (error: any) {
-        devLog('FEC data collection failed:', error);
+        devLog('FEC data collection failed:', { error });
         this.recordApiFailure('fec', error.status);
       }
     } else if (this.shouldSkipApi('fec')) {
@@ -549,7 +546,7 @@ export class SuperiorDataPipeline {
           this.recordApiSuccess('openStatesApi');
         }
       } catch (error: any) {
-        devLog('OpenStates API data collection failed:', error);
+        devLog('OpenStates API data collection failed:', { error });
         this.recordApiFailure('openStatesApi', error.status);
       }
     } else if (this.shouldSkipApi('openStatesApi')) {
@@ -564,7 +561,7 @@ export class SuperiorDataPipeline {
           this.recordApiSuccess('wikipedia');
         }
       } catch (error: any) {
-        devLog('Wikipedia data collection failed:', error);
+        devLog('Wikipedia data collection failed:', { error });
         this.recordApiFailure('wikipedia', error.status);
       }
     } else if (this.shouldSkipApi('wikipedia')) {
@@ -882,7 +879,7 @@ export class SuperiorDataPipeline {
       });
     }
     
-    logger.info('🔍 Social Media: Total collected', socialMedia.length, 'items');
+    logger.info('🔍 Social Media: Total collected', { count: socialMedia.length, type: 'items' });
     return socialMedia;
   }
   
@@ -1172,7 +1169,7 @@ export class SuperiorDataPipeline {
               .single();
           
             if (updateError) {
-              devLog('Error updating enhanced representative data:', updateError);
+              devLog('Error updating enhanced representative data:', { error: updateError });
               continue; // Skip social media storage if representative update failed
           } else {
               repData = updateData;
@@ -1192,7 +1189,7 @@ export class SuperiorDataPipeline {
           .single();
         
           if (insertError) {
-            devLog('Error inserting enhanced representative data:', insertError);
+            devLog('Error inserting enhanced representative data:', { error: insertError });
             continue; // Skip social media storage if representative insertion failed
           } else {
             repData = insertData;
@@ -1205,7 +1202,7 @@ export class SuperiorDataPipeline {
       
       devLog(`Successfully stored enhanced data`);
     } catch (error) {
-      devLog('Error storing enhanced data:', error);
+      devLog('Error storing enhanced data:', { error });
     }
   }
   
@@ -1241,7 +1238,7 @@ export class SuperiorDataPipeline {
             };
           }
         } else {
-          logger.info('🔍 DEBUG: Congress.gov API FAILED with status:', response.status);
+          logger.info('🔍 DEBUG: Congress.gov API FAILED with status:', { status: response.status });
           const error = new Error(`Congress.gov API failed with status ${response.status}`);
           (error as any).status = response.status;
           throw error;
@@ -1297,7 +1294,7 @@ export class SuperiorDataPipeline {
     }
   }
   private async getGoogleCivicData(rep: any): Promise<any> { 
-    logger.info('Getting Google Civic data for:', rep.name);
+    logger.info('Getting Google Civic data for:', { name: rep.name });
     
     try {
       // Google Civic API - focus on elections and voter information (not representative lookup)
@@ -1367,14 +1364,14 @@ export class SuperiorDataPipeline {
     }
   }
   private async getFECData(rep: any): Promise<any> { 
-    logger.info('Getting FEC data for:', rep.name);
+    logger.info('Getting FEC data for:', { name: rep.name });
     
     try {
       // First, try to find the candidate by name and state if no FEC ID is available
       let candidateId = rep.fec_id;
       
       if (!candidateId) {
-        logger.info(`🔍 DEBUG: No FEC ID available, searching by name and state for ${rep.name}`);
+        logger.info(`🔍 DEBUG: No FEC ID available, searching by name and state for ${rep.name}`, { name: rep.name });
         
         // Convert state name to state code for FEC API
         const stateCodeMap = {
@@ -1516,8 +1513,8 @@ export class SuperiorDataPipeline {
    * Get social media data and other information from OpenStates API
    */
   private async getOpenStatesApiData(rep: any): Promise<any> {
-    logger.info('Getting OpenStates API data for:', rep.name);
-    logger.info('🔍 OpenStates API: Starting OPTIMIZED data collection for', rep.name);
+    logger.info('Getting OpenStates API data for:', { name: rep.name });
+    logger.info('🔍 OpenStates API: Starting OPTIMIZED data collection for', { name: rep.name });
     
     try {
       const apiKey = process.env.OPEN_STATES_API_KEY;
@@ -1533,7 +1530,7 @@ export class SuperiorDataPipeline {
 
       // OPTIMIZATION: Use specific OpenStates ID if available
       if (rep.openstates_id) {
-        logger.info('🚀 OpenStates API: Using OPTIMIZED direct person lookup by ID:', rep.openstates_id);
+        logger.info('🚀 OpenStates API: Using OPTIMIZED direct person lookup by ID:', { id: rep.openstates_id });
 
       // Add delay before API call to respect rate limits
       await new Promise(resolve => setTimeout(resolve, 1000)); // 1 second delay
@@ -1552,16 +1549,16 @@ export class SuperiorDataPipeline {
           }
         );
         
-        logger.info('🔍 OpenStates API: Direct person lookup response status', response.status);
+        logger.info('🔍 OpenStates API: Direct person lookup response status', { status: response.status });
 
         if (!response.ok) {
           if (response.status === 429) {
-            logger.info('OpenStates API rate limited, waiting 30 seconds...');
+            logger.info('OpenStates API rate limited, waiting 30 seconds...', {});
             await new Promise(resolve => setTimeout(resolve, 30000)); // Wait 30 seconds for rate limit
             return {}; // Return empty to avoid further requests
           }
           if (response.status === 404) {
-            logger.info('OpenStates API: Person not found by ID, falling back to jurisdiction search');
+            logger.info('OpenStates API: Person not found by ID, falling back to jurisdiction search', {});
             // Fall back to jurisdiction search if direct lookup fails
             return await this.getOpenStatesApiDataByJurisdiction(rep, apiKey);
           }
@@ -1617,7 +1614,7 @@ export class SuperiorDataPipeline {
           efficiencyGain: '100%' // Direct lookup vs jurisdiction search
         };
       } else {
-        logger.info('⚠️ OpenStates API: No OpenStates ID available, falling back to jurisdiction search');
+        logger.info('⚠️ OpenStates API: No OpenStates ID available, falling back to jurisdiction search', {});
         return await this.getOpenStatesApiDataByJurisdiction(rep, apiKey);
       }
     } catch (error) {
@@ -1630,7 +1627,7 @@ export class SuperiorDataPipeline {
    * Fallback method for jurisdiction-based search (less efficient)
    */
   private async getOpenStatesApiDataByJurisdiction(rep: any, apiKey: string): Promise<any> {
-    logger.info('🔍 OpenStates API: Using FALLBACK jurisdiction search for', rep.state);
+    logger.info('🔍 OpenStates API: Using FALLBACK jurisdiction search for', { state: rep.state });
 
     // Add delay before API call to respect rate limits
     await new Promise(resolve => setTimeout(resolve, 1000)); // 1 second delay
@@ -1649,11 +1646,11 @@ export class SuperiorDataPipeline {
         }
       );
       
-    logger.info('🔍 OpenStates API: Jurisdiction search response status', response.status);
+    logger.info('🔍 OpenStates API: Jurisdiction search response status', { status: response.status });
 
       if (!response.ok) {
         if (response.status === 429) {
-          logger.info('OpenStates API rate limited, waiting 30 seconds...');
+          logger.info('OpenStates API rate limited, waiting 30 seconds...', {});
           await new Promise(resolve => setTimeout(resolve, 30000)); // Wait 30 seconds for rate limit
           return {}; // Return empty to avoid further requests
         }
@@ -1781,7 +1778,7 @@ export class SuperiorDataPipeline {
   }
   
   private async getWikipediaData(rep: any): Promise<any> { 
-    logger.info('Getting Wikipedia data for:', rep.name);
+    logger.info('Getting Wikipedia data for:', { name: rep.name });
     
     try {
       // Try different name formats for Wikipedia search

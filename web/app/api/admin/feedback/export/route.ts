@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
       .single();
 
     if (profileError) {
-      devLog('Error fetching user profile:', profileError);
+      devLog('Error fetching user profile:', { error: profileError });
       return NextResponse.json(
         { error: 'Failed to verify user permissions' },
         { status: 500 }
@@ -118,7 +118,7 @@ export async function GET(request: NextRequest) {
     const { data: feedback, error } = await query;
 
     if (error) {
-      devLog('Error fetching feedback for export:', error);
+      devLog('Error fetching feedback for export:', { error });
       return NextResponse.json(
         { error: 'Failed to fetch feedback' },
         { status: 500 }
@@ -136,7 +136,7 @@ export async function GET(request: NextRequest) {
     return response;
 
   } catch (error) {
-    devLog('Error in feedback export API:', error);
+    devLog('Error in feedback export API:', { error });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

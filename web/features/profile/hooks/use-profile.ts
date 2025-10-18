@@ -12,7 +12,6 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
-import { withOptional } from '@/lib/utils/objects';
 
 import { 
   getCurrentProfile, 
@@ -88,11 +87,12 @@ export function useProfileUpdate(): UseProfileUpdateReturn {
       const previousProfile = queryClient.getQueryData(profileQueryKeys.current());
 
       // Optimistically update
-      queryClient.setQueryData(profileQueryKeys.current(), (old: any) => {
-        if (!old?.data) return old;
+      queryClient.setQueryData(profileQueryKeys.current(), (old: unknown) => {
+        if (!old || typeof old !== 'object' || !('data' in old)) return old;
+        const oldData = old as { data: UserProfile };
         return {
-          ...(old || {}),
-          data: { ...(old.data || {}), ...(newData || {}) },
+          ...oldData,
+          data: { ...(oldData.data || {}), ...(newData || {}) },
         };
       });
 
@@ -272,7 +272,11 @@ export function useProfileData() {
   const loadingStates = useProfileLoadingStates();
   const errorStates = useProfileErrorStates();
 
-  return withOptional(profile, withOptional(loadingStates, errorStates));
+  return {
+    ...profile,
+    ...loadingStates,
+    ...errorStates
+  };
 }
 
 // ============================================================================

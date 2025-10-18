@@ -3,7 +3,8 @@
 import { Search, X } from 'lucide-react';
 import React from 'react';
 
-import { withOptional } from '@/lib/utils/objects';
+import { stripUndefinedDeep } from '@/lib/utils/clean';
+
 
 interface Filters {
   type: string;
@@ -24,18 +25,18 @@ export const FeedbackFilters: React.FC<FeedbackFiltersProps> = ({
   onFiltersChange 
 }) => {
   const handleFilterChange = (key: keyof Filters, value: string) => {
-    onFiltersChange(withOptional(filters, { [key]: value }));
+    onFiltersChange(stripUndefinedDeep({ ...stripUndefinedDeep(filters), [key]: value }));
   };
 
   const clearFilters = () => {
-    onFiltersChange({
+    onFiltersChange(stripUndefinedDeep({
       type: '',
       sentiment: '',
       status: '',
       priority: '',
       dateRange: 'all',
       search: ''
-    });
+    }));
   };
 
   const hasActiveFilters = Object.values(filters).some(value => 

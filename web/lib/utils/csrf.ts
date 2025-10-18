@@ -24,7 +24,7 @@ export function validateCSRFToken(token: string, sessionToken: string): boolean 
  * Generate a CSRF token for a session
  */
 export function generateSessionCSRFToken(sessionId: string): string {
-  const secret = process.env.CSRF_SECRET || 'default-csrf-secret';
+  const secret = process.env.CSRF_SECRET ?? 'default-csrf-secret';
   return crypto.createHmac('sha256', secret).update(sessionId).digest('hex');
 }
 

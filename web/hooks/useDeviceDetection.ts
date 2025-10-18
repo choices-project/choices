@@ -108,7 +108,7 @@ export function useDeviceDetection() {
         const estimate = await navigator.storage.estimate()
         capabilities.storage_quota = estimate.quota || 0
       } catch (error) {
-        devLog('Error checking storage quota:', error)
+        devLog('Error checking storage quota:', { error: error instanceof Error ? error.message : String(error) })
       }
     }
 
@@ -128,7 +128,7 @@ export function useDeviceDetection() {
         const battery = await (navigator as Navigator & { getBattery?: () => Promise<{ level: number }> }).getBattery!()
         capabilities.battery_level = battery.level * 100
       } catch (error) {
-        devLog('Error checking battery level:', error)
+        devLog('Error checking battery level:', { error: error instanceof Error ? error.message : String(error) })
       }
     }
 
@@ -217,12 +217,12 @@ export function useDeviceDetection() {
       setCapabilities(capabilities)
       setOptimizationSettings(optimizationSettings)
 
-      devLog('Device detected:', deviceInfo)
-      devLog('Capabilities:', capabilities)
-      devLog('Optimization settings:', optimizationSettings)
+      devLog('Device detected:', { deviceInfo })
+      devLog('Capabilities:', { capabilities })
+      devLog('Optimization settings:', { optimizationSettings })
 
     } catch (error) {
-      devLog('Error detecting device:', error)
+      devLog('Error detecting device:', { error: error instanceof Error ? error.message : String(error) })
       setError('Failed to detect device capabilities')
     } finally {
       setIsLoading(false)
@@ -230,7 +230,7 @@ export function useDeviceDetection() {
   }, [detectDeviceType, detectOS, detectBrowser, checkCapabilities, getOptimizationSettings])
 
   const updateOptimizationSettings = useCallback((newSettings: Partial<OptimizationSettings>) => {
-    setOptimizationSettings(prev => prev ? withOptional(prev, newSettings) : null)
+    setOptimizationSettings(prev => prev ? { ...prev, ...newSettings } : null)
   }, [])
 
   const checkNetworkStatus = useCallback(async (): Promise<{ online: boolean; speed: 'slow' | 'medium' | 'fast' }> => {
@@ -256,7 +256,7 @@ export function useDeviceDetection() {
       stream.getTracks().forEach(track => track.stop())
       return true
     } catch (error) {
-      devLog('Camera access denied:', error)
+      devLog('Camera access denied:', { error: error instanceof Error ? error.message : String(error) })
       return false
     }
   }, [capabilities])
@@ -270,7 +270,7 @@ export function useDeviceDetection() {
       })
       return true
     } catch (error) {
-      devLog('Location access denied:', error)
+      devLog('Location access denied:', { error: error instanceof Error ? error.message : String(error) })
       return false
     }
   }, [capabilities])
@@ -286,7 +286,7 @@ export function useDeviceDetection() {
       }
       return false
     } catch (error) {
-      devLog('Failed to enable offline mode:', error)
+      devLog('Failed to enable offline mode:', { error: error instanceof Error ? error.message : String(error) })
       return false
     }
   }, [capabilities])

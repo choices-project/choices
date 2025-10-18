@@ -11,14 +11,13 @@ import { logger } from '@/lib/utils/logger';
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { alertId: string } }
+  { params }: { params: Promise<{ alertId: string }> }
 ) {
   try {
+    const { alertId } = await params;
     // Admin authentication
     const authGate = await requireAdminOr401();
     if (authGate) return authGate;
-
-    const { alertId } = params;
 
     // Resolve the alert
     const resolved = performanceMonitor.resolveAlert(alertId);

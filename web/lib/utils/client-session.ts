@@ -57,7 +57,7 @@ class ClientSessionManager {
         method: 'GET',
         credentials: 'include', // Ensure cookies are sent
         headers: {
-          "X-CSRF-Token": this.getCsrfToken() || "",
+          "X-CSRF-Token": this.getCsrfToken() ?? "",
           'Content-Type': 'application/json',
         },
       })
@@ -102,7 +102,7 @@ class ClientSessionManager {
         method: 'POST',
         credentials: 'include',
         headers: {
-          "X-CSRF-Token": this.getCsrfToken() || "",
+          "X-CSRF-Token": this.getCsrfToken() ?? "",
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ email, password }),
@@ -115,7 +115,7 @@ class ClientSessionManager {
         await this.initializeSession()
         return { success: true }
       } else {
-        return { success: false, error: data.message || 'Login failed' }
+        return { success: false, error: data.message ?? 'Login failed' }
       }
     } catch (error) {
       logger.error('Login error:', error instanceof Error ? error : new Error(String(error)))
@@ -148,7 +148,7 @@ class ClientSessionManager {
         method: 'POST',
         credentials: 'include',
         headers: {
-          "X-CSRF-Token": this.getCsrfToken() || "",
+          "X-CSRF-Token": this.getCsrfToken() ?? "",
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(userData),

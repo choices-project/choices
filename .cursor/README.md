@@ -1,238 +1,168 @@
-# Cursor AI Configuration - Choices Platform
+# Cursor Configuration - Choices Platform
 
-**Created:** January 19, 2025  
-**Status:** 🚀 **ACTIVE** - Complete AI agent optimization  
-**Scope:** All Cursor AI agents working on Choices platform  
+**Created:** January 27, 2025  
+**Updated:** January 27, 2025  
+**Purpose:** Streamlined configuration for AI agents working on the Choices Platform
 
-## 🎯 **OVERVIEW**
+## 🚀 Quick Start
 
-This directory contains the complete Cursor AI optimization system for the Choices platform. It provides advanced control over AI agent behavior, ensuring consistent, high-quality implementations.
-
-## 📁 **CONFIGURATION FILES**
-
-### **Core Configuration**
-- **`team-rules.md`** - Global agent behavior rules
-- **`custom-instructions.md`** - Specific behavior guidance
-- **`agents.md`** - Specialized agent roles and configurations
-- **`context.md`** - Complete project context
-- **`README.md`** - This documentation
-
-### **Hooks Directory**
-- **`hooks/pre-commit.js`** - Pre-commit validation
-- **`hooks/post-commit.js`** - Post-commit validation
-
-## 🚀 **QUICK START**
-
-### **1. Automatic Activation**
-The configuration is automatically active for all Cursor AI agents working on the Choices platform.
-
-### **2. Manual Configuration**
-If you need to manually configure agents:
-
+### **Essential Commands**
 ```bash
-# Navigate to project root
-cd /Users/alaughingkitsune/src/Choices
+# Fix 90% of errors automatically
+npm run auto-fix
 
-# The configuration is already active
-# No additional setup required
+# Verify everything is working
+npm run types:strict && npm run lint:gradual && npm run test:all
 ```
 
-### **3. Validation**
-The system includes automatic validation:
-- **Pre-commit**: Validates agent behavior before commits
-- **Post-commit**: Validates agent behavior after commits
+### **Development Workflow**
+```bash
+# Start development
+npm run dev
+npm run test:jest -- --watch
 
-## 🎯 **AGENT BEHAVIOR CONTROL**
-
-### **System Date Accuracy**
-- **Current Date**: Always check system date dynamically
-- **File Updates**: Only update files with current date when actually modifying them (for change tracking)
-- **Timezone**: UTC
-- **Format**: ISO 8601 (YYYY-MM-DDTHH:mm:ss.sssZ)
-- **Validation**: Automatic date accuracy validation
-
-### **Error Handling Standards**
-- **Base Class**: `ApplicationError`
-- **Structured Logging**: Custom logger utility
-- **Error Recovery**: Graceful error recovery
-- **User Feedback**: User-friendly error messages
-
-### **Unused Variable Handling**
-- **Research-First**: Investigate before removal
-- **Side Effect Check**: Verify no side effects
-- **Dependency Check**: Check for dependencies
-- **Proper Removal**: Remove if truly unused
-
-### **Implementation Standards**
-- **Complete Solutions**: No lazy implementations
-- **Error Handling**: Comprehensive error handling
-- **Testing**: Comprehensive testing
-- **Best Practices**: Follow established patterns
-
-## 🤖 **SPECIALIZED AGENTS**
-
-### **Available Agents**
-- **ERROR_HANDLING_AGENT** - Error handling implementation
-- **CODE_CLEANUP_AGENT** - Unused code identification
-- **DATE_ACCURACY_AGENT** - Date handling accuracy
-- **IMPLEMENTATION_AGENT** - Perfect implementation
-- **ZUSTAND_OPTIMIZATION_AGENT** - State management optimization
-- **API_ROUTE_AGENT** - API route implementation
-- **PWA_AGENT** - PWA implementation
-- **ERROR_BOUNDARY_AGENT** - Error boundary implementation
-
-### **Agent Activation**
-Agents automatically activate based on:
-- **Context Analysis**: Project context analysis
-- **User Requests**: Specific user requests
-- **Pattern Recognition**: Code pattern recognition
-- **Task Requirements**: Specific task requirements
-
-## 🔧 **CONFIGURATION OPTIONS**
-
-### **Team Rules**
-- **Global Behavior**: Applies to all agents
-- **Mandatory Standards**: Enforced standards
-- **Quality Assurance**: Quality requirements
-- **Best Practices**: Established best practices
-
-### **Custom Instructions**
-- **Specific Guidance**: Task-specific instructions
-- **Behavior Control**: Agent behavior control
-- **Quality Standards**: Quality requirements
-- **Implementation Standards**: Implementation requirements
-
-### **Agent Roles**
-- **Specialized Roles**: Specific agent roles
-- **Behavior Patterns**: Documented behavior patterns
-- **Trigger Conditions**: Activation conditions
-- **Success Criteria**: Success requirements
-
-## 📊 **MONITORING & VALIDATION**
-
-### **Pre-Commit Validation**
-- **Date Accuracy**: Date format validation
-- **Error Handling**: Error pattern validation
-- **Code Quality**: Code quality validation
-- **Implementation**: Implementation validation
-
-### **Post-Commit Validation**
-- **Behavior Analysis**: Agent behavior analysis
-- **Quality Metrics**: Quality measurement
-- **Performance Tracking**: Performance monitoring
-- **Improvement Suggestions**: Continuous improvement
-
-## 🎯 **BENEFITS**
-
-### **For Developers**
-- **Consistent Quality**: Consistent, high-quality code
-- **Reduced Errors**: Fewer implementation errors
-- **Faster Development**: Accelerated development
-- **Better Practices**: Improved development practices
-
-### **For the Project**
-- **Code Quality**: Higher code quality
-- **Maintainability**: Better maintainability
-- **Performance**: Improved performance
-- **Security**: Enhanced security
-
-### **For AI Agents**
-- **Behavior Control**: Better behavior control
-- **Quality Assurance**: Quality assurance
-- **Performance Optimization**: Performance optimization
-- **Continuous Learning**: Continuous improvement
-
-## 🚀 **USAGE EXAMPLES**
-
-### **Error Handling**
-```typescript
-// ✅ CORRECT - Agent will implement this way
-throw new ApplicationError(
-  'Failed to fetch polling data',
-  500,
-  'POLLING_FETCH_ERROR',
-  { context: { pollId, userId } }
-);
-
-// ❌ INCORRECT - Agent will avoid this
-throw new Error('Something went wrong');
+# Before committing
+npm run auto-fix:test
 ```
 
-### **Date Handling**
-```typescript
-// ✅ CORRECT - Agent will use this format
-const timestamp = '2025-01-19T00:00:00.000Z';
-const currentDate = '2025-01-19';
+## 📁 Configuration Files
 
-// ❌ INCORRECT - Agent will avoid this
-const timestamp = '2024-01-01';
-const currentDate = 'today';
+### **Agent Guidance**
+- `AGENT_GUIDE.md` - Essential guide for agents
+- `AGENT_COMMANDS.md` - Essential commands for agents
+- `AGENT_RULES.md` - Core rules and principles
+- `AGENT_CHECKLIST.md` - Step-by-step checklist
+- `QUICK_START.md` - 30-second setup guide
+
+## 🎯 Key Features
+
+### **Automated Error Fixing**
+The platform includes a sophisticated auto-fix system that:
+- Fixes 90% of common errors automatically
+- Uses testing infrastructure for verification
+- Handles TypeScript, ESLint, and test errors
+- Provides iterative improvement
+
+### **Quality Gates**
+- TypeScript strict mode enforcement
+- ESLint with comprehensive rules
+- Comprehensive test coverage
+- Security and performance testing
+- Automated verification pipeline
+
+### **Development Tools**
+- Hot reload development server
+- Test watchers for continuous feedback
+- Automated error fixing
+- Quality verification commands
+
+## 🔧 Usage
+
+### **For New Agents**
+1. Read `QUICK_START.md` for 30-second setup
+2. Follow `AGENT_CHECKLIST.md` for step-by-step guidance
+3. Use `AGENT_COMMANDS.md` for essential commands
+4. Follow `AGENT_RULES.md` for best practices
+
+### **For Experienced Agents**
+1. Use `AGENT_COMMANDS.md` for quick reference
+2. Follow `AGENT_RULES.md` for quality standards
+3. Use `AGENT_CHECKLIST.md` for verification
+
+## 🚨 Emergency Procedures
+
+### **When Everything Breaks**
+```bash
+npm run auto-fix && npm run test:all
 ```
 
-### **Implementation**
-```typescript
-// ✅ CORRECT - Agent will implement complete solutions
-export async function fetchPollingData(pollId: string) {
-  try {
-    // Complete implementation with error handling
-    const { data, error } = await supabase
-      .from('polls')
-      .select('*')
-      .eq('id', pollId)
-      .single();
-    
-    if (error) {
-      throw new ApplicationError(
-        `Failed to fetch poll ${pollId}`,
-        404,
-        'POLL_NOT_FOUND',
-        { context: { pollId } }
-      );
-    }
-    
-    return data;
-  } catch (error) {
-    logger.error('Polling data fetch failed', { pollId, error });
-    throw error;
-  }
-}
-
-// ❌ INCORRECT - Agent will avoid lazy implementations
-export async function fetchPollingData(pollId: string) {
-  // TODO: Add proper error handling
-  return await supabase.from('polls').select('*').eq('id', pollId);
-}
+### **When Tests Fail**
+```bash
+npm run auto-fix
+npm run test:jest -- --verbose
 ```
 
-## 📚 **DOCUMENTATION**
+### **When TypeScript Errors**
+```bash
+npm run auto-fix
+npm run types:strict
+```
 
-### **Related Documentation**
-- **`ERROR_AUDIT.md`** - Error handling audit
-- **`ERROR_CONSOLIDATION_ROADMAP.md`** - Error handling roadmap
-- **`PROJECT_IMPROVEMENT_ANALYSIS_2025.md`** - Project improvements
-- **`CURSOR_AI_OPTIMIZATION_GUIDE_2025.md`** - Complete optimization guide
+## 📊 Success Metrics
 
-### **Configuration Files**
-- **`team-rules.md`** - Global behavior rules
-- **`custom-instructions.md`** - Specific instructions
-- **`agents.md`** - Agent configurations
-- **`context.md`** - Project context
+### **Green Status (Good)**
+- ✅ Auto-fix completes successfully
+- ✅ All tests pass
+- ✅ TypeScript strict mode passes
+- ✅ ESLint shows minimal warnings
+- ✅ Security tests pass
+- ✅ Performance tests pass
 
-## 🔄 **MAINTENANCE**
+### **Red Status (Fix Required)**
+- ❌ Auto-fix fails
+- ❌ Tests failing
+- ❌ TypeScript errors
+- ❌ ESLint errors
+- ❌ Security vulnerabilities
+- ❌ Performance regressions
 
-### **Regular Updates**
-- **Configuration Updates**: Regular configuration updates
-- **Behavior Optimization**: Continuous behavior optimization
-- **Quality Improvement**: Quality improvement
-- **Performance Optimization**: Performance optimization
+## 🔄 Workflow Templates
 
-### **Monitoring**
-- **Behavior Tracking**: Agent behavior tracking
-- **Quality Metrics**: Quality measurement
-- **Performance Monitoring**: Performance monitoring
-- **Feedback Integration**: User feedback integration
+### **Feature Development**
+```bash
+# 1. Start clean
+npm run auto-fix
+
+# 2. Develop with tests
+npm run test:jest -- --watch
+
+# 3. Test E2E
+npm run test:playwright
+
+# 4. Final verification
+npm run auto-fix:test
+```
+
+### **Bug Fixing**
+```bash
+# 1. Auto-fix common issues
+npm run auto-fix
+
+# 2. Test specific functionality
+npm run test:jest -- --testNamePattern="bug-description"
+
+# 3. Verify fix
+npm run test:all
+```
+
+### **Code Review**
+```bash
+# 1. Quality check
+npm run check
+
+# 2. Security review
+npm run test:security
+
+# 3. Performance check
+npm run test:performance
+```
+
+## 💡 Pro Tips
+
+### **Always Run Auto-Fix First**
+The `npm run auto-fix` command uses the testing infrastructure to automatically fix 90% of common errors. Always run this first!
+
+### **Keep Tests Running**
+Use `npm run test:jest -- --watch` to catch issues immediately while developing.
+
+### **Verify Before Committing**
+Run `npm run auto-fix:test` before committing to ensure everything is working.
+
+### **When in Doubt**
+```bash
+npm run auto-fix && npm run test:all
+```
 
 ---
 
-**This configuration is ACTIVE and provides complete control over Cursor AI agent behavior.**
-**All agents working on the Choices platform will follow these guidelines automatically.**
+**Remember:** The auto-fix system is your best friend. It handles most errors automatically, so you can focus on the important stuff!

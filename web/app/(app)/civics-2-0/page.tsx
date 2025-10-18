@@ -15,14 +15,25 @@ import {
   UserGroupIcon,
   HeartIcon
 } from '@heroicons/react/24/outline';
+import dynamic from 'next/dynamic';
 import React, { useState, useEffect, useCallback } from 'react';
 
-import EnhancedCandidateCard from '@/features/civics/components/EnhancedCandidateCard';
+// Lazy load heavy components to reduce initial bundle size
+const EnhancedCandidateCard = dynamic(() => import('@/features/civics/components/EnhancedCandidateCard'), {
+  loading: () => <div className="animate-pulse bg-gray-200 h-32 rounded-lg"></div>,
+  ssr: false
+});
+
+const SuperiorMobileFeed = dynamic(() => import('@/features/feeds').then(mod => ({ default: mod.SuperiorMobileFeed })), {
+  loading: () => <div className="animate-pulse bg-gray-200 h-64 rounded-lg"></div>,
+  ssr: false
+});
+
 import type { SuperiorRepresentativeData } from '@/features/civics/lib/civics-superior/superior-data-pipeline';
-import { SuperiorMobileFeed } from '@/features/feeds';
 import {
   useAppStore
 } from '@/lib/stores';
+import { logger } from '@/lib/utils/logger';
 
 export default function Civics2Page() {
   // UI state (local)
@@ -41,11 +52,11 @@ export default function Civics2Page() {
 
   const loadRepresentatives = useCallback(async () => {
     setIsLoading(true);
-    logger.info('🔄 Loading representatives...');
+    logger.info('🔄 Loading representatives...', { state: selectedState, level: selectedLevel });
     
     try {
       const response = await fetch(`/api/civics/by-state?state=${selectedState}&level=${selectedLevel}&limit=20`);
-      logger.info('📡 Response status:', response.status);
+      logger.info('📡 Response status', { status: response.status });
       
       if (!response.ok) {
         throw new Error(`Failed to load representatives: ${response.status}`);
@@ -107,12 +118,12 @@ export default function Civics2Page() {
 
   const handleContact = (id: string, type: string) => {
     // Contact functionality
-    logger.info('Contacting representative:', id, type);
+    logger.info('Contacting representative', { id, type });
   };
 
   const handleShare = (representative: SuperiorRepresentativeData) => {
     // Share functionality
-    logger.info('Sharing representative:', representative.name);
+    logger.info('Sharing representative', { name: representative.name });
   };
 
   const filteredRepresentatives = representatives.filter(rep => {

@@ -5,7 +5,8 @@
  * Maps WebAuthn-specific errors to user-friendly messages and proper HTTP status codes.
  */
 
-import { withOptional } from '@/lib/utils/objects';
+import { logger } from '@/lib/utils/logger';
+
 
 // Local SSR guard to avoid restricted imports and missing exports
 const isServer = (): boolean => typeof window === 'undefined';
@@ -343,10 +344,11 @@ export function logWebAuthnError(
     message: error.message,
     statusCode: error.statusCode,
     timestamp: new Date().toISOString(),
-    context: withOptional({}, Object.assign({}, context, {
+    context: {
+      ...context,
       credentialId: context?.credentialId ? 
         `${context.credentialId.substring(0, 8)  }...` : undefined
-    })),
+    },
     details: error.details
   };
 
@@ -364,7 +366,7 @@ export function logWebAuthnError(
   } else if (error.statusCode >= 400) {
     console.warn('WebAuthn client error:', logData);
   } else {
-    logger.info('WebAuthn error:', logData);
+    logger.info('WebAuthn error:', { logData });
   }
 }
 

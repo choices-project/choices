@@ -35,9 +35,55 @@ interface FeedbackItem {
   priority: 'low' | 'medium' | 'high' | 'urgent'
   createdat: string
   updatedat: string
-  userJourney: any
-  metadata: any
-  aiAnalysis: any
+  userJourney: {
+    currentPage: string
+    currentPath: string
+    pageTitle: string
+    referrer: string
+    userAgent: string
+    screenResolution: string
+    viewportSize: string
+    timeOnPage: number
+    sessionId: string
+    sessionStartTime: string
+    totalPageViews: number
+    activeFeatures: string[]
+    lastAction: string
+    actionSequence: string[]
+    pageLoadTime: number
+    performanceMetrics: {
+      fcp?: number
+      lcp?: number
+      fid?: number
+      cls?: number
+    }
+    errors: Array<{
+      type: string
+      message: string
+      stack?: string
+      timestamp: string
+    }>
+    deviceInfo: {
+      type: 'mobile' | 'tablet' | 'desktop'
+      os: string
+      browser: string
+      language: string
+      timezone: string
+    }
+    isAuthenticated: boolean
+    userRole?: string
+    userId?: string
+  }
+  metadata: Record<string, unknown>
+  aiAnalysis: {
+    intent: string
+    category: string
+    sentiment: number
+    urgency: number
+    complexity: number
+    keywords: string[]
+    suggestedActions: string[]
+  }
   deviceType?: string
   browser?: string
   os?: string
@@ -76,23 +122,28 @@ const EnhancedFeedbackAdminPage: React.FC = () => {
     try {
       setLoading(true)
       const response = await fetch('/api/feedback?limit=100')
-      const data = await response.json()
+      const data = await response.json() as { 
+        success: boolean; 
+        feedback?: FeedbackItem[]; 
+        analytics?: Analytics | null; 
+        error?: string 
+      }
       
       if (data.success) {
-        setFeedback(data.feedback || [])
-        setAnalytics(data.analytics || null)
+        setFeedback(data.feedback ?? [])
+        setAnalytics(data.analytics ?? null)
       } else {
-        devLog('Error fetching feedback:', data.error)
+        devLog('Error fetching feedback:', { error: data.error })
       }
     } catch (error) {
-      devLog('Error fetching feedback:', error)
+      devLog('Error fetching feedback:', { error })
     } finally {
       setLoading(false)
     }
   }
 
   useEffect(() => {
-    fetchFeedback()
+    void fetchFeedback()
   }, [])
 
   const getTypeIcon = (type: string) => {

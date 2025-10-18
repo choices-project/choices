@@ -9,7 +9,6 @@
  */
 
 import { devLog } from '@/lib/utils/logger';
-import { withOptional } from '@/lib/utils/objects';
 
 import { ApprovalStrategy } from './strategies/approval';
 import { QuadraticStrategy } from './strategies/quadratic';
@@ -65,7 +64,7 @@ export class VoteEngine {
       ['range', new RangeStrategy()]
     ]);
 
-    devLog('VoteEngine initialized with strategies:', Array.from(this.strategies.keys()));
+    devLog('VoteEngine initialized with strategies:', { strategies: Array.from(this.strategies.keys()) });
   }
 
   /**
@@ -128,7 +127,7 @@ export class VoteEngine {
       }
 
       // Check if poll exists and is active
-      if (!poll || poll.status !== 'active') {
+      if (poll?.status !== 'active') {
         return {
           valid: false,
           isValid: false,
@@ -233,7 +232,7 @@ export class VoteEngine {
       };
 
     } catch (error) {
-      devLog('Vote validation error:', error);
+      devLog('Vote validation error:', { error: error instanceof Error ? error.message : String(error) });
       return {
         valid: false,
         isValid: false,
@@ -289,7 +288,7 @@ export class VoteEngine {
       };
 
     } catch (error) {
-      devLog('Vote processing error:', error);
+      devLog('Vote processing error:', { error: error instanceof Error ? error.message : String(error) });
       return {
           success: false,
           message: error instanceof Error ? error.message : 'Vote processing failed',
@@ -315,7 +314,7 @@ export class VoteEngine {
           totalVotes: 0,
           participationRate: 0,
           results: {
-            winner: null,
+            winner: undefined,
             winnerVotes: 0,
             winnerPercentage: 0,
             optionVotes: poll.options.reduce((acc, option) => {
@@ -350,7 +349,7 @@ export class VoteEngine {
       return results;
 
     } catch (error) {
-      devLog('Results calculation error:', error);
+      devLog('Results calculation error:', { error: error instanceof Error ? error.message : String(error) });
       
       // Return a basic results structure for unsupported methods
       return {
@@ -507,6 +506,7 @@ export class VoteEngine {
       };
 
     } catch (error) {
+      console.error('Vote validation error:', error);
       return {
         valid: false,
         isValid: false,
@@ -615,7 +615,7 @@ export class VoteEngine {
    */
   updateConfig(newConfig: Partial<VoteEngineConfig>): void {
     this.config = Object.assign({}, this.config, newConfig);
-    devLog('VoteEngine configuration updated:', this.config);
+    devLog('VoteEngine configuration updated:', { config: this.config });
   }
 
   /**

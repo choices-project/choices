@@ -4,43 +4,52 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import dynamic from 'next/dynamic'
 import { useState, useEffect } from 'react'
 
+import FontProvider from '@/components/shared/FontProvider'
+import GlobalNavigation from '@/components/shared/GlobalNavigation'
+import SiteMessages from '@/components/shared/SiteMessages'
 import { UserStoreProvider } from '@/lib/providers/UserStoreProvider'
 import { initializePWA } from '@/lib/pwa/init'
+import { logger } from '@/lib/utils/logger'
 // import EnhancedFeedbackWidget from '../../components/EnhancedFeedbackWidget'
 
 const PWABackground = dynamic(() => import('@/features/pwa/components/PWABackground'), {
   ssr: false,
   loading: () => null
 })
-import SiteMessages from '@/components/shared/SiteMessages'
-import GlobalNavigation from '@/components/shared/GlobalNavigation'
-import FontProvider from '@/components/shared/FontProvider'
 
 export default function AppLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  // Create QueryClient instance for TanStack Query
+  // Create QueryClient instance for TanStack Query with memory optimization
   const [queryClient] = useState(() => new QueryClient({
     defaultOptions: {
       queries: {
         staleTime: 5 * 60 * 1000, // 5 minutes
-        gcTime: 10 * 60 * 1000, // 10 minutes
+        gcTime: 5 * 60 * 1000, // 5 minutes (reduced from 10)
         retry: 1,
         refetchOnWindowFocus: false,
+        refetchOnMount: false, // Prevent unnecessary refetches
+        refetchOnReconnect: false, // Prevent refetch on reconnect
+      },
+      mutations: {
+        retry: 1, // Reduce mutation retries
       },
     },
   }))
 
-  // Initialize PWA functionality
+  // Initialize PWA functionality with memory optimization
   useEffect(() => {
-    logger.info('PWA: Starting initialization...')
-    initializePWA().then(() => {
-      logger.info('PWA: Initialization completed successfully')
-    }).catch(error => {
-      console.error('PWA: Failed to initialize PWA:', error)
-    })
+    // Only initialize PWA on client side and if supported
+    if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+      logger.info('PWA: Starting initialization...')
+      initializePWA().then(() => {
+        logger.info('PWA: Initialization completed successfully')
+      }).catch(error => {
+        console.error('PWA: Failed to initialize PWA:', error)
+      })
+    }
   }, [])
 
   return (

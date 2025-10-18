@@ -1,7 +1,7 @@
 // Utility functions for object manipulation
 export const withOptional = <T extends Record<string, any>>(
   obj: T,
-  keys: (keyof T)[] | string
+  keys: Array<keyof T> | string
 ): Partial<T> => {
   const result: Partial<T> = {}
   const keysArray = Array.isArray(keys) ? keys : [keys]

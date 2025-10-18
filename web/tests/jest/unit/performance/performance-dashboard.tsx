@@ -5,7 +5,7 @@
  */
 
 import React from 'react';
-import { TestMonitor, TestMetrics, PerformanceReport } from './test-monitoring';
+import { TestMonitor, type TestMetrics, type PerformanceReport } from './test-monitoring';
 
 interface PerformanceDashboardProps {
   monitor: TestMonitor;
@@ -116,7 +116,7 @@ export const PerformanceDashboard: React.FC<PerformanceDashboardProps> = ({
           <h3 className="text-lg font-semibold text-gray-800 mb-3">🚨 Performance Alerts</h3>
           <div className="space-y-2">
             {alerts.map((alert, index) => (
-              <div key={index} className="bg-yellow-50 border-l-4 border-yellow-400 p-3">
+              <div key={`alert-${index}-${alert.slice(0, 20)}`} className="bg-yellow-50 border-l-4 border-yellow-400 p-3">
                 <p className="text-yellow-800">{alert}</p>
               </div>
             ))}
@@ -130,7 +130,7 @@ export const PerformanceDashboard: React.FC<PerformanceDashboardProps> = ({
           <h3 className="text-lg font-semibold text-gray-800 mb-3">💡 Optimization Recommendations</h3>
           <div className="space-y-2">
             {report.recommendations.map((recommendation, index) => (
-              <div key={index} className="bg-blue-50 border-l-4 border-blue-400 p-3">
+              <div key={`recommendation-${index}-${recommendation.slice(0, 20)}`} className="bg-blue-50 border-l-4 border-blue-400 p-3">
                 <p className="text-blue-800">{recommendation}</p>
               </div>
             ))}
@@ -208,7 +208,7 @@ export const PerformanceMetricsTable: React.FC<PerformanceMetricsTableProps> = (
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {metrics.map((metric, index) => (
-              <tr key={index} className="hover:bg-gray-50">
+              <tr key={`metric-${metric.testName}-${index}`} className="hover:bg-gray-50">
                 <td className="px-4 py-2 text-sm text-gray-900">
                   {metric.testName}
                 </td>

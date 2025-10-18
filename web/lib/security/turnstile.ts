@@ -6,7 +6,6 @@
  */
 
 import { devLog } from '@/lib/utils/logger';
-import { withOptional } from '@/lib/utils/objects';
 
 export interface TurnstileConfig {
   secretKey: string;
@@ -111,13 +110,11 @@ export async function verifyTurnstileToken(
     });
 
     if (!result.success) {
-      return withOptional(
-        { success: false },
-        { 
-          error: 'Turnstile verification failed',
-          errorCodes: result.error_codes
-        }
-      );
+      return {
+        success: false,
+        error: 'Turnstile verification failed',
+        ...(result.error_codes && { errorCodes: result.error_codes })
+      };
     }
 
     // Additional validation in strict mode
@@ -128,17 +125,15 @@ export async function verifyTurnstileToken(
       }
     }
 
-    return withOptional(
-      { success: true },
-      { 
-        hostname: result.hostname,
-        action: result.action,
-        timestamp: result.challenge_ts
-      }
-    );
+    return {
+      success: true,
+      ...(result.hostname && { hostname: result.hostname }),
+      ...(result.action && { action: result.action }),
+      ...(result.challenge_ts && { timestamp: result.challenge_ts })
+    };
 
   } catch (error) {
-    devLog('Turnstile verification error:', error);
+    devLog('Turnstile verification error:', { error });
     
     if (error instanceof Error && error.name === 'AbortError') {
       return {
@@ -275,14 +270,12 @@ export function getTurnstileWidgetConfig(action?: string): {
   size?: 'normal' | 'compact';
   tabindex?: number;
 } {
-  return withOptional(
-    {
-      sitekey: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || '',
-      theme: 'auto' as const,
-      size: 'normal' as const,
-    },
-    { action }
-  );
+  return {
+    sitekey: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || '',
+    theme: 'auto' as const,
+    size: 'normal' as const,
+    ...(action && { action })
+  };
 }
 
 /**

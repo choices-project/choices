@@ -23,7 +23,6 @@ import { HashtagDisplay } from '@/features/hashtags';
 import type { Hashtag } from '@/features/hashtags/types';
 import { useHashtagStore, useHashtagActions, useHashtagStats } from '@/lib/stores';
 import { cn } from '@/lib/utils';
-import { withOptional } from '@/lib/utils/objects';
 
 import type { 
   FeedItemData, 
@@ -139,7 +138,7 @@ export default function FeedHashtagIntegration({
   const trendingHashtagObjects = trendingHashtags.map(th => th.hashtag);
 
   // Get search result hashtags
-  const searchResultHashtags = searchResults?.hashtags || [];
+  const searchResultHashtags = searchResults?.hashtags ?? [];
 
   // Get followed hashtag objects
   const followedHashtagObjects = followedHashtags.map(hashtagId => 
@@ -225,7 +224,7 @@ export default function FeedHashtagIntegration({
                 key={index}
                 variant="secondary"
                 className="flex items-center gap-1 cursor-pointer"
-                onClick={() => handleFilterApply(withOptional(filter, { active: false }))}
+                onClick={() => handleFilterApply({ ...filter, active: false })}
               >
                 {filter.label}
                 <X className="h-3 w-3" />
@@ -443,7 +442,7 @@ export default function FeedHashtagIntegration({
                           <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
                             <span className="flex items-center gap-1">
                               <Eye className="h-3 w-3" />
-                              {item.engagementMetrics.likes || 0}
+                              {item.engagementMetrics.likes ?? 0}
                             </span>
                             <span className="flex items-center gap-1">
                               <Share2 className="h-3 w-3" />

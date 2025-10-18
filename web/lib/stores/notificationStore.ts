@@ -13,8 +13,8 @@ import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 
-
 import type { AdminNotification } from '@/features/admin/types';
+import { logger } from '@/lib/utils/logger';
 
 import type { Notification, BaseStore } from './types';
 
@@ -205,6 +205,7 @@ export const useNotificationStore = create<NotificationStore>()(
         const beforeCount = state.notifications.length;
         state.notifications = state.notifications.filter(n => n.type !== type);
         state.unreadCount = state.notifications.filter(n => !n.read).length;
+        logger.debug(`Cleared ${beforeCount - state.notifications.length} notifications of type ${type}`);
       }),
       
       // Admin notification actions
@@ -273,6 +274,7 @@ export const useNotificationStore = create<NotificationStore>()(
         const beforeCount = state.adminNotifications.length;
         state.adminNotifications = state.adminNotifications.filter(n => n.type !== type);
         state.adminUnreadCount = state.adminNotifications.filter(n => !n.read).length;
+        logger.debug(`Cleared ${beforeCount - state.adminNotifications.length} admin notifications of type ${type}`);
       }),
       
       // Settings actions
@@ -624,7 +626,7 @@ export const notificationStoreDebug = {
    */
   logNotifications: () => {
     const state = useNotificationStore.getState();
-    logger.debug('All Notifications', state.notifications);
+    logger.debug('All Notifications', { notifications: state.notifications });
   },
   
   /**

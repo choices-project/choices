@@ -64,7 +64,7 @@ export function ProfessionalChart({
   const [hoveredItem, setHoveredItem] = useState<string | null>(null)
   
   // Get analytics store actions and state
-  const { setChartData, setChartConfig, setChartMaxValue, setChartShowTrends, setChartShowConfidence } = useAnalyticsActions()
+  const { setChartData, setChartMaxValue, setChartShowTrends, setChartShowConfidence } = useAnalyticsActions()
   const { data: storeData, maxValue: storeMaxValue, showTrends: storeShowTrends, showConfidence: storeShowConfidence } = useChartContext()
 
   // Update store when props change

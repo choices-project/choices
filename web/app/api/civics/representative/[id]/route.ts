@@ -13,12 +13,13 @@ const supabase = createClient(
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const logger = createApiLogger('/api/civics/representative/[id]', 'GET');
   
   try {
-    const representativeId = params.id;
+    const { id } = await params;
+    const representativeId = id;
     
     if (!representativeId) {
       return NextResponse.json(

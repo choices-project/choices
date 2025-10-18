@@ -80,7 +80,7 @@ export function createLazyComponent<T extends ComponentType<any>>(
  * Lazy load images with intersection observer
  */
 export function lazyLoadImages(
-  selector: string = 'img[data-src]',
+  selector = 'img[data-src]',
   options: LazyLoadOptions = {}
 ): () => void {
   const {

@@ -209,7 +209,7 @@ export class ProvenanceService {
 
       return data.id;
     } catch (error) {
-      throw new Error(`Raw data storage failed: ${error}`);
+      throw new Error(`Raw data storage failed: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -248,7 +248,7 @@ export class ProvenanceService {
         throw new Error(`Failed to update processing status: ${updateError.message}`);
       }
     } catch (error) {
-      throw new Error(`Processing status update failed: ${error}`);
+      throw new Error(`Processing status update failed: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -288,7 +288,7 @@ export class ProvenanceService {
 
       return data;
     } catch (error) {
-      throw new Error(`Data lineage tracking failed: ${error}`);
+      throw new Error(`Data lineage tracking failed: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -309,7 +309,7 @@ export class ProvenanceService {
 
       return data || [];
     } catch (error) {
-      throw new Error(`Data lineage trail lookup failed: ${error}`);
+      throw new Error(`Data lineage trail lookup failed: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -354,7 +354,7 @@ export class ProvenanceService {
 
       return checksumValue;
     } catch (error) {
-      throw new Error(`Checksum calculation failed: ${error}`);
+      throw new Error(`Checksum calculation failed: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -364,7 +364,7 @@ export class ProvenanceService {
   async validateDataQuality(
     tableName: string,
     recordId: string,
-    checkVersion: string = '1.0'
+    checkVersion = '1.0'
   ): Promise<DataQualityCheck[]> {
     try {
       const { data, error } = await this.supabase
@@ -401,7 +401,7 @@ export class ProvenanceService {
 
       return qualityChecks;
     } catch (error) {
-      throw new Error(`Data quality validation failed: ${error}`);
+      throw new Error(`Data quality validation failed: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -427,7 +427,7 @@ export class ProvenanceService {
 
       return data;
     } catch (error) {
-      throw new Error(`Raw data lookup failed: ${error}`);
+      throw new Error(`Raw data lookup failed: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -473,7 +473,7 @@ export class ProvenanceService {
         success_rate
       };
     } catch (error) {
-      throw new Error(`Processing summary lookup failed: ${error}`);
+      throw new Error(`Processing summary lookup failed: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -503,7 +503,7 @@ export class ProvenanceService {
 
       return data || [];
     } catch (error) {
-      throw new Error(`Data quality summary lookup failed: ${error}`);
+      throw new Error(`Data quality summary lookup failed: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -583,7 +583,7 @@ export class ProvenanceService {
 
       return data || [];
     } catch (error) {
-      throw new Error(`Staging summaries lookup failed: ${error}`);
+      throw new Error(`Staging summaries lookup failed: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 }

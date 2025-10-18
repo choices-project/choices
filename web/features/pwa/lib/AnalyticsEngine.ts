@@ -20,7 +20,7 @@ export interface AnalyticsEvent {
 export class PWAAnalyticsEngine {
   private events: AnalyticsEvent[] = [];
   private mainAnalyticsEngine = getAnalyticsEngine();
-  private isEnabled: boolean = true;
+  private isEnabled = true;
 
   constructor() {
     this.setupEventListeners();
@@ -135,9 +135,9 @@ export class PWAAnalyticsEngine {
 
     // Notification events
     if ('Notification' in window) {
-      const originalRequestPermission = Notification.requestPermission;
+      const originalRequestPermission = Notification.requestPermission.bind(Notification);
       Notification.requestPermission = async () => {
-        const result = await originalRequestPermission.call(Notification);
+        const result = await originalRequestPermission();
         
         this.track({
           name: result === 'granted' ? 'pwa_notification_permission_granted' : 'pwa_notification_permission_denied',

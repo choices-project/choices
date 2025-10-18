@@ -27,28 +27,28 @@ export class TrendingHashtagsTracker {
   /**
    * Track hashtag usage
    */
-  async trackHashtagUsage(usage: HashtagUsage): Promise<void> {
+  trackHashtagUsage(usage: HashtagUsage): void {
     try {
       // Store locally (in production, this would go to database)
       this.hashtagUsage.push(usage);
       
       // Update trending cache
-      await this.updateTrendingCache();
+      this.updateTrendingCache();
       
-      devLog('Hashtag usage tracked:', usage);
+      devLog('Hashtag usage tracked:', { usage });
     } catch (error) {
-      devLog('Error tracking hashtag usage:', error);
+      devLog('Error tracking hashtag usage:', { error });
     }
   }
 
   /**
    * Track multiple hashtag usages (e.g., from onboarding)
    */
-  async trackMultipleHashtags(hashtags: string[], userId: string, source: HashtagUsage['source']): Promise<void> {
+  trackMultipleHashtags(hashtags: string[], userId: string, source: HashtagUsage['source']): void {
     const timestamp = new Date().toISOString();
     
     for (const hashtag of hashtags) {
-      await this.trackHashtagUsage({
+      this.trackHashtagUsage({
         hashtag: hashtag.toLowerCase().trim(),
         userId,
         timestamp,
@@ -60,21 +60,21 @@ export class TrendingHashtagsTracker {
   /**
    * Get trending hashtags
    */
-  async getTrendingHashtags(limit: number = 20): Promise<TrendingHashtag[]> {
+  getTrendingHashtags(limit = 20): TrendingHashtag[] {
     // Return cached results if recent
     if (this.trendingCache.length > 0 && 
         Date.now() - this.lastUpdate.getTime() < 5 * 60 * 1000) { // 5 minutes
       return this.trendingCache.slice(0, limit);
     }
 
-    await this.updateTrendingCache();
+    this.updateTrendingCache();
     return this.trendingCache.slice(0, limit);
   }
 
   /**
    * Get hashtag analytics
    */
-  async getHashtagAnalytics(): Promise<HashtagAnalytics> {
+  getHashtagAnalytics(): HashtagAnalytics {
     const now = new Date();
     const last24Hours = new Date(now.getTime() - 24 * 60 * 60 * 1000);
     const last7Days = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
@@ -85,14 +85,14 @@ export class TrendingHashtagsTracker {
     );
 
     // Calculate trending hashtags
-    let trendingHashtags = await this.calculateTrendingHashtags(recentUsage);
+    let trendingHashtags = this.calculateTrendingHashtags(recentUsage);
 
     // Build 7-day baseline (exclude the last 24h window)
     const baselineCounts: Record<string, number> = {};
     this.hashtagUsage.forEach(u => {
       const t = new Date(u.timestamp);
       if (t > last7Days && t <= last24Hours) {
-        baselineCounts[u.hashtag] = (baselineCounts[u.hashtag] || 0) + 1;
+        baselineCounts[u.hashtag] = (baselineCounts[u.hashtag] ?? 0) + 1;
       }
     });
 
@@ -109,14 +109,14 @@ export class TrendingHashtagsTracker {
     // Category breakdown
     const categoryBreakdown: Record<string, number> = {};
     recentUsage.forEach(usage => {
-      const category = usage.metadata?.category || 'general';
+      const category = usage.metadata?.category ?? 'general';
       categoryBreakdown[category] = (categoryBreakdown[category] || 0) + 1;
     });
 
     // User engagement
     const userEngagement: Record<string, number> = {};
     recentUsage.forEach(usage => {
-      userEngagement[usage.userId] = (userEngagement[usage.userId] || 0) + 1;
+      userEngagement[usage.userId] = (userEngagement[usage.userId] ?? 0) + 1;
     });
 
     // Viral potential (hashtags with high growth rate and engagement)
@@ -137,8 +137,8 @@ export class TrendingHashtagsTracker {
   /**
    * Get suggested hashtags for a user based on their interests
    */
-  async getSuggestedHashtags(userInterests: string[], limit: number = 10): Promise<string[]> {
-    const analytics = await this.getHashtagAnalytics();
+  getSuggestedHashtags(userInterests: string[], limit = 10): string[] {
+    const analytics = this.getHashtagAnalytics();
     
     // Find hashtags that are trending and related to user interests
     const relatedTrending = analytics.trendingHashtags.filter(hashtag => {
@@ -163,14 +163,14 @@ export class TrendingHashtagsTracker {
   /**
    * Get hashtag performance for admin dashboard
    */
-  async getHashtagPerformance(hashtag: string): Promise<{
+  getHashtagPerformance(hashtag: string): {
     hashtag: string;
     totalUsage: number;
     uniqueUsers: number;
     growthRate: number;
     topCategories: string[];
     recentActivity: HashtagUsage[];
-  }> {
+  } {
     const hashtagUsage = this.hashtagUsage.filter(u => u.hashtag === hashtag);
     const uniqueUsers = new Set(hashtagUsage.map(u => u.userId)).size;
     
@@ -190,7 +190,7 @@ export class TrendingHashtagsTracker {
     // Top categories
     const categoryCount: Record<string, number> = {};
     hashtagUsage.forEach(usage => {
-      const category = usage.metadata?.category || 'general';
+      const category = usage.metadata?.category ?? 'general';
       categoryCount[category] = (categoryCount[category] || 0) + 1;
     });
     
@@ -211,7 +211,7 @@ export class TrendingHashtagsTracker {
 
   // Private helper methods
 
-  private async updateTrendingCache(): Promise<void> {
+  private updateTrendingCache(): void {
     const now = new Date();
     const last24Hours = new Date(now.getTime() - 24 * 60 * 60 * 1000);
     const last48Hours = new Date(now.getTime() - 48 * 60 * 60 * 1000);
@@ -225,11 +225,11 @@ export class TrendingHashtagsTracker {
       new Date(usage.timestamp) > last24Hours
     );
 
-    this.trendingCache = await this.calculateTrendingHashtags(recentUsage);
+    this.trendingCache = this.calculateTrendingHashtags(recentUsage);
     this.lastUpdate = now;
   }
 
-  private async calculateTrendingHashtags(usage: HashtagUsage[]): Promise<TrendingHashtag[]> {
+  private calculateTrendingHashtags(usage: HashtagUsage[]): TrendingHashtag[] {
     const hashtagStats: Record<string, {
       usageCount: number;
       uniqueUsers: Set<string>;

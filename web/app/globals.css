@@ -200,6 +200,56 @@
   }
 }
 
+/* Focus management for accessibility */
+.focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* Skip links for keyboard navigation */
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 6px;
+  background: #000;
+  color: #fff;
+  padding: 8px;
+  text-decoration: none;
+  z-index: 1000;
+}
+
+.skip-link:focus {
+  top: 6px;
+}
+
+/* High zoom support (up to 400%) */
+@media (min-resolution: 1.5dppx) {
+  h1, h2, h3, h4, h5, h6 {
+    font-size: clamp(1.2rem, 4vw, 2.5rem);
+    line-height: 1.2;
+  }
+  
+  .text-sm {
+    font-size: 1rem;
+  }
+  
+  .text-xs {
+    font-size: 0.875rem;
+  }
+}
+
+/* Ensure elements remain visible at high zoom */
+@media (min-width: 1px) {
+  h1, h2, h3, h4, h5, h6 {
+    min-height: 1.2em;
+    overflow: visible;
+  }
+  
+  button, a, input, select, textarea {
+    min-height: 44px; /* Touch target size */
+  }
+}
+
 /* High contrast mode support */
 @media (prefers-contrast: high) {
   .bg-gray-50 {

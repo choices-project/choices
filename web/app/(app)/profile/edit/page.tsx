@@ -167,7 +167,7 @@ export default function EditProfilePage() {
         setError('Failed to load profile')
       }
     } catch (error) {
-      devLog('Error loading profile:', error)
+      devLog('Error loading profile:', { error })
       setError('Failed to load profile')
     } finally {
       setIsLoading(false)
@@ -224,7 +224,7 @@ export default function EditProfilePage() {
         setError('Failed to upload avatar')
       }
     } catch (error) {
-      devLog('Error uploading avatar:', error)
+      devLog('Error uploading avatar:', { error })
       setError('Failed to upload avatar')
     } finally {
       setIsUploadingAvatar(false)
@@ -255,7 +255,7 @@ export default function EditProfilePage() {
         setError('Failed to update profile')
       }
     } catch (error) {
-      devLog('Error updating profile:', error)
+      devLog('Error updating profile:', { error })
       setError('Failed to update profile')
     } finally {
       setIsSaving(false)

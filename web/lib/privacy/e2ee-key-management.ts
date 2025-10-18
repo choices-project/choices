@@ -68,7 +68,8 @@ export class E2EEKeyManager {
     }
 
     // Derive key from passphrase using Argon2id (simulated with PBKDF2)
-    const salt = crypto.getRandomValues(new Uint8Array(32));
+    const salt = new Uint8Array(32);
+    crypto.getRandomValues(salt);
     const iterations = 100000; // High iteration count for security
     
     const pwKey = await crypto.subtle.importKey(
@@ -93,7 +94,8 @@ export class E2EEKeyManager {
     );
 
     // Wrap the local CEK
-    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const iv = new Uint8Array(12);
+    crypto.getRandomValues(iv);
     const wrappedCEK = await crypto.subtle.wrapKey(
       'raw',
       this.localCEK,
@@ -130,7 +132,7 @@ export class E2EEKeyManager {
       const derivedKey = await crypto.subtle.deriveKey(
         {
           name: 'PBKDF2',
-          salt,
+          salt: salt as BufferSource,
           iterations,
           hash: 'SHA-256'
         },

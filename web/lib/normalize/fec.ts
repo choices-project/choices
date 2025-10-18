@@ -6,7 +6,6 @@
  */
 
 import { isPresent } from '@/lib/utils/clean'
-import { withOptional } from '@/lib/utils/objects'
 
 // External API types (permissive)
 export interface FECTotalsWire {
@@ -66,20 +65,16 @@ export function toFECMinimal(
     throw new Error('FEC totals missing cycle')
   }
   
-  return withOptional(
-    { 
-      person_id, 
-      fec_candidate_id: fecId, 
-      election_cycle: wire.cycle, 
-      data_source: 'fec_api' as const 
-    },
-    { 
-      total_receipts: wire.total_receipts, 
-      cash_on_hand: wire.cash_on_hand_end_period,
-      total_disbursements: wire.total_disbursements,
-      debts_owed: wire.debts_owed_by_committee
-    }
-  )
+  return {
+    person_id, 
+    fec_candidate_id: fecId, 
+    election_cycle: wire.cycle, 
+    data_source: 'fec_api' as const,
+    ...(wire.total_receipts && { total_receipts: wire.total_receipts }),
+    ...(wire.cash_on_hand_end_period && { cash_on_hand: wire.cash_on_hand_end_period }),
+    ...(wire.total_disbursements && { total_disbursements: wire.total_disbursements }),
+    ...(wire.debts_owed_by_committee && { debts_owed: wire.debts_owed_by_committee })
+  }
 }
 
 /**

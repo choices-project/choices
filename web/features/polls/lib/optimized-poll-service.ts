@@ -23,7 +23,20 @@ export interface PerformanceMetrics {
 }
 
 // Export the missing functions that are imported elsewhere
-export async function getOptimizedPollResults(pollId: string): Promise<any> {
+export async function getOptimizedPollResults(pollId: string): Promise<{
+  id: string;
+  title: string;
+  description: string;
+  options: any[];
+  totalVotes: number;
+  participation: number;
+  status: string;
+  privacyLevel: string;
+  category: string;
+  votingMethod: string;
+  endTime: string;
+  createdAt: string;
+} | null> {
   try {
     const supabase = await getSupabaseServerClient();
     
@@ -43,8 +56,8 @@ export async function getOptimizedPollResults(pollId: string): Promise<any> {
       title: poll.title,
       description: poll.description,
       options: poll.options,
-      totalVotes: poll.total_votes || 0,
-      participation: poll.participation || 0,
+      totalVotes: poll.total_votes ?? 0,
+      participation: poll.participation ?? 0,
       status: poll.status,
       privacyLevel: poll.privacy_level,
       category: poll.category,
@@ -58,7 +71,17 @@ export async function getOptimizedPollResults(pollId: string): Promise<any> {
   }
 }
 
-export async function calculatePollStatistics(pollId: string): Promise<any> {
+export async function calculatePollStatistics(pollId: string): Promise<{
+  pollId: string;
+  title: string;
+  totalVotes: number;
+  participation: number;
+  status: string;
+  createdAt: string;
+  averageVotesPerDay: number;
+  isActive: boolean;
+  hasEnded: boolean;
+} | null> {
   try {
     const supabase = await getSupabaseServerClient();
     
@@ -78,8 +101,8 @@ export async function calculatePollStatistics(pollId: string): Promise<any> {
     const stats = {
       pollId: poll.id,
       title: poll.title,
-      totalVotes: poll.total_votes || 0,
-      participation: poll.participation || 0,
+      totalVotes: poll.total_votes ?? 0,
+      participation: poll.participation ?? 0,
       status: poll.status,
       createdAt: poll.created_at,
       // Additional calculated fields
@@ -116,8 +139,8 @@ export async function generatePollInsights(pollId: string): Promise<any> {
       pollId: poll.id,
       title: poll.title,
       category: poll.category,
-      totalVotes: poll.total_votes || 0,
-      participation: poll.participation || 0,
+      totalVotes: poll.total_votes ?? 0,
+      participation: poll.participation ?? 0,
       status: poll.status,
       // Generated insights
       engagementLevel: poll.total_votes > 100 ? 'high' : poll.total_votes > 50 ? 'medium' : 'low',
@@ -140,7 +163,7 @@ export async function generatePollInsights(pollId: string): Promise<any> {
 
 export class OptimizedPollService {
   private cache: Map<string, any> = new Map();
-  private evictionCount: number = 0;
+  private evictionCount = 0;
   private metrics: PerformanceMetrics = {
     metricName: 'default',
     avgValue: 0,
@@ -223,7 +246,7 @@ export class OptimizedPollService {
   }
 
   // Performance statistics for admin dashboard
-  async getPerformanceStats(hours: number = 24): Promise<PerformanceMetrics[]> {
+  async getPerformanceStats(hours = 24): Promise<PerformanceMetrics[]> {
     try {
       const supabase = await getSupabaseServerClient();
       const startTime = new Date(Date.now() - hours * 60 * 60 * 1000);
@@ -454,7 +477,7 @@ export class OptimizedPollService {
   async getOptimizedPollResults(
     pollId: string, 
     userId?: string, 
-    includePrivate: boolean = false
+    includePrivate = false
   ): Promise<OptimizedPollResult | null> {
     try {
       const startTime = performance.now();

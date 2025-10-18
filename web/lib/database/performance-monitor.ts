@@ -98,7 +98,7 @@ export class DatabasePerformanceMonitor {
   private monitoringInterval: NodeJS.Timeout | null = null
   private alertCheckInterval: NodeJS.Timeout | null = null
   private recommendationInterval: NodeJS.Timeout | null = null
-  private isMonitoring: boolean = false
+  private isMonitoring = false
 
   constructor(thresholds?: Partial<PerformanceThresholds>) {
     this.thresholds = Object.assign({}, this.thresholds, thresholds)
@@ -120,7 +120,7 @@ export class DatabasePerformanceMonitor {
   /**
    * Start performance monitoring
    */
-  async startMonitoring(intervalMs: number = 60000): Promise<void> {
+  async startMonitoring(intervalMs = 60000): Promise<void> {
     if (this.isMonitoring) {
       logger.warn('Performance monitoring already started')
       return
@@ -592,7 +592,7 @@ export class DatabasePerformanceMonitor {
   /**
    * Get performance metrics history
    */
-  getMetricsHistory(hours: number = 24): DatabaseMetrics[] {
+  getMetricsHistory(hours = 24): DatabaseMetrics[] {
     const cutoff = Date.now() - (hours * 60 * 60 * 1000)
     return this.metrics.filter(m => m.timestamp > cutoff)
   }

@@ -87,8 +87,8 @@ export default function ApprovalVoting({
       }
       
       await onVote(pollId, validApprovals)
-    } catch (err: any) {
-      setError(err.message || 'Failed to submit vote')
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to submit vote')
     } finally {
       setIsSubmitting(false)
     }
@@ -153,7 +153,7 @@ export default function ApprovalVoting({
       {/* Voting Interface */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
         <div className="space-y-3">
-          {options.map((option: any) => (
+          {options.map((option: PollOption) => (
             <div
               key={option.id}
               onClick={() => handleOptionToggle(option.id)}

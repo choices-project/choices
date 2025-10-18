@@ -93,7 +93,7 @@ export async function GET(request: NextRequest) {
         total_districts: heatmapData?.length || 0,
         districts: heatmapData || [],
         privacy_note: 'Data aggregated by district with k-anonymity protection',
-        engagement_metrics: await getEngagementMetrics(supabase, state, districtType)
+        engagement_metrics: await getEngagementMetrics(supabase, state)
       },
       metadata: {
         source: 'database',
@@ -155,7 +155,7 @@ async function getDistrictHeatmapData(supabase: any, state: string, districtType
     // Get user engagement data for each district
     const districtData = await Promise.all(
       (representatives || []).map(async (rep: any) => {
-        const engagementData = await getDistrictEngagement(supabase, rep.district, rep.state, rep.level);
+        const engagementData = await getDistrictEngagement(supabase, rep.district, rep.state);
         
         return {
           district: rep.district,
@@ -192,7 +192,7 @@ async function getDistrictHeatmapData(supabase: any, state: string, districtType
 /**
  * Get engagement metrics for a specific district
  */
-async function getDistrictEngagement(supabase: any, district: string, state: string, level: string) {
+async function getDistrictEngagement(supabase: any, district: string, state: string) {
   try {
     // Get users who have looked up this district via address lookup
     const { data: addressLookups } = await supabase
@@ -256,7 +256,7 @@ async function getDistrictEngagement(supabase: any, district: string, state: str
 /**
  * Get overall engagement metrics for the state/district type
  */
-async function getEngagementMetrics(supabase: any, state: string, districtType: string) {
+async function getEngagementMetrics(supabase: any, state: string) {
   try {
     // Get total users who have done address lookups in this state
     const { data: stateLookups } = await supabase
@@ -301,62 +301,5 @@ async function getEngagementMetrics(supabase: any, state: string, districtType: 
   }
 }
 
-function generateGeohashPrefixes(bbox: number[], precision: number): string[] {
-  const [minLng, minLat, maxLng, maxLat] = bbox;
-  const prefixes: string[] = [];
-  
-  // Validate bbox has all required values
-  if (minLng === undefined || minLat === undefined || maxLng === undefined || maxLat === undefined) {
-    throw new Error('Invalid bounding box: missing coordinates');
-  }
-  
-  // Simple geohash generation for demo purposes
-  // In production, this would use a proper geohash library
-  const lngStep = (maxLng - minLng) / 10;
-  const latStep = (maxLat - minLat) / 10;
-  
-  for (let i = 0; i < 10; i++) {
-    for (let j = 0; j < 10; j++) {
-      const lng = minLng + (i * lngStep);
-      const lat = minLat + (j * latStep);
-      const geohash = generateGeohash(lat, lng, precision);
-      prefixes.push(geohash);
-    }
-  }
-  
-  return [...new Set(prefixes)]; // Remove duplicates
-}
 
-/**
- * Simple geohash generation (demo implementation)
- */
-function generateGeohash(lat: number, lng: number, precision: number): string {
-  // This is a simplified geohash implementation
-  // In production, use a proper geohash library
-  const base32 = '0123456789bcdefghjkmnpqrstuvwxyz';
-  let geohash = '';
-  
-  // Simplified geohash generation
-  const latInt = Math.floor((lat + 90) * 1000);
-  const lngInt = Math.floor((lng + 180) * 1000);
-  
-  for (let i = 0; i < precision; i++) {
-    const combined = (latInt + lngInt + i) % 32;
-    geohash += base32[combined];
-  }
-  
-  return geohash;
-}
 
-/**
- * Generate fallback heatmap data when database RPC is unavailable
- */
-function generateFallbackHeatmapData(prefixes: string[], minCount: number): any[] {
-  return prefixes.slice(0, 20).map((prefix: string) => ({
-    geohash: prefix,
-    count: Math.floor(Math.random() * 50) + minCount, // Ensure k-anonymity
-    lat: Math.random() * 180 - 90,
-    lng: Math.random() * 360 - 180,
-    precision: prefix.length
-  }));
-}

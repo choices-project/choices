@@ -19,7 +19,7 @@ export async function GET() {
   
   try {
     // Get or create CSRF token
-    const csrfToken = getOrSetCsrfCookie();
+    const csrfToken = await getOrSetCsrfCookie();
     
     // Create response
     const response = NextResponse.json({

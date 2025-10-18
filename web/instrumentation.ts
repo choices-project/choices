@@ -1,3 +1,5 @@
+import { logger } from '@/lib/logger';
+
 export function register() {
   // Verify this runs in Vercel logs:
   logger.info('[instrumentation] runtime=', process.env.NEXT_RUNTIME);

@@ -171,7 +171,7 @@ export async function setJurisdictionCookie(payload: { state?: string; district?
   const sig = crypto.createHmac('sha256', secret).update(body).digest('hex');
   const value = Buffer.from(JSON.stringify({ body, sig })).toString('base64url');
 
-  cookies().set({
+  (await cookies()).set({
     name: COOKIE_NAME,
     value,
     httpOnly: true,
@@ -182,9 +182,9 @@ export async function setJurisdictionCookie(payload: { state?: string; district?
   });
 }
 
-export function readJurisdictionCookie(): { state?: string; district?: string; county?: string } | null {
+export async function readJurisdictionCookie(): Promise<{ state?: string; district?: string; county?: string } | null> {
   const secret = process.env.SESSION_SECRET ?? 'dev-session-secret-not-for-prod';
-  const raw = cookies().get(COOKIE_NAME)?.value;
+  const raw = (await cookies()).get(COOKIE_NAME)?.value;
   if (!raw) return null;
   try {
     const { body, sig } = JSON.parse(Buffer.from(raw, 'base64url').toString());

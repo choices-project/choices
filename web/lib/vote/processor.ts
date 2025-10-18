@@ -102,7 +102,7 @@ export class VoteProcessor implements IVoteProcessor {
         .insert(voteRecord);
 
       if (voteError) {
-        devLog('Error inserting vote:', voteError);
+        devLog('Error inserting vote:', { error: voteError.message });
         return {
           success: false,
           error: 'Failed to store vote'
@@ -131,7 +131,7 @@ export class VoteProcessor implements IVoteProcessor {
       };
 
     } catch (error) {
-      devLog('Vote processing error:', error);
+      devLog('Vote processing error:', { error: error instanceof Error ? error.message : String(error) });
       return {
         success: false,
         error: `Failed to process vote: ${error instanceof Error ? error.message : 'Unknown error'}`
@@ -176,7 +176,7 @@ export class VoteProcessor implements IVoteProcessor {
       }
 
     } catch (error) {
-      devLog('Vote validation error:', error);
+      devLog('Vote validation error:', { error: error instanceof Error ? error.message : String(error) });
       return false;
     }
   }
@@ -211,7 +211,7 @@ export class VoteProcessor implements IVoteProcessor {
       return true;
 
     } catch (error) {
-      devLog('Can user vote check error:', error);
+      devLog('Can user vote check error:', { error: error instanceof Error ? error.message : String(error) });
       return false;
     }
   }
@@ -237,7 +237,7 @@ export class VoteProcessor implements IVoteProcessor {
         .eq('id', pollId);
 
     } catch (error) {
-      devLog('Error updating poll vote count:', error);
+      devLog('Error updating poll vote count:', { error: error instanceof Error ? error.message : String(error) });
       // Don't throw here as the vote was already recorded
     }
   }

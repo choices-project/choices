@@ -1,9 +1,10 @@
-import { verifyAuthenticationResponse } from '@simplewebauthn/server';
-import { isoBase64URL } from '@simplewebauthn/server/helpers';
 import { type NextRequest, NextResponse } from 'next/server';
 
 import { getRPIDAndOrigins } from '@/features/auth/lib/webauthn/config';
+import { verifyAuthenticationResponse, arrayBufferToBase64URL } from '@/features/auth/lib/webauthn/native/server';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
+
+export const dynamic = 'force-dynamic';
 
 /**
  * WebAuthn Authentication Verify
@@ -14,6 +15,11 @@ import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 export async function POST(req: NextRequest) {
   try {
+    // Disable during build time to prevent static analysis issues
+    if (process.env.NODE_ENV === 'production' && !process.env.VERCEL) {
+      return NextResponse.json({ error: 'WebAuthn routes disabled during build' }, { status: 503 });
+    }
+
     const { enabled, rpID, allowedOrigins } = getRPIDAndOrigins(req);
     if (!enabled) {
       return NextResponse.json({ error: 'Passkeys disabled on preview' }, { status: 400 });
@@ -50,7 +56,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Lookup authenticator by credentialId presented
-    const credIdBuf = isoBase64URL.toBuffer(body.id);
+    const credIdBuf = Buffer.from(body.id, 'base64url');
     const { data: creds, error: credsErr } = await supabase
       .from('webauthn_credentials')
       .select('*')
@@ -65,24 +71,43 @@ export async function POST(req: NextRequest) {
 
     const cred = creds[0];
 
-    const verification = await verifyAuthenticationResponse({
-      response: body,
-      expectedChallenge: isoBase64URL.fromBuffer(chal.challenge),
-      expectedOrigin: allowedOrigins,
-      expectedRPID: rpID,
-      requireUserVerification: true,
-      credential: {
-        id: Buffer.from(cred.credential_id).buffer,
-        publicKey: Buffer.from(cred.public_key).buffer,
-        counter: Number(cred.counter),
-      },
-    });
+    // Convert challenge to base64URL for verification
+    const challengeBase64 = arrayBufferToBase64URL(chal.challenge);
 
-    if (!verification.verified || !verification.authenticationInfo) {
+    // Get current request origin
+    const origin = req.headers.get('origin') || req.headers.get('referer') || '';
+    const currentOrigin = origin.replace(/\/$/, ''); // Remove trailing slash
+
+    // Create proper WebAuthnCredential object
+    const credentialData = {
+      id: cred.id,
+      userId: cred.user_id,
+      rpId: cred.rp_id,
+      credentialId: cred.credential_id,
+      publicKey: cred.public_key,
+      counter: Number(cred.counter),
+      transports: cred.transports,
+      backupEligible: cred.backup_eligible,
+      backupState: cred.backup_state,
+      aaguid: cred.aaguid,
+      userHandle: cred.user_handle,
+      createdAt: new Date(cred.created_at),
+      lastUsedAt: cred.last_used_at ? new Date(cred.last_used_at) : undefined
+    };
+
+    const verification = await verifyAuthenticationResponse(
+      body,
+      challengeBase64,
+      currentOrigin,
+      rpID,
+      credentialData
+    );
+
+    if (!verification.verified) {
       return NextResponse.json({ error: 'Verification failed' }, { status: 400 });
     }
 
-    const { newCounter } = verification.authenticationInfo;
+    const { newCounter } = verification;
 
     // Critical fix: Counter integrity guard
     if (Number.isFinite(cred.counter) && newCounter < cred.counter) {

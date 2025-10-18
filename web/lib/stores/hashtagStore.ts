@@ -28,7 +28,6 @@ import type {
   PollHashtagIntegration,
   FeedHashtagIntegration
 } from '@/features/hashtags/types';
-import { withOptional } from '@/lib/utils/objects';
 
 import type { BaseStore } from './types';
 
@@ -456,7 +455,7 @@ export const useHashtagStore = create<HashtagStore>()(
             if (result.success) {
               set((state) => {
                 if (state.userPreferences) {
-                  state.userPreferences = withOptional(state.userPreferences, preferences);
+                  state.userPreferences = { ...state.userPreferences, ...preferences };
                 }
                 state.isUpdating = false;
               });
@@ -983,7 +982,7 @@ export const hashtagStoreDebug = {
   // Log current state
   logState: () => {
     const state = useHashtagStore.getState();
-    // State logging removed for production
+    console.log('Hashtag store state:', state);
   },
   
   // Reset store

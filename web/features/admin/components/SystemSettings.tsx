@@ -8,7 +8,6 @@
 import React, { useEffect } from 'react';
 
 import { performanceMetrics } from '@/lib/performance/performance-metrics';
-import { handleLoadError, handleSaveError } from '@/lib/utils/error-handler';
 import { 
   useAdminSystemSettings,
   useAdminSettingsTab,
@@ -47,6 +46,7 @@ export default function SystemSettings({ onSettingsUpdate }: SystemSettingsProps
         performanceMetrics.addMetric('system-settings-load', loadTime);
       } catch (error) {
         performanceMetrics.addMetric('system-settings-error', 1);
+        console.error('Error loading system settings:', error);
         // Error loading system settings - handled by error boundary
       }
     };
@@ -71,6 +71,7 @@ export default function SystemSettings({ onSettingsUpdate }: SystemSettingsProps
       // Settings saved successfully - notification handled by parent component
     } catch (error) {
       performanceMetrics.addMetric('system-settings-save-error', 1);
+      console.error('Error saving system settings:', error);
       // Error saving system settings - handled by error boundary
     }
   };

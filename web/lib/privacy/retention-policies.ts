@@ -2,7 +2,7 @@
 // PHASE 2: DATA RETENTION POLICIES IMPLEMENTATION
 // ============================================================================
 
-import { withOptional } from '@/lib/utils/objects';
+import { logger } from '@/lib/utils/logger';
 // Agent A2 - Privacy Specialist
 // 
 // This module implements data retention policies and automatic purging
@@ -191,9 +191,7 @@ export class DataRetentionManager {
       throw new Error(`Retention policy not found for data type: ${dataType}`);
     }
 
-    const updatedPolicy: RetentionPolicy = withOptional(existingPolicy, Object.assign({}, policy, {
-      lastUpdated: new Date()
-    }));
+    const updatedPolicy: RetentionPolicy = { ...existingPolicy, ...policy, lastUpdated: new Date() };
 
     this.policies.set(dataType, updatedPolicy);
     
@@ -285,21 +283,17 @@ export class DataRetentionManager {
       // Calculate next cleanup time
       const nextCleanup = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours from now
       
-      return withOptional(
-        {
-          dataType,
-          totalRecords: stats.totalRecords,
-          recordsToDelete,
-          recordsToAnonymize,
-          oldestRecord: stats.oldestRecord,
-          newestRecord: stats.newestRecord,
-          nextCleanup,
-          policy
-        },
-        {
-          lastCleanup: stats.lastCleanup
-        }
-      );
+      return {
+        dataType,
+        totalRecords: stats.totalRecords,
+        recordsToDelete,
+        recordsToAnonymize,
+        oldestRecord: stats.oldestRecord,
+        newestRecord: stats.newestRecord,
+        nextCleanup,
+        policy,
+        ...(stats.lastCleanup && { lastCleanup: stats.lastCleanup })
+      };
     } catch (error) {
       console.error(`Error getting retention status for ${dataType}:`, error);
       return null;
@@ -595,7 +589,7 @@ export class DataRetentionManager {
     this.lifecycleEvents.push(lifecycleEvent);
     
     // In production, this would be stored in a database
-    logger.info('Data lifecycle event logged:', lifecycleEvent);
+    logger.info('Data lifecycle event logged:', { lifecycleEvent });
   }
 }
 

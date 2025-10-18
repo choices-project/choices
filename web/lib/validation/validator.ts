@@ -7,7 +7,6 @@
 import { type ZodError, type ZodSchema } from 'zod';
 
 import { logger } from '@/lib/utils/logger';
-import { withOptional } from '@/lib/utils/objects';
 
 /**
  * Result of a validation operation
@@ -68,10 +67,10 @@ export function safeParse<T>(
     const result = schema.safeParse(data);
     
     if (result.success) {
-      return withOptional(
-        { success: true },
-        { data: result.data }
-      );
+      return {
+        success: true,
+        data: result.data
+      };
     } else {
       const errorMessage = `Validation failed: ${result.error.issues.map(issue => 
         `${issue.path.join('.')}: ${issue.message}`
@@ -88,10 +87,11 @@ export function safeParse<T>(
         throw new Error(errorMessage);
       }
 
-      return withOptional(
-        { success: false },
-        { error: errorMessage, details: result.error }
-      );
+      return {
+        success: false,
+        error: errorMessage,
+        details: result.error
+      };
     }
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown validation error';
@@ -106,10 +106,10 @@ export function safeParse<T>(
       throw error;
     }
 
-    return withOptional(
-      { success: false },
-      { error: errorMessage }
-    );
+    return {
+      success: false,
+      error: errorMessage
+    };
   }
 }
 
@@ -221,10 +221,10 @@ export function validateDatabaseResponse<T>(
       });
     }
 
-    return withOptional(
-      { success: false },
-      { error: errorMessage }
-    );
+    return {
+      success: false,
+      error: errorMessage
+    };
   }
 
   return safeParse(schema, response.data, options);
@@ -261,13 +261,11 @@ export function validateMultipleResponses<T>(
     });
   }
 
-  return withOptional(
-    { success: validItems.length > 0 },
-    { 
-      data: validItems,
-      error: errors.length > 0 ? errors.join('; ') : undefined
-    }
-  );
+  return {
+    success: validItems.length > 0,
+    data: validItems,
+    error: errors.length > 0 ? errors.join('; ') : undefined
+  };
 }
 
 /**
@@ -289,21 +287,19 @@ export function validateAndTransform<T, U>(
   const validationResult = safeParse(schema, data, options);
   
   if (!validationResult.success || validationResult.data === undefined) {
-    return withOptional(
-      { success: false },
-      { 
-        error: validationResult.error,
-        details: validationResult.details
-      }
-    );
+    return {
+      success: false,
+      ...(validationResult.error && { error: validationResult.error }),
+      ...(validationResult.details && { details: validationResult.details })
+    };
   }
 
   try {
     const transformed = transform(validationResult.data);
-    return withOptional(
-      { success: true },
-      { data: transformed }
-    );
+    return {
+      success: true,
+      data: transformed
+    };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Transform failed';
     
@@ -313,10 +309,10 @@ export function validateAndTransform<T, U>(
       });
     }
 
-    return withOptional(
-      { success: false },
-      { error: errorMessage }
-    );
+    return {
+      success: false,
+      error: errorMessage
+    };
   }
 }
 
@@ -348,11 +344,9 @@ export function validateBatch<T extends Record<string, unknown>>(
     });
   }
 
-  return withOptional(
-    { success: errors.length === 0 },
-    { 
-      data: result as T,
-      error: errors.length > 0 ? errors.join('; ') : undefined
-    }
-  );
+  return {
+    success: errors.length === 0,
+    data: result as T,
+    error: errors.length > 0 ? errors.join('; ') : undefined
+  };
 }

@@ -297,7 +297,7 @@ class FeatureFlagManagerImpl implements FeatureFlagManager {
       description: metadata.description as string || `Feature flag for ${normalizedId.toLowerCase().replace(/_/g, ' ')}`,
       category: metadata.category as string,
       dependencies: metadata.dependencies as string[],
-      metadata: metadata
+      metadata
     };
   }
 

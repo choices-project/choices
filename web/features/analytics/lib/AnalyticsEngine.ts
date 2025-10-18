@@ -9,7 +9,6 @@
  */
 
 import { logger } from '@/lib/utils/logger';
-import { withOptional } from '@/lib/utils/objects';
 
 export interface AnalyticsEvent {
   [key: string]: unknown;
@@ -33,17 +32,18 @@ export class AnalyticsEngine {
   private events: AnalyticsEvent[] = [];
   private config: AnalyticsConfig;
   private flushTimer?: NodeJS.Timeout | undefined;
-  private sessionCount: number = 0;
+  private sessionCount = 0;
   private featureUsage: Record<string, number> = {};
-  private userRetentionRate: number = 0;
+  private userRetentionRate = 0;
 
   constructor(config: Partial<AnalyticsConfig> = {}) {
-    this.config = withOptional({
+    this.config = {
       enabled: true,
       debug: false,
       batchSize: 50,
       flushInterval: 60000, // 1 minute
-    }, config);
+      ...config
+    };
 
     if (this.config.enabled) {
       this.startFlushTimer();
@@ -56,10 +56,11 @@ export class AnalyticsEngine {
   track(event: AnalyticsEvent): void {
     if (!this.config.enabled) return;
 
-    const fullEvent: AnalyticsEvent = withOptional(event, {
+    const fullEvent: AnalyticsEvent = {
+      ...event,
       timestamp: event.timestamp || Date.now(),
       sessionId: event.sessionId || this.getSessionId()
-    });
+    };
 
     this.events.push(fullEvent);
 

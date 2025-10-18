@@ -20,6 +20,7 @@ import {
   usePWAError,
   usePWAStore
 } from '@/lib/stores';
+import { logger } from '@/lib/utils/logger';
 
 interface PWAStatusProps {
   showDetails?: boolean;
@@ -45,7 +46,7 @@ export default function PWAStatus({ showDetails = false, className = '' }: PWASt
   }
 
   if (!installation.isInstalled && !installation.canInstall) {
-    logger.info('PWAStatus: Not rendering - isInstalled:', installation.isInstalled, 'canInstall:', installation.canInstall);
+    logger.info('PWAStatus: Not rendering', { isInstalled: installation.isInstalled, canInstall: installation.canInstall });
     return null;
   }
 

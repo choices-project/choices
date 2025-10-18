@@ -94,13 +94,13 @@ export class RealComponentTester {
     const result = render(component, {
       wrapper: this.config.wrapper ?? defaultWrapper,
       ...options
-    });
+    } as any);
 
     const endTime = performance.now();
     const renderTime = endTime - startTime;
 
     // Store performance metrics
-    result.__realComponentMetrics = {
+    (result as any).__realComponentMetrics = {
       renderTime,
       startTime,
       endTime
@@ -422,7 +422,7 @@ export const realComponentHelpers = {
     try {
       for (const element of expectedElements) {
         try {
-          const foundElement = result.getByText(element);
+          const foundElement = (result as any).getByText(element);
           if (!foundElement) {
             errors.push(new Error(`Expected element not found: ${element}`));
             passed = false;
@@ -636,16 +636,6 @@ export const REAL_COMPONENT_CONSTANTS = {
   DEFAULT_TIMEOUT: 5000,
   /** Performance test timeout (10 seconds) */
   PERFORMANCE_TIMEOUT: 10000
-};
-
-/**
- * Real Component Testing Exports
- */
-export {
-  RealComponentTester,
-  realComponentHelpers,
-  realComponentPatterns,
-  REAL_COMPONENT_CONSTANTS
 };
 
 export default RealComponentTester;

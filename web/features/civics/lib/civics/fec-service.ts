@@ -353,7 +353,7 @@ export class FECService {
 
       return data;
     } catch (error) {
-      throw new Error(`FEC cycle lookup failed: ${error}`);
+      throw new Error(`FEC cycle lookup failed: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -373,7 +373,7 @@ export class FECService {
 
       return data || [];
     } catch (error) {
-      throw new Error(`FEC cycles lookup failed: ${error}`);
+      throw new Error(`FEC cycles lookup failed: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -397,7 +397,7 @@ export class FECService {
 
       return data;
     } catch (error) {
-      throw new Error(`Current FEC cycle lookup failed: ${error}`);
+      throw new Error(`Current FEC cycle lookup failed: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -421,7 +421,7 @@ export class FECService {
 
       return data;
     } catch (error) {
-      throw new Error(`FEC candidate lookup failed: ${error}`);
+      throw new Error(`FEC candidate lookup failed: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -445,7 +445,7 @@ export class FECService {
 
       return data;
     } catch (error) {
-      throw new Error(`FEC committee lookup failed: ${error}`);
+      throw new Error(`FEC committee lookup failed: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -466,7 +466,7 @@ export class FECService {
 
       return data || [];
     } catch (error) {
-      throw new Error(`Candidate committees lookup failed: ${error}`);
+      throw new Error(`Candidate committees lookup failed: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -518,7 +518,7 @@ export class FECService {
         calculated_at: new Date().toISOString()
       };
     } catch (error) {
-      throw new Error(`Independence score calculation failed: ${error}`);
+      throw new Error(`Independence score calculation failed: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -581,7 +581,7 @@ export class FECService {
 
       return data || [];
     } catch (error) {
-      throw new Error(`Candidate contributions lookup failed: ${error}`);
+      throw new Error(`Candidate contributions lookup failed: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -638,7 +638,7 @@ export class FECService {
 
       return data || [];
     } catch (error) {
-      throw new Error(`Candidate disbursements lookup failed: ${error}`);
+      throw new Error(`Candidate disbursements lookup failed: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -690,7 +690,7 @@ export class FECService {
 
       return data || [];
     } catch (error) {
-      throw new Error(`Candidate independent expenditures lookup failed: ${error}`);
+      throw new Error(`Candidate independent expenditures lookup failed: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -708,7 +708,7 @@ export class FECService {
 
       return data || [];
     } catch (error) {
-      throw new Error(`E-filing vs processed summary lookup failed: ${error}`);
+      throw new Error(`E-filing vs processed summary lookup failed: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -734,7 +734,7 @@ export class FECService {
 
       return data;
     } catch (error) {
-      throw new Error(`Ingest cursor lookup failed: ${error}`);
+      throw new Error(`Ingest cursor lookup failed: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -759,7 +759,7 @@ export class FECService {
         throw new Error(`Failed to update ingest cursor: ${error.message}`);
       }
     } catch (error) {
-      throw new Error(`Ingest cursor update failed: ${error}`);
+      throw new Error(`Ingest cursor update failed: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -807,7 +807,7 @@ export class FECService {
         processed_percentage: totalRecords > 0 ? (totalProcessed / totalRecords) * 100 : 0
       };
     } catch (error) {
-      throw new Error(`FEC stats lookup failed: ${error}`);
+      throw new Error(`FEC stats lookup failed: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 }

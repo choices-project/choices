@@ -6,7 +6,8 @@
  */
 
 import { usePWAInstallation as usePWAInstallationStore } from '@/lib/stores';
+import type { PWAInstallation } from '@/lib/stores/pwaStore';
 
-export function usePWAInstallation() {
+export function usePWAInstallation(): PWAInstallation {
   return usePWAInstallationStore();
 }

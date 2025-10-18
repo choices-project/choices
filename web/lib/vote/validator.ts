@@ -36,25 +36,25 @@ export class VoteValidator {
     try {
       // Basic validation
       const basicValidation = this.validateBasicVoteData(voteData, poll);
-      if (!basicValidation.isValid) {
+      if (!basicValidation.valid) {
         return basicValidation;
       }
 
       // Method-specific validation
-      const methodValidation = await this.validateVotingMethod(voteData, poll);
-      if (!methodValidation.isValid) {
+      const methodValidation = this.validateVotingMethod(voteData, poll);
+      if (!methodValidation.valid) {
         return methodValidation;
       }
 
       // Business logic validation
       const businessValidation = await this.validateBusinessRules(voteData, poll, userId);
-      if (!businessValidation.isValid) {
+      if (!businessValidation.valid) {
         return businessValidation;
       }
 
       // Security validation
       const securityValidation = await this.validateSecurity(voteData, poll, userId);
-      if (!securityValidation.isValid) {
+      if (!securityValidation.valid) {
         return securityValidation;
       }
 
@@ -65,15 +65,15 @@ export class VoteValidator {
       });
 
       return {
-        isValid: true,
+        valid: true,
         requiresAuthentication: true,
         requiresTokens: false
       };
 
     } catch (error) {
-      devLog('Vote validation error:', error);
+      devLog('Vote validation error:', { error: error instanceof Error ? error.message : String(error) });
       return {
-        isValid: false,
+        valid: false,
         error: error instanceof Error ? error.message : 'Validation failed',
         requiresAuthentication: true,
         requiresTokens: false
@@ -87,7 +87,7 @@ export class VoteValidator {
   private validateBasicVoteData(voteData: VoteData, poll: PollData): VoteValidation {
     if (!voteData || typeof voteData !== 'object') {
       return {
-        isValid: false,
+        valid: false,
         error: 'Vote data must be an object',
         requiresAuthentication: true,
         requiresTokens: false
@@ -96,7 +96,7 @@ export class VoteValidator {
 
     if (!poll || typeof poll !== 'object') {
       return {
-        isValid: false,
+        valid: false,
         error: 'Poll data is required',
         requiresAuthentication: true,
         requiresTokens: false
@@ -105,7 +105,7 @@ export class VoteValidator {
 
     if (!poll.id || !poll.votingMethod) {
       return {
-        isValid: false,
+        valid: false,
         error: 'Invalid poll data',
         requiresAuthentication: true,
         requiresTokens: false
@@ -113,7 +113,7 @@ export class VoteValidator {
     }
 
     return {
-      isValid: true,
+      valid: true,
       requiresAuthentication: true,
       requiresTokens: false
     };
@@ -122,7 +122,7 @@ export class VoteValidator {
   /**
    * Validate voting method specific data
    */
-  private async validateVotingMethod(voteData: VoteData, poll: PollData): Promise<VoteValidation> {
+  private validateVotingMethod(voteData: VoteData, poll: PollData): VoteValidation {
     const method = poll.votingMethod;
 
     switch (method) {
@@ -138,7 +138,7 @@ export class VoteValidator {
         return this.validateRange(voteData, poll);
       default:
         return {
-          isValid: false,
+          valid: false,
           error: `Unsupported voting method: ${method}`,
           requiresAuthentication: true,
           requiresTokens: false
@@ -157,7 +157,7 @@ export class VoteValidator {
     // Check if poll is active
     if (poll.status !== 'active') {
       return {
-        isValid: false,
+        valid: false,
         error: 'Poll is not active',
         requiresAuthentication: true,
         requiresTokens: false
@@ -167,7 +167,7 @@ export class VoteValidator {
     // Check poll end time
     if (poll.endTime && new Date(poll.endTime) < new Date()) {
       return {
-        isValid: false,
+        valid: false,
         error: 'Poll has ended',
         requiresAuthentication: true,
         requiresTokens: false
@@ -177,7 +177,7 @@ export class VoteValidator {
     // Check if poll is locked
     if (poll.lockedAt) {
       return {
-        isValid: false,
+        valid: false,
         error: 'Poll is locked',
         requiresAuthentication: true,
         requiresTokens: false
@@ -189,7 +189,7 @@ export class VoteValidator {
       const hasVoted = await this.checkExistingVote(poll.id, userId);
       if (hasVoted) {
         return {
-          isValid: false,
+          valid: false,
           error: 'You have already voted on this poll',
           requiresAuthentication: true,
           requiresTokens: false
@@ -198,7 +198,7 @@ export class VoteValidator {
     }
 
     return {
-      isValid: true,
+      valid: true,
       requiresAuthentication: true,
       requiresTokens: false
     };
@@ -215,7 +215,7 @@ export class VoteValidator {
     // Check authentication requirements
     if (poll.votingConfig.requireVerification && !userId) {
       return {
-        isValid: false,
+        valid: false,
         error: 'Authentication required for this poll',
         requiresAuthentication: true,
         requiresTokens: false
@@ -227,7 +227,7 @@ export class VoteValidator {
       const userTier = await this.getUserTrustTier(userId);
       if (!this.isTrustTierSufficient(userTier, poll.votingConfig.minTrustTier)) {
         return {
-          isValid: false,
+          valid: false,
           error: 'Insufficient trust tier for this poll',
           requiresAuthentication: true,
           requiresTokens: false
@@ -237,10 +237,10 @@ export class VoteValidator {
 
     // Rate limiting check
     if (userId) {
-      const isRateLimited = await this.checkRateLimit(userId);
+      const isRateLimited = this.checkRateLimit(userId);
       if (isRateLimited) {
         return {
-          isValid: false,
+          valid: false,
           error: 'Rate limit exceeded. Please try again later.',
           requiresAuthentication: true,
           requiresTokens: false
@@ -249,7 +249,7 @@ export class VoteValidator {
     }
 
     return {
-      isValid: true,
+      valid: true,
       requiresAuthentication: true,
       requiresTokens: false
     };
@@ -261,7 +261,7 @@ export class VoteValidator {
   private validateSingleChoice(voteData: VoteData, poll: PollData): VoteValidation {
     if (voteData.choice === undefined || voteData.choice === null) {
       return {
-        isValid: false,
+        valid: false,
         error: 'Choice is required for single choice voting',
         requiresAuthentication: true,
         requiresTokens: false
@@ -270,7 +270,7 @@ export class VoteValidator {
 
     if (typeof voteData.choice !== 'number' || !Number.isInteger(voteData.choice)) {
       return {
-        isValid: false,
+        valid: false,
         error: 'Choice must be a valid integer',
         requiresAuthentication: true,
         requiresTokens: false
@@ -279,7 +279,7 @@ export class VoteValidator {
 
     if (voteData.choice < 0 || voteData.choice >= poll.options.length) {
       return {
-        isValid: false,
+        valid: false,
         error: `Choice must be between 0 and ${poll.options.length - 1}`,
         requiresAuthentication: true,
         requiresTokens: false
@@ -287,7 +287,7 @@ export class VoteValidator {
     }
 
     return {
-      isValid: true,
+      valid: true,
       requiresAuthentication: true,
       requiresTokens: false
     };
@@ -299,7 +299,7 @@ export class VoteValidator {
   private validateApproval(voteData: VoteData, poll: PollData): VoteValidation {
     if (!voteData.approvals || !Array.isArray(voteData.approvals)) {
       return {
-        isValid: false,
+        valid: false,
         error: 'Approvals array is required for approval voting',
         requiresAuthentication: true,
         requiresTokens: false
@@ -308,7 +308,7 @@ export class VoteValidator {
 
     if (voteData.approvals.length === 0) {
       return {
-        isValid: false,
+        valid: false,
         error: 'At least one option must be approved',
         requiresAuthentication: true,
         requiresTokens: false
@@ -318,7 +318,7 @@ export class VoteValidator {
     const maxApprovals = poll.votingConfig.maxChoices || poll.options.length;
     if (voteData.approvals.length > maxApprovals) {
       return {
-        isValid: false,
+        valid: false,
         error: `Maximum ${maxApprovals} approvals allowed`,
         requiresAuthentication: true,
         requiresTokens: false
@@ -328,7 +328,7 @@ export class VoteValidator {
     for (const approval of voteData.approvals) {
       if (typeof approval !== 'number' || !Number.isInteger(approval)) {
         return {
-          isValid: false,
+          valid: false,
           error: 'All approvals must be valid integers',
           requiresAuthentication: true,
           requiresTokens: false
@@ -337,7 +337,7 @@ export class VoteValidator {
 
       if (approval < 0 || approval >= poll.options.length) {
         return {
-          isValid: false,
+          valid: false,
           error: `Approval index must be between 0 and ${poll.options.length - 1}`,
           requiresAuthentication: true,
           requiresTokens: false
@@ -349,7 +349,7 @@ export class VoteValidator {
     const uniqueApprovals = new Set(voteData.approvals);
     if (uniqueApprovals.size !== voteData.approvals.length) {
       return {
-        isValid: false,
+        valid: false,
         error: 'Duplicate approvals are not allowed',
         requiresAuthentication: true,
         requiresTokens: false
@@ -357,7 +357,7 @@ export class VoteValidator {
     }
 
     return {
-      isValid: true,
+      valid: true,
       requiresAuthentication: true,
       requiresTokens: false
     };
@@ -369,7 +369,7 @@ export class VoteValidator {
   private validateRanked(voteData: VoteData, poll: PollData): VoteValidation {
     if (!voteData.rankings || !Array.isArray(voteData.rankings)) {
       return {
-        isValid: false,
+        valid: false,
         error: 'Rankings array is required for ranked choice voting',
         requiresAuthentication: true,
         requiresTokens: false
@@ -378,7 +378,7 @@ export class VoteValidator {
 
     if (voteData.rankings.length !== poll.options.length) {
       return {
-        isValid: false,
+        valid: false,
         error: 'All options must be ranked',
         requiresAuthentication: true,
         requiresTokens: false
@@ -388,7 +388,7 @@ export class VoteValidator {
     for (const ranking of voteData.rankings) {
       if (typeof ranking !== 'number' || !Number.isInteger(ranking)) {
         return {
-          isValid: false,
+          valid: false,
           error: 'All rankings must be valid integers',
           requiresAuthentication: true,
           requiresTokens: false
@@ -397,7 +397,7 @@ export class VoteValidator {
 
       if (ranking < 0 || ranking >= poll.options.length) {
         return {
-          isValid: false,
+          valid: false,
           error: `Ranking index must be between 0 and ${poll.options.length - 1}`,
           requiresAuthentication: true,
           requiresTokens: false
@@ -409,7 +409,7 @@ export class VoteValidator {
     const uniqueRankings = new Set(voteData.rankings);
     if (uniqueRankings.size !== voteData.rankings.length) {
       return {
-        isValid: false,
+        valid: false,
         error: 'Duplicate rankings are not allowed',
         requiresAuthentication: true,
         requiresTokens: false
@@ -417,7 +417,7 @@ export class VoteValidator {
     }
 
     return {
-      isValid: true,
+      valid: true,
       requiresAuthentication: true,
       requiresTokens: false
     };
@@ -429,7 +429,7 @@ export class VoteValidator {
   private validateQuadratic(voteData: VoteData, poll: PollData): VoteValidation {
     if (!voteData.allocations || typeof voteData.allocations !== 'object') {
       return {
-        isValid: false,
+        valid: false,
         error: 'Allocations object is required for quadratic voting',
         requiresAuthentication: true,
         requiresTokens: false
@@ -442,7 +442,7 @@ export class VoteValidator {
     for (const [optionIndex, credits] of Object.entries(voteData.allocations)) {
       if (typeof credits !== 'number' || !Number.isInteger(credits) || credits < 0) {
         return {
-          isValid: false,
+          valid: false,
           error: 'All allocations must be non-negative integers',
           requiresAuthentication: true,
           requiresTokens: false
@@ -452,7 +452,7 @@ export class VoteValidator {
       const optionIdx = parseInt(optionIndex);
       if (optionIdx < 0 || optionIdx >= poll.options.length) {
         return {
-          isValid: false,
+          valid: false,
           error: `Invalid option index: ${optionIndex}`,
           requiresAuthentication: true,
           requiresTokens: false
@@ -465,7 +465,7 @@ export class VoteValidator {
 
     if (totalSpent > totalCredits) {
       return {
-        isValid: false,
+        valid: false,
         error: `Total spending (${totalSpent}) exceeds available credits (${totalCredits})`,
         requiresAuthentication: true,
         requiresTokens: false
@@ -475,7 +475,7 @@ export class VoteValidator {
     const hasVotes = Object.values(voteData.allocations).some(credits => credits > 0);
     if (!hasVotes) {
       return {
-        isValid: false,
+        valid: false,
         error: 'At least one option must receive votes',
         requiresAuthentication: true,
         requiresTokens: false
@@ -483,7 +483,7 @@ export class VoteValidator {
     }
 
     return {
-      isValid: true,
+      valid: true,
       requiresAuthentication: true,
       requiresTokens: false
     };
@@ -495,7 +495,7 @@ export class VoteValidator {
   private validateRange(voteData: VoteData, poll: PollData): VoteValidation {
     if (!voteData.ratings || typeof voteData.ratings !== 'object') {
       return {
-        isValid: false,
+        valid: false,
         error: 'Ratings object is required for range voting',
         requiresAuthentication: true,
         requiresTokens: false
@@ -508,7 +508,7 @@ export class VoteValidator {
     for (const [optionIndex, rating] of Object.entries(voteData.ratings)) {
       if (typeof rating !== 'number' || isNaN(rating)) {
         return {
-          isValid: false,
+          valid: false,
           error: 'All ratings must be valid numbers',
           requiresAuthentication: true,
           requiresTokens: false
@@ -517,7 +517,7 @@ export class VoteValidator {
 
       if (rating < rangeMin || rating > rangeMax) {
         return {
-          isValid: false,
+          valid: false,
           error: `Rating must be between ${rangeMin} and ${rangeMax}`,
           requiresAuthentication: true,
           requiresTokens: false
@@ -527,7 +527,7 @@ export class VoteValidator {
       const optionIdx = parseInt(optionIndex);
       if (optionIdx < 0 || optionIdx >= poll.options.length) {
         return {
-          isValid: false,
+          valid: false,
           error: `Invalid option index: ${optionIndex}`,
           requiresAuthentication: true,
           requiresTokens: false
@@ -537,7 +537,7 @@ export class VoteValidator {
 
     if (Object.keys(voteData.ratings).length !== poll.options.length) {
       return {
-        isValid: false,
+        valid: false,
         error: 'All options must be rated',
         requiresAuthentication: true,
         requiresTokens: false
@@ -547,7 +547,7 @@ export class VoteValidator {
     const hasNonZeroRating = Object.values(voteData.ratings).some(rating => rating > rangeMin);
     if (!hasNonZeroRating) {
       return {
-        isValid: false,
+        valid: false,
         error: 'At least one option must have a rating above the minimum',
         requiresAuthentication: true,
         requiresTokens: false
@@ -555,7 +555,7 @@ export class VoteValidator {
     }
 
     return {
-      isValid: true,
+      valid: true,
       requiresAuthentication: true,
       requiresTokens: false
     };
@@ -616,7 +616,7 @@ export class VoteValidator {
   /**
    * Check rate limit for user
    */
-  private async checkRateLimit(_userId: string): Promise<boolean> {
+  private checkRateLimit(_userId: string): boolean {
     // This would implement actual rate limiting logic
     // For now, return false (no rate limiting)
     return false;

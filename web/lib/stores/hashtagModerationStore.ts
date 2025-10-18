@@ -12,7 +12,8 @@ import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
-import { shallow } from 'zustand/shallow';
+
+import { logger } from '@/lib/utils/logger';
 
 import type { BaseStore } from './types';
 
@@ -465,6 +466,7 @@ export const useModerationSubscription = () => {
     subscribe: (callback: (state: HashtagModerationStore) => void) => {
       return useHashtagModerationStore.subscribe(callback);
     },
+    getState: () => store,
   };
 };
 

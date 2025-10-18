@@ -56,9 +56,9 @@ export class PerformanceProfiler {
   private profiles: Map<string, ComponentProfile> = new Map();
   private metrics: ProfilerMetrics[] = [];
   private alerts: string[] = [];
-  private isProfiling: boolean = false;
-  private startTime: number = 0;
-  private startMemory: number = 0;
+  private isProfiling = false;
+  private startTime = 0;
+  private startMemory = 0;
 
   /**
    * Start profiling a component
@@ -66,7 +66,7 @@ export class PerformanceProfiler {
   startProfiling(componentName: string): void {
     this.isProfiling = true;
     this.startTime = performance.now();
-    this.startMemory = performance.memory?.usedJSHeapSize || 0;
+    this.startMemory = (performance as any).memory?.usedJSHeapSize || 0;
     
     logger.info(`🔍 Starting performance profiling for: ${componentName}`);
   }
@@ -74,13 +74,13 @@ export class PerformanceProfiler {
   /**
    * Stop profiling and record metrics
    */
-  stopProfiling(componentName: string, renderCount: number = 1): ProfilerMetrics {
+  stopProfiling(componentName: string, renderCount = 1): ProfilerMetrics {
     if (!this.isProfiling) {
       throw new Error('Profiling not started. Call startProfiling() first.');
     }
 
     const endTime = performance.now();
-    const endMemory = performance.memory?.usedJSHeapSize || 0;
+    const endMemory = (performance as any).memory?.usedJSHeapSize || 0;
     
     const totalRenderTime = endTime - this.startTime;
     const averageRenderTime = totalRenderTime / renderCount;
@@ -139,8 +139,8 @@ export class PerformanceProfiler {
     // Check for memory patterns
     if (recentMetrics.length > 1) {
       const memoryTrend = recentMetrics.map(m => m.memoryPeak);
-      const isIncreasing = memoryTrend.every((val, i) => i === 0 || val >= memoryTrend[i - 1]);
-      if (isIncreasing && memoryTrend[memoryTrend.length - 1] > 5) {
+      const isIncreasing = memoryTrend.every((val, i) => i === 0 || val >= (memoryTrend[i - 1] || 0));
+      if (isIncreasing && (memoryTrend[memoryTrend.length - 1] || 0) > 5) {
         triggers.push('Increasing memory usage pattern');
       }
     }
@@ -148,8 +148,8 @@ export class PerformanceProfiler {
     // Check for performance degradation
     if (recentMetrics.length > 2) {
       const scores = recentMetrics.map(m => m.optimizationScore);
-      const isDegrading = scores.every((score, i) => i === 0 || score <= scores[i - 1]);
-      if (isDegrading && scores[scores.length - 1] < 70) {
+      const isDegrading = scores.every((score, i) => i === 0 || score <= (scores[i - 1] || 0));
+      if (isDegrading && (scores[scores.length - 1] || 0) < 70) {
         triggers.push('Performance degradation detected');
       }
     }

@@ -33,7 +33,7 @@ export function usePerformanceUtils() {
           }
         } as any)
       } catch (err) {
-        devLog('Error loading performance utils:', err)
+        devLog('Error loading performance utils:', { error: err instanceof Error ? err.message : String(err) })
         setError(err instanceof Error ? err.message : 'Unknown error')
       } finally {
         setLoading(false)

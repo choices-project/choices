@@ -7,13 +7,13 @@
 import { ApplicationError, type ErrorDetails } from './base';
 
 export class ValidationError extends ApplicationError {
-  constructor(message: string = 'Validation failed', details?: ErrorDetails) {
+  constructor(message = 'Validation failed', details?: ErrorDetails) {
     super(message, 400, 'VALIDATION_FAILED', details);
   }
 }
 
 export class InvalidInputError extends ApplicationError {
-  constructor(message: string = 'Invalid input provided', details?: ErrorDetails) {
+  constructor(message = 'Invalid input provided', details?: ErrorDetails) {
     super(message, 400, 'VALIDATION_INVALID_INPUT', details);
   }
 }
@@ -51,13 +51,13 @@ export class OutOfRangeError extends ApplicationError {
 }
 
 export class InvalidVoteDataError extends ApplicationError {
-  constructor(message: string = 'Invalid vote data provided', details?: ErrorDetails) {
+  constructor(message = 'Invalid vote data provided', details?: ErrorDetails) {
     super(message, 400, 'VALIDATION_INVALID_VOTE_DATA', details);
   }
 }
 
 export class PollConfigurationError extends ApplicationError {
-  constructor(message: string = 'Invalid poll configuration', details?: ErrorDetails) {
+  constructor(message = 'Invalid poll configuration', details?: ErrorDetails) {
     super(message, 400, 'VALIDATION_POLL_CONFIG_ERROR', details);
   }
 }

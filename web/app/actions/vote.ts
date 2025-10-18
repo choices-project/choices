@@ -50,7 +50,7 @@ export const vote = createSecureServerAction(
     }
 
     // Check if poll has ended
-    if (poll.end_date && new Date(poll.end_date) < new Date()) {
+    if (poll.end_time && new Date(poll.end_time) < new Date()) {
       throw new Error('Poll has ended')
     }
 

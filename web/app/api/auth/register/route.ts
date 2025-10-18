@@ -13,7 +13,7 @@ import {
 export async function POST(request: NextRequest) {
   try {
     // Validate CSRF protection for state-changing operation
-    if (!validateCsrfProtection(request)) {
+    if (!(await validateCsrfProtection(request))) {
       return createCsrfErrorResponse()
     }
 

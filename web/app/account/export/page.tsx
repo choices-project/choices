@@ -121,7 +121,7 @@ export default function DataExportPage() {
         throw new Error('Failed to export data')
       }
     } catch (error) {
-      devLog('Error exporting data:', error)
+      devLog('Error exporting data:', { error })
       setError('Failed to export data')
     } finally {
       setIsExporting(false)
@@ -138,7 +138,7 @@ export default function DataExportPage() {
         setExportHistory(data.history)
       }
     } catch (error) {
-      devLog('Error loading export history:', error)
+      devLog('Error loading export history:', { error })
     }
   }, [user])
 
@@ -181,6 +181,17 @@ export default function DataExportPage() {
           >
             Login
           </a>
+        </div>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading your data...</p>
         </div>
       </div>
     );

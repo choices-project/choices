@@ -17,6 +17,8 @@ import {
 import Image from 'next/image';
 import React, { useState } from 'react';
 
+import { logger } from '@/lib/utils/logger';
+
 interface BurgerMenuProps {
   isOpen: boolean;
   onClose: () => void;

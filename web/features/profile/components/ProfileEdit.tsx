@@ -36,8 +36,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/hooks/useAuth';
 import { 
   useUserProfileEditData,
-  useUserIsProfileEditing,
-  useUserProfileEditErrors,
   useUserAvatarFile,
   useUserAvatarPreview,
   useUserIsUploadingAvatar,
@@ -88,8 +86,6 @@ export default function ProfileEdit({
   
   // Get state from userStore
   const formData = useUserProfileEditData();
-  const isEditing = useUserIsProfileEditing();
-  const errors = useUserProfileEditErrors();
   const avatarFile = useUserAvatarFile();
   const avatarPreview = useUserAvatarPreview();
   const isUploadingAvatar = useUserIsUploadingAvatar();
@@ -99,13 +95,9 @@ export default function ProfileEdit({
     setProfileEditData,
     updateProfileEditData,
     updateArrayField,
-    setProfileEditing,
-    setProfileEditError,
-    clearProfileEditError,
     setAvatarFile,
     setAvatarPreview,
-    setUploadingAvatar,
-    clearAvatar
+    setUploadingAvatar
   } = useUserActions();
   
   // Local UI state (not in store)

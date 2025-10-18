@@ -42,6 +42,7 @@ export async function verify(proofData: { proof: string; publicInputs: string[] 
     
     return true;
   } catch (error) {
+    console.error('Zero-knowledge proof verification failed:', error);
     return false;
   }
 }

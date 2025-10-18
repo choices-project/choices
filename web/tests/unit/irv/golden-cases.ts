@@ -305,7 +305,7 @@ export const goldenTestCases = [
 // TEST RUNNER FUNCTIONS
 // ============================================================================
 
-export function createTestRankings(ballots: string[][], pollId: string = 'test-poll'): UserRanking[] {
+export function createTestRankings(ballots: string[][], pollId = 'test-poll'): UserRanking[] {
   return ballots.map((ranking, index) => ({
     pollId,
     userId: `user_${index}`,
@@ -446,7 +446,7 @@ export function generateLargeBallotSet(candidateCount: number, ballotCount: numb
   return ballots;
 }
 
-export function runPerformanceTest(candidateCount: number = 10, ballotCount: number = 10000): {
+export function runPerformanceTest(candidateCount = 10, ballotCount = 10000): {
   duration: number;
   success: boolean;
   error?: string;

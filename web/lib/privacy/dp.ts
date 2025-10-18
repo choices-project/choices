@@ -14,7 +14,7 @@
 // - Privacy-aware data aggregation
 // - Budget allocation and monitoring
 
-import { withOptional } from '@/lib/utils/objects';
+import { logger } from '@/lib/utils/logger';
 // 
 // Created: January 15, 2025
 // Status: Phase 2 Implementation
@@ -164,7 +164,7 @@ export class DifferentialPrivacyManager {
     pollId: string, 
     epsilon: number, 
     operation: string, 
-    context: string = ''
+    context = ''
   ): void {
     const budget = this.getOrCreateBudget(pollId);
     
@@ -237,7 +237,7 @@ export class DifferentialPrivacyManager {
     pollId: string, 
     epsilon: number, 
     operation: string, 
-    context: string = ''
+    context = ''
   ): boolean {
     if (!this.canAllocateEpsilon(pollId, epsilon)) {
       return false;
@@ -261,7 +261,7 @@ export class DifferentialPrivacyManager {
   shouldShowBreakdown(
     groupSize: number, 
     context: 'public' | 'loggedIn' | 'internal',
-    totalCount: number = 0
+    totalCount = 0
   ): KAnonymityResult {
     const threshold = this.config.kAnonymityThresholds[context];
     const minPercentage = this.config.minPercentageThreshold;
@@ -300,7 +300,7 @@ export class DifferentialPrivacyManager {
   filterBreakdowns(
     breakdown: Record<string, any>, 
     context: 'public' | 'loggedIn' | 'internal',
-    totalCount: number = 0
+    totalCount = 0
   ): Record<string, any> {
     const filtered: Record<string, any> = {};
     
@@ -312,20 +312,22 @@ export class DifferentialPrivacyManager {
           // Apply differential privacy to the count
           const dpResult = this.dpCount(value.count, this.config.defaultEpsilon);
           
-          filtered[key] = withOptional(value, {
+          filtered[key] = {
+            ...value,
             count: dpResult.noisyCount,
             originalCount: value.count,
             privacyProtected: true,
             epsilon: dpResult.epsilon,
             confidence: dpResult.confidence
-          });
+          };
         } else {
           // Suppress the breakdown
-          filtered[key] = withOptional(value, {
+          filtered[key] = {
+            ...value,
             count: 0,
             suppressed: true,
             reason: kAnonymityResult.reason
-          });
+          };
         }
       } else {
         filtered[key] = value;
@@ -504,7 +506,7 @@ export function laplaceNoise(epsilon: number): number {
  * @param epsilon - Privacy parameter
  * @returns Noisy count
  */
-export function dpCount(count: number, epsilon: number = 0.8): number {
+export function dpCount(count: number, epsilon = 0.8): number {
   return Math.max(0, Math.round(count + laplaceNoise(epsilon)));
 }
 
@@ -518,9 +520,9 @@ export function dpCount(count: number, epsilon: number = 0.8): number {
  */
 export function showBucket(
   groupSize: number, 
-  k: number = 100, 
-  minPercentage: number = 0.01, 
-  total: number = 0
+  k = 100, 
+  minPercentage = 0.01, 
+  total = 0
 ): boolean {
   const minCount = Math.ceil(total * minPercentage);
   return groupSize >= k && groupSize >= minCount;

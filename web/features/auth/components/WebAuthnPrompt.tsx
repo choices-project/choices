@@ -5,6 +5,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+
 import { logger } from '@/lib/utils/logger';
 
 export interface FeatureWrapperProps {
@@ -14,7 +15,7 @@ export interface FeatureWrapperProps {
   mode?: 'register' | 'authenticate';
   onComplete?: () => Promise<void>;
   onCancel?: () => void;
-  onError?: (error: any) => void;
+  onError?: (error: Error) => void;
 }
 
 export const FeatureWrapper: React.FC<FeatureWrapperProps> = ({ 
@@ -37,7 +38,7 @@ export const FeatureWrapper: React.FC<FeatureWrapperProps> = ({
           const available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
           setIsSupported(available);
         } catch (error) {
-          console.warn('WebAuthn support check failed:', error);
+          logger.warn('WebAuthn support check failed', { error: error instanceof Error ? error.message : String(error) });
           setIsSupported(false);
         }
       }
@@ -61,7 +62,7 @@ export const FeatureWrapper: React.FC<FeatureWrapperProps> = ({
       }
       await onComplete?.();
     } catch (error) {
-      onError?.(error);
+      onError?.(error instanceof Error ? error : new Error(String(error)));
     } finally {
       setIsLoading(false);
     }

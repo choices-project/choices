@@ -6,6 +6,8 @@
  * Updated: October 8, 2025
  */
 
+import { logger } from '@/lib/utils/logger';
+
 export interface CurrentElectorateVerification {
   systemDate: Date;
   verificationTimestamp: string;

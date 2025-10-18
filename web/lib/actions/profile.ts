@@ -16,6 +16,7 @@ import {
   requireProfileUser, 
   validateProfileData 
 } from '@/lib/core/auth/profile-auth';
+import { logger } from '@/lib/utils/logger';
 
 // Types for superior implementation - matches documented superior implementation
 export interface ProfileUser {
@@ -70,14 +71,14 @@ export async function getCurrentProfile(): Promise<ProfileActionResult> {
     const authResult = await requireProfileUser();
     
     if ('error' in authResult) {
-      logger.info('[getCurrentProfile] Auth error:', authResult.error);
+      logger.info('[getCurrentProfile] Auth error:', { error: authResult.error });
       return {
         success: false,
         error: authResult.error,
       };
     }
 
-    logger.info('[getCurrentProfile] Success, user:', JSON.stringify(authResult.user, null, 2));
+    logger.info('[getCurrentProfile] Success, user:', { user: authResult.user });
     return {
       success: true,
       data: authResult.user,

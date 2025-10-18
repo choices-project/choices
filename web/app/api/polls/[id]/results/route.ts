@@ -9,10 +9,11 @@ export const dynamic = 'force-dynamic';
 // GET /api/polls/[id]/results - Get aggregated poll results only
 export async function GET(
   _request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const pollId = params.id;
+    const { id } = await params;
+    const pollId = id;
     const supabaseClient = await getSupabaseServerClient();
 
     // Fetch poll data and calculate aggregated results
@@ -62,7 +63,7 @@ export async function GET(
     });
 
   } catch (error) {
-    devLog('Error in poll results API:', error);
+    devLog('Error in poll results API:', { error });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

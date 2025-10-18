@@ -1,14 +1,16 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useEffect, useCallback } from 'react'
 
 import { 
   usePWAInstallation,
   usePWAOffline,
-  usePWANotifications,
   usePWALoading,
-  usePWAError
+  usePWAError,
+  usePWAActions
 } from '@/lib/stores'
+import { T } from '@/lib/testing/testIds'
+import { logger } from '@/lib/utils/logger'
 
 import NotificationPermission from './NotificationPermission'
 import NotificationPreferences from './NotificationPreferences'
@@ -16,7 +18,6 @@ import OfflineIndicator from './OfflineIndicator'
 import OfflineQueue from './OfflineQueue'
 import OfflineSync from './OfflineSync'
 import OfflineVoting from './OfflineVoting'
-import { T } from '@/lib/testing/testIds'
 
 interface PWAFeaturesProps {
   className?: string
@@ -26,34 +27,45 @@ interface PWAFeaturesProps {
 export default function PWAFeatures({ className = '', showDetails = false }: PWAFeaturesProps) {
   const installation = usePWAInstallation();
   const offline = usePWAOffline();
-  const notifications = usePWANotifications();
   const _loading = usePWALoading();
   const _error = usePWAError();
-  
-  const [isOnline, setIsOnline] = useState(true)
+  const pwa = usePWAActions();
+
+  // Use useCallback to prevent infinite loops
+  const handleOnline = useCallback(() => {
+    if (typeof window !== 'undefined' && pwa.setOnlineStatus) {
+      pwa.setOnlineStatus(true);
+    }
+  }, [pwa.setOnlineStatus]);
+
+  const handleOffline = useCallback(() => {
+    if (typeof window !== 'undefined' && pwa.setOnlineStatus) {
+      pwa.setOnlineStatus(false);
+    }
+  }, [pwa.setOnlineStatus]);
 
   useEffect(() => {
-    // Only run on client side
-    if (typeof window !== 'undefined') {
-      setIsOnline(navigator.onLine)
+    // Only run on client side and sync with Zustand store
+    if (typeof window !== 'undefined' && pwa.setOnlineStatus) {
+      // Update Zustand store with current online status
+      pwa.setOnlineStatus(navigator.onLine);
       
-      const handleOnline = () => setIsOnline(true)
-      const handleOffline = () => setIsOnline(false)
-      
-      window.addEventListener('online', handleOnline)
-      window.addEventListener('offline', handleOffline)
+      window.addEventListener('online', handleOnline);
+      window.addEventListener('offline', handleOffline);
       
       return () => {
-        window.removeEventListener('online', handleOnline)
-        window.removeEventListener('offline', handleOffline)
+        window.removeEventListener('online', handleOnline);
+        window.removeEventListener('offline', handleOffline);
       }
     }
-  }, [])
+  }, [handleOnline, handleOffline, pwa.setOnlineStatus]) // Stable dependencies
 
   // Handle undefined store hooks gracefully - provide defaults for testing
   const safeInstallation = installation || { canInstall: true, isInstalled: false }
   const safeOffline = offline || { isOnline: true, offlineData: { cachedPages: [], queuedActions: [] } }
-  const safeNotifications = notifications || { requestPermission: jest.fn(), showNotification: jest.fn() }
+  
+  // Use Zustand store's online status instead of local state
+  const isOnline = safeOffline.isOnline
 
   // Only render if PWA can be installed or is already installed
   if (!safeInstallation.canInstall && !safeInstallation.isInstalled) {
@@ -81,7 +93,7 @@ export default function PWAFeatures({ className = '', showDetails = false }: PWA
 
       {/* Offline Queue */}
       {safeOffline.offlineData?.queuedActions?.length > 0 && (
-        <div data-testid="offline-queue">
+        <div data-testid="offline-queue-container">
           <OfflineQueue />
         </div>
       )}
@@ -107,10 +119,8 @@ export default function PWAFeatures({ className = '', showDetails = false }: PWA
           className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
           aria-label="Install PWA"
           onClick={() => {
-            // Call the mocked install function if available
-            if (safeInstallation.install) {
-              safeInstallation.install();
-            }
+            // PWA installation is handled by the browser
+            // The install prompt will be shown automatically
           }}
         >
           Install PWA
@@ -119,10 +129,19 @@ export default function PWAFeatures({ className = '', showDetails = false }: PWA
           data-testid={T.pwa.syncButton}
           className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 ml-2"
           aria-label="Sync offline data"
-          onClick={() => {
-            // Call the mocked sync function if available
-            if (safeOffline.syncOfflineData) {
-              safeOffline.syncOfflineData();
+          onClick={async () => {
+            try {
+              // Trigger offline data sync
+              if (safeOffline.offlineData.queuedActions.length > 0) {
+                await pwa.processOfflineActions();
+                logger.info('Offline data synced successfully', { 
+                  actionsProcessed: safeOffline.offlineData.queuedActions.length 
+                });
+              } else {
+                logger.info('No offline data to sync');
+              }
+            } catch (error) {
+              logger.error('Failed to sync offline data:', error instanceof Error ? error : new Error(String(error)));
             }
           }}
         >
@@ -132,10 +151,13 @@ export default function PWAFeatures({ className = '', showDetails = false }: PWA
           data-testid={T.pwa.clearButton}
           className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 ml-2"
           aria-label="Clear offline data"
-          onClick={() => {
-            // Call the mocked clear function if available
-            if (safeOffline.clearOfflineData) {
-              safeOffline.clearOfflineData();
+          onClick={async () => {
+            try {
+              // Clear offline data
+              await pwa.clearCache();
+              logger.info('Offline data cleared successfully');
+            } catch (error) {
+              logger.error('Failed to clear offline data:', error instanceof Error ? error : new Error(String(error)));
             }
           }}
         >
@@ -151,13 +173,9 @@ export default function PWAFeatures({ className = '', showDetails = false }: PWA
             className="bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600"
             onClick={() => {
               // Call the mocked request permission function if available
-              if (safeNotifications.requestPermission) {
-                safeNotifications.requestPermission();
-              } else {
-                // Fallback to real API
-                if (typeof window !== 'undefined' && 'Notification' in window) {
-                  Notification.requestPermission();
-                }
+              // Request notification permission
+              if (typeof window !== 'undefined' && 'Notification' in window) {
+                Notification.requestPermission();
               }
             }}
           >
@@ -167,21 +185,12 @@ export default function PWAFeatures({ className = '', showDetails = false }: PWA
             data-testid={T.pwa.testNotificationButton}
             className="bg-orange-500 text-white px-4 py-2 rounded hover:bg-orange-600 ml-2"
             onClick={() => {
-              // Call the mocked show notification function if available
-              if (safeNotifications.showNotification) {
-                safeNotifications.showNotification({
-                  title: 'Test Notification',
+              // Show test notification
+              if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
+                new Notification('Test Notification', {
                   body: 'This is a test notification',
                   icon: '/icon-192x192.png'
                 });
-              } else {
-                // Fallback to real API
-                if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
-                  new Notification('Test Notification', {
-                    body: 'This is a test notification',
-                    icon: '/icon-192x192.png'
-                  });
-                }
               }
             }}
           >

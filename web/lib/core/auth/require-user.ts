@@ -10,7 +10,6 @@ import { type NextRequest } from 'next/server';
 
 import { validateOrigin } from '@/lib/http/origin';
 import { devLog } from '@/lib/utils/logger';
-import { withOptional } from '@/lib/utils/objects';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 export interface User {
@@ -115,7 +114,7 @@ export async function requireUser(
       .single();
 
     if (profileError) {
-      devLog('Profile lookup error:', profileError, { userId: user.id });
+      devLog('Profile lookup error:', { error: profileError.message, userId: user.id });
       return {
         error: 'User profile not found',
         status: 404
@@ -127,18 +126,17 @@ export async function requireUser(
       .rpc('is_admin', { input_user_id: user.id });
 
     if (adminError) {
-      devLog('Admin check error:', adminError, { userId: user.id });
+      devLog('Admin check error:', { error: adminError.message, userId: user.id });
     }
 
     const userProfile = profile && !('error' in profile) ? profile as UserProfile : null;
-    const userObj: User = withOptional({
+    const userObj: User = {
       id: user.id,
       email: user.email || '',
       trust_tier: userProfile?.trust_tier || 'T1',
-      is_admin: !!isAdmin
-    }, {
+      is_admin: !!isAdmin,
       username: userProfile?.username
-    });
+    };
 
     // Check admin requirement
     if (requireAdmin && !userObj.is_admin) {
@@ -181,7 +179,7 @@ export async function requireUser(
     };
 
   } catch (error) {
-    devLog('Require user error:', error);
+    devLog('Require user error:', { error: error instanceof Error ? error.message : String(error) });
     return {
       error: 'Authentication error',
       status: 500
@@ -246,14 +244,13 @@ export async function requireUserForAction(
     .rpc('is_admin', { input_user_id: user.id });
 
   const userProfile = profile && !('error' in profile) ? profile as UserProfile : null;
-  const userObj: User = withOptional({
+  const userObj: User = {
     id: user.id,
     email: user.email || '',
     trust_tier: userProfile?.trust_tier || 'T1',
-    is_admin: !!isAdmin
-  }, {
+    is_admin: !!isAdmin,
     username: userProfile?.username
-  });
+  };
 
   // Apply requirements
   if (options.requireAdmin && !userObj.is_admin) {
@@ -313,17 +310,16 @@ export async function getCurrentUser(): Promise<User | null> {
 
     const userProfile = profile && !('error' in profile) ? profile as UserProfile : null;
     
-    return withOptional({
+    return {
       id: user.id,
       email: user.email || '',
       trust_tier: userProfile?.trust_tier || 'T1',
-      is_admin: !!isAdmin
-    }, {
+      is_admin: !!isAdmin,
       username: userProfile?.username
-    });
+    };
 
   } catch (error) {
-    devLog('Get current user error:', error);
+    devLog('Get current user error:', { error: error instanceof Error ? error.message : String(error) });
     return null;
   }
 }
@@ -353,7 +349,7 @@ export function hasPermission(
 export function canAccessResource(
   user: User,
   resourceOwnerId: string,
-  requireOwnership: boolean = true
+  requireOwnership = true
 ): boolean {
   if (!requireOwnership) return true;
   return user.id === resourceOwnerId || !!user.is_admin;
@@ -364,7 +360,7 @@ export function canAccessResource(
  */
 export function createAuthErrorResponse(
   error: string,
-  status: number = 401
+  status = 401
 ): Response {
   return new Response(
     JSON.stringify({ error }),

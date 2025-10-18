@@ -44,15 +44,10 @@ interface PollData {
 export default function PollResults({ pollId }: PollResultsProps) {
   const polls = usePolls();
   const { loadPolls } = usePollsActions();
-  const _pollsLoading = usePollsLoading();
-  const _pollsError = usePollsError();
+  const pollsLoading = usePollsLoading();
+  const pollsError = usePollsError();
   
   const [poll, setPoll] = useState<PollData | null>(null)
-  const [_pollError, setPollError] = useState<string | null>(null)
-  const [_pollLoading, setPollLoading] = useState(false)
-  
-  const _loading = _pollLoading;
-  const _error = _pollError;
 
   const loadPollResults = useCallback(async () => {
     try {
@@ -69,19 +64,19 @@ export default function PollResults({ pollId }: PollResultsProps) {
       const poll: PollData = {
         id: pollData.id,
         title: pollData.title,
-        description: pollData.description || '',
+        description: pollData.description ?? '',
         votingMethod: 'single',
-        totalVotes: pollData.voting?.totalVotes || 0,
-        participationRate: pollData.voting?.uniqueVoters || 0,
+        totalVotes: pollData.voting?.totalVotes ?? 0,
+        participationRate: pollData.voting?.uniqueVoters ?? 0,
         isActive: pollData.status === 'active',
         results: pollData.options?.map((option: PollOption, _index: number) => ({
           option: option.text,
-          votes: option.votes || 0,
-          percentage: (pollData.voting?.totalVotes || 0) > 0 
-            ? Math.round((option.votes || 0) / (pollData.voting?.totalVotes || 1) * 100 * 10) / 10
+          votes: option.votes ?? 0,
+          percentage: (pollData.voting?.totalVotes ?? 0) > 0 
+            ? Math.round((option.votes ?? 0) / (pollData.voting?.totalVotes ?? 1) * 100 * 10) / 10
             : 0,
           trend: 'stable' // Default trend since we don't have historical data
-        })) || [],
+        })) ?? [],
         demographics: {
           ageGroups: {
             '18-24': 25,
@@ -102,19 +97,16 @@ export default function PollResults({ pollId }: PollResultsProps) {
       setPoll(poll)
     } catch (error) {
       logger.error('Error loading poll results:', error instanceof Error ? error : new Error(String(error)))
-      setPollError(error instanceof Error ? error.message : 'Failed to load poll results')
-    } finally {
-      setPollLoading(false)
     }
-  }, [pollId])
+  }, [pollId, loadPolls, polls])
 
   useEffect(() => {
-    loadPollResults()
+    void loadPollResults()
   }, [pollId, loadPollResults])
 
   const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#06B6D4']
 
-  if (_pollsLoading) {
+  if (pollsLoading) {
     return (
       <div className="text-center py-12">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
@@ -123,10 +115,10 @@ export default function PollResults({ pollId }: PollResultsProps) {
     )
   }
 
-  if (_pollsError || !poll) {
+  if (pollsError || !poll) {
     return (
       <div className="text-center py-12">
-        <p className="text-red-600">{_pollsError || 'Failed to load results'}</p>
+        <p className="text-red-600">{pollsError ?? 'Failed to load results'}</p>
       </div>
     )
   }
@@ -201,8 +193,8 @@ export default function PollResults({ pollId }: PollResultsProps) {
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
         <h3 className="text-xl font-semibold text-gray-900 mb-4">Detailed Results</h3>
         <div className="space-y-4">
-          {poll.results.map((result, index: any) => (
-            <div key={index} className="border border-gray-200 rounded-xl p-6 hover:bg-gray-50 transition-colors">
+          {poll.results.map((result, index: number) => (
+            <div key={`result-${result.option}-${index}`} className="border border-gray-200 rounded-xl p-6 hover:bg-gray-50 transition-colors">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -260,8 +252,8 @@ export default function PollResults({ pollId }: PollResultsProps) {
                   paddingAngle={5}
                   dataKey="value"
                 >
-                  {Object.entries(poll.demographics.ageGroups).map((_, index: any) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  {Object.entries(poll.demographics.ageGroups).map(([ageGroup, _count], index: number) => (
+                    <Cell key={`cell-${ageGroup}-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>
                 <Tooltip />

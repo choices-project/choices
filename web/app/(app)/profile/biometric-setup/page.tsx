@@ -121,7 +121,7 @@ export default function BiometricSetupPage() {
 
     } catch (error) {
       const err = error instanceof Error ? error : new Error(String(error))
-      devLog('Biometric setup error:', err)
+      devLog('Biometric setup error:', { error: err })
       setError(err.message || 'Failed to set up biometric authentication')
       setStep('intro')
     } finally {

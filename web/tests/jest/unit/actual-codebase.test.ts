@@ -155,7 +155,7 @@ describe('API Functionality', () => {
 
   it('should test API response handling', () => {
     // Test API response handling
-    const createApiResponse = (data: any, status: number = 200) => {
+    const createApiResponse = (data: any, status = 200) => {
       return {
         status,
         data,

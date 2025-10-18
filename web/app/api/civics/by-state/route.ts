@@ -57,7 +57,7 @@ export async function GET(request: NextRequest) {
           source: 'cache',
           last_updated: new Date().toISOString(),
           data_quality_score: 95,
-          total_representatives: cachedData.length
+          total_representatives: Array.isArray(cachedData) ? cachedData.length : 0
         }
       });
     }

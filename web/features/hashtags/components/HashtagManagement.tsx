@@ -72,7 +72,7 @@ export default function HashtagManagement({
       await followHashtagMutation.mutateAsync(hashtag.id);
       onFollow?.(hashtag);
     } catch (error) {
-      // Failed to follow hashtag
+      console.error('Failed to follow hashtag:', error);
     }
   };
 
@@ -82,7 +82,7 @@ export default function HashtagManagement({
       await unfollowHashtagMutation.mutateAsync(hashtag.id);
       onUnfollow?.(hashtag);
     } catch (error) {
-      // Failed to unfollow hashtag
+      console.error('Failed to unfollow hashtag:', error);
     }
   };
 

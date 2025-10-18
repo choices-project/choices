@@ -1,0 +1,127 @@
+62925cd57ecbf78d82c6934f56a73cc9
+"use client";
+"use strict";
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+Object.defineProperty(exports, "default", {
+    enumerable: true,
+    get: function() {
+        return OfflineQueue;
+    }
+});
+const _jsxruntime = require("react/jsx-runtime");
+const _Clock = require("lucide-react/dist/esm/icons/Clock");
+const _WifiOff = require("lucide-react/dist/esm/icons/WifiOff");
+const _react = require("react");
+const _usePWA = require("../../../hooks/usePWA");
+const _logger = require("../../../lib/utils/logger");
+function OfflineQueue({ className = "" }) {
+    const pwa = (0, _usePWA.usePWA)();
+    const [queueItems, setQueueItems] = (0, _react.useState)([]);
+    const [isSyncing, setIsSyncing] = (0, _react.useState)(false);
+    (0, _react.useEffect)(()=>{
+        // Simulate offline queue items
+        const mockQueueItems = [
+            {
+                id: "1",
+                type: "vote",
+                pollId: "poll-1",
+                timestamp: Date.now() - 300000
+            },
+            {
+                id: "2",
+                type: "comment",
+                pollId: "poll-1",
+                timestamp: Date.now() - 180000
+            },
+            {
+                id: "3",
+                type: "vote",
+                pollId: "poll-2",
+                timestamp: Date.now() - 60000
+            }
+        ];
+        setQueueItems(mockQueueItems);
+    }, []);
+    const handleSync = async ()=>{
+        setIsSyncing(true);
+        try {
+            await pwa.syncOfflineData();
+            setQueueItems([]);
+        } catch (error) {
+            _logger.logger.error("Sync failed:", error instanceof Error ? error : new Error(String(error)));
+        } finally{
+            setIsSyncing(false);
+        }
+    };
+    if (!pwa.hasOfflineData && queueItems.length === 0) {
+        return null;
+    }
+    return /*#__PURE__*/ (0, _jsxruntime.jsxs)("div", {
+        className: `bg-yellow-50 border border-yellow-200 rounded-lg p-4 ${className}`,
+        "data-testid": "offline-queue-component",
+        children: [
+            /*#__PURE__*/ (0, _jsxruntime.jsxs)("div", {
+                className: "flex items-center justify-between mb-3",
+                children: [
+                    /*#__PURE__*/ (0, _jsxruntime.jsxs)("div", {
+                        className: "flex items-center space-x-2",
+                        children: [
+                            /*#__PURE__*/ (0, _jsxruntime.jsx)(_WifiOff.WifiOff, {
+                                className: "w-5 h-5 text-yellow-600"
+                            }),
+                            /*#__PURE__*/ (0, _jsxruntime.jsx)("h3", {
+                                className: "text-sm font-medium text-yellow-800",
+                                children: "Offline Actions"
+                            })
+                        ]
+                    }),
+                    /*#__PURE__*/ (0, _jsxruntime.jsxs)("span", {
+                        className: "text-sm text-yellow-700",
+                        children: [
+                            queueItems.length,
+                            " pending"
+                        ]
+                    })
+                ]
+            }),
+            /*#__PURE__*/ (0, _jsxruntime.jsx)("div", {
+                className: "space-y-2",
+                children: queueItems.map((item)=>/*#__PURE__*/ (0, _jsxruntime.jsxs)("div", {
+                        className: "flex items-center justify-between p-2 bg-white rounded border",
+                        children: [
+                            /*#__PURE__*/ (0, _jsxruntime.jsxs)("div", {
+                                className: "flex items-center space-x-2",
+                                children: [
+                                    /*#__PURE__*/ (0, _jsxruntime.jsx)(_Clock.Clock, {
+                                        className: "w-4 h-4 text-gray-400"
+                                    }),
+                                    /*#__PURE__*/ (0, _jsxruntime.jsxs)("span", {
+                                        className: "text-sm text-gray-700",
+                                        children: [
+                                            item.label === "vote" ? "Vote" : "Comment",
+                                            " on Poll ",
+                                            item.pollId
+                                        ]
+                                    })
+                                ]
+                            }),
+                            /*#__PURE__*/ (0, _jsxruntime.jsx)("span", {
+                                className: "text-xs text-gray-500",
+                                children: new Date(item.timestamp).toLocaleTimeString()
+                            })
+                        ]
+                    }, item.id))
+            }),
+            pwa.isOnline && /*#__PURE__*/ (0, _jsxruntime.jsx)("button", {
+                onClick: handleSync,
+                disabled: isSyncing,
+                className: "w-full mt-3 px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 disabled:opacity-50 transition-colors",
+                children: isSyncing ? "Syncing..." : "Sync Now"
+            })
+        ]
+    });
+}
+
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIi9Vc2Vycy9hbGF1Z2hpbmdraXRzdW5lL3NyYy9DaG9pY2VzL3dlYi9mZWF0dXJlcy9wd2EvY29tcG9uZW50cy9PZmZsaW5lUXVldWUudHN4Il0sInNvdXJjZXNDb250ZW50IjpbIid1c2UgY2xpZW50J1xuXG5pbXBvcnQgeyBDbG9jaywgV2lmaU9mZiB9IGZyb20gJ2x1Y2lkZS1yZWFjdCdcbmltcG9ydCB7IHVzZVN0YXRlLCB1c2VFZmZlY3QgfSBmcm9tICdyZWFjdCdcblxuaW1wb3J0IHsgdXNlUFdBIH0gZnJvbSAnQC9ob29rcy91c2VQV0EnXG5pbXBvcnQgeyBsb2dnZXIgfSBmcm9tICdAL2xpYi91dGlscy9sb2dnZXInXG5cbmludGVyZmFjZSBPZmZsaW5lUXVldWVQcm9wcyB7XG4gIGNsYXNzTmFtZT86IHN0cmluZ1xufVxuXG5leHBvcnQgZGVmYXVsdCBmdW5jdGlvbiBPZmZsaW5lUXVldWUoeyBjbGFzc05hbWUgPSAnJyB9OiBPZmZsaW5lUXVldWVQcm9wcykge1xuICBjb25zdCBwd2EgPSB1c2VQV0EoKVxuICBjb25zdCBbcXVldWVJdGVtcywgc2V0UXVldWVJdGVtc10gPSB1c2VTdGF0ZTxhbnlbXT4oW10pXG4gIGNvbnN0IFtpc1N5bmNpbmcsIHNldElzU3luY2luZ10gPSB1c2VTdGF0ZShmYWxzZSlcblxuICB1c2VFZmZlY3QoKCkgPT4ge1xuICAgIC8vIFNpbXVsYXRlIG9mZmxpbmUgcXVldWUgaXRlbXNcbiAgICBjb25zdCBtb2NrUXVldWVJdGVtcyA9IFtcbiAgICAgIHsgaWQ6ICcxJywgdHlwZTogJ3ZvdGUnLCBwb2xsSWQ6ICdwb2xsLTEnLCB0aW1lc3RhbXA6IERhdGUubm93KCkgLSAzMDAwMDAgfSxcbiAgICAgIHsgaWQ6ICcyJywgdHlwZTogJ2NvbW1lbnQnLCBwb2xsSWQ6ICdwb2xsLTEnLCB0aW1lc3RhbXA6IERhdGUubm93KCkgLSAxODAwMDAgfSxcbiAgICAgIHsgaWQ6ICczJywgdHlwZTogJ3ZvdGUnLCBwb2xsSWQ6ICdwb2xsLTInLCB0aW1lc3RhbXA6IERhdGUubm93KCkgLSA2MDAwMCB9XG4gICAgXVxuICAgIHNldFF1ZXVlSXRlbXMobW9ja1F1ZXVlSXRlbXMpXG4gIH0sIFtdKVxuXG4gIGNvbnN0IGhhbmRsZVN5bmMgPSBhc3luYyAoKSA9PiB7XG4gICAgc2V0SXNTeW5jaW5nKHRydWUpXG4gICAgdHJ5IHtcbiAgICAgIGF3YWl0IHB3YS5zeW5jT2ZmbGluZURhdGEoKVxuICAgICAgc2V0UXVldWVJdGVtcyhbXSlcbiAgICB9IGNhdGNoIChlcnJvcikge1xuICAgICAgbG9nZ2VyLmVycm9yKCdTeW5jIGZhaWxlZDonLCBlcnJvciBpbnN0YW5jZW9mIEVycm9yID8gZXJyb3IgOiBuZXcgRXJyb3IoU3RyaW5nKGVycm9yKSkpXG4gICAgfSBmaW5hbGx5IHtcbiAgICAgIHNldElzU3luY2luZyhmYWxzZSlcbiAgICB9XG4gIH1cblxuICBpZiAoIXB3YS5oYXNPZmZsaW5lRGF0YSAmJiBxdWV1ZUl0ZW1zLmxlbmd0aCA9PT0gMCkge1xuICAgIHJldHVybiBudWxsXG4gIH1cblxuICByZXR1cm4gKFxuICAgIDxkaXYgY2xhc3NOYW1lPXtgYmcteWVsbG93LTUwIGJvcmRlciBib3JkZXIteWVsbG93LTIwMCByb3VuZGVkLWxnIHAtNCAke2NsYXNzTmFtZX1gfSBkYXRhLXRlc3RpZD1cIm9mZmxpbmUtcXVldWUtY29tcG9uZW50XCI+XG4gICAgICA8ZGl2IGNsYXNzTmFtZT1cImZsZXggaXRlbXMtY2VudGVyIGp1c3RpZnktYmV0d2VlbiBtYi0zXCI+XG4gICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZmxleCBpdGVtcy1jZW50ZXIgc3BhY2UteC0yXCI+XG4gICAgICAgICAgPFdpZmlPZmYgY2xhc3NOYW1lPVwidy01IGgtNSB0ZXh0LXllbGxvdy02MDBcIiAvPlxuICAgICAgICAgIDxoMyBjbGFzc05hbWU9XCJ0ZXh0LXNtIGZvbnQtbWVkaXVtIHRleHQteWVsbG93LTgwMFwiPk9mZmxpbmUgQWN0aW9uczwvaDM+XG4gICAgICAgIDwvZGl2PlxuICAgICAgICA8c3BhbiBjbGFzc05hbWU9XCJ0ZXh0LXNtIHRleHQteWVsbG93LTcwMFwiPntxdWV1ZUl0ZW1zLmxlbmd0aH0gcGVuZGluZzwvc3Bhbj5cbiAgICAgIDwvZGl2PlxuXG4gICAgICA8ZGl2IGNsYXNzTmFtZT1cInNwYWNlLXktMlwiPlxuICAgICAgICB7cXVldWVJdGVtcy5tYXAoKGl0ZW0pID0+IChcbiAgICAgICAgICA8ZGl2IGtleT17aXRlbS5pZH0gY2xhc3NOYW1lPVwiZmxleCBpdGVtcy1jZW50ZXIganVzdGlmeS1iZXR3ZWVuIHAtMiBiZy13aGl0ZSByb3VuZGVkIGJvcmRlclwiPlxuICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJmbGV4IGl0ZW1zLWNlbnRlciBzcGFjZS14LTJcIj5cbiAgICAgICAgICAgICAgPENsb2NrIGNsYXNzTmFtZT1cInctNCBoLTQgdGV4dC1ncmF5LTQwMFwiIC8+XG4gICAgICAgICAgICAgIDxzcGFuIGNsYXNzTmFtZT1cInRleHQtc20gdGV4dC1ncmF5LTcwMFwiPlxuICAgICAgICAgICAgICAgIHtpdGVtLmxhYmVsID09PSAndm90ZScgPyAnVm90ZScgOiAnQ29tbWVudCd9IG9uIFBvbGwge2l0ZW0ucG9sbElkfVxuICAgICAgICAgICAgICA8L3NwYW4+XG4gICAgICAgICAgICA8L2Rpdj5cbiAgICAgICAgICAgIDxzcGFuIGNsYXNzTmFtZT1cInRleHQteHMgdGV4dC1ncmF5LTUwMFwiPlxuICAgICAgICAgICAgICB7bmV3IERhdGUoaXRlbS50aW1lc3RhbXApLnRvTG9jYWxlVGltZVN0cmluZygpfVxuICAgICAgICAgICAgPC9zcGFuPlxuICAgICAgICAgIDwvZGl2PlxuICAgICAgICApKX1cbiAgICAgIDwvZGl2PlxuXG4gICAgICB7cHdhLmlzT25saW5lICYmIChcbiAgICAgICAgPGJ1dHRvblxuICAgICAgICAgIG9uQ2xpY2s9e2hhbmRsZVN5bmN9XG4gICAgICAgICAgZGlzYWJsZWQ9e2lzU3luY2luZ31cbiAgICAgICAgICBjbGFzc05hbWU9XCJ3LWZ1bGwgbXQtMyBweC00IHB5LTIgYmcteWVsbG93LTYwMCB0ZXh0LXdoaXRlIHJvdW5kZWQtbGcgaG92ZXI6YmcteWVsbG93LTcwMCBkaXNhYmxlZDpvcGFjaXR5LTUwIHRyYW5zaXRpb24tY29sb3JzXCJcbiAgICAgICAgPlxuICAgICAgICAgIHtpc1N5bmNpbmcgPyAnU3luY2luZy4uLicgOiAnU3luYyBOb3cnfVxuICAgICAgICA8L2J1dHRvbj5cbiAgICAgICl9XG4gICAgPC9kaXY+XG4gIClcbn1cbiJdLCJuYW1lcyI6WyJPZmZsaW5lUXVldWUiLCJjbGFzc05hbWUiLCJwd2EiLCJ1c2VQV0EiLCJxdWV1ZUl0ZW1zIiwic2V0UXVldWVJdGVtcyIsInVzZVN0YXRlIiwiaXNTeW5jaW5nIiwic2V0SXNTeW5jaW5nIiwidXNlRWZmZWN0IiwibW9ja1F1ZXVlSXRlbXMiLCJpZCIsInR5cGUiLCJwb2xsSWQiLCJ0aW1lc3RhbXAiLCJEYXRlIiwibm93IiwiaGFuZGxlU3luYyIsInN5bmNPZmZsaW5lRGF0YSIsImVycm9yIiwibG9nZ2VyIiwiRXJyb3IiLCJTdHJpbmciLCJoYXNPZmZsaW5lRGF0YSIsImxlbmd0aCIsImRpdiIsImRhdGEtdGVzdGlkIiwiV2lmaU9mZiIsImgzIiwic3BhbiIsIm1hcCIsIml0ZW0iLCJDbG9jayIsImxhYmVsIiwidG9Mb2NhbGVUaW1lU3RyaW5nIiwiaXNPbmxpbmUiLCJidXR0b24iLCJvbkNsaWNrIiwiZGlzYWJsZWQiXSwibWFwcGluZ3MiOiJBQUFBOzs7OzsrQkFZQTs7O2VBQXdCQTs7Ozs7O3VCQVRZO3dCQUViO3dCQUNBO0FBTVIsU0FBU0EsYUFBYSxFQUFFQyxZQUFZLEVBQUUsRUFBcUI7SUFDeEUsTUFBTUMsTUFBTUMsSUFBQUEsY0FBTTtJQUNsQixNQUFNLENBQUNDLFlBQVlDLGNBQWMsR0FBR0MsSUFBQUEsZUFBUSxFQUFRLEVBQUU7SUFDdEQsTUFBTSxDQUFDQyxXQUFXQyxhQUFhLEdBQUdGLElBQUFBLGVBQVEsRUFBQztJQUUzQ0csSUFBQUEsZ0JBQVMsRUFBQztRQUNSLCtCQUErQjtRQUMvQixNQUFNQyxpQkFBaUI7WUFDckI7Z0JBQUVDLElBQUk7Z0JBQUtDLE1BQU07Z0JBQVFDLFFBQVE7Z0JBQVVDLFdBQVdDLEtBQUtDLEdBQUcsS0FBSztZQUFPO1lBQzFFO2dCQUFFTCxJQUFJO2dCQUFLQyxNQUFNO2dCQUFXQyxRQUFRO2dCQUFVQyxXQUFXQyxLQUFLQyxHQUFHLEtBQUs7WUFBTztZQUM3RTtnQkFBRUwsSUFBSTtnQkFBS0MsTUFBTTtnQkFBUUMsUUFBUTtnQkFBVUMsV0FBV0MsS0FBS0MsR0FBRyxLQUFLO1lBQU07U0FDMUU7UUFDRFgsY0FBY0s7SUFDaEIsR0FBRyxFQUFFO0lBRUwsTUFBTU8sYUFBYTtRQUNqQlQsYUFBYTtRQUNiLElBQUk7WUFDRixNQUFNTixJQUFJZ0IsZUFBZTtZQUN6QmIsY0FBYyxFQUFFO1FBQ2xCLEVBQUUsT0FBT2MsT0FBTztZQUNkQyxjQUFNLENBQUNELEtBQUssQ0FBQyxnQkFBZ0JBLGlCQUFpQkUsUUFBUUYsUUFBUSxJQUFJRSxNQUFNQyxPQUFPSDtRQUNqRixTQUFVO1lBQ1JYLGFBQWE7UUFDZjtJQUNGO0lBRUEsSUFBSSxDQUFDTixJQUFJcUIsY0FBYyxJQUFJbkIsV0FBV29CLE1BQU0sS0FBSyxHQUFHO1FBQ2xELE9BQU87SUFDVDtJQUVBLHFCQUNFLHNCQUFDQztRQUFJeEIsV0FBVyxDQUFDLHFEQUFxRCxFQUFFQSxVQUFVLENBQUM7UUFBRXlCLGVBQVk7OzBCQUMvRixzQkFBQ0Q7Z0JBQUl4QixXQUFVOztrQ0FDYixzQkFBQ3dCO3dCQUFJeEIsV0FBVTs7MENBQ2IscUJBQUMwQixnQkFBTztnQ0FBQzFCLFdBQVU7OzBDQUNuQixxQkFBQzJCO2dDQUFHM0IsV0FBVTswQ0FBc0M7Ozs7a0NBRXRELHNCQUFDNEI7d0JBQUs1QixXQUFVOzs0QkFBMkJHLFdBQVdvQixNQUFNOzRCQUFDOzs7OzswQkFHL0QscUJBQUNDO2dCQUFJeEIsV0FBVTswQkFDWkcsV0FBVzBCLEdBQUcsQ0FBQyxDQUFDQyxxQkFDZixzQkFBQ047d0JBQWtCeEIsV0FBVTs7MENBQzNCLHNCQUFDd0I7Z0NBQUl4QixXQUFVOztrREFDYixxQkFBQytCLFlBQUs7d0NBQUMvQixXQUFVOztrREFDakIsc0JBQUM0Qjt3Q0FBSzVCLFdBQVU7OzRDQUNiOEIsS0FBS0UsS0FBSyxLQUFLLFNBQVMsU0FBUzs0Q0FBVTs0Q0FBVUYsS0FBS2xCLE1BQU07Ozs7OzBDQUdyRSxxQkFBQ2dCO2dDQUFLNUIsV0FBVTswQ0FDYixJQUFJYyxLQUFLZ0IsS0FBS2pCLFNBQVMsRUFBRW9CLGtCQUFrQjs7O3VCQVJ0Q0gsS0FBS3BCLEVBQUU7O1lBY3BCVCxJQUFJaUMsUUFBUSxrQkFDWCxxQkFBQ0M7Z0JBQ0NDLFNBQVNwQjtnQkFDVHFCLFVBQVUvQjtnQkFDVk4sV0FBVTswQkFFVE0sWUFBWSxlQUFlOzs7O0FBS3RDIn0=

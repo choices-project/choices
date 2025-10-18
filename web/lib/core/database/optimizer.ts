@@ -473,7 +473,7 @@ export class QueryOptimizer {
   }
 
   // Optimized analytics queries
-  async getAnalytics(period: string = '7d'): Promise<AnalyticsData> {
+  async getAnalytics(period = '7d'): Promise<AnalyticsData> {
     const startTime = Date.now()
     
     // Calculate date range

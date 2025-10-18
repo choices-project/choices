@@ -37,7 +37,7 @@ export async function DELETE(_request: NextRequest) {
       .eq('user_id', user.id)
 
     if (profileError) {
-      devLog('Profile deletion error:', profileError)
+      devLog('Profile deletion error:', { error: profileError })
       return NextResponse.json(
         { error: 'Failed to delete profile' },
         { status: 500 }
@@ -51,7 +51,7 @@ export async function DELETE(_request: NextRequest) {
       .eq('user_id', user.id)
 
     if (votesError) {
-      devLog('Votes deletion error:', votesError)
+      devLog('Votes deletion error:', { error: votesError })
       // Continue - this is not critical
     }
 
@@ -62,7 +62,7 @@ export async function DELETE(_request: NextRequest) {
       .eq('created_by', user.id)
 
     if (pollsError) {
-      devLog('Polls deletion error:', pollsError)
+      devLog('Polls deletion error:', { error: pollsError })
       // Continue - this is not critical
     }
 
@@ -73,7 +73,7 @@ export async function DELETE(_request: NextRequest) {
       .eq('user_id', user.id)
 
     if (credentialsError) {
-      devLog('Credentials deletion error:', credentialsError)
+      devLog('Credentials deletion error:', { error: credentialsError })
       // Continue - this is not critical
     }
 
@@ -81,7 +81,7 @@ export async function DELETE(_request: NextRequest) {
     const { error: authError } = await supabase.auth.admin.deleteUser(user.id)
 
     if (authError) {
-      devLog('Auth deletion error:', authError)
+      devLog('Auth deletion error:', { error: authError })
       return NextResponse.json(
         { error: 'Failed to delete user account' },
         { status: 500 }
@@ -94,7 +94,7 @@ export async function DELETE(_request: NextRequest) {
     })
 
   } catch (error) {
-    devLog('Account deletion error:', error)
+    devLog('Account deletion error:', { error })
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

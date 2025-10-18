@@ -1,12 +1,7 @@
 
 import type { Metadata } from 'next'
 import './globals.css'
-import dynamic from 'next/dynamic'
-
-const PWABackground = dynamic(() => import('@/features/pwa/components/PWABackground'), {
-  ssr: false,
-  loading: () => null
-})
+import PWABackgroundWrapper from '@/components/PWABackgroundWrapper'
 
 export const metadata: Metadata = {
   title: 'Choices - Democratic Polling Platform',
@@ -71,7 +66,7 @@ export default function RootLayout({
         {children}
         
         {/* PWA Background - Only shows offline indicator when needed */}
-        <PWABackground />
+        <PWABackgroundWrapper />
       </body>
     </html>
   )

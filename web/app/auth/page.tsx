@@ -1,17 +1,14 @@
 'use client';
 
-import Link from 'next/link';
-import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { Eye, EyeOff, User, Lock, Mail, UserPlus, CheckCircle2, AlertCircle } from 'lucide-react';
-
+import { Eye, EyeOff, Lock, Mail, UserPlus, CheckCircle2, AlertCircle } from 'lucide-react';
 import dynamic from 'next/dynamic';
+import { useRouter } from 'next/navigation';
+import React, { useState } from 'react';
 
 const PasskeyControls = dynamic(() => import('@/features/auth/components/PasskeyControls').then(mod => ({ default: mod.PasskeyControls })), {
   ssr: false,
   loading: () => <div className="text-center text-sm text-gray-500">Loading authentication options...</div>
 });
-import { useUser, useUserLoading } from '@/lib/stores';
 import { loginAction } from '@/app/actions/login';
 import { register } from '@/app/actions/register';
 import { T } from '@/lib/testing/testIds';
@@ -34,13 +31,12 @@ export default function AuthPage() {
   });
 
   // Performance tracking - properly implemented
-  const [loadTime, setLoadTime] = useState<number>(0);
-
   React.useEffect(() => {
     const startTime = performance.now();
     const timer = setTimeout(() => {
       const endTime = performance.now();
-      setLoadTime(endTime - startTime);
+      const loadTime = endTime - startTime;
+      logger.info('Auth page load time', { loadTime });
     }, 100);
     return () => clearTimeout(timer);
   }, []);
@@ -51,21 +47,14 @@ export default function AuthPage() {
   // Native DOM event handler as workaround for Playwright onClick issues
   const handleToggle = (e: Event) => {
     e.preventDefault();
-    logger.info('Native toggle clicked! Current isSignUp:', isSignUp);
+    logger.info('Native toggle clicked! Current isSignUp', { isSignUp });
     setIsSignUp(!isSignUp);
     setError(null);
     setMessage(null);
     setFormData({ email: '', password: '', confirmPassword: '', displayName: '' });
-    logger.info('Native toggle after setState! New isSignUp should be:', !isSignUp);
+    logger.info('Native toggle after setState! New isSignUp should be', { newIsSignUp: !isSignUp });
   };
 
-  // React event handler for regular onClick
-  const handleToggleReact = () => {
-    setIsSignUp(!isSignUp);
-    setError(null);
-    setMessage(null);
-    setFormData({ email: '', password: '', confirmPassword: '', displayName: '' });
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -139,7 +128,7 @@ export default function AuthPage() {
         }
       }
     } catch (err) {
-      setError('An unexpected error occurred');
+      setError(err instanceof Error ? err.message : 'An unexpected error occurred');
     }
   };
 
@@ -178,7 +167,7 @@ export default function AuthPage() {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="mt-8 space-y-6 transition-all duration-300 ease-in-out" data-testid={T.login.form} role="form" aria-labelledby="auth-title">
+        <form onSubmit={handleSubmit} className="mt-8 space-y-6 transition-all duration-300 ease-in-out" data-testid={T.login.form}>
           {/* CSRF Token */}
           <input type="hidden" name="csrf-token" value="test-csrf-token" data-testid="csrf-token" />
               {error && (
@@ -382,7 +371,7 @@ export default function AuthPage() {
             </div>
           </div>
           <div className="mt-4">
-          <PasskeyControls />
+            <PasskeyControls />
           </div>
         </div>
       </div>

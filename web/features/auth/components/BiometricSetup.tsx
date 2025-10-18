@@ -7,12 +7,9 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import {
-  registerBiometric,
-  isWebAuthnSupported, 
-  isBiometricAvailable,
-  getUserCredentials
-} from '@/features/auth/lib/webauthn/client'
+// Native WebAuthn implementation to avoid decorator issues
+
+
 import { devLog } from '@/lib/utils/logger'
 
 // Context for sharing biometric setup state
@@ -70,6 +67,9 @@ export default function BiometricSetup({ userId, username, onSuccess, onError }:
   useEffect(() => {
     const initializeBiometricSupport = async () => {
       try {
+        // Dynamic import to avoid build-time decorator issues
+        const { isWebAuthnSupported, isBiometricAvailable, getUserCredentials } = await import('@/features/auth/lib/webauthn/client');
+        
         const supported = isWebAuthnSupported()
         setIsSupported(supported)
 
@@ -84,12 +84,12 @@ export default function BiometricSetup({ userId, username, onSuccess, onError }:
             setHasCredentials(hasCreds)
             
             if (hasCreds) {
-              devLog('Existing biometric credentials found:', existingCreds.length)
+              devLog('Existing biometric credentials found:', { count: existingCreds.length })
             }
           }
         }
       } catch (error) {
-        devLog('Error checking biometric support:', error)
+        devLog('Error checking biometric support:', { error })
         setError('Failed to check biometric support')
       }
     }
@@ -104,6 +104,8 @@ export default function BiometricSetup({ userId, username, onSuccess, onError }:
     setError(null)
 
     try {
+      // Dynamic import to avoid build-time decorator issues
+      const { registerBiometric } = await import('@/features/auth/lib/webauthn/client');
       const result = await registerBiometric()
       
       if (result.success) {

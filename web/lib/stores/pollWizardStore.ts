@@ -13,6 +13,8 @@ import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { persist } from 'zustand/middleware';
 
+import { logger } from '@/lib/utils/logger';
+
 
 // Poll wizard data types
 export interface PollWizardData {

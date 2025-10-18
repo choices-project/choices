@@ -18,15 +18,44 @@ export interface AppError {
   message: string;
   code: string;
   statusCode: number;
-  context?: Record<string, any>;
+  context?: Record<string, unknown>;
   timestamp: Date;
 }
 
 export interface ErrorHandlerOptions {
   operation: string;
-  context?: Record<string, any>;
+  context?: Record<string, unknown>;
   fallbackMessage?: string;
   logLevel?: 'error' | 'warn' | 'info';
+}
+
+// ============================================================================
+// ERROR UTILITIES
+// ============================================================================
+
+/**
+ * Convert unknown error to Error instance
+ * Useful for logger compatibility
+ */
+export function toError(e: unknown): Error {
+  return e instanceof Error ? e : new Error(typeof e === 'string' ? e : JSON.stringify(e));
+}
+
+/**
+ * Extract error message from unknown error
+ * Safe string conversion for error messages
+ */
+export function getErrorMessage(e: unknown): string {
+  return (e instanceof Error && e.message) ? e.message : String(e);
+}
+
+/**
+ * Safe error logging utility that handles unknown types
+ * Avoids circular dependencies by using direct logger import
+ */
+export async function logError(message: string, error: unknown): Promise<void> {
+  const err = toError(error);
+  logger.error(message, err);
 }
 
 // ============================================================================
@@ -39,8 +68,8 @@ export interface ErrorHandlerOptions {
 export function createAppError(
   message: string,
   code: string,
-  statusCode: number = 500,
-  context?: Record<string, any>
+  statusCode = 500,
+  context?: Record<string, unknown>
 ): AppError {
   return {
     message,
@@ -74,7 +103,7 @@ export function normalizeError(error: unknown, options: ErrorHandlerOptions): Ap
   }
 
   return createAppError(
-    options.fallbackMessage || 'An unknown error occurred',
+    options.fallbackMessage ?? 'An unknown error occurred',
     'UNKNOWN_ERROR',
     500,
     { ...options.context, originalError: String(error) }
@@ -99,7 +128,7 @@ export async function handleAsyncOperation<T>(
     const appError = normalizeError(error, options);
     
     // Log the error
-    logger[options.logLevel || 'error'](`${options.operation} failed:`, undefined, { ...appError, ...options.context });
+    logger[options.logLevel ?? 'error'](`${options.operation} failed:`, undefined, { ...appError, ...(options.context ?? {}) });
     
     return { error: appError };
   }
@@ -119,7 +148,7 @@ export function handleSyncOperation<T>(
     const appError = normalizeError(error, options);
     
     // Log the error
-    logger[options.logLevel || 'error'](`${options.operation} failed:`, undefined, { ...appError, ...options.context });
+    logger[options.logLevel ?? 'error'](`${options.operation} failed:`, undefined, { ...appError, ...(options.context ?? {}) });
     
     return { error: appError };
   }
@@ -249,5 +278,5 @@ export function getUserFriendlyMessage(error: AppError): string {
     'INTERNAL_ERROR': 'Something went wrong. Please try again later.'
   };
 
-  return friendlyMessages[error.code] || error.message;
+  return friendlyMessages[error.code] ?? error.message;
 }

@@ -17,11 +17,13 @@ interface Feedback {
   status: string;
   priority: string;
   createdat: string;
+  updatedat: string;
 }
 
 interface FeedbackStatsProps {
   feedback: Feedback[];
 }
+
 
 export const FeedbackStats: React.FC<FeedbackStatsProps> = ({ feedback }) => {
   const stats = React.useMemo(() => {
@@ -44,7 +46,7 @@ export const FeedbackStats: React.FC<FeedbackStatsProps> = ({ feedback }) => {
       });
     
     const avgResponseTime = responseTimes.length > 0 
-      ? responseTimes.reduce((a: any, b: any) => a + b, 0) / responseTimes.length 
+      ? responseTimes.reduce((a: number, b: number) => a + b, 0) / responseTimes.length 
       : 0;
 
     return {
@@ -107,10 +109,10 @@ export const FeedbackStats: React.FC<FeedbackStatsProps> = ({ feedback }) => {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-      {statCards.map((stat: any, index: any) => {
+      {statCards.map((stat) => {
         const Icon = stat.icon;
         return (
-          <div key={index} className="bg-white rounded-lg shadow p-4">
+          <div key={stat.title} className="bg-white rounded-lg shadow p-4">
             <div className="flex items-center">
               <div className={`p-2 rounded-lg ${stat.bgColor}`}>
                 <Icon className={`h-5 w-5 ${stat.color}`} />

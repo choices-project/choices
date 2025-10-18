@@ -21,7 +21,6 @@
 // TYPES AND INTERFACES
 // ============================================================================
 
-import { withOptional } from '@/lib/utils/objects';
 
 export interface ScreenReaderAnnouncement {
   message: string;
@@ -66,7 +65,7 @@ export class ScreenReaderSupport {
    * @param priority - Priority level (polite or assertive)
    * @param duration - How long to display the message (default: 1000ms)
    */
-  static announce(message: string, priority: 'polite' | 'assertive' = 'polite', duration: number = 1000): void {
+  static announce(message: string, priority: 'polite' | 'assertive' = 'polite', duration = 1000): void {
     const announcement: ScreenReaderAnnouncement = {
       message,
       priority,
@@ -95,7 +94,7 @@ export class ScreenReaderSupport {
    * @param leadingCandidate - Name of the leading candidate
    * @param isOfficial - Whether these are official results
    */
-  static announceResultsUpdate(totalVotes: number, leadingCandidate: string, isOfficial: boolean = false): void {
+  static announceResultsUpdate(totalVotes: number, leadingCandidate: string, isOfficial = false): void {
     const resultType = isOfficial ? 'Official results' : 'Trend results';
     const message = `${resultType} updated. ${totalVotes} total votes. ${leadingCandidate} is currently leading.`;
     this.announce(message, 'polite');
@@ -229,10 +228,9 @@ export class ScreenReaderSupport {
     }
     
     // Set focus
-    const focusOptions = withOptional(
-      {},
-      { preventScroll: options.preventScroll }
-    );
+    const focusOptions = {
+      preventScroll: options.preventScroll
+    };
     element.focus(focusOptions);
     
     // Announce focus change if requested
@@ -538,10 +536,7 @@ export function announce(message: string, priority: 'polite' | 'assertive' = 'po
  * @param announce - Optional announcement
  */
 export function focusElement(element: HTMLElement, announce?: string): void {
-  const options = withOptional(
-    {},
-    { announce }
-  );
+  const options = { announce };
   ScreenReaderSupport.setFocus(element, options);
 }
 

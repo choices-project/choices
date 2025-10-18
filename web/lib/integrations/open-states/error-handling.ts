@@ -32,7 +32,7 @@ export class OpenStatesApiError extends Error {
   public readonly retryable: boolean;
   public readonly details?: any;
 
-  constructor(message: string, code: string = 'OPEN_STATES_ERROR', statusCode?: number, retryable: boolean = false, details?: any) {
+  constructor(message: string, code = 'OPEN_STATES_ERROR', statusCode?: number, retryable = false, details?: any) {
     super(message);
     this.name = 'OpenStatesApiError';
     this.code = code;
@@ -47,35 +47,35 @@ export class OpenStatesApiError extends Error {
 }
 
 export class OpenStatesRateLimitError extends OpenStatesApiError {
-  constructor(message: string = 'Rate limit exceeded', retryAfter?: number) {
+  constructor(message = 'Rate limit exceeded', retryAfter?: number) {
     super(message, 'RATE_LIMIT_EXCEEDED', 429, true, { retryAfter });
     this.name = 'OpenStatesRateLimitError';
   }
 }
 
 export class OpenStatesNotFoundError extends OpenStatesApiError {
-  constructor(message: string = 'Resource not found') {
+  constructor(message = 'Resource not found') {
     super(message, 'NOT_FOUND', 404, false);
     this.name = 'OpenStatesNotFoundError';
   }
 }
 
 export class OpenStatesAuthenticationError extends OpenStatesApiError {
-  constructor(message: string = 'Authentication failed') {
+  constructor(message = 'Authentication failed') {
     super(message, 'AUTHENTICATION_ERROR', 401, false);
     this.name = 'OpenStatesAuthenticationError';
   }
 }
 
 export class OpenStatesQuotaExceededError extends OpenStatesApiError {
-  constructor(message: string = 'API quota exceeded') {
+  constructor(message = 'API quota exceeded') {
     super(message, 'QUOTA_EXCEEDED', 429, true);
     this.name = 'OpenStatesQuotaExceededError';
   }
 }
 
 export class OpenStatesServerError extends OpenStatesApiError {
-  constructor(message: string = 'Internal server error', statusCode: number = 500) {
+  constructor(message = 'Internal server error', statusCode = 500) {
     super(message, 'SERVER_ERROR', statusCode, true);
     this.name = 'OpenStatesServerError';
   }
@@ -214,7 +214,7 @@ export function calculateRetryDelay(attempt: number, config: RetryConfig, baseDe
 export async function executeWithRetry<T>(
   operation: () => Promise<T>,
   config: RetryConfig = DEFAULT_RETRY_CONFIG,
-  context: string = 'Open States API'
+  context = 'Open States API'
 ): Promise<T> {
   let lastError: OpenStatesApiError;
   
@@ -290,7 +290,7 @@ export class ErrorMonitor {
   
   private retryCounts: number[] = [];
 
-  recordError(error: OpenStatesApiError, retries: number = 0): void {
+  recordError(error: OpenStatesApiError, retries = 0): void {
     this.metrics.totalErrors++;
     this.metrics.errorsByCode[error.code] = (this.metrics.errorsByCode[error.code] || 0) + 1;
     

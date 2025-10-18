@@ -286,7 +286,7 @@ export default function PollTemplatesPage() {
   };
 
   const previewTemplate = (template: PollTemplate) => {
-    devLog('Preview template:', template);
+    devLog('Preview template:', { template });
   };
 
   const getDifficultyColor = (difficulty: string) => {

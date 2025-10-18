@@ -9,13 +9,15 @@ import { headers } from 'next/headers';
 
 import PollClient from './PollClient';
 
-export default async function PollPage({ params }: { params: { id: string } }) {
-  const h = headers();
+export default async function PollPage({ params }: { params: Promise<{ id: string }> }) {
+  const h = await headers();
   const e2eHeader = h.get('x-e2e-bypass') === '1' ? { 'x-e2e-bypass': '1' } : {};
+  
+  const { id } = await params;
   
   try {
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
-    const res = await fetch(`${baseUrl}/api/polls/${params.id}`, {
+    const res = await fetch(`${baseUrl}/api/polls/${id}`, {
       cache: 'no-store',
       headers: { 
         ...Object.fromEntries(

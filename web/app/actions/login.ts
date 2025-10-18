@@ -2,8 +2,8 @@
 
 import { redirect } from 'next/navigation'
 
-import { getSupabaseServerClient } from '@/utils/supabase/server'
 import { logger } from '@/lib/utils/logger'
+import { getSupabaseServerClient } from '@/utils/supabase/server'
 
 /**
  * Modern Supabase Authentication Login Action
@@ -66,7 +66,7 @@ export async function loginAction(formData: FormData) {
   // No need for manual session management
   
   // Redirect based on onboarding status
-  if (profile?.onboarding_completed) {
+  if (profile?.onboarding_completed === true) {
     logger.info('User has completed onboarding, redirecting to dashboard');
     redirect('/dashboard');
   } else {

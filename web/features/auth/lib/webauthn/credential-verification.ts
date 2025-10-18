@@ -5,22 +5,21 @@
  * Provides utilities for verifying registration and authentication responses.
  */
 
-import { 
-  verifyRegistrationResponse,
-  verifyAuthenticationResponse,
-  type VerifyRegistrationResponseOpts,
-  type VerifyAuthenticationResponseOpts,
-  type RegistrationResponseJSON,
-  type AuthenticationResponseJSON,
-  type AuthenticatorTransportFuture
-} from '@simplewebauthn/server';
-
+// Import native WebAuthn implementation
 import { devLog } from '@/lib/utils/logger';
 
 import { 
+  verifyRegistrationResponse,
+  verifyAuthenticationResponse
+} from './native/server';
+import type { 
+  RegistrationResponse,
+  AuthenticationResponse,
+  WebAuthnCredential
+} from './native/types';
+import { 
   arrayBufferToBase64url,
-  base64urlToArrayBuffer,
-  byteaToArrayBuffer
+  base64urlToArrayBuffer
 } from './type-converters';
 
 /**
@@ -30,7 +29,7 @@ export interface WebAuthnCredentialData {
   credentialId: string;
   publicKey: string; // BYTEA format
   counter: number;
-  transports?: AuthenticatorTransportFuture[];
+  transports?: string[];
   backupEligible?: boolean;
   backupState?: boolean;
   aaguid?: string; // BYTEA format
@@ -47,11 +46,11 @@ export interface RegistrationVerificationResult {
   credentialId: string;
   publicKey: ArrayBuffer;
   counter: number;
-  transports?: AuthenticatorTransportFuture[];
+  transports?: string[];
   backupEligible?: boolean;
   backupState?: boolean;
-  aaguid?: string; // WebAuthn aaguid is a string in @simplewebauthn/server v13.2.0
-  userHandle?: ArrayBuffer | null; // Can be null if not available
+  aaguid?: string;
+  userHandle?: ArrayBuffer | null;
   error?: string;
 }
 
@@ -69,31 +68,25 @@ export interface AuthenticationVerificationResult {
  * Verify WebAuthn registration response
  */
 export async function verifyCredentialRegistration(
-  response: RegistrationResponseJSON,
+  response: RegistrationResponse,
   expectedChallenge: string,
   expectedOrigin: string,
   expectedRPID: string,
   credentialData?: WebAuthnCredentialData
 ): Promise<RegistrationVerificationResult> {
   try {
-    // Prepare verification options
-    const verificationOptions: VerifyRegistrationResponseOpts = {
+    // If credentialData is provided, log the expected state for auditing
+    if (credentialData) {
+      devLog('Expected credential backup state:', { backupEligible: credentialData.backupEligible });
+    }
+
+    // Use native WebAuthn verification
+    const verification = await verifyRegistrationResponse(
       response,
       expectedChallenge,
       expectedOrigin,
-      expectedRPID,
-      requireUserVerification: true,
-    };
-
-    // If credentialData is provided, use it to set expected backup state
-    if (credentialData) {
-      // Note: expectedCredentialBackupState and expectedCredentialDeviceType are not supported
-      // in @simplewebauthn/server v13.2.0, but we can log the expected state for auditing
-      devLog('Expected credential backup state:', credentialData.backupEligible);
-    }
-
-    // Verify the registration response
-    const verification = await verifyRegistrationResponse(verificationOptions);
+      expectedRPID
+    );
 
     if (!verification.verified) {
       return {
@@ -105,19 +98,17 @@ export async function verifyCredentialRegistration(
       };
     }
 
-    // Extract credential information
-    const credential = verification.registrationInfo;
-    
+    // Extract credential information from native response
     return {
       verified: true,
-      credentialId: credential.credential.id,
-      publicKey: credential.credential.publicKey.buffer,
-      counter: credential.credential.counter,
-      transports: response.response.transports || [],
-      backupEligible: credential.credentialBackedUp,
-      backupState: credential.credentialBackedUp,
-      aaguid: credential.aaguid,
-      userHandle: null, // userHandle is not available in registrationInfo
+      credentialId: verification.credentialId,
+      publicKey: verification.publicKey,
+      counter: verification.counter,
+      transports: verification.transports,
+      backupEligible: verification.backupEligible,
+      backupState: verification.backupState,
+      aaguid: verification.aaguid,
+      userHandle: verification.userHandle,
     };
 
   } catch (error) {
@@ -135,40 +126,44 @@ export async function verifyCredentialRegistration(
  * Verify WebAuthn authentication response
  */
 export async function verifyCredentialAuthentication(
-  response: AuthenticationResponseJSON,
+  response: AuthenticationResponse,
   expectedChallenge: string,
   expectedOrigin: string,
   expectedRPID: string,
   credentialData: WebAuthnCredentialData
 ): Promise<AuthenticationVerificationResult> {
   try {
-    // Convert database format to ArrayBuffer
-    const publicKey = byteaToArrayBuffer(credentialData.publicKey);
-    const credentialID = base64urlToArrayBuffer(credentialData.credentialId);
+    // Convert database format to WebAuthnCredential
+    const credential: WebAuthnCredential = {
+      id: credentialData.credentialId,
+      userId: '', // Not needed for verification
+      rpId: expectedRPID,
+      credentialId: credentialData.credentialId,
+      publicKey: credentialData.publicKey,
+      counter: credentialData.counter,
+      transports: credentialData.transports as any,
+      backupEligible: credentialData.backupEligible,
+      backupState: credentialData.backupState,
+      aaguid: credentialData.aaguid,
+      userHandle: credentialData.userHandle,
+      createdAt: credentialData.createdAt,
+      lastUsedAt: credentialData.lastUsedAt
+    };
 
-    // Prepare verification options
-    const verificationOptions: VerifyAuthenticationResponseOpts = {
+    // Log credential ID for debugging
+    devLog('Verifying credential', {
+      credentialId: `${credentialData.credentialId.substring(0, 8)}...`,
+      credentialIdLength: credentialData.credentialId.length
+    });
+
+    // Use native WebAuthn verification
+    const verification = await verifyAuthenticationResponse(
       response,
       expectedChallenge,
       expectedOrigin,
       expectedRPID,
-      credential: {
-        id: credentialData.credentialId,
-        publicKey: new Uint8Array(publicKey),
-        counter: credentialData.counter,
-        transports: credentialData.transports || []
-      },
-      requireUserVerification: true,
-    };
-
-    // Log credential ID for debugging (using the converted ArrayBuffer)
-    devLog('Verifying credential', {
-      credentialId: `${credentialData.credentialId.substring(0, 8)  }...`,
-      credentialIdLength: credentialID.byteLength
-    });
-
-    // Verify the authentication response
-    const verification = await verifyAuthenticationResponse(verificationOptions);
+      credential
+    );
 
     if (!verification.verified) {
       return {
@@ -182,7 +177,7 @@ export async function verifyCredentialAuthentication(
     return {
       verified: true,
       credentialId: credentialData.credentialId,
-      newCounter: verification.authenticationInfo.newCounter,
+      newCounter: verification.newCounter,
     };
 
   } catch (error) {
@@ -247,7 +242,7 @@ export function validateRPID(rpID: string): boolean {
  */
 export function isCredentialExpired(
   lastUsedAt: Date | null,
-  maxAgeDays: number = 365
+  maxAgeDays = 365
 ): boolean {
   if (!lastUsedAt) {
     return false; // Never used, not expired

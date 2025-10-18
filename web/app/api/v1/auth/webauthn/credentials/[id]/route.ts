@@ -12,10 +12,11 @@ export const dynamic = 'force-dynamic';
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const credentialId = params.id;
+    const { id } = await params;
+    const credentialId = id;
     
     if (!credentialId) {
       return NextResponse.json(
@@ -77,10 +78,11 @@ export async function DELETE(
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const credentialId = params.id;
+    const { id } = await params;
+    const credentialId = id;
     
     if (!credentialId) {
       return NextResponse.json(

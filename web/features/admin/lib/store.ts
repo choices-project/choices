@@ -1,9 +1,9 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 
+import { FEATURE_FLAGS, featureFlagManager } from '@/lib/core/feature-flags';
 import { logger } from '@/lib/utils/logger';
 
-import { FEATURE_FLAGS, featureFlagManager } from '@/lib/core/feature-flags';
 
 import type {
   AdminNotification,
@@ -12,7 +12,6 @@ import type {
   SystemMetrics,
   ActivityItem,
   AdminStore,
-  FeatureFlag,
   FeatureFlagConfig
 } from '../types';
 
@@ -394,11 +393,11 @@ export const useAdminStore = create<AdminStore>()(
           enabled,
           description: `Feature flag for ${key.toLowerCase().replace(/_/g, ' ')}`,
           key,
-          category: state.featureFlags.categories.core.includes(key) ? 'core' :
-                   state.featureFlags.categories.enhanced.includes(key) ? 'enhanced' :
-                   state.featureFlags.categories.civics.includes(key) ? 'civics' :
-                   state.featureFlags.categories.future.includes(key) ? 'future' :
-                   state.featureFlags.categories.performance.includes(key) ? 'performance' : 'general'
+          category: state.featureFlags.categories.core?.includes(key) ? 'core' :
+                   state.featureFlags.categories.enhanced?.includes(key) ? 'enhanced' :
+                   state.featureFlags.categories.civics?.includes(key) ? 'civics' :
+                   state.featureFlags.categories.future?.includes(key) ? 'future' :
+                   state.featureFlags.categories.performance?.includes(key) ? 'performance' : 'general'
         }));
       },
       
@@ -421,7 +420,7 @@ export const useAdminStore = create<AdminStore>()(
           logger.info('Feature flag config imported', { config, action: 'import_config' });
           return true;
         } catch (error) {
-          logger.error('Failed to import feature flag config', { error, action: 'import_config' });
+          logger.error('Failed to import feature flag config', error instanceof Error ? error : undefined, { action: 'import_config' });
           return false;
         }
       },

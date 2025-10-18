@@ -222,14 +222,14 @@ export default function InfiniteScroll({
         {/* Loading indicator */}
         {isLoading && hasMore && (
           <div className="px-4">
-            {loadingComponent || defaultLoadingComponent}
+            {loadingComponent ?? defaultLoadingComponent}
           </div>
         )}
 
         {/* End of feed */}
         {!hasMore && !isLoading && (
           <div className="px-4">
-            {endComponent || defaultEndComponent}
+            {endComponent ?? defaultEndComponent}
           </div>
         )}
 

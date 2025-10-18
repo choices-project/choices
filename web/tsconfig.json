@@ -1,16 +1,44 @@
 {
   "compilerOptions": {
+    // Target ES2022 for modern JavaScript features
     "target": "ES2022",
     "lib": [
       "dom",
       "dom.iterable",
-      "esnext"
+      "esnext",
+      "webworker"
     ],
     "module": "ESNext",
     "moduleResolution": "bundler",
     "jsx": "preserve",
+    
+    // Strict type checking for TypeScript 5.9
     "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedSideEffectImports": true,
+    "exactOptionalPropertyTypes": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "strictBindCallApply": true,
+    "strictPropertyInitialization": true,
+    "noImplicitThis": true,
+    "alwaysStrict": true,
+    
+    // Modern TypeScript 5.9 features
+    "verbatimModuleSyntax": true,
+    "useUnknownInCatchVariables": true,
+    "allowUnusedLabels": false,
+    "allowUnreachableCode": false,
+    "noPropertyAccessFromIndexSignature": true,
+    "noUncheckedIndexedAccess": true,
+    
+    // Module resolution
     "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "allowJs": true,
@@ -18,41 +46,45 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
-    /* Stricter TypeScript settings for better type safety */
-    "noUncheckedIndexedAccess": true,
-    "noImplicitOverride": true,
-    "verbatimModuleSyntax": true,
-    "useUnknownInCatchVariables": true,
+    
+    // Next.js plugin for App Router support
     "plugins": [
       {
         "name": "next"
       }
     ],
+    
+    // Path mapping for clean imports
     "baseUrl": ".",
     "paths": {
-      "@/*": [
-        "./*"
-      ],
+      "@/*": ["./*"],
       "@/features/*": ["./features/*"],
       "@/components/*": ["./components/*"],
       "@/lib/*": ["./lib/*"],
       "@/hooks/*": ["./hooks/*"],
       "@/types/*": ["./types/*"],
-      "@/utils/supabase/server": ["./utils/supabase/server"],
-      "@/lib/supabase/server": ["./utils/supabase/server"],
-      "@/components/polls/*": ["./features/polls/*"],
-      "@/components/voting/*": ["./features/voting/*"],
-      "@/components/CreatePoll*": ["./features/polls/components/CreatePollForm"],
-      "@/components/admin/layout/*": ["./app/(app)/admin/layout/*"]
+      "@/utils/*": ["./utils/*"],
+      "@/app/*": ["./app/*"],
+      "@/styles/*": ["./styles/*"],
+      "@/public/*": ["./public/*"]
     }
   },
   "include": [
     "next-env.d.ts",
     ".next/types/**/*.ts",
     "**/*.ts",
-    "**/*.tsx"
+    "**/*.tsx",
+    "**/*.js",
+    "**/*.jsx"
   ],
   "exclude": [
+    "node_modules",
+    ".next",
+    "dist",
+    "build",
+    "coverage",
+    "playwright-report",
+    "test-results",
     "**/*.disabled",
     "**/*.disabled.*",
     "**/scripts.disabled/**",

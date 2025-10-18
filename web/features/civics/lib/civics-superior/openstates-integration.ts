@@ -9,11 +9,7 @@
  * Updated: October 8, 2025
  */
 
-// Node.js imports - only available in server environment
-// import { readFileSync, readdirSync, statSync } from 'fs';
-// import { join, extname } from 'path';
-// import { load } from 'js-yaml';
-import { withOptional } from '@/lib/utils/objects';
+import { logger } from '@/lib/utils/logger';
 
 import { CurrentElectorateVerifier } from './current-electorate-verifier';
 
@@ -92,7 +88,7 @@ export default class OpenStatesIntegration {
         // 2. It has no end date (ongoing) OR end date is in the future
         const isCurrent = startDate <= this.currentDate && (!endDate || endDate > this.currentDate);
         
-        logger.info(`   🔍 Checking role for ${person.name}: start=${role.start_date}, end=${role.end_date || 'none'}, current=${isCurrent}`);
+        logger.info(`   🔍 Checking role for ${person.name}: start=${role.start_date}, end=${role.end_date || 'none'}, current=${isCurrent}`, { name: person.name, startDate: role.start_date, endDate: role.end_date, isCurrent });
         
         return isCurrent;
       });
@@ -118,13 +114,13 @@ export default class OpenStatesIntegration {
     logger.info(`🔍 Processing OpenStates People Database for ${stateCode}...`);
     logger.info(`   System Date: ${this.currentDate.toISOString()}`);
     logger.info(`   Data Path: ${this.dataPath}`);
-    logger.info(`   NOTE: This is the OpenStates People Database (offline), NOT the OpenStates API`);
+    logger.info(`   NOTE: This is the OpenStates People Database (offline), NOT the OpenStates API`, {});
     logger.info(`   GOAL: Extract all current legislators and committee information for efficient API usage`);
     
     // Check if we're running in a browser environment
     if (typeof window !== 'undefined') {
       logger.info('⚠️  OpenStates People Database integration requires server-side execution');
-      logger.info('   This should be called from API routes, not client-side code');
+      logger.info('   This should be called from API routes, not client-side code', {});
       return [];
     }
     
@@ -229,7 +225,7 @@ export default class OpenStatesIntegration {
                       logger.info(`   📋 Created new person entry for committee member: ${member.name}`);
                     } else {
                       // Add committee role to existing person
-                      logger.info(`   📋 Found existing person: ${person.name}, adding committee role`);
+                      logger.info(`   📋 Found existing person: ${person.name}, adding committee role`, { name: person.name });
                       if (!person.roles) person.roles = [];
                       const roleType = member.role === 'chair' ? 'committee_chair' : 
                                      member.role === 'vice chair' ? 'committee_vice_chair' : 
@@ -278,7 +274,7 @@ export default class OpenStatesIntegration {
 
   private async enhancePersonData(person: OpenStatesPerson, _stateCode: string): Promise<OpenStatesPerson> {
 
-    const enhanced: OpenStatesPerson & Record<string, any> = withOptional(person);
+    const enhanced: OpenStatesPerson & Record<string, any> = { ...person };
     
     // Extract OpenStates ID for efficient API calls
     if (person.id) {
@@ -380,7 +376,7 @@ export default class OpenStatesIntegration {
           end_date: role.end_date
         }));
         logger.info(`   📋 Committee Memberships: ${committeeRoles.length} committees`);
-        logger.info(`   📋 Committee details:`, committeeRoles.map(r => `${r.type} - ${r.title}`));
+        logger.info(`   📋 Committee details:`, { committees: committeeRoles.map(r => `${r.type} - ${r.title}`) });
       } else {
         logger.info(`   📋 No committee roles found for ${person.name}`);
       }
@@ -507,7 +503,7 @@ export default class OpenStatesIntegration {
       const dataPath = path.join(this.dataPath);
       return fs.existsSync(dataPath);
     } catch (error) {
-      logger.info('OpenStates People database not available:', error);
+      logger.info('OpenStates People database not available:', { error: error instanceof Error ? error.message : String(error) });
       return false;
     }
   }
@@ -519,7 +515,7 @@ export default class OpenStatesIntegration {
     try {
       // Check if database is available
       if (!(await this.isDatabaseAvailable())) {
-        logger.info('OpenStates People database not available, returning hardcoded state list');
+        logger.info('OpenStates People database not available, returning hardcoded state list', {});
     return [
       'AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA',
       'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MD',
@@ -542,7 +538,7 @@ export default class OpenStatesIntegration {
       logger.info(`Found ${states.length} available states in OpenStates People database`);
       return states;
     } catch (error) {
-      logger.info('Error reading available states, returning hardcoded list:', error);
+      logger.info('Error reading available states, returning hardcoded list:', { error: error instanceof Error ? error.message : String(error) });
       return [
         'AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA',
         'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MD',

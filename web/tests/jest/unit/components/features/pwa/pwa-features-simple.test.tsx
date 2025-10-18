@@ -54,26 +54,64 @@ jest.mock('@/lib/stores', () => ({
   usePWAInstallation: jest.fn(() => ({
     isInstalled: false,
     canInstall: true,
-    install: jest.fn(),
-    checkInstallationStatus: jest.fn(),
+    installPrompt: null,
+    installSource: 'manual',
+    version: '1.0.0',
   })),
   usePWAOffline: jest.fn(() => ({
     isOnline: true,
+    isOffline: false,
+    lastOnline: new Date().toISOString(),
     offlineData: {
       cachedPages: [],
       cachedResources: [],
       queuedActions: []
     },
-    syncOfflineData: jest.fn(),
-    clearOfflineData: jest.fn(),
   })),
-  usePWANotifications: jest.fn(() => ({
-    permission: 'default',
-    requestPermission: jest.fn(),
-    showNotification: jest.fn(),
-  })),
+  usePWANotifications: jest.fn(() => []),
   usePWALoading: jest.fn(() => false),
   usePWAError: jest.fn(() => null),
+  usePWAActions: jest.fn(() => ({
+    setInstallation: jest.fn(),
+    setInstallPrompt: jest.fn(),
+    setCanInstall: jest.fn(),
+    installPWA: jest.fn(),
+    uninstallPWA: jest.fn(),
+    setOnlineStatus: jest.fn(),
+    setOfflineData: jest.fn(),
+    addCachedPage: jest.fn(),
+    removeCachedPage: jest.fn(),
+    addCachedResource: jest.fn(),
+    removeCachedResource: jest.fn(),
+    queueOfflineAction: jest.fn(),
+    processOfflineActions: jest.fn(),
+    setUpdateAvailable: jest.fn(),
+    downloadUpdate: jest.fn(),
+    installUpdate: jest.fn(),
+    skipUpdate: jest.fn(),
+    setAutoUpdate: jest.fn(),
+    addNotification: jest.fn(),
+    removeNotification: jest.fn(),
+    markNotificationRead: jest.fn(),
+    clearNotifications: jest.fn(),
+    setPerformance: jest.fn(),
+    updatePerformanceMetrics: jest.fn(),
+    updatePreferences: jest.fn(),
+    resetPreferences: jest.fn(),
+    registerServiceWorker: jest.fn(),
+    unregisterServiceWorker: jest.fn(),
+    updateServiceWorker: jest.fn(),
+    syncData: jest.fn(),
+    clearCache: jest.fn(),
+    exportData: jest.fn(),
+    importData: jest.fn(),
+    setLoading: jest.fn(),
+    setInstalling: jest.fn(),
+    setUpdating: jest.fn(),
+    setSyncing: jest.fn(),
+    setError: jest.fn(),
+    clearError: jest.fn(),
+  })),
 }));
 
 import React from 'react';
@@ -128,8 +166,9 @@ describe('PWA Features - Simple Testing', () => {
       usePWAInstallation.mockReturnValue({
         isInstalled: true,
         canInstall: false,
-        install: jest.fn(),
-        isInstalling: false,
+        installPrompt: null,
+        installSource: 'manual',
+        version: '1.0.0',
       });
 
       render(
@@ -170,12 +209,13 @@ describe('PWA Features - Simple Testing', () => {
       const { usePWAOffline } = require('@/lib/stores');
       usePWAOffline.mockReturnValue({
         isOnline: false,
+        isOffline: true,
+        lastOnline: new Date().toISOString(),
         offlineData: {
           cachedPages: ['poll-1', 'poll-2'],
+          cachedResources: [],
           queuedActions: [],
         },
-        syncOfflineData: jest.fn(),
-        clearOfflineData: jest.fn(),
       });
 
       render(
@@ -192,12 +232,13 @@ describe('PWA Features - Simple Testing', () => {
       const { usePWAOffline } = require('@/lib/stores');
       usePWAOffline.mockReturnValue({
         isOnline: false,
+        isOffline: true,
+        lastOnline: new Date().toISOString(),
         offlineData: {
           cachedPages: [],
+          cachedResources: [],
           queuedActions: ['action-1', 'action-2'],
         },
-        syncOfflineData: jest.fn(),
-        clearOfflineData: jest.fn(),
       });
 
       render(
@@ -206,7 +247,7 @@ describe('PWA Features - Simple Testing', () => {
         </BrowserRouter>
       );
 
-      expect(screen.getByTestId('offline-queue')).toBeInTheDocument();
+      expect(screen.getByTestId('offline-queue-container')).toBeInTheDocument();
     });
   });
 

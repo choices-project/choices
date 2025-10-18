@@ -64,7 +64,7 @@ export class InterestBasedPollFeed {
   ): Promise<PersonalizedPollFeed> {
     
     try {
-      const supabase = await getSupabaseClient();
+      const supabase = getSupabaseClient();
       this.supabase = supabase;
       
       // 1. Get user's interest tags
@@ -74,13 +74,13 @@ export class InterestBasedPollFeed {
       const matchingPolls = await this.findMatchingPolls(userTags, userLocation);
       
       // 3. Apply demographic filtering
-      const demographicFiltered = await this.applyDemographicFiltering(
+      const demographicFiltered = this.applyDemographicFiltering(
         matchingPolls, 
         userDemographics
       );
       
       // 4. Rank by relevance and recency
-      const rankedPolls = await this.rankPollsByRelevance(
+      const rankedPolls = this.rankPollsByRelevance(
         demographicFiltered,
         userInterests
       );
@@ -113,7 +113,7 @@ export class InterestBasedPollFeed {
         return [];
       }
 
-      return data?.map((item: any) => item.hashtag) || [];
+      return data?.map((item: any) => item.hashtag) ?? [];
     } catch (error) {
       logger.error('Error in getUserInterestTags:', error instanceof Error ? error : new Error(String(error)));
       return [];
@@ -156,10 +156,10 @@ export class InterestBasedPollFeed {
         title: poll.title,
         description: poll.description,
         category: poll.category,
-        tags: poll.tags || [],
+        tags: poll.tags ?? [],
         relevanceScore: this.calculateRelevanceScore(poll.tags, userTags),
         interestMatches: this.findMatchingInterests(poll.tags, userTags),
-        totalVotes: poll.total_votes || 0,
+        totalVotes: poll.total_votes ?? 0,
         created_at: poll.created_at
       })) || [];
     } catch (error) {
@@ -169,10 +169,10 @@ export class InterestBasedPollFeed {
   }
 
   // Apply demographic filtering
-  private async applyDemographicFiltering(
+  private applyDemographicFiltering(
     polls: PollRecommendation[],
     userDemographics: any
-  ): Promise<PollRecommendation[]> {
+  ): PollRecommendation[] {
     // Demographic filtering implementation
     if (FEATURE_FLAGS.DEMOGRAPHIC_FILTERING) {
       logger.debug('Demographic filtering enabled', { userDemographics });
@@ -184,10 +184,10 @@ export class InterestBasedPollFeed {
   }
 
   // Rank polls by relevance and recency
-  private async rankPollsByRelevance(
+  private rankPollsByRelevance(
     polls: PollRecommendation[],
     userInterests: string[]
-  ): Promise<PollRecommendation[]> {
+  ): PollRecommendation[] {
     return polls
       .map(poll => {
         const safeTags = poll.tags ?? [];
@@ -195,11 +195,11 @@ export class InterestBasedPollFeed {
           id: poll.id,
           title: poll.title,
           description: poll.description,
-          category: poll.category || 'general',
+          category: poll.category ?? 'general',
           tags: safeTags,
           relevanceScore: this.calculateRelevanceScore(safeTags, userInterests),
           interestMatches: this.findInterestMatches(safeTags, userInterests),
-          totalVotes: poll.totalVotes || 0,
+          totalVotes: poll.totalVotes ?? 0,
           created_at: poll.created_at
         };
       })
@@ -215,7 +215,7 @@ export class InterestBasedPollFeed {
 
   // Calculate relevance score based on tag matches
   private calculateRelevanceScore(pollTags: string[], userInterests: string[]): number {
-    if (!pollTags || pollTags.length === 0) return 0;
+    if (pollTags?.length === 0) return 0;
     
     const matches = pollTags.filter(tag => userInterests.includes(tag)).length;
     return matches / pollTags.length;
@@ -270,7 +270,7 @@ export class InterestBasedPollFeed {
         return [];
       }
 
-      return data?.map((item: any) => item.hashtag) || [];
+      return data?.map((item: any) => item.hashtag) ?? [];
     } catch (error) {
       logger.error('Error in getTrendingHashtags:', error instanceof Error ? error : new Error(String(error)));
       return [];
@@ -334,10 +334,10 @@ export class InterestBasedPollFeed {
         title: poll.title,
         description: poll.description,
         category: poll.category,
-        tags: poll.tags || [],
+        tags: poll.tags ?? [],
         relevanceScore: 0.5, // Default relevance for trending
         interestMatches: [],
-        totalVotes: poll.total_votes || 0,
+        totalVotes: poll.total_votes ?? 0,
         created_at: poll.created_at
       })) || [];
     } catch (error) {
@@ -366,7 +366,7 @@ export async function GET(request: NextRequest) {
     const feedService = new InterestBasedPollFeed();
     
     // Get user profile data
-    const supabase = await getSupabaseClient();
+    const supabase = getSupabaseClient();
     const { data: userProfile } = await supabase
       .from('user_profiles')
       .select('*')
@@ -408,7 +408,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    const supabase = await getSupabaseClient();
+    const supabase = getSupabaseClient();
     
     switch (action) {
       case 'follow':

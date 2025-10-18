@@ -21,6 +21,7 @@ import Image from 'next/image';
 import React, { useState, useEffect, useCallback } from 'react';
 
 import type { SuperiorRepresentativeData } from '@/features/civics/lib/civics-superior/superior-data-pipeline';
+import { logger } from '@/lib/utils/logger';
 
 export default function Civics2Page() {
   const [activeTab, setActiveTab] = useState<'representatives' | 'feed'>('representatives');
@@ -36,18 +37,18 @@ export default function Civics2Page() {
 
   const loadRepresentatives = useCallback(async () => {
     setIsLoading(true);
-    logger.info('🔄 Loading representatives...');
+    logger.info('🔄 Loading representatives...', { state: selectedState, level: selectedLevel });
     
     try {
       const response = await fetch(`/api/civics/by-state?state=${selectedState}&level=${selectedLevel}&limit=20`);
-      logger.info('📡 Response status:', response.status);
+      logger.info('📡 Response status', { status: response.status });
       
       if (!response.ok) {
         throw new Error(`Failed to load representatives: ${response.status}`);
       }
 
       const data = await response.json();
-      logger.info('✅ API Response:', data);
+      logger.info('✅ API Response:', { data });
       setRepresentatives(data.data || []);
     } catch (error) {
       console.error('❌ Error loading representatives:', error);
@@ -88,7 +89,7 @@ export default function Civics2Page() {
 
   const handleShare = (id: string) => {
     // Share functionality
-    logger.info('Sharing representative:', id);
+    logger.info('Sharing representative', { id });
   };
 
   const handleFollow = (id: string) => {
@@ -105,7 +106,7 @@ export default function Civics2Page() {
 
   const handleContact = (id: string, type: string) => {
     // Contact functionality
-    logger.info('Contacting representative:', id, type);
+    logger.info('Contacting representative', { id, type });
   };
 
   const filteredRepresentatives = representatives.filter(rep => {

@@ -93,7 +93,7 @@ export class ConnectionPoolManager {
     validationFailures: 0
   }
 
-  private isInitialized: boolean = false
+  private isInitialized = false
   private cleanupInterval: NodeJS.Timeout | null = null
   private validationInterval: NodeJS.Timeout | null = null
   private leakDetectionInterval: NodeJS.Timeout | null = null

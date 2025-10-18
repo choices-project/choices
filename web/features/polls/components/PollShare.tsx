@@ -1,15 +1,19 @@
 'use client'
 
 import { Share2, Copy, Link, Twitter, Facebook, Linkedin, Mail, QrCode, Download } from 'lucide-react'
-import { useState, useEffect } from 'react'
+import Image from 'next/image'
 import QRCode from 'qrcode'
+import { useState, useEffect } from 'react'
 
 import { isFeatureEnabled } from '@/lib/core/feature-flags'
 import { devLog } from '@/lib/utils/logger';
 
 interface PollShareProps {
   pollId: string
-  poll?: any
+  poll?: {
+    title: string;
+    description?: string;
+  }
 }
 
 export default function PollShare({ pollId, poll }: PollShareProps) {
@@ -38,12 +42,12 @@ export default function PollShare({ pollId, poll }: PollShareProps) {
         });
         setQrCodeDataUrl(qrDataUrl);
       } catch (error) {
-        devLog('Failed to generate QR code:', error);
+        devLog('Failed to generate QR code:', { error });
       }
     };
-    initUrl();
+    void initUrl();
   }, [pollId]);
-  const pollTitle = poll?.title || 'Check out this poll!'
+  const pollTitle = poll?.title ?? 'Check out this poll!'
   const socialSharingEnabled = isFeatureEnabled('SOCIAL_SHARING')
 
   const handleCopyLink = async () => {
@@ -56,13 +60,13 @@ export default function PollShare({ pollId, poll }: PollShareProps) {
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     } catch (error) {
-      devLog('Failed to copy link:', error)
+      devLog('Failed to copy link:', { error })
     }
   }
 
   const handleDownloadQR = async () => {
     if (!qrCodeDataUrl) {
-      devLog('QR code not available for download')
+      devLog('QR code not available for download', {})
       return
     }
     
@@ -78,7 +82,7 @@ export default function PollShare({ pollId, poll }: PollShareProps) {
       link.download = `poll-${pollId}-qr-code.png`
       link.click()
     } catch (error) {
-      devLog('Failed to download QR code:', error)
+      devLog('Failed to download QR code:', { error })
     }
   }
 
@@ -91,7 +95,7 @@ export default function PollShare({ pollId, poll }: PollShareProps) {
           url: pollUrl
         })
       } catch (error) {
-        devLog('Error sharing:', error)
+        devLog('Error sharing:', { error })
       }
     }
   }
@@ -142,7 +146,7 @@ export default function PollShare({ pollId, poll }: PollShareProps) {
               className="flex-1 px-3 py-2 border border-gray-300 rounded-l-lg bg-gray-50 text-gray-900"
             />
             <button
-              onClick={handleCopyLink}
+              onClick={() => void handleCopyLink()}
               className="px-4 py-2 bg-blue-600 text-white rounded-r-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
             >
               <Copy className="w-4 h-4" />
@@ -192,7 +196,7 @@ export default function PollShare({ pollId, poll }: PollShareProps) {
         {'share' in navigator && (
           <div className="mt-4">
             <button
-              onClick={handleNativeShare}
+              onClick={() => void handleNativeShare()}
               className="w-full flex items-center justify-center space-x-2 p-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
             >
               <Share2 className="w-5 h-5" />
@@ -220,9 +224,11 @@ export default function PollShare({ pollId, poll }: PollShareProps) {
             <div className="inline-block p-4 bg-gray-100 rounded-lg">
               <div className="w-48 h-48 bg-white border-2 border-gray-300 rounded-lg flex items-center justify-center">
                 {qrCodeDataUrl ? (
-                  <img 
+                  <Image 
                     src={qrCodeDataUrl} 
                     alt="QR Code for poll" 
+                    width={192}
+                    height={192}
                     className="w-full h-full object-contain"
                   />
                 ) : (
@@ -238,7 +244,7 @@ export default function PollShare({ pollId, poll }: PollShareProps) {
             </p>
             <div className="mt-4 flex justify-center space-x-3">
               <button
-                onClick={handleDownloadQR}
+                onClick={() => void handleDownloadQR()}
                 className="flex items-center space-x-2 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
               >
                 <Download className="w-4 h-4" />
@@ -275,7 +281,7 @@ export default function PollShare({ pollId, poll }: PollShareProps) {
           
           <button
             onClick={() => {
-              navigator.clipboard.writeText(`<iframe src="${pollUrl}/embed" width="100%" height="600" frameborder="0"></iframe>`)
+              void navigator.clipboard.writeText(`<iframe src="${pollUrl}/embed" width="100%" height="600" frameborder="0"></iframe>`)
               setCopied(true)
               setTimeout(() => setCopied(false), 2000)
             }}

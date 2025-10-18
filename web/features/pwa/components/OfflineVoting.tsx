@@ -4,6 +4,7 @@ import { WifiOff, CheckCircle, AlertCircle } from 'lucide-react'
 import { useState, useEffect } from 'react'
 
 import { usePWA } from '@/hooks/usePWA'
+import { logger } from '@/lib/utils/logger'
 
 interface OfflineVotingProps {
   pollId: string
@@ -24,7 +25,7 @@ export default function OfflineVoting({ pollId, className = '' }: OfflineVotingP
     setOfflineVotes(mockVotes)
   }, [pollId])
 
-  const _handleVote = async (choice: number) => {
+  const _handleVote = (choice: number) => {
     setIsVoting(true)
     try {
       // Simulate storing offline vote
@@ -36,7 +37,7 @@ export default function OfflineVoting({ pollId, className = '' }: OfflineVotingP
       }
       setOfflineVotes(prev => [...prev, newVote])
     } catch (error) {
-      console.error('Vote failed:', error)
+      logger.error('Vote failed:', error instanceof Error ? error : new Error(String(error)))
     } finally {
       setIsVoting(false)
     }

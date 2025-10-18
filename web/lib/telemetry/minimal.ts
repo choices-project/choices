@@ -82,7 +82,7 @@ class MinimalTelemetry {
     const durations = this.timers.dbQueryDuration;
     const sortedDurations = [...durations].sort((a, b) => a - b);
     const p95Index = Math.floor(sortedDurations.length * 0.95);
-    const p95Duration = sortedDurations[p95Index] || 0;
+    const p95Duration = sortedDurations[p95Index] ?? 0;
 
     return {
       counters: {

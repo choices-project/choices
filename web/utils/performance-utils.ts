@@ -162,7 +162,7 @@ export class TTLCache<K, V> {
   private cache = new Map<K, { value: V; expires: number }>();
   private defaultTTL: number;
   
-  constructor(defaultTTL: number = 60000) { // 1 minute default
+  constructor(defaultTTL = 60000) { // 1 minute default
     this.defaultTTL = defaultTTL;
   }
   
@@ -236,8 +236,8 @@ export class BatchProcessor<T> {
   
   constructor(
     processFn: (items: T[]) => void | Promise<void>,
-    batchSize: number = 10,
-    timeoutMs: number = 100
+    batchSize = 10,
+    timeoutMs = 100
   ) {
     this.processFn = processFn;
     this.batchSize = batchSize;
@@ -289,7 +289,7 @@ export interface VirtualListOptions {
 export class VirtualList<T> {
   private items: T[];
   private options: VirtualListOptions;
-  private scrollTop: number = 0;
+  private scrollTop = 0;
   
   constructor(items: T[], options: VirtualListOptions) {
     this.items = items;

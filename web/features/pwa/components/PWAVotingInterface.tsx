@@ -78,7 +78,7 @@ export function PWAVotingInterface({
 
     // Validate choice is within valid range
     if (choice < 0 || choice >= poll.options.length) {
-      devLog('Invalid choice:', choice)
+      devLog('Invalid choice:', { choice })
       return
     }
 
@@ -112,7 +112,7 @@ export function PWAVotingInterface({
       //   pwaUtils.pwaAnalytics.trackDataCollection(1)
       // }
     } catch (error) {
-      devLog('Vote failed:', error)
+      devLog('Vote failed:', { error })
     } finally {
       setIsVoting(false)
     }
@@ -240,7 +240,7 @@ export function PWAVotingInterface({
           <h4 className="text-lg font-semibold text-gray-900 mb-4">Results</h4>
           <div className="space-y-3">
             {poll.options.map((option: any, index: any) => {
-              const votes = poll.results?.[index] || 0
+              const votes = poll.results?.[index] ?? 0
               const percentage = calculatePercentage(votes)
               
               return (
@@ -337,9 +337,9 @@ export function PWAVotingInterface({
                       </span>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <div className={`w-2 h-2 rounded-full ${(JSON.parse(localStorage.getItem('offlineVotes') || '[]').length) > 0 ? 'bg-orange-500' : 'bg-gray-300'}`} />
+                      <div className={`w-2 h-2 rounded-full ${(JSON.parse(localStorage.getItem('offlineVotes') ?? '[]').length) > 0 ? 'bg-orange-500' : 'bg-gray-300'}`} />
                       <span className="text-gray-600">
-                        {JSON.parse(localStorage.getItem('offlineVotes') || '[]').length} offline votes
+                        {JSON.parse(localStorage.getItem('offlineVotes') ?? '[]').length} offline votes
                       </span>
                     </div>
                   </div>

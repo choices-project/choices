@@ -21,7 +21,6 @@ import type {
   AdminUser,
 } from '@/features/admin/types';
 import { logger } from '@/lib/utils/logger';
-import { withOptional } from '@/lib/utils/objects';
 
 // Admin store state interface (business logic only)
 interface AdminStore {
@@ -130,7 +129,7 @@ interface AdminStore {
   
   // System settings actions
   setSystemSettings: (settings: AdminStore['systemSettings']) => void;
-  updateSystemSetting: (section: keyof NonNullable<AdminStore['systemSettings']>, key: string, value: any) => void;
+  updateSystemSetting: (section: keyof NonNullable<AdminStore['systemSettings']>, key: string, value: unknown) => void;
   setSettingsTab: (tab: AdminStore['settingsTab']) => void;
   saveSystemSettings: () => Promise<void>;
   
@@ -234,12 +233,12 @@ export const useAdminStore = create<AdminStore>()(
             const adminUsers: AdminUser[] = users?.map(user => ({
               id: user.user_id,
               email: user.email,
-              name: user.display_name || 'Unknown User',
-              role: (user.role as 'admin' | 'moderator' | 'user') || 'user',
-              status: (user.status as 'active' | 'inactive' | 'suspended') || 'active',
+              name: user.display_name ?? 'Unknown User',
+              role: (user.role as 'admin' | 'moderator' | 'user') ?? 'user',
+              status: (user.status as 'active' | 'inactive' | 'suspended') ?? 'active',
               created_at: user.created_at,
               last_login: user.last_login
-            })) || [];
+            })) ?? [];
 
             set({ users: adminUsers });
             
@@ -306,9 +305,9 @@ export const useAdminStore = create<AdminStore>()(
             const systemHealth = recentActivity && recentActivity.length > 0 ? 'healthy' : 'warning';
 
             const stats = {
-              totalUsers: totalUsers || 0,
-              activePolls: activePolls || 0,
-              totalVotes: totalVotes || 0,
+              totalUsers: totalUsers ?? 0,
+              activePolls: activePolls ?? 0,
+              totalVotes: totalVotes ?? 0,
               systemHealth: systemHealth as 'healthy' | 'warning' | 'critical'
             };
 
@@ -379,7 +378,7 @@ export const useAdminStore = create<AdminStore>()(
               },
             };
             
-            const settings = settingsData?.settings || defaultSettings;
+            const settings = settingsData?.settings ?? defaultSettings;
             set({ systemSettings: settings });
             
             logger.info('System settings loaded successfully');
@@ -530,9 +529,13 @@ export const useAdminStore = create<AdminStore>()(
           if (!state.systemSettings) return state;
           
           return {
-            systemSettings: withOptional(state.systemSettings, {
-              [section]: withOptional(state.systemSettings[section], { [key]: value })
-            })
+            systemSettings: {
+              ...state.systemSettings,
+              [section]: {
+                ...state.systemSettings[section],
+                [key]: value
+              }
+            }
           };
         }),
         
@@ -806,17 +809,17 @@ export const adminStoreSubscriptions = {
 export const adminStoreDebug = {
   logState: () => {
     const state = useAdminStore.getState();
-    // Admin store state logged
+    logger.info('Admin store state:', state);
   },
   
   logStats: () => {
     const stats = adminStoreUtils.getAdminStats();
-    // Admin statistics logged
+    logger.info('Admin statistics:', stats);
   },
   
   logDataSummary: () => {
     const summary = adminStoreUtils.getDataSummary();
-    // Admin data summary logged
+    logger.info('Admin data summary:', summary);
   },
   
   reset: () => {

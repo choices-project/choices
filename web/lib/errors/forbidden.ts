@@ -7,7 +7,7 @@
 import { ApplicationError, type ErrorDetails } from './base';
 
 export class ForbiddenError extends ApplicationError {
-  constructor(message: string = 'Access forbidden', details?: ErrorDetails) {
+  constructor(message = 'Access forbidden', details?: ErrorDetails) {
     super(message, 403, 'FORBIDDEN', details);
   }
 }

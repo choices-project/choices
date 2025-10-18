@@ -16,7 +16,7 @@ import { persist } from 'zustand/middleware';
 import { logger } from '@/lib/utils/logger';
 
 // Voting data types
-interface Ballot {
+export interface Ballot {
   id: string;
   electionId: string;
   title: string;
@@ -89,19 +89,8 @@ interface BallotMeasure {
   };
 }
 
-interface VotingRecord {
-  id: string;
-  ballotId: string;
-  contestId: string;
-  selections: string[]; // Candidate or measure IDs
-  votedAt: string;
-  method: 'in_person' | 'mail' | 'early' | 'absentee';
-  location?: string;
-  verified: boolean;
-  receipt?: string;
-}
 
-interface Election {
+export interface Election {
   id: string;
   name: string;
   date: string;
@@ -116,6 +105,18 @@ interface Election {
     turnout: number;
     totalVoters: number;
   };
+}
+
+export interface VotingRecord {
+  id: string;
+  ballotId: string;
+  contestId: string;
+  selections: string[]; // Candidate or measure IDs
+  votedAt: string;
+  method: 'in_person' | 'mail' | 'early' | 'absentee';
+  location?: string;
+  verified: boolean;
+  receipt?: string;
 }
 
 interface ElectionResults {
@@ -504,7 +505,10 @@ export const useVotingStore = create<VotingStore>()(
               throw new Error('Failed to search voting data');
             }
             
-            const results = await response.json();
+            const results = await response.json() as {
+              items: Array<Ballot | Election>;
+              total: number;
+            };
             
             set((state) => ({
               search: {
@@ -609,7 +613,7 @@ export const useVotingStore = create<VotingStore>()(
               throw new Error('Failed to load ballots');
             }
             
-            const ballots = await response.json();
+            const ballots = await response.json() as Ballot[];
             set({ ballots });
             
             logger.info('Ballots loaded', {
@@ -638,7 +642,7 @@ export const useVotingStore = create<VotingStore>()(
               throw new Error('Failed to load elections');
             }
             
-            const elections = await response.json();
+            const elections = await response.json() as Election[];
             set({ elections });
             
             logger.info('Elections loaded', {
@@ -666,7 +670,7 @@ export const useVotingStore = create<VotingStore>()(
               throw new Error('Failed to load voting records');
             }
             
-            const records = await response.json();
+            const records = await response.json() as VotingRecord[];
             set({ votingRecords: records });
             
             logger.info('Voting records loaded', {
@@ -720,7 +724,7 @@ export const useVotingStore = create<VotingStore>()(
               throw new Error('Failed to load election');
             }
             
-            const election = await response.json();
+            const election = await response.json() as Election;
             set({ selectedElection: election });
             
             logger.info('Election loaded', { id });
@@ -750,7 +754,7 @@ export const useVotingStore = create<VotingStore>()(
               throw new Error('Failed to submit ballot');
             }
             
-            const votingRecord = await response.json();
+            const votingRecord = await response.json() as VotingRecord;
             
             set((state) => ({
               votingRecords: [votingRecord, ...state.votingRecords]

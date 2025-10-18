@@ -18,7 +18,6 @@ import {
   type ServiceWorkerStatus 
 } from '@/lib/pwa/service-worker';
 import { logger } from '@/lib/utils/logger';
-import { withOptional } from '@/lib/utils/objects';
 
 // Import PWA managers
 
@@ -103,14 +102,15 @@ export function usePWA(): PWAStatus & PWAActions {
   const initializePWA = useCallback(async () => {
     try {
       logger.info('usePWA: Starting initialization...');
-      setStatus(prev => withOptional(prev, { loading: true, error: null }));
+      setStatus(prev => ({ ...prev, loading: true, error: null }));
 
       // Check if PWA feature is enabled
       const pwaEnabled = isFeatureEnabled('PWA');
-      logger.info('usePWA: PWA feature enabled:', pwaEnabled);
+      logger.info('usePWA: PWA feature enabled:', { enabled: pwaEnabled });
       if (!pwaEnabled) {
         logger.info('usePWA: PWA feature is disabled, setting status');
-        setStatus(prev => withOptional(prev, {
+        setStatus(prev => ({
+          ...prev,
           isEnabled: false,
           loading: false,
           error: 'PWA feature is disabled'
@@ -154,11 +154,12 @@ export function usePWA(): PWAStatus & PWAActions {
       };
       
       logger.info('usePWA: Setting final status:', finalStatus);
-      setStatus(prev => withOptional(prev, finalStatus));
+      setStatus(prev => ({ ...prev, ...finalStatus }));
 
     } catch (error) {
       logger.error('PWA: Initialization failed:', error instanceof Error ? error : new Error('Unknown error'));
-      setStatus(prev => withOptional(prev, {
+      setStatus(prev => ({
+        ...prev,
         loading: false,
         error: error instanceof Error ? error.message : 'Unknown error'
       }));
@@ -172,7 +173,8 @@ export function usePWA(): PWAStatus & PWAActions {
       
       // Update status after installation attempt
       const installationStatus = pwaInstallationManager.getStatus();
-      setStatus(prev => withOptional(prev, {
+      setStatus(prev => ({
+        ...prev,
         installation: installationStatus
       }));
       
@@ -194,7 +196,8 @@ export function usePWA(): PWAStatus & PWAActions {
       
       // Update service worker status
       const serviceWorkerStatus = await serviceWorkerManager.getStatus();
-      setStatus(prev => withOptional(prev, {
+      setStatus(prev => ({
+        ...prev,
         serviceWorker: serviceWorkerStatus
       }));
       
@@ -222,7 +225,8 @@ export function usePWA(): PWAStatus & PWAActions {
       
       // Update offline data count
       const offlineVotes = await getOfflineVotesCount();
-      setStatus(prev => withOptional(prev, {
+      setStatus(prev => ({
+        ...prev,
         offlineVotes,
         hasOfflineData: offlineVotes > 0
       }));
@@ -237,7 +241,8 @@ export function usePWA(): PWAStatus & PWAActions {
     try {
       logger.info('PWA: Clearing offline data...');
       
-      setStatus(prev => withOptional(prev, {
+      setStatus(prev => ({
+        ...prev,
         offlineVotes: 0,
         hasOfflineData: false
       }));
@@ -257,7 +262,8 @@ export function usePWA(): PWAStatus & PWAActions {
       const permission = await Notification.requestPermission();
       const enabled = permission === 'granted';
       
-      setStatus(prev => withOptional(prev, {
+      setStatus(prev => ({
+        ...prev,
         notificationsPermission: permission,
         notificationsEnabled: enabled
       }));
@@ -294,7 +300,8 @@ export function usePWA(): PWAStatus & PWAActions {
       // This would typically unsubscribe from push notifications
       logger.info('PWA: Unsubscribing from notifications...');
       
-      setStatus(prev => withOptional(prev, {
+      setStatus(prev => ({
+        ...prev,
         notificationsEnabled: false
       }));
       
@@ -319,7 +326,7 @@ export function usePWA(): PWAStatus & PWAActions {
   useEffect(() => {
     // Online/offline status
     const handleOnline = () => {
-      setStatus(prev => withOptional(prev, { isOnline: true }));
+      setStatus(prev => ({ ...prev, isOnline: true }));
       // Auto-sync when coming back online
       syncOfflineData().catch(error => {
         logger.error('PWA: Auto-sync failed:', error instanceof Error ? error : new Error('Unknown error'));
@@ -327,17 +334,17 @@ export function usePWA(): PWAStatus & PWAActions {
     };
 
     const handleOffline = () => {
-      setStatus(prev => withOptional(prev, { isOnline: false }));
+      setStatus(prev => ({ ...prev, isOnline: false }));
     };
 
     // Installation status changes
     const unsubscribeInstallation = pwaInstallationManager.subscribe((installationStatus) => {
-      setStatus(prev => withOptional(prev, { installation: installationStatus }));
+      setStatus(prev => ({ ...prev, installation: installationStatus }));
     });
 
     // Service worker status changes
     const unsubscribeServiceWorker = serviceWorkerManager.subscribe((serviceWorkerStatus) => {
-      setStatus(prev => withOptional(prev, { serviceWorker: serviceWorkerStatus }));
+      setStatus(prev => ({ ...prev, serviceWorker: serviceWorkerStatus }));
     });
 
     // Add event listeners (only on client side)

@@ -34,7 +34,7 @@ interface WeeklySelection {
 
 export default function CommunityPollSelection() {
   // All React Hooks must be called at the top level, before any conditional returns
-  const [_selectedWeek, _setSelectedWeek] = useState('current');
+  const [selectedWeek, setSelectedWeek] = useState('current');
   const [viewMode, setViewMode] = useState<'trending' | 'selected' | 'analytics'>('trending');
 
   // This component is ready for use - no experimental dependency needed
@@ -251,7 +251,7 @@ export default function CommunityPollSelection() {
             <h4 className="font-medium text-gray-900 mb-2">Selection Criteria</h4>
             <ul className="text-sm text-gray-600 space-y-1">
               {selection.selectionCriteria.map((criteria, index) => (
-                <li key={index}>• {criteria}</li>
+                <li key={`criteria-${criteria}-${index}`}>• {criteria}</li>
               ))}
             </ul>
           </div>
@@ -350,6 +350,24 @@ export default function CommunityPollSelection() {
         <p className="text-gray-600">
           See what polls the community wants and how we select featured polls
         </p>
+      </div>
+
+      {/* Week Selection */}
+      <div className="mb-6">
+        <label htmlFor="week-select" className="block text-sm font-medium text-gray-700 mb-2">
+          Select Week
+        </label>
+        <select
+          id="week-select"
+          value={selectedWeek}
+          onChange={(e) => setSelectedWeek(e.target.value)}
+          className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+        >
+          <option value="current">Current Week</option>
+          <option value="last">Last Week</option>
+          <option value="two-weeks-ago">Two Weeks Ago</option>
+          <option value="three-weeks-ago">Three Weeks Ago</option>
+        </select>
       </div>
 
       {/* View Mode Tabs */}

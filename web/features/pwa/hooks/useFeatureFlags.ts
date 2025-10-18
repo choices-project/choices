@@ -9,12 +9,12 @@ import { useState, useEffect } from 'react';
 import { isFeatureEnabled, featureFlagManager } from '@/lib/core/feature-flags';
 
 export function useFeatureFlags() {
-  const [flags, setFlags] = useState(() => featureFlagManager.all());
+  const [flags, setFlags] = useState(() => featureFlagManager.getAllFlags());
 
   useEffect(() => {
     // In a real app, you might want to listen for flag changes
     // For now, we'll just use the static flags
-    setFlags(featureFlagManager.all());
+    setFlags(featureFlagManager.getAllFlags());
   }, []);
 
   return {

@@ -2,34 +2,34 @@
 const withBundleAnalyzer = require('@next/bundle-analyzer');
 
 const bundleAnalyzer = withBundleAnalyzer({
-  enabled: process.env.ANALYZE === 'true',
+  enabled: process.env['ANALYZE'] === 'true',
 });
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Server external packages (moved from experimental in Next.js 15)
+  serverExternalPackages: [
+    '@supabase/ssr',
+    '@supabase/realtime-js',
+    '@supabase/supabase-js'
+  ],
+
   experimental: {
-    // Next 14 way to opt packages out of RSC bundling (Node will require them at runtime)
-    serverComponentsExternalPackages: [
-      '@supabase/ssr',
-      '@supabase/realtime-js',
-      '@supabase/supabase-js',
-      // Externalize all Supabase packages to prevent browser globals in server bundles
-    ],
-    // Enable SWC for better performance
-    swcMinify: true,
-    // Disable CSS optimization to avoid critters dependency issues
-    optimizeCss: false,
-    // Disable font optimization to prevent browser globals in server bundles
-    optimizeServerReact: false,
-    // Font optimization is disabled by default in Next.js 14+
+    // Basic package imports optimization
     optimizePackageImports: [
       'lucide-react',
       'clsx',
       'tailwind-merge',
-      'recharts',
-      'framer-motion',
-      'uuid',
+      '@heroicons/react',
+      'recharts'
     ],
+    // Next.js 15 features
+    staleTimes: {
+      dynamic: 30,
+      static: 180,
+    },
+    // Reduce memory usage
+    workerThreads: false,
   },
 
   // Image optimization
@@ -49,201 +49,20 @@ const nextConfig = {
   },
 
   webpack: (config, { isServer, webpack }) => {
-    // Exclude test files from compilation
-    config.module.rules.push({
-      test: /\.(test|spec)\.(ts|tsx|js|jsx)$/,
-      use: 'ignore-loader'
-    });
-    
-    // Exclude test directories
-    config.module.rules.push({
-      test: /tests\/.*\.(ts|tsx|js|jsx)$/,
-      use: 'ignore-loader'
-    });
-
-    // Exclude social sharing components when feature is disabled
-    if (process.env.SOCIAL_SHARING_ENABLED !== 'true') {
-      config.module.rules.push({
-        test: /components\/social\/.*\.(ts|tsx|js|jsx)$/,
-        use: 'ignore-loader'
-      });
-      
-      config.module.rules.push({
-        test: /lib\/share\.(ts|tsx|js|jsx)$/,
-        use: 'ignore-loader'
-      });
-
-      config.module.rules.push({
-        test: /app\/p\/\[id\]\/opengraph-image\.(ts|tsx|js|jsx)$/,
-        use: 'ignore-loader'
-      });
-
-      config.module.rules.push({
-        test: /app\/api\/share\/.*\.(ts|tsx|js|jsx)$/,
-        use: 'ignore-loader'
-      });
-    }
-
-    if (isServer) {
-      // Define browser globals as undefined for server-side compatibility
-      config.plugins.push(new webpack.DefinePlugin({ 
-        self: 'globalThis',
-        window: 'undefined',
-        document: 'undefined',
-        navigator: 'undefined',
-        localStorage: 'undefined',
-        sessionStorage: 'undefined',
-        location: 'undefined',
-        HTMLElement: 'undefined',
-        // Additional browser globals that might leak
-        'window.location': 'undefined',
-        'document.location': 'undefined',
-        'navigator.userAgent': 'undefined',
-        'navigator.clipboard': 'undefined',
-        'window.localStorage': 'undefined',
-        'window.sessionStorage': 'undefined'
-      }));
-
-      // Exclude font optimization and Supabase from server bundles
-      config.externals = config.externals || [];
-      config.externals.push({
-        'next/font': 'commonjs next/font',
-        'next/font/google': 'commonjs next/font/google',
-        'next/font/local': 'commonjs next/font/local',
-        '@supabase/supabase-js': 'commonjs @supabase/supabase-js',
-        '@supabase/ssr': 'commonjs @supabase/ssr',
-        '@supabase/realtime-js': 'commonjs @supabase/realtime-js'
-      });
-
-      // More aggressive Supabase externalization for server builds
-      // @ts-expect-error - webpack callback types
-      config.externals.push(({ request }, callback) => {
-        if (isServer && request && request.includes('@supabase')) {
-          return callback(null, `commonjs ${request}`);
-        }
-        callback();
-      });
-
-      // Prevent font optimization from including browser globals
-      config.module.rules.push({
-        test: /\.(woff|woff2|eot|ttf|otf)$/,
-        use: {
-          loader: 'file-loader',
-          options: {
-            publicPath: '/_next/static/fonts/',
-            outputPath: 'static/fonts/',
-          },
-        },
-      });
-    }
-
-    // Module resolution optimizations
+    // Basic module resolution
     config.resolve.alias = {
       ...config.resolve.alias,
       '@': require('path').resolve(__dirname, './')
     }
 
-    // Bundle size optimizations
-    if (!isServer) {
-      // Optimize bundle splitting - more aggressive consolidation
-      config.optimization = {
-        ...config.optimization,
-        splitChunks: {
-          chunks: 'all',
-          minSize: 20000, // 20KB minimum chunk size
-          maxSize: 300000, // 300KB maximum chunk size
-          minChunks: 1,
-          maxAsyncRequests: 10, // Limit async chunks
-          maxInitialRequests: 8, // Limit initial chunks
-          cacheGroups: {
-            // React specific chunk - highest priority
-            react: {
-              test: /[\\/]node_modules[\\/](react|react-dom)[\\/]/,
-              name: 'react',
-              chunks: 'all',
-              priority: 40,
-              enforce: true,
-            },
-            // Next.js framework chunk
-            nextjs: {
-              test: /[\\/]node_modules[\\/](next)[\\/]/,
-              name: 'nextjs',
-              chunks: 'all',
-              priority: 35,
-              enforce: true,
-            },
-            // UI libraries consolidated
-            ui: {
-              test: /[\\/]node_modules[\\/](@radix-ui|lucide-react|clsx|tailwind-merge)[\\/]/,
-              name: 'ui',
-              chunks: 'all',
-              priority: 30,
-              enforce: true,
-            },
-            // Data & state management
-            data: {
-              test: /[\\/]node_modules[\\/](@tanstack|@supabase|zod)[\\/]/,
-              name: 'data',
-              chunks: 'all',
-              priority: 25,
-              enforce: true,
-            },
-            // Charts and visualization - more aggressive splitting
-            charts: {
-              test: /[\\/]node_modules[\\/](recharts|d3|chart\.js|react-smooth)[\\/]/,
-              name: 'charts',
-              chunks: 'async', // Only load charts when needed
-              priority: 20,
-              enforce: true,
-              maxSize: 100000, // 100KB max for charts
-            },
-            // Animation libraries - async loading
-            animations: {
-              test: /[\\/]node_modules[\\/](framer-motion|lottie)[\\/]/,
-              name: 'animations',
-              chunks: 'async', // Only load animations when needed
-              priority: 20,
-              enforce: true,
-              maxSize: 100000, // 100KB max for animations
-            },
-            // Utility libraries - async loading
-            utils: {
-              test: /[\\/]node_modules[\\/](date-fns|lodash-es|uuid)[\\/]/,
-              name: 'utils',
-              chunks: 'async', // Only load utils when needed
-              priority: 15,
-              enforce: true,
-              maxSize: 50000, // 50KB max for utils
-            },
-            // All other vendor libraries - consolidated
-            vendor: {
-              test: /[\\/]node_modules[\\/]/,
-              name: 'vendors',
-              chunks: 'all',
-              priority: 10,
-              enforce: true,
-              minChunks: 1,
-            },
-            // Common application code
-            common: {
-              name: 'common',
-              minChunks: 2,
-              chunks: 'all',
-              priority: 5,
-              reuseExistingChunk: true,
-              enforce: true,
-            }
-          }
-        }
-      }
-
-      // Performance hints
-      config.performance = {
-        ...config.performance,
-        hints: 'warning',
-        maxEntrypointSize: 512000, // 500KB
-        maxAssetSize: 512000, // 500KB
-      }
+    if (isServer) {
+      // Basic server-side configuration
+      config.externals = config.externals || [];
+      config.externals.push({
+        '@supabase/supabase-js': 'commonjs @supabase/supabase-js',
+        '@supabase/ssr': 'commonjs @supabase/ssr',
+        '@supabase/realtime-js': 'commonjs @supabase/realtime-js'
+      });
     }
 
     return config
@@ -272,7 +91,7 @@ const nextConfig = {
   // Headers for performance and security
   async headers() {
     const isProduction = process.env.NODE_ENV === 'production'
-    const isReportOnly = process.env.CSP_REPORT_ONLY === 'true'
+    const isReportOnly = process.env['CSP_REPORT_ONLY'] === 'true'
     
     // CSP configuration with two profiles: production and development
     const cspDirectives = {
@@ -509,13 +328,16 @@ const nextConfig = {
     ignoreBuildErrors: false
   },
 
-  // ESLint configuration - temporarily disabled for bundle optimization testing
+  // ESLint configuration - temporarily disabled to test PWA component
   eslint: {
     ignoreDuringBuilds: true
   },
 
   // Output configuration - removed standalone for Vercel compatibility
   // output: 'standalone',
+  
+  // Fix workspace root detection
+  outputFileTracingRoot: __dirname,
 
   // Trailing slash
   trailingSlash: false,

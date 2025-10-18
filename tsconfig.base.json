@@ -35,7 +35,10 @@
     "noUncheckedIndexedAccess": true,
     "noImplicitOverride": true,
     "verbatimModuleSyntax": true,
-    "useUnknownInCatchVariables": true
+    "useUnknownInCatchVariables": true,
+    /* Decorator support for @simplewebauthn/server */
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true
   },
   "exclude": [
     "node_modules",

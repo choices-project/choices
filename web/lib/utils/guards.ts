@@ -215,7 +215,7 @@ export const ApiValidators = {
   /**
    * Validate a standard API response structure
    */
-  isApiResponse: (x: unknown): x is { data: unknown; error: unknown | null } => {
+  isApiResponse: (x: unknown): x is { data: unknown; error: unknown } => {
     return isRecord(x) && has(x, 'data') && has(x, 'error');
   },
 
@@ -224,8 +224,8 @@ export const ApiValidators = {
    */
   isPaginatedResponse: (x: unknown): x is { 
     data: unknown[]; 
-    error: unknown | null; 
-    count: number | null 
+    error: unknown; 
+    count: number 
   } => {
     return isRecord(x) && 
            has(x, 'data') && 

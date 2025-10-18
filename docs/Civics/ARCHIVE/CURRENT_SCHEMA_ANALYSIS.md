@@ -10,7 +10,7 @@
 ## 📊 **SCHEMA VERIFICATION RESULTS**
 
 ### **✅ Database Connection: WORKING**
-- **Supabase URL**: `https://muqwrehywjrbaeerjgfb.supabase.co`
+- **Supabase URL**: `https://your-project.supabase.co` (use environment variable)
 - **Authentication**: Service role key working
 - **Table Access**: `representatives_core` table accessible
 - **Data Retrieval**: Successfully querying enhanced JSONB data

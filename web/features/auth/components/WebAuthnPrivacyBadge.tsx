@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react';
 
-import { getPrivacyStatus } from '@/features/auth/lib/webauthn/client';
+// Dynamic imports to avoid build-time decorator issues
+// import { getPrivacyStatus } from '@/features/auth/lib/webauthn/client';
 
 interface PrivacyStatus {
   status: 'active' | 'partial' | 'inactive';
@@ -17,10 +18,20 @@ export function WebAuthnPrivacyBadge() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    getPrivacyStatus()
-      .then(setStatus)
-      .catch(console.error)
-      .finally(() => setLoading(false));
+    const loadPrivacyStatus = async () => {
+      try {
+        // Dynamic import to avoid build-time decorator issues
+        const { getPrivacyStatus } = await import('@/features/auth/lib/webauthn/client');
+        const status = await getPrivacyStatus();
+        setStatus(status);
+      } catch (error) {
+        console.error('Failed to load privacy status:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    loadPrivacyStatus();
   }, []);
 
   if (loading) {

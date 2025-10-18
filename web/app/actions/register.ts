@@ -27,18 +27,18 @@ export async function register(
   context: ServerActionContext
 ): Promise<{ ok: true } | { ok: false; error: string; fieldErrors?: Record<string, string> }> {
   try {
-    logger.info('Register function called with formData:', Array.from(formData.entries()));
-    logger.info('Register function called with context:', context);
+    logger.info('Register function called with formData', { entries: Array.from(formData.entries()) });
+    logger.info('Register function called with context', { context });
     
     // Always use real Supabase for registration
-    logger.info('NEXT_PUBLIC_SUPABASE_URL:', process.env.NEXT_PUBLIC_SUPABASE_URL);
-    logger.info('NODE_ENV:', process.env.NODE_ENV);
+    logger.info('NEXT_PUBLIC_SUPABASE_URL', { url: process.env.NEXT_PUBLIC_SUPABASE_URL });
+    logger.info('NODE_ENV', { env: process.env.NODE_ENV });
     
     const supabase = await getSupabaseServerClient();
-    logger.info('Supabase client created:', !!supabase);
+    logger.info('Supabase client created', { created: !!supabase });
     
     // ---- context usage (security + provenance) ----
-    const h = headers();
+    const h = await headers();
     const ip = context.ipAddress ?? h.get('x-forwarded-for') ?? null;
     const ua = context.userAgent ?? h.get('user-agent') ?? null;
 
@@ -58,8 +58,8 @@ export async function register(
     };
     
     // Debug logging
-    logger.info('Register payload received:', payload);
-    logger.info('FormData entries:', Array.from(formData.entries()));
+    logger.info('Register payload received', { payload });
+    logger.info('FormData entries', { entries: Array.from(formData.entries()) });
     
     const data = RegisterForm.parse(payload);
 
@@ -71,7 +71,7 @@ export async function register(
     logger.info('Proceeding with user registration');
 
     // Check for existing username in user_profiles table
-    logger.info('Checking for existing username:', data.username.toLowerCase());
+    logger.info('Checking for existing username', { username: data.username.toLowerCase() });
     const { data: existingUsername, error: usernameError } = await supabase
       .from('user_profiles')
       .select('user_id')

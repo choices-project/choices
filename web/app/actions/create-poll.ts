@@ -61,13 +61,14 @@ export const createPoll = createSecureServerAction(
       .from('polls')
       .insert({
         id: pollId,
-        owner_id: user.userId,
+        created_by: user.userId,
         title: sanitizedTitle,
         description: sanitizedDescription,
-        type: validatedData.type,
-        visibility: validatedData.visibility,
-        end_date: validatedData.endDate,
-        allow_multiple_votes: validatedData.allowMultipleVotes || false,
+        voting_method: validatedData.voting_method,
+        privacy_level: validatedData.privacy_level,
+        end_time: validatedData.endDate,
+        start_time: new Date().toISOString(),
+        options: sanitizedOptions,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       })
@@ -100,8 +101,8 @@ export const createPoll = createSecureServerAction(
     logSecurityEvent('POLL_CREATED', {
       pollId,
       title: sanitizedTitle,
-      type: validatedData.type,
-      visibility: validatedData.visibility,
+      type: validatedData.voting_method,
+      visibility: validatedData.privacy_level,
       optionsCount: sanitizedOptions.length
     }, context)
 

@@ -1,8 +1,8 @@
 'use client'
 
 import { Smartphone, Monitor, Tablet, Laptop, Trash2, Plus, QrCode } from 'lucide-react'
-import React, { useState, useCallback, useMemo, useEffect } from 'react'
 import QRCode from 'qrcode'
+import React, { useState, useCallback, useMemo, useEffect } from 'react'
 
 interface Device {
   id: string

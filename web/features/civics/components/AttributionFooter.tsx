@@ -13,7 +13,7 @@ interface AttributionFooterProps {
 }
 
 export function AttributionFooter({ sources, className = '' }: AttributionFooterProps) {
-  if (!sources || sources.length === 0) {
+  if (sources?.length === 0) {
     return null;
   }
 
@@ -91,7 +91,7 @@ export function AttributionFooter({ sources, className = '' }: AttributionFooter
 
 // Compact version for cards
 export function AttributionBadge({ sources, className = '' }: AttributionFooterProps) {
-  if (!sources || sources.length === 0) {
+  if (sources?.length === 0) {
     return null;
   }
 
@@ -133,7 +133,7 @@ export function AttributionBadge({ sources, className = '' }: AttributionFooterP
 
 // API response attribution component
 export function APIAttribution({ sources, className = '' }: AttributionFooterProps) {
-  if (!sources || sources.length === 0) {
+  if (sources?.length === 0) {
     return null;
   }
 

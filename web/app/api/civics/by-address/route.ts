@@ -75,7 +75,7 @@ export async function GET(req: NextRequest) {
         return NextResponse.json({ error: 'Database query failed' }, { status: 500 });
       }
 
-      if (!representatives || representatives.length === 0) {
+      if (representatives?.length === 0) {
         return NextResponse.json({ 
           message: 'No representatives found for this address',
           address,
@@ -103,7 +103,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Database query failed' }, { status: 500 });
     }
 
-    if (!representatives || representatives.length === 0) {
+    if (representatives?.length === 0) {
       return NextResponse.json({
         success: true,
         data: {

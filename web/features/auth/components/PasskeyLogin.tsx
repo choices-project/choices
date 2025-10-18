@@ -15,7 +15,6 @@ import React, { useState } from 'react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { withOptional } from '@/lib/utils/objects';
 
 interface PasskeyLoginProps {
   onSuccess?: (session: any) => void;
@@ -85,13 +84,14 @@ export function PasskeyLogin({
 
       // Get credential
       const credential = await navigator.credentials.get({
-        publicKey: withOptional(credentialOptions, {
+        publicKey: {
+          ...credentialOptions,
           userVerification: 'required',
           authenticatorSelection: {
             userVerification: 'required',
             authenticatorAttachment: hasPlatformAuth ? 'platform' : 'cross-platform'
           }
-        })
+        }
       }) as PublicKeyCredential;
 
       if (!credential) {

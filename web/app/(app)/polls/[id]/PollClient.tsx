@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import PostCloseBanner from '@/features/polls/components/PostCloseBanner';
+import { logger } from '@/lib/utils/logger';
 
 import VotingInterface from '../../../../features/voting/components/VotingInterface';
 
@@ -111,7 +112,7 @@ export default function PollClient({ poll }: PollClientProps) {
       };
     }
 
-    logger.info('Submitting vote for poll:', poll.id, 'choice:', choice);
+    logger.info('Submitting vote for poll', { pollId: poll.id, choice });
     setIsVoting(true);
     try {
       // Submit vote to API

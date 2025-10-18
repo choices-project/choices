@@ -143,7 +143,7 @@ export function getByteaLength(bytea: string): number {
  */
 export function stringToArrayBuffer(str: string): ArrayBuffer {
   const encoder = new TextEncoder();
-  return encoder.encode(str).buffer as ArrayBuffer;
+  return encoder.encode(str).buffer;
 }
 
 /**

@@ -35,7 +35,7 @@ async function getRedirectDestination(supabase: any, user: any, requestedRedirec
     devLog('User has completed onboarding, redirecting to dashboard')
     return '/dashboard'
   } catch (error) {
-    devLog('Error in getRedirectDestination:', error)
+    devLog('Error in getRedirectDestination:', { error })
     // Fallback to dashboard on any error
     return '/dashboard'
   }
@@ -51,7 +51,7 @@ export async function GET(request: Request) {
 
   // Handle OAuth errors
   if (error) {
-    devLog('OAuth error:', error, errorDescription)
+    devLog('OAuth error:', { error, errorDescription })
     return NextResponse.redirect(
       `${origin}/login?error=${encodeURIComponent(errorDescription || error)}`
     )
@@ -65,28 +65,28 @@ export async function GET(request: Request) {
       const { data, error: exchangeError } = await supabaseClient.auth.exchangeCodeForSession(code)
       
       if (exchangeError) {
-        devLog('Session exchange error:', exchangeError)
+        devLog('Session exchange error:', { error: exchangeError })
         return NextResponse.redirect(
           `${origin}/login?error=${encodeURIComponent(exchangeError.message)}`
         )
       }
 
       if (data.session && data.user) {
-        devLog('Successfully authenticated user:', data.user.email)
+        devLog('Successfully authenticated user:', { email: data.user.email })
         
         // Determine the appropriate redirect destination
         const finalRedirect = await getRedirectDestination(supabase, data.user, redirectTo)
         
-        devLog(`Redirecting user to: ${finalRedirect}`)
+        devLog(`Redirecting user to: ${finalRedirect}`, { redirectTo: finalRedirect })
         return NextResponse.redirect(`${origin}${finalRedirect}`)
       } else {
-        devLog('No session returned from code exchange')
+        devLog('No session returned from code exchange', {})
         return NextResponse.redirect(
           `${origin}/login?error=${encodeURIComponent('Authentication failed - no session created')}`
         )
       }
     } catch (error) {
-      devLog('Unexpected error in auth callback:', error)
+      devLog('Unexpected error in auth callback:', { error })
       return NextResponse.redirect(
         `${origin}/login?error=${encodeURIComponent('Unexpected authentication error')}`
       )

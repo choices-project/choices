@@ -126,12 +126,12 @@ export default function ComponentTest() {
   const [variant, setVariant] = useState<'default' | 'compact' | 'detailed'>('default');
 
   const handleLike = (id: string) => {
-    devLog('Liked item:', id);
+    devLog('Liked item:', { id });
     setIsLiked(!isLiked);
   };
 
   const handleShare = (id: string) => {
-    devLog('Sharing item:', id);
+    devLog('Sharing item:', { id });
     // Implement share functionality - could use Web Share API or copy to clipboard
     if (navigator.share) {
       navigator.share({
@@ -152,12 +152,12 @@ export default function ComponentTest() {
   };
 
   const handleFollow = (id: string) => {
-    devLog('Following item:', id);
+    devLog('Following item:', { id });
     setIsFollowing(!isFollowing);
   };
 
   const handleContact = (id: string, type: string) => {
-    devLog('Contacting item:', id, 'via', type);
+    devLog('Contacting item:', { id, type });
     // Implement contact functionality based on type
     switch (type) {
       case 'email':
@@ -171,7 +171,7 @@ export default function ComponentTest() {
         window.open('https://twitter.com/example', '_blank');
         break;
       default:
-        devLog('Unknown contact type:', type);
+        devLog('Unknown contact type:', { type });
     }
   };
 

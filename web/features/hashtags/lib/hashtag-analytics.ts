@@ -11,6 +11,9 @@
 
 import { createClient } from '@supabase/supabase-js';
 
+import { logger } from '@/lib/utils/logger';
+
+
 import type {
   Hashtag,
   HashtagAnalytics,
@@ -60,7 +63,7 @@ export async function calculateHashtagAnalytics(
     const metrics = {
       usage_count: usageData.totalUsage,
       unique_users: userData.uniqueUsers,
-      engagement_rate: calculateEngagementRate(usageData.totalViews, engagementData.totalInteractions),
+      engagement_rate: calculateEngagementRate(Number(usageData.totalViews), Number(engagementData.totalInteractions)),
       growth_rate: calculateGrowthRate(usageData.currentUsage, usageData.previousUsage),
       peak_usage: usageData.peakUsage,
       average_usage: usageData.averageUsage,
@@ -79,7 +82,7 @@ export async function calculateHashtagAnalytics(
       generated_at: new Date().toISOString()
     };
   } catch (error) {
-    console.error('Failed to calculate hashtag analytics:', error);
+    logger.error('Failed to calculate hashtag analytics:', error instanceof Error ? error : new Error(String(error)));
     throw error;
   }
 }
@@ -89,7 +92,7 @@ export async function calculateHashtagAnalytics(
  */
 export async function calculateTrendingHashtags(
   category?: HashtagCategory,
-  limit: number = 20
+  limit = 20
 ): Promise<TrendingHashtag[]> {
   try {
     const timeWindow = 24; // hours
@@ -99,7 +102,7 @@ export async function calculateTrendingHashtags(
     // Get hashtag usage data
     const { data: usageData, error: usageError } = await supabase
       .from('hashtag_usage')
-      .select('hashtag_id, created_at')
+      .select('hashtag_id, created_at, user_id')
       .gte('created_at', startTime.toISOString())
       .order('created_at', { ascending: false });
 
@@ -126,7 +129,7 @@ export async function calculateTrendingHashtags(
 
       const metrics = hashtagMetrics.get(hashtagId)!;
       metrics.usageCount++;
-      metrics.uniqueUsers.add((usage as any).user_id || 'anonymous');
+      metrics.uniqueUsers.add(String(usage.user_id ?? 'anonymous'));
       metrics.recentUsage.push(1);
       metrics.peakUsage = Math.max(metrics.peakUsage, metrics.usageCount);
     });
@@ -144,7 +147,7 @@ export async function calculateTrendingHashtags(
     const trendingHashtags: TrendingHashtag[] = [];
 
     for (const hashtag of hashtags || []) {
-      if (category && hashtag.category !== category) continue;
+      if (category && String(hashtag.category) !== category) continue;
 
       const metrics = hashtagMetrics.get(hashtag.id);
       if (!metrics) continue;
@@ -267,7 +270,7 @@ export async function getHashtagPerformanceInsights(hashtagId: string): Promise<
  */
 export async function getCrossFeatureDiscovery(
   userId: string,
-  limit: number = 10
+  limit = 10
 ): Promise<{
   profileSuggestions: Hashtag[];
   pollSuggestions: Hashtag[];
@@ -918,7 +921,7 @@ async function calculatePeakPosition(hashtagId: string): Promise<number> {
 
     if (error) throw error;
 
-    if (!data || data.length === 0) return 1;
+    if (data?.length === 0) return 1;
 
     // Calculate daily usage counts
     const dailyUsage = new Map<string, number>();

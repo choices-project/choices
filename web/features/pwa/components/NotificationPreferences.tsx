@@ -5,7 +5,6 @@ import { useState, useEffect } from 'react'
 
 import { usePWA } from '@/hooks/usePWA'
 import { logger } from '@/lib/utils/logger'
-import { withOptional } from '@/lib/utils/objects'
 
 interface NotificationPreferencesProps {
   className?: string
@@ -99,7 +98,8 @@ export default function NotificationPreferences({ className = '' }: Notification
   }
 
   const handlePreferenceChange = (key: keyof typeof preferences) => {
-    setPreferences(prev => withOptional(prev, {
+    setPreferences(prev => ({
+      ...prev,
       [key]: !prev[key]
     }))
   }

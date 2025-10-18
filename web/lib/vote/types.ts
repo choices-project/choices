@@ -19,6 +19,8 @@ export interface VoteRequest {
   };
   privacyLevel?: 'public' | 'private' | 'anonymous';
   timestamp?: Date;
+  ipAddress?: string;
+  userAgent?: string;
   metadata?: Record<string, unknown>;
 }
 
@@ -67,6 +69,10 @@ export interface PollData {
     requireVerification?: boolean;
     minTrustTier?: string;
   };
+  settings?: {
+    maxChoices?: number;
+    [key: string]: unknown;
+  };
   metadata?: Record<string, unknown>;
 }
 
@@ -95,6 +101,14 @@ export interface VoteData {
   ipAddress?: string;
   userAgent?: string;
   metadata?: Record<string, unknown>;
+  // Vote data property for strategies
+  voteData?: {
+    choice?: number;
+    approvals?: number[];
+    rankings?: number[];
+    allocations?: Record<string, number>;
+    ratings?: Record<string, number>;
+  };
 }
 
 export interface ResultsData {
@@ -291,5 +305,3 @@ export interface SnapshotData {
   checksum: string;
   merkleRoot: string;
 }
-  checksum: string;
-  merkleRoot: string;

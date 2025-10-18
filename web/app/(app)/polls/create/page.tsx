@@ -5,13 +5,12 @@ import { useState } from 'react';
 import { 
   usePollWizardData,
   usePollWizardStep,
-  usePollWizardProgress,
   usePollWizardErrors,
   usePollWizardCanProceed,
-  usePollWizardCanGoBack,
-  usePollWizardActions,
-  usePollWizardStats
+  usePollWizardActions
 } from '@/lib/stores';
+import { usePollsActions } from '@/lib/stores/pollsStore';
+import { logger } from '@/lib/utils/logger';
 
 const CATEGORIES = [
   { id: 'general', name: 'General', description: 'General purpose polls', icon: '📊' },
@@ -34,17 +33,13 @@ export default function CreatePollPage() {
   // Get state from pollWizardStore
   const data = usePollWizardData();
   const currentStep = usePollWizardStep();
-  const progress = usePollWizardProgress();
   const errors = usePollWizardErrors();
   const canProceed = usePollWizardCanProceed();
-  const canGoBack = usePollWizardCanGoBack();
-  const stats = usePollWizardStats();
   
   // Get actions from pollWizardStore
   const {
     nextStep: storeNextStep,
     prevStep: storePrevStep,
-    goToStep: storeGoToStep,
     updateData: storeUpdateData,
     addOption: storeAddOption,
     removeOption: storeRemoveOption,
@@ -52,77 +47,21 @@ export default function CreatePollPage() {
     addTag: storeAddTag,
     removeTag: storeRemoveTag,
     validateCurrentStep: storeValidateCurrentStep,
-    setLoading: storeSetLoading,
-    setError: storeSetError,
-    clearError: storeClearError,
     resetWizard: storeResetWizard
   } = usePollWizardActions();
+  
+  // Get polls store actions
+  const { createPoll, setLoading, setError, clearError } = usePollsActions();
   
   const [newTag, setNewTag] = useState('');
   const totalSteps = 5;
   
   // Enhanced validation with real-time feedback
-  const handleValidateCurrentStep = (setErrorsFlag = false) => {
+  const handleValidateCurrentStep = () => {
     storeValidateCurrentStep();
     return canProceed;
   };
   
-  // Legacy validation function for compatibility
-  const validateCurrentStepLegacy = (setErrorsFlag = false) => {
-    const newErrors: Record<string, string> = {};
-    
-    switch (currentStep) {
-      case 0: // Basic info
-        if (!data.title.trim()) {
-          newErrors.title = 'Title is required';
-        } else if (data.title.trim().length < 5) {
-          newErrors.title = 'Title must be at least 5 characters';
-        } else if (data.title.trim().length > 200) {
-          newErrors.title = 'Title must be 200 characters or less';
-        }
-        if (!data.description.trim()) {
-          newErrors.description = 'Description is required';
-        } else if (data.description.trim().length < 10) {
-          newErrors.description = 'Description must be at least 10 characters';
-        } else if (data.description.trim().length > 2000) {
-          newErrors.description = 'Description must be 2000 characters or less';
-        }
-        break;
-      case 1: // Options
-        const validOptions = data.options.filter(option => option.trim().length > 0);
-        if (validOptions.length < 2) {
-          newErrors.options = 'At least 2 options are required';
-        } else if (validOptions.length > 10) {
-          newErrors.options = 'Maximum 10 options allowed';
-        }
-        // Check individual option length
-        for (let i = 0; i < validOptions.length; i++) {
-          const option = validOptions[i];
-          if (option && option.trim().length > 100) {
-            newErrors[`option-${i}`] = 'Each option must be 100 characters or less';
-          }
-        }
-        break;
-      case 2: // Category & Tags
-        if (!data.category) {
-          newErrors.category = 'Please select a category';
-        }
-        // Check tag length
-        for (let i = 0; i < data.tags.length; i++) {
-          const tag = data.tags[i];
-          if (tag && tag.length > 50) {
-            newErrors[`tag-${i}`] = 'Each tag must be 50 characters or less';
-          }
-        }
-        break;
-    }
-    
-    if (setErrorsFlag) {
-      // Errors are managed by the store
-    }
-    
-    return Object.keys(newErrors).length === 0;
-  };
   
   // Navigation with validation
   const handleNext = () => {
@@ -169,60 +108,118 @@ export default function CreatePollPage() {
   };
   
   const handleUpdateSettings = (updates: Partial<typeof data.settings>) => {
-    storeUpdateData({ settings: { ...data.settings, ...updates } });
+    storeUpdateData({ settings: { ...(data.settings ?? {}), ...updates } });
   };
   
   const submitPoll = async () => {
-    const newErrors: Record<string, string> = {};
-    
-    // Final validation for all steps
-    if (!data.title.trim()) {
-      newErrors.title = 'Title is required';
-    } else if (data.title.trim().length < 5) {
-      newErrors.title = 'Title must be at least 5 characters';
-    } else if (data.title.trim().length > 200) {
-      newErrors.title = 'Title must be 200 characters or less';
-    }
-    if (!data.description.trim()) {
-      newErrors.description = 'Description is required';
-    } else if (data.description.trim().length < 10) {
-      newErrors.description = 'Description must be at least 10 characters';
-    } else if (data.description.trim().length > 2000) {
-      newErrors.description = 'Description must be 2000 characters or less';
-    }
-    
-    const validOptions = data.options.filter(option => option.trim().length > 0);
-    if (validOptions.length < 2) {
-      newErrors.options = 'At least 2 options are required';
-    } else if (validOptions.length > 10) {
-      newErrors.options = 'Maximum 10 options allowed';
-    }
-    
-    // Check individual option length
-    for (let i = 0; i < validOptions.length; i++) {
-      const option = validOptions[i];
-      if (option && option.trim().length > 100) {
-        newErrors[`option-${i}`] = 'Each option must be 100 characters or less';
+    try {
+      setLoading(true);
+      clearError();
+      
+      const newErrors: Record<string, string> = {};
+      
+      // Final validation for all steps
+      if (!data.title.trim()) {
+        newErrors.title = 'Title is required';
+      } else if (data.title.trim().length < 5) {
+        newErrors.title = 'Title must be at least 5 characters';
+      } else if (data.title.trim().length > 200) {
+        newErrors.title = 'Title must be 200 characters or less';
       }
-    }
-    
-    if (!data.category) {
-      newErrors.category = 'Please select a category';
-    }
-    
-    // Check tag length
-    for (let i = 0; i < data.tags.length; i++) {
-      const tag = data.tags[i];
-      if (tag && tag.length > 50) {
-        newErrors[`tag-${i}`] = 'Each tag must be 50 characters or less';
+      if (!data.description.trim()) {
+        newErrors.description = 'Description is required';
+      } else if (data.description.trim().length < 10) {
+        newErrors.description = 'Description must be at least 10 characters';
+      } else if (data.description.trim().length > 2000) {
+        newErrors.description = 'Description must be 2000 characters or less';
       }
-    }
-    
-    // Errors are managed by the store
-    
-    if (Object.keys(newErrors).length === 0) {
-      logger.info('Poll created successfully:', data);
-      alert('Poll created successfully!');
+      
+      const validOptions = data.options.filter(option => option.trim().length > 0);
+      if (validOptions.length < 2) {
+        newErrors.options = 'At least 2 options are required';
+      } else if (validOptions.length > 10) {
+        newErrors.options = 'Maximum 10 options allowed';
+      }
+      
+      // Check individual option length
+      for (let i = 0; i < validOptions.length; i++) {
+        const option = validOptions[i];
+        if (option && option.trim().length > 100) {
+          newErrors[`option-${i}`] = 'Each option must be 100 characters or less';
+        }
+      }
+      
+      if (!data.category) {
+        newErrors.category = 'Please select a category';
+      }
+      
+      // Check tag length
+      for (let i = 0; i < data.tags.length; i++) {
+        const tag = data.tags[i];
+        if (tag && tag.length > 50) {
+          newErrors[`tag-${i}`] = 'Each tag must be 50 characters or less';
+        }
+      }
+      
+      if (Object.keys(newErrors).length > 0) {
+        // Set validation errors in store
+        setError('Please fix the validation errors');
+        return;
+      }
+      
+      // Create poll using the store action
+      const pollData = {
+        title: data.title.trim(),
+        description: data.description.trim(),
+        question: data.title.trim(), // Use title as question for now
+        options: validOptions.map((text, index) => ({
+          id: `option-${index}`,
+          text: text.trim(),
+          description: '',
+          order: index,
+          votes: 0,
+          percentage: 0
+        })),
+        category: data.category,
+        tags: data.tags,
+        author: {
+          id: 'current-user', // This should come from auth context
+          name: 'Current User',
+          verified: false
+        },
+        status: 'draft' as const,
+        visibility: 'public' as const,
+        settings: {
+          allowMultipleVotes: data.settings.allowMultipleVotes,
+          allowAnonymousVotes: data.settings.allowAnonymousVotes,
+          showResultsBeforeClose: data.settings.showResults,
+          allowComments: data.settings.allowComments,
+          allowSharing: true, // Default to true for new polls
+          requireAuthentication: data.settings.requireAuthentication
+        },
+        metadata: {
+          language: 'en',
+          estimatedTime: 2,
+          difficulty: 'easy' as const
+        }
+      };
+      
+      await createPoll(pollData);
+      
+      // Reset wizard after successful creation
+      storeResetWizard();
+      
+      logger.info('Poll created successfully', { title: data.title, category: data.category });
+      
+      // Navigate to success page or show success message
+      // This should be handled by the router
+      
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to create poll';
+      setError(errorMessage);
+      logger.error('Failed to create poll:', error instanceof Error ? error : new Error(errorMessage));
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -237,6 +234,7 @@ export default function CreatePollPage() {
               </label>
               <input
                 id="title"
+                data-testid="poll-title-input"
                 value={data.title}
                 onChange={(e) => updateFormData({ title: e.target.value })}
                 placeholder="Enter your poll question..."
@@ -262,6 +260,7 @@ export default function CreatePollPage() {
               </label>
               <textarea
                 id="description"
+                data-testid="poll-description-input"
                 value={data.description}
                 onChange={(e) => updateFormData({ description: e.target.value })}
                 placeholder="Provide more context about your poll..."
@@ -297,9 +296,10 @@ export default function CreatePollPage() {
               
               <div className="space-y-3">
                 {data.options.map((option, index) => (
-                  <div key={index} className="space-y-1">
+                  <div key={`option-${index}-${option.slice(0, 10)}`} className="space-y-1">
                     <div className="flex items-center space-x-2">
                       <input
+                        data-testid={`option-input-${index}`}
                         value={option}
                         onChange={(e) => handleUpdateOption(index, e.target.value)}
                         placeholder={`Option ${index + 1}`}
@@ -334,6 +334,7 @@ export default function CreatePollPage() {
               {data.options.length < 10 && (
                 <button
                   type="button"
+                  data-testid="add-option-btn"
                   onClick={handleAddOption}
                   className="mt-4 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
                 >
@@ -552,7 +553,7 @@ export default function CreatePollPage() {
                   <h5 className="font-medium mb-2">Options:</h5>
                   <div className="space-y-2">
                     {data.options.filter(opt => opt.trim()).map((option, index) => (
-                      <div key={index} className="flex items-center space-x-2">
+                      <div key={`preview-option-${index}-${option.slice(0, 10)}`} className="flex items-center space-x-2">
                         <input type="radio" name="preview" disabled />
                         <span>{option}</span>
                       </div>
@@ -658,6 +659,7 @@ export default function CreatePollPage() {
           <div className="flex space-x-2">
             {currentStep === totalSteps - 1 ? (
               <button
+                data-testid="create-poll-btn"
                 onClick={submitPoll}
                 disabled={!canProceed}
                 className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"

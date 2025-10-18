@@ -7,7 +7,6 @@
 
 import type { GoogleCivicErrorDetails, RetryConfig, ErrorContext } from '@/lib/types/google-civic';
 import { logger } from '@/lib/utils/logger';
-import { withOptional } from '@/lib/utils/objects';
 
 import { GoogleCivicApiError } from './client';
 
@@ -24,7 +23,7 @@ export class GoogleCivicErrorHandler {
       backoffMultiplier: 2,
       retryableStatusCodes: [408, 429, 500, 502, 503, 504],
     };
-    this.retryConfig = withOptional(base, retryConfig ?? {});
+    this.retryConfig = { ...base, ...(retryConfig ?? {}) };
   }
 
   /**
@@ -199,7 +198,7 @@ export class GoogleCivicErrorHandler {
         logger.debug('Executing Google Civic API operation', { attempt, context });
         return await operation();
       } catch (error) {
-        const contextWithAttempt: ErrorContext = withOptional(context ?? ({} as ErrorContext), { attempt });
+        const contextWithAttempt: ErrorContext = { ...(context ?? ({} as ErrorContext)), attempt };
         lastError = this.handleError(error, contextWithAttempt);
         
         // If not retryable or last attempt, throw immediately
@@ -278,11 +277,11 @@ export class GoogleCivicErrorHandler {
     };
 
     if (error.statusCode >= 500) {
-      logger.error('Google Civic API server error', undefined, { error: error.message, statusCode: error.statusCode });
+      logger.error('Google Civic API server error', undefined, logData);
     } else if (error.statusCode >= 400) {
-      logger.warn('Google Civic API client error', { error: error.message, statusCode: error.statusCode });
+      logger.warn('Google Civic API client error', logData);
     } else {
-      logger.info('Google Civic API error', { error: error.message, statusCode: error.statusCode });
+      logger.info('Google Civic API error', logData);
     }
   }
 

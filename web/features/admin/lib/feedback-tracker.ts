@@ -4,7 +4,6 @@
  */
 
 import { devLog } from '@/lib/utils/logger'
-import { withOptional } from '@/lib/utils/objects'
 
 import type { UserJourney, FeedbackContext } from '../types'
 
@@ -13,7 +12,7 @@ import type { UserJourney, FeedbackContext } from '../types'
 class FeedbackTracker {
   private sessionId: string
   private sessionStartTime: string
-  private pageViews: number = 0
+  private pageViews = 0
   private actionSequence: string[] = []
   private errors: any[] = []
   private performanceMetrics: any = {}
@@ -216,45 +215,42 @@ class FeedbackTracker {
   }
   
   public captureUserJourney(): UserJourney {
-    return withOptional(
-      {
-        currentPage: typeof window !== 'undefined' ? window.location.pathname : '',
-        currentPath: typeof window !== 'undefined' ? window.location.href : '',
-        pageTitle: typeof document !== 'undefined' ? document.title : '',
-        referrer: typeof document !== 'undefined' ? document.referrer : '',
-        
-        userAgent: navigator.userAgent,
-        screenResolution: `${window.screen.width}x${window.screen.height}`,
-        viewportSize: `${window.innerWidth}x${window.innerHeight}`,
-        timeOnPage: this.performanceMetrics.timeOnPage || 0,
-        
-        sessionId: this.sessionId,
-        sessionStartTime: this.sessionStartTime,
-        totalPageViews: this.pageViews,
-        
-        activeFeatures: this.getActiveFeatures(),
-        lastAction: this.actionSequence[this.actionSequence.length - 1] || 'none',
-        actionSequence: this.actionSequence.slice(-10), // Last 10 actions
-        
-        pageLoadTime: this.performanceMetrics.pageLoadTime || 0,
-        performanceMetrics: {
-          fcp: this.performanceMetrics.fcp,
-          lcp: this.performanceMetrics.lcp,
-          fid: this.performanceMetrics.fid,
-          cls: this.performanceMetrics.cls
-        },
-        
-        errors: this.errors,
-        
-        deviceInfo: this.getDeviceInfo(),
-        
-        isAuthenticated: this.isUserAuthenticated()
+    return {
+      currentPage: typeof window !== 'undefined' ? window.location.pathname : '',
+      currentPath: typeof window !== 'undefined' ? window.location.href : '',
+      pageTitle: typeof document !== 'undefined' ? document.title : '',
+      referrer: typeof document !== 'undefined' ? document.referrer : '',
+      
+      userAgent: navigator.userAgent,
+      screenResolution: `${window.screen.width}x${window.screen.height}`,
+      viewportSize: `${window.innerWidth}x${window.innerHeight}`,
+      timeOnPage: this.performanceMetrics.timeOnPage || 0,
+      
+      sessionId: this.sessionId,
+      sessionStartTime: this.sessionStartTime,
+      totalPageViews: this.pageViews,
+      
+      activeFeatures: this.getActiveFeatures(),
+      lastAction: this.actionSequence[this.actionSequence.length - 1] || 'none',
+      actionSequence: this.actionSequence.slice(-10), // Last 10 actions
+      
+      pageLoadTime: this.performanceMetrics.pageLoadTime || 0,
+      performanceMetrics: {
+        fcp: this.performanceMetrics.fcp,
+        lcp: this.performanceMetrics.lcp,
+        fid: this.performanceMetrics.fid,
+        cls: this.performanceMetrics.cls
       },
-      {
-        userRole: this.getUserRole(),
-        userId: this.getUserId()
-      }
-    )
+      
+      errors: this.errors,
+      
+      deviceInfo: this.getDeviceInfo(),
+      
+      isAuthenticated: this.isUserAuthenticated(),
+      
+      userRole: this.getUserRole(),
+      userId: this.getUserId()
+    }
   }
   
   private getActiveFeatures(): string[] {
@@ -317,52 +313,49 @@ class FeedbackTracker {
       return undefined
     } catch (error) {
       if (process.env.NODE_ENV === 'development') {
-        devLog('Failed to capture screenshot:', error)
+        devLog('Failed to capture screenshot:', { error })
       }
       return undefined
     }
   }
   
-  public generateFeedbackContext(
+  public async generateFeedbackContext(
     type: string,
     title: string,
     description: string,
     sentiment: string
-  ): FeedbackContext {
-    return withOptional(
-      {
-        feedbackId: `feedback_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-        timestamp: new Date().toISOString(),
-        source: 'widget',
-        
-        userJourney: this.captureUserJourney(),
-        
-        type: type as any,
-        title,
-        description,
-        sentiment: sentiment as any,
-        
-        category: this.categorizeFeedback(type, title, description),
-        priority: this.determinePriority(type, sentiment),
-        severity: this.determineSeverity(type, sentiment),
-        
-        consoleLogs: this.captureConsoleLogs(),
-        networkRequests: this.performanceMetrics.networkRequests || [],
-        
-        aiAnalysis: {
-          intent: '',
-          category: '',
-          sentiment: 0,
-          urgency: 0,
-          complexity: 0,
-          keywords: [],
-          suggestedActions: []
-        }
+  ): Promise<FeedbackContext> {
+    return {
+      feedbackId: `feedback_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      timestamp: new Date().toISOString(),
+      source: 'widget',
+      
+      userJourney: this.captureUserJourney(),
+      
+      type: type as any,
+      title,
+      description,
+      sentiment: sentiment as any,
+      
+      category: this.categorizeFeedback(type, title, description),
+      priority: this.determinePriority(type, sentiment),
+      severity: this.determineSeverity(type, sentiment),
+      
+      consoleLogs: this.captureConsoleLogs(),
+      networkRequests: this.performanceMetrics.networkRequests || [],
+      
+      aiAnalysis: {
+        intent: '',
+        category: '',
+        sentiment: 0,
+        urgency: 0,
+        complexity: 0,
+        keywords: [],
+        suggestedActions: []
       },
-      {
-        screenshot: this.captureScreenshot()
-      }
-    )
+      
+      screenshot: await this.captureScreenshot()
+    }
   }
   
   private categorizeFeedback(type: string, title: string, description: string): string[] {

@@ -18,11 +18,12 @@
 
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
+
+import { AnalyticsService } from '@/features/analytics/lib/analytics-service';
 import { withAuth, createRateLimitMiddleware, combineMiddleware } from '@/lib/core/auth/middleware';
 import { getQueryOptimizer, withPerformanceMonitoring } from '@/lib/core/database/optimizer';
-import { getSupabaseServerClient } from '@/utils/supabase/server';
 import { logger } from '@/lib/utils/logger';
-import { AnalyticsService } from '@/lib/services/analytics-service';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
@@ -35,7 +36,7 @@ const rateLimitMiddleware = createRateLimitMiddleware({
 // Combined middleware: rate limiting + admin auth
 const middleware = combineMiddleware(rateLimitMiddleware);
 
-export const GET = withAuth(async (request: NextRequest, context) => {
+export const GET = withAuth(async (request: NextRequest) => {
   try {
     const { searchParams } = new URL(request.url);
     const type = searchParams.get('type') || 'general';
@@ -115,7 +116,7 @@ export const GET = withAuth(async (request: NextRequest, context) => {
         });
 
       } catch (error) {
-        logger.error('Error getting analytics summary:', error);
+        logger.error('Error getting analytics summary', error as Error);
         return NextResponse.json(
           { error: 'Failed to get analytics summary' },
           { status: 500 }
@@ -145,7 +146,7 @@ export const GET = withAuth(async (request: NextRequest, context) => {
         });
 
       } catch (error) {
-        logger.error('Error getting poll analytics:', error);
+        logger.error('Error getting poll analytics', error as Error);
         return NextResponse.json(
           { error: 'Failed to get poll analytics' },
           { status: 500 }
@@ -175,7 +176,7 @@ export const GET = withAuth(async (request: NextRequest, context) => {
         });
 
       } catch (error) {
-        logger.error('Error getting user analytics:', error);
+        logger.error('Error getting user analytics', error as Error);
         return NextResponse.json(
           { error: 'Failed to get user analytics' },
           { status: 500 }
@@ -241,7 +242,7 @@ export const GET = withAuth(async (request: NextRequest, context) => {
 }, { requireAdmin: true });
 
 // Handle unsupported methods
-export async function POST() {
+export function POST() {
   return NextResponse.json({
     error: 'Method not allowed. Use GET for analytics queries.',
     generatedAt: new Date().toISOString()

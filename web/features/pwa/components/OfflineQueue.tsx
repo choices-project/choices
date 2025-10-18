@@ -4,6 +4,7 @@ import { Clock, WifiOff } from 'lucide-react'
 import { useState, useEffect } from 'react'
 
 import { usePWA } from '@/hooks/usePWA'
+import { logger } from '@/lib/utils/logger'
 
 interface OfflineQueueProps {
   className?: string
@@ -30,7 +31,7 @@ export default function OfflineQueue({ className = '' }: OfflineQueueProps) {
       await pwa.syncOfflineData()
       setQueueItems([])
     } catch (error) {
-      console.error('Sync failed:', error)
+      logger.error('Sync failed:', error instanceof Error ? error : new Error(String(error)))
     } finally {
       setIsSyncing(false)
     }
@@ -41,7 +42,7 @@ export default function OfflineQueue({ className = '' }: OfflineQueueProps) {
   }
 
   return (
-    <div className={`bg-yellow-50 border border-yellow-200 rounded-lg p-4 ${className}`} data-testid="offline-queue">
+    <div className={`bg-yellow-50 border border-yellow-200 rounded-lg p-4 ${className}`} data-testid="offline-queue-component">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center space-x-2">
           <WifiOff className="w-5 h-5 text-yellow-600" />

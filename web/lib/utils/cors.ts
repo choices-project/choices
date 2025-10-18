@@ -14,7 +14,7 @@ export function addCorsHeaders(response: NextResponse): NextResponse {
   return response;
 }
 
-export function createCorsResponse(data: any, status: number = 200): NextResponse {
+export function createCorsResponse(data: any, status = 200): NextResponse {
   const response = NextResponse.json(data, { status });
   return addCorsHeaders(response);
 }

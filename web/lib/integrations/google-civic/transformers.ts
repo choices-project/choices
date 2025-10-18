@@ -6,7 +6,8 @@
  */
 
 import { logger } from '@/lib/utils/logger';
-import { withOptional } from '@/lib/utils/objects';
+
+
 
 import type { 
   GoogleCivicResponse, 
@@ -14,11 +15,7 @@ import type {
   GoogleCivicOffice,
   GoogleCivicDivision 
 } from './client';
-import type { 
-  Candidate,
-  Election,
-  GeographicLookup
-} from '../../../features/civics/lib/civics/types';
+
 
 // Proper types for Google Civic API integration
 export interface AddressLookupResult {
@@ -147,30 +144,23 @@ export function transformRepresentatives(
     const office = findOfficeForOfficial(offices, index);
     const socialMedia = extractSocialMedia(official.channels);
     
-    return withOptional(
-      {
-        id: `google-civic-${index}-${Date.now()}`,
-        name: official.name,
-        party: official.party || 'Unknown',
-        office: office?.name || 'Unknown Office',
-        district,
-        state,
-        contact: withOptional(
-          {},
-          {
-            phone: official.phones?.[0],
-            email: official.emails?.[0]
-          }
-        ),
-        source: 'google-civic' as const,
-        sourceId: `official-${index}`
+    return {
+      id: `google-civic-${index}-${Date.now()}`,
+      name: official.name,
+      party: official.party || 'Unknown',
+      office: office?.name || 'Unknown Office',
+      district,
+      state,
+      contact: {
+        ...(official.phones?.[0] && { phone: official.phones[0] }),
+        ...(official.emails?.[0] && { email: official.emails[0] })
       },
-      {
-        photoUrl: official.photoUrl,
-        socialMedia,
-        channels: official.channels || undefined
-      }
-    );
+      source: 'google-civic' as const,
+      sourceId: `official-${index}`,
+      ...(official.photoUrl && { photoUrl: official.photoUrl }),
+      ...(socialMedia && { socialMedia }),
+      ...(official.channels && { channels: official.channels })
+    };
   });
 }
 
@@ -361,22 +351,18 @@ export function validateTransformedData(data: AddressLookupResult): boolean {
  * Clean and normalize representative data
  */
 export function cleanRepresentativeData(representative: TransformedRepresentative): TransformedRepresentative {
-  return withOptional(
-    Object.assign({}, representative, {
-      name: representative.name.trim(),
-      party: representative.party.trim() || 'Unknown',
-      office: representative.office.trim(),
-      district: representative.district.trim(),
-      state: representative.state.trim().toUpperCase(),
-      contact: withOptional(
-        {},
-        {
-          phone: representative.contact.phone?.trim(),
-          email: representative.contact.email?.trim().toLowerCase(),
-          website: representative.contact.website?.trim(),
-          address: representative.contact.address
-        }
-      )
-    })
-  );
+  return {
+    ...representative,
+    name: representative.name.trim(),
+    party: representative.party.trim() || 'Unknown',
+    office: representative.office.trim(),
+    district: representative.district.trim(),
+    state: representative.state.trim().toUpperCase(),
+    contact: {
+      ...(representative.contact.phone?.trim() && { phone: representative.contact.phone.trim() }),
+      ...(representative.contact.email?.trim().toLowerCase() && { email: representative.contact.email.trim().toLowerCase() }),
+      ...(representative.contact.website?.trim() && { website: representative.contact.website.trim() }),
+      ...(representative.contact.address && { address: representative.contact.address })
+    }
+  };
 }

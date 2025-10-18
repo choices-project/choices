@@ -115,7 +115,6 @@ function OnboardingFlow() {
 
 ### **Server Actions**
 - **complete-onboarding.ts** - Production-ready completion handler
-- **complete-onboarding-simple.ts** - E2E testing handler (non-production)
 
 ### **API Routes**
 - **/api/onboarding/complete/** - Onboarding completion endpoint

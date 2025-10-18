@@ -2,6 +2,8 @@
 
 import React, { useState } from 'react';
 
+import { logger } from '@/lib/utils/logger';
+
 export default function TestTogglePage() {
   const [isSignUp, setIsSignUp] = useState(false);
 

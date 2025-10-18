@@ -62,7 +62,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
           });
         }
       } catch (error) {
-        devLog('Error fetching trending poll:', error);
+        devLog('Error fetching trending poll:', { error });
         // Fallback to default poll
         setTrendingPoll({
           title: "Climate Action Priorities 2024",

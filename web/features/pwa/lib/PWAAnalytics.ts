@@ -80,8 +80,8 @@ class PWAAnalytics {
   private pwaEvents: Array<PWAInstallationEvent | PWAOfflineEvent | PWAPerformanceEvent | PWANotificationEvent> = [];
   private engagementMetrics: PWAEngagementMetrics | null = null;
   private platformMetrics: Map<string, PWAPlatformMetrics> = new Map();
-  private isEnabled: boolean = true;
-  private flushInterval: number = 60000; // 1 minute
+  private isEnabled = true;
+  private flushInterval = 60000; // 1 minute
   private flushTimer?: NodeJS.Timeout;
 
   constructor(analyticsEngine: AnalyticsEngine) {
@@ -395,9 +395,9 @@ class PWAAnalytics {
     // Notification events
     if ('Notification' in window) {
       // Track permission changes
-      const originalRequestPermission = Notification.requestPermission;
+      const originalRequestPermission = Notification.requestPermission.bind(Notification);
       Notification.requestPermission = async () => {
-        const result = await originalRequestPermission.call(Notification);
+        const result = await originalRequestPermission();
         
         this.trackNotification({
           eventType: result === 'granted' ? 'notification_permission_granted' : 'notification_permission_denied'
@@ -433,13 +433,15 @@ class PWAAnalytics {
   /**
    * Send data to analytics backend
    */
-  private async sendToBackend(events: any[]): Promise<void> {
+  private sendToBackend(events: any[]): Promise<void> {
     try {
       // This would integrate with your analytics backend
       // For now, just log the events
+      return Promise.resolve();
       logger.info('PWA Analytics: Flushing events', { count: events.length });
     } catch (error) {
       logger.error('PWA Analytics: Failed to send data to backend', error instanceof Error ? error : new Error(String(error)));
+      return Promise.resolve();
     }
   }
 
@@ -459,11 +461,16 @@ class PWAAnalytics {
    * Calculate performance score
    */
   private calculatePerformanceScore(data: any): number {
-    const cacheHitRate = (data.cacheHits + data.cacheMisses) > 0 
-      ? data.cacheHits / (data.cacheHits + data.cacheMisses) 
+    const cacheHits = (data.cacheHits as number) ?? 0;
+    const cacheMisses = (data.cacheMisses as number) ?? 0;
+    const totalSessions = (data.totalSessions as number) ?? 0;
+    const errors = (data as { errors?: number }).errors ?? 0;
+    
+    const cacheHitRate = (cacheHits + cacheMisses) > 0 
+      ? cacheHits / (cacheHits + cacheMisses) 
       : 0;
     
-    const errorRate = data.totalSessions > 0 ? data.errors / data.totalSessions : 0;
+    const errorRate = totalSessions > 0 ? errors / totalSessions : 0;
     
     // Performance score based on cache hit rate and error rate
     return Math.max(0, Math.min(100, (cacheHitRate * 100) - (errorRate * 100)));
@@ -479,8 +486,7 @@ class PWAAnalytics {
   }> {
     try {
       // Get real analytics data from the analytics service
-      const { AnalyticsService } = await import('@/features/analytics/lib/analytics-service');
-      const analyticsService = AnalyticsService.getInstance();
+      await import('@/features/analytics/lib/analytics-service');
       
       // Get PWA installation events from the last 30 days
       const installations = await this.getInstallationTrends();
@@ -497,6 +503,7 @@ class PWAAnalytics {
         performance
       };
     } catch (error) {
+      logger.error('Error getting PWA analytics trends:', error instanceof Error ? error : new Error(String(error)));
       // Fallback to empty data structure if analytics service is unavailable
       return {
         installations: [],
@@ -528,7 +535,7 @@ class PWAAnalytics {
       data?.forEach(event => {
         const date = new Date(event.created_at).toISOString().split('T')[0];
         if (date) {
-          dailyCounts.set(date, (dailyCounts.get(date) || 0) + 1);
+          dailyCounts.set(date, (dailyCounts.get(date) ?? 0) + 1);
         }
       });
 
@@ -546,6 +553,7 @@ class PWAAnalytics {
 
       return result;
     } catch (error) {
+      logger.error('Error getting installation trends:', error instanceof Error ? error : new Error(String(error)));
       return [];
     }
   }
@@ -572,7 +580,7 @@ class PWAAnalytics {
       data?.forEach(event => {
         const date = new Date(event.created_at).toISOString().split('T')[0];
         if (date) {
-          const stats = dailyStats.get(date) || { offline: 0, total: 0 };
+          const stats = dailyStats.get(date) ?? { offline: 0, total: 0 };
           stats.total++;
           if (event.event_type === 'offline_access') {
             stats.offline++;
@@ -594,6 +602,7 @@ class PWAAnalytics {
 
       return result;
     } catch (error) {
+      logger.error('Error getting offline usage trends:', error instanceof Error ? error : new Error(String(error)));
       return [];
     }
   }
@@ -620,8 +629,8 @@ class PWAAnalytics {
       data?.forEach(event => {
         const date = new Date(event.created_at).toISOString().split('T')[0];
         if (date) {
-          const score = event.event_data?.score || 0;
-          const scores = dailyScores.get(date) || [];
+          const score = event.event_data?.score ?? 0;
+          const scores = dailyScores.get(date) ?? [];
           scores.push(score);
           dailyScores.set(date, scores);
         }
@@ -632,7 +641,7 @@ class PWAAnalytics {
       for (let i = 29; i >= 0; i--) {
         const date = new Date(Date.now() - i * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
         if (date) {
-          const scores = dailyScores.get(date) || [];
+          const scores = dailyScores.get(date) ?? [];
           const avgScore = scores.length > 0 ? scores.reduce((a, b) => a + b, 0) / scores.length : 0;
           result.push({ date, score: avgScore });
         }
@@ -640,6 +649,7 @@ class PWAAnalytics {
 
       return result;
     } catch (error) {
+      console.error('Error getting performance trends:', error);
       return [];
     }
   }

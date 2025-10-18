@@ -87,7 +87,7 @@ export default function SocialFeed({
   const [pullDistance, setPullDistance] = useState(0);
 
   // Load feed items using store
-  const loadFeedItems = useCallback(async (pageNum: number, isRefresh: boolean = false) => {
+  const loadFeedItems = useCallback(async (pageNum: number, isRefresh = false) => {
     if (isLoading) return;
 
     try {
@@ -248,7 +248,7 @@ export default function SocialFeed({
       'Libertarian': 'text-yellow-600 bg-yellow-50 border-yellow-200'
     };
     
-    return partyColors[party] || 'text-gray-600 bg-gray-50 border-gray-200';
+    return partyColors[party] ?? 'text-gray-600 bg-gray-50 border-gray-200';
   };
 
   return (

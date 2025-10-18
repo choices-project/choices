@@ -12,7 +12,6 @@ import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 
-import { withOptional } from '@/lib/utils/objects';
 
 // ============================================================================
 // TYPES
@@ -314,7 +313,7 @@ export const useDeviceStore = create<DeviceStore>()(
 
         setNetworkInfo: (network: Partial<NetworkInfo>) => {
           set((state) => {
-            state.network = withOptional(state.network, network);
+            state.network = { ...state.network, ...network };
           });
         },
 
@@ -531,10 +530,11 @@ export const useDeviceCapabilities = () => {
   const isOnline = useIsOnline();
   const lowData = useLowData();
 
-  return withOptional(capabilities, {
+  return {
+    ...capabilities,
     isOnline,
     isOffline: !isOnline,
     isLowData: lowData,
     canUseAdvancedFeatures: isOnline && !lowData && capabilities.camera && capabilities.microphone
-  });
+  };
 };

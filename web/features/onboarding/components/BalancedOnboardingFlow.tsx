@@ -18,9 +18,8 @@ import {
   useOnboardingLoading,
   useOnboardingError
 } from '@/lib/stores';
-import { withOptional } from '@/lib/utils/objects';
-import { getSupabaseBrowserClient } from '@/utils/supabase/client';
 import { T } from '@/lib/testing/testIds';
+import { getSupabaseBrowserClient } from '@/utils/supabase/client';
 
 
 // Step 1: Welcome & Value Proposition (30 seconds)
@@ -151,9 +150,10 @@ const PrivacyStep: React.FC<{
               <input
                 type="checkbox"
                 checked={privacy.location_sharing === 'quantized'}
-                onChange={(e) => setPrivacy(withOptional(privacy, {
+                onChange={(e) => setPrivacy({
+                  ...privacy,
                   location_sharing: e.target.checked ? 'quantized' : 'disabled'
-                }))}
+                })}
                 className="w-5 h-5 text-blue-600 rounded"
               />
               <span className="text-gray-700">
@@ -164,9 +164,10 @@ const PrivacyStep: React.FC<{
               <input
                 type="checkbox"
                 checked={privacy.demographic_sharing === 'enabled'}
-                onChange={(e) => setPrivacy(withOptional(privacy, {
+                onChange={(e) => setPrivacy({
+                  ...privacy,
                   demographic_sharing: e.target.checked ? 'enabled' : 'disabled'
-                }))}
+                })}
                 className="w-5 h-5 text-blue-600 rounded"
               />
               <span className="text-gray-700">
@@ -177,9 +178,10 @@ const PrivacyStep: React.FC<{
               <input
                 type="checkbox"
                 checked={privacy.analytics_sharing === 'enabled'}
-                onChange={(e) => setPrivacy(withOptional(privacy, {
+                onChange={(e) => setPrivacy({
+                  ...privacy,
                   analytics_sharing: e.target.checked ? 'enabled' : 'limited'
-                }))}
+                })}
                 className="w-5 h-5 text-blue-600 rounded"
               />
               <span className="text-gray-700">
@@ -248,9 +250,13 @@ const DemographicsStep: React.FC<{
                 </label>
                 <select
                   value={demographics?.location?.state || ''}
-                  onChange={(e) => setDemographics(withOptional(demographics, {
-                    location: withOptional(demographics?.location || {}, { state: e.target.value })
-                  }))}
+                  onChange={(e) => setDemographics({
+                    ...demographics,
+                    location: {
+                      ...demographics?.location,
+                      state: e.target.value
+                    }
+                  })}
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
                   <option value="">Select your state</option>
@@ -313,9 +319,13 @@ const DemographicsStep: React.FC<{
                 <input
                   type="text"
                   value={demographics?.location?.district || ''}
-                  onChange={(e) => setDemographics(withOptional(demographics, {
-                    location: withOptional(demographics?.location || {}, { district: e.target.value })
-                  }))}
+                  onChange={(e) => setDemographics({
+                    ...demographics,
+                    location: {
+                      ...demographics?.location,
+                      district: e.target.value
+                    }
+                  })}
                   placeholder="Enter your congressional district"
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
@@ -343,9 +353,10 @@ const DemographicsStep: React.FC<{
                 </label>
                 <select
                   value={demographics?.age_range || ''}
-                  onChange={(e) => setDemographics(withOptional(demographics, {
+                  onChange={(e) => setDemographics({
+                    ...demographics,
                     age_range: e.target.value as UserDemographics['age_range']
-                  }))}
+                  })}
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
                   <option value="">Select age range</option>
@@ -364,9 +375,10 @@ const DemographicsStep: React.FC<{
                 </label>
                 <select
                   value={demographics?.education || ''}
-                  onChange={(e) => setDemographics(withOptional(demographics, {
+                  onChange={(e) => setDemographics({
+                    ...demographics,
                     education: e.target.value as UserDemographics['education']
-                  }))}
+                  })}
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
                   <option value="">Select education</option>
@@ -383,9 +395,10 @@ const DemographicsStep: React.FC<{
                 </label>
                 <select
                   value={demographics?.political_engagement || ''}
-                  onChange={(e) => setDemographics(withOptional(demographics, {
+                  onChange={(e) => setDemographics({
+                    ...demographics,
                     political_engagement: e.target.value as UserDemographics['political_engagement']
-                  }))}
+                  })}
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
                   <option value="">Select engagement</option>

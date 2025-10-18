@@ -103,23 +103,23 @@ export function PWAUserProfile({ user, onUpdate: _onUpdate }: PWAUserProfileProp
     }
 
     try {
-      const credential = await pwaWebAuthn.registerUser(user?.pseudonym || 'user')
+      const credential = await pwaWebAuthn.registerUser(user?.pseudonym ?? 'user')
       if (credential) {
         alert('WebAuthn registration successful!')
       }
     } catch (error) {
-      alert(`WebAuthn registration failed: ${  error}`)
+      alert(`WebAuthn registration failed: ${error instanceof Error ? error.message : String(error)}`)
     }
   }
 
-  const handleClearEncryptedData = async () => {
+  const handleClearEncryptedData = () => {
     if (confirm('Are you sure you want to clear all encrypted data? This cannot be undone.')) {
       privacyStorage.clearAllEncryptedData()
       alert('All encrypted data has been cleared.')
     }
   }
 
-  const handleExportData = async () => {
+  const handleExportData = () => {
     try {
       const exportData = {
         profile: user,
@@ -136,7 +136,7 @@ export function PWAUserProfile({ user, onUpdate: _onUpdate }: PWAUserProfileProp
       a.click()
       URL.revokeObjectURL(url)
     } catch (error) {
-      alert(`Failed to export data: ${  error}`)
+      alert(`Failed to export data: ${error instanceof Error ? error.message : String(error)}`)
     }
   }
 
@@ -185,7 +185,7 @@ export function PWAUserProfile({ user, onUpdate: _onUpdate }: PWAUserProfileProp
             </div>
             <div>
               <h2 className="text-xl font-bold text-gray-900">
-                {user.pseudonym || `User ${user.stableId.slice(0, 8)}`}
+                {user.pseudonym ?? `User ${user.stableId.slice(0, 8)}`}
               </h2>
               <p className="text-sm text-gray-600">Member since {new Date(user.createdAt).toLocaleDateString()}</p>
             </div>

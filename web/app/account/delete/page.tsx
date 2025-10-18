@@ -113,7 +113,7 @@ export default function AccountDeletionPage() {
       const data = await response.json()
       setUserData(data)
     } catch (error) {
-      devLog('Error loading user data:', error)
+      devLog('Error loading user data:', { error })
       setError('Failed to load user data')
     } finally {
       setIsLoading(false)
@@ -164,7 +164,7 @@ export default function AccountDeletionPage() {
         throw new Error('Failed to export user data')
       }
     } catch (error) {
-      devLog('Error exporting user data:', error)
+      devLog('Error exporting user data:', { error })
       setError('Failed to export user data')
     } finally {
       setIsExporting(false)
@@ -219,7 +219,7 @@ export default function AccountDeletionPage() {
         throw new Error('Failed to delete account')
       }
     } catch (error) {
-      devLog('Error deleting account:', error)
+      devLog('Error deleting account:', { error })
       setError('Failed to delete account')
     } finally {
       setIsDeleting(false)
@@ -246,7 +246,7 @@ export default function AccountDeletionPage() {
     );
   }
 
-  if (isLoading) {
+  if (isUserLoading || isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">

@@ -27,12 +27,58 @@ interface Feedback {
   description: string;
   sentiment: string;
   screenshot: string | null;
-  userjourney: any;
+  userjourney: {
+    currentPage: string;
+    currentPath: string;
+    pageTitle: string;
+    referrer: string;
+    userAgent: string;
+    screenResolution: string;
+    viewportSize: string;
+    timeOnPage: number;
+    sessionId: string;
+    sessionStartTime: string;
+    totalPageViews: number;
+    activeFeatures: string[];
+    lastAction: string;
+    actionSequence: string[];
+    pageLoadTime: number;
+    performanceMetrics: {
+      fcp?: number;
+      lcp?: number;
+      fid?: number;
+      cls?: number;
+    };
+    errors: Array<{
+      type: string;
+      message: string;
+      stack?: string;
+      timestamp: string;
+    }>;
+    deviceInfo: {
+      type: 'mobile' | 'tablet' | 'desktop';
+      os: string;
+      browser: string;
+      language: string;
+      timezone: string;
+    };
+    isAuthenticated: boolean;
+    userRole?: string;
+    userId?: string;
+  };
   status: string;
   priority: string;
   tags: string[];
-  aianalysis: any;
-  metadata: any;
+  aianalysis: {
+    intent: string;
+    category: string;
+    sentiment: number;
+    urgency: number;
+    complexity: number;
+    keywords: string[];
+    suggestedActions: string[];
+  };
+  metadata: Record<string, unknown>;
   createdat: string;
   updatedat: string;
 }
@@ -68,7 +114,8 @@ export default function AdminFeedbackPage() {
         throw new Error('Failed to fetch feedback');
       }
 
-      return response.json();
+      const data = await response.json() as Feedback[];
+      return data;
     },
     staleTime: 30000, // 30 seconds
   });
@@ -91,10 +138,10 @@ export default function AdminFeedbackPage() {
       }
 
       // Refetch data to update the UI
-      refetch();
+      await refetch();
       devLog('Feedback status updated successfully', { feedbackId, newStatus });
     } catch (error) {
-      devLog('Error updating feedback status:', error);
+      devLog('Error updating feedback status:', { error });
     }
   };
 
@@ -115,20 +162,20 @@ export default function AdminFeedbackPage() {
         safeWindow(w => w.URL?.revokeObjectURL?.(url));
       }
     } catch (error) {
-      devLog('Error exporting feedback:', error);
+      devLog('Error exporting feedback:', { error });
     }
   };
 
-  const handleIssueGenerated = (feedbackId: string, issueData: any) => {
+  const handleIssueGenerated = (feedbackId: string, issueData: { issueNumber: number; generatedIssue: { title: string; description: string }; issueUrl: string; feedbackId: string; analysis: { intent: string; category: string; sentiment: number; urgency: number; complexity: number; keywords: string[]; suggestedActions: string[]; impact: number; estimatedEffort: string } }) => {
     devLog('GitHub issue generated:', { feedbackId, issueData });
     // Refetch data to update the UI
-    refetch();
+    void refetch();
   };
 
   const handleBulkGenerate = (feedbackIds: string[]) => {
     devLog('Bulk issue generation completed:', { feedbackIds });
     // Refetch data to update the UI
-    refetch();
+    void refetch();
   };
 
   if (error) {
@@ -155,14 +202,14 @@ export default function AdminFeedbackPage() {
         </div>
         <div className="flex space-x-3">
           <button
-            onClick={handleExport}
+            onClick={() => void handleExport()}
             className="flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
           >
             <Download className="h-4 w-4 mr-2" />
             Export
           </button>
           <button
-            onClick={() => refetch()}
+            onClick={() => void refetch()}
             className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
             <Eye className="h-4 w-4 mr-2" />
@@ -207,7 +254,7 @@ export default function AdminFeedbackPage() {
       {activeTab === 'overview' ? (
         <>
           {/* Stats Cards */}
-          <FeedbackStats feedback={feedback?.data || []} />
+          <FeedbackStats feedback={feedback ?? []} />
 
           {/* Filters */}
           <FeedbackFilters
@@ -218,16 +265,16 @@ export default function AdminFeedbackPage() {
           {/* Feedback List */}
           <div className="bg-white rounded-lg shadow" data-testid="feedback-list">
             <FeedbackList
-              feedback={feedback?.data || []}
+              feedback={feedback ?? []}
               isLoading={isLoading}
               onFeedbackSelect={handleFeedbackSelect}
-              onStatusUpdate={handleStatusUpdate}
+              onStatusUpdate={() => void handleStatusUpdate}
             />
           </div>
         </>
       ) : (
         <IssueGenerationPanel
-          feedback={feedback?.data || []}
+          feedback={feedback ?? []}
           onIssueGenerated={handleIssueGenerated}
           onBulkGenerate={handleBulkGenerate}
         />
@@ -242,7 +289,7 @@ export default function AdminFeedbackPage() {
             setIsDetailModalOpen(false);
             setSelectedFeedback(null);
           }}
-          onStatusUpdate={handleStatusUpdate}
+          onStatusUpdate={() => void handleStatusUpdate}
         />
       )}
     </div>

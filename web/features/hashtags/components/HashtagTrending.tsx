@@ -61,7 +61,7 @@ export default function HashtagTrending({
   // Zustand store integration
   const { trendingHashtags } = useHashtagStore();
   const filters = useHashtagFilters();
-  const { getTrendingHashtags, setFilter, setCategory, setSortBy, setTimeRange, setSearchQuery } = useHashtagActions();
+  const { getTrendingHashtags, setCategory, setSortBy, setTimeRange, setSearchQuery } = useHashtagActions();
   const { isLoading } = useHashtagLoading();
   const { error } = useHashtagError();
   

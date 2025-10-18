@@ -9,6 +9,7 @@ import {
   getAuthenticatedUser,
   type ServerActionContext
 } from '@/lib/core/auth/server-actions'
+import { logger } from '@/lib/utils/logger'
 import { getSupabaseServerClient } from '@/utils/supabase/server'
 
 // Validation schema
@@ -19,10 +20,10 @@ const OnboardingSchema = z.object({
 })
 
 // Simple server action for E2E testing
-export async function completeOnboardingAction(formData: FormData) {
+export function completeOnboardingAction(formData: FormData) {
   logger.info('=== COMPLETE ONBOARDING ACTION CALLED ===');
-  logger.info('FormData entries:', Object.fromEntries(formData.entries()));
-  logger.info('E2E environment:', process.env.E2E);
+  logger.info('FormData entries', { entries: Object.fromEntries(formData.entries()) });
+  logger.info('E2E environment', { e2e: process.env.E2E });
   
   // Always use real authentication - no E2E bypasses
   
@@ -35,10 +36,10 @@ export async function completeOnboardingAction(formData: FormData) {
 export const completeOnboarding = createSecureServerAction(
   async (formData: FormData, context: ServerActionContext) => {
     logger.info('=== COMPLETE ONBOARDING SERVER ACTION CALLED ===');
-    logger.info('FormData entries:', Object.fromEntries(formData.entries()));
-    logger.info('E2E environment:', process.env.E2E);
-    logger.info('FormData keys:', Array.from(formData.keys()));
-    logger.info('FormData values:', Array.from(formData.values()));
+    logger.info('FormData entries', { entries: Object.fromEntries(formData.entries()) });
+    logger.info('E2E environment', { e2e: process.env.E2E });
+    logger.info('FormData keys', { keys: Array.from(formData.keys()) });
+    logger.info('FormData values', { values: Array.from(formData.values()) });
     
     // Always use real authentication - no E2E bypasses
     
@@ -46,11 +47,11 @@ export const completeOnboarding = createSecureServerAction(
     
     // Get authenticated user
     const user = await getAuthenticatedUser(context)
-    logger.info('Authenticated user:', user?.userId);
+    logger.info('Authenticated user', { userId: user?.userId });
     
     // Validate form data
     const validatedData = validateFormData(formData, OnboardingSchema)
-    logger.info('Validated data:', validatedData);
+    logger.info('Validated data', { data: validatedData });
 
     // Get Supabase client
     const supabaseClient = await supabase
@@ -75,7 +76,7 @@ export const completeOnboarding = createSecureServerAction(
       })
 
     if (updateError) {
-      logger.info('Profile update error:', updateError);
+      logger.info('Profile update error', { error: updateError });
       throw new Error('Failed to complete onboarding')
     }
 

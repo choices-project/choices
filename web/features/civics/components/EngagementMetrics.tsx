@@ -28,7 +28,6 @@ import {
 } from '@heroicons/react/24/solid';
 import React, { useState, useEffect, useCallback } from 'react';
 
-import { withOptional } from '@/lib/utils/objects';
 
 import type { EngagementData } from '../lib/types/civics-types';
 
@@ -83,7 +82,8 @@ export default function EngagementMetrics({
     try {
       const newValue = isActive ? currentValue - 1 : currentValue + 1;
       
-      setMetrics(prev => withOptional(prev, {
+      setMetrics(prev => ({
+        ...prev,
         [action]: newValue,
         lastUpdated: new Date()
       }));

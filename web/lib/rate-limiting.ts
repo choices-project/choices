@@ -173,6 +173,6 @@ export function logAPIUsage(): void {
     const statusIcon = canMakeRequest ? '✅' : '❌';
     const delayText = delayNeeded > 0 ? ` (wait ${Math.ceil(delayNeeded/1000)}s)` : '';
     
-    logger.debug(`API Status: ${api}`, { requestsToday: usage.requestsToday, dailyLimit: usage.rateLimit.daily, requestsThisMinute: usage.requestsThisMinute, perMinuteLimit: usage.rateLimit.perMinute, delayText });
+    logger.debug(`API Status: ${api} ${statusIcon}`, { requestsToday: usage.requestsToday, dailyLimit: usage.rateLimit.daily, requestsThisMinute: usage.requestsThisMinute, perMinuteLimit: usage.rateLimit.perMinute, delayText });
   }
 }

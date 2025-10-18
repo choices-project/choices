@@ -4,7 +4,9 @@ import React, { useState } from 'react';
 
 import { 
   useOnboardingStep,
-  useOnboardingActions
+  useOnboardingActions,
+  useUserStore,
+  useNotificationStore
 } from '@/lib/stores';
 
 import type { UserOnboardingProps } from '../types';
@@ -28,22 +30,32 @@ import type { UserOnboardingProps } from '../types';
  * @returns {JSX.Element} Civics onboarding interface
  */
 export default function UserOnboarding({ onComplete, onSkip }: UserOnboardingProps) {
-  // Use onboarding store for step management
+  // ✅ MIGRATED: Use existing stores instead of useState
+  // Onboarding store for step management
   const currentStep = useOnboardingStep();
   const { updateFormData, setCurrentStep } = useOnboardingActions();
   
-  // Keep local state for UI-specific concerns
-  const [userAddress, setUserAddress] = useState('');
-  const [selectedState] = useState('CA');
-  const [addressLoading, setAddressLoading] = useState(false);
-  const [representatives, setRepresentatives] = useState<any[]>([]);
+  // User store for address and representatives
+  const currentAddress = useUserStore(state => state.currentAddress);
+  const representatives = useUserStore(state => state.representatives);
+  const addressLoading = useUserStore(state => state.addressLoading);
+  const setCurrentAddress = useUserStore(state => state.setCurrentAddress);
+  const setCurrentState = useUserStore(state => state.setCurrentState);
+  const setRepresentatives = useUserStore(state => state.setRepresentatives);
+  const setAddressLoading = useUserStore(state => state.setAddressLoading);
+  
+  // Notification store for user feedback
+  const addNotification = useNotificationStore(state => state.addNotification);
+  
+  // ✅ Keep local state for component-specific concerns
+  const [selectedState] = useState('CA'); // Default state selection
 
   const handleAddressLookup = async () => {
     setAddressLoading(true);
     setCurrentStep(2); // loading step
     
     try {
-      const response = await fetch(`/api/civics/by-address?address=${encodeURIComponent(userAddress)}`);
+      const response = await fetch(`/api/civics/by-address?address=${encodeURIComponent(currentAddress)}`);
       if (!response.ok) throw new Error('Address lookup failed');
       const result = await response.json();
       
@@ -51,15 +63,32 @@ export default function UserOnboarding({ onComplete, onSkip }: UserOnboardingPro
       setCurrentStep(3); // complete step
       
       // Update store with address data
-      updateFormData(2, { address: userAddress, representatives: result.data ?? [] });
+      updateFormData(2, { address: currentAddress, representatives: result.data ?? [] });
       
       // Save to localStorage for future use
-      localStorage.setItem('userAddress', userAddress);
+      localStorage.setItem('userAddress', currentAddress);
       localStorage.setItem('userRepresentatives', JSON.stringify(result.data ?? []));
       
-      onComplete({ address: userAddress, representatives: result.data ?? [] });
+      // Add success notification
+      addNotification({
+        type: 'success',
+        title: 'Address Found',
+        message: 'Address found! Representatives loaded successfully.',
+        duration: 3000
+      });
+      
+      onComplete({ address: currentAddress, representatives: result.data ?? [] });
     } catch (error) {
       console.error('Address lookup failed:', error);
+      
+      // Add error notification
+      addNotification({
+        type: 'error',
+        title: 'Address Lookup Failed',
+        message: 'Address lookup failed. Trying state-based lookup...',
+        duration: 5000
+      });
+      
       // Fallback to state-based lookup
       handleStateLookup();
     }
@@ -75,6 +104,7 @@ export default function UserOnboarding({ onComplete, onSkip }: UserOnboardingPro
       const result = await response.json();
       
       setRepresentatives(result.data ?? []);
+      setCurrentState(selectedState);
       setCurrentStep(3); // complete step
       
       // Update store with state data
@@ -84,9 +114,26 @@ export default function UserOnboarding({ onComplete, onSkip }: UserOnboardingPro
       localStorage.setItem('userState', selectedState);
       localStorage.setItem('userRepresentatives', JSON.stringify(result.data ?? []));
       
+      // Add success notification
+      addNotification({
+        type: 'success',
+        title: 'Representatives Loaded',
+        message: 'State representatives loaded successfully.',
+        duration: 3000
+      });
+      
       onComplete({ state: selectedState, representatives: result.data ?? [] });
     } catch (error) {
       console.error('State lookup failed:', error);
+      
+      // Add error notification
+      addNotification({
+        type: 'error',
+        title: 'Representatives Load Failed',
+        message: 'Failed to load representatives. You can skip this step.',
+        duration: 5000
+      });
+      
       onSkip();
     }
   };
@@ -147,8 +194,8 @@ export default function UserOnboarding({ onComplete, onSkip }: UserOnboardingPro
               </label>
               <input
                 type="text"
-                value={userAddress}
-                onChange={(e) => setUserAddress(e.target.value)}
+                value={currentAddress}
+                onChange={(e) => setCurrentAddress(e.target.value)}
                 placeholder="Enter your full address"
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 required
@@ -209,7 +256,7 @@ export default function UserOnboarding({ onComplete, onSkip }: UserOnboardingPro
             </p>
             
             <button
-              onClick={() => onComplete({ address: userAddress, representatives })}
+              onClick={() => onComplete({ address: currentAddress, representatives })}
               className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors font-medium"
             >
               Continue to Your Feed

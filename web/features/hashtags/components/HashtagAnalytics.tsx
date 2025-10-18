@@ -22,7 +22,7 @@ import {
   Award,
   Activity
 } from 'lucide-react';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
 import { 
   useHashtagStore,
@@ -37,7 +37,7 @@ import {
   useAnalyticsError
 } from '@/lib/stores';
 import { formatUsageCount, formatEngagementRate, formatGrowthRate } from '@/lib/utils/format-utils';
-import { withOptional } from '@/lib/utils/objects';
+import { logger } from '@/lib/utils/logger';
 
 import {
   calculateHashtagAnalytics,
@@ -48,10 +48,10 @@ import {
   getSmartSuggestions,
   getRelatedHashtags
 } from '../lib/hashtag-suggestions';
+import type { HashtagCategory } from '../types';
 import type {
   Hashtag,
-  HashtagAnalytics,
-  HashtagCategory
+  HashtagAnalytics
 } from '../types';
 import {
   formatTrendingScore,
@@ -81,11 +81,11 @@ export default function HashtagAnalytics({
   // Zustand store integration
   const { trendingHashtags, suggestions } = useHashtagStore();
   const { getTrendingHashtags, getSuggestions, getHashtagAnalytics } = useHashtagActions();
-  const { isLoading: hashtagLoading } = useHashtagLoading();
-  const { error: hashtagError } = useHashtagError();
+  const hashtagLoading = useHashtagLoading();
+  const hashtagError = useHashtagError();
   
   // Analytics store integration
-  const { dashboard, chartData } = useAnalyticsStore();
+  const {} = useAnalyticsStore();
   const { setChartData, setChartConfig, generateReport } = useAnalyticsActions();
   const analyticsLoading = useAnalyticsLoading();
   const analyticsError = useAnalyticsError();
@@ -126,10 +126,10 @@ export default function HashtagAnalytics({
   const [selectedCategory, setSelectedCategory] = useState<HashtagCategory | 'all'>('all');
   
   // Combined loading and error states
-  const isLoading = hashtagLoading || analyticsLoading;
-  const error = hashtagError || analyticsError;
+  const isLoading = hashtagLoading.isLoading ?? analyticsLoading;
+  const error = hashtagError.error ?? analyticsError;
 
-  const loadAnalytics = async () => {
+  const loadAnalytics = useCallback(async () => {
     if (!hashtagId) return;
     
     try {
@@ -142,9 +142,9 @@ export default function HashtagAnalytics({
       
       // Merge calculated analytics with fetched data
       const mergedAnalytics = {
-        ...(analyticsData || {}),
-        ...(calculatedAnalytics || {}),
-        performance_level: getHashtagPerformanceLevel(analyticsData?.metrics?.engagement_rate || 0)
+        ...(analyticsData ?? {}),
+        ...(calculatedAnalytics ?? {}),
+        performance_level: getHashtagPerformanceLevel(analyticsData?.metrics?.engagement_rate ?? 0)
       };
       
       // Store analytics data in local state
@@ -178,11 +178,11 @@ export default function HashtagAnalytics({
       
       await generateReport(startDate.toISOString(), endDate.toISOString());
     } catch (err) {
-      console.error('Failed to load analytics:', err);
+      logger.error('Failed to load analytics:', err instanceof Error ? err : new Error(String(err)));
     }
-  };
+  }, [hashtagId, selectedPeriod]);
 
-  const loadTrendingHashtags = async () => {
+  const loadTrendingHashtags = useCallback(async () => {
     try {
       // Use the imported calculateTrendingHashtags function
       const calculatedTrending = await calculateTrendingHashtags(
@@ -197,15 +197,15 @@ export default function HashtagAnalytics({
       // Merge calculated trending data with store data
       if (calculatedTrending && calculatedTrending.length > 0) {
         // Update store with calculated trending hashtags
-        logger.info('Calculated trending hashtags:', calculatedTrending);
+        logger.info('Calculated trending hashtags:', { count: calculatedTrending.length, hashtags: calculatedTrending });
         // Note: Trending data is now managed by the hashtag store
       }
     } catch (err) {
-      console.error('Failed to load trending hashtags:', err);
+      logger.error('Failed to load trending hashtags:', err instanceof Error ? err : new Error(String(err)));
     }
-  };
+  }, [selectedCategory]);
 
-  const loadSuggestions = async () => {
+  const loadSuggestions = useCallback(async () => {
     if (!userId) return;
     
     try {
@@ -213,48 +213,52 @@ export default function HashtagAnalytics({
       const smartSuggestions = await getSmartSuggestions(userId, {
         contentType: 'feed'
       });
-      const relatedHashtags = await getRelatedHashtags(hashtagId || '', 10);
+      const relatedHashtags = await getRelatedHashtags(hashtagId ?? '', 10);
       
       // Also fetch from store
       await getSuggestions('', 'analytics');
       
       // Merge smart suggestions with related hashtags
       if (smartSuggestions && relatedHashtags) {
-        logger.info('Smart suggestions:', smartSuggestions);
-        logger.info('Related hashtags:', relatedHashtags);
+        logger.info('Smart suggestions:', { count: smartSuggestions.length, suggestions: smartSuggestions });
+        logger.info('Related hashtags:', { count: relatedHashtags.length, hashtags: relatedHashtags });
         // Convert HashtagSuggestion[] to Hashtag[]
         const hashtags: Hashtag[] = relatedHashtags.map(suggestion => ({
           id: suggestion.hashtag.id,
           name: suggestion.hashtag.name,
           display_name: suggestion.hashtag.display_name,
-          follower_count: suggestion.hashtag.follower_count || 0,
-          usage_count: suggestion.usage_count || 0,
-          category: (suggestion.category || 'other'),
-          is_trending: suggestion.is_trending || false,
-          trend_score: suggestion.hashtag.trend_score || 0,
-          is_verified: suggestion.hashtag.is_verified || false,
-          is_featured: suggestion.hashtag.is_featured || false,
+          follower_count: suggestion.hashtag.follower_count ?? 0,
+          usage_count: suggestion.usage_count ?? 0,
+          category: (suggestion.category ?? 'other'),
+          is_trending: suggestion.is_trending ?? false,
+          trend_score: suggestion.hashtag.trend_score ?? 0,
+          is_verified: suggestion.hashtag.is_verified ?? false,
+          is_featured: suggestion.hashtag.is_featured ?? false,
           created_at: suggestion.hashtag.created_at,
           updated_at: suggestion.hashtag.updated_at
         }));
         setRelatedHashtags(hashtags);
       }
     } catch (err) {
-      console.error('Failed to load suggestions:', err);
+      logger.error('Failed to load suggestions:', err instanceof Error ? err : new Error(String(err)));
     }
-  };
+  }, [userId, hashtagId]);
 
   useEffect(() => {
-    if (hashtagId) {
-      loadAnalytics();
-    }
-    if (showTrending) {
-      loadTrendingHashtags();
-    }
-    if (showSuggestions && userId) {
-      loadSuggestions();
-    }
-  }, [hashtagId, userId, selectedPeriod, selectedCategory, showTrending, showSuggestions]);
+    const loadData = async () => {
+      if (hashtagId) {
+        await loadAnalytics();
+      }
+      if (showTrending) {
+        await loadTrendingHashtags();
+      }
+      if (showSuggestions && userId) {
+        await loadSuggestions();
+      }
+    };
+    
+    void loadData();
+  }, [hashtagId, userId, selectedPeriod, selectedCategory, showTrending, showSuggestions, loadAnalytics, loadTrendingHashtags, loadSuggestions]);
 
   const getPerformanceColor = (level: string) => {
     switch (level) {
@@ -289,7 +293,7 @@ export default function HashtagAnalytics({
         <div className="flex items-center space-x-4">
           <select
             value={selectedPeriod}
-            onChange={(e) => setSelectedPeriod(e.target.value as any)}
+            onChange={(e) => setSelectedPeriod(e.target.value as '24h' | '7d' | '30d' | '90d')}
             className="px-3 py-2 border border-gray-300 rounded-md text-sm"
           >
             <option value="24h">Last 24 hours</option>
@@ -299,7 +303,7 @@ export default function HashtagAnalytics({
           </select>
           <select
             value={selectedCategory}
-            onChange={(e) => setSelectedCategory(e.target.value as any)}
+            onChange={(e) => setSelectedCategory((e.target.value || 'all') as HashtagCategory | 'all')}
             className="px-3 py-2 border border-gray-300 rounded-md text-sm"
           >
             <option value="all">All Categories</option>
@@ -389,7 +393,7 @@ export default function HashtagAnalytics({
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Peak Usage</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {analytics.metrics.peak_usage || 0}
+                  {analytics.metrics.peak_usage ?? 0}
                 </p>
               </div>
             </div>
@@ -403,7 +407,7 @@ export default function HashtagAnalytics({
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Comments</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {analytics.metrics.top_content?.length || 0}
+                  {analytics.metrics.top_content?.length ?? 0}
                 </p>
               </div>
             </div>
@@ -417,7 +421,7 @@ export default function HashtagAnalytics({
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Reach</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {analytics.metrics.unique_users || 0}
+                  {analytics.metrics.unique_users ?? 0}
                 </p>
               </div>
             </div>
@@ -431,7 +435,7 @@ export default function HashtagAnalytics({
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Peak Activity</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {analytics.metrics.peak_usage || 0}
+                  {analytics.metrics.peak_usage ?? 0}
                 </p>
               </div>
             </div>
@@ -445,7 +449,7 @@ export default function HashtagAnalytics({
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Quality Score</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {Math.round(analytics.metrics.engagement_rate * 100) || 0}%
+                  {Math.round(analytics.metrics.engagement_rate * 100) ?? 0}%
                 </p>
               </div>
             </div>
@@ -469,7 +473,7 @@ export default function HashtagAnalytics({
               <h4 className="font-medium text-gray-900 mb-2">Key Insights</h4>
               <ul className="space-y-1">
                 {insights.insights.map((insight: string, index: number) => (
-                  <li key={index} className="text-sm text-gray-600 flex items-start">
+                  <li key={`insight-${index}-${insight.slice(0, 20)}`} className="text-sm text-gray-600 flex items-start">
                     <span className="text-blue-500 mr-2">•</span>
                     {insight}
                   </li>
@@ -481,7 +485,7 @@ export default function HashtagAnalytics({
               <h4 className="font-medium text-gray-900 mb-2">Recommendations</h4>
               <ul className="space-y-1">
                 {insights.recommendations.map((recommendation: string, index: number) => (
-                  <li key={index} className="text-sm text-gray-600 flex items-start">
+                  <li key={`recommendation-${index}-${recommendation.slice(0, 20)}`} className="text-sm text-gray-600 flex items-start">
                     <span className="text-green-500 mr-2">•</span>
                     {recommendation}
                   </li>
@@ -506,10 +510,10 @@ export default function HashtagAnalytics({
                 <div className="flex items-center space-x-3">
                   <span className="text-sm font-medium text-gray-500">#{index + 1}</span>
                   <div className="flex items-center space-x-2">
-                    {getHashtagCategoryIcon((trending.hashtag.category || 'other') as any)}
+                    {getHashtagCategoryIcon((trending.hashtag.category ?? 'other') )}
                     <span className="font-medium text-gray-900">#{trending.hashtag.name}</span>
-                    <span className={`px-2 py-1 text-xs rounded-full ${getHashtagCategoryColor((trending.hashtag.category || 'other') as any)}`}>
-                      {trending.hashtag.category || 'other'}
+                    <span className={`px-2 py-1 text-xs rounded-full ${getHashtagCategoryColor((trending.hashtag.category ?? 'other') )}`}>
+                      {trending.hashtag.category ?? 'other'}
                     </span>
                   </div>
                 </div>
@@ -539,14 +543,14 @@ export default function HashtagAnalytics({
                   <span className="text-xs text-gray-500">#{index + 1}</span>
                 </div>
                 <div className="flex items-center space-x-2 mb-2">
-                  {getHashtagCategoryIcon((hashtag.category || 'other') as any)}
+                  {getHashtagCategoryIcon((hashtag.category ?? 'other') )}
                   <span className="font-medium text-gray-900">#{hashtag.name}</span>
                 </div>
                 <p className="text-sm text-gray-600 mb-2">{hashtag.description}</p>
                 <div className="flex items-center justify-between text-xs text-gray-500">
                   <span>{formatUsageCount(hashtag.usage_count)}</span>
-                  <span className={`px-2 py-1 text-xs rounded-full ${getHashtagCategoryColor((hashtag.category || 'other') as any)}`}>
-                    {hashtag.category || 'other'}
+                  <span className={`px-2 py-1 text-xs rounded-full ${getHashtagCategoryColor((hashtag.category ?? 'other') )}`}>
+                    {hashtag.category ?? 'other'}
                   </span>
                 </div>
               </div>
@@ -569,10 +573,10 @@ export default function HashtagAnalytics({
                 <div className="flex items-center space-x-3">
                   <span className="text-sm font-medium text-gray-500">#{index + 1}</span>
                   <div className="flex items-center space-x-2">
-                    {getHashtagCategoryIcon((trending.hashtag.category || 'other') as any)}
+                    {getHashtagCategoryIcon((trending.hashtag.category ?? 'other') )}
                     <span className="font-medium text-gray-900">#{trending.hashtag.name}</span>
-                    <span className={`px-2 py-1 text-xs rounded-full ${getHashtagCategoryColor((trending.hashtag.category || 'other') as any)}`}>
-                      {trending.hashtag.category || 'other'}
+                    <span className={`px-2 py-1 text-xs rounded-full ${getHashtagCategoryColor((trending.hashtag.category ?? 'other') )}`}>
+                      {trending.hashtag.category ?? 'other'}
                     </span>
                   </div>
                 </div>
@@ -597,15 +601,15 @@ export default function HashtagAnalytics({
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {suggestions.slice(0, 6).map((suggestion, index) => (
-              <div key={index} className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+              <div key={`suggestion-${suggestion.hashtag.id}-${index}`} className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
                 <div className="flex items-center space-x-2 mb-2">
-                  {getHashtagCategoryIcon((suggestion.category || 'other') as any)}
+                  {getHashtagCategoryIcon((suggestion.category ?? 'other') )}
                   <span className="font-medium text-gray-900">#{suggestion.hashtag.name}</span>
                 </div>
                 <p className="text-sm text-gray-600 mb-2">{suggestion.reason}</p>
                 <div className="flex items-center justify-between text-xs text-gray-500">
-                  <span>{formatUsageCount(suggestion.usage_count || 0)}</span>
-                  <span className="text-blue-600">{Math.round((suggestion.confidence || suggestion.confidence_score || 0) * 100)}% match</span>
+                  <span>{formatUsageCount(suggestion.usage_count ?? 0)}</span>
+                  <span className="text-blue-600">{Math.round((suggestion.confidence ?? suggestion.confidence_score ?? 0) * 100)}% match</span>
                 </div>
               </div>
             ))}

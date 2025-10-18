@@ -13,7 +13,7 @@
 // - Opt-in discovery mechanisms
 // - Cross-demographic insights with privacy protection
 
-import { withOptional } from '@/lib/utils/objects';
+import { logger } from '@/lib/utils/logger';
 // 
 // Created: January 15, 2025
 // Status: Phase 2 Implementation
@@ -389,10 +389,11 @@ export class PrivacyAwareSocialDiscoveryManager {
     const noise = this.laplaceNoise(0.8);
     const noisyCount = Math.max(0, Math.round(insight.userCount + noise));
     
-    return withOptional(insight, {
+    return {
+      ...insight,
       userCount: noisyCount,
       privacyProtected: true
-    });
+    };
   }
 
   /**
@@ -567,7 +568,7 @@ export function meetsKAnonymity(
  * @param epsilon - Privacy parameter
  * @returns Noisy count
  */
-export function applyDifferentialPrivacy(count: number, epsilon: number = 0.8): number {
+export function applyDifferentialPrivacy(count: number, epsilon = 0.8): number {
   const noise = laplaceNoise(epsilon);
   return Math.max(0, Math.round(count + noise));
 }

@@ -7,7 +7,7 @@
 import { ApplicationError, type ErrorDetails } from './base';
 
 export class ConflictError extends ApplicationError {
-  constructor(message: string = 'Resource conflict', details?: ErrorDetails) {
+  constructor(message = 'Resource conflict', details?: ErrorDetails) {
     super(message, 409, 'CONFLICT', details);
   }
 }

@@ -18,16 +18,17 @@ import { Button } from '@/components/ui/button';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { cn } from '@/lib/utils';
-
-import { useHashtagSuggestions, useHashtagValidation, useCreateHashtag } from '../hooks/use-hashtags';
 import { 
   useHashtagStore,
   useHashtagActions,
   useHashtagLoading,
   useHashtagError
 } from '@/lib/stores/hashtagStore';
-import type { HashtagInputProps, Hashtag, HashtagSuggestion } from '../types';
+import { cn } from '@/lib/utils';
+import { logger } from '@/lib/utils/logger';
+
+import { useHashtagSuggestions, useHashtagValidation } from '../hooks/use-hashtags';
+import type { HashtagInputProps, HashtagSuggestion } from '../types';
 
 export default function HashtagInput({
   value = [],
@@ -35,7 +36,6 @@ export default function HashtagInput({
   placeholder = "Add hashtags...",
   maxTags = 10,
   allowCustom = true,
-  suggestions = [],
   onSuggestionSelect,
   validation: _validation,
   disabled = false,
@@ -66,13 +66,11 @@ export default function HashtagInput({
     enabled: inputValue.length >= 2
   });
 
-  // Create hashtag mutation
-  const createHashtagMutation = useCreateHashtag();
 
   // Combine store suggestions with hook suggestions
-  const allSuggestions = hashtagSuggestions.length > 0 ? hashtagSuggestions : (suggestionData?.data || []);
-  const isValidInput = validationData?.data?.is_valid || false;
-  const hasValidationErrors = (validationData?.data?.errors?.length || 0) > 0;
+  const allSuggestions = hashtagSuggestions.length > 0 ? hashtagSuggestions : (suggestionData?.data ?? []);
+  const isValidInput = validationData?.data?.is_valid ?? false;
+  const hasValidationErrors = (validationData?.data?.errors?.length ?? 0) > 0;
 
   // Handle input changes with useEffect
   useEffect(() => {
@@ -80,28 +78,12 @@ export default function HashtagInput({
       setIsOpen(true);
       setSelectedIndex(0);
       // Get suggestions from store
-      getSuggestions(inputValue, 'input');
+      void getSuggestions(inputValue, 'input');
     } else {
       setIsOpen(false);
     }
   }, [inputValue, getSuggestions]);
 
-  // Helper function to create hashtag objects
-  const createHashtagObject = (name: string): Hashtag => ({
-    id: `hashtag-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-    name,
-    display_name: name,
-    description: `User-created hashtag: ${name}`,
-    category: 'custom' as const,
-    usage_count: 0,
-    follower_count: 0,
-    is_trending: false,
-    trend_score: 0,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    is_verified: false,
-    is_featured: false
-  });
 
   // Handle suggestion selection
   const handleSelectSuggestion = useCallback((suggestion: HashtagSuggestion) => {
@@ -143,7 +125,7 @@ export default function HashtagInput({
           setIsOpen(false);
         }
       } catch (error) {
-        console.error('Failed to create hashtag:', error);
+        logger.error('Failed to create hashtag:', error instanceof Error ? error : new Error(String(error)));
       }
     }
   }, [value, maxTags, allSuggestions, allowCustom, createHashtag, onChange, handleSelectSuggestion]);
@@ -180,7 +162,7 @@ export default function HashtagInput({
     if (!isOpen || allSuggestions.length === 0) {
       if (e.key === 'Enter' && inputValue.trim()) {
         e.preventDefault();
-        handleAddHashtag(inputValue.trim());
+        void handleAddHashtag(inputValue.trim());
       }
       return;
     }
@@ -199,7 +181,7 @@ export default function HashtagInput({
         if (allSuggestions[selectedIndex]) {
           handleSelectSuggestion(allSuggestions[selectedIndex]);
         } else if (inputValue.trim()) {
-          handleAddHashtag(inputValue.trim());
+          void handleAddHashtag(inputValue.trim());
         }
         break;
       case 'Escape':
@@ -259,7 +241,7 @@ export default function HashtagInput({
         {/* Hashtag Tags */}
         {value.map((tag, index) => (
           <Badge
-            key={`${tag}-${index}`}
+            key={`hashtag-${tag}-${index}`}
             variant="secondary"
             className="flex items-center gap-1 px-2 py-1 text-xs"
           >
@@ -308,6 +290,13 @@ export default function HashtagInput({
           </Button>
         )}
       </div>
+
+      {/* Error Display */}
+      {error && (
+        <div className="mt-1 text-xs text-destructive">
+          {typeof error === 'string' ? error : 'An error occurred'}
+        </div>
+      )}
 
       {/* Suggestions Popover */}
       <Popover open={isOpen} onOpenChange={setIsOpen}>

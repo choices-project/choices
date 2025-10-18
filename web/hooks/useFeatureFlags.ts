@@ -279,7 +279,7 @@ export function useFeatureFlagManagement(): {
   }, [manager]);
 
   const exportConfig = useCallback(() => {
-    return manager.exportConfig();
+    return manager.exportConfig() as unknown as Record<string, unknown>;
   }, [manager]);
 
   const importConfig = useCallback((config: FeatureFlagConfig) => {

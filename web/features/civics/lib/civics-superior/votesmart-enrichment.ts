@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+
 import { logger } from '@/lib/utils/logger';
 
 // VoteSmart API integration for data enrichment

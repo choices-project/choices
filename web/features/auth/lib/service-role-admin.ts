@@ -26,7 +26,7 @@ export async function serviceRoleAdminAuth(request: NextRequest) {
     // Service role key provides full admin access
     return { success: true, supabase };
   } catch (error) {
-    devLog('Service role auth error:', error);
+    devLog('Service role auth error:', { error });
     return { success: false, error: 'Service role authentication failed' };
   }
 }

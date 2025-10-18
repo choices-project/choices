@@ -57,8 +57,7 @@ export default function UserProfile({ onRepresentativesUpdate, onClose }: UserPr
     setShowAddressForm,
     setNewAddress,
     setAddressLoading,
-    setSavedSuccessfully,
-    handleAddressUpdate
+    setSavedSuccessfully
   } = useUserActions();
 
   useEffect(() => {

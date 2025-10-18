@@ -1,71 +1,124 @@
 import { defineConfig, devices } from '@playwright/test';
 
 /**
- * @see https://playwright.dev/docs/test-configuration
+ * Optimized Playwright Configuration for Choices Platform
+ * 
+ * This is our single, consolidated Playwright configuration that replaces
+ * all the redundant configs we had before. It's optimized for performance
+ * and provides comprehensive testing coverage.
+ * 
+ * Created: January 27, 2025
+ * Updated: January 27, 2025
  */
+
 export default defineConfig({
-  testDir: './tests/playwright',
-  /* Run tests in files in parallel */
+  testDir: './tests/playwright/e2e',
   fullyParallel: true,
-  /* Fail the build on CI if you accidentally left test.only in the source code. */
-  forbidOnly: !!process.env.CI,
-  /* Retry on CI only */
-  retries: process.env.CI ? 2 : 0,
-  /* Opt out of parallel tests on CI. */
-  workers: process.env.CI ? 1 : undefined,
-  /* Reporter to use. See https://playwright.dev/docs/test-reporters */
-  reporter: 'html',
-  /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
+  forbidOnly: !!process.env['CI'],
+  retries: process.env['CI'] ? 2 : 0,
+  workers: process.env['CI'] ? 2 : 4, // Optimized for parallel execution
+  reporter: 'line',
+  timeout: 30000, // 30 second timeout for individual tests
   use: {
-    /* Base URL to use in actions like `await page.goto('/')`. */
     baseURL: 'http://localhost:3000',
-
-    /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',
+    screenshot: 'only-on-failure',
+    video: 'retain-on-failure',
+    actionTimeout: 10000, // 10 second timeout for actions
+    navigationTimeout: 15000, // 15 second timeout for navigation
   },
-
-  /* Configure projects for major browsers */
   projects: [
+    // Fast tests - Critical browsers only
     {
-      name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+      name: 'chromium-fast',
+      testMatch: [
+        '**/basic-navigation.spec.ts',
+        '**/authentication.spec.ts',
+        '**/admin-dashboard.spec.ts'
+      ],
+      use: { 
+        ...devices['Desktop Chrome'],
+        launchOptions: {
+          args: [
+            '--disable-web-security',
+            '--disable-features=VizDisplayCompositor',
+            '--disable-background-timer-throttling',
+            '--disable-backgrounding-occluded-windows',
+            '--disable-renderer-backgrounding',
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
+          ],
+        },
+      },
     },
-
     {
-      name: 'firefox',
-      use: { ...devices['Desktop Firefox'] },
+      name: 'firefox-fast',
+      testMatch: [
+        '**/basic-navigation.spec.ts',
+        '**/authentication.spec.ts',
+        '**/admin-dashboard.spec.ts'
+      ],
+      use: { 
+        ...devices['Desktop Firefox'],
+        launchOptions: {
+          firefoxUserPrefs: {
+            'dom.webnotifications.enabled': true,
+            'dom.push.enabled': true,
+          },
+        },
+      },
     },
-
+    // Medium tests - Core functionality
     {
-      name: 'webkit',
-      use: { ...devices['Desktop Safari'] },
+      name: 'chromium-medium',
+      testMatch: [
+        '**/poll-creation.spec.ts',
+        '**/voting-system.spec.ts',
+        '**/onboarding-flow.spec.ts'
+      ],
+      use: { 
+        ...devices['Desktop Chrome'],
+        launchOptions: {
+          args: [
+            '--disable-web-security',
+            '--disable-features=VizDisplayCompositor',
+            '--disable-background-timer-throttling',
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
+          ],
+        },
+      },
     },
-
-    /* Test against mobile viewports. */
-    // {
-    //   name: 'Mobile Chrome',
-    //   use: { ...devices['Pixel 5'] },
-    // },
-    // {
-    //   name: 'Mobile Safari',
-    //   use: { ...devices['iPhone 12'] },
-    // },
-
-    /* Test against branded browsers. */
-    // {
-    //   name: 'Microsoft Edge',
-    //   use: { ...devices['Desktop Edge'], channel: 'msedge' },
-    // },
-    // {
-    //   name: 'Google Chrome',
-    //   use: { ...devices['Desktop Chrome'], channel: 'chrome' },
-    // },
+    // Comprehensive tests - Performance focused
+    {
+      name: 'chromium-comprehensive',
+      testMatch: [
+        '**/performance-challenges.spec.ts',
+        '**/security-challenges.spec.ts',
+        '**/accessibility-challenges.spec.ts',
+        '**/accessibility-public-pages.spec.ts',
+        '**/edge-case-challenges.spec.ts',
+        '**/data-integrity-challenges.spec.ts',
+        '**/performance-public-pages.spec.ts'
+      ],
+      use: { 
+        ...devices['Desktop Chrome'],
+        launchOptions: {
+          args: [
+            '--disable-web-security',
+            '--disable-features=VizDisplayCompositor',
+            '--disable-background-timer-throttling',
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
+          ],
+        },
+      },
+    },
   ],
-
-  /* Run your local dev server before starting the tests */
-  webServer: {
-    command: 'npm run dev',
-    url: 'http://localhost:3000',
-    reuseExistingServer: !process.env.CI,
-  },
+  // webServer: {
+  //   command: 'npm run dev',
+  //   url: 'http://localhost:3000',
+  //   reuseExistingServer: true, // Always reuse existing server
+  //   timeout: 60000, // 1 minute timeout for server startup
+  // },
 });

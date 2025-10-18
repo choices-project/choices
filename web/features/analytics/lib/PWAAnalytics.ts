@@ -81,8 +81,8 @@ class PWAAnalytics {
   private pwaEvents: Array<PWAInstallationEvent | PWAOfflineEvent | PWAPerformanceEvent | PWANotificationEvent> = [];
   private engagementMetrics: PWAEngagementMetrics | null = null;
   private platformMetrics: Map<string, PWAPlatformMetrics> = new Map();
-  private isEnabled: boolean = true;
-  private flushInterval: number = 60000; // 1 minute
+  private isEnabled = true;
+  private flushInterval = 60000; // 1 minute
   private flushTimer?: NodeJS.Timeout;
 
   constructor(analyticsEngine: AnalyticsEngine) {
@@ -484,13 +484,6 @@ class PWAAnalytics {
     performance: Array<{ date: string; score: number }>;
   }> {
     try {
-      // Get real analytics data from the analytics service
-      const { AnalyticsService } = await import('@/features/analytics/lib/analytics-service');
-      const analyticsService = AnalyticsService.getInstance();
-      
-      // Get analytics summary for trend data
-      const summary = await analyticsService.getAnalyticsSummary();
-      
       // Get PWA installation events from the last 30 days
       const installations = await this.getInstallationTrends();
       
@@ -506,6 +499,8 @@ class PWAAnalytics {
         performance
       };
     } catch (error) {
+      // Log error for debugging
+      console.error('Error getting PWA analytics trends:', error);
       // Fallback to empty data structure if analytics service is unavailable
       return {
         installations: [],
@@ -555,6 +550,7 @@ class PWAAnalytics {
 
       return result;
     } catch (error) {
+      console.error('Error getting installation trends:', error);
       return [];
     }
   }
@@ -603,6 +599,7 @@ class PWAAnalytics {
 
       return result;
     } catch (error) {
+      console.error('Error getting offline usage trends:', error);
       return [];
     }
   }
@@ -649,6 +646,7 @@ class PWAAnalytics {
 
       return result;
     } catch (error) {
+      console.error('Error getting performance trends:', error);
       return [];
     }
   }

@@ -34,8 +34,20 @@ export {
   useUserPreferences,
   useUserLoading,
   useUserError,
-  useUserStats,
   useUserActions,
+  useUserCurrentAddress,
+  useUserCurrentState,
+  useUserRepresentatives,
+  useUserShowAddressForm,
+  useUserNewAddress,
+  useUserAddressLoading,
+  useUserSavedSuccessfully,
+  useUserProfileEditData,
+  useUserIsProfileEditing,
+  useUserProfileEditErrors,
+  useUserAvatarFile,
+  useUserAvatarPreview,
+  useUserIsUploadingAvatar,
   userStoreUtils,
   userStoreDebug
 } from './userStore';
@@ -43,11 +55,31 @@ export {
 // Admin Store
 export {
   useAdminStore,
-  useAdmin,
+  useTrendingTopics,
+  useGeneratedPolls,
+  useSystemMetrics,
+  useActivityItems,
+  useActivityFeed,
+  useAdminNotifications,
+  useAdminLoading,
+  useAdminError,
   useAdminUsers,
-  useAdminPolls,
-  useAdminSystem,
+  useAdminUserFilters,
+  useAdminUserActions,
+  useAdminActiveTab,
+  useAdminDashboardStats,
+  useAdminDashboardActions,
+  useAdminSystemSettings,
+  useAdminSettingsTab,
+  useAdminIsSavingSettings,
+  useAdminSystemSettingsActions,
+  useAdminReimportProgress,
+  useAdminReimportLogs,
+  useAdminIsReimportRunning,
+  useAdminReimportActions,
   useAdminActions,
+  useAdminStats,
+  useRecentActivity,
   adminStoreUtils,
   adminStoreDebug
 } from './adminStore';
@@ -55,8 +87,6 @@ export {
 // Voting Store
 export {
   useVotingStore,
-  useVoting,
-  useVotingHistory,
   useVotingStats,
   useVotingActions,
   votingStoreUtils,
@@ -76,7 +106,6 @@ export {
 // Onboarding Store
 export {
   useOnboardingStore,
-  useOnboarding,
   useOnboardingStep,
   useOnboardingProgress,
   useOnboardingCompleted,
@@ -96,7 +125,6 @@ export {
 // PWA Store
 export {
   usePWAStore,
-  usePWA,
   usePWAInstallation,
   usePWAOffline,
   usePWAUpdate,
@@ -119,16 +147,35 @@ export {
   usePerformance,
   usePerformanceMetrics,
   usePerformanceActions,
-  performanceStoreUtils,
-  performanceStoreDebug
+  usePerformanceLoading,
+  usePerformanceError,
+  useDatabaseMetrics,
+  useCacheStats,
+  useLastRefresh,
+  useAutoRefresh,
+  useRefreshInterval
 } from './performanceStore';
 
 // Analytics Store
 export {
   useAnalyticsStore,
-  useAnalytics,
-  useAnalyticsData,
+  useAnalyticsEvents,
+  useAnalyticsMetrics,
+  useAnalyticsBehavior,
+  useAnalyticsDashboard,
+  useAnalyticsPreferences,
+  useAnalyticsTracking,
+  useAnalyticsLoading,
+  useAnalyticsError,
+  useAnalyticsChartData,
+  useAnalyticsChartConfig,
+  useAnalyticsChartMaxValue,
+  useAnalyticsChartShowTrends,
+  useAnalyticsChartShowConfidence,
   useAnalyticsActions,
+  useAnalyticsStats,
+  useAnalyticsSession,
+  useAnalyticsChartContext,
   analyticsStoreUtils,
   analyticsStoreDebug
 } from './analyticsStore';
@@ -136,9 +183,8 @@ export {
 // Civics Store
 export {
   useCivicsStore,
-  useCivics,
-  useCivicsData,
   useCivicsActions,
+  useCivicsLoading,
   civicsStoreUtils,
   civicsStoreDebug
 } from './civicsStore';
@@ -147,19 +193,16 @@ export {
 export {
   useDeviceStore,
   useDevice,
-  useDeviceInfo,
-  useDeviceActions,
-  deviceStoreUtils,
-  deviceStoreDebug
+  useDeviceActions
 } from './deviceStore';
 
 // Polls Store
 export {
   usePollsStore,
   usePolls,
-  usePoll,
-  usePollResults,
-  usePollActions,
+  usePollsActions,
+  usePollsLoading,
+  usePollsError,
   pollsStoreUtils,
   pollsStoreDebug
 } from './pollsStore';
@@ -168,8 +211,12 @@ export {
 export {
   useProfileStore,
   useProfile,
-  useProfileData,
   useProfileActions,
+  useProfileDisplay,
+  useProfileValidation,
+  useProfileStats,
+  profileSelectors,
+  profileStoreSubscriptions,
   profileStoreUtils,
   profileStoreDebug
 } from './profileStore';
@@ -179,6 +226,10 @@ export {
   useHashtagStore,
   useHashtags,
   useHashtagActions,
+  useHashtagStats,
+  useHashtagLoading,
+  useHashtagError,
+  useHashtagFilters,
   hashtagStoreUtils,
   hashtagStoreDebug
 } from './hashtagStore';
@@ -186,18 +237,29 @@ export {
 // Hashtag Moderation Store
 export {
   useHashtagModerationStore,
-  useHashtagModeration,
-  useHashtagModerationActions,
-  hashtagModerationStoreUtils,
-  hashtagModerationStoreDebug
+  useModerationModal,
+  useModerationForm,
+  useModerationQueue,
+  useSelectedModeration,
+  useModerationLoading,
+  useModerationError,
+  useModerationActions,
+  useModerationStats,
+  usePendingFlags
 } from './hashtagModerationStore';
 
 // Poll Wizard Store
 export {
   usePollWizardStore,
-  usePollWizard,
-  usePollWizardStep,
+  usePollWizardData,
+  usePollWizardProgress,
+  usePollWizardLoading,
+  usePollWizardErrors,
+  usePollWizardCanProceed,
+  usePollWizardCanGoBack,
+  usePollWizardIsComplete,
   usePollWizardActions,
+  usePollWizardStats,
   pollWizardStoreUtils,
   pollWizardStoreDebug
 } from './pollWizardStore';
@@ -205,22 +267,47 @@ export {
 // App Store
 export {
   useAppStore,
-  useApp,
-  useAppState,
+  useAppLoading,
+  useAppError,
   useAppActions,
+  useAppTheme,
+  useAppLanguage,
+  useAppTimezone,
+  useAppAnimations,
+  useAppHaptics,
   appStoreUtils,
   appStoreDebug
 } from './appStore';
 
-// Store types
-export type {
-  FeedItem,
-  FeedCategory,
-  FeedFilters,
-  FeedPreferences,
-  FeedSearch,
-  FeedsStore
-} from './feedsStore';
+// UI Store removed - use App Store for global UI state
+
+// Optimized Selectors
+export * from './selectors';
+
+// Store types - Note: These types are not exported from feedsStore
+// export type {
+//   FeedItem,
+//   FeedCategory,
+//   FeedFilters,
+//   FeedPreferences,
+//   FeedSearch,
+//   FeedsStore
+// } from './feedsStore';
 
 // Store middleware
-export { storeMiddleware } from './middleware';
+export { 
+  loggingMiddleware,
+  performanceMiddleware,
+  errorHandlingMiddleware,
+  persistenceMiddleware,
+  analyticsMiddleware,
+  validationMiddleware,
+  batchUpdateMiddleware,
+  createMiddlewareChain,
+  createStoreMiddleware,
+  developmentMiddleware,
+  productionMiddleware,
+  storeDebug,
+  storeTest,
+  storeDocumentation
+} from './middleware';

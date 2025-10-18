@@ -97,7 +97,7 @@ export class AnalyticsService {
         }
       }
     } catch (error) {
-      devLog('Error calculating trust tier score:', error)
+      devLog('Error calculating trust tier score:', { error })
       throw error
     }
   }
@@ -164,7 +164,7 @@ export class AnalyticsService {
       await this.updateCivicDatabaseEntry(userId, pollId)
 
     } catch (error) {
-      devLog('Error recording poll analytics:', error)
+      devLog('Error recording poll analytics:', { error })
       throw error
     }
   }
@@ -187,7 +187,7 @@ export class AnalyticsService {
         throw new Error('Failed to update poll demographic insights')
       }
     } catch (error) {
-      devLog('Error updating poll demographic insights:', error)
+      devLog('Error updating poll demographic insights:', { error })
       throw error
     }
   }
@@ -269,7 +269,7 @@ export class AnalyticsService {
       }
 
     } catch (error) {
-      devLog('Error updating civic database entry:', error)
+      devLog('Error updating civic database entry:', { error })
       throw error
     }
   }
@@ -350,7 +350,7 @@ export class AnalyticsService {
       }
 
     } catch (error) {
-      devLog('Error getting analytics summary:', error)
+      devLog('Error getting analytics summary:', { error })
       throw error
     }
   }
@@ -414,7 +414,7 @@ export class AnalyticsService {
       }
 
     } catch (error) {
-      devLog('Error getting poll analytics:', error)
+      devLog('Error getting poll analytics:', { error })
       throw error
     }
   }
@@ -482,7 +482,7 @@ export class AnalyticsService {
       }
 
     } catch (error) {
-      devLog('Error getting user analytics:', error)
+      devLog('Error getting user analytics:', { error })
       throw error
     }
   }
@@ -528,7 +528,7 @@ export class AnalyticsService {
         count
       })).sort((a, b) => a.date.localeCompare(b.date))
     } catch (error) {
-      devLog('Error getting daily response trends:', error)
+      devLog('Error getting daily response trends:', { error })
       return []
     }
   }

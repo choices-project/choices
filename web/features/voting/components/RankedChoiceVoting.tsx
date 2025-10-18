@@ -3,7 +3,6 @@
 import { CheckCircle, AlertCircle, Info } from 'lucide-react'
 import { useState, useEffect } from 'react'
 
-import { withOptional } from '@/lib/utils/objects'
 
 interface PollOption {
   id: string
@@ -73,7 +72,7 @@ export default function RankedChoiceVoting({
     }
     
     const newRankings = { 
-      ...withOptional(rankings), 
+      ...rankings, 
       [optionId]: newRank 
     }
     setRankings(newRankings)

@@ -74,6 +74,18 @@ jest.mock('@/lib/stores', () => ({
   })),
   usePWALoading: jest.fn(() => false),
   usePWAError: jest.fn(() => null),
+  usePWAActions: jest.fn(() => ({
+    installPWA: jest.fn(),
+    uninstallPWA: jest.fn(),
+    checkForUpdates: jest.fn(),
+    installUpdate: jest.fn(),
+    requestNotificationPermission: jest.fn(),
+    showNotification: jest.fn(),
+    syncOfflineData: jest.fn(),
+    clearOfflineData: jest.fn(),
+    exportData: jest.fn(),
+    importData: jest.fn(),
+  })),
 }));
 
 import React from 'react';
@@ -327,13 +339,17 @@ describe('PWA Features - Comprehensive Testing', () => {
       );
 
       const installButton = screen.getByTestId(T.pwa.installButton);
-      await user.click(installButton);
       
-      // Wait for async operation
+      // Use act() for state updates and proper async handling
+      await act(async () => {
+        await user.click(installButton);
+      });
+      
+      // Wait for async operation with proper timeout handling
       await waitFor(() => {
         expect(mockInstall).toHaveBeenCalled();
-      });
-    }, 5000);
+      }, { timeout: 5000 });
+    });
 
     it('should show installation progress', () => {
       // Mock installing state
@@ -401,13 +417,17 @@ describe('PWA Features - Comprehensive Testing', () => {
       );
 
       const syncButton = screen.getByTestId(T.pwa.syncButton);
-      await user.click(syncButton);
       
-      // Wait for async operation
+      // Use act() for state updates and proper async handling
+      await act(async () => {
+        await user.click(syncButton);
+      });
+      
+      // Wait for async operation with proper timeout handling
       await waitFor(() => {
         expect(mockSyncOfflineData).toHaveBeenCalled();
-      });
-    }, 5000);
+      }, { timeout: 5000 });
+    });
 
     it('should clear offline data', async () => {
       const user = userEvent.setup();
@@ -431,13 +451,17 @@ describe('PWA Features - Comprehensive Testing', () => {
       );
 
       const clearButton = screen.getByTestId(T.pwa.clearButton);
-      await user.click(clearButton);
       
-      // Wait for async operation
+      // Use act() for state updates and proper async handling
+      await act(async () => {
+        await user.click(clearButton);
+      });
+      
+      // Wait for async operation with proper timeout handling
       await waitFor(() => {
         expect(mockClearOfflineData).toHaveBeenCalled();
-      });
-    }, 5000);
+      }, { timeout: 5000 });
+    });
   });
 
   describe('Notification Management', () => {
@@ -461,9 +485,16 @@ describe('PWA Features - Comprehensive Testing', () => {
       );
 
       const requestButton = screen.getByTestId(T.pwa.requestPermissionButton);
-      await user.click(requestButton);
       
-      expect(mockRequestPermission).toHaveBeenCalled();
+      // Use act() for state updates and proper async handling
+      await act(async () => {
+        await user.click(requestButton);
+      });
+      
+      // Wait for async operation with proper timeout handling
+      await waitFor(() => {
+        expect(mockRequestPermission).toHaveBeenCalled();
+      }, { timeout: 5000 });
     });
 
     it('should show notification when permission is granted', async () => {
@@ -486,13 +517,20 @@ describe('PWA Features - Comprehensive Testing', () => {
       );
 
       const testButton = screen.getByTestId(T.pwa.testNotificationButton);
-      await user.click(testButton);
       
-      expect(mockShowNotification).toHaveBeenCalledWith({
-        title: 'Test Notification',
-        body: 'This is a test notification',
-        icon: '/icon-192x192.png',
+      // Use act() for state updates and proper async handling
+      await act(async () => {
+        await user.click(testButton);
       });
+      
+      // Wait for async operation with proper timeout handling
+      await waitFor(() => {
+        expect(mockShowNotification).toHaveBeenCalledWith({
+          title: 'Test Notification',
+          body: 'This is a test notification',
+          icon: '/icon-192x192.png',
+        });
+      }, { timeout: 5000 });
     });
   });
 
@@ -518,13 +556,17 @@ describe('PWA Features - Comprehensive Testing', () => {
       );
 
       const installButton = screen.getByTestId(T.pwa.installButton);
-      await user.click(installButton);
       
-      // Should show error message
+      // Use act() for state updates and proper async handling
+      await act(async () => {
+        await user.click(installButton);
+      });
+      
+      // Should show error message with proper timeout handling
       await waitFor(() => {
         expect(screen.getByTestId(T.pwa.installError)).toBeInTheDocument();
         expect(screen.getByTestId(T.pwa.installError)).toHaveTextContent('Installation failed');
-      });
+      }, { timeout: 5000 });
     });
 
     it('should handle sync errors', async () => {
@@ -551,33 +593,48 @@ describe('PWA Features - Comprehensive Testing', () => {
       );
 
       const syncButton = screen.getByTestId(T.pwa.syncButton);
-      await user.click(syncButton);
       
-      // Should show error message
+      // Use act() for state updates and proper async handling
+      await act(async () => {
+        await user.click(syncButton);
+      });
+      
+      // Should show error message with proper timeout handling
       await waitFor(() => {
         expect(screen.getByTestId(T.pwa.syncError)).toBeInTheDocument();
         expect(screen.getByTestId(T.pwa.syncError)).toHaveTextContent('Sync failed');
-      });
+      }, { timeout: 5000 });
     });
   });
 
   describe('Accessibility', () => {
-    it('should be keyboard navigable', () => {
+    it('should be keyboard navigable', async () => {
       render(
         <BrowserRouter>
           <PWAFeatures />
         </BrowserRouter>
       );
 
-      // Tab through elements
+      // Tab through elements with proper async handling
       const firstElement = screen.getByTestId(T.pwa.firstFocusable);
-      firstElement.focus();
+      
+      await act(async () => {
+        firstElement.focus();
+      });
+      
       expect(document.activeElement).toBe(firstElement);
       
-      // Tab to next element
-      fireEvent.keyDown(firstElement, { key: 'Tab' });
+      // Tab to next element with proper async handling
+      await act(async () => {
+        fireEvent.keyDown(firstElement, { key: 'Tab' });
+      });
+      
       const secondElement = screen.getByTestId(T.pwa.secondFocusable);
-      expect(document.activeElement).toBe(secondElement);
+      
+      // Wait for focus to change
+      await waitFor(() => {
+        expect(document.activeElement).toBe(secondElement);
+      }, { timeout: 1000 });
     });
 
     it('should have proper ARIA labels', () => {
@@ -601,14 +658,17 @@ describe('PWA Features - Comprehensive Testing', () => {
         </BrowserRouter>
       );
 
-      // Trigger state change
+      // Trigger state change with proper async handling
       const installButton = screen.getByTestId(T.pwa.installButton);
-      await user.click(installButton);
       
-      // Should announce state change
+      await act(async () => {
+        await user.click(installButton);
+      });
+      
+      // Should announce state change with proper timeout handling
       await waitFor(() => {
         expect(screen.getByTestId(T.pwa.stateAnnouncement)).toBeInTheDocument();
-      });
+      }, { timeout: 5000 });
     });
   });
 

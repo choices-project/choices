@@ -207,7 +207,7 @@ export interface HashtagSearchResult {
 
 export interface HashtagSuggestion {
   hashtag: Hashtag;
-  reason: 'trending' | 'related' | 'popular' | 'recent' | 'personal' | string;
+  reason: 'trending' | 'related' | 'popular' | 'recent' | 'personal';
   confidence: number;
   confidence_score: number; // For backward compatibility
   source: 'trending' | 'related' | 'personalized' | 'category' | 'search';

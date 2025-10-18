@@ -33,14 +33,14 @@ export class CongressGovNotFoundError extends CongressGovApiError {
 }
 
 export class CongressGovAuthenticationError extends CongressGovApiError {
-  constructor(message: string = 'Invalid API key or authentication failed') {
+  constructor(message = 'Invalid API key or authentication failed') {
     super(message, 401);
     this.name = 'CongressGovAuthenticationError';
   }
 }
 
 export class CongressGovQuotaExceededError extends CongressGovApiError {
-  constructor(message: string = 'Daily quota exceeded') {
+  constructor(message = 'Daily quota exceeded') {
     super(message, 429);
     this.name = 'CongressGovQuotaExceededError';
   }

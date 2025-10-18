@@ -7,7 +7,7 @@
 import { ApplicationError, type ErrorDetails } from './base';
 
 export class NotFoundError extends ApplicationError {
-  constructor(resource: string = 'Resource', details?: ErrorDetails) {
+  constructor(resource = 'Resource', details?: ErrorDetails) {
     super(`${resource} not found`, 404, 'NOT_FOUND', details);
   }
 }

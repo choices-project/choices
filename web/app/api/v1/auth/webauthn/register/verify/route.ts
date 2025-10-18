@@ -1,9 +1,10 @@
-import { verifyRegistrationResponse } from '@simplewebauthn/server';
-import { isoBase64URL } from '@simplewebauthn/server/helpers';
 import { type NextRequest, NextResponse } from 'next/server';
 
 import { getRPIDAndOrigins } from '@/features/auth/lib/webauthn/config';
+import { verifyRegistrationResponse, arrayBufferToBase64URL } from '@/features/auth/lib/webauthn/native/server';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
+
+export const dynamic = 'force-dynamic';
 
 /**
  * WebAuthn Registration Verify
@@ -14,6 +15,11 @@ import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 export async function POST(req: NextRequest) {
   try {
+    // Disable during build time to prevent static analysis issues
+    if (process.env.NODE_ENV === 'production' && !process.env.VERCEL) {
+      return NextResponse.json({ error: 'WebAuthn routes disabled during build' }, { status: 503 });
+    }
+
     const { enabled, rpID, allowedOrigins } = getRPIDAndOrigins(req);
     if (!enabled) {
       return NextResponse.json({ error: 'Passkeys disabled on preview' }, { status: 400 });
@@ -51,41 +57,45 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Challenge expired' }, { status: 400 });
     }
 
-    // Verify
-    const verification = await verifyRegistrationResponse({
-      response: body,
-      expectedChallenge: isoBase64URL.fromBuffer(chal.challenge),
-      expectedOrigin: allowedOrigins,
-      expectedRPID: rpID,
-      requireUserVerification: true,
-    });
+    // Convert challenge to base64URL for verification
+    const challengeBase64 = arrayBufferToBase64URL(chal.challenge);
 
-    if (!verification.verified || !verification.registrationInfo) {
+    // Get current request origin
+    const origin = req.headers.get('origin') || req.headers.get('referer') || '';
+    const currentOrigin = origin.replace(/\/$/, ''); // Remove trailing slash
+
+    // Verify
+    const verification = await verifyRegistrationResponse(
+      body,
+      challengeBase64,
+      currentOrigin,
+      rpID
+    );
+
+    if (!verification.verified) {
       return NextResponse.json({ error: 'Verification failed' }, { status: 400 });
     }
 
     const {
-      credential: {
-        id: credentialID,
-        publicKey: credentialPublicKey,
-        counter,
-      },
+      credentialId,
+      publicKey,
+      counter,
       aaguid,
-      credentialBackedUp,
-      credentialDeviceType,
-    } = verification.registrationInfo;
+      backupEligible,
+      backupState,
+    } = verification;
 
     // Store credential (owner row; bytea as base64)
     const { error: credErr } = await supabase.from('webauthn_credentials').insert({
       user_id: user.id,
       rp_id: rpID,
-      credential_id: Buffer.from(credentialID),
-      public_key: Buffer.from(credentialPublicKey),
+      credential_id: Buffer.from(credentialId),
+      public_key: Buffer.from(publicKey),
       cose_alg: body?.response?.publicKeyAlgorithm ?? null,
       counter,
       aaguid: aaguid || null,
-      backed_up: credentialBackedUp ?? null,
-      backup_eligible: credentialDeviceType === 'multiDevice',
+      backed_up: backupState ?? null,
+      backup_eligible: backupEligible ?? false,
       device_label: body?.clientExtensionResults?.credProps?.rk ? 'This device' : null,
       device_info: { ua: req.headers.get('user-agent') ?? '' },
       last_used_at: new Date().toISOString(),

@@ -13,7 +13,6 @@ import { devtools } from 'zustand/middleware';
 import { persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 
-import { withOptional } from '@/lib/utils/objects';
 import { logger } from '@/lib/utils/logger';
 
 import type { BaseStore, FeatureFlag } from './types';

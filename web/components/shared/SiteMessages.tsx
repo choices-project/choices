@@ -36,8 +36,8 @@ export default function SiteMessages({
   className = '',
   maxMessages = 3,
   showDismiss = true,
-  autoRefresh = true,
-  refreshInterval = 30000 // 30 seconds
+  autoRefresh = false, // Disable auto-refresh by default to reduce memory usage
+  refreshInterval = 60000 // 60 seconds (increased from 30)
 }: SiteMessagesProps) {
   const [messages, setMessages] = useState<SiteMessage[]>([])
   const [loading, setLoading] = useState(true)
@@ -48,9 +48,24 @@ export default function SiteMessages({
   useEffect(() => {
     fetchMessages()
     
+    // Event-driven refresh: listen for new message events
+    const handleNewMessage = () => {
+      fetchMessages()
+    }
+    
+    // Listen for custom events when new messages are posted
+    window.addEventListener('newSiteMessage', handleNewMessage)
+    
     if (autoRefresh) {
       const interval = setInterval(fetchMessages, refreshInterval)
-      return () => clearInterval(interval)
+      return () => {
+        clearInterval(interval)
+        window.removeEventListener('newSiteMessage', handleNewMessage)
+      }
+    }
+    
+    return () => {
+      window.removeEventListener('newSiteMessage', handleNewMessage)
     }
   }, [autoRefresh, refreshInterval])
 
@@ -231,5 +246,10 @@ export default function SiteMessages({
       })}
     </div>
   )
+}
+
+// Utility function to trigger site message refresh when new messages are posted
+export const triggerSiteMessageRefresh = () => {
+  window.dispatchEvent(new CustomEvent('newSiteMessage'))
 }
 

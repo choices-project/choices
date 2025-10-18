@@ -316,7 +316,7 @@ export function sanitizeInput(input: string): string {
  */
 export function createErrorResponse(
   message: string, 
-  statusCode: number = 400,
+  statusCode = 400,
   details?: Record<string, unknown>
 ) {
   return {

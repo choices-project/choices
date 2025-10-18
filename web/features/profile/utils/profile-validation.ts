@@ -9,7 +9,6 @@
  */
 
 import { isValidEmail } from '@/lib/utils/format-utils';
-import { withOptional } from '@/lib/utils/objects';
 
 import type { 
   ProfileUpdateData, 
@@ -29,7 +28,7 @@ import {
  * Checks length and character restrictions
  */
 export function validateDisplayName(displayName: string): { isValid: boolean; error?: string } {
-  if (!displayName || displayName.trim().length === 0) {
+  if (displayName?.trim().length === 0) {
     return { isValid: false, error: 'Display name is required' };
   }
 
@@ -52,7 +51,7 @@ export function validateDisplayName(displayName: string): { isValid: boolean; er
  * Checks length, character restrictions, and uniqueness
  */
 export function validateUsername(username: string): { isValid: boolean; error?: string } {
-  if (!username || username.trim().length === 0) {
+  if (username?.trim().length === 0) {
     return { isValid: false, error: 'Username is required' };
   }
 
@@ -104,7 +103,7 @@ export function validateBio(bio: string): { isValid: boolean; error?: string } {
  * Checks email format and basic requirements
  */
 export function validateEmail(email: string): { isValid: boolean; error?: string } {
-  if (!email || email.trim().length === 0) {
+  if (email?.trim().length === 0) {
     return { isValid: false, error: 'Email is required' };
   }
 
@@ -281,7 +280,7 @@ export function validatePrivacySettings(settings: any): { isValid: boolean; erro
  * Removes potentially harmful content and normalizes data
  */
 export function sanitizeProfileData(data: ProfileUpdateData): ProfileUpdateData {
-  const sanitized = withOptional(data);
+  const sanitized = { ...data };
 
   // Sanitize text fields
   if (sanitized.displayname) {

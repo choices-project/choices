@@ -12,7 +12,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 
 import { logger } from '@/lib/utils/logger'
-import { withOptional } from '@/lib/utils/objects'
 import { getSupabaseServerClient } from '@/utils/supabase/server'
 
 export interface IdempotencyResult<T> {
@@ -157,12 +156,11 @@ export async function withIdempotency<T>(
 
   if (checkResult.exists) {
     logger.info('Idempotency key found, returning cached result', { key })
-    return withOptional({
+    return {
       success: true,
-      isDuplicate: true
-    }, {
+      isDuplicate: true,
       data: checkResult.data
-    })
+    }
   }
 
   // Execute operation

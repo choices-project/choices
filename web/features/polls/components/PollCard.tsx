@@ -137,7 +137,7 @@ const PollCard: React.FC<PollCardProps> = ({
           <h4 className="text-sm font-medium text-gray-700 mb-2">Options:</h4>
           <div className="space-y-1">
             {poll.options.slice(0, 3).map((option, index) => (
-              <div key={index} className="text-sm text-gray-600 truncate">
+              <div key={`option-${option}-${index}`} className="text-sm text-gray-600 truncate">
                 {index + 1}. {option}
               </div>
             ))}

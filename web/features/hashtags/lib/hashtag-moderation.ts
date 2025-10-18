@@ -66,9 +66,9 @@ const MODERATION_CONSTANTS = {
  */
 export async function getHashtagModeration(hashtagId: string): Promise<HashtagApiResponse<HashtagModeration>> {
   try {
-    const supabase = await getSupabaseClient();
+    const supabase = getSupabaseClient();
     
-    const { data, error } = await supabase
+    const result = await supabase
       .from('hashtag_moderation')
       .select(`
         *,
@@ -76,6 +76,8 @@ export async function getHashtagModeration(hashtagId: string): Promise<HashtagAp
       `)
       .eq('hashtag_id', hashtagId)
       .single();
+    
+    const { data, error } = result;
 
     if (error) {
       logger.error('Failed to get hashtag moderation:', error);
@@ -107,7 +109,7 @@ export async function flagHashtag(
   reason: string
 ): Promise<HashtagApiResponse<HashtagFlag>> {
   try {
-    const supabase = await getSupabaseClient();
+    const supabase = getSupabaseClient();
     
     // Check if user has already flagged this hashtag recently
     const { data: existingFlags } = await supabase
@@ -125,7 +127,7 @@ export async function flagHashtag(
     }
 
     // Create the flag
-    const { data, error } = await supabase
+    const result = await supabase
       .from('hashtag_flags')
       .insert({
         hashtag_id: hashtagId,
@@ -136,6 +138,8 @@ export async function flagHashtag(
       })
       .select()
       .single();
+    
+    const { data, error } = result;
 
     if (error) {
       logger.error('Failed to create hashtag flag:', error);
@@ -170,7 +174,7 @@ export async function moderateHashtag(
   reason?: string
 ): Promise<HashtagApiResponse<HashtagModeration>> {
   try {
-    const supabase = await getSupabaseClient();
+    const supabase = getSupabaseClient();
     const userId = (await supabase.auth.getUser()).data.user?.id;
     
     if (!userId) {
@@ -236,10 +240,10 @@ export async function moderateHashtag(
  */
 export async function getModerationQueue(
   status?: HashtagModeration['status'],
-  limit: number = 50
+  limit = 50
 ): Promise<HashtagApiResponse<Array<Hashtag & { moderation: HashtagModeration }>>> {
   try {
-    const supabase = await getSupabaseClient();
+    const supabase = getSupabaseClient();
     
     let query = supabase
       .from('hashtag_moderation')
@@ -299,7 +303,7 @@ export async function getModerationQueue(
  */
 export async function triggerAutoModeration(hashtagId: string): Promise<void> {
   try {
-    const supabase = await getSupabaseClient();
+    const supabase = getSupabaseClient();
     
     // Get hashtag details
     const { data: hashtag } = await supabase
@@ -395,7 +399,7 @@ export async function calculateAutoModerationScore(hashtag: any): Promise<number
  */
 export async function checkForDuplicates(hashtagName: string): Promise<HashtagApiResponse<Hashtag[]>> {
   try {
-    const supabase = await getSupabaseClient();
+    const supabase = getSupabaseClient();
     
     // Normalize the name for comparison
     const normalizedName = hashtagName.toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -487,7 +491,7 @@ export async function getModerationStats(): Promise<HashtagApiResponse<{
   top_flag_types: Array<{ type: string; count: number }>;
 }>> {
   try {
-    const supabase = await getSupabaseClient();
+    const supabase = getSupabaseClient();
     
     // Get basic counts
     const [

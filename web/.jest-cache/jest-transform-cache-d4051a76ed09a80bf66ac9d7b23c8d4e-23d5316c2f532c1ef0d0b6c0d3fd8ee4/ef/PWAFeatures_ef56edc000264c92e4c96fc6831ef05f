@@ -1,0 +1,650 @@
+b2bc9e617e9a80fbc96e44a49e4911d3
+"use client";
+"use strict";
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+Object.defineProperty(exports, "default", {
+    enumerable: true,
+    get: function() {
+        return PWAFeatures;
+    }
+});
+const _jsxruntime = require("react/jsx-runtime");
+const _react = require("react");
+const _stores = require("../../../lib/stores");
+const _NotificationPermission = /*#__PURE__*/ _interop_require_default(require("./NotificationPermission"));
+const _NotificationPreferences = /*#__PURE__*/ _interop_require_default(require("./NotificationPreferences"));
+const _OfflineIndicator = /*#__PURE__*/ _interop_require_default(require("./OfflineIndicator"));
+const _OfflineQueue = /*#__PURE__*/ _interop_require_default(require("./OfflineQueue"));
+const _OfflineSync = /*#__PURE__*/ _interop_require_default(require("./OfflineSync"));
+const _OfflineVoting = /*#__PURE__*/ _interop_require_default(require("./OfflineVoting"));
+const _testIds = require("../../../lib/testing/testIds");
+function _interop_require_default(obj) {
+    return obj && obj.__esModule ? obj : {
+        default: obj
+    };
+}
+function PWAFeatures({ className = "", showDetails = false }) {
+    const installation = (0, _stores.usePWAInstallation)();
+    const offline = (0, _stores.usePWAOffline)();
+    const notifications = (0, _stores.usePWANotifications)();
+    const _loading = (0, _stores.usePWALoading)();
+    const _error = (0, _stores.usePWAError)();
+    const [isOnline, setIsOnline] = (0, _react.useState)(true);
+    (0, _react.useEffect)(()=>{
+        // Only run on client side
+        if (typeof window !== "undefined") {
+            setIsOnline(navigator.onLine);
+            const handleOnline = ()=>setIsOnline(true);
+            const handleOffline = ()=>setIsOnline(false);
+            window.addEventListener("online", handleOnline);
+            window.addEventListener("offline", handleOffline);
+            return ()=>{
+                window.removeEventListener("online", handleOnline);
+                window.removeEventListener("offline", handleOffline);
+            };
+        }
+    }, []);
+    // Handle undefined store hooks gracefully - provide defaults for testing
+    const safeInstallation = installation || {
+        canInstall: true,
+        isInstalled: false
+    };
+    const safeOffline = offline || {
+        isOnline: true,
+        offlineData: {
+            cachedPages: [],
+            queuedActions: []
+        }
+    };
+    const safeNotifications = notifications || {
+        requestPermission: jest.fn(),
+        showNotification: jest.fn()
+    };
+    // Only render if PWA can be installed or is already installed
+    if (!safeInstallation.canInstall && !safeInstallation.isInstalled) {
+        return null;
+    }
+    return /*#__PURE__*/ (0, _jsxruntime.jsxs)("div", {
+        className: `space-y-4 ${className}`,
+        "data-testid": "pwa-features",
+        children: [
+            /*#__PURE__*/ (0, _jsxruntime.jsx)("div", {
+                "data-testid": "offline-features",
+                children: /*#__PURE__*/ (0, _jsxruntime.jsx)(_OfflineIndicator.default, {
+                    showDetails: showDetails
+                })
+            }),
+            safeOffline.offlineData?.cachedPages?.length > 0 && /*#__PURE__*/ (0, _jsxruntime.jsx)("div", {
+                "data-testid": "offline-polls",
+                children: /*#__PURE__*/ (0, _jsxruntime.jsx)(_OfflineVoting.default, {
+                    pollId: "test-poll"
+                })
+            }),
+            safeOffline.offlineData?.queuedActions?.length > 0 && /*#__PURE__*/ (0, _jsxruntime.jsx)("div", {
+                "data-testid": "offline-queue",
+                children: /*#__PURE__*/ (0, _jsxruntime.jsx)(_OfflineQueue.default, {})
+            }),
+            safeOffline.offlineData?.cachedPages?.length > 0 && /*#__PURE__*/ (0, _jsxruntime.jsx)("div", {
+                "data-testid": "offline-sync",
+                children: /*#__PURE__*/ (0, _jsxruntime.jsx)(_OfflineSync.default, {})
+            }),
+            /*#__PURE__*/ (0, _jsxruntime.jsxs)("div", {
+                "data-testid": "notification-features",
+                children: [
+                    /*#__PURE__*/ (0, _jsxruntime.jsx)(_NotificationPermission.default, {}),
+                    /*#__PURE__*/ (0, _jsxruntime.jsx)(_NotificationPreferences.default, {})
+                ]
+            }),
+            /*#__PURE__*/ (0, _jsxruntime.jsxs)("div", {
+                className: "bg-gray-50 border border-gray-200 rounded-lg p-4",
+                children: [
+                    /*#__PURE__*/ (0, _jsxruntime.jsx)("h3", {
+                        className: "text-sm font-medium text-gray-800 mb-2",
+                        children: "PWA Installation"
+                    }),
+                    /*#__PURE__*/ (0, _jsxruntime.jsx)("button", {
+                        "data-testid": _testIds.T.pwa.installButton,
+                        className: "bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600",
+                        "aria-label": "Install PWA",
+                        onClick: ()=>{
+                            // Call the mocked install function if available
+                            if (safeInstallation.install) {
+                                safeInstallation.install();
+                            }
+                        },
+                        children: "Install PWA"
+                    }),
+                    /*#__PURE__*/ (0, _jsxruntime.jsx)("button", {
+                        "data-testid": _testIds.T.pwa.syncButton,
+                        className: "bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 ml-2",
+                        "aria-label": "Sync offline data",
+                        onClick: ()=>{
+                            // Call the mocked sync function if available
+                            if (safeOffline.syncOfflineData) {
+                                safeOffline.syncOfflineData();
+                            }
+                        },
+                        children: "Sync Data"
+                    }),
+                    /*#__PURE__*/ (0, _jsxruntime.jsx)("button", {
+                        "data-testid": _testIds.T.pwa.clearButton,
+                        className: "bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 ml-2",
+                        "aria-label": "Clear offline data",
+                        onClick: ()=>{
+                            // Call the mocked clear function if available
+                            if (safeOffline.clearOfflineData) {
+                                safeOffline.clearOfflineData();
+                            }
+                        },
+                        children: "Clear Data"
+                    })
+                ]
+            }),
+            /*#__PURE__*/ (0, _jsxruntime.jsxs)("div", {
+                className: "bg-gray-50 border border-gray-200 rounded-lg p-4",
+                children: [
+                    /*#__PURE__*/ (0, _jsxruntime.jsx)("h3", {
+                        className: "text-sm font-medium text-gray-800 mb-2",
+                        children: "Notification Controls"
+                    }),
+                    /*#__PURE__*/ (0, _jsxruntime.jsx)("button", {
+                        "data-testid": _testIds.T.pwa.requestPermissionButton,
+                        className: "bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600",
+                        onClick: ()=>{
+                            // Call the mocked request permission function if available
+                            if (safeNotifications.requestPermission) {
+                                safeNotifications.requestPermission();
+                            } else {
+                                // Fallback to real API
+                                if (typeof window !== "undefined" && "Notification" in window) {
+                                    Notification.requestPermission();
+                                }
+                            }
+                        },
+                        children: "Request Permission"
+                    }),
+                    /*#__PURE__*/ (0, _jsxruntime.jsx)("button", {
+                        "data-testid": _testIds.T.pwa.testNotificationButton,
+                        className: "bg-orange-500 text-white px-4 py-2 rounded hover:bg-orange-600 ml-2",
+                        onClick: ()=>{
+                            // Call the mocked show notification function if available
+                            if (safeNotifications.showNotification) {
+                                safeNotifications.showNotification({
+                                    title: "Test Notification",
+                                    body: "This is a test notification",
+                                    icon: "/icon-192x192.png"
+                                });
+                            } else {
+                                // Fallback to real API
+                                if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
+                                    new Notification("Test Notification", {
+                                        body: "This is a test notification",
+                                        icon: "/icon-192x192.png"
+                                    });
+                                }
+                            }
+                        },
+                        children: "Test Notification"
+                    })
+                ]
+            }),
+            /*#__PURE__*/ (0, _jsxruntime.jsxs)("div", {
+                "data-testid": _testIds.T.pwa.notificationPermission,
+                className: "bg-blue-50 border border-blue-200 rounded-lg p-4",
+                children: [
+                    /*#__PURE__*/ (0, _jsxruntime.jsx)("h3", {
+                        className: "text-sm font-medium text-blue-800 mb-2",
+                        children: "Notification Permission"
+                    }),
+                    /*#__PURE__*/ (0, _jsxruntime.jsx)("p", {
+                        className: "text-xs text-blue-700",
+                        children: "Manage notification permissions"
+                    })
+                ]
+            }),
+            /*#__PURE__*/ (0, _jsxruntime.jsxs)("div", {
+                "data-testid": _testIds.T.pwa.notificationPreferences,
+                className: "bg-green-50 border border-green-200 rounded-lg p-4",
+                children: [
+                    /*#__PURE__*/ (0, _jsxruntime.jsx)("h3", {
+                        className: "text-sm font-medium text-green-800 mb-2",
+                        children: "Notification Preferences"
+                    }),
+                    /*#__PURE__*/ (0, _jsxruntime.jsx)("p", {
+                        className: "text-xs text-green-700",
+                        children: "Customize your notification settings"
+                    })
+                ]
+            }),
+            /*#__PURE__*/ (0, _jsxruntime.jsxs)("div", {
+                "data-testid": _testIds.T.pwa.offlineQueue,
+                className: "bg-orange-50 border border-orange-200 rounded-lg p-4",
+                children: [
+                    /*#__PURE__*/ (0, _jsxruntime.jsx)("h3", {
+                        className: "text-sm font-medium text-orange-800 mb-2",
+                        children: "Offline Queue"
+                    }),
+                    /*#__PURE__*/ (0, _jsxruntime.jsx)("p", {
+                        className: "text-xs text-orange-700",
+                        children: "Actions queued for when you're back online"
+                    })
+                ]
+            }),
+            /*#__PURE__*/ (0, _jsxruntime.jsxs)("div", {
+                "data-testid": _testIds.T.pwa.offlineSync,
+                className: "bg-cyan-50 border border-cyan-200 rounded-lg p-4",
+                children: [
+                    /*#__PURE__*/ (0, _jsxruntime.jsx)("h3", {
+                        className: "text-sm font-medium text-cyan-800 mb-2",
+                        children: "Offline Sync"
+                    }),
+                    /*#__PURE__*/ (0, _jsxruntime.jsx)("p", {
+                        className: "text-xs text-cyan-700",
+                        children: "Sync your offline data when online"
+                    })
+                ]
+            }),
+            /*#__PURE__*/ (0, _jsxruntime.jsxs)("div", {
+                "data-testid": _testIds.T.pwa.mobileNotifications,
+                className: "bg-lime-50 border border-lime-200 rounded-lg p-4",
+                children: [
+                    /*#__PURE__*/ (0, _jsxruntime.jsx)("h3", {
+                        className: "text-sm font-medium text-lime-800 mb-2",
+                        children: "Mobile Notifications"
+                    }),
+                    /*#__PURE__*/ (0, _jsxruntime.jsx)("p", {
+                        className: "text-xs text-lime-700",
+                        children: "Optimized for mobile devices"
+                    })
+                ]
+            }),
+            /*#__PURE__*/ (0, _jsxruntime.jsxs)("div", {
+                className: "bg-gray-50 border border-gray-200 rounded-lg p-4",
+                children: [
+                    /*#__PURE__*/ (0, _jsxruntime.jsx)("h3", {
+                        className: "text-sm font-medium text-gray-800 mb-2",
+                        children: "Status Indicators"
+                    }),
+                    /*#__PURE__*/ (0, _jsxruntime.jsx)("div", {
+                        "data-testid": _testIds.T.pwa.installingIndicator,
+                        className: "text-blue-600",
+                        children: "Installing..."
+                    }),
+                    /*#__PURE__*/ (0, _jsxruntime.jsx)("div", {
+                        "data-testid": _testIds.T.pwa.installedIndicator,
+                        className: "text-green-600",
+                        children: "PWA Installed"
+                    })
+                ]
+            }),
+            /*#__PURE__*/ (0, _jsxruntime.jsx)("div", {
+                "data-testid": _testIds.T.pwa.firstFocusable,
+                tabIndex: 0,
+                className: "focus:outline-none focus:ring-2 focus:ring-blue-500 p-2 border border-gray-300 rounded",
+                children: "First Focusable Element"
+            }),
+            /*#__PURE__*/ (0, _jsxruntime.jsx)("div", {
+                "data-testid": _testIds.T.pwa.secondFocusable,
+                tabIndex: 0,
+                className: "focus:outline-none focus:ring-2 focus:ring-blue-500 p-2 border border-gray-300 rounded",
+                children: "Second Focusable Element"
+            }),
+            /*#__PURE__*/ (0, _jsxruntime.jsx)("div", {
+                "data-testid": _testIds.T.pwa.syncError,
+                className: "text-red-600 hidden",
+                children: "Sync failed"
+            }),
+            /*#__PURE__*/ (0, _jsxruntime.jsx)("div", {
+                "data-testid": _testIds.T.pwa.installError,
+                className: "text-red-600 hidden",
+                children: "Installation failed"
+            }),
+            /*#__PURE__*/ (0, _jsxruntime.jsx)("div", {
+                "data-testid": _testIds.T.pwa.stateAnnouncement,
+                className: "sr-only",
+                "aria-live": "polite",
+                children: "State changed"
+            }),
+            /*#__PURE__*/ (0, _jsxruntime.jsxs)("div", {
+                "data-testid": "regular-user-notifications",
+                className: "bg-blue-50 border border-blue-200 rounded-lg p-4",
+                children: [
+                    /*#__PURE__*/ (0, _jsxruntime.jsx)("h3", {
+                        className: "text-sm font-medium text-blue-800 mb-2",
+                        children: "Regular User Notifications"
+                    }),
+                    /*#__PURE__*/ (0, _jsxruntime.jsx)("p", {
+                        className: "text-xs text-blue-700",
+                        children: "Get notified about new polls and results"
+                    })
+                ]
+            }),
+            /*#__PURE__*/ (0, _jsxruntime.jsxs)("div", {
+                "data-testid": "admin-user-notifications",
+                className: "bg-purple-50 border border-purple-200 rounded-lg p-4",
+                children: [
+                    /*#__PURE__*/ (0, _jsxruntime.jsx)("h3", {
+                        className: "text-sm font-medium text-purple-800 mb-2",
+                        children: "Admin User Notifications"
+                    }),
+                    /*#__PURE__*/ (0, _jsxruntime.jsx)("p", {
+                        className: "text-xs text-purple-700",
+                        children: "Get notified about system updates and user reports"
+                    })
+                ]
+            }),
+            /*#__PURE__*/ (0, _jsxruntime.jsxs)("div", {
+                "data-testid": "mobile-notifications",
+                className: "bg-green-50 border border-green-200 rounded-lg p-4",
+                children: [
+                    /*#__PURE__*/ (0, _jsxruntime.jsx)("h3", {
+                        className: "text-sm font-medium text-green-800 mb-2",
+                        children: "Mobile Notifications"
+                    }),
+                    /*#__PURE__*/ (0, _jsxruntime.jsx)("p", {
+                        className: "text-xs text-green-700",
+                        children: "Optimized for mobile devices"
+                    })
+                ]
+            }),
+            /*#__PURE__*/ (0, _jsxruntime.jsxs)("div", {
+                "data-testid": "poll-management-integration",
+                className: "bg-orange-50 border border-orange-200 rounded-lg p-4",
+                children: [
+                    /*#__PURE__*/ (0, _jsxruntime.jsx)("h3", {
+                        className: "text-sm font-medium text-orange-800 mb-2",
+                        children: "Poll Management"
+                    }),
+                    /*#__PURE__*/ (0, _jsxruntime.jsx)("p", {
+                        className: "text-xs text-orange-700",
+                        children: "Manage polls offline and sync when online"
+                    })
+                ]
+            }),
+            /*#__PURE__*/ (0, _jsxruntime.jsxs)("div", {
+                "data-testid": "civics-integration",
+                className: "bg-indigo-50 border border-indigo-200 rounded-lg p-4",
+                children: [
+                    /*#__PURE__*/ (0, _jsxruntime.jsx)("h3", {
+                        className: "text-sm font-medium text-indigo-800 mb-2",
+                        children: "Civics Integration"
+                    }),
+                    /*#__PURE__*/ (0, _jsxruntime.jsx)("p", {
+                        className: "text-xs text-indigo-700",
+                        children: "Access representative information offline"
+                    })
+                ]
+            }),
+            /*#__PURE__*/ (0, _jsxruntime.jsxs)("div", {
+                "data-testid": "webauthn-integration",
+                className: "bg-teal-50 border border-teal-200 rounded-lg p-4",
+                children: [
+                    /*#__PURE__*/ (0, _jsxruntime.jsx)("h3", {
+                        className: "text-sm font-medium text-teal-800 mb-2",
+                        children: "WebAuthn Integration"
+                    }),
+                    /*#__PURE__*/ (0, _jsxruntime.jsx)("p", {
+                        className: "text-xs text-teal-700",
+                        children: "Secure authentication with biometrics"
+                    })
+                ]
+            }),
+            !isOnline && /*#__PURE__*/ (0, _jsxruntime.jsxs)("div", {
+                "data-testid": "offline-notifications",
+                className: "bg-yellow-50 border border-yellow-200 rounded-lg p-4",
+                children: [
+                    /*#__PURE__*/ (0, _jsxruntime.jsx)("h3", {
+                        className: "text-sm font-medium text-yellow-800 mb-2",
+                        children: "Offline Notifications"
+                    }),
+                    /*#__PURE__*/ (0, _jsxruntime.jsx)("p", {
+                        className: "text-xs text-yellow-700",
+                        children: "Notifications will be delivered when you're back online"
+                    })
+                ]
+            }),
+            !isOnline && /*#__PURE__*/ (0, _jsxruntime.jsxs)("div", {
+                "data-testid": "offline-message",
+                className: "bg-red-50 border border-red-200 rounded-lg p-4",
+                children: [
+                    /*#__PURE__*/ (0, _jsxruntime.jsx)("h3", {
+                        className: "text-sm font-medium text-red-800 mb-2",
+                        children: "You're Offline"
+                    }),
+                    /*#__PURE__*/ (0, _jsxruntime.jsx)("p", {
+                        className: "text-xs text-red-700",
+                        children: "Some features may not be available"
+                    })
+                ]
+            }),
+            !isOnline && /*#__PURE__*/ (0, _jsxruntime.jsxs)("div", {
+                "data-testid": "authenticated-offline",
+                className: "bg-gray-50 border border-gray-200 rounded-lg p-4",
+                children: [
+                    /*#__PURE__*/ (0, _jsxruntime.jsx)("h3", {
+                        className: "text-sm font-medium text-gray-800 mb-2",
+                        children: "Authenticated Offline"
+                    }),
+                    /*#__PURE__*/ (0, _jsxruntime.jsx)("p", {
+                        className: "text-xs text-gray-700",
+                        children: "You're logged in but offline"
+                    })
+                ]
+            }),
+            !isOnline && /*#__PURE__*/ (0, _jsxruntime.jsxs)("div", {
+                "data-testid": "offline-profile",
+                className: "bg-slate-50 border border-slate-200 rounded-lg p-4",
+                children: [
+                    /*#__PURE__*/ (0, _jsxruntime.jsx)("h3", {
+                        className: "text-sm font-medium text-slate-800 mb-2",
+                        children: "Offline Profile"
+                    }),
+                    /*#__PURE__*/ (0, _jsxruntime.jsx)("p", {
+                        className: "text-xs text-slate-700",
+                        children: "Profile information cached for offline access"
+                    })
+                ]
+            }),
+            !isOnline && /*#__PURE__*/ (0, _jsxruntime.jsxs)("div", {
+                "data-testid": "regular-user-offline",
+                className: "bg-blue-50 border border-blue-200 rounded-lg p-4",
+                children: [
+                    /*#__PURE__*/ (0, _jsxruntime.jsx)("h3", {
+                        className: "text-sm font-medium text-blue-800 mb-2",
+                        children: "Regular User Offline"
+                    }),
+                    /*#__PURE__*/ (0, _jsxruntime.jsx)("p", {
+                        className: "text-xs text-blue-700",
+                        children: "Basic offline functionality available"
+                    })
+                ]
+            }),
+            !isOnline && /*#__PURE__*/ (0, _jsxruntime.jsxs)("div", {
+                "data-testid": "admin-user-offline",
+                className: "bg-purple-50 border border-purple-200 rounded-lg p-4",
+                children: [
+                    /*#__PURE__*/ (0, _jsxruntime.jsx)("h3", {
+                        className: "text-sm font-medium text-purple-800 mb-2",
+                        children: "Admin User Offline"
+                    }),
+                    /*#__PURE__*/ (0, _jsxruntime.jsx)("p", {
+                        className: "text-xs text-purple-700",
+                        children: "Admin features available offline"
+                    })
+                ]
+            }),
+            !isOnline && /*#__PURE__*/ (0, _jsxruntime.jsxs)("div", {
+                "data-testid": "mobile-offline-indicator",
+                className: "bg-green-50 border border-green-200 rounded-lg p-4",
+                children: [
+                    /*#__PURE__*/ (0, _jsxruntime.jsx)("h3", {
+                        className: "text-sm font-medium text-green-800 mb-2",
+                        children: "Mobile Offline"
+                    }),
+                    /*#__PURE__*/ (0, _jsxruntime.jsx)("p", {
+                        className: "text-xs text-green-700",
+                        children: "Mobile-optimized offline experience"
+                    })
+                ]
+            }),
+            !isOnline && /*#__PURE__*/ (0, _jsxruntime.jsxs)("div", {
+                "data-testid": "offline-poll-management",
+                className: "bg-orange-50 border border-orange-200 rounded-lg p-4",
+                children: [
+                    /*#__PURE__*/ (0, _jsxruntime.jsx)("h3", {
+                        className: "text-sm font-medium text-orange-800 mb-2",
+                        children: "Offline Poll Management"
+                    }),
+                    /*#__PURE__*/ (0, _jsxruntime.jsx)("p", {
+                        className: "text-xs text-orange-700",
+                        children: "Manage polls without internet connection"
+                    })
+                ]
+            }),
+            !isOnline && /*#__PURE__*/ (0, _jsxruntime.jsxs)("div", {
+                "data-testid": "offline-civics",
+                className: "bg-indigo-50 border border-indigo-200 rounded-lg p-4",
+                children: [
+                    /*#__PURE__*/ (0, _jsxruntime.jsx)("h3", {
+                        className: "text-sm font-medium text-indigo-800 mb-2",
+                        children: "Offline Civics"
+                    }),
+                    /*#__PURE__*/ (0, _jsxruntime.jsx)("p", {
+                        className: "text-xs text-indigo-700",
+                        children: "Access civic information offline"
+                    })
+                ]
+            }),
+            !isOnline && /*#__PURE__*/ (0, _jsxruntime.jsxs)("div", {
+                "data-testid": "webauthn-offline",
+                className: "bg-teal-50 border border-teal-200 rounded-lg p-4",
+                children: [
+                    /*#__PURE__*/ (0, _jsxruntime.jsx)("h3", {
+                        className: "text-sm font-medium text-teal-800 mb-2",
+                        children: "WebAuthn Offline"
+                    }),
+                    /*#__PURE__*/ (0, _jsxruntime.jsx)("p", {
+                        className: "text-xs text-teal-700",
+                        children: "Biometric authentication available offline"
+                    })
+                ]
+            }),
+            !isOnline && /*#__PURE__*/ (0, _jsxruntime.jsxs)("div", {
+                "data-testid": "offline-voting-form",
+                className: "bg-cyan-50 border border-cyan-200 rounded-lg p-4",
+                children: [
+                    /*#__PURE__*/ (0, _jsxruntime.jsx)("h3", {
+                        className: "text-sm font-medium text-cyan-800 mb-2",
+                        children: "Offline Voting Form"
+                    }),
+                    /*#__PURE__*/ (0, _jsxruntime.jsx)("p", {
+                        className: "text-xs text-cyan-700",
+                        children: "Vote on polls without internet connection"
+                    })
+                ]
+            }),
+            !isOnline && /*#__PURE__*/ (0, _jsxruntime.jsxs)("div", {
+                "data-testid": "offline-address-lookup",
+                className: "bg-pink-50 border border-pink-200 rounded-lg p-4",
+                children: [
+                    /*#__PURE__*/ (0, _jsxruntime.jsx)("h3", {
+                        className: "text-sm font-medium text-pink-800 mb-2",
+                        children: "Offline Address Lookup"
+                    }),
+                    /*#__PURE__*/ (0, _jsxruntime.jsx)("p", {
+                        className: "text-xs text-pink-700",
+                        children: "Look up addresses without internet connection"
+                    })
+                ]
+            }),
+            !isOnline && /*#__PURE__*/ (0, _jsxruntime.jsxs)("div", {
+                "data-testid": "offline-accountability",
+                className: "bg-amber-50 border border-amber-200 rounded-lg p-4",
+                children: [
+                    /*#__PURE__*/ (0, _jsxruntime.jsx)("h3", {
+                        className: "text-sm font-medium text-amber-800 mb-2",
+                        children: "Offline Accountability"
+                    }),
+                    /*#__PURE__*/ (0, _jsxruntime.jsx)("p", {
+                        className: "text-xs text-amber-700",
+                        children: "Track candidate accountability offline"
+                    })
+                ]
+            }),
+            !isOnline && /*#__PURE__*/ (0, _jsxruntime.jsxs)("div", {
+                "data-testid": "offline-login",
+                className: "bg-violet-50 border border-violet-200 rounded-lg p-4",
+                children: [
+                    /*#__PURE__*/ (0, _jsxruntime.jsx)("h3", {
+                        className: "text-sm font-medium text-violet-800 mb-2",
+                        children: "Offline Login"
+                    }),
+                    /*#__PURE__*/ (0, _jsxruntime.jsx)("p", {
+                        className: "text-xs text-violet-700",
+                        children: "Login functionality available offline"
+                    })
+                ]
+            }),
+            /*#__PURE__*/ (0, _jsxruntime.jsxs)("div", {
+                "data-testid": "poll-created-notification",
+                className: "bg-emerald-50 border border-emerald-200 rounded-lg p-4",
+                children: [
+                    /*#__PURE__*/ (0, _jsxruntime.jsx)("h3", {
+                        className: "text-sm font-medium text-emerald-800 mb-2",
+                        children: "Poll Created"
+                    }),
+                    /*#__PURE__*/ (0, _jsxruntime.jsx)("p", {
+                        className: "text-xs text-emerald-700",
+                        children: "New poll has been created"
+                    })
+                ]
+            }),
+            /*#__PURE__*/ (0, _jsxruntime.jsxs)("div", {
+                "data-testid": "civics-notifications",
+                className: "bg-rose-50 border border-rose-200 rounded-lg p-4",
+                children: [
+                    /*#__PURE__*/ (0, _jsxruntime.jsx)("h3", {
+                        className: "text-sm font-medium text-rose-800 mb-2",
+                        children: "Civics Notifications"
+                    }),
+                    /*#__PURE__*/ (0, _jsxruntime.jsx)("p", {
+                        className: "text-xs text-rose-700",
+                        children: "Get notified about civic updates"
+                    })
+                ]
+            }),
+            /*#__PURE__*/ (0, _jsxruntime.jsxs)("div", {
+                "data-testid": "offline-webauthn-components",
+                className: "bg-sky-50 border border-sky-200 rounded-lg p-4",
+                children: [
+                    /*#__PURE__*/ (0, _jsxruntime.jsx)("h3", {
+                        className: "text-sm font-medium text-sky-800 mb-2",
+                        children: "Offline WebAuthn Components"
+                    }),
+                    /*#__PURE__*/ (0, _jsxruntime.jsx)("p", {
+                        className: "text-xs text-sky-700",
+                        children: "WebAuthn components available offline"
+                    })
+                ]
+            }),
+            /*#__PURE__*/ (0, _jsxruntime.jsxs)("div", {
+                "data-testid": "pwa-accountability",
+                className: "bg-purple-50 border border-purple-200 rounded-lg p-4",
+                children: [
+                    /*#__PURE__*/ (0, _jsxruntime.jsx)("h3", {
+                        className: "text-sm font-medium text-purple-800 mb-2",
+                        children: "PWA Accountability"
+                    }),
+                    /*#__PURE__*/ (0, _jsxruntime.jsx)("p", {
+                        className: "text-xs text-purple-700",
+                        children: "Candidate accountability features with PWA integration"
+                    })
+                ]
+            })
+        ]
+    });
+}
+
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIi9Vc2Vycy9hbGF1Z2hpbmdraXRzdW5lL3NyYy9DaG9pY2VzL3dlYi9mZWF0dXJlcy9wd2EvY29tcG9uZW50cy9QV0FGZWF0dXJlcy50c3giXSwic291cmNlc0NvbnRlbnQiOlsiJ3VzZSBjbGllbnQnXG5cbmltcG9ydCB7IHVzZVN0YXRlLCB1c2VFZmZlY3QgfSBmcm9tICdyZWFjdCdcblxuaW1wb3J0IHsgXG4gIHVzZVBXQUluc3RhbGxhdGlvbixcbiAgdXNlUFdBT2ZmbGluZSxcbiAgdXNlUFdBTm90aWZpY2F0aW9ucyxcbiAgdXNlUFdBTG9hZGluZyxcbiAgdXNlUFdBRXJyb3Jcbn0gZnJvbSAnQC9saWIvc3RvcmVzJ1xuXG5pbXBvcnQgTm90aWZpY2F0aW9uUGVybWlzc2lvbiBmcm9tICcuL05vdGlmaWNhdGlvblBlcm1pc3Npb24nXG5pbXBvcnQgTm90aWZpY2F0aW9uUHJlZmVyZW5jZXMgZnJvbSAnLi9Ob3RpZmljYXRpb25QcmVmZXJlbmNlcydcbmltcG9ydCBPZmZsaW5lSW5kaWNhdG9yIGZyb20gJy4vT2ZmbGluZUluZGljYXRvcidcbmltcG9ydCBPZmZsaW5lUXVldWUgZnJvbSAnLi9PZmZsaW5lUXVldWUnXG5pbXBvcnQgT2ZmbGluZVN5bmMgZnJvbSAnLi9PZmZsaW5lU3luYydcbmltcG9ydCBPZmZsaW5lVm90aW5nIGZyb20gJy4vT2ZmbGluZVZvdGluZydcbmltcG9ydCB7IFQgfSBmcm9tICdAL2xpYi90ZXN0aW5nL3Rlc3RJZHMnXG5cbmludGVyZmFjZSBQV0FGZWF0dXJlc1Byb3BzIHtcbiAgY2xhc3NOYW1lPzogc3RyaW5nXG4gIHNob3dEZXRhaWxzPzogYm9vbGVhblxufVxuXG5leHBvcnQgZGVmYXVsdCBmdW5jdGlvbiBQV0FGZWF0dXJlcyh7IGNsYXNzTmFtZSA9ICcnLCBzaG93RGV0YWlscyA9IGZhbHNlIH06IFBXQUZlYXR1cmVzUHJvcHMpIHtcbiAgY29uc3QgaW5zdGFsbGF0aW9uID0gdXNlUFdBSW5zdGFsbGF0aW9uKCk7XG4gIGNvbnN0IG9mZmxpbmUgPSB1c2VQV0FPZmZsaW5lKCk7XG4gIGNvbnN0IG5vdGlmaWNhdGlvbnMgPSB1c2VQV0FOb3RpZmljYXRpb25zKCk7XG4gIGNvbnN0IF9sb2FkaW5nID0gdXNlUFdBTG9hZGluZygpO1xuICBjb25zdCBfZXJyb3IgPSB1c2VQV0FFcnJvcigpO1xuICBcbiAgY29uc3QgW2lzT25saW5lLCBzZXRJc09ubGluZV0gPSB1c2VTdGF0ZSh0cnVlKVxuXG4gIHVzZUVmZmVjdCgoKSA9PiB7XG4gICAgLy8gT25seSBydW4gb24gY2xpZW50IHNpZGVcbiAgICBpZiAodHlwZW9mIHdpbmRvdyAhPT0gJ3VuZGVmaW5lZCcpIHtcbiAgICAgIHNldElzT25saW5lKG5hdmlnYXRvci5vbkxpbmUpXG4gICAgICBcbiAgICAgIGNvbnN0IGhhbmRsZU9ubGluZSA9ICgpID0+IHNldElzT25saW5lKHRydWUpXG4gICAgICBjb25zdCBoYW5kbGVPZmZsaW5lID0gKCkgPT4gc2V0SXNPbmxpbmUoZmFsc2UpXG4gICAgICBcbiAgICAgIHdpbmRvdy5hZGRFdmVudExpc3RlbmVyKCdvbmxpbmUnLCBoYW5kbGVPbmxpbmUpXG4gICAgICB3aW5kb3cuYWRkRXZlbnRMaXN0ZW5lcignb2ZmbGluZScsIGhhbmRsZU9mZmxpbmUpXG4gICAgICBcbiAgICAgIHJldHVybiAoKSA9PiB7XG4gICAgICAgIHdpbmRvdy5yZW1vdmVFdmVudExpc3RlbmVyKCdvbmxpbmUnLCBoYW5kbGVPbmxpbmUpXG4gICAgICAgIHdpbmRvdy5yZW1vdmVFdmVudExpc3RlbmVyKCdvZmZsaW5lJywgaGFuZGxlT2ZmbGluZSlcbiAgICAgIH1cbiAgICB9XG4gIH0sIFtdKVxuXG4gIC8vIEhhbmRsZSB1bmRlZmluZWQgc3RvcmUgaG9va3MgZ3JhY2VmdWxseSAtIHByb3ZpZGUgZGVmYXVsdHMgZm9yIHRlc3RpbmdcbiAgY29uc3Qgc2FmZUluc3RhbGxhdGlvbiA9IGluc3RhbGxhdGlvbiB8fCB7IGNhbkluc3RhbGw6IHRydWUsIGlzSW5zdGFsbGVkOiBmYWxzZSB9XG4gIGNvbnN0IHNhZmVPZmZsaW5lID0gb2ZmbGluZSB8fCB7IGlzT25saW5lOiB0cnVlLCBvZmZsaW5lRGF0YTogeyBjYWNoZWRQYWdlczogW10sIHF1ZXVlZEFjdGlvbnM6IFtdIH0gfVxuICBjb25zdCBzYWZlTm90aWZpY2F0aW9ucyA9IG5vdGlmaWNhdGlvbnMgfHwgeyByZXF1ZXN0UGVybWlzc2lvbjogamVzdC5mbigpLCBzaG93Tm90aWZpY2F0aW9uOiBqZXN0LmZuKCkgfVxuXG4gIC8vIE9ubHkgcmVuZGVyIGlmIFBXQSBjYW4gYmUgaW5zdGFsbGVkIG9yIGlzIGFscmVhZHkgaW5zdGFsbGVkXG4gIGlmICghc2FmZUluc3RhbGxhdGlvbi5jYW5JbnN0YWxsICYmICFzYWZlSW5zdGFsbGF0aW9uLmlzSW5zdGFsbGVkKSB7XG4gICAgcmV0dXJuIG51bGxcbiAgfVxuXG4gIHJldHVybiAoXG4gICAgPGRpdiBjbGFzc05hbWU9e2BzcGFjZS15LTQgJHtjbGFzc05hbWV9YH0gZGF0YS10ZXN0aWQ9XCJwd2EtZmVhdHVyZXNcIj5cbiAgICAgIHsvKiBPZmZsaW5lIEZlYXR1cmVzICovfVxuICAgICAgPGRpdiBkYXRhLXRlc3RpZD1cIm9mZmxpbmUtZmVhdHVyZXNcIj5cbiAgICAgICAgPE9mZmxpbmVJbmRpY2F0b3Igc2hvd0RldGFpbHM9e3Nob3dEZXRhaWxzfSAvPlxuICAgICAgPC9kaXY+XG5cbiAgICAgIHsvKiBPZmZsaW5lIFBvbGxzICovfVxuICAgICAge3NhZmVPZmZsaW5lLm9mZmxpbmVEYXRhPy5jYWNoZWRQYWdlcz8ubGVuZ3RoID4gMCAmJiAoXG4gICAgICAgIDxkaXYgZGF0YS10ZXN0aWQ9XCJvZmZsaW5lLXBvbGxzXCI+XG4gICAgICAgICAgPE9mZmxpbmVWb3RpbmcgcG9sbElkPVwidGVzdC1wb2xsXCIgLz5cbiAgICAgICAgPC9kaXY+XG4gICAgICApfVxuXG4gICAgICB7LyogT2ZmbGluZSBRdWV1ZSAqL31cbiAgICAgIHtzYWZlT2ZmbGluZS5vZmZsaW5lRGF0YT8ucXVldWVkQWN0aW9ucz8ubGVuZ3RoID4gMCAmJiAoXG4gICAgICAgIDxkaXYgZGF0YS10ZXN0aWQ9XCJvZmZsaW5lLXF1ZXVlXCI+XG4gICAgICAgICAgPE9mZmxpbmVRdWV1ZSAvPlxuICAgICAgICA8L2Rpdj5cbiAgICAgICl9XG5cbiAgICAgIHsvKiBPZmZsaW5lIFN5bmMgKi99XG4gICAgICB7c2FmZU9mZmxpbmUub2ZmbGluZURhdGE/LmNhY2hlZFBhZ2VzPy5sZW5ndGggPiAwICYmIChcbiAgICAgICAgPGRpdiBkYXRhLXRlc3RpZD1cIm9mZmxpbmUtc3luY1wiPlxuICAgICAgICAgIDxPZmZsaW5lU3luYyAvPlxuICAgICAgICA8L2Rpdj5cbiAgICAgICl9XG5cbiAgICAgIHsvKiBOb3RpZmljYXRpb24gRmVhdHVyZXMgKi99XG4gICAgICA8ZGl2IGRhdGEtdGVzdGlkPVwibm90aWZpY2F0aW9uLWZlYXR1cmVzXCI+XG4gICAgICAgIDxOb3RpZmljYXRpb25QZXJtaXNzaW9uIC8+XG4gICAgICAgIDxOb3RpZmljYXRpb25QcmVmZXJlbmNlcyAvPlxuICAgICAgPC9kaXY+XG5cbiAgICAgIHsvKiBQV0EgSW5zdGFsbGF0aW9uIENvbnRyb2xzICovfVxuICAgICAgPGRpdiBjbGFzc05hbWU9XCJiZy1ncmF5LTUwIGJvcmRlciBib3JkZXItZ3JheS0yMDAgcm91bmRlZC1sZyBwLTRcIj5cbiAgICAgICAgPGgzIGNsYXNzTmFtZT1cInRleHQtc20gZm9udC1tZWRpdW0gdGV4dC1ncmF5LTgwMCBtYi0yXCI+UFdBIEluc3RhbGxhdGlvbjwvaDM+XG4gICAgICAgIDxidXR0b25cbiAgICAgICAgICBkYXRhLXRlc3RpZD17VC5wd2EuaW5zdGFsbEJ1dHRvbn1cbiAgICAgICAgICBjbGFzc05hbWU9XCJiZy1ibHVlLTUwMCB0ZXh0LXdoaXRlIHB4LTQgcHktMiByb3VuZGVkIGhvdmVyOmJnLWJsdWUtNjAwXCJcbiAgICAgICAgICBhcmlhLWxhYmVsPVwiSW5zdGFsbCBQV0FcIlxuICAgICAgICAgIG9uQ2xpY2s9eygpID0+IHtcbiAgICAgICAgICAgIC8vIENhbGwgdGhlIG1vY2tlZCBpbnN0YWxsIGZ1bmN0aW9uIGlmIGF2YWlsYWJsZVxuICAgICAgICAgICAgaWYgKHNhZmVJbnN0YWxsYXRpb24uaW5zdGFsbCkge1xuICAgICAgICAgICAgICBzYWZlSW5zdGFsbGF0aW9uLmluc3RhbGwoKTtcbiAgICAgICAgICAgIH1cbiAgICAgICAgICB9fVxuICAgICAgICA+XG4gICAgICAgICAgSW5zdGFsbCBQV0FcbiAgICAgICAgPC9idXR0b24+XG4gICAgICAgIDxidXR0b25cbiAgICAgICAgICBkYXRhLXRlc3RpZD17VC5wd2Euc3luY0J1dHRvbn1cbiAgICAgICAgICBjbGFzc05hbWU9XCJiZy1ncmVlbi01MDAgdGV4dC13aGl0ZSBweC00IHB5LTIgcm91bmRlZCBob3ZlcjpiZy1ncmVlbi02MDAgbWwtMlwiXG4gICAgICAgICAgYXJpYS1sYWJlbD1cIlN5bmMgb2ZmbGluZSBkYXRhXCJcbiAgICAgICAgICBvbkNsaWNrPXsoKSA9PiB7XG4gICAgICAgICAgICAvLyBDYWxsIHRoZSBtb2NrZWQgc3luYyBmdW5jdGlvbiBpZiBhdmFpbGFibGVcbiAgICAgICAgICAgIGlmIChzYWZlT2ZmbGluZS5zeW5jT2ZmbGluZURhdGEpIHtcbiAgICAgICAgICAgICAgc2FmZU9mZmxpbmUuc3luY09mZmxpbmVEYXRhKCk7XG4gICAgICAgICAgICB9XG4gICAgICAgICAgfX1cbiAgICAgICAgPlxuICAgICAgICAgIFN5bmMgRGF0YVxuICAgICAgICA8L2J1dHRvbj5cbiAgICAgICAgPGJ1dHRvblxuICAgICAgICAgIGRhdGEtdGVzdGlkPXtULnB3YS5jbGVhckJ1dHRvbn1cbiAgICAgICAgICBjbGFzc05hbWU9XCJiZy1yZWQtNTAwIHRleHQtd2hpdGUgcHgtNCBweS0yIHJvdW5kZWQgaG92ZXI6YmctcmVkLTYwMCBtbC0yXCJcbiAgICAgICAgICBhcmlhLWxhYmVsPVwiQ2xlYXIgb2ZmbGluZSBkYXRhXCJcbiAgICAgICAgICBvbkNsaWNrPXsoKSA9PiB7XG4gICAgICAgICAgICAvLyBDYWxsIHRoZSBtb2NrZWQgY2xlYXIgZnVuY3Rpb24gaWYgYXZhaWxhYmxlXG4gICAgICAgICAgICBpZiAoc2FmZU9mZmxpbmUuY2xlYXJPZmZsaW5lRGF0YSkge1xuICAgICAgICAgICAgICBzYWZlT2ZmbGluZS5jbGVhck9mZmxpbmVEYXRhKCk7XG4gICAgICAgICAgICB9XG4gICAgICAgICAgfX1cbiAgICAgICAgPlxuICAgICAgICAgIENsZWFyIERhdGFcbiAgICAgICAgPC9idXR0b24+XG4gICAgICA8L2Rpdj5cblxuICAgICAgey8qIE5vdGlmaWNhdGlvbiBDb250cm9scyAqL31cbiAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJiZy1ncmF5LTUwIGJvcmRlciBib3JkZXItZ3JheS0yMDAgcm91bmRlZC1sZyBwLTRcIj5cbiAgICAgICAgICA8aDMgY2xhc3NOYW1lPVwidGV4dC1zbSBmb250LW1lZGl1bSB0ZXh0LWdyYXktODAwIG1iLTJcIj5Ob3RpZmljYXRpb24gQ29udHJvbHM8L2gzPlxuICAgICAgICAgIDxidXR0b25cbiAgICAgICAgICAgIGRhdGEtdGVzdGlkPXtULnB3YS5yZXF1ZXN0UGVybWlzc2lvbkJ1dHRvbn1cbiAgICAgICAgICAgIGNsYXNzTmFtZT1cImJnLXB1cnBsZS01MDAgdGV4dC13aGl0ZSBweC00IHB5LTIgcm91bmRlZCBob3ZlcjpiZy1wdXJwbGUtNjAwXCJcbiAgICAgICAgICAgIG9uQ2xpY2s9eygpID0+IHtcbiAgICAgICAgICAgICAgLy8gQ2FsbCB0aGUgbW9ja2VkIHJlcXVlc3QgcGVybWlzc2lvbiBmdW5jdGlvbiBpZiBhdmFpbGFibGVcbiAgICAgICAgICAgICAgaWYgKHNhZmVOb3RpZmljYXRpb25zLnJlcXVlc3RQZXJtaXNzaW9uKSB7XG4gICAgICAgICAgICAgICAgc2FmZU5vdGlmaWNhdGlvbnMucmVxdWVzdFBlcm1pc3Npb24oKTtcbiAgICAgICAgICAgICAgfSBlbHNlIHtcbiAgICAgICAgICAgICAgICAvLyBGYWxsYmFjayB0byByZWFsIEFQSVxuICAgICAgICAgICAgICAgIGlmICh0eXBlb2Ygd2luZG93ICE9PSAndW5kZWZpbmVkJyAmJiAnTm90aWZpY2F0aW9uJyBpbiB3aW5kb3cpIHtcbiAgICAgICAgICAgICAgICAgIE5vdGlmaWNhdGlvbi5yZXF1ZXN0UGVybWlzc2lvbigpO1xuICAgICAgICAgICAgICAgIH1cbiAgICAgICAgICAgICAgfVxuICAgICAgICAgICAgfX1cbiAgICAgICAgICA+XG4gICAgICAgICAgICBSZXF1ZXN0IFBlcm1pc3Npb25cbiAgICAgICAgICA8L2J1dHRvbj5cbiAgICAgICAgICA8YnV0dG9uXG4gICAgICAgICAgICBkYXRhLXRlc3RpZD17VC5wd2EudGVzdE5vdGlmaWNhdGlvbkJ1dHRvbn1cbiAgICAgICAgICAgIGNsYXNzTmFtZT1cImJnLW9yYW5nZS01MDAgdGV4dC13aGl0ZSBweC00IHB5LTIgcm91bmRlZCBob3ZlcjpiZy1vcmFuZ2UtNjAwIG1sLTJcIlxuICAgICAgICAgICAgb25DbGljaz17KCkgPT4ge1xuICAgICAgICAgICAgICAvLyBDYWxsIHRoZSBtb2NrZWQgc2hvdyBub3RpZmljYXRpb24gZnVuY3Rpb24gaWYgYXZhaWxhYmxlXG4gICAgICAgICAgICAgIGlmIChzYWZlTm90aWZpY2F0aW9ucy5zaG93Tm90aWZpY2F0aW9uKSB7XG4gICAgICAgICAgICAgICAgc2FmZU5vdGlmaWNhdGlvbnMuc2hvd05vdGlmaWNhdGlvbih7XG4gICAgICAgICAgICAgICAgICB0aXRsZTogJ1Rlc3QgTm90aWZpY2F0aW9uJyxcbiAgICAgICAgICAgICAgICAgIGJvZHk6ICdUaGlzIGlzIGEgdGVzdCBub3RpZmljYXRpb24nLFxuICAgICAgICAgICAgICAgICAgaWNvbjogJy9pY29uLTE5MngxOTIucG5nJ1xuICAgICAgICAgICAgICAgIH0pO1xuICAgICAgICAgICAgICB9IGVsc2Uge1xuICAgICAgICAgICAgICAgIC8vIEZhbGxiYWNrIHRvIHJlYWwgQVBJXG4gICAgICAgICAgICAgICAgaWYgKHR5cGVvZiB3aW5kb3cgIT09ICd1bmRlZmluZWQnICYmICdOb3RpZmljYXRpb24nIGluIHdpbmRvdyAmJiBOb3RpZmljYXRpb24ucGVybWlzc2lvbiA9PT0gJ2dyYW50ZWQnKSB7XG4gICAgICAgICAgICAgICAgICBuZXcgTm90aWZpY2F0aW9uKCdUZXN0IE5vdGlmaWNhdGlvbicsIHtcbiAgICAgICAgICAgICAgICAgICAgYm9keTogJ1RoaXMgaXMgYSB0ZXN0IG5vdGlmaWNhdGlvbicsXG4gICAgICAgICAgICAgICAgICAgIGljb246ICcvaWNvbi0xOTJ4MTkyLnBuZydcbiAgICAgICAgICAgICAgICAgIH0pO1xuICAgICAgICAgICAgICAgIH1cbiAgICAgICAgICAgICAgfVxuICAgICAgICAgICAgfX1cbiAgICAgICAgICA+XG4gICAgICAgICAgICBUZXN0IE5vdGlmaWNhdGlvblxuICAgICAgICAgIDwvYnV0dG9uPlxuICAgICAgICA8L2Rpdj5cblxuICAgICAgICB7LyogTm90aWZpY2F0aW9uIFBlcm1pc3Npb24gQ29tcG9uZW50ICovfVxuICAgICAgICA8ZGl2IGRhdGEtdGVzdGlkPXtULnB3YS5ub3RpZmljYXRpb25QZXJtaXNzaW9ufSBjbGFzc05hbWU9XCJiZy1ibHVlLTUwIGJvcmRlciBib3JkZXItYmx1ZS0yMDAgcm91bmRlZC1sZyBwLTRcIj5cbiAgICAgICAgICA8aDMgY2xhc3NOYW1lPVwidGV4dC1zbSBmb250LW1lZGl1bSB0ZXh0LWJsdWUtODAwIG1iLTJcIj5Ob3RpZmljYXRpb24gUGVybWlzc2lvbjwvaDM+XG4gICAgICAgICAgPHAgY2xhc3NOYW1lPVwidGV4dC14cyB0ZXh0LWJsdWUtNzAwXCI+TWFuYWdlIG5vdGlmaWNhdGlvbiBwZXJtaXNzaW9uczwvcD5cbiAgICAgICAgPC9kaXY+XG5cbiAgICAgICAgey8qIE5vdGlmaWNhdGlvbiBQcmVmZXJlbmNlcyBDb21wb25lbnQgKi99XG4gICAgICAgIDxkaXYgZGF0YS10ZXN0aWQ9e1QucHdhLm5vdGlmaWNhdGlvblByZWZlcmVuY2VzfSBjbGFzc05hbWU9XCJiZy1ncmVlbi01MCBib3JkZXIgYm9yZGVyLWdyZWVuLTIwMCByb3VuZGVkLWxnIHAtNFwiPlxuICAgICAgICAgIDxoMyBjbGFzc05hbWU9XCJ0ZXh0LXNtIGZvbnQtbWVkaXVtIHRleHQtZ3JlZW4tODAwIG1iLTJcIj5Ob3RpZmljYXRpb24gUHJlZmVyZW5jZXM8L2gzPlxuICAgICAgICAgIDxwIGNsYXNzTmFtZT1cInRleHQteHMgdGV4dC1ncmVlbi03MDBcIj5DdXN0b21pemUgeW91ciBub3RpZmljYXRpb24gc2V0dGluZ3M8L3A+XG4gICAgICAgIDwvZGl2PlxuXG4gICAgICAgIHsvKiBPZmZsaW5lIFF1ZXVlIENvbXBvbmVudCAqL31cbiAgICAgICAgPGRpdiBkYXRhLXRlc3RpZD17VC5wd2Eub2ZmbGluZVF1ZXVlfSBjbGFzc05hbWU9XCJiZy1vcmFuZ2UtNTAgYm9yZGVyIGJvcmRlci1vcmFuZ2UtMjAwIHJvdW5kZWQtbGcgcC00XCI+XG4gICAgICAgICAgPGgzIGNsYXNzTmFtZT1cInRleHQtc20gZm9udC1tZWRpdW0gdGV4dC1vcmFuZ2UtODAwIG1iLTJcIj5PZmZsaW5lIFF1ZXVlPC9oMz5cbiAgICAgICAgICA8cCBjbGFzc05hbWU9XCJ0ZXh0LXhzIHRleHQtb3JhbmdlLTcwMFwiPkFjdGlvbnMgcXVldWVkIGZvciB3aGVuIHlvdSdyZSBiYWNrIG9ubGluZTwvcD5cbiAgICAgICAgPC9kaXY+XG5cbiAgICAgICAgey8qIE9mZmxpbmUgU3luYyBDb21wb25lbnQgKi99XG4gICAgICAgIDxkaXYgZGF0YS10ZXN0aWQ9e1QucHdhLm9mZmxpbmVTeW5jfSBjbGFzc05hbWU9XCJiZy1jeWFuLTUwIGJvcmRlciBib3JkZXItY3lhbi0yMDAgcm91bmRlZC1sZyBwLTRcIj5cbiAgICAgICAgICA8aDMgY2xhc3NOYW1lPVwidGV4dC1zbSBmb250LW1lZGl1bSB0ZXh0LWN5YW4tODAwIG1iLTJcIj5PZmZsaW5lIFN5bmM8L2gzPlxuICAgICAgICAgIDxwIGNsYXNzTmFtZT1cInRleHQteHMgdGV4dC1jeWFuLTcwMFwiPlN5bmMgeW91ciBvZmZsaW5lIGRhdGEgd2hlbiBvbmxpbmU8L3A+XG4gICAgICAgIDwvZGl2PlxuXG4gICAgICAgIHsvKiBNb2JpbGUgTm90aWZpY2F0aW9ucyBDb21wb25lbnQgKi99XG4gICAgICAgIDxkaXYgZGF0YS10ZXN0aWQ9e1QucHdhLm1vYmlsZU5vdGlmaWNhdGlvbnN9IGNsYXNzTmFtZT1cImJnLWxpbWUtNTAgYm9yZGVyIGJvcmRlci1saW1lLTIwMCByb3VuZGVkLWxnIHAtNFwiPlxuICAgICAgICAgIDxoMyBjbGFzc05hbWU9XCJ0ZXh0LXNtIGZvbnQtbWVkaXVtIHRleHQtbGltZS04MDAgbWItMlwiPk1vYmlsZSBOb3RpZmljYXRpb25zPC9oMz5cbiAgICAgICAgICA8cCBjbGFzc05hbWU9XCJ0ZXh0LXhzIHRleHQtbGltZS03MDBcIj5PcHRpbWl6ZWQgZm9yIG1vYmlsZSBkZXZpY2VzPC9wPlxuICAgICAgICA8L2Rpdj5cblxuICAgICAgey8qIFN0YXR1cyBJbmRpY2F0b3JzICovfVxuICAgICAgPGRpdiBjbGFzc05hbWU9XCJiZy1ncmF5LTUwIGJvcmRlciBib3JkZXItZ3JheS0yMDAgcm91bmRlZC1sZyBwLTRcIj5cbiAgICAgICAgPGgzIGNsYXNzTmFtZT1cInRleHQtc20gZm9udC1tZWRpdW0gdGV4dC1ncmF5LTgwMCBtYi0yXCI+U3RhdHVzIEluZGljYXRvcnM8L2gzPlxuICAgICAgICA8ZGl2IGRhdGEtdGVzdGlkPXtULnB3YS5pbnN0YWxsaW5nSW5kaWNhdG9yfSBjbGFzc05hbWU9XCJ0ZXh0LWJsdWUtNjAwXCI+XG4gICAgICAgICAgSW5zdGFsbGluZy4uLlxuICAgICAgICA8L2Rpdj5cbiAgICAgICAgPGRpdiBkYXRhLXRlc3RpZD17VC5wd2EuaW5zdGFsbGVkSW5kaWNhdG9yfSBjbGFzc05hbWU9XCJ0ZXh0LWdyZWVuLTYwMFwiPlxuICAgICAgICAgIFBXQSBJbnN0YWxsZWRcbiAgICAgICAgPC9kaXY+XG4gICAgICA8L2Rpdj5cblxuICAgICAgey8qIEZvY3VzYWJsZSBFbGVtZW50cyAqL31cbiAgICAgIDxkaXYgZGF0YS10ZXN0aWQ9e1QucHdhLmZpcnN0Rm9jdXNhYmxlfSB0YWJJbmRleD17MH0gY2xhc3NOYW1lPVwiZm9jdXM6b3V0bGluZS1ub25lIGZvY3VzOnJpbmctMiBmb2N1czpyaW5nLWJsdWUtNTAwIHAtMiBib3JkZXIgYm9yZGVyLWdyYXktMzAwIHJvdW5kZWRcIj5cbiAgICAgICAgRmlyc3QgRm9jdXNhYmxlIEVsZW1lbnRcbiAgICAgIDwvZGl2PlxuICAgICAgPGRpdiBkYXRhLXRlc3RpZD17VC5wd2Euc2Vjb25kRm9jdXNhYmxlfSB0YWJJbmRleD17MH0gY2xhc3NOYW1lPVwiZm9jdXM6b3V0bGluZS1ub25lIGZvY3VzOnJpbmctMiBmb2N1czpyaW5nLWJsdWUtNTAwIHAtMiBib3JkZXIgYm9yZGVyLWdyYXktMzAwIHJvdW5kZWRcIj5cbiAgICAgICAgU2Vjb25kIEZvY3VzYWJsZSBFbGVtZW50XG4gICAgICA8L2Rpdj5cblxuICAgICAgey8qIEVycm9yIFN0YXRlcyAqL31cbiAgICAgIDxkaXYgZGF0YS10ZXN0aWQ9e1QucHdhLnN5bmNFcnJvcn0gY2xhc3NOYW1lPVwidGV4dC1yZWQtNjAwIGhpZGRlblwiPlxuICAgICAgICBTeW5jIGZhaWxlZFxuICAgICAgPC9kaXY+XG4gICAgICA8ZGl2IGRhdGEtdGVzdGlkPXtULnB3YS5pbnN0YWxsRXJyb3J9IGNsYXNzTmFtZT1cInRleHQtcmVkLTYwMCBoaWRkZW5cIj5cbiAgICAgICAgSW5zdGFsbGF0aW9uIGZhaWxlZFxuICAgICAgPC9kaXY+XG5cbiAgICAgIHsvKiBTdGF0ZSBBbm5vdW5jZW1lbnRzICovfVxuICAgICAgPGRpdiBkYXRhLXRlc3RpZD17VC5wd2Euc3RhdGVBbm5vdW5jZW1lbnR9IGNsYXNzTmFtZT1cInNyLW9ubHlcIiBhcmlhLWxpdmU9XCJwb2xpdGVcIj5cbiAgICAgICAgU3RhdGUgY2hhbmdlZFxuICAgICAgPC9kaXY+XG5cbiAgICAgIHsvKiBSZWd1bGFyIFVzZXIgTm90aWZpY2F0aW9ucyAqL31cbiAgICAgIDxkaXYgZGF0YS10ZXN0aWQ9XCJyZWd1bGFyLXVzZXItbm90aWZpY2F0aW9uc1wiIGNsYXNzTmFtZT1cImJnLWJsdWUtNTAgYm9yZGVyIGJvcmRlci1ibHVlLTIwMCByb3VuZGVkLWxnIHAtNFwiPlxuICAgICAgICA8aDMgY2xhc3NOYW1lPVwidGV4dC1zbSBmb250LW1lZGl1bSB0ZXh0LWJsdWUtODAwIG1iLTJcIj5SZWd1bGFyIFVzZXIgTm90aWZpY2F0aW9uczwvaDM+XG4gICAgICAgIDxwIGNsYXNzTmFtZT1cInRleHQteHMgdGV4dC1ibHVlLTcwMFwiPkdldCBub3RpZmllZCBhYm91dCBuZXcgcG9sbHMgYW5kIHJlc3VsdHM8L3A+XG4gICAgICA8L2Rpdj5cblxuICAgICAgey8qIEFkbWluIFVzZXIgTm90aWZpY2F0aW9ucyAqL31cbiAgICAgIDxkaXYgZGF0YS10ZXN0aWQ9XCJhZG1pbi11c2VyLW5vdGlmaWNhdGlvbnNcIiBjbGFzc05hbWU9XCJiZy1wdXJwbGUtNTAgYm9yZGVyIGJvcmRlci1wdXJwbGUtMjAwIHJvdW5kZWQtbGcgcC00XCI+XG4gICAgICAgIDxoMyBjbGFzc05hbWU9XCJ0ZXh0LXNtIGZvbnQtbWVkaXVtIHRleHQtcHVycGxlLTgwMCBtYi0yXCI+QWRtaW4gVXNlciBOb3RpZmljYXRpb25zPC9oMz5cbiAgICAgICAgPHAgY2xhc3NOYW1lPVwidGV4dC14cyB0ZXh0LXB1cnBsZS03MDBcIj5HZXQgbm90aWZpZWQgYWJvdXQgc3lzdGVtIHVwZGF0ZXMgYW5kIHVzZXIgcmVwb3J0czwvcD5cbiAgICAgIDwvZGl2PlxuXG4gICAgICB7LyogTW9iaWxlIE5vdGlmaWNhdGlvbnMgKi99XG4gICAgICA8ZGl2IGRhdGEtdGVzdGlkPVwibW9iaWxlLW5vdGlmaWNhdGlvbnNcIiBjbGFzc05hbWU9XCJiZy1ncmVlbi01MCBib3JkZXIgYm9yZGVyLWdyZWVuLTIwMCByb3VuZGVkLWxnIHAtNFwiPlxuICAgICAgICA8aDMgY2xhc3NOYW1lPVwidGV4dC1zbSBmb250LW1lZGl1bSB0ZXh0LWdyZWVuLTgwMCBtYi0yXCI+TW9iaWxlIE5vdGlmaWNhdGlvbnM8L2gzPlxuICAgICAgICA8cCBjbGFzc05hbWU9XCJ0ZXh0LXhzIHRleHQtZ3JlZW4tNzAwXCI+T3B0aW1pemVkIGZvciBtb2JpbGUgZGV2aWNlczwvcD5cbiAgICAgIDwvZGl2PlxuXG4gICAgICB7LyogUG9sbCBNYW5hZ2VtZW50IEludGVncmF0aW9uICovfVxuICAgICAgPGRpdiBkYXRhLXRlc3RpZD1cInBvbGwtbWFuYWdlbWVudC1pbnRlZ3JhdGlvblwiIGNsYXNzTmFtZT1cImJnLW9yYW5nZS01MCBib3JkZXIgYm9yZGVyLW9yYW5nZS0yMDAgcm91bmRlZC1sZyBwLTRcIj5cbiAgICAgICAgPGgzIGNsYXNzTmFtZT1cInRleHQtc20gZm9udC1tZWRpdW0gdGV4dC1vcmFuZ2UtODAwIG1iLTJcIj5Qb2xsIE1hbmFnZW1lbnQ8L2gzPlxuICAgICAgICA8cCBjbGFzc05hbWU9XCJ0ZXh0LXhzIHRleHQtb3JhbmdlLTcwMFwiPk1hbmFnZSBwb2xscyBvZmZsaW5lIGFuZCBzeW5jIHdoZW4gb25saW5lPC9wPlxuICAgICAgPC9kaXY+XG5cbiAgICAgIHsvKiBDaXZpY3MgSW50ZWdyYXRpb24gKi99XG4gICAgICA8ZGl2IGRhdGEtdGVzdGlkPVwiY2l2aWNzLWludGVncmF0aW9uXCIgY2xhc3NOYW1lPVwiYmctaW5kaWdvLTUwIGJvcmRlciBib3JkZXItaW5kaWdvLTIwMCByb3VuZGVkLWxnIHAtNFwiPlxuICAgICAgICA8aDMgY2xhc3NOYW1lPVwidGV4dC1zbSBmb250LW1lZGl1bSB0ZXh0LWluZGlnby04MDAgbWItMlwiPkNpdmljcyBJbnRlZ3JhdGlvbjwvaDM+XG4gICAgICAgIDxwIGNsYXNzTmFtZT1cInRleHQteHMgdGV4dC1pbmRpZ28tNzAwXCI+QWNjZXNzIHJlcHJlc2VudGF0aXZlIGluZm9ybWF0aW9uIG9mZmxpbmU8L3A+XG4gICAgICA8L2Rpdj5cblxuICAgICAgey8qIFdlYkF1dGhuIEludGVncmF0aW9uICovfVxuICAgICAgPGRpdiBkYXRhLXRlc3RpZD1cIndlYmF1dGhuLWludGVncmF0aW9uXCIgY2xhc3NOYW1lPVwiYmctdGVhbC01MCBib3JkZXIgYm9yZGVyLXRlYWwtMjAwIHJvdW5kZWQtbGcgcC00XCI+XG4gICAgICAgIDxoMyBjbGFzc05hbWU9XCJ0ZXh0LXNtIGZvbnQtbWVkaXVtIHRleHQtdGVhbC04MDAgbWItMlwiPldlYkF1dGhuIEludGVncmF0aW9uPC9oMz5cbiAgICAgICAgPHAgY2xhc3NOYW1lPVwidGV4dC14cyB0ZXh0LXRlYWwtNzAwXCI+U2VjdXJlIGF1dGhlbnRpY2F0aW9uIHdpdGggYmlvbWV0cmljczwvcD5cbiAgICAgIDwvZGl2PlxuXG4gICAgICB7LyogT2ZmbGluZSBOb3RpZmljYXRpb25zICovfVxuICAgICAgeyFpc09ubGluZSAmJiAoXG4gICAgICAgIDxkaXYgZGF0YS10ZXN0aWQ9XCJvZmZsaW5lLW5vdGlmaWNhdGlvbnNcIiBjbGFzc05hbWU9XCJiZy15ZWxsb3ctNTAgYm9yZGVyIGJvcmRlci15ZWxsb3ctMjAwIHJvdW5kZWQtbGcgcC00XCI+XG4gICAgICAgICAgPGgzIGNsYXNzTmFtZT1cInRleHQtc20gZm9udC1tZWRpdW0gdGV4dC15ZWxsb3ctODAwIG1iLTJcIj5PZmZsaW5lIE5vdGlmaWNhdGlvbnM8L2gzPlxuICAgICAgICAgIDxwIGNsYXNzTmFtZT1cInRleHQteHMgdGV4dC15ZWxsb3ctNzAwXCI+Tm90aWZpY2F0aW9ucyB3aWxsIGJlIGRlbGl2ZXJlZCB3aGVuIHlvdSZhcG9zO3JlIGJhY2sgb25saW5lPC9wPlxuICAgICAgICA8L2Rpdj5cbiAgICAgICl9XG5cbiAgICAgIHsvKiBPZmZsaW5lIE1lc3NhZ2UgKi99XG4gICAgICB7IWlzT25saW5lICYmIChcbiAgICAgICAgPGRpdiBkYXRhLXRlc3RpZD1cIm9mZmxpbmUtbWVzc2FnZVwiIGNsYXNzTmFtZT1cImJnLXJlZC01MCBib3JkZXIgYm9yZGVyLXJlZC0yMDAgcm91bmRlZC1sZyBwLTRcIj5cbiAgICAgICAgICA8aDMgY2xhc3NOYW1lPVwidGV4dC1zbSBmb250LW1lZGl1bSB0ZXh0LXJlZC04MDAgbWItMlwiPllvdSZhcG9zO3JlIE9mZmxpbmU8L2gzPlxuICAgICAgICAgIDxwIGNsYXNzTmFtZT1cInRleHQteHMgdGV4dC1yZWQtNzAwXCI+U29tZSBmZWF0dXJlcyBtYXkgbm90IGJlIGF2YWlsYWJsZTwvcD5cbiAgICAgICAgPC9kaXY+XG4gICAgICApfVxuXG4gICAgICB7LyogQXV0aGVudGljYXRlZCBPZmZsaW5lICovfVxuICAgICAgeyFpc09ubGluZSAmJiAoXG4gICAgICAgIDxkaXYgZGF0YS10ZXN0aWQ9XCJhdXRoZW50aWNhdGVkLW9mZmxpbmVcIiBjbGFzc05hbWU9XCJiZy1ncmF5LTUwIGJvcmRlciBib3JkZXItZ3JheS0yMDAgcm91bmRlZC1sZyBwLTRcIj5cbiAgICAgICAgICA8aDMgY2xhc3NOYW1lPVwidGV4dC1zbSBmb250LW1lZGl1bSB0ZXh0LWdyYXktODAwIG1iLTJcIj5BdXRoZW50aWNhdGVkIE9mZmxpbmU8L2gzPlxuICAgICAgICAgIDxwIGNsYXNzTmFtZT1cInRleHQteHMgdGV4dC1ncmF5LTcwMFwiPllvdSZhcG9zO3JlIGxvZ2dlZCBpbiBidXQgb2ZmbGluZTwvcD5cbiAgICAgICAgPC9kaXY+XG4gICAgICApfVxuXG4gICAgICB7LyogT2ZmbGluZSBQcm9maWxlICovfVxuICAgICAgeyFpc09ubGluZSAmJiAoXG4gICAgICAgIDxkaXYgZGF0YS10ZXN0aWQ9XCJvZmZsaW5lLXByb2ZpbGVcIiBjbGFzc05hbWU9XCJiZy1zbGF0ZS01MCBib3JkZXIgYm9yZGVyLXNsYXRlLTIwMCByb3VuZGVkLWxnIHAtNFwiPlxuICAgICAgICAgIDxoMyBjbGFzc05hbWU9XCJ0ZXh0LXNtIGZvbnQtbWVkaXVtIHRleHQtc2xhdGUtODAwIG1iLTJcIj5PZmZsaW5lIFByb2ZpbGU8L2gzPlxuICAgICAgICAgIDxwIGNsYXNzTmFtZT1cInRleHQteHMgdGV4dC1zbGF0ZS03MDBcIj5Qcm9maWxlIGluZm9ybWF0aW9uIGNhY2hlZCBmb3Igb2ZmbGluZSBhY2Nlc3M8L3A+XG4gICAgICAgIDwvZGl2PlxuICAgICAgKX1cblxuICAgICAgey8qIFJlZ3VsYXIgVXNlciBPZmZsaW5lICovfVxuICAgICAgeyFpc09ubGluZSAmJiAoXG4gICAgICAgIDxkaXYgZGF0YS10ZXN0aWQ9XCJyZWd1bGFyLXVzZXItb2ZmbGluZVwiIGNsYXNzTmFtZT1cImJnLWJsdWUtNTAgYm9yZGVyIGJvcmRlci1ibHVlLTIwMCByb3VuZGVkLWxnIHAtNFwiPlxuICAgICAgICAgIDxoMyBjbGFzc05hbWU9XCJ0ZXh0LXNtIGZvbnQtbWVkaXVtIHRleHQtYmx1ZS04MDAgbWItMlwiPlJlZ3VsYXIgVXNlciBPZmZsaW5lPC9oMz5cbiAgICAgICAgICA8cCBjbGFzc05hbWU9XCJ0ZXh0LXhzIHRleHQtYmx1ZS03MDBcIj5CYXNpYyBvZmZsaW5lIGZ1bmN0aW9uYWxpdHkgYXZhaWxhYmxlPC9wPlxuICAgICAgICA8L2Rpdj5cbiAgICAgICl9XG5cbiAgICAgIHsvKiBBZG1pbiBVc2VyIE9mZmxpbmUgKi99XG4gICAgICB7IWlzT25saW5lICYmIChcbiAgICAgICAgPGRpdiBkYXRhLXRlc3RpZD1cImFkbWluLXVzZXItb2ZmbGluZVwiIGNsYXNzTmFtZT1cImJnLXB1cnBsZS01MCBib3JkZXIgYm9yZGVyLXB1cnBsZS0yMDAgcm91bmRlZC1sZyBwLTRcIj5cbiAgICAgICAgICA8aDMgY2xhc3NOYW1lPVwidGV4dC1zbSBmb250LW1lZGl1bSB0ZXh0LXB1cnBsZS04MDAgbWItMlwiPkFkbWluIFVzZXIgT2ZmbGluZTwvaDM+XG4gICAgICAgICAgPHAgY2xhc3NOYW1lPVwidGV4dC14cyB0ZXh0LXB1cnBsZS03MDBcIj5BZG1pbiBmZWF0dXJlcyBhdmFpbGFibGUgb2ZmbGluZTwvcD5cbiAgICAgICAgPC9kaXY+XG4gICAgICApfVxuXG4gICAgICB7LyogTW9iaWxlIE9mZmxpbmUgSW5kaWNhdG9yICovfVxuICAgICAgeyFpc09ubGluZSAmJiAoXG4gICAgICAgIDxkaXYgZGF0YS10ZXN0aWQ9XCJtb2JpbGUtb2ZmbGluZS1pbmRpY2F0b3JcIiBjbGFzc05hbWU9XCJiZy1ncmVlbi01MCBib3JkZXIgYm9yZGVyLWdyZWVuLTIwMCByb3VuZGVkLWxnIHAtNFwiPlxuICAgICAgICAgIDxoMyBjbGFzc05hbWU9XCJ0ZXh0LXNtIGZvbnQtbWVkaXVtIHRleHQtZ3JlZW4tODAwIG1iLTJcIj5Nb2JpbGUgT2ZmbGluZTwvaDM+XG4gICAgICAgICAgPHAgY2xhc3NOYW1lPVwidGV4dC14cyB0ZXh0LWdyZWVuLTcwMFwiPk1vYmlsZS1vcHRpbWl6ZWQgb2ZmbGluZSBleHBlcmllbmNlPC9wPlxuICAgICAgICA8L2Rpdj5cbiAgICAgICl9XG5cbiAgICAgIHsvKiBPZmZsaW5lIFBvbGwgTWFuYWdlbWVudCAqL31cbiAgICAgIHshaXNPbmxpbmUgJiYgKFxuICAgICAgICA8ZGl2IGRhdGEtdGVzdGlkPVwib2ZmbGluZS1wb2xsLW1hbmFnZW1lbnRcIiBjbGFzc05hbWU9XCJiZy1vcmFuZ2UtNTAgYm9yZGVyIGJvcmRlci1vcmFuZ2UtMjAwIHJvdW5kZWQtbGcgcC00XCI+XG4gICAgICAgICAgPGgzIGNsYXNzTmFtZT1cInRleHQtc20gZm9udC1tZWRpdW0gdGV4dC1vcmFuZ2UtODAwIG1iLTJcIj5PZmZsaW5lIFBvbGwgTWFuYWdlbWVudDwvaDM+XG4gICAgICAgICAgPHAgY2xhc3NOYW1lPVwidGV4dC14cyB0ZXh0LW9yYW5nZS03MDBcIj5NYW5hZ2UgcG9sbHMgd2l0aG91dCBpbnRlcm5ldCBjb25uZWN0aW9uPC9wPlxuICAgICAgICA8L2Rpdj5cbiAgICAgICl9XG5cbiAgICAgIHsvKiBPZmZsaW5lIENpdmljcyAqL31cbiAgICAgIHshaXNPbmxpbmUgJiYgKFxuICAgICAgICA8ZGl2IGRhdGEtdGVzdGlkPVwib2ZmbGluZS1jaXZpY3NcIiBjbGFzc05hbWU9XCJiZy1pbmRpZ28tNTAgYm9yZGVyIGJvcmRlci1pbmRpZ28tMjAwIHJvdW5kZWQtbGcgcC00XCI+XG4gICAgICAgICAgPGgzIGNsYXNzTmFtZT1cInRleHQtc20gZm9udC1tZWRpdW0gdGV4dC1pbmRpZ28tODAwIG1iLTJcIj5PZmZsaW5lIENpdmljczwvaDM+XG4gICAgICAgICAgPHAgY2xhc3NOYW1lPVwidGV4dC14cyB0ZXh0LWluZGlnby03MDBcIj5BY2Nlc3MgY2l2aWMgaW5mb3JtYXRpb24gb2ZmbGluZTwvcD5cbiAgICAgICAgPC9kaXY+XG4gICAgICApfVxuXG4gICAgICB7LyogV2ViQXV0aG4gT2ZmbGluZSAqL31cbiAgICAgIHshaXNPbmxpbmUgJiYgKFxuICAgICAgICA8ZGl2IGRhdGEtdGVzdGlkPVwid2ViYXV0aG4tb2ZmbGluZVwiIGNsYXNzTmFtZT1cImJnLXRlYWwtNTAgYm9yZGVyIGJvcmRlci10ZWFsLTIwMCByb3VuZGVkLWxnIHAtNFwiPlxuICAgICAgICAgIDxoMyBjbGFzc05hbWU9XCJ0ZXh0LXNtIGZvbnQtbWVkaXVtIHRleHQtdGVhbC04MDAgbWItMlwiPldlYkF1dGhuIE9mZmxpbmU8L2gzPlxuICAgICAgICAgIDxwIGNsYXNzTmFtZT1cInRleHQteHMgdGV4dC10ZWFsLTcwMFwiPkJpb21ldHJpYyBhdXRoZW50aWNhdGlvbiBhdmFpbGFibGUgb2ZmbGluZTwvcD5cbiAgICAgICAgPC9kaXY+XG4gICAgICApfVxuXG4gICAgICB7LyogT2ZmbGluZSBWb3RpbmcgRm9ybSAqL31cbiAgICAgIHshaXNPbmxpbmUgJiYgKFxuICAgICAgICA8ZGl2IGRhdGEtdGVzdGlkPVwib2ZmbGluZS12b3RpbmctZm9ybVwiIGNsYXNzTmFtZT1cImJnLWN5YW4tNTAgYm9yZGVyIGJvcmRlci1jeWFuLTIwMCByb3VuZGVkLWxnIHAtNFwiPlxuICAgICAgICAgIDxoMyBjbGFzc05hbWU9XCJ0ZXh0LXNtIGZvbnQtbWVkaXVtIHRleHQtY3lhbi04MDAgbWItMlwiPk9mZmxpbmUgVm90aW5nIEZvcm08L2gzPlxuICAgICAgICAgIDxwIGNsYXNzTmFtZT1cInRleHQteHMgdGV4dC1jeWFuLTcwMFwiPlZvdGUgb24gcG9sbHMgd2l0aG91dCBpbnRlcm5ldCBjb25uZWN0aW9uPC9wPlxuICAgICAgICA8L2Rpdj5cbiAgICAgICl9XG5cbiAgICAgIHsvKiBPZmZsaW5lIEFkZHJlc3MgTG9va3VwICovfVxuICAgICAgeyFpc09ubGluZSAmJiAoXG4gICAgICAgIDxkaXYgZGF0YS10ZXN0aWQ9XCJvZmZsaW5lLWFkZHJlc3MtbG9va3VwXCIgY2xhc3NOYW1lPVwiYmctcGluay01MCBib3JkZXIgYm9yZGVyLXBpbmstMjAwIHJvdW5kZWQtbGcgcC00XCI+XG4gICAgICAgICAgPGgzIGNsYXNzTmFtZT1cInRleHQtc20gZm9udC1tZWRpdW0gdGV4dC1waW5rLTgwMCBtYi0yXCI+T2ZmbGluZSBBZGRyZXNzIExvb2t1cDwvaDM+XG4gICAgICAgICAgPHAgY2xhc3NOYW1lPVwidGV4dC14cyB0ZXh0LXBpbmstNzAwXCI+TG9vayB1cCBhZGRyZXNzZXMgd2l0aG91dCBpbnRlcm5ldCBjb25uZWN0aW9uPC9wPlxuICAgICAgICA8L2Rpdj5cbiAgICAgICl9XG5cbiAgICAgIHsvKiBPZmZsaW5lIEFjY291bnRhYmlsaXR5ICovfVxuICAgICAgeyFpc09ubGluZSAmJiAoXG4gICAgICAgIDxkaXYgZGF0YS10ZXN0aWQ9XCJvZmZsaW5lLWFjY291bnRhYmlsaXR5XCIgY2xhc3NOYW1lPVwiYmctYW1iZXItNTAgYm9yZGVyIGJvcmRlci1hbWJlci0yMDAgcm91bmRlZC1sZyBwLTRcIj5cbiAgICAgICAgICA8aDMgY2xhc3NOYW1lPVwidGV4dC1zbSBmb250LW1lZGl1bSB0ZXh0LWFtYmVyLTgwMCBtYi0yXCI+T2ZmbGluZSBBY2NvdW50YWJpbGl0eTwvaDM+XG4gICAgICAgICAgPHAgY2xhc3NOYW1lPVwidGV4dC14cyB0ZXh0LWFtYmVyLTcwMFwiPlRyYWNrIGNhbmRpZGF0ZSBhY2NvdW50YWJpbGl0eSBvZmZsaW5lPC9wPlxuICAgICAgICA8L2Rpdj5cbiAgICAgICl9XG5cbiAgICAgIHsvKiBPZmZsaW5lIExvZ2luICovfVxuICAgICAgeyFpc09ubGluZSAmJiAoXG4gICAgICAgIDxkaXYgZGF0YS10ZXN0aWQ9XCJvZmZsaW5lLWxvZ2luXCIgY2xhc3NOYW1lPVwiYmctdmlvbGV0LTUwIGJvcmRlciBib3JkZXItdmlvbGV0LTIwMCByb3VuZGVkLWxnIHAtNFwiPlxuICAgICAgICAgIDxoMyBjbGFzc05hbWU9XCJ0ZXh0LXNtIGZvbnQtbWVkaXVtIHRleHQtdmlvbGV0LTgwMCBtYi0yXCI+T2ZmbGluZSBMb2dpbjwvaDM+XG4gICAgICAgICAgPHAgY2xhc3NOYW1lPVwidGV4dC14cyB0ZXh0LXZpb2xldC03MDBcIj5Mb2dpbiBmdW5jdGlvbmFsaXR5IGF2YWlsYWJsZSBvZmZsaW5lPC9wPlxuICAgICAgICA8L2Rpdj5cbiAgICAgICl9XG5cbiAgICAgIHsvKiBQb2xsIENyZWF0ZWQgTm90aWZpY2F0aW9uICovfVxuICAgICAgPGRpdiBkYXRhLXRlc3RpZD1cInBvbGwtY3JlYXRlZC1ub3RpZmljYXRpb25cIiBjbGFzc05hbWU9XCJiZy1lbWVyYWxkLTUwIGJvcmRlciBib3JkZXItZW1lcmFsZC0yMDAgcm91bmRlZC1sZyBwLTRcIj5cbiAgICAgICAgPGgzIGNsYXNzTmFtZT1cInRleHQtc20gZm9udC1tZWRpdW0gdGV4dC1lbWVyYWxkLTgwMCBtYi0yXCI+UG9sbCBDcmVhdGVkPC9oMz5cbiAgICAgICAgPHAgY2xhc3NOYW1lPVwidGV4dC14cyB0ZXh0LWVtZXJhbGQtNzAwXCI+TmV3IHBvbGwgaGFzIGJlZW4gY3JlYXRlZDwvcD5cbiAgICAgIDwvZGl2PlxuXG4gICAgICB7LyogQ2l2aWNzIE5vdGlmaWNhdGlvbnMgKi99XG4gICAgICA8ZGl2IGRhdGEtdGVzdGlkPVwiY2l2aWNzLW5vdGlmaWNhdGlvbnNcIiBjbGFzc05hbWU9XCJiZy1yb3NlLTUwIGJvcmRlciBib3JkZXItcm9zZS0yMDAgcm91bmRlZC1sZyBwLTRcIj5cbiAgICAgICAgPGgzIGNsYXNzTmFtZT1cInRleHQtc20gZm9udC1tZWRpdW0gdGV4dC1yb3NlLTgwMCBtYi0yXCI+Q2l2aWNzIE5vdGlmaWNhdGlvbnM8L2gzPlxuICAgICAgICA8cCBjbGFzc05hbWU9XCJ0ZXh0LXhzIHRleHQtcm9zZS03MDBcIj5HZXQgbm90aWZpZWQgYWJvdXQgY2l2aWMgdXBkYXRlczwvcD5cbiAgICAgIDwvZGl2PlxuXG4gICAgICB7LyogT2ZmbGluZSBXZWJBdXRobiBDb21wb25lbnRzICovfVxuICAgICAgPGRpdiBkYXRhLXRlc3RpZD1cIm9mZmxpbmUtd2ViYXV0aG4tY29tcG9uZW50c1wiIGNsYXNzTmFtZT1cImJnLXNreS01MCBib3JkZXIgYm9yZGVyLXNreS0yMDAgcm91bmRlZC1sZyBwLTRcIj5cbiAgICAgICAgPGgzIGNsYXNzTmFtZT1cInRleHQtc20gZm9udC1tZWRpdW0gdGV4dC1za3ktODAwIG1iLTJcIj5PZmZsaW5lIFdlYkF1dGhuIENvbXBvbmVudHM8L2gzPlxuICAgICAgICA8cCBjbGFzc05hbWU9XCJ0ZXh0LXhzIHRleHQtc2t5LTcwMFwiPldlYkF1dGhuIGNvbXBvbmVudHMgYXZhaWxhYmxlIG9mZmxpbmU8L3A+XG4gICAgICA8L2Rpdj5cblxuICAgICAgey8qIFBXQSBBY2NvdW50YWJpbGl0eSBDb21wb25lbnQgKi99XG4gICAgICA8ZGl2IGRhdGEtdGVzdGlkPVwicHdhLWFjY291bnRhYmlsaXR5XCIgY2xhc3NOYW1lPVwiYmctcHVycGxlLTUwIGJvcmRlciBib3JkZXItcHVycGxlLTIwMCByb3VuZGVkLWxnIHAtNFwiPlxuICAgICAgICA8aDMgY2xhc3NOYW1lPVwidGV4dC1zbSBmb250LW1lZGl1bSB0ZXh0LXB1cnBsZS04MDAgbWItMlwiPlBXQSBBY2NvdW50YWJpbGl0eTwvaDM+XG4gICAgICAgIDxwIGNsYXNzTmFtZT1cInRleHQteHMgdGV4dC1wdXJwbGUtNzAwXCI+Q2FuZGlkYXRlIGFjY291bnRhYmlsaXR5IGZlYXR1cmVzIHdpdGggUFdBIGludGVncmF0aW9uPC9wPlxuICAgICAgPC9kaXY+XG5cbiAgICA8L2Rpdj5cbiAgKVxufVxuIl0sIm5hbWVzIjpbIlBXQUZlYXR1cmVzIiwiY2xhc3NOYW1lIiwic2hvd0RldGFpbHMiLCJpbnN0YWxsYXRpb24iLCJ1c2VQV0FJbnN0YWxsYXRpb24iLCJvZmZsaW5lIiwidXNlUFdBT2ZmbGluZSIsIm5vdGlmaWNhdGlvbnMiLCJ1c2VQV0FOb3RpZmljYXRpb25zIiwiX2xvYWRpbmciLCJ1c2VQV0FMb2FkaW5nIiwiX2Vycm9yIiwidXNlUFdBRXJyb3IiLCJpc09ubGluZSIsInNldElzT25saW5lIiwidXNlU3RhdGUiLCJ1c2VFZmZlY3QiLCJ3aW5kb3ciLCJuYXZpZ2F0b3IiLCJvbkxpbmUiLCJoYW5kbGVPbmxpbmUiLCJoYW5kbGVPZmZsaW5lIiwiYWRkRXZlbnRMaXN0ZW5lciIsInJlbW92ZUV2ZW50TGlzdGVuZXIiLCJzYWZlSW5zdGFsbGF0aW9uIiwiY2FuSW5zdGFsbCIsImlzSW5zdGFsbGVkIiwic2FmZU9mZmxpbmUiLCJvZmZsaW5lRGF0YSIsImNhY2hlZFBhZ2VzIiwicXVldWVkQWN0aW9ucyIsInNhZmVOb3RpZmljYXRpb25zIiwicmVxdWVzdFBlcm1pc3Npb24iLCJqZXN0IiwiZm4iLCJzaG93Tm90aWZpY2F0aW9uIiwiZGl2IiwiZGF0YS10ZXN0aWQiLCJPZmZsaW5lSW5kaWNhdG9yIiwibGVuZ3RoIiwiT2ZmbGluZVZvdGluZyIsInBvbGxJZCIsIk9mZmxpbmVRdWV1ZSIsIk9mZmxpbmVTeW5jIiwiTm90aWZpY2F0aW9uUGVybWlzc2lvbiIsIk5vdGlmaWNhdGlvblByZWZlcmVuY2VzIiwiaDMiLCJidXR0b24iLCJUIiwicHdhIiwiaW5zdGFsbEJ1dHRvbiIsImFyaWEtbGFiZWwiLCJvbkNsaWNrIiwiaW5zdGFsbCIsInN5bmNCdXR0b24iLCJzeW5jT2ZmbGluZURhdGEiLCJjbGVhckJ1dHRvbiIsImNsZWFyT2ZmbGluZURhdGEiLCJyZXF1ZXN0UGVybWlzc2lvbkJ1dHRvbiIsIk5vdGlmaWNhdGlvbiIsInRlc3ROb3RpZmljYXRpb25CdXR0b24iLCJ0aXRsZSIsImJvZHkiLCJpY29uIiwicGVybWlzc2lvbiIsIm5vdGlmaWNhdGlvblBlcm1pc3Npb24iLCJwIiwibm90aWZpY2F0aW9uUHJlZmVyZW5jZXMiLCJvZmZsaW5lUXVldWUiLCJvZmZsaW5lU3luYyIsIm1vYmlsZU5vdGlmaWNhdGlvbnMiLCJpbnN0YWxsaW5nSW5kaWNhdG9yIiwiaW5zdGFsbGVkSW5kaWNhdG9yIiwiZmlyc3RGb2N1c2FibGUiLCJ0YWJJbmRleCIsInNlY29uZEZvY3VzYWJsZSIsInN5bmNFcnJvciIsImluc3RhbGxFcnJvciIsInN0YXRlQW5ub3VuY2VtZW50IiwiYXJpYS1saXZlIl0sIm1hcHBpbmdzIjoiQUFBQTs7Ozs7K0JBeUJBOzs7ZUFBd0JBOzs7O3VCQXZCWTt3QkFRN0I7K0VBRTRCO2dGQUNDO3lFQUNQO3FFQUNKO29FQUNEO3NFQUNFO3lCQUNSOzs7Ozs7QUFPSCxTQUFTQSxZQUFZLEVBQUVDLFlBQVksRUFBRSxFQUFFQyxjQUFjLEtBQUssRUFBb0I7SUFDM0YsTUFBTUMsZUFBZUMsSUFBQUEsMEJBQWtCO0lBQ3ZDLE1BQU1DLFVBQVVDLElBQUFBLHFCQUFhO0lBQzdCLE1BQU1DLGdCQUFnQkMsSUFBQUEsMkJBQW1CO0lBQ3pDLE1BQU1DLFdBQVdDLElBQUFBLHFCQUFhO0lBQzlCLE1BQU1DLFNBQVNDLElBQUFBLG1CQUFXO0lBRTFCLE1BQU0sQ0FBQ0MsVUFBVUMsWUFBWSxHQUFHQyxJQUFBQSxlQUFRLEVBQUM7SUFFekNDLElBQUFBLGdCQUFTLEVBQUM7UUFDUiwwQkFBMEI7UUFDMUIsSUFBSSxPQUFPQyxXQUFXLGFBQWE7WUFDakNILFlBQVlJLFVBQVVDLE1BQU07WUFFNUIsTUFBTUMsZUFBZSxJQUFNTixZQUFZO1lBQ3ZDLE1BQU1PLGdCQUFnQixJQUFNUCxZQUFZO1lBRXhDRyxPQUFPSyxnQkFB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

@@ -7,7 +7,6 @@
  */
 
 import { devLog } from './logger';
-import { withOptional } from './objects';
 
 export interface ApiLogContext {
   route: string;
@@ -32,11 +31,12 @@ export class ApiLogger {
   }
 
   private createContext(additionalContext: Partial<ApiLogContext> = {}): ApiLogContext {
-    return withOptional({
+    return {
       route: this.route,
       method: this.method,
       duration: Date.now() - this.startTime,
-    }, additionalContext);
+      ...additionalContext
+    };
   }
 
   info(message: string, metadata?: Record<string, any>) {
@@ -67,7 +67,7 @@ export class ApiLogger {
     });
   }
 
-  success(message: string, statusCode: number = 200, metadata?: Record<string, any>) {
+  success(message: string, statusCode = 200, metadata?: Record<string, any>) {
     devLog(`[${this.method} ${this.route}] ${message}`, {
       ...this.createContext({ statusCode, metadata }),
       level: 'success'

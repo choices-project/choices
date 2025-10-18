@@ -6,7 +6,8 @@
  */
 
 import { usePWANotifications as usePWANotificationsStore } from '@/lib/stores';
+import type { PWANotification } from '@/lib/stores/pwaStore';
 
-export function useNotifications() {
+export function useNotifications(): PWANotification[] {
   return usePWANotificationsStore();
 }

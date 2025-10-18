@@ -17,7 +17,7 @@ export default async function AdminLayoutPage({
   children: React.ReactNode;
 }) {
   // Server-side admin check - this is the authoritative gate
-  const user = await getAdminUser();
+  const user = await getAdminUser() as { id: string; email?: string } | null;
   
   if (!user) {
     // For E2E tests, show access denied page instead of redirecting

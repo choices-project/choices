@@ -6,64 +6,35 @@
  */
 
 import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach } from '@jest/globals';
-import { createClient } from '@supabase/supabase-js';
 import { NextRequest } from 'next/server';
 import { GET, POST } from '@/app/api/polls/route';
+import { 
+  setupTestDatabase, 
+  createTestUser, 
+  trackTestData,
+  cleanupTestDatabase 
+} from '../../../helpers/database-test-utils';
 
-// Set real Supabase credentials directly for testing
-process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://muqwrehywjrbaeerjgfb.supabase.co';
-process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = 'sb_publishable_tJOpGO2IPjujJDQou44P_g_BgbTFBfc';
-
-// Use real Supabase client with real credentials
+// Use real test database
 let supabase: any;
-
-try {
-  supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
-} catch (error) {
-  console.warn('Real Supabase credentials not set up. This test requires real credentials.');
-  console.warn('Please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY environment variables.');
-}
+let testUser: any;
 
 describe('Integration Tests - API + Database', () => {
   let testUser: any;
   let testPollId: string | null = null;
 
   beforeAll(async () => {
-    if (!supabase) {
-      console.warn('Skipping tests - Real Supabase credentials not set up');
-      return;
-    }
-
-    // Login with real test user
-    console.log('Integration: Logging in with real test user...');
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email: 'test@example.com',
-      password: 'TestPassword123!'
-    });
-
-    if (error) {
-      console.error('Failed to login with test user:', error);
-      throw new Error(`Failed to login with test user: ${error.message}`);
-    }
-
-    testUser = data.user;
-    console.log('Integration: Successfully logged in with test user:', testUser.email);
+    // Setup real test database with proper integration testing
+    supabase = await setupTestDatabase();
+    testUser = await createTestUser(supabase);
+    
+    console.log('Integration: Test database setup complete');
   });
 
   afterAll(async () => {
-    if (!supabase) return;
-
-    // Clean up test data
-    if (testPollId) {
-      console.log('Integration: Cleaning up test poll:', testPollId);
-      await supabase.from('polls').delete().eq('id', testPollId);
-    }
-
-    // Sign out
-    await supabase.auth.signOut();
+    // Clean up test database with proper cleanup
+    await cleanupTestDatabase(supabase);
+    console.log('Integration: Test database cleanup complete');
   });
 
   beforeEach(() => {
@@ -89,16 +60,26 @@ describe('Integration Tests - API + Database', () => {
       }
 
       // Integration test: API + Database
-      // 1. Create poll via database
+      // 1. Create poll via database using actual schema
       const pollData = {
         title: 'Integration Test Poll',
+        description: 'A test poll for integration testing',
         options: [
-          { text: 'Integration Option 1', votes: 0 },
-          { text: 'Integration Option 2', votes: 0 }
+          'Integration Option 1',
+          'Integration Option 2'
         ],
+        voting_method: 'single',
+        privacy_level: 'public',
+        category: 'test',
+        tags: ['integration', 'test'],
         created_by: testUser.id,
+        status: 'active',
         total_votes: 0,
-        status: 'active'
+        participation: 0,
+        sponsors: [],
+        settings: {},
+        hashtags: [],
+        poll_settings: {}
       };
 
       const { data: createdPoll, error: createError } = await supabase
@@ -113,6 +94,7 @@ describe('Integration Tests - API + Database', () => {
 
       // Store for cleanup
       testPollId = createdPoll.id;
+      trackTestData('polls', createdPoll.id);
 
       // 2. Retrieve poll via API
       const request = new NextRequest('http://localhost:3000/api/polls');
@@ -138,16 +120,26 @@ describe('Integration Tests - API + Database', () => {
       }
 
       // Integration test: Poll creation + Voting
-      // 1. Create poll
+      // 1. Create poll using actual schema
       const pollData = {
         title: 'Voting Integration Poll',
+        description: 'A poll for testing voting integration',
         options: [
-          { text: 'Vote Option 1', votes: 0 },
-          { text: 'Vote Option 2', votes: 0 }
+          'Vote Option 1',
+          'Vote Option 2'
         ],
+        voting_method: 'single',
+        privacy_level: 'public',
+        category: 'test',
+        tags: ['voting', 'integration'],
         created_by: testUser.id,
+        status: 'active',
         total_votes: 0,
-        status: 'active'
+        participation: 0,
+        sponsors: [],
+        settings: {},
+        hashtags: [],
+        poll_settings: {}
       };
 
       const { data: poll, error: pollError } = await supabase
@@ -162,12 +154,17 @@ describe('Integration Tests - API + Database', () => {
       // Store for cleanup
       testPollId = poll.id;
 
-      // 2. Add votes
+      // 2. Add votes using actual schema
       const voteData = {
         poll_id: poll.id,
         user_id: testUser.id,
-        option_index: 0,
-        created_at: new Date().toISOString()
+        choice: 0,
+        voting_method: 'single',
+        vote_data: {
+          choice: 0
+        },
+        is_verified: true,
+        is_active: true
       };
 
       const { data: vote, error: voteError } = await supabase
@@ -208,16 +205,26 @@ describe('Integration Tests - API + Database', () => {
       }
 
       // Integration test: Poll + Votes + Results
-      // 1. Create poll
+      // 1. Create poll using actual schema
       const pollData = {
         title: 'Results Integration Poll',
+        description: 'A poll for testing results calculation',
         options: [
-          { text: 'Results Option 1', votes: 0 },
-          { text: 'Results Option 2', votes: 0 }
+          'Results Option 1',
+          'Results Option 2'
         ],
+        voting_method: 'single',
+        privacy_level: 'public',
+        category: 'test',
+        tags: ['results', 'integration'],
         created_by: testUser.id,
+        status: 'active',
         total_votes: 0,
-        status: 'active'
+        participation: 0,
+        sponsors: [],
+        settings: {},
+        hashtags: [],
+        poll_settings: {}
       };
 
       const { data: poll, error: pollError } = await supabase
@@ -232,11 +239,35 @@ describe('Integration Tests - API + Database', () => {
       // Store for cleanup
       testPollId = poll.id;
 
-      // 2. Add multiple votes
+      // 2. Add multiple votes using actual schema
       const votes = [
-        { poll_id: poll.id, user_id: testUser.id, option_index: 0 },
-        { poll_id: poll.id, user_id: 'user2', option_index: 0 },
-        { poll_id: poll.id, user_id: 'user3', option_index: 1 }
+        { 
+          poll_id: poll.id, 
+          user_id: testUser.id, 
+          choice: 0,
+          voting_method: 'single',
+          vote_data: { choice: 0 },
+          is_verified: true,
+          is_active: true
+        },
+        { 
+          poll_id: poll.id, 
+          user_id: 'user2', 
+          choice: 0,
+          voting_method: 'single',
+          vote_data: { choice: 0 },
+          is_verified: true,
+          is_active: true
+        },
+        { 
+          poll_id: poll.id, 
+          user_id: 'user3', 
+          choice: 1,
+          voting_method: 'single',
+          vote_data: { choice: 1 },
+          is_verified: true,
+          is_active: true
+        }
       ];
 
       for (const vote of votes) {
@@ -257,8 +288,8 @@ describe('Integration Tests - API + Database', () => {
       expect(allVotes).toHaveLength(3);
 
       // 4. Verify integration
-      const option1Votes = allVotes.filter((vote: any) => vote.option_index === 0).length;
-      const option2Votes = allVotes.filter((vote: any) => vote.option_index === 1).length;
+      const option1Votes = allVotes.filter((vote: any) => vote.choice === 0).length;
+      const option2Votes = allVotes.filter((vote: any) => vote.choice === 1).length;
 
       expect(option1Votes).toBe(2);
       expect(option2Votes).toBe(1);

@@ -132,7 +132,7 @@ export function createRouteCodeSplitting() {
     /**
      * Preload route component
      */
-    preloadRoute: (route: string, importFn: () => Promise<Record<string, unknown>>, delay: number = 0) => {
+    preloadRoute: (route: string, importFn: () => Promise<Record<string, unknown>>, delay = 0) => {
       if (preloadedRoutes.has(route)) return;
       
       setTimeout(() => {
@@ -384,7 +384,7 @@ export function createUserAgentCodeSplitting<T>(
  */
 export function createPrefetchCodeSplitting<T>(
   importFn: () => Promise<T>,
-  prefetchDelay: number = 2000
+  prefetchDelay = 2000
 ): {
   load: () => Promise<T>;
   prefetch: () => void;

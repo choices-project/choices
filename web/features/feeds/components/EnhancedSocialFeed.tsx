@@ -21,12 +21,15 @@ import {
 } from '@heroicons/react/24/outline';
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 
+
 import type { UserPreferences } from '@/features/feeds/types';
 import { 
   useFeeds, 
   useFeedsActions, 
-  useFeedsLoading
+  useFeedsLoading,
+  useNotificationStore
 } from '@/lib/stores';
+import { logger } from '@/lib/utils/logger';
 
 import FeedItem from './FeedItem';
 import InfiniteScroll from './InfiniteScroll';
@@ -63,14 +66,22 @@ export default function EnhancedSocialFeed({
   enableHaptics = true,
   showTrending = true
 }: EnhancedSocialFeedProps) {
+  // ✅ MIGRATED: Use existing stores instead of useState
+  // Feeds state from Feeds Store
   const feeds = useFeeds();
   const { loadFeeds, likeFeed, bookmarkFeed, refreshFeeds } = useFeedsActions();
   const isLoading = useFeedsLoading();
   
-  // Use store state instead of local state
-  const feedItems = feeds;
-  const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
+  // Global UI state from App Store
+  
+  // PWA state from PWA Store
+  
+  // User state from User Store
+  
+  // Notification state from Notification Store
+  const addNotification = useNotificationStore(state => state.addNotification);
+  
+  // ✅ Keep local state for component-specific concerns
   const [personalizationScore, setPersonalizationScore] = useState(0);
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
   
@@ -78,13 +89,10 @@ export default function EnhancedSocialFeed({
   const refreshIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Load feed items with personalization
-  const loadFeedItems = useCallback(async (pageNum: number, isRefresh: boolean = false) => {
+  const loadFeedItems = useCallback(async (pageNum: number, isRefresh = false) => {
     if (isLoading) return;
 
     try {
-      // Update page state
-      setPage(pageNum);
-      
       // Use FeedsStore to load feeds
       if (isRefresh) {
         await refreshFeeds();
@@ -92,14 +100,28 @@ export default function EnhancedSocialFeed({
         await loadFeeds('all');
       }
 
-      setHasMore(feeds.length === 20);
+      // Update component-specific state
       setPersonalizationScore(0); // This would come from the store
       setLastUpdate(new Date());
+      
+      // Add notification for user feedback
+      addNotification({
+        type: 'success',
+        title: 'Feed Updated',
+        message: isRefresh ? 'Feed refreshed!' : 'New posts loaded!',
+        duration: 3000
+      });
     } catch (error) {
       // Error handling - could be logged to monitoring service
       console.error('Error loading feed:', error);
+      addNotification({
+        type: 'error',
+        title: 'Feed Load Failed',
+        message: 'Failed to load feed. Please try again.',
+        duration: 5000
+      });
     }
-  }, [isLoading, loadFeeds, refreshFeeds, feeds.length]);
+  }, [isLoading, loadFeeds, refreshFeeds, addNotification]);
 
   // Load initial feed
   useEffect(() => {
@@ -143,14 +165,14 @@ export default function EnhancedSocialFeed({
   // Analytics tracking
   const trackEvent = useCallback((event: string, data?: any) => {
     if (enableAnalytics) {
-      logger.info('Analytics:', event, data);
+      logger.info('Analytics:', { event, data });
       // Implement analytics tracking for social media interactions
       try {
         // Track social media click event
         if (typeof window !== 'undefined' && window.gtag) {
           window.gtag('event', 'social_media_click', {
             event_category: 'civics',
-            event_label: data?.platform || 'unknown',
+            event_label: data?.platform ?? 'unknown',
             value: 1
           });
         }
@@ -158,10 +180,10 @@ export default function EnhancedSocialFeed({
         // Track in local analytics if available
         if (typeof window !== 'undefined' && (window as any).analytics) {
           (window as any).analytics.track('Social Media Clicked', {
-            platform: data?.platform || 'unknown',
-            handle: data?.handle || 'unknown',
-            url: data?.url || 'unknown',
-            representative: data?.representative || 'unknown'
+            platform: data?.platform ?? 'unknown',
+            handle: data?.handle ?? 'unknown',
+            url: data?.url ?? 'unknown',
+            representative: data?.representative ?? 'unknown'
           });
         }
       } catch (error) {
@@ -191,16 +213,16 @@ export default function EnhancedSocialFeed({
     
     // Native sharing if available
     if (navigator.share) {
-      const item = feedItems.find(item => item.id === itemId);
+      const item = feeds.find((item: any) => item.id === itemId);
       if (item) {
         navigator.share({
           title: item.title,
-          text: item.summary || '',
-          url: item.source.url || window.location.href
+          text: item.summary ?? '',
+          url: item.source.url ?? window.location.href
         });
       }
     }
-  }, [feedItems, onShare, trackEvent]);
+  }, [feeds, onShare, trackEvent]);
 
   const handleComment = useCallback((itemId: string) => {
     onComment?.(itemId);
@@ -218,8 +240,8 @@ export default function EnhancedSocialFeed({
 
   // Handle load more
   const handleLoadMore = useCallback(async () => {
-    await loadFeedItems(page + 1, false);
-  }, [loadFeedItems, page]);
+    await loadFeedItems(1, false);
+  }, [loadFeedItems]);
 
   // Format last update time
   const formatLastUpdate = (date: Date) => {
@@ -291,7 +313,7 @@ export default function EnhancedSocialFeed({
       {/* Enhanced Feed with Infinite Scroll */}
       <InfiniteScroll
         onLoadMore={handleLoadMore}
-        hasMore={hasMore}
+        hasMore={feeds.length > 0}
         isLoading={isLoading}
         onRefresh={handleRefresh}
         enableScrollToTop={true}
@@ -310,10 +332,10 @@ export default function EnhancedSocialFeed({
           </div>
         }
       >
-        {feedItems.map((item) => (
+        {feeds.map((item: any) => (
           <FeedItem
             key={item.id}
-            item={item as any} // Type conversion needed due to different FeedItem types
+            item={item} // Type conversion needed due to different FeedItem types
             onLike={handleLike}
             onShare={handleShare}
             onBookmark={handleBookmark}

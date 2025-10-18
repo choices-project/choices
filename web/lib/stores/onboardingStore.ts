@@ -12,10 +12,8 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { persist } from 'zustand/middleware';
-import { shallow } from 'zustand/shallow';
 
 import { logger } from '@/lib/utils/logger';
-import { withOptional } from '@/lib/utils/objects';
 
 // Onboarding data types
 interface AuthData {
@@ -327,31 +325,33 @@ export const useOnboardingStore = create<OnboardingStore>()(
         
         // Data management actions
         updateFormData: (step, data) => set((state) => ({
-          stepData: withOptional(state.stepData, {
-            [step]: withOptional(state.stepData[step] || {}, data)
-          })
+          stepData: {
+            ...state.stepData,
+            [step]: { ...(state.stepData[step] || {}), ...data }
+          }
         })),
         
         updateAuthData: (data) => set((state) => ({
-          authData: withOptional(state.authData, data)
+          authData: { ...state.authData, ...data }
         })),
         
         updateProfileData: (data) => set((state) => ({
-          profileData: withOptional(state.profileData, data)
+          profileData: { ...state.profileData, ...data }
         })),
         
         updateValuesData: (data) => set((state) => ({
-          valuesData: withOptional(state.valuesData, data)
+          valuesData: { ...state.valuesData, ...data }
         })),
         
         updatePreferencesData: (data) => set((state) => ({
-          preferencesData: withOptional(state.preferencesData, data)
+          preferencesData: { ...state.preferencesData, ...data }
         })),
         
         clearStepData: (step) => set((state) => ({
-          stepData: withOptional(state.stepData, {
+          stepData: {
+            ...state.stepData,
             [step]: {}
-          })
+          }
         })),
         
         clearAllData: () => set({
@@ -366,21 +366,21 @@ export const useOnboardingStore = create<OnboardingStore>()(
         markStepCompleted: (step) => set((state) => ({
           completedSteps: [...state.completedSteps, step],
           steps: state.steps.map(s => 
-            s.id === step ? withOptional(s, { completed: true }) : s
+            s.id === step ? { ...s, completed: true } : s
           )
         })),
         
         markStepSkipped: (step) => set((state) => ({
           skippedSteps: [...state.skippedSteps, step],
           steps: state.steps.map(s => 
-            s.id === step ? withOptional(s, { skipped: true }) : s
+            s.id === step ? { ...s, skipped: true } : s
           )
         })),
         
         markStepIncomplete: (step) => set((state) => ({
           completedSteps: state.completedSteps.filter(s => s !== step),
           steps: state.steps.map(s => 
-            s.id === step ? withOptional(s, { completed: false }) : s
+            s.id === step ? { ...s, completed: false } : s
           )
         })),
         

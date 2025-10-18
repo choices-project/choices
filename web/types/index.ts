@@ -18,7 +18,7 @@ export type {
   PollEventHandler,
   PollListProps,
   ResultsChartProps
-} from './poll';
+} from '@/features/polls/types/index';
 
 // Export frontend types (excluding duplicates)
 export type {

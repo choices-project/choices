@@ -6,7 +6,6 @@
  */
 
 import { logger } from '@/lib/utils/logger';
-import { withOptional } from '@/lib/utils/objects';
 
 import type { CacheStats } from './caching';
 
@@ -197,21 +196,19 @@ export class IntegrationMonitor {
         errorRate = totalRequests > 0 ? totalErrors / totalRequests : 0;
       }
 
-      const healthCheck: HealthCheck = withOptional(
-        {
-          apiName,
-          status,
-          timestamp: new Date(),
+      const healthCheck: HealthCheck = {
+        apiName,
+        status,
+        timestamp: new Date(),
+        responseTime,
+        errorRate,
+        details: {
           responseTime,
           errorRate,
-          details: {
-            responseTime,
-            errorRate,
-            isHealthy
-          }
+          isHealthy
         },
-        { lastError }
-      );
+        ...(lastError && { lastError })
+      };
 
       this.healthChecks.set(apiName, healthCheck);
       
@@ -238,7 +235,7 @@ export class IntegrationMonitor {
 
       this.healthChecks.set(apiName, healthCheck);
       
-      logger.error('Health check failed', lastError as unknown as Error, { apiName, responseTime, lastError: lastError });
+      logger.error('Health check failed', lastError as unknown as Error, { apiName, responseTime, lastError });
       return healthCheck;
     }
   }
@@ -254,7 +251,7 @@ export class IntegrationMonitor {
   /**
    * Get recent metrics for an API
    */
-  getRecentMetrics(apiName: string, hours: number = 24): IntegrationMetrics[] {
+  getRecentMetrics(apiName: string, hours = 24): IntegrationMetrics[] {
     const metricsList = this.metrics.get(apiName) || [];
     const cutoff = Date.now() - (hours * 60 * 60 * 1000);
     

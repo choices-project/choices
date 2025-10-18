@@ -329,8 +329,6 @@ export const T = {
   
   // Login Form
   loginHydrated: 'login-hydrated',
-  loginForm: 'login-form',
-  loginError: 'login-error',
   
   // Onboarding Passkey Setup
   onboardingPasskeySetup: 'onboarding-passkey-setup',
@@ -352,9 +350,7 @@ export const T = {
   passwordStrength: 'password-strength',
   passwordMatch: 'password-match',
   displayNameValidation: 'display-name-validation',
-  submitButton: 'submit-button',
   successMessage: 'success-message',
-  userMenu: 'user-menu',
   userAvatar: 'user-avatar',
   emailError: 'email-error',
   passwordError: 'password-error',

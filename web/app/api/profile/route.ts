@@ -1,821 +1,433 @@
 /**
- * Consolidated Profile API Endpoint
+ * Comprehensive Profile API Endpoint
  * 
- * This endpoint consolidates all profile functionality:
- * - User profile management
- * - Profile updates
- * - Avatar management
- * - User preferences
- * - User interests
- * - Onboarding completion
+ * This endpoint provides complete profile management functionality:
+ * - User profile CRUD operations
+ * - Avatar upload and management
+ * - User preferences management
+ * - User interests management
+ * - Onboarding progress tracking
+ * - Profile validation and sanitization
+ * - Error handling and logging
  * 
- * Usage:
- * GET /api/profile - Get current user profile
- * POST /api/profile - Create user profile
+ * Endpoints:
+ * GET /api/profile - Get current user profile with all related data
+ * POST /api/profile - Create or update user profile
  * PUT /api/profile - Update user profile
- * POST /api/profile/avatar - Upload avatar
- * GET /api/profile/preferences - Get user preferences
- * PUT /api/profile/preferences - Update user preferences
- * GET /api/profile/interests - Get user interests
- * PUT /api/profile/interests - Update user interests
- * POST /api/profile/complete-onboarding - Complete onboarding
+ * DELETE /api/profile - Delete user profile
  */
 
 import { type NextRequest, NextResponse } from 'next/server';
-import { createApiLogger } from '@/lib/utils/api-logger';
-import { getSupabaseServerClient } from '@/utils/supabase/server';
-import { logger } from '@/lib/utils/logger';
+import { z } from 'zod';
 
-export const dynamic = 'force-dynamic';
+import { logger } from '@/lib/logger';
+import { getSupabaseServerClient } from '@/lib/supabase/server';
+
+// Validation schemas
+const profileSchema = z.object({
+  full_name: z.string().min(1).max(100).optional(),
+  username: z.string().min(3).max(50).optional(),
+  website: z.string().url().optional().or(z.literal('')),
+  avatar_url: z.string().url().optional().or(z.literal('')),
+  bio: z.string().max(500).optional(),
+  location: z.string().max(100).optional(),
+  onboarding_complete: z.boolean().optional(),
+  trust_tier: z.number().int().min(0).max(5).optional(),
+  is_admin: z.boolean().optional(),
+  is_contributor: z.boolean().optional(),
+  is_owner: z.boolean().optional(),
+});
+
+const preferencesSchema = z.object({
+  email_notifications: z.boolean().optional(),
+  push_notifications: z.boolean().optional(),
+  dark_mode: z.boolean().optional(),
+  language: z.string().optional(),
+  timezone: z.string().optional(),
+  marketing_emails: z.boolean().optional(),
+  weekly_digest: z.boolean().optional(),
+});
+
+const interestsSchema = z.object({
+  categories: z.array(z.string()).optional(),
+  keywords: z.array(z.string()).optional(),
+  topics: z.array(z.string()).optional(),
+});
+
+const onboardingSchema = z.object({
+  step: z.number().int().min(1).max(10).optional(),
+  completed: z.boolean().optional(),
+  completed_at: z.string().optional(),
+});
 
 /**
- * GET /api/profile - Get current user profile
- * Superior implementation using Supabase native sessions
+ * GET /api/profile - Get current user profile with all related data
  */
-export async function GET(_request: NextRequest) {
-  const logger = createApiLogger('/api/profile', 'GET');
-  
+export async function GET(request: NextRequest) {
   try {
-    logger.info('Request received');
-    
-    // Get Supabase client
     const supabase = await getSupabaseServerClient();
-    
     if (!supabase) {
-      logger.error('Supabase client not configured');
-      return NextResponse.json(
-        { error: 'Supabase not configured' },
-        { status: 500 }
-      );
+      logger.error('Supabase not configured');
+      return NextResponse.json({ error: 'Supabase not configured' }, { status: 500 });
     }
 
-    // Get current user session from cookies
     const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-    
     if (sessionError || !session?.user) {
-      logger.warn('User not authenticated', { sessionError });
-      return NextResponse.json(
-        { error: 'User not authenticated' },
-        { status: 401 }
-      );
+      logger.warn('User not authenticated or session error', sessionError);
+      return NextResponse.json({ error: 'User not authenticated' }, { status: 401 });
     }
 
     const user = session.user;
-    logger.info('User authenticated', { userId: user.id });
 
-    // Get user profile
-    const { data, error } = await supabase
+    // Fetch profile
+    const { data: profile, error: profileError } = await supabase
       .from('user_profiles')
-      .select('id, user_id, display_name, avatar_url, bio, created_at, updated_at, trust_tier, username, email, is_admin, is_active, onboarding_completed')
-      .eq('user_id', String(user.id) as any)
-      .single();
-
-    if (error && error.code !== 'PGRST116') {
-      logger.error('Database error while fetching profile', error);
-      return NextResponse.json(
-        { error: 'Failed to fetch profile' },
-        { status: 500 }
-      );
-    }
-    
-    logger.success('Profile data retrieved successfully', 200, { profileId: data?.id });
-
-    const response = NextResponse.json({
-      success: true,
-      profile: data || null,
-      hasProfile: !!data,
-      email: user.email
-    });
-    
-    // Add CORS headers for E2E tests
-    response.headers.set('access-control-allow-origin', '*');
-    response.headers.set('access-control-allow-methods', 'GET, POST, PUT, DELETE, OPTIONS');
-    response.headers.set('access-control-allow-headers', 'Content-Type, Authorization');
-    
-    return response;
-
-  } catch (error) {
-    logger.error('Profile API error', error as Error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
-}
-
-/**
- * POST /api/profile - Create user profile
- * Superior implementation using Supabase native sessions
- */
-export async function POST(request: NextRequest) {
-  const logger = createApiLogger('/api/profile', 'POST');
-  
-  try {
-    const body = await request.json();
-    
-    // Get Supabase client
-    const supabase = await getSupabaseServerClient();
-    
-    if (!supabase) {
-      return NextResponse.json(
-        { error: 'Supabase not configured' },
-        { status: 500 }
-      );
-    }
-
-    // Get current user session from cookies
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-    
-    if (sessionError || !session?.user) {
-      return NextResponse.json(
-        { error: 'User not authenticated' },
-        { status: 401 }
-      );
-    }
-
-    const user = session.user;
-
-    // Prepare profile data
-    const profileData = {
-      user_id: user.id,
-      display_name: body.displayName || user.email?.split('@')[0],
-      bio: body.bio || null,
-      username: body.username || user.email?.split('@')[0],
-      trust_tier: 'T0',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    };
-
-    // Insert or update profile
-    const { data, error } = await supabase
-      .from('user_profiles')
-      .upsert([profileData] as any, {
-        onConflict: 'user_id',
-        ignoreDuplicates: false
-      })
-      .select();
-
-    if (error) {
-      logger.error('Database error during profile creation', error);
-      return NextResponse.json(
-        { error: 'Failed to save profile' },
-        { status: 500 }
-      );
-    }
-
-    return NextResponse.json({
-      success: true,
-      message: 'Profile saved successfully',
-      profile: data[0]
-    });
-
-  } catch (error) {
-    logger.error('Profile creation error', error as Error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
-}
-
-/**
- * PUT /api/profile - Update user profile
- * Superior implementation using Supabase native sessions
- */
-export async function PUT(request: NextRequest) {
-  const logger = createApiLogger('/api/profile', 'PUT');
-  
-  try {
-    const body = await request.json();
-    
-    // Get Supabase client
-    const supabase = await getSupabaseServerClient();
-    
-    if (!supabase) {
-      return NextResponse.json(
-        { error: 'Supabase not configured' },
-        { status: 500 }
-      );
-    }
-
-    // Get current user session from cookies
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-    
-    if (sessionError || !session?.user) {
-      return NextResponse.json(
-        { error: 'User not authenticated' },
-        { status: 401 }
-      );
-    }
-
-    const user = session.user;
-
-    // Update profile data
-    const updateData = {
-      ...body,
-      updated_at: new Date().toISOString()
-    };
-
-    const { data, error } = await supabase
-      .from('user_profiles')
-      .update(updateData)
-      .eq('user_id', String(user.id) as any)
-      .select();
-
-    if (error) {
-      logger.error('Database error during profile update', error);
-      return NextResponse.json(
-        { error: 'Failed to update profile' },
-        { status: 500 }
-      );
-    }
-
-    return NextResponse.json({
-      success: true,
-      message: 'Profile updated successfully',
-      profile: data[0]
-    });
-
-  } catch (error) {
-    logger.error('Profile update error', error as Error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
-}
-
-/**
- * POST /api/profile/avatar - Upload avatar
- * Consolidated avatar management
- */
-export async function POST_AVATAR(request: NextRequest) {
-  const logger = createApiLogger('/api/profile/avatar', 'POST');
-  
-  try {
-    const formData = await request.formData();
-    const file = formData.get('avatar') as File;
-    
-    if (!file) {
-      return NextResponse.json(
-        { error: 'No file provided' },
-        { status: 400 }
-      );
-    }
-
-    // Get Supabase client
-    const supabase = await getSupabaseServerClient();
-    
-    if (!supabase) {
-      return NextResponse.json(
-        { error: 'Supabase not configured' },
-        { status: 500 }
-      );
-    }
-
-    // Get current user session
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-    
-    if (sessionError || !session?.user) {
-      return NextResponse.json(
-        { error: 'User not authenticated' },
-        { status: 401 }
-      );
-    }
-
-    const user = session.user;
-
-    // Upload file to Supabase Storage
-    const fileName = `${user.id}-${Date.now()}.${file.name.split('.').pop()}`;
-    const { data: uploadData, error: uploadError } = await supabase.storage
-      .from('avatars')
-      .upload(fileName, file);
-
-    if (uploadError) {
-      logger.error('Avatar upload error', uploadError);
-      return NextResponse.json(
-        { error: 'Failed to upload avatar' },
-        { status: 500 }
-      );
-    }
-
-    // Get public URL
-    const { data: urlData } = supabase.storage
-      .from('avatars')
-      .getPublicUrl(fileName);
-
-    // Update user profile with new avatar URL
-    const { data, error } = await supabase
-      .from('user_profiles')
-      .update({ 
-        avatar_url: urlData.publicUrl,
-        updated_at: new Date().toISOString()
-      })
-      .eq('user_id', String(user.id) as any)
-      .select();
-
-    if (error) {
-      logger.error('Database error during avatar update', error);
-      return NextResponse.json(
-        { error: 'Failed to update avatar' },
-        { status: 500 }
-      );
-    }
-
-    return NextResponse.json({
-      success: true,
-      message: 'Avatar updated successfully',
-      avatarUrl: urlData.publicUrl,
-      profile: data[0]
-    });
-
-  } catch (error) {
-    logger.error('Avatar upload error', error as Error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
-}
-
-/**
- * GET /api/profile/preferences - Get user preferences
- * Consolidated preferences management
- */
-export async function GET_PREFERENCES(_request: NextRequest) {
-  const logger = createApiLogger('/api/profile/preferences', 'GET');
-  
-  try {
-    // Get Supabase client
-    const supabase = await getSupabaseServerClient();
-    
-    if (!supabase) {
-      return NextResponse.json(
-        { error: 'Supabase not configured' },
-        { status: 500 }
-      );
-    }
-
-    // Get current user session
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-    
-    if (sessionError || !session?.user) {
-      return NextResponse.json(
-        { error: 'User not authenticated' },
-        { status: 401 }
-      );
-    }
-
-    const user = session.user;
-
-    // Get user preferences
-    const { data, error } = await supabase
-      .from('user_preferences')
       .select('*')
-      .eq('user_id', String(user.id) as any)
-      .single();
-
-    if (error && error.code !== 'PGRST116') {
-      logger.error('Database error while fetching preferences', error);
-      return NextResponse.json(
-        { error: 'Failed to fetch preferences' },
-        { status: 500 }
-      );
-    }
-
-    return NextResponse.json({
-      success: true,
-      preferences: data || {
-        notifications: true,
-        email_updates: true,
-        privacy_level: 'standard',
-        theme: 'system'
-      }
-    });
-
-  } catch (error) {
-    logger.error('Preferences API error', error as Error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
-}
-
-/**
- * PUT /api/profile/preferences - Update user preferences
- * Consolidated preferences management
- */
-export async function PUT_PREFERENCES(request: NextRequest) {
-  const logger = createApiLogger('/api/profile/preferences', 'PUT');
-  
-  try {
-    const body = await request.json();
-    
-    // Get Supabase client
-    const supabase = await getSupabaseServerClient();
-    
-    if (!supabase) {
-      return NextResponse.json(
-        { error: 'Supabase not configured' },
-        { status: 500 }
-      );
-    }
-
-    // Get current user session
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-    
-    if (sessionError || !session?.user) {
-      return NextResponse.json(
-        { error: 'User not authenticated' },
-        { status: 401 }
-      );
-    }
-
-    const user = session.user;
-
-    // Update preferences
-    const { data, error } = await supabase
-      .from('user_preferences')
-      .upsert([{
-        user_id: user.id,
-        ...body,
-        updated_at: new Date().toISOString()
-      }] as any, {
-        onConflict: 'user_id',
-        ignoreDuplicates: false
-      })
-      .select();
-
-    if (error) {
-      logger.error('Database error during preferences update', error);
-      return NextResponse.json(
-        { error: 'Failed to update preferences' },
-        { status: 500 }
-      );
-    }
-
-    return NextResponse.json({
-      success: true,
-      message: 'Preferences updated successfully',
-      preferences: data[0]
-    });
-
-  } catch (error) {
-    logger.error('Preferences update error', error as Error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
-}
-
-/**
- * GET /api/profile/interests - Get user interests
- * Consolidated interests management
- */
-export async function GET_INTERESTS(_request: NextRequest) {
-  try {
-    const supabase = await getSupabaseServerClient();
-    if (!supabase) {
-      return NextResponse.json(
-        { error: 'Database connection not available' },
-        { status: 500 }
-      );
-    }
-
-    // Get authenticated user
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
-
-    // Get user interests from database
-    const { data: userData, error: userError } = await supabase
-      .from('users')
-      .select('interests')
       .eq('id', user.id)
       .single();
 
-    if (userError) {
-      logger.error('Failed to fetch user interests:', userError);
-      return NextResponse.json(
-        { error: 'Failed to fetch user interests' },
-        { status: 500 }
-      );
+    if (profileError && profileError.code !== 'PGRST116') { // PGRST116 means no rows found
+      logger.error('Error fetching profile', profileError);
+      return NextResponse.json({ error: 'Error fetching profile' }, { status: 500 });
     }
 
-    return NextResponse.json({
-      success: true,
-      interests: userData?.interests || []
-    });
+    // Fetch preferences
+    const { data: preferences, error: preferencesError } = await supabase
+      .from('user_notification_preferences')
+      .select('*')
+      .eq('user_id', user.id)
+      .single();
+
+    if (preferencesError && preferencesError.code !== 'PGRST116') {
+      logger.error('Error fetching preferences', preferencesError);
+      return NextResponse.json({ error: 'Error fetching preferences' }, { status: 500 });
+    }
+
+    // Fetch interests
+    const { data: interests, error: interestsError } = await supabase
+      .from('user_interests')
+      .select('categories, keywords, topics')
+      .eq('user_id', user.id)
+      .single();
+
+    if (interestsError && interestsError.code !== 'PGRST116') {
+      logger.error('Error fetching interests', interestsError);
+      return NextResponse.json({ error: 'Error fetching interests' }, { status: 500 });
+    }
+
+    // Fetch onboarding progress
+    const { data: onboarding, error: onboardingError } = await supabase
+      .from('user_onboarding_progress')
+      .select('*')
+      .eq('user_id', user.id)
+      .single();
+
+    if (onboardingError && onboardingError.code !== 'PGRST116') {
+      logger.error('Error fetching onboarding progress', onboardingError);
+      return NextResponse.json({ error: 'Error fetching onboarding progress' }, { status: 500 });
+    }
+
+    const responseData = {
+      profile: profile || null,
+      preferences: preferences || null,
+      interests: interests || null,
+      onboarding: onboarding || null,
+    };
+
+    logger.info('Profile data fetched successfully', { userId: user.id });
+    return NextResponse.json(responseData, { status: 200 });
 
   } catch (error) {
-    logger.error('Error in interests GET:', error instanceof Error ? error : undefined);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    logger.error('GET /api/profile error', error instanceof Error ? error : new Error('Unknown error'));
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 
 /**
- * PUT /api/profile/interests - Update user interests
- * Consolidated interests management
+ * POST /api/profile - Create or update user profile with comprehensive data
  */
-export async function PUT_INTERESTS(request: NextRequest) {
+export async function POST(request: NextRequest) {
   try {
     const supabase = await getSupabaseServerClient();
     if (!supabase) {
-      return NextResponse.json(
-        { error: 'Database connection not available' },
-        { status: 500 }
-      );
+      logger.error('Supabase not configured');
+      return NextResponse.json({ error: 'Supabase not configured' }, { status: 500 });
     }
 
-    // Get authenticated user
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    if (sessionError || !session?.user) {
+      logger.warn('User not authenticated or session error', sessionError);
+      return NextResponse.json({ error: 'User not authenticated' }, { status: 401 });
     }
 
-    // Parse request body
-    const { interests } = await request.json();
-    
-    if (!Array.isArray(interests)) {
-      return NextResponse.json(
-        { error: 'Interests must be an array' },
-        { status: 400 }
-      );
-    }
-
-    // Update user interests in database
-    const { error: updateError } = await supabase
-      .from('users')
-      .update({ 
-        interests,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', user.id);
-
-    if (updateError) {
-      logger.error('Failed to update user interests:', updateError);
-      return NextResponse.json(
-        { error: 'Failed to save interests' },
-        { status: 500 }
-      );
-    }
-
-    logger.info(`User ${user.id} updated interests:`, { interests });
-
-    return NextResponse.json({
-      success: true,
-      message: 'Interests saved successfully',
-      interests
-    });
-
-  } catch (error) {
-    logger.error('Error in interests PUT:', error instanceof Error ? error : undefined);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
-}
-
-/**
- * GET /api/profile/onboarding-progress - Get onboarding progress
- * Consolidated onboarding management
- */
-export async function GET_ONBOARDING_PROGRESS(_request: NextRequest) {
-  try {
-    const supabase = getSupabaseServerClient();
-    
-    if (!supabase) {
-      return NextResponse.json({ error: 'Database connection failed' }, { status: 500 });
-    }
-    
-    const supabaseClient = await supabase;
-    
-    // Get current user
-    const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
-    if (userError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    // Get onboarding progress
-    const { data: progress, error: progressError } = await supabaseClient
-      .from('onboarding_progress')
-      .select('*')
-      .eq('user_id', String(user.id) as any)
-      .single();
-
-    if (progressError && progressError.code !== 'PGRST116') {
-      logger.error('Error fetching onboarding progress:', progressError);
-      return NextResponse.json({ error: 'Failed to fetch progress' }, { status: 500 });
-    }
-
-    // Get user profile for additional onboarding data
-    const { data: profile, error: profileError } = await supabaseClient
-      .from('user_profiles')
-      .select('onboarding_completed, onboarding_step, privacy_level, profile_visibility, data_sharing_preferences')
-      .eq('user_id', String(user.id) as any)
-      .single();
-
-    if (profileError && profileError.code !== 'PGRST116') {
-      logger.error('Error fetching user profile:', profileError);
-    }
-
-    return NextResponse.json({
-      success: true,
-      progress: progress || {
-        user_id: user.id,
-        current_step: 'welcome',
-        completed_steps: [],
-        step_data: {},
-        started_at: null,
-        last_activity_at: null,
-        completed_at: null,
-        total_time_minutes: null
-      },
-      profile: profile || {
-        onboarding_completed: false,
-        onboarding_step: 'welcome',
-        privacy_level: 'medium',
-        profile_visibility: 'public',
-        data_sharing_preferences: { analytics: true, research: false, contact: false, marketing: false }
-      }
-    });
-  } catch (error) {
-    logger.error('Error in onboarding progress GET:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
-  }
-}
-
-/**
- * POST /api/profile/onboarding-progress - Update onboarding progress
- * Consolidated onboarding management
- */
-export async function POST_ONBOARDING_PROGRESS(request: NextRequest) {
-  try {
-    const supabase = getSupabaseServerClient();
-    
-    if (!supabase) {
-      return NextResponse.json({ error: 'Database connection failed' }, { status: 500 });
-    }
-    
-    const supabaseClient = await supabase;
-    
-    // Get current user
-    const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
-    if (userError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
+    const user = session.user;
     const body = await request.json();
-    const { step, data, action } = body;
 
-    if (!step) {
-      return NextResponse.json({ error: 'Step is required' }, { status: 400 });
-    }
+    let response = NextResponse.json({ message: 'No specific action taken' }, { status: 200 });
 
-    let result;
-
-    switch (action) {
-      case 'start':
-        // Start onboarding
-        result = await supabaseClient.rpc('start_onboarding', { p_user_id: user.id });
-        break;
-
-      case 'update':
-        // Update onboarding step
-        result = await supabaseClient.rpc('update_onboarding_step', { 
-          p_user_id: user.id, 
-          p_step: step, 
-          p_data: data || {} 
-        });
-        break;
-
-      case 'complete':
-        // Complete onboarding
-        result = await supabaseClient.rpc('complete_onboarding', { p_user_id: user.id });
-        break;
-
-      default:
-        return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
-    }
-
-    if (result.error) {
-      logger.error('Error updating onboarding progress:', result.error);
-      return NextResponse.json({ error: 'Failed to update progress' }, { status: 500 });
-    }
-
-    // Get updated progress
-    const { data: updatedProgress, error: progressError } = await supabaseClient
-      .from('onboarding_progress')
-      .select('*')
-      .eq('user_id', String(user.id) as any)
-      .single();
-
-    if (progressError && progressError.code !== 'PGRST116') {
-      logger.error('Error fetching updated progress:', progressError);
-    }
-
-    return NextResponse.json({
-      success: true,
-      progress: updatedProgress,
-      message: `Onboarding ${action} successful`
-    });
-  } catch (error) {
-    logger.error('Error in onboarding progress POST:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
-  }
-}
-
-/**
- * POST /api/profile/complete-onboarding - Complete onboarding
- * Consolidated onboarding management
- */
-export async function POST_COMPLETE_ONBOARDING(request: NextRequest) {
-  try {
-    const supabase = getSupabaseServerClient();
-    
-    if (!supabase) {
-      return NextResponse.json(
-        { error: 'Supabase client not available' },
-        { status: 500 }
-      );
-    }
-
-    const supabaseClient = await supabase;
-
-    // Get current user from Supabase Auth
-    const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
-    
-    if (authError || !user) {
-      logger.warn('User not authenticated for onboarding completion');
-      return NextResponse.redirect(new URL('/login', request.url), { status: 303 });
-    }
-
-    // Handle both form data and JSON requests
-    const contentType = request.headers.get('content-type');
-    let preferences = {};
-    
-    if (contentType?.includes('application/json')) {
-      const body = await request.json();
-      preferences = body.preferences || {};
-    } else {
-      // Handle form data
-      const formData = await request.formData();
-      // Extract preferences from form data if needed
-      preferences = {
-        notifications: formData.get('notifications') === 'true',
-        dataSharing: formData.get('dataSharing') === 'true',
-        theme: formData.get('theme') || 'system'
-      };
-    }
-
-    // Update user profile to mark onboarding as completed
-    const { error: updateError } = await supabaseClient
+    // Handle profile updates
+    if (body.profile) {
+      const parsedProfile = profileSchema.safeParse(body.profile);
+      if (!parsedProfile.success) {
+        logger.warn('Invalid profile data', parsedProfile.error.issues);
+        return NextResponse.json({ error: 'Invalid profile data', details: parsedProfile.error.issues }, { status: 400 });
+      }
+    const { data, error } = await supabase
       .from('user_profiles')
-      .update({
-        onboarding_completed: true,
-        preferences,
-        updated_at: new Date().toISOString()
-      } as any)
-      .eq('user_id', user.id);
-
-    if (updateError) {
-      logger.error('Failed to complete onboarding', updateError);
-      return NextResponse.json({ error: 'Failed to complete onboarding' }, { status: 500 });
+        .upsert({ id: user.id, ...parsedProfile.data }, { onConflict: 'id' })
+      .select();
+    if (error) {
+        logger.error('Error upserting profile', error);
+        return NextResponse.json({ error: 'Error updating profile' }, { status: 500 });
+      }
+      logger.info('Profile updated successfully', { userId: user.id, profile: data });
+      response = NextResponse.json({ message: 'Profile updated successfully', profile: data }, { status: 200 });
     }
 
-    // Create response with explicit redirect
-    const dest = new URL('/dashboard', request.url).toString(); // absolute
-    
-    // Use 302 for WebKit/Safari, 303 for others (WebKit redirect quirk workaround)
-    const userAgent = request.headers.get('user-agent') || '';
-    const isWebKit = userAgent.includes('WebKit') && !userAgent.includes('Chrome');
-    const status = isWebKit ? 302 : 303;
-    
-    const response = NextResponse.redirect(dest, { status });
+    // Handle preferences updates
+    if (body.preferences) {
+      const parsedPreferences = preferencesSchema.safeParse(body.preferences);
+      if (!parsedPreferences.success) {
+        logger.warn('Invalid preferences data', parsedPreferences.error.issues);
+        return NextResponse.json({ error: 'Invalid preferences data', details: parsedPreferences.error.issues }, { status: 400 });
+      }
+      const { data, error } = await supabase
+        .from('user_notification_preferences')
+        .upsert({ user_id: user.id, ...parsedPreferences.data }, { onConflict: 'user_id' })
+        .select();
+      if (error) {
+        logger.error('Error upserting preferences', error);
+        return NextResponse.json({ error: 'Error updating preferences' }, { status: 500 });
+      }
+      logger.info('Preferences updated successfully', { userId: user.id, preferences: data });
+      response = NextResponse.json({ message: 'Preferences updated successfully', preferences: data }, { status: 200 });
+    }
 
-    // Add explicit headers for WebKit compatibility
-    response.headers.set('Cache-Control', 'no-store');
-    response.headers.set('Content-Length', '0'); // help some UA edge cases
+    // Handle interests updates
+    if (body.interests) {
+      const parsedInterests = interestsSchema.safeParse(body.interests);
+      if (!parsedInterests.success) {
+        logger.warn('Invalid interests data', parsedInterests.error.issues);
+        return NextResponse.json({ error: 'Invalid interests data', details: parsedInterests.error.issues }, { status: 400 });
+      }
+      const { data, error } = await supabase
+        .from('user_interests')
+        .upsert({ user_id: user.id, ...parsedInterests.data }, { onConflict: 'user_id' })
+        .select();
+      if (error) {
+        logger.error('Error upserting interests', error);
+        return NextResponse.json({ error: 'Error updating interests' }, { status: 500 });
+      }
+      logger.info('Interests updated successfully', { userId: user.id, interests: data });
+      response = NextResponse.json({ message: 'Interests updated successfully', interests: data }, { status: 200 });
+    }
 
-    logger.info('Onboarding completed successfully', { userId: user.id });
+    // Handle onboarding progress updates
+    if (body.onboarding) {
+      const parsedOnboarding = onboardingSchema.safeParse(body.onboarding);
+      if (!parsedOnboarding.success) {
+        logger.warn('Invalid onboarding data', parsedOnboarding.error.issues);
+        return NextResponse.json({ error: 'Invalid onboarding data', details: parsedOnboarding.error.issues }, { status: 400 });
+      }
+    const { data, error } = await supabase
+        .from('user_onboarding_progress')
+        .upsert({ user_id: user.id, ...parsedOnboarding.data }, { onConflict: 'user_id' })
+      .select();
+    if (error) {
+        logger.error('Error upserting onboarding progress', error);
+        return NextResponse.json({ error: 'Error updating onboarding progress' }, { status: 500 });
+      }
+      logger.info('Onboarding progress updated successfully', { userId: user.id, onboarding: data });
+      response = NextResponse.json({ message: 'Onboarding progress updated successfully', onboarding: data }, { status: 200 });
+    }
+
+    // Handle avatar upload (if file is present in form data)
+    const contentType = request.headers.get('content-type');
+    if (contentType?.includes('multipart/form-data')) {
+      const formData = await request.formData();
+      const file = formData.get('avatar') as File;
+
+      if (file) {
+        const fileName = `${user.id}-${Date.now()}.${file.name.split('.').pop()}`;
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('avatars')
+          .upload(fileName, file, {
+            cacheControl: '3600',
+            upsert: true,
+          });
+
+        if (uploadError) {
+          logger.error('Avatar upload error', uploadError);
+          return NextResponse.json({ error: 'Error uploading avatar' }, { status: 500 });
+        }
+
+        const { data: publicUrlData } = supabase.storage.from('avatars').getPublicUrl(fileName);
+        const avatarUrl = publicUrlData.publicUrl;
+
+        const { error: updateProfileError } = await supabase
+          .from('user_profiles')
+          .update({ avatar_url: avatarUrl })
+          .eq('id', user.id);
+
+        if (updateProfileError) {
+          logger.error('Error updating profile with avatar URL', updateProfileError);
+          return NextResponse.json({ error: 'Error updating profile with avatar URL' }, { status: 500 });
+        }
+        logger.info('Avatar uploaded and profile updated successfully', { userId: user.id, avatarUrl });
+        response = NextResponse.json({ message: 'Avatar uploaded successfully', avatar_url: avatarUrl }, { status: 200 });
+      }
+    }
 
     return response;
 
   } catch (error) {
-    logger.error('Complete onboarding error', error instanceof Error ? error : new Error('Unknown error'));
+    logger.error('POST /api/profile error', error instanceof Error ? error : new Error('Unknown error'));
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}
+
+/**
+ * PUT /api/profile - Update user profile (full replacement)
+ */
+export async function PUT(request: NextRequest) {
+  try {
+    const supabase = await getSupabaseServerClient();
+    if (!supabase) {
+      logger.error('Supabase not configured');
+      return NextResponse.json({ error: 'Supabase not configured' }, { status: 500 });
+    }
+
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    if (sessionError || !session?.user) {
+      logger.warn('User not authenticated or session error', sessionError);
+      return NextResponse.json({ error: 'User not authenticated' }, { status: 401 });
+    }
+
+    const user = session.user;
+    const body = await request.json();
+
+    const parsedProfile = profileSchema.safeParse(body);
+    if (!parsedProfile.success) {
+      logger.warn('Invalid profile data for PUT', parsedProfile.error.issues);
+      return NextResponse.json({ error: 'Invalid profile data', details: parsedProfile.error.issues }, { status: 400 });
+    }
+
+    const { data, error } = await supabase
+      .from('user_profiles')
+      .update(parsedProfile.data)
+      .eq('id', user.id)
+      .select();
+
+    if (error) {
+      logger.error('Error updating profile via PUT', error);
+      return NextResponse.json({ error: 'Error updating profile' }, { status: 500 });
+    }
+
+    if (data?.length === 0) {
+      return NextResponse.json({ error: 'Profile not found or no changes made' }, { status: 404 });
+    }
+
+    logger.info('Profile updated successfully via PUT', { userId: user.id, profile: data[0] });
+    return NextResponse.json({ message: 'Profile updated successfully', profile: data[0] }, { status: 200 });
+
+  } catch (error) {
+    logger.error('PUT /api/profile error', error instanceof Error ? error : new Error('Unknown error'));
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}
+
+/**
+ * DELETE /api/profile - Delete user profile and all related data
+ */
+export async function DELETE(request: NextRequest) {
+  try {
+    const supabase = await getSupabaseServerClient();
+    if (!supabase) {
+      logger.error('Supabase not configured');
+      return NextResponse.json({ error: 'Supabase not configured' }, { status: 500 });
+    }
+
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    if (sessionError || !session?.user) {
+      logger.warn('User not authenticated or session error', sessionError);
+      return NextResponse.json({ error: 'User not authenticated' }, { status: 401 });
+    }
+
+    const user = session.user;
+
+    // Delete all related data
+    const deletePromises = [
+      supabase.from('user_profiles').delete().eq('id', user.id),
+      supabase.from('user_notification_preferences').delete().eq('user_id', user.id),
+      supabase.from('user_interests').delete().eq('user_id', user.id),
+      supabase.from('user_onboarding_progress').delete().eq('user_id', user.id),
+    ];
+
+    const results = await Promise.allSettled(deletePromises);
+    
+    // Check for errors
+    const errors = results.filter(result => result.status === 'rejected' || (result.status === 'fulfilled' && result.value.error));
+    if (errors.length > 0) {
+      logger.error('Error deleting profile data', errors);
+      return NextResponse.json({ error: 'Error deleting profile data' }, { status: 500 });
+    }
+
+    logger.info('Profile deleted successfully', { userId: user.id });
+    return NextResponse.json({ message: 'Profile deleted successfully' }, { status: 200 });
+
+  } catch (error) {
+    logger.error('DELETE /api/profile error', error instanceof Error ? error : new Error('Unknown error'));
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}
+
+/**
+ * PATCH /api/profile - Partial update of user profile
+ */
+export async function PATCH(request: NextRequest) {
+  try {
+    const supabase = await getSupabaseServerClient();
+    if (!supabase) {
+      logger.error('Supabase not configured');
+      return NextResponse.json({ error: 'Supabase not configured' }, { status: 500 });
+    }
+
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    if (sessionError || !session?.user) {
+      logger.warn('User not authenticated or session error', sessionError);
+      return NextResponse.json({ error: 'User not authenticated' }, { status: 401 });
+    }
+
+    const user = session.user;
+    const body = await request.json();
+
+    // Validate partial profile data
+    const parsedProfile = profileSchema.partial().safeParse(body);
+    if (!parsedProfile.success) {
+      logger.warn('Invalid profile data for PATCH', parsedProfile.error.issues);
+      return NextResponse.json({ error: 'Invalid profile data', details: parsedProfile.error.issues }, { status: 400 });
+    }
+
+    const { data, error } = await supabase
+      .from('user_profiles')
+      .update({ ...parsedProfile.data, updated_at: new Date().toISOString() })
+      .eq('id', user.id)
+      .select();
+
+    if (error) {
+      logger.error('Error updating profile via PATCH', error);
+      return NextResponse.json({ error: 'Error updating profile' }, { status: 500 });
+    }
+
+    if (data?.length === 0) {
+      return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
+    }
+
+    logger.info('Profile updated successfully via PATCH', { userId: user.id, profile: data[0] });
+    return NextResponse.json({ message: 'Profile updated successfully', profile: data[0] }, { status: 200 });
+
+  } catch (error) {
+    logger.error('PATCH /api/profile error', error instanceof Error ? error : new Error('Unknown error'));
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

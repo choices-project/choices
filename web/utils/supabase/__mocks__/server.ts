@@ -5,17 +5,17 @@
 // Jest type declarations for mock functions
 declare const jest: {
   fn: <T extends (...args: any[]) => any>(implementation?: T) => T & {
-    mockReturnThis: () => T & any;
-    mockImplementation: (impl: T) => T & any;
-    mockResolvedValue: (value: any) => T & any;
+    mockReturnThis: () => T;
+    mockImplementation: (impl: T) => T;
+    mockResolvedValue: (value: unknown) => T;
     mockReset: () => void;
     mockClear: () => void;
   };
 };
 
-type SingleResult<T> = Promise<{ data: T | null; error: unknown | null }>;
+type SingleResult<T> = Promise<{ data: T | null; error: unknown }>;
 
-const makeQb = <T>(singleImpl?: () => SingleResult<T>, limitImpl?: () => Promise<{ data: T[] | null; error: unknown | null }>) => {
+const makeQb = <T>(singleImpl?: () => SingleResult<T>, limitImpl?: () => Promise<{ data: T[] | null; error: unknown }>) => {
   const chain = {
     select: jest.fn().mockReturnThis(),
     eq: jest.fn().mockReturnThis(),
@@ -26,7 +26,7 @@ const makeQb = <T>(singleImpl?: () => SingleResult<T>, limitImpl?: () => Promise
     chain.single.mockImplementation(singleImpl as any);
   }
   if (limitImpl) {
-    chain.limit.mockImplementation(limitImpl as any);
+    (chain.limit as any).mockImplementation(limitImpl as any);
   }
   return chain;
 };
@@ -54,14 +54,14 @@ export const __client = {
 
 // Helpers for tests
 export const __resetClient = () => {
-  __client.auth.getUser.mockReset();
-  __client.from.mockClear();
-  __client.rpc.mockClear();
+  (__client.auth.getUser as any).mockReset();
+  (__client.from as any).mockClear();
+  (__client.rpc as any).mockClear();
   tableHandlers.clear();
 };
 
 export const __setRpcResult = (functionName: string, result: unknown, error: unknown = null) => {
-  __client.rpc.mockImplementation((fn: string) => {
+  (__client.rpc as any).mockImplementation((fn: string) => {
     if (fn === functionName) {
       return Promise.resolve({ data: result, error });
     }

@@ -34,7 +34,7 @@ const CACHE_CONFIG = {
 };
 
 // In-memory cache store
-const cacheStore = new Map<string, { data: any; timestamp: number; ttl: number }>();
+const cacheStore = new Map<string, { data: unknown; timestamp: number; ttl: number }>();
 
 export class CivicsCache {
   /**
@@ -102,7 +102,7 @@ export class CivicsCache {
   /**
    * Cache representative data
    */
-  static cacheRepresentative(id: string, data: any): void {
+  static cacheRepresentative(id: string, data: unknown): void {
     const key = this.getRepresentativeKey(id);
     this.set(key, data, CACHE_CONFIG.representative.ttl);
   }
@@ -110,7 +110,7 @@ export class CivicsCache {
   /**
    * Get cached representative data
    */
-  static getCachedRepresentative(id: string): any | null {
+  static getCachedRepresentative(id: string): unknown {
     const key = this.getRepresentativeKey(id);
     return this.get(key);
   }
@@ -118,7 +118,7 @@ export class CivicsCache {
   /**
    * Cache address lookup data
    */
-  static cacheAddressLookup(address: string, data: any): void {
+  static cacheAddressLookup(address: string, data: unknown): void {
     const key = this.getAddressKey(address);
     this.set(key, data, CACHE_CONFIG.address.ttl);
   }
@@ -126,7 +126,7 @@ export class CivicsCache {
   /**
    * Get cached address lookup data
    */
-  static getCachedAddressLookup(address: string): any | null {
+  static getCachedAddressLookup(address: string): unknown {
     const key = this.getAddressKey(address);
     return this.get(key);
   }
@@ -134,7 +134,7 @@ export class CivicsCache {
   /**
    * Cache state lookup data
    */
-  static cacheStateLookup(state: string, level: string | undefined, chamber: string | undefined, data: any): void {
+  static cacheStateLookup(state: string, level: string | undefined, chamber: string | undefined, data: unknown): void {
     const key = this.getStateKey(state, level, chamber);
     this.set(key, data, CACHE_CONFIG.state.ttl);
   }
@@ -142,7 +142,7 @@ export class CivicsCache {
   /**
    * Get cached state lookup data
    */
-  static getCachedStateLookup(state: string, level?: string, chamber?: string): any | null {
+  static getCachedStateLookup(state: string, level?: string, chamber?: string): unknown {
     const key = this.getStateKey(state, level, chamber);
     return this.get(key);
   }
@@ -196,6 +196,7 @@ export class CivicsCache {
     };
   }
 }
+
 
 /**
  * Database query optimization utilities
@@ -317,7 +318,7 @@ export class CivicsQueryOptimizer {
   /**
    * Optimized state query with filtering
    */
-  static getStateQuery(supabase: any, state: string, level?: string, chamber?: string, limit: number = 200) {
+  static getStateQuery(supabase: any, state: string, level?: string, chamber?: string, limit = 200) {
     let query = supabase
       .from('representatives_core')
       .select(`

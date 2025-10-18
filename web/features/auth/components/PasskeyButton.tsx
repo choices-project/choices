@@ -2,8 +2,11 @@
 
 import { useState, useEffect } from 'react';
 
-import { beginRegister, beginAuthenticate, isWebAuthnSupported } from '@/features/auth/lib/webauthn/client';
+
+// Dynamic imports to avoid build-time decorator issues
+// import { beginRegister, beginAuthenticate, isWebAuthnSupported } from '@/features/auth/lib/webauthn/client';
 import { T } from '@/lib/testing/testIds';
+import { logger } from '@/lib/utils/logger';
 
 import WebAuthnPrompt from './WebAuthnPrompt';
 
@@ -38,9 +41,30 @@ export function PasskeyButton({
     return null;
   }
 
-  // Check if WebAuthn is supported
-  if (!isWebAuthnSupported()) {
-    return null; // Don't show button if not supported
+  // Check if WebAuthn is supported (dynamic import)
+  const [webAuthnSupported, setWebAuthnSupported] = useState<boolean | null>(null);
+  
+  useEffect(() => {
+    const checkSupport = async () => {
+      try {
+        const { isWebAuthnSupported } = await import('@/features/auth/lib/webauthn/client');
+        setWebAuthnSupported(isWebAuthnSupported());
+      } catch (error) {
+        logger.error('Error checking WebAuthn support', error instanceof Error ? error : new Error(String(error)));
+        setWebAuthnSupported(false);
+      }
+    };
+    checkSupport();
+  }, []);
+
+  // Don't render until we know WebAuthn support status
+  if (webAuthnSupported === null) {
+    return null;
+  }
+
+  // Don't show button if not supported
+  if (!webAuthnSupported) {
+    return null;
   }
 
   const handleClick = async () => {
@@ -53,6 +77,9 @@ export function PasskeyButton({
     setError(null);
 
     try {
+      // Dynamic import to avoid build-time decorator issues
+      const { beginRegister, beginAuthenticate } = await import('@/features/auth/lib/webauthn/client');
+      
       let result;
       if (mode === 'register') {
         result = await beginRegister();
@@ -60,7 +87,7 @@ export function PasskeyButton({
         result = await beginAuthenticate();
       }
 
-      if (result.ok) {
+      if (result.success) {
         onSuccess?.();
       } else {
         const errorMsg = result.error || 'Operation failed';
@@ -139,8 +166,9 @@ export function PasskeyButton({
             onComplete={handlePromptComplete}
             onCancel={handlePromptCancel}
             onError={(error) => {
-              setError(error);
-              onError?.(error);
+              const errorMessage = error instanceof Error ? error.message : String(error);
+              setError(errorMessage);
+              onError?.(errorMessage);
             }}
           >
             <div className="webauthn-prompt-content">

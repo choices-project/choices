@@ -8,7 +8,7 @@ import {
   useVotingLoading,
   useVotingError
 } from '@/lib/stores'
-import { withOptional } from '@/lib/utils/objects'
+import { logger } from '@/lib/utils/logger'
 
 import ApprovalVoting from './ApprovalVoting'
 import MultipleChoiceVoting from './MultipleChoiceVoting'
@@ -81,16 +81,16 @@ export default function VotingInterface({
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
+        const errorData = await response.json() as { error?: string };
         throw new Error(errorData.error || 'Failed to submit vote');
       }
 
-      const _result = await response.json();
+      const _result = await response.json() as { ok: boolean; id?: string };
 
       // Call the original onVote callback to update the UI
       await onVote(approvals.length);
     } catch (error) {
-      console.error('Approval vote failed:', error);
+      logger.error('Approval vote failed', error instanceof Error ? error : new Error(String(error)), { pollId: poll.id });
       throw error;
     }
   }, [poll.id, onVote]);
@@ -145,16 +145,16 @@ export default function VotingInterface({
         });
 
         if (!response.ok) {
-          const errorData = await response.json();
+          const errorData = await response.json() as { error?: string };
           throw new Error(errorData.error || 'Failed to submit vote');
         }
 
-        const _result = await response.json();
+        const _result = await response.json() as { ok: boolean; id?: string };
 
         // Call the original onVote callback to update the UI
         await onVote(selections.length);
       } catch (error) {
-        console.error('Multiple choice vote failed:', error);
+        logger.error('Multiple choice vote failed', error instanceof Error ? error : new Error(String(error)), { pollId: poll.id });
         throw error;
       }
     },
@@ -229,97 +229,79 @@ export default function VotingInterface({
       case 'approval':
         return (
           <ApprovalVoting
-            {...withOptional({
-              pollId: poll.id,
-              title: poll.title,
-              options: poll.options,
-              onVote: onApproval,
-              isVoting,
-              hasVoted
-            }, {
-              description: poll.description ?? undefined,
-              userVote: userApprovalVote ?? undefined
-            })}
+            pollId={poll.id}
+            title={poll.title}
+            options={poll.options}
+            onVote={onApproval}
+            isVoting={isVoting}
+            hasVoted={hasVoted}
+            description={poll.description ?? undefined}
+            userVote={userApprovalVote ?? undefined}
           />
         );
       case 'quadratic':
         return (
           <QuadraticVoting
-            {...withOptional({
-              pollId: poll.id,
-              title: poll.title,
-              options: poll.options,
-              onVote: onQuadratic,
-              isVoting,
-              hasVoted
-            }, {
-              description: poll.description ?? undefined,
-              userVote: userQuadraticVote ?? undefined
-            })}
+            pollId={poll.id}
+            title={poll.title}
+            options={poll.options}
+            onVote={onQuadratic}
+            isVoting={isVoting}
+            hasVoted={hasVoted}
+            description={poll.description ?? undefined}
+            userVote={userQuadraticVote ?? undefined}
           />
         );
       case 'range':
         return (
           <RangeVoting
-            {...withOptional({
-              pollId: poll.id,
-              title: poll.title,
-              options: poll.options,
-              onVote: onRange,
-              isVoting,
-              hasVoted
-            }, {
-              description: poll.description ?? undefined,
-              userVote: userRangeVote ?? undefined
-            })}
+            pollId={poll.id}
+            title={poll.title}
+            options={poll.options}
+            onVote={onRange}
+            isVoting={isVoting}
+            hasVoted={hasVoted}
+            description={poll.description ?? undefined}
+            userVote={userRangeVote ?? undefined}
           />
         );
       case 'ranked':
         return (
           <RankedChoiceVoting
-            {...withOptional({
-              pollId: poll.id,
-              title: poll.title,
-              options: poll.options,
-              onVote: onRanked,
-              isVoting,
-              hasVoted
-            }, {
-              description: poll.description ?? undefined,
-              userVote: userRankedVote ?? undefined
-            })}
+            pollId={poll.id}
+            title={poll.title}
+            options={poll.options}
+            onVote={onRanked}
+            isVoting={isVoting}
+            hasVoted={hasVoted}
+            description={poll.description ?? undefined}
+            userVote={userRankedVote ?? undefined}
           />
         );
       case 'multiple_choice':
         return (
           <MultipleChoiceVoting
-            {...withOptional({
-              pollId: poll.id,
-              title: poll.title,
-              options: poll.options,
-              onVote: onMultiple,
-              isVoting,
-              hasVoted
-            }, {
-              description: poll.description ?? undefined,
-              userVote: userMultipleVote ?? undefined
-            })}
+            pollId={poll.id}
+            title={poll.title}
+            options={poll.options}
+            onVote={onMultiple}
+            isVoting={isVoting}
+            hasVoted={hasVoted}
+            description={poll.description ?? undefined}
+            userVote={userMultipleVote ?? undefined}
           />
         );
       default:
         return (
           <SingleChoiceVoting
-            {...withOptional({
-              pollId: poll.id,
-              title: poll.title,
-              options: poll.options,
-              onVote: onSingle,
-              isVoting,
-              hasVoted
-            }, {
-              description: poll.description ?? undefined,
-              userVote: userVote ?? undefined
-            })}
+            pollId={poll.id}
+            title={poll.title}
+            options={poll.options}
+            onVote={onSingle}
+            isVoting={isVoting}
+            hasVoted={hasVoted}
+            description={poll.description ?? undefined}
+            userVote={userVote ?? undefined}
           />
         );
     }

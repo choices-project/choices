@@ -28,7 +28,6 @@ import {
   useAnalyticsError
 } from '@/lib/stores/analyticsStore'
 import { devLog } from '@/lib/utils/logger'
-import { withOptional } from '@/lib/utils/objects'
 
 // gtag is declared in global.d.ts files
 
@@ -72,12 +71,27 @@ const EnhancedFeedbackWidget: React.FC = () => {
   useEffect(() => {
     if (!feedbackTracker) return
     const userJourney = feedbackTracker.captureUserJourney()
-    setFeedback(prev => withOptional(prev, { userJourney }))
+    setFeedback(prev => ({ ...prev, userJourney }))
   }, [feedbackTracker])
 
   // Check feature flag after hooks
   if (!FEATURE_FLAGS.FEEDBACK_WIDGET) {
     return null
+  }
+
+  // Show error state if there's an error
+  if (error) {
+    return (
+      <div className="fixed bottom-4 right-4 z-50">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 max-w-sm">
+          <div className="flex items-center">
+            <div className="text-red-600 text-sm">
+              <strong>Error:</strong> {error}
+            </div>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   const handleOpen = () => {
@@ -87,7 +101,7 @@ const EnhancedFeedbackWidget: React.FC = () => {
     // Update user journey when widget opens
     if (feedbackTracker) {
       const userJourney = feedbackTracker.captureUserJourney()
-      setFeedback(prev => withOptional(prev, { userJourney }))
+      setFeedback(prev => ({ ...prev, userJourney }))
     }
     
     // Track analytics using store
@@ -117,12 +131,12 @@ const EnhancedFeedbackWidget: React.FC = () => {
   }
 
   const handleTypeSelect = (type: FeedbackData['type']) => {
-    setFeedback(prev => withOptional(prev, { type }))
+    setFeedback(prev => ({ ...prev, type }))
     setStep('details')
   }
 
   const handleSentimentSelect = (sentiment: FeedbackData['sentiment']) => {
-    setFeedback(prev => withOptional(prev, { sentiment }))
+    setFeedback(prev => ({ ...prev, sentiment }))
     setStep('screenshot')
   }
 
@@ -131,10 +145,10 @@ const EnhancedFeedbackWidget: React.FC = () => {
     try {
       if (feedbackTracker) {
         const screenshot = await feedbackTracker.captureScreenshot()
-        setFeedback(prev => withOptional(prev, { screenshot }))
+        setFeedback(prev => ({ ...prev, screenshot }))
       }
     } catch (error) {
-      devLog('Failed to capture screenshot:', error)
+      devLog('Failed to capture screenshot:', { error })
     } finally {
       setCapturingScreenshot(false)
     }
@@ -150,7 +164,8 @@ const EnhancedFeedbackWidget: React.FC = () => {
     if (file) {
       const reader = new FileReader()
       reader.onload = (e) => {
-        setFeedback(prev => withOptional(prev, { 
+        setFeedback(prev => ({ 
+          ...prev,
           screenshot: e.target?.result as string 
         }))
       }
@@ -233,7 +248,7 @@ const EnhancedFeedbackWidget: React.FC = () => {
         throw new Error(result.error || 'Failed to submit feedback')
       }
     } catch (error) {
-      devLog('Error submitting feedback:', error)
+      devLog('Error submitting feedback:', { error })
       // Ensure we don't show success state if there was an error
       setShowSuccess(false)
       setStep('sentiment') // Go back to previous step
@@ -366,13 +381,13 @@ const EnhancedFeedbackWidget: React.FC = () => {
                           type="text"
                           placeholder="Brief title"
                           value={feedback.title}
-                          onChange={(e) => setFeedback(prev => withOptional(prev, { title: e.target.value }))}
+                          onChange={(e) => setFeedback(prev => ({ ...prev, title: e.target.value }))}
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         />
                         <textarea
                           placeholder="Detailed description..."
                           value={feedback.description}
-                          onChange={(e) => setFeedback(prev => withOptional(prev, { description: e.target.value }))}
+                          onChange={(e) => setFeedback(prev => ({ ...prev, description: e.target.value }))}
                           rows={4}
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
                         />

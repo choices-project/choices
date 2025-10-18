@@ -14,7 +14,6 @@ import { devtools } from 'zustand/middleware';
 import { persist } from 'zustand/middleware';
 
 import { logger } from '@/lib/utils/logger';
-import { withOptional } from '@/lib/utils/objects';
 
 // Civic data types
 interface Representative {
@@ -253,7 +252,7 @@ export const useCivicsStore = create<CivicsStore>()(
         
         updateRepresentative: (id, updates) => set((state) => ({
           representatives: state.representatives.map(rep =>
-            rep.id === id ? withOptional(rep, updates) : rep
+            rep.id === id ? { ...rep, ...updates } : rep
           )
         })),
         
@@ -292,7 +291,7 @@ export const useCivicsStore = create<CivicsStore>()(
         
         updateDistrict: (id, updates) => set((state) => ({
           districts: state.districts.map(district =>
-            district.id === id ? withOptional(district, updates) : district
+            district.id === id ? { ...district, ...updates } : district
           )
         })),
         
@@ -308,18 +307,19 @@ export const useCivicsStore = create<CivicsStore>()(
         addCivicAction: (action) => set((state) => ({
           civicActions: [
             ...state.civicActions,
-            withOptional(action, {
+            {
+              ...action,
               id: `action_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
               createdAt: new Date().toISOString(),
               updatedAt: new Date().toISOString(),
-            }) as CivicAction
+            } as CivicAction
           ]
         })),
         
         updateCivicAction: (id, updates) => set((state) => ({
           civicActions: state.civicActions.map(action =>
             action.id === id 
-              ? withOptional(action, withOptional(updates, { updatedAt: new Date().toISOString() }))
+              ? { ...action, ...updates, updatedAt: new Date().toISOString() }
               : action
           )
         })),
@@ -327,11 +327,12 @@ export const useCivicsStore = create<CivicsStore>()(
         completeCivicAction: (id) => set((state) => ({
           civicActions: state.civicActions.map(action =>
             action.id === id 
-              ? withOptional(action, { 
+              ? { 
+                  ...action,
                   status: 'completed' as const,
                   completedAt: new Date().toISOString(),
                   updatedAt: new Date().toISOString()
-                })
+                }
               : action
           )
         })),
@@ -345,7 +346,7 @@ export const useCivicsStore = create<CivicsStore>()(
         
         updateUserCivicProfile: (updates) => set((state) => ({
           userCivicProfile: state.userCivicProfile 
-            ? withOptional(state.userCivicProfile, withOptional(updates, { lastUpdated: new Date().toISOString() }))
+            ? { ...state.userCivicProfile, ...updates, lastUpdated: new Date().toISOString() }
             : null
         })),
         
@@ -353,7 +354,7 @@ export const useCivicsStore = create<CivicsStore>()(
         
         // Preferences actions
         updatePreferences: (preferences) => set((state) => ({
-          preferences: withOptional(state.preferences, preferences)
+          preferences: { ...state.preferences, ...preferences }
         })),
         
         resetPreferences: () => set({ preferences: defaultPreferences }),
@@ -362,7 +363,7 @@ export const useCivicsStore = create<CivicsStore>()(
         setSearchQuery: (query) => set({ searchQuery: query }),
         
         setFilters: (filters) => set((state) => ({
-          filters: withOptional(state.filters, filters)
+          filters: { ...state.filters, ...filters }
         })),
         
         clearFilters: () => set({ filters: {} }),

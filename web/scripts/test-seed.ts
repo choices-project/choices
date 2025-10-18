@@ -123,7 +123,11 @@ async function seedTestPolls() {
     return;
   }
 
-  const userId = users[0].user_id;
+  const userId = users[0]?.user_id;
+  if (!userId) {
+    logger.info('⚠️ No valid user ID found, skipping poll creation');
+    return;
+  }
 
   const testPolls = [
     {

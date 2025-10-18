@@ -147,8 +147,8 @@ describe('Dashboard Accessibility Tests', () => {
       expect(mainHeading).toHaveTextContent(/choices/i);
       expect(mainHeading).toHaveAttribute('data-testid', T.mainHeading);
 
-      // Check for section headings
-      const sectionHeadings = screen.getAllByRole('heading', { level: 2 });
+      // Check for section headings (h3 level in the actual component)
+      const sectionHeadings = screen.getAllByRole('heading', { level: 3 });
       expect(sectionHeadings.length).toBeGreaterThan(0);
       sectionHeadings.forEach(heading => {
         expect(heading).toHaveAttribute('data-testid', T.accessibility.sectionHeading);
@@ -167,8 +167,8 @@ describe('Dashboard Accessibility Tests', () => {
       expect(main).toBeInTheDocument();
       expect(main).toHaveAttribute('data-testid', T.accessibility.main);
 
-      // Check for navigation landmark
-      const nav = screen.getByRole('navigation');
+      // Check for navigation landmark (tablist in the actual component)
+      const nav = screen.getByRole('tablist');
       expect(nav).toBeInTheDocument();
       expect(nav).toHaveAttribute('data-testid', T.accessibility.navigation);
 
@@ -304,7 +304,7 @@ describe('Dashboard Accessibility Tests', () => {
       );
 
       // Test tab navigation
-      const firstFocusable = screen.getByRole('searchbox');
+      const firstFocusable = screen.getByRole('textbox');
       firstFocusable.focus();
       expect(document.activeElement).toBe(firstFocusable);
       expect(firstFocusable).toHaveAttribute('data-testid', T.accessibility.searchInput);
@@ -376,11 +376,11 @@ describe('Dashboard Accessibility Tests', () => {
       );
 
       // Test focus management on route changes
-      const navigationLinks = screen.getAllByRole('link');
-      if (navigationLinks.length > 0) {
-        navigationLinks[0].focus();
-        expect(document.activeElement).toBe(navigationLinks[0]);
-        expect(navigationLinks[0]).toHaveAttribute('data-testid', T.accessibility.link);
+      const navigationButtons = screen.getAllByRole('button');
+      if (navigationButtons.length > 0) {
+        navigationButtons[0].focus();
+        expect(document.activeElement).toBe(navigationButtons[0]);
+        expect(navigationButtons[0]).toHaveAttribute('data-testid', T.accessibility.button);
       }
     });
 

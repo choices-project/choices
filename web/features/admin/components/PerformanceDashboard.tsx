@@ -7,7 +7,6 @@ import {
   useCacheStats,
   useLastRefresh,
   useAutoRefresh,
-  useRefreshInterval,
   usePerformanceActions,
   usePerformanceLoading,
   usePerformanceError
@@ -29,8 +28,7 @@ export default function PerformanceDashboard({ refreshInterval = 30000 }: Perfor
     loadDatabasePerformance, 
     refreshMaterializedViews, 
     performDatabaseMaintenance,
-    setAutoRefresh,
-    setRefreshInterval
+    setAutoRefresh
   } = usePerformanceActions();
 
   // Load performance statistics

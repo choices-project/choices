@@ -253,8 +253,8 @@ export default function AnalyticsPage() {
             <LineChart className="h-5 w-5 text-gray-400" />
           </div>
           <div className="space-y-4">
-            {data?.trends.map((trend, index: number) => (
-              <div key={`trend-${trend.date}-${index}`} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+            {data?.trends.map((trend) => (
+              <div key={`trend-${trend.date}`} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                 <div className="flex items-center space-x-4">
                   <Calendar className="h-4 w-4 text-gray-400" />
                   <span className="text-sm font-medium text-gray-900">{trend.date}</span>
@@ -300,8 +300,8 @@ export default function AnalyticsPage() {
             <PieChart className="h-5 w-5 text-gray-400" />
           </div>
           <div className="space-y-3">
-            {data?.demographics.ageGroups.map((group, index: number) => (
-              <div key={`age-group-${group.age}-${index}`} className="flex items-center justify-between">
+            {data?.demographics.ageGroups.map((group) => (
+              <div key={`age-group-${group.age}`} className="flex items-center justify-between">
                 <span className="text-sm text-gray-600">{group.age}</span>
                 <div className="flex items-center space-x-2">
                   <div className="w-20 bg-gray-200 rounded-full h-2">
@@ -324,8 +324,8 @@ export default function AnalyticsPage() {
             <Map className="h-5 w-5 text-gray-400" />
           </div>
           <div className="space-y-3">
-            {data?.demographics.locations.map((location, index: number) => (
-              <div key={`location-${location.location}-${index}`} className="flex items-center justify-between">
+            {data?.demographics.locations.map((location) => (
+              <div key={`location-${location.location}`} className="flex items-center justify-between">
                 <span className="text-sm text-gray-600">{location.location}</span>
                 <div className="flex items-center space-x-2">
                   <div className="w-20 bg-gray-200 rounded-full h-2">
@@ -348,8 +348,8 @@ export default function AnalyticsPage() {
             <Activity className="h-5 w-5 text-gray-400" />
           </div>
           <div className="space-y-3">
-            {data?.demographics.devices.map((device, index: number) => (
-              <div key={`device-${device.device}-${index}`} className="flex items-center justify-between">
+            {data?.demographics.devices.map((device) => (
+              <div key={`device-${device.device}`} className="flex items-center justify-between">
                 <span className="text-sm text-gray-600">{device.device}</span>
                 <div className="flex items-center space-x-2">
                   <div className="w-20 bg-gray-200 rounded-full h-2">
@@ -373,8 +373,8 @@ export default function AnalyticsPage() {
           <Clock className="h-5 w-5 text-gray-400" />
         </div>
         <div className="grid grid-cols-6 gap-4">
-          {data?.userActivity.map((activity, index: number) => (
-            <div key={`activity-${activity.timeSlot}-${index}`} className="text-center">
+          {data?.userActivity.map((activity) => (
+            <div key={`activity-${activity.timeSlot}`} className="text-center">
               <div className="bg-blue-100 rounded-lg p-3">
                 <p className="text-sm font-medium text-gray-900">{activity.timeSlot}</p>
                 <p className="text-lg font-bold text-blue-600">{activity.activeUsers}</p>

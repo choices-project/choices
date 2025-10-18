@@ -28,20 +28,17 @@ import {
   AdjustmentsHorizontalIcon
 } from '@heroicons/react/24/outline';
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { 
-  useFeeds, 
-  useFeedsActions, 
-  useFeedsLoading,
-  useFeedsError,
-  useFeedPreferences,
-  useFeedFilters,
-  useFeedsStore
-} from '@/lib/stores';
-import { T } from '@/lib/testing/testIds';
-
-
 
 import EnhancedCandidateCard from '@/features/civics/components/EnhancedCandidateCard';
+import { 
+  useFeeds, 
+  useFeedsLoading,
+  useFeedsStore,
+  useAppStore,
+  usePWAStore,
+  useUserStore
+} from '@/lib/stores';
+import { T } from '@/lib/testing/testIds';
 import { devLog } from '@/lib/utils/logger';
 
 import EnhancedSocialFeed from './EnhancedSocialFeed';
@@ -52,17 +49,28 @@ interface SuperiorMobileFeedProps {
 }
 
 export default function SuperiorMobileFeed({ userId, className = '' }: SuperiorMobileFeedProps) {
-  // UI state (local)
+  // ✅ MIGRATED: Use existing stores instead of useState
+  // Global UI state from App Store
+  const sidebarOpen = useAppStore(state => state.sidebarCollapsed);
+  const toggleSidebar = useAppStore(state => state.toggleSidebar);
+  
+  // PWA state from PWA Store
+  const isOnline = usePWAStore(state => state.offline.isOnline);
+  const setOnlineStatus = usePWAStore(state => state.setOnlineStatus);
+  
+  // User state from User Store
+  const currentAddress = useUserStore(state => state.currentAddress);
+  const setCurrentAddress = useUserStore(state => state.setCurrentAddress);
+  
+  // Notification state from Notification Store
+  
+  // ✅ Keep local state for component-specific concerns
   const [activeTab, setActiveTab] = useState<'feed' | 'representatives' | 'analytics'>('feed');
-  const [sidebarOpen, setSidebarOpen] = useState(true); // Default to open for accessibility testing
-  const [userAddress, setUserAddress] = useState<string>('');
   const [selectedRepresentative, setSelectedRepresentative] = useState<any>(null);
   const [analyticsData, setAnalyticsData] = useState<any>(null);
-  
-  // Accessibility state
   const [accessibilityAnnouncements, setAccessibilityAnnouncements] = useState<string[]>([]);
   const [errorMessage, setErrorMessage] = useState<string>('');
-  const [statusMessage, setStatusMessage] = useState<string>('');
+  const [statusMessage] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [showError, setShowError] = useState<boolean>(false);
   
@@ -71,11 +79,7 @@ export default function SuperiorMobileFeed({ userId, className = '' }: SuperiorM
   const loadFeeds = useFeedsStore(state => state.loadFeeds);
   const refreshFeeds = useFeedsStore(state => state.refreshFeeds);
   const loadMoreFeeds = useFeedsStore(state => state.loadMoreFeeds);
-  const setFilters = useFeedsStore(state => state.setFilters);
   const isLoading = useFeedsLoading();
-  const error = useFeedsError();
-  const preferences = useFeedPreferences();
-  const filters = useFeedFilters();
   
   // Local state for pagination
   const [page, setPage] = useState(1);
@@ -83,7 +87,7 @@ export default function SuperiorMobileFeed({ userId, className = '' }: SuperiorM
   
   // Load feed items using feedsStore - fixed infinite loop
   const loadFeedItems = useCallback(async (pageNumber?: number) => {
-    const currentPage = pageNumber || page;
+    const currentPage = pageNumber ?? page;
     try {
       if (pageNumber === 1) {
         // Refresh feeds
@@ -103,7 +107,7 @@ export default function SuperiorMobileFeed({ userId, className = '' }: SuperiorM
       setError('Failed to load feed items. Please try again.');
     }
   }, [page, refreshFeeds, loadMoreFeeds]); // Removed feeds.length to prevent infinite loops
-  const [isOnline, setIsOnline] = useState(true);
+  // isOnline is now from PWAStore
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>('default');
   const [swRegistration, setSwRegistration] = useState<ServiceWorkerRegistration | null>(null);
@@ -121,7 +125,7 @@ export default function SuperiorMobileFeed({ userId, className = '' }: SuperiorM
       try {
         const registration = await navigator.serviceWorker.ready;
         setSwRegistration(registration);
-        devLog('Service Worker ready:', registration);
+        devLog('Service Worker ready:', { registration });
       } catch (error) {
         console.error('Service Worker registration failed:', error);
       }
@@ -133,7 +137,7 @@ export default function SuperiorMobileFeed({ userId, className = '' }: SuperiorM
     const savedTheme = localStorage.getItem('theme');
     const savedViewMode = localStorage.getItem('viewMode');
     
-    if (savedAddress) setUserAddress(savedAddress);
+    if (savedAddress) setCurrentAddress(savedAddress);
     if (savedTheme === 'dark') setIsDarkMode(true);
     if (savedViewMode) setActiveTab(savedViewMode as any);
     
@@ -142,17 +146,17 @@ export default function SuperiorMobileFeed({ userId, className = '' }: SuperiorM
   }, []); // Remove loadFeeds dependency to prevent infinite loops
 
   const checkOnlineStatus = useCallback(() => {
-    setIsOnline(navigator.onLine);
+    setOnlineStatus(navigator.onLine);
     
     const handleOnline = () => {
-      setIsOnline(true);
+      setOnlineStatus(true);
       if (swRegistration) {
         syncOfflineData();
       }
     };
     
     const handleOffline = () => {
-      setIsOnline(false);
+      setOnlineStatus(false);
     };
     
     window.addEventListener('online', handleOnline);
@@ -181,7 +185,7 @@ export default function SuperiorMobileFeed({ userId, className = '' }: SuperiorM
     if ('serviceWorker' in navigator) {
       try {
         const registration = await navigator.serviceWorker.register('/sw.js');
-        devLog('Service Worker registered:', registration);
+        devLog('Service Worker registered:', { registration });
         setSwRegistration(registration);
       } catch (error) {
         console.error('Service Worker registration failed:', error);
@@ -195,7 +199,7 @@ export default function SuperiorMobileFeed({ userId, className = '' }: SuperiorM
     try {
       const subscription = await swRegistration.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || null
+        applicationServerKey: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? null
       });
       
       // Send subscription to server
@@ -288,7 +292,7 @@ export default function SuperiorMobileFeed({ userId, className = '' }: SuperiorM
   };
 
   const handleContact = (type: string, value: string) => {
-    devLog('Contacting representative via', type, ':', value);
+    devLog('Contacting representative via', { type, value });
     // Implement contact functionality based on type
     switch (type) {
       case 'email':
@@ -304,7 +308,7 @@ export default function SuperiorMobileFeed({ userId, className = '' }: SuperiorM
         window.open(value, '_blank');
         break;
       default:
-        devLog('Unknown contact type:', type);
+        devLog('Unknown contact type:', { type });
     }
   };
 
@@ -346,7 +350,7 @@ export default function SuperiorMobileFeed({ userId, className = '' }: SuperiorM
     // Implement bookmark functionality
     try {
       // Get existing bookmarks from localStorage
-      const existingBookmarks = JSON.parse(localStorage.getItem('bookmarkedRepresentatives') || '[]');
+      const existingBookmarks = JSON.parse(localStorage.getItem('bookmarkedRepresentatives') ?? '[]');
       
       // Check if already bookmarked
       const isBookmarked = existingBookmarks.some((bookmark: any) => bookmark.id === representative.id);
@@ -371,7 +375,7 @@ export default function SuperiorMobileFeed({ userId, className = '' }: SuperiorM
         alert('Representative bookmarked!');
       }
     } catch (error) {
-      devLog('Bookmark operation failed:', error);
+      devLog('Bookmark operation failed:', { error });
       alert('Failed to bookmark representative');
     }
   };
@@ -402,10 +406,6 @@ export default function SuperiorMobileFeed({ userId, className = '' }: SuperiorM
     setErrorMessage('');
   };
 
-  const setStatus = (message: string) => {
-    setStatusMessage(message);
-    announceToScreenReader(message);
-  };
 
   // Test function to trigger error messages for accessibility testing
   const triggerTestError = () => {
@@ -733,7 +733,7 @@ export default function SuperiorMobileFeed({ userId, className = '' }: SuperiorM
       case 'representatives':
         return (
           <EnhancedSocialFeed
-            userId={userId || ''}
+            userId={userId ?? ''}
             onViewDetails={handleRepresentativeClick}
           />
         );
@@ -784,7 +784,7 @@ export default function SuperiorMobileFeed({ userId, className = '' }: SuperiorM
       <div className="md:hidden flex items-center justify-between p-4 bg-white dark:bg-gray-800 shadow-sm">
         <button
           type="button"
-          onClick={() => setSidebarOpen(true)} 
+          onClick={() => toggleSidebar()} 
           data-testid={T.hamburgerMenu}
           className="p-3 rounded-md text-gray-700 dark:text-gray-300 min-w-[44px] min-h-[44px]"
           aria-label="Open navigation menu"
@@ -910,7 +910,7 @@ export default function SuperiorMobileFeed({ userId, className = '' }: SuperiorM
 
       {/* Sidebar for Mobile */}
       <div className={`fixed inset-0 bg-gray-800 bg-opacity-75 z-40 md:hidden ${sidebarOpen ? 'block' : 'hidden'}`} 
-           onClick={() => setSidebarOpen(false)}></div>
+           onClick={() => toggleSidebar()}></div>
         <div
           data-testid={T.accessibility.dialog}
           className={`fixed inset-y-0 left-0 w-64 bg-white dark:bg-gray-800 shadow-lg z-50 transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:hidden transition-transform duration-300 ease-in-out`}
@@ -929,7 +929,7 @@ export default function SuperiorMobileFeed({ userId, className = '' }: SuperiorM
           </h2>
           <button 
             type="button"
-            onClick={() => setSidebarOpen(false)} 
+            onClick={() => toggleSidebar()} 
             className="p-2 rounded-md text-gray-700 dark:text-gray-300 min-w-[44px] min-h-[44px]"
             aria-label="Close navigation menu"
             data-testid={T.accessibility.button}
@@ -950,7 +950,7 @@ export default function SuperiorMobileFeed({ userId, className = '' }: SuperiorM
               href="#"
               onClick={() => {
                 setActiveTab(item.id as any);
-                setSidebarOpen(false);
+                toggleSidebar();
               }}
               className={`flex items-center px-3 py-2 text-sm font-medium rounded-md ${
                 activeTab === item.id
@@ -984,18 +984,18 @@ export default function SuperiorMobileFeed({ userId, className = '' }: SuperiorM
           <input
             type="text"
             placeholder="Enter your address"
-            value={userAddress}
-            onChange={(e) => setUserAddress(e.target.value)}
-            onBlur={() => localStorage.setItem('userAddress', userAddress)}
+            value={currentAddress}
+            onChange={(e) => setCurrentAddress(e.target.value)}
+            onBlur={() => localStorage.setItem('userAddress', currentAddress)}
             className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
             aria-label="Enter your address to find representatives"
             role="searchbox"
             data-testid={T.accessibility.searchInput}
             tabIndex={0}
           />
-          {userAddress && (
+          {currentAddress && (
             <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-              Representatives for: <span className="font-medium">{userAddress}</span>
+              Representatives for: <span className="font-medium">{currentAddress}</span>
             </p>
           )}
         </div>
@@ -1072,7 +1072,7 @@ export default function SuperiorMobileFeed({ userId, className = '' }: SuperiorM
           data-testid={T.accessibility.liveRegion}
         >
           {accessibilityAnnouncements.map((announcement, index) => (
-            <div key={index}>{announcement}</div>
+            <div key={`announcement-${index}-${announcement.slice(0, 20)}`}>{announcement}</div>
           ))}
         </div>
 

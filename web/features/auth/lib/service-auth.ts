@@ -10,6 +10,8 @@ import { createClient } from '@supabase/supabase-js';
 // Load environment variables
 import dotenv from 'dotenv';
 import { NextResponse } from 'next/server';
+
+import { logger } from '@/lib/utils/logger';
 dotenv.config({ path: '.env.local' });
 
 export async function requireServiceKey(): Promise<NextResponse | null> {
@@ -39,7 +41,7 @@ export async function requireServiceKey(): Promise<NextResponse | null> {
 
     return null; // Service key is valid
   } catch (error) {
-    console.error('Service key validation error:', error);
+    logger.error('Service key validation error', error instanceof Error ? error : new Error(String(error)));
     return NextResponse.json({ error: 'Service key validation failed' }, { status: 500 });
   }
 }

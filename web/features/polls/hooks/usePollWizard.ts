@@ -7,6 +7,8 @@
 
 import { useState, useCallback } from 'react';
 
+import { logger } from '@/lib/utils/logger';
+
 import type { 
   PollWizardData, 
   PollWizardState 
@@ -270,7 +272,7 @@ export function usePollWizard() {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || `HTTP ${response.status}: Failed to create poll`);
+        throw new Error(errorData.error ?? `HTTP ${response.status}: Failed to create poll`);
       }
 
       const result = await response.json();

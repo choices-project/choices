@@ -14,7 +14,6 @@ import { devtools } from 'zustand/middleware';
 import { persist } from 'zustand/middleware';
 
 import { logger } from '@/lib/utils/logger';
-import { withOptional } from '@/lib/utils/objects';
 
 // Analytics data types
 interface AnalyticsEvent {
@@ -210,11 +209,12 @@ export const useAnalyticsStore = create<AnalyticsStore>()(
             return state;
           }
           
-          const newEvent: AnalyticsEvent = withOptional(event, {
+          const newEvent: AnalyticsEvent = {
+            ...event,
             id: `event_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
             timestamp: new Date().toISOString(),
             sessionId: state.sessionId,
-          }) as AnalyticsEvent;
+          } as AnalyticsEvent;
           
           const updatedEvents = [...state.events, newEvent];
           
@@ -240,11 +240,12 @@ export const useAnalyticsStore = create<AnalyticsStore>()(
             action: 'page_view',
             label: page,
             value: 1,
-            metadata: withOptional(metadata || {}, {
+            metadata: {
+              ...(metadata ?? {}),
               page,
               userAgent: navigator.userAgent,
               referrer: document.referrer,
-            }),
+            },
           });
         },
         
@@ -254,8 +255,8 @@ export const useAnalyticsStore = create<AnalyticsStore>()(
             type: 'user_action',
             category,
             action,
-            label: label || '',
-            value: value || 0,
+            label: label ?? '',
+            value: value ?? 0,
           });
         },
         
@@ -283,8 +284,8 @@ export const useAnalyticsStore = create<AnalyticsStore>()(
           }
           
           const updatedMetrics = state.performanceMetrics 
-            ? withOptional(state.performanceMetrics, metrics)
-            : withOptional(metrics) as PerformanceMetrics;
+            ? { ...state.performanceMetrics, ...metrics }
+            : metrics as PerformanceMetrics;
           
           logger.info('Performance metrics tracked', {
             pageLoadTime: updatedMetrics.pageLoadTime,
@@ -307,8 +308,8 @@ export const useAnalyticsStore = create<AnalyticsStore>()(
         
         updateUserBehavior: (behavior) => set((state) => ({
           userBehavior: state.userBehavior 
-            ? withOptional(state.userBehavior, behavior)
-            : withOptional(behavior) as UserBehaviorData
+            ? { ...state.userBehavior, ...behavior }
+            : behavior as UserBehaviorData
         })),
         
         setDashboard: (dashboard) => set({ dashboard }),
@@ -326,10 +327,10 @@ export const useAnalyticsStore = create<AnalyticsStore>()(
         
         updateChartConfig: (config) => set((state) => ({
           chartConfig: state.chartConfig 
-            ? withOptional(state.chartConfig, config)
-            : withOptional(config) as ChartConfig,
-          chartData: config.data || state.chartData,
-          chartMaxValue: config.maxValue || state.chartMaxValue,
+            ? { ...state.chartConfig, ...config }
+            : config as ChartConfig,
+          chartData: config.data ?? state.chartData,
+          chartMaxValue: config.maxValue ?? state.chartMaxValue,
           chartShowTrends: config.showTrends !== undefined ? config.showTrends : state.chartShowTrends,
           chartShowConfidence: config.showConfidence !== undefined ? config.showConfidence : state.chartShowConfidence
         })),
@@ -350,7 +351,7 @@ export const useAnalyticsStore = create<AnalyticsStore>()(
         
         // Preferences actions
         updatePreferences: (preferences) => set((state) => ({
-          preferences: withOptional(state.preferences, preferences)
+          preferences: { ...state.preferences, ...preferences }
         })),
         
         setTrackingEnabled: (enabled) => set({ trackingEnabled: enabled }),
@@ -573,7 +574,7 @@ export const analyticsStoreUtils = {
   /**
    * Get recent events
    */
-  getRecentEvents: (limit: number = 10) => {
+  getRecentEvents: (limit = 10) => {
     const state = useAnalyticsStore.getState();
     return state.events
       .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
@@ -688,9 +689,9 @@ export const analyticsStoreDebug = {
   /**
    * Log recent events
    */
-  logRecentEvents: (limit: number = 5) => {
+  logRecentEvents: (limit = 5) => {
     const events = analyticsStoreUtils.getRecentEvents(limit);
-    logger.debug('Recent Analytics Events', events);
+    logger.debug('Recent Analytics Events', { events });
   },
   
   /**

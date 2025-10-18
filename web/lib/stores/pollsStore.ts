@@ -13,7 +13,6 @@ import { devtools } from 'zustand/middleware';
 import { persist } from 'zustand/middleware';
 
 import { logger } from '@/lib/utils/logger';
-import { withOptional } from '@/lib/utils/objects';
 
 // Poll data types
 interface Poll {
@@ -314,10 +313,10 @@ export const usePollsStore = create<PollsStore>()(
         
         updatePoll: (id, updates) => set((state) => ({
           polls: state.polls.map(poll =>
-            poll.id === id ? withOptional(poll, updates) : poll
+            poll.id === id ? { ...poll, ...updates } : poll
           ),
           filteredPolls: state.filteredPolls.map(poll =>
-            poll.id === id ? withOptional(poll, updates) : poll
+            poll.id === id ? { ...poll, ...updates } : poll
           ),
         })),
         
@@ -329,24 +328,28 @@ export const usePollsStore = create<PollsStore>()(
         publishPoll: (id) => set((state) => ({
           polls: state.polls.map(poll =>
             poll.id === id 
-              ? withOptional(poll, { 
+              ? { 
+                  ...poll,
                   status: 'active' as const,
-                  timestamps: withOptional(poll.timestamps, { 
+                  timestamps: { 
+                    ...poll.timestamps,
                     publishedAt: new Date().toISOString(),
                     updatedAt: new Date().toISOString()
-                  })
-                })
+                  }
+                }
               : poll
           ),
           filteredPolls: state.filteredPolls.map(poll =>
             poll.id === id 
-              ? withOptional(poll, { 
+              ? { 
+                  ...poll,
                   status: 'active' as const,
-                  timestamps: withOptional(poll.timestamps, { 
+                  timestamps: { 
+                    ...poll.timestamps,
                     publishedAt: new Date().toISOString(),
                     updatedAt: new Date().toISOString()
-                  })
-                })
+                  }
+                }
               : poll
           ),
         })),
@@ -354,24 +357,28 @@ export const usePollsStore = create<PollsStore>()(
         closePoll: (id) => set((state) => ({
           polls: state.polls.map(poll =>
             poll.id === id 
-              ? withOptional(poll, { 
+              ? { 
+                  ...poll,
                   status: 'closed' as const,
-                  timestamps: withOptional(poll.timestamps, { 
+                  timestamps: { 
+                    ...poll.timestamps,
                     closesAt: new Date().toISOString(),
                     updatedAt: new Date().toISOString()
-                  })
-                })
+                  }
+                }
               : poll
           ),
           filteredPolls: state.filteredPolls.map(poll =>
             poll.id === id 
-              ? withOptional(poll, { 
+              ? { 
+                  ...poll,
                   status: 'closed' as const,
-                  timestamps: withOptional(poll.timestamps, { 
+                  timestamps: { 
+                    ...poll.timestamps,
                     closesAt: new Date().toISOString(),
                     updatedAt: new Date().toISOString()
-                  })
-                })
+                  }
+                }
               : poll
           ),
         })),
@@ -379,22 +386,26 @@ export const usePollsStore = create<PollsStore>()(
         archivePoll: (id) => set((state) => ({
           polls: state.polls.map(poll =>
             poll.id === id 
-              ? withOptional(poll, { 
+              ? { 
+                  ...poll,
                   status: 'archived' as const,
-                  timestamps: withOptional(poll.timestamps, { 
+                  timestamps: { 
+                    ...poll.timestamps,
                     updatedAt: new Date().toISOString()
-                  })
-                })
+                  }
+                }
               : poll
           ),
           filteredPolls: state.filteredPolls.map(poll =>
             poll.id === id 
-              ? withOptional(poll, { 
+              ? { 
+                  ...poll,
                   status: 'archived' as const,
-                  timestamps: withOptional(poll.timestamps, { 
+                  timestamps: { 
+                    ...poll.timestamps,
                     updatedAt: new Date().toISOString()
-                  })
-                })
+                  }
+                }
               : poll
           ),
         })),
@@ -421,40 +432,46 @@ export const usePollsStore = create<PollsStore>()(
             set((state) => ({
               polls: state.polls.map(poll =>
                 poll.id === pollId 
-                  ? withOptional(poll, {
-                      voting: withOptional(poll.voting, {
+                  ? {
+                      ...poll,
+                      voting: {
+                        ...poll.voting,
                         userVote: optionId,
                         userVotedAt: new Date().toISOString(),
                         hasVoted: true,
                         totalVotes: poll.voting.totalVotes + 1,
-                      }),
-                      results: withOptional(poll.results, {
+                      },
+                      results: {
+                        ...poll.results,
                         optionResults: poll.results.optionResults.map(result =>
                           result.optionId === optionId
-                            ? withOptional(result, { votes: result.votes + 1 })
+                            ? { ...result, votes: result.votes + 1 }
                             : result
                         ),
-                      }),
-                    })
+                      },
+                    }
                   : poll
               ),
               filteredPolls: state.filteredPolls.map(poll =>
                 poll.id === pollId 
-                  ? withOptional(poll, {
-                      voting: withOptional(poll.voting, {
+                  ? {
+                      ...poll,
+                      voting: {
+                        ...poll.voting,
                         userVote: optionId,
                         userVotedAt: new Date().toISOString(),
                         hasVoted: true,
                         totalVotes: poll.voting.totalVotes + 1,
-                      }),
-                      results: withOptional(poll.results, {
+                      },
+                      results: {
+                        ...poll.results,
                         optionResults: poll.results.optionResults.map(result =>
                           result.optionId === optionId
-                            ? withOptional(result, { votes: result.votes + 1 })
+                            ? { ...result, votes: result.votes + 1 }
                             : result
                         ),
-                      }),
-                    })
+                      },
+                    }
                   : poll
               ),
             }));
@@ -497,40 +514,46 @@ export const usePollsStore = create<PollsStore>()(
               return {
                 polls: state.polls.map(p =>
                   p.id === pollId 
-                    ? withOptional(p, {
-                        voting: withOptional(p.voting, {
+                    ? {
+                        ...p,
+                        voting: {
+                          ...p.voting,
                           userVote: undefined,
                           userVotedAt: undefined,
                           hasVoted: false,
                           totalVotes: Math.max(0, p.voting.totalVotes - 1),
-                        }),
-                        results: withOptional(p.results, {
+                        },
+                        results: {
+                          ...p.results,
                           optionResults: p.results.optionResults.map(result =>
                             result.optionId === poll.voting.userVote
-                              ? withOptional(result, { votes: Math.max(0, result.votes - 1) })
+                              ? { ...result, votes: Math.max(0, result.votes - 1) }
                               : result
                           ),
-                        }),
-                      })
+                        },
+                      }
                     : p
                 ),
                 filteredPolls: state.filteredPolls.map(p =>
                   p.id === pollId 
-                    ? withOptional(p, {
-                        voting: withOptional(p.voting, {
+                    ? {
+                        ...p,
+                        voting: {
+                          ...p.voting,
                           userVote: undefined,
                           userVotedAt: undefined,
                           hasVoted: false,
                           totalVotes: Math.max(0, p.voting.totalVotes - 1),
-                        }),
-                        results: withOptional(p.results, {
+                        },
+                        results: {
+                          ...p.results,
                           optionResults: p.results.optionResults.map(result =>
                             result.optionId === poll.voting.userVote
-                              ? withOptional(result, { votes: Math.max(0, result.votes - 1) })
+                              ? { ...result, votes: Math.max(0, result.votes - 1) }
                               : result
                           ),
-                        }),
-                      })
+                        },
+                      }
                     : p
                 ),
               };
@@ -581,7 +604,7 @@ export const usePollsStore = create<PollsStore>()(
         updateComment: (id, updates) => set((state) => ({
           comments: state.comments.map(comment =>
             comment.id === id 
-              ? withOptional(comment, withOptional(updates, { updatedAt: new Date().toISOString() }))
+              ? { ...comment, ...updates, updatedAt: new Date().toISOString() }
               : comment
           )
         })),
@@ -593,10 +616,11 @@ export const usePollsStore = create<PollsStore>()(
         likeComment: (id) => set((state) => ({
           comments: state.comments.map(comment =>
             comment.id === id 
-              ? withOptional(comment, { 
+              ? { 
+                  ...comment,
                   userLiked: true,
                   likes: comment.likes + 1 
-                })
+                }
               : comment
           )
         })),
@@ -604,17 +628,18 @@ export const usePollsStore = create<PollsStore>()(
         unlikeComment: (id) => set((state) => ({
           comments: state.comments.map(comment =>
             comment.id === id 
-              ? withOptional(comment, { 
+              ? { 
+                  ...comment,
                   userLiked: false,
                   likes: Math.max(0, comment.likes - 1) 
-                })
+                }
               : comment
           )
         })),
         
         // Filtering and search actions
         setFilters: (filters) => set((state) => {
-          const newFilters = withOptional(state.filters, filters);
+          const newFilters = { ...state.filters, ...filters };
           
           // Apply filters to polls
           const filtered = state.polls.filter(poll => {
@@ -667,13 +692,14 @@ export const usePollsStore = create<PollsStore>()(
             const results = await response.json();
             
             set((state) => ({
-              search: withOptional(state.search, {
+              search: {
+                ...state.search,
                 query,
                 results: results.polls,
                 totalResults: results.total,
                 currentPage: 1,
                 totalPages: Math.ceil(results.total / state.preferences.itemsPerPage),
-              })
+              }
             }));
             
             logger.info('Polls searched', {
@@ -695,13 +721,14 @@ export const usePollsStore = create<PollsStore>()(
         })),
         
         clearSearch: () => set((state) => ({
-          search: withOptional(state.search, {
+          search: {
+            ...state.search,
             query: '',
             results: [],
             totalResults: 0,
             currentPage: 1,
             totalPages: 1,
-          })
+          }
         })),
         
         // UI state actions
@@ -713,7 +740,7 @@ export const usePollsStore = create<PollsStore>()(
         
         // Preferences actions
         updatePreferences: (preferences) => set((state) => ({
-          preferences: withOptional(state.preferences, preferences)
+          preferences: { ...state.preferences, ...preferences }
         })),
         
         resetPreferences: () => set({ preferences: defaultPreferences }),
@@ -864,22 +891,26 @@ export const usePollsStore = create<PollsStore>()(
             set((state) => ({
               polls: state.polls.map(poll =>
                 poll.id === id 
-                  ? withOptional(poll, { 
-                      settings: withOptional(poll.settings, settings),
-                      timestamps: withOptional(poll.timestamps, { 
+                  ? { 
+                      ...poll,
+                      settings: { ...poll.settings, ...settings },
+                      timestamps: { 
+                        ...poll.timestamps,
                         updatedAt: new Date().toISOString()
-                      })
-                    })
+                      }
+                    }
                   : poll
               ),
               filteredPolls: state.filteredPolls.map(poll =>
                 poll.id === id 
-                  ? withOptional(poll, { 
-                      settings: withOptional(poll.settings, settings),
-                      timestamps: withOptional(poll.timestamps, { 
+                  ? { 
+                      ...poll,
+                      settings: { ...poll.settings, ...settings },
+                      timestamps: { 
+                        ...poll.timestamps,
                         updatedAt: new Date().toISOString()
-                      })
-                    })
+                      }
+                    }
                   : poll
               ),
             }));
@@ -1040,7 +1071,7 @@ export const pollsStoreUtils = {
   /**
    * Get recent polls
    */
-  getRecentPolls: (limit: number = 10) => {
+  getRecentPolls: (limit = 10) => {
     const state = usePollsStore.getState();
     return state.polls
       .sort((a, b) => new Date(b.timestamps.createdAt).getTime() - new Date(a.timestamps.createdAt).getTime())

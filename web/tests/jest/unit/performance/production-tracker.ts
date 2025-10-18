@@ -74,15 +74,15 @@ export interface UserExperienceInsights {
 }
 
 export interface ProductionAnalytics {
-  performanceTrends: {
+  performanceTrends: Array<{
     period: string;
     averageRenderTime: number;
     averageMemoryUsage: number;
     averageUserSatisfaction: number;
     trend: 'improving' | 'stable' | 'declining';
-  }[];
+  }>;
   userExperienceMetrics: {
-    satisfactionDistribution: { score: number; percentage: number }[];
+    satisfactionDistribution: Array<{ score: number; percentage: number }>;
     taskCompletionRate: number;
     errorRate: number;
     bounceRate: number;
@@ -104,8 +104,8 @@ export class ProductionTracker {
   private metrics: ProductionMetrics[] = [];
   private regressions: PerformanceRegression[] = [];
   private baselineMetrics: Map<string, number> = new Map();
-  private isTracking: boolean = false;
-  private sessionId: string = '';
+  private isTracking = false;
+  private sessionId = '';
 
   /**
    * Start production tracking session
@@ -434,7 +434,7 @@ export class ProductionTracker {
     const userExperienceMetrics = this.calculateUserExperienceMetrics();
     
     // Calculate business impact
-    const businessImpact = this.calculateBusinessImpact();
+    const businessImpact = this.calculateBusinessImpactMetrics();
     
     // Calculate technical health
     const technicalHealth = this.calculateTechnicalHealth();
@@ -495,7 +495,7 @@ export class ProductionTracker {
   /**
    * Calculate business impact
    */
-  private calculateBusinessImpact(): ProductionAnalytics['businessImpact'] {
+  private calculateBusinessImpactMetrics(): ProductionAnalytics['businessImpact'] {
     const averageSatisfaction = this.metrics.reduce((sum, m) => sum + m.userExperience.satisfaction, 0) / this.metrics.length;
     const taskCompletionRate = this.metrics.filter(m => m.userExperience.taskCompletion).length / this.metrics.length;
     const averageRevenueImpact = this.metrics.reduce((sum, m) => sum + m.businessMetrics.revenueImpact, 0) / this.metrics.length;

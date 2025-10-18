@@ -33,10 +33,6 @@ export default function UserManagement({ onUserUpdate, onUserDelete }: UserManag
   // Get actions from adminStore
   const {
     setUserFilters,
-    selectUser,
-    deselectUser,
-    selectAllUsers,
-    deselectAllUsers,
     updateUserRole,
     updateUserStatus,
     deleteUser

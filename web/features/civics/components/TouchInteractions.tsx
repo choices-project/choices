@@ -14,7 +14,6 @@
 
 import React, { useRef, useCallback, useState, useEffect } from 'react';
 
-import { withOptional } from '@/lib/utils/objects';
 
 type TouchGesture = 'swipe-left' | 'swipe-right' | 'swipe-up' | 'swipe-down' | 'pinch-in' | 'pinch-out' | 'long-press' | 'tap';
 
@@ -76,7 +75,8 @@ export default function TouchInteractions({
   const clearLongPressTimer = useCallback(() => {
     if (touchState.longPressTimer) {
       clearTimeout(touchState.longPressTimer);
-      setTouchState(prev => withOptional(prev, {
+      setTouchState(prev => ({
+        ...prev,
         longPressTimer: null
       }));
     }
@@ -101,7 +101,8 @@ export default function TouchInteractions({
       const touch2 = e.touches[1];
       if (touch1 && touch2) {
         const distance = calculateDistance(touch1, touch2);
-        setTouchState(prev => withOptional(prev, {
+        setTouchState(prev => ({
+          ...prev,
           initialDistance: distance,
           lastDistance: distance,
           isLongPress: false
@@ -110,7 +111,8 @@ export default function TouchInteractions({
       }
     }
 
-    setTouchState(prev => withOptional(prev, {
+    setTouchState(prev => ({
+      ...prev,
       start: point,
       end: null,
       last: point,
@@ -123,13 +125,15 @@ export default function TouchInteractions({
 
     // Start long press timer
     const timer = setTimeout(() => {
-      setTouchState(prev => withOptional(prev, {
+      setTouchState(prev => ({
+        ...prev,
         isLongPress: true
       }));
       onLongPress?.();
     }, longPressDelay);
 
-    setTouchState(prev => withOptional(prev, {
+    setTouchState(prev => ({
+      ...prev,
       longPressTimer: timer
     }));
   }, [disabled, onLongPress, longPressDelay, calculateDistance]);
@@ -146,7 +150,8 @@ export default function TouchInteractions({
         const currentDistance = calculateDistance(touch1, touch2);
         const distanceChange = currentDistance - (touchState.lastDistance || touchState.initialDistance);
         
-        setTouchState(prev => withOptional(prev, {
+        setTouchState(prev => ({
+          ...prev,
           lastDistance: currentDistance
         }));
         
@@ -174,7 +179,8 @@ export default function TouchInteractions({
       time: Date.now()
     };
 
-    setTouchState(prev => withOptional(prev, {
+    setTouchState(prev => ({
+      ...prev,
       last: point
     }));
 
@@ -206,14 +212,16 @@ export default function TouchInteractions({
       time: Date.now()
     };
 
-    setTouchState(prev => withOptional(prev, {
+    setTouchState(prev => ({
+      ...prev,
       end: endPoint
     }));
     setIsTouching(false);
 
     // Don't process gestures if it was a long press
     if (touchState.isLongPress) {
-      setTouchState(prev => withOptional(prev, {
+      setTouchState(prev => ({
+        ...prev,
         isLongPress: false
       }));
       return;

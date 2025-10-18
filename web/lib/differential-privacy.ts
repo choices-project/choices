@@ -127,7 +127,7 @@ export class PrivacyBudgetManager {
   private budget: number;
   private used: number;
 
-  constructor(initialBudget: number = 1.0) {
+  constructor(initialBudget = 1.0) {
     this.budget = initialBudget;
     this.used = 0;
   }

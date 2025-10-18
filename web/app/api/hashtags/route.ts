@@ -14,9 +14,10 @@
  * POST /api/hashtags?action=reject&flagId={id} - Reject a flag
  */
 
-import { NextRequest, NextResponse } from 'next/server';
-import { getSupabaseServerClient } from '@/utils/supabase/server';
+import { type NextRequest, NextResponse } from 'next/server';
+
 import { logger } from '@/lib/utils/logger';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
@@ -43,7 +44,7 @@ export async function GET(request: NextRequest) {
         .order('created_at', { ascending: false });
 
       if (error) {
-        logger.error('Failed to fetch moderation queue', { error });
+        logger.error('Failed to fetch moderation queue', error as Error);
         return NextResponse.json(
           { error: 'Failed to fetch moderation queue' },
           { status: 500 }
@@ -65,7 +66,7 @@ export async function GET(request: NextRequest) {
       { status: 400 }
     );
   } catch (error) {
-    logger.error('Hashtags GET error', { error });
+    logger.error('Hashtags GET error', error as Error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -104,7 +105,7 @@ export async function POST(request: NextRequest) {
         .select();
 
       if (error) {
-        logger.error('Failed to create hashtag flag', { error });
+        logger.error('Failed to create hashtag flag', error as Error);
         return NextResponse.json(
           { error: 'Failed to create hashtag flag' },
           { status: 500 }
@@ -127,7 +128,7 @@ export async function POST(request: NextRequest) {
         .select();
 
       if (error) {
-        logger.error('Failed to approve hashtag flag', { error });
+        logger.error('Failed to approve hashtag flag', error as Error);
         return NextResponse.json(
           { error: 'Failed to approve hashtag flag' },
           { status: 500 }
@@ -150,7 +151,7 @@ export async function POST(request: NextRequest) {
         .select();
 
       if (error) {
-        logger.error('Failed to reject hashtag flag', { error });
+        logger.error('Failed to reject hashtag flag', error as Error);
         return NextResponse.json(
           { error: 'Failed to reject hashtag flag' },
           { status: 500 }
@@ -169,7 +170,7 @@ export async function POST(request: NextRequest) {
       { status: 400 }
     );
   } catch (error) {
-    logger.error('Hashtags POST error', { error });
+    logger.error('Hashtags POST error', error as Error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

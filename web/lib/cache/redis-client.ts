@@ -9,7 +9,6 @@
  */
 
 import { logger } from '@/lib/utils/logger'
-import { withOptional } from '@/lib/utils/objects'
 
 // Redis client configuration interface
 export interface RedisConfig {
@@ -68,9 +67,9 @@ export interface InvalidationOptions {
 export class RedisClient {
   private client: any = null
   private config: RedisConfig
-  private isConnected: boolean = false
-  private connectionAttempts: number = 0
-  private maxConnectionAttempts: number = 5
+  private isConnected = false
+  private connectionAttempts = 0
+  private maxConnectionAttempts = 5
   private stats: CacheStats = {
     hits: 0,
     misses: 0,
@@ -108,19 +107,17 @@ export class RedisClient {
       // Dynamic import to avoid build-time dependency
       const Redis = await import('redis')
       
-      this.client = Redis.createClient(withOptional({
-        socket: withOptional({
+      this.client = Redis.createClient({
+        socket: {
           host: this.config.host,
           port: this.config.port,
-          keepAlive: this.config.keepAlive ? true : false
-        }, {
+          keepAlive: this.config.keepAlive ? true : false,
           connectTimeout: this.config.connectTimeout,
           family: this.config.family
-        })
-      }, {
+        },
         password: this.config.password,
         database: this.config.db
-      }))
+      })
 
       // Set up event listeners
       this.client.on('connect', () => {
@@ -235,7 +232,7 @@ export class RedisClient {
   async set<T = any>(
     key: string, 
     value: T, 
-    ttlSeconds: number = 300,
+    ttlSeconds = 300,
     tags: string[] = [],
     metadata?: Record<string, any>
   ): Promise<boolean> {
@@ -244,15 +241,14 @@ export class RedisClient {
     }
 
     try {
-      const entry: CacheEntry<T> = withOptional({
+      const entry: CacheEntry<T> = {
         data: value,
         expiresAt: Date.now() + (ttlSeconds * 1000),
         createdAt: Date.now(),
         hitCount: 0,
-        tags
-      }, {
-        metadata
-      })
+        tags,
+        ...metadata
+      }
 
       await this.client.setEx(key, ttlSeconds, JSON.stringify(entry))
       
@@ -589,15 +585,14 @@ export class RedisClient {
 }
 
 // Default Redis configuration
-const defaultRedisConfig: RedisConfig = withOptional({
+const defaultRedisConfig: RedisConfig = {
   host: process.env.REDIS_HOST || 'localhost',
   port: parseInt(process.env.REDIS_PORT || '6379'),
   db: parseInt(process.env.REDIS_DB || '0'),
   maxMemoryPolicy: 'allkeys-lru',
-  maxMemory: '256mb'
-}, {
+  maxMemory: '256mb',
   password: process.env.REDIS_PASSWORD
-})
+}
 
 // Global Redis client instance
 let redisClient: RedisClient | null = null

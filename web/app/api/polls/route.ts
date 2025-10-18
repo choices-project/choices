@@ -56,7 +56,7 @@ export async function GET(request: NextRequest) {
         throw directError;
       }
 
-      devLog('Found polls:', directPolls.length || 0);
+      devLog('Found polls:', { count: directPolls.length || 0 });
 
       // Manually aggregate results (temporary solution)
       polls = (directPolls ?? []).map(poll => ({
@@ -71,7 +71,7 @@ export async function GET(request: NextRequest) {
         status: poll.status
       }));
     } catch (fallbackError) {
-      devLog('Error fetching polls:', fallbackError);
+      devLog('Error fetching polls:', { error: fallbackError });
       return NextResponse.json(
         { error: 'Failed to fetch polls' },
         { status: 500 }
@@ -96,7 +96,7 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    devLog('Error in polls API:', error);
+    devLog('Error in polls API:', { error });
     return NextResponse.json(
       { 
         error: 'Internal server error',
@@ -126,7 +126,7 @@ export async function POST(request: NextRequest) {
     try {
       user = await getUser();
     } catch (error) {
-      devLog('Authentication error during poll creation:', error);
+      devLog('Authentication error during poll creation:', { error });
       return NextResponse.json(
         { error: 'Authentication required to create polls' },
         { status: 401 }
@@ -221,7 +221,7 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (pollError) {
-      devLog('Error creating poll:', pollError);
+      devLog('Error creating poll:', { error: pollError });
       return NextResponse.json(
         { error: 'Failed to create poll', details: pollError },
         { status: 500 }
@@ -250,7 +250,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(sanitizedPoll);
 
   } catch (error) {
-    devLog('Error in polls API:', error);
+    devLog('Error in polls API:', { error });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

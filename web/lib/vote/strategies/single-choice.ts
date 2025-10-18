@@ -9,7 +9,6 @@
  */
 
 import { devLog } from '@/lib/utils/logger';
-import { withOptional } from '@/lib/utils/objects';
 
 import type { 
   VotingStrategy, 
@@ -29,44 +28,44 @@ export class SingleChoiceStrategy implements VotingStrategy {
     return 'single';
   }
 
-  async validateVote(request: VoteRequest, poll: PollData): Promise<VoteValidation> {
+  validateVote(request: VoteRequest, poll: PollData): Promise<VoteValidation> {
     try {
       const voteData = request.voteData;
 
       // Validate choice exists and is a number
       if (typeof voteData.choice !== 'number') {
-        return {
+        return Promise.resolve({
           valid: false,
           isValid: false,
           error: 'Choice is required for single-choice voting',
           errors: ['Choice is required for single-choice voting'],
           requiresAuthentication: false,
           requiresTokens: false
-        };
+        });
       }
 
       // Validate choice is a valid integer
       if (!Number.isInteger(voteData.choice)) {
-        return {
+        return Promise.resolve({
           valid: false,
           isValid: false,
           error: 'Choice must be an integer',
           errors: ['Choice must be an integer'],
           requiresAuthentication: false,
           requiresTokens: false
-        };
+        });
       }
 
       // Validate choice is within valid range
       if (voteData.choice < 0 || voteData.choice >= poll.options.length) {
-        return {
+        return Promise.resolve({
           valid: false,
           isValid: false,
           error: `Choice must be between 0 and ${poll.options.length - 1}`,
           errors: ['Invalid option selected'],
           requiresAuthentication: false,
           requiresTokens: false
-        };
+        });
       }
 
       devLog('Single choice vote validated successfully', {
@@ -75,39 +74,49 @@ export class SingleChoiceStrategy implements VotingStrategy {
         userId: request.userId
       });
 
-      return {
+      return Promise.resolve({
         valid: true,
         isValid: true,
         requiresAuthentication: false,
         requiresTokens: false
-      };
+      });
 
     } catch (error) {
-      devLog('Single choice vote validation error:', error);
-      return {
+      devLog('Single choice vote validation error:', { error: error instanceof Error ? error.message : String(error) });
+      return Promise.resolve({
         valid: false,
         isValid: false,
         error: 'Single choice vote validation failed',
         errors: ['Single choice vote validation failed'],
         requiresAuthentication: false,
         requiresTokens: false
-      };
+      });
     }
   }
 
-  async processVote(request: VoteRequest, poll: PollData): Promise<VoteResponse> {
+  processVote(request: VoteRequest, poll: PollData): Promise<VoteResponse> {
     try {
       const voteData = request.voteData;
+      
+      // Validate choice against poll options
+      if (typeof voteData.choice !== 'number' || voteData.choice < 0 || voteData.choice >= poll.options.length) {
+        return Promise.resolve({
+          success: false,
+          error: 'Invalid choice selection',
+          message: 'Selected choice is not valid for this poll',
+          pollId: request.pollId
+        });
+      }
       
       // Create vote data for storage
       const voteRecord: VoteData = {
         id: `vote_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
         pollId: request.pollId,
         userId: request.userId,
-        voteData: {
-          choice: voteData.choice
-        },
-        timestamp: new Date().toISOString(),
+        choice: voteData.choice,
+        privacyLevel: 'standard',
+        auditReceipt: `audit_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        timestamp: new Date(),
         ipAddress: request.ipAddress,
         userAgent: request.userAgent
       };
@@ -119,25 +128,25 @@ export class SingleChoiceStrategy implements VotingStrategy {
         voteId: voteRecord.id
       });
 
-      return {
+      return Promise.resolve({
         success: true,
         voteId: voteRecord.id,
         message: 'Vote recorded successfully',
         pollId: request.pollId
-      };
+      });
 
     } catch (error) {
-      devLog('Single choice vote processing error:', error);
-      return {
+      devLog('Single choice vote processing error:', { error: error instanceof Error ? error.message : String(error) });
+      return Promise.resolve({
         success: false,
         error: 'Failed to process single choice vote',
         message: 'Failed to process single choice vote',
         pollId: request.pollId
-      };
+      });
     }
   }
 
-  async calculateResults(poll: PollData, votes: VoteData[]): Promise<ResultsData> {
+  calculateResults(poll: PollData, votes: VoteData[]): Promise<ResultsData> {
     try {
       const startTime = Date.now();
       
@@ -157,20 +166,20 @@ export class SingleChoiceStrategy implements VotingStrategy {
         // Handle both voteData.choice and direct choice property
         const choice = vote.voteData?.choice ?? vote.choice;
         if (typeof choice === 'number') {
-          const optionId = poll.options[choice]?.id;
-          if (optionId) {
-            optionVotes[optionId]++;
+          const option = poll.options[choice];
+          if (option?.id) {
+            optionVotes[option.id] = (optionVotes[option.id] || 0) + 1;
             validVoteCount++;
           }
         }
       });
 
-      const totalVotes = validVoteCount;
+      const totalVotes = validVoteCount || 0;
 
       // Calculate percentages
       if (totalVotes > 0) {
         Object.keys(optionVotes).forEach(optionId => {
-          const votes = optionVotes[optionId];
+          const votes = optionVotes[optionId] || 0;
           optionPercentages[optionId] = (votes / totalVotes) * 100;
         });
       }
@@ -191,7 +200,7 @@ export class SingleChoiceStrategy implements VotingStrategy {
       }
 
       const results: PollResults = {
-        winner: totalVotes > 0 ? winner : null,
+        winner: totalVotes > 0 ? winner : undefined,
         winnerVotes,
         winnerPercentage,
         optionVotes,
@@ -209,7 +218,7 @@ export class SingleChoiceStrategy implements VotingStrategy {
         calculationTime: Date.now() - startTime
       });
 
-      return {
+      return Promise.resolve({
         pollId: poll.id,
         votingMethod: poll.votingMethod,
         totalVotes,
@@ -220,13 +229,13 @@ export class SingleChoiceStrategy implements VotingStrategy {
           calculationTime: Date.now() - startTime,
           method: 'single'
         }
-      };
+      });
 
     } catch (error) {
-      devLog('Single choice results calculation error:', error);
+      devLog('Single choice results calculation error:', { error: error instanceof Error ? error.message : String(error) });
       
       // Return empty results on error
-      return {
+      return Promise.resolve({
         pollId: poll.id,
         votingMethod: poll.votingMethod,
         totalVotes: 0,
@@ -245,7 +254,7 @@ export class SingleChoiceStrategy implements VotingStrategy {
           calculationTime: 0,
           error: error instanceof Error ? error.message : 'Unknown error'
         }
-      };
+      });
     }
   }
 

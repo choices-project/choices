@@ -5,6 +5,8 @@
  * It replaces the old @/shared/utils/lib/client-session imports.
  */
 
+import { logger } from '@/lib/utils/logger';
+
 export const clientSession = {
   get: (key: string): string | null => {
     if (typeof window === 'undefined') return null;

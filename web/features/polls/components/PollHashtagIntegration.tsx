@@ -22,7 +22,6 @@ import { HashtagInput, HashtagDisplay } from '@/features/hashtags';
 import type { Hashtag } from '@/features/hashtags/types';
 import { useHashtagStore, useHashtagActions, useHashtagStats } from '@/lib/stores';
 import { cn } from '@/lib/utils';
-import { withOptional } from '@/lib/utils/objects';
 
 import type { Poll, PollHashtagIntegration } from '../types';
 
@@ -44,8 +43,8 @@ export default function PollHashtagIntegration({
     poll.hashtags ? {
       poll_id: poll.id,
       hashtags: poll.hashtags,
-      primary_hashtag: poll.primary_hashtag || '',
-      hashtag_engagement: poll.hashtag_engagement || {
+      primary_hashtag: poll.primary_hashtag ?? '',
+      hashtag_engagement: poll.hashtag_engagement ?? {
         total_views: 0,
         hashtag_clicks: 0,
         hashtag_shares: 0
@@ -62,7 +61,7 @@ export default function PollHashtagIntegration({
 
   // Load trending hashtags on mount
   useEffect(() => {
-    getTrendingHashtags();
+    void getTrendingHashtags();
   }, [getTrendingHashtags]);
 
   // Handle hashtag updates
@@ -70,13 +69,13 @@ export default function PollHashtagIntegration({
     const updatedIntegration: PollHashtagIntegration = {
       poll_id: poll.id,
       hashtags: newHashtags,
-      primary_hashtag: newHashtags[0] || '', // First hashtag as primary
-      hashtag_engagement: hashtagIntegration?.hashtag_engagement || {
+      primary_hashtag: newHashtags[0] ?? '', // First hashtag as primary
+      hashtag_engagement: hashtagIntegration?.hashtag_engagement ?? {
         total_views: 0,
         hashtag_clicks: 0,
         hashtag_shares: 0
       },
-      related_polls: hashtagIntegration?.related_polls || [],
+      related_polls: hashtagIntegration?.related_polls ?? [],
       hashtag_trending_score: 0
     };
 
@@ -85,7 +84,7 @@ export default function PollHashtagIntegration({
     // Update poll
     onUpdate({
       hashtags: newHashtags,
-      primary_hashtag: newHashtags[0] || '',
+      primary_hashtag: newHashtags[0] ?? '',
       hashtag_engagement: updatedIntegration.hashtag_engagement
     });
   };
@@ -93,9 +92,10 @@ export default function PollHashtagIntegration({
   // Handle primary hashtag change
   const handlePrimaryHashtagChange = (hashtag: string) => {
     if (hashtagIntegration) {
-      const updatedIntegration = withOptional(hashtagIntegration, {
+      const updatedIntegration = {
+        ...hashtagIntegration,
         primary_hashtag: hashtag
-      });
+      };
       
       setHashtagIntegration(updatedIntegration);
       onUpdate({
@@ -107,7 +107,7 @@ export default function PollHashtagIntegration({
   // Get hashtag objects for display
   const pollHashtagObjects = hashtagIntegration?.hashtags?.map(hashtagName => 
     hashtags.find(h => h.name === hashtagName)
-  ).filter(Boolean) as Hashtag[] || [];
+  ).filter(Boolean) as Hashtag[] ?? [];
 
   // Get trending hashtags for suggestions
   const trendingHashtagObjects = trendingHashtags.map(th => th.hashtag);
@@ -192,7 +192,7 @@ export default function PollHashtagIntegration({
               {isEditing ? (
                 <div className="space-y-4">
                   <HashtagInput
-                    value={hashtagIntegration?.hashtags || []}
+                    value={hashtagIntegration?.hashtags ?? []}
                     onChange={handleHashtagUpdate}
                     placeholder="Add hashtags to your poll..."
                     maxTags={10}
@@ -207,7 +207,7 @@ export default function PollHashtagIntegration({
                         <div className="flex flex-wrap gap-2">
                           {hashtagIntegration.hashtags.map((hashtag, index) => (
                             <Button
-                              key={index}
+                              key={`primary-${hashtag}-${index}`}
                               variant={hashtag === hashtagIntegration.primary_hashtag ? "default" : "outline"}
                               size="sm"
                               onClick={() => handlePrimaryHashtagChange(hashtag)}
@@ -227,7 +227,7 @@ export default function PollHashtagIntegration({
                         <p className="text-sm font-medium mb-2">All Hashtags:</p>
                         <div className="flex flex-wrap gap-2">
                           {hashtagIntegration.hashtags.map((hashtag, index) => (
-                            <Badge key={index} variant="secondary" className="flex items-center gap-1">
+                            <Badge key={`all-${hashtag}-${index}`} variant="secondary" className="flex items-center gap-1">
                               <Hash className="h-3 w-3" />
                               {hashtag}
                               {hashtag === hashtagIntegration.primary_hashtag && (
@@ -344,7 +344,7 @@ export default function PollHashtagIntegration({
                     <p className="text-sm font-medium">Hashtag Performance</p>
                     <div className="space-y-1">
                       {hashtagIntegration.hashtags.map((hashtag, index) => (
-                        <div key={index} className="flex items-center justify-between text-sm">
+                        <div key={`performance-${hashtag}-${index}`} className="flex items-center justify-between text-sm">
                           <span className="flex items-center gap-1">
                             <Hash className="h-3 w-3" />
                             {hashtag}
@@ -382,18 +382,18 @@ export default function PollHashtagIntegration({
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
                 <p className="font-medium">Total Hashtags:</p>
-                <p className="text-muted-foreground">{hashtagIntegration?.hashtags.length || 0} hashtags</p>
+                <p className="text-muted-foreground">{hashtagIntegration?.hashtags.length ?? 0} hashtags</p>
               </div>
               <div>
                 <p className="font-medium">Primary Hashtag:</p>
                 <p className="text-muted-foreground">
-                  {hashtagIntegration?.primary_hashtag || 'None selected'}
+                  {hashtagIntegration?.primary_hashtag ?? 'None selected'}
                 </p>
               </div>
               <div>
                 <p className="font-medium">Total Views:</p>
                 <p className="text-muted-foreground">
-                  {hashtagIntegration?.hashtag_engagement.total_views || 0} views
+                  {hashtagIntegration?.hashtag_engagement.total_views ?? 0} views
                 </p>
               </div>
               <div>

@@ -23,7 +23,7 @@ import type {
   AvatarUploadResult,
   ProfileExportData
 } from '@/features/profile/types';
-import { withOptional } from '@/lib/utils/objects';
+import { logger } from '@/lib/utils/logger';
 
 import type { BaseStore } from './types';
 
@@ -208,7 +208,7 @@ export const useProfileStore = create<ProfileStore>()(
             if (result.success) {
               set((state) => {
                 if (state.preferences) {
-                  state.preferences = withOptional(state.preferences, preferences);
+                  state.preferences = { ...state.preferences, ...preferences };
                 } else {
                   state.preferences = preferences;
                 }
@@ -245,7 +245,7 @@ export const useProfileStore = create<ProfileStore>()(
             if (result.success) {
               set((state) => {
                 if (state.privacySettings) {
-                  state.privacySettings = withOptional(state.privacySettings, settings);
+                  state.privacySettings = { ...state.privacySettings, ...settings };
                 } else {
                   state.privacySettings = settings as PrivacySettings;
                 }

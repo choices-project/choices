@@ -104,7 +104,7 @@ export default function HashtagDisplay({
       other: '📌'
     };
     
-    return icons[category] || '🏷️';
+    return icons[category] ?? '🏷️';
   };
 
   // Format usage count
@@ -214,7 +214,7 @@ export default function HashtagDisplay({
                     )}
 
                     {/* Action Buttons */}
-                    {(onFollow || onUnfollow) && (
+                    {(onFollow ?? onUnfollow) && (
                       <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                         {onFollow && (
                           <Button

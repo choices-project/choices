@@ -10,7 +10,6 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
-import { withOptional } from '@/lib/utils/objects';
 
 import {
   getHashtagById,
@@ -45,7 +44,7 @@ import type {
 export const hashtagQueryKeys = {
   all: ['hashtags'] as const,
   lists: () => [...hashtagQueryKeys.all, 'list'] as const,
-  list: (filters: Record<string, any>) => [...hashtagQueryKeys.lists(), filters] as const,
+  list: (filters: Record<string, unknown>) => [...hashtagQueryKeys.lists(), filters] as const,
   details: () => [...hashtagQueryKeys.all, 'detail'] as const,
   detail: (id: string) => [...hashtagQueryKeys.details(), id] as const,
   search: (query: string) => [...hashtagQueryKeys.all, 'search', query] as const,
@@ -69,8 +68,8 @@ export function useHashtag(id: string, options?: UseHashtagOptions) {
     queryKey: hashtagQueryKeys.detail(id),
     queryFn: () => getHashtagById(id),
     enabled: !!id && (options?.enabled !== false),
-    staleTime: options?.staleTime || 5 * 60 * 1000, // 5 minutes
-    gcTime: options?.cacheTime || 10 * 60 * 1000, // 10 minutes
+    staleTime: options?.staleTime ?? 5 * 60 * 1000, // 5 minutes
+    gcTime: options?.cacheTime ?? 10 * 60 * 1000, // 10 minutes
     refetchOnWindowFocus: options?.refetchOnWindowFocus !== false
   });
 }
@@ -83,8 +82,8 @@ export function useHashtagByName(name: string, options?: UseHashtagOptions) {
     queryKey: hashtagQueryKeys.detail(name),
     queryFn: () => getHashtagByName(name),
     enabled: !!name && (options?.enabled !== false),
-    staleTime: options?.staleTime || 5 * 60 * 1000,
-    gcTime: options?.cacheTime || 10 * 60 * 1000,
+    staleTime: options?.staleTime ?? 5 * 60 * 1000,
+    gcTime: options?.cacheTime ?? 10 * 60 * 1000,
     refetchOnWindowFocus: options?.refetchOnWindowFocus !== false
   });
 }
@@ -102,8 +101,8 @@ export function useHashtagSearch(options: UseHashtagSearchOptions) {
       limit: options.limit
     }),
     enabled: !!options.query && (options.enabled !== false),
-    staleTime: options.staleTime || 2 * 60 * 1000, // 2 minutes
-    gcTime: options.cacheTime || 5 * 60 * 1000, // 5 minutes
+    staleTime: options.staleTime ?? 2 * 60 * 1000, // 2 minutes
+    gcTime: options.cacheTime ?? 5 * 60 * 1000, // 5 minutes
     refetchOnWindowFocus: options.refetchOnWindowFocus !== false
   });
 }
@@ -116,8 +115,8 @@ export function useTrendingHashtags(options: UseTrendingHashtagsOptions = {}) {
     queryKey: hashtagQueryKeys.trending(options.category),
     queryFn: () => getTrendingHashtags(options.category, options.limit),
     enabled: options.enabled !== false,
-    staleTime: options.staleTime || 1 * 60 * 1000, // 1 minute
-    gcTime: options.cacheTime || 5 * 60 * 1000, // 5 minutes
+    staleTime: options.staleTime ?? 1 * 60 * 1000, // 1 minute
+    gcTime: options.cacheTime ?? 5 * 60 * 1000, // 5 minutes
     refetchOnWindowFocus: options.refetchOnWindowFocus !== false,
     refetchInterval: 5 * 60 * 1000 // Refetch every 5 minutes
   });
@@ -306,9 +305,10 @@ export function useFollowHashtag() {
           hashtagQueryKeys.user(),
           (oldData: any) => {
             if (!oldData?.data) return oldData;
-            return withOptional(oldData, {
+            return {
+              ...oldData,
               data: [...oldData.data, data.data]
-            });
+            };
           }
         );
         
@@ -338,9 +338,10 @@ export function useUnfollowHashtag() {
           hashtagQueryKeys.user(),
           (oldData: any) => {
             if (!oldData?.data) return oldData;
-            return withOptional(oldData, {
+            return {
+              ...oldData,
               data: oldData.data.filter((uh: UserHashtag) => uh.hashtag_id !== hashtagId)
-            });
+            };
           }
         );
         
@@ -385,10 +386,11 @@ export function useHashtagSearchWithSuggestions(
   options?: UseHashtagSearchOptions
 ) {
   const search = useHashtagSearch({ query, ...options });
-  const suggestions = useHashtagSuggestions(withOptional({
+  const suggestions = useHashtagSuggestions({
     input: query,
     limit: 5,
-  }, options ? { ...options } : {}));
+    ...options
+  });
 
   return {
     search,

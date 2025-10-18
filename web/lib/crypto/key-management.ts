@@ -67,7 +67,7 @@ export interface DecryptionResult {
 // SECURE KEY MANAGER CLASS
 // ============================================================================
 
-import { withOptional } from '@/lib/utils/objects';
+import { logger } from '@/lib/utils/logger';
 
 export class SecureKeyManager {
   private keys: Map<string, SecureKey> = new Map();
@@ -159,7 +159,9 @@ export class SecureKeyManager {
 
   private generateIV(): Uint8Array {
     // Generate 96-bit IV for AES-GCM (recommended size)
-    return crypto.getRandomValues(new Uint8Array(12));
+    const iv = new Uint8Array(12);
+    crypto.getRandomValues(iv);
+    return iv;
   }
 
   private generateIVFromSeed(seed: string): Uint8Array {
@@ -205,7 +207,7 @@ export class SecureKeyManager {
     const ciphertext = await crypto.subtle.encrypt(
       {
         name: 'AES-GCM',
-        iv
+        iv: iv as BufferSource
       },
       key.key,
       data
@@ -290,7 +292,7 @@ export class SecureKeyManager {
     const iv = this.generateIV();
     const wrapped = await crypto.subtle.wrapKey('raw', key.key, kek, {
       name: 'AES-GCM',
-      iv
+      iv: iv as BufferSource
     });
 
     return {
@@ -477,31 +479,27 @@ export class SecureKeyManager {
     const key = this.keys.get(keyId);
     if (!key) return null;
     
-    return withOptional(
-      {
-        id: key.id,
-        algorithm: key.algorithm,
-        extractable: key.extractable,
-        usages: key.usages,
-        createdAt: key.createdAt,
-        version: key.version
-      },
-      { expiresAt: key.expiresAt }
-    );
+    return {
+      id: key.id,
+      algorithm: key.algorithm,
+      extractable: key.extractable,
+      usages: key.usages,
+      createdAt: key.createdAt,
+      version: key.version,
+      expiresAt: key.expiresAt
+    };
   }
 
   listKeys(): Array<Omit<SecureKey, 'key'>> {
-    return Array.from(this.keys.values()).map(key => withOptional(
-      {
-        id: key.id,
-        algorithm: key.algorithm,
-        extractable: key.extractable,
-        usages: key.usages,
-        createdAt: key.createdAt,
-        version: key.version
-      },
-      { expiresAt: key.expiresAt }
-    ));
+    return Array.from(this.keys.values()).map(key => ({
+      id: key.id,
+      algorithm: key.algorithm,
+      extractable: key.extractable,
+      usages: key.usages,
+      createdAt: key.createdAt,
+      version: key.version,
+      expiresAt: key.expiresAt
+    }));
   }
 
   deleteKey(keyId: string): boolean {
@@ -520,7 +518,7 @@ export async function generateSecureIV(): Promise<Uint8Array> {
 export async function deriveKeyFromPassphrase(
   passphrase: string, 
   salt: Uint8Array, 
-  iterations: number = 200_000
+  iterations = 200_000
 ): Promise<CryptoKey> {
   const encoder = new TextEncoder();
   const base = await crypto.subtle.importKey(
@@ -534,7 +532,7 @@ export async function deriveKeyFromPassphrase(
   return crypto.subtle.deriveKey(
     {
       name: 'PBKDF2',
-      salt,
+      salt: salt as BufferSource,
       iterations,
       hash: 'SHA-256'
     },

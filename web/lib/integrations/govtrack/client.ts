@@ -213,7 +213,7 @@ export class GovTrackClient {
   /**
    * Get recent votes for a member
    */
-  async getRecentVotesForMember(memberId: number, limit: number = 20): Promise<GovTrackVote[]> {
+  async getRecentVotesForMember(memberId: number, limit = 20): Promise<GovTrackVote[]> {
     await this.checkRateLimit();
 
     try {
@@ -239,7 +239,7 @@ export class GovTrackClient {
   /**
    * Get recent bills
    */
-  async getRecentBills(congress: number = 118, limit: number = 50): Promise<GovTrackBill[]> {
+  async getRecentBills(congress = 118, limit = 50): Promise<GovTrackBill[]> {
     await this.checkRateLimit();
 
     try {

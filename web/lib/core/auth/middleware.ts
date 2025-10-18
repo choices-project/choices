@@ -70,7 +70,7 @@ export function createAuthMiddleware(options: AuthMiddlewareOptions = {}) {
         try {
           requireTrustedOrigin(request);
         } catch (error) {
-          devLog('Origin validation failed:', error);
+          devLog('Origin validation failed:', { error: error instanceof Error ? error.message : String(error) });
           return NextResponse.json(
             { message: 'Invalid origin' },
             { status: 403 }
@@ -106,7 +106,7 @@ export function createAuthMiddleware(options: AuthMiddlewareOptions = {}) {
         try {
           await requireTurnstileVerification(request, turnstileAction);
         } catch (error) {
-          devLog('Turnstile verification failed:', error);
+          devLog('Turnstile verification failed:', { error: error instanceof Error ? error.message : String(error) });
           return NextResponse.json(
             { message: 'Security verification failed' },
             { status: 403 }
@@ -155,20 +155,19 @@ export function createAuthMiddleware(options: AuthMiddlewareOptions = {}) {
         .single();
 
       if (profileError) {
-        devLog('Profile lookup error', profileError, { userId: user.id });
+        devLog('Profile lookup error', { error: profileError.message, userId: user.id });
         return NextResponse.json(
           { message: 'User profile not found' },
           { status: 404 }
         );
       }
 
-      const authUser: AuthUser = withOptional({
+      const authUser: AuthUser = {
         id: user.id,
         email: user.email || '',
-        trust_tier: profile && !('error' in profile) ? (profile as UserProfile).trust_tier || 'T1' : 'T1'
-      }, {
+        trust_tier: profile && !('error' in profile) ? (profile as UserProfile).trust_tier || 'T1' : 'T1',
         username: profile && !('error' in profile) ? (profile as UserProfile).username : null
-      });
+      };
 
       // Check admin requirement - rely on RLS policies for security
       if (requireAdmin) {
@@ -206,7 +205,7 @@ export function createAuthMiddleware(options: AuthMiddlewareOptions = {}) {
       return null;
 
     } catch (error) {
-      devLog('Auth middleware error', error instanceof Error ? error : new Error(String(error)));
+      devLog('Auth middleware error', { error: error instanceof Error ? error.message : String(error) });
 
       return NextResponse.json(
         { message: 'Authentication error' },
@@ -254,13 +253,12 @@ export function withAuth(
       .single();
 
     const context: AuthContext = {
-      user: withOptional({
+      user: {
         id: user!.id,
         email: user!.email || '',
-        trust_tier: isAdmin ? 'T3' : 'T1'
-      }, {
+        trust_tier: isAdmin ? 'T3' : 'T1',
         username: profile && !('error' in profile) ? (profile as UserProfile).username : null
-      }),
+      },
       supabase
     };
 
@@ -377,13 +375,13 @@ export async function getUser(): Promise<User | null> {
     const { data: { user }, error } = await supabase.auth.getUser();
     
     if (error) {
-      devLog('getUser error:', error);
+      devLog('getUser error:', { error: error.message });
       return null;
     }
     
     return user;
   } catch (error) {
-    devLog('getUser error:', error);
+    devLog('getUser error:', { error: error instanceof Error ? error.message : String(error) });
     return null;
   }
 }

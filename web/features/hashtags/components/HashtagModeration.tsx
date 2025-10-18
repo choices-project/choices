@@ -22,8 +22,7 @@ import {
   Clock,
   Eye,
   User,
-  Calendar,
-  Copy
+  Calendar
 } from 'lucide-react';
 import React, { useState, useEffect, useCallback } from 'react';
 
@@ -31,15 +30,11 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { logger } from '@/lib/utils/logger';
 import { 
   useHashtagModerationStore,
-  useModerationForm,
-  useModerationActions,
-  useModerationLoading,
-  useModerationError,
   type HashtagFlagType
 } from '@/lib/stores/hashtagModerationStore';
+import { logger } from '@/lib/utils/logger';
 
 import type { 
   HashtagModeration, 

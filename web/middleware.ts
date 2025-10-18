@@ -48,8 +48,9 @@ function shouldBypassForE2E(req: NextRequest): boolean {
   const byQuery = req.nextUrl.searchParams.get('e2e') === '1';
   const byCookie = req.cookies.get(E2E_COOKIE)?.value === '1';
   
-  // Local development bypass
-  const isLocal = req.ip === '127.0.0.1' || req.ip === '::1' || req.ip?.endsWith(':127.0.0.1')
+  // Local development bypass - Next.js 15 removed request.ip
+  const forwardedFor = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+  const isLocal = forwardedFor === '127.0.0.1' || forwardedFor === '::1' || forwardedFor?.endsWith(':127.0.0.1')
   const isLocalAuth = isLocal && (req.nextUrl.pathname.startsWith('/login') || req.nextUrl.pathname.startsWith('/register'))
   
   const rateLimitEnabled = Boolean(SECURITY_CONFIG.rateLimit.enabled)
@@ -116,8 +117,8 @@ function getClientIP(request: NextRequest): string {
     return realIP
   }
   
-  // Fallback to connection remote address
-  return request.ip || 'unknown'
+  // Fallback to unknown
+  return 'unknown'
 }
 
 /**

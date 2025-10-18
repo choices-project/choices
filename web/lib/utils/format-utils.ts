@@ -64,7 +64,7 @@ export function formatTrendingScore(score: number): string {
 /**
  * Format currency with appropriate precision
  */
-export function formatCurrency(amount: number, currency: string = 'USD'): string {
+export function formatCurrency(amount: number, currency = 'USD'): string {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency
@@ -212,7 +212,7 @@ export function formatPerformanceMetric(value: number, unit: 'ms' | 'bytes' | 'c
 /**
  * Format percentage with appropriate precision
  */
-export function formatPercentage(value: number, decimals: number = 1): string {
+export function formatPercentage(value: number, decimals = 1): string {
   return `${(value * 100).toFixed(decimals)}%`;
 }
 
