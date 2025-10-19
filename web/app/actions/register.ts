@@ -10,7 +10,7 @@ import { logSecurityEvent } from '@/lib/core/auth/server-actions';
 import type { ServerActionContext } from '@/lib/core/auth/server-actions';
 import { TypeGuardError } from '@/lib/core/types/guards';
 import { logger } from '@/lib/utils/logger';
-import { getSupabaseServerClient, getSupabaseServiceRoleClient } from '@/utils/supabase/server';
+import { getSupabaseServerClient, getSupabaseAdminClient } from '@/utils/supabase/server';
 
 const RegisterForm = z.object({
   email: z.string().email('Invalid email'),
@@ -117,7 +117,7 @@ export async function register(
     const authUser = authUserData.user;
 
     // Create user profile using service role client (bypasses RLS)
-    const serviceRoleClient = await getSupabaseServiceRoleClient();
+    const serviceRoleClient = getSupabaseAdminClient();
     const { error: profileError } = await serviceRoleClient
       .from('user_profiles')
       .insert({

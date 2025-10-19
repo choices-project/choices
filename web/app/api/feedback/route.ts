@@ -143,7 +143,7 @@ export async function POST(request: NextRequest) {
     }
 
     const supabaseClient = await supabase;
-    
+            
     // Get current user (if authenticated)
     const { data: { user }, error: userError } = await supabaseClient.auth.getUser()
     
@@ -157,7 +157,7 @@ export async function POST(request: NextRequest) {
       const { count } = await supabaseClient
         .from('feedback')
         .select('id', { count: 'exact', head: true })
-        .eq('user_id', String(user.id) as any)
+        .eq('user_id', String(user.id))
         .gte('created_at', today)
       
       if (count && count >= 10) {
@@ -212,7 +212,7 @@ export async function POST(request: NextRequest) {
     // Insert feedback into database
     const { data, error } = await supabaseClient
       .from('feedback')
-      .insert([feedbackData] as any)
+      .insert([feedbackData])
       .select()
 
     if (error) {
@@ -309,15 +309,15 @@ export async function GET(request: NextRequest) {
       .range(offset, offset + limit - 1)
 
     if (status) {
-      query = query.eq('status', status as any)
+      query = query.eq('status', status)
     }
 
     if (type) {
-      query = query.eq('type', type as any)
+      query = query.eq('type', type)
     }
 
     if (sentiment) {
-      query = query.eq('sentiment', sentiment as any)
+      query = query.eq('sentiment', sentiment)
     }
 
     const { data, error } = await query

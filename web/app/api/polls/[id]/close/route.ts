@@ -45,7 +45,7 @@ export async function POST(
     const user = session.user;
 
     // Get poll details
-    const { data: poll, error: pollError } = await supabase
+            const { data: poll, error: pollError } = await supabase
       .from('polls')
       .select('id, title, status, created_by, end_time, baseline_at, allow_post_close')
       .eq('id', pollId)

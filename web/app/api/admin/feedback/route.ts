@@ -37,19 +37,19 @@ export async function GET(request: NextRequest) {
 
     // Apply filters
     if (type) {
-      query = query.eq('type', type as any);
+      query = query.eq('type', type);
     }
 
     if (sentiment) {
-      query = query.eq('sentiment', sentiment as any);
+      query = query.eq('sentiment', sentiment);
     }
 
     if (status?.trim()) {
-      query = query.eq('status', status as any);
+      query = query.eq('status', status);
     }
 
     if (priority) {
-      query = query.eq('priority', priority as any);
+      query = query.eq('priority', priority);
     }
 
     // Apply date range filter
@@ -97,7 +97,7 @@ export async function GET(request: NextRequest) {
     // Apply additional search filtering if needed (for fields not in the database)
     let filteredFeedback = feedback || [];
     if (feedback) {
-      filteredFeedback = feedback.filter(item => {
+      filteredFeedback = feedback.filter((item: any) => {
         const searchLower = search.toLowerCase();
         return (
           (item && 'title' in item ? item.title?.toLowerCase().includes(searchLower) : false) ||

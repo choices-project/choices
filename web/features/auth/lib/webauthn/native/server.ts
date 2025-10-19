@@ -191,7 +191,7 @@ export async function verifyRegistrationResponse(
       credentialId,
       publicKey,
       counter: 0,
-      transports: response.clientExtensionResults?.credProps?.rk ? ['internal'] : undefined,
+      transports: response.clientExtensionResults?.credProps?.rk ? ['internal'] : [],
       backupEligible: response.clientExtensionResults?.credProps?.rk || false,
       backupState: response.clientExtensionResults?.credProps?.rk || false
     };

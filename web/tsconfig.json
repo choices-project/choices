@@ -1,51 +1,9 @@
 {
+  "extends": "../tsconfig.base.json",
   "compilerOptions": {
-    // Target ES2022 for modern JavaScript features
-    "target": "ES2022",
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "esnext",
-      "webworker"
-    ],
-    "module": "ESNext",
-    "moduleResolution": "bundler",
-    "jsx": "preserve",
-    
-    // Strict type checking for TypeScript 5.9
-    "strict": true,
-    "noUncheckedIndexedAccess": true,
-    "noImplicitOverride": true,
-    "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": true,
-    "noUncheckedSideEffectImports": true,
-    "exactOptionalPropertyTypes": true,
-    "noImplicitAny": true,
-    "strictNullChecks": true,
-    "strictFunctionTypes": true,
-    "strictBindCallApply": true,
-    "strictPropertyInitialization": true,
-    "noImplicitThis": true,
-    "alwaysStrict": true,
-    
-    // Modern TypeScript 5.9 features
-    "verbatimModuleSyntax": true,
-    "useUnknownInCatchVariables": true,
-    "allowUnusedLabels": false,
-    "allowUnreachableCode": false,
-    "noPropertyAccessFromIndexSignature": true,
-    "noUncheckedIndexedAccess": true,
-    
-    // Module resolution
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
-    "allowJs": true,
-    "incremental": true,
-    "resolveJsonModule": true,
-    "isolatedModules": true,
+    // Web-specific overrides
     "noEmit": true,
+    "jsx": "preserve",
     
     // Next.js plugin for App Router support
     "plugins": [
@@ -54,7 +12,7 @@
       }
     ],
     
-    // Path mapping for clean imports
+    // Path mapping for clean imports (relative to web directory)
     "baseUrl": ".",
     "paths": {
       "@/*": ["./*"],

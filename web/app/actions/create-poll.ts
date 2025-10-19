@@ -61,48 +61,49 @@ export const createPoll = createSecureServerAction(
       .from('polls')
       .insert({
         id: pollId,
-        created_by: user.userId,
         title: sanitizedTitle,
         description: sanitizedDescription,
-        voting_method: validatedData.voting_method,
-        privacy_level: validatedData.privacy_level,
-        end_time: validatedData.endDate,
-        start_time: new Date().toISOString(),
         options: sanitizedOptions,
+        voting_method: validatedData.type,
+        created_by: user.userId,
         created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
+        end_time: validatedData.endDate || null,
+        status: 'active',
+        privacy_level: validatedData.visibility,
+        total_votes: 0,
+        participation: 0,
+        category: '',
+        tags: [],
+        sponsors: [],
+        is_mock: false,
+        settings: {},
+        hashtags: [],
+        primary_hashtag: null,
+        poll_settings: {},
+        total_views: 0,
+        engagement_score: 0,
+        trending_score: 0,
+        is_trending: false,
+        is_featured: false,
+        is_verified: false,
+        last_modified_by: null,
+        modification_reason: null
       })
 
     if (pollError) {
       throw new Error('Failed to create poll')
     }
 
-    // Create poll options
-    const optionsData = sanitizedOptions.map((option, index) => ({
-      id: uuidv4(),
-      poll_id: pollId,
-      label: option,
-      weight: 1,
-      order: index + 1,
-      created_at: new Date().toISOString()
-    }))
-
-    const { error: optionsError } = await supabase
-      .from('poll_options')
-      .insert(optionsData)
-
-    if (optionsError) {
-      // Clean up poll if options creation fails
-      await supabase.from('polls').delete().eq('id', pollId)
-      throw new Error('Failed to create poll options')
-    }
+    // Poll options are stored as JSON in the polls.options field
+    // No separate poll_options table needed
 
     // Log poll creation
     logSecurityEvent('POLL_CREATED', {
       pollId,
       title: sanitizedTitle,
-      type: validatedData.voting_method,
-      visibility: validatedData.privacy_level,
+      type: validatedData.type,
+      visibility: validatedData.visibility,
       optionsCount: sanitizedOptions.length
     }, context)
 

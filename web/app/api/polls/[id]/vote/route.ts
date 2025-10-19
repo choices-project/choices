@@ -269,8 +269,8 @@ export async function GET(
     const { data: existingVote, error: voteError } = await supabase
       .from('votes')
       .select('id')
-      .eq('poll_id', pollId as any)
-      .eq('user_id', user.id as any)
+      .eq('poll_id', pollId)
+      .eq('user_id', user.id)
       .maybeSingle()
 
     // If there's an error or no vote found, user hasn't voted

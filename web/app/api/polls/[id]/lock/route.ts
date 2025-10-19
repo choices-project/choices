@@ -30,7 +30,7 @@ export async function POST(
     }
 
     const supabase = await getSupabaseServerClient();
-    
+            
     if (!supabase) {
       throw new Error('Supabase client not available');
     }
@@ -159,7 +159,7 @@ export async function DELETE(
     }
 
     const supabase = await getSupabaseServerClient();
-    
+            
     if (!supabase) {
       throw new Error('Supabase client not available');
     }

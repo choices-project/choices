@@ -207,109 +207,36 @@ export class CivicsQueryOptimizer {
    */
   static getRepresentativeQuery(supabase: any, id: string) {
     return supabase
-      .from('civics_representatives')
+      .from('representatives_core')
       .select(`
         id,
-        canonical_id,
         name,
         party,
         office,
         level,
-        jurisdiction,
+        state,
         district,
-        ocd_division_id,
-        external_id,
-        source,
-        data_origin,
-        valid_from,
-        valid_to,
+        openstates_id,
+        bioguide_id,
+        fec_id,
+        google_civic_id,
+        legiscan_id,
+        congress_gov_id,
+        govinfo_id,
+        primary_email,
+        primary_phone,
+        primary_website,
+        primary_photo_url,
+        data_quality_score,
+        data_sources,
+        verification_status,
+        last_verified,
         created_at,
         last_updated,
-        civics_contact_info!inner(
-          id,
-          representative_id,
-          official_email,
-          official_phone,
-          official_fax,
-          official_website,
-          office_addresses,
-          preferred_contact_method,
-          response_time_expectation,
-          data_quality_score,
-          last_verified,
-          created_at,
-          updated_at
-        ),
-        civics_social_engagement(
-          id,
-          representative_id,
-          platform,
-          handle,
-          followers_count,
-          engagement_rate,
-          created_at,
-          last_updated
-        ),
-        civics_campaign_finance(
-          id,
-          representative_id,
-          candidate_name,
-          candidate_id,
-          cycle,
-          party,
-          state,
-          district,
-          office,
-          raw_data,
-          created_at,
-          updated_at
-        ),
-        civics_voting_behavior(
-          id,
-          representative_id,
-          analysis_period,
-          total_votes,
-          missed_votes,
-          party_line_votes,
-          bipartisan_votes,
-          attendance_rate,
-          party_loyalty_score,
-          bipartisanship_score,
-          created_at,
-          updated_at
-        ),
-        civics_votes(
-          id,
-          representative_id,
-          bill_id,
-          bill_title,
-          vote_date,
-          vote_position,
-          chamber,
-          session,
-          raw_data,
-          created_at
-        ),
-        civics_policy_positions(
-          id,
-          representative_id,
-          issue,
-          position,
-          confidence_score,
-          source,
-          source_url,
-          created_at,
-          last_updated
-        ),
-        civics_crosswalk(
-          id,
-          canonical_id,
-          source_id,
-          source,
-          source_type,
-          created_at,
-          last_verified
-        )
+        enhanced_contacts,
+        enhanced_photos,
+        enhanced_activity,
+        enhanced_social_media
       `)
       .eq('id', id)
       .single();

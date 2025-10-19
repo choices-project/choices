@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
     const action = url.searchParams.get('action');
 
     const supabase = await getSupabaseServerClient();
-    
+            
     if (!supabase) {
       return NextResponse.json(
         { error: 'Supabase not configured' },
@@ -81,7 +81,7 @@ export async function POST(request: NextRequest) {
     const flagId = url.searchParams.get('flagId');
 
     const supabase = await getSupabaseServerClient();
-    
+            
     if (!supabase) {
       return NextResponse.json(
         { error: 'Supabase not configured' },

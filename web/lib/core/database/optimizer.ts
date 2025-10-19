@@ -20,16 +20,13 @@ import { getSupabaseServerClient } from '@/utils/supabase/server'
 
 import type {
   UserProfile,
-  PollsResponse,
-  PollWithVotes,
-  Vote,
-  VoteWithUserInfo,
-  VoteGroupedByChoice,
-  VoteInsert,
-  AnalyticsData,
-  DatabaseHealthStatus,
-  CacheDatabaseEntry
+  AnalyticsEvent,
+  PrivacyLog
 } from '../../types/database'
+import type {
+  Poll,
+  Vote
+} from '../../../features/polls/types/database'
 
 // Create optimized Supabase client with connection pooling
 export const createOptimizedClient = async () => {

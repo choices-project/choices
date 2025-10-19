@@ -88,8 +88,8 @@ export async function PATCH(
       .update({ 
         status: newStatus,
         updated_at: new Date().toISOString()
-      } as any)
-      .eq('id', feedbackId as any)
+      })
+      .eq('id', feedbackId)
       .select()
       .single();
 

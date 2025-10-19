@@ -43,8 +43,6 @@ export const completeOnboarding = createSecureServerAction(
     
     // Always use real authentication - no E2E bypasses
     
-    const supabase = getSupabaseServerClient();
-    
     // Get authenticated user
     const user = await getAuthenticatedUser(context)
     logger.info('Authenticated user', { userId: user?.userId });
@@ -54,7 +52,7 @@ export const completeOnboarding = createSecureServerAction(
     logger.info('Validated data', { data: validatedData });
 
     // Get Supabase client
-    const supabaseClient = await supabase
+    const supabaseClient = await getSupabaseServerClient()
 
     if (!supabaseClient) {
       throw new Error('Supabase client not available')
@@ -63,17 +61,16 @@ export const completeOnboarding = createSecureServerAction(
     // Update or create user profile to mark onboarding as completed
     const { error: updateError } = await supabaseClient
       .from('user_profiles')
-      .upsert({
-        user_id: user.userId,
+      .update({
         onboarding_completed: true,
         preferences: {
           notifications: validatedData.notifications,
           dataSharing: validatedData.dataSharing,
           theme: validatedData.theme
         },
-        updated_at: new Date().toISOString(),
-        created_at: new Date().toISOString()
+        updated_at: new Date().toISOString()
       })
+      .eq('user_id', user.userId)
 
     if (updateError) {
       logger.info('Profile update error', { error: updateError });

@@ -1,7 +1,7 @@
 import 'server-only';                  // build-time guard
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
-import type { Database } from '@/types/database-schema-complete'
+import type { Database } from '../../types/database'
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 
 // Re-export the Database type for use in other modules
@@ -10,9 +10,9 @@ export type { Database }
 // Environment validation
 const validateEnvironment = () => {
   const requiredVars = {
-    NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
-    NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-    SUPABASE_SECRET_KEY: process.env.SUPABASE_SECRET_KEY
+    NEXT_PUBLIC_SUPABASE_URL: process.env['NEXT_PUBLIC_SUPABASE_URL'],
+    NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env['NEXT_PUBLIC_SUPABASE_ANON_KEY'],
+    SUPABASE_SECRET_KEY: process.env['SUPABASE_SECRET_KEY']
   }
 
   const missing = Object.entries(requiredVars)
@@ -27,15 +27,15 @@ const validateEnvironment = () => {
 }
 
 // Initialize environment variables
-const env = validateEnvironment()
-
+  const env = validateEnvironment()
+  
 // Create Supabase server client
-export function getSupabaseServerClient() {
-  const cookieStore = cookies();
-
+export async function getSupabaseServerClient() {
+  const cookieStore = await cookies();
+  
   return createServerClient<Database>(
-    env.NEXT_PUBLIC_SUPABASE_URL,
-    env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    env.NEXT_PUBLIC_SUPABASE_URL!,
+    env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
         get(name: string) {
@@ -68,7 +68,7 @@ export function getSupabaseServerClient() {
 export function getSupabaseAdminClient(): SupabaseClient<Database> {
   const { createClient } = require('@supabase/supabase-js');
   
-  return createClient<Database>(
+  return createClient(
     env.NEXT_PUBLIC_SUPABASE_URL,
     env.SUPABASE_SECRET_KEY,
     {
@@ -82,7 +82,7 @@ export function getSupabaseAdminClient(): SupabaseClient<Database> {
 
 // Helper function to get user from server-side context
 export async function getServerUser() {
-  const supabase = getSupabaseServerClient();
+  const supabase = await getSupabaseServerClient();
   
   try {
     const { data: { user }, error } = await supabase.auth.getUser();
@@ -100,14 +100,14 @@ export async function getServerUser() {
 }
 
 // Helper function to get user profile from server-side context
-export async function getServerUserProfile() {
+export async function getServerUserProfile(): Promise<Database['public']['Tables']['user_profiles']['Row'] | null> {
   const user = await getServerUser();
   
   if (!user) {
     return null;
   }
   
-  const supabase = getSupabaseServerClient();
+  const supabase = await getSupabaseServerClient();
   
   try {
     const { data: profile, error } = await supabase
@@ -121,7 +121,7 @@ export async function getServerUserProfile() {
       return null;
     }
     
-    return profile;
+    return profile as Database['public']['Tables']['user_profiles']['Row'];
   } catch (error) {
     console.error('Error in getServerUserProfile:', error);
     return null;
@@ -131,7 +131,7 @@ export async function getServerUserProfile() {
 // Helper function to check if user is admin
 export async function isServerAdmin() {
   const profile = await getServerUserProfile();
-  return profile?.is_admin === true;
+  return profile ? profile.is_admin === true : false;
 }
 
 // Helper function to require admin access
@@ -173,8 +173,8 @@ export async function getServerUserWithProfile() {
 }
 
 // Helper function to create a new Supabase client for specific operations
-export function createServerSupabaseClient(): SupabaseClient<Database> {
-  return getSupabaseServerClient();
+export async function createServerSupabaseClient(): Promise<SupabaseClient<Database>> {
+  return await getSupabaseServerClient();
 }
 
 // Helper function to create an admin client for specific operations

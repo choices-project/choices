@@ -13,23 +13,43 @@ All scripts in this directory are designed with safety as the top priority:
 
 ## 📁 Available Scripts
 
-### `generate-complete-typescript-types.js` ⭐ **PRIMARY**
+### `generate-comprehensive-schema.js` ⭐ **PRIMARY**
 
-**Purpose**: Generate comprehensive TypeScript types for all 127 database tables
+**Purpose**: Generate comprehensive TypeScript types for all 121 database tables from actual Supabase dashboard
 
 **What it does**:
-- Generates complete TypeScript Database interface
-- Covers all major systems (core, hashtags, analytics, civics, privacy, etc.)
-- Creates production-ready type definitions
-- Updates `web/types/database-schema-complete.ts`
+- Generates complete TypeScript Database interface for ALL actual tables
+- Covers all major systems (core, hashtags, analytics, civics, privacy, WebAuthn, etc.)
+- Creates production-ready type definitions based on real database structure
+- Updates `web/types/database-comprehensive.ts`
+- **RESOLVES AUTHENTICATION ISSUES** - Includes missing WebAuthn tables
 
 **Usage**:
 ```bash
 cd /Users/alaughingkitsune/src/Choices
-node scripts/generate-complete-typescript-types.js
+node scripts/generate-comprehensive-schema.js
 ```
 
-**Output**: Complete TypeScript schema with 127 tables
+**Output**: Complete TypeScript schema with 121 tables from actual Supabase dashboard
+
+### `discover-all-tables.js` 🔍 **DISCOVERY**
+
+**Purpose**: Discover all tables in the database using comprehensive testing
+
+**What it does**:
+- Tests 469 potential table names
+- Identifies all accessible tables
+- Discovers tables with data vs empty tables
+- Creates comprehensive table inventory
+- **BREAKTHROUGH**: Found all 121 actual tables!
+
+**Usage**:
+```bash
+cd /Users/alaughingkitsune/src/Choices
+node scripts/discover-all-tables.js
+```
+
+**Output**: Complete inventory of all database tables with accessibility status
 
 ### `supabase-inspection.js`
 

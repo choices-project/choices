@@ -43,7 +43,7 @@ export async function POST(_request: NextRequest) {
     
     // Initialize OpenStates integration
     const openStatesIntegration = new OpenStatesIntegration({
-      dataPath: '/Users/alaughingkitsune/src/Choices/scratch/agent-b/openstates-people/data',
+      dataPath: '/Users/alaughingkitsune/src/Choices/scratch/agent-b/people/data',
       currentDate: new Date()
     });
     
@@ -350,7 +350,7 @@ export async function GET(_request: NextRequest) {
     
     // Initialize OpenStates integration
     const openStatesIntegration = new OpenStatesIntegration({
-      dataPath: '/Users/alaughingkitsune/src/Choices/scratch/agent-b/openstates-people/data',
+      dataPath: '/Users/alaughingkitsune/src/Choices/scratch/agent-b/people/data',
       currentDate: new Date()
     });
     

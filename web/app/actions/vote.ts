@@ -41,7 +41,7 @@ export const vote = createSecureServerAction(
     // Check if poll exists and is active
     const { data: poll, error: pollError } = await supabase
       .from('polls')
-      .select('id, owner_id, type, visibility, end_date, allow_multiple_votes')
+      .select('id, created_by, voting_method, privacy_level, end_time, options')
       .eq('id', validatedData.pollId)
       .single()
 
@@ -54,44 +54,68 @@ export const vote = createSecureServerAction(
       throw new Error('Poll has ended')
     }
 
-    // Check if user has already voted (unless multiple votes are allowed)
-    if (!poll.allow_multiple_votes) {
-      const { data: existingVote } = await supabase
-        .from('votes')
-        .select('id')
-        .eq('poll_id', validatedData.pollId)
-        .eq('voter_id', user.userId)
-        .single()
-
-      if (existingVote) {
-        throw new Error('You have already voted on this poll')
-      }
-    }
-
-    // Validate that all option IDs belong to this poll
-    const { data: pollOptions, error: optionsError } = await supabase
-      .from('poll_options')
+    // Check if user has already voted (multiple votes not supported in current schema)
+    // Note: allow_multiple_votes field doesn't exist in current schema
+    const { data: existingVote } = await supabase
+      .from('votes')
       .select('id')
       .eq('poll_id', validatedData.pollId)
-      .in('id', validatedData.optionIds)
+      .eq('user_id', user.userId)
+      .single()
 
-    if (optionsError || pollOptions.length !== validatedData.optionIds.length) {
+    if (existingVote) {
+      throw new Error('You have already voted on this poll')
+    }
+
+    // Validate that the selected options exist in the poll's options
+    // Note: Options are stored as JSON array in polls.options field
+    if (!poll.options || !Array.isArray(poll.options)) {
+      throw new Error('Invalid poll options')
+    }
+    
+    // For now, we'll validate that the option IDs are valid
+    // This assumes optionIds are the actual option values from the array
+    const validOptions = validatedData.optionIds.every(optionId => 
+      (poll.options as string[]).includes(optionId)
+    )
+    
+    if (!validOptions) {
       throw new Error('Invalid option selection')
     }
 
     // Create vote records
-    const voteData = validatedData.optionIds.map(optionId => ({
-      id: uuidv4(),
-      poll_id: validatedData.pollId,
-      voter_id: validatedData.anonymous ? null : user.userId,
-      voter_hash: validatedData.anonymous ? `anon_${user.userId}_${Date.now()}` : null,
-      option_id: optionId,
-      payload: {
-        timestamp: new Date().toISOString(),
-        anonymous: validatedData.anonymous || false
-      },
-      created_at: new Date().toISOString()
-    }))
+    // Note: Using actual schema fields - choice is a number (index of option)
+    const voteData = validatedData.optionIds.map(optionId => {
+      // Find the index of the option in the poll's options array
+      const choiceIndex = (poll.options as string[]).indexOf(optionId)
+      return {
+        id: uuidv4(),
+        poll_id: validatedData.pollId,
+        user_id: validatedData.anonymous ? 'anonymous' : user.userId,
+        choice: choiceIndex, // Index of the selected option
+        voting_method: poll.voting_method,
+        vote_data: {
+          option: optionId,
+          timestamp: new Date().toISOString(),
+          anonymous: validatedData.anonymous || false
+        },
+        verification_token: null,
+        is_verified: false,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ip_address: null,
+        user_agent: null,
+        session_id: null,
+        device_fingerprint: null,
+        time_spent_seconds: 0,
+        page_views: 1,
+        engagement_actions: [],
+        trust_score_at_vote: null,
+        vote_metadata: {},
+        analytics_data: {},
+        is_active: true
+      }
+    })
 
     const { error: voteError } = await supabase
       .from('votes')

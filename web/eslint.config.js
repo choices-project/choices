@@ -16,7 +16,8 @@ import boundaries from 'eslint-plugin-boundaries';
 import nextPlugin from '@next/eslint-plugin-next';
 import globals from 'globals';
 
-export default [
+/** @type {import('eslint').Linter.Config[]} */
+const config = [
   // Base configuration
   js.configs.recommended,
   

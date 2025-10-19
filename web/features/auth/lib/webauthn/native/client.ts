@@ -5,7 +5,7 @@
  * Replaces @simplewebauthn/browser with native browser API
  */
 
-import { logger } from '@/lib/utils/logger';
+import { logger } from '../../../../../lib/utils/logger';
 
 import type { 
   PublicKeyCredentialCreationOptions,
@@ -359,7 +359,7 @@ export async function registerBiometric(): Promise<{ success: boolean; error?: s
 
     // Use the existing registration flow
     const result = await beginRegister();
-    return { success: !result.error, error: result.error };
+    return result.error ? { success: false, error: result.error } : { success: true };
   } catch (error) {
     return { 
       success: false, 

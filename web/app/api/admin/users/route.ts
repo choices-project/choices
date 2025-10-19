@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
     const trustTier = searchParams.get('trust_tier') || ''
 
     // Build query
-    let query = supabase
+            let query = supabase
       .from('user_profiles')
       .select(`
         user_id,
@@ -92,7 +92,7 @@ export async function PUT(request: NextRequest) {
   
   try {
     const supabase = await getSupabaseServerClient();
-
+        
     const body = await request.json()
     const { userId, updates } = body
 

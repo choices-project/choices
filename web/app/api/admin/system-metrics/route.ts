@@ -24,17 +24,17 @@ export async function GET(_request: NextRequest) {
     }
     
     // Fetch real metrics from database
-    const [topicsResult, pollsResult] = await Promise.all([
-      supabaseClient.from('trending_topics').select('id, processing_status'),
-      supabaseClient.from('generated_polls').select('id, status')
+    const [pollsResult, feedbackResult] = await Promise.all([
+      supabaseClient.from('polls').select('id, status'),
+      supabaseClient.from('feedback').select('id, status')
     ]);
 
-    const totalTopics = topicsResult.data?.length || 0;
     const totalPolls = pollsResult.data?.length || 0;
-    const activePolls = pollsResult.data?.filter(poll => poll && 'status' in poll && poll.status === 'active').length || 0;
+    const activePolls = pollsResult.data?.filter((poll: any) => poll && 'status' in poll && poll.status === 'active').length || 0;
+    const totalFeedback = feedbackResult.data?.length || 0;
 
     const metrics = {
-      total_topics: totalTopics,
+      total_topics: totalFeedback, // Using feedback as topics for now
       total_polls: totalPolls,
       active_polls: activePolls,
       system_health: 'healthy',

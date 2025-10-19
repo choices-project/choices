@@ -73,7 +73,7 @@ export class CanonicalIdService {
         return `election_${electionId}_${date}_${jurisdiction}`;
 
       default:
-        throw new Error(`Unknown entity type: ${entityType as string}`);
+        throw new Error(`Unknown entity type: ${entityType}`);
     }
   }
 

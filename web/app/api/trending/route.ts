@@ -155,7 +155,7 @@ async function getTrendingPolls(limit: number) {
       totalVotes: poll.total_votes || 0,
       timeRemaining: getTimeRemaining(poll.end_date),
       isActive: true,
-      options: poll.options.map(option => ({
+      options: poll.options.map((option: any) => ({
         id: option.id,
         text: option.text,
         votes: option.votes || 0,

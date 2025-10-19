@@ -20,7 +20,9 @@ import type {
   ActivityItem,
   AdminUser,
 } from '@/features/admin/types';
+import type { Database } from '@/types/database-minimal'
 import { logger } from '@/lib/utils/logger';
+import { getSupabaseClient } from '@/utils/supabase/client';
 
 // Admin store state interface (business logic only)
 interface AdminStore {
@@ -207,7 +209,7 @@ export const useAdminStore = create<AdminStore>()(
             setError(null);
             
             // Fetch users directly from database
-            const supabase = await import('@/utils/supabase/client').then(m => m.getSupabaseClient());
+            const supabase = getSupabaseClient() as any;
             if (!supabase) {
               throw new Error('Database connection not available');
             }
@@ -230,7 +232,7 @@ export const useAdminStore = create<AdminStore>()(
             }
 
             // Transform data to match AdminUser interface
-            const adminUsers: AdminUser[] = users?.map(user => ({
+            const adminUsers: AdminUser[] = users?.map((user: any) => ({
               id: user.user_id,
               email: user.email,
               name: user.display_name ?? 'Unknown User',
@@ -262,7 +264,7 @@ export const useAdminStore = create<AdminStore>()(
             setError(null);
             
             // Fetch dashboard stats directly from database
-            const supabase = await import('@/utils/supabase/client').then(m => m.getSupabaseClient());
+            const supabase = getSupabaseClient() as any;
             if (!supabase) {
               throw new Error('Database connection not available');
             }
@@ -336,7 +338,7 @@ export const useAdminStore = create<AdminStore>()(
             setError(null);
             
             // Fetch system settings from database
-            const supabase = await import('@/utils/supabase/client').then(m => m.getSupabaseClient());
+            const supabase = getSupabaseClient() as any;
             if (!supabase) {
               throw new Error('Database connection not available');
             }
@@ -430,7 +432,7 @@ export const useAdminStore = create<AdminStore>()(
 
         updateUserRole: async (userId, role) => {
           try {
-            const supabase = await import('@/utils/supabase/client').then(m => m.getSupabaseClient());
+            const supabase = getSupabaseClient() as any;
             if (!supabase) {
               throw new Error('Database connection not available');
             }
@@ -461,7 +463,7 @@ export const useAdminStore = create<AdminStore>()(
 
         updateUserStatus: async (userId, status) => {
           try {
-            const supabase = await import('@/utils/supabase/client').then(m => m.getSupabaseClient());
+            const supabase = getSupabaseClient() as any;
             if (!supabase) {
               throw new Error('Database connection not available');
             }
@@ -492,7 +494,7 @@ export const useAdminStore = create<AdminStore>()(
 
         deleteUser: async (userId) => {
           try {
-            const supabase = await import('@/utils/supabase/client').then(m => m.getSupabaseClient());
+            const supabase = getSupabaseClient() as any;
             if (!supabase) {
               throw new Error('Database connection not available');
             }
@@ -553,7 +555,7 @@ export const useAdminStore = create<AdminStore>()(
               throw new Error('No settings to save');
             }
 
-            const supabase = await import('@/utils/supabase/client').then(m => m.getSupabaseClient());
+            const supabase = getSupabaseClient() as any;
             if (!supabase) {
               throw new Error('Database connection not available');
             }
@@ -809,7 +811,7 @@ export const adminStoreSubscriptions = {
 export const adminStoreDebug = {
   logState: () => {
     const state = useAdminStore.getState();
-    logger.info('Admin store state:', state);
+    logger.info('Admin store state:', state as any);
   },
   
   logStats: () => {
