@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server'
 
 import { getUser } from '@/lib/core/auth/middleware'
 // import { HybridVotingService } from '@/lib/core/services/hybrid-voting'
-import { AnalyticsService } from '@/lib/core/services/analytics'
+import { AnalyticsService } from '@/lib/services/analytics'
 import { 
   ValidationError, 
   AuthenticationError, 

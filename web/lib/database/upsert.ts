@@ -22,10 +22,10 @@ export async function upsertClean<T extends object>(
   const cleanPayload = stripUndefinedDeep(payload)
   
   if (options?.onConflict) {
-    return supabase.from(table).upsert(cleanPayload, { onConflict: options.onConflict })
+    return supabase.from(table as any).upsert(cleanPayload, { onConflict: options.onConflict })
   }
   
-  return supabase.from(table).upsert(cleanPayload)
+  return supabase.from(table as any).upsert(cleanPayload)
 }
 
 /**
@@ -37,7 +37,7 @@ export async function insertClean<T extends object>(
 ) {
   const supabase = await getSupabaseBrowserClient()
   const cleanPayload = stripUndefinedDeep(payload)
-  return supabase.from(table).insert(cleanPayload)
+  return supabase.from(table as any).insert(cleanPayload)
 }
 
 /**
@@ -51,7 +51,7 @@ export async function updateClean<T extends object>(
   const supabase = await getSupabaseBrowserClient()
   const cleanPayload = stripUndefinedDeep(payload)
   
-  let query = supabase.from(table).update(cleanPayload)
+  let query = supabase.from(table as any).update(cleanPayload)
   
   for (const [key, value] of Object.entries(match)) {
     query = query.eq(key, value)

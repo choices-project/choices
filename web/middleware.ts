@@ -9,7 +9,7 @@ import {
   buildCSPHeader as buildCSPHeaderFromConfig, 
   isBlockedUserAgent, 
   anonymizeIP 
-} from '@/lib/core/security/config'
+} from '@/lib/security/config'
 import { logger } from '@/lib/utils/logger'
 
 /**

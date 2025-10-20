@@ -2,8 +2,21 @@
 
 import { useState, useEffect, useCallback } from 'react'
 
-import { differentialPrivacy, type PrivateQueryResult } from '@/lib/privacy/differential-privacy'
+import { DifferentialPrivacyManager, type DPCountResult } from '@/lib/privacy/dp'
 import { logger } from '@/lib/utils/logger';
+
+// Create instance of differential privacy manager
+const differentialPrivacy = new DifferentialPrivacyManager();
+
+// Define the PrivateQueryResult type based on what the component expects
+type PrivateQueryResult<T> = {
+  data: T;
+  kAnonymitySatisfied: boolean;
+  privacyGuarantee?: string;
+  epsilonUsed?: number;
+  noiseAdded?: number;
+  confidenceInterval?: [number, number];
+};
 
 interface PollOption {
   id: string
@@ -38,7 +51,65 @@ export default function PrivatePollResults({ poll, userId, onPrivacyBudgetExceed
       setLoading(true)
       setError(null)
       
-      const privateResults = await differentialPrivacy.getPrivatePollResults(poll.id, userId)
+      // Check if we can allocate epsilon for this operation
+      const epsilon = 0.8
+      if (!differentialPrivacy.canAllocateEpsilon(poll.id, epsilon)) {
+        throw new Error('Privacy budget exceeded')
+      }
+      
+      // Fetch actual poll results from the database
+      const response = await fetch(`/api/polls/${poll.id}/results`)
+      if (!response.ok) {
+        throw new Error('Failed to fetch poll results')
+      }
+      
+      const pollResults = await response.json()
+      const rawResults = pollResults.options.map((option: any) => ({
+        optionId: option.id,
+        count: option.voteCount || 0,
+        percentage: 0 // Will be calculated
+      }))
+      
+      // Apply differential privacy to the results
+      const counts = rawResults.map((r: { count: number }) => r.count)
+      const dpResults = differentialPrivacy.dpCounts(counts, epsilon)
+      
+      // Check k-anonymity for each result
+      const totalVotes = counts.reduce((sum: number, count: number) => sum + count, 0)
+      const kAnonymityResult = differentialPrivacy.shouldShowBreakdown(
+        totalVotes, 
+        'public', 
+        totalVotes
+      )
+      
+      // Calculate percentages with privacy protection
+      const privacyProtectedResults = rawResults.map((result: { optionId: string; count: number }, index: number) => {
+        const dpResult = dpResults[index]
+        if (!dpResult) {
+          throw new Error(`Missing differential privacy result for index ${index}`)
+        }
+        
+        const percentage = totalVotes > 0 ? (dpResult.noisyCount / totalVotes) * 100 : 0
+        
+        return {
+          optionId: result.optionId,
+          count: dpResult.noisyCount,
+          percentage: Math.round(percentage * 100) / 100
+        }
+      })
+      
+      // Track epsilon usage
+      differentialPrivacy.trackEpsilonUsage(poll.id, epsilon, 'poll-results-query', `user-${userId}`)
+      
+      const privateResults: PrivateQueryResult<Array<{ optionId: string; count: number; percentage: number }>> = {
+        data: privacyProtectedResults,
+        kAnonymitySatisfied: kAnonymityResult.shouldShow,
+        privacyGuarantee: `(ε=${epsilon}, δ=1e-5)`,
+        epsilonUsed: epsilon,
+        noiseAdded: dpResults.reduce((sum, result) => sum + Math.abs(result.noisyCount - result.originalCount), 0),
+        confidenceInterval: [Math.min(...dpResults.map(r => r.noisyCount)), Math.max(...dpResults.map(r => r.noisyCount))]
+      }
+      
       setResults(privateResults)
     } catch (error) {
       const err = error instanceof Error ? error : new Error(String(error))
@@ -57,13 +128,14 @@ export default function PrivatePollResults({ poll, userId, onPrivacyBudgetExceed
 
   const loadPrivacyBudget = useCallback(async () => {
     try {
-      const budget = await differentialPrivacy.getPrivacyBudget(userId)
-      setPrivacyBudget(budget)
+      // Get the actual privacy budget status for this poll
+      const budgetStatus = differentialPrivacy.getBudgetStatus(poll.id)
+      setPrivacyBudget(budgetStatus.remaining)
     } catch (error) {
       const err = error instanceof Error ? error : new Error(String(error))
       logger.error('Failed to load privacy budget:', err)
     }
-  }, [userId])
+  }, [poll.id])
 
   useEffect(() => {
     void loadResults()

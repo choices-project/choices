@@ -111,7 +111,8 @@ export default function FeedHashtagIntegration({
             case 'usage_count':
               return item.hashtags?.some(tag => {
                 const hashtag = hashtags.find(h => h.name === tag);
-                return hashtag && hashtag.usage_count >= filter.value;
+                const filterValue = typeof filter.value === 'number' ? filter.value : 0;
+                return hashtag && hashtag.usage_count >= filterValue;
               });
             default:
               return true;

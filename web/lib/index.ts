@@ -1,5 +1,5 @@
 // Explicit re-exports to resolve ambiguity
-export type { CoreTrustTier, CoreUser, CoreDatabase } from './core'
+export type { CoreTrustTier, CoreUser } from './core'
 // export type { DeviceFingerprint as SharedDeviceFingerprint } from './shared' // DISABLED: shared directory moved
 
 // Use explicit re-exports to resolve duplicate export conflicts

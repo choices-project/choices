@@ -73,7 +73,7 @@ export class HashtagPollsIntegrationService {
     try {
       this.supabase = await getSupabaseServerClient();
     } catch (error) {
-      logger.error('Failed to initialize Supabase client:', error);
+      logger.error('Failed to initialize Supabase client:', error as Error);
       this.supabase = null;
     }
   }
@@ -124,7 +124,7 @@ export class HashtagPollsIntegrationService {
       };
       
     } catch (error) {
-      logger.error('Failed to generate hashtag poll feed:', error);
+      logger.error('Failed to generate hashtag poll feed:', error as Error);
       throw error;
     }
   }
@@ -175,7 +175,7 @@ export class HashtagPollsIntegrationService {
       return followedHashtagNames;
       
     } catch (error) {
-      logger.error('Failed to get user followed hashtags:', error);
+      logger.error('Failed to get user followed hashtags:', error as Error);
       return await this.getFallbackHashtagInterests(userId);
     }
   }
@@ -221,7 +221,7 @@ export class HashtagPollsIntegrationService {
       return sortedHashtags;
       
     } catch (error) {
-      logger.error('Failed to get fallback hashtag interests:', error);
+      logger.error('Failed to get fallback hashtag interests:', error as Error);
       return [];
     }
   }
@@ -280,7 +280,7 @@ export class HashtagPollsIntegrationService {
       return trendingScores;
       
     } catch (error) {
-      logger.error('Failed to get trending hashtags:', error);
+      logger.error('Failed to get trending hashtags:', error as Error);
       return [];
     }
   }
@@ -350,14 +350,14 @@ export class HashtagPollsIntegrationService {
           followedHashtags.includes(hashtag)
         );
         const reason = matchedHashtags.length > 0 
-          ? `Matches your followed hashtags: ${matchedHashtags.map(h => `#${h}`).join(', ')}`
+          ? `Matches your followed hashtags: ${matchedHashtags.map((h: string) => `#${h}`).join(', ')}`
           : `Related to your interests in ${poll.primary_hashtag || 'politics'}`;
 
         return {
           poll_id: poll.id,
           title: poll.title,
           description: poll.description,
-          relevance_score: relevanceScore,
+          relevanceScore: relevanceScore,
           hashtag_match_score: hashtagMatchScore + primaryHashtagBonus,
           engagement_score: engagementScore,
           recency_score: recencyScore,
@@ -371,11 +371,11 @@ export class HashtagPollsIntegrationService {
 
       // Sort by relevance score and return top recommendations
       return recommendations
-        .sort((a, b) => b.relevance_score - a.relevance_score)
+        .sort((a, b) => b.relevanceScore - a.relevanceScore)
         .slice(0, limit);
         
     } catch (error) {
-      logger.error('Failed to get hashtag-based poll recommendations:', error);
+      logger.error('Failed to get hashtag-based poll recommendations:', error as Error);
       return await this.getTrendingPollRecommendations(limit);
     }
   }
@@ -411,7 +411,7 @@ export class HashtagPollsIntegrationService {
         poll_id: poll.id,
         title: poll.title,
         description: poll.description,
-        relevance_score: 0.5, // Default score for trending
+        relevanceScore: 0.5, // Default score for trending
         hashtag_match_score: 0,
         engagement_score: this.calculateEngagementScore(poll),
         recency_score: this.calculateRecencyScore(poll.created_at),
@@ -423,7 +423,7 @@ export class HashtagPollsIntegrationService {
       })) || [];
       
     } catch (error) {
-      logger.error('Failed to get trending poll recommendations:', error);
+      logger.error('Failed to get trending poll recommendations:', error as Error);
       return [];
     }
   }
@@ -452,7 +452,7 @@ export class HashtagPollsIntegrationService {
         }
 
         // Calculate engagement rate
-        const totalEngagement = pollData?.reduce((sum, poll) => {
+        const totalEngagement = pollData?.reduce((sum: number, poll: any) => {
           const engagement = poll.hashtag_engagement || {};
           return sum + (engagement.total_views || 0) + (engagement.hashtag_clicks || 0);
         }, 0) || 0;
@@ -481,7 +481,7 @@ export class HashtagPollsIntegrationService {
       return analytics;
       
     } catch (error) {
-      logger.error('Failed to calculate hashtag analytics:', error);
+      logger.error('Failed to calculate hashtag analytics:', error as Error);
       return [];
     }
   }
@@ -536,7 +536,7 @@ export class HashtagPollsIntegrationService {
     if (recommendations.length === 0) return 0;
 
     const avgRelevance = recommendations.reduce((sum, rec) => 
-      sum + rec.relevance_score, 0) / recommendations.length;
+      sum + rec.relevanceScore, 0) / recommendations.length;
     
     const avgAnalytics = analytics.reduce((sum, analytic) => 
       sum + analytic.engagement_rate, 0) / Math.max(analytics.length, 1);
@@ -570,7 +570,7 @@ export class HashtagPollsIntegrationService {
       this.clearCacheForUser(userId);
       
     } catch (error) {
-      logger.error('Failed to track hashtag engagement:', error);
+      logger.error('Failed to track hashtag engagement:', error as Error);
     }
   }
 
@@ -593,7 +593,7 @@ export class HashtagPollsIntegrationService {
       return analytics;
       
     } catch (error) {
-      logger.error('Failed to get real-time trending data:', error);
+      logger.error('Failed to get real-time trending data:', error as Error);
       return [];
     }
   }

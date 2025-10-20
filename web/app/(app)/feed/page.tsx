@@ -1,11 +1,11 @@
 'use client';
 
-import { SuperiorMobileFeed } from '@/features/feeds';
+import { UnifiedFeed } from '@/features/feeds';
 
 export default function FeedPage() {
   return (
-    <div data-testid="mobile-feed">
-      <SuperiorMobileFeed userId="test-user" />
+    <div data-testid="unified-feed">
+      <UnifiedFeed userId="test-user" />
     </div>
   );
 }

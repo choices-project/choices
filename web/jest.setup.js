@@ -73,6 +73,25 @@ if (typeof window !== 'undefined') {
       static permission = 'granted';
     },
   });
+
+  // Mock IntersectionObserver for components using infinite scroll
+  if (typeof window.IntersectionObserver === 'undefined') {
+    class MockIntersectionObserver {
+      constructor(callback, options) {
+        this.callback = callback;
+        this.options = options;
+      }
+      observe() {}
+      unobserve() {}
+      disconnect() {}
+      takeRecords() { return []; }
+    }
+    Object.defineProperty(window, 'IntersectionObserver', {
+      writable: true,
+      configurable: true,
+      value: MockIntersectionObserver,
+    });
+  }
 }
 
 // Enhanced fetch polyfill for Node.js (for Supabase compatibility)

@@ -14,7 +14,7 @@ import {
   type IPReputation, 
   type DeviceFingerprint,
   type RiskAssessment 
-} from '@/lib/core/security/rate-limit';
+} from '@/lib/security/rate-limit';
 
 // Test setup removed - not needed for this test
 

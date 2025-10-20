@@ -551,11 +551,12 @@ export const usePerformanceStore = create<PerformanceStore>()(
             }
 
             // Get database performance metrics from the last 24 hours
+            // FUNCTIONALITY MERGED INTO analytics_events - use analytics table
             const { data: metricsData, error: metricsError } = await supabase
-              .from('performance_metrics')
+              .from('analytics_events')
               .select('*')
-              .gte('timestamp', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
-              .order('timestamp', { ascending: false });
+              .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
+              .order('created_at', { ascending: false });
 
             if (metricsError) {
               throw new Error(`Failed to fetch database metrics: ${metricsError.message}`);
@@ -563,21 +564,22 @@ export const usePerformanceStore = create<PerformanceStore>()(
 
             // Transform metrics data to match DatabasePerformanceMetric interface
             const databaseMetrics: DatabasePerformanceMetric[] = metricsData?.map(metric => ({
-              metricName: metric.metric_name,
-              avgValue: metric.avg_value,
-              minValue: metric.min_value,
-              maxValue: metric.max_value,
-              countMeasurements: metric.count_measurements,
-              timestamp: new Date(metric.timestamp)
+              metricName: metric.event_type || 'unknown',
+              avgValue: 0, // Default value since analytics_events doesn't have these fields
+              minValue: 0,
+              maxValue: 0,
+              countMeasurements: 1,
+              timestamp: new Date(metric.created_at || new Date())
             })) || [];
 
             // Get cache statistics
+            // FUNCTIONALITY MERGED INTO analytics_events - use analytics table for cache stats
             const { data: cacheData, error: cacheError } = await supabase
-              .from('cache_stats')
+              .from('analytics_events')
               .select('*')
-              .order('timestamp', { ascending: false })
-              .limit(1)
-              .single();
+              .eq('event_type', 'vote')
+              .order('created_at', { ascending: false })
+              .limit(1);
 
             if (cacheError && cacheError.code !== 'PGRST116') {
               throw new Error(`Failed to fetch cache stats: ${cacheError.message}`);
@@ -585,10 +587,10 @@ export const usePerformanceStore = create<PerformanceStore>()(
 
             // Transform cache data to match CacheStats interface
             const cacheStats: CacheStats = cacheData ? {
-              size: cacheData.size || 0,
-              keys: cacheData.keys || [],
-              memoryUsage: cacheData.memory_usage || 0,
-              hitRate: cacheData.hit_rate || 0
+              size: (cacheData as any).size || 0,
+              keys: (cacheData as any).keys || [],
+              memoryUsage: (cacheData as any).memory_usage || 0,
+              hitRate: (cacheData as any).hit_rate || 0
             } : {
               size: 0,
               keys: [],

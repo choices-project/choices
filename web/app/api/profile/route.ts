@@ -25,17 +25,27 @@ import { getSupabaseServerClient } from '@/lib/supabase/server';
 
 // Validation schemas
 const profileSchema = z.object({
-  full_name: z.string().min(1).max(100).optional(),
-  username: z.string().min(3).max(50).optional(),
-  website: z.string().url().optional().or(z.literal('')),
+  // Required fields for database
+  email: z.string().email(),
+  
+  // Optional profile fields that match database schema
   avatar_url: z.string().url().optional().or(z.literal('')),
   bio: z.string().max(500).optional(),
-  location: z.string().max(100).optional(),
-  onboarding_complete: z.boolean().optional(),
-  trust_tier: z.number().int().min(0).max(5).optional(),
+  display_name: z.string().max(100).optional(),
+  username: z.string().min(3).max(50).optional(),
+  trust_tier: z.string().optional(),
   is_admin: z.boolean().optional(),
-  is_contributor: z.boolean().optional(),
-  is_owner: z.boolean().optional(),
+  is_active: z.boolean().optional(),
+  onboarding_completed: z.boolean().optional(),
+  // Additional fields that exist in database
+  community_focus: z.array(z.string()).optional(),
+  primary_concerns: z.array(z.string()).optional(),
+  primary_hashtags: z.array(z.string()).optional(),
+  followed_hashtags: z.array(z.string()).optional(),
+  preferences: z.any().optional(),
+  demographics: z.any().optional(),
+  location_data: z.any().optional(),
+  privacy_settings: z.any().optional(),
 });
 
 const preferencesSchema = z.object({
@@ -103,29 +113,20 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Error fetching preferences' }, { status: 500 });
     }
 
-    // Fetch interests
-    const { data: interests, error: interestsError } = await supabase
-      .from('user_interests')
-      .select('categories, keywords, topics')
-      .eq('user_id', user.id)
-      .single();
+    // Fetch interests - FUNCTIONALITY MERGED INTO user_profiles
+    const interests = {
+      categories: profile?.primary_concerns || [],
+      keywords: profile?.community_focus || [],
+      topics: profile?.primary_hashtags || []
+    };
+    const interestsError = null;
 
-    if (interestsError && interestsError.code !== 'PGRST116') {
-      logger.error('Error fetching interests', interestsError);
-      return NextResponse.json({ error: 'Error fetching interests' }, { status: 500 });
-    }
-
-    // Fetch onboarding progress
-    const { data: onboarding, error: onboardingError } = await supabase
-      .from('user_onboarding_progress')
-      .select('*')
-      .eq('user_id', user.id)
-      .single();
-
-    if (onboardingError && onboardingError.code !== 'PGRST116') {
-      logger.error('Error fetching onboarding progress', onboardingError);
-      return NextResponse.json({ error: 'Error fetching onboarding progress' }, { status: 500 });
-    }
+    // Fetch onboarding progress - FUNCTIONALITY MERGED INTO user_profiles
+    const onboarding = {
+      completed: profile?.onboarding_completed || false,
+      data: profile?.onboarding_data || {}
+    };
+    const onboardingError = null;
 
     const responseData = {
       profile: profile || null,
@@ -174,7 +175,8 @@ export async function POST(request: NextRequest) {
       }
     const { data, error } = await supabase
       .from('user_profiles')
-        .upsert({ id: user.id, ...parsedProfile.data }, { onConflict: 'id' })
+      .update(parsedProfile.data)
+      .eq('user_id', user.id)
       .select();
     if (error) {
         logger.error('Error upserting profile', error);
@@ -210,9 +212,15 @@ export async function POST(request: NextRequest) {
         logger.warn('Invalid interests data', parsedInterests.error.issues);
         return NextResponse.json({ error: 'Invalid interests data', details: parsedInterests.error.issues }, { status: 400 });
       }
+      // FUNCTIONALITY MERGED INTO user_profiles - update profile with interests
       const { data, error } = await supabase
-        .from('user_interests')
-        .upsert({ user_id: user.id, ...parsedInterests.data }, { onConflict: 'user_id' })
+        .from('user_profiles')
+        .update({
+          primary_concerns: parsedInterests.data.categories,
+          community_focus: parsedInterests.data.keywords,
+          primary_hashtags: parsedInterests.data.topics
+        })
+        .eq('user_id', user.id)
         .select();
       if (error) {
         logger.error('Error upserting interests', error);
@@ -229,9 +237,17 @@ export async function POST(request: NextRequest) {
         logger.warn('Invalid onboarding data', parsedOnboarding.error.issues);
         return NextResponse.json({ error: 'Invalid onboarding data', details: parsedOnboarding.error.issues }, { status: 400 });
       }
+    // FUNCTIONALITY MERGED INTO user_profiles - update profile with onboarding
     const { data, error } = await supabase
-        .from('user_onboarding_progress')
-        .upsert({ user_id: user.id, ...parsedOnboarding.data }, { onConflict: 'user_id' })
+      .from('user_profiles')
+      .update({
+        onboarding_completed: parsedOnboarding.data.completed,
+        onboarding_data: {
+          step: parsedOnboarding.data.step,
+          completed_at: parsedOnboarding.data.completed_at
+        }
+      })
+      .eq('user_id', user.id)
       .select();
     if (error) {
         logger.error('Error upserting onboarding progress', error);
@@ -359,8 +375,8 @@ export async function DELETE(request: NextRequest) {
     const deletePromises = [
       supabase.from('user_profiles').delete().eq('id', user.id),
       supabase.from('user_notification_preferences').delete().eq('user_id', user.id),
-      supabase.from('user_interests').delete().eq('user_id', user.id),
-      supabase.from('user_onboarding_progress').delete().eq('user_id', user.id),
+      // TABLES DO NOT EXIST - user_interests, user_onboarding_progress
+      // TODO: Create these tables or remove these delete operations
     ];
 
     const results = await Promise.allSettled(deletePromises);

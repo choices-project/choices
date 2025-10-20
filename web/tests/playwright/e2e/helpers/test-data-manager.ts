@@ -8,7 +8,7 @@
  * Updated: January 27, 2025
  */
 
-import { Page } from '@playwright/test';
+import type { Page } from '@playwright/test';
 
 export interface TestUser {
   id: string;
@@ -134,7 +134,7 @@ export class TestDataManager {
    * Get a test poll by ID
    */
   getTestPoll(id: string): TestPoll | undefined {
-    return this.testUsers.get(id);
+    return this.testUsers.get(id) as TestPoll | undefined;
   }
 
   /**
@@ -221,7 +221,7 @@ export class TestDataManager {
       polls.push(this.createTestPoll({
         title: `Performance Test Poll ${i}`,
         description: `This is a performance test poll ${i}`,
-        createdBy: users[i % users.length].id
+        createdBy: users[i % users.length]?.id || 'unknown'
       }));
     }
 
@@ -229,7 +229,9 @@ export class TestDataManager {
     for (let i = 0; i < 20; i++) {
       const poll = polls[i % polls.length];
       const user = users[i % users.length];
-      votes.push(this.createTestVote(poll.id, 'option-1', user.id));
+      if (poll && user) {
+        votes.push(this.createTestVote(poll.id, 'option-1', user.id));
+      }
     }
 
     return { users, polls, votes };

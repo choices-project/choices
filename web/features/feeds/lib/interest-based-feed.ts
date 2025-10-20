@@ -518,29 +518,6 @@ export async function GET(request: NextRequest) {
     const userId = searchParams.get('userId');
     const includeTrending = searchParams.get('includeTrending') === 'true';
     
-    // Enhanced: Add hashtag-based polls integration
-    let hashtagPollsFeed = null;
-    if (includeTrending) {
-      try {
-        // Import hashtag-polls integration service
-        const { hashtagPollsIntegrationService } = await import('./hashtag-polls-integration');
-        
-        // Generate hashtag-based poll recommendations
-        hashtagPollsFeed = await hashtagPollsIntegrationService.generateHashtagPollFeed(
-          userId,
-          {
-            state: userProfile.location_data?.state,
-            region: userProfile.location_data?.region,
-            followed_hashtags: userProfile.followed_hashtags || [],
-            demographics: userProfile.demographics || {}
-          },
-          10 // Limit hashtag-based recommendations
-        );
-      } catch (error) {
-        logger.warn('Failed to generate hashtag-polls feed:', error);
-      }
-    }
-    
     if (!userId) {
       return NextResponse.json({ error: 'User ID required' }, { status: 400 });
     }
@@ -557,6 +534,29 @@ export async function GET(request: NextRequest) {
 
     if (!userProfile) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+
+    // Enhanced: Add hashtag-based polls integration
+    let hashtagPollsFeed = null;
+    if (includeTrending) {
+      try {
+        // Import hashtag-polls integration service (client version)
+        const { hashtagPollsIntegrationServiceClient } = await import('./hashtag-polls-integration-client');
+        
+        // Generate hashtag-based poll recommendations
+        hashtagPollsFeed = await hashtagPollsIntegrationServiceClient.generateHashtagPollFeed(
+          userId,
+          {
+            state: (userProfile.location_data as any)?.state,
+            region: (userProfile.location_data as any)?.region,
+            followed_hashtags: userProfile.followed_hashtags || [],
+            demographics: (userProfile.demographics as any) || {}
+          },
+          10 // Limit hashtag-based recommendations
+        );
+      } catch (error) {
+        logger.warn('Failed to generate hashtag-polls feed:', { error });
+      }
     }
 
     // Generate personalized feed with enhanced district-based civic filtering
@@ -588,7 +588,7 @@ export async function GET(request: NextRequest) {
         } : null,
         feed_enhancement: {
           hashtag_integration: !!hashtagPollsFeed,
-          personalization_level: hashtagPollsFeed?.hashtag_interests.length > 0 ? 'high' : 'medium',
+          personalization_level: (hashtagPollsFeed?.hashtag_interests?.length || 0) > 0 ? 'high' : 'medium',
           autopopulation_driver: 'followed_hashtags'
         }
       }

@@ -225,14 +225,14 @@ describe('VoteEngine', () => {
       expect(results.results).toBeDefined();
       expect(typeof results.results).toBe('object');
       
-      // Check option votes using the correct structure (option IDs)
-      expect(results.results.optionVotes['option-1']).toBe(2); // Option 1
-      expect(results.results.optionVotes['option-2']).toBe(1); // Option 2
-      expect(results.results.optionVotes['option-3']).toBe(0); // Option 3
+      // Check option votes using the correct structure
+      expect(results.results.optionVotes['0']).toBe(2); // Option 1 (index 0)
+      expect(results.results.optionVotes['1']).toBe(1); // Option 2 (index 1)
+      expect(results.results.optionVotes['2']).toBe(0); // Option 3 (index 2)
       
-      expect(results.results.optionPercentages['option-1']).toBeCloseTo(66.67, 1);
-      expect(results.results.optionPercentages['option-2']).toBeCloseTo(33.33, 1);
-      expect(results.results.optionPercentages['option-3']).toBe(0);
+      expect(results.results.optionPercentages['0']).toBeCloseTo(66.67, 1);
+      expect(results.results.optionPercentages['1']).toBeCloseTo(33.33, 1);
+      expect(results.results.optionPercentages['2']).toBe(0);
     });
 
     it('should handle empty votes array', async () => {

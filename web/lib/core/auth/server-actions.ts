@@ -21,7 +21,7 @@ import {
   generateIdempotencyKey,
   type IdempotencyOptions 
 } from '@/lib/core/auth/idempotency'
-import { getSecurityConfig } from '@/lib/core/security/config'
+import { getSecurityConfig } from '@/lib/security/config'
 import { logger } from '@/lib/utils/logger'
 
 // Common validation schemas

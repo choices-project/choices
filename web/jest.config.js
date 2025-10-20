@@ -1,14 +1,15 @@
 const nextJest = require('next/jest')
 
 const createJestConfig = nextJest({
-  // Provide the path to your Next.js app to load next.config.js and .env files
   dir: './',
 })
 
-// Add any custom config to be passed to Jest
+// Comprehensive Jest Configuration for Choices Platform
 const customJestConfig = {
   setupFilesAfterEnv: ['<rootDir>/jest.setup.js', '<rootDir>/tests/jest/setup/supabase-mock.ts'],
   testEnvironment: 'jest-environment-jsdom',
+  
+  // Test patterns
   testPathIgnorePatterns: [
     '<rootDir>/.next/',
     '<rootDir>/node_modules/',
@@ -20,10 +21,13 @@ const customJestConfig = {
     '<rootDir>/tests/e2e/archive-old/',
     '<rootDir>/archive-unused-files/',
   ],
+  
   testMatch: [
     '<rootDir>/tests/jest/**/*.test.{js,jsx,ts,tsx}',
     '<rootDir>/tests/jest/**/*.spec.{js,jsx,ts,tsx}',
   ],
+  
+  // Coverage configuration
   collectCoverageFrom: [
     'app/**/*.{js,jsx,ts,tsx}',
     'lib/**/*.{js,jsx,ts,tsx}',
@@ -40,6 +44,7 @@ const customJestConfig = {
     '!**/tests/e2e/archive-old/**',
     '!**/archive-unused-files/**',
   ],
+  
   coverageThreshold: {
     global: {
       branches: 70,
@@ -48,15 +53,18 @@ const customJestConfig = {
       statements: 70,
     },
   },
-  // Performance optimizations for Jest 30.2.0
-  maxWorkers: '50%', // Use half of available CPU cores
+  
+  // Performance optimizations
+  maxWorkers: '50%',
   cache: true,
   cacheDirectory: '<rootDir>/.jest-cache',
-  // Transform ignore patterns for ESM modules - optimized for React 19
+  
+  // Transform ignore patterns for ESM modules
   transformIgnorePatterns: [
     'node_modules/(?!(lucide-react|@radix-ui|@headlessui|@floating-ui|@tanstack|@supabase|framer-motion|recharts|uuid|clsx|tailwind-merge)/)',
   ],
-  // Module name mapping - optimized for React 19 and Next.js 15
+  
+  // Module name mapping
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/$1',
     '^@/features/(.*)$': '<rootDir>/features/$1',
@@ -69,49 +77,36 @@ const customJestConfig = {
     '^@/styles/(.*)$': '<rootDir>/styles/$1',
     '^@/public/(.*)$': '<rootDir>/public/$1',
     '^lucide-react$': '<rootDir>/__mocks__/lucide-react.js',
-    '^lucide-react/dist/esm/icons/(.*)$': '<rootDir>/__mocks__/lucide-react.js',
   },
-  // Force transform ESM modules for React 19 compatibility
+  
+  // Transform configuration
   transform: {
-    '^.+\\.(js|jsx|ts|tsx)$': ['babel-jest', { presets: ['next/babel'] }],
-    '^.+\\.mjs$': ['babel-jest', { presets: ['next/babel'] }],
+    '^.+\.(js|jsx|ts|tsx)$': ['babel-jest', { presets: ['next/babel'] }],
+    '^.+\.mjs$': ['babel-jest', { presets: ['next/babel'] }],
   },
-  // Test timeout - increased for React 19
+  
+  // Test timeout
   testTimeout: 15000,
-  // Verbose output for debugging
+  
+  // Verbose output
   verbose: false,
+  
   // Clear mocks between tests
   clearMocks: true,
-  // Reset modules between tests
   resetMocks: true,
-  // Restore mocks after each test
   restoreMocks: true,
-  // React 19 specific configuration
-  globals: {
-    'ts-jest': {
-      useESM: true,
-    },
-  },
-  // Module file extensions
-  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
-  // Test environment options for React 19
-  testEnvironmentOptions: {
-    customExportConditions: ['node', 'node-addons'],
-  },
-  // Snapshot serializers for React 19
-  snapshotSerializers: ['@testing-library/jest-dom'],
-  // Setup files
-  setupFiles: ['<rootDir>/jest.env.setup.js'],
+  
   // Global setup
   globalSetup: '<rootDir>/jest.global-setup.js',
-  // Global teardown
   globalTeardown: '<rootDir>/jest.global-teardown.js',
+  
   // Test results processor
   testResultsProcessor: '<rootDir>/jest.results-processor.js',
+  
   // Coverage reporters
   coverageReporters: ['text', 'lcov', 'html', 'json'],
-  // Coverage directory
   coverageDirectory: '<rootDir>/coverage',
+  
   // Coverage path ignore patterns
   coveragePathIgnorePatterns: [
     '/node_modules/',
@@ -126,13 +121,27 @@ const customJestConfig = {
     '/tests/e2e/archive-old/',
     '/archive-unused-files/',
   ],
-};
+  
+  // Module file extensions
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
+  
+  // Test environment options
+  testEnvironmentOptions: {
+    customExportConditions: ['node', 'node-addons'],
+  },
+  
+  // Snapshot serializers
+  snapshotSerializers: ['@testing-library/jest-dom'],
+  
+  // Setup files
+  setupFiles: ['<rootDir>/jest.env.setup.js'],
+  
+  // Globals for TypeScript
+  globals: {
+    'ts-jest': {
+      useESM: true,
+    },
+  },
+}
 
-// Wire client/server configs as separate Jest projects
-customJestConfig.projects = [
-  '<rootDir>/jest.client.config.js',
-  '<rootDir>/jest.server.config.js',
-];
-
-// createJestConfig is exported this way to ensure that next/jest can load the Next.js config which is async
 module.exports = createJestConfig(customJestConfig)

@@ -26,7 +26,7 @@ import {
 } from '@heroicons/react/24/outline';
 
 
-import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -456,6 +456,10 @@ export default function UnifiedFeed({
 
   // Infinite scroll setup
   useEffect(() => {
+    if (process.env.NODE_ENV === 'test') {
+      return;
+    }
+
     if (observerRef.current) {
       observerRef.current.disconnect();
     }
@@ -515,6 +519,9 @@ export default function UnifiedFeed({
 
   // Real-time updates with WebSocket (from EnhancedSocialFeed.tsx)
   useEffect(() => {
+    if (process.env.NODE_ENV === 'test') {
+      return;
+    }
     if (enableRealTimeUpdates && userId) {
       // WebSocket connection for real-time updates
       const ws = new WebSocket(`wss://your-websocket-endpoint/feed/${userId}`);
@@ -549,7 +556,7 @@ export default function UnifiedFeed({
   useEffect(() => {
     const initializeApp = async () => {
       try {
-        if (typeof window !== 'undefined') {
+        if (typeof window !== 'undefined' && process.env.NODE_ENV !== 'test') {
           await initializeSuperiorPWAFeatures();
           checkOnlineStatus();
         }

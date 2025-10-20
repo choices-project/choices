@@ -110,7 +110,7 @@ export default function HashtagPollsFeed({
     if (selectedHashtags.length > 0) {
       filtered = filtered.filter(poll => 
         selectedHashtags.some(hashtag => 
-          poll.hashtags?.includes(hashtag)
+          poll.tags?.includes(hashtag)
         )
       );
     }
@@ -118,14 +118,14 @@ export default function HashtagPollsFeed({
     // Sort by selected criteria
     switch (sortBy) {
       case 'trending':
-        filtered.sort((a, b) => b.relevance_score - a.relevance_score);
+        filtered.sort((a, b) => b.relevanceScore - a.relevanceScore);
         break;
       case 'engagement':
-        filtered.sort((a, b) => b.engagement_score - a.engagement_score);
+        filtered.sort((a, b) => b.totalVotes - a.totalVotes);
         break;
       case 'relevance':
       default:
-        filtered.sort((a, b) => b.relevance_score - a.relevance_score);
+        filtered.sort((a, b) => b.relevanceScore - a.relevanceScore);
         break;
     }
 
@@ -335,7 +335,7 @@ export default function HashtagPollsFeed({
           ) : (
             <div className="space-y-4">
               {filteredPolls.map(poll => (
-                <Card key={poll.poll_id} className="hover:shadow-md transition-shadow">
+                <Card key={poll.id} className="hover:shadow-md transition-shadow">
                   <CardContent className="p-6">
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex-1">
@@ -345,9 +345,9 @@ export default function HashtagPollsFeed({
                         <p className="text-gray-600 mb-4">{poll.description}</p>
                         
                         {/* Poll hashtags */}
-                        {poll.hashtags && poll.hashtags.length > 0 && (
+                        {poll.tags && poll.tags.length > 0 && (
                           <div className="flex flex-wrap gap-2 mb-4">
-                            {poll.hashtags.map(hashtag => (
+                            {poll.tags.map(hashtag => (
                               <Badge
                                 key={hashtag}
                                 variant="outline"
@@ -364,7 +364,7 @@ export default function HashtagPollsFeed({
                         <div className="flex items-center space-x-4 text-sm text-gray-500">
                           <div className="flex items-center">
                             <Users className="h-4 w-4 mr-1" />
-                            {poll.total_votes} votes
+                            {poll.totalVotes} votes
                           </div>
                           <div className="flex items-center">
                             <Clock className="h-4 w-4 mr-1" />
@@ -372,7 +372,7 @@ export default function HashtagPollsFeed({
                           </div>
                           <div className="flex items-center">
                             <BarChart3 className="h-4 w-4 mr-1" />
-                            {Math.round(poll.relevance_score * 100)}% match
+                            {Math.round(poll.relevanceScore * 100)}% match
                           </div>
                         </div>
                       </div>
@@ -380,10 +380,10 @@ export default function HashtagPollsFeed({
 
                     <div className="flex items-center justify-between">
                       <div className="text-sm text-gray-600">
-                        {poll.reason}
+                        {poll.interestMatches.length > 0 ? `Matches: ${poll.interestMatches.join(', ')}` : 'Recommended poll'}
                       </div>
                       <Button
-                        onClick={() => handlePollSelect(poll.poll_id)}
+                        onClick={() => handlePollSelect(poll.id)}
                         className="ml-4"
                       >
                         View Poll

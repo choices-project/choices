@@ -16,7 +16,7 @@ This document audits the web application's testing stack: structure, configs, he
   - Env logging noise from `dotenv` during tests; can be quieted to speed runs and reduce log churn.
 
 - **Immediate actions recommended**:
-  1. Remove global mock mappers for feeds/hashtags and `@/lib/auth` from all Jest configs, and delete virtual mocks for these in setup files. Rely on per-test `jest.mock(...)` within feeds tests.
+  1. Remove global mock mappers for feeds/hashtags and `@/lib/auth` from all Jest configs, and delete virtual mocks in setup files. Rely on per-test `jest.mock(...)` within feeds tests.
   2. Remove `@/lib/auth` forced mapping. Mock only real import paths if/when needed (e.g., `@/lib/core/auth/*`).
   3. Consolidate duplicate suites under one hierarchy (`tests/jest/unit/...`) and delete stale duplicates under `tests/unit/...` where overlapping.
   4. Make `.env` logging quiet in Jest setup and Playwright global setup.
@@ -343,6 +343,83 @@ with:
 - For PRs: run `npm run test:unit` first; only run Playwright tags relevant to changed areas.
 - Cache Jest and Playwright artifacts between CI jobs to reduce run time.
 - Consider `--maxWorkers=50%` for CI stability; raise locally.
+
+## Progress Log (2025-10-20)
+
+- Changes implemented
+  - Removed problematic global mappings and virtual mocks from Jest configs and `jest.setup.js` related to feeds/hashtags/auth (suite-local mocks now control behavior).
+  - Refactored feeds test suites to mock the aggregated `@/lib/stores` module instead of individual hooks, providing stable, test-controlled return values.
+  - Standardized per-suite mocks to avoid property redefinition conflicts by exposing shared `mockStores` objects and returning values via functions.
+  - Added `jsdom` environment annotations to feeds suites and mocked `IntersectionObserver` in `jest.setup.js` to support infinite scroll logic.
+  - Began migration to selector-friendly mocks: store hooks now use selector-style accessors in tests to mirror Zustand usage, reducing shape mismatches.
+
+- Current blockers
+  - Feeds suites still encounter "Maximum update depth exceeded" during render. Root cause: at least one mocked store hook (selector variant) or snapshot provider returns changing references or triggers effects that cause re-renders. Specifically, selector-based hooks must return stable object references across renders; recreating objects each render can induce infinite loops with `useSyncExternalStore` and Zustand-like selectors.
+
+- Mitigations in-progress
+  - Converting store mocks to use `useSyncExternalStore` with stable snapshot functions per hook and module-level singleton objects. Only mutate properties of those objects in tests; never replace the object itself.
+  - Disabling side-effectful features in test renders (`enableRealTimeUpdates`, `enableAnalytics`, `enableHaptics`) to reduce passive effects during mount.
+
+- Next steps (priority order)
+  1. Complete stabilization of all mocked store hooks in `UnifiedFeed.test.tsx` by:
+     - Returning stable references for `useFeeds`, `useFeedsActions`, `useFeedsLoading`, `useUserStore`, `usePWAStore`, `useNotificationStore`, `useHashtagStore` via `useSyncExternalStore` with module-scoped snapshot functions.
+     - Ensuring `useHashtagActions` returns a single shared action object (module-level) whose methods are reassigned per test.
+     - Updating the suite to mutate `mockStores.*` properties (not replace objects) in `beforeEach` and per-test.
+  2. Remove all remaining legacy references to `mockUseFeeds`/`mockUseHashtagStore` and align to the new `mockStores` mutation approach.
+  3. Rerun `npm run test:feeds` to verify the render loop is resolved. If loops persist, instrument `UnifiedFeed` mount effects with guards (e.g., skip WebSocket init when `typeof window === 'undefined'` or when a `TEST_MODE` env is present) and expand test mocks for `window.navigator`/ServiceWorker to stable singletons.
+  4. Quiet dotenv logs in `jest.setup.js` via `require('dotenv').config({ path: '.env.local', override: true, quiet: true })` to reduce noise.
+  5. Document the finalized mock pattern in `web/tests/jest/helpers/store-mock.md` and migrate other suites to the same pattern.
+
+- Acceptance criteria
+  - Feeds suites pass locally via `npm run test:feeds` with no infinite update loops.
+  - No global forced mocks for app modules remain in Jest configs; only stable global mocks (icons) persist.
+  - Selector-style store mocks are stable (no recreated objects per render), and tests mutate only properties.
+
+## Current Known Failures (updated)
+
+- Infinite update depth in feeds tests triggered during `render(<UnifiedFeed />)` when mocked selector hooks return fresh objects per call. This is under active remediation by stabilizing store snapshots and mutating properties only.
+
+## Recommendations (Actionable)
+
+- Jest config hygiene
+  - Keep only `lucide-react` mapping globally; remove app-specific forced mocks. Verified in-progress.
+- Feeds tests
+  - Finalize unified `mockStores` and `useSyncExternalStore` pattern; remove any residual per-hook `jest.spyOn`/`mock*` calls that redefine properties.
+- Consolidation
+  - Proceed with duplicate test tree consolidation after feeds pass.
+- Env & performance
+  - Quiet dotenv logs; ensure stable global browser mocks created once.
+
+---
+Maintainers: The remaining work focuses on stabilizing Zustand selector mocks for feeds to eliminate re-render loops. After that, we’ll re-run full unit suites and proceed to duplicate test consolidation and CI tuning.
+
+## Update (2025-10-20): Performance testing strategy
+
+- **Decision**: Disable Jest-based performance suite for `UnifiedFeed` because jsdom and extensive mocks yield unreliable metrics.
+- **Change**: Marked `web/tests/jest/unit/features/feeds/UnifiedFeed.performance.test.tsx` as skipped via `describe.skip` and added an explanatory header comment.
+- **New plan**:
+  - Implement browser-level performance checks in Playwright:
+    - Use Tracing (`context.tracing.start/stop`) and HAR to capture timings.
+    - Collect Core Web Vitals via `@axe-core/playwright` integration or `web-vitals` injected script.
+    - Add a Lighthouse CI step (via `@lhci/cli`) on preview deployments; store assertions and budgets.
+  - Gate budgets in CI (TTI, LCP, CLS) and surface regressions as PR comments.
+- **Why**: You prefer meaningful tests over superficial ones; unit-level perf in Jest is not representative of user experience.
+
+## Update (2025-10-20): Unit vs E2E split for UnifiedFeed
+
+- **Decision**: Keep only minimal unit “smoke” tests for `UnifiedFeed`; shift interaction, infinite scroll, real-time updates, and performance/a11y audits to E2E (Playwright + Lighthouse).
+- **Unit smoke coverage to retain**:
+  - Render without crashing (with stable plain-value store mocks)
+  - Loading/empty/error UI states
+  - Basic static accessibility semantics (roles/labels present)
+- **Moved to E2E**:
+  - Infinite scroll/IntersectionObserver behavior, real-time updates, complex interactions, keyboard/touch flows, runtime a11y audits, and performance timings.
+- **Rationale**: jsdom + heavy mocks made timing/behavior assertions unreliable and introduced render loops via selector/live-binding behavior.
+
+### Action items
+- [ ] Reduce feeds unit suites to 3–5 smoke tests matching the above scope
+- [ ] Add Playwright flows for scroll, real-time, interaction, and runtime a11y with axe
+- [ ] Add Lighthouse CI on preview deployments with budgets (LCP/CLS/TTI) and PR annotations
 
 
 

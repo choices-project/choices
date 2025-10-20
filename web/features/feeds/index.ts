@@ -39,13 +39,13 @@ export type {
 // Lib utilities
 export { TrendingHashtagsTracker, trendingHashtagsTracker } from './lib/TrendingHashtags';
 
-// Hashtag-Polls Integration
+// Hashtag-Polls Integration (Client Version)
 export { 
-  hashtagPollsIntegrationService,
+  hashtagPollsIntegrationServiceClient as hashtagPollsIntegrationService,
   type HashtagPollIntegration,
   type HashtagFeedAnalytics,
   type PersonalizedHashtagFeed
-} from './lib/hashtag-polls-integration';
+} from './lib/hashtag-polls-integration-client';
 
 // Components
 export { default as HashtagPollsFeed } from './components/HashtagPollsFeed';
@@ -58,11 +58,8 @@ export { default as SocialFeed } from './components/SocialFeed';
 export { default as EnhancedSocialFeed } from './components/EnhancedSocialFeed';
 export { default as SuperiorMobileFeed } from './components/SuperiorMobileFeed';
 export { default as FeedHashtagIntegration } from './components/FeedHashtagIntegration';
-export { default as FeedItem } from './components/FeedItem'
-export { default as InfiniteScroll } from './components/InfiniteScroll'
-
-// Hashtag integration component
-export { default as FeedHashtagIntegration } from './components/FeedHashtagIntegration'
+export { default as FeedItem } from './components/FeedItem';
+export { default as InfiniteScroll } from './components/InfiniteScroll';
 
 // Hooks (when created)
 // export { useFeed } from './hooks/useFeed'

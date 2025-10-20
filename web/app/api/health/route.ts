@@ -19,7 +19,7 @@ import { type NextRequest, NextResponse } from 'next/server';
 
 import { isCivicsEnabled } from '@/features/civics/lib/civics/privacy-utils';
 import { createRateLimitMiddleware, combineMiddleware } from '@/lib/core/auth/middleware';
-import { getQueryOptimizer } from '@/lib/core/database/optimizer';
+import { getQueryOptimizer } from '@/lib/database/optimizer';
 import { logger } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 

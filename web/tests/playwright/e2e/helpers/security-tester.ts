@@ -8,7 +8,7 @@
  * Updated: January 27, 2025
  */
 
-import { Page } from '@playwright/test';
+import type { Page } from '@playwright/test';
 
 export interface SecurityTestResult {
   testName: string;
@@ -136,7 +136,7 @@ export class SecurityTester {
         }
 
       } catch (error) {
-        result.vulnerabilities.push(`XSS test failed with payload ${payload}: ${error.message}`);
+        result.vulnerabilities.push(`XSS test failed with payload ${payload}: ${error instanceof Error ? error.message : String(error)}`);
       }
     }
 
@@ -206,7 +206,7 @@ export class SecurityTester {
         }
 
       } catch (error) {
-        result.vulnerabilities.push(`SQL injection test failed with payload ${payload}: ${error.message}`);
+        result.vulnerabilities.push(`SQL injection test failed with payload ${payload}: ${error instanceof Error ? error.message : String(error)}`);
       }
     }
 
@@ -271,7 +271,7 @@ export class SecurityTester {
       }
 
     } catch (error) {
-      result.vulnerabilities.push(`CSRF test failed: ${error.message}`);
+      result.vulnerabilities.push(`CSRF test failed: ${error instanceof Error ? error.message : String(error)}`);
     }
 
     if (!result.passed) {
@@ -326,7 +326,7 @@ export class SecurityTester {
       }
 
     } catch (error) {
-      result.vulnerabilities.push(`Rate limiting test failed: ${error.message}`);
+        result.vulnerabilities.push(`Rate limiting test failed: ${error instanceof Error ? error.message : String(error)}`);
     }
 
     if (!result.passed) {
@@ -375,7 +375,7 @@ export class SecurityTester {
         }
 
       } catch (error) {
-        result.vulnerabilities.push(`Input validation test failed with input ${invalidInput}: ${error.message}`);
+        result.vulnerabilities.push(`Input validation test failed with input ${invalidInput}: ${error instanceof Error ? error.message : String(error)}`);
       }
     }
 

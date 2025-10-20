@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Choices Platform - Test Monitoring Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        
+        .dashboard {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 1.1rem;
+            color: #666;
+            margin-bottom: 20px;
+        }
+        
+        .status-bar {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .status-item {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 15px 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        .status-item h3 {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .status-item .value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #333;
+        }
+        
+        .status-item.passed .value { color: #10b981; }
+        .status-item.failed .value { color: #ef4444; }
+        .status-item.skipped .value { color: #f59e0b; }
+        .status-item.duration .value { color: #3b82f6; }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        
+        .card h2 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #333;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e5e7eb;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #10b981, #059669);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+        
+        .metric {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #f3f4f6;
+        }
+        
+        .metric:last-child {
+            border-bottom: none;
+        }
+        
+        .metric-label {
+            font-weight: 500;
+            color: #374151;
+        }
+        
+        .metric-value {
+            font-weight: 600;
+            color: #1f2937;
+        }
+        
+        .metric-value.good { color: #10b981; }
+        .metric-value.warning { color: #f59e0b; }
+        .metric-value.error { color: #ef4444; }
+        
+        .test-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .test-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #f3f4f6;
+        }
+        
+        .test-item:last-child {
+            border-bottom: none;
+        }
+        
+        .test-status {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 12px;
+            flex-shrink: 0;
+        }
+        
+        .test-status.passed { background: #10b981; }
+        .test-status.failed { background: #ef4444; }
+        .test-status.skipped { background: #f59e0b; }
+        
+        .test-name {
+            flex: 1;
+            font-weight: 500;
+            color: #374151;
+        }
+        
+        .test-duration {
+            font-size: 0.9rem;
+            color: #6b7280;
+        }
+        
+        .recommendations {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        
+        .recommendations h2 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #333;
+        }
+        
+        .recommendation {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 15px 20px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+        }
+        
+        .recommendation.warning {
+            background: #fef3c7;
+            border-left-color: #f59e0b;
+        }
+        
+        .recommendation.error {
+            background: #fee2e2;
+            border-left-color: #ef4444;
+        }
+        
+        .recommendation.success {
+            background: #d1fae5;
+            border-left-color: #10b981;
+        }
+        
+        .refresh-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+        
+        .refresh-btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+        
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f4f6;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        @media (max-width: 768px) {
+            .dashboard {
+                padding: 10px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .status-bar {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <div class="header">
+            <h1>🧪 Test Monitoring Dashboard</h1>
+            <p>Real-time monitoring of Choices Platform test execution and performance metrics</p>
+            <button class="refresh-btn" onclick="refreshDashboard()">🔄 Refresh Data</button>
+        </div>
+        
+        <div class="status-bar">
+            <div class="status-item passed">
+                <h3>Tests Passed</h3>
+                <div class="value" id="passed-count">-</div>
+            </div>
+            <div class="status-item failed">
+                <h3>Tests Failed</h3>
+                <div class="value" id="failed-count">-</div>
+            </div>
+            <div class="status-item skipped">
+                <h3>Tests Skipped</h3>
+                <div class="value" id="skipped-count">-</div>
+            </div>
+            <div class="status-item duration">
+                <h3>Total Duration</h3>
+                <div class="value" id="total-duration">-</div>
+            </div>
+        </div>
+        
+        <div class="grid">
+            <div class="card">
+                <h2>📊 Performance Metrics</h2>
+                <div class="metric">
+                    <span class="metric-label">Average Load Time</span>
+                    <span class="metric-value" id="avg-load-time">-</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Memory Peak</span>
+                    <span class="metric-value" id="memory-peak">-</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">CPU Peak</span>
+                    <span class="metric-value" id="cpu-peak">-</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Test Success Rate</span>
+                    <span class="metric-value" id="success-rate">-</span>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2>🧪 Recent Test Results</h2>
+                <div class="test-list" id="test-results">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        <p>Loading test results...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="recommendations">
+            <h2>💡 Recommendations</h2>
+            <div id="recommendations-list">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Analyzing test results...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let monitoringData = null;
+        
+        async function loadMonitoringData() {
+            try {
+                // Try to load from monitoring-data directory
+                const response = await fetch('/monitoring-data/latest.json');
+                if (response.ok) {
+                    monitoringData = await response.json();
+                    updateDashboard();
+                } else {
+                    // Fallback to mock data for demonstration
+                    monitoringData = generateMockData();
+                    updateDashboard();
+                }
+            } catch (error) {
+                console.error('Error loading monitoring data:', error);
+                // Use mock data as fallback
+                monitoringData = generateMockData();
+                updateDashboard();
+            }
+        }
+        
+        function generateMockData() {
+            return {
+                totalTests: 45,
+                passedTests: 42,
+                failedTests: 2,
+                skippedTests: 1,
+                totalDuration: 125000,
+                averageDuration: 2777,
+                performanceMetrics: {
+                    averageLoadTime: 1850,
+                    maxLoadTime: 3200,
+                    minLoadTime: 1200,
+                    memoryPeak: 85.6,
+                    cpuPeak: 45.2
+                },
+                recommendations: [
+                    "⚠️ 2 test(s) failed - review test results and fix issues",
+                    "🐌 Average load time (1850ms) is approaching 3s threshold - monitor performance",
+                    "💾 Memory usage is within acceptable limits",
+                    "⏱️ Test execution time is optimal"
+                ],
+                testResults: [
+                    { name: "UnifiedFeed Component - E2E Tests", status: "passed", duration: 3200 },
+                    { name: "Authentication Security Tests", status: "passed", duration: 2800 },
+                    { name: "Performance Monitoring Tests", status: "passed", duration: 4500 },
+                    { name: "Accessibility Compliance Tests", status: "failed", duration: 1200 },
+                    { name: "Cross-browser Compatibility Tests", status: "passed", duration: 8900 },
+                    { name: "API Security Tests", status: "passed", duration: 2100 },
+                    { name: "Mobile Responsiveness Tests", status: "passed", duration: 3400 },
+                    { name: "Data Integrity Tests", status: "skipped", duration: 0 }
+                ]
+            };
+        }
+        
+        function updateDashboard() {
+            if (!monitoringData) return;
+            
+            // Update status bar
+            document.getElementById('passed-count').textContent = monitoringData.passedTests;
+            document.getElementById('failed-count').textContent = monitoringData.failedTests;
+            document.getElementById('skipped-count').textContent = monitoringData.skippedTests;
+            document.getElementById('total-duration').textContent = formatDuration(monitoringData.totalDuration);
+            
+            // Update performance metrics
+            document.getElementById('avg-load-time').textContent = `${monitoringData.performanceMetrics.averageLoadTime}ms`;
+            document.getElementById('memory-peak').textContent = `${monitoringData.performanceMetrics.memoryPeak}MB`;
+            document.getElementById('cpu-peak').textContent = `${monitoringData.performanceMetrics.cpuPeak}%`;
+            
+            const successRate = ((monitoringData.passedTests / monitoringData.totalTests) * 100).toFixed(1);
+            document.getElementById('success-rate').textContent = `${successRate}%`;
+            
+            // Update test results
+            updateTestResults(monitoringData.testResults);
+            
+            // Update recommendations
+            updateRecommendations(monitoringData.recommendations);
+        }
+        
+        function updateTestResults(testResults) {
+            const container = document.getElementById('test-results');
+            container.innerHTML = '';
+            
+            testResults.forEach(test => {
+                const testItem = document.createElement('div');
+                testItem.className = 'test-item';
+                testItem.innerHTML = `
+                    <div class="test-status ${test.status}"></div>
+                    <div class="test-name">${test.name}</div>
+                    <div class="test-duration">${formatDuration(test.duration)}</div>
+                `;
+                container.appendChild(testItem);
+            });
+        }
+        
+        function updateRecommendations(recommendations) {
+            const container = document.getElementById('recommendations-list');
+            container.innerHTML = '';
+            
+            recommendations.forEach(rec => {
+                const recElement = document.createElement('div');
+                recElement.className = 'recommendation';
+                
+                if (rec.includes('⚠️') || rec.includes('🐌')) {
+                    recElement.classList.add('warning');
+                } else if (rec.includes('❌')) {
+                    recElement.classList.add('error');
+                } else {
+                    recElement.classList.add('success');
+                }
+                
+                recElement.textContent = rec;
+                container.appendChild(recElement);
+            });
+        }
+        
+        function formatDuration(ms) {
+            if (ms < 1000) return `${ms}ms`;
+            if (ms < 60000) return `${(ms / 1000).toFixed(1)}s`;
+            return `${Math.floor(ms / 60000)}m ${Math.floor((ms % 60000) / 1000)}s`;
+        }
+        
+        function refreshDashboard() {
+            document.querySelector('.refresh-btn').textContent = '🔄 Refreshing...';
+            setTimeout(() => {
+                loadMonitoringData();
+                document.querySelector('.refresh-btn').textContent = '🔄 Refresh Data';
+            }, 1000);
+        }
+        
+        // Auto-refresh every 30 seconds
+        setInterval(loadMonitoringData, 30000);
+        
+        // Load initial data
+        loadMonitoringData();
+    </script>
+</body>
+</html>

@@ -71,9 +71,14 @@ export async function getCurrentProfileUser(): Promise<ProfileUser | null> {
         .from('user_profiles')
         .insert({
           user_id: user.id,
+          email: user.email || '',
           username: user.email?.split('@')[0] || 'user',
           display_name: user.email?.split('@')[0] || 'User',
           trust_tier: 'T0',
+          is_admin: false,
+          is_active: true,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
         })
         .select()
         .single();
@@ -87,12 +92,12 @@ export async function getCurrentProfileUser(): Promise<ProfileUser | null> {
         id: user.id,
         email: user.email || '',
         username: newProfile.username,
-        display_name: newProfile.display_name,
-        trust_tier: newProfile.trust_tier,
+        display_name: newProfile.display_name || undefined,
+        trust_tier: newProfile.trust_tier as 'T0' | 'T1' | 'T2' | 'T3',
         is_admin: false,
         is_active: true,
-        created_at: newProfile.created_at,
-        updated_at: newProfile.updated_at,
+        created_at: newProfile.created_at || new Date().toISOString(),
+        updated_at: newProfile.updated_at || new Date().toISOString(),
       };
     }
 
@@ -104,12 +109,12 @@ export async function getCurrentProfileUser(): Promise<ProfileUser | null> {
       id: user.id,
       email: profile.email || user.email || '',
       username: profile.username,
-      display_name: profile.display_name,
-      trust_tier: profile.trust_tier,
+      display_name: profile.display_name || undefined,
+      trust_tier: profile.trust_tier as 'T0' | 'T1' | 'T2' | 'T3',
       is_admin: !!isAdmin,
       is_active: profile.is_active ?? true,
-      created_at: profile.created_at,
-      updated_at: profile.updated_at,
+      created_at: profile.created_at || new Date().toISOString(),
+      updated_at: profile.updated_at || new Date().toISOString(),
     };
 
   } catch (error) {

@@ -8,7 +8,18 @@
  * Updated: January 27, 2025
  */
 
-import { TestResult, TestError } from '@playwright/test';
+// Define proper interfaces for test reporting
+interface TestResult {
+  status: 'passed' | 'failed' | 'skipped';
+  duration: number;
+  title: string;
+  error?: TestError;
+}
+
+interface TestError {
+  message: string;
+  stack?: string;
+}
 import fs from 'fs';
 import path from 'path';
 

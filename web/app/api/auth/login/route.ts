@@ -1,7 +1,7 @@
 import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
 
-import { rateLimiters } from '@/lib/core/security/rate-limit'
+import { rateLimiters } from '@/lib/security/rate-limit'
 import { logger } from '@/lib/utils/logger'
 import { getSupabaseServerClient } from '@/utils/supabase/server'
 

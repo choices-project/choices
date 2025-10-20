@@ -21,7 +21,7 @@ import { NextResponse } from 'next/server';
 
 import { AnalyticsService } from '@/features/analytics/lib/analytics-service';
 import { withAuth, createRateLimitMiddleware, combineMiddleware } from '@/lib/core/auth/middleware';
-import { getQueryOptimizer, withPerformanceMonitoring } from '@/lib/core/database/optimizer';
+import { getQueryOptimizer, withPerformanceMonitoring } from '@/lib/database/optimizer';
 import { logger } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
