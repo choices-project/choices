@@ -28,9 +28,6 @@ const customJestConfig = {
     '^@/utils/supabase/server$': '<rootDir>/utils/supabase/server',
     '^@/shared/(.*)$': '<rootDir>/shared/$1',
     '^@/features/(.*)$': '<rootDir>/features/$1',
-    '^@/lib/auth$': '<rootDir>/__mocks__/auth.js',
-    '^@/lib/stores/feedsStore$': '<rootDir>/__mocks__/feedsStore.js',
-    '^@/features/hashtags/hooks/useHashtags$': '<rootDir>/__mocks__/useHashtags.js',
   },
   collectCoverageFrom: [
     'lib/**/*.{js,jsx,ts,tsx}',

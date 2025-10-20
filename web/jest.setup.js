@@ -207,26 +207,7 @@ jest.mock('next/navigation', () => ({
   useSearchParams: () => new URLSearchParams(),
 }));
 
-// Provide a virtual mock for '@/lib/stores/feedsStore' and hashtags hook used by feeds tests
-jest.mock('@/lib/stores/feedsStore', () => ({
-  useFeeds: jest.fn(() => []),
-}), { virtual: true });
-
-jest.mock('@/features/hashtags/hooks/useHashtags', () => ({
-  useHashtags: jest.fn(() => ({
-    hashtags: [],
-    trendingHashtags: [],
-    userHashtags: [],
-    isLoading: false,
-    error: null,
-    loadTrendingHashtags: jest.fn(),
-    searchHashtags: jest.fn(),
-    followHashtag: jest.fn(),
-    unfollowHashtag: jest.fn(),
-    getTrendingHashtags: jest.fn(),
-    refresh: jest.fn(),
-  })),
-}), { virtual: true });
+// Per-suite mocks should be declared within tests. Avoid global virtual mocks for app modules.
 
 // Enhanced fetch polyfill for Node.js (for Supabase compatibility)
 if (typeof global.fetch === 'undefined') {

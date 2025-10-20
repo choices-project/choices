@@ -29,10 +29,6 @@ const customJestConfig = {
     '^@/utils/supabase/server$': '<rootDir>/utils/supabase/server',
     '^@/shared/(.*)$': '<rootDir>/shared/$1',
     '^@/features/(.*)$': '<rootDir>/features/$1',
-    // Dedicated mocks for feeds tests
-    '^@/lib/auth$': '<rootDir>/__mocks__/auth.js',
-    '^@/lib/stores/feedsStore$': '<rootDir>/__mocks__/feedsStore.js',
-    '^@/features/hashtags/hooks/useHashtags$': '<rootDir>/__mocks__/useHashtags.js',
     // Handle CSS modules
     '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
   },
