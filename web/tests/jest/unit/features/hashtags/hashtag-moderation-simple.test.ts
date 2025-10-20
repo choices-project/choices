@@ -161,21 +161,21 @@ describe('Hashtag Moderation System - Basic Verification', () => {
       // Simple Levenshtein distance calculation
       const matrix = Array(str2.length + 1).fill(null).map(() => Array(str1.length + 1).fill(null));
       
-      for (let i = 0; i <= str1.length; i++) matrix[0][i] = i;
-      for (let j = 0; j <= str2.length; j++) matrix[j][0] = j;
+      for (let i = 0; i <= str1.length; i++) matrix[0]![i] = i;
+      for (let j = 0; j <= str2.length; j++) matrix[j]![0] = j;
       
       for (let j = 1; j <= str2.length; j++) {
         for (let i = 1; i <= str1.length; i++) {
           const indicator = str1[i - 1] === str2[j - 1] ? 0 : 1;
-          matrix[j][i] = Math.min(
-            matrix[j][i - 1] + 1,
-            matrix[j - 1][i] + 1,
-            matrix[j - 1][i - 1] + indicator
+          matrix[j]![i] = Math.min(
+            matrix[j]![i - 1] + 1,
+            matrix[j - 1]![i] + 1,
+            matrix[j - 1]![i - 1] + indicator
           );
         }
       }
       
-      const editDistance = matrix[str2.length][str1.length];
+      const editDistance = matrix[str2.length]![str1.length];
       return (longer.length - editDistance) / longer.length;
     };
 
@@ -215,8 +215,8 @@ describe('Hashtag Moderation System - Basic Verification', () => {
     expect(mockStats.total_hashtags).toBeGreaterThan(0);
     expect(mockStats.approved + mockStats.rejected + mockStats.flagged).toBeLessThanOrEqual(mockStats.total_hashtags);
     expect(mockStats.top_flag_types).toHaveLength(4);
-    expect(mockStats.top_flag_types[0].type).toBe('inappropriate');
-    expect(mockStats.top_flag_types[0].count).toBe(8);
+    expect(mockStats.top_flag_types[0]?.type).toBe('inappropriate');
+    expect(mockStats.top_flag_types[0]?.count).toBe(8);
   });
 
   it('should validate API endpoint structure', () => {
@@ -246,7 +246,7 @@ describe('Hashtag Moderation System - Basic Verification', () => {
       showUserActions: true,
       showAdminActions: false,
       onModerationUpdate: (moderation: any) => {
-        logger.info('Moderation updated:', moderation);
+        console.log('Moderation updated:', moderation);
       },
       className: 'test-class'
     };

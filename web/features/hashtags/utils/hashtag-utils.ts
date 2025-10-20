@@ -11,7 +11,7 @@ import type {
   Hashtag, 
   HashtagCategory, 
   HashtagValidation
-} from '@/lib/types/hashtag';
+} from '../types';
 
 // ============================================================================
 // HASHTAG VALIDATION UTILITIES

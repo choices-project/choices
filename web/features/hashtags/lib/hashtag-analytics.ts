@@ -11,7 +11,7 @@
 
 import { createClient } from '@supabase/supabase-js';
 
-import { logger } from '@/lib/utils/logger';
+import { logger } from '../../../lib/utils/logger';
 
 
 import type {

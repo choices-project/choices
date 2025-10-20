@@ -48,7 +48,7 @@ const MODERATION_CONSTANTS = {
   ],
   
   INAPPROPRIATE_KEYWORDS: [
-    'hate', 'violence', 'explicit', 'nsfw', 'adult',
+    'hate', 'violence', 'explicit', 'adult',
     'illegal', 'harmful', 'dangerous'
   ],
   
@@ -69,13 +69,10 @@ export async function getHashtagModeration(hashtagId: string): Promise<HashtagAp
     const supabase = getSupabaseClient();
     
     const result = await supabase
-      .from('hashtag_moderation')
-      .select(`
-        *,
-        flags:hashtag_flags(*)
-      `)
-      .eq('hashtag_id', hashtagId)
-      .single();
+      .from('hashtag_flags')
+      .select('*')
+      .eq('hashtag', hashtagId)
+      .order('created_at', { ascending: false });
     
     const { data, error } = result;
 
@@ -87,9 +84,36 @@ export async function getHashtagModeration(hashtagId: string): Promise<HashtagAp
       };
     }
 
+    // Transform hashtag_flags data to HashtagModeration format
+    const flags = data || [];
+    const pendingFlags = flags.filter(flag => flag.status === 'pending');
+    const moderationStatus = pendingFlags.length > 0 ? 'pending' : 
+                           flags.length > 0 ? 'flagged' : 'approved';
+
+    // Transform flags to match HashtagFlag type
+    const transformedFlags: HashtagFlag[] = flags.map(flag => ({
+      id: flag.id,
+      hashtag_id: flag.hashtag,
+      user_id: flag.reporter_id || '',
+      flag_type: 'other' as const, // Default type since hashtag_flags doesn't have flag_type
+      reason: flag.reason,
+      created_at: flag.created_at || new Date().toISOString(),
+      status: flag.status === 'approved' ? 'resolved' : 
+              flag.status === 'rejected' ? 'dismissed' : 'pending'
+    }));
+
+    const moderationData: HashtagModeration = {
+      hashtag_id: hashtagId,
+      status: moderationStatus,
+      moderated_at: flags[0]?.updated_at || new Date().toISOString(),
+      flags: transformedFlags,
+      auto_moderation_score: 0.5, // Default score
+      human_review_required: pendingFlags.length > 0
+    };
+
     return {
       success: true,
-      data: data as HashtagModeration
+      data: moderationData
     };
   } catch (error) {
     logger.error('Error getting hashtag moderation:', error instanceof Error ? error : new Error(String(error)));
@@ -111,12 +135,21 @@ export async function flagHashtag(
   try {
     const supabase = getSupabaseClient();
     
+    // Get current user
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user?.id) {
+      return {
+        success: false,
+        error: 'Authentication required'
+      };
+    }
+
     // Check if user has already flagged this hashtag recently
     const { data: existingFlags } = await supabase
       .from('hashtag_flags')
       .select('id, created_at')
-      .eq('hashtag_id', hashtagId)
-      .eq('user_id', (await supabase.auth.getUser()).data.user?.id)
+      .eq('hashtag', hashtagId)
+      .eq('reporter_id', user.id)
       .gte('created_at', new Date(Date.now() - MODERATION_CONSTANTS.FLAG_COOLDOWN_HOURS * 60 * 60 * 1000).toISOString());
 
     if (existingFlags && existingFlags.length > 0) {
@@ -130,9 +163,8 @@ export async function flagHashtag(
     const result = await supabase
       .from('hashtag_flags')
       .insert({
-        hashtag_id: hashtagId,
-        user_id: (await supabase.auth.getUser()).data.user?.id,
-        flag_type: flagType,
+        hashtag: hashtagId,
+        reporter_id: user.id,
         reason,
         status: 'pending'
       })
@@ -152,9 +184,20 @@ export async function flagHashtag(
     // Trigger auto-moderation if needed
     await triggerAutoModeration(hashtagId);
 
+    // Transform the returned data to match HashtagFlag type
+    const transformedFlag: HashtagFlag = {
+      id: data.id,
+      hashtag_id: data.hashtag,
+      user_id: data.reporter_id || '',
+      flag_type: 'other', // Default since hashtag_flags doesn't have flag_type
+      reason: data.reason,
+      created_at: data.created_at || new Date().toISOString(),
+      status: data.status as 'pending' | 'resolved' | 'dismissed'
+    };
+
     return {
       success: true,
-      data: data as HashtagFlag
+      data: transformedFlag
     };
   } catch (error) {
     logger.error('Error flagging hashtag:', error instanceof Error ? error : new Error(String(error)));
@@ -184,19 +227,16 @@ export async function moderateHashtag(
       };
     }
 
-    // Update or create moderation record
+    // Update hashtag flags with moderation decision
     const { data, error } = await supabase
-      .from('hashtag_moderation')
-      .upsert({
-        hashtag_id: hashtagId,
-        status,
-        moderation_reason: reason,
-        moderated_by: userId,
-        moderated_at: new Date().toISOString(),
-        human_review_required: false
+      .from('hashtag_flags')
+      .update({
+        status: status,
+        updated_at: new Date().toISOString()
       })
-      .select()
-      .single();
+      .eq('hashtag', hashtagId)
+      .eq('status', 'pending')
+      .select();
 
     if (error) {
       logger.error('Failed to moderate hashtag:', error);
@@ -208,13 +248,20 @@ export async function moderateHashtag(
 
     // Update hashtag status if rejected
     if (status === 'rejected') {
+      // Get current hashtag metadata first
+      const { data: hashtagData } = await supabase
+        .from('hashtags')
+        .select('metadata')
+        .eq('id', hashtagId)
+        .single();
+
       await supabase
         .from('hashtags')
         .update({ 
           is_featured: false,
           is_trending: false,
           metadata: {
-            ...data.metadata,
+            ...(hashtagData?.metadata as Record<string, any> || {}),
             moderation_status: 'rejected',
             moderation_reason: reason
           }
@@ -222,9 +269,12 @@ export async function moderateHashtag(
         .eq('id', hashtagId);
     }
 
+    // Get updated moderation status
+    const moderationResult = await getHashtagModeration(hashtagId);
+    
     return {
       success: true,
-      data: data as HashtagModeration
+      data: moderationResult.data
     };
   } catch (error) {
     logger.error('Error moderating hashtag:', error instanceof Error ? error : new Error(String(error)));
@@ -246,7 +296,7 @@ export async function getModerationQueue(
     const supabase = getSupabaseClient();
     
     let query = supabase
-      .from('hashtag_moderation')
+      .from('hashtag_flags')
       .select(`
         *,
         hashtags:hashtags(*)
@@ -328,16 +378,15 @@ export async function triggerAutoModeration(hashtagId: string): Promise<void> {
     const humanReviewRequired = score > MODERATION_CONSTANTS.HUMAN_REVIEW_THRESHOLD || 
                                (flagCount || 0) >= 3;
 
-    // Update moderation record
+    // Update hashtag flags with auto-moderation results
     await supabase
-      .from('hashtag_moderation')
-      .upsert({
-        hashtag_id: hashtagId,
-        status: humanReviewRequired ? 'flagged' : 'pending',
-        auto_moderation_score: score,
-        human_review_required: humanReviewRequired,
-        moderated_at: new Date().toISOString()
-      });
+      .from('hashtag_flags')
+      .update({
+        status: humanReviewRequired ? 'flagged' : 'approved',
+        updated_at: new Date().toISOString()
+      })
+      .eq('hashtag', hashtagId)
+      .eq('status', 'pending');
 
     // Auto-approve if score is low and no flags
     if (score < MODERATION_CONSTANTS.HUMAN_REVIEW_THRESHOLD && (flagCount || 0) === 0) {
@@ -423,9 +472,26 @@ export async function checkForDuplicates(hashtagName: string): Promise<HashtagAp
       return similarity > MODERATION_CONSTANTS.DUPLICATE_THRESHOLD;
     }) || [];
 
+    // Transform duplicates to handle null values
+    const transformedDuplicates = duplicates.map(hashtag => ({
+      ...hashtag,
+      description: hashtag.description || undefined,
+      category: hashtag.category as any || undefined,
+      created_by: hashtag.created_by || undefined,
+      follower_count: hashtag.follower_count || 0,
+      usage_count: hashtag.usage_count || 0,
+      is_featured: hashtag.is_featured || false,
+      is_trending: hashtag.is_trending || false,
+      is_verified: hashtag.is_verified || false,
+      trend_score: hashtag.trend_score || 0,
+      created_at: hashtag.created_at || new Date().toISOString(),
+      updated_at: hashtag.updated_at || new Date().toISOString(),
+      metadata: hashtag.metadata as Record<string, any> || undefined
+    }));
+
     return {
       success: true,
-      data: duplicates
+      data: transformedDuplicates
     };
   } catch (error) {
     logger.error('Error checking for duplicates:', error instanceof Error ? error : new Error(String(error)));
@@ -503,10 +569,10 @@ export async function getModerationStats(): Promise<HashtagApiResponse<{
       { count: flagCount }
     ] = await Promise.all([
       supabase.from('hashtags').select('*', { count: 'exact', head: true }),
-      supabase.from('hashtag_moderation').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
-      supabase.from('hashtag_moderation').select('*', { count: 'exact', head: true }).eq('status', 'approved'),
-      supabase.from('hashtag_moderation').select('*', { count: 'exact', head: true }).eq('status', 'rejected'),
-      supabase.from('hashtag_moderation').select('*', { count: 'exact', head: true }).eq('status', 'flagged'),
+      supabase.from('hashtag_flags').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
+      supabase.from('hashtag_flags').select('*', { count: 'exact', head: true }).eq('status', 'approved'),
+      supabase.from('hashtag_flags').select('*', { count: 'exact', head: true }).eq('status', 'rejected'),
+      supabase.from('hashtag_flags').select('*', { count: 'exact', head: true }).eq('status', 'flagged'),
       supabase.from('hashtag_flags').select('*', { count: 'exact', head: true })
     ]);
 

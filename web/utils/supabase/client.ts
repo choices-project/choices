@@ -2,7 +2,7 @@
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
-// Import the comprehensive database schema types
+// Import the fully aligned database schema types from Supabase
 import type { Database } from '../../types/database'
 
 // Re-export the Database type for use in other modules

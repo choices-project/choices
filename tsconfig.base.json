@@ -12,6 +12,7 @@
     "allowJs": true,
     "incremental": true,
     "resolveJsonModule": true,
+    "downlevelIteration": true,
     "baseUrl": ".",
     "paths": {
       "@/*": ["./web/*"],

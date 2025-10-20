@@ -58,7 +58,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Convert challenge to base64URL for verification
-    const challengeBase64 = arrayBufferToBase64URL(chal.challenge);
+    const challengeBase64 = arrayBufferToBase64URL(Buffer.from(chal.challenge, 'base64').buffer);
 
     // Get current request origin
     const origin = req.headers.get('origin') || req.headers.get('referer') || '';
@@ -89,15 +89,15 @@ export async function POST(req: NextRequest) {
     const { error: credErr } = await supabase.from('webauthn_credentials').insert({
       user_id: user.id,
       rp_id: rpID,
-      credential_id: Buffer.from(credentialId),
-      public_key: Buffer.from(publicKey),
+      credential_id: Buffer.from(credentialId).toString('base64'),
+      public_key: Buffer.from(publicKey).toString('base64'),
       cose_alg: body?.response?.publicKeyAlgorithm ?? null,
       counter,
       aaguid: aaguid || null,
-      backed_up: backupState ?? null,
+      backup_state: backupState ?? false,
       backup_eligible: backupEligible ?? false,
       device_label: body?.clientExtensionResults?.credProps?.rk ? 'This device' : null,
-      device_info: { ua: req.headers.get('user-agent') ?? '' },
+      transports: body?.response?.transports || [],
       last_used_at: new Date().toISOString(),
     });
 

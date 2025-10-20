@@ -5,7 +5,7 @@
  * Ensures Jest can resolve all aliases correctly for client-side tests.
  */
 
-import nextJest from 'next/jest';
+const nextJest = require('next/jest');
 
 const createJestConfig = nextJest({
   // Provide the path to your Next.js app to load next.config.js and .env files
@@ -14,13 +14,13 @@ const createJestConfig = nextJest({
 
 // Add any custom config to be passed to Jest
 const customJestConfig = {
+  displayName: 'client',
   setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
   testEnvironment: 'jsdom',
   testMatch: [
-    '<rootDir>/components/**/*.test.{js,jsx,ts,tsx}',
-    '<rootDir>/components/**/*.spec.{js,jsx,ts,tsx}',
-    '<rootDir>/app/**/*.test.{js,jsx,ts,tsx}',
-    '<rootDir>/app/**/*.spec.{js,jsx,ts,tsx}',
+    '<rootDir>/tests/jest/**/*.{test,spec}.{js,jsx,ts,tsx}',
+    '<rootDir>/components/**/*.{test,spec}.{js,jsx,ts,tsx}',
+    '<rootDir>/app/**/*.{test,spec}.{js,jsx,ts,tsx}',
   ],
   moduleNameMapper: {
     // Updated aliases for reorganized structure
@@ -29,6 +29,10 @@ const customJestConfig = {
     '^@/utils/supabase/server$': '<rootDir>/utils/supabase/server',
     '^@/shared/(.*)$': '<rootDir>/shared/$1',
     '^@/features/(.*)$': '<rootDir>/features/$1',
+    // Dedicated mocks for feeds tests
+    '^@/lib/auth$': '<rootDir>/__mocks__/auth.js',
+    '^@/lib/stores/feedsStore$': '<rootDir>/__mocks__/feedsStore.js',
+    '^@/features/hashtags/hooks/useHashtags$': '<rootDir>/__mocks__/useHashtags.js',
     // Handle CSS modules
     '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
   },
@@ -48,7 +52,7 @@ const customJestConfig = {
       statements: 80,
     },
   },
-}
+};
 
-// createJestConfig is exported this way to ensure that next/jest can load the Next.js config which is async
-export default createJestConfig(customJestConfig);
+// Export in CommonJS format for Jest projects compatibility
+module.exports = createJestConfig(customJestConfig);

@@ -172,7 +172,7 @@ export function createAuthMiddleware(options: AuthMiddlewareOptions = {}) {
       // Check admin requirement - rely on RLS policies for security
       if (requireAdmin) {
         const { data: adminCheck, error: adminError } = await supabase
-          .rpc('is_admin', { user_id: user.id });
+          .rpc('is_admin', { input_user_id: user.id });
 
         if (adminError || !adminCheck) {
           return NextResponse.json(
@@ -244,7 +244,7 @@ export function withAuth(
     
     // Use RLS function to check admin status
     const { data: isAdmin } = await supabase
-      .rpc('is_admin', { user_id: user!.id });
+      .rpc('is_admin', { input_user_id: user!.id });
 
     const { data: profile } = await supabase
       .from('user_profiles')

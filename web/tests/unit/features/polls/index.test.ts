@@ -263,10 +263,10 @@ describe('Poll Utilities', () => {
         { id: '2', text: 'Option 2', votes: 30 },
         { id: '3', text: 'Option 3', votes: 20 }
       ];
-      const result = sortOptionsByVotes(options);
-      expect(result[0].votes).toBe(30);
-      expect(result[1].votes).toBe(20);
-      expect(result[2].votes).toBe(10);
+      const result = sortOptionsByVotes(options as any);
+      expect(result[0]?.votes).toBe(30);
+      expect(result[1]?.votes).toBe(20);
+      expect(result[2]?.votes).toBe(10);
     });
 
     it('should handle options without votes', () => {
@@ -274,9 +274,9 @@ describe('Poll Utilities', () => {
         { id: '1', text: 'Option 1' },
         { id: '2', text: 'Option 2', votes: 10 }
       ];
-      const result = sortOptionsByVotes(options);
-      expect(result[0].votes).toBe(10);
-      expect(result[1].votes).toBeUndefined();
+      const result = sortOptionsByVotes(options as any);
+      expect(result[0]?.votes).toBe(10);
+      expect(result[1]?.votes).toBeUndefined();
     });
   });
 

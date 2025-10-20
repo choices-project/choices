@@ -9,7 +9,7 @@ import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET() {
+export async function GET(): Promise<NextResponse> {
   try {
     const supabase = await getSupabaseServerClient();
     if (!supabase) {

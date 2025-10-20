@@ -64,7 +64,7 @@ export async function GET(request: NextRequest) {
         title: poll.title,
         total_votes: poll.total_votes || 0,
         aggregated_results: Array.isArray(poll.options) ? 
-          poll.options.reduce((acc: Record<string, number>, option: PollOption, index: number) => {
+          (poll.options as unknown[]).reduce((acc: Record<string, number>, option: any, index: number) => {
             acc[`option_${index + 1}`] = option.votes || 0;
             return acc;
           }, {}) : {},

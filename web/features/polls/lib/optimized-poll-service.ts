@@ -54,16 +54,16 @@ export async function getOptimizedPollResults(pollId: string): Promise<{
     return {
       id: poll.id,
       title: poll.title,
-      description: poll.description,
-      options: poll.options,
+      description: poll.description || '',
+      options: (poll.options as any[]) || [],
       totalVotes: poll.total_votes ?? 0,
       participation: poll.participation ?? 0,
-      status: poll.status,
-      privacyLevel: poll.privacy_level,
-      category: poll.category,
-      votingMethod: poll.voting_method,
-      endTime: poll.end_time,
-      createdAt: poll.created_at
+      status: poll.status || '',
+      privacyLevel: poll.privacy_level || '',
+      category: poll.category || '',
+      votingMethod: poll.voting_method || '',
+      endTime: poll.end_time || '',
+      createdAt: poll.created_at || ''
     };
   } catch (error) {
     logger.error('Error in getOptimizedPollResults:', error instanceof Error ? error : new Error('Unknown error'));
@@ -103,10 +103,10 @@ export async function calculatePollStatistics(pollId: string): Promise<{
       title: poll.title,
       totalVotes: poll.total_votes ?? 0,
       participation: poll.participation ?? 0,
-      status: poll.status,
-      createdAt: poll.created_at,
+      status: poll.status || '',
+      createdAt: poll.created_at || '',
       // Additional calculated fields
-      averageVotesPerDay: poll.total_votes ? Math.round(poll.total_votes / Math.max(1, Math.ceil((Date.now() - new Date(poll.created_at).getTime()) / (1000 * 60 * 60 * 24)))) : 0,
+      averageVotesPerDay: poll.total_votes ? Math.round((poll.total_votes || 0) / Math.max(1, Math.ceil((Date.now() - new Date(poll.created_at || new Date()).getTime()) / (1000 * 60 * 60 * 24)))) : 0,
       isActive: poll.status === 'active',
       hasEnded: poll.status === 'closed' || poll.status === 'archived'
     };
@@ -143,12 +143,12 @@ export async function generatePollInsights(pollId: string): Promise<any> {
       participation: poll.participation ?? 0,
       status: poll.status,
       // Generated insights
-      engagementLevel: poll.total_votes > 100 ? 'high' : poll.total_votes > 50 ? 'medium' : 'low',
+      engagementLevel: (poll.total_votes || 0) > 100 ? 'high' : (poll.total_votes || 0) > 50 ? 'medium' : 'low',
       categoryTrend: poll.category === 'politics' ? 'trending' : 'stable',
       timeToClose: poll.status === 'active' ? 'ongoing' : 'ended',
       popularityScore: Math.min(100, Math.round((poll.total_votes || 0) * 2)),
       recommendations: [
-        poll.total_votes < 10 ? 'Consider promoting this poll to increase engagement' : null,
+        (poll.total_votes || 0) < 10 ? 'Consider promoting this poll to increase engagement' : null,
         poll.category === 'politics' ? 'This poll is in a trending category' : null,
         poll.status === 'active' ? 'Poll is currently active and accepting votes' : null
       ].filter(Boolean)
@@ -362,30 +362,36 @@ export class OptimizedPollService {
   }
 
   // Refresh materialized views (admin only)
-  async refreshMaterializedViews(): Promise<{ success: boolean; message: string; refreshedViews?: string[] }> {
+  async refreshMaterializedViews(): Promise<{ success: boolean; message: string; refreshedViews?: string[]; error?: string }> {
     try {
       const supabase = await getSupabaseServerClient();
       
-      // Refresh poll statistics materialized view
-      const { error: pollStatsError } = await supabase.rpc('refresh_poll_statistics_view');
+      // Refresh poll statistics materialized view (if function exists)
+      const { error: pollStatsError } = await supabase.rpc('refresh_poll_statistics_view' as any);
       
       if (pollStatsError) {
         logger.error('Failed to refresh poll statistics view:', pollStatsError instanceof Error ? pollStatsError : new Error('Unknown error'));
         return {
           success: false,
-          message: 'Failed to refresh poll statistics view'
+          message: 'Failed to refresh poll statistics view',
+          error: pollStatsError.message || 'Unknown error'
         };
+      } else {
+        logger.info('Successfully refreshed poll statistics view');
       }
 
-      // Refresh poll analytics materialized view
-      const { error: pollAnalyticsError } = await supabase.rpc('refresh_poll_analytics_view');
+      // Refresh poll analytics materialized view (if function exists)
+      const { error: pollAnalyticsError } = await supabase.rpc('refresh_poll_analytics_view' as any);
       
       if (pollAnalyticsError) {
         logger.error('Failed to refresh poll analytics view:', pollAnalyticsError instanceof Error ? pollAnalyticsError : new Error('Unknown error'));
         return {
           success: false,
-          message: 'Failed to refresh poll analytics view'
+          message: 'Failed to refresh poll analytics view',
+          error: pollAnalyticsError.message || 'Unknown error'
         };
+      } else {
+        logger.info('Successfully refreshed poll analytics view');
       }
 
       logger.info('Materialized views refreshed successfully');
@@ -404,7 +410,7 @@ export class OptimizedPollService {
   }
 
   // Perform database maintenance (admin only)
-  async performDatabaseMaintenance(): Promise<{ success: boolean; message: string; stats: any }> {
+  async performDatabaseMaintenance(pollId?: string): Promise<{ success: boolean; message: string; stats: any }> {
     try {
       const supabase = await getSupabaseServerClient();
       const startTime = Date.now();
@@ -413,15 +419,19 @@ export class OptimizedPollService {
       this.clearCache();
       
       // Analyze poll table for optimization
-      const { error: analyzeError } = await supabase.rpc('analyze_polls_table');
+      const { error: analyzeError } = await supabase.rpc('analyze_polls_table' as any);
       if (analyzeError) {
         logger.warn('Failed to analyze polls table:', { error: analyzeError.message });
+      } else {
+        logger.info('Successfully analyzed polls table performance');
       }
 
       // Rebuild indexes (if supported by Supabase)
-      const { error: indexError } = await supabase.rpc('rebuild_poll_indexes');
+      const { error: indexError } = await supabase.rpc('rebuild_poll_indexes' as any);
       if (indexError) {
         logger.warn('Failed to rebuild poll indexes:', { error: indexError.message });
+      } else {
+        logger.info('Successfully rebuilt poll indexes');
       }
 
       // Clean up old polls (archived polls older than 1 year)
@@ -435,12 +445,17 @@ export class OptimizedPollService {
 
       if (cleanupError) {
         logger.warn('Failed to cleanup old polls:', { error: cleanupError.message });
+      } else {
+        logger.info('Successfully cleaned up old polls', { cleanedCount: cleanupResult?.length || 0 });
       }
 
-      // Update poll statistics
-      const { error: statsError } = await supabase.rpc('update_poll_statistics');
+      // Update poll statistics for all polls or specific poll
+      const targetPollId = pollId || 'all';
+      const { error: statsError } = await supabase.rpc('update_poll_statistics' as any, { poll_id_param: targetPollId });
       if (statsError) {
         logger.warn('Failed to update poll statistics:', { error: statsError.message || 'Unknown error' });
+      } else {
+        logger.info('Successfully updated poll statistics', { pollId: targetPollId });
       }
 
       const duration = Date.now() - startTime;

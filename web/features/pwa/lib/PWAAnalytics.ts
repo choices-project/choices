@@ -15,6 +15,56 @@
 import { type AnalyticsEngine } from '@/features/analytics/lib/AnalyticsEngine';
 import { logger } from '@/lib/utils/logger';
 
+// Track PWA events using existing analytics system
+export async function trackPWAEvent(
+  eventType: 'pwa_install' | 'pwa_uninstall' | 'pwa_offline_access' | 'pwa_online_access' | 'pwa_service_worker_registered',
+  properties: Record<string, any> = {}
+): Promise<void> {
+  try {
+    const supabase = await import('@/utils/supabase/client').then(m => m.getSupabaseClient());
+    if (!supabase) return;
+
+    await supabase.from('analytics_events').insert({
+      event_type: 'user_registered', // Use existing event type
+      event_category: 'pwa',
+      event_data: {
+        pwa_event_type: eventType,
+        ...properties,
+        platform: navigator.platform,
+        user_agent: navigator.userAgent,
+        timestamp: new Date().toISOString()
+      }
+    });
+  } catch (error) {
+    console.warn('Failed to track PWA event:', error);
+  }
+}
+
+// Track PWA performance metrics using existing analytics system
+export async function trackPWAPerformance(
+  metricType: 'load_time' | 'cache_hit_rate' | 'offline_usage_time' | 'service_worker_performance',
+  value: number,
+  metadata: Record<string, any> = {}
+): Promise<void> {
+  try {
+    const supabase = await import('@/utils/supabase/client').then(m => m.getSupabaseClient());
+    if (!supabase) return;
+
+    await supabase.from('analytics_events').insert({
+      event_type: 'poll_created', // Use existing event type
+      event_category: 'pwa',
+      event_data: {
+        pwa_performance_type: metricType,
+        metric_value: value,
+        metadata,
+        timestamp: new Date().toISOString()
+      }
+    });
+  } catch (error) {
+    console.warn('Failed to track PWA performance:', error);
+  }
+}
+
 export interface PWAInstallationEvent {
   [key: string]: unknown;
   eventType: 'install_prompt_shown' | 'install_prompt_accepted' | 'install_prompt_dismissed' | 'app_installed' | 'app_uninstalled';
@@ -521,19 +571,25 @@ class PWAAnalytics {
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
+      // Use existing analytics_events table for PWA analytics
       const { data, error } = await supabase
-        .from('pwa_events')
+        .from('analytics_events')
         .select('created_at')
-        .eq('event_type', 'install')
+        .eq('event_type', 'user_registered')
+        .eq('event_category', 'pwa')
         .gte('created_at', thirtyDaysAgo.toISOString())
         .order('created_at', { ascending: true });
 
-      if (error) return [];
+      if (error) {
+        console.warn('PWA analytics error:', error.message);
+        return [];
+      }
 
       // Group by date and count installations
       const dailyCounts = new Map<string, number>();
       data?.forEach(event => {
-        const date = new Date(event.created_at).toISOString().split('T')[0];
+        const eventData = event as any;
+        const date = new Date(eventData.created_at).toISOString().split('T')[0];
         if (date) {
           dailyCounts.set(date, (dailyCounts.get(date) ?? 0) + 1);
         }
@@ -566,23 +622,29 @@ class PWAAnalytics {
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
+      // Use existing analytics_events table for offline analytics
       const { data, error } = await supabase
-        .from('pwa_events')
-        .select('created_at, event_type')
-        .in('event_type', ['offline_access', 'online_access'])
+        .from('analytics_events')
+        .select('created_at, event_data')
+        .eq('event_type', 'poll_created')
+        .eq('event_category', 'pwa')
         .gte('created_at', thirtyDaysAgo.toISOString())
         .order('created_at', { ascending: true });
 
-      if (error) return [];
+      if (error) {
+        console.warn('PWA offline analytics error:', error.message);
+        return [];
+      }
 
       // Calculate offline usage rate by date
       const dailyStats = new Map<string, { offline: number; total: number }>();
       data?.forEach(event => {
-        const date = new Date(event.created_at).toISOString().split('T')[0];
-        if (date) {
+        const eventData = event as any;
+        const date = new Date(eventData.created_at).toISOString().split('T')[0];
+        if (date && eventData.event_data?.pwa_performance_type) {
           const stats = dailyStats.get(date) ?? { offline: 0, total: 0 };
           stats.total++;
-          if (event.event_type === 'offline_access') {
+          if (eventData.event_data.pwa_performance_type === 'offline_usage_time') {
             stats.offline++;
           }
           dailyStats.set(date, stats);
@@ -616,9 +678,10 @@ class PWAAnalytics {
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
       const { data, error } = await supabase
-        .from('pwa_events')
+        .from('analytics_events')
         .select('created_at, event_data')
-        .eq('event_type', 'performance_metric')
+        .eq('event_type', 'poll_created')
+        .eq('event_category', 'pwa')
         .gte('created_at', thirtyDaysAgo.toISOString())
         .order('created_at', { ascending: true });
 
@@ -627,9 +690,10 @@ class PWAAnalytics {
       // Calculate average performance score by date
       const dailyScores = new Map<string, number[]>();
       data?.forEach(event => {
-        const date = new Date(event.created_at).toISOString().split('T')[0];
-        if (date) {
-          const score = event.event_data?.score ?? 0;
+        const eventData = event as any;
+        const date = new Date(eventData.created_at).toISOString().split('T')[0];
+        if (date && eventData.event_data?.metric_value) {
+          const score = eventData.event_data.metric_value ?? 0;
           const scores = dailyScores.get(date) ?? [];
           scores.push(score);
           dailyScores.set(date, scores);

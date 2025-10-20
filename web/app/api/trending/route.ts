@@ -155,12 +155,12 @@ async function getTrendingPolls(limit: number) {
       totalVotes: poll.total_votes || 0,
       timeRemaining: getTimeRemaining(poll.end_date),
       isActive: true,
-      options: poll.options.map((option: any) => ({
+      options: Array.isArray(poll.options) ? (poll.options as any[]).map((option: any) => ({
         id: option.id,
         text: option.text,
         votes: option.votes || 0,
-        percentage: poll.total_votes > 0 ? Math.round((option.votes || 0) / poll.total_votes * 100) : 0
-      })) || []
+        percentage: (poll.total_votes || 0) > 0 ? Math.round((option.votes || 0) / (poll.total_votes || 0) * 100) : 0
+      })) : []
     })) || [];
     
     return NextResponse.json({
@@ -264,7 +264,7 @@ async function getTrendingTopics(limit: number) {
     }
 
     // Create dynamic trending polls by combining trending topics with poll data
-    const trendingPolls = trendingTopics.map((topic: TopicData, index: number) => {
+    const trendingPolls = trendingTopics.map((topic: any, index: number) => {
       const poll = polls[index % polls.length] || {
         id: `trending-${topic.id}`,
         title: topic.title,

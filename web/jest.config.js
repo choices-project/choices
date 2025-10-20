@@ -7,7 +7,7 @@ const createJestConfig = nextJest({
 
 // Add any custom config to be passed to Jest
 const customJestConfig = {
-  setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
+  setupFilesAfterEnv: ['<rootDir>/jest.setup.js', '<rootDir>/tests/jest/setup/supabase-mock.ts'],
   testEnvironment: 'jest-environment-jsdom',
   testPathIgnorePatterns: [
     '<rootDir>/.next/',
@@ -68,6 +68,9 @@ const customJestConfig = {
     '^@/app/(.*)$': '<rootDir>/app/$1',
     '^@/styles/(.*)$': '<rootDir>/styles/$1',
     '^@/public/(.*)$': '<rootDir>/public/$1',
+    '^@/lib/auth$': '<rootDir>/tests/jest/__mocks__/auth.js',
+    '^@/lib/stores/feedsStore$': '<rootDir>/tests/jest/__mocks__/feedsStore.js',
+    '^@/features/hashtags/hooks/useHashtags$': '<rootDir>/tests/jest/__mocks__/useHashtags.js',
     '^lucide-react$': '<rootDir>/__mocks__/lucide-react.js',
     '^lucide-react/dist/esm/icons/(.*)$': '<rootDir>/__mocks__/lucide-react.js',
   },
@@ -126,7 +129,13 @@ const customJestConfig = {
     '/tests/e2e/archive-old/',
     '/archive-unused-files/',
   ],
-}
+};
+
+// Wire client/server configs as separate Jest projects
+customJestConfig.projects = [
+  '<rootDir>/jest.client.config.js',
+  '<rootDir>/jest.server.config.js',
+];
 
 // createJestConfig is exported this way to ensure that next/jest can load the Next.js config which is async
 module.exports = createJestConfig(customJestConfig)

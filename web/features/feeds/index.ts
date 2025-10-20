@@ -39,10 +39,25 @@ export type {
 // Lib utilities
 export { TrendingHashtagsTracker, trendingHashtagsTracker } from './lib/TrendingHashtags';
 
-// Components (moved from civics)
-export { default as SocialFeed } from './components/SocialFeed'
-export { default as EnhancedSocialFeed } from './components/EnhancedSocialFeed'
-export { default as SuperiorMobileFeed } from './components/SuperiorMobileFeed'
+// Hashtag-Polls Integration
+export { 
+  hashtagPollsIntegrationService,
+  type HashtagPollIntegration,
+  type HashtagFeedAnalytics,
+  type PersonalizedHashtagFeed
+} from './lib/hashtag-polls-integration';
+
+// Components
+export { default as HashtagPollsFeed } from './components/HashtagPollsFeed';
+
+// Unified Feed Component (RECOMMENDED)
+export { default as UnifiedFeed } from './components/UnifiedFeed';
+
+// Legacy Components (DEPRECATED - Use UnifiedFeed instead)
+export { default as SocialFeed } from './components/SocialFeed';
+export { default as EnhancedSocialFeed } from './components/EnhancedSocialFeed';
+export { default as SuperiorMobileFeed } from './components/SuperiorMobileFeed';
+export { default as FeedHashtagIntegration } from './components/FeedHashtagIntegration';
 export { default as FeedItem } from './components/FeedItem'
 export { default as InfiniteScroll } from './components/InfiniteScroll'
 

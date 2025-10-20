@@ -65,7 +65,7 @@ export async function POST(req: NextRequest) {
       .from('webauthn_credentials')
       .select('*')
       .eq('user_id', user.id)
-      .eq('credential_id', Buffer.from(base64URLToArrayBuffer(body.id)))
+      .eq('credential_id', Buffer.from(base64URLToArrayBuffer(body.id)).toString('base64'))
       .limit(1);
 
     if (credErr || !credRows?.length) {
@@ -75,7 +75,7 @@ export async function POST(req: NextRequest) {
     const credential = credRows[0];
 
     // Convert challenge to base64URL for verification
-    const challengeBase64 = arrayBufferToBase64URL(chal.challenge);
+    const challengeBase64 = arrayBufferToBase64URL(Buffer.from(chal.challenge, 'base64').buffer);
 
     // Get current request origin
     const origin = req.headers.get('origin') || req.headers.get('referer') || '';
@@ -88,19 +88,19 @@ export async function POST(req: NextRequest) {
       currentOrigin,
       rpID,
       {
-        id: credential.id,
-        userId: credential.user_id,
-        rpId: credential.rp_id,
-        credentialId: arrayBufferToBase64URL(credential.credential_id),
-        publicKey: arrayBufferToBase64URL(credential.public_key),
-        counter: credential.counter,
-        transports: credential.transports,
-        backupEligible: credential.backup_eligible,
-        backupState: credential.backed_up,
-        aaguid: credential.aaguid ? arrayBufferToBase64URL(credential.aaguid) : undefined,
-        userHandle: credential.user_handle ? arrayBufferToBase64URL(credential.user_handle) : undefined,
-        createdAt: new Date(credential.created_at),
-        lastUsedAt: credential.last_used_at ? new Date(credential.last_used_at) : undefined
+        id: credential?.id || '',
+        userId: credential?.user_id || '',
+        rpId: credential?.rp_id || '',
+        credentialId: arrayBufferToBase64URL(Buffer.from(credential?.credential_id || '', 'base64').buffer),
+        publicKey: arrayBufferToBase64URL(Buffer.from(credential?.public_key || '', 'base64').buffer),
+        counter: credential?.counter || 0,
+        transports: (credential?.transports || []) as AuthenticatorTransport[],
+        backupEligible: credential?.backup_eligible || false,
+        backupState: credential?.backup_state || false,
+        aaguid: credential?.aaguid ? arrayBufferToBase64URL(Buffer.from(credential.aaguid, 'base64').buffer) : undefined,
+        userHandle: credential?.user_handle ? arrayBufferToBase64URL(Buffer.from(credential.user_handle, 'base64').buffer) : undefined,
+        createdAt: new Date(credential?.created_at || Date.now()),
+        lastUsedAt: credential?.last_used_at ? new Date(credential.last_used_at) : undefined
       }
     );
 
@@ -115,7 +115,7 @@ export async function POST(req: NextRequest) {
         counter: verification.newCounter,
         last_used_at: new Date().toISOString()
       })
-      .eq('id', credential.id);
+      .eq('id', credential?.id || '');
 
     if (updateErr) {
       console.error('Update credential failed:', updateErr);

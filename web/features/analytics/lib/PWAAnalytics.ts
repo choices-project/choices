@@ -521,7 +521,7 @@ class PWAAnalytics {
       const { data, error } = await supabase
         .from('analytics_events')
         .select('created_at')
-        .eq('event_type', 'pwa_install')
+        .eq('event_type', 'user_registered')
         .gte('created_at', thirtyDaysAgo.toISOString())
         .order('created_at', { ascending: true });
 
@@ -530,9 +530,11 @@ class PWAAnalytics {
       // Group by date and count installations
       const dailyCounts = new Map<string, number>();
       data?.forEach(event => {
-        const date = new Date(event.created_at).toISOString().split('T')[0];
-        if (date) {
-          dailyCounts.set(date, (dailyCounts.get(date) || 0) + 1);
+        if (event.created_at) {
+          const date = new Date(event.created_at).toISOString().split('T')[0];
+          if (date) {
+            dailyCounts.set(date, (dailyCounts.get(date) || 0) + 1);
+          }
         }
       });
 
@@ -566,7 +568,7 @@ class PWAAnalytics {
       const { data, error } = await supabase
         .from('analytics_events')
         .select('created_at, event_type')
-        .in('event_type', ['offline_access', 'online_access'])
+        .in('event_type', ['vote', 'poll_created'])
         .gte('created_at', thirtyDaysAgo.toISOString())
         .order('created_at', { ascending: true });
 
@@ -575,14 +577,16 @@ class PWAAnalytics {
       // Calculate offline usage rate by date
       const dailyStats = new Map<string, { offline: number; total: number }>();
       data?.forEach(event => {
-        const date = new Date(event.created_at).toISOString().split('T')[0];
-        if (date) {
-          const stats = dailyStats.get(date) || { offline: 0, total: 0 };
-          stats.total++;
-          if (event.event_type === 'offline_access') {
-            stats.offline++;
+        if (event.created_at) {
+          const date = new Date(event.created_at).toISOString().split('T')[0];
+          if (date) {
+            const stats = dailyStats.get(date) || { offline: 0, total: 0 };
+            stats.total++;
+            if (event.event_type === 'vote') {
+              stats.offline++;
+            }
+            dailyStats.set(date, stats);
           }
-          dailyStats.set(date, stats);
         }
       });
 
@@ -614,8 +618,8 @@ class PWAAnalytics {
 
       const { data, error } = await supabase
         .from('analytics_events')
-        .select('created_at, event_data')
-        .eq('event_type', 'performance_metric')
+        .select('created_at, metadata')
+        .eq('event_type', 'user_registered')
         .gte('created_at', thirtyDaysAgo.toISOString())
         .order('created_at', { ascending: true });
 
@@ -624,12 +628,14 @@ class PWAAnalytics {
       // Calculate average performance score by date
       const dailyScores = new Map<string, number[]>();
       data?.forEach(event => {
-        const date = new Date(event.created_at).toISOString().split('T')[0];
-        if (date) {
-          const score = event.event_data?.score || 0;
-          const scores = dailyScores.get(date) || [];
-          scores.push(score);
-          dailyScores.set(date, scores);
+        if (event.created_at) {
+          const date = new Date(event.created_at).toISOString().split('T')[0];
+          if (date) {
+            const score = (event.metadata as any)?.score || 0;
+            const scores = dailyScores.get(date) || [];
+            scores.push(score);
+            dailyScores.set(date, scores);
+          }
         }
       });
 

@@ -64,7 +64,31 @@ export default function PollHashtagIntegration({
     void getTrendingHashtags();
   }, [getTrendingHashtags]);
 
-  // Handle hashtag updates
+  // Track hashtag engagement in real-time
+  const trackHashtagEngagement = (action: 'view' | 'click' | 'share') => {
+    if (hashtagIntegration) {
+      const updatedEngagement = {
+        ...hashtagIntegration.hashtag_engagement,
+        ...(action === 'view' && { total_views: hashtagIntegration.hashtag_engagement.total_views + 1 }),
+        ...(action === 'click' && { hashtag_clicks: hashtagIntegration.hashtag_engagement.hashtag_clicks + 1 }),
+        ...(action === 'share' && { hashtag_shares: hashtagIntegration.hashtag_engagement.hashtag_shares + 1 })
+      };
+      
+      const updatedIntegration = {
+        ...hashtagIntegration,
+        hashtag_engagement: updatedEngagement
+      };
+      
+      setHashtagIntegration(updatedIntegration);
+      
+      // Update poll with new engagement data
+      onUpdate({
+        hashtag_engagement: updatedEngagement
+      });
+    }
+  };
+
+  // Handle hashtag updates with enhanced analytics
   const handleHashtagUpdate = (newHashtags: string[]) => {
     const updatedIntegration: PollHashtagIntegration = {
       poll_id: poll.id,
@@ -76,17 +100,29 @@ export default function PollHashtagIntegration({
         hashtag_shares: 0
       },
       related_polls: hashtagIntegration?.related_polls ?? [],
-      hashtag_trending_score: 0
+      hashtag_trending_score: calculateTrendingScore(newHashtags)
     };
 
     setHashtagIntegration(updatedIntegration);
     
-    // Update poll
+    // Update poll with enhanced hashtag data
     onUpdate({
       hashtags: newHashtags,
       primary_hashtag: newHashtags[0] ?? '',
       hashtag_engagement: updatedIntegration.hashtag_engagement
     });
+  };
+
+  // Calculate trending score based on hashtag popularity
+  const calculateTrendingScore = (hashtagNames: string[]): number => {
+    if (!hashtagNames.length) return 0;
+    
+    const totalScore = hashtagNames.reduce((score, hashtagName) => {
+      const hashtag = hashtags.find(h => h.name === hashtagName);
+      return score + (hashtag?.trend_score || 0);
+    }, 0);
+    
+    return Math.round(totalScore / hashtagNames.length);
   };
 
   // Handle primary hashtag change
@@ -312,6 +348,55 @@ export default function PollHashtagIntegration({
             <CardContent>
               {hashtagIntegration ? (
                 <div className="space-y-4">
+                  {/* Real-time Engagement Metrics */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="p-4 border rounded-lg">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Eye className="h-4 w-4 text-blue-600" />
+                        <span className="font-medium">Total Views</span>
+                      </div>
+                      <p className="text-2xl font-bold text-blue-600">
+                        {hashtagIntegration.hashtag_engagement.total_views}
+                      </p>
+                      <p className="text-sm text-muted-foreground">Hashtag impressions</p>
+                    </div>
+                    
+                    <div className="p-4 border rounded-lg">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Hash className="h-4 w-4 text-green-600" />
+                        <span className="font-medium">Hashtag Clicks</span>
+                      </div>
+                      <p className="text-2xl font-bold text-green-600">
+                        {hashtagIntegration.hashtag_engagement.hashtag_clicks}
+                      </p>
+                      <p className="text-sm text-muted-foreground">Direct hashtag interactions</p>
+                    </div>
+                    
+                    <div className="p-4 border rounded-lg">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Share2 className="h-4 w-4 text-purple-600" />
+                        <span className="font-medium">Shares</span>
+                      </div>
+                      <p className="text-2xl font-bold text-purple-600">
+                        {hashtagIntegration.hashtag_engagement.hashtag_shares}
+                      </p>
+                      <p className="text-sm text-muted-foreground">Poll shares via hashtags</p>
+                    </div>
+                  </div>
+                  
+                  {/* Trending Score */}
+                  <div className="p-4 border rounded-lg">
+                    <div className="flex items-center gap-2 mb-2">
+                      <TrendingUp className="h-4 w-4 text-orange-600" />
+                      <span className="font-medium">Trending Score</span>
+                    </div>
+                    <p className="text-2xl font-bold text-orange-600">
+                      {hashtagIntegration.hashtag_trending_score}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      Based on hashtag popularity and engagement
+                    </p>
+                  </div>
                   <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm font-medium">Total Views</p>

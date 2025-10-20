@@ -5,6 +5,7 @@
  * Includes social feeds, hashtag tracking, and personalization
  */
 
+import type React from 'react';
 // Core feed item types
 export interface FeedItemData {
   id: string;
@@ -26,7 +27,7 @@ export interface FeedItemData {
     bookmarks: number;
   };
   isPublic: boolean;
-  metadata: Record<string, any>;
+  metadata: Record<string, unknown>;
   
   // Enhanced hashtag support
   hashtags?: string[];
@@ -41,6 +42,9 @@ export interface FeedItemData {
 // User preferences for feed personalization
 export interface UserPreferences {
   state?: string;
+  region?: string;
+  followed_hashtags?: string[];
+  demographics?: Record<string, unknown>;
   district?: string;
   interests?: string[];
   followedRepresentatives?: string[];
@@ -76,7 +80,7 @@ export interface TouchState {
   start: TouchPoint | null;
   end: TouchPoint | null;
   last: TouchPoint | null;
-  longPressTimer: NodeJS.Timeout | null;
+  longPressTimer: ReturnType<typeof setTimeout> | null;
   isLongPress: boolean;
   initialDistance: number | null;
   lastDistance: number | null;
@@ -238,7 +242,7 @@ export interface GenerateFeedOptions {
   interests?: string[];
   followedRepresentatives?: string[];
   personalization?: boolean;
-  preferences?: any;
+  preferences?: unknown;
 }
 
 export interface FeedServiceConfig {
@@ -274,7 +278,7 @@ export interface HashtagContent {
   updated_at: string;
   is_featured: boolean;
   engagement_score: number;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface HashtagDetailedAnalytics {
@@ -315,7 +319,7 @@ export interface HashtagFeed {
 
 export interface HashtagFilter {
   type: 'category' | 'trending' | 'verified' | 'usage_count' | 'date_range';
-  value: any;
+  value: unknown;
   label: string;
   active: boolean;
 }

@@ -85,7 +85,7 @@ export async function POST(req: NextRequest) {
       user_id: user.id,
       rp_id: rpID,
       kind: 'registration',
-      challenge: Buffer.from(challengeArray),
+      challenge: Buffer.from(challengeArray).toString('base64'),
       expires_at: expiresAt,
     });
 

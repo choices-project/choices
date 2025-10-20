@@ -62,7 +62,7 @@ export async function POST(req: NextRequest) {
       .select('*')
       .eq('user_id', user.id)
       .eq('rp_id', rpID)
-      .eq('credential_id', credIdBuf)
+      .eq('credential_id', Buffer.from(credIdBuf).toString('base64'))
       .limit(1);
 
     if (credsErr || !creds?.length) {
@@ -72,7 +72,7 @@ export async function POST(req: NextRequest) {
     const cred = creds[0];
 
     // Convert challenge to base64URL for verification
-    const challengeBase64 = arrayBufferToBase64URL(chal.challenge);
+    const challengeBase64 = arrayBufferToBase64URL(Buffer.from(chal.challenge, 'base64').buffer);
 
     // Get current request origin
     const origin = req.headers.get('origin') || req.headers.get('referer') || '';
@@ -80,19 +80,15 @@ export async function POST(req: NextRequest) {
 
     // Create proper WebAuthnCredential object
     const credentialData = {
-      id: cred.id,
-      userId: cred.user_id,
-      rpId: cred.rp_id,
-      credentialId: cred.credential_id,
-      publicKey: cred.public_key,
-      counter: Number(cred.counter),
-      transports: cred.transports,
-      backupEligible: cred.backup_eligible,
-      backupState: cred.backup_state,
-      aaguid: cred.aaguid,
-      userHandle: cred.user_handle,
-      createdAt: new Date(cred.created_at),
-      lastUsedAt: cred.last_used_at ? new Date(cred.last_used_at) : undefined
+      id: cred?.id || '',
+      userId: cred?.user_id || '',
+      rpId: cred?.rp_id || '',
+      credentialId: cred?.credential_id || '',
+      publicKey: cred?.public_key || '',
+      counter: Number(cred?.counter || 0),
+      userHandle: cred?.user_handle || '',
+      createdAt: new Date(cred?.created_at || Date.now()),
+      lastUsedAt: cred?.last_used_at ? new Date(cred.last_used_at) : undefined
     };
 
     const verification = await verifyAuthenticationResponse(
@@ -110,9 +106,9 @@ export async function POST(req: NextRequest) {
     const { newCounter } = verification;
 
     // Critical fix: Counter integrity guard
-    if (Number.isFinite(cred.counter) && newCounter < cred.counter) {
+    if (Number.isFinite(cred?.counter) && newCounter < (cred?.counter || 0)) {
       // Log suspicious activity, consider forcing re-register if repeated
-      console.warn(`Suspicious counter decrease for credential ${cred.id}: ${cred.counter} -> ${newCounter}`);
+      console.warn(`Suspicious counter decrease for credential ${cred?.id}: ${cred?.counter} -> ${newCounter}`);
     }
 
     // Update counter + last_used
@@ -121,7 +117,7 @@ export async function POST(req: NextRequest) {
         counter: newCounter, 
         last_used_at: new Date().toISOString() 
       })
-      .eq('id', cred.id);
+      .eq('id', cred?.id || '');
 
     await supabase.from('webauthn_challenges')
       .update({ used_at: new Date().toISOString() })

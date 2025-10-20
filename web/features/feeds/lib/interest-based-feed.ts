@@ -120,13 +120,18 @@ export class InterestBasedPollFeed {
     }
   }
 
-  // Find polls matching user interests
+  // Find polls matching user interests with district-based civic filtering
   private async findMatchingPolls(userTags: string[], userLocation: string): Promise<PollRecommendation[]> {
     try {
-      // Location-based filtering implementation
+      // Enhanced location-based filtering with civic district integration
       if (FEATURE_FLAGS.DEMOGRAPHIC_FILTERING) {
         logger.debug('Location-based filtering enabled', { userLocation });
-        // Location filtering is applied in the database query below
+        
+        // Parse location data for district-based filtering
+        const locationData = this.parseLocationData(userLocation);
+        if (locationData) {
+          return await this.getDistrictBasedPolls(userTags, locationData);
+        }
       }
       
       if (userTags.length === 0) {
@@ -138,7 +143,7 @@ export class InterestBasedPollFeed {
         .from('polls')
         .select(`
           id, title, description, category, tags, total_votes, created_at,
-          created_by, status, privacy_level
+          created_by, status, privacy_level, jurisdiction, district
         `)
         .eq('status', 'active')
         .eq('privacy_level', 'public')
@@ -160,12 +165,124 @@ export class InterestBasedPollFeed {
         relevanceScore: this.calculateRelevanceScore(poll.tags, userTags),
         interestMatches: this.findMatchingInterests(poll.tags, userTags),
         totalVotes: poll.total_votes ?? 0,
-        created_at: poll.created_at
+        created_at: poll.created_at,
+        jurisdiction: poll.jurisdiction,
+        district: poll.district
       })) || [];
     } catch (error) {
       logger.error('Error in findMatchingPolls:', error instanceof Error ? error : new Error(String(error)));
       return [];
     }
+  }
+
+  // Parse location data to extract district information
+  private parseLocationData(locationData: string): { state?: string; district?: string; county?: string } | null {
+    try {
+      if (!locationData) return null;
+      
+      const parsed = JSON.parse(locationData);
+      return {
+        state: parsed.state,
+        district: parsed.district,
+        county: parsed.county
+      };
+    } catch {
+      return null;
+    }
+  }
+
+  // Get district-based polls for civic engagement
+  private async getDistrictBasedPolls(
+    userTags: string[], 
+    locationData: { state?: string; district?: string; county?: string }
+  ): Promise<PollRecommendation[]> {
+    try {
+      // Build district-based query
+      let query = this.supabase
+        .from('polls')
+        .select(`
+          id, title, description, category, tags, total_votes, created_at,
+          created_by, status, privacy_level, jurisdiction, district
+        `)
+        .eq('status', 'active')
+        .eq('privacy_level', 'public');
+
+      // Add district filtering for civic relevance
+      if (locationData.state) {
+        query = query.or(`jurisdiction.eq.${locationData.state},jurisdiction.is.null`);
+      }
+      
+      if (locationData.district) {
+        query = query.or(`district.eq.${locationData.district},district.is.null`);
+      }
+
+      // Add interest-based filtering
+      if (userTags.length > 0) {
+        query = query.overlaps('tags', userTags);
+      }
+
+      const { data, error } = await query
+        .order('created_at', { ascending: false })
+        .limit(50);
+
+      if (error) {
+        logger.error('Error fetching district-based polls:', error instanceof Error ? error : new Error(String(error)));
+        return [];
+      }
+
+      return data?.map((poll: any) => ({
+        id: poll.id,
+        title: poll.title,
+        description: poll.description,
+        category: poll.category,
+        tags: poll.tags ?? [],
+        relevanceScore: this.calculateDistrictRelevanceScore(poll, userTags, locationData),
+        interestMatches: this.findMatchingInterests(poll.tags, userTags),
+        totalVotes: poll.total_votes ?? 0,
+        created_at: poll.created_at,
+        jurisdiction: poll.jurisdiction,
+        district: poll.district,
+        civicRelevance: this.calculateCivicRelevance(poll, locationData)
+      })) || [];
+    } catch (error) {
+      logger.error('Error in getDistrictBasedPolls:', error instanceof Error ? error : new Error(String(error)));
+      return [];
+    }
+  }
+
+  // Calculate civic relevance score for district-based polls
+  private calculateCivicRelevance(poll: any, locationData: { state?: string; district?: string; county?: string }): number {
+    let score = 0;
+    
+    // Higher score for polls in user's jurisdiction
+    if (locationData.state && poll.jurisdiction === locationData.state) {
+      score += 0.4;
+    }
+    
+    // Highest score for polls in user's specific district
+    if (locationData.district && poll.district === locationData.district) {
+      score += 0.6;
+    }
+    
+    // Bonus for civic/political categories
+    if (poll.category && ['civics', 'politics', 'government', 'elections'].includes(poll.category.toLowerCase())) {
+      score += 0.3;
+    }
+    
+    return Math.min(score, 1.0);
+  }
+
+  // Calculate district-aware relevance score
+  private calculateDistrictRelevanceScore(
+    poll: any, 
+    userTags: string[], 
+    locationData: { state?: string; district?: string; county?: string }
+  ): number {
+    const baseScore = this.calculateRelevanceScore(poll.tags, userTags);
+    const civicScore = this.calculateCivicRelevance(poll, locationData);
+    
+    // Weight civic relevance higher for district-based feeds
+    return (baseScore * 0.6) + (civicScore * 0.4);
   }
 
   // Apply demographic filtering
@@ -181,6 +298,53 @@ export class InterestBasedPollFeed {
     
     // For MVP, return all polls
     return polls;
+  }
+
+  // Get civic recommendations based on user's district
+  async getCivicRecommendations(userId: string, locationData: any): Promise<any> {
+    try {
+      const parsedLocation = this.parseLocationData(JSON.stringify(locationData));
+      if (!parsedLocation) return [];
+
+      // Get representatives for user's district
+      const { data: representatives, error: repError } = await this.supabase
+        .from('representatives_core')
+        .select('*')
+        .or(`district.eq.${parsedLocation.district},state.eq.${parsedLocation.state}`)
+        .eq('is_current', true)
+        .limit(5);
+
+      if (repError) {
+        logger.error('Error fetching representatives:', repError);
+        return [];
+      }
+
+      // Get civic-related polls for the district
+      const { data: civicPolls, error: pollsError } = await this.supabase
+        .from('polls')
+        .select('*')
+        .eq('status', 'active')
+        .eq('privacy_level', 'public')
+        .or(`jurisdiction.eq.${parsedLocation.state},district.eq.${parsedLocation.district}`)
+        .in('category', ['civics', 'politics', 'government', 'elections'])
+        .order('created_at', { ascending: false })
+        .limit(3);
+
+      if (pollsError) {
+        logger.error('Error fetching civic polls:', pollsError);
+        return [];
+      }
+
+      return {
+        representatives: representatives || [],
+        civicPolls: civicPolls || [],
+        district: parsedLocation.district,
+        state: parsedLocation.state
+      };
+    } catch (error) {
+      logger.error('Error getting civic recommendations:', error instanceof Error ? error : new Error(String(error)));
+      return [];
+    }
   }
 
   // Rank polls by relevance and recency
@@ -354,9 +518,27 @@ export async function GET(request: NextRequest) {
     const userId = searchParams.get('userId');
     const includeTrending = searchParams.get('includeTrending') === 'true';
     
-    // Future: Add trending polls when TRENDING_POLLS feature flag is added
+    // Enhanced: Add hashtag-based polls integration
+    let hashtagPollsFeed = null;
     if (includeTrending) {
-      // This will add trending polls to the personalized feed
+      try {
+        // Import hashtag-polls integration service
+        const { hashtagPollsIntegrationService } = await import('./hashtag-polls-integration');
+        
+        // Generate hashtag-based poll recommendations
+        hashtagPollsFeed = await hashtagPollsIntegrationService.generateHashtagPollFeed(
+          userId,
+          {
+            state: userProfile.location_data?.state,
+            region: userProfile.location_data?.region,
+            followed_hashtags: userProfile.followed_hashtags || [],
+            demographics: userProfile.demographics || {}
+          },
+          10 // Limit hashtag-based recommendations
+        );
+      } catch (error) {
+        logger.warn('Failed to generate hashtag-polls feed:', error);
+      }
     }
     
     if (!userId) {
@@ -377,17 +559,39 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    // Generate personalized feed
+    // Generate personalized feed with enhanced district-based civic filtering
     const personalizedFeed = await feedService.generatePersonalizedFeed(
       userId,
-      userProfile.interests || [],
-      userProfile.location || '',
+      userProfile.followed_hashtags || [],
+      userProfile.location_data ? JSON.stringify(userProfile.location_data) : '',
       userProfile.demographics || {}
     );
 
+    // Add district-based civic recommendations if location data is available
+    let civicRecommendations = null;
+    if (userProfile.location_data) {
+      civicRecommendations = await feedService.getCivicRecommendations(userId, userProfile.location_data);
+    }
+
     return NextResponse.json({
       ok: true,
-      data: personalizedFeed
+      data: {
+        ...personalizedFeed,
+        civicRecommendations,
+        // Enhanced with hashtag-polls integration
+        hashtagPollsFeed: hashtagPollsFeed ? {
+          user_followed_hashtags: hashtagPollsFeed.hashtag_interests,
+          recommended_polls: hashtagPollsFeed.recommended_polls,
+          trending_hashtags: hashtagPollsFeed.trending_hashtags,
+          feed_score: hashtagPollsFeed.feed_score,
+          hashtag_analytics: hashtagPollsFeed.hashtag_analytics
+        } : null,
+        feed_enhancement: {
+          hashtag_integration: !!hashtagPollsFeed,
+          personalization_level: hashtagPollsFeed?.hashtag_interests.length > 0 ? 'high' : 'medium',
+          autopopulation_driver: 'followed_hashtags'
+        }
+      }
     });
 
   } catch (error) {
@@ -414,24 +618,25 @@ export async function POST(request: NextRequest) {
       case 'follow':
         await supabase.from('user_hashtags').upsert({
           user_id: userId,
-          hashtag,
-          is_following: true
+          hashtag_id: hashtag,
+          is_primary: true,
+          followed_at: new Date().toISOString()
         });
         break;
         
       case 'unfollow':
         await supabase.from('user_hashtags')
-          .update({ is_following: false })
+          .delete()
           .eq('user_id', userId)
-          .eq('hashtag', hashtag);
+          .eq('hashtag_id', hashtag);
         break;
         
       case 'create':
         await supabase.from('user_hashtags').insert({
           user_id: userId,
-          hashtag,
-          is_custom: true,
-          is_following: true
+          hashtag_id: hashtag,
+          is_primary: true,
+          followed_at: new Date().toISOString()
         });
         break;
         
