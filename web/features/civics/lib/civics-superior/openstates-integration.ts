@@ -10,6 +10,7 @@
  */
 
 import { withOptional } from '../../../../lib/utils/objects';
+import type { Database } from '@/types/database';
 import { logger } from '../../../../lib/utils/logger';
 
 import { CurrentElectorateVerifier } from './current-electorate-verifier';
@@ -371,7 +372,7 @@ export default class OpenStatesIntegration {
       if (committeeRoles.length > 0) {
         enhanced.committee_memberships = committeeRoles.map(role => ({
           committee: role.title, // Committee name is stored in title
-          role: (role as any).member_role || 'member', // Member role (chair, member, etc.)
+          role: role.member_role || 'member', // Member role (chair, member, etc.)
           jurisdiction: role.jurisdiction,
           start_date: role.start_date,
           end_date: role.end_date

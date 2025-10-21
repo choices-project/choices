@@ -151,9 +151,9 @@ export class PerformanceMonitor {
     // Get memory usage
     if ('memory' in performance) {
       this.metrics.memoryUsage = {
-        usedJSHeapSize: (performance as any).memory.usedJSHeapSize,
-        totalJSHeapSize: (performance as any).memory.totalJSHeapSize,
-        jsHeapSizeLimit: (performance as any).memory.jsHeapSizeLimit,
+        usedJSHeapSize: performance.memory.usedJSHeapSize,
+        totalJSHeapSize: performance.memory.totalJSHeapSize,
+        jsHeapSizeLimit: performance.memory.jsHeapSizeLimit,
       };
     }
 
@@ -368,3 +368,4 @@ export function usePerformanceMonitor() {
 
 // Import React for the hook
 import React from 'react';
+import type { Database } from '@/types/database';

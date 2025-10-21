@@ -9,6 +9,7 @@
  */
 
 import { test, expect, type Page } from '@playwright/test';
+import type { Database } from '@/types/database';
 
 test.describe('UnifiedFeed Performance Tests', () => {
   let page: Page;
@@ -36,7 +37,7 @@ test.describe('UnifiedFeed Performance Tests', () => {
         const entries = list.getEntries();
         const lastEntry = entries[entries.length - 1];
         vitals.lcp = lastEntry.startTime;
-        (window as any).vitals = vitals;
+        window.vitals = vitals;
       }).observe({ entryTypes: ['largest-contentful-paint'] });
       
       // First Input Delay
@@ -47,7 +48,7 @@ test.describe('UnifiedFeed Performance Tests', () => {
             vitals.fid = entry.processingStart - entry.startTime;
           }
         });
-        (window as any).vitals = vitals;
+        window.vitals = vitals;
       }).observe({ entryTypes: ['first-input'] });
       
       // Cumulative Layout Shift
@@ -55,12 +56,12 @@ test.describe('UnifiedFeed Performance Tests', () => {
       new PerformanceObserver((list) => {
         const entries = list.getEntries();
         entries.forEach((entry) => {
-          if (!(entry as any).hadRecentInput) {
-            clsValue += (entry as any).value;
+          if (!entry.hadRecentInput) {
+            clsValue += entry.value;
           }
         });
         vitals.cls = clsValue;
-        (window as any).vitals = vitals;
+        window.vitals = vitals;
       }).observe({ entryTypes: ['layout-shift'] });
       
       // First Contentful Paint
@@ -71,7 +72,7 @@ test.describe('UnifiedFeed Performance Tests', () => {
             vitals.fcp = entry.startTime;
           }
         });
-        (window as any).vitals = vitals;
+        window.vitals = vitals;
       }).observe({ entryTypes: ['paint'] });
       
       // Time to First Byte
@@ -79,10 +80,10 @@ test.describe('UnifiedFeed Performance Tests', () => {
         const entries = list.getEntries();
         entries.forEach((entry) => {
           if (entry.name === 'navigation') {
-            vitals.ttfb = (entry as any).responseStart - (entry as any).requestStart;
+            vitals.ttfb = entry.responseStart - entry.requestStart;
           }
         });
-        (window as any).vitals = vitals;
+        window.vitals = vitals;
       }).observe({ entryTypes: ['navigation'] });
     });
   });
@@ -121,7 +122,7 @@ test.describe('UnifiedFeed Performance Tests', () => {
       expect(loadTime).toBeLessThan(3000); // 3 seconds max
       
       // Check Core Web Vitals
-      const vitals = await page.evaluate(() => (window as any).vitals);
+      const vitals = await page.evaluate(() => window.vitals);
       
       if (vitals) {
         console.log('📊 Core Web Vitals:');
@@ -236,10 +237,10 @@ test.describe('UnifiedFeed Performance Tests', () => {
       
       // Get initial memory usage
       const initialMemory = await page.evaluate(() => {
-        return (performance as any).memory ? {
-          usedJSHeapSize: (performance as any).memory.usedJSHeapSize,
-          totalJSHeapSize: (performance as any).memory.totalJSHeapSize,
-          jsHeapSizeLimit: (performance as any).memory.jsHeapSizeLimit
+        return performance.memory ? {
+          usedJSHeapSize: performance.memory.usedJSHeapSize,
+          totalJSHeapSize: performance.memory.totalJSHeapSize,
+          jsHeapSizeLimit: performance.memory.jsHeapSizeLimit
         } : null;
       });
       
@@ -263,10 +264,10 @@ test.describe('UnifiedFeed Performance Tests', () => {
         
         // Get final memory usage
         const finalMemory = await page.evaluate(() => {
-          return (performance as any).memory ? {
-            usedJSHeapSize: (performance as any).memory.usedJSHeapSize,
-            totalJSHeapSize: (performance as any).memory.totalJSHeapSize,
-            jsHeapSizeLimit: (performance as any).memory.jsHeapSizeLimit
+          return performance.memory ? {
+            usedJSHeapSize: performance.memory.usedJSHeapSize,
+            totalJSHeapSize: performance.memory.totalJSHeapSize,
+            jsHeapSizeLimit: performance.memory.jsHeapSizeLimit
           } : null;
         });
         

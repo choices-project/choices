@@ -9,6 +9,7 @@
  */
 
 import { create } from 'zustand';
+import type { Database } from '@/types/database';
 import { devtools, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 
@@ -587,10 +588,10 @@ export const usePerformanceStore = create<PerformanceStore>()(
 
             // Transform cache data to match CacheStats interface
             const cacheStats: CacheStats = cacheData ? {
-              size: (cacheData as any).size || 0,
-              keys: (cacheData as any).keys || [],
-              memoryUsage: (cacheData as any).memory_usage || 0,
-              hitRate: (cacheData as any).hit_rate || 0
+              size: cacheData.size || 0,
+              keys: cacheData.keys || [],
+              memoryUsage: cacheData.memory_usage || 0,
+              hitRate: cacheData.hit_rate || 0
             } : {
               size: 0,
               keys: [],

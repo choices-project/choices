@@ -19,6 +19,7 @@ const logger = {
 };
 
 import { createClient } from '../../../utils/supabase/client';
+import type { Database } from '@/types/database';
 
 // Helper function to transform database data to Hashtag type
 function transformHashtagData(data: any): Hashtag {
@@ -824,8 +825,8 @@ export async function getPollHashtagIntegration(pollId: string): Promise<Hashtag
       primary_hashtag: poll.primary_hashtag || undefined,
       hashtag_engagement: {
         total_views: poll.total_views || 0,
-        hashtag_clicks: engagement?.filter(e => (e as any).engagement_type === 'click').length || 0,
-        hashtag_shares: engagement?.filter(e => (e as any).engagement_type === 'share').length || 0
+        hashtag_clicks: engagement?.filter(e => e.engagement_type === 'click').length || 0,
+        hashtag_shares: engagement?.filter(e => e.engagement_type === 'share').length || 0
       },
       related_polls: relatedPolls?.map(p => p.id) || [],
       hashtag_trending_score: trendingScore
@@ -1308,9 +1309,9 @@ async function getRecentActivity() {
       content_id: usage.content_id || '',
       user_id: usage.user_id,
       created_at: usage.created_at,
-      context: (usage as any).context || undefined,
-      sentiment: ((usage as any).sentiment as 'positive' | 'neutral' | 'negative') || 'neutral',
-      engagement_score: (usage as any).engagement_score || 0
+      context: usage.context || undefined,
+      sentiment: (usage.sentiment as 'positive' | 'neutral' | 'negative') || 'neutral',
+      engagement_score: usage.engagement_score || 0
     })) || [];
   } catch (error) {
     console.error('Failed to get recent activity:', error);

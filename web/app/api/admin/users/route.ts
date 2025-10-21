@@ -110,7 +110,7 @@ export async function PUT(request: NextRequest) {
     
     for (const [key, value] of Object.entries(updates)) {
       if (allowedFields.includes(key)) {
-        (validUpdates as any)[key] = value
+        validUpdates[key] = value
       }
     }
 

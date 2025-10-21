@@ -3,6 +3,7 @@
  */
 
 import { logger } from '@/lib/utils/logger';
+import type { Database } from '@/types/database';
 
 export interface ProfilerMetrics {
   componentName: string;
@@ -66,7 +67,7 @@ export class PerformanceProfiler {
   startProfiling(componentName: string): void {
     this.isProfiling = true;
     this.startTime = performance.now();
-    this.startMemory = (performance as any).memory?.usedJSHeapSize || 0;
+    this.startMemory = performance.memory?.usedJSHeapSize || 0;
     
     logger.info(`🔍 Starting performance profiling for: ${componentName}`);
   }
@@ -80,7 +81,7 @@ export class PerformanceProfiler {
     }
 
     const endTime = performance.now();
-    const endMemory = (performance as any).memory?.usedJSHeapSize || 0;
+    const endMemory = performance.memory?.usedJSHeapSize || 0;
     
     const totalRenderTime = endTime - this.startTime;
     const averageRenderTime = totalRenderTime / renderCount;

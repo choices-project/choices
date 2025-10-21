@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import type { Database } from '@/types/database';
 import { runCrossBrowserTests, generateCrossBrowserReport } from './cross-browser-utils';
 
 /**
@@ -160,7 +161,7 @@ test.describe('Comprehensive Cross-Browser Tests', () => {
         secureContext: typeof window.isSecureContext !== 'undefined' ? window.isSecureContext : true,
         crypto: typeof crypto !== 'undefined',
         webCrypto: typeof crypto.subtle !== 'undefined',
-        webSecurity: typeof (window as any).trustedTypes !== 'undefined',
+        webSecurity: typeof window.trustedTypes !== 'undefined',
         csp: typeof document.querySelector === 'function'
       };
     });

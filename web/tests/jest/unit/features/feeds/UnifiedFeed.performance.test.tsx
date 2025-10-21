@@ -12,6 +12,7 @@
 
 /** @jest-environment jsdom */
 import React from 'react';
+import type { Database } from '@/types/database';
 import { render, screen, fireEvent, act } from '@testing-library/react';
 import { jest } from '@jest/globals';
 import UnifiedFeed from '@/features/feeds/components/UnifiedFeed';
@@ -307,7 +308,7 @@ D('UnifiedFeed Performance Tests', () => {
 
   describe('Memory Performance', () => {
     test('should not leak memory during repeated renders', async () => {
-      const initialMemory = (performance as any).memory?.usedJSHeapSize || 0;
+      const initialMemory = performance.memory?.usedJSHeapSize || 0;
       
       // Render and unmount component multiple times
       for (let i = 0; i < 10; i++) {
@@ -320,7 +321,7 @@ D('UnifiedFeed Performance Tests', () => {
         }
       }
       
-      const finalMemory = (performance as any).memory?.usedJSHeapSize || 0;
+      const finalMemory = performance.memory?.usedJSHeapSize || 0;
       const memoryIncrease = finalMemory - initialMemory;
       
       // Memory increase should be minimal (< 10MB)
@@ -332,13 +333,13 @@ D('UnifiedFeed Performance Tests', () => {
       mockStores.feeds.length = 0;
       mockStores.feeds.push(...(veryLargeDataset as any[]));
 
-      const initialMemory = (performance as any).memory?.usedJSHeapSize || 0;
+      const initialMemory = performance.memory?.usedJSHeapSize || 0;
       
       await act(async () => {
         render(<UnifiedFeed enableRealTimeUpdates={false} enableAnalytics={false} enableHaptics={false} />);
       });
       
-      const finalMemory = (performance as any).memory?.usedJSHeapSize || 0;
+      const finalMemory = performance.memory?.usedJSHeapSize || 0;
       const memoryIncrease = finalMemory - initialMemory;
       
       // Memory increase should be reasonable (< 50MB for 1000 items)

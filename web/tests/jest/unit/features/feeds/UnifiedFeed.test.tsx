@@ -10,6 +10,7 @@
 
 /** @jest-environment jsdom */
 import React from 'react';
+import type { Database } from '@/types/database';
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import { jest } from '@jest/globals';
 import { RealComponentTester, realComponentHelpers } from '@/lib/testing/realComponentTesting';
@@ -232,7 +233,7 @@ D('UnifiedFeed Component - Real Component Testing', () => {
     // Import the component after mocks are registered so it binds to mocked modules
     const { default: UnifiedFeedComponent } = await import('@/features/feeds/components/UnifiedFeed');
     // Store the component for use in tests
-    (global as any).UnifiedFeed = UnifiedFeedComponent;
+    global.UnifiedFeed = UnifiedFeedComponent;
   });
 
   beforeEach(() => {

@@ -6,6 +6,7 @@
  */
 
 import type { GoogleCivicErrorDetails, RetryConfig, ErrorContext } from '@/lib/types/google-civic';
+import type { Database } from '@/types/database';
 import { logger } from '@/lib/utils/logger';
 
 import { GoogleCivicApiError } from './client';
@@ -47,7 +48,7 @@ export class GoogleCivicErrorHandler {
     }
 
     // Handle timeout errors
-    if ((error as any).name === 'AbortError') {
+    if (error.name === 'AbortError') {
       return new GoogleCivicApiError(
         'Request timeout: Google Civic API did not respond in time',
         408,
@@ -56,7 +57,7 @@ export class GoogleCivicErrorHandler {
     }
 
     // Handle HTTP response errors
-    if ((error as any).status || (error as any).statusCode) {
+    if (error.status || error.statusCode) {
       return this.handleHttpError(error as { status?: number; statusCode?: number; body?: unknown; data?: unknown }, context);
     }
 
@@ -166,7 +167,7 @@ export class GoogleCivicErrorHandler {
 
       default:
         return new GoogleCivicApiError(
-          `HTTP error ${status}: ${(errorData as any).message || 'Unknown error'}`,
+          `HTTP error ${status}: ${errorData.message || 'Unknown error'}`,
           status || 500,
           { 
             details: errorData,

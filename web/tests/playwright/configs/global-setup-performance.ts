@@ -1,4 +1,5 @@
 import { chromium } from '@playwright/test';
+import type { Database } from '@/types/database';
 import type { FullConfig } from '@playwright/test';
 
 /**
@@ -30,7 +31,7 @@ async function globalSetup(config: FullConfig) {
         firstPaint: performance.getEntriesByName('first-paint')[0]?.startTime || 0,
         firstContentfulPaint: performance.getEntriesByName('first-contentful-paint')[0]?.startTime || 0,
         largestContentfulPaint: performance.getEntriesByName('largest-contentful-paint')[0]?.startTime || 0,
-        cumulativeLayoutShift: performance.getEntriesByName('layout-shift').reduce((sum, entry) => sum + (entry as any).value, 0),
+        cumulativeLayoutShift: performance.getEntriesByName('layout-shift').reduce((sum, entry) => sum + entry.value, 0),
         totalBlockingTime: performance.getEntriesByType('measure').reduce((sum, entry) => sum + entry.duration, 0)
       };
     });

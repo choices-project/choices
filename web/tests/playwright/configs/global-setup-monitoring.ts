@@ -1,4 +1,5 @@
 import type { FullConfig } from '@playwright/test';
+import type { Database } from '@/types/database';
 import { chromium } from 'playwright';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -79,8 +80,8 @@ async function globalSetup(config: FullConfig) {
             let cls = 0;
             new PerformanceObserver((entryList) => {
               for (const entry of entryList.getEntries()) {
-                if (!(entry as any).hadRecentInput) {
-                  cls += (entry as any).value;
+                if (!entry.hadRecentInput) {
+                  cls += entry.value;
                 }
               }
             }).observe({ type: 'layout-shift', buffered: true });

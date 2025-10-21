@@ -85,7 +85,7 @@ async function resolveViaGoogleCivic(input: LocationInput): Promise<ClientResolv
         jurisdictionIds.push(divisionId);
         
         // Use division data for more accurate level determination
-        const divisionName = (division && typeof division === 'object' && 'name' in division) ? (division as any).name : '';
+        const divisionName = (division && typeof division === 'object' && 'name' in division) ? division.name : '';
         const hasCounty = divisionId.includes('/county:') || (typeof divisionName === 'string' && divisionName.toLowerCase().includes('county'));
         const hasPlace = divisionId.includes('/place:') || (typeof divisionName === 'string' && divisionName.toLowerCase().includes('city'));
         

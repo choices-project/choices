@@ -16,6 +16,7 @@
  */
 
 import { createClient } from '@supabase/supabase-js';
+import type { Database } from '@/types/database';
 
 import { logger } from '@/lib/utils/logger';
 import { devLog } from '@/lib/utils/logger';
@@ -1240,7 +1241,7 @@ export class SuperiorDataPipeline {
         } else {
           logger.info('🔍 DEBUG: Congress.gov API FAILED with status:', { status: response.status });
           const error = new Error(`Congress.gov API failed with status ${response.status}`);
-          (error as any).status = response.status;
+          error.status = response.status;
           throw error;
         }
       } catch (error) {
@@ -1260,7 +1261,7 @@ export class SuperiorDataPipeline {
       if (!response.ok) {
         console.warn('Congress.gov API error:', response.status);
         const error = new Error(`Congress.gov API failed with status ${response.status}`);
-        (error as any).status = response.status;
+        error.status = response.status;
         throw error;
       }
       

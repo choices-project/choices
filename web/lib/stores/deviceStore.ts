@@ -9,6 +9,7 @@
  */
 
 import { create } from 'zustand';
+import type { Database } from '@/types/database';
 import { devtools, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 
@@ -143,7 +144,7 @@ const detectCapabilities = (): DeviceCapabilities => {
     reducedMotion: window.matchMedia('(prefers-reduced-motion: reduce)').matches,
     darkMode: window.matchMedia('(prefers-color-scheme: dark)').matches,
     highContrast: window.matchMedia('(prefers-contrast: high)').matches,
-    lowData: (navigator as any).connection?.saveData || false,
+    lowData: navigator.connection?.saveData || false,
     offline: !navigator.onLine,
     geolocation: 'geolocation' in navigator,
     camera: 'mediaDevices' in navigator && 'getUserMedia' in navigator.mediaDevices,
@@ -167,7 +168,7 @@ const detectNetworkInfo = (): NetworkInfo => {
     };
   }
 
-  const connection = (navigator as any).connection;
+  const connection = navigator.connection;
   return {
     type: connection.effectiveType || 'unknown',
     effectiveType: connection.effectiveType || '4g',
@@ -391,7 +392,7 @@ export const useDeviceStore = create<DeviceStore>()(
               window.addEventListener('offline', handleOffline);
               
               if ('connection' in navigator) {
-                (navigator as any).connection.addEventListener('change', handleConnectionChange);
+                navigator.connection.addEventListener('change', handleConnectionChange);
               }
 
               // Listen for capability changes

@@ -6,6 +6,7 @@
  */
 
 import { logger } from '@/lib/utils/logger';
+import type { Database } from '@/types/database';
 
 // Feature Flag Types
 export interface FeatureFlag {
@@ -342,7 +343,7 @@ class FeatureFlagManagerImpl implements FeatureFlagManager {
     
     const categories: Record<string, number> = {};
     Object.keys(FEATURE_FLAG_CATEGORIES).forEach(category => {
-      categories[category] = this.getFlagsByCategory(category as any).length;
+      categories[category] = this.getFlagsByCategorycategory.length;
     });
 
     return {

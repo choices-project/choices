@@ -14,6 +14,7 @@
  */
 
 import { type NextRequest, NextResponse } from 'next/server';
+import type { Database } from '@/types/database';
 
 import { trendingHashtagsTracker } from '@/features/feeds/lib/TrendingHashtags';
 import { logger } from '@/lib/utils/logger';
@@ -282,8 +283,8 @@ async function getTrendingTopics(limit: number) {
         title: poll.title,
         description: topic.description,
         category: topic.category,
-        totalVotes: (poll as any).total_votes || 0,
-        participationRate: (poll as any).participation_rate || 0,
+        totalVotes: poll.total_votes || 0,
+        participationRate: poll.participation_rate || 0,
         trendingScore: topic.trending_score,
         velocity: topic.velocity,
         momentum: topic.momentum,
@@ -295,7 +296,7 @@ async function getTrendingTopics(limit: number) {
           id: option.id,
           text: option.text,
           votes: option.votes,
-          percentage: (poll as any).total_votes > 0 ? Math.round((option.votes / (poll as any).total_votes) * 100) : 0
+          percentage: poll.total_votes > 0 ? Math.round((option.votes / poll.total_votes) * 100) : 0
         })),
         metadata: topic.metadata
       };

@@ -10,6 +10,7 @@
  */
 
 import { render } from '@testing-library/react';
+import type { Database } from '@/types/database';
 import type { RenderOptions, RenderResult } from '@testing-library/react';
 import type { ReactElement, ReactNode } from 'react';
 import { BrowserRouter } from 'react-router-dom';
@@ -100,7 +101,7 @@ export class RealComponentTester {
     const renderTime = endTime - startTime;
 
     // Store performance metrics
-    (result as any).__realComponentMetrics = {
+    result.__realComponentMetrics = {
       renderTime,
       startTime,
       endTime
@@ -422,7 +423,7 @@ export const realComponentHelpers = {
     try {
       for (const element of expectedElements) {
         try {
-          const foundElement = (result as any).getByText(element);
+          const foundElement = result.getByText(element);
           if (!foundElement) {
             errors.push(new Error(`Expected element not found: ${element}`));
             passed = false;

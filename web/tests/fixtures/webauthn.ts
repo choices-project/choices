@@ -9,6 +9,7 @@
  */
 
 import { test as base, expect } from '@playwright/test';
+import type { Database } from '@/types/database';
 
 type WebAuthnMode = 'chromium' | 'mock';
 type Fixtures = { webauthnMode: WebAuthnMode };
@@ -41,15 +42,15 @@ export const test = base.extend<Fixtures>({
       // Non-Chromium: Provide a light stub so component tests don't explode
       await page.addInitScript(() => {
         // Minimal shim – good enough for rendering & basic interaction tests
-        (globalThis as any).PublicKeyCredential ??= class PublicKeyCredential {};
-        (navigator as any).credentials ??= {};
-        (navigator as any).credentials.create = async () => ({
+        globalThis.PublicKeyCredential ??= class PublicKeyCredential {};
+        navigator.credentials ??= {};
+        navigator.credentials.create = async () => ({
           id: 'dummy',
           type: 'public-key',
           rawId: new ArrayBuffer(16),
           response: {},
         });
-        (navigator as any).credentials.get = async () => ({
+        navigator.credentials.get = async () => ({
           id: 'dummy',
           type: 'public-key',
           rawId: new ArrayBuffer(16),

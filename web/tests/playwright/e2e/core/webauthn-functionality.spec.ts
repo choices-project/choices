@@ -9,6 +9,7 @@
  */
 
 import { test, expect } from '@playwright/test';
+import type { Database } from '@/types/database';
 
 test.describe('WebAuthn Functionality', () => {
   test.beforeEach(async ({ page }) => {
@@ -107,7 +108,7 @@ test.describe('WebAuthn Functionality', () => {
     // Mock WebAuthn API for testing
     await page.addInitScript(() => {
       // Mock WebAuthn APIs
-      (window as any).navigator.credentials = {
+      window.navigator.credentials = {
         create: async () => {
           return {
             id: 'mock-credential-id',
@@ -158,7 +159,7 @@ test.describe('WebAuthn Functionality', () => {
   test('should handle WebAuthn authentication flow', async ({ page }) => {
     // Mock WebAuthn API for testing
     await page.addInitScript(() => {
-      (window as any).navigator.credentials = {
+      window.navigator.credentials = {
         get: async () => {
           return {
             id: 'mock-credential-id',
@@ -198,7 +199,7 @@ test.describe('WebAuthn Functionality', () => {
   test('should handle WebAuthn errors gracefully', async ({ page }) => {
     // Mock WebAuthn API to throw errors
     await page.addInitScript(() => {
-      (window as any).navigator.credentials = {
+      window.navigator.credentials = {
         create: async () => {
           throw new Error('WebAuthn registration failed');
         },

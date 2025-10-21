@@ -17,6 +17,7 @@
  */
 
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import type { Database } from '@/types/database';
 // Temporarily removed Zustand imports to fix SSR issues
 // import { useAppStore, useAppActions } from '@/lib/stores/appStore';
 // import { useFeedsStore } from '@/lib/stores/feedsStore';
@@ -401,8 +402,8 @@ function UnifiedFeed({
       
       try {
         // Track social media click event
-        if (typeof window !== 'undefined' && (window as any).gtag) {
-          (window as any).gtag('event', 'social_media_click', {
+        if (typeof window !== 'undefined' && window.gtag) {
+          window.gtag('event', 'social_media_click', {
             event_category: 'civics',
             event_label: data?.platform ?? 'unknown',
             value: 1
@@ -410,8 +411,8 @@ function UnifiedFeed({
         }
         
         // Track in local analytics if available
-        if (typeof window !== 'undefined' && (window as any).analytics) {
-          (window as any).analytics.track('Social Media Clicked', {
+        if (typeof window !== 'undefined' && window.analytics) {
+          window.analytics.track('Social Media Clicked', {
             platform: data?.platform ?? 'unknown',
             handle: data?.handle ?? 'unknown',
             url: data?.url ?? 'unknown',

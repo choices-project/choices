@@ -1,4 +1,5 @@
 import { type Page, expect } from '@playwright/test';
+import type { Database } from '@/types/database';
 
 /**
  * Test Monitoring Utilities
@@ -84,7 +85,7 @@ export interface MonitoringReport {
 export async function collectPerformanceMetrics(page: Page, testName: string): Promise<MonitoringMetrics['performance']> {
   const performanceMetrics = await page.evaluate(() => {
     const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
-    const memory = (performance as any).memory;
+    const memory = performance.memory;
     
     return {
       loadTime: navigation.loadEventEnd - navigation.loadEventStart,

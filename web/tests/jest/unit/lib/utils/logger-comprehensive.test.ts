@@ -9,6 +9,7 @@ process.env.NODE_ENV = 'development';
 jest.resetModules();
 
 import { logger } from '@/lib/utils/logger';
+import type { Database } from '@/types/database';
 
 // Mock console methods
 const mockConsole = {
@@ -27,8 +28,8 @@ describe('Logger Utility - Comprehensive Testing', () => {
     jest.clearAllMocks();
     
     // Force logger to be in development mode for all tests
-    (logger as any).isDevelopment = true;
-    (logger as any).level = 0; // DEBUG level
+    logger.isDevelopment = true;
+    logger.level = 0; // DEBUG level
   });
 
   describe('Basic Logging', () => {
@@ -111,8 +112,8 @@ describe('Logger Utility - Comprehensive Testing', () => {
 
     it('should handle log level filtering', () => {
       // Temporarily change logger level to INFO (filter out DEBUG)
-      const originalLevel = (logger as any).level;
-      (logger as any).level = 1; // INFO level
+      const originalLevel = logger.level;
+      logger.level = 1; // INFO level
       
       // Clear previous calls
       jest.clearAllMocks();
@@ -125,7 +126,7 @@ describe('Logger Utility - Comprehensive Testing', () => {
       expect(mockConsole.info).toHaveBeenCalledWith(expect.stringMatching(/\[.*\] INFO: Info message/));
       
       // Restore original level
-      (logger as any).level = originalLevel;
+      logger.level = originalLevel;
     });
   });
 

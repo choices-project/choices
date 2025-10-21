@@ -207,7 +207,7 @@ export class NetworkOptimizer {
       }, delay);
 
       // Store timeout ID for potential cancellation
-      (config as any).timeoutId = timeoutId;
+      config.timeoutId = timeoutId;
     });
   }
 
@@ -344,3 +344,4 @@ export function useNetworkOptimization() {
 
 // Import React for the hook
 import React from 'react';
+import type { Database } from '@/types/database';

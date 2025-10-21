@@ -8,6 +8,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import type { Database } from '@/types/database';
 import { VoteValidator } from '@/lib/vote/validator';
 import type { 
   VoteData, 
@@ -556,8 +557,8 @@ describe('VoteValidator', () => {
   describe('Error Handling', () => {
     it('should handle validation errors gracefully', async () => {
       // Mock a method to throw an error
-      const originalValidateBasicVoteData = (validator as any).validateBasicVoteData;
-      (validator as any).validateBasicVoteData = jest.fn().mockImplementation(() => {
+      const originalValidateBasicVoteData = validator.validateBasicVoteData;
+      validator.validateBasicVoteData = jest.fn().mockImplementation(() => {
         throw new Error('Validation error');
       });
 
@@ -567,7 +568,7 @@ describe('VoteValidator', () => {
       expect(validation.error).toBe('Validation error');
 
       // Restore original method
-      (validator as any).validateBasicVoteData = originalValidateBasicVoteData;
+      validator.validateBasicVoteData = originalValidateBasicVoteData;
     });
 
     it('should handle database errors gracefully', async () => {
@@ -575,10 +576,10 @@ describe('VoteValidator', () => {
       const testValidator = new VoteValidator();
       
       // Mock the getUserTrustTier method to return T0 (default fallback)
-      const originalGetUserTrustTier = (testValidator as any).getUserTrustTier;
+      const originalGetUserTrustTier = testValidator.getUserTrustTier;
       const mockGetUserTrustTier = jest.fn() as jest.MockedFunction<() => Promise<string>>;
       mockGetUserTrustTier.mockResolvedValue('T0');
-      (testValidator as any).getUserTrustTier = mockGetUserTrustTier;
+      testValidator.getUserTrustTier = mockGetUserTrustTier;
 
       const highTrustPoll = Object.assign({}, mockPoll, { 
         votingConfig: Object.assign({}, mockPoll.votingConfig, { 
@@ -594,7 +595,7 @@ describe('VoteValidator', () => {
       expect(validation.error).toBe('Insufficient trust tier for this poll');
       
       // Restore original method
-      (testValidator as any).getUserTrustTier = originalGetUserTrustTier;
+      testValidator.getUserTrustTier = originalGetUserTrustTier;
     });
   });
 });

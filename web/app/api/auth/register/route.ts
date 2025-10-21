@@ -1,4 +1,5 @@
 import type { NextRequest} from 'next/server';
+import type { Database } from '@/types/database';
 import { NextResponse } from 'next/server'
 
 import { rateLimiters } from '@/lib/security/rate-limit'
@@ -138,10 +139,10 @@ export async function POST(request: NextRequest) {
       user: {
         id: authData.user.id,
         email: authData.user.email,
-        username: (profile as any).username,
-        trust_tier: (profile as any).trust_tier,
-        display_name: (profile as any).display_name,
-        is_active: (profile as any).is_active
+        username: profile.username,
+        trust_tier: profile.trust_tier,
+        display_name: profile.display_name,
+        is_active: profile.is_active
       },
       session: authData.session,
       token: authData.session?.access_token, // Add token field for E2E compatibility

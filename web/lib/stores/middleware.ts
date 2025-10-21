@@ -9,6 +9,7 @@
  */
 
 import { logger } from '../utils/logger';
+import type { Database } from '@/types/database';
 
 import type { StoreMiddleware, StoreConfig, PersistOptions } from './types';
 
@@ -120,8 +121,8 @@ export const analyticsMiddleware: StoreMiddleware = (config) => (set, get, api) 
       const [_partial, _replace, action] = args;
       
       // Track store actions for analytics
-      if (typeof window !== 'undefined' && (window as any).gtag) {
-        (window as any).gtag('event', 'store_action', {
+      if (typeof window !== 'undefined' && window.gtag) {
+        window.gtag('event', 'store_action', {
           event_category: 'store',
           event_label: action || 'unknown',
           value: 1
@@ -248,7 +249,7 @@ export const developmentMiddleware: StoreMiddleware = (config) => (set, get, api
   if (process.env.NODE_ENV === 'development') {
     // Add state inspection to window object
     if (typeof window !== 'undefined') {
-      (window as any).__STORE_DEBUG__ = {
+      window.__STORE_DEBUG__ = {
         getState: get,
         setState: set,
         getActions: () => api

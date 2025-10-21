@@ -6,6 +6,7 @@
  */
 
 import { stripUndefinedDeep } from '@/lib/utils/clean'
+import type { Database } from '@/types/database';
 
 import { getSupabaseBrowserClient } from '../../utils/supabase/client'
 
@@ -22,10 +23,10 @@ export async function upsertClean<T extends object>(
   const cleanPayload = stripUndefinedDeep(payload)
   
   if (options?.onConflict) {
-    return supabase.from(table as any).upsert(cleanPayload, { onConflict: options.onConflict })
+    return supabase.fromtable.upsert(cleanPayload, { onConflict: options.onConflict })
   }
   
-  return supabase.from(table as any).upsert(cleanPayload)
+  return supabase.fromtable.upsert(cleanPayload)
 }
 
 /**
@@ -37,7 +38,7 @@ export async function insertClean<T extends object>(
 ) {
   const supabase = await getSupabaseBrowserClient()
   const cleanPayload = stripUndefinedDeep(payload)
-  return supabase.from(table as any).insert(cleanPayload)
+  return supabase.fromtable.insert(cleanPayload)
 }
 
 /**
@@ -51,7 +52,7 @@ export async function updateClean<T extends object>(
   const supabase = await getSupabaseBrowserClient()
   const cleanPayload = stripUndefinedDeep(payload)
   
-  let query = supabase.from(table as any).update(cleanPayload)
+  let query = supabase.fromtable.update(cleanPayload)
   
   for (const [key, value] of Object.entries(match)) {
     query = query.eq(key, value)

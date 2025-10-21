@@ -14,7 +14,7 @@
 // Ensure we're in a Node.js environment
 if (typeof window === 'undefined') {
   // Define self as globalThis if it doesn't exist
-  if (typeof (globalThis as any).self === 'undefined') {
+  if (typeof globalThis.self === 'undefined') {
     Object.defineProperty(globalThis, 'self', {
       value: globalThis,
       configurable: true,
@@ -24,12 +24,12 @@ if (typeof window === 'undefined') {
   }
 
   // Also ensure self is available on global for older modules
-  if (typeof (global as any).self === 'undefined') {
-    (global as any).self = globalThis;
+  if (typeof global.self === 'undefined') {
+    global.self = globalThis;
   }
 
   // Define other browser globals that might be referenced
-  if (typeof (globalThis as any).window === 'undefined') {
+  if (typeof globalThis.window === 'undefined') {
     Object.defineProperty(globalThis, 'window', {
       value: undefined,
       configurable: true,
@@ -38,7 +38,7 @@ if (typeof window === 'undefined') {
     });
   }
 
-  if (typeof (globalThis as any).document === 'undefined') {
+  if (typeof globalThis.document === 'undefined') {
     Object.defineProperty(globalThis, 'document', {
       value: undefined,
       configurable: true,
@@ -48,8 +48,8 @@ if (typeof window === 'undefined') {
   }
 
   // Define localStorage and sessionStorage as no-op objects
-  if (typeof (globalThis as any).localStorage === 'undefined') {
-    (globalThis as any).localStorage = {
+  if (typeof globalThis.localStorage === 'undefined') {
+    globalThis.localStorage = {
       getItem: () => null,
       setItem: () => {},
       removeItem: () => {},
@@ -59,8 +59,8 @@ if (typeof window === 'undefined') {
     };
   }
 
-  if (typeof (globalThis as any).sessionStorage === 'undefined') {
-    (globalThis as any).sessionStorage = {
+  if (typeof globalThis.sessionStorage === 'undefined') {
+    globalThis.sessionStorage = {
       getItem: () => null,
       setItem: () => {},
       removeItem: () => {},
@@ -71,17 +71,17 @@ if (typeof window === 'undefined') {
   }
 
   // Define other browser APIs that might be referenced
-  if (typeof (globalThis as any).indexedDB === 'undefined') {
-    delete (globalThis as any).indexedDB;
+  if (typeof globalThis.indexedDB === 'undefined') {
+    delete globalThis.indexedDB;
   }
 
-  if (typeof (globalThis as any).crypto === 'undefined') {
+  if (typeof globalThis.crypto === 'undefined') {
     const crypto = await import('crypto');
-    (globalThis as any).crypto = crypto.webcrypto;
+    globalThis.crypto = crypto.webcrypto;
   }
 
-  if (typeof (globalThis as any).performance === 'undefined') {
-    (globalThis as any).performance = {
+  if (typeof globalThis.performance === 'undefined') {
+    globalThis.performance = {
       now: () => Date.now(),
       mark: () => {},
       measure: () => {},
@@ -94,27 +94,27 @@ if (typeof window === 'undefined') {
     };
   }
 
-  if (typeof (globalThis as any).queueMicrotask === 'undefined') {
-    (globalThis as any).queueMicrotask = (fn: () => void) => {
+  if (typeof globalThis.queueMicrotask === 'undefined') {
+    globalThis.queueMicrotask = (fn: () => void) => {
       Promise.resolve().then(fn);
     };
   }
 
-  if (typeof (globalThis as any).requestAnimationFrame === 'undefined') {
-    (globalThis as any).requestAnimationFrame = (fn: () => void) => {
+  if (typeof globalThis.requestAnimationFrame === 'undefined') {
+    globalThis.requestAnimationFrame = (fn: () => void) => {
       return setTimeout(fn, 16);
     };
   }
 
-  if (typeof (globalThis as any).cancelAnimationFrame === 'undefined') {
-    (globalThis as any).cancelAnimationFrame = (id: number) => {
+  if (typeof globalThis.cancelAnimationFrame === 'undefined') {
+    globalThis.cancelAnimationFrame = (id: number) => {
       clearTimeout(id);
     };
   }
 
   // Define browser observer APIs
-  if (typeof (globalThis as any).ResizeObserver === 'undefined') {
-    (globalThis as any).ResizeObserver = class ResizeObserver {
+  if (typeof globalThis.ResizeObserver === 'undefined') {
+    globalThis.ResizeObserver = class ResizeObserver {
       constructor() {}
       observe() {}
       unobserve() {}
@@ -122,8 +122,8 @@ if (typeof window === 'undefined') {
     };
   }
 
-  if (typeof (globalThis as any).IntersectionObserver === 'undefined') {
-    (globalThis as any).IntersectionObserver = class IntersectionObserver {
+  if (typeof globalThis.IntersectionObserver === 'undefined') {
+    globalThis.IntersectionObserver = class IntersectionObserver {
       constructor() {}
       observe() {}
       unobserve() {}
@@ -131,8 +131,8 @@ if (typeof window === 'undefined') {
     };
   }
 
-  if (typeof (globalThis as any).MutationObserver === 'undefined') {
-    (globalThis as any).MutationObserver = class MutationObserver {
+  if (typeof globalThis.MutationObserver === 'undefined') {
+    globalThis.MutationObserver = class MutationObserver {
       constructor() {}
       observe() {}
       disconnect() {}
@@ -141,8 +141,8 @@ if (typeof window === 'undefined') {
   }
 
   // Define EventTarget and Event classes
-  if (typeof (globalThis as any).EventTarget === 'undefined') {
-    (globalThis as any).EventTarget = class EventTarget {
+  if (typeof globalThis.EventTarget === 'undefined') {
+    globalThis.EventTarget = class EventTarget {
       constructor() {}
       addEventListener() {}
       removeEventListener() {}
@@ -150,8 +150,8 @@ if (typeof window === 'undefined') {
     };
   }
 
-  if (typeof (globalThis as any).Event === 'undefined') {
-    (globalThis as any).Event = class Event {
+  if (typeof globalThis.Event === 'undefined') {
+    globalThis.Event = class Event {
       constructor(type: string) {
         this.type = type;
       }
@@ -163,8 +163,8 @@ if (typeof window === 'undefined') {
     };
   }
 
-  if (typeof (globalThis as any).CustomEvent === 'undefined') {
-    (globalThis as any).CustomEvent = class CustomEvent extends (globalThis as any).Event {
+  if (typeof globalThis.CustomEvent === 'undefined') {
+    globalThis.CustomEvent = class CustomEvent extends globalThis.Event {
       constructor(type: string, detail?: any) {
         super(type);
         this.detail = detail;

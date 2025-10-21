@@ -9,6 +9,7 @@
  */
 
 import type { Page } from '@playwright/test';
+import type { Database } from '@/types/database';
 
 export interface PerformanceMetrics {
   // Core Web Vitals
@@ -106,7 +107,7 @@ export class PerformanceMonitor {
             const firstEntry = entries[0];
             clearTimeout(timeout);
             if (firstEntry && 'processingStart' in firstEntry) {
-              resolve((firstEntry as any).processingStart - firstEntry.startTime);
+              resolve(firstEntry.processingStart - firstEntry.startTime);
             } else {
               resolve(0);
             }
@@ -121,8 +122,8 @@ export class PerformanceMonitor {
           let clsValue = 0;
           new PerformanceObserver((list) => {
             for (const entry of list.getEntries()) {
-              if (!(entry as any).hadRecentInput) {
-                clsValue += (entry as any).value;
+              if (!entry.hadRecentInput) {
+                clsValue += entry.value;
               }
             }
             resolve(clsValue);
@@ -167,14 +168,14 @@ export class PerformanceMonitor {
       // Get DOM Content Loaded time
       const domContentLoaded = await page.evaluate(() => {
         const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
-        return navigation.domContentLoadedEventEnd - (navigation as any).navigationStart;
+        return navigation.domContentLoadedEventEnd - navigation.navigationStart;
       });
       metrics.domContentLoaded = domContentLoaded;
 
       // Get Load Complete time
       const loadComplete = await page.evaluate(() => {
         const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
-        return navigation.loadEventEnd - (navigation as any).navigationStart;
+        return navigation.loadEventEnd - navigation.navigationStart;
       });
       metrics.loadComplete = loadComplete;
 
@@ -195,9 +196,9 @@ export class PerformanceMonitor {
       const memoryInfo = await page.evaluate(() => {
         if ('memory' in performance) {
           return {
-            usedJSHeapSize: (performance as any).memory.usedJSHeapSize,
-            totalJSHeapSize: (performance as any).memory.totalJSHeapSize,
-            jsHeapSizeLimit: (performance as any).memory.jsHeapSizeLimit,
+            usedJSHeapSize: performance.memory.usedJSHeapSize,
+            totalJSHeapSize: performance.memory.totalJSHeapSize,
+            jsHeapSizeLimit: performance.memory.jsHeapSizeLimit,
           };
         }
         return null;

@@ -1,5 +1,11 @@
 import type { NextRequest} from 'next/server';
-import { NextResponse } from 'next/server'
+import type { Database } from '@/types/database';
+import { NextResponse } from 'next/server';
+
+// Define the profile type based on the selected fields
+type UserProfile = Pick<Database['public']['Tables']['user_profiles']['Row'], 
+  'username' | 'trust_tier' | 'display_name' | 'avatar_url' | 'bio' | 'is_active'
+>;
 
 import { rateLimiters } from '@/lib/security/rate-limit'
 import { logger } from '@/lib/utils/logger'
@@ -55,8 +61,8 @@ export async function POST(request: NextRequest) {
     const { data: profile, error: profileError } = await supabaseClient
       .from('user_profiles')
       .select('username, trust_tier, display_name, avatar_url, bio, is_active')
-      .eq('user_id', authData.user.id as any)
-      .single()
+      .eq('user_id', authData.user.id)
+      .single() as { data: UserProfile | null; error: any }
 
     if (profileError || !profile) {
       logger.warn('User profile not found after login', { userId: authData.user.id })
@@ -67,7 +73,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if user is active
-    if (!(profile as any).is_active) {
+    if (!profile.is_active) {
       logger.warn('Inactive user attempted login', { userId: authData.user.id })
       return NextResponse.json(
         { message: 'Account is deactivated' },
@@ -78,7 +84,7 @@ export async function POST(request: NextRequest) {
     logger.info('User logged in successfully', { 
       userId: authData.user.id, 
       email: authData.user.email,
-      username: (profile as any).username 
+      username: profile.username 
     })
 
     return NextResponse.json({
@@ -86,12 +92,12 @@ export async function POST(request: NextRequest) {
       user: {
         id: authData.user.id,
         email: authData.user.email,
-        username: (profile as any).username,
-        trust_tier: (profile as any).trust_tier,
-        display_name: (profile as any).display_name,
-        avatar_url: (profile as any).avatar_url,
-        bio: (profile as any).bio,
-        is_active: (profile as any).is_active
+        username: profile.username,
+        trust_tier: profile.trust_tier,
+        display_name: profile.display_name,
+        avatar_url: profile.avatar_url,
+        bio: profile.bio,
+        is_active: profile.is_active
       },
       session: authData.session,
       token: authData.session?.access_token
