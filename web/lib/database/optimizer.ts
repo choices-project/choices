@@ -18,10 +18,9 @@ import {
 } from '@/lib/validation/validator'
 import { getSupabaseServerClient } from '@/utils/supabase/server'
 
-import type { UserProfile } from '../core/types'
 
 // Minimal user profile type for optimization queries
-type MinimalUserProfile = {
+interface MinimalUserProfile {
   user_id: string
   username: string
   email: string
@@ -31,7 +30,7 @@ type MinimalUserProfile = {
 }
 
 // Polls response type for optimization queries
-type PollsResponse = {
+interface PollsResponse {
   polls: Poll[]
   total: number
   page: number
@@ -61,7 +60,7 @@ type VoteWithUserInfo = Vote & {
 }
 
 // Vote grouped by choice type for optimization queries
-type VoteGroupedByChoice = {
+interface VoteGroupedByChoice {
   choiceId: string
   choice: string
   votes: Vote[]
@@ -69,7 +68,7 @@ type VoteGroupedByChoice = {
 }
 
 // Analytics data type for optimization queries
-type AnalyticsData = {
+interface AnalyticsData {
   metric?: string
   value?: number
   timestamp?: string
@@ -80,7 +79,7 @@ type AnalyticsData = {
 }
 
 // Cache database entry type for optimization queries
-type CacheDatabaseEntry = {
+interface CacheDatabaseEntry {
   key: string
   value: any
   expires_at: string
@@ -89,7 +88,7 @@ type CacheDatabaseEntry = {
 }
 
 // Database health status type for optimization queries
-type DatabaseHealthStatus = {
+interface DatabaseHealthStatus {
   status: 'healthy' | 'degraded' | 'unhealthy'
   healthPercentage: number
   responseTime: number

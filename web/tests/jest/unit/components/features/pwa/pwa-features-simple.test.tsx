@@ -49,7 +49,13 @@ jest.mock('lucide-react', () => ({
   X: () => <div data-testid="x-icon" />,
 }));
 
-// Mock Zustand PWA store hooks
+
+import React from 'react';
+import { render, screen } from '@testing-library/react';
+import { BrowserRouter } from 'react-router-dom';
+import PWAFeatures from '@/features/pwa/components/PWAFeatures';
+
+// Mock the PWA store hooks directly
 jest.mock('@/lib/stores', () => ({
   usePWAInstallation: jest.fn(() => ({
     isInstalled: false,
@@ -113,11 +119,6 @@ jest.mock('@/lib/stores', () => ({
     clearError: jest.fn(),
   })),
 }));
-
-import React from 'react';
-import { render, screen } from '@testing-library/react';
-import { BrowserRouter } from 'react-router-dom';
-import PWAFeatures from '@/features/pwa/components/PWAFeatures';
 
 // Mock Notification API
 Object.defineProperty(window, 'Notification', {

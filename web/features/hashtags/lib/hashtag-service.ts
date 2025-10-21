@@ -25,7 +25,7 @@ function transformHashtagData(data: any): Hashtag {
   return {
     ...data,
     description: data.description || undefined,
-    category: (data.category as any) || 'general', // Cast to any to handle string -> HashtagCategory conversion
+    category: (data.category) || 'general', // Cast to any to handle string -> HashtagCategory conversion
     created_by: data.created_by || undefined,
     follower_count: data.follower_count || 0,
     usage_count: data.usage_count || 0,

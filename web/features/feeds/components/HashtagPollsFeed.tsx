@@ -64,7 +64,7 @@ export default function HashtagPollsFeed({
       setIsLoading(true);
       setError(null);
 
-      const response = await fetch(`/api/feeds/interest-based?userId=${userId}&includeTrending=true&limit=${maxPolls}`);
+      const response = await fetch(`/api/feeds?userId=${userId}&limit=${maxPolls}`);
       if (!response.ok) {
         throw new Error(`Failed to load feed: ${response.statusText}`);
       }

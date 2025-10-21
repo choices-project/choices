@@ -11,7 +11,13 @@ import type { VoteRequest, VoteResponse, PollData, VotingMethod } from '@/lib/vo
 
 // Mock the logger
 jest.mock('@/lib/utils/logger', () => ({
-  devLog: jest.fn()
+  devLog: jest.fn(),
+  logger: {
+    info: jest.fn(),
+    error: jest.fn(),
+    warn: jest.fn(),
+    debug: jest.fn()
+  }
 }))
 
 describe('VoteEngine', () => {
@@ -73,11 +79,13 @@ describe('VoteEngine', () => {
   describe('Initialization', () => {
     it('should initialize with provided configuration', () => {
       expect(engine).toBeDefined()
+      expect(engine).toBeInstanceOf(VoteEngine)
     })
 
     it('should use default configuration when none provided', () => {
       const defaultEngine = new VoteEngine()
       expect(defaultEngine).toBeDefined()
+      expect(defaultEngine).toBeInstanceOf(VoteEngine)
     })
   })
 
@@ -85,6 +93,7 @@ describe('VoteEngine', () => {
     it('should validate single-choice votes correctly', async () => {
       const validation = await engine.validateVote(mockVoteRequest, mockPoll)
       
+      expect(validation).toBeDefined()
       expect(validation.valid).toBe(true)
       expect(validation.errors).toHaveLength(0)
     })
@@ -94,6 +103,7 @@ describe('VoteEngine', () => {
       
       const validation = await engine.validateVote(invalidRequest, mockPoll)
       
+      expect(validation).toBeDefined()
       expect(validation.valid).toBe(false)
       expect(validation.errors).toContain('Poll ID mismatch')
     })

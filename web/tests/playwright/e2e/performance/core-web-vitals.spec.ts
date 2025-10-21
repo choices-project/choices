@@ -5,8 +5,8 @@ import {
   measureResourcePerformance,
   assertPerformanceMetrics,
   DEFAULT_THRESHOLDS
-} from './performance-utils';
-import type { PerformanceMetrics } from './performance-utils';
+} from '../performance-utils';
+import type { PerformanceMetrics } from '../performance-utils';
 
 /**
  * Core Web Vitals Performance Tests

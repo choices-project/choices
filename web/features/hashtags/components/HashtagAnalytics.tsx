@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { TrendingUp, Users, MessageSquare, Eye, Heart, Share2, BarChart3, Hash } from 'lucide-react';
+import { TrendingUp, Users, BarChart3, Hash } from 'lucide-react';
 import { getHashtagStats, getTrendingHashtags } from '../lib/hashtag-service';
 import type { HashtagStatsResponse, TrendingHashtag } from '../types';
 

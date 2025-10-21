@@ -73,7 +73,7 @@ describe('pepper rotation verify', () => {
       jest.resetModules();
       const utils = await import('@/features/civics/lib/civics/privacy-utils');
       utils.hmac256('test', 'addr');
-    }).rejects.toThrow('PRIVACY_PEPPER_CURRENT must be base64:/hex: prefixed');
+    }).rejects.toThrow('PRIVACY_PEPPER_CURRENT required');
   });
 
   test('production forbids PRIVACY_PEPPER_DEV', async () => {

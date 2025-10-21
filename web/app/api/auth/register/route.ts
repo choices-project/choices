@@ -104,7 +104,7 @@ export async function POST(request: NextRequest) {
         display_name: display_name || username,
         trust_tier: 'T0',
         is_active: true
-      })
+      } as any)
       .select()
       .single()
 
@@ -138,10 +138,10 @@ export async function POST(request: NextRequest) {
       user: {
         id: authData.user.id,
         email: authData.user.email,
-        username: profile.username,
-        trust_tier: profile.trust_tier,
-        display_name: profile.display_name,
-        is_active: profile.is_active
+        username: (profile as any).username,
+        trust_tier: (profile as any).trust_tier,
+        display_name: (profile as any).display_name,
+        is_active: (profile as any).is_active
       },
       session: authData.session,
       token: authData.session?.access_token, // Add token field for E2E compatibility

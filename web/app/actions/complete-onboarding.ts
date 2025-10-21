@@ -59,17 +59,19 @@ export const completeOnboarding = createSecureServerAction(
     }
 
     // Update or create user profile to mark onboarding as completed
-    const { error: updateError } = await supabaseClient
+    const updateData = {
+      onboarding_completed: true,
+      preferences: {
+        notifications: validatedData.notifications,
+        dataSharing: validatedData.dataSharing,
+        theme: validatedData.theme
+      },
+      updated_at: new Date().toISOString()
+    };
+    
+    const { error: updateError } = await (supabaseClient as any)
       .from('user_profiles')
-      .update({
-        onboarding_completed: true,
-        preferences: {
-          notifications: validatedData.notifications,
-          dataSharing: validatedData.dataSharing,
-          theme: validatedData.theme
-        },
-        updated_at: new Date().toISOString()
-      })
+      .update(updateData)
       .eq('user_id', user.userId)
 
     if (updateError) {

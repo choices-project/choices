@@ -3,69 +3,36 @@
  * 
  * Comprehensive utilities for testing database operations with proper
  * setup, teardown, and realistic test scenarios.
+ * 
+ * For INTEGRATION TESTS - uses real database connections
+ * For UNIT TESTS - use mocks instead
  */
+
+import { createClient } from '@supabase/supabase-js';
 
 /**
  * Setup test database with proper configuration
+ * Uses REAL database for integration testing
  */
 export const setupTestDatabase = async () => {
-  // Mock Supabase client for testing
-  const mockSupabaseClient = {
-    auth: {
-      signInWithPassword: jest.fn(),
-      signUp: jest.fn(),
-      signOut: jest.fn(),
-      getUser: jest.fn(),
-      getSession: jest.fn()
-    },
-    from: jest.fn().mockReturnValue({
-      select: jest.fn().mockReturnValue({
-        eq: jest.fn().mockReturnValue({
-          single: jest.fn().mockResolvedValue({
-            data: null,
-            error: null
-          }),
-          limit: jest.fn().mockResolvedValue({
-            data: [],
-            error: null
-          })
-        }),
-        limit: jest.fn().mockResolvedValue({
-          data: [],
-          error: null
-        })
-      }),
-      insert: jest.fn().mockResolvedValue({
-        data: [{ id: 'test-id' }],
-        error: null
-      }),
-      update: jest.fn().mockReturnValue({
-        eq: jest.fn().mockResolvedValue({
-          data: [{ id: 'test-id' }],
-          error: null
-        })
-      }),
-      delete: jest.fn().mockReturnValue({
-        eq: jest.fn().mockResolvedValue({
-          data: [],
-          error: null
-        })
-      })
-    })
-  };
-
-  // Mock environment variables
-  process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://test.supabase.co';
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = 'test-anon-key';
-  process.env.SUPABASE_SERVICE_ROLE_KEY = 'test-service-role-key';
-
-  return mockSupabaseClient;
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
+  
+  if (!supabaseUrl || !supabaseKey) {
+    throw new Error('Supabase credentials not found. Please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY');
+  }
+  
+  const realSupabaseClient = createClient(supabaseUrl, supabaseKey);
+  
+  // Return real client for integration testing
+  return realSupabaseClient;
 };
 
 /**
  * Create test user with proper credentials
+ * Uses REAL database operations
  */
-export const createTestUser = async () => {
+export const createTestUser = async (supabase: any) => {
   const testUser = {
     id: 'test-user-id',
     email: 'test@example.com',
@@ -79,6 +46,21 @@ export const createTestUser = async () => {
       updated_at: new Date().toISOString()
     }
   };
+
+  // Try to create the user in the real database
+  try {
+    const { data, error } = await supabase
+      .from('profiles')
+      .insert(testUser.profile)
+      .select()
+      .single();
+    
+    if (error) {
+      console.warn('Could not create test user in database:', error);
+    }
+  } catch (error) {
+    console.warn('Database operation failed, using mock user:', error);
+  }
 
   return testUser;
 };
@@ -97,228 +79,81 @@ export const createTestPoll = () => ({
   voting_method: 'single-choice',
   status: 'active',
   created_at: new Date().toISOString(),
-  updated_at: new Date().toISOString(),
-  created_by: 'test-user-id'
+  close_at: new Date(Date.now() + 86400000).toISOString(), // 24 hours from now
+  created_by: 'test-user-id',
+  total_votes: 0,
+  participation: 0,
+  privacy_level: 'public',
+  category: 'test',
+  tags: ['test'],
+  sponsors: [],
+  settings: {},
+  hashtags: [],
+  poll_settings: {}
 });
 
 /**
- * Create test vote data
+ * Track test data for cleanup
  */
-export const createTestVote = () => ({
-  id: 'test-vote-id',
-  poll_id: 'test-poll-id',
-  user_id: 'test-user-id',
-  choice: 'option-1',
-  created_at: new Date().toISOString()
-});
+const testDataIds: { [key: string]: string[] } = {
+  polls: [],
+  profiles: [],
+  votes: []
+};
 
-/**
- * Mock authentication for tests
- */
-export const mockAuthentication = async (supabaseClient: any, testUser: any) => {
-  // Mock successful authentication
-  supabaseClient.auth.signInWithPassword.mockResolvedValue({
-    data: {
-      user: testUser,
-      session: {
-        access_token: 'test-access-token',
-        refresh_token: 'test-refresh-token',
-        user: testUser
-      }
-    },
-    error: null
-  });
-
-  // Mock get user
-  supabaseClient.auth.getUser.mockResolvedValue({
-    data: { user: testUser },
-    error: null
-  });
-
-  // Mock get session
-  supabaseClient.auth.getSession.mockResolvedValue({
-    data: {
-      session: {
-        access_token: 'test-access-token',
-        refresh_token: 'test-refresh-token',
-        user: testUser
-      }
-    },
-    error: null
-  });
-
-  return testUser;
+export const trackTestData = (table: string, id: string) => {
+  if (!testDataIds[table]) {
+    testDataIds[table] = [];
+  }
+  testDataIds[table].push(id);
 };
 
 /**
- * Mock database operations for polls
+ * Clean up test database
+ * Removes all test data created during tests
  */
-export const mockPollOperations = (supabaseClient: any) => {
-  const pollsTable = supabaseClient.from('polls');
-  
-  // Mock poll creation
-  pollsTable.insert.mockResolvedValue({
-    data: [{ id: 'test-poll-id' }],
-    error: null
-  });
+export const cleanupTestDatabase = async (supabase: any) => {
+  if (!supabase) return;
 
-  // Mock poll retrieval
-  pollsTable.select.mockReturnValue({
-    eq: jest.fn().mockReturnValue({
-      single: jest.fn().mockResolvedValue({
-        data: {
-          id: 'test-poll-id',
-          title: 'Test Poll',
-          status: 'active'
-        },
-        error: null
-      }),
-      limit: jest.fn().mockResolvedValue({
-        data: [
-          {
-            id: 'test-poll-id',
-            title: 'Test Poll',
-            status: 'active'
-          }
-        ],
-        error: null
-      })
-    })
-  });
-
-  return pollsTable;
-};
-
-/**
- * Mock database operations for votes
- */
-export const mockVoteOperations = (supabaseClient: any) => {
-  const votesTable = supabaseClient.from('votes');
-  
-  // Mock vote creation
-  votesTable.insert.mockResolvedValue({
-    data: [{ id: 'test-vote-id' }],
-    error: null
-  });
-
-  // Mock vote retrieval
-  votesTable.select.mockReturnValue({
-    eq: jest.fn().mockReturnValue({
-      limit: jest.fn().mockResolvedValue({
-        data: [
-          {
-            id: 'test-vote-id',
-            poll_id: 'test-poll-id',
-            user_id: 'test-user-id',
-            choice: 'option-1'
-          }
-        ],
-        error: null
-      })
-    })
-  });
-
-  return votesTable;
-};
-
-/**
- * Mock database errors for testing error handling
- */
-export const mockDatabaseError = (supabaseClient: any, errorType: 'connection' | 'auth' | 'permission' | 'validation') => {
-  const errorMessages = {
-    connection: 'Database connection failed',
-    auth: 'Authentication failed',
-    permission: 'Insufficient permissions',
-    validation: 'Validation failed'
-  };
-
-  const error = new Error(errorMessages[errorType]);
-  
-  // Mock error for all operations
-  supabaseClient.from.mockReturnValue({
-    select: jest.fn().mockReturnValue({
-      eq: jest.fn().mockReturnValue({
-        single: jest.fn().mockResolvedValue({
-          data: null,
-          error
-        }),
-        limit: jest.fn().mockResolvedValue({
-          data: null,
-          error
-        })
-      })
-    }),
-    insert: jest.fn().mockResolvedValue({
-      data: null,
-      error
-    }),
-    update: jest.fn().mockReturnValue({
-      eq: jest.fn().mockResolvedValue({
-        data: null,
-        error
-      })
-    }),
-    delete: jest.fn().mockReturnValue({
-      eq: jest.fn().mockResolvedValue({
-        data: null,
-        error
-      })
-    })
-  });
-
-  return error;
-};
-
-/**
- * Clean up test database after tests
- */
-export const cleanupTestDatabase = async () => {
-  // Clear all mocks
-  jest.clearAllMocks();
-  
-  // Reset environment variables
-  delete process.env.NEXT_PUBLIC_SUPABASE_URL;
-  delete process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  delete process.env.SUPABASE_SERVICE_ROLE_KEY;
-};
-
-/**
- * Test database connection
- */
-export const testDatabaseConnection = async (supabaseClient: any) => {
   try {
-    // Test basic connection
-    const result = await supabaseClient.from('polls').select('id').limit(1);
-    return result.error === null;
+    // Clean up test data in reverse order of dependencies
+    if (testDataIds.votes.length > 0) {
+      await supabase.from('votes').delete().in('id', testDataIds.votes);
+    }
+    
+    if (testDataIds.polls.length > 0) {
+      await supabase.from('polls').delete().in('id', testDataIds.polls);
+    }
+    
+    if (testDataIds.profiles.length > 0) {
+      await supabase.from('profiles').delete().in('id', testDataIds.profiles);
+    }
+    
+    console.log('Test database cleanup completed');
   } catch (error) {
-    return false;
+    console.warn('Error during test database cleanup:', error);
   }
 };
 
 /**
- * Test authentication flow
+ * Verify database connection
  */
-export const testAuthenticationFlow = async (supabaseClient: any, testUser: any) => {
+export const verifyDatabaseConnection = async (supabase: any) => {
   try {
-    // Test sign in
-    const signInResult = await supabaseClient.auth.signInWithPassword({
-      email: testUser.email,
-      password: testUser.password
-    });
+    const { data, error } = await supabase
+      .from('polls')
+      .select('count')
+      .limit(1);
     
-    if (signInResult.error) {
+    if (error) {
+      console.warn('Database connection verification failed:', error);
       return false;
     }
     
-    // Test get user
-    const userResult = await supabaseClient.auth.getUser();
-    
-    if (userResult.error) {
-      return false;
-    }
-    
+    console.log('Database connection verified');
     return true;
   } catch (error) {
+    console.warn('Database connection verification error:', error);
     return false;
   }
 };

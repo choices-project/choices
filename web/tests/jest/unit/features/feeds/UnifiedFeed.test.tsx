@@ -13,8 +13,23 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import { jest } from '@jest/globals';
 import { RealComponentTester, realComponentHelpers } from '@/lib/testing/realComponentTesting';
-let UnifiedFeed: any;
 import * as Stores from '@/lib/stores';
+import UnifiedFeed from '@/features/feeds/components/UnifiedFeed';
+
+// Mock window.matchMedia
+Object.defineProperty(window, 'matchMedia', {
+  value: jest.fn().mockImplementation(query => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addListener: jest.fn(),
+    removeListener: jest.fn(),
+    addEventListener: jest.fn(),
+    removeEventListener: jest.fn(),
+    dispatchEvent: jest.fn(),
+  })),
+  writable: true,
+});
 
 // Shared mock state for aggregated stores used by UnifiedFeed
 const mockStores = {
@@ -51,9 +66,26 @@ jest.mock('@/lib/stores', () => {
 jest.mock('@/lib/stores/hashtagStore', () => {
   const hashtagActions = { getTrendingHashtags: jest.fn() };
   const hashtagStats = { trendingCount: 0 };
+  
+  // Create stable references to avoid infinite loops
+  const stableHashtagStore = {
+    hashtags: [],
+    trendingHashtags: [],
+    isLoading: false,
+    error: null,
+    searchHashtags: jest.fn(),
+    getTrendingHashtags: jest.fn(),
+    getSuggestions: jest.fn(),
+  };
+  
   return {
     __esModule: true,
-    useHashtagStore: (selector?: any) => (typeof selector === 'function' ? selector(mockStores.hashtagStore) : mockStores.hashtagStore),
+    useHashtagStore: (selector?: any) => {
+      if (typeof selector === 'function') {
+        return selector(stableHashtagStore);
+      }
+      return stableHashtagStore;
+    },
     useHashtagActions: () => hashtagActions,
     useHashtagStats: () => hashtagStats,
   };
@@ -198,7 +230,9 @@ D('UnifiedFeed Component - Real Component Testing', () => {
   beforeAll(async () => {
     jest.resetModules();
     // Import the component after mocks are registered so it binds to mocked modules
-    UnifiedFeed = (await import('@/features/feeds/components/UnifiedFeed')).default;
+    const { default: UnifiedFeedComponent } = await import('@/features/feeds/components/UnifiedFeed');
+    // Store the component for use in tests
+    (global as any).UnifiedFeed = UnifiedFeedComponent;
   });
 
   beforeEach(() => {

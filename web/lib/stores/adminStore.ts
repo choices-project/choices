@@ -20,7 +20,6 @@ import type {
   ActivityItem,
   AdminUser,
 } from '@/features/admin/types';
-import type { Database } from '@/types/database'
 import { logger } from '@/lib/utils/logger';
 import { getSupabaseClient } from '@/utils/supabase/client';
 

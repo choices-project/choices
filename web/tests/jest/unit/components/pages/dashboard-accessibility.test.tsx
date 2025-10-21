@@ -1,7 +1,7 @@
 /**
  * Dashboard Accessibility Tests - PHASE 3 COMPREHENSIVE TESTING
  * 
- * Tests accessibility compliance for the SuperiorMobileFeed component:
+ * Tests accessibility compliance for the UnifiedFeed component:
  * - WCAG 2.1 AA compliance
  * - Screen reader compatibility
  * - Keyboard navigation
@@ -15,7 +15,7 @@ import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { BrowserRouter } from 'react-router-dom';
-import SuperiorMobileFeed from '@/features/feeds/components/SuperiorMobileFeed';
+import UnifiedFeed from '@/features/feeds/components/UnifiedFeed';
 import { T } from '@/lib/testing/testIds';
 
 // Mock Next.js router
@@ -137,7 +137,7 @@ describe('Dashboard Accessibility Tests', () => {
     it('should have proper heading hierarchy', async () => {
       render(
         <BrowserRouter>
-          <SuperiorMobileFeed />
+          <UnifiedFeed />
         </BrowserRouter>
       );
 
@@ -158,7 +158,7 @@ describe('Dashboard Accessibility Tests', () => {
     it('should have proper ARIA landmarks', async () => {
       render(
         <BrowserRouter>
-          <SuperiorMobileFeed />
+          <UnifiedFeed />
         </BrowserRouter>
       );
 
@@ -183,7 +183,7 @@ describe('Dashboard Accessibility Tests', () => {
     it('should have proper form labels and controls', async () => {
       render(
         <BrowserRouter>
-          <SuperiorMobileFeed />
+          <UnifiedFeed />
         </BrowserRouter>
       );
 
@@ -202,7 +202,7 @@ describe('Dashboard Accessibility Tests', () => {
     it('should have proper button accessibility', async () => {
       render(
         <BrowserRouter>
-          <SuperiorMobileFeed />
+          <UnifiedFeed />
         </BrowserRouter>
       );
 
@@ -228,7 +228,7 @@ describe('Dashboard Accessibility Tests', () => {
     it('should have proper alt text for images', async () => {
       render(
         <BrowserRouter>
-          <SuperiorMobileFeed />
+          <UnifiedFeed />
         </BrowserRouter>
       );
 
@@ -244,7 +244,7 @@ describe('Dashboard Accessibility Tests', () => {
     it('should have proper ARIA descriptions for complex elements', async () => {
       render(
         <BrowserRouter>
-          <SuperiorMobileFeed />
+          <UnifiedFeed />
         </BrowserRouter>
       );
 
@@ -261,7 +261,7 @@ describe('Dashboard Accessibility Tests', () => {
     it('should announce dynamic content changes', async () => {
       render(
         <BrowserRouter>
-          <SuperiorMobileFeed />
+          <UnifiedFeed />
         </BrowserRouter>
       );
 
@@ -279,7 +279,7 @@ describe('Dashboard Accessibility Tests', () => {
     it('should be fully navigable with keyboard', async () => {
       render(
         <BrowserRouter>
-          <SuperiorMobileFeed />
+          <UnifiedFeed />
         </BrowserRouter>
       );
 
@@ -299,7 +299,7 @@ describe('Dashboard Accessibility Tests', () => {
     it('should have proper tab order', async () => {
       render(
         <BrowserRouter>
-          <SuperiorMobileFeed />
+          <UnifiedFeed />
         </BrowserRouter>
       );
 
@@ -317,7 +317,7 @@ describe('Dashboard Accessibility Tests', () => {
     it('should handle keyboard shortcuts', async () => {
       render(
         <BrowserRouter>
-          <SuperiorMobileFeed />
+          <UnifiedFeed />
         </BrowserRouter>
       );
 
@@ -337,7 +337,7 @@ describe('Dashboard Accessibility Tests', () => {
     it('should have sufficient color contrast', async () => {
       render(
         <BrowserRouter>
-          <SuperiorMobileFeed />
+          <UnifiedFeed />
         </BrowserRouter>
       );
 
@@ -352,7 +352,7 @@ describe('Dashboard Accessibility Tests', () => {
     it('should not rely solely on color for information', async () => {
       render(
         <BrowserRouter>
-          <SuperiorMobileFeed />
+          <UnifiedFeed />
         </BrowserRouter>
       );
 
@@ -371,7 +371,7 @@ describe('Dashboard Accessibility Tests', () => {
     it('should manage focus properly on navigation', async () => {
       render(
         <BrowserRouter>
-          <SuperiorMobileFeed />
+          <UnifiedFeed />
         </BrowserRouter>
       );
 
@@ -387,7 +387,7 @@ describe('Dashboard Accessibility Tests', () => {
     it('should trap focus in modals and overlays', async () => {
       render(
         <BrowserRouter>
-          <SuperiorMobileFeed />
+          <UnifiedFeed />
         </BrowserRouter>
       );
 
@@ -412,7 +412,7 @@ describe('Dashboard Accessibility Tests', () => {
 
       render(
         <BrowserRouter>
-          <SuperiorMobileFeed />
+          <UnifiedFeed />
         </BrowserRouter>
       );
 
@@ -434,7 +434,7 @@ describe('Dashboard Accessibility Tests', () => {
     it('should support touch accessibility', async () => {
       render(
         <BrowserRouter>
-          <SuperiorMobileFeed />
+          <UnifiedFeed />
         </BrowserRouter>
       );
 
@@ -451,7 +451,7 @@ describe('Dashboard Accessibility Tests', () => {
     it('should have proper ARIA attributes on all interactive elements', async () => {
       render(
         <BrowserRouter>
-          <SuperiorMobileFeed />
+          <UnifiedFeed />
         </BrowserRouter>
       );
 
@@ -467,7 +467,7 @@ describe('Dashboard Accessibility Tests', () => {
     it('should have proper ARIA states and properties', async () => {
       render(
         <BrowserRouter>
-          <SuperiorMobileFeed />
+          <UnifiedFeed />
         </BrowserRouter>
       );
 
@@ -486,7 +486,7 @@ describe('Dashboard Accessibility Tests', () => {
     it('should announce errors to screen readers', async () => {
       render(
         <BrowserRouter>
-          <SuperiorMobileFeed />
+          <UnifiedFeed />
         </BrowserRouter>
       );
 
@@ -511,7 +511,7 @@ describe('Dashboard Accessibility Tests', () => {
     it('should provide accessible error messages', async () => {
       render(
         <BrowserRouter>
-          <SuperiorMobileFeed />
+          <UnifiedFeed />
         </BrowserRouter>
       );
 
@@ -542,7 +542,7 @@ describe('Dashboard Accessibility Tests', () => {
       
       render(
         <BrowserRouter>
-          <SuperiorMobileFeed />
+          <UnifiedFeed />
         </BrowserRouter>
       );
 
@@ -560,7 +560,7 @@ describe('Dashboard Accessibility Tests', () => {
     it('should not cause layout shifts that affect screen readers', async () => {
       render(
         <BrowserRouter>
-          <SuperiorMobileFeed />
+          <UnifiedFeed />
         </BrowserRouter>
       );
 

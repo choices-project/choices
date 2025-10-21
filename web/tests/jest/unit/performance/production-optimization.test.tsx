@@ -5,7 +5,7 @@
 import React from 'react';
 import { render, screen, waitFor, act } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
-import SuperiorMobileFeed from '@/features/feeds/components/SuperiorMobileFeed';
+import UnifiedFeed from '@/features/feeds/components/UnifiedFeed';
 import { productionTracker, ProductionMetrics } from './production-tracker';
 import { logger } from '@/lib/utils/logger';
 

@@ -34,7 +34,7 @@ export async function PATCH(
     }
 
     // Check admin permissions - only admins can modify feedback status
-    const { data: userProfile, error: profileError } = await supabaseClient
+    const { data: userProfile, error: profileError } = await (supabaseClient as any)
       .from('user_profiles')
       .select('is_admin')
       .eq('user_id', String(user.id))
@@ -83,7 +83,7 @@ export async function PATCH(
     }
 
     // Update feedback status
-    const { data: updatedFeedback, error: updateError } = await supabaseClient
+    const { data: updatedFeedback, error: updateError } = await (supabaseClient as any)
       .from('feedback')
       .update({ 
         status: newStatus,

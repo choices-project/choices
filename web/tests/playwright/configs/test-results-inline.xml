@@ -1,856 +1,174 @@
-<testsuites id="" name="" tests="38" failures="19" skipped="0" errors="0" time="195.73290599999999">
-<testsuite name="core/authentication.spec.ts" timestamp="2025-10-20T17:44:51.200Z" hostname="chromium-inline" tests="4" failures="0" skipped="0" time="82.148" errors="0">
-<testcase name="Authentication › should load authentication page" classname="core/authentication.spec.ts" time="20.443">
+<testsuites id="" name="" tests="26" failures="3" skipped="19" errors="0" time="70.271195">
+<testsuite name="features/unified-feed.spec.ts" timestamp="2025-10-21T12:25:50.987Z" hostname="chromium-inline" tests="26" failures="3" skipped="19" time="369.128" errors="0">
+<testcase name="UnifiedFeed Component - E2E Tests › Basic Functionality › should load UnifiedFeed component with all essential elements" classname="features/unified-feed.spec.ts" time="26.84">
 </testcase>
-<testcase name="Authentication › should show authentication options" classname="core/authentication.spec.ts" time="20.31">
-</testcase>
-<testcase name="Authentication › should handle WebAuthn authentication" classname="core/authentication.spec.ts" time="20.548">
-</testcase>
-<testcase name="Authentication › should handle admin authentication" classname="core/authentication.spec.ts" time="20.847">
-</testcase>
-</testsuite>
-<testsuite name="core/basic-navigation.spec.ts" timestamp="2025-10-20T17:44:51.200Z" hostname="chromium-inline" tests="3" failures="1" skipped="0" time="44.635" errors="0">
-<testcase name="Basic Navigation › should load the home page" classname="core/basic-navigation.spec.ts" time="20.441">
-<failure message="basic-navigation.spec.ts:4:7 should load the home page" type="FAILURE">
-<![CDATA[  [chromium-inline] › core/basic-navigation.spec.ts:4:7 › Basic Navigation › should load the home page 
-
-    Error: expect(received).toContain(expected) // indexOf
-
-    Expected substring: "localhost:3000"
-    Received string:    "http://localhost:3002/"
-
-       9 |     
-      10 |     // Check that the page loaded successfully
-    > 11 |     expect(page.url()).toContain('localhost:3000');
-         |                        ^
-      12 |   });
-      13 |
-      14 |   test('should have a title', async ({ page }) => {
-        at /Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/core/basic-navigation.spec.ts:11:24
-
-    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
-    ../../../test-results/core-basic-navigation-Basi-a3a34-n-should-load-the-home-page-chromium-inline/test-failed-1.png
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-
-    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
-    ../../../test-results/core-basic-navigation-Basi-a3a34-n-should-load-the-home-page-chromium-inline/video.webm
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-
-    Error Context: ../../../test-results/core-basic-navigation-Basi-a3a34-n-should-load-the-home-page-chromium-inline/error-context.md
-]]>
-</failure>
-<system-out>
-<![CDATA[
-[[ATTACHMENT|../../../test-results/core-basic-navigation-Basi-a3a34-n-should-load-the-home-page-chromium-inline/test-failed-1.png]]
-
-[[ATTACHMENT|../../../test-results/core-basic-navigation-Basi-a3a34-n-should-load-the-home-page-chromium-inline/video.webm]]
-
-[[ATTACHMENT|../../../test-results/core-basic-navigation-Basi-a3a34-n-should-load-the-home-page-chromium-inline/error-context.md]]
-]]>
-</system-out>
-</testcase>
-<testcase name="Basic Navigation › should have a title" classname="core/basic-navigation.spec.ts" time="19.945">
-</testcase>
-<testcase name="Basic Navigation › should load auth page" classname="core/basic-navigation.spec.ts" time="4.249">
-</testcase>
-</testsuite>
-<testsuite name="core/onboarding-flow.spec.ts" timestamp="2025-10-20T17:44:51.200Z" hostname="chromium-inline" tests="3" failures="3" skipped="0" time="42.479" errors="0">
-<testcase name="Onboarding Flow › should load onboarding page" classname="core/onboarding-flow.spec.ts" time="13.91">
-<failure message="onboarding-flow.spec.ts:5:7 should load onboarding page" type="FAILURE">
-<![CDATA[  [chromium-inline] › core/onboarding-flow.spec.ts:5:7 › Onboarding Flow › should load onboarding page 
-
-    Error: Rate limiting is working correctly - this is expected behavior for security
-
-       at helpers/auth-helper.ts:100
-
-       98 |       console.log(`⏳ Rate limited detected - this is expected behavior!`);
-       99 |       console.log(`✅ Test is working correctly - rate limiting is functioning as designed`);
-    > 100 |       throw new Error('Rate limiting is working correctly - this is expected behavior for security');
-          |             ^
-      101 |     }
-      102 |     
-      103 |     // Fill in login form using the correct selectors
-        at Function.authenticateUser (/Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/helpers/auth-helper.ts:100:13)
-        at /Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/core/onboarding-flow.spec.ts:7:5
-
-    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
-    ../../../test-results/core-onboarding-flow-Onboa-0476e-should-load-onboarding-page-chromium-inline/test-failed-1.png
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-
-    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
-    ../../../test-results/core-onboarding-flow-Onboa-0476e-should-load-onboarding-page-chromium-inline/video.webm
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-
-    Error Context: ../../../test-results/core-onboarding-flow-Onboa-0476e-should-load-onboarding-page-chromium-inline/error-context.md
-]]>
-</failure>
-<system-out>
-<![CDATA[🔐 Attempting to authenticate user: test@example.com
-🧹 Clearing authentication state...
-⚠️ Could not clear storage: Error: page.evaluate: SecurityError: Failed to read the 'localStorage' property from 'Window': Access is denied for this document.
-    at UtilityScript.evaluate (<anonymous>:292:16)
-    at UtilityScript.<anonymous> (<anonymous>:1:44)
-📍 Navigated to auth page: http://localhost:3002/auth?e2e=1
-⏳ Rate limited detected - this is expected behavior!
-✅ Test is working correctly - rate limiting is functioning as designed
-
-[[ATTACHMENT|../../../test-results/core-onboarding-flow-Onboa-0476e-should-load-onboarding-page-chromium-inline/test-failed-1.png]]
-
-[[ATTACHMENT|../../../test-results/core-onboarding-flow-Onboa-0476e-should-load-onboarding-page-chromium-inline/video.webm]]
-
-[[ATTACHMENT|../../../test-results/core-onboarding-flow-Onboa-0476e-should-load-onboarding-page-chromium-inline/error-context.md]]
-]]>
-</system-out>
-</testcase>
-<testcase name="Onboarding Flow › should show onboarding steps" classname="core/onboarding-flow.spec.ts" time="14.499">
-<failure message="onboarding-flow.spec.ts:17:7 should show onboarding steps" type="FAILURE">
-<![CDATA[  [chromium-inline] › core/onboarding-flow.spec.ts:17:7 › Onboarding Flow › should show onboarding steps 
-
-    Error: Rate limiting is working correctly - this is expected behavior for security
-
-       at helpers/auth-helper.ts:100
-
-       98 |       console.log(`⏳ Rate limited detected - this is expected behavior!`);
-       99 |       console.log(`✅ Test is working correctly - rate limiting is functioning as designed`);
-    > 100 |       throw new Error('Rate limiting is working correctly - this is expected behavior for security');
-          |             ^
-      101 |     }
-      102 |     
-      103 |     // Fill in login form using the correct selectors
-        at Function.authenticateUser (/Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/helpers/auth-helper.ts:100:13)
-        at /Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/core/onboarding-flow.spec.ts:19:5
-
-    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
-    ../../../test-results/core-onboarding-flow-Onboa-acb57-hould-show-onboarding-steps-chromium-inline/test-failed-1.png
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-
-    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
-    ../../../test-results/core-onboarding-flow-Onboa-acb57-hould-show-onboarding-steps-chromium-inline/video.webm
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-
-    Error Context: ../../../test-results/core-onboarding-flow-Onboa-acb57-hould-show-onboarding-steps-chromium-inline/error-context.md
-]]>
-</failure>
-<system-out>
-<![CDATA[🔐 Attempting to authenticate user: test@example.com
-🧹 Clearing authentication state...
-⚠️ Could not clear storage: Error: page.evaluate: SecurityError: Failed to read the 'localStorage' property from 'Window': Access is denied for this document.
-    at UtilityScript.evaluate (<anonymous>:292:16)
-    at UtilityScript.<anonymous> (<anonymous>:1:44)
-📍 Navigated to auth page: http://localhost:3002/auth?e2e=1
-⏳ Rate limited detected - this is expected behavior!
-✅ Test is working correctly - rate limiting is functioning as designed
-
-[[ATTACHMENT|../../../test-results/core-onboarding-flow-Onboa-acb57-hould-show-onboarding-steps-chromium-inline/test-failed-1.png]]
-
-[[ATTACHMENT|../../../test-results/core-onboarding-flow-Onboa-acb57-hould-show-onboarding-steps-chromium-inline/video.webm]]
-
-[[ATTACHMENT|../../../test-results/core-onboarding-flow-Onboa-acb57-hould-show-onboarding-steps-chromium-inline/error-context.md]]
-]]>
-</system-out>
-</testcase>
-<testcase name="Onboarding Flow › should handle onboarding steps" classname="core/onboarding-flow.spec.ts" time="14.07">
-<failure message="onboarding-flow.spec.ts:38:7 should handle onboarding steps" type="FAILURE">
-<![CDATA[  [chromium-inline] › core/onboarding-flow.spec.ts:38:7 › Onboarding Flow › should handle onboarding steps 
-
-    Error: Rate limiting is working correctly - this is expected behavior for security
-
-       at helpers/auth-helper.ts:100
-
-       98 |       console.log(`⏳ Rate limited detected - this is expected behavior!`);
-       99 |       console.log(`✅ Test is working correctly - rate limiting is functioning as designed`);
-    > 100 |       throw new Error('Rate limiting is working correctly - this is expected behavior for security');
-          |             ^
-      101 |     }
-      102 |     
-      103 |     // Fill in login form using the correct selectors
-        at Function.authenticateUser (/Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/helpers/auth-helper.ts:100:13)
-        at /Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/core/onboarding-flow.spec.ts:40:5
-
-    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
-    ../../../test-results/core-onboarding-flow-Onboa-25f49-uld-handle-onboarding-steps-chromium-inline/test-failed-1.png
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-
-    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
-    ../../../test-results/core-onboarding-flow-Onboa-25f49-uld-handle-onboarding-steps-chromium-inline/video.webm
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-
-    Error Context: ../../../test-results/core-onboarding-flow-Onboa-25f49-uld-handle-onboarding-steps-chromium-inline/error-context.md
-]]>
-</failure>
-<system-out>
-<![CDATA[🔐 Attempting to authenticate user: test@example.com
-🧹 Clearing authentication state...
-⚠️ Could not clear storage: Error: page.evaluate: SecurityError: Failed to read the 'localStorage' property from 'Window': Access is denied for this document.
-    at UtilityScript.evaluate (<anonymous>:292:16)
-    at UtilityScript.<anonymous> (<anonymous>:1:44)
-📍 Navigated to auth page: http://localhost:3002/auth?e2e=1
-⏳ Rate limited detected - this is expected behavior!
-✅ Test is working correctly - rate limiting is functioning as designed
-
-[[ATTACHMENT|../../../test-results/core-onboarding-flow-Onboa-25f49-uld-handle-onboarding-steps-chromium-inline/test-failed-1.png]]
-
-[[ATTACHMENT|../../../test-results/core-onboarding-flow-Onboa-25f49-uld-handle-onboarding-steps-chromium-inline/video.webm]]
-
-[[ATTACHMENT|../../../test-results/core-onboarding-flow-Onboa-25f49-uld-handle-onboarding-steps-chromium-inline/error-context.md]]
-]]>
-</system-out>
-</testcase>
-</testsuite>
-<testsuite name="core/webauthn-functionality.spec.ts" timestamp="2025-10-20T17:44:51.200Z" hostname="chromium-inline" tests="9" failures="3" skipped="0" time="74.097" errors="0">
-<testcase name="WebAuthn Functionality › should load WebAuthn components" classname="core/webauthn-functionality.spec.ts" time="11.315">
-<failure message="webauthn-functionality.spec.ts:20:7 should load WebAuthn components" type="FAILURE">
-<![CDATA[  [chromium-inline] › core/webauthn-functionality.spec.ts:20:7 › WebAuthn Functionality › should load WebAuthn components 
-
-    Error: expect(received).toBeGreaterThan(expected)
-
-    Expected: > 0
-    Received:   0
-
-      24 |     
-      25 |     // Should have at least one WebAuthn element
-    > 26 |     expect(passkeyElements.length + passkeyButtons.length).toBeGreaterThan(0);
-         |                                                            ^
-      27 |   });
-      28 |
-      29 |   test('should show WebAuthn registration options', async ({ page }) => {
-        at /Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/core/webauthn-functionality.spec.ts:26:60
-
-    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
-    ../../../test-results/core-webauthn-functionalit-abf34-ld-load-WebAuthn-components-chromium-inline/test-failed-1.png
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-
-    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
-    ../../../test-results/core-webauthn-functionalit-abf34-ld-load-WebAuthn-components-chromium-inline/video.webm
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-
-    Error Context: ../../../test-results/core-webauthn-functionalit-abf34-ld-load-WebAuthn-components-chromium-inline/error-context.md
-]]>
-</failure>
-<system-out>
-<![CDATA[
-[[ATTACHMENT|../../../test-results/core-webauthn-functionalit-abf34-ld-load-WebAuthn-components-chromium-inline/test-failed-1.png]]
-
-[[ATTACHMENT|../../../test-results/core-webauthn-functionalit-abf34-ld-load-WebAuthn-components-chromium-inline/video.webm]]
-
-[[ATTACHMENT|../../../test-results/core-webauthn-functionalit-abf34-ld-load-WebAuthn-components-chromium-inline/error-context.md]]
-]]>
-</system-out>
-</testcase>
-<testcase name="WebAuthn Functionality › should show WebAuthn registration options" classname="core/webauthn-functionality.spec.ts" time="3.652">
-</testcase>
-<testcase name="WebAuthn Functionality › should show WebAuthn login options" classname="core/webauthn-functionality.spec.ts" time="10.384">
-</testcase>
-<testcase name="WebAuthn Functionality › should handle WebAuthn registration flow" classname="core/webauthn-functionality.spec.ts" time="10.042">
-</testcase>
-<testcase name="WebAuthn Functionality › should handle WebAuthn authentication flow" classname="core/webauthn-functionality.spec.ts" time="9.571">
-</testcase>
-<testcase name="WebAuthn Functionality › should handle WebAuthn errors gracefully" classname="core/webauthn-functionality.spec.ts" time="6.186">
-</testcase>
-<testcase name="WebAuthn Functionality › should support WebAuthn browser compatibility" classname="core/webauthn-functionality.spec.ts" time="6.244">
-<failure message="webauthn-functionality.spec.ts:168:7 should support WebAuthn browser compatibility" type="FAILURE">
-<![CDATA[  [chromium-inline] › core/webauthn-functionality.spec.ts:168:7 › WebAuthn Functionality › should support WebAuthn browser compatibility 
-
-    Error: expect(received).toBeGreaterThan(expected)
-
-    Expected: > 0
-    Received:   0
-
-      180 |       
-      181 |       // Should have WebAuthn UI elements
-    > 182 |       expect(passkeyElements.length + passkeyButtons.length).toBeGreaterThan(0);
-          |                                                              ^
-      183 |     } else {
-      184 |       // WebAuthn not supported, should show fallback
-      185 |       const fallbackElements = await page.locator('[data-testid*="fallback"], [data-testid*="alternative"]').all();
-        at /Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/core/webauthn-functionality.spec.ts:182:62
-
-    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
-    ../../../test-results/core-webauthn-functionalit-b5496-Authn-browser-compatibility-chromium-inline/test-failed-1.png
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-
-    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
-    ../../../test-results/core-webauthn-functionalit-b5496-Authn-browser-compatibility-chromium-inline/video.webm
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-
-    Error Context: ../../../test-results/core-webauthn-functionalit-b5496-Authn-browser-compatibility-chromium-inline/error-context.md
-]]>
-</failure>
-<system-out>
-<![CDATA[
-[[ATTACHMENT|../../../test-results/core-webauthn-functionalit-b5496-Authn-browser-compatibility-chromium-inline/test-failed-1.png]]
-
-[[ATTACHMENT|../../../test-results/core-webauthn-functionalit-b5496-Authn-browser-compatibility-chromium-inline/video.webm]]
-
-[[ATTACHMENT|../../../test-results/core-webauthn-functionalit-b5496-Authn-browser-compatibility-chromium-inline/error-context.md]]
-]]>
-</system-out>
-</testcase>
-<testcase name="WebAuthn Functionality › should handle WebAuthn user interaction" classname="core/webauthn-functionality.spec.ts" time="8.367">
-</testcase>
-<testcase name="WebAuthn Functionality › should validate WebAuthn form integration" classname="core/webauthn-functionality.spec.ts" time="8.336">
-<failure message="webauthn-functionality.spec.ts:216:7 should validate WebAuthn form integration" type="FAILURE">
-<![CDATA[  [chromium-inline] › core/webauthn-functionality.spec.ts:216:7 › WebAuthn Functionality › should validate WebAuthn form integration 
-
-    Error: expect(received).toBeGreaterThan(expected)
-
-    Expected: > 0
-    Received:   0
-
-      221 |     // Should have forms and WebAuthn buttons
-      222 |     expect(forms.length).toBeGreaterThan(0);
-    > 223 |     expect(passkeyButtons.length).toBeGreaterThan(0);
-          |                                   ^
-      224 |     
-      225 |     // WebAuthn buttons should be within or associated with forms
-      226 |     for (const button of passkeyButtons) {
-        at /Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/core/webauthn-functionality.spec.ts:223:35
-
-    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
-    ../../../test-results/core-webauthn-functionalit-f1b1f-e-WebAuthn-form-integration-chromium-inline/test-failed-1.png
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-
-    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
-    ../../../test-results/core-webauthn-functionalit-f1b1f-e-WebAuthn-form-integration-chromium-inline/video.webm
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-
-    Error Context: ../../../test-results/core-webauthn-functionalit-f1b1f-e-WebAuthn-form-integration-chromium-inline/error-context.md
-]]>
-</failure>
-<system-out>
-<![CDATA[
-[[ATTACHMENT|../../../test-results/core-webauthn-functionalit-f1b1f-e-WebAuthn-form-integration-chromium-inline/test-failed-1.png]]
-
-[[ATTACHMENT|../../../test-results/core-webauthn-functionalit-f1b1f-e-WebAuthn-form-integration-chromium-inline/video.webm]]
-
-[[ATTACHMENT|../../../test-results/core-webauthn-functionalit-f1b1f-e-WebAuthn-form-integration-chromium-inline/error-context.md]]
-]]>
-</system-out>
-</testcase>
-</testsuite>
-<testsuite name="core/authentication.spec.ts" timestamp="2025-10-20T17:44:51.200Z" hostname="firefox-inline" tests="4" failures="3" skipped="0" time="123.809" errors="0">
-<testcase name="Authentication › should load authentication page" classname="core/authentication.spec.ts" time="18.328">
-</testcase>
-<testcase name="Authentication › should show authentication options" classname="core/authentication.spec.ts" time="33.585">
-<failure message="authentication.spec.ts:14:7 should show authentication options" type="FAILURE">
-<![CDATA[  [firefox-inline] › core/authentication.spec.ts:14:7 › Authentication › should show authentication options 
+<testcase name="UnifiedFeed Component - E2E Tests › Basic Functionality › should display feed items correctly" classname="features/unified-feed.spec.ts" time="30.291">
+<failure message="unified-feed.spec.ts:50:9 should display feed items correctly" type="FAILURE">
+<![CDATA[  [chromium-inline] › features/unified-feed.spec.ts:50:9 › UnifiedFeed Component - E2E Tests › Basic Functionality › should display feed items correctly 
 
     Test timeout of 30000ms exceeded.
 
-    Error: page.goto: Test timeout of 30000ms exceeded.
+    Error: page.waitForSelector: Target page, context or browser has been closed
     Call log:
-      - navigating to "http://localhost:3002/auth", waiting until "load"
+      - waiting for locator('[data-testid="feed-item"]') to be visible
 
 
-      13 |
-      14 |   test('should show authentication options', async ({ page }) => {
-    > 15 |     await page.goto('/auth');
-         |                ^
-      16 |     
-      17 |     // Wait for page to load
-      18 |     await page.waitForLoadState('networkidle');
-        at /Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/core/authentication.spec.ts:15:16
+      53 |       
+      54 |       // Wait for feed items to load
+    > 55 |       await page.waitForSelector('[data-testid="feed-item"]', { timeout: 10000 });
+         |                  ^
+      56 |       
+      57 |       // Check for feed items
+      58 |       const feedItems = page.locator('[data-testid="feed-item"]');
+        at /Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/features/unified-feed.spec.ts:55:18
 
     attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
-    ../../../test-results/core-authentication-Authen-18f26-show-authentication-options-firefox-inline/test-failed-1.png
+    ../../../test-results/features-unified-feed-Unif-615e2-isplay-feed-items-correctly-chromium-inline/test-failed-1.png
     ────────────────────────────────────────────────────────────────────────────────────────────────
 
-    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
-    ../../../test-results/core-authentication-Authen-18f26-show-authentication-options-firefox-inline/video.webm
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-
-    Error Context: ../../../test-results/core-authentication-Authen-18f26-show-authentication-options-firefox-inline/error-context.md
+    Error Context: ../../../test-results/features-unified-feed-Unif-615e2-isplay-feed-items-correctly-chromium-inline/error-context.md
 ]]>
 </failure>
 <system-out>
 <![CDATA[
-[[ATTACHMENT|../../../test-results/core-authentication-Authen-18f26-show-authentication-options-firefox-inline/test-failed-1.png]]
+[[ATTACHMENT|../../../test-results/features-unified-feed-Unif-615e2-isplay-feed-items-correctly-chromium-inline/test-failed-1.png]]
 
-[[ATTACHMENT|../../../test-results/core-authentication-Authen-18f26-show-authentication-options-firefox-inline/video.webm]]
-
-[[ATTACHMENT|../../../test-results/core-authentication-Authen-18f26-show-authentication-options-firefox-inline/error-context.md]]
+[[ATTACHMENT|../../../test-results/features-unified-feed-Unif-615e2-isplay-feed-items-correctly-chromium-inline/error-context.md]]
 ]]>
 </system-out>
 </testcase>
-<testcase name="Authentication › should handle WebAuthn authentication" classname="core/authentication.spec.ts" time="36.802">
-<failure message="authentication.spec.ts:34:7 should handle WebAuthn authentication" type="FAILURE">
-<![CDATA[  [firefox-inline] › core/authentication.spec.ts:34:7 › Authentication › should handle WebAuthn authentication 
+<testcase name="UnifiedFeed Component - E2E Tests › Basic Functionality › should show online status indicator" classname="features/unified-feed.spec.ts" time="26.738">
+</testcase>
+<testcase name="UnifiedFeed Component - E2E Tests › Dark Mode Functionality › should toggle dark mode correctly" classname="features/unified-feed.spec.ts" time="27.781">
+</testcase>
+<testcase name="UnifiedFeed Component - E2E Tests › Dark Mode Functionality › should persist dark mode preference in localStorage" classname="features/unified-feed.spec.ts" time="40.09">
+<failure message="unified-feed.spec.ts:100:9 should persist dark mode preference in localStorage" type="FAILURE">
+<![CDATA[  [chromium-inline] › features/unified-feed.spec.ts:100:9 › UnifiedFeed Component - E2E Tests › Dark Mode Functionality › should persist dark mode preference in localStorage 
 
     Test timeout of 30000ms exceeded.
 
-    Error: page.goto: Test timeout of 30000ms exceeded.
+    Error: page.reload: net::ERR_ABORTED; maybe frame was detached?
     Call log:
-      - navigating to "http://localhost:3002/auth", waiting until "load"
+      - waiting for navigation until "load"
 
 
-      33 |
-      34 |   test('should handle WebAuthn authentication', async ({ page }) => {
-    > 35 |     await page.goto('/auth');
-         |                ^
-      36 |     
-      37 |     // Wait for page to load
-      38 |     await page.waitForLoadState('networkidle');
-        at /Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/core/authentication.spec.ts:35:16
-
-    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
-    ../../../test-results/core-authentication-Authen-bb2d3-dle-WebAuthn-authentication-firefox-inline/test-failed-1.png
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-
-    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
-    ../../../test-results/core-authentication-Authen-bb2d3-dle-WebAuthn-authentication-firefox-inline/video.webm
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-
-    Error Context: ../../../test-results/core-authentication-Authen-bb2d3-dle-WebAuthn-authentication-firefox-inline/error-context.md
+      110 |       
+      111 |       // Reload page
+    > 112 |       await page.reload();
+          |                  ^
+      113 |       await page.waitForSelector('[data-testid="unified-feed"]');
+      114 |       
+      115 |       // Check dark mode is still applied
+        at /Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/features/unified-feed.spec.ts:112:18
 ]]>
 </failure>
-<system-out>
-<![CDATA[
-[[ATTACHMENT|../../../test-results/core-authentication-Authen-bb2d3-dle-WebAuthn-authentication-firefox-inline/test-failed-1.png]]
-
-[[ATTACHMENT|../../../test-results/core-authentication-Authen-bb2d3-dle-WebAuthn-authentication-firefox-inline/video.webm]]
-
-[[ATTACHMENT|../../../test-results/core-authentication-Authen-bb2d3-dle-WebAuthn-authentication-firefox-inline/error-context.md]]
-]]>
-</system-out>
 </testcase>
-<testcase name="Authentication › should handle admin authentication" classname="core/authentication.spec.ts" time="35.094">
-<failure message="authentication.spec.ts:53:7 should handle admin authentication" type="FAILURE">
-<![CDATA[  [firefox-inline] › core/authentication.spec.ts:53:7 › Authentication › should handle admin authentication 
+<testcase name="UnifiedFeed Component - E2E Tests › Advanced Filters › should toggle advanced filters panel" classname="features/unified-feed.spec.ts" time="28.91">
+</testcase>
+<testcase name="UnifiedFeed Component - E2E Tests › Advanced Filters › should filter content by hashtags" classname="features/unified-feed.spec.ts" time="35.648">
+<failure message="unified-feed.spec.ts:144:9 should filter content by hashtags" type="FAILURE">
+<![CDATA[  [chromium-inline] › features/unified-feed.spec.ts:144:9 › UnifiedFeed Component - E2E Tests › Advanced Filters › should filter content by hashtags 
 
     Test timeout of 30000ms exceeded.
 
-    Error: page.goto: Test timeout of 30000ms exceeded.
+    Error: page.waitForSelector: Target page, context or browser has been closed
     Call log:
-      - navigating to "http://localhost:3002/admin", waiting until "load"
+      - waiting for locator('[data-testid="unified-feed"]') to be visible
 
 
-      52 |
-      53 |   test('should handle admin authentication', async ({ page }) => {
-    > 54 |     await page.goto('/admin');
-         |                ^
-      55 |     
-      56 |     // Wait for page to load
-      57 |     await page.waitForLoadState('networkidle');
-        at /Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/core/authentication.spec.ts:54:16
+      144 |     test('should filter content by hashtags', async () => {
+      145 |       await page.goto('/feed');
+    > 146 |       await page.waitForSelector('[data-testid="unified-feed"]');
+          |                  ^
+      147 |       
+      148 |       // Wait for feed items to load
+      149 |       await page.waitForSelector('[data-testid="feed-item"]', { timeout: 10000 });
+        at /Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/features/unified-feed.spec.ts:146:18
 
-    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
-    ../../../test-results/core-authentication-Authen-a4ebe-handle-admin-authentication-firefox-inline/test-failed-1.png
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-
-    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
-    ../../../test-results/core-authentication-Authen-a4ebe-handle-admin-authentication-firefox-inline/video.webm
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-
-    Error Context: ../../../test-results/core-authentication-Authen-a4ebe-handle-admin-authentication-firefox-inline/error-context.md
+    Error Context: ../../../test-results/features-unified-feed-Unif-400e5--filter-content-by-hashtags-chromium-inline/error-context.md
 ]]>
 </failure>
 <system-out>
 <![CDATA[
-[[ATTACHMENT|../../../test-results/core-authentication-Authen-a4ebe-handle-admin-authentication-firefox-inline/test-failed-1.png]]
-
-[[ATTACHMENT|../../../test-results/core-authentication-Authen-a4ebe-handle-admin-authentication-firefox-inline/video.webm]]
-
-[[ATTACHMENT|../../../test-results/core-authentication-Authen-a4ebe-handle-admin-authentication-firefox-inline/error-context.md]]
+[[ATTACHMENT|../../../test-results/features-unified-feed-Unif-400e5--filter-content-by-hashtags-chromium-inline/error-context.md]]
 ]]>
 </system-out>
 </testcase>
-</testsuite>
-<testsuite name="core/basic-navigation.spec.ts" timestamp="2025-10-20T17:44:51.200Z" hostname="firefox-inline" tests="3" failures="3" skipped="0" time="96.445" errors="0">
-<testcase name="Basic Navigation › should load the home page" classname="core/basic-navigation.spec.ts" time="30.776">
-<failure message="basic-navigation.spec.ts:4:7 should load the home page" type="FAILURE">
-<![CDATA[  [firefox-inline] › core/basic-navigation.spec.ts:4:7 › Basic Navigation › should load the home page 
-
-    Test timeout of 30000ms exceeded.
-
-    Error: page.goto: Test timeout of 30000ms exceeded.
-    Call log:
-      - navigating to "http://localhost:3002/", waiting until "load"
-
-
-      3 | test.describe('Basic Navigation', () => {
-      4 |   test('should load the home page', async ({ page }) => {
-    > 5 |     await page.goto('/');
-        |                ^
-      6 |     
-      7 |     // Wait for page to load
-      8 |     await page.waitForLoadState('networkidle');
-        at /Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/core/basic-navigation.spec.ts:5:16
-
-    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
-    ../../../test-results/core-basic-navigation-Basi-a3a34-n-should-load-the-home-page-firefox-inline/test-failed-1.png
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-
-    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
-    ../../../test-results/core-basic-navigation-Basi-a3a34-n-should-load-the-home-page-firefox-inline/video.webm
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-]]>
-</failure>
-<system-out>
-<![CDATA[
-[[ATTACHMENT|../../../test-results/core-basic-navigation-Basi-a3a34-n-should-load-the-home-page-firefox-inline/test-failed-1.png]]
-
-[[ATTACHMENT|../../../test-results/core-basic-navigation-Basi-a3a34-n-should-load-the-home-page-firefox-inline/video.webm]]
-]]>
-</system-out>
+<testcase name="UnifiedFeed Component - E2E Tests › Feed Interactions › should handle like interactions" classname="features/unified-feed.spec.ts" time="36.203">
+<skipped>
+</skipped>
 </testcase>
-<testcase name="Basic Navigation › should have a title" classname="core/basic-navigation.spec.ts" time="32.293">
-<failure message="basic-navigation.spec.ts:14:7 should have a title" type="FAILURE">
-<![CDATA[  [firefox-inline] › core/basic-navigation.spec.ts:14:7 › Basic Navigation › should have a title ───
-
-    Test timeout of 30000ms exceeded.
-
-    Error: page.goto: Test timeout of 30000ms exceeded.
-    Call log:
-      - navigating to "http://localhost:3002/", waiting until "load"
-
-
-      13 |
-      14 |   test('should have a title', async ({ page }) => {
-    > 15 |     await page.goto('/');
-         |                ^
-      16 |     
-      17 |     // Check that the page has a title
-      18 |     const title = await page.title();
-        at /Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/core/basic-navigation.spec.ts:15:16
-
-    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
-    ../../../test-results/core-basic-navigation-Basic-Navigation-should-have-a-title-firefox-inline/test-failed-1.png
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-
-    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
-    ../../../test-results/core-basic-navigation-Basic-Navigation-should-have-a-title-firefox-inline/video.webm
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-]]>
-</failure>
-<system-out>
-<![CDATA[
-[[ATTACHMENT|../../../test-results/core-basic-navigation-Basic-Navigation-should-have-a-title-firefox-inline/test-failed-1.png]]
-
-[[ATTACHMENT|../../../test-results/core-basic-navigation-Basic-Navigation-should-have-a-title-firefox-inline/video.webm]]
-]]>
-</system-out>
+<testcase name="UnifiedFeed Component - E2E Tests › Feed Interactions › should handle share interactions" classname="features/unified-feed.spec.ts" time="35.559">
+<skipped>
+</skipped>
 </testcase>
-<testcase name="Basic Navigation › should load auth page" classname="core/basic-navigation.spec.ts" time="33.376">
-<failure message="basic-navigation.spec.ts:22:7 should load auth page" type="FAILURE">
-<![CDATA[  [firefox-inline] › core/basic-navigation.spec.ts:22:7 › Basic Navigation › should load auth page ─
-
-    Test timeout of 30000ms exceeded.
-
-    Error: page.goto: Test timeout of 30000ms exceeded.
-    Call log:
-      - navigating to "http://localhost:3002/auth", waiting until "load"
-
-
-      21 |
-      22 |   test('should load auth page', async ({ page }) => {
-    > 23 |     await page.goto('/auth');
-         |                ^
-      24 |     
-      25 |     // Wait for page to load
-      26 |     await page.waitForLoadState('networkidle');
-        at /Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/core/basic-navigation.spec.ts:23:16
-
-    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
-    ../../../test-results/core-basic-navigation-Basic-Navigation-should-load-auth-page-firefox-inline/test-failed-1.png
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-
-    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
-    ../../../test-results/core-basic-navigation-Basic-Navigation-should-load-auth-page-firefox-inline/video.webm
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-
-    Error Context: ../../../test-results/core-basic-navigation-Basic-Navigation-should-load-auth-page-firefox-inline/error-context.md
-]]>
-</failure>
-<system-out>
-<![CDATA[
-[[ATTACHMENT|../../../test-results/core-basic-navigation-Basic-Navigation-should-load-auth-page-firefox-inline/test-failed-1.png]]
-
-[[ATTACHMENT|../../../test-results/core-basic-navigation-Basic-Navigation-should-load-auth-page-firefox-inline/video.webm]]
-
-[[ATTACHMENT|../../../test-results/core-basic-navigation-Basic-Navigation-should-load-auth-page-firefox-inline/error-context.md]]
-]]>
-</system-out>
+<testcase name="UnifiedFeed Component - E2E Tests › Feed Interactions › should handle comment interactions" classname="features/unified-feed.spec.ts" time="34.482">
+<skipped>
+</skipped>
 </testcase>
-</testsuite>
-<testsuite name="core/onboarding-flow.spec.ts" timestamp="2025-10-20T17:44:51.200Z" hostname="firefox-inline" tests="3" failures="3" skipped="0" time="95.558" errors="0">
-<testcase name="Onboarding Flow › should load onboarding page" classname="core/onboarding-flow.spec.ts" time="23.585">
-<failure message="onboarding-flow.spec.ts:5:7 should load onboarding page" type="FAILURE">
-<![CDATA[  [firefox-inline] › core/onboarding-flow.spec.ts:5:7 › Onboarding Flow › should load onboarding page 
-
-    Error: Rate limiting is working correctly - this is expected behavior for security
-
-       at helpers/auth-helper.ts:100
-
-       98 |       console.log(`⏳ Rate limited detected - this is expected behavior!`);
-       99 |       console.log(`✅ Test is working correctly - rate limiting is functioning as designed`);
-    > 100 |       throw new Error('Rate limiting is working correctly - this is expected behavior for security');
-          |             ^
-      101 |     }
-      102 |     
-      103 |     // Fill in login form using the correct selectors
-        at Function.authenticateUser (/Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/helpers/auth-helper.ts:100:13)
-        at /Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/core/onboarding-flow.spec.ts:7:5
-
-    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
-    ../../../test-results/core-onboarding-flow-Onboa-0476e-should-load-onboarding-page-firefox-inline/test-failed-1.png
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-
-    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
-    ../../../test-results/core-onboarding-flow-Onboa-0476e-should-load-onboarding-page-firefox-inline/video.webm
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-
-    Error Context: ../../../test-results/core-onboarding-flow-Onboa-0476e-should-load-onboarding-page-firefox-inline/error-context.md
-]]>
-</failure>
-<system-out>
-<![CDATA[🔐 Attempting to authenticate user: test@example.com
-🧹 Clearing authentication state...
-⚠️ Could not clear storage: Error: page.evaluate: The operation is insecure.
-@debugger eval code line 290 > eval:2:13
-evaluate@debugger eval code:292:16
-@debugger eval code:1:44
-
-📍 Navigated to auth page: http://localhost:3002/auth?e2e=1
-⏳ Rate limited detected - this is expected behavior!
-✅ Test is working correctly - rate limiting is functioning as designed
-
-[[ATTACHMENT|../../../test-results/core-onboarding-flow-Onboa-0476e-should-load-onboarding-page-firefox-inline/test-failed-1.png]]
-
-[[ATTACHMENT|../../../test-results/core-onboarding-flow-Onboa-0476e-should-load-onboarding-page-firefox-inline/video.webm]]
-
-[[ATTACHMENT|../../../test-results/core-onboarding-flow-Onboa-0476e-should-load-onboarding-page-firefox-inline/error-context.md]]
-]]>
-</system-out>
+<testcase name="UnifiedFeed Component - E2E Tests › Hashtag Interactions › should handle hashtag clicks" classname="features/unified-feed.spec.ts" time="27.38">
+<skipped>
+</skipped>
 </testcase>
-<testcase name="Onboarding Flow › should show onboarding steps" classname="core/onboarding-flow.spec.ts" time="37.211">
-<failure message="onboarding-flow.spec.ts:17:7 should show onboarding steps" type="FAILURE">
-<![CDATA[  [firefox-inline] › core/onboarding-flow.spec.ts:17:7 › Onboarding Flow › should show onboarding steps 
-
-    Test timeout of 30000ms exceeded.
-
-    Error: Rate limiting is working correctly - this is expected behavior for security
-
-       at helpers/auth-helper.ts:100
-
-       98 |       console.log(`⏳ Rate limited detected - this is expected behavior!`);
-       99 |       console.log(`✅ Test is working correctly - rate limiting is functioning as designed`);
-    > 100 |       throw new Error('Rate limiting is working correctly - this is expected behavior for security');
-          |             ^
-      101 |     }
-      102 |     
-      103 |     // Fill in login form using the correct selectors
-        at Function.authenticateUser (/Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/helpers/auth-helper.ts:100:13)
-        at /Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/core/onboarding-flow.spec.ts:19:5
-
-    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
-    ../../../test-results/core-onboarding-flow-Onboa-acb57-hould-show-onboarding-steps-firefox-inline/test-failed-1.png
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-
-    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
-    ../../../test-results/core-onboarding-flow-Onboa-acb57-hould-show-onboarding-steps-firefox-inline/video.webm
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-
-    Error Context: ../../../test-results/core-onboarding-flow-Onboa-acb57-hould-show-onboarding-steps-firefox-inline/error-context.md
-]]>
-</failure>
-<system-out>
-<![CDATA[🔐 Attempting to authenticate user: test@example.com
-🧹 Clearing authentication state...
-⚠️ Could not clear storage: Error: page.evaluate: The operation is insecure.
-@debugger eval code line 290 > eval:2:13
-evaluate@debugger eval code:292:16
-@debugger eval code:1:44
-
-📍 Navigated to auth page: http://localhost:3002/auth?e2e=1
-⏳ Rate limited detected - this is expected behavior!
-✅ Test is working correctly - rate limiting is functioning as designed
-
-[[ATTACHMENT|../../../test-results/core-onboarding-flow-Onboa-acb57-hould-show-onboarding-steps-firefox-inline/test-failed-1.png]]
-
-[[ATTACHMENT|../../../test-results/core-onboarding-flow-Onboa-acb57-hould-show-onboarding-steps-firefox-inline/video.webm]]
-
-[[ATTACHMENT|../../../test-results/core-onboarding-flow-Onboa-acb57-hould-show-onboarding-steps-firefox-inline/error-context.md]]
-]]>
-</system-out>
+<testcase name="UnifiedFeed Component - E2E Tests › Hashtag Interactions › should filter content by hashtag selection" classname="features/unified-feed.spec.ts" time="19.206">
+<skipped>
+</skipped>
 </testcase>
-<testcase name="Onboarding Flow › should handle onboarding steps" classname="core/onboarding-flow.spec.ts" time="34.762">
-<failure message="onboarding-flow.spec.ts:38:7 should handle onboarding steps" type="FAILURE">
-<![CDATA[  [firefox-inline] › core/onboarding-flow.spec.ts:38:7 › Onboarding Flow › should handle onboarding steps 
-
-    Test timeout of 30000ms exceeded.
-
-    Error: page.goto: Test timeout of 30000ms exceeded.
-    Call log:
-      - navigating to "http://localhost:3002/auth?e2e=1", waiting until "load"
-
-
-       at helpers/auth-helper.ts:91
-
-      89 |     
-      90 |     // Navigate to auth page with E2E bypass query parameter
-    > 91 |     await page.goto('/auth?e2e=1');
-         |                ^
-      92 |     await page.waitForLoadState('networkidle');
-      93 |     console.log(`📍 Navigated to auth page: ${page.url()}`);
-      94 |     
-        at Function.authenticateUser (/Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/helpers/auth-helper.ts:91:16)
-        at /Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/core/onboarding-flow.spec.ts:40:5
-
-    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
-    ../../../test-results/core-onboarding-flow-Onboa-25f49-uld-handle-onboarding-steps-firefox-inline/test-failed-1.png
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-
-    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
-    ../../../test-results/core-onboarding-flow-Onboa-25f49-uld-handle-onboarding-steps-firefox-inline/video.webm
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-
-    Error Context: ../../../test-results/core-onboarding-flow-Onboa-25f49-uld-handle-onboarding-steps-firefox-inline/error-context.md
-]]>
-</failure>
-<system-out>
-<![CDATA[🔐 Attempting to authenticate user: test@example.com
-🧹 Clearing authentication state...
-⚠️ Could not clear storage: Error: page.evaluate: The operation is insecure.
-@debugger eval code line 290 > eval:2:13
-evaluate@debugger eval code:292:16
-@debugger eval code:1:44
-
-
-[[ATTACHMENT|../../../test-results/core-onboarding-flow-Onboa-25f49-uld-handle-onboarding-steps-firefox-inline/test-failed-1.png]]
-
-[[ATTACHMENT|../../../test-results/core-onboarding-flow-Onboa-25f49-uld-handle-onboarding-steps-firefox-inline/video.webm]]
-
-[[ATTACHMENT|../../../test-results/core-onboarding-flow-Onboa-25f49-uld-handle-onboarding-steps-firefox-inline/error-context.md]]
-]]>
-</system-out>
+<testcase name="UnifiedFeed Component - E2E Tests › Pull-to-Refresh Functionality › should handle pull-to-refresh gesture" classname="features/unified-feed.spec.ts" time="0">
+<skipped>
+</skipped>
 </testcase>
-</testsuite>
-<testsuite name="core/webauthn-functionality.spec.ts" timestamp="2025-10-20T17:44:51.200Z" hostname="firefox-inline" tests="9" failures="3" skipped="0" time="178.475" errors="0">
-<testcase name="WebAuthn Functionality › should load WebAuthn components" classname="core/webauthn-functionality.spec.ts" time="36.185">
-<failure message="webauthn-functionality.spec.ts:20:7 should load WebAuthn components" type="FAILURE">
-<![CDATA[  [firefox-inline] › core/webauthn-functionality.spec.ts:20:7 › WebAuthn Functionality › should load WebAuthn components 
-
-    Test timeout of 30000ms exceeded while running "beforeEach" hook.
-
-      12 |
-      13 | test.describe('WebAuthn Functionality', () => {
-    > 14 |   test.beforeEach(async ({ page }) => {
-         |        ^
-      15 |     // Navigate to auth page before each test
-      16 |     await page.goto('/auth');
-      17 |     await page.waitForLoadState('networkidle');
-        at /Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/core/webauthn-functionality.spec.ts:14:8
-
-    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
-    ../../../test-results/core-webauthn-functionalit-abf34-ld-load-WebAuthn-components-firefox-inline/test-failed-1.png
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-
-    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
-    ../../../test-results/core-webauthn-functionalit-abf34-ld-load-WebAuthn-components-firefox-inline/video.webm
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-
-    Error Context: ../../../test-results/core-webauthn-functionalit-abf34-ld-load-WebAuthn-components-firefox-inline/error-context.md
-]]>
-</failure>
-<system-out>
-<![CDATA[
-[[ATTACHMENT|../../../test-results/core-webauthn-functionalit-abf34-ld-load-WebAuthn-components-firefox-inline/test-failed-1.png]]
-
-[[ATTACHMENT|../../../test-results/core-webauthn-functionalit-abf34-ld-load-WebAuthn-components-firefox-inline/video.webm]]
-
-[[ATTACHMENT|../../../test-results/core-webauthn-functionalit-abf34-ld-load-WebAuthn-components-firefox-inline/error-context.md]]
-]]>
-</system-out>
+<testcase name="UnifiedFeed Component - E2E Tests › Pull-to-Refresh Functionality › should trigger refresh when pull threshold is reached" classname="features/unified-feed.spec.ts" time="0">
+<skipped>
+</skipped>
 </testcase>
-<testcase name="WebAuthn Functionality › should show WebAuthn registration options" classname="core/webauthn-functionality.spec.ts" time="25.105">
+<testcase name="UnifiedFeed Component - E2E Tests › Infinite Scroll › should load more content when scrolling to bottom" classname="features/unified-feed.spec.ts" time="0">
+<skipped>
+</skipped>
 </testcase>
-<testcase name="WebAuthn Functionality › should show WebAuthn login options" classname="core/webauthn-functionality.spec.ts" time="32.499">
+<testcase name="UnifiedFeed Component - E2E Tests › Accessibility › should have proper ARIA labels and roles" classname="features/unified-feed.spec.ts" time="0">
+<skipped>
+</skipped>
 </testcase>
-<testcase name="WebAuthn Functionality › should handle WebAuthn registration flow" classname="core/webauthn-functionality.spec.ts" time="19.986">
+<testcase name="UnifiedFeed Component - E2E Tests › Accessibility › should support keyboard navigation" classname="features/unified-feed.spec.ts" time="0">
+<skipped>
+</skipped>
 </testcase>
-<testcase name="WebAuthn Functionality › should handle WebAuthn authentication flow" classname="core/webauthn-functionality.spec.ts" time="13.253">
+<testcase name="UnifiedFeed Component - E2E Tests › Accessibility › should announce changes to screen readers" classname="features/unified-feed.spec.ts" time="0">
+<skipped>
+</skipped>
 </testcase>
-<testcase name="WebAuthn Functionality › should handle WebAuthn errors gracefully" classname="core/webauthn-functionality.spec.ts" time="12.902">
+<testcase name="UnifiedFeed Component - E2E Tests › Performance › should load within acceptable time" classname="features/unified-feed.spec.ts" time="0">
+<skipped>
+</skipped>
 </testcase>
-<testcase name="WebAuthn Functionality › should support WebAuthn browser compatibility" classname="core/webauthn-functionality.spec.ts" time="8.967">
-<failure message="webauthn-functionality.spec.ts:168:7 should support WebAuthn browser compatibility" type="FAILURE">
-<![CDATA[  [firefox-inline] › core/webauthn-functionality.spec.ts:168:7 › WebAuthn Functionality › should support WebAuthn browser compatibility 
-
-    Error: expect(received).toBeGreaterThan(expected)
-
-    Expected: > 0
-    Received:   0
-
-      180 |       
-      181 |       // Should have WebAuthn UI elements
-    > 182 |       expect(passkeyElements.length + passkeyButtons.length).toBeGreaterThan(0);
-          |                                                              ^
-      183 |     } else {
-      184 |       // WebAuthn not supported, should show fallback
-      185 |       const fallbackElements = await page.locator('[data-testid*="fallback"], [data-testid*="alternative"]').all();
-        at /Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/core/webauthn-functionality.spec.ts:182:62
-
-    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
-    ../../../test-results/core-webauthn-functionalit-b5496-Authn-browser-compatibility-firefox-inline/test-failed-1.png
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-
-    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
-    ../../../test-results/core-webauthn-functionalit-b5496-Authn-browser-compatibility-firefox-inline/video.webm
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-
-    Error Context: ../../../test-results/core-webauthn-functionalit-b5496-Authn-browser-compatibility-firefox-inline/error-context.md
-]]>
-</failure>
-<system-out>
-<![CDATA[
-[[ATTACHMENT|../../../test-results/core-webauthn-functionalit-b5496-Authn-browser-compatibility-firefox-inline/test-failed-1.png]]
-
-[[ATTACHMENT|../../../test-results/core-webauthn-functionalit-b5496-Authn-browser-compatibility-firefox-inline/video.webm]]
-
-[[ATTACHMENT|../../../test-results/core-webauthn-functionalit-b5496-Authn-browser-compatibility-firefox-inline/error-context.md]]
-]]>
-</system-out>
+<testcase name="UnifiedFeed Component - E2E Tests › Performance › should handle large datasets efficiently" classname="features/unified-feed.spec.ts" time="0">
+<skipped>
+</skipped>
 </testcase>
-<testcase name="WebAuthn Functionality › should handle WebAuthn user interaction" classname="core/webauthn-functionality.spec.ts" time="15.233">
+<testcase name="UnifiedFeed Component - E2E Tests › Error Handling › should handle network errors gracefully" classname="features/unified-feed.spec.ts" time="0">
+<skipped>
+</skipped>
 </testcase>
-<testcase name="WebAuthn Functionality › should validate WebAuthn form integration" classname="core/webauthn-functionality.spec.ts" time="14.345">
-<failure message="webauthn-functionality.spec.ts:216:7 should validate WebAuthn form integration" type="FAILURE">
-<![CDATA[  [firefox-inline] › core/webauthn-functionality.spec.ts:216:7 › WebAuthn Functionality › should validate WebAuthn form integration 
-
-    Error: expect(received).toBeGreaterThan(expected)
-
-    Expected: > 0
-    Received:   0
-
-      221 |     // Should have forms and WebAuthn buttons
-      222 |     expect(forms.length).toBeGreaterThan(0);
-    > 223 |     expect(passkeyButtons.length).toBeGreaterThan(0);
-          |                                   ^
-      224 |     
-      225 |     // WebAuthn buttons should be within or associated with forms
-      226 |     for (const button of passkeyButtons) {
-        at /Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/core/webauthn-functionality.spec.ts:223:35
-
-    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
-    ../../../test-results/core-webauthn-functionalit-f1b1f-e-WebAuthn-form-integration-firefox-inline/test-failed-1.png
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-
-    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
-    ../../../test-results/core-webauthn-functionalit-f1b1f-e-WebAuthn-form-integration-firefox-inline/video.webm
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-
-    Error Context: ../../../test-results/core-webauthn-functionalit-f1b1f-e-WebAuthn-form-integration-firefox-inline/error-context.md
-]]>
-</failure>
-<system-out>
-<![CDATA[
-[[ATTACHMENT|../../../test-results/core-webauthn-functionalit-f1b1f-e-WebAuthn-form-integration-firefox-inline/test-failed-1.png]]
-
-[[ATTACHMENT|../../../test-results/core-webauthn-functionalit-f1b1f-e-WebAuthn-form-integration-firefox-inline/video.webm]]
-
-[[ATTACHMENT|../../../test-results/core-webauthn-functionalit-f1b1f-e-WebAuthn-form-integration-firefox-inline/error-context.md]]
-]]>
-</system-out>
+<testcase name="UnifiedFeed Component - E2E Tests › Error Handling › should allow retry after error" classname="features/unified-feed.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="UnifiedFeed Component - E2E Tests › Mobile Responsiveness › should work correctly on mobile viewport" classname="features/unified-feed.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="UnifiedFeed Component - E2E Tests › Mobile Responsiveness › should handle touch gestures on mobile" classname="features/unified-feed.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="UnifiedFeed Component - E2E Tests › PWA Features › should show offline status when network is unavailable" classname="features/unified-feed.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="UnifiedFeed Component - E2E Tests › PWA Features › should show online status when network is restored" classname="features/unified-feed.spec.ts" time="0">
+<skipped>
+</skipped>
 </testcase>
 </testsuite>
 </testsuites>

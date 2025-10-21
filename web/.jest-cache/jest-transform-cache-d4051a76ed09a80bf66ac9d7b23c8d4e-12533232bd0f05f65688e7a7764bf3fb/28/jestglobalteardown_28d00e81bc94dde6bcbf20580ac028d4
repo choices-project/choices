@@ -1,0 +1,20 @@
+f1c153328d22d76851949944c84b91b3
+/**
+ * Jest Global Teardown
+ * 
+ * Created: October 18, 2025
+ * Updated: October 18, 2025
+ * 
+ * Global teardown for Jest tests - runs once after all tests
+ */ "use strict";
+module.exports = async ()=>{
+    // Clean up global test resources
+    const testDuration = Date.now() - global.__TEST_START_TIME__;
+    console.log(`🧪 Jest Global Teardown: Tests completed in ${testDuration}ms`);
+    // Clean up any global resources
+    if (global.__TEST_START_TIME__) {
+        delete global.__TEST_START_TIME__;
+    }
+};
+
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIi9Vc2Vycy9hbGF1Z2hpbmdraXRzdW5lL3NyYy9DaG9pY2VzL3dlYi9qZXN0Lmdsb2JhbC10ZWFyZG93bi5qcyJdLCJzb3VyY2VzQ29udGVudCI6WyIvKipcbiAqIEplc3QgR2xvYmFsIFRlYXJkb3duXG4gKiBcbiAqIENyZWF0ZWQ6IE9jdG9iZXIgMTgsIDIwMjVcbiAqIFVwZGF0ZWQ6IE9jdG9iZXIgMTgsIDIwMjVcbiAqIFxuICogR2xvYmFsIHRlYXJkb3duIGZvciBKZXN0IHRlc3RzIC0gcnVucyBvbmNlIGFmdGVyIGFsbCB0ZXN0c1xuICovXG5cbm1vZHVsZS5leHBvcnRzID0gYXN5bmMgKCkgPT4ge1xuICAvLyBDbGVhbiB1cCBnbG9iYWwgdGVzdCByZXNvdXJjZXNcbiAgY29uc3QgdGVzdER1cmF0aW9uID0gRGF0ZS5ub3coKSAtIGdsb2JhbC5fX1RFU1RfU1RBUlRfVElNRV9fO1xuICBjb25zb2xlLmxvZyhg8J+nqiBKZXN0IEdsb2JhbCBUZWFyZG93bjogVGVzdHMgY29tcGxldGVkIGluICR7dGVzdER1cmF0aW9ufW1zYCk7XG4gIFxuICAvLyBDbGVhbiB1cCBhbnkgZ2xvYmFsIHJlc291cmNlc1xuICBpZiAoZ2xvYmFsLl9fVEVTVF9TVEFSVF9USU1FX18pIHtcbiAgICBkZWxldGUgZ2xvYmFsLl9fVEVTVF9TVEFSVF9USU1FX187XG4gIH1cbn07XG4iXSwibmFtZXMiOlsibW9kdWxlIiwiZXhwb3J0cyIsInRlc3REdXJhdGlvbiIsIkRhdGUiLCJub3ciLCJnbG9iYWwiLCJfX1RFU1RfU1RBUlRfVElNRV9fIiwiY29uc29sZSIsImxvZyJdLCJtYXBwaW5ncyI6IkFBQUE7Ozs7Ozs7Q0FPQztBQUVEQSxPQUFPQyxPQUFPLEdBQUc7SUFDZixpQ0FBaUM7SUFDakMsTUFBTUMsZUFBZUMsS0FBS0MsR0FBRyxLQUFLQyxPQUFPQyxtQkFBbUI7SUFDNURDLFFBQVFDLEdBQUcsQ0FBQyxDQUFDLDRDQUE0QyxFQUFFTixhQUFhLEVBQUUsQ0FBQztJQUUzRSxnQ0FBZ0M7SUFDaEMsSUFBSUcsT0FBT0MsbUJBQW1CLEVBQUU7UUFDOUIsT0FBT0QsT0FBT0MsbUJBQW1CO0lBQ25DO0FBQ0YifQ==

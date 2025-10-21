@@ -15,7 +15,7 @@ import '@testing-library/jest-dom';
 import { describe, it, expect, beforeEach } from '@jest/globals';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
-import SuperiorMobileFeed from '@/features/feeds/components/SuperiorMobileFeed';
+import UnifiedFeed from '@/features/feeds/components/UnifiedFeed';
 
 // Use real functionality - minimal mocking only for test environment setup
 
@@ -69,7 +69,7 @@ describe('Authentication Security Tests - Real Functionality', () => {
     it('should handle session state properly', async () => {
       render(
         <BrowserRouter>
-          <SuperiorMobileFeed />
+          <UnifiedFeed />
         </BrowserRouter>
       );
 
@@ -86,7 +86,7 @@ describe('Authentication Security Tests - Real Functionality', () => {
 
       render(
         <BrowserRouter>
-          <SuperiorMobileFeed />
+          <UnifiedFeed />
         </BrowserRouter>
       );
 
@@ -99,7 +99,7 @@ describe('Authentication Security Tests - Real Functionality', () => {
     it('should validate user input properly', async () => {
       render(
         <BrowserRouter>
-          <SuperiorMobileFeed />
+          <UnifiedFeed />
         </BrowserRouter>
       );
 
@@ -113,7 +113,7 @@ describe('Authentication Security Tests - Real Functionality', () => {
     it('should sanitize user input', async () => {
       render(
         <BrowserRouter>
-          <SuperiorMobileFeed />
+          <UnifiedFeed />
         </BrowserRouter>
       );
 
@@ -130,7 +130,7 @@ describe('Authentication Security Tests - Real Functionality', () => {
     it('should handle rapid interactions gracefully', async () => {
       render(
         <BrowserRouter>
-          <SuperiorMobileFeed />
+          <UnifiedFeed />
         </BrowserRouter>
       );
 
@@ -152,7 +152,7 @@ describe('Authentication Security Tests - Real Functionality', () => {
     it('should handle API rate limiting', async () => {
       render(
         <BrowserRouter>
-          <SuperiorMobileFeed />
+          <UnifiedFeed />
         </BrowserRouter>
       );
 
@@ -165,7 +165,7 @@ describe('Authentication Security Tests - Real Functionality', () => {
     it('should handle sensitive data securely', async () => {
       render(
         <BrowserRouter>
-          <SuperiorMobileFeed />
+          <UnifiedFeed />
         </BrowserRouter>
       );
 
@@ -176,7 +176,7 @@ describe('Authentication Security Tests - Real Functionality', () => {
     it('should handle localStorage securely', async () => {
       render(
         <BrowserRouter>
-          <SuperiorMobileFeed />
+          <UnifiedFeed />
         </BrowserRouter>
       );
 
@@ -189,7 +189,7 @@ describe('Authentication Security Tests - Real Functionality', () => {
     it('should handle errors securely', async () => {
       render(
         <BrowserRouter>
-          <SuperiorMobileFeed />
+          <UnifiedFeed />
         </BrowserRouter>
       );
 
@@ -200,7 +200,7 @@ describe('Authentication Security Tests - Real Functionality', () => {
     it('should not expose stack traces to users', async () => {
       render(
         <BrowserRouter>
-          <SuperiorMobileFeed />
+          <UnifiedFeed />
         </BrowserRouter>
       );
 
@@ -213,7 +213,7 @@ describe('Authentication Security Tests - Real Functionality', () => {
     it('should handle network errors securely', async () => {
       render(
         <BrowserRouter>
-          <SuperiorMobileFeed />
+          <UnifiedFeed />
         </BrowserRouter>
       );
 
@@ -224,7 +224,7 @@ describe('Authentication Security Tests - Real Functionality', () => {
     it('should validate API responses', async () => {
       render(
         <BrowserRouter>
-          <SuperiorMobileFeed />
+          <UnifiedFeed />
         </BrowserRouter>
       );
 
@@ -237,7 +237,7 @@ describe('Authentication Security Tests - Real Functionality', () => {
     it('should maintain accessibility during security operations', async () => {
       render(
         <BrowserRouter>
-          <SuperiorMobileFeed />
+          <UnifiedFeed />
         </BrowserRouter>
       );
 
@@ -249,7 +249,7 @@ describe('Authentication Security Tests - Real Functionality', () => {
     it('should handle screen reader security announcements', async () => {
       render(
         <BrowserRouter>
-          <SuperiorMobileFeed />
+          <UnifiedFeed />
         </BrowserRouter>
       );
 
@@ -263,7 +263,7 @@ describe('Authentication Security Tests - Real Functionality', () => {
     it('should handle performance under security constraints', async () => {
       render(
         <BrowserRouter>
-          <SuperiorMobileFeed />
+          <UnifiedFeed />
         </BrowserRouter>
       );
 
@@ -274,7 +274,7 @@ describe('Authentication Security Tests - Real Functionality', () => {
     it('should handle memory usage securely', async () => {
       render(
         <BrowserRouter>
-          <SuperiorMobileFeed />
+          <UnifiedFeed />
         </BrowserRouter>
       );
 
@@ -287,7 +287,7 @@ describe('Authentication Security Tests - Real Functionality', () => {
     it('should use real component logic', async () => {
       render(
         <BrowserRouter>
-          <SuperiorMobileFeed />
+          <UnifiedFeed />
         </BrowserRouter>
       );
 
@@ -298,7 +298,7 @@ describe('Authentication Security Tests - Real Functionality', () => {
     it('should handle real security features', async () => {
       render(
         <BrowserRouter>
-          <SuperiorMobileFeed />
+          <UnifiedFeed />
         </BrowserRouter>
       );
 
@@ -309,7 +309,7 @@ describe('Authentication Security Tests - Real Functionality', () => {
     it('should use real state management', async () => {
       render(
         <BrowserRouter>
-          <SuperiorMobileFeed />
+          <UnifiedFeed />
         </BrowserRouter>
       );
 

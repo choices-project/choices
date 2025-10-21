@@ -8,7 +8,7 @@ test.describe('Basic Navigation', () => {
     await page.waitForLoadState('networkidle');
     
     // Check that the page loaded successfully
-    expect(page.url()).toContain('localhost:3000');
+            expect(page.url()).toContain('localhost:3000');
   });
 
   test('should have a title', async ({ page }) => {

@@ -1,9 +1,9 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Search, Hash, TrendingUp, X, Plus } from 'lucide-react';
+import { Hash, TrendingUp, X } from 'lucide-react';
 import { getHashtagSuggestions, validateHashtagName } from '../lib/hashtag-service';
-import type { Hashtag, HashtagSuggestion } from '../types';
+import type { HashtagSuggestion } from '../types';
 
 interface HashtagInputProps {
   value: string[];
@@ -69,7 +69,7 @@ export function HashtagInput({
     
     // Auto-format hashtag input
     if (newValue && !newValue.startsWith('#')) {
-      setInputValue('#' + newValue);
+      setInputValue(`#${  newValue}`);
     }
   };
 

@@ -2261,6 +2261,38 @@ export type Database = {
           },
         ]
       }
+      feeds: {
+        Row: {
+          created_at: string
+          hashtag_filters: string[] | null
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          hashtag_filters?: string[] | null
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          hashtag_filters?: string[] | null
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feeds_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       generated_polls: {
         Row: {
           approved_at: string | null
@@ -2524,34 +2556,75 @@ export type Database = {
         }
         Relationships: []
       }
+      hashtag_trending_history: {
+        Row: {
+          created_at: string
+          hashtag_id: string
+          id: string
+          position: number
+          trend_score: number
+        }
+        Insert: {
+          created_at?: string
+          hashtag_id: string
+          id?: string
+          position: number
+          trend_score: number
+        }
+        Update: {
+          created_at?: string
+          hashtag_id?: string
+          id?: string
+          position?: number
+          trend_score?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hashtag_trending_history_hashtag_id_fkey"
+            columns: ["hashtag_id"]
+            isOneToOne: false
+            referencedRelation: "hashtags"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       hashtag_usage: {
         Row: {
           content_id: string | null
           content_type: string | null
+          context: string | null
           created_at: string | null
+          engagement_score: number | null
           hashtag_id: string
           id: string
           metadata: Json | null
+          sentiment: string | null
           user_id: string | null
           views: number | null
         }
         Insert: {
           content_id?: string | null
           content_type?: string | null
+          context?: string | null
           created_at?: string | null
+          engagement_score?: number | null
           hashtag_id: string
           id?: string
           metadata?: Json | null
+          sentiment?: string | null
           user_id?: string | null
           views?: number | null
         }
         Update: {
           content_id?: string | null
           content_type?: string | null
+          context?: string | null
           created_at?: string | null
+          engagement_score?: number | null
           hashtag_id?: string
           id?: string
           metadata?: Json | null
+          sentiment?: string | null
           user_id?: string | null
           views?: number | null
         }
@@ -2561,6 +2634,38 @@ export type Database = {
             columns: ["hashtag_id"]
             isOneToOne: false
             referencedRelation: "hashtags"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hashtag_user_preferences: {
+        Row: {
+          created_at: string
+          id: string
+          preferences: Json | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          preferences?: Json | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          preferences?: Json | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hashtag_user_preferences_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "user_profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -5416,6 +5521,7 @@ export type Database = {
           geo_source: string | null
           geo_trust_gate: string | null
           geo_updated_at: string | null
+          hashtag_filters: string[] | null
           hashtag_preferences: Json | null
           id: string
           is_active: boolean | null
@@ -5460,6 +5566,7 @@ export type Database = {
           geo_source?: string | null
           geo_trust_gate?: string | null
           geo_updated_at?: string | null
+          hashtag_filters?: string[] | null
           hashtag_preferences?: Json | null
           id?: string
           is_active?: boolean | null
@@ -5504,6 +5611,7 @@ export type Database = {
           geo_source?: string | null
           geo_trust_gate?: string | null
           geo_updated_at?: string | null
+          hashtag_filters?: string[] | null
           hashtag_preferences?: Json | null
           id?: string
           is_active?: boolean | null
@@ -5981,6 +6089,16 @@ export type Database = {
           usage_count: number
         }[]
       }
+      analyze_polls_table: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          index_size: string
+          last_analyzed: string
+          row_count: number
+          table_name: string
+          table_size: string
+        }[]
+      }
       anonymize_user_data: {
         Args: { target_user_id: string }
         Returns: undefined
@@ -6004,6 +6122,10 @@ export type Database = {
       calculate_hashtag_analytics: {
         Args: { hashtag_id_param: string; period_param?: string }
         Returns: Json
+      }
+      calculate_hashtag_trending_score: {
+        Args: { hashtag_id: string }
+        Returns: number
       }
       calculate_independence_score: {
         Args: { candidate_id: string; cycle_year: number }
@@ -6072,6 +6194,10 @@ export type Database = {
           target_vote_choice: number
         }
         Returns: boolean
+      }
+      decrement_hashtag_follower_count: {
+        Args: { hashtag_id: string } | { p_hashtag_id: string }
+        Returns: undefined
       }
       delete_webauthn_credential: {
         Args: { credential_id_param: string; user_uuid: string }
@@ -6154,6 +6280,20 @@ export type Database = {
           is_current: boolean
           is_upcoming: boolean
           start_date: string
+        }[]
+      }
+      get_hashtag_suggestions: {
+        Args: { input_text: string; limit_count?: number; user_id?: string }
+        Returns: {
+          confidence_score: number
+          display_name: string
+          follower_count: number
+          id: string
+          is_trending: boolean
+          name: string
+          suggestion_reason: string
+          trend_score: number
+          usage_count: number
         }[]
       }
       get_local_government_representatives: {
@@ -6301,6 +6441,10 @@ export type Database = {
           transports: string[]
         }[]
       }
+      increment_hashtag_follower_count: {
+        Args: { hashtag_id: string } | { p_hashtag_id: string }
+        Returns: undefined
+      }
       is_admin: {
         Args: { input_user_id?: string }
         Returns: boolean
@@ -6371,6 +6515,22 @@ export type Database = {
         Args: { input_name: string }
         Returns: string
       }
+      rebuild_poll_indexes: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          index_name: string
+          rebuild_time: unknown
+          status: string
+        }[]
+      }
+      refresh_poll_analytics_view: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      refresh_poll_statistics_view: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       run_accepted_values_test: {
         Args: {
           accepted_values: string[]
@@ -6424,9 +6584,22 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      update_hashtag_trend_score: {
+        Args: { p_hashtag_id: string; p_trend_score: number }
+        Returns: undefined
+      }
       update_poll_privacy_level: {
         Args: { new_privacy_level: string; poll_id_param: string }
         Returns: boolean
+      }
+      update_poll_statistics: {
+        Args: { poll_id_param: string }
+        Returns: {
+          last_updated: string
+          participation_rate: number
+          poll_id: string
+          total_votes: number
+        }[]
       }
       user_has_webauthn_credentials: {
         Args: { user_uuid: string }

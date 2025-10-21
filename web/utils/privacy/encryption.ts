@@ -76,9 +76,13 @@ export class UserEncryption {
       encoded
     );
     
+    if (!this.salt) {
+      throw new Error('Salt not initialized');
+    }
+    
     return {
       encryptedData: encrypted,
-      salt: this.salt!,
+      salt: this.salt,
       iv
     };
   }
@@ -99,7 +103,7 @@ export class UserEncryption {
       );
       
       const decoded = new TextDecoder().decode(decrypted);
-      const data = JSON.parse(decoded);
+      const data = JSON.parse(decoded) as Record<string, unknown>;
       
       return {
         decryptedData: data,
@@ -156,7 +160,7 @@ export class EncryptionUtils {
     const bytes = new Uint8Array(buffer);
     let binary = '';
     for (let i = 0; i < bytes.byteLength; i++) {
-      binary += String.fromCharCode(bytes[i] || 0);
+      binary += String.fromCharCode(bytes[i] ?? 0);
     }
     return btoa(binary);
   }

@@ -3,32 +3,9 @@ import { NextResponse } from 'next/server';
 
 import { devLog } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
-export const dynamic = 'force-dynamic'
+import type { Database } from '@/types/database';
 
-// Type definitions for feedback data
-interface _FeedbackItem {
-  id: string;
-  user_id: string;
-  type: string;
-  content: string;
-  sentiment: string;
-  status: string;
-  created_at: string;
-  updated_at: string;
-  user_journey?: {
-    deviceInfo?: {
-      type?: string;
-      browser?: string;
-      os?: string;
-    };
-    pageLoadTime?: number;
-    timeOnPage?: number;
-    errors?: unknown[];
-    sessionId?: string;
-  };
-  metadata?: unknown;
-  ai_analysis?: unknown;
-}
+export const dynamic = 'force-dynamic'
 
 // Security configuration for feedback API
 const securityConfig = {
@@ -154,11 +131,11 @@ export async function POST(request: NextRequest) {
     // Check daily feedback limit for authenticated users
     if (user?.id) {
       const today = new Date().toISOString().split('T')[0]
-      const { count } = await supabaseClient
-        .from('feedback')
-        .select('id', { count: 'exact', head: true })
-        .eq('user_id', String(user.id))
-        .gte('created_at', today)
+    const { count } = await supabaseClient
+      .from('feedback')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', String(user.id))
+      .gte('created_at', today)
       
       if (count && count >= 10) {
         return NextResponse.json(
@@ -349,7 +326,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Process feedback data for better display
-    const processedFeedback = data && !('error' in data) ? (data as any[]).map(item => ({
+    const processedFeedback = data && !('error' in data) ? data.map((item: any) => ({
       id: item.id,
       user_id: item.user_id,
       type: item.type,

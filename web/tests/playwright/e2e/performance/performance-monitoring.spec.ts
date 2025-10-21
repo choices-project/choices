@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { collectPerformanceMetrics, collectMonitoringMetrics, generateMonitoringAlerts } from './monitoring-utils';
+import { collectPerformanceMetrics, collectMonitoringMetrics, generateMonitoringAlerts } from '../monitoring-utils';
 
 /**
  * Performance Monitoring Tests

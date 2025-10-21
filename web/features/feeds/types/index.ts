@@ -5,7 +5,7 @@
  * Includes social feeds, hashtag tracking, and personalization
  */
 
-import type React from 'react';
+import type { ReactNode } from 'react';
 // Core feed item types
 export interface FeedItemData {
   id: string;
@@ -194,7 +194,7 @@ export interface FeedItemProps {
 }
 
 export interface InfiniteScrollProps {
-  children: React.ReactNode;
+  children: ReactNode;
   onLoadMore: () => Promise<void>;
   hasMore: boolean;
   isLoading: boolean;
@@ -204,8 +204,8 @@ export interface InfiniteScrollProps {
   enableScrollToTop?: boolean;
   enablePullToRefresh?: boolean;
   onRefresh?: () => Promise<void>;
-  loadingComponent?: React.ReactNode;
-  endComponent?: React.ReactNode;
+  loadingComponent?: ReactNode;
+  endComponent?: ReactNode;
   scrollToTopThreshold?: number;
 }
 

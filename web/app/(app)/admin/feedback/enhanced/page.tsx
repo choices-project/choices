@@ -218,7 +218,7 @@ const EnhancedFeedbackAdminPage: React.FC = () => {
               <p className="text-gray-600 mt-2">Comprehensive feedback analysis with user journey tracking</p>
             </div>
             <button
-              onClick={fetchFeedback}
+              onClick={() => void fetchFeedback()}
               disabled={loading}
               className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
             >
@@ -378,7 +378,7 @@ const EnhancedFeedbackAdminPage: React.FC = () => {
             </div>
           ) : (
             <div className="divide-y divide-gray-200">
-              {filteredFeedback.map((item: any) => (
+              {filteredFeedback.map((item: FeedbackItem) => (
                 <div key={item.id} className="p-6 hover:bg-gray-50 cursor-pointer" onClick={() => {
                   setSelectedFeedback(item)
                   setShowDetails(true)
@@ -435,7 +435,7 @@ const EnhancedFeedbackAdminPage: React.FC = () => {
                       
                       {item.tags && item.tags.length > 0 && (
                         <div className="flex gap-1 mt-2">
-                          {item.tags.slice(0, 5).map((tag: any, index: any) => (
+                          {item.tags.slice(0, 5).map((tag: string, index: number) => (
                             <span key={index} className="px-2 py-1 bg-gray-100 rounded text-xs">
                               {tag}
                             </span>
@@ -520,14 +520,14 @@ const EnhancedFeedbackAdminPage: React.FC = () => {
                       <div>
                         <label className="text-sm font-medium text-gray-700">Device</label>
                         <div className="flex items-center gap-2 mt-1">
-                          {getDeviceIcon(selectedFeedback.deviceType || 'unknown')}
+                          {getDeviceIcon(selectedFeedback.deviceType ?? 'unknown')}
                           <span className="text-gray-900 capitalize">{selectedFeedback.deviceType}</span>
                         </div>
                       </div>
                       <div>
                         <label className="text-sm font-medium text-gray-700">Browser</label>
                         <div className="flex items-center gap-2 mt-1">
-                          {getBrowserIcon(selectedFeedback.browser || 'unknown')}
+                          {getBrowserIcon(selectedFeedback.browser ?? 'unknown')}
                           <span className="text-gray-900">{selectedFeedback.browser}</span>
                         </div>
                       </div>
@@ -535,8 +535,8 @@ const EnhancedFeedbackAdminPage: React.FC = () => {
                     <div>
                       <label className="text-sm font-medium text-gray-700">Performance</label>
                       <div className="grid grid-cols-2 gap-4 mt-1">
-                        <span className="text-sm text-gray-600">Load: {formatDuration(selectedFeedback.pageLoadTime || 0)}</span>
-                        <span className="text-sm text-gray-600">Time: {formatDuration(selectedFeedback.timeOnPage || 0)}</span>
+                        <span className="text-sm text-gray-600">Load: {formatDuration(selectedFeedback.pageLoadTime ?? 0)}</span>
+                        <span className="text-sm text-gray-600">Time: {formatDuration(selectedFeedback.timeOnPage ?? 0)}</span>
                       </div>
                     </div>
                   </div>
@@ -548,7 +548,7 @@ const EnhancedFeedbackAdminPage: React.FC = () => {
                 <div className="mt-6">
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">Tags</h3>
                   <div className="flex flex-wrap gap-2">
-                    {selectedFeedback.tags.map((tag: any, index: any) => (
+                    {selectedFeedback.tags.map((tag: string, index: number) => (
                       <span key={index} className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm">
                         {tag}
                       </span>

@@ -15,7 +15,6 @@ import { rateLimiters } from '@/lib/security/rate-limit';
 import { requireTrustedOrigin } from '@/lib/http/origin';
 import { requireTurnstileVerification } from '@/lib/security/turnstile';
 import { devLog } from '@/lib/utils/logger';
-import { withOptional } from '@/lib/utils/objects';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 
 export type TrustTier = 'T1' | 'T2' | 'T3';

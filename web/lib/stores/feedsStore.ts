@@ -307,7 +307,7 @@ export const useFeedsStore = create<FeedsStore>()(
               body: JSON.stringify({ category: null }),
             });
             
-            if (!response.ok) {
+            if (!response?.ok) {
               throw new Error('Failed to refresh feeds');
             }
             

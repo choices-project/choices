@@ -2,21 +2,21 @@
 
 import { useState, useEffect, useCallback } from 'react'
 
-import { DifferentialPrivacyManager, type DPCountResult } from '@/lib/privacy/dp'
+import { DifferentialPrivacyManager } from '@/lib/privacy/dp'
 import { logger } from '@/lib/utils/logger';
 
 // Create instance of differential privacy manager
 const differentialPrivacy = new DifferentialPrivacyManager();
 
 // Define the PrivateQueryResult type based on what the component expects
-type PrivateQueryResult<T> = {
+interface PrivateQueryResult<T> {
   data: T;
   kAnonymitySatisfied: boolean;
   privacyGuarantee?: string;
   epsilonUsed?: number;
   noiseAdded?: number;
   confidenceInterval?: [number, number];
-};
+}
 
 interface PollOption {
   id: string

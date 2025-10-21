@@ -5,7 +5,7 @@
 import React from 'react';
 import { render, screen, waitFor, act } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
-import SuperiorMobileFeed from '@/features/feeds/components/SuperiorMobileFeed';
+import UnifiedFeed from '@/features/feeds/components/UnifiedFeed';
 import { performanceProfiler } from './performance-profiler';
 import { logger } from '@/lib/utils/logger';
 
@@ -79,7 +79,7 @@ describe('Enhanced Performance Profiler Tests', () => {
 
   describe('Full Functionality Profiling', () => {
     it('should demonstrate complete profiler functionality with real analysis', async () => {
-      const componentName = 'SuperiorMobileFeed';
+      const componentName = 'UnifiedFeed';
       
       // Start profiling with full functionality
       performanceProfiler.startProfiling(componentName);
@@ -90,7 +90,7 @@ describe('Enhanced Performance Profiler Tests', () => {
       await act(async () => {
         render(
           <BrowserRouter>
-            <SuperiorMobileFeed />
+            <UnifiedFeed />
           </BrowserRouter>
         );
       });

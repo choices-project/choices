@@ -57,7 +57,7 @@ export const createPoll = createSecureServerAction(
 
     // Create poll
     const pollId = uuidv4()
-    const { error: pollError } = await supabase
+    const { error: pollError } = await (supabase as any)
       .from('polls')
       .insert({
         id: pollId,

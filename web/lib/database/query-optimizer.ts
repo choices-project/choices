@@ -14,7 +14,7 @@ import { logger } from '@/lib/utils/logger'
 
 import { getSupabaseServerClient } from '../../utils/supabase/server'
 // QueryPlan type definition
-type QueryPlan = {
+interface QueryPlan {
   id: string
   name: string
   description: string

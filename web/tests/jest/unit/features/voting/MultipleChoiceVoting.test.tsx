@@ -2,7 +2,7 @@
  * @jest-environment jsdom
  */
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
-import MultipleChoiceVoting from '../../../../features/voting/components/MultipleChoiceVoting'
+import MultipleChoiceVoting from '@/features/voting/components/MultipleChoiceVoting'
 
 // Mock the SSR-safe utility
 jest.mock('@/lib/utils/ssr-safe', () => ({

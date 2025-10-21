@@ -32,9 +32,9 @@ import { T } from '@/lib/testing/testIds';
 
 // Mock the aggregated stores module used by UnifiedFeed
 jest.mock('@/lib/stores', () => {
-  const actual = jest.requireActual('@/lib/stores') as Record<string, any>;
+  const actual = jest.requireActual('@/lib/stores');
   const React = require('react');
-  const useSyncExternalStore = (React as any).useSyncExternalStore;
+  const useSyncExternalStore = (React).useSyncExternalStore;
   const subscribe = () => () => {};
   const getFeedsSnapshot = () => mockStores.feeds;
   const getHashtagSnapshot = () => mockStores.hashtagStore;
@@ -101,7 +101,7 @@ const generateLargeFeedData = (count: number) =>
     },
     category: `category${i % 5}`,
     tags: [`hashtag${i % 10}`, `category${i % 5}`],
-    type: (i % 2 === 0 ? 'poll' : 'article') as 'poll' | 'article',
+    type: (i % 2 === 0 ? 'poll' : 'article'),
     source: {
       name: `Source ${i}`,
       url: `https://example.com/${i}`,

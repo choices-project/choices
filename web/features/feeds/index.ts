@@ -67,4 +67,4 @@ export { default as InfiniteScroll } from './components/InfiniteScroll';
 // export { useFeedPersonalization } from './hooks/useFeedPersonalization'
 
 // Services (moved from polls)
-export { InterestBasedPollFeed } from './lib/interest-based-feed'
+// export { InterestBasedPollFeed } from './lib/interest-based-feed' // Commented out to fix hydration issue

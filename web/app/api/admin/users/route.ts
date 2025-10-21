@@ -3,7 +3,8 @@ import { NextResponse } from 'next/server'
 
 import { requireAdminOr401 } from '@/features/auth/lib/admin-auth';
 import { logger } from '@/lib/utils/logger';
-import { getSupabaseServerClient } from '@/utils/supabase/server';
+import { getSupabaseAdminClient } from '@/utils/supabase/server';
+import type { Database } from '@/types/database';
 
 export const dynamic = 'force-dynamic'
 
@@ -13,7 +14,7 @@ export async function GET(request: NextRequest) {
   if (authGate) return authGate
   
   try {
-    const supabase = await getSupabaseServerClient();
+    const supabase = await getSupabaseAdminClient();
 
     // Get query parameters
     const { searchParams } = new URL(request.url)
@@ -91,7 +92,7 @@ export async function PUT(request: NextRequest) {
   if (authGate) return authGate
   
   try {
-    const supabase = await getSupabaseServerClient();
+    const supabase = await getSupabaseAdminClient();
         
     const body = await request.json()
     const { userId, updates } = body
@@ -105,11 +106,11 @@ export async function PUT(request: NextRequest) {
 
     // Validate updates
     const allowedFields = ['is_admin', 'username']
-    const validUpdates: any = {}
+    const validUpdates: Partial<Database['public']['Tables']['user_profiles']['Update']> = {}
     
     for (const [key, value] of Object.entries(updates)) {
       if (allowedFields.includes(key)) {
-        validUpdates[key] = value
+        (validUpdates as any)[key] = value
       }
     }
 
@@ -121,7 +122,7 @@ export async function PUT(request: NextRequest) {
     }
 
     // Update user profile
-    const { error: updateError } = await supabase
+    const { error: updateError } = await (supabase as any)
       .from('user_profiles')
       .update({
         ...validUpdates,

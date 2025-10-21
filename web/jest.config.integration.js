@@ -1,0 +1,143 @@
+const nextJest = require('next/jest')
+
+const createJestConfig = nextJest({
+  dir: './',
+})
+
+// Integration Jest Configuration for Real Database Access
+const integrationJestConfig = {
+  setupFilesAfterEnv: ['<rootDir>/jest.setup.js', '<rootDir>/tests/jest/setup/real-env.js'],
+  testEnvironment: 'jest-environment-jsdom',
+  
+  // Test patterns - only integration tests
+  testPathIgnorePatterns: [
+    '<rootDir>/.next/',
+    '<rootDir>/node_modules/',
+    '<rootDir>/tests/playwright/',
+    '<rootDir>/archive/',
+    '<rootDir>/archive-*/',
+    '<rootDir>/app/archive-*/',
+    '<rootDir>/_reports/',
+    '<rootDir>/tests/e2e/archive-old/',
+    '<rootDir>/tests/jest/unit/', // Exclude unit tests
+    '<rootDir>/tests/jest/performance/',
+    '<rootDir>/tests/jest/security/',
+    '<rootDir>/tests/jest/accessibility/',
+    '<rootDir>/tests/jest/compatibility/',
+    '<rootDir>/tests/jest/monitoring/',
+  ],
+  
+  testMatch: [
+    '<rootDir>/tests/jest/integration/**/*.test.{js,jsx,ts,tsx}',
+    '<rootDir>/tests/jest/integration/**/*.spec.{js,jsx,ts,tsx}',
+  ],
+  
+  // Coverage configuration
+  collectCoverageFrom: [
+    'app/**/*.{js,jsx,ts,tsx}',
+    'lib/**/*.{js,jsx,ts,tsx}',
+    'features/**/*.{js,jsx,ts,tsx}',
+    'components/**/*.{js,jsx,ts,tsx}',
+    'hooks/**/*.{js,jsx,ts,tsx}',
+    'utils/**/*.{js,jsx,ts,tsx}',
+    '!**/*.d.ts',
+    '!**/node_modules/**',
+    '!**/archive/**',
+    '!**/archive-*/**',
+    '!**/app/archive-*/**',
+    '!**/_reports/**',
+    '!**/tests/e2e/archive-old/**',
+    '!**/archive-unused-files/**',
+  ],
+  
+  // Performance optimizations
+  maxWorkers: '50%',
+  cache: true,
+  cacheDirectory: '<rootDir>/.jest-cache',
+  
+  // Transform ignore patterns for ESM modules
+  transformIgnorePatterns: [
+    'node_modules/(?!(lucide-react|@radix-ui|@headlessui|@floating-ui|@tanstack|@supabase|framer-motion|recharts|uuid|clsx|tailwind-merge)/)',
+  ],
+  
+  // Module name mapping
+  moduleNameMapper: {
+    '^@/(.*)$': '<rootDir>/$1',
+    '^@/features/(.*)$': '<rootDir>/features/$1',
+    '^@/components/(.*)$': '<rootDir>/components/$1',
+    '^@/lib/(.*)$': '<rootDir>/lib/$1',
+    '^@/hooks/(.*)$': '<rootDir>/hooks/$1',
+    '^@/types/(.*)$': '<rootDir>/types/$1',
+    '^@/utils/(.*)$': '<rootDir>/utils/$1',
+    '^@/app/(.*)$': '<rootDir>/app/$1',
+    '^@/styles/(.*)$': '<rootDir>/styles/$1',
+    '^@/public/(.*)$': '<rootDir>/public/$1',
+    '^lucide-react$': '<rootDir>/__mocks__/lucide-react.js',
+  },
+  
+  // Transform configuration
+  transform: {
+    '^.+\.(js|jsx|ts|tsx)$': ['babel-jest', { presets: ['next/babel'] }],
+    '^.+\.mjs$': ['babel-jest', { presets: ['next/babel'] }],
+  },
+  
+  // Test timeout - longer for integration tests
+  testTimeout: 30000,
+  
+  // Verbose output
+  verbose: true,
+  
+  // Clear mocks between tests
+  clearMocks: true,
+  resetMocks: true,
+  restoreMocks: true,
+  
+  // Global setup
+  globalSetup: '<rootDir>/jest.global-setup.js',
+  globalTeardown: '<rootDir>/jest.global-teardown.js',
+  
+  // Test results processor
+  testResultsProcessor: '<rootDir>/jest.results-processor.js',
+  
+  // Coverage reporters
+  coverageReporters: ['text', 'lcov', 'html', 'json'],
+  coverageDirectory: '<rootDir>/coverage',
+  
+  // Coverage path ignore patterns
+  coveragePathIgnorePatterns: [
+    '/node_modules/',
+    '/.next/',
+    '/coverage/',
+    '/playwright-report/',
+    '/test-results/',
+    '/archive/',
+    '/archive-*/',
+    '/app/archive-*/',
+    '/_reports/',
+    '/tests/e2e/archive-old/',
+    '/archive-unused-files/',
+  ],
+  
+  // Module file extensions
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
+  
+  // Test environment options
+  testEnvironmentOptions: {
+    customExportConditions: ['node', 'node-addons'],
+  },
+  
+  // Snapshot serializers
+  snapshotSerializers: ['@testing-library/jest-dom'],
+  
+  // Setup files
+  setupFiles: ['<rootDir>/jest.env.setup.js'],
+  
+  // Globals for TypeScript
+  globals: {
+    'ts-jest': {
+      useESM: true,
+    },
+  },
+}
+
+module.exports = createJestConfig(integrationJestConfig)

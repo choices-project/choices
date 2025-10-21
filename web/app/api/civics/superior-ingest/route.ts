@@ -94,7 +94,7 @@ export async function POST(request: NextRequest) {
       }, { status: 500 });
     }
     
-    if (!representatives || representatives.length === 0) {
+    if (representatives?.length === 0) {
       return NextResponse.json({
         success: false,
         error: "No representatives found in database. Run OpenStates People ingestion first."

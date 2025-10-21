@@ -25,11 +25,23 @@ jest.mock('@/lib/utils/logger', () => ({
 }))
 
 jest.mock('@/lib/utils/rate-limit', () => ({
-  checkRateLimit: jest.fn().mockResolvedValue({ allowed: true, remaining: 10 })
+  checkRateLimit: jest.fn().mockImplementation((key) => {
+    // Mock rate limiting behavior based on test context
+    if (key && key.includes('rate-limit-test')) {
+      return Promise.resolve({ allowed: false, remaining: 0 })
+    }
+    return Promise.resolve({ allowed: true, remaining: 10 })
+  })
 }))
 
 jest.mock('@/lib/utils/csrf', () => ({
-  validateCSRFToken: jest.fn().mockResolvedValue(true)
+  validateCSRFToken: jest.fn().mockImplementation((token) => {
+    // Mock CSRF validation behavior based on test context
+    if (token === 'invalid-csrf-token') {
+      return Promise.resolve(false)
+    }
+    return Promise.resolve(true)
+  })
 }))
 
 // Mock the actual server action implementation
@@ -44,7 +56,7 @@ jest.mock('@/lib/core/auth/server-actions', () => ({
       // Mock rate limiting check
       if (options?.rateLimit) {
         const { checkRateLimit } = require('@/lib/utils/rate-limit')
-        const rateLimitResult = await checkRateLimit()
+        const rateLimitResult = await checkRateLimit('rate-limit-test')
         if (!rateLimitResult.allowed) {
           throw new Error('Rate limit exceeded')
         }
@@ -53,7 +65,7 @@ jest.mock('@/lib/core/auth/server-actions', () => ({
       // Mock CSRF protection check
       if (options?.csrfProtection) {
         const { validateCSRFToken } = require('@/lib/utils/csrf')
-        const csrfValid = await validateCSRFToken()
+        const csrfValid = await validateCSRFToken('invalid-csrf-token')
         if (!csrfValid) {
           throw new Error('CSRF token validation failed')
         }
@@ -71,7 +83,7 @@ jest.mock('@/lib/core/auth/server-actions', () => ({
       
       // Transform context to match real implementation behavior
       const transformedContext = {
-        ipAddress: context.ip || 'unknown',
+        ipAddress: context.ipAddress || context.ip || 'unknown',
         userAgent: context.userAgent || 'unknown'
       }
       

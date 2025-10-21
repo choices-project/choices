@@ -38,8 +38,6 @@ describe('VoteProcessor', () => {
   beforeEach(() => {
     // Reset all mocks before each test
     jest.clearAllMocks();
-    // Reset mock routes to ensure clean state
-    mockSetup.resetAllMocks();
     processor = new VoteProcessor(() => Promise.resolve(mockSupabaseClient as any));
     
     mockPoll = {

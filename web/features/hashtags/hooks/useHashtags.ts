@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { 
-  getHashtagById, 
   searchHashtags, 
   getTrendingHashtags, 
   followHashtag, 
@@ -236,7 +235,7 @@ export function useHashtagSearch(options: UseHashtagSearchOptions = {}) {
         setError(null);
 
         const searchQuery: HashtagSearchQuery = {
-          query: query,
+          query,
           filters: {},
           limit: 20,
           offset: 0

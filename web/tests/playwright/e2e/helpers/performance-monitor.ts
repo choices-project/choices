@@ -223,6 +223,12 @@ export class PerformanceMonitor {
     const metrics: Partial<PerformanceMetrics> = {};
 
     try {
+      // Check if page is still valid before evaluating
+      if (page.isClosed()) {
+        console.log('⚠️ Page is closed, skipping network performance monitoring');
+        return metrics;
+      }
+
       const networkInfo = await page.evaluate(() => {
         const resources = performance.getEntriesByType('resource');
         let totalSize = 0;
@@ -241,6 +247,9 @@ export class PerformanceMonitor {
           totalSize,
           slowestRequest,
         };
+      }).catch(error => {
+        console.log('⚠️ Failed to evaluate network performance:', error.message);
+        return { requestsCount: 0, totalSize: 0, slowestRequest: 0 };
       });
 
       metrics.requestsCount = networkInfo.requestsCount;

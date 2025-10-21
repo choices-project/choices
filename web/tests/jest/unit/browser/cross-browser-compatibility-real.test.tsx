@@ -14,7 +14,7 @@ import '@testing-library/jest-dom';
 import { describe, it, expect, beforeEach } from '@jest/globals';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
-import SuperiorMobileFeed from '@/features/feeds/components/SuperiorMobileFeed';
+import UnifiedFeed from '@/features/feeds/components/UnifiedFeed';
 
 // Use real functionality - minimal mocking only for test environment setup
 
@@ -68,7 +68,7 @@ describe('Cross-Browser Compatibility Tests - Real Functionality', () => {
     it('should work with standard DOM APIs', async () => {
       render(
         <BrowserRouter>
-          <SuperiorMobileFeed />
+          <UnifiedFeed />
         </BrowserRouter>
       );
 
@@ -84,7 +84,7 @@ describe('Cross-Browser Compatibility Tests - Real Functionality', () => {
     it('should handle event listeners properly', async () => {
       render(
         <BrowserRouter>
-          <SuperiorMobileFeed />
+          <UnifiedFeed />
         </BrowserRouter>
       );
 
@@ -102,7 +102,7 @@ describe('Cross-Browser Compatibility Tests - Real Functionality', () => {
     it('should handle CSS properly', async () => {
       render(
         <BrowserRouter>
-          <SuperiorMobileFeed />
+          <UnifiedFeed />
         </BrowserRouter>
       );
 
@@ -116,7 +116,7 @@ describe('Cross-Browser Compatibility Tests - Real Functionality', () => {
     it('should work with modern JavaScript features', async () => {
       render(
         <BrowserRouter>
-          <SuperiorMobileFeed />
+          <UnifiedFeed />
         </BrowserRouter>
       );
 
@@ -128,7 +128,7 @@ describe('Cross-Browser Compatibility Tests - Real Functionality', () => {
     it('should handle Promises correctly', async () => {
       render(
         <BrowserRouter>
-          <SuperiorMobileFeed />
+          <UnifiedFeed />
         </BrowserRouter>
       );
 
@@ -144,7 +144,7 @@ describe('Cross-Browser Compatibility Tests - Real Functionality', () => {
     it('should handle fetch API', async () => {
       render(
         <BrowserRouter>
-          <SuperiorMobileFeed />
+          <UnifiedFeed />
         </BrowserRouter>
       );
 
@@ -157,7 +157,7 @@ describe('Cross-Browser Compatibility Tests - Real Functionality', () => {
     it('should work with localStorage', async () => {
       render(
         <BrowserRouter>
-          <SuperiorMobileFeed />
+          <UnifiedFeed />
         </BrowserRouter>
       );
 
@@ -169,7 +169,7 @@ describe('Cross-Browser Compatibility Tests - Real Functionality', () => {
     it('should handle storage events', async () => {
       render(
         <BrowserRouter>
-          <SuperiorMobileFeed />
+          <UnifiedFeed />
         </BrowserRouter>
       );
 
@@ -192,7 +192,7 @@ describe('Cross-Browser Compatibility Tests - Real Functionality', () => {
       
       render(
         <BrowserRouter>
-          <SuperiorMobileFeed />
+          <UnifiedFeed />
         </BrowserRouter>
       );
       
@@ -206,7 +206,7 @@ describe('Cross-Browser Compatibility Tests - Real Functionality', () => {
     it('should handle memory efficiently', async () => {
       render(
         <BrowserRouter>
-          <SuperiorMobileFeed />
+          <UnifiedFeed />
         </BrowserRouter>
       );
 
@@ -226,7 +226,7 @@ describe('Cross-Browser Compatibility Tests - Real Functionality', () => {
 
       render(
         <BrowserRouter>
-          <SuperiorMobileFeed />
+          <UnifiedFeed />
         </BrowserRouter>
       );
 
@@ -237,7 +237,7 @@ describe('Cross-Browser Compatibility Tests - Real Functionality', () => {
     it('should handle touch events', async () => {
       render(
         <BrowserRouter>
-          <SuperiorMobileFeed />
+          <UnifiedFeed />
         </BrowserRouter>
       );
 
@@ -259,7 +259,7 @@ describe('Cross-Browser Compatibility Tests - Real Functionality', () => {
     it('should maintain accessibility across browsers', async () => {
       render(
         <BrowserRouter>
-          <SuperiorMobileFeed />
+          <UnifiedFeed />
         </BrowserRouter>
       );
 
@@ -271,7 +271,7 @@ describe('Cross-Browser Compatibility Tests - Real Functionality', () => {
     it('should handle screen readers properly', async () => {
       render(
         <BrowserRouter>
-          <SuperiorMobileFeed />
+          <UnifiedFeed />
         </BrowserRouter>
       );
 
@@ -287,7 +287,7 @@ describe('Cross-Browser Compatibility Tests - Real Functionality', () => {
     it('should handle errors gracefully across browsers', async () => {
       render(
         <BrowserRouter>
-          <SuperiorMobileFeed />
+          <UnifiedFeed />
         </BrowserRouter>
       );
 
@@ -298,7 +298,7 @@ describe('Cross-Browser Compatibility Tests - Real Functionality', () => {
     it('should provide fallbacks for unsupported features', async () => {
       render(
         <BrowserRouter>
-          <SuperiorMobileFeed />
+          <UnifiedFeed />
         </BrowserRouter>
       );
 
@@ -311,7 +311,7 @@ describe('Cross-Browser Compatibility Tests - Real Functionality', () => {
     it('should detect browser features correctly', async () => {
       render(
         <BrowserRouter>
-          <SuperiorMobileFeed />
+          <UnifiedFeed />
         </BrowserRouter>
       );
 
@@ -323,7 +323,7 @@ describe('Cross-Browser Compatibility Tests - Real Functionality', () => {
     it('should handle missing features gracefully', async () => {
       render(
         <BrowserRouter>
-          <SuperiorMobileFeed />
+          <UnifiedFeed />
         </BrowserRouter>
       );
 
@@ -336,7 +336,7 @@ describe('Cross-Browser Compatibility Tests - Real Functionality', () => {
     it('should use real component logic', async () => {
       render(
         <BrowserRouter>
-          <SuperiorMobileFeed />
+          <UnifiedFeed />
         </BrowserRouter>
       );
 
@@ -347,7 +347,7 @@ describe('Cross-Browser Compatibility Tests - Real Functionality', () => {
     it('should handle real browser compatibility', async () => {
       render(
         <BrowserRouter>
-          <SuperiorMobileFeed />
+          <UnifiedFeed />
         </BrowserRouter>
       );
 
@@ -358,7 +358,7 @@ describe('Cross-Browser Compatibility Tests - Real Functionality', () => {
     it('should use real state management', async () => {
       render(
         <BrowserRouter>
-          <SuperiorMobileFeed />
+          <UnifiedFeed />
         </BrowserRouter>
       );
 

@@ -5,7 +5,7 @@ import {
   measurePageLoadTime,
   assertPerformanceMetrics,
   DEFAULT_THRESHOLDS
-} from './performance-utils';
+} from '../performance-utils';
 
 /**
  * Loading Performance Tests

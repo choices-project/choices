@@ -58,6 +58,25 @@ export async function measureCoreWebVitals(page: Page): Promise<Partial<Performa
     return new Promise<Partial<PerformanceMetrics>>((resolve) => {
       const metrics: Partial<PerformanceMetrics> = {};
       
+      // Get navigation timing
+      const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
+      const paint = performance.getEntriesByType('paint');
+      
+      // Get FCP from paint entries
+      const fcp = paint.find(entry => entry.name === 'first-contentful-paint');
+      metrics.fcp = fcp ? fcp.startTime : 0;
+      
+      // Get TTI from navigation timing
+      metrics.tti = navigation.domInteractive - navigation.fetchStart;
+      
+      // Get TBT from navigation timing
+      metrics.tbt = navigation.domContentLoadedEventEnd - navigation.domContentLoadedEventStart;
+      
+      // Initialize Core Web Vitals with default values
+      metrics.lcp = 0;
+      metrics.fid = 0;
+      metrics.cls = 0;
+      
       // Measure LCP (Largest Contentful Paint)
       if ('PerformanceObserver' in window) {
         const lcpObserver = new PerformanceObserver((list) => {
@@ -71,7 +90,9 @@ export async function measureCoreWebVitals(page: Page): Promise<Partial<Performa
         const fidObserver = new PerformanceObserver((list) => {
           const entries = list.getEntries();
           entries.forEach((entry: any) => {
-            metrics.fid = entry.processingStart - entry.startTime;
+            if (entry.processingStart && entry.startTime) {
+              metrics.fid = entry.processingStart - entry.startTime;
+            }
           });
         });
         fidObserver.observe({ entryTypes: ['first-input'] });
@@ -92,7 +113,7 @@ export async function measureCoreWebVitals(page: Page): Promise<Partial<Performa
         // Resolve after a delay to allow metrics to be collected
         setTimeout(() => {
           resolve(metrics);
-        }, 3000);
+        }, 2000);
       } else {
         resolve(metrics);
       }

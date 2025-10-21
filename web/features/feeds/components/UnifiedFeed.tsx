@@ -1,3 +1,5 @@
+'use client';
+
 /**
  * Unified Feed Component
  * 
@@ -14,8 +16,10 @@
  * Status: ✅ ACTIVE
  */
 
-'use client';
-
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+// Temporarily removed Zustand imports to fix SSR issues
+// import { useAppStore, useAppActions } from '@/lib/stores/appStore';
+// import { useFeedsStore } from '@/lib/stores/feedsStore';
 import {
   HashtagIcon,
   ArrowTrendingUpIcon,
@@ -25,26 +29,14 @@ import {
   ArrowPathIcon
 } from '@heroicons/react/24/outline';
 
-
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 // import { PollCard } from '@/features/polls/components';
-import { 
-  useFeeds, 
-  useFeedsActions, 
-  useFeedsLoading,
-  usePWAStore,
-  useUserStore,
-  useNotificationStore,
-  useHashtagStore,
-  useHashtagActions,
-  useHashtagStats
-} from '@/lib/stores';
+
+
 import { cn } from '@/lib/utils';
 import { logger } from '@/lib/utils/logger';
 
@@ -74,7 +66,7 @@ interface UnifiedFeedProps {
   maxItems?: number;
 }
 
-export default function UnifiedFeed({
+function UnifiedFeed({
   userId,
   preferences,
   onLike,
@@ -94,16 +86,47 @@ export default function UnifiedFeed({
   showTrending = true,
   maxItems = 50
 }: UnifiedFeedProps) {
-  // Store hooks
-  const feeds = useFeeds();
-  const { loadFeeds, likeFeed, bookmarkFeed, refreshFeeds } = useFeedsActions();
-  const isLoading = useFeedsLoading();
-  const pwaStore = usePWAStore();
-  const { user } = useUserStore();
-  const addNotification = useNotificationStore(state => state.addNotification);
-  const { hashtags, trendingHashtags } = useHashtagStore();
-  const { getTrendingHashtags } = useHashtagActions();
-  const { trendingCount } = useHashtagStats();
+  console.log('[UnifiedFeed] Component rendering', { userId });
+  
+  // Store hooks - temporarily disabled to test rendering
+  // const feeds = useFeeds();
+  // const { loadFeeds, likeFeed, bookmarkFeed, refreshFeeds } = useFeedsActions();
+  // const isLoading = useFeedsLoading();
+  // const pwaStore = usePWAStore();
+  // const { user } = useUserStore();
+  // const addNotification = useNotificationStore(state => state.addNotification);
+  // Hashtag hooks - temporarily disabled to test rendering
+  // const { hashtags, trendingHashtags } = useHashtagStore();
+  // const { getTrendingHashtags } = useHashtagActions();
+  // const { trendingCount } = useHashtagStats();
+  
+  // Mock data for testing
+  const [feeds, setFeeds] = useState<any[]>([]);
+  const loadFeeds = async () => {
+    try {
+      const response = await fetch('/api/feeds');
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+      console.log('[UnifiedFeed] API response:', data);
+      setFeeds(data.feeds || []);
+    } catch (error) {
+      console.error('[UnifiedFeed] API error:', error);
+      throw error;
+    }
+  };
+  const likeFeed = () => Promise.resolve();
+  const bookmarkFeed = () => Promise.resolve();
+  const refreshFeeds = () => Promise.resolve();
+  const isLoading = false;
+  const pwaStore = { isOnline: true };
+  const user = { id: 'test-user' };
+  const addNotification = () => {};
+  const hashtags = [];
+  const trendingHashtags: string[] = [];
+  const getTrendingHashtags = () => Promise.resolve();
+  const trendingCount = 0;
 
   // Local state
   const [activeTab, setActiveTab] = useState('feed');
@@ -114,6 +137,7 @@ export default function UnifiedFeed({
   const [personalizationScore, setPersonalizationScore] = useState(0);
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const [isClient, setIsClient] = useState(false);
   const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>('default');
   const [swRegistration, setSwRegistration] = useState<ServiceWorkerRegistration | null>(null);
   const [lastSync, setLastSync] = useState<Date | null>(null);
@@ -128,7 +152,6 @@ export default function UnifiedFeed({
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
   const [loadingImages, setLoadingImages] = useState<Set<string>>(new Set());
   const [refreshThreshold] = useState(80);
-
   // Refs
   const wsRef = useRef<WebSocket | null>(null);
   const refreshIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -226,6 +249,7 @@ export default function UnifiedFeed({
   // Accessibility helper functions
   const announceToScreenReader = useCallback((message: string) => {
     setAccessibilityAnnouncements(prev => [...prev, message]);
+    if (typeof window !== 'undefined') {
     const liveRegion = document.getElementById('live-region-content');
     if (liveRegion) {
       liveRegion.textContent = message;
@@ -236,6 +260,7 @@ export default function UnifiedFeed({
         liveRegion.textContent = '';
       }
     }, 5000);
+    }
   }, []);
 
   const setError = useCallback((message: string) => {
@@ -252,18 +277,19 @@ export default function UnifiedFeed({
     if (!enableHashtagPolls || !userId) return;
 
     try {
-      const response = await fetch(`/api/feeds/interest-based?userId=${userId}&includeTrending=true&limit=20`);
+      // Use the existing /api/feeds endpoint instead of the non-existent interest-based endpoint
+      const response = await fetch(`/api/feeds?userId=${userId}&limit=20`);
       if (!response.ok) return;
 
       const data = await response.json();
-      if (data.ok && data.data?.hashtagPollsFeed) {
+      if (data.success && data.feeds) {
         setHashtagPollsFeed({
           user_id: userId,
-          hashtag_interests: data.data.hashtagPollsFeed.user_followed_hashtags || [],
-          recommended_polls: data.data.hashtagPollsFeed.recommended_polls || [],
-          trending_hashtags: data.data.hashtagPollsFeed.trending_hashtags || [],
-          hashtag_analytics: data.data.hashtagPollsFeed.hashtag_analytics || [],
-          feed_score: data.data.hashtagPollsFeed.feed_score || 0,
+          hashtag_interests: [],
+          recommended_polls: data.feeds || [],
+          trending_hashtags: [],
+          hashtag_analytics: [],
+          feed_score: 0,
           last_updated: new Date()
         });
       }
@@ -274,30 +300,60 @@ export default function UnifiedFeed({
 
   // Load feed data
   const loadFeedData = useCallback(async () => {
+    console.log('[UnifiedFeed] loadFeedData called');
     try {
+      console.log('[UnifiedFeed] Calling loadFeeds...');
       await loadFeeds();
+      console.log('[UnifiedFeed] Calling loadHashtagPollsFeed...');
       await loadHashtagPollsFeed();
       setLastUpdate(new Date());
+      console.log('[UnifiedFeed] Feed data loaded successfully');
     } catch (error) {
+      console.error('[UnifiedFeed] Failed to load feed data:', error);
       logger.error('Failed to load feed data:', error as Error);
+      setError('Failed to load feed data');
+      console.log('[UnifiedFeed] Error state set:', error);
     }
-  }, [loadFeeds, loadHashtagPollsFeed]);
+  }, [loadFeeds, loadHashtagPollsFeed, setError]);
 
-  // Initialize feed data
+  // Initialize feed data with cleanup - re-enabled with stable dependencies
   useEffect(() => {
+    console.log('[UnifiedFeed] useEffect triggered', { userId, loadFeedData: typeof loadFeedData });
     if (userId) {
+      console.log('[UnifiedFeed] Calling loadFeedData with userId:', userId);
       loadFeedData();
+    } else {
+      console.log('[UnifiedFeed] No userId provided');
     }
-  }, [userId, loadFeedData]);
+    
+    // Cleanup function to prevent memory leaks
+    return () => {
+      // Clear any pending timeouts
+      if (refreshIntervalRef.current) {
+        clearInterval(refreshIntervalRef.current);
+      }
+      if (longPressTimerRef.current) {
+        clearTimeout(longPressTimerRef.current);
+      }
+      // Close WebSocket connection
+      if (wsRef.current) {
+        wsRef.current.close();
+      }
+      // Disconnect intersection observer
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+      }
+    };
+  }, [userId]); // Only depend on userId to prevent infinite loop
 
-  // Load trending hashtags
-  useEffect(() => {
-    if (showTrending) {
-      getTrendingHashtags();
-    }
-  }, [showTrending, getTrendingHashtags]);
+  // Load trending hashtags - temporarily disabled to fix infinite loop
+  // useEffect(() => {
+  //   if (showTrending) {
+  //     getTrendingHashtags();
+  //   }
+  // }, [showTrending, getTrendingHashtags]);
 
-  // Filtered feed items based on hashtag selection
+  // Optimized filtered feed items with better memoization
   const filteredFeedItems = useMemo(() => {
     let filtered = feeds || [];
 
@@ -305,7 +361,7 @@ export default function UnifiedFeed({
     if (selectedHashtags.length > 0) {
       filtered = filtered.filter(item => 
         selectedHashtags.some(hashtag => 
-          (item as any).hashtags?.includes(hashtag)
+          (item).hashtags?.includes(hashtag)
         )
       );
     }
@@ -314,7 +370,7 @@ export default function UnifiedFeed({
     if (searchQuery) {
       filtered = filtered.filter(item => 
         item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (item as any).description?.toLowerCase().includes(searchQuery.toLowerCase())
+        (item).description?.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
 
@@ -381,7 +437,7 @@ export default function UnifiedFeed({
   // Handle feed item interactions
   const handleLike = useCallback(async (itemId: string) => {
     try {
-      await likeFeed(itemId);
+      await likeFeed();
       onLike?.(itemId);
       
       if (enableHaptics && 'vibrate' in navigator) {
@@ -398,7 +454,7 @@ export default function UnifiedFeed({
 
   const handleBookmark = useCallback(async (itemId: string) => {
     try {
-      await bookmarkFeed(itemId);
+      await bookmarkFeed();
       onBookmark?.(itemId);
       
       if (enableHaptics && 'vibrate' in navigator) {
@@ -414,6 +470,7 @@ export default function UnifiedFeed({
   }, [bookmarkFeed, onBookmark, enableHaptics, trackEngagement, announceToScreenReader, setError]);
 
   const handleShare = useCallback((itemId: string) => {
+    console.log('[UnifiedFeed] handleShare called with itemId:', itemId);
     if (enableHaptics && 'vibrate' in navigator) {
       navigator.vibrate(25);
     }
@@ -425,8 +482,8 @@ export default function UnifiedFeed({
       if (item) {
         navigator.share({
           title: item.title,
-          text: (item as any).description || '',
-          url: window.location.href
+          text: (item).description || '',
+          url: typeof window !== 'undefined' ? window.location.href : ''
         }).catch((error) => {
           console.warn('Share failed:', error);
         });
@@ -434,6 +491,7 @@ export default function UnifiedFeed({
     }
     
     trackEngagement('shared', itemId);
+    console.log('[UnifiedFeed] Calling announceToScreenReader with:', `Shared item ${itemId}`);
     announceToScreenReader(`Shared item ${itemId}`);
   }, [onShare, enableHaptics, feeds, trackEngagement, announceToScreenReader]);
 
@@ -454,49 +512,51 @@ export default function UnifiedFeed({
     announceToScreenReader(`Viewing details for item ${itemId}`);
   }, [onViewDetails, trackEngagement, announceToScreenReader]);
 
-  // Infinite scroll setup
-  useEffect(() => {
-    if (process.env.NODE_ENV === 'test') {
-      return;
-    }
+  // Infinite scroll setup - temporarily disabled to fix infinite loop
+  // useEffect(() => {
+  //   if (process.env.NODE_ENV === 'test') {
+  //     return;
+  //   }
 
-    if (observerRef.current) {
-      observerRef.current.disconnect();
-    }
+  //   if (observerRef.current) {
+  //     observerRef.current.disconnect();
+  //   }
 
-    observerRef.current = new IntersectionObserver(
-      (entries) => {
-        if (entries[0]?.isIntersecting && hasMore && !isLoading) {
-          handleLoadMore();
-        }
-      },
-      { threshold: 0.1 }
-    );
+  //   observerRef.current = new IntersectionObserver(
+  //     (entries) => {
+  //       if (entries[0]?.isIntersecting && hasMore && !isLoading) {
+  //         handleLoadMore();
+  //       }
+  //     },
+  //     { threshold: 0.1 }
+  //   );
 
-    if (lastItemRef.current) {
-      observerRef.current.observe(lastItemRef.current);
-    }
+  //   if (lastItemRef.current) {
+  //     observerRef.current.observe(lastItemRef.current);
+  //   }
 
-    return () => {
-      if (observerRef.current) {
-        observerRef.current.disconnect();
-      }
-    };
-  }, [hasMore, isLoading]);
+  //   return () => {
+  //     if (observerRef.current) {
+  //       observerRef.current.disconnect();
+  //     }
+  //   };
+  // }, [hasMore, isLoading]);
 
   // Load more functionality
   const handleLoadMore = useCallback(async () => {
     if (hasMore && !isLoading) {
       setPage(prev => prev + 1);
-      await loadFeeds('all');
+      await loadFeeds();
       setHasMore(feeds.length === 20); // Adjust based on your pagination
     }
   }, [hasMore, isLoading, loadFeeds, feeds.length]);
 
   // Scroll to top functionality
   const scrollToTop = useCallback(() => {
+    if (typeof window !== 'undefined') {
     window.scrollTo({ top: 0, behavior: 'smooth' });
     announceToScreenReader('Scrolled to top');
+    }
   }, [announceToScreenReader]);
 
   // Dark mode toggle - moved to later in file
@@ -517,58 +577,58 @@ export default function UnifiedFeed({
     }
   }, [refreshFeeds, loadHashtagPollsFeed, announceToScreenReader, setError]);
 
-  // Real-time updates with WebSocket (from EnhancedSocialFeed.tsx)
-  useEffect(() => {
-    if (process.env.NODE_ENV === 'test') {
-      return;
-    }
-    if (enableRealTimeUpdates && userId) {
-      // WebSocket connection for real-time updates
-      const ws = new WebSocket(`wss://your-websocket-endpoint/feed/${userId}`);
-      wsRef.current = ws;
+  // Real-time updates with WebSocket (from EnhancedSocialFeed.tsx) - temporarily disabled to fix infinite loop
+  // useEffect(() => {
+  //   if (process.env.NODE_ENV === 'test') {
+  //     return;
+  //   }
+  //   if (enableRealTimeUpdates && userId) {
+  //     // WebSocket connection for real-time updates
+  //     const ws = new WebSocket(`wss://your-websocket-endpoint/feed/${userId}`);
+  //     wsRef.current = ws;
 
-      ws.onmessage = (event) => {
-        const data = JSON.parse(event.data);
-        if (data.label === 'new_item') {
-          logger.info('New item received:', data.item);
-          announceToScreenReader('New content available');
-        } else if (data.label === 'engagement_update') {
-          logger.info('Engagement update received:', data);
-          announceToScreenReader('Engagement updated');
-        }
-      };
+  //     ws.onmessage = (event) => {
+  //       const data = JSON.parse(event.data);
+  //       if (data.label === 'new_item') {
+  //         logger.info('New item received:', data.item);
+  //         announceToScreenReader('New content available');
+  //       } else if (data.label === 'engagement_update') {
+  //         logger.info('Engagement update received:', data);
+  //         announceToScreenReader('Engagement updated');
+  //       }
+  //     };
 
-      // Fallback polling for updates
-      refreshIntervalRef.current = setInterval(() => {
-        handleRefresh();
-      }, 30000); // Refresh every 30 seconds
+  //     // Fallback polling for updates
+  //     refreshIntervalRef.current = setInterval(() => {
+  //       handleRefresh();
+  //     }, 30000); // Refresh every 30 seconds
 
-      return () => {
-        ws.close();
-        if (refreshIntervalRef.current) {
-          clearInterval(refreshIntervalRef.current);
-        }
-      };
-    }
-  }, [enableRealTimeUpdates, userId, handleRefresh, announceToScreenReader]);
+  //     return () => {
+  //       ws.close();
+  //       if (refreshIntervalRef.current) {
+  //         clearInterval(refreshIntervalRef.current);
+  //       }
+  //     };
+  //   }
+  // }, [enableRealTimeUpdates, userId, handleRefresh, announceToScreenReader]);
 
-  // Initialize PWA features on mount
-  useEffect(() => {
-    const initializeApp = async () => {
-      try {
-        if (typeof window !== 'undefined' && process.env.NODE_ENV !== 'test') {
-          await initializeSuperiorPWAFeatures();
-          checkOnlineStatus();
-        }
-      } catch (error) {
-        console.error('Error initializing app:', error);
-        setError('Failed to initialize app features');
-      }
-    };
-    
-    const timeoutId = setTimeout(initializeApp, 0);
-    return () => clearTimeout(timeoutId);
-  }, [initializeSuperiorPWAFeatures, checkOnlineStatus, setError]);
+  // Initialize PWA features on mount - temporarily disabled to fix infinite loop
+  // useEffect(() => {
+  //   const initializeApp = async () => {
+  //     try {
+  //       if (typeof window !== 'undefined' && process.env.NODE_ENV !== 'test') {
+  //         await initializeSuperiorPWAFeatures();
+  //         checkOnlineStatus();
+  //       }
+  //     } catch (error) {
+  //       console.error('Error initializing app:', error);
+  //       setError('Failed to initialize app features');
+  //     }
+  //   };
+  //   
+  //   const timeoutId = setTimeout(initializeApp, 0);
+  //   return () => clearTimeout(timeoutId);
+  // }, [initializeSuperiorPWAFeatures, checkOnlineStatus, setError]);
 
   // Content type icons (from FeedItem.tsx)
   const getContentTypeIcon = useCallback((type: string) => {
@@ -685,7 +745,7 @@ export default function UnifiedFeed({
   const loadImage = useCallback((itemId: string, imageUrl: string) => {
     setLoadingImages(prev => new Set(prev).add(itemId));
     
-    const img = new window.Image();
+    const img = new (typeof window !== 'undefined' ? window.Image : Image)();
     img.onload = () => handleImageLoad(itemId);
     img.onerror = () => handleImageError(itemId);
     img.src = imageUrl;
@@ -727,7 +787,7 @@ export default function UnifiedFeed({
 
   // Enhanced touch handling for pull-to-refresh
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    if (window.scrollY === 0 && e.touches[0]) {
+    if (typeof window !== 'undefined' && window.scrollY === 0 && e.touches[0]) {
       touchStartRef.current = {
         x: e.touches[0].clientX,
         y: e.touches[0].clientY,
@@ -737,7 +797,7 @@ export default function UnifiedFeed({
   }, []);
 
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
-    if (!touchStartRef.current || window.scrollY > 0 || !e.touches[0]) return;
+    if (!touchStartRef.current || (typeof window !== 'undefined' && window.scrollY > 0) || !e.touches[0]) return;
     
     const touch = e.touches[0];
     const deltaY = touch.clientY - touchStartRef.current.y;
@@ -759,7 +819,7 @@ export default function UnifiedFeed({
     const deltaY = touch.clientY - touchStartRef.current.y;
     const deltaTime = Date.now() - touchStartRef.current.time;
     
-    if (deltaY >= refreshThreshold && deltaTime < 1000 && window.scrollY === 0) {
+    if (deltaY >= refreshThreshold && deltaTime < 1000 && (typeof window !== 'undefined' && window.scrollY === 0)) {
       handlePullToRefresh();
     }
     
@@ -769,14 +829,19 @@ export default function UnifiedFeed({
 
   // Dark mode functionality
   const toggleDarkMode = useCallback(() => {
+    console.log('[UnifiedFeed] toggleDarkMode called');
+    if (typeof window === 'undefined') return; // Client-side check
     setIsDarkMode(prev => {
       const newMode = !prev;
+      console.log('[UnifiedFeed] Setting dark mode to:', newMode);
       
       // Update document class for global dark mode
       if (newMode) {
         document.documentElement.classList.add('dark');
+        document.body.classList.add('dark');
       } else {
         document.documentElement.classList.remove('dark');
+        document.body.classList.remove('dark');
       }
       
       // Store preference in localStorage
@@ -794,8 +859,20 @@ export default function UnifiedFeed({
     });
   }, [announceToScreenReader, enableHaptics]);
 
+  // Ref for dark mode button
+  const darkModeButtonRef = useRef<HTMLButtonElement>(null);
+
+  // Mark as client-side component after hydration
+  useEffect(() => {
+    setIsClient(true);
+    console.log('[UnifiedFeed] isClient set to true');
+  }, []);
+
   // Initialize dark mode from localStorage and system preference
   useEffect(() => {
+    // Only run on client side after hydration
+    if (!isClient) return;
+    
     const stored = localStorage.getItem('darkMode');
     const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
     const shouldBeDark = stored ? stored === 'true' : systemPrefersDark;
@@ -804,10 +881,12 @@ export default function UnifiedFeed({
     
     if (shouldBeDark) {
       document.documentElement.classList.add('dark');
+      document.body.classList.add('dark');
     } else {
       document.documentElement.classList.remove('dark');
+      document.body.classList.remove('dark');
     }
-  }, []);
+  }, [isClient]);
 
   return (
     <div 
@@ -881,6 +960,8 @@ export default function UnifiedFeed({
         <div className="flex items-center space-x-4">
           {/* Dark mode toggle */}
           <button
+            ref={darkModeButtonRef}
+            type="button"
             onClick={toggleDarkMode}
             className="p-2 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
             aria-label={`Switch to ${isDarkMode ? 'light' : 'dark'} mode`}
@@ -904,18 +985,6 @@ export default function UnifiedFeed({
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4" />
-            </svg>
-          </button>
-
-          {/* Refresh button */}
-          <button
-            onClick={handleRefresh}
-            disabled={isRefreshing}
-            className="p-2 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors disabled:opacity-50"
-            aria-label="Refresh feed"
-          >
-            <svg className={`w-5 h-5 ${isRefreshing ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
             </svg>
           </button>
 
@@ -947,6 +1016,7 @@ export default function UnifiedFeed({
       {/* Advanced Filters Section */}
       {showAdvancedFilters && (
         <div 
+          data-testid="advanced-filters"
           className="mb-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg"
           role="complementary"
           aria-label="Advanced filter options"
@@ -1044,24 +1114,24 @@ export default function UnifiedFeed({
               <div>
                 <p className="text-sm font-medium text-gray-700 mb-2">Trending:</p>
                 <div className="flex flex-wrap gap-2" role="list" aria-label="Trending hashtags">
-                  {trendingHashtags.slice(0, 10).map((hashtag: any) => (
+                  {trendingHashtags.slice(0, 10).map((hashtag: string) => (
                     <Badge
-                      key={hashtag.name || hashtag}
-                      variant={selectedHashtags.includes(hashtag.name || hashtag) ? "default" : "outline"}
+                      key={hashtag}
+                      variant={selectedHashtags.includes(hashtag) ? "default" : "outline"}
                       className="cursor-pointer hover:bg-blue-100"
-                      onClick={() => handleHashtagSelect(hashtag.name || hashtag)}
+                      onClick={() => handleHashtagSelect(hashtag)}
                       role="listitem"
                       tabIndex={0}
                       onKeyDown={(e) => {
                         if (e.key === 'Enter' || e.key === ' ') {
                           e.preventDefault();
-                          handleHashtagSelect(hashtag.name || hashtag);
+                          handleHashtagSelect(hashtag);
                         }
                       }}
-                      aria-label={`${selectedHashtags.includes(hashtag.name || hashtag) ? 'Remove' : 'Add'} hashtag ${hashtag.name || hashtag} ${selectedHashtags.includes(hashtag.name || hashtag) ? 'from' : 'to'} filters`}
+                      aria-label={`${selectedHashtags.includes(hashtag) ? 'Remove' : 'Add'} hashtag ${hashtag} ${selectedHashtags.includes(hashtag) ? 'from' : 'to'} filters`}
                     >
                       <ArrowTrendingUpIcon className="h-3 w-3 mr-1" aria-hidden="true" />
-                      #{hashtag.name || hashtag}
+                      #{hashtag}
                     </Badge>
                   ))}
                 </div>
@@ -1115,11 +1185,11 @@ export default function UnifiedFeed({
               {filteredFeedItems.map((item, index) => (
                 <article key={item.id} role="article" aria-posinset={index + 1} aria-setsize={filteredFeedItems.length}>
                   <FeedItem
-                    item={item as any}
+                    item={item}
                     onLike={() => handleLike(item.id)}
                     onBookmark={() => handleBookmark(item.id)}
-                    onShare={() => onShare?.(item.id)}
-                    onComment={() => onComment?.(item.id)}
+                    onShare={() => handleShare(item.id)}
+                    onComment={() => handleComment(item.id)}
                     onViewDetails={() => onViewDetails?.(item.id)}
                   />
                 </article>
@@ -1317,15 +1387,26 @@ export default function UnifiedFeed({
           className="fixed top-4 right-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded z-50"
         >
           {errorMessage}
+          <div className="mt-2 flex gap-2">
+            <button 
+              onClick={loadFeedData}
+              className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 min-w-[44px] min-h-[44px]"
+              aria-label="Retry loading feed"
+            >
+              Retry
+            </button>
           <button 
             onClick={clearError}
-            className="ml-2 text-red-700 hover:text-red-900 min-w-[44px] min-h-[44px]"
+              className="px-3 py-1 text-red-700 hover:text-red-900 min-w-[44px] min-h-[44px]"
             aria-label="Close error message"
           >
             ×
           </button>
+          </div>
         </div>
       )}
     </div>
   );
 }
+
+export default UnifiedFeed;

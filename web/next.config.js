@@ -15,15 +15,19 @@ const nextConfig = {
   ],
 
   experimental: {
-    // Basic package imports optimization
+    // Advanced package imports optimization
     optimizePackageImports: [
       'lucide-react',
       'clsx',
       'tailwind-merge',
       '@heroicons/react',
-      'recharts'
+      'recharts',
+      'framer-motion',
+      'date-fns',
+      'lodash-es',
+      'uuid'
     ],
-    // Next.js 15 features
+    // Next.js 15 features with performance optimizations
     staleTimes: {
       dynamic: 30,
       static: 180,
@@ -48,15 +52,61 @@ const nextConfig = {
     ]
   },
 
-  webpack: (config, { isServer, webpack }) => {
-    // Basic module resolution
+  webpack: (config, { isServer, webpack, dev }) => {
+    // Enhanced module resolution with performance optimizations
     config.resolve.alias = {
       ...config.resolve.alias,
       '@': require('path').resolve(__dirname, './')
     }
 
+    // Performance optimizations
+    if (!dev) {
+      // Enable tree shaking in production
+      config.optimization = {
+        ...config.optimization,
+        usedExports: true,
+        sideEffects: false,
+        // Split chunks for better caching
+        splitChunks: {
+          chunks: 'all',
+          cacheGroups: {
+            vendor: {
+              test: /[\\/]node_modules[\\/]/,
+              name: 'vendors',
+              chunks: 'all',
+            },
+            common: {
+              name: 'common',
+              minChunks: 2,
+              chunks: 'all',
+              enforce: true,
+            },
+          },
+        },
+      }
+    }
+
+    // Optimize bundle size
+    config.optimization = {
+      ...config.optimization,
+      // Remove console logs in production
+      minimize: !dev,
+      // Enable gzip compression
+      minimizer: [
+        ...config.optimization.minimizer,
+        new (require('terser-webpack-plugin'))({
+          terserOptions: {
+            compress: {
+              drop_console: !dev,
+              drop_debugger: !dev,
+            },
+          },
+        }),
+      ],
+    }
+
     if (isServer) {
-      // Basic server-side configuration
+      // Enhanced server-side configuration
       config.externals = config.externals || [];
       config.externals.push({
         '@supabase/supabase-js': 'commonjs @supabase/supabase-js',
@@ -68,8 +118,8 @@ const nextConfig = {
     return config
   },
 
-  // Compression
-  compress: true,
+  // Compression - temporarily disabled to fix ERR_CONTENT_DECODING_FAILED
+  compress: false,
 
   // Modularize imports for better tree-shaking
   modularizeImports: {
@@ -293,6 +343,20 @@ const nextConfig = {
       },
       {
         source: '/_next/static/(.*)',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable'
+          },
+          // Temporarily removed to fix ERR_CONTENT_DECODING_FAILED
+          // {
+          //   key: 'Content-Encoding',
+          //   value: 'gzip'
+          // }
+        ]
+      },
+      {
+        source: '/_next/static/chunks/(.*)',
         headers: [
           {
             key: 'Cache-Control',

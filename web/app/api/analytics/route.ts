@@ -23,7 +23,7 @@ import { AnalyticsService } from '@/features/analytics/lib/analytics-service';
 import { withAuth, createRateLimitMiddleware, combineMiddleware } from '@/lib/core/auth/middleware';
 import { getQueryOptimizer, withPerformanceMonitoring } from '@/lib/database/optimizer';
 import { logger } from '@/lib/utils/logger';
-import { getSupabaseServerClient } from '@/utils/supabase/server';
+import { getSupabaseAdminClient } from '@/utils/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
@@ -46,13 +46,13 @@ export const GET = withAuth(async (request: NextRequest) => {
     // Public statistics (no auth required)
     if (type === 'public') {
       try {
-        const supabase = await getSupabaseServerClient();
+        const supabase = await getSupabaseAdminClient();
         
         // Get total polls
         const { count: totalPolls, error: pollsError } = await supabase
           .from('polls')
           .select('*', { count: 'exact', head: true })
-          .eq('is_active', true);
+          .eq('status', 'active');
         
         if (pollsError) {
           logger.error('Error fetching total polls:', pollsError);

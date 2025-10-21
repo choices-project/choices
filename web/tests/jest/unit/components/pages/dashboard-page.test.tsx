@@ -1,7 +1,7 @@
 /**
  * Dashboard Page Component Tests - REAL COMPONENT TESTING
  * 
- * Tests the actual SuperiorMobileFeed component with real functionality:
+ * Tests the actual UnifiedFeed component with real functionality:
  * - Real state management and user interactions
  * - Real business logic and API calls
  * - Real error handling and edge cases
@@ -9,9 +9,9 @@
  */
 
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
-import SuperiorMobileFeed from '@/features/feeds/components/SuperiorMobileFeed';
+import UnifiedFeed from '@/features/feeds/components/UnifiedFeed';
 import { T } from '@/lib/testing/testIds';
 
 // Mock Next.js router
@@ -213,7 +213,7 @@ Object.defineProperty(global.navigator, 'onLine', {
   writable: true
 });
 
-describe('SuperiorMobileFeed - Real Component Testing', () => {
+describe('UnifiedFeed - Real Component Testing', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     // Reset DOM
@@ -221,12 +221,14 @@ describe('SuperiorMobileFeed - Real Component Testing', () => {
   });
 
   describe('Real Component Rendering', () => {
-    it('should render the actual SuperiorMobileFeed component with real functionality', () => {
-      render(
-        <BrowserRouter>
-          <SuperiorMobileFeed userId="test-user-1" />
-        </BrowserRouter>
-      );
+    it('should render the actual UnifiedFeed component with real functionality', async () => {
+      await act(async () => {
+        render(
+          <BrowserRouter>
+            <UnifiedFeed userId="test-user-1" />
+          </BrowserRouter>
+        );
+      });
 
       // Test real component elements
       expect(screen.getByText('Choices')).toBeInTheDocument();
@@ -234,24 +236,28 @@ describe('SuperiorMobileFeed - Real Component Testing', () => {
       expect(screen.getByTestId(T.themeToggle)).toBeInTheDocument();
     });
 
-    it('should display real feed data from the store', () => {
-      render(
-        <BrowserRouter>
-          <SuperiorMobileFeed userId="test-user-1" />
-        </BrowserRouter>
-      );
+    it('should display real feed data from the store', async () => {
+      await act(async () => {
+        render(
+          <BrowserRouter>
+            <UnifiedFeed userId="test-user-1" />
+          </BrowserRouter>
+        );
+      });
 
       // Test that feed component is rendered (actual content may vary)
       expect(screen.getByTestId('main-heading')).toBeInTheDocument();
       expect(screen.getByTestId('online-indicator')).toBeInTheDocument();
     });
 
-    it('should show online status indicator with real functionality', () => {
-      render(
-        <BrowserRouter>
-          <SuperiorMobileFeed userId="test-user-1" />
-        </BrowserRouter>
-      );
+    it('should show online status indicator with real functionality', async () => {
+      await act(async () => {
+        render(
+          <BrowserRouter>
+            <UnifiedFeed userId="test-user-1" />
+          </BrowserRouter>
+        );
+      });
 
       // Test real online status using test ID to avoid duplicate text issues
       expect(screen.getByTestId(T.onlineIndicator)).toBeInTheDocument();
@@ -262,7 +268,7 @@ describe('SuperiorMobileFeed - Real Component Testing', () => {
     it('should handle theme toggle with real state management', async () => {
       render(
         <BrowserRouter>
-          <SuperiorMobileFeed userId="test-user-1" />
+          <UnifiedFeed userId="test-user-1" />
         </BrowserRouter>
       );
 
@@ -276,7 +282,7 @@ describe('SuperiorMobileFeed - Real Component Testing', () => {
     it('should handle hamburger menu with real state management', async () => {
       render(
         <BrowserRouter>
-          <SuperiorMobileFeed userId="test-user-1" />
+          <UnifiedFeed userId="test-user-1" />
         </BrowserRouter>
       );
 
@@ -290,7 +296,7 @@ describe('SuperiorMobileFeed - Real Component Testing', () => {
     it('should handle tab navigation with real state changes', async () => {
       render(
         <BrowserRouter>
-          <SuperiorMobileFeed userId="test-user-1" />
+          <UnifiedFeed userId="test-user-1" />
         </BrowserRouter>
       );
 
@@ -311,7 +317,7 @@ describe('SuperiorMobileFeed - Real Component Testing', () => {
     it('should handle advanced filters with real functionality', async () => {
       render(
         <BrowserRouter>
-          <SuperiorMobileFeed userId="test-user-1" />
+          <UnifiedFeed userId="test-user-1" />
         </BrowserRouter>
       );
 
@@ -328,7 +334,7 @@ describe('SuperiorMobileFeed - Real Component Testing', () => {
     it('should load feeds on component mount', async () => {
       render(
         <BrowserRouter>
-          <SuperiorMobileFeed userId="test-user-1" />
+          <UnifiedFeed userId="test-user-1" />
         </BrowserRouter>
       );
 
@@ -342,7 +348,7 @@ describe('SuperiorMobileFeed - Real Component Testing', () => {
     it('should handle feed refresh with real API calls', async () => {
       render(
         <BrowserRouter>
-          <SuperiorMobileFeed userId="test-user-1" />
+          <UnifiedFeed userId="test-user-1" />
         </BrowserRouter>
       );
 
@@ -359,7 +365,7 @@ describe('SuperiorMobileFeed - Real Component Testing', () => {
     it('should handle bookmark functionality with real state updates', async () => {
       render(
         <BrowserRouter>
-          <SuperiorMobileFeed userId="test-user-1" />
+          <UnifiedFeed userId="test-user-1" />
         </BrowserRouter>
       );
 
@@ -384,7 +390,7 @@ describe('SuperiorMobileFeed - Real Component Testing', () => {
     it('should handle share functionality with real state updates', async () => {
       render(
         <BrowserRouter>
-          <SuperiorMobileFeed userId="test-user-1" />
+          <UnifiedFeed userId="test-user-1" />
         </BrowserRouter>
       );
 
@@ -426,7 +432,7 @@ describe('SuperiorMobileFeed - Real Component Testing', () => {
 
       render(
         <BrowserRouter>
-          <SuperiorMobileFeed userId="test-user-1" />
+          <UnifiedFeed userId="test-user-1" />
         </BrowserRouter>
       );
 
@@ -443,7 +449,7 @@ describe('SuperiorMobileFeed - Real Component Testing', () => {
 
       render(
         <BrowserRouter>
-          <SuperiorMobileFeed userId="test-user-1" />
+          <UnifiedFeed userId="test-user-1" />
         </BrowserRouter>
       );
 
@@ -456,7 +462,7 @@ describe('SuperiorMobileFeed - Real Component Testing', () => {
     it('should have proper ARIA labels and roles', () => {
       render(
         <BrowserRouter>
-          <SuperiorMobileFeed userId="test-user-1" />
+          <UnifiedFeed userId="test-user-1" />
         </BrowserRouter>
       );
 
@@ -468,7 +474,7 @@ describe('SuperiorMobileFeed - Real Component Testing', () => {
     it('should support keyboard navigation', () => {
       render(
         <BrowserRouter>
-          <SuperiorMobileFeed userId="test-user-1" />
+          <UnifiedFeed userId="test-user-1" />
         </BrowserRouter>
       );
 
@@ -485,7 +491,7 @@ describe('SuperiorMobileFeed - Real Component Testing', () => {
       
       render(
         <BrowserRouter>
-          <SuperiorMobileFeed userId="test-user-1" />
+          <UnifiedFeed userId="test-user-1" />
         </BrowserRouter>
       );
 
@@ -499,20 +505,20 @@ describe('SuperiorMobileFeed - Real Component Testing', () => {
     it('should handle multiple re-renders efficiently', async () => {
       const { rerender } = render(
         <BrowserRouter>
-          <SuperiorMobileFeed userId="test-user-1" />
+          <UnifiedFeed userId="test-user-1" />
         </BrowserRouter>
       );
 
       // Test multiple re-renders
       rerender(
         <BrowserRouter>
-          <SuperiorMobileFeed userId="test-user-2" />
+          <UnifiedFeed userId="test-user-2" />
         </BrowserRouter>
       );
 
       rerender(
         <BrowserRouter>
-          <SuperiorMobileFeed userId="test-user-1" />
+          <UnifiedFeed userId="test-user-1" />
         </BrowserRouter>
       );
 

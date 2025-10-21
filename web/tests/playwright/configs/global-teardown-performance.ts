@@ -1,4 +1,5 @@
-import { chromium, FullConfig } from '@playwright/test';
+import { chromium } from '@playwright/test';
+import type { FullConfig } from '@playwright/test';
 import fs from 'fs';
 import path from 'path';
 
@@ -30,8 +31,8 @@ async function globalTeardown(config: FullConfig) {
         failedTests: results.suites?.filter((suite: any) => !suite.ok).length || 0,
         performanceMetrics: {
           averageTestDuration: 0,
-          slowestTest: null,
-          fastestTest: null
+          slowestTest: 0,
+          fastestTest: 0
         }
       };
       

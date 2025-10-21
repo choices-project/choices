@@ -1,7 +1,6 @@
 'use client'
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import dynamic from 'next/dynamic'
 import { useState, useEffect } from 'react'
 
 import FontProvider from '@/components/shared/FontProvider'
@@ -10,12 +9,8 @@ import SiteMessages from '@/components/shared/SiteMessages'
 import { UserStoreProvider } from '@/lib/providers/UserStoreProvider'
 import { initializePWA } from '@/lib/pwa/init'
 import { logger } from '@/lib/utils/logger'
+import PWABackground from '@/features/pwa/components/PWABackground'
 // import EnhancedFeedbackWidget from '../../components/EnhancedFeedbackWidget'
-
-const PWABackground = dynamic(() => import('@/features/pwa/components/PWABackground'), {
-  ssr: false,
-  loading: () => null
-})
 
 export default function AppLayout({
   children,

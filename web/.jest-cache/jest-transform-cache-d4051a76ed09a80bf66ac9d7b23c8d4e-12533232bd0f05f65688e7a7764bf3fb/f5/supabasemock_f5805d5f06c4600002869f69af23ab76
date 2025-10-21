@@ -1,0 +1,176 @@
+c9b07ce7151163dd63ba225f86892516
+/**
+ * Supabase Mock Setup for Jest Tests
+ * 
+ * Provides comprehensive mocking for Supabase client to avoid URL validation issues
+ * 
+ * Created: January 19, 2025
+ * Status: ✅ PRODUCTION READY
+ */ "use strict";
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+const _globals = require("@jest/globals");
+// Mock environment variables
+process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://test.supabase.co';
+process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = 'test-anon-key';
+// Mock Supabase client
+_globals.jest.mock('@/utils/supabase/client', ()=>({
+        createClient: _globals.jest.fn(()=>({
+                from: _globals.jest.fn(()=>({
+                        select: _globals.jest.fn(()=>({
+                                eq: _globals.jest.fn(()=>({
+                                        single: _globals.jest.fn(()=>Promise.resolve({
+                                                data: null,
+                                                error: null
+                                            })),
+                                        order: _globals.jest.fn(()=>({
+                                                limit: _globals.jest.fn(()=>Promise.resolve({
+                                                        data: [],
+                                                        error: null
+                                                    }))
+                                            }))
+                                    })),
+                                order: _globals.jest.fn(()=>({
+                                        limit: _globals.jest.fn(()=>Promise.resolve({
+                                                data: [],
+                                                error: null
+                                            }))
+                                    })),
+                                limit: _globals.jest.fn(()=>Promise.resolve({
+                                        data: [],
+                                        error: null
+                                    }))
+                            })),
+                        insert: _globals.jest.fn(()=>Promise.resolve({
+                                data: null,
+                                error: null
+                            })),
+                        update: _globals.jest.fn(()=>Promise.resolve({
+                                data: null,
+                                error: null
+                            })),
+                        delete: _globals.jest.fn(()=>Promise.resolve({
+                                data: null,
+                                error: null
+                            }))
+                    })),
+                rpc: _globals.jest.fn(()=>Promise.resolve({
+                        data: null,
+                        error: null
+                    }))
+            }))
+    }));
+// Mock Supabase server client
+_globals.jest.mock('@/utils/supabase/server', ()=>({
+        createServerClient: _globals.jest.fn(()=>({
+                from: _globals.jest.fn(()=>({
+                        select: _globals.jest.fn(()=>({
+                                eq: _globals.jest.fn(()=>({
+                                        single: _globals.jest.fn(()=>Promise.resolve({
+                                                data: null,
+                                                error: null
+                                            })),
+                                        order: _globals.jest.fn(()=>({
+                                                limit: _globals.jest.fn(()=>Promise.resolve({
+                                                        data: [],
+                                                        error: null
+                                                    }))
+                                            }))
+                                    })),
+                                order: _globals.jest.fn(()=>({
+                                        limit: _globals.jest.fn(()=>Promise.resolve({
+                                                data: [],
+                                                error: null
+                                            }))
+                                    })),
+                                limit: _globals.jest.fn(()=>Promise.resolve({
+                                        data: [],
+                                        error: null
+                                    }))
+                            })),
+                        insert: _globals.jest.fn(()=>Promise.resolve({
+                                data: null,
+                                error: null
+                            })),
+                        update: _globals.jest.fn(()=>Promise.resolve({
+                                data: null,
+                                error: null
+                            })),
+                        delete: _globals.jest.fn(()=>Promise.resolve({
+                                data: null,
+                                error: null
+                            }))
+                    })),
+                rpc: _globals.jest.fn(()=>Promise.resolve({
+                        data: null,
+                        error: null
+                    }))
+            }))
+    }));
+// Mock Supabase auth
+_globals.jest.mock('@supabase/supabase-js', ()=>({
+        createClient: _globals.jest.fn(()=>({
+                from: _globals.jest.fn(()=>({
+                        select: _globals.jest.fn(()=>({
+                                eq: _globals.jest.fn(()=>({
+                                        single: _globals.jest.fn(()=>Promise.resolve({
+                                                data: null,
+                                                error: null
+                                            })),
+                                        order: _globals.jest.fn(()=>({
+                                                limit: _globals.jest.fn(()=>Promise.resolve({
+                                                        data: [],
+                                                        error: null
+                                                    }))
+                                            }))
+                                    })),
+                                order: _globals.jest.fn(()=>({
+                                        limit: _globals.jest.fn(()=>Promise.resolve({
+                                                data: [],
+                                                error: null
+                                            }))
+                                    })),
+                                limit: _globals.jest.fn(()=>Promise.resolve({
+                                        data: [],
+                                        error: null
+                                    }))
+                            })),
+                        insert: _globals.jest.fn(()=>Promise.resolve({
+                                data: null,
+                                error: null
+                            })),
+                        update: _globals.jest.fn(()=>Promise.resolve({
+                                data: null,
+                                error: null
+                            })),
+                        delete: _globals.jest.fn(()=>Promise.resolve({
+                                data: null,
+                                error: null
+                            }))
+                    })),
+                rpc: _globals.jest.fn(()=>Promise.resolve({
+                        data: null,
+                        error: null
+                    })),
+                auth: {
+                    getUser: _globals.jest.fn(()=>Promise.resolve({
+                            data: {
+                                user: null
+                            },
+                            error: null
+                        })),
+                    signIn: _globals.jest.fn(()=>Promise.resolve({
+                            data: {
+                                user: null
+                            },
+                            error: null
+                        })),
+                    signOut: _globals.jest.fn(()=>Promise.resolve({
+                            error: null
+                        }))
+                }
+            }))
+    }));
+
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIi9Vc2Vycy9hbGF1Z2hpbmdraXRzdW5lL3NyYy9DaG9pY2VzL3dlYi90ZXN0cy9qZXN0L3NldHVwL3N1cGFiYXNlLW1vY2sudHMiXSwic291cmNlc0NvbnRlbnQiOlsiLyoqXG4gKiBTdXBhYmFzZSBNb2NrIFNldHVwIGZvciBKZXN0IFRlc3RzXG4gKiBcbiAqIFByb3ZpZGVzIGNvbXByZWhlbnNpdmUgbW9ja2luZyBmb3IgU3VwYWJhc2UgY2xpZW50IHRvIGF2b2lkIFVSTCB2YWxpZGF0aW9uIGlzc3Vlc1xuICogXG4gKiBDcmVhdGVkOiBKYW51YXJ5IDE5LCAyMDI1XG4gKiBTdGF0dXM6IOKchSBQUk9EVUNUSU9OIFJFQURZXG4gKi9cblxuaW1wb3J0IHsgamVzdCB9IGZyb20gJ0BqZXN0L2dsb2JhbHMnO1xuXG4vLyBNb2NrIGVudmlyb25tZW50IHZhcmlhYmxlc1xucHJvY2Vzcy5lbnYuTkVYVF9QVUJMSUNfU1VQQUJBU0VfVVJMID0gJ2h0dHBzOi8vdGVzdC5zdXBhYmFzZS5jbyc7XG5wcm9jZXNzLmVudi5ORVhUX1BVQkxJQ19TVVBBQkFTRV9BTk9OX0tFWSA9ICd0ZXN0LWFub24ta2V5JztcblxuLy8gTW9jayBTdXBhYmFzZSBjbGllbnRcbmplc3QubW9jaygnQC91dGlscy9zdXBhYmFzZS9jbGllbnQnLCAoKSA9PiAoe1xuICBjcmVhdGVDbGllbnQ6IGplc3QuZm4oKCkgPT4gKHtcbiAgICBmcm9tOiBqZXN0LmZuKCgpID0+ICh7XG4gICAgICBzZWxlY3Q6IGplc3QuZm4oKCkgPT4gKHtcbiAgICAgICAgZXE6IGplc3QuZm4oKCkgPT4gKHtcbiAgICAgICAgICBzaW5nbGU6IGplc3QuZm4oKCkgPT4gUHJvbWlzZS5yZXNvbHZlKHsgZGF0YTogbnVsbCwgZXJyb3I6IG51bGwgfSkpLFxuICAgICAgICAgIG9yZGVyOiBqZXN0LmZuKCgpID0+ICh7XG4gICAgICAgICAgICBsaW1pdDogamVzdC5mbigoKSA9PiBQcm9taXNlLnJlc29sdmUoeyBkYXRhOiBbXSwgZXJyb3I6IG51bGwgfSkpXG4gICAgICAgICAgfSkpXG4gICAgICAgIH0pKSxcbiAgICAgICAgb3JkZXI6IGplc3QuZm4oKCkgPT4gKHtcbiAgICAgICAgICBsaW1pdDogamVzdC5mbigoKSA9PiBQcm9taXNlLnJlc29sdmUoeyBkYXRhOiBbXSwgZXJyb3I6IG51bGwgfSkpXG4gICAgICAgIH0pKSxcbiAgICAgICAgbGltaXQ6IGplc3QuZm4oKCkgPT4gUHJvbWlzZS5yZXNvbHZlKHsgZGF0YTogW10sIGVycm9yOiBudWxsIH0pKVxuICAgICAgfSkpLFxuICAgICAgaW5zZXJ0OiBqZXN0LmZuKCgpID0+IFByb21pc2UucmVzb2x2ZSh7IGRhdGE6IG51bGwsIGVycm9yOiBudWxsIH0pKSxcbiAgICAgIHVwZGF0ZTogamVzdC5mbigoKSA9PiBQcm9taXNlLnJlc29sdmUoeyBkYXRhOiBudWxsLCBlcnJvcjogbnVsbCB9KSksXG4gICAgICBkZWxldGU6IGplc3QuZm4oKCkgPT4gUHJvbWlzZS5yZXNvbHZlKHsgZGF0YTogbnVsbCwgZXJyb3I6IG51bGwgfSkpXG4gICAgfSkpLFxuICAgIHJwYzogamVzdC5mbigoKSA9PiBQcm9taXNlLnJlc29sdmUoeyBkYXRhOiBudWxsLCBlcnJvcjogbnVsbCB9KSlcbiAgfSkpXG59KSk7XG5cbi8vIE1vY2sgU3VwYWJhc2Ugc2VydmVyIGNsaWVudFxuamVzdC5tb2NrKCdAL3V0aWxzL3N1cGFiYXNlL3NlcnZlcicsICgpID0+ICh7XG4gIGNyZWF0ZVNlcnZlckNsaWVudDogamVzdC5mbigoKSA9PiAoe1xuICAgIGZyb206IGplc3QuZm4oKCkgPT4gKHtcbiAgICAgIHNlbGVjdDogamVzdC5mbigoKSA9PiAoe1xuICAgICAgICBlcTogamVzdC5mbigoKSA9PiAoe1xuICAgICAgICAgIHNpbmdsZTogamVzdC5mbigoKSA9PiBQcm9taXNlLnJlc29sdmUoeyBkYXRhOiBudWxsLCBlcnJvcjogbnVsbCB9KSksXG4gICAgICAgICAgb3JkZXI6IGplc3QuZm4oKCkgPT4gKHtcbiAgICAgICAgICAgIGxpbWl0OiBqZXN0LmZuKCgpID0+IFByb21pc2UucmVzb2x2ZSh7IGRhdGE6IFtdLCBlcnJvcjogbnVsbCB9KSlcbiAgICAgICAgICB9KSlcbiAgICAgICAgfSkpLFxuICAgICAgICBvcmRlcjogamVzdC5mbigoKSA9PiAoe1xuICAgICAgICAgIGxpbWl0OiBqZXN0LmZuKCgpID0+IFByb21pc2UucmVzb2x2ZSh7IGRhdGE6IFtdLCBlcnJvcjogbnVsbCB9KSlcbiAgICAgICAgfSkpLFxuICAgICAgICBsaW1pdDogamVzdC5mbigoKSA9PiBQcm9taXNlLnJlc29sdmUoeyBkYXRhOiBbXSwgZXJyb3I6IG51bGwgfSkpXG4gICAgICB9KSksXG4gICAgICBpbnNlcnQ6IGplc3QuZm4oKCkgPT4gUHJvbWlzZS5yZXNvbHZlKHsgZGF0YTogbnVsbCwgZXJyb3I6IG51bGwgfSkpLFxuICAgICAgdXBkYXRlOiBqZXN0LmZuKCgpID0+IFByb21pc2UucmVzb2x2ZSh7IGRhdGE6IG51bGwsIGVycm9yOiBudWxsIH0pKSxcbiAgICAgIGRlbGV0ZTogamVzdC5mbigoKSA9PiBQcm9taXNlLnJlc29sdmUoeyBkYXRhOiBudWxsLCBlcnJvcjogbnVsbCB9KSlcbiAgICB9KSksXG4gICAgcnBjOiBqZXN0LmZuKCgpID0+IFByb21pc2UucmVzb2x2ZSh7IGRhdGE6IG51bGwsIGVycm9yOiBudWxsIH0pKVxuICB9KSlcbn0pKTtcblxuLy8gTW9jayBTdXBhYmFzZSBhdXRoXG5qZXN0Lm1vY2soJ0BzdXBhYmFzZS9zdXBhYmFzZS1qcycsICgpID0+ICh7XG4gIGNyZWF0ZUNsaWVudDogamVzdC5mbigoKSA9PiAoe1xuICAgIGZyb206IGplc3QuZm4oKCkgPT4gKHtcbiAgICAgIHNlbGVjdDogamVzdC5mbigoKSA9PiAoe1xuICAgICAgICBlcTogamVzdC5mbigoKSA9PiAoe1xuICAgICAgICAgIHNpbmdsZTogamVzdC5mbigoKSA9PiBQcm9taXNlLnJlc29sdmUoeyBkYXRhOiBudWxsLCBlcnJvcjogbnVsbCB9KSksXG4gICAgICAgICAgb3JkZXI6IGplc3QuZm4oKCkgPT4gKHtcbiAgICAgICAgICAgIGxpbWl0OiBqZXN0LmZuKCgpID0+IFByb21pc2UucmVzb2x2ZSh7IGRhdGE6IFtdLCBlcnJvcjogbnVsbCB9KSlcbiAgICAgICAgICB9KSlcbiAgICAgICAgfSkpLFxuICAgICAgICBvcmRlcjogamVzdC5mbigoKSA9PiAoe1xuICAgICAgICAgIGxpbWl0OiBqZXN0LmZuKCgpID0+IFByb21pc2UucmVzb2x2ZSh7IGRhdGE6IFtdLCBlcnJvcjogbnVsbCB9KSlcbiAgICAgICAgfSkpLFxuICAgICAgICBsaW1pdDogamVzdC5mbigoKSA9PiBQcm9taXNlLnJlc29sdmUoeyBkYXRhOiBbXSwgZXJyb3I6IG51bGwgfSkpXG4gICAgICB9KSksXG4gICAgICBpbnNlcnQ6IGplc3QuZm4oKCkgPT4gUHJvbWlzZS5yZXNvbHZlKHsgZGF0YTogbnVsbCwgZXJyb3I6IG51bGwgfSkpLFxuICAgICAgdXBkYXRlOiBqZXN0LmZuKCgpID0+IFByb21pc2UucmVzb2x2ZSh7IGRhdGE6IG51bGwsIGVycm9yOiBudWxsIH0pKSxcbiAgICAgIGRlbGV0ZTogamVzdC5mbigoKSA9PiBQcm9taXNlLnJlc29sdmUoeyBkYXRhOiBudWxsLCBlcnJvcjogbnVsbCB9KSlcbiAgICB9KSksXG4gICAgcnBjOiBqZXN0LmZuKCgpID0+IFByb21pc2UucmVzb2x2ZSh7IGRhdGE6IG51bGwsIGVycm9yOiBudWxsIH0pKSxcbiAgICBhdXRoOiB7XG4gICAgICBnZXRVc2VyOiBqZXN0LmZuKCgpID0+IFByb21pc2UucmVzb2x2ZSh7IGRhdGE6IHsgdXNlcjogbnVsbCB9LCBlcnJvcjogbnVsbCB9KSksXG4gICAgICBzaWduSW46IGplc3QuZm4oKCkgPT4gUHJvbWlzZS5yZXNvbHZlKHsgZGF0YTogeyB1c2VyOiBudWxsIH0sIGVycm9yOiBudWxsIH0pKSxcbiAgICAgIHNpZ25PdXQ6IGplc3QuZm4oKCkgPT4gUHJvbWlzZS5yZXNvbHZlKHsgZXJyb3I6IG51bGwgfSkpXG4gICAgfVxuICB9KSlcbn0pKTtcbiJdLCJuYW1lcyI6WyJwcm9jZXNzIiwiZW52IiwiTkVYVF9QVUJMSUNfU1VQQUJBU0VfVVJMIiwiTkVYVF9QVUJMSUNfU1VQQUJBU0VfQU5PTl9LRVkiLCJqZXN0IiwibW9jayIsImNyZWF0ZUNsaWVudCIsImZuIiwiZnJvbSIsInNlbGVjdCIsImVxIiwic2luZ2xlIiwiUHJvbWlzZSIsInJlc29sdmUiLCJkYXRhIiwiZXJyb3IiLCJvcmRlciIsImxpbWl0IiwiaW5zZXJ0IiwidXBkYXRlIiwiZGVsZXRlIiwicnBjIiwiY3JlYXRlU2VydmVyQ2xpZW50IiwiYXV0aCIsImdldFVzZXIiLCJ1c2VyIiwic2lnbkluIiwic2lnbk91dCJdLCJtYXBwaW5ncyI6IkFBQUE7Ozs7Ozs7Q0FPQzs7Ozt5QkFFb0I7QUFFckIsNkJBQTZCO0FBQzdCQSxRQUFRQyxHQUFHLENBQUNDLHdCQUF3QixHQUFHO0FBQ3ZDRixRQUFRQyxHQUFHLENBQUNFLDZCQUE2QixHQUFHO0FBRTVDLHVCQUF1QjtBQUN2QkMsYUFBSSxDQUFDQyxJQUFJLENBQUMsMkJBQTJCLElBQU8sQ0FBQTtRQUMxQ0MsY0FBY0YsYUFBSSxDQUFDRyxFQUFFLENBQUMsSUFBTyxDQUFBO2dCQUMzQkMsTUFBTUosYUFBSSxDQUFDRyxFQUFFLENBQUMsSUFBTyxDQUFBO3dCQUNuQkUsUUFBUUwsYUFBSSxDQUFDRyxFQUFFLENBQUMsSUFBTyxDQUFBO2dDQUNyQkcsSUFBSU4sYUFBSSxDQUFDRyxFQUFFLENBQUMsSUFBTyxDQUFBO3dDQUNqQkksUUFBUVAsYUFBSSxDQUFDRyxFQUFFLENBQUMsSUFBTUssUUFBUUMsT0FBTyxDQUFDO2dEQUFFQyxNQUFNO2dEQUFNQyxPQUFPOzRDQUFLO3dDQUNoRUMsT0FBT1osYUFBSSxDQUFDRyxFQUFFLENBQUMsSUFBTyxDQUFBO2dEQUNwQlUsT0FBT2IsYUFBSSxDQUFDRyxFQUFFLENBQUMsSUFBTUssUUFBUUMsT0FBTyxDQUFDO3dEQUFF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

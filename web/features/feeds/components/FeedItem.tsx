@@ -26,7 +26,7 @@ import {
   BookmarkIcon as BookmarkSolidIcon
 } from '@heroicons/react/24/solid';
 import Image from 'next/image';
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, memo } from 'react';
 
 import type { FeedItemData } from '../types';
 
@@ -44,7 +44,7 @@ interface FeedItemProps {
   className?: string;
 }
 
-export default function FeedItem({
+const FeedItem = memo(({
   item,
   onLike,
   onShare,
@@ -56,7 +56,7 @@ export default function FeedItem({
   showEngagement = true,
   enableHaptics = false,
   className = ''
-}: FeedItemProps) {
+}: FeedItemProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [showActions, setShowActions] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -136,6 +136,27 @@ export default function FeedItem({
     onComment?.(item.id);
     setTimeout(() => setIsLoading(false), 200);
   }, [item.id, onComment, enableHaptics, isLoading]);
+
+  const handleHashtagClick = useCallback((tag: string) => {
+    if (isLoading) return;
+    
+    setIsLoading(true);
+    if (enableHaptics && 'vibrate' in navigator) {
+      navigator.vibrate(25);
+    }
+    
+    // Simulate hashtag follow/unfollow
+    setTimeout(() => {
+      setIsLoading(false);
+      // Announce to screen reader
+      if (typeof window !== 'undefined' && window.document) {
+        const liveRegion = document.getElementById('live-region-content');
+        if (liveRegion) {
+          liveRegion.textContent = `Followed hashtag ${tag}`;
+        }
+      }
+    }, 500);
+  }, [enableHaptics, isLoading]);
 
   const handleTouchEnd = useCallback((e: React.TouchEvent) => {
     if (longPressTimerRef.current) {
@@ -237,6 +258,7 @@ export default function FeedItem({
   return (
     <div 
       ref={itemRef}
+      data-testid="feed-item"
       className={`bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden transition-all duration-200 hover:shadow-md ${className}`}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
@@ -246,13 +268,21 @@ export default function FeedItem({
       <div className="p-4 border-b border-gray-100">
         <div className="flex items-center space-x-3">
           <div className="relative">
-            <Image
-              src={item.representativePhoto}
-              alt={item.representativeName}
-              width={40}
-              height={40}
-              className="rounded-full object-cover"
-            />
+            {item.representativePhoto ? (
+              <Image
+                src={item.representativePhoto}
+                alt={item.representativeName}
+                width={40}
+                height={40}
+                className="rounded-full object-cover"
+              />
+            ) : (
+              <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
+                <span className="text-gray-500 text-sm font-medium">
+                  {item.representativeName?.charAt(0) || '?'}
+                </span>
+              </div>
+            )}
             <div className="absolute -bottom-1 -right-1">
               {getContentTypeIcon(item.contentType)}
             </div>
@@ -301,7 +331,7 @@ export default function FeedItem({
           </div>
         )}
         
-        {item.imageUrl && (
+        {item.imageUrl && item.imageUrl.trim() !== '' && (
           <div className="relative mb-4">
             <Image
               src={item.imageUrl}
@@ -310,6 +340,24 @@ export default function FeedItem({
               height={300}
               className="w-full h-64 object-cover rounded-lg"
             />
+          </div>
+        )}
+        
+        {/* Hashtags */}
+        {item.tags && item.tags.length > 0 && (
+          <div className="px-4 py-2">
+            <div className="flex flex-wrap gap-2">
+              {item.tags.map((tag: string, index: number) => (
+                <button
+                  key={index}
+                  onClick={() => handleHashtagClick(tag)}
+                  className="text-blue-500 hover:text-blue-700 text-sm font-medium hover:underline"
+                  aria-label={`Click hashtag ${tag}`}
+                >
+                  #{tag}
+                </button>
+              ))}
+            </div>
           </div>
         )}
       </div>
@@ -327,7 +375,7 @@ export default function FeedItem({
                     ? 'text-red-500' 
                     : 'text-gray-500 hover:text-red-500'
                 } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
-                aria-label={`${isLiked ? 'Unlike' : 'Like'} this post`}
+                aria-label={`${isLiked ? 'Unlike' : 'Like'} ${item.title}`}
               >
                 {isLiked ? (
                   <HeartSolidIcon className="w-5 h-5" />
@@ -345,7 +393,7 @@ export default function FeedItem({
                 className={`flex items-center space-x-2 text-gray-500 hover:text-blue-500 transition-colors ${
                   isLoading ? 'opacity-50 cursor-not-allowed' : ''
                 }`}
-                aria-label="Comment on this post"
+                aria-label={`Comment on ${item.title}`}
               >
                 <ChatBubbleLeftIcon className="w-5 h-5" />
                 <span className="text-sm font-medium">
@@ -359,7 +407,7 @@ export default function FeedItem({
                 className={`flex items-center space-x-2 text-gray-500 hover:text-green-500 transition-colors ${
                   isLoading ? 'opacity-50 cursor-not-allowed' : ''
                 }`}
-                aria-label="Share this post"
+                aria-label={`Share ${item.title}`}
               >
                 <ShareIcon className="w-5 h-5" />
                 <span className="text-sm font-medium">
@@ -431,4 +479,6 @@ export default function FeedItem({
       )}
     </div>
   );
-}
+});
+
+export default FeedItem;

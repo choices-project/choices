@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Check admin permissions - only admins can access feedback data
-    const { data: userProfile, error: profileError } = await supabaseClient
+    const { data: userProfile, error: profileError } = await (supabaseClient as any)
       .from('user_profiles')
       .select('is_admin')
       .eq('user_id', String(user.id))

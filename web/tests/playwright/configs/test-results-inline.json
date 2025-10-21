@@ -9,7 +9,7 @@
     "globalTimeout": 0,
     "grep": {},
     "grepInvert": null,
-    "maxFailures": 0,
+    "maxFailures": 3,
     "metadata": {
       "actualWorkers": 6
     },
@@ -69,6 +69,38 @@
           "**/*.@(spec|test).?(c|m)[jt]s?(x)"
         ],
         "timeout": 30000
+      },
+      {
+        "outputDir": "/Users/alaughingkitsune/src/Choices/web/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 6
+        },
+        "id": "webkit-inline",
+        "name": "webkit-inline",
+        "testDir": "/Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      },
+      {
+        "outputDir": "/Users/alaughingkitsune/src/Choices/web/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 6
+        },
+        "id": "mobile-chrome-inline",
+        "name": "mobile-chrome-inline",
+        "testDir": "/Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
       }
     ],
     "shard": null,
@@ -78,2171 +110,920 @@
     "workers": 6,
     "webServer": {
       "command": "npm run dev",
-      "url": "http://localhost:3002",
+      "url": "http://localhost:3000",
       "reuseExistingServer": true,
       "timeout": 120000
     }
   },
   "suites": [
     {
-      "title": "core/authentication.spec.ts",
-      "file": "core/authentication.spec.ts",
+      "title": "features/unified-feed.spec.ts",
+      "file": "features/unified-feed.spec.ts",
       "column": 0,
       "line": 0,
       "specs": [],
       "suites": [
         {
-          "title": "Authentication",
-          "file": "core/authentication.spec.ts",
-          "line": 3,
+          "title": "UnifiedFeed Component - E2E Tests",
+          "file": "features/unified-feed.spec.ts",
+          "line": 14,
           "column": 6,
-          "specs": [
+          "specs": [],
+          "suites": [
             {
-              "title": "should load authentication page",
-              "ok": true,
-              "tags": [],
-              "tests": [
+              "title": "Basic Functionality",
+              "file": "features/unified-feed.spec.ts",
+              "line": 31,
+              "column": 8,
+              "specs": [
                 {
-                  "timeout": 30000,
-                  "annotations": [],
-                  "expectedStatus": "passed",
-                  "projectId": "chromium-inline",
-                  "projectName": "chromium-inline",
-                  "results": [
+                  "title": "should load UnifiedFeed component with all essential elements",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
                     {
-                      "workerIndex": 0,
-                      "parallelIndex": 0,
-                      "status": "passed",
-                      "duration": 20443,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2025-10-20T17:44:54.963Z",
+                      "timeout": 30000,
                       "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
-                }
-              ],
-              "id": "756295d69f331ac26ed6-29f23eb7660f88b7880c",
-              "file": "core/authentication.spec.ts",
-              "line": 4,
-              "column": 7
-            },
-            {
-              "title": "should show authentication options",
-              "ok": true,
-              "tags": [],
-              "tests": [
-                {
-                  "timeout": 30000,
-                  "annotations": [],
-                  "expectedStatus": "passed",
-                  "projectId": "chromium-inline",
-                  "projectName": "chromium-inline",
-                  "results": [
-                    {
-                      "workerIndex": 1,
-                      "parallelIndex": 1,
-                      "status": "passed",
-                      "duration": 20310,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2025-10-20T17:44:54.997Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
-                }
-              ],
-              "id": "756295d69f331ac26ed6-ce78fdd839112ecde4dd",
-              "file": "core/authentication.spec.ts",
-              "line": 14,
-              "column": 7
-            },
-            {
-              "title": "should handle WebAuthn authentication",
-              "ok": true,
-              "tags": [],
-              "tests": [
-                {
-                  "timeout": 30000,
-                  "annotations": [],
-                  "expectedStatus": "passed",
-                  "projectId": "chromium-inline",
-                  "projectName": "chromium-inline",
-                  "results": [
-                    {
-                      "workerIndex": 2,
-                      "parallelIndex": 2,
-                      "status": "passed",
-                      "duration": 20548,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2025-10-20T17:44:54.997Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
-                }
-              ],
-              "id": "756295d69f331ac26ed6-6b2d8cfa82b339127e80",
-              "file": "core/authentication.spec.ts",
-              "line": 34,
-              "column": 7
-            },
-            {
-              "title": "should handle admin authentication",
-              "ok": true,
-              "tags": [],
-              "tests": [
-                {
-                  "timeout": 30000,
-                  "annotations": [],
-                  "expectedStatus": "passed",
-                  "projectId": "chromium-inline",
-                  "projectName": "chromium-inline",
-                  "results": [
-                    {
-                      "workerIndex": 3,
-                      "parallelIndex": 3,
-                      "status": "passed",
-                      "duration": 20847,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2025-10-20T17:44:55.000Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
-                }
-              ],
-              "id": "756295d69f331ac26ed6-7188e9d1d84984cbf166",
-              "file": "core/authentication.spec.ts",
-              "line": 53,
-              "column": 7
-            },
-            {
-              "title": "should load authentication page",
-              "ok": true,
-              "tags": [],
-              "tests": [
-                {
-                  "timeout": 30000,
-                  "annotations": [],
-                  "expectedStatus": "passed",
-                  "projectId": "firefox-inline",
-                  "projectName": "firefox-inline",
-                  "results": [
-                    {
-                      "workerIndex": 10,
-                      "parallelIndex": 4,
-                      "status": "passed",
-                      "duration": 18328,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2025-10-20T17:45:35.184Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
-                }
-              ],
-              "id": "756295d69f331ac26ed6-a339dd0d11227708b7fb",
-              "file": "core/authentication.spec.ts",
-              "line": 4,
-              "column": 7
-            },
-            {
-              "title": "should show authentication options",
-              "ok": false,
-              "tags": [],
-              "tests": [
-                {
-                  "timeout": 30000,
-                  "annotations": [],
-                  "expectedStatus": "passed",
-                  "projectId": "firefox-inline",
-                  "projectName": "firefox-inline",
-                  "results": [
-                    {
-                      "workerIndex": 11,
-                      "parallelIndex": 3,
-                      "status": "timedOut",
-                      "duration": 33585,
-                      "error": {
-                        "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
-                        "stack": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
-                      },
-                      "errors": [
+                      "expectedStatus": "passed",
+                      "projectId": "chromium-inline",
+                      "projectName": "chromium-inline",
+                      "results": [
                         {
-                          "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
-                        },
+                          "workerIndex": 0,
+                          "parallelIndex": 0,
+                          "status": "passed",
+                          "duration": 26840,
+                          "errors": [],
+                          "stdout": [],
+                          "stderr": [],
+                          "retry": 0,
+                          "startTime": "2025-10-21T12:25:54.535Z",
+                          "annotations": [],
+                          "attachments": []
+                        }
+                      ],
+                      "status": "expected"
+                    }
+                  ],
+                  "id": "b28c7033ad3fe2609563-1edab4b142b396942f0e",
+                  "file": "features/unified-feed.spec.ts",
+                  "line": 32,
+                  "column": 9
+                },
+                {
+                  "title": "should display feed items correctly",
+                  "ok": false,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 30000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "chromium-inline",
+                      "projectName": "chromium-inline",
+                      "results": [
                         {
-                          "location": {
-                            "file": "/Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/core/authentication.spec.ts",
-                            "column": 16,
-                            "line": 15
+                          "workerIndex": 1,
+                          "parallelIndex": 1,
+                          "status": "timedOut",
+                          "duration": 30291,
+                          "error": {
+                            "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
+                            "stack": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
                           },
-                          "message": "Error: page.goto: Test timeout of 30000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3002/auth\", waiting until \"load\"\u001b[22m\n\n\n\u001b[0m \u001b[90m 13 |\u001b[39m\n \u001b[90m 14 |\u001b[39m   test(\u001b[32m'should show authentication options'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 15 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/auth'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 16 |\u001b[39m     \n \u001b[90m 17 |\u001b[39m     \u001b[90m// Wait for page to load\u001b[39m\n \u001b[90m 18 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForLoadState(\u001b[32m'networkidle'\u001b[39m)\u001b[33m;\u001b[39m\u001b[0m\n\u001b[2m    at /Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/core/authentication.spec.ts:15:16\u001b[22m"
+                          "errors": [
+                            {
+                              "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                            },
+                            {
+                              "location": {
+                                "file": "/Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/features/unified-feed.spec.ts",
+                                "column": 18,
+                                "line": 55
+                              },
+                              "message": "Error: page.waitForSelector: Target page, context or browser has been closed\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"feed-item\"]') to be visible\u001b[22m\n\n\n\u001b[0m \u001b[90m 53 |\u001b[39m       \n \u001b[90m 54 |\u001b[39m       \u001b[90m// Wait for feed items to load\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 55 |\u001b[39m       \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForSelector(\u001b[32m'[data-testid=\"feed-item\"]'\u001b[39m\u001b[33m,\u001b[39m { timeout\u001b[33m:\u001b[39m \u001b[35m10000\u001b[39m })\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                  \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 56 |\u001b[39m       \n \u001b[90m 57 |\u001b[39m       \u001b[90m// Check for feed items\u001b[39m\n \u001b[90m 58 |\u001b[39m       \u001b[36mconst\u001b[39m feedItems \u001b[33m=\u001b[39m page\u001b[33m.\u001b[39mlocator(\u001b[32m'[data-testid=\"feed-item\"]'\u001b[39m)\u001b[33m;\u001b[39m\u001b[0m\n\u001b[2m    at /Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/features/unified-feed.spec.ts:55:18\u001b[22m"
+                            }
+                          ],
+                          "stdout": [],
+                          "stderr": [],
+                          "retry": 0,
+                          "startTime": "2025-10-21T12:25:54.492Z",
+                          "annotations": [],
+                          "attachments": [
+                            {
+                              "name": "screenshot",
+                              "contentType": "image/png",
+                              "path": "/Users/alaughingkitsune/src/Choices/web/test-results/features-unified-feed-Unif-615e2-isplay-feed-items-correctly-chromium-inline/test-failed-1.png"
+                            },
+                            {
+                              "name": "error-context",
+                              "contentType": "text/markdown",
+                              "path": "/Users/alaughingkitsune/src/Choices/web/test-results/features-unified-feed-Unif-615e2-isplay-feed-items-correctly-chromium-inline/error-context.md"
+                            }
+                          ]
                         }
                       ],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2025-10-20T17:45:46.220Z",
-                      "annotations": [],
-                      "attachments": [
-                        {
-                          "name": "screenshot",
-                          "contentType": "image/png",
-                          "path": "/Users/alaughingkitsune/src/Choices/web/test-results/core-authentication-Authen-18f26-show-authentication-options-firefox-inline/test-failed-1.png"
-                        },
-                        {
-                          "name": "video",
-                          "contentType": "video/webm",
-                          "path": "/Users/alaughingkitsune/src/Choices/web/test-results/core-authentication-Authen-18f26-show-authentication-options-firefox-inline/video.webm"
-                        },
-                        {
-                          "name": "error-context",
-                          "contentType": "text/markdown",
-                          "path": "/Users/alaughingkitsune/src/Choices/web/test-results/core-authentication-Authen-18f26-show-authentication-options-firefox-inline/error-context.md"
-                        }
-                      ]
+                      "status": "unexpected"
                     }
                   ],
-                  "status": "unexpected"
+                  "id": "b28c7033ad3fe2609563-82c262190130fecac4bc",
+                  "file": "features/unified-feed.spec.ts",
+                  "line": 50,
+                  "column": 9
+                },
+                {
+                  "title": "should show online status indicator",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 30000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "chromium-inline",
+                      "projectName": "chromium-inline",
+                      "results": [
+                        {
+                          "workerIndex": 2,
+                          "parallelIndex": 2,
+                          "status": "passed",
+                          "duration": 26738,
+                          "errors": [],
+                          "stdout": [],
+                          "stderr": [],
+                          "retry": 0,
+                          "startTime": "2025-10-21T12:25:54.550Z",
+                          "annotations": [],
+                          "attachments": []
+                        }
+                      ],
+                      "status": "expected"
+                    }
+                  ],
+                  "id": "b28c7033ad3fe2609563-f94c48b4a816c7781d72",
+                  "file": "features/unified-feed.spec.ts",
+                  "line": 68,
+                  "column": 9
                 }
-              ],
-              "id": "756295d69f331ac26ed6-de1cbb9b9ab6d5c2985b",
-              "file": "core/authentication.spec.ts",
-              "line": 14,
-              "column": 7
+              ]
             },
             {
-              "title": "should handle WebAuthn authentication",
-              "ok": false,
-              "tags": [],
-              "tests": [
+              "title": "Dark Mode Functionality",
+              "file": "features/unified-feed.spec.ts",
+              "line": 78,
+              "column": 8,
+              "specs": [
                 {
-                  "timeout": 30000,
-                  "annotations": [],
-                  "expectedStatus": "passed",
-                  "projectId": "firefox-inline",
-                  "projectName": "firefox-inline",
-                  "results": [
+                  "title": "should toggle dark mode correctly",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
                     {
-                      "workerIndex": 12,
-                      "parallelIndex": 5,
-                      "status": "timedOut",
-                      "duration": 36802,
-                      "error": {
-                        "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
-                        "stack": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
-                      },
-                      "errors": [
+                      "timeout": 30000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "chromium-inline",
+                      "projectName": "chromium-inline",
+                      "results": [
                         {
-                          "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
-                        },
+                          "workerIndex": 3,
+                          "parallelIndex": 3,
+                          "status": "passed",
+                          "duration": 27781,
+                          "errors": [],
+                          "stdout": [],
+                          "stderr": [],
+                          "retry": 0,
+                          "startTime": "2025-10-21T12:25:54.488Z",
+                          "annotations": [],
+                          "attachments": []
+                        }
+                      ],
+                      "status": "expected"
+                    }
+                  ],
+                  "id": "b28c7033ad3fe2609563-a87bbffa35a385ee845d",
+                  "file": "features/unified-feed.spec.ts",
+                  "line": 79,
+                  "column": 9
+                },
+                {
+                  "title": "should persist dark mode preference in localStorage",
+                  "ok": false,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 30000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "chromium-inline",
+                      "projectName": "chromium-inline",
+                      "results": [
                         {
-                          "location": {
-                            "file": "/Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/core/authentication.spec.ts",
-                            "column": 16,
-                            "line": 35
+                          "workerIndex": 4,
+                          "parallelIndex": 4,
+                          "status": "timedOut",
+                          "duration": 40090,
+                          "error": {
+                            "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
+                            "stack": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
                           },
-                          "message": "Error: page.goto: Test timeout of 30000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3002/auth\", waiting until \"load\"\u001b[22m\n\n\n\u001b[0m \u001b[90m 33 |\u001b[39m\n \u001b[90m 34 |\u001b[39m   test(\u001b[32m'should handle WebAuthn authentication'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 35 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/auth'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 36 |\u001b[39m     \n \u001b[90m 37 |\u001b[39m     \u001b[90m// Wait for page to load\u001b[39m\n \u001b[90m 38 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForLoadState(\u001b[32m'networkidle'\u001b[39m)\u001b[33m;\u001b[39m\u001b[0m\n\u001b[2m    at /Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/core/authentication.spec.ts:35:16\u001b[22m"
+                          "errors": [
+                            {
+                              "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                            },
+                            {
+                              "location": {
+                                "file": "/Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/features/unified-feed.spec.ts",
+                                "column": 18,
+                                "line": 112
+                              },
+                              "message": "Error: page.reload: net::ERR_ABORTED; maybe frame was detached?\nCall log:\n\u001b[2m  - waiting for navigation until \"load\"\u001b[22m\n\n\n\u001b[0m \u001b[90m 110 |\u001b[39m       \n \u001b[90m 111 |\u001b[39m       \u001b[90m// Reload page\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 112 |\u001b[39m       \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mreload()\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                  \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 113 |\u001b[39m       \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForSelector(\u001b[32m'[data-testid=\"unified-feed\"]'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 114 |\u001b[39m       \n \u001b[90m 115 |\u001b[39m       \u001b[90m// Check dark mode is still applied\u001b[39m\u001b[0m\n\u001b[2m    at /Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/features/unified-feed.spec.ts:112:18\u001b[22m"
+                            }
+                          ],
+                          "stdout": [],
+                          "stderr": [],
+                          "retry": 0,
+                          "startTime": "2025-10-21T12:25:54.492Z",
+                          "annotations": [],
+                          "attachments": []
                         }
                       ],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2025-10-20T17:45:46.454Z",
-                      "annotations": [],
-                      "attachments": [
-                        {
-                          "name": "screenshot",
-                          "contentType": "image/png",
-                          "path": "/Users/alaughingkitsune/src/Choices/web/test-results/core-authentication-Authen-bb2d3-dle-WebAuthn-authentication-firefox-inline/test-failed-1.png"
-                        },
-                        {
-                          "name": "video",
-                          "contentType": "video/webm",
-                          "path": "/Users/alaughingkitsune/src/Choices/web/test-results/core-authentication-Authen-bb2d3-dle-WebAuthn-authentication-firefox-inline/video.webm"
-                        },
-                        {
-                          "name": "error-context",
-                          "contentType": "text/markdown",
-                          "path": "/Users/alaughingkitsune/src/Choices/web/test-results/core-authentication-Authen-bb2d3-dle-WebAuthn-authentication-firefox-inline/error-context.md"
-                        }
-                      ]
+                      "status": "unexpected"
                     }
                   ],
-                  "status": "unexpected"
+                  "id": "b28c7033ad3fe2609563-a79e301bb0dc5d6f5184",
+                  "file": "features/unified-feed.spec.ts",
+                  "line": 100,
+                  "column": 9
                 }
-              ],
-              "id": "756295d69f331ac26ed6-4aecf2c2799ff1275582",
-              "file": "core/authentication.spec.ts",
-              "line": 34,
-              "column": 7
+              ]
             },
             {
-              "title": "should handle admin authentication",
-              "ok": false,
-              "tags": [],
-              "tests": [
+              "title": "Advanced Filters",
+              "file": "features/unified-feed.spec.ts",
+              "line": 121,
+              "column": 8,
+              "specs": [
                 {
-                  "timeout": 30000,
-                  "annotations": [],
-                  "expectedStatus": "passed",
-                  "projectId": "firefox-inline",
-                  "projectName": "firefox-inline",
-                  "results": [
+                  "title": "should toggle advanced filters panel",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
                     {
-                      "workerIndex": 13,
-                      "parallelIndex": 2,
-                      "status": "timedOut",
-                      "duration": 35094,
-                      "error": {
-                        "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
-                        "stack": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
-                      },
-                      "errors": [
+                      "timeout": 30000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "chromium-inline",
+                      "projectName": "chromium-inline",
+                      "results": [
                         {
-                          "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
-                        },
+                          "workerIndex": 5,
+                          "parallelIndex": 5,
+                          "status": "passed",
+                          "duration": 28910,
+                          "errors": [],
+                          "stdout": [],
+                          "stderr": [],
+                          "retry": 0,
+                          "startTime": "2025-10-21T12:25:54.481Z",
+                          "annotations": [],
+                          "attachments": []
+                        }
+                      ],
+                      "status": "expected"
+                    }
+                  ],
+                  "id": "b28c7033ad3fe2609563-e8e31c22b27da2e4c176",
+                  "file": "features/unified-feed.spec.ts",
+                  "line": 122,
+                  "column": 9
+                },
+                {
+                  "title": "should filter content by hashtags",
+                  "ok": false,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 30000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "chromium-inline",
+                      "projectName": "chromium-inline",
+                      "results": [
                         {
-                          "location": {
-                            "file": "/Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/core/authentication.spec.ts",
-                            "column": 16,
-                            "line": 54
+                          "workerIndex": 2,
+                          "parallelIndex": 2,
+                          "status": "timedOut",
+                          "duration": 35648,
+                          "error": {
+                            "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
+                            "stack": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
                           },
-                          "message": "Error: page.goto: Test timeout of 30000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3002/admin\", waiting until \"load\"\u001b[22m\n\n\n\u001b[0m \u001b[90m 52 |\u001b[39m\n \u001b[90m 53 |\u001b[39m   test(\u001b[32m'should handle admin authentication'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 54 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/admin'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 55 |\u001b[39m     \n \u001b[90m 56 |\u001b[39m     \u001b[90m// Wait for page to load\u001b[39m\n \u001b[90m 57 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForLoadState(\u001b[32m'networkidle'\u001b[39m)\u001b[33m;\u001b[39m\u001b[0m\n\u001b[2m    at /Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/core/authentication.spec.ts:54:16\u001b[22m"
+                          "errors": [
+                            {
+                              "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                            },
+                            {
+                              "location": {
+                                "file": "/Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/features/unified-feed.spec.ts",
+                                "column": 18,
+                                "line": 146
+                              },
+                              "message": "Error: page.waitForSelector: Target page, context or browser has been closed\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"unified-feed\"]') to be visible\u001b[22m\n\n\n\u001b[0m \u001b[90m 144 |\u001b[39m     test(\u001b[32m'should filter content by hashtags'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m () \u001b[33m=>\u001b[39m {\n \u001b[90m 145 |\u001b[39m       \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/feed'\u001b[39m)\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 146 |\u001b[39m       \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForSelector(\u001b[32m'[data-testid=\"unified-feed\"]'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                  \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 147 |\u001b[39m       \n \u001b[90m 148 |\u001b[39m       \u001b[90m// Wait for feed items to load\u001b[39m\n \u001b[90m 149 |\u001b[39m       \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForSelector(\u001b[32m'[data-testid=\"feed-item\"]'\u001b[39m\u001b[33m,\u001b[39m { timeout\u001b[33m:\u001b[39m \u001b[35m10000\u001b[39m })\u001b[33m;\u001b[39m\u001b[0m\n\u001b[2m    at /Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/features/unified-feed.spec.ts:146:18\u001b[22m"
+                            }
+                          ],
+                          "stdout": [],
+                          "stderr": [],
+                          "retry": 0,
+                          "startTime": "2025-10-21T12:26:22.395Z",
+                          "annotations": [],
+                          "attachments": [
+                            {
+                              "name": "error-context",
+                              "contentType": "text/markdown",
+                              "path": "/Users/alaughingkitsune/src/Choices/web/test-results/features-unified-feed-Unif-400e5--filter-content-by-hashtags-chromium-inline/error-context.md"
+                            }
+                          ]
                         }
                       ],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2025-10-20T17:45:51.170Z",
-                      "annotations": [],
-                      "attachments": [
-                        {
-                          "name": "screenshot",
-                          "contentType": "image/png",
-                          "path": "/Users/alaughingkitsune/src/Choices/web/test-results/core-authentication-Authen-a4ebe-handle-admin-authentication-firefox-inline/test-failed-1.png"
-                        },
-                        {
-                          "name": "video",
-                          "contentType": "video/webm",
-                          "path": "/Users/alaughingkitsune/src/Choices/web/test-results/core-authentication-Authen-a4ebe-handle-admin-authentication-firefox-inline/video.webm"
-                        },
-                        {
-                          "name": "error-context",
-                          "contentType": "text/markdown",
-                          "path": "/Users/alaughingkitsune/src/Choices/web/test-results/core-authentication-Authen-a4ebe-handle-admin-authentication-firefox-inline/error-context.md"
-                        }
-                      ]
+                      "status": "unexpected"
                     }
                   ],
-                  "status": "unexpected"
+                  "id": "b28c7033ad3fe2609563-9cad3b495897e3b0b6b8",
+                  "file": "features/unified-feed.spec.ts",
+                  "line": 144,
+                  "column": 9
                 }
-              ],
-              "id": "756295d69f331ac26ed6-f5e4f7972096948ba7cd",
-              "file": "core/authentication.spec.ts",
-              "line": 53,
-              "column": 7
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "title": "core/basic-navigation.spec.ts",
-      "file": "core/basic-navigation.spec.ts",
-      "column": 0,
-      "line": 0,
-      "specs": [],
-      "suites": [
-        {
-          "title": "Basic Navigation",
-          "file": "core/basic-navigation.spec.ts",
-          "line": 3,
-          "column": 6,
-          "specs": [
-            {
-              "title": "should load the home page",
-              "ok": false,
-              "tags": [],
-              "tests": [
-                {
-                  "timeout": 30000,
-                  "annotations": [],
-                  "expectedStatus": "passed",
-                  "projectId": "chromium-inline",
-                  "projectName": "chromium-inline",
-                  "results": [
-                    {
-                      "workerIndex": 4,
-                      "parallelIndex": 4,
-                      "status": "failed",
-                      "duration": 20441,
-                      "error": {
-                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoContain\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // indexOf\u001b[22m\n\nExpected substring: \u001b[32m\"localhost:3000\"\u001b[39m\nReceived string:    \u001b[31m\"http://localhost:3002/\"\u001b[39m",
-                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoContain\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // indexOf\u001b[22m\n\nExpected substring: \u001b[32m\"localhost:3000\"\u001b[39m\nReceived string:    \u001b[31m\"http://localhost:3002/\"\u001b[39m\n    at /Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/core/basic-navigation.spec.ts:11:24",
-                        "location": {
-                          "file": "/Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/core/basic-navigation.spec.ts",
-                          "column": 24,
-                          "line": 11
-                        },
-                        "snippet": "\u001b[0m \u001b[90m  9 |\u001b[39m     \n \u001b[90m 10 |\u001b[39m     \u001b[90m// Check that the page loaded successfully\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 11 |\u001b[39m     expect(page\u001b[33m.\u001b[39murl())\u001b[33m.\u001b[39mtoContain(\u001b[32m'localhost:3000'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                        \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 12 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 13 |\u001b[39m\n \u001b[90m 14 |\u001b[39m   test(\u001b[32m'should have a title'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\u001b[0m"
-                      },
-                      "errors": [
-                        {
-                          "location": {
-                            "file": "/Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/core/basic-navigation.spec.ts",
-                            "column": 24,
-                            "line": 11
-                          },
-                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoContain\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // indexOf\u001b[22m\n\nExpected substring: \u001b[32m\"localhost:3000\"\u001b[39m\nReceived string:    \u001b[31m\"http://localhost:3002/\"\u001b[39m\n\n\u001b[0m \u001b[90m  9 |\u001b[39m     \n \u001b[90m 10 |\u001b[39m     \u001b[90m// Check that the page loaded successfully\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 11 |\u001b[39m     expect(page\u001b[33m.\u001b[39murl())\u001b[33m.\u001b[39mtoContain(\u001b[32m'localhost:3000'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                        \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 12 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 13 |\u001b[39m\n \u001b[90m 14 |\u001b[39m   test(\u001b[32m'should have a title'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\u001b[0m\n\u001b[2m    at /Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/core/basic-navigation.spec.ts:11:24\u001b[22m"
-                        }
-                      ],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2025-10-20T17:44:54.962Z",
-                      "annotations": [],
-                      "attachments": [
-                        {
-                          "name": "screenshot",
-                          "contentType": "image/png",
-                          "path": "/Users/alaughingkitsune/src/Choices/web/test-results/core-basic-navigation-Basi-a3a34-n-should-load-the-home-page-chromium-inline/test-failed-1.png"
-                        },
-                        {
-                          "name": "video",
-                          "contentType": "video/webm",
-                          "path": "/Users/alaughingkitsune/src/Choices/web/test-results/core-basic-navigation-Basi-a3a34-n-should-load-the-home-page-chromium-inline/video.webm"
-                        },
-                        {
-                          "name": "error-context",
-                          "contentType": "text/markdown",
-                          "path": "/Users/alaughingkitsune/src/Choices/web/test-results/core-basic-navigation-Basi-a3a34-n-should-load-the-home-page-chromium-inline/error-context.md"
-                        }
-                      ],
-                      "errorLocation": {
-                        "file": "/Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/core/basic-navigation.spec.ts",
-                        "column": 24,
-                        "line": 11
-                      }
-                    }
-                  ],
-                  "status": "unexpected"
-                }
-              ],
-              "id": "608c483525fa7df0fcda-7f1e35dea1ceee05b346",
-              "file": "core/basic-navigation.spec.ts",
-              "line": 4,
-              "column": 7
+              ]
             },
             {
-              "title": "should have a title",
-              "ok": true,
-              "tags": [],
-              "tests": [
+              "title": "Feed Interactions",
+              "file": "features/unified-feed.spec.ts",
+              "line": 164,
+              "column": 8,
+              "specs": [
                 {
-                  "timeout": 30000,
-                  "annotations": [],
-                  "expectedStatus": "passed",
-                  "projectId": "chromium-inline",
-                  "projectName": "chromium-inline",
-                  "results": [
+                  "title": "should handle like interactions",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
                     {
-                      "workerIndex": 5,
-                      "parallelIndex": 5,
-                      "status": "passed",
-                      "duration": 19945,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2025-10-20T17:44:54.995Z",
+                      "timeout": 30000,
                       "annotations": [],
-                      "attachments": []
+                      "expectedStatus": "passed",
+                      "projectId": "chromium-inline",
+                      "projectName": "chromium-inline",
+                      "results": [
+                        {
+                          "workerIndex": 0,
+                          "parallelIndex": 0,
+                          "status": "interrupted",
+                          "duration": 36203,
+                          "errors": [],
+                          "stdout": [],
+                          "stderr": [],
+                          "retry": 0,
+                          "startTime": "2025-10-21T12:26:22.487Z",
+                          "annotations": [],
+                          "attachments": [
+                            {
+                              "name": "error-context",
+                              "contentType": "text/markdown",
+                              "path": "/Users/alaughingkitsune/src/Choices/web/test-results/features-unified-feed-Unif-817f0-ld-handle-like-interactions-chromium-inline/error-context.md"
+                            }
+                          ]
+                        }
+                      ],
+                      "status": "skipped"
                     }
                   ],
-                  "status": "expected"
+                  "id": "b28c7033ad3fe2609563-ade3fc75b63e7e8d252f",
+                  "file": "features/unified-feed.spec.ts",
+                  "line": 165,
+                  "column": 9
+                },
+                {
+                  "title": "should handle share interactions",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 30000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "chromium-inline",
+                      "projectName": "chromium-inline",
+                      "results": [
+                        {
+                          "workerIndex": 3,
+                          "parallelIndex": 3,
+                          "status": "interrupted",
+                          "duration": 35559,
+                          "errors": [],
+                          "stdout": [],
+                          "stderr": [],
+                          "retry": 0,
+                          "startTime": "2025-10-21T12:26:23.269Z",
+                          "annotations": [],
+                          "attachments": [
+                            {
+                              "name": "error-context",
+                              "contentType": "text/markdown",
+                              "path": "/Users/alaughingkitsune/src/Choices/web/test-results/features-unified-feed-Unif-3bd81-d-handle-share-interactions-chromium-inline/error-context.md"
+                            }
+                          ]
+                        }
+                      ],
+                      "status": "skipped"
+                    }
+                  ],
+                  "id": "b28c7033ad3fe2609563-a3732b2a860960a8221a",
+                  "file": "features/unified-feed.spec.ts",
+                  "line": 176,
+                  "column": 9
+                },
+                {
+                  "title": "should handle comment interactions",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 30000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "chromium-inline",
+                      "projectName": "chromium-inline",
+                      "results": [
+                        {
+                          "workerIndex": 5,
+                          "parallelIndex": 5,
+                          "status": "interrupted",
+                          "duration": 34482,
+                          "errors": [],
+                          "stdout": [],
+                          "stderr": [],
+                          "retry": 0,
+                          "startTime": "2025-10-21T12:26:24.439Z",
+                          "annotations": [],
+                          "attachments": [
+                            {
+                              "name": "screenshot",
+                              "contentType": "image/png",
+                              "path": "/Users/alaughingkitsune/src/Choices/web/test-results/features-unified-feed-Unif-b434b-handle-comment-interactions-chromium-inline/test-failed-1.png"
+                            },
+                            {
+                              "name": "error-context",
+                              "contentType": "text/markdown",
+                              "path": "/Users/alaughingkitsune/src/Choices/web/test-results/features-unified-feed-Unif-b434b-handle-comment-interactions-chromium-inline/error-context.md"
+                            }
+                          ]
+                        }
+                      ],
+                      "status": "skipped"
+                    }
+                  ],
+                  "id": "b28c7033ad3fe2609563-7e265b93431413c84e66",
+                  "file": "features/unified-feed.spec.ts",
+                  "line": 187,
+                  "column": 9
                 }
-              ],
-              "id": "608c483525fa7df0fcda-5d5d88139324138906a1",
-              "file": "core/basic-navigation.spec.ts",
-              "line": 14,
-              "column": 7
+              ]
             },
             {
-              "title": "should load auth page",
-              "ok": true,
-              "tags": [],
-              "tests": [
+              "title": "Hashtag Interactions",
+              "file": "features/unified-feed.spec.ts",
+              "line": 199,
+              "column": 8,
+              "specs": [
                 {
-                  "timeout": 30000,
-                  "annotations": [],
-                  "expectedStatus": "passed",
-                  "projectId": "chromium-inline",
-                  "projectName": "chromium-inline",
-                  "results": [
+                  "title": "should handle hashtag clicks",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
                     {
-                      "workerIndex": 5,
-                      "parallelIndex": 5,
-                      "status": "passed",
-                      "duration": 4249,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2025-10-20T17:45:16.211Z",
+                      "timeout": 30000,
                       "annotations": [],
-                      "attachments": []
+                      "expectedStatus": "passed",
+                      "projectId": "chromium-inline",
+                      "projectName": "chromium-inline",
+                      "results": [
+                        {
+                          "workerIndex": 6,
+                          "parallelIndex": 1,
+                          "status": "interrupted",
+                          "duration": 27380,
+                          "errors": [],
+                          "stdout": [],
+                          "stderr": [],
+                          "retry": 0,
+                          "startTime": "2025-10-21T12:26:31.102Z",
+                          "annotations": [],
+                          "attachments": []
+                        }
+                      ],
+                      "status": "skipped"
                     }
                   ],
-                  "status": "expected"
+                  "id": "b28c7033ad3fe2609563-5741b6ae0f9504446949",
+                  "file": "features/unified-feed.spec.ts",
+                  "line": 200,
+                  "column": 9
+                },
+                {
+                  "title": "should filter content by hashtag selection",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 30000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "chromium-inline",
+                      "projectName": "chromium-inline",
+                      "results": [
+                        {
+                          "workerIndex": 7,
+                          "parallelIndex": 4,
+                          "status": "interrupted",
+                          "duration": 19206,
+                          "errors": [],
+                          "stdout": [],
+                          "stderr": [],
+                          "retry": 0,
+                          "startTime": "2025-10-21T12:26:39.636Z",
+                          "annotations": [],
+                          "attachments": [
+                            {
+                              "name": "screenshot",
+                              "contentType": "image/png",
+                              "path": "/Users/alaughingkitsune/src/Choices/web/test-results/features-unified-feed-Unif-c8ba8-ontent-by-hashtag-selection-chromium-inline/test-failed-1.png"
+                            }
+                          ]
+                        }
+                      ],
+                      "status": "skipped"
+                    }
+                  ],
+                  "id": "b28c7033ad3fe2609563-c67050fc5e0caf7a0ce9",
+                  "file": "features/unified-feed.spec.ts",
+                  "line": 218,
+                  "column": 9
                 }
-              ],
-              "id": "608c483525fa7df0fcda-53f5c2b82cda727ccf05",
-              "file": "core/basic-navigation.spec.ts",
-              "line": 22,
-              "column": 7
+              ]
             },
             {
-              "title": "should load the home page",
-              "ok": false,
-              "tags": [],
-              "tests": [
+              "title": "Pull-to-Refresh Functionality",
+              "file": "features/unified-feed.spec.ts",
+              "line": 236,
+              "column": 8,
+              "specs": [
                 {
-                  "timeout": 30000,
-                  "annotations": [],
-                  "expectedStatus": "passed",
-                  "projectId": "firefox-inline",
-                  "projectName": "firefox-inline",
-                  "results": [
+                  "title": "should handle pull-to-refresh gesture",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
                     {
-                      "workerIndex": 15,
-                      "parallelIndex": 1,
-                      "status": "timedOut",
-                      "duration": 30776,
-                      "error": {
-                        "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
-                        "stack": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
-                      },
-                      "errors": [
-                        {
-                          "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
-                        },
-                        {
-                          "location": {
-                            "file": "/Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/core/basic-navigation.spec.ts",
-                            "column": 16,
-                            "line": 5
-                          },
-                          "message": "Error: page.goto: Test timeout of 30000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3002/\", waiting until \"load\"\u001b[22m\n\n\n\u001b[0m \u001b[90m 3 |\u001b[39m test\u001b[33m.\u001b[39mdescribe(\u001b[32m'Basic Navigation'\u001b[39m\u001b[33m,\u001b[39m () \u001b[33m=>\u001b[39m {\n \u001b[90m 4 |\u001b[39m   test(\u001b[32m'should load the home page'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 5 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m   |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 6 |\u001b[39m     \n \u001b[90m 7 |\u001b[39m     \u001b[90m// Wait for page to load\u001b[39m\n \u001b[90m 8 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForLoadState(\u001b[32m'networkidle'\u001b[39m)\u001b[33m;\u001b[39m\u001b[0m\n\u001b[2m    at /Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/core/basic-navigation.spec.ts:5:16\u001b[22m"
-                        }
-                      ],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2025-10-20T17:45:53.777Z",
+                      "timeout": 30000,
                       "annotations": [],
-                      "attachments": [
-                        {
-                          "name": "screenshot",
-                          "contentType": "image/png",
-                          "path": "/Users/alaughingkitsune/src/Choices/web/test-results/core-basic-navigation-Basi-a3a34-n-should-load-the-home-page-firefox-inline/test-failed-1.png"
-                        },
-                        {
-                          "name": "video",
-                          "contentType": "video/webm",
-                          "path": "/Users/alaughingkitsune/src/Choices/web/test-results/core-basic-navigation-Basi-a3a34-n-should-load-the-home-page-firefox-inline/video.webm"
-                        }
-                      ]
+                      "expectedStatus": "passed",
+                      "projectId": "chromium-inline",
+                      "projectName": "chromium-inline",
+                      "results": [],
+                      "status": "skipped"
                     }
                   ],
-                  "status": "unexpected"
+                  "id": "b28c7033ad3fe2609563-f9fa2d7c55b83e2d8821",
+                  "file": "features/unified-feed.spec.ts",
+                  "line": 237,
+                  "column": 9
+                },
+                {
+                  "title": "should trigger refresh when pull threshold is reached",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 30000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "chromium-inline",
+                      "projectName": "chromium-inline",
+                      "results": [],
+                      "status": "skipped"
+                    }
+                  ],
+                  "id": "b28c7033ad3fe2609563-6bc31ef7c3efef5b61dc",
+                  "file": "features/unified-feed.spec.ts",
+                  "line": 260,
+                  "column": 9
                 }
-              ],
-              "id": "608c483525fa7df0fcda-1ae02ab826cbc8e7ca25",
-              "file": "core/basic-navigation.spec.ts",
-              "line": 4,
-              "column": 7
+              ]
             },
             {
-              "title": "should have a title",
-              "ok": false,
-              "tags": [],
-              "tests": [
+              "title": "Infinite Scroll",
+              "file": "features/unified-feed.spec.ts",
+              "line": 290,
+              "column": 8,
+              "specs": [
                 {
-                  "timeout": 30000,
-                  "annotations": [],
-                  "expectedStatus": "passed",
-                  "projectId": "firefox-inline",
-                  "projectName": "firefox-inline",
-                  "results": [
+                  "title": "should load more content when scrolling to bottom",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
                     {
-                      "workerIndex": 14,
-                      "parallelIndex": 0,
-                      "status": "timedOut",
-                      "duration": 32293,
-                      "error": {
-                        "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
-                        "stack": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
-                      },
-                      "errors": [
-                        {
-                          "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
-                        },
-                        {
-                          "location": {
-                            "file": "/Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/core/basic-navigation.spec.ts",
-                            "column": 16,
-                            "line": 15
-                          },
-                          "message": "Error: page.goto: Test timeout of 30000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3002/\", waiting until \"load\"\u001b[22m\n\n\n\u001b[0m \u001b[90m 13 |\u001b[39m\n \u001b[90m 14 |\u001b[39m   test(\u001b[32m'should have a title'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 15 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 16 |\u001b[39m     \n \u001b[90m 17 |\u001b[39m     \u001b[90m// Check that the page has a title\u001b[39m\n \u001b[90m 18 |\u001b[39m     \u001b[36mconst\u001b[39m title \u001b[33m=\u001b[39m \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mtitle()\u001b[33m;\u001b[39m\u001b[0m\n\u001b[2m    at /Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/core/basic-navigation.spec.ts:15:16\u001b[22m"
-                        }
-                      ],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2025-10-20T17:45:51.199Z",
+                      "timeout": 30000,
                       "annotations": [],
-                      "attachments": [
-                        {
-                          "name": "screenshot",
-                          "contentType": "image/png",
-                          "path": "/Users/alaughingkitsune/src/Choices/web/test-results/core-basic-navigation-Basic-Navigation-should-have-a-title-firefox-inline/test-failed-1.png"
-                        },
-                        {
-                          "name": "video",
-                          "contentType": "video/webm",
-                          "path": "/Users/alaughingkitsune/src/Choices/web/test-results/core-basic-navigation-Basic-Navigation-should-have-a-title-firefox-inline/video.webm"
-                        }
-                      ]
+                      "expectedStatus": "passed",
+                      "projectId": "chromium-inline",
+                      "projectName": "chromium-inline",
+                      "results": [],
+                      "status": "skipped"
                     }
                   ],
-                  "status": "unexpected"
+                  "id": "b28c7033ad3fe2609563-b55ee6e53c1f28eb9fc9",
+                  "file": "features/unified-feed.spec.ts",
+                  "line": 291,
+                  "column": 9
                 }
-              ],
-              "id": "608c483525fa7df0fcda-27dddbb39332e68ff76c",
-              "file": "core/basic-navigation.spec.ts",
-              "line": 14,
-              "column": 7
+              ]
             },
             {
-              "title": "should load auth page",
-              "ok": false,
-              "tags": [],
-              "tests": [
+              "title": "Accessibility",
+              "file": "features/unified-feed.spec.ts",
+              "line": 316,
+              "column": 8,
+              "specs": [
                 {
-                  "timeout": 30000,
-                  "annotations": [],
-                  "expectedStatus": "passed",
-                  "projectId": "firefox-inline",
-                  "projectName": "firefox-inline",
-                  "results": [
+                  "title": "should have proper ARIA labels and roles",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
                     {
-                      "workerIndex": 10,
-                      "parallelIndex": 4,
-                      "status": "timedOut",
-                      "duration": 33376,
-                      "error": {
-                        "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
-                        "stack": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
-                      },
-                      "errors": [
-                        {
-                          "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
-                        },
-                        {
-                          "location": {
-                            "file": "/Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/core/basic-navigation.spec.ts",
-                            "column": 16,
-                            "line": 23
-                          },
-                          "message": "Error: page.goto: Test timeout of 30000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3002/auth\", waiting until \"load\"\u001b[22m\n\n\n\u001b[0m \u001b[90m 21 |\u001b[39m\n \u001b[90m 22 |\u001b[39m   test(\u001b[32m'should load auth page'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 23 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/auth'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 24 |\u001b[39m     \n \u001b[90m 25 |\u001b[39m     \u001b[90m// Wait for page to load\u001b[39m\n \u001b[90m 26 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForLoadState(\u001b[32m'networkidle'\u001b[39m)\u001b[33m;\u001b[39m\u001b[0m\n\u001b[2m    at /Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/core/basic-navigation.spec.ts:23:16\u001b[22m"
-                        }
-                      ],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2025-10-20T17:46:02.521Z",
+                      "timeout": 30000,
                       "annotations": [],
-                      "attachments": [
-                        {
-                          "name": "screenshot",
-                          "contentType": "image/png",
-                          "path": "/Users/alaughingkitsune/src/Choices/web/test-results/core-basic-navigation-Basic-Navigation-should-load-auth-page-firefox-inline/test-failed-1.png"
-                        },
-                        {
-                          "name": "video",
-                          "contentType": "video/webm",
-                          "path": "/Users/alaughingkitsune/src/Choices/web/test-results/core-basic-navigation-Basic-Navigation-should-load-auth-page-firefox-inline/video.webm"
-                        },
-                        {
-                          "name": "error-context",
-                          "contentType": "text/markdown",
-                          "path": "/Users/alaughingkitsune/src/Choices/web/test-results/core-basic-navigation-Basic-Navigation-should-load-auth-page-firefox-inline/error-context.md"
-                        }
-                      ]
+                      "expectedStatus": "passed",
+                      "projectId": "chromium-inline",
+                      "projectName": "chromium-inline",
+                      "results": [],
+                      "status": "skipped"
                     }
                   ],
-                  "status": "unexpected"
-                }
-              ],
-              "id": "608c483525fa7df0fcda-06e39fede821e76c31ae",
-              "file": "core/basic-navigation.spec.ts",
-              "line": 22,
-              "column": 7
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "title": "core/onboarding-flow.spec.ts",
-      "file": "core/onboarding-flow.spec.ts",
-      "column": 0,
-      "line": 0,
-      "specs": [],
-      "suites": [
-        {
-          "title": "Onboarding Flow",
-          "file": "core/onboarding-flow.spec.ts",
-          "line": 4,
-          "column": 6,
-          "specs": [
-            {
-              "title": "should load onboarding page",
-              "ok": false,
-              "tags": [],
-              "tests": [
+                  "id": "b28c7033ad3fe2609563-d193b7cedf20ac28b233",
+                  "file": "features/unified-feed.spec.ts",
+                  "line": 317,
+                  "column": 9
+                },
                 {
-                  "timeout": 30000,
-                  "annotations": [],
-                  "expectedStatus": "passed",
-                  "projectId": "chromium-inline",
-                  "projectName": "chromium-inline",
-                  "results": [
+                  "title": "should support keyboard navigation",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
                     {
-                      "workerIndex": 1,
-                      "parallelIndex": 1,
-                      "status": "failed",
-                      "duration": 13910,
-                      "error": {
-                        "message": "Error: Rate limiting is working correctly - this is expected behavior for security",
-                        "stack": "Error: Rate limiting is working correctly - this is expected behavior for security\n    at Function.authenticateUser (/Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/helpers/auth-helper.ts:100:13)\n    at /Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/core/onboarding-flow.spec.ts:7:5",
-                        "location": {
-                          "file": "/Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/helpers/auth-helper.ts",
-                          "column": 13,
-                          "line": 100
-                        },
-                        "snippet": "\u001b[90m   at \u001b[39mhelpers/auth-helper.ts:100\n\n\u001b[0m \u001b[90m  98 |\u001b[39m       console\u001b[33m.\u001b[39mlog(\u001b[32m`⏳ Rate limited detected - this is expected behavior!`\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m  99 |\u001b[39m       console\u001b[33m.\u001b[39mlog(\u001b[32m`✅ Test is working correctly - rate limiting is functioning as designed`\u001b[39m)\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 100 |\u001b[39m       \u001b[36mthrow\u001b[39m \u001b[36mnew\u001b[39m \u001b[33mError\u001b[39m(\u001b[32m'Rate limiting is working correctly - this is expected behavior for security'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m             \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 101 |\u001b[39m     }\n \u001b[90m 102 |\u001b[39m     \n \u001b[90m 103 |\u001b[39m     \u001b[90m// Fill in login form using the correct selectors\u001b[39m\u001b[0m"
-                      },
-                      "errors": [
-                        {
-                          "location": {
-                            "file": "/Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/helpers/auth-helper.ts",
-                            "column": 13,
-                            "line": 100
-                          },
-                          "message": "Error: Rate limiting is working correctly - this is expected behavior for security\n\n\u001b[90m   at \u001b[39mhelpers/auth-helper.ts:100\n\n\u001b[0m \u001b[90m  98 |\u001b[39m       console\u001b[33m.\u001b[39mlog(\u001b[32m`⏳ Rate limited detected - this is expected behavior!`\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m  99 |\u001b[39m       console\u001b[33m.\u001b[39mlog(\u001b[32m`✅ Test is working correctly - rate limiting is functioning as designed`\u001b[39m)\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 100 |\u001b[39m       \u001b[36mthrow\u001b[39m \u001b[36mnew\u001b[39m \u001b[33mError\u001b[39m(\u001b[32m'Rate limiting is working correctly - this is expected behavior for security'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m             \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 101 |\u001b[39m     }\n \u001b[90m 102 |\u001b[39m     \n \u001b[90m 103 |\u001b[39m     \u001b[90m// Fill in login form using the correct selectors\u001b[39m\u001b[0m\n\u001b[2m    at Function.authenticateUser (/Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/helpers/auth-helper.ts:100:13)\u001b[22m\n\u001b[2m    at /Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/core/onboarding-flow.spec.ts:7:5\u001b[22m"
-                        }
-                      ],
-                      "stdout": [
-                        {
-                          "text": "🔐 Attempting to authenticate user: test@example.com\n"
-                        },
-                        {
-                          "text": "🧹 Clearing authentication state...\n"
-                        },
-                        {
-                          "text": "⚠️ Could not clear storage: Error: page.evaluate: SecurityError: Failed to read the 'localStorage' property from 'Window': Access is denied for this document.\n    at UtilityScript.evaluate (<anonymous>:292:16)\n    at UtilityScript.<anonymous> (<anonymous>:1:44)\n"
-                        },
-                        {
-                          "text": "📍 Navigated to auth page: http://localhost:3002/auth?e2e=1\n"
-                        },
-                        {
-                          "text": "⏳ Rate limited detected - this is expected behavior!\n"
-                        },
-                        {
-                          "text": "✅ Test is working correctly - rate limiting is functioning as designed\n"
-                        }
-                      ],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2025-10-20T17:45:16.515Z",
+                      "timeout": 30000,
                       "annotations": [],
-                      "attachments": [
-                        {
-                          "name": "screenshot",
-                          "contentType": "image/png",
-                          "path": "/Users/alaughingkitsune/src/Choices/web/test-results/core-onboarding-flow-Onboa-0476e-should-load-onboarding-page-chromium-inline/test-failed-1.png"
-                        },
-                        {
-                          "name": "video",
-                          "contentType": "video/webm",
-                          "path": "/Users/alaughingkitsune/src/Choices/web/test-results/core-onboarding-flow-Onboa-0476e-should-load-onboarding-page-chromium-inline/video.webm"
-                        },
-                        {
-                          "name": "error-context",
-                          "contentType": "text/markdown",
-                          "path": "/Users/alaughingkitsune/src/Choices/web/test-results/core-onboarding-flow-Onboa-0476e-should-load-onboarding-page-chromium-inline/error-context.md"
-                        }
-                      ],
-                      "errorLocation": {
-                        "file": "/Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/helpers/auth-helper.ts",
-                        "column": 13,
-                        "line": 100
-                      }
+                      "expectedStatus": "passed",
+                      "projectId": "chromium-inline",
+                      "projectName": "chromium-inline",
+                      "results": [],
+                      "status": "skipped"
                     }
                   ],
-                  "status": "unexpected"
+                  "id": "b28c7033ad3fe2609563-69e37e22b6e7c86bbed0",
+                  "file": "features/unified-feed.spec.ts",
+                  "line": 334,
+                  "column": 9
+                },
+                {
+                  "title": "should announce changes to screen readers",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 30000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "chromium-inline",
+                      "projectName": "chromium-inline",
+                      "results": [],
+                      "status": "skipped"
+                    }
+                  ],
+                  "id": "b28c7033ad3fe2609563-e7f3ce50a5dc4aec42a7",
+                  "file": "features/unified-feed.spec.ts",
+                  "line": 348,
+                  "column": 9
                 }
-              ],
-              "id": "a30cc0197364db604475-01070a08a6f83b99ad9a",
-              "file": "core/onboarding-flow.spec.ts",
-              "line": 5,
-              "column": 7
+              ]
             },
             {
-              "title": "should show onboarding steps",
-              "ok": false,
-              "tags": [],
-              "tests": [
+              "title": "Performance",
+              "file": "features/unified-feed.spec.ts",
+              "line": 364,
+              "column": 8,
+              "specs": [
                 {
-                  "timeout": 30000,
-                  "annotations": [],
-                  "expectedStatus": "passed",
-                  "projectId": "chromium-inline",
-                  "projectName": "chromium-inline",
-                  "results": [
+                  "title": "should load within acceptable time",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
                     {
-                      "workerIndex": 0,
-                      "parallelIndex": 0,
-                      "status": "failed",
-                      "duration": 14499,
-                      "error": {
-                        "message": "Error: Rate limiting is working correctly - this is expected behavior for security",
-                        "stack": "Error: Rate limiting is working correctly - this is expected behavior for security\n    at Function.authenticateUser (/Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/helpers/auth-helper.ts:100:13)\n    at /Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/core/onboarding-flow.spec.ts:19:5",
-                        "location": {
-                          "file": "/Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/helpers/auth-helper.ts",
-                          "column": 13,
-                          "line": 100
-                        },
-                        "snippet": "\u001b[90m   at \u001b[39mhelpers/auth-helper.ts:100\n\n\u001b[0m \u001b[90m  98 |\u001b[39m       console\u001b[33m.\u001b[39mlog(\u001b[32m`⏳ Rate limited detected - this is expected behavior!`\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m  99 |\u001b[39m       console\u001b[33m.\u001b[39mlog(\u001b[32m`✅ Test is working correctly - rate limiting is functioning as designed`\u001b[39m)\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 100 |\u001b[39m       \u001b[36mthrow\u001b[39m \u001b[36mnew\u001b[39m \u001b[33mError\u001b[39m(\u001b[32m'Rate limiting is working correctly - this is expected behavior for security'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m             \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 101 |\u001b[39m     }\n \u001b[90m 102 |\u001b[39m     \n \u001b[90m 103 |\u001b[39m     \u001b[90m// Fill in login form using the correct selectors\u001b[39m\u001b[0m"
-                      },
-                      "errors": [
-                        {
-                          "location": {
-                            "file": "/Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/helpers/auth-helper.ts",
-                            "column": 13,
-                            "line": 100
-                          },
-                          "message": "Error: Rate limiting is working correctly - this is expected behavior for security\n\n\u001b[90m   at \u001b[39mhelpers/auth-helper.ts:100\n\n\u001b[0m \u001b[90m  98 |\u001b[39m       console\u001b[33m.\u001b[39mlog(\u001b[32m`⏳ Rate limited detected - this is expected behavior!`\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m  99 |\u001b[39m       console\u001b[33m.\u001b[39mlog(\u001b[32m`✅ Test is working correctly - rate limiting is functioning as designed`\u001b[39m)\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 100 |\u001b[39m       \u001b[36mthrow\u001b[39m \u001b[36mnew\u001b[39m \u001b[33mError\u001b[39m(\u001b[32m'Rate limiting is working correctly - this is expected behavior for security'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m             \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 101 |\u001b[39m     }\n \u001b[90m 102 |\u001b[39m     \n \u001b[90m 103 |\u001b[39m     \u001b[90m// Fill in login form using the correct selectors\u001b[39m\u001b[0m\n\u001b[2m    at Function.authenticateUser (/Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/helpers/auth-helper.ts:100:13)\u001b[22m\n\u001b[2m    at /Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/core/onboarding-flow.spec.ts:19:5\u001b[22m"
-                        }
-                      ],
-                      "stdout": [
-                        {
-                          "text": "🔐 Attempting to authenticate user: test@example.com\n"
-                        },
-                        {
-                          "text": "🧹 Clearing authentication state...\n"
-                        },
-                        {
-                          "text": "⚠️ Could not clear storage: Error: page.evaluate: SecurityError: Failed to read the 'localStorage' property from 'Window': Access is denied for this document.\n    at UtilityScript.evaluate (<anonymous>:292:16)\n    at UtilityScript.<anonymous> (<anonymous>:1:44)\n"
-                        },
-                        {
-                          "text": "📍 Navigated to auth page: http://localhost:3002/auth?e2e=1\n"
-                        },
-                        {
-                          "text": "⏳ Rate limited detected - this is expected behavior!\n"
-                        },
-                        {
-                          "text": "✅ Test is working correctly - rate limiting is functioning as designed\n"
-                        }
-                      ],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2025-10-20T17:45:16.624Z",
+                      "timeout": 30000,
                       "annotations": [],
-                      "attachments": [
-                        {
-                          "name": "screenshot",
-                          "contentType": "image/png",
-                          "path": "/Users/alaughingkitsune/src/Choices/web/test-results/core-onboarding-flow-Onboa-acb57-hould-show-onboarding-steps-chromium-inline/test-failed-1.png"
-                        },
-                        {
-                          "name": "video",
-                          "contentType": "video/webm",
-                          "path": "/Users/alaughingkitsune/src/Choices/web/test-results/core-onboarding-flow-Onboa-acb57-hould-show-onboarding-steps-chromium-inline/video.webm"
-                        },
-                        {
-                          "name": "error-context",
-                          "contentType": "text/markdown",
-                          "path": "/Users/alaughingkitsune/src/Choices/web/test-results/core-onboarding-flow-Onboa-acb57-hould-show-onboarding-steps-chromium-inline/error-context.md"
-                        }
-                      ],
-                      "errorLocation": {
-                        "file": "/Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/helpers/auth-helper.ts",
-                        "column": 13,
-                        "line": 100
-                      }
+                      "expectedStatus": "passed",
+                      "projectId": "chromium-inline",
+                      "projectName": "chromium-inline",
+                      "results": [],
+                      "status": "skipped"
                     }
                   ],
-                  "status": "unexpected"
+                  "id": "b28c7033ad3fe2609563-925b241a858310d55521",
+                  "file": "features/unified-feed.spec.ts",
+                  "line": 365,
+                  "column": 9
+                },
+                {
+                  "title": "should handle large datasets efficiently",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 30000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "chromium-inline",
+                      "projectName": "chromium-inline",
+                      "results": [],
+                      "status": "skipped"
+                    }
+                  ],
+                  "id": "b28c7033ad3fe2609563-cc61e7b81c7bf9623803",
+                  "file": "features/unified-feed.spec.ts",
+                  "line": 379,
+                  "column": 9
                 }
-              ],
-              "id": "a30cc0197364db604475-9e4fdb0b4c34e0be36f2",
-              "file": "core/onboarding-flow.spec.ts",
-              "line": 17,
-              "column": 7
+              ]
             },
             {
-              "title": "should handle onboarding steps",
-              "ok": false,
-              "tags": [],
-              "tests": [
+              "title": "Error Handling",
+              "file": "features/unified-feed.spec.ts",
+              "line": 397,
+              "column": 8,
+              "specs": [
                 {
-                  "timeout": 30000,
-                  "annotations": [],
-                  "expectedStatus": "passed",
-                  "projectId": "chromium-inline",
-                  "projectName": "chromium-inline",
-                  "results": [
+                  "title": "should handle network errors gracefully",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
                     {
-                      "workerIndex": 2,
-                      "parallelIndex": 2,
-                      "status": "failed",
-                      "duration": 14070,
-                      "error": {
-                        "message": "Error: Rate limiting is working correctly - this is expected behavior for security",
-                        "stack": "Error: Rate limiting is working correctly - this is expected behavior for security\n    at Function.authenticateUser (/Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/helpers/auth-helper.ts:100:13)\n    at /Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/core/onboarding-flow.spec.ts:40:5",
-                        "location": {
-                          "file": "/Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/helpers/auth-helper.ts",
-                          "column": 13,
-                          "line": 100
-                        },
-                        "snippet": "\u001b[90m   at \u001b[39mhelpers/auth-helper.ts:100\n\n\u001b[0m \u001b[90m  98 |\u001b[39m       console\u001b[33m.\u001b[39mlog(\u001b[32m`⏳ Rate limited detected - this is expected behavior!`\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m  99 |\u001b[39m       console\u001b[33m.\u001b[39mlog(\u001b[32m`✅ Test is working correctly - rate limiting is functioning as designed`\u001b[39m)\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 100 |\u001b[39m       \u001b[36mthrow\u001b[39m \u001b[36mnew\u001b[39m \u001b[33mError\u001b[39m(\u001b[32m'Rate limiting is working correctly - this is expected behavior for security'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m             \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 101 |\u001b[39m     }\n \u001b[90m 102 |\u001b[39m     \n \u001b[90m 103 |\u001b[39m     \u001b[90m// Fill in login form using the correct selectors\u001b[39m\u001b[0m"
-                      },
-                      "errors": [
-                        {
-                          "location": {
-                            "file": "/Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/helpers/auth-helper.ts",
-                            "column": 13,
-                            "line": 100
-                          },
-                          "message": "Error: Rate limiting is working correctly - this is expected behavior for security\n\n\u001b[90m   at \u001b[39mhelpers/auth-helper.ts:100\n\n\u001b[0m \u001b[90m  98 |\u001b[39m       console\u001b[33m.\u001b[39mlog(\u001b[32m`⏳ Rate limited detected - this is expected behavior!`\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m  99 |\u001b[39m       console\u001b[33m.\u001b[39mlog(\u001b[32m`✅ Test is working correctly - rate limiting is functioning as designed`\u001b[39m)\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 100 |\u001b[39m       \u001b[36mthrow\u001b[39m \u001b[36mnew\u001b[39m \u001b[33mError\u001b[39m(\u001b[32m'Rate limiting is working correctly - this is expected behavior for security'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m             \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 101 |\u001b[39m     }\n \u001b[90m 102 |\u001b[39m     \n \u001b[90m 103 |\u001b[39m     \u001b[90m// Fill in login form using the correct selectors\u001b[39m\u001b[0m\n\u001b[2m    at Function.authenticateUser (/Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/helpers/auth-helper.ts:100:13)\u001b[22m\n\u001b[2m    at /Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/core/onboarding-flow.spec.ts:40:5\u001b[22m"
-                        }
-                      ],
-                      "stdout": [
-                        {
-                          "text": "🔐 Attempting to authenticate user: test@example.com\n"
-                        },
-                        {
-                          "text": "🧹 Clearing authentication state...\n"
-                        },
-                        {
-                          "text": "⚠️ Could not clear storage: Error: page.evaluate: SecurityError: Failed to read the 'localStorage' property from 'Window': Access is denied for this document.\n    at UtilityScript.evaluate (<anonymous>:292:16)\n    at UtilityScript.<anonymous> (<anonymous>:1:44)\n"
-                        },
-                        {
-                          "text": "📍 Navigated to auth page: http://localhost:3002/auth?e2e=1\n"
-                        },
-                        {
-                          "text": "⏳ Rate limited detected - this is expected behavior!\n"
-                        },
-                        {
-                          "text": "✅ Test is working correctly - rate limiting is functioning as designed\n"
-                        }
-                      ],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2025-10-20T17:45:16.751Z",
+                      "timeout": 30000,
                       "annotations": [],
-                      "attachments": [
-                        {
-                          "name": "screenshot",
-                          "contentType": "image/png",
-                          "path": "/Users/alaughingkitsune/src/Choices/web/test-results/core-onboarding-flow-Onboa-25f49-uld-handle-onboarding-steps-chromium-inline/test-failed-1.png"
-                        },
-                        {
-                          "name": "video",
-                          "contentType": "video/webm",
-                          "path": "/Users/alaughingkitsune/src/Choices/web/test-results/core-onboarding-flow-Onboa-25f49-uld-handle-onboarding-steps-chromium-inline/video.webm"
-                        },
-                        {
-                          "name": "error-context",
-                          "contentType": "text/markdown",
-                          "path": "/Users/alaughingkitsune/src/Choices/web/test-results/core-onboarding-flow-Onboa-25f49-uld-handle-onboarding-steps-chromium-inline/error-context.md"
-                        }
-                      ],
-                      "errorLocation": {
-                        "file": "/Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/helpers/auth-helper.ts",
-                        "column": 13,
-                        "line": 100
-                      }
+                      "expectedStatus": "passed",
+                      "projectId": "chromium-inline",
+                      "projectName": "chromium-inline",
+                      "results": [],
+                      "status": "skipped"
                     }
                   ],
-                  "status": "unexpected"
+                  "id": "b28c7033ad3fe2609563-7f7746bbaca32d8e3ec8",
+                  "file": "features/unified-feed.spec.ts",
+                  "line": 398,
+                  "column": 9
+                },
+                {
+                  "title": "should allow retry after error",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 30000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "chromium-inline",
+                      "projectName": "chromium-inline",
+                      "results": [],
+                      "status": "skipped"
+                    }
+                  ],
+                  "id": "b28c7033ad3fe2609563-316c4ce69409838b6f7f",
+                  "file": "features/unified-feed.spec.ts",
+                  "line": 413,
+                  "column": 9
                 }
-              ],
-              "id": "a30cc0197364db604475-ba1bf57e75117a76a888",
-              "file": "core/onboarding-flow.spec.ts",
-              "line": 38,
-              "column": 7
+              ]
             },
             {
-              "title": "should load onboarding page",
-              "ok": false,
-              "tags": [],
-              "tests": [
+              "title": "Mobile Responsiveness",
+              "file": "features/unified-feed.spec.ts",
+              "line": 442,
+              "column": 8,
+              "specs": [
                 {
-                  "timeout": 30000,
-                  "annotations": [],
-                  "expectedStatus": "passed",
-                  "projectId": "firefox-inline",
-                  "projectName": "firefox-inline",
-                  "results": [
+                  "title": "should work correctly on mobile viewport",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
                     {
-                      "workerIndex": 16,
-                      "parallelIndex": 3,
-                      "status": "failed",
-                      "duration": 23585,
-                      "error": {
-                        "message": "Error: Rate limiting is working correctly - this is expected behavior for security",
-                        "stack": "Error: Rate limiting is working correctly - this is expected behavior for security\n    at Function.authenticateUser (/Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/helpers/auth-helper.ts:100:13)\n    at /Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/core/onboarding-flow.spec.ts:7:5",
-                        "location": {
-                          "file": "/Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/helpers/auth-helper.ts",
-                          "column": 13,
-                          "line": 100
-                        },
-                        "snippet": "\u001b[90m   at \u001b[39mhelpers/auth-helper.ts:100\n\n\u001b[0m \u001b[90m  98 |\u001b[39m       console\u001b[33m.\u001b[39mlog(\u001b[32m`⏳ Rate limited detected - this is expected behavior!`\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m  99 |\u001b[39m       console\u001b[33m.\u001b[39mlog(\u001b[32m`✅ Test is working correctly - rate limiting is functioning as designed`\u001b[39m)\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 100 |\u001b[39m       \u001b[36mthrow\u001b[39m \u001b[36mnew\u001b[39m \u001b[33mError\u001b[39m(\u001b[32m'Rate limiting is working correctly - this is expected behavior for security'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m             \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 101 |\u001b[39m     }\n \u001b[90m 102 |\u001b[39m     \n \u001b[90m 103 |\u001b[39m     \u001b[90m// Fill in login form using the correct selectors\u001b[39m\u001b[0m"
-                      },
-                      "errors": [
-                        {
-                          "location": {
-                            "file": "/Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/helpers/auth-helper.ts",
-                            "column": 13,
-                            "line": 100
-                          },
-                          "message": "Error: Rate limiting is working correctly - this is expected behavior for security\n\n\u001b[90m   at \u001b[39mhelpers/auth-helper.ts:100\n\n\u001b[0m \u001b[90m  98 |\u001b[39m       console\u001b[33m.\u001b[39mlog(\u001b[32m`⏳ Rate limited detected - this is expected behavior!`\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m  99 |\u001b[39m       console\u001b[33m.\u001b[39mlog(\u001b[32m`✅ Test is working correctly - rate limiting is functioning as designed`\u001b[39m)\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 100 |\u001b[39m       \u001b[36mthrow\u001b[39m \u001b[36mnew\u001b[39m \u001b[33mError\u001b[39m(\u001b[32m'Rate limiting is working correctly - this is expected behavior for security'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m             \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 101 |\u001b[39m     }\n \u001b[90m 102 |\u001b[39m     \n \u001b[90m 103 |\u001b[39m     \u001b[90m// Fill in login form using the correct selectors\u001b[39m\u001b[0m\n\u001b[2m    at Function.authenticateUser (/Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/helpers/auth-helper.ts:100:13)\u001b[22m\n\u001b[2m    at /Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/core/onboarding-flow.spec.ts:7:5\u001b[22m"
-                        }
-                      ],
-                      "stdout": [
-                        {
-                          "text": "🔐 Attempting to authenticate user: test@example.com\n"
-                        },
-                        {
-                          "text": "🧹 Clearing authentication state...\n"
-                        },
-                        {
-                          "text": "⚠️ Could not clear storage: Error: page.evaluate: The operation is insecure.\n@debugger eval code line 290 > eval:2:13\nevaluate@debugger eval code:292:16\n@debugger eval code:1:44\n\n"
-                        },
-                        {
-                          "text": "📍 Navigated to auth page: http://localhost:3002/auth?e2e=1\n"
-                        },
-                        {
-                          "text": "⏳ Rate limited detected - this is expected behavior!\n"
-                        },
-                        {
-                          "text": "✅ Test is working correctly - rate limiting is functioning as designed\n"
-                        }
-                      ],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2025-10-20T17:46:41.292Z",
+                      "timeout": 30000,
                       "annotations": [],
-                      "attachments": [
-                        {
-                          "name": "screenshot",
-                          "contentType": "image/png",
-                          "path": "/Users/alaughingkitsune/src/Choices/web/test-results/core-onboarding-flow-Onboa-0476e-should-load-onboarding-page-firefox-inline/test-failed-1.png"
-                        },
-                        {
-                          "name": "video",
-                          "contentType": "video/webm",
-                          "path": "/Users/alaughingkitsune/src/Choices/web/test-results/core-onboarding-flow-Onboa-0476e-should-load-onboarding-page-firefox-inline/video.webm"
-                        },
-                        {
-                          "name": "error-context",
-                          "contentType": "text/markdown",
-                          "path": "/Users/alaughingkitsune/src/Choices/web/test-results/core-onboarding-flow-Onboa-0476e-should-load-onboarding-page-firefox-inline/error-context.md"
-                        }
-                      ],
-                      "errorLocation": {
-                        "file": "/Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/helpers/auth-helper.ts",
-                        "column": 13,
-                        "line": 100
-                      }
+                      "expectedStatus": "passed",
+                      "projectId": "chromium-inline",
+                      "projectName": "chromium-inline",
+                      "results": [],
+                      "status": "skipped"
                     }
                   ],
-                  "status": "unexpected"
+                  "id": "b28c7033ad3fe2609563-08431d04b7ec203a7b88",
+                  "file": "features/unified-feed.spec.ts",
+                  "line": 443,
+                  "column": 9
+                },
+                {
+                  "title": "should handle touch gestures on mobile",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 30000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "chromium-inline",
+                      "projectName": "chromium-inline",
+                      "results": [],
+                      "status": "skipped"
+                    }
+                  ],
+                  "id": "b28c7033ad3fe2609563-f03714c8c0e4eece8a34",
+                  "file": "features/unified-feed.spec.ts",
+                  "line": 453,
+                  "column": 9
                 }
-              ],
-              "id": "a30cc0197364db604475-39e0580f351a834b0128",
-              "file": "core/onboarding-flow.spec.ts",
-              "line": 5,
-              "column": 7
+              ]
             },
             {
-              "title": "should show onboarding steps",
-              "ok": false,
-              "tags": [],
-              "tests": [
+              "title": "PWA Features",
+              "file": "features/unified-feed.spec.ts",
+              "line": 476,
+              "column": 8,
+              "specs": [
                 {
-                  "timeout": 30000,
-                  "annotations": [],
-                  "expectedStatus": "passed",
-                  "projectId": "firefox-inline",
-                  "projectName": "firefox-inline",
-                  "results": [
+                  "title": "should show offline status when network is unavailable",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
                     {
-                      "workerIndex": 17,
-                      "parallelIndex": 2,
-                      "status": "timedOut",
-                      "duration": 37211,
-                      "error": {
-                        "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
-                        "stack": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
-                      },
-                      "errors": [
-                        {
-                          "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
-                        },
-                        {
-                          "location": {
-                            "file": "/Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/helpers/auth-helper.ts",
-                            "column": 13,
-                            "line": 100
-                          },
-                          "message": "Error: Rate limiting is working correctly - this is expected behavior for security\n\n\u001b[90m   at \u001b[39mhelpers/auth-helper.ts:100\n\n\u001b[0m \u001b[90m  98 |\u001b[39m       console\u001b[33m.\u001b[39mlog(\u001b[32m`⏳ Rate limited detected - this is expected behavior!`\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m  99 |\u001b[39m       console\u001b[33m.\u001b[39mlog(\u001b[32m`✅ Test is working correctly - rate limiting is functioning as designed`\u001b[39m)\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 100 |\u001b[39m       \u001b[36mthrow\u001b[39m \u001b[36mnew\u001b[39m \u001b[33mError\u001b[39m(\u001b[32m'Rate limiting is working correctly - this is expected behavior for security'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m             \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 101 |\u001b[39m     }\n \u001b[90m 102 |\u001b[39m     \n \u001b[90m 103 |\u001b[39m     \u001b[90m// Fill in login form using the correct selectors\u001b[39m\u001b[0m\n\u001b[2m    at Function.authenticateUser (/Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/helpers/auth-helper.ts:100:13)\u001b[22m\n\u001b[2m    at /Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/core/onboarding-flow.spec.ts:19:5\u001b[22m"
-                        }
-                      ],
-                      "stdout": [
-                        {
-                          "text": "🔐 Attempting to authenticate user: test@example.com\n"
-                        },
-                        {
-                          "text": "🧹 Clearing authentication state...\n"
-                        },
-                        {
-                          "text": "⚠️ Could not clear storage: Error: page.evaluate: The operation is insecure.\n@debugger eval code line 290 > eval:2:13\nevaluate@debugger eval code:292:16\n@debugger eval code:1:44\n\n"
-                        },
-                        {
-                          "text": "📍 Navigated to auth page: http://localhost:3002/auth?e2e=1\n"
-                        },
-                        {
-                          "text": "⏳ Rate limited detected - this is expected behavior!\n"
-                        },
-                        {
-                          "text": "✅ Test is working correctly - rate limiting is functioning as designed\n"
-                        }
-                      ],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2025-10-20T17:46:43.579Z",
+                      "timeout": 30000,
                       "annotations": [],
-                      "attachments": [
-                        {
-                          "name": "screenshot",
-                          "contentType": "image/png",
-                          "path": "/Users/alaughingkitsune/src/Choices/web/test-results/core-onboarding-flow-Onboa-acb57-hould-show-onboarding-steps-firefox-inline/test-failed-1.png"
-                        },
-                        {
-                          "name": "video",
-                          "contentType": "video/webm",
-                          "path": "/Users/alaughingkitsune/src/Choices/web/test-results/core-onboarding-flow-Onboa-acb57-hould-show-onboarding-steps-firefox-inline/video.webm"
-                        },
-                        {
-                          "name": "error-context",
-                          "contentType": "text/markdown",
-                          "path": "/Users/alaughingkitsune/src/Choices/web/test-results/core-onboarding-flow-Onboa-acb57-hould-show-onboarding-steps-firefox-inline/error-context.md"
-                        }
-                      ]
+                      "expectedStatus": "passed",
+                      "projectId": "chromium-inline",
+                      "projectName": "chromium-inline",
+                      "results": [],
+                      "status": "skipped"
                     }
                   ],
-                  "status": "unexpected"
-                }
-              ],
-              "id": "a30cc0197364db604475-385d462dcd10b0e17246",
-              "file": "core/onboarding-flow.spec.ts",
-              "line": 17,
-              "column": 7
-            },
-            {
-              "title": "should handle onboarding steps",
-              "ok": false,
-              "tags": [],
-              "tests": [
+                  "id": "b28c7033ad3fe2609563-95881b63dc250ced80ac",
+                  "file": "features/unified-feed.spec.ts",
+                  "line": 477,
+                  "column": 9
+                },
                 {
-                  "timeout": 30000,
-                  "annotations": [],
-                  "expectedStatus": "passed",
-                  "projectId": "firefox-inline",
-                  "projectName": "firefox-inline",
-                  "results": [
+                  "title": "should show online status when network is restored",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
                     {
-                      "workerIndex": 18,
-                      "parallelIndex": 4,
-                      "status": "timedOut",
-                      "duration": 34762,
-                      "error": {
-                        "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
-                        "stack": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
-                      },
-                      "errors": [
-                        {
-                          "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
-                        },
-                        {
-                          "location": {
-                            "file": "/Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/helpers/auth-helper.ts",
-                            "column": 16,
-                            "line": 91
-                          },
-                          "message": "Error: page.goto: Test timeout of 30000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3002/auth?e2e=1\", waiting until \"load\"\u001b[22m\n\n\n\u001b[90m   at \u001b[39mhelpers/auth-helper.ts:91\n\n\u001b[0m \u001b[90m 89 |\u001b[39m     \n \u001b[90m 90 |\u001b[39m     \u001b[90m// Navigate to auth page with E2E bypass query parameter\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 91 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/auth?e2e=1'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 92 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForLoadState(\u001b[32m'networkidle'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 93 |\u001b[39m     console\u001b[33m.\u001b[39mlog(\u001b[32m`📍 Navigated to auth page: ${page.url()}`\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 94 |\u001b[39m     \u001b[0m\n\u001b[2m    at Function.authenticateUser (/Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/helpers/auth-helper.ts:91:16)\u001b[22m\n\u001b[2m    at /Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/core/onboarding-flow.spec.ts:40:5\u001b[22m"
-                        }
-                      ],
-                      "stdout": [
-                        {
-                          "text": "🔐 Attempting to authenticate user: test@example.com\n"
-                        },
-                        {
-                          "text": "🧹 Clearing authentication state...\n"
-                        },
-                        {
-                          "text": "⚠️ Could not clear storage: Error: page.evaluate: The operation is insecure.\n@debugger eval code line 290 > eval:2:13\nevaluate@debugger eval code:292:16\n@debugger eval code:1:44\n\n"
-                        }
-                      ],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2025-10-20T17:46:44.099Z",
+                      "timeout": 30000,
                       "annotations": [],
-                      "attachments": [
-                        {
-                          "name": "screenshot",
-                          "contentType": "image/png",
-                          "path": "/Users/alaughingkitsune/src/Choices/web/test-results/core-onboarding-flow-Onboa-25f49-uld-handle-onboarding-steps-firefox-inline/test-failed-1.png"
-                        },
-                        {
-                          "name": "video",
-                          "contentType": "video/webm",
-                          "path": "/Users/alaughingkitsune/src/Choices/web/test-results/core-onboarding-flow-Onboa-25f49-uld-handle-onboarding-steps-firefox-inline/video.webm"
-                        },
-                        {
-                          "name": "error-context",
-                          "contentType": "text/markdown",
-                          "path": "/Users/alaughingkitsune/src/Choices/web/test-results/core-onboarding-flow-Onboa-25f49-uld-handle-onboarding-steps-firefox-inline/error-context.md"
-                        }
-                      ]
+                      "expectedStatus": "passed",
+                      "projectId": "chromium-inline",
+                      "projectName": "chromium-inline",
+                      "results": [],
+                      "status": "skipped"
                     }
                   ],
-                  "status": "unexpected"
+                  "id": "b28c7033ad3fe2609563-40a4ecfa08f2e9450046",
+                  "file": "features/unified-feed.spec.ts",
+                  "line": 488,
+                  "column": 9
                 }
-              ],
-              "id": "a30cc0197364db604475-7c484841e03deda6e4fc",
-              "file": "core/onboarding-flow.spec.ts",
-              "line": 38,
-              "column": 7
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "title": "core/webauthn-functionality.spec.ts",
-      "file": "core/webauthn-functionality.spec.ts",
-      "column": 0,
-      "line": 0,
-      "specs": [],
-      "suites": [
-        {
-          "title": "WebAuthn Functionality",
-          "file": "core/webauthn-functionality.spec.ts",
-          "line": 13,
-          "column": 6,
-          "specs": [
-            {
-              "title": "should load WebAuthn components",
-              "ok": false,
-              "tags": [],
-              "tests": [
-                {
-                  "timeout": 30000,
-                  "annotations": [],
-                  "expectedStatus": "passed",
-                  "projectId": "chromium-inline",
-                  "projectName": "chromium-inline",
-                  "results": [
-                    {
-                      "workerIndex": 6,
-                      "parallelIndex": 4,
-                      "status": "failed",
-                      "duration": 11315,
-                      "error": {
-                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeGreaterThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: > \u001b[32m0\u001b[39m\nReceived:   \u001b[31m0\u001b[39m",
-                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeGreaterThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: > \u001b[32m0\u001b[39m\nReceived:   \u001b[31m0\u001b[39m\n    at /Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/core/webauthn-functionality.spec.ts:26:60",
-                        "location": {
-                          "file": "/Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/core/webauthn-functionality.spec.ts",
-                          "column": 60,
-                          "line": 26
-                        },
-                        "snippet": "\u001b[0m \u001b[90m 24 |\u001b[39m     \n \u001b[90m 25 |\u001b[39m     \u001b[90m// Should have at least one WebAuthn element\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 26 |\u001b[39m     expect(passkeyElements\u001b[33m.\u001b[39mlength \u001b[33m+\u001b[39m passkeyButtons\u001b[33m.\u001b[39mlength)\u001b[33m.\u001b[39mtoBeGreaterThan(\u001b[35m0\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                                                            \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 27 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 28 |\u001b[39m\n \u001b[90m 29 |\u001b[39m   test(\u001b[32m'should show WebAuthn registration options'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\u001b[0m"
-                      },
-                      "errors": [
-                        {
-                          "location": {
-                            "file": "/Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/core/webauthn-functionality.spec.ts",
-                            "column": 60,
-                            "line": 26
-                          },
-                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeGreaterThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: > \u001b[32m0\u001b[39m\nReceived:   \u001b[31m0\u001b[39m\n\n\u001b[0m \u001b[90m 24 |\u001b[39m     \n \u001b[90m 25 |\u001b[39m     \u001b[90m// Should have at least one WebAuthn element\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 26 |\u001b[39m     expect(passkeyElements\u001b[33m.\u001b[39mlength \u001b[33m+\u001b[39m passkeyButtons\u001b[33m.\u001b[39mlength)\u001b[33m.\u001b[39mtoBeGreaterThan(\u001b[35m0\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                                                            \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 27 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 28 |\u001b[39m\n \u001b[90m 29 |\u001b[39m   test(\u001b[32m'should show WebAuthn registration options'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\u001b[0m\n\u001b[2m    at /Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/core/webauthn-functionality.spec.ts:26:60\u001b[22m"
-                        }
-                      ],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2025-10-20T17:45:19.124Z",
-                      "annotations": [],
-                      "attachments": [
-                        {
-                          "name": "screenshot",
-                          "contentType": "image/png",
-                          "path": "/Users/alaughingkitsune/src/Choices/web/test-results/core-webauthn-functionalit-abf34-ld-load-WebAuthn-components-chromium-inline/test-failed-1.png"
-                        },
-                        {
-                          "name": "video",
-                          "contentType": "video/webm",
-                          "path": "/Users/alaughingkitsune/src/Choices/web/test-results/core-webauthn-functionalit-abf34-ld-load-WebAuthn-components-chromium-inline/video.webm"
-                        },
-                        {
-                          "name": "error-context",
-                          "contentType": "text/markdown",
-                          "path": "/Users/alaughingkitsune/src/Choices/web/test-results/core-webauthn-functionalit-abf34-ld-load-WebAuthn-components-chromium-inline/error-context.md"
-                        }
-                      ],
-                      "errorLocation": {
-                        "file": "/Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/core/webauthn-functionality.spec.ts",
-                        "column": 60,
-                        "line": 26
-                      }
-                    }
-                  ],
-                  "status": "unexpected"
-                }
-              ],
-              "id": "bd0801ac7565fee60f6e-dcc24943ee097dd6192a",
-              "file": "core/webauthn-functionality.spec.ts",
-              "line": 20,
-              "column": 7
-            },
-            {
-              "title": "should show WebAuthn registration options",
-              "ok": true,
-              "tags": [],
-              "tests": [
-                {
-                  "timeout": 30000,
-                  "annotations": [],
-                  "expectedStatus": "passed",
-                  "projectId": "chromium-inline",
-                  "projectName": "chromium-inline",
-                  "results": [
-                    {
-                      "workerIndex": 3,
-                      "parallelIndex": 3,
-                      "status": "passed",
-                      "duration": 3652,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2025-10-20T17:45:17.038Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
-                }
-              ],
-              "id": "bd0801ac7565fee60f6e-634a072097f528bbcf68",
-              "file": "core/webauthn-functionality.spec.ts",
-              "line": 29,
-              "column": 7
-            },
-            {
-              "title": "should show WebAuthn login options",
-              "ok": true,
-              "tags": [],
-              "tests": [
-                {
-                  "timeout": 30000,
-                  "annotations": [],
-                  "expectedStatus": "passed",
-                  "projectId": "chromium-inline",
-                  "projectName": "chromium-inline",
-                  "results": [
-                    {
-                      "workerIndex": 5,
-                      "parallelIndex": 5,
-                      "status": "passed",
-                      "duration": 10384,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2025-10-20T17:45:20.547Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
-                }
-              ],
-              "id": "bd0801ac7565fee60f6e-3223c7c0d03e191726cf",
-              "file": "core/webauthn-functionality.spec.ts",
-              "line": 38,
-              "column": 7
-            },
-            {
-              "title": "should handle WebAuthn registration flow",
-              "ok": true,
-              "tags": [],
-              "tests": [
-                {
-                  "timeout": 30000,
-                  "annotations": [],
-                  "expectedStatus": "passed",
-                  "projectId": "chromium-inline",
-                  "projectName": "chromium-inline",
-                  "results": [
-                    {
-                      "workerIndex": 3,
-                      "parallelIndex": 3,
-                      "status": "passed",
-                      "duration": 10042,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2025-10-20T17:45:20.736Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
-                }
-              ],
-              "id": "bd0801ac7565fee60f6e-b552f5d9a1486fcd8b2a",
-              "file": "core/webauthn-functionality.spec.ts",
-              "line": 47,
-              "column": 7
-            },
-            {
-              "title": "should handle WebAuthn authentication flow",
-              "ok": true,
-              "tags": [],
-              "tests": [
-                {
-                  "timeout": 30000,
-                  "annotations": [],
-                  "expectedStatus": "passed",
-                  "projectId": "chromium-inline",
-                  "projectName": "chromium-inline",
-                  "results": [
-                    {
-                      "workerIndex": 7,
-                      "parallelIndex": 1,
-                      "status": "passed",
-                      "duration": 9571,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2025-10-20T17:45:34.686Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
-                }
-              ],
-              "id": "bd0801ac7565fee60f6e-1391f73a96a7b1e23588",
-              "file": "core/webauthn-functionality.spec.ts",
-              "line": 99,
-              "column": 7
-            },
-            {
-              "title": "should handle WebAuthn errors gracefully",
-              "ok": true,
-              "tags": [],
-              "tests": [
-                {
-                  "timeout": 30000,
-                  "annotations": [],
-                  "expectedStatus": "passed",
-                  "projectId": "chromium-inline",
-                  "projectName": "chromium-inline",
-                  "results": [
-                    {
-                      "workerIndex": 3,
-                      "parallelIndex": 3,
-                      "status": "passed",
-                      "duration": 6186,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2025-10-20T17:45:30.844Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
-                }
-              ],
-              "id": "bd0801ac7565fee60f6e-931f85423ad7bd76a7c6",
-              "file": "core/webauthn-functionality.spec.ts",
-              "line": 139,
-              "column": 7
-            },
-            {
-              "title": "should support WebAuthn browser compatibility",
-              "ok": false,
-              "tags": [],
-              "tests": [
-                {
-                  "timeout": 30000,
-                  "annotations": [],
-                  "expectedStatus": "passed",
-                  "projectId": "chromium-inline",
-                  "projectName": "chromium-inline",
-                  "results": [
-                    {
-                      "workerIndex": 5,
-                      "parallelIndex": 5,
-                      "status": "failed",
-                      "duration": 6244,
-                      "error": {
-                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeGreaterThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: > \u001b[32m0\u001b[39m\nReceived:   \u001b[31m0\u001b[39m",
-                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeGreaterThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: > \u001b[32m0\u001b[39m\nReceived:   \u001b[31m0\u001b[39m\n    at /Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/core/webauthn-functionality.spec.ts:182:62",
-                        "location": {
-                          "file": "/Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/core/webauthn-functionality.spec.ts",
-                          "column": 62,
-                          "line": 182
-                        },
-                        "snippet": "\u001b[0m \u001b[90m 180 |\u001b[39m       \n \u001b[90m 181 |\u001b[39m       \u001b[90m// Should have WebAuthn UI elements\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 182 |\u001b[39m       expect(passkeyElements\u001b[33m.\u001b[39mlength \u001b[33m+\u001b[39m passkeyButtons\u001b[33m.\u001b[39mlength)\u001b[33m.\u001b[39mtoBeGreaterThan(\u001b[35m0\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                                                              \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 183 |\u001b[39m     } \u001b[36melse\u001b[39m {\n \u001b[90m 184 |\u001b[39m       \u001b[90m// WebAuthn not supported, should show fallback\u001b[39m\n \u001b[90m 185 |\u001b[39m       \u001b[36mconst\u001b[39m fallbackElements \u001b[33m=\u001b[39m \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mlocator(\u001b[32m'[data-testid*=\"fallback\"], [data-testid*=\"alternative\"]'\u001b[39m)\u001b[33m.\u001b[39mall()\u001b[33m;\u001b[39m\u001b[0m"
-                      },
-                      "errors": [
-                        {
-                          "location": {
-                            "file": "/Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/core/webauthn-functionality.spec.ts",
-                            "column": 62,
-                            "line": 182
-                          },
-                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeGreaterThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: > \u001b[32m0\u001b[39m\nReceived:   \u001b[31m0\u001b[39m\n\n\u001b[0m \u001b[90m 180 |\u001b[39m       \n \u001b[90m 181 |\u001b[39m       \u001b[90m// Should have WebAuthn UI elements\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 182 |\u001b[39m       expect(passkeyElements\u001b[33m.\u001b[39mlength \u001b[33m+\u001b[39m passkeyButtons\u001b[33m.\u001b[39mlength)\u001b[33m.\u001b[39mtoBeGreaterThan(\u001b[35m0\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                                                              \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 183 |\u001b[39m     } \u001b[36melse\u001b[39m {\n \u001b[90m 184 |\u001b[39m       \u001b[90m// WebAuthn not supported, should show fallback\u001b[39m\n \u001b[90m 185 |\u001b[39m       \u001b[36mconst\u001b[39m fallbackElements \u001b[33m=\u001b[39m \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mlocator(\u001b[32m'[data-testid*=\"fallback\"], [data-testid*=\"alternative\"]'\u001b[39m)\u001b[33m.\u001b[39mall()\u001b[33m;\u001b[39m\u001b[0m\n\u001b[2m    at /Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/core/webauthn-functionality.spec.ts:182:62\u001b[22m"
-                        }
-                      ],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2025-10-20T17:45:30.982Z",
-                      "annotations": [],
-                      "attachments": [
-                        {
-                          "name": "screenshot",
-                          "contentType": "image/png",
-                          "path": "/Users/alaughingkitsune/src/Choices/web/test-results/core-webauthn-functionalit-b5496-Authn-browser-compatibility-chromium-inline/test-failed-1.png"
-                        },
-                        {
-                          "name": "video",
-                          "contentType": "video/webm",
-                          "path": "/Users/alaughingkitsune/src/Choices/web/test-results/core-webauthn-functionalit-b5496-Authn-browser-compatibility-chromium-inline/video.webm"
-                        },
-                        {
-                          "name": "error-context",
-                          "contentType": "text/markdown",
-                          "path": "/Users/alaughingkitsune/src/Choices/web/test-results/core-webauthn-functionalit-b5496-Authn-browser-compatibility-chromium-inline/error-context.md"
-                        }
-                      ],
-                      "errorLocation": {
-                        "file": "/Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/core/webauthn-functionality.spec.ts",
-                        "column": 62,
-                        "line": 182
-                      }
-                    }
-                  ],
-                  "status": "unexpected"
-                }
-              ],
-              "id": "bd0801ac7565fee60f6e-f996927113e91f399241",
-              "file": "core/webauthn-functionality.spec.ts",
-              "line": 168,
-              "column": 7
-            },
-            {
-              "title": "should handle WebAuthn user interaction",
-              "ok": true,
-              "tags": [],
-              "tests": [
-                {
-                  "timeout": 30000,
-                  "annotations": [],
-                  "expectedStatus": "passed",
-                  "projectId": "chromium-inline",
-                  "projectName": "chromium-inline",
-                  "results": [
-                    {
-                      "workerIndex": 8,
-                      "parallelIndex": 2,
-                      "status": "passed",
-                      "duration": 8367,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2025-10-20T17:45:35.183Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
-                }
-              ],
-              "id": "bd0801ac7565fee60f6e-be9c0efbba8d07ac2dc9",
-              "file": "core/webauthn-functionality.spec.ts",
-              "line": 193,
-              "column": 7
-            },
-            {
-              "title": "should validate WebAuthn form integration",
-              "ok": false,
-              "tags": [],
-              "tests": [
-                {
-                  "timeout": 30000,
-                  "annotations": [],
-                  "expectedStatus": "passed",
-                  "projectId": "chromium-inline",
-                  "projectName": "chromium-inline",
-                  "results": [
-                    {
-                      "workerIndex": 9,
-                      "parallelIndex": 0,
-                      "status": "failed",
-                      "duration": 8336,
-                      "error": {
-                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeGreaterThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: > \u001b[32m0\u001b[39m\nReceived:   \u001b[31m0\u001b[39m",
-                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeGreaterThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: > \u001b[32m0\u001b[39m\nReceived:   \u001b[31m0\u001b[39m\n    at /Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/core/webauthn-functionality.spec.ts:223:35",
-                        "location": {
-                          "file": "/Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/core/webauthn-functionality.spec.ts",
-                          "column": 35,
-                          "line": 223
-                        },
-                        "snippet": "\u001b[0m \u001b[90m 221 |\u001b[39m     \u001b[90m// Should have forms and WebAuthn buttons\u001b[39m\n \u001b[90m 222 |\u001b[39m     expect(forms\u001b[33m.\u001b[39mlength)\u001b[33m.\u001b[39mtoBeGreaterThan(\u001b[35m0\u001b[39m)\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 223 |\u001b[39m     expect(passkeyButtons\u001b[33m.\u001b[39mlength)\u001b[33m.\u001b[39mtoBeGreaterThan(\u001b[35m0\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                                   \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 224 |\u001b[39m     \n \u001b[90m 225 |\u001b[39m     \u001b[90m// WebAuthn buttons should be within or associated with forms\u001b[39m\n \u001b[90m 226 |\u001b[39m     \u001b[36mfor\u001b[39m (\u001b[36mconst\u001b[39m button \u001b[36mof\u001b[39m passkeyButtons) {\u001b[0m"
-                      },
-                      "errors": [
-                        {
-                          "location": {
-                            "file": "/Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/core/webauthn-functionality.spec.ts",
-                            "column": 35,
-                            "line": 223
-                          },
-                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeGreaterThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: > \u001b[32m0\u001b[39m\nReceived:   \u001b[31m0\u001b[39m\n\n\u001b[0m \u001b[90m 221 |\u001b[39m     \u001b[90m// Should have forms and WebAuthn buttons\u001b[39m\n \u001b[90m 222 |\u001b[39m     expect(forms\u001b[33m.\u001b[39mlength)\u001b[33m.\u001b[39mtoBeGreaterThan(\u001b[35m0\u001b[39m)\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 223 |\u001b[39m     expect(passkeyButtons\u001b[33m.\u001b[39mlength)\u001b[33m.\u001b[39mtoBeGreaterThan(\u001b[35m0\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                                   \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 224 |\u001b[39m     \n \u001b[90m 225 |\u001b[39m     \u001b[90m// WebAuthn buttons should be within or associated with forms\u001b[39m\n \u001b[90m 226 |\u001b[39m     \u001b[36mfor\u001b[39m (\u001b[36mconst\u001b[39m button \u001b[36mof\u001b[39m passkeyButtons) {\u001b[0m\n\u001b[2m    at /Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/core/webauthn-functionality.spec.ts:223:35\u001b[22m"
-                        }
-                      ],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2025-10-20T17:45:35.393Z",
-                      "annotations": [],
-                      "attachments": [
-                        {
-                          "name": "screenshot",
-                          "contentType": "image/png",
-                          "path": "/Users/alaughingkitsune/src/Choices/web/test-results/core-webauthn-functionalit-f1b1f-e-WebAuthn-form-integration-chromium-inline/test-failed-1.png"
-                        },
-                        {
-                          "name": "video",
-                          "contentType": "video/webm",
-                          "path": "/Users/alaughingkitsune/src/Choices/web/test-results/core-webauthn-functionalit-f1b1f-e-WebAuthn-form-integration-chromium-inline/video.webm"
-                        },
-                        {
-                          "name": "error-context",
-                          "contentType": "text/markdown",
-                          "path": "/Users/alaughingkitsune/src/Choices/web/test-results/core-webauthn-functionalit-f1b1f-e-WebAuthn-form-integration-chromium-inline/error-context.md"
-                        }
-                      ],
-                      "errorLocation": {
-                        "file": "/Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/core/webauthn-functionality.spec.ts",
-                        "column": 35,
-                        "line": 223
-                      }
-                    }
-                  ],
-                  "status": "unexpected"
-                }
-              ],
-              "id": "bd0801ac7565fee60f6e-82dfe2fea7f8f257a0cd",
-              "file": "core/webauthn-functionality.spec.ts",
-              "line": 216,
-              "column": 7
-            },
-            {
-              "title": "should load WebAuthn components",
-              "ok": false,
-              "tags": [],
-              "tests": [
-                {
-                  "timeout": 30000,
-                  "annotations": [],
-                  "expectedStatus": "passed",
-                  "projectId": "firefox-inline",
-                  "projectName": "firefox-inline",
-                  "results": [
-                    {
-                      "workerIndex": 19,
-                      "parallelIndex": 0,
-                      "status": "timedOut",
-                      "duration": 36185,
-                      "error": {
-                        "message": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m",
-                        "stack": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m\n    at /Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/core/webauthn-functionality.spec.ts:14:8",
-                        "location": {
-                          "file": "/Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/core/webauthn-functionality.spec.ts",
-                          "column": 8,
-                          "line": 14
-                        },
-                        "snippet": "\u001b[0m \u001b[90m 12 |\u001b[39m\n \u001b[90m 13 |\u001b[39m test\u001b[33m.\u001b[39mdescribe(\u001b[32m'WebAuthn Functionality'\u001b[39m\u001b[33m,\u001b[39m () \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 14 |\u001b[39m   test\u001b[33m.\u001b[39mbeforeEach(\u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n \u001b[90m    |\u001b[39m        \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 15 |\u001b[39m     \u001b[90m// Navigate to auth page before each test\u001b[39m\n \u001b[90m 16 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/auth'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 17 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForLoadState(\u001b[32m'networkidle'\u001b[39m)\u001b[33m;\u001b[39m\u001b[0m"
-                      },
-                      "errors": [
-                        {
-                          "location": {
-                            "file": "/Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/core/webauthn-functionality.spec.ts",
-                            "column": 8,
-                            "line": 14
-                          },
-                          "message": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m\n\n\u001b[0m \u001b[90m 12 |\u001b[39m\n \u001b[90m 13 |\u001b[39m test\u001b[33m.\u001b[39mdescribe(\u001b[32m'WebAuthn Functionality'\u001b[39m\u001b[33m,\u001b[39m () \u001b[33m=>\u001b[39m {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 14 |\u001b[39m   test\u001b[33m.\u001b[39mbeforeEach(\u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n \u001b[90m    |\u001b[39m        \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 15 |\u001b[39m     \u001b[90m// Navigate to auth page before each test\u001b[39m\n \u001b[90m 16 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/auth'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 17 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForLoadState(\u001b[32m'networkidle'\u001b[39m)\u001b[33m;\u001b[39m\u001b[0m\n\u001b[2m    at /Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/core/webauthn-functionality.spec.ts:14:8\u001b[22m"
-                        }
-                      ],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2025-10-20T17:46:44.239Z",
-                      "annotations": [],
-                      "attachments": [
-                        {
-                          "name": "screenshot",
-                          "contentType": "image/png",
-                          "path": "/Users/alaughingkitsune/src/Choices/web/test-results/core-webauthn-functionalit-abf34-ld-load-WebAuthn-components-firefox-inline/test-failed-1.png"
-                        },
-                        {
-                          "name": "video",
-                          "contentType": "video/webm",
-                          "path": "/Users/alaughingkitsune/src/Choices/web/test-results/core-webauthn-functionalit-abf34-ld-load-WebAuthn-components-firefox-inline/video.webm"
-                        },
-                        {
-                          "name": "error-context",
-                          "contentType": "text/markdown",
-                          "path": "/Users/alaughingkitsune/src/Choices/web/test-results/core-webauthn-functionalit-abf34-ld-load-WebAuthn-components-firefox-inline/error-context.md"
-                        }
-                      ],
-                      "errorLocation": {
-                        "file": "/Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/core/webauthn-functionality.spec.ts",
-                        "column": 8,
-                        "line": 14
-                      }
-                    }
-                  ],
-                  "status": "unexpected"
-                }
-              ],
-              "id": "bd0801ac7565fee60f6e-813d47ef62c901b3d03b",
-              "file": "core/webauthn-functionality.spec.ts",
-              "line": 20,
-              "column": 7
-            },
-            {
-              "title": "should show WebAuthn registration options",
-              "ok": true,
-              "tags": [],
-              "tests": [
-                {
-                  "timeout": 30000,
-                  "annotations": [],
-                  "expectedStatus": "passed",
-                  "projectId": "firefox-inline",
-                  "projectName": "firefox-inline",
-                  "results": [
-                    {
-                      "workerIndex": 20,
-                      "parallelIndex": 5,
-                      "status": "passed",
-                      "duration": 25105,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2025-10-20T17:46:44.241Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
-                }
-              ],
-              "id": "bd0801ac7565fee60f6e-3ff7b864b00c837a4830",
-              "file": "core/webauthn-functionality.spec.ts",
-              "line": 29,
-              "column": 7
-            },
-            {
-              "title": "should show WebAuthn login options",
-              "ok": true,
-              "tags": [],
-              "tests": [
-                {
-                  "timeout": 30000,
-                  "annotations": [],
-                  "expectedStatus": "passed",
-                  "projectId": "firefox-inline",
-                  "projectName": "firefox-inline",
-                  "results": [
-                    {
-                      "workerIndex": 21,
-                      "parallelIndex": 1,
-                      "status": "passed",
-                      "duration": 32499,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2025-10-20T17:46:44.447Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
-                }
-              ],
-              "id": "bd0801ac7565fee60f6e-59e9a2ca4da985c88e42",
-              "file": "core/webauthn-functionality.spec.ts",
-              "line": 38,
-              "column": 7
-            },
-            {
-              "title": "should handle WebAuthn registration flow",
-              "ok": true,
-              "tags": [],
-              "tests": [
-                {
-                  "timeout": 30000,
-                  "annotations": [],
-                  "expectedStatus": "passed",
-                  "projectId": "firefox-inline",
-                  "projectName": "firefox-inline",
-                  "results": [
-                    {
-                      "workerIndex": 20,
-                      "parallelIndex": 5,
-                      "status": "passed",
-                      "duration": 19986,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2025-10-20T17:47:13.357Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
-                }
-              ],
-              "id": "bd0801ac7565fee60f6e-c182c63bf41c47dfdcda",
-              "file": "core/webauthn-functionality.spec.ts",
-              "line": 47,
-              "column": 7
-            },
-            {
-              "title": "should handle WebAuthn authentication flow",
-              "ok": true,
-              "tags": [],
-              "tests": [
-                {
-                  "timeout": 30000,
-                  "annotations": [],
-                  "expectedStatus": "passed",
-                  "projectId": "firefox-inline",
-                  "projectName": "firefox-inline",
-                  "results": [
-                    {
-                      "workerIndex": 22,
-                      "parallelIndex": 3,
-                      "status": "passed",
-                      "duration": 13253,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2025-10-20T17:47:30.549Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
-                }
-              ],
-              "id": "bd0801ac7565fee60f6e-cf898ca5e414b57feece",
-              "file": "core/webauthn-functionality.spec.ts",
-              "line": 99,
-              "column": 7
-            },
-            {
-              "title": "should handle WebAuthn errors gracefully",
-              "ok": true,
-              "tags": [],
-              "tests": [
-                {
-                  "timeout": 30000,
-                  "annotations": [],
-                  "expectedStatus": "passed",
-                  "projectId": "firefox-inline",
-                  "projectName": "firefox-inline",
-                  "results": [
-                    {
-                      "workerIndex": 21,
-                      "parallelIndex": 1,
-                      "status": "passed",
-                      "duration": 12902,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2025-10-20T17:47:24.724Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
-                }
-              ],
-              "id": "bd0801ac7565fee60f6e-98ee4993d980899f704d",
-              "file": "core/webauthn-functionality.spec.ts",
-              "line": 139,
-              "column": 7
-            },
-            {
-              "title": "should support WebAuthn browser compatibility",
-              "ok": false,
-              "tags": [],
-              "tests": [
-                {
-                  "timeout": 30000,
-                  "annotations": [],
-                  "expectedStatus": "passed",
-                  "projectId": "firefox-inline",
-                  "projectName": "firefox-inline",
-                  "results": [
-                    {
-                      "workerIndex": 20,
-                      "parallelIndex": 5,
-                      "status": "failed",
-                      "duration": 8967,
-                      "error": {
-                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeGreaterThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: > \u001b[32m0\u001b[39m\nReceived:   \u001b[31m0\u001b[39m",
-                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeGreaterThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: > \u001b[32m0\u001b[39m\nReceived:   \u001b[31m0\u001b[39m\n    at /Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/core/webauthn-functionality.spec.ts:182:62",
-                        "location": {
-                          "file": "/Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/core/webauthn-functionality.spec.ts",
-                          "column": 62,
-                          "line": 182
-                        },
-                        "snippet": "\u001b[0m \u001b[90m 180 |\u001b[39m       \n \u001b[90m 181 |\u001b[39m       \u001b[90m// Should have WebAuthn UI elements\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 182 |\u001b[39m       expect(passkeyElements\u001b[33m.\u001b[39mlength \u001b[33m+\u001b[39m passkeyButtons\u001b[33m.\u001b[39mlength)\u001b[33m.\u001b[39mtoBeGreaterThan(\u001b[35m0\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                                                              \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 183 |\u001b[39m     } \u001b[36melse\u001b[39m {\n \u001b[90m 184 |\u001b[39m       \u001b[90m// WebAuthn not supported, should show fallback\u001b[39m\n \u001b[90m 185 |\u001b[39m       \u001b[36mconst\u001b[39m fallbackElements \u001b[33m=\u001b[39m \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mlocator(\u001b[32m'[data-testid*=\"fallback\"], [data-testid*=\"alternative\"]'\u001b[39m)\u001b[33m.\u001b[39mall()\u001b[33m;\u001b[39m\u001b[0m"
-                      },
-                      "errors": [
-                        {
-                          "location": {
-                            "file": "/Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/core/webauthn-functionality.spec.ts",
-                            "column": 62,
-                            "line": 182
-                          },
-                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeGreaterThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: > \u001b[32m0\u001b[39m\nReceived:   \u001b[31m0\u001b[39m\n\n\u001b[0m \u001b[90m 180 |\u001b[39m       \n \u001b[90m 181 |\u001b[39m       \u001b[90m// Should have WebAuthn UI elements\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 182 |\u001b[39m       expect(passkeyElements\u001b[33m.\u001b[39mlength \u001b[33m+\u001b[39m passkeyButtons\u001b[33m.\u001b[39mlength)\u001b[33m.\u001b[39mtoBeGreaterThan(\u001b[35m0\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                                                              \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 183 |\u001b[39m     } \u001b[36melse\u001b[39m {\n \u001b[90m 184 |\u001b[39m       \u001b[90m// WebAuthn not supported, should show fallback\u001b[39m\n \u001b[90m 185 |\u001b[39m       \u001b[36mconst\u001b[39m fallbackElements \u001b[33m=\u001b[39m \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mlocator(\u001b[32m'[data-testid*=\"fallback\"], [data-testid*=\"alternative\"]'\u001b[39m)\u001b[33m.\u001b[39mall()\u001b[33m;\u001b[39m\u001b[0m\n\u001b[2m    at /Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/core/webauthn-functionality.spec.ts:182:62\u001b[22m"
-                        }
-                      ],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2025-10-20T17:47:33.457Z",
-                      "annotations": [],
-                      "attachments": [
-                        {
-                          "name": "screenshot",
-                          "contentType": "image/png",
-                          "path": "/Users/alaughingkitsune/src/Choices/web/test-results/core-webauthn-functionalit-b5496-Authn-browser-compatibility-firefox-inline/test-failed-1.png"
-                        },
-                        {
-                          "name": "video",
-                          "contentType": "video/webm",
-                          "path": "/Users/alaughingkitsune/src/Choices/web/test-results/core-webauthn-functionalit-b5496-Authn-browser-compatibility-firefox-inline/video.webm"
-                        },
-                        {
-                          "name": "error-context",
-                          "contentType": "text/markdown",
-                          "path": "/Users/alaughingkitsune/src/Choices/web/test-results/core-webauthn-functionalit-b5496-Authn-browser-compatibility-firefox-inline/error-context.md"
-                        }
-                      ],
-                      "errorLocation": {
-                        "file": "/Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/core/webauthn-functionality.spec.ts",
-                        "column": 62,
-                        "line": 182
-                      }
-                    }
-                  ],
-                  "status": "unexpected"
-                }
-              ],
-              "id": "bd0801ac7565fee60f6e-0fe29a57913191aaddbc",
-              "file": "core/webauthn-functionality.spec.ts",
-              "line": 168,
-              "column": 7
-            },
-            {
-              "title": "should handle WebAuthn user interaction",
-              "ok": true,
-              "tags": [],
-              "tests": [
-                {
-                  "timeout": 30000,
-                  "annotations": [],
-                  "expectedStatus": "passed",
-                  "projectId": "firefox-inline",
-                  "projectName": "firefox-inline",
-                  "results": [
-                    {
-                      "workerIndex": 23,
-                      "parallelIndex": 4,
-                      "status": "passed",
-                      "duration": 15233,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2025-10-20T17:47:40.663Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
-                }
-              ],
-              "id": "bd0801ac7565fee60f6e-1095f0cf4a33a8cf87b1",
-              "file": "core/webauthn-functionality.spec.ts",
-              "line": 193,
-              "column": 7
-            },
-            {
-              "title": "should validate WebAuthn form integration",
-              "ok": false,
-              "tags": [],
-              "tests": [
-                {
-                  "timeout": 30000,
-                  "annotations": [],
-                  "expectedStatus": "passed",
-                  "projectId": "firefox-inline",
-                  "projectName": "firefox-inline",
-                  "results": [
-                    {
-                      "workerIndex": 24,
-                      "parallelIndex": 0,
-                      "status": "failed",
-                      "duration": 14345,
-                      "error": {
-                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeGreaterThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: > \u001b[32m0\u001b[39m\nReceived:   \u001b[31m0\u001b[39m",
-                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeGreaterThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: > \u001b[32m0\u001b[39m\nReceived:   \u001b[31m0\u001b[39m\n    at /Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/core/webauthn-functionality.spec.ts:223:35",
-                        "location": {
-                          "file": "/Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/core/webauthn-functionality.spec.ts",
-                          "column": 35,
-                          "line": 223
-                        },
-                        "snippet": "\u001b[0m \u001b[90m 221 |\u001b[39m     \u001b[90m// Should have forms and WebAuthn buttons\u001b[39m\n \u001b[90m 222 |\u001b[39m     expect(forms\u001b[33m.\u001b[39mlength)\u001b[33m.\u001b[39mtoBeGreaterThan(\u001b[35m0\u001b[39m)\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 223 |\u001b[39m     expect(passkeyButtons\u001b[33m.\u001b[39mlength)\u001b[33m.\u001b[39mtoBeGreaterThan(\u001b[35m0\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                                   \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 224 |\u001b[39m     \n \u001b[90m 225 |\u001b[39m     \u001b[90m// WebAuthn buttons should be within or associated with forms\u001b[39m\n \u001b[90m 226 |\u001b[39m     \u001b[36mfor\u001b[39m (\u001b[36mconst\u001b[39m button \u001b[36mof\u001b[39m passkeyButtons) {\u001b[0m"
-                      },
-                      "errors": [
-                        {
-                          "location": {
-                            "file": "/Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/core/webauthn-functionality.spec.ts",
-                            "column": 35,
-                            "line": 223
-                          },
-                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeGreaterThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: > \u001b[32m0\u001b[39m\nReceived:   \u001b[31m0\u001b[39m\n\n\u001b[0m \u001b[90m 221 |\u001b[39m     \u001b[90m// Should have forms and WebAuthn buttons\u001b[39m\n \u001b[90m 222 |\u001b[39m     expect(forms\u001b[33m.\u001b[39mlength)\u001b[33m.\u001b[39mtoBeGreaterThan(\u001b[35m0\u001b[39m)\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 223 |\u001b[39m     expect(passkeyButtons\u001b[33m.\u001b[39mlength)\u001b[33m.\u001b[39mtoBeGreaterThan(\u001b[35m0\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                                   \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 224 |\u001b[39m     \n \u001b[90m 225 |\u001b[39m     \u001b[90m// WebAuthn buttons should be within or associated with forms\u001b[39m\n \u001b[90m 226 |\u001b[39m     \u001b[36mfor\u001b[39m (\u001b[36mconst\u001b[39m button \u001b[36mof\u001b[39m passkeyButtons) {\u001b[0m\n\u001b[2m    at /Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/core/webauthn-functionality.spec.ts:223:35\u001b[22m"
-                        }
-                      ],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2025-10-20T17:47:42.250Z",
-                      "annotations": [],
-                      "attachments": [
-                        {
-                          "name": "screenshot",
-                          "contentType": "image/png",
-                          "path": "/Users/alaughingkitsune/src/Choices/web/test-results/core-webauthn-functionalit-f1b1f-e-WebAuthn-form-integration-firefox-inline/test-failed-1.png"
-                        },
-                        {
-                          "name": "video",
-                          "contentType": "video/webm",
-                          "path": "/Users/alaughingkitsune/src/Choices/web/test-results/core-webauthn-functionalit-f1b1f-e-WebAuthn-form-integration-firefox-inline/video.webm"
-                        },
-                        {
-                          "name": "error-context",
-                          "contentType": "text/markdown",
-                          "path": "/Users/alaughingkitsune/src/Choices/web/test-results/core-webauthn-functionalit-f1b1f-e-WebAuthn-form-integration-firefox-inline/error-context.md"
-                        }
-                      ],
-                      "errorLocation": {
-                        "file": "/Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/core/webauthn-functionality.spec.ts",
-                        "column": 35,
-                        "line": 223
-                      }
-                    }
-                  ],
-                  "status": "unexpected"
-                }
-              ],
-              "id": "bd0801ac7565fee60f6e-9bdb5ce8f6917dbf0111",
-              "file": "core/webauthn-functionality.spec.ts",
-              "line": 216,
-              "column": 7
+              ]
             }
           ]
         }
       ]
     }
   ],
-  "errors": [],
+  "errors": [
+    {
+      "message": "\u001b[31mTesting stopped early after 3 maximum allowed failures.\u001b[39m"
+    }
+  ],
   "stats": {
-    "startTime": "2025-10-20T17:44:50.442Z",
-    "duration": 195732.906,
-    "expected": 19,
-    "skipped": 0,
-    "unexpected": 19,
+    "startTime": "2025-10-21T12:25:49.453Z",
+    "duration": 70271.195,
+    "expected": 4,
+    "skipped": 19,
+    "unexpected": 3,
     "flaky": 0
   }
 }

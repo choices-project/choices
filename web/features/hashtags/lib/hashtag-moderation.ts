@@ -231,7 +231,7 @@ export async function moderateHashtag(
     const { data, error } = await supabase
       .from('hashtag_flags')
       .update({
-        status: status,
+        status,
         updated_at: new Date().toISOString()
       })
       .eq('hashtag', hashtagId)

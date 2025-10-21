@@ -19,10 +19,17 @@ import type {
 } from './types';
 
 export class VoteValidator {
-  private supabase: ReturnType<typeof getSupabaseServerClient>;
+  private supabase: Awaited<ReturnType<typeof getSupabaseServerClient>> | null = null;
 
   constructor() {
-    this.supabase = getSupabaseServerClient();
+    // Supabase client will be initialized lazily when needed
+  }
+
+  private async getSupabaseClient() {
+    if (!this.supabase) {
+      this.supabase = await getSupabaseServerClient();
+    }
+    return this.supabase;
   }
 
   /**
@@ -566,7 +573,7 @@ export class VoteValidator {
    */
   private async checkExistingVote(pollId: string, userId: string): Promise<boolean> {
     try {
-      const supabaseClient = await this.supabase;
+      const supabaseClient = await this.getSupabaseClient();
       if (!supabaseClient) return false;
 
       const { data } = await supabaseClient
@@ -587,7 +594,7 @@ export class VoteValidator {
    */
   private async getUserTrustTier(userId: string): Promise<string> {
     try {
-      const supabaseClient = await this.supabase;
+      const supabaseClient = await this.getSupabaseClient();
       if (!supabaseClient) return 'T0';
 
       const { data } = await supabaseClient

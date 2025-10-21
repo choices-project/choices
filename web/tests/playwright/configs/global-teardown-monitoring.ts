@@ -1,4 +1,4 @@
-import { FullConfig } from '@playwright/test';
+import type { FullConfig } from '@playwright/test';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -32,12 +32,14 @@ interface MonitoringSummary {
 }
 
 async function globalTeardown(config: FullConfig) {
-  console.log('📊 Analyzing comprehensive test monitoring results...');
+  if (process.env.NODE_ENV === 'development') {
+    console.log('📊 Analyzing comprehensive test monitoring results...');
+  }
 
   const monitoringDir = path.join(process.cwd(), 'monitoring-data');
   const testResultsDir = path.join(process.cwd(), 'test-results');
   
-  let monitoringSummary: MonitoringSummary = {
+  const monitoringSummary: MonitoringSummary = {
     timestamp: new Date().toISOString(),
     totalTests: 0,
     passedTests: 0,
@@ -60,9 +62,11 @@ async function globalTeardown(config: FullConfig) {
     const resultFiles = fs.readdirSync(testResultsDir).filter(f => f.endsWith('.json'));
     
     if (resultFiles.length > 0) {
-      console.log(`📈 Found ${resultFiles.length} test result file(s)`);
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`📈 Found ${resultFiles.length} test result file(s)`);
+      }
       
-      let allResults: TestResult[] = [];
+      const allResults: TestResult[] = [];
       
       for (const file of resultFiles) {
         try {
@@ -113,7 +117,9 @@ async function globalTeardown(config: FullConfig) {
             }
           }
         } catch (error) {
-          console.error(`❌ Error processing result file ${file}:`, error);
+          if (process.env.NODE_ENV === 'development') {
+            console.error(`❌ Error processing result file ${file}:`, error);
+          }
         }
       }
       
@@ -159,25 +165,27 @@ async function globalTeardown(config: FullConfig) {
   fs.writeFileSync(summaryFile, JSON.stringify(monitoringSummary, null, 2));
 
   // Display summary
-  console.log('\n📊 COMPREHENSIVE TEST MONITORING SUMMARY');
-  console.log('==========================================');
-  console.log(`📈 Total Tests: ${monitoringSummary.totalTests}`);
-  console.log(`✅ Passed: ${monitoringSummary.passedTests}`);
-  console.log(`❌ Failed: ${monitoringSummary.failedTests}`);
-  console.log(`⏭️  Skipped: ${monitoringSummary.skippedTests}`);
-  console.log(`⏱️  Total Duration: ${(monitoringSummary.totalDuration / 1000).toFixed(2)}s`);
-  console.log(`📊 Average Duration: ${monitoringSummary.averageDuration.toFixed(2)}ms`);
-  console.log(`🚀 Average Load Time: ${monitoringSummary.performanceMetrics.averageLoadTime.toFixed(2)}ms`);
-  console.log(`💾 Memory Peak: ${monitoringSummary.performanceMetrics.memoryPeak.toFixed(2)}MB`);
-  console.log(`🖥️  CPU Peak: ${monitoringSummary.performanceMetrics.cpuPeak.toFixed(2)}%`);
-  
-  if (monitoringSummary.recommendations.length > 0) {
-    console.log('\n💡 RECOMMENDATIONS:');
-    monitoringSummary.recommendations.forEach(rec => console.log(`  ${rec}`));
+  if (process.env.NODE_ENV === 'development') {
+    console.log('\n📊 COMPREHENSIVE TEST MONITORING SUMMARY');
+    console.log('==========================================');
+    console.log(`📈 Total Tests: ${monitoringSummary.totalTests}`);
+    console.log(`✅ Passed: ${monitoringSummary.passedTests}`);
+    console.log(`❌ Failed: ${monitoringSummary.failedTests}`);
+    console.log(`⏭️  Skipped: ${monitoringSummary.skippedTests}`);
+    console.log(`⏱️  Total Duration: ${(monitoringSummary.totalDuration / 1000).toFixed(2)}s`);
+    console.log(`📊 Average Duration: ${monitoringSummary.averageDuration.toFixed(2)}ms`);
+    console.log(`🚀 Average Load Time: ${monitoringSummary.performanceMetrics.averageLoadTime.toFixed(2)}ms`);
+    console.log(`💾 Memory Peak: ${monitoringSummary.performanceMetrics.memoryPeak.toFixed(2)}MB`);
+    console.log(`🖥️  CPU Peak: ${monitoringSummary.performanceMetrics.cpuPeak.toFixed(2)}%`);
+    
+    if (monitoringSummary.recommendations.length > 0) {
+      console.log('\n💡 RECOMMENDATIONS:');
+      monitoringSummary.recommendations.forEach(rec => console.log(`  ${rec}`));
+    }
+    
+    console.log(`\n📁 Monitoring summary saved to: ${summaryFile}`);
+    console.log('✅ Comprehensive test monitoring analysis complete');
   }
-  
-  console.log(`\n📁 Monitoring summary saved to: ${summaryFile}`);
-  console.log('✅ Comprehensive test monitoring analysis complete');
 }
 
 export default globalTeardown;

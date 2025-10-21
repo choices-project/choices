@@ -29,11 +29,11 @@ export default defineConfig({
     actionTimeout: 10000,
     navigationTimeout: 30000,
     // Enable HAR recording for network analysis
-    recordHar: {
-      mode: 'full',
-      urlFilter: '**/*',
-      omitContent: false
-    }
+    // recordHar: {
+    //   mode: 'full',
+    //   urlFilter: '**/*',
+    //   omitContent: false
+    // }
   },
 
   projects: [

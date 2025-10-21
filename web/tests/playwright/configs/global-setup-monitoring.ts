@@ -1,4 +1,4 @@
-import { FullConfig } from '@playwright/test';
+import type { FullConfig } from '@playwright/test';
 import { chromium } from 'playwright';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -22,7 +22,9 @@ interface MonitoringData {
 }
 
 async function globalSetup(config: FullConfig) {
-  console.log('🚀 Setting up comprehensive test monitoring...');
+  if (process.env.NODE_ENV === 'development') {
+    console.log('🚀 Setting up comprehensive test monitoring...');
+  }
   
   const monitoringData: MonitoringData = {
     timestamp: new Date().toISOString(),
@@ -77,8 +79,8 @@ async function globalSetup(config: FullConfig) {
             let cls = 0;
             new PerformanceObserver((entryList) => {
               for (const entry of entryList.getEntries()) {
-                if (!entry.hadRecentInput) {
-                  cls += (entry as LayoutShift).value;
+                if (!(entry as any).hadRecentInput) {
+                  cls += (entry as any).value;
                 }
               }
             }).observe({ type: 'layout-shift', buffered: true });
@@ -111,22 +113,26 @@ async function globalSetup(config: FullConfig) {
 
     monitoringData.baselineMetrics = performanceMetrics;
 
-    console.log('📊 Baseline Performance Metrics:');
-    console.log(`  DOM Content Loaded: ${performanceMetrics.domContentLoaded.toFixed(2)}ms`);
-    console.log(`  Load Complete: ${performanceMetrics.loadComplete.toFixed(2)}ms`);
-    console.log(`  First Paint: ${performanceMetrics.firstPaint.toFixed(2)}ms`);
-    console.log(`  First Contentful Paint: ${performanceMetrics.firstContentfulPaint.toFixed(2)}ms`);
-    console.log(`  Largest Contentful Paint: ${performanceMetrics.largestContentfulPaint.toFixed(2)}ms`);
-    console.log(`  Cumulative Layout Shift: ${performanceMetrics.cumulativeLayoutShift.toFixed(4)}`);
-    console.log(`  Total Blocking Time: ${performanceMetrics.totalBlockingTime.toFixed(2)}ms`);
+    if (process.env.NODE_ENV === 'development') {
+      console.log('📊 Baseline Performance Metrics:');
+      console.log(`  DOM Content Loaded: ${performanceMetrics.domContentLoaded.toFixed(2)}ms`);
+      console.log(`  Load Complete: ${performanceMetrics.loadComplete.toFixed(2)}ms`);
+      console.log(`  First Paint: ${performanceMetrics.firstPaint.toFixed(2)}ms`);
+      console.log(`  First Contentful Paint: ${performanceMetrics.firstContentfulPaint.toFixed(2)}ms`);
+      console.log(`  Largest Contentful Paint: ${performanceMetrics.largestContentfulPaint.toFixed(2)}ms`);
+      console.log(`  Cumulative Layout Shift: ${performanceMetrics.cumulativeLayoutShift.toFixed(4)}`);
+      console.log(`  Total Blocking Time: ${performanceMetrics.totalBlockingTime.toFixed(2)}ms`);
 
-    // System metrics
-    console.log('💻 System Metrics:');
-    console.log(`  Memory Usage: ${(monitoringData.systemMetrics.memoryUsage.heapUsed / 1024 / 1024).toFixed(2)}MB`);
-    console.log(`  CPU Usage: ${monitoringData.systemMetrics.cpuUsage.user}μs user, ${monitoringData.systemMetrics.cpuUsage.system}μs system`);
+      // System metrics
+      console.log('💻 System Metrics:');
+      console.log(`  Memory Usage: ${(monitoringData.systemMetrics.memoryUsage.heapUsed / 1024 / 1024).toFixed(2)}MB`);
+      console.log(`  CPU Usage: ${monitoringData.systemMetrics.cpuUsage.user}μs user, ${monitoringData.systemMetrics.cpuUsage.system}μs system`);
+    }
 
   } catch (error) {
-    console.error('❌ Error collecting baseline metrics:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('❌ Error collecting baseline metrics:', error);
+    }
   } finally {
     await browser.close();
   }
@@ -140,8 +146,10 @@ async function globalSetup(config: FullConfig) {
   const monitoringFile = path.join(monitoringDir, `monitoring-${Date.now()}.json`);
   fs.writeFileSync(monitoringFile, JSON.stringify(monitoringData, null, 2));
 
-  console.log('✅ Comprehensive test monitoring environment ready');
-  console.log(`📁 Monitoring data saved to: ${monitoringFile}`);
+  if (process.env.NODE_ENV === 'development') {
+    console.log('✅ Comprehensive test monitoring environment ready');
+    console.log(`📁 Monitoring data saved to: ${monitoringFile}`);
+  }
 }
 
 export default globalSetup;

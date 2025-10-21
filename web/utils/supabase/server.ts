@@ -34,8 +34,8 @@ export async function getSupabaseServerClient() {
   const cookieStore = await cookies();
   
   return createServerClient<Database>(
-    env.NEXT_PUBLIC_SUPABASE_URL!,
-    env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    env.NEXT_PUBLIC_SUPABASE_URL,
+    env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     {
       cookies: {
         get(name: string) {
@@ -65,8 +65,8 @@ export async function getSupabaseServerClient() {
 }
 
 // Create Supabase admin client (for server-side operations requiring elevated privileges)
-export function getSupabaseAdminClient(): SupabaseClient<Database> {
-  const { createClient } = require('@supabase/supabase-js');
+export async function getSupabaseAdminClient(): Promise<SupabaseClient<Database>> {
+  const { createClient } = await import('@supabase/supabase-js');
   
   return createClient(
     env.NEXT_PUBLIC_SUPABASE_URL,
@@ -88,13 +88,19 @@ export async function getServerUser() {
     const { data: { user }, error } = await supabase.auth.getUser();
     
     if (error) {
-      console.error('Error getting user:', error);
+      // Log error for debugging but don't expose to client
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Error getting user:', error);
+      }
       return null;
     }
     
     return user;
   } catch (error) {
-    console.error('Error in getServerUser:', error);
+    // Log error for debugging but don't expose to client
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Error in getServerUser:', error);
+    }
     return null;
   }
 }
@@ -117,13 +123,19 @@ export async function getServerUserProfile(): Promise<Database['public']['Tables
       .single();
     
     if (error) {
-      console.error('Error getting user profile:', error);
+      // Log error for debugging but don't expose to client
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Error getting user profile:', error);
+      }
       return null;
     }
     
     return profile as Database['public']['Tables']['user_profiles']['Row'];
   } catch (error) {
-    console.error('Error in getServerUserProfile:', error);
+    // Log error for debugging but don't expose to client
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Error in getServerUserProfile:', error);
+    }
     return null;
   }
 }
@@ -178,8 +190,8 @@ export async function createServerSupabaseClient(): Promise<SupabaseClient<Datab
 }
 
 // Helper function to create an admin client for specific operations
-export function createServerAdminClient(): SupabaseClient<Database> {
-  return getSupabaseAdminClient();
+export async function createServerAdminClient(): Promise<SupabaseClient<Database>> {
+  return await getSupabaseAdminClient();
 }
 
 // Export types for use in other modules

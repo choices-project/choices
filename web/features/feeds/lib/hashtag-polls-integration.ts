@@ -357,7 +357,7 @@ export class HashtagPollsIntegrationService {
           poll_id: poll.id,
           title: poll.title,
           description: poll.description,
-          relevanceScore: relevanceScore,
+          relevanceScore,
           hashtag_match_score: hashtagMatchScore + primaryHashtagBonus,
           engagement_score: engagementScore,
           recency_score: recencyScore,

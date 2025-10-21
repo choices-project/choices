@@ -64,6 +64,12 @@ const customJestConfig = {
     'node_modules/(?!(lucide-react|@radix-ui|@headlessui|@floating-ui|@tanstack|@supabase|framer-motion|recharts|uuid|clsx|tailwind-merge)/)',
   ],
   
+  // Transform configuration for ESM modules
+  transform: {
+    '^.+\\.(js|jsx|ts|tsx)$': ['babel-jest', { presets: ['next/babel'] }],
+    '^.+\\.mjs$': ['babel-jest', { presets: ['next/babel'] }],
+  },
+  
   // Module name mapping
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/$1',
@@ -77,6 +83,7 @@ const customJestConfig = {
     '^@/styles/(.*)$': '<rootDir>/styles/$1',
     '^@/public/(.*)$': '<rootDir>/public/$1',
     '^lucide-react$': '<rootDir>/__mocks__/lucide-react.js',
+    '^lucide-react/(.*)$': '<rootDir>/__mocks__/lucide-react.js',
   },
   
   // Transform configuration

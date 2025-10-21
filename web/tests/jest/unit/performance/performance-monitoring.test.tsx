@@ -5,7 +5,7 @@
 import React from 'react';
 import { render, screen, waitFor, act } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
-import SuperiorMobileFeed from '@/features/feeds/components/SuperiorMobileFeed';
+import UnifiedFeed from '@/features/feeds/components/UnifiedFeed';
 import { testMonitor, calculatePerformanceGrade, PERFORMANCE_BUDGETS } from './test-monitoring';
 import { PerformanceDashboard, PerformanceMetricsTable } from './performance-dashboard';
 import { logger } from '@/lib/utils/logger';
@@ -86,7 +86,7 @@ describe('Performance Monitoring Tests', () => {
       await act(async () => {
         render(
           <BrowserRouter>
-            <SuperiorMobileFeed />
+            <UnifiedFeed />
           </BrowserRouter>
         );
       });
@@ -132,7 +132,7 @@ describe('Performance Monitoring Tests', () => {
         await act(async () => {
           render(
             <BrowserRouter>
-              <SuperiorMobileFeed />
+              <UnifiedFeed />
             </BrowserRouter>
           );
         });
@@ -179,7 +179,7 @@ describe('Performance Monitoring Tests', () => {
       await act(async () => {
         render(
           <BrowserRouter>
-            <SuperiorMobileFeed />
+            <UnifiedFeed />
           </BrowserRouter>
         );
       });
@@ -405,7 +405,7 @@ describe('Performance Monitoring Tests', () => {
       await act(async () => {
         render(
           <BrowserRouter>
-            <SuperiorMobileFeed />
+            <UnifiedFeed />
           </BrowserRouter>
         );
       });
@@ -451,7 +451,7 @@ describe('Performance Monitoring Tests', () => {
         await act(async () => {
           render(
             <BrowserRouter>
-              <SuperiorMobileFeed />
+              <UnifiedFeed />
             </BrowserRouter>
           );
         });
@@ -498,7 +498,7 @@ describe('Performance Monitoring Tests', () => {
       await act(async () => {
         render(
           <BrowserRouter>
-            <SuperiorMobileFeed />
+            <UnifiedFeed />
           </BrowserRouter>
         );
       });

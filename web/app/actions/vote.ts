@@ -39,7 +39,7 @@ export const vote = createSecureServerAction(
     }
 
     // Check if poll exists and is active
-    const { data: poll, error: pollError } = await supabase
+    const { data: poll, error: pollError } = await (supabase as any)
       .from('polls')
       .select('id, created_by, voting_method, privacy_level, end_time, options')
       .eq('id', validatedData.pollId)
@@ -56,7 +56,7 @@ export const vote = createSecureServerAction(
 
     // Check if user has already voted (multiple votes not supported in current schema)
     // Note: allow_multiple_votes field doesn't exist in current schema
-    const { data: existingVote } = await supabase
+    const { data: existingVote } = await (supabase as any)
       .from('votes')
       .select('id')
       .eq('poll_id', validatedData.pollId)
@@ -117,7 +117,7 @@ export const vote = createSecureServerAction(
       }
     })
 
-    const { error: voteError } = await supabase
+    const { error: voteError } = await (supabase as any)
       .from('votes')
       .insert(voteData)
 

@@ -99,8 +99,7 @@ export async function POST(request: NextRequest) {
           hashtag: body.hashtag,
           reason: body.reason,
           reporter_id: body.reporter_id,
-          status: 'pending',
-          created_at: new Date().toISOString()
+          status: 'pending'
         }])
         .select();
 

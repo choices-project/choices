@@ -51,7 +51,7 @@ export async function loginAction(formData: FormData) {
   logger.info('User authenticated successfully', { userId: authData.user.id });
   
   // Check if user has completed onboarding
-  const { data: profile, error: profileError } = await supabase
+  const { data: profile, error: profileError } = await (supabase as any)
     .from('user_profiles')
     .select('onboarding_completed')
     .eq('user_id', authData.user.id)

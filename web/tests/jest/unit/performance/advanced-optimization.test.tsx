@@ -5,7 +5,7 @@
 import React from 'react';
 import { render, screen, waitFor, act } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
-import SuperiorMobileFeed from '@/features/feeds/components/SuperiorMobileFeed';
+import UnifiedFeed from '@/features/feeds/components/UnifiedFeed';
 import { performanceProfiler, ProfilerMetrics, ComponentProfile } from './performance-profiler';
 import { logger } from '@/lib/utils/logger';
 
@@ -79,7 +79,7 @@ describe('Advanced Performance Optimization Tests', () => {
 
   describe('Performance Profiling', () => {
     it('should profile component performance with deep analysis', async () => {
-      const componentName = 'SuperiorMobileFeed';
+      const componentName = 'UnifiedFeed';
       
       // Start profiling
       performanceProfiler.startProfiling(componentName);
@@ -90,7 +90,7 @@ describe('Advanced Performance Optimization Tests', () => {
       await act(async () => {
         render(
           <BrowserRouter>
-            <SuperiorMobileFeed />
+            <UnifiedFeed />
           </BrowserRouter>
         );
       });
@@ -121,7 +121,7 @@ describe('Advanced Performance Optimization Tests', () => {
     });
 
     it('should create component profile with optimization analysis', async () => {
-      const componentName = 'SuperiorMobileFeed';
+      const componentName = 'UnifiedFeed';
       
       // Profile the component
       performanceProfiler.startProfiling(componentName);
@@ -129,7 +129,7 @@ describe('Advanced Performance Optimization Tests', () => {
       await act(async () => {
         render(
           <BrowserRouter>
-            <SuperiorMobileFeed />
+            <UnifiedFeed />
           </BrowserRouter>
         );
       });
@@ -156,7 +156,7 @@ describe('Advanced Performance Optimization Tests', () => {
 
     it('should generate comprehensive performance analysis', async () => {
       // Profile multiple components
-      const components = ['SuperiorMobileFeed', 'TestComponent1', 'TestComponent2'];
+      const components = ['UnifiedFeed', 'TestComponent1', 'TestComponent2'];
       
       for (const componentName of components) {
         performanceProfiler.startProfiling(componentName);
@@ -164,7 +164,7 @@ describe('Advanced Performance Optimization Tests', () => {
         await act(async () => {
           render(
             <BrowserRouter>
-              <SuperiorMobileFeed />
+              <UnifiedFeed />
             </BrowserRouter>
           );
         });
@@ -211,7 +211,7 @@ describe('Advanced Performance Optimization Tests', () => {
       await act(async () => {
         render(
           <BrowserRouter>
-            <SuperiorMobileFeed />
+            <UnifiedFeed />
           </BrowserRouter>
         );
       });
@@ -246,7 +246,7 @@ describe('Advanced Performance Optimization Tests', () => {
         await act(async () => {
           render(
             <BrowserRouter>
-              <SuperiorMobileFeed />
+              <UnifiedFeed />
             </BrowserRouter>
           );
         });
@@ -281,7 +281,7 @@ describe('Advanced Performance Optimization Tests', () => {
       await act(async () => {
         render(
           <BrowserRouter>
-            <SuperiorMobileFeed />
+            <UnifiedFeed />
           </BrowserRouter>
         );
       });
@@ -314,7 +314,7 @@ describe('Advanced Performance Optimization Tests', () => {
       await act(async () => {
         render(
           <BrowserRouter>
-            <SuperiorMobileFeed />
+            <UnifiedFeed />
           </BrowserRouter>
         );
       });
@@ -340,7 +340,7 @@ describe('Advanced Performance Optimization Tests', () => {
       await act(async () => {
         render(
           <BrowserRouter>
-            <SuperiorMobileFeed />
+            <UnifiedFeed />
           </BrowserRouter>
         );
       });
@@ -371,7 +371,7 @@ describe('Advanced Performance Optimization Tests', () => {
       await act(async () => {
         render(
           <BrowserRouter>
-            <SuperiorMobileFeed />
+            <UnifiedFeed />
           </BrowserRouter>
         );
       });
@@ -407,7 +407,7 @@ describe('Advanced Performance Optimization Tests', () => {
         await act(async () => {
           render(
             <BrowserRouter>
-              <SuperiorMobileFeed />
+              <UnifiedFeed />
             </BrowserRouter>
           );
         });
@@ -442,7 +442,7 @@ describe('Advanced Performance Optimization Tests', () => {
         await act(async () => {
           render(
             <BrowserRouter>
-              <SuperiorMobileFeed />
+              <UnifiedFeed />
             </BrowserRouter>
           );
         });

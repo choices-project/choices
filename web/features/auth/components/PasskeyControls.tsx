@@ -273,3 +273,5 @@ export function PasskeyControls() {
     </div>
   );
 }
+
+export default PasskeyControls;

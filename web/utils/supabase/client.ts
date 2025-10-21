@@ -42,8 +42,12 @@ export type Vote = Database['public']['Tables']['votes']['Row']
 
 // Create Supabase client
 export const createClient = (): SupabaseClient<Database> => {
-  const supabaseUrl = process.env['NEXT_PUBLIC_SUPABASE_URL']!
-  const supabaseKey = process.env['NEXT_PUBLIC_SUPABASE_ANON_KEY']!
+  const supabaseUrl = process.env['NEXT_PUBLIC_SUPABASE_URL']
+  const supabaseKey = process.env['NEXT_PUBLIC_SUPABASE_ANON_KEY']
+  
+  if (!supabaseUrl || !supabaseKey) {
+    throw new Error('Missing required Supabase environment variables')
+  }
   
   return createSupabaseClient<Database>(supabaseUrl, supabaseKey)
 }

@@ -34,7 +34,7 @@ export async function DELETE(_request: NextRequest) {
     const { error: profileError } = await supabase
       .from('user_profiles')
       .delete()
-      .eq('user_id', user.id)
+      .eq('user_id', user.id as any)
 
     if (profileError) {
       devLog('Profile deletion error:', { error: profileError })
@@ -48,7 +48,7 @@ export async function DELETE(_request: NextRequest) {
     const { error: votesError } = await supabase
       .from('votes')
       .delete()
-      .eq('user_id', user.id)
+      .eq('user_id', user.id as any)
 
     if (votesError) {
       devLog('Votes deletion error:', { error: votesError })
@@ -59,7 +59,7 @@ export async function DELETE(_request: NextRequest) {
     const { error: pollsError } = await supabase
       .from('polls')
       .delete()
-      .eq('created_by', user.id)
+      .eq('created_by', user.id as any)
 
     if (pollsError) {
       devLog('Polls deletion error:', { error: pollsError })
@@ -70,7 +70,7 @@ export async function DELETE(_request: NextRequest) {
     const { error: credentialsError } = await supabase
       .from('webauthn_credentials')
       .delete()
-      .eq('user_id', user.id)
+      .eq('user_id', user.id as any)
 
     if (credentialsError) {
       devLog('Credentials deletion error:', { error: credentialsError })

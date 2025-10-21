@@ -1,8 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Hash, TrendingUp, Users, Settings, Plus, Search, Filter } from 'lucide-react';
-import { HashtagDisplay } from './HashtagDisplay';
+import { Hash, Plus, Search, Filter } from 'lucide-react';
 import { searchHashtags, createHashtag, updateHashtag, deleteHashtag } from '../lib/hashtag-service';
 import type { Hashtag, HashtagCategory } from '../types';
 

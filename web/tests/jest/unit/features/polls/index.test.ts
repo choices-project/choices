@@ -26,7 +26,7 @@ import {
   formatTimeRemaining,
   sanitizePollTitleForUrl,
   generatePollSummary
-} from '../../../../features/polls/utils/index';
+} from '@/features/polls/utils';
 
 describe('Poll Utilities', () => {
   describe('formatPollDate', () => {

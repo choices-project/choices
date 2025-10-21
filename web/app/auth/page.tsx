@@ -5,7 +5,7 @@ import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import React, { useState } from 'react';
 
-const PasskeyControls = dynamic(() => import('@/features/auth/components/PasskeyControls').then(mod => ({ default: mod.PasskeyControls })), {
+const PasskeyControls = dynamic(() => import('@/features/auth/components/PasskeyControls'), {
   ssr: false,
   loading: () => <div className="text-center text-sm text-gray-500">Loading authentication options...</div>
 });

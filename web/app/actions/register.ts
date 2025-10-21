@@ -72,7 +72,7 @@ export async function register(
 
     // Check for existing username in user_profiles table
     logger.info('Checking for existing username', { username: data.username.toLowerCase() });
-    const { data: existingUsername, error: usernameError } = await supabase
+    const { data: existingUsername, error: usernameError } = await (supabase as any)
       .from('user_profiles')
       .select('user_id')
       .eq('username', data.username.toLowerCase())
@@ -117,8 +117,8 @@ export async function register(
     const authUser = authUserData.user;
 
     // Create user profile using service role client (bypasses RLS)
-    const serviceRoleClient = getSupabaseAdminClient();
-    const { error: profileError } = await serviceRoleClient
+    const serviceRoleClient = await getSupabaseAdminClient();
+    const { error: profileError } = await (serviceRoleClient as any)
       .from('user_profiles')
       .insert({
         user_id: authUser.id,
