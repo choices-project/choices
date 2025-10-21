@@ -15,8 +15,8 @@
 
 'use client';
 
-import {
 import type { Database } from '@/types/database';
+import {
   SparklesIcon,
   ClockIcon
 } from '@heroicons/react/24/outline';
