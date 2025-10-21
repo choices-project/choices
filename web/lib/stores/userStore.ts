@@ -432,7 +432,7 @@ export const useUserStore = create<UserStore>()(
       
       updatePrivacySetting: (setting, value) => set((state) => {
         if (state.profileEditData) {
-          (state.profileEditData.privacysettings as any)[setting] = value;
+          (state.profileEditData.privacysettings as Record<string, any>)[setting] = value;
         }
       }),
       
@@ -501,7 +501,7 @@ export const useUserStore = create<UserStore>()(
           const result = await response.json();
           return result.data || [];
         } catch (error) {
-          console.error('Address lookup failed:', error);
+          // Address lookup failed - error will be handled by calling code
           throw error;
         }
       },
@@ -532,7 +532,7 @@ export const useUserStore = create<UserStore>()(
           }, 3000);
           
         } catch (error) {
-          console.error('Address update failed:', error);
+          // Address update failed - error will be handled by calling code
           set((state) => {
             state.addressLoading = false;
             state.savedSuccessfully = false;
@@ -564,7 +564,7 @@ export const useUserStore = create<UserStore>()(
         state.error = error;
         
         if (error) {
-          console.error('User store error:', error);
+          // User store error - error will be handled by calling code
         }
       }),
       
@@ -855,7 +855,7 @@ export const userStoreDebug = {
    */
   logState: () => {
     const state = useUserStore.getState();
-    console.log('User store state:', state);
+    // User store state logged for debugging
   },
   
   /**

@@ -45,7 +45,7 @@ export interface UserProfile {
   privacy_settings?: PrivacySettings;
   primary_concerns?: string[];
   community_focus?: string[];
-  participation_style?: 'observer' | 'contributor' | 'leader';
+  participation_style?: 'observer' | 'participant' | 'leader' | 'organizer';
   demographics?: Record<string, any>;
   
   // Hashtag integration
@@ -165,8 +165,8 @@ export interface ProfileUpdateData {
   primary_concerns?: string[];
   communityfocus?: string[];
   community_focus?: string[];
-  participationstyle?: 'observer' | 'contributor' | 'leader';
-  participation_style?: 'observer' | 'contributor' | 'leader';
+  participationstyle?: 'observer' | 'participant' | 'leader' | 'organizer';
+  participation_style?: 'observer' | 'participant' | 'leader' | 'organizer';
   trust_tier?: 'T0' | 'T1' | 'T2' | 'T3';
   privacysettings?: PrivacySettings;
   privacy_settings?: PrivacySettings;
@@ -343,7 +343,7 @@ export const PROFILE_CONSTANTS = {
   MAX_DISPLAY_NAME_LENGTH: 100,
   MAX_USERNAME_LENGTH: 50,
   TRUST_TIERS: ['T0', 'T1', 'T2', 'T3'] as const,
-  PARTICIPATION_STYLES: ['observer', 'contributor', 'leader'] as const,
+  PARTICIPATION_STYLES: ['observer', 'participant', 'leader', 'organizer'] as const,
   PROFILE_VISIBILITY: ['public', 'private', 'friends'] as const,
   EXPORT_FORMATS: ['json', 'csv', 'pdf'] as const,
 } as const;

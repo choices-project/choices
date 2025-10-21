@@ -18,6 +18,16 @@
 import { type NextRequest, NextResponse } from 'next/server';
 
 import { isCivicsEnabled } from '@/features/civics/lib/civics/privacy-utils';
+
+// Define health check result types
+type HealthStatus = 'healthy' | 'warning' | 'error' | 'unhealthy' | 'degraded' | 'unknown';
+type HealthResult = {
+  status: HealthStatus;
+  error?: string;
+  type?: string;
+  timestamp?: string;
+  details?: any;
+};
 import { createRateLimitMiddleware, combineMiddleware } from '@/lib/core/auth/middleware';
 import { getQueryOptimizer } from '@/lib/database/optimizer';
 import { logger } from '@/lib/utils/logger';
@@ -354,7 +364,12 @@ export async function GET(request: NextRequest) {
 
     // All health checks
     if (type === 'all') {
-      const results = {
+      const results: {
+        basic: HealthResult | null;
+        database: HealthResult | null;
+        supabase: HealthResult | null;
+        civics: HealthResult | null;
+      } = {
         basic: null,
         database: null,
         supabase: null,
@@ -412,17 +427,17 @@ export async function GET(request: NextRequest) {
           })()
         ]);
 
-        results.basic = basicResult.status === 'fulfilled' ? basicResult.value : { status: 'error', error: 'Basic check failed' } as any;
-        results.database = databaseResult.status === 'fulfilled' ? databaseResult.value : { status: 'error', error: 'Database check failed' } as any;
-        results.supabase = supabaseResult.status === 'fulfilled' ? supabaseResult.value : { status: 'error', error: 'Supabase check failed' } as any;
-        results.civics = civicsResult.status === 'fulfilled' ? civicsResult.value : { status: 'error', error: 'Civics check failed' } as any;
+        results.basic = basicResult.status === 'fulfilled' ? { ...basicResult.value, status: basicResult.value.status as HealthStatus } : { status: 'error' as HealthStatus, error: 'Basic check failed' };
+        results.database = databaseResult.status === 'fulfilled' ? { ...databaseResult.value, status: databaseResult.value.status as HealthStatus } : { status: 'error' as HealthStatus, error: 'Database check failed' };
+        results.supabase = supabaseResult.status === 'fulfilled' ? { ...supabaseResult.value, status: supabaseResult.value.status as HealthStatus, error: supabaseResult.value.error || undefined } : { status: 'error' as HealthStatus, error: 'Supabase check failed' };
+        results.civics = civicsResult.status === 'fulfilled' ? { ...civicsResult.value, status: civicsResult.value.status as HealthStatus } : { status: 'error' as HealthStatus, error: 'Civics check failed' };
 
         // Determine overall status
-        const allStatuses = [
-          (results.basic as any)?.status || 'unknown',
-          (results.database as any)?.status || 'unknown', 
-          (results.supabase as any)?.status || 'unknown',
-          (results.civics as any)?.status || 'unknown'
+        const allStatuses: HealthStatus[] = [
+          results.basic?.status || 'unknown',
+          results.database?.status || 'unknown', 
+          results.supabase?.status || 'unknown',
+          results.civics?.status || 'unknown'
         ];
         const hasErrors = allStatuses.includes('error') || allStatuses.includes('unhealthy');
         const hasWarnings = allStatuses.includes('warning') || allStatuses.includes('degraded');
@@ -437,7 +452,7 @@ export async function GET(request: NextRequest) {
           checks: results,
           summary: {
             total: 4,
-            healthy: allStatuses.filter(s => s === 'healthy' || s === 'ok').length,
+            healthy: allStatuses.filter(s => s === 'healthy').length,
             warnings: allStatuses.filter(s => s === 'warning' || s === 'degraded').length,
             errors: allStatuses.filter(s => s === 'error' || s === 'unhealthy').length
           }

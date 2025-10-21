@@ -62,14 +62,14 @@ export function validateProfileData(data: ProfileUpdateData): ProfileValidationR
   }
 
   // Trust tier validation
-  if (data.trust_tier && !PROFILE_CONSTANTS.TRUST_TIERS.includes(data.trust_tier as any)) {
+  if (data.trust_tier && !PROFILE_CONSTANTS.TRUST_TIERS.includes(data.trust_tier as 'T0' | 'T1' | 'T2' | 'T3')) {
     errors.push(`Trust tier must be one of: ${PROFILE_CONSTANTS.TRUST_TIERS.join(', ')}`);
   }
 
   // Participation style validation
   if (data.participationstyle || data.participation_style) {
     const style = data.participationstyle || data.participation_style;
-    if (style && !PROFILE_CONSTANTS.PARTICIPATION_STYLES.includes(style as any)) {
+    if (style && !PROFILE_CONSTANTS.PARTICIPATION_STYLES.includes(style as 'observer' | 'contributor' | 'leader')) {
       errors.push(`Participation style must be one of: ${PROFILE_CONSTANTS.PARTICIPATION_STYLES.join(', ')}`);
     }
   }
@@ -77,7 +77,7 @@ export function validateProfileData(data: ProfileUpdateData): ProfileValidationR
   // Privacy settings validation
   if (data.privacysettings || data.privacy_settings) {
     const settings = data.privacysettings || data.privacy_settings;
-    if (settings?.profile_visibility && !PROFILE_CONSTANTS.PROFILE_VISIBILITY.includes(settings.profile_visibility as any)) {
+    if (settings?.profile_visibility && !PROFILE_CONSTANTS.PROFILE_VISIBILITY.includes(settings.profile_visibility as 'public' | 'private' | 'friends')) {
       errors.push(`Profile visibility must be one of: ${PROFILE_CONSTANTS.PROFILE_VISIBILITY.join(', ')}`);
     }
   }

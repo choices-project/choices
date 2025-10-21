@@ -8,7 +8,7 @@
  * Status: ✅ ACTIVE
  */
 
-import React from 'react';
+import * as React from 'react';
 
 // UIStore removed - functionality moved to AppStore and PWAStore
 import { useAdminStore } from './adminStore';

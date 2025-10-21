@@ -57,7 +57,7 @@ export const createPoll = createSecureServerAction(
 
     // Create poll
     const pollId = uuidv4()
-    const { error: pollError } = await (supabase as any)
+    const { error: pollError } = await supabase
       .from('polls')
       .insert({
         id: pollId,
@@ -68,7 +68,7 @@ export const createPoll = createSecureServerAction(
         created_by: user.userId,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
-        end_time: validatedData.endDate || null,
+        end_time: validatedData.endDate ?? null,
         status: 'active',
         privacy_level: validatedData.visibility,
         total_votes: 0,

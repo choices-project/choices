@@ -476,7 +476,7 @@ export async function checkForDuplicates(hashtagName: string): Promise<HashtagAp
     const transformedDuplicates = duplicates.map(hashtag => ({
       ...hashtag,
       description: hashtag.description || undefined,
-      category: hashtag.category as any || undefined,
+      category: (hashtag.category as HashtagCategory) || undefined,
       created_by: hashtag.created_by || undefined,
       follower_count: hashtag.follower_count || 0,
       usage_count: hashtag.usage_count || 0,

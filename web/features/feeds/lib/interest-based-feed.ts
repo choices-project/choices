@@ -4,6 +4,7 @@
 
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
+import type { Database } from '@/types/database';
 
 import { FEATURE_FLAGS } from '@/lib/core/feature-flags';
 import { logger } from '@/lib/utils/logger';
@@ -19,6 +20,26 @@ export interface UserInterests {
   trendingHashtags: string[]; // Real-time trending
   userHashtags: string[]; // User's custom hashtags
 }
+
+// Proper types for JSON fields from database
+export interface LocationData {
+  state?: string;
+  region?: string;
+  district?: string;
+  county?: string;
+  country?: string;
+}
+
+export interface Demographics {
+  age_range?: string;
+  education_level?: string;
+  income_bracket?: string;
+  political_affiliation?: string;
+  [key: string]: unknown;
+}
+
+// Database types
+type UserProfile = Database['public']['Tables']['user_profiles']['Row'];
 
 export interface PersonalizedPollFeed {
   userId: string;
@@ -544,13 +565,16 @@ export async function GET(request: NextRequest) {
         const { hashtagPollsIntegrationServiceClient } = await import('./hashtag-polls-integration-client');
         
         // Generate hashtag-based poll recommendations
+        const locationData = userProfile.location_data as LocationData | null;
+        const demographics = userProfile.demographics as Demographics | null;
+        
         hashtagPollsFeed = await hashtagPollsIntegrationServiceClient.generateHashtagPollFeed(
           userId,
           {
-            state: (userProfile.location_data as any)?.state,
-            region: (userProfile.location_data as any)?.region,
+            state: locationData?.state,
+            region: locationData?.region,
             followed_hashtags: userProfile.followed_hashtags || [],
-            demographics: (userProfile.demographics as any) || {}
+            demographics: demographics || {}
           },
           10 // Limit hashtag-based recommendations
         );

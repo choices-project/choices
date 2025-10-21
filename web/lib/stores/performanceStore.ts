@@ -391,9 +391,9 @@ export const usePerformanceStore = create<PerformanceStore>()(
         setThreshold: (type, metric, threshold) => {
           set((state) => {
             if (type === 'navigation' && metric in state.thresholds.navigation) {
-              (state.thresholds.navigation as any)[metric] = threshold;
+              (state.thresholds.navigation as Record<string, number>)[metric] = threshold;
             } else if (type === 'resource' && metric in state.thresholds.resource) {
-              (state.thresholds.resource as any)[metric] = threshold;
+              (state.thresholds.resource as Record<string, number>)[metric] = threshold;
             } else if (type === 'custom') {
               state.thresholds.custom[metric] = threshold;
             }
@@ -408,9 +408,9 @@ export const usePerformanceStore = create<PerformanceStore>()(
             let threshold = 0;
             
             if (metric.type === 'navigation' && metric.name in thresholds.navigation) {
-              threshold = (thresholds.navigation as any)[metric.name];
+              threshold = (thresholds.navigation as Record<string, number>)[metric.name] || 0;
             } else if (metric.type === 'resource' && metric.name in thresholds.resource) {
-              threshold = (thresholds.resource as any)[metric.name];
+              threshold = (thresholds.resource as Record<string, number>)[metric.name] || 0;
             } else if (metric.type === 'custom' && metric.name in thresholds.custom) {
               threshold = thresholds.custom[metric.name] || 0;
             }
@@ -587,12 +587,7 @@ export const usePerformanceStore = create<PerformanceStore>()(
             }
 
             // Transform cache data to match CacheStats interface
-            const cacheStats: CacheStats = cacheData ? {
-              size: cacheData.size || 0,
-              keys: cacheData.keys || [],
-              memoryUsage: cacheData.memory_usage || 0,
-              hitRate: cacheData.hit_rate || 0
-            } : {
+            const cacheStats: CacheStats = {
               size: 0,
               keys: [],
               memoryUsage: 0,

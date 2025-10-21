@@ -19,14 +19,57 @@ const logger = {
 };
 
 import { createClient } from '../../../utils/supabase/client';
-import type { Database } from '@/types/database';
+import type { Database, Json } from '@/types/database';
+
+// Database types
+type HashtagRow = Database['public']['Tables']['hashtags']['Row'];
+type HashtagInsert = Database['public']['Tables']['hashtags']['Insert'];
+type HashtagUpdate = Database['public']['Tables']['hashtags']['Update'];
+type UserHashtagRow = Database['public']['Tables']['user_hashtags']['Row'];
+type HashtagFlagRow = Database['public']['Tables']['hashtag_flags']['Row'];
+
+// JSON field types
+export interface HashtagMetadata {
+  source?: string;
+  auto_generated?: boolean;
+  moderation_notes?: string;
+  [key: string]: unknown;
+}
+
+export interface UserHashtagPreferences {
+  notifications?: boolean;
+  auto_follow?: boolean;
+  [key: string]: unknown;
+}
+
+export interface HashtagActivity {
+  id: string;
+  hashtag_id: string;
+  hashtag: {
+    id: string;
+    name: string;
+    display_name: string;
+    usage_count: number;
+    follower_count: number;
+    is_trending: boolean;
+    trend_score: number;
+    created_at: string;
+    updated_at: string;
+    is_verified: boolean;
+    is_featured: boolean;
+  };
+  content_type: 'poll' | 'comment' | 'profile' | 'feed';
+  content_id: string;
+  user_id: string;
+  created_at: string;
+}
 
 // Helper function to transform database data to Hashtag type
-function transformHashtagData(data: any): Hashtag {
+function transformHashtagData(data: HashtagRow): Hashtag {
   return {
     ...data,
     description: data.description || undefined,
-    category: (data.category) || 'general', // Cast to any to handle string -> HashtagCategory conversion
+    category: (data.category as HashtagCategory) || 'general',
     created_by: data.created_by || undefined,
     follower_count: data.follower_count || 0,
     usage_count: data.usage_count || 0,
@@ -36,7 +79,7 @@ function transformHashtagData(data: any): Hashtag {
     trend_score: data.trend_score || 0,
     created_at: data.created_at || new Date().toISOString(),
     updated_at: data.updated_at || new Date().toISOString(),
-    metadata: data.metadata as Record<string, any> || undefined
+    metadata: data.metadata as HashtagMetadata | null || undefined
   };
 }
 import type {
@@ -48,11 +91,13 @@ import type {
   TrendingHashtag,
   HashtagSearchQuery,
   HashtagSearchResult,
+  HashtagEngagement,
   HashtagAnalytics,
   HashtagApiResponse,
   HashtagStatsResponse,
   HashtagUserPreferences,
   ProfileHashtagIntegration,
+  HashtagContent,
   PollHashtagIntegration,
   FeedHashtagIntegration
 } from '../types';
@@ -347,7 +392,7 @@ export async function getTrendingHashtags(
       current_position: await calculateCurrentPosition(hashtag.id),
       related_hashtags: await calculateRelatedHashtags(hashtag.id),
       trending_since: hashtag.created_at || '',
-      category_trends: await calculateCategoryTrends((hashtag.category as any) || 'general')
+      category_trends: await calculateCategoryTrends((hashtag.category as HashtagCategory) || 'general')
     })));
 
     return { success: true, data: trendingHashtags };
@@ -605,7 +650,7 @@ export async function getHashtagStats(): Promise<HashtagApiResponse<HashtagStats
       verified_count: stats?.filter(s => s.is_verified).length || 0,
       categories: {} as Record<HashtagCategory, number>,
       top_hashtags: stats?.slice(0, 10) as Hashtag[] || [],
-      recent_activity: await getRecentActivity() as any,
+      recent_activity: await getRecentActivity() as HashtagActivity[],
       system_health: {
         api_response_time: 0,
         database_performance: 0,
@@ -696,7 +741,7 @@ export async function getProfileHashtagIntegration(userId: string): Promise<Hash
     // Get user's hashtag preferences (fallback to user_profiles if table doesn't exist)
     let preferences, preferencesError;
     try {
-      const result = await (supabase as any)
+      const result = await supabase
         .from('hashtag_user_preferences')
         .select('*')
         .eq('user_id', userId)
@@ -711,10 +756,11 @@ export async function getProfileHashtagIntegration(userId: string): Promise<Hash
         .select('*')
         .eq('id', userId)
         .single();
-      preferences = result.data ? {
+      const userProfile = result.data as Database['public']['Tables']['user_profiles']['Row'] | null;
+      preferences = userProfile ? {
         preferences: {
-          followed_hashtags: (result.data as any).followed_hashtags || [],
-          hashtag_filters: (result.data as any).hashtag_filters || []
+          followed_hashtags: userProfile.followed_hashtags || [],
+          hashtag_filters: userProfile.hashtag_filters || []
         }
       } : null;
       preferencesError = result.error;
@@ -731,7 +777,7 @@ export async function getProfileHashtagIntegration(userId: string): Promise<Hash
         .eq('user_id', userId)
         .order('timestamp', { ascending: false })
         .limit(50);
-      activity = result.data as any;
+      activity = result.data as HashtagActivity[] | null;
       activityError = result.error;
     } catch (tableError) {
       // Fallback to hashtag_usage table
@@ -742,7 +788,7 @@ export async function getProfileHashtagIntegration(userId: string): Promise<Hash
         .eq('user_id', userId)
         .order('created_at', { ascending: false })
         .limit(50);
-      activity = result.data as any;
+      activity = result.data as HashtagActivity[] | null;
       activityError = result.error;
     }
 
@@ -754,8 +800,27 @@ export async function getProfileHashtagIntegration(userId: string): Promise<Hash
       interest_hashtags: userHashtags?.filter(uh => !uh.is_primary).map(uh => uh.hashtag.name) || [],
       custom_hashtags: await getUserCustomHashtags(userId),
       followed_hashtags: userHashtags?.map(uh => uh.hashtag.name) || [],
-      hashtag_preferences: preferences || {} as HashtagUserPreferences,
-      hashtag_activity: activity || [],
+      hashtag_preferences: (preferences || {
+        user_id: userId,
+        default_categories: [],
+        auto_follow_suggestions: false,
+        trending_notifications: false,
+        related_hashtag_suggestions: false,
+        privacy_settings: {
+          show_followed_hashtags: true,
+          show_hashtag_activity: true,
+          allow_hashtag_recommendations: true
+        },
+        notification_preferences: {
+          new_trending_hashtags: false,
+          hashtag_updates: false,
+          related_content: true,
+          weekly_digest: false
+        },
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }) as unknown as HashtagUserPreferences,
+      hashtag_activity: (activity || []) as unknown as HashtagEngagement[],
       last_updated: new Date().toISOString()
     };
 
@@ -825,8 +890,8 @@ export async function getPollHashtagIntegration(pollId: string): Promise<Hashtag
       primary_hashtag: poll.primary_hashtag || undefined,
       hashtag_engagement: {
         total_views: poll.total_views || 0,
-        hashtag_clicks: engagement?.filter(e => e.engagement_type === 'click').length || 0,
-        hashtag_shares: engagement?.filter(e => e.engagement_type === 'share').length || 0
+        hashtag_clicks: (engagement as HashtagEngagement[])?.filter(e => e.engagement_type === 'click').length || 0,
+        hashtag_shares: (engagement as HashtagEngagement[])?.filter(e => e.engagement_type === 'share').length || 0
       },
       related_polls: relatedPolls?.map(p => p.id) || [],
       hashtag_trending_score: trendingScore
@@ -849,7 +914,7 @@ export async function getFeedHashtagIntegration(feedId: string): Promise<Hashtag
     // Get feed details (fallback to user_profiles if feeds table doesn't exist)
     let feed, feedError;
     try {
-      const result = await (supabase as any)
+      const result = await supabase
         .from('feeds')
         .select('hashtag_filters, user_id')
         .eq('id', feedId)
@@ -864,9 +929,10 @@ export async function getFeedHashtagIntegration(feedId: string): Promise<Hashtag
         .select('*')
         .eq('id', feedId)
         .single();
-      feed = result.data ? {
-        hashtag_filters: (result.data as any).hashtag_filters || [],
-        user_id: result.data.id
+      const feedData = result.data as { hashtag_filters?: string[]; id: string } | null;
+      feed = feedData ? {
+        hashtag_filters: feedData.hashtag_filters || [],
+        user_id: feedData.id
       } : null;
       feedError = result.error;
     }
@@ -886,7 +952,7 @@ export async function getFeedHashtagIntegration(feedId: string): Promise<Hashtag
     // Get hashtag content (fallback to hashtag_usage if table doesn't exist)
     let hashtagContent, contentError;
     try {
-      const result = await (supabase as any)
+      const result = await supabase
         .from('hashtag_content')
         .select('*')
         .eq('feed_id', feedId)
@@ -900,7 +966,7 @@ export async function getFeedHashtagIntegration(feedId: string): Promise<Hashtag
       const result = await supabase
         .from('hashtag_usage')
         .select('*')
-        .eq('user_id', feed.user_id)
+        .eq('user_id', feed?.user_id || '')
         .order('created_at', { ascending: false })
         .limit(20);
       hashtagContent = result.data;
@@ -913,7 +979,7 @@ export async function getFeedHashtagIntegration(feedId: string): Promise<Hashtag
     const { data: personalizedHashtags, error: personalError } = await supabase
       .from('user_hashtags')
       .select('hashtag:hashtags(name)')
-      .eq('user_id', feed.user_id)
+      .eq('user_id', feed?.user_id || '')
       .order('usage_count', { ascending: false })
       .limit(10);
 
@@ -922,7 +988,7 @@ export async function getFeedHashtagIntegration(feedId: string): Promise<Hashtag
     // Get hashtag analytics (fallback to basic analytics if table doesn't exist)
     let analytics, analyticsError;
     try {
-      const result = await (supabase as any)
+      const result = await supabase
         .from('hashtag_analytics')
         .select('*')
         .eq('feed_id', feedId)
@@ -945,10 +1011,10 @@ export async function getFeedHashtagIntegration(feedId: string): Promise<Hashtag
 
     const integration: FeedHashtagIntegration = {
       feed_id: feedId,
-      hashtag_filters: feed.hashtag_filters || [],
+      hashtag_filters: feed?.hashtag_filters || [],
       trending_hashtags: trendingHashtags?.map(h => h.name) || [],
-      hashtag_content: hashtagContent || [],
-      hashtag_analytics: analytics || {} as HashtagAnalytics,
+      hashtag_content: (hashtagContent || []) as unknown as HashtagContent[],
+      hashtag_analytics: (analytics || {}) as unknown as HashtagAnalytics,
       personalized_hashtags: personalizedHashtags?.map((uh: any) => uh.hashtag.name) || []
     };
 
@@ -1172,7 +1238,7 @@ async function calculatePeakPosition(hashtagId: string): Promise<number> {
     // Get historical trending data (fallback to hashtags table if history table doesn't exist)
     let historicalData, error;
     try {
-      const result = await (supabase as any)
+      const result = await supabase
         .from('hashtag_trending_history')
         .select('position')
         .eq('hashtag_id', hashtagId)
@@ -1324,9 +1390,14 @@ async function getRecentActivity() {
  */
 export async function updateUserPreferences(preferences: Partial<HashtagUserPreferences>): Promise<HashtagApiResponse<HashtagUserPreferences>> {
   try {
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from('hashtag_user_preferences')
-      .upsert(preferences)
+      .upsert({
+        user_id: preferences.user_id || '',
+        preferences: preferences as unknown as Json,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      })
       .select()
       .single();
 
@@ -1334,7 +1405,7 @@ export async function updateUserPreferences(preferences: Partial<HashtagUserPref
       return { success: false, error: error.message };
     }
 
-    return { success: true, data };
+    return { success: true, data: data as unknown as HashtagUserPreferences };
   } catch (error) {
     return { 
       success: false, 
@@ -1348,7 +1419,7 @@ export async function updateUserPreferences(preferences: Partial<HashtagUserPref
  */
 export async function getUserPreferences(): Promise<HashtagApiResponse<HashtagUserPreferences>> {
   try {
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from('hashtag_user_preferences')
       .select('*')
       .single();
@@ -1357,7 +1428,7 @@ export async function getUserPreferences(): Promise<HashtagApiResponse<HashtagUs
       return { success: false, error: error.message };
     }
 
-    return { success: true, data };
+    return { success: true, data: data as unknown as HashtagUserPreferences };
   } catch (error) {
     return { 
       success: false, 

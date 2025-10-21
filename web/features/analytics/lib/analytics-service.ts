@@ -10,6 +10,24 @@ import type {
   UserAnalytics
 } from '../types/analytics'
 
+// Use database types for actual schema
+import type { Database } from '@/types/database'
+
+type TrustTierAnalyticsRow = Database['public']['Tables']['trust_tier_analytics']['Row']
+type UserProfileRow = Database['public']['Tables']['user_profiles']['Row']
+type TrustTierAnalyticsFactors = {
+  confidence_level?: number;
+  data_quality_score?: number;
+  age_group?: string;
+  geographic_region?: string;
+  education_level?: string;
+  income_bracket?: string;
+  political_affiliation?: string;
+  biometric_verified?: boolean;
+  phone_verified?: boolean;
+  identity_verified?: boolean;
+}
+
 export class AnalyticsService {
   private static instance: AnalyticsService
 
@@ -36,7 +54,7 @@ export class AnalyticsService {
       const { data: user, error: userError } = await supabase
         .from('user_profiles')
         .select('trust_tier, email')
-        .eq('user_id', userId)
+        .eq('id', userId as any)
         .single()
 
       if (userError || !user) {
@@ -47,19 +65,19 @@ export class AnalyticsService {
       const { data: biometricCreds } = await supabase
         .from('webauthn_credentials')
         .select('id')
-        .eq('user_id', userId)
+        .eq('user_id', userId as any)
 
       // Get voting history count
       const { count: votingHistory } = await supabase
         .from('votes')
         .select('*', { count: 'exact', head: true })
-        .eq('user_id', userId)
+        .eq('user_id', userId as any)
 
       // Calculate verification factors
-      const biometric_verified = (biometricCreds?.length || 0) > 0
-      const phone_verified = user.trust_tier === 'T2' || user.trust_tier === 'T3'
-      const identity_verified = user.trust_tier === 'T3'
-      const voting_history_count = votingHistory || 0
+      const biometric_verified = (biometricCreds?.length ?? 0) > 0
+      const phone_verified = user && 'trust_tier' in user ? (user.trust_tier === 'T2' || user.trust_tier === 'T3') : false
+      const identity_verified = user && 'trust_tier' in user ? user.trust_tier === 'T3' : false
+      const voting_history_count = votingHistory ?? 0
 
       // Calculate score using database function
       const { data: scoreResult, error: scoreError } = await supabase
@@ -74,7 +92,7 @@ export class AnalyticsService {
         throw new Error('Failed to calculate trust tier score')
       }
 
-      const score = scoreResult?.[0]?.trust_score ?? 0
+      const score = Array.isArray(scoreResult) && scoreResult.length > 0 ? scoreResult[0].trust_score : 0
 
       // Determine trust tier
       const { data: tierResult, error: tierError } = await supabase
@@ -84,7 +102,7 @@ export class AnalyticsService {
         throw new Error('Failed to determine trust tier')
       }
 
-      const trust_tier = tierResult as TrustTier
+      const trust_tier = Array.isArray(tierResult) && tierResult.length > 0 ? tierResult[0] as TrustTier : 'T1' as TrustTier
 
       return {
         score,
@@ -153,9 +171,9 @@ export class AnalyticsService {
             data_quality_score: trustTierScore.score,
             confidence_level: trustTierScore.score,
             last_activity: new Date().toISOString()
-          },
+          } as any, // Type assertion for JSON field
           calculated_at: new Date().toISOString()
-        })
+        } as any) // Type assertion for insert data
 
       if (insertError) {
         throw new Error('Failed to record poll analytics')
@@ -211,17 +229,17 @@ export class AnalyticsService {
       const { data: analytics, error: analyticsError } = await supabase
         .from('trust_tier_analytics')
         .select('*')
-        .eq('user_id', userId)
+        .eq('user_id', userId as any)
 
       if (analyticsError) {
         throw new Error('Failed to get user analytics')
       }
 
       // Calculate engagement metrics
-      const total_polls_participated = analytics.length ?? 0
-      const total_votes_cast = analytics.length ?? 0
-      const average_engagement_score = analytics.length > 0 
-        ? analytics.reduce((sum, a) => sum + (a.trust_score ?? 0), 0) / analytics.length
+      const total_polls_participated = analytics?.length ?? 0
+      const total_votes_cast = analytics?.length ?? 0
+      const average_engagement_score = analytics && analytics.length > 0 
+        ? analytics.reduce((sum, a) => sum + (a && 'trust_score' in a ? (a as any).trust_score : 0), 0) / analytics.length
         : 0
 
       // Get current trust tier
@@ -301,7 +319,7 @@ export class AnalyticsService {
         .select('trust_tier')
 
       const trustTierCounts = tierDistribution?.reduce((acc, item) => {
-        const tier = item.trust_tier as TrustTier
+        const tier = item && 'trust_tier' in item ? item.trust_tier as TrustTier : 'T1' as TrustTier
         acc[tier] = (acc[tier] ?? 0) + 1
         return acc
       }, {} as Record<TrustTier, number>) ?? { T0: 0, T1: 0, T2: 0, T3: 0 }
@@ -309,18 +327,29 @@ export class AnalyticsService {
       // Get average confidence level
       const { data: confidenceData } = await supabase
         .from('trust_tier_analytics')
-        .select('factors')
+        .select('*')
 
       const averageConfidenceLevel = confidenceData && confidenceData.length > 0
-        ? confidenceData.reduce((sum, item) => sum + ((item.factors as any)?.confidence_level ?? 0), 0) / confidenceData.length
+        ? confidenceData.reduce((sum, item) => {
+            const factors = item && 'factors' in item ? item.factors as TrustTierAnalyticsFactors | null : null
+            return sum + (factors?.confidence_level ?? 0)
+          }, 0) / confidenceData.length
         : 0
 
       // Get data quality metrics
-      const highQuality = confidenceData?.filter(item => ((item.factors as any)?.confidence_level ?? 0) >= 0.8).length ?? 0
-      const mediumQuality = confidenceData?.filter(item => 
-        ((item.factors as any)?.confidence_level ?? 0) >= 0.5 && ((item.factors as any)?.confidence_level ?? 0) < 0.8
-      ).length ?? 0
-      const lowQuality = confidenceData?.filter(item => ((item.factors as any)?.confidence_level ?? 0) < 0.5).length ?? 0
+      const highQuality = confidenceData?.filter(item => {
+        const factors = item && 'factors' in item ? item.factors as TrustTierAnalyticsFactors | null : null
+        return (factors?.confidence_level ?? 0) >= 0.8
+      }).length ?? 0
+      const mediumQuality = confidenceData?.filter(item => {
+        const factors = item && 'factors' in item ? item.factors as TrustTierAnalyticsFactors | null : null
+        const confidence = factors?.confidence_level ?? 0
+        return confidence >= 0.5 && confidence < 0.8
+      }).length ?? 0
+      const lowQuality = confidenceData?.filter(item => {
+        const factors = item && 'factors' in item ? item.factors as TrustTierAnalyticsFactors | null : null
+        return (factors?.confidence_level ?? 0) < 0.5
+      }).length ?? 0
 
       // Get engagement metrics
       const { data: engagementData } = await supabase
@@ -328,15 +357,15 @@ export class AnalyticsService {
         .select('total_sessions, total_page_views, engagement_score')
 
       const activeUsers = engagementData?.filter(entry => 
-        (entry.total_sessions ?? 0) > 0
+        entry && 'total_sessions' in entry ? (entry.total_sessions ?? 0) > 0 : false
       ).length ?? 0
 
       const averagePollsParticipated = engagementData && engagementData.length > 0
-        ? engagementData.reduce((sum, entry) => sum + (entry.total_sessions ?? 0), 0) / engagementData.length
+        ? engagementData.reduce((sum, entry) => sum + (entry && 'total_sessions' in entry ? entry.total_sessions ?? 0 : 0), 0) / engagementData.length
         : 0
 
       const averageVotesCast = engagementData && engagementData.length > 0
-        ? engagementData.reduce((sum, entry) => sum + (entry.total_page_views ?? 0), 0) / engagementData.length
+        ? engagementData.reduce((sum, entry) => sum + (entry && 'total_page_views' in entry ? entry.total_page_views ?? 0 : 0), 0) / engagementData.length
         : 0
 
       return {
@@ -375,7 +404,7 @@ export class AnalyticsService {
       const { data: insights, error: insightsError } = await supabase
         .from('demographic_analytics')
         .select('*')
-        .eq('poll_id', pollId)
+        .eq('poll_id', pollId as any)
         .single()
 
       if (insightsError || !insights) {
@@ -386,7 +415,7 @@ export class AnalyticsService {
       const { data: analytics, error: analyticsError } = await supabase
         .from('trust_tier_analytics')
         .select('*')
-        .eq('poll_id', pollId)
+        .eq('poll_id', pollId as any)
 
       if (analyticsError) {
         throw new Error('Failed to get poll analytics')
@@ -395,15 +424,21 @@ export class AnalyticsService {
       // Calculate metrics
       const total_responses = analytics.length ?? 0
       const data_quality_score = analytics.length > 0
-        ? analytics.reduce((sum, a) => sum + ((a.factors as any)?.data_quality_score ?? 0), 0) / analytics.length
+        ? analytics.reduce((sum, a) => {
+            const factors = (a as any).factors as TrustTierAnalyticsFactors | null
+            return sum + (factors?.data_quality_score ?? 0)
+          }, 0) / analytics.length
         : 0
       const confidence_level = analytics.length > 0
-        ? analytics.reduce((sum, a) => sum + ((a.factors as any)?.confidence_level ?? 0), 0) / analytics.length
+        ? analytics.reduce((sum, a) => {
+            const factors = (a as any).factors as TrustTierAnalyticsFactors | null
+            return sum + (factors?.confidence_level ?? 0)
+          }, 0) / analytics.length
         : 0
 
       // Calculate trust tier breakdown
       const trustTierBreakdown = analytics.reduce((acc, item) => {
-        const tier = item.trust_tier as TrustTier
+        const tier = (item as any).trust_tier as TrustTier
         acc[tier] = (acc[tier] ?? 0) + 1
         return acc
       }, {} as Record<TrustTier, number>) ?? { T0: 0, T1: 0, T2: 0, T3: 0 }
@@ -413,14 +448,14 @@ export class AnalyticsService {
         total_responses,
         trust_tier_breakdown: trustTierBreakdown,
         demographic_insights: {
-          id: insights?.poll_id || '',
-          poll_id: insights?.poll_id || '',
-          total_responses: insights?.participant_count || 0,
+          id: (insights as any)?.poll_id ?? '',
+          poll_id: (insights as any)?.poll_id ?? '',
+          total_responses: (insights as any)?.participant_count ?? 0,
           trust_tier_breakdown: trustTierBreakdown,
-          age_group_breakdown: insights?.age_bucket ? { [insights.age_bucket]: insights.participant_count || 0 } : {},
-          education_breakdown: insights?.education_bucket ? { [insights.education_bucket]: insights.participant_count || 0 } : {},
-          region_breakdown: insights?.region_bucket ? { [insights.region_bucket]: insights.participant_count || 0 } : {},
-          geographic_breakdown: insights?.region_bucket ? { [insights.region_bucket]: insights.participant_count || 0 } : {},
+          age_group_breakdown: (insights as any)?.age_bucket ? { [(insights as any).age_bucket]: (insights as any).participant_count ?? 0 } : {},
+          education_breakdown: (insights as any)?.education_bucket ? { [(insights as any).education_bucket]: (insights as any).participant_count ?? 0 } : {},
+          region_breakdown: (insights as any)?.region_bucket ? { [(insights as any).region_bucket]: (insights as any).participant_count ?? 0 } : {},
+          geographic_breakdown: (insights as any)?.region_bucket ? { [(insights as any).region_bucket]: (insights as any).participant_count ?? 0 } : {},
           political_breakdown: {},
           income_breakdown: {},
           gender_breakdown: {},
@@ -429,8 +464,8 @@ export class AnalyticsService {
           data_quality_distribution: {},
           verification_method_distribution: {},
           engagement_metrics: {
-            average_choice: insights?.average_choice || 0,
-            choice_variance: insights?.choice_variance || 0
+            average_choice: (insights as any)?.average_choice ?? 0,
+            choice_variance: (insights as any)?.choice_variance ?? 0
           },
           response_velocity: 0,
           participation_trends: {}
@@ -465,7 +500,7 @@ export class AnalyticsService {
       const { data: analytics, error: analyticsError } = await supabase
         .from('trust_tier_analytics')
         .select('*')
-        .eq('user_id', userId)
+        .eq('user_id', userId as any)
         .order('created_at', { ascending: false })
 
       if (analyticsError) {
@@ -499,15 +534,15 @@ export class AnalyticsService {
         engagement_metrics: {
           total_polls_participated: analytics.length,
           total_votes_cast: analytics.length,
-          average_engagement_score: analytics.length > 0 ? analytics.reduce((sum, a) => sum + (a.trust_score ?? 0), 0) / analytics.length : 0,
-          last_activity: latestAnalytics?.created_at ?? new Date().toISOString()
+          average_engagement_score: analytics.length > 0 ? analytics.reduce((sum, a) => sum + ((a as any).trust_score ?? 0), 0) / analytics.length : 0,
+          last_activity: (latestAnalytics as any)?.created_at ?? new Date().toISOString()
         },
         demographic_data: {
-          age_group: (latestAnalytics?.factors as any)?.age_group,
-          geographic_region: (latestAnalytics?.factors as any)?.geographic_region,
-          education_level: (latestAnalytics?.factors as any)?.education_level,
-          income_bracket: (latestAnalytics?.factors as any)?.income_bracket,
-          political_affiliation: (latestAnalytics?.factors as any)?.political_affiliation
+          age_group: ((latestAnalytics as any)?.factors as TrustTierAnalyticsFactors)?.age_group,
+          geographic_region: ((latestAnalytics as any)?.factors as TrustTierAnalyticsFactors)?.geographic_region,
+          education_level: ((latestAnalytics as any)?.factors as TrustTierAnalyticsFactors)?.education_level,
+          income_bracket: ((latestAnalytics as any)?.factors as TrustTierAnalyticsFactors)?.income_bracket,
+          political_affiliation: ((latestAnalytics as any)?.factors as TrustTierAnalyticsFactors)?.political_affiliation
         }
       }
 
@@ -534,7 +569,7 @@ export class AnalyticsService {
       const { data: trends, error } = await supabase
         .from('trust_tier_analytics')
         .select('created_at')
-        .eq('poll_id', pollId)
+        .eq('poll_id', pollId as any)
         .gte('created_at', thirtyDaysAgo.toISOString())
 
       if (error) {
@@ -544,8 +579,8 @@ export class AnalyticsService {
       // Group by date and count
       const dailyCounts = new Map<string, number>()
       trends?.forEach(trend => {
-        if (trend.created_at && typeof trend.created_at === 'string') {
-          const date = new Date(trend.created_at).toISOString().split('T')[0]
+        if ((trend as any).created_at && typeof (trend as any).created_at === 'string') {
+          const date = new Date((trend as any).created_at).toISOString().split('T')[0]
           if (date) {
             dailyCounts.set(date, (dailyCounts.get(date) ?? 0) + 1)
           }

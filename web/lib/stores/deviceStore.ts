@@ -144,7 +144,7 @@ const detectCapabilities = (): DeviceCapabilities => {
     reducedMotion: window.matchMedia('(prefers-reduced-motion: reduce)').matches,
     darkMode: window.matchMedia('(prefers-color-scheme: dark)').matches,
     highContrast: window.matchMedia('(prefers-contrast: high)').matches,
-    lowData: navigator.connection?.saveData || false,
+    lowData: (navigator as any).connection?.saveData || false,
     offline: !navigator.onLine,
     geolocation: 'geolocation' in navigator,
     camera: 'mediaDevices' in navigator && 'getUserMedia' in navigator.mediaDevices,
@@ -168,13 +168,13 @@ const detectNetworkInfo = (): NetworkInfo => {
     };
   }
 
-  const connection = navigator.connection;
+  const connection = (navigator as any).connection;
   return {
-    type: connection.effectiveType || 'unknown',
-    effectiveType: connection.effectiveType || '4g',
-    downlink: connection.downlink || 10,
-    rtt: connection.rtt || 50,
-    saveData: connection.saveData || false,
+    type: connection?.effectiveType || 'unknown',
+    effectiveType: connection?.effectiveType || '4g',
+    downlink: connection?.downlink || 10,
+    rtt: connection?.rtt || 50,
+    saveData: connection?.saveData || false,
     online: navigator.onLine
   };
 };
@@ -392,7 +392,7 @@ export const useDeviceStore = create<DeviceStore>()(
               window.addEventListener('offline', handleOffline);
               
               if ('connection' in navigator) {
-                navigator.connection.addEventListener('change', handleConnectionChange);
+                (navigator as any).connection?.addEventListener('change', handleConnectionChange);
               }
 
               // Listen for capability changes

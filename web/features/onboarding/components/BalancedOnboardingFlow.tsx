@@ -745,7 +745,7 @@ const ProfileStep: React.FC<{
                   name="participation"
                   value={option.value}
                   checked={participationStyle === option.value}
-                  onChange={(e) => setParticipationStyle(e.target.value as any)}
+                  onChange={(e) => setParticipationStyle(e.target.value as 'observer' | 'contributor' | 'leader')}
                   className="h-4 w-4 text-blue-600"
                 />
                 <div>
@@ -905,8 +905,8 @@ const CompleteStep: React.FC<{
  */
 const BalancedOnboardingFlow: React.FC = () => {
   const currentStep = useOnboardingStep();
-  const onboardingData = useOnboardingData() as any;
-  const { nextStep, previousStep, updateFormData, completeOnboarding, setCurrentStep } = useOnboardingActions() as any;
+  const onboardingData = useOnboardingData();
+  const { nextStep, previousStep, updateFormData, completeOnboarding, setCurrentStep } = useOnboardingActions();
   const loading = useOnboardingLoading();
   const error = useOnboardingError();
 
@@ -1027,7 +1027,7 @@ const BalancedOnboardingFlow: React.FC = () => {
         <PrivacyStep
           onNext={handleNext}
           onBack={handleBack}
-          privacy={onboardingData?.privacy || { location_sharing: 'disabled', demographic_sharing: 'disabled', analytics_sharing: 'disabled' }}
+          privacy={(onboardingData?.preferencesData as PrivacyPreferences) || { location_sharing: 'disabled', demographic_sharing: 'disabled', analytics_sharing: 'disabled' }}
           setPrivacy={(privacy) => updateFormData(2, { privacy })}
         />
       )}
@@ -1036,7 +1036,7 @@ const BalancedOnboardingFlow: React.FC = () => {
           onNext={handleNext} 
           onBack={handleBack}
           onSkip={handleNext}
-          demographics={onboardingData?.demographics || {}}
+          demographics={(onboardingData?.valuesData as UserDemographics) || {}}
           setDemographics={(demographics) => updateFormData(0, { demographics })}
         />
       )}
@@ -1048,14 +1048,14 @@ const BalancedOnboardingFlow: React.FC = () => {
           onNext={handleNext} 
           onBack={handleBack}
           onSkip={handleSkip}
-          profile={onboardingData?.profile || {}}
+          profile={onboardingData?.profileData || {}}
           onUpdate={(profile) => updateFormData(0, { profile })}
         />
       )}
       {currentStep === 5 && (
         <CompleteStep 
           onFinish={handleFinish}
-          demographics={onboardingData?.demographics || {}}
+          demographics={(onboardingData?.valuesData as UserDemographics) || {}}
         />
       )}
       </main>

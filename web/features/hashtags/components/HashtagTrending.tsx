@@ -183,7 +183,7 @@ export default function HashtagTrending({
             {/* Category Filter */}
             <select
               value={filters.selectedCategory}
-              onChange={(e) => setCategory(e.target.value as any)}
+              onChange={(e) => setCategory(e.target.value as HashtagCategory)}
               className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500"
             >
               <option value="all">All Categories</option>
@@ -200,7 +200,7 @@ export default function HashtagTrending({
             {/* Sort By */}
             <select
               value={filters.sortBy}
-              onChange={(e) => setSortBy(e.target.value as any)}
+              onChange={(e) => setSortBy(e.target.value as 'trend_score' | 'usage' | 'growth' | 'alphabetical')}
               className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500"
             >
               <option value="trend_score">Trend Score</option>
@@ -212,7 +212,14 @@ export default function HashtagTrending({
             {/* Time Range */}
             <select
               value={filters.timeRange}
-              onChange={(e) => setTimeRange(e.target.value as any)}
+              onChange={(e) => {
+                const value = e.target.value as '24h' | '7d' | '30d' | 'all';
+                if (value === 'all') {
+                  setTimeRange('30d'); // Default to 30d for 'all'
+                } else {
+                  setTimeRange(value);
+                }
+              }}
               className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500"
             >
               <option value="24h">Last 24 hours</option>

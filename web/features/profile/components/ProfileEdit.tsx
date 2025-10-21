@@ -186,9 +186,25 @@ export default function ProfileEdit({
     setSuccess(null);
 
     try {
-      await updateProfile(formData as any);
+      // Convert userStore ProfileUpdateData to profile types ProfileUpdateData
+      const profileUpdateData: ProfileUpdateData = {
+        displayname: formData.displayname,
+        display_name: formData.displayname,
+        bio: formData.bio,
+        username: formData.username,
+        primaryconcerns: formData.primaryconcerns,
+        primary_concerns: formData.primaryconcerns,
+        communityfocus: formData.communityfocus,
+        community_focus: formData.communityfocus,
+        participationstyle: formData.participationstyle,
+        participation_style: formData.participationstyle,
+        privacysettings: formData.privacysettings,
+        privacy_settings: formData.privacysettings
+      };
+      
+      await updateProfile(profileUpdateData);
       setSuccess('Profile updated successfully');
-      onSave?.(formData as any);
+      onSave?.(formData);
     } catch {
       setError('Failed to update profile');
     }

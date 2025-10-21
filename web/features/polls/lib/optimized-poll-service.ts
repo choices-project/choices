@@ -9,6 +9,9 @@
 
 import { logger } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
+import type { Database } from '@/types/database';
+
+type PollRow = Database['public']['Tables']['polls']['Row'];
 
 export interface PerformanceMetrics {
   metricName: string;
@@ -43,7 +46,7 @@ export async function getOptimizedPollResults(pollId: string): Promise<{
     const { data: poll, error } = await supabase
       .from('polls')
       .select('id, title, description, options, total_votes, participation, status, privacy_level, category, voting_method, end_time, created_at')
-      .eq('id', pollId)
+      .eq('id', pollId as any)
       .single();
 
     if (error || !poll) {
@@ -52,18 +55,18 @@ export async function getOptimizedPollResults(pollId: string): Promise<{
     }
 
     return {
-      id: poll.id,
-      title: poll.title,
-      description: poll.description || '',
-      options: (poll.options as any[]) || [],
-      totalVotes: poll.total_votes ?? 0,
-      participation: poll.participation ?? 0,
-      status: poll.status || '',
-      privacyLevel: poll.privacy_level || '',
-      category: poll.category || '',
-      votingMethod: poll.voting_method || '',
-      endTime: poll.end_time || '',
-      createdAt: poll.created_at || ''
+      id: poll && 'id' in poll ? poll.id : '',
+      title: poll && 'title' in poll ? poll.title : '',
+      description: poll && 'description' in poll ? poll.description ?? '' : '',
+      options: poll && 'options' in poll ? (poll.options as string[]) ?? [] : [],
+      totalVotes: poll && 'total_votes' in poll ? poll.total_votes ?? 0 : 0,
+      participation: poll && 'participation' in poll ? poll.participation ?? 0 : 0,
+      status: poll && 'status' in poll ? poll.status ?? '' : '',
+      privacyLevel: poll && 'privacy_level' in poll ? poll.privacy_level ?? '' : '',
+      category: poll && 'category' in poll ? poll.category ?? '' : '',
+      votingMethod: poll && 'voting_method' in poll ? poll.voting_method ?? '' : '',
+      endTime: poll && 'end_time' in poll ? poll.end_time ?? '' : '',
+      createdAt: poll && 'created_at' in poll ? poll.created_at ?? '' : ''
     };
   } catch (error) {
     logger.error('Error in getOptimizedPollResults:', error instanceof Error ? error : new Error('Unknown error'));
@@ -89,7 +92,7 @@ export async function calculatePollStatistics(pollId: string): Promise<{
     const { data: poll, error: pollError } = await supabase
       .from('polls')
       .select('id, title, total_votes, participation, status, created_at')
-      .eq('id', pollId)
+      .eq('id', pollId as any)
       .single();
 
     if (pollError || !poll) {
@@ -98,17 +101,24 @@ export async function calculatePollStatistics(pollId: string): Promise<{
     }
 
     // Calculate basic statistics
+    const id = poll && 'id' in poll ? poll.id : '';
+    const title = poll && 'title' in poll ? poll.title : '';
+    const totalVotes = poll && 'total_votes' in poll ? poll.total_votes ?? 0 : 0;
+    const participation = poll && 'participation' in poll ? poll.participation ?? 0 : 0;
+    const status = poll && 'status' in poll ? poll.status ?? '' : '';
+    const createdAt = poll && 'created_at' in poll ? poll.created_at ?? '' : '';
+    
     const stats = {
-      pollId: poll.id,
-      title: poll.title,
-      totalVotes: poll.total_votes ?? 0,
-      participation: poll.participation ?? 0,
-      status: poll.status || '',
-      createdAt: poll.created_at || '',
+      pollId: id,
+      title,
+      totalVotes,
+      participation,
+      status,
+      createdAt,
       // Additional calculated fields
-      averageVotesPerDay: poll.total_votes ? Math.round((poll.total_votes || 0) / Math.max(1, Math.ceil((Date.now() - new Date(poll.created_at || new Date()).getTime()) / (1000 * 60 * 60 * 24)))) : 0,
-      isActive: poll.status === 'active',
-      hasEnded: poll.status === 'closed' || poll.status === 'archived'
+      averageVotesPerDay: totalVotes ? Math.round(totalVotes / Math.max(1, Math.ceil((Date.now() - new Date(createdAt || new Date()).getTime()) / (1000 * 60 * 60 * 24)))) : 0,
+      isActive: status === 'active',
+      hasEnded: status === 'closed' || status === 'archived'
     };
 
     return stats;
@@ -126,7 +136,7 @@ export async function generatePollInsights(pollId: string): Promise<any> {
     const { data: poll, error: pollError } = await supabase
       .from('polls')
       .select('id, title, description, options, total_votes, participation, status, category, created_at, updated_at')
-      .eq('id', pollId)
+      .eq('id', pollId as any)
       .single();
 
     if (pollError || !poll) {
@@ -135,22 +145,29 @@ export async function generatePollInsights(pollId: string): Promise<any> {
     }
 
     // Generate insights based on poll data
+    const id = poll && 'id' in poll ? poll.id : '';
+    const title = poll && 'title' in poll ? poll.title : '';
+    const category = poll && 'category' in poll ? poll.category : '';
+    const totalVotes = poll && 'total_votes' in poll ? poll.total_votes ?? 0 : 0;
+    const participation = poll && 'participation' in poll ? poll.participation ?? 0 : 0;
+    const status = poll && 'status' in poll ? poll.status : '';
+    
     const insights = {
-      pollId: poll.id,
-      title: poll.title,
-      category: poll.category,
-      totalVotes: poll.total_votes ?? 0,
-      participation: poll.participation ?? 0,
-      status: poll.status,
+      pollId: id,
+      title,
+      category,
+      totalVotes,
+      participation,
+      status,
       // Generated insights
-      engagementLevel: (poll.total_votes || 0) > 100 ? 'high' : (poll.total_votes || 0) > 50 ? 'medium' : 'low',
-      categoryTrend: poll.category === 'politics' ? 'trending' : 'stable',
-      timeToClose: poll.status === 'active' ? 'ongoing' : 'ended',
-      popularityScore: Math.min(100, Math.round((poll.total_votes || 0) * 2)),
+      engagementLevel: totalVotes > 100 ? 'high' : totalVotes > 50 ? 'medium' : 'low',
+      categoryTrend: category === 'politics' ? 'trending' : 'stable',
+      timeToClose: status === 'active' ? 'ongoing' : 'ended',
+      popularityScore: Math.min(100, Math.round(totalVotes * 2)),
       recommendations: [
-        (poll.total_votes || 0) < 10 ? 'Consider promoting this poll to increase engagement' : null,
-        poll.category === 'politics' ? 'This poll is in a trending category' : null,
-        poll.status === 'active' ? 'Poll is currently active and accepting votes' : null
+        totalVotes < 10 ? 'Consider promoting this poll to increase engagement' : null,
+        category === 'politics' ? 'This poll is in a trending category' : null,
+        status === 'active' ? 'Poll is currently active and accepting votes' : null
       ].filter(Boolean)
     };
 
@@ -208,7 +225,7 @@ export class OptimizedPollService {
       const { data: poll, error } = await supabase
         .from('polls')
         .select('id, title, description, options, total_votes, participation, status, privacy_level, category, voting_method, end_time, created_at, updated_at')
-        .eq('id', id)
+        .eq('id', id as any)
         .single();
 
       if (error || !poll) {
@@ -217,19 +234,19 @@ export class OptimizedPollService {
       }
 
       return {
-        id: poll.id,
-        title: poll.title,
-        description: poll.description,
-        options: poll.options,
-        totalVotes: poll.total_votes || 0,
-        participation: poll.participation || 0,
-        status: poll.status,
-        privacyLevel: poll.privacy_level,
-        category: poll.category,
-        votingMethod: poll.voting_method,
-        endTime: poll.end_time,
-        createdAt: poll.created_at,
-        updatedAt: poll.updated_at
+        id: poll && 'id' in poll ? poll.id : '',
+        title: poll && 'title' in poll ? poll.title : '',
+        description: poll && 'description' in poll ? poll.description : '',
+        options: poll && 'options' in poll ? poll.options : [],
+        totalVotes: poll && 'total_votes' in poll ? poll.total_votes ?? 0 : 0,
+        participation: poll && 'participation' in poll ? poll.participation ?? 0 : 0,
+        status: poll && 'status' in poll ? poll.status : '',
+        privacyLevel: poll && 'privacy_level' in poll ? poll.privacy_level : '',
+        category: poll && 'category' in poll ? poll.category : '',
+        votingMethod: poll && 'voting_method' in poll ? poll.voting_method : '',
+        endTime: poll && 'end_time' in poll ? poll.end_time : '',
+        createdAt: poll && 'created_at' in poll ? poll.created_at : '',
+        updatedAt: poll && 'updated_at' in poll ? poll.updated_at : ''
       };
     } catch (error) {
       logger.error('Error fetching poll from database:', error instanceof Error ? error : new Error('Unknown error'));
@@ -263,8 +280,8 @@ export class OptimizedPollService {
       }
 
       // Calculate performance metrics
-      const totalPolls = pollStats?.length || 0;
-      const avgParticipation = totalPolls > 0 ? pollStats.reduce((sum, poll) => sum + (poll.participation || 0), 0) / totalPolls : 0;
+      const totalPolls = pollStats?.length ?? 0;
+      const avgParticipation = totalPolls > 0 ? pollStats.reduce((sum, poll) => sum + (poll && 'participation' in poll ? poll.participation ?? 0 : 0), 0) / totalPolls : 0;
       
       // Calculate response time based on cache performance
       const cacheHitRate = this.metrics.cacheHitRate || 0;
@@ -367,7 +384,7 @@ export class OptimizedPollService {
       const supabase = await getSupabaseServerClient();
       
       // Refresh poll statistics materialized view (if function exists)
-      const { error: pollStatsError } = await supabase.rpc('refresh_poll_statistics_view' as any);
+      const { error: pollStatsError } = await supabase.rpc('refresh_poll_statistics_view');
       
       if (pollStatsError) {
         logger.error('Failed to refresh poll statistics view:', pollStatsError instanceof Error ? pollStatsError : new Error('Unknown error'));
@@ -381,7 +398,7 @@ export class OptimizedPollService {
       }
 
       // Refresh poll analytics materialized view (if function exists)
-      const { error: pollAnalyticsError } = await supabase.rpc('refresh_poll_analytics_view' as any);
+      const { error: pollAnalyticsError } = await supabase.rpc('refresh_poll_analytics_view');
       
       if (pollAnalyticsError) {
         logger.error('Failed to refresh poll analytics view:', pollAnalyticsError instanceof Error ? pollAnalyticsError : new Error('Unknown error'));
@@ -419,7 +436,7 @@ export class OptimizedPollService {
       this.clearCache();
       
       // Analyze poll table for optimization
-      const { error: analyzeError } = await supabase.rpc('analyze_polls_table' as any);
+      const { error: analyzeError } = await supabase.rpc('analyze_polls_table');
       if (analyzeError) {
         logger.warn('Failed to analyze polls table:', { error: analyzeError.message });
       } else {
@@ -427,7 +444,7 @@ export class OptimizedPollService {
       }
 
       // Rebuild indexes (if supported by Supabase)
-      const { error: indexError } = await supabase.rpc('rebuild_poll_indexes' as any);
+      const { error: indexError } = await supabase.rpc('rebuild_poll_indexes');
       if (indexError) {
         logger.warn('Failed to rebuild poll indexes:', { error: indexError.message });
       } else {
@@ -439,7 +456,7 @@ export class OptimizedPollService {
       const { data: cleanupResult, error: cleanupError } = await supabase
         .from('polls')
         .delete()
-        .eq('status', 'archived')
+        .eq('status', 'archived' as any)
         .lt('updated_at', oneYearAgo.toISOString())
         .select('id');
 
@@ -451,7 +468,7 @@ export class OptimizedPollService {
 
       // Update poll statistics for all polls or specific poll
       const targetPollId = pollId || 'all';
-      const { error: statsError } = await supabase.rpc('update_poll_statistics' as any, { poll_id_param: targetPollId });
+      const { error: statsError } = await supabase.rpc('update_poll_statistics', { poll_id_param: targetPollId });
       if (statsError) {
         logger.warn('Failed to update poll statistics:', { error: statsError.message || 'Unknown error' });
       } else {

@@ -39,7 +39,7 @@ export const vote = createSecureServerAction(
     }
 
     // Check if poll exists and is active
-    const { data: poll, error: pollError } = await (supabase as any)
+    const { data: poll, error: pollError } = await supabase
       .from('polls')
       .select('id, created_by, voting_method, privacy_level, end_time, options')
       .eq('id', validatedData.pollId)
@@ -50,13 +50,13 @@ export const vote = createSecureServerAction(
     }
 
     // Check if poll has ended
-    if (poll.end_time && new Date(poll.end_time) < new Date()) {
+    if (poll.end_time && new Date(poll.end_time as string) < new Date()) {
       throw new Error('Poll has ended')
     }
 
     // Check if user has already voted (multiple votes not supported in current schema)
     // Note: allow_multiple_votes field doesn't exist in current schema
-    const { data: existingVote } = await (supabase as any)
+    const { data: existingVote } = await supabase
       .from('votes')
       .select('id')
       .eq('poll_id', validatedData.pollId)
@@ -93,11 +93,11 @@ export const vote = createSecureServerAction(
         poll_id: validatedData.pollId,
         user_id: validatedData.anonymous ? 'anonymous' : user.userId,
         choice: choiceIndex, // Index of the selected option
-        voting_method: poll.voting_method,
+        voting_method: poll.voting_method as string,
         vote_data: {
           option: optionId,
           timestamp: new Date().toISOString(),
-          anonymous: validatedData.anonymous || false
+          anonymous: validatedData.anonymous ?? false
         },
         verification_token: null,
         is_verified: false,
@@ -117,7 +117,7 @@ export const vote = createSecureServerAction(
       }
     })
 
-    const { error: voteError } = await (supabase as any)
+    const { error: voteError } = await supabase
       .from('votes')
       .insert(voteData)
 
@@ -129,7 +129,7 @@ export const vote = createSecureServerAction(
     logSecurityEvent('VOTE_CAST', {
       pollId: validatedData.pollId,
       optionIds: validatedData.optionIds,
-      anonymous: validatedData.anonymous || false,
+      anonymous: validatedData.anonymous ?? false,
       voteCount: voteData.length
     }, context)
 
