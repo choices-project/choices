@@ -1,174 +1,114 @@
-<testsuites id="" name="" tests="26" failures="3" skipped="19" errors="0" time="70.271195">
-<testsuite name="features/unified-feed.spec.ts" timestamp="2025-10-21T12:25:50.987Z" hostname="chromium-inline" tests="26" failures="3" skipped="19" time="369.128" errors="0">
-<testcase name="UnifiedFeed Component - E2E Tests › Basic Functionality › should load UnifiedFeed component with all essential elements" classname="features/unified-feed.spec.ts" time="26.84">
-</testcase>
-<testcase name="UnifiedFeed Component - E2E Tests › Basic Functionality › should display feed items correctly" classname="features/unified-feed.spec.ts" time="30.291">
-<failure message="unified-feed.spec.ts:50:9 should display feed items correctly" type="FAILURE">
-<![CDATA[  [chromium-inline] › features/unified-feed.spec.ts:50:9 › UnifiedFeed Component - E2E Tests › Basic Functionality › should display feed items correctly 
+<testsuites id="" name="" tests="4" failures="2" skipped="0" errors="0" time="82.33331700000001">
+<testsuite name="core/simple-dashboard-load-test.spec.ts" timestamp="2025-10-21T23:47:45.871Z" hostname="chromium-inline" tests="1" failures="1" skipped="0" time="39.781" errors="0">
+<testcase name="Simple Dashboard Load Test › should load dashboard page without errors" classname="core/simple-dashboard-load-test.spec.ts" time="39.781">
+<failure message="simple-dashboard-load-test.spec.ts:4:7 should load dashboard page without errors" type="FAILURE">
+<![CDATA[  [chromium-inline] › core/simple-dashboard-load-test.spec.ts:4:7 › Simple Dashboard Load Test › should load dashboard page without errors 
 
     Test timeout of 30000ms exceeded.
 
-    Error: page.waitForSelector: Target page, context or browser has been closed
+    TimeoutError: page.goto: Timeout 30000ms exceeded.
     Call log:
-      - waiting for locator('[data-testid="feed-item"]') to be visible
+      - navigating to "http://localhost:3000/dashboard", waiting until "load"
 
 
-      53 |       
-      54 |       // Wait for feed items to load
-    > 55 |       await page.waitForSelector('[data-testid="feed-item"]', { timeout: 10000 });
-         |                  ^
-      56 |       
-      57 |       // Check for feed items
-      58 |       const feedItems = page.locator('[data-testid="feed-item"]');
-        at /Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/features/unified-feed.spec.ts:55:18
+       6 |     
+       7 |     // Navigate to dashboard
+    >  8 |     await page.goto('/dashboard');
+         |                ^
+       9 |     
+      10 |     // Wait for page to load
+      11 |     await page.waitForLoadState('networkidle');
+        at /Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/core/simple-dashboard-load-test.spec.ts:8:16
 
     attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
-    ../../../test-results/features-unified-feed-Unif-615e2-isplay-feed-items-correctly-chromium-inline/test-failed-1.png
+    ../../../test-results/core-simple-dashboard-load-13839-shboard-page-without-errors-chromium-inline/test-failed-1.png
     ────────────────────────────────────────────────────────────────────────────────────────────────
 
-    Error Context: ../../../test-results/features-unified-feed-Unif-615e2-isplay-feed-items-correctly-chromium-inline/error-context.md
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../../test-results/core-simple-dashboard-load-13839-shboard-page-without-errors-chromium-inline/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../../test-results/core-simple-dashboard-load-13839-shboard-page-without-errors-chromium-inline/error-context.md
 ]]>
 </failure>
 <system-out>
-<![CDATA[
-[[ATTACHMENT|../../../test-results/features-unified-feed-Unif-615e2-isplay-feed-items-correctly-chromium-inline/test-failed-1.png]]
+<![CDATA[🚀 Starting Simple Dashboard Load Test
 
-[[ATTACHMENT|../../../test-results/features-unified-feed-Unif-615e2-isplay-feed-items-correctly-chromium-inline/error-context.md]]
+[[ATTACHMENT|../../../test-results/core-simple-dashboard-load-13839-shboard-page-without-errors-chromium-inline/test-failed-1.png]]
+
+[[ATTACHMENT|../../../test-results/core-simple-dashboard-load-13839-shboard-page-without-errors-chromium-inline/video.webm]]
+
+[[ATTACHMENT|../../../test-results/core-simple-dashboard-load-13839-shboard-page-without-errors-chromium-inline/error-context.md]]
 ]]>
 </system-out>
 </testcase>
-<testcase name="UnifiedFeed Component - E2E Tests › Basic Functionality › should show online status indicator" classname="features/unified-feed.spec.ts" time="26.738">
-</testcase>
-<testcase name="UnifiedFeed Component - E2E Tests › Dark Mode Functionality › should toggle dark mode correctly" classname="features/unified-feed.spec.ts" time="27.781">
-</testcase>
-<testcase name="UnifiedFeed Component - E2E Tests › Dark Mode Functionality › should persist dark mode preference in localStorage" classname="features/unified-feed.spec.ts" time="40.09">
-<failure message="unified-feed.spec.ts:100:9 should persist dark mode preference in localStorage" type="FAILURE">
-<![CDATA[  [chromium-inline] › features/unified-feed.spec.ts:100:9 › UnifiedFeed Component - E2E Tests › Dark Mode Functionality › should persist dark mode preference in localStorage 
-
-    Test timeout of 30000ms exceeded.
-
-    Error: page.reload: net::ERR_ABORTED; maybe frame was detached?
-    Call log:
-      - waiting for navigation until "load"
-
-
-      110 |       
-      111 |       // Reload page
-    > 112 |       await page.reload();
-          |                  ^
-      113 |       await page.waitForSelector('[data-testid="unified-feed"]');
-      114 |       
-      115 |       // Check dark mode is still applied
-        at /Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/features/unified-feed.spec.ts:112:18
+</testsuite>
+<testsuite name="core/simple-dashboard-load-test.spec.ts" timestamp="2025-10-21T23:47:45.871Z" hostname="firefox-inline" tests="1" failures="0" skipped="0" time="29.191" errors="0">
+<testcase name="Simple Dashboard Load Test › should load dashboard page without errors" classname="core/simple-dashboard-load-test.spec.ts" time="29.191">
+<system-out>
+<![CDATA[🚀 Starting Simple Dashboard Load Test
+📄 Page title: Choices - Democratic Polling Platform
+❌ Error messages found: 0
+📝 Body content length: 18921
+✅ Simple dashboard load test completed
 ]]>
-</failure>
+</system-out>
 </testcase>
-<testcase name="UnifiedFeed Component - E2E Tests › Advanced Filters › should toggle advanced filters panel" classname="features/unified-feed.spec.ts" time="28.91">
+</testsuite>
+<testsuite name="core/simple-dashboard-load-test.spec.ts" timestamp="2025-10-21T23:47:45.871Z" hostname="webkit-inline" tests="1" failures="0" skipped="0" time="53.043" errors="0">
+<testcase name="Simple Dashboard Load Test › should load dashboard page without errors" classname="core/simple-dashboard-load-test.spec.ts" time="53.043">
+<system-out>
+<![CDATA[🚀 Starting Simple Dashboard Load Test
+📄 Page title: Choices - Democratic Polling Platform
+❌ Error messages found: 0
+📝 Body content length: 18920
+✅ Simple dashboard load test completed
+]]>
+</system-out>
 </testcase>
-<testcase name="UnifiedFeed Component - E2E Tests › Advanced Filters › should filter content by hashtags" classname="features/unified-feed.spec.ts" time="35.648">
-<failure message="unified-feed.spec.ts:144:9 should filter content by hashtags" type="FAILURE">
-<![CDATA[  [chromium-inline] › features/unified-feed.spec.ts:144:9 › UnifiedFeed Component - E2E Tests › Advanced Filters › should filter content by hashtags 
+</testsuite>
+<testsuite name="core/simple-dashboard-load-test.spec.ts" timestamp="2025-10-21T23:47:45.871Z" hostname="mobile-chrome-inline" tests="1" failures="1" skipped="0" time="39.08" errors="0">
+<testcase name="Simple Dashboard Load Test › should load dashboard page without errors" classname="core/simple-dashboard-load-test.spec.ts" time="39.08">
+<failure message="simple-dashboard-load-test.spec.ts:4:7 should load dashboard page without errors" type="FAILURE">
+<![CDATA[  [mobile-chrome-inline] › core/simple-dashboard-load-test.spec.ts:4:7 › Simple Dashboard Load Test › should load dashboard page without errors 
 
     Test timeout of 30000ms exceeded.
 
-    Error: page.waitForSelector: Target page, context or browser has been closed
+    TimeoutError: page.goto: Timeout 30000ms exceeded.
     Call log:
-      - waiting for locator('[data-testid="unified-feed"]') to be visible
+      - navigating to "http://localhost:3000/dashboard", waiting until "load"
 
 
-      144 |     test('should filter content by hashtags', async () => {
-      145 |       await page.goto('/feed');
-    > 146 |       await page.waitForSelector('[data-testid="unified-feed"]');
-          |                  ^
-      147 |       
-      148 |       // Wait for feed items to load
-      149 |       await page.waitForSelector('[data-testid="feed-item"]', { timeout: 10000 });
-        at /Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/features/unified-feed.spec.ts:146:18
+       6 |     
+       7 |     // Navigate to dashboard
+    >  8 |     await page.goto('/dashboard');
+         |                ^
+       9 |     
+      10 |     // Wait for page to load
+      11 |     await page.waitForLoadState('networkidle');
+        at /Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/core/simple-dashboard-load-test.spec.ts:8:16
 
-    Error Context: ../../../test-results/features-unified-feed-Unif-400e5--filter-content-by-hashtags-chromium-inline/error-context.md
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../../test-results/core-simple-dashboard-load-13839-shboard-page-without-errors-mobile-chrome-inline/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../../test-results/core-simple-dashboard-load-13839-shboard-page-without-errors-mobile-chrome-inline/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../../test-results/core-simple-dashboard-load-13839-shboard-page-without-errors-mobile-chrome-inline/error-context.md
 ]]>
 </failure>
 <system-out>
-<![CDATA[
-[[ATTACHMENT|../../../test-results/features-unified-feed-Unif-400e5--filter-content-by-hashtags-chromium-inline/error-context.md]]
+<![CDATA[🚀 Starting Simple Dashboard Load Test
+
+[[ATTACHMENT|../../../test-results/core-simple-dashboard-load-13839-shboard-page-without-errors-mobile-chrome-inline/test-failed-1.png]]
+
+[[ATTACHMENT|../../../test-results/core-simple-dashboard-load-13839-shboard-page-without-errors-mobile-chrome-inline/video.webm]]
+
+[[ATTACHMENT|../../../test-results/core-simple-dashboard-load-13839-shboard-page-without-errors-mobile-chrome-inline/error-context.md]]
 ]]>
 </system-out>
-</testcase>
-<testcase name="UnifiedFeed Component - E2E Tests › Feed Interactions › should handle like interactions" classname="features/unified-feed.spec.ts" time="36.203">
-<skipped>
-</skipped>
-</testcase>
-<testcase name="UnifiedFeed Component - E2E Tests › Feed Interactions › should handle share interactions" classname="features/unified-feed.spec.ts" time="35.559">
-<skipped>
-</skipped>
-</testcase>
-<testcase name="UnifiedFeed Component - E2E Tests › Feed Interactions › should handle comment interactions" classname="features/unified-feed.spec.ts" time="34.482">
-<skipped>
-</skipped>
-</testcase>
-<testcase name="UnifiedFeed Component - E2E Tests › Hashtag Interactions › should handle hashtag clicks" classname="features/unified-feed.spec.ts" time="27.38">
-<skipped>
-</skipped>
-</testcase>
-<testcase name="UnifiedFeed Component - E2E Tests › Hashtag Interactions › should filter content by hashtag selection" classname="features/unified-feed.spec.ts" time="19.206">
-<skipped>
-</skipped>
-</testcase>
-<testcase name="UnifiedFeed Component - E2E Tests › Pull-to-Refresh Functionality › should handle pull-to-refresh gesture" classname="features/unified-feed.spec.ts" time="0">
-<skipped>
-</skipped>
-</testcase>
-<testcase name="UnifiedFeed Component - E2E Tests › Pull-to-Refresh Functionality › should trigger refresh when pull threshold is reached" classname="features/unified-feed.spec.ts" time="0">
-<skipped>
-</skipped>
-</testcase>
-<testcase name="UnifiedFeed Component - E2E Tests › Infinite Scroll › should load more content when scrolling to bottom" classname="features/unified-feed.spec.ts" time="0">
-<skipped>
-</skipped>
-</testcase>
-<testcase name="UnifiedFeed Component - E2E Tests › Accessibility › should have proper ARIA labels and roles" classname="features/unified-feed.spec.ts" time="0">
-<skipped>
-</skipped>
-</testcase>
-<testcase name="UnifiedFeed Component - E2E Tests › Accessibility › should support keyboard navigation" classname="features/unified-feed.spec.ts" time="0">
-<skipped>
-</skipped>
-</testcase>
-<testcase name="UnifiedFeed Component - E2E Tests › Accessibility › should announce changes to screen readers" classname="features/unified-feed.spec.ts" time="0">
-<skipped>
-</skipped>
-</testcase>
-<testcase name="UnifiedFeed Component - E2E Tests › Performance › should load within acceptable time" classname="features/unified-feed.spec.ts" time="0">
-<skipped>
-</skipped>
-</testcase>
-<testcase name="UnifiedFeed Component - E2E Tests › Performance › should handle large datasets efficiently" classname="features/unified-feed.spec.ts" time="0">
-<skipped>
-</skipped>
-</testcase>
-<testcase name="UnifiedFeed Component - E2E Tests › Error Handling › should handle network errors gracefully" classname="features/unified-feed.spec.ts" time="0">
-<skipped>
-</skipped>
-</testcase>
-<testcase name="UnifiedFeed Component - E2E Tests › Error Handling › should allow retry after error" classname="features/unified-feed.spec.ts" time="0">
-<skipped>
-</skipped>
-</testcase>
-<testcase name="UnifiedFeed Component - E2E Tests › Mobile Responsiveness › should work correctly on mobile viewport" classname="features/unified-feed.spec.ts" time="0">
-<skipped>
-</skipped>
-</testcase>
-<testcase name="UnifiedFeed Component - E2E Tests › Mobile Responsiveness › should handle touch gestures on mobile" classname="features/unified-feed.spec.ts" time="0">
-<skipped>
-</skipped>
-</testcase>
-<testcase name="UnifiedFeed Component - E2E Tests › PWA Features › should show offline status when network is unavailable" classname="features/unified-feed.spec.ts" time="0">
-<skipped>
-</skipped>
-</testcase>
-<testcase name="UnifiedFeed Component - E2E Tests › PWA Features › should show online status when network is restored" classname="features/unified-feed.spec.ts" time="0">
-<skipped>
-</skipped>
 </testcase>
 </testsuite>
 </testsuites>

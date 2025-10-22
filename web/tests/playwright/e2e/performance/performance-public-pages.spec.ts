@@ -89,7 +89,7 @@ test.describe('Public Pages Performance', () => {
       await page.waitForLoadState('networkidle');
       
       const memory = await page.evaluate(() => {
-        return performance.memory?.usedJSHeapSize || 0;
+        return (performance as any).memory?.usedJSHeapSize || 0;
       });
       
       console.log(`Memory usage at ${pageUrl}: ${Math.round(memory / 1024 / 1024)}MB`);
@@ -131,7 +131,7 @@ test.describe('Public Pages Performance', () => {
         await page.waitForLoadState('networkidle');
         
         const memory = await page.evaluate(() => {
-          return performance.memory?.usedJSHeapSize || 0;
+          return (performance as any).memory?.usedJSHeapSize || 0;
         });
         
         console.log(`Round ${i + 1} - Memory usage at ${pageUrl}: ${Math.round(memory / 1024 / 1024)}MB`);

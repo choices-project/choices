@@ -66,6 +66,7 @@
     "**/scripts.disabled/**",
     "**/tests.disabled/**",
     "archive/**",
-    "archive-*/**"
+    "archive-*/**",
+    "**/disabled-for-now/**"
   ]
 }

@@ -92,7 +92,7 @@ export class AnalyticsService {
         throw new Error('Failed to calculate trust tier score')
       }
 
-      const score = Array.isArray(scoreResult) && scoreResult.length > 0 ? scoreResult[0].trust_score : 0
+      const score = Array.isArray(scoreResult) && scoreResult.length > 0 ? scoreResult[0]?.trust_score || 0 : 0
 
       // Determine trust tier
       const { data: tierResult, error: tierError } = await supabase

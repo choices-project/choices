@@ -34,6 +34,10 @@ const nextConfig = {
     },
     // Reduce memory usage
     workerThreads: false,
+    // Aggressive bundle optimization
+    optimizeCss: true,
+    // Tree shaking optimization
+    esmExternals: true,
   },
 
   // Image optimization
@@ -113,6 +117,27 @@ const nextConfig = {
         '@supabase/ssr': 'commonjs @supabase/ssr',
         '@supabase/realtime-js': 'commonjs @supabase/realtime-js'
       });
+    } else {
+      // Client-side bundle optimization
+      config.optimization = config.optimization || {};
+      config.optimization.splitChunks = {
+        chunks: 'all',
+        cacheGroups: {
+          vendor: {
+            test: /[\\/]node_modules[\\/]/,
+            name: 'vendors',
+            chunks: 'all',
+            priority: 10,
+          },
+          common: {
+            name: 'common',
+            minChunks: 2,
+            chunks: 'all',
+            priority: 5,
+            reuseExistingChunk: true,
+          },
+        },
+      };
     }
 
     return config
@@ -192,7 +217,7 @@ const nextConfig = {
         'form-action': ["'self'"],
         'frame-ancestors': ["'none'"],
         'upgrade-insecure-requests': [],
-        'report-uri': ['/api/csp-report'],
+        'report-uri': ['/api/feedback'],
       },
       development: {
         'default-src': ["'self'"],
@@ -240,7 +265,7 @@ const nextConfig = {
         'base-uri': ["'self'"],
         'form-action': ["'self'"],
         'frame-ancestors': ["'none'"],
-        'report-uri': ['/api/csp-report'],
+        'report-uri': ['/api/feedback'],
       }
     }
 

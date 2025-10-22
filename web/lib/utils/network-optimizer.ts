@@ -170,7 +170,7 @@ export class NetworkOptimizer {
     if (this.cache.size >= config.maxSize) {
       // Remove oldest entry
       const oldestKey = this.cache.keys().next().value;
-      this.cache.delete(oldestKey);
+      this.cache.delete(oldestKey!);
     }
 
     this.cache.set(key, {
@@ -207,7 +207,7 @@ export class NetworkOptimizer {
       }, delay);
 
       // Store timeout ID for potential cancellation
-      config.timeoutId = timeoutId;
+      (config as any).timeoutId = timeoutId;
     });
   }
 

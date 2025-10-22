@@ -9,9 +9,9 @@
     "globalTimeout": 0,
     "grep": {},
     "grepInvert": null,
-    "maxFailures": 3,
+    "maxFailures": 0,
     "metadata": {
-      "actualWorkers": 6
+      "actualWorkers": 4
     },
     "preserveOutput": "always",
     "reporter": [
@@ -43,7 +43,7 @@
         "repeatEach": 1,
         "retries": 0,
         "metadata": {
-          "actualWorkers": 6
+          "actualWorkers": 4
         },
         "id": "chromium-inline",
         "name": "chromium-inline",
@@ -59,7 +59,7 @@
         "repeatEach": 1,
         "retries": 0,
         "metadata": {
-          "actualWorkers": 6
+          "actualWorkers": 4
         },
         "id": "firefox-inline",
         "name": "firefox-inline",
@@ -75,7 +75,7 @@
         "repeatEach": 1,
         "retries": 0,
         "metadata": {
-          "actualWorkers": 6
+          "actualWorkers": 4
         },
         "id": "webkit-inline",
         "name": "webkit-inline",
@@ -91,7 +91,7 @@
         "repeatEach": 1,
         "retries": 0,
         "metadata": {
-          "actualWorkers": 6
+          "actualWorkers": 4
         },
         "id": "mobile-chrome-inline",
         "name": "mobile-chrome-inline",
@@ -117,913 +117,270 @@
   },
   "suites": [
     {
-      "title": "features/unified-feed.spec.ts",
-      "file": "features/unified-feed.spec.ts",
+      "title": "core/simple-dashboard-load-test.spec.ts",
+      "file": "core/simple-dashboard-load-test.spec.ts",
       "column": 0,
       "line": 0,
       "specs": [],
       "suites": [
         {
-          "title": "UnifiedFeed Component - E2E Tests",
-          "file": "features/unified-feed.spec.ts",
-          "line": 14,
+          "title": "Simple Dashboard Load Test",
+          "file": "core/simple-dashboard-load-test.spec.ts",
+          "line": 3,
           "column": 6,
-          "specs": [],
-          "suites": [
+          "specs": [
             {
-              "title": "Basic Functionality",
-              "file": "features/unified-feed.spec.ts",
-              "line": 31,
-              "column": 8,
-              "specs": [
+              "title": "should load dashboard page without errors",
+              "ok": false,
+              "tags": [],
+              "tests": [
                 {
-                  "title": "should load UnifiedFeed component with all essential elements",
-                  "ok": true,
-                  "tags": [],
-                  "tests": [
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium-inline",
+                  "projectName": "chromium-inline",
+                  "results": [
                     {
-                      "timeout": 30000,
-                      "annotations": [],
-                      "expectedStatus": "passed",
-                      "projectId": "chromium-inline",
-                      "projectName": "chromium-inline",
-                      "results": [
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "timedOut",
+                      "duration": 39781,
+                      "error": {
+                        "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
+                        "stack": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                      },
+                      "errors": [
                         {
-                          "workerIndex": 0,
-                          "parallelIndex": 0,
-                          "status": "passed",
-                          "duration": 26840,
-                          "errors": [],
-                          "stdout": [],
-                          "stderr": [],
-                          "retry": 0,
-                          "startTime": "2025-10-21T12:25:54.535Z",
-                          "annotations": [],
-                          "attachments": []
-                        }
-                      ],
-                      "status": "expected"
-                    }
-                  ],
-                  "id": "b28c7033ad3fe2609563-1edab4b142b396942f0e",
-                  "file": "features/unified-feed.spec.ts",
-                  "line": 32,
-                  "column": 9
-                },
-                {
-                  "title": "should display feed items correctly",
-                  "ok": false,
-                  "tags": [],
-                  "tests": [
-                    {
-                      "timeout": 30000,
-                      "annotations": [],
-                      "expectedStatus": "passed",
-                      "projectId": "chromium-inline",
-                      "projectName": "chromium-inline",
-                      "results": [
+                          "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                        },
                         {
-                          "workerIndex": 1,
-                          "parallelIndex": 1,
-                          "status": "timedOut",
-                          "duration": 30291,
-                          "error": {
-                            "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
-                            "stack": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                          "location": {
+                            "file": "/Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/core/simple-dashboard-load-test.spec.ts",
+                            "column": 16,
+                            "line": 8
                           },
-                          "errors": [
-                            {
-                              "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
-                            },
-                            {
-                              "location": {
-                                "file": "/Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/features/unified-feed.spec.ts",
-                                "column": 18,
-                                "line": 55
-                              },
-                              "message": "Error: page.waitForSelector: Target page, context or browser has been closed\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"feed-item\"]') to be visible\u001b[22m\n\n\n\u001b[0m \u001b[90m 53 |\u001b[39m       \n \u001b[90m 54 |\u001b[39m       \u001b[90m// Wait for feed items to load\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 55 |\u001b[39m       \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForSelector(\u001b[32m'[data-testid=\"feed-item\"]'\u001b[39m\u001b[33m,\u001b[39m { timeout\u001b[33m:\u001b[39m \u001b[35m10000\u001b[39m })\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                  \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 56 |\u001b[39m       \n \u001b[90m 57 |\u001b[39m       \u001b[90m// Check for feed items\u001b[39m\n \u001b[90m 58 |\u001b[39m       \u001b[36mconst\u001b[39m feedItems \u001b[33m=\u001b[39m page\u001b[33m.\u001b[39mlocator(\u001b[32m'[data-testid=\"feed-item\"]'\u001b[39m)\u001b[33m;\u001b[39m\u001b[0m\n\u001b[2m    at /Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/features/unified-feed.spec.ts:55:18\u001b[22m"
-                            }
-                          ],
-                          "stdout": [],
-                          "stderr": [],
-                          "retry": 0,
-                          "startTime": "2025-10-21T12:25:54.492Z",
-                          "annotations": [],
-                          "attachments": [
-                            {
-                              "name": "screenshot",
-                              "contentType": "image/png",
-                              "path": "/Users/alaughingkitsune/src/Choices/web/test-results/features-unified-feed-Unif-615e2-isplay-feed-items-correctly-chromium-inline/test-failed-1.png"
-                            },
-                            {
-                              "name": "error-context",
-                              "contentType": "text/markdown",
-                              "path": "/Users/alaughingkitsune/src/Choices/web/test-results/features-unified-feed-Unif-615e2-isplay-feed-items-correctly-chromium-inline/error-context.md"
-                            }
-                          ]
+                          "message": "TimeoutError: page.goto: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3000/dashboard\", waiting until \"load\"\u001b[22m\n\n\n\u001b[0m \u001b[90m  6 |\u001b[39m     \n \u001b[90m  7 |\u001b[39m     \u001b[90m// Navigate to dashboard\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m  8 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/dashboard'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m  9 |\u001b[39m     \n \u001b[90m 10 |\u001b[39m     \u001b[90m// Wait for page to load\u001b[39m\n \u001b[90m 11 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForLoadState(\u001b[32m'networkidle'\u001b[39m)\u001b[33m;\u001b[39m\u001b[0m\n\u001b[2m    at /Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/core/simple-dashboard-load-test.spec.ts:8:16\u001b[22m"
                         }
                       ],
-                      "status": "unexpected"
-                    }
-                  ],
-                  "id": "b28c7033ad3fe2609563-82c262190130fecac4bc",
-                  "file": "features/unified-feed.spec.ts",
-                  "line": 50,
-                  "column": 9
-                },
-                {
-                  "title": "should show online status indicator",
-                  "ok": true,
-                  "tags": [],
-                  "tests": [
-                    {
-                      "timeout": 30000,
-                      "annotations": [],
-                      "expectedStatus": "passed",
-                      "projectId": "chromium-inline",
-                      "projectName": "chromium-inline",
-                      "results": [
+                      "stdout": [
                         {
-                          "workerIndex": 2,
-                          "parallelIndex": 2,
-                          "status": "passed",
-                          "duration": 26738,
-                          "errors": [],
-                          "stdout": [],
-                          "stderr": [],
-                          "retry": 0,
-                          "startTime": "2025-10-21T12:25:54.550Z",
-                          "annotations": [],
-                          "attachments": []
+                          "text": "🚀 Starting Simple Dashboard Load Test\n"
                         }
                       ],
-                      "status": "expected"
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-21T23:47:49.709Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "/Users/alaughingkitsune/src/Choices/web/test-results/core-simple-dashboard-load-13839-shboard-page-without-errors-chromium-inline/test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "/Users/alaughingkitsune/src/Choices/web/test-results/core-simple-dashboard-load-13839-shboard-page-without-errors-chromium-inline/video.webm"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "/Users/alaughingkitsune/src/Choices/web/test-results/core-simple-dashboard-load-13839-shboard-page-without-errors-chromium-inline/error-context.md"
+                        }
+                      ]
                     }
                   ],
-                  "id": "b28c7033ad3fe2609563-f94c48b4a816c7781d72",
-                  "file": "features/unified-feed.spec.ts",
-                  "line": 68,
-                  "column": 9
+                  "status": "unexpected"
                 }
-              ]
+              ],
+              "id": "e3ae7dea433af06d2075-f90b2a288e45b97c50ff",
+              "file": "core/simple-dashboard-load-test.spec.ts",
+              "line": 4,
+              "column": 7
             },
             {
-              "title": "Dark Mode Functionality",
-              "file": "features/unified-feed.spec.ts",
-              "line": 78,
-              "column": 8,
-              "specs": [
+              "title": "should load dashboard page without errors",
+              "ok": true,
+              "tags": [],
+              "tests": [
                 {
-                  "title": "should toggle dark mode correctly",
-                  "ok": true,
-                  "tags": [],
-                  "tests": [
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "firefox-inline",
+                  "projectName": "firefox-inline",
+                  "results": [
                     {
-                      "timeout": 30000,
-                      "annotations": [],
-                      "expectedStatus": "passed",
-                      "projectId": "chromium-inline",
-                      "projectName": "chromium-inline",
-                      "results": [
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 29191,
+                      "errors": [],
+                      "stdout": [
                         {
-                          "workerIndex": 3,
-                          "parallelIndex": 3,
-                          "status": "passed",
-                          "duration": 27781,
-                          "errors": [],
-                          "stdout": [],
-                          "stderr": [],
-                          "retry": 0,
-                          "startTime": "2025-10-21T12:25:54.488Z",
-                          "annotations": [],
-                          "attachments": []
+                          "text": "🚀 Starting Simple Dashboard Load Test\n"
+                        },
+                        {
+                          "text": "📄 Page title: Choices - Democratic Polling Platform\n"
+                        },
+                        {
+                          "text": "❌ Error messages found: 0\n"
+                        },
+                        {
+                          "text": "📝 Body content length: 18921\n"
+                        },
+                        {
+                          "text": "✅ Simple dashboard load test completed\n"
                         }
                       ],
-                      "status": "expected"
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-21T23:47:49.875Z",
+                      "annotations": [],
+                      "attachments": []
                     }
                   ],
-                  "id": "b28c7033ad3fe2609563-a87bbffa35a385ee845d",
-                  "file": "features/unified-feed.spec.ts",
-                  "line": 79,
-                  "column": 9
-                },
+                  "status": "expected"
+                }
+              ],
+              "id": "e3ae7dea433af06d2075-fcca5b08f155d19dddca",
+              "file": "core/simple-dashboard-load-test.spec.ts",
+              "line": 4,
+              "column": 7
+            },
+            {
+              "title": "should load dashboard page without errors",
+              "ok": true,
+              "tags": [],
+              "tests": [
                 {
-                  "title": "should persist dark mode preference in localStorage",
-                  "ok": false,
-                  "tags": [],
-                  "tests": [
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "webkit-inline",
+                  "projectName": "webkit-inline",
+                  "results": [
                     {
-                      "timeout": 30000,
-                      "annotations": [],
-                      "expectedStatus": "passed",
-                      "projectId": "chromium-inline",
-                      "projectName": "chromium-inline",
-                      "results": [
+                      "workerIndex": 2,
+                      "parallelIndex": 2,
+                      "status": "passed",
+                      "duration": 53043,
+                      "errors": [],
+                      "stdout": [
                         {
-                          "workerIndex": 4,
-                          "parallelIndex": 4,
-                          "status": "timedOut",
-                          "duration": 40090,
-                          "error": {
-                            "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
-                            "stack": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                          "text": "🚀 Starting Simple Dashboard Load Test\n"
+                        },
+                        {
+                          "text": "📄 Page title: Choices - Democratic Polling Platform\n"
+                        },
+                        {
+                          "text": "❌ Error messages found: 0\n"
+                        },
+                        {
+                          "text": "📝 Body content length: 18920\n"
+                        },
+                        {
+                          "text": "✅ Simple dashboard load test completed\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-21T23:47:49.539Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "e3ae7dea433af06d2075-f0b2d935153c34b9cbe5",
+              "file": "core/simple-dashboard-load-test.spec.ts",
+              "line": 4,
+              "column": 7
+            },
+            {
+              "title": "should load dashboard page without errors",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "mobile-chrome-inline",
+                  "projectName": "mobile-chrome-inline",
+                  "results": [
+                    {
+                      "workerIndex": 3,
+                      "parallelIndex": 3,
+                      "status": "timedOut",
+                      "duration": 39080,
+                      "error": {
+                        "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
+                        "stack": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                      },
+                      "errors": [
+                        {
+                          "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                        },
+                        {
+                          "location": {
+                            "file": "/Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/core/simple-dashboard-load-test.spec.ts",
+                            "column": 16,
+                            "line": 8
                           },
-                          "errors": [
-                            {
-                              "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
-                            },
-                            {
-                              "location": {
-                                "file": "/Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/features/unified-feed.spec.ts",
-                                "column": 18,
-                                "line": 112
-                              },
-                              "message": "Error: page.reload: net::ERR_ABORTED; maybe frame was detached?\nCall log:\n\u001b[2m  - waiting for navigation until \"load\"\u001b[22m\n\n\n\u001b[0m \u001b[90m 110 |\u001b[39m       \n \u001b[90m 111 |\u001b[39m       \u001b[90m// Reload page\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 112 |\u001b[39m       \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mreload()\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                  \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 113 |\u001b[39m       \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForSelector(\u001b[32m'[data-testid=\"unified-feed\"]'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 114 |\u001b[39m       \n \u001b[90m 115 |\u001b[39m       \u001b[90m// Check dark mode is still applied\u001b[39m\u001b[0m\n\u001b[2m    at /Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/features/unified-feed.spec.ts:112:18\u001b[22m"
-                            }
-                          ],
-                          "stdout": [],
-                          "stderr": [],
-                          "retry": 0,
-                          "startTime": "2025-10-21T12:25:54.492Z",
-                          "annotations": [],
-                          "attachments": []
+                          "message": "TimeoutError: page.goto: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3000/dashboard\", waiting until \"load\"\u001b[22m\n\n\n\u001b[0m \u001b[90m  6 |\u001b[39m     \n \u001b[90m  7 |\u001b[39m     \u001b[90m// Navigate to dashboard\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m  8 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/dashboard'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m  9 |\u001b[39m     \n \u001b[90m 10 |\u001b[39m     \u001b[90m// Wait for page to load\u001b[39m\n \u001b[90m 11 |\u001b[39m     \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForLoadState(\u001b[32m'networkidle'\u001b[39m)\u001b[33m;\u001b[39m\u001b[0m\n\u001b[2m    at /Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/core/simple-dashboard-load-test.spec.ts:8:16\u001b[22m"
                         }
                       ],
-                      "status": "unexpected"
-                    }
-                  ],
-                  "id": "b28c7033ad3fe2609563-a79e301bb0dc5d6f5184",
-                  "file": "features/unified-feed.spec.ts",
-                  "line": 100,
-                  "column": 9
-                }
-              ]
-            },
-            {
-              "title": "Advanced Filters",
-              "file": "features/unified-feed.spec.ts",
-              "line": 121,
-              "column": 8,
-              "specs": [
-                {
-                  "title": "should toggle advanced filters panel",
-                  "ok": true,
-                  "tags": [],
-                  "tests": [
-                    {
-                      "timeout": 30000,
-                      "annotations": [],
-                      "expectedStatus": "passed",
-                      "projectId": "chromium-inline",
-                      "projectName": "chromium-inline",
-                      "results": [
+                      "stdout": [
                         {
-                          "workerIndex": 5,
-                          "parallelIndex": 5,
-                          "status": "passed",
-                          "duration": 28910,
-                          "errors": [],
-                          "stdout": [],
-                          "stderr": [],
-                          "retry": 0,
-                          "startTime": "2025-10-21T12:25:54.481Z",
-                          "annotations": [],
-                          "attachments": []
+                          "text": "🚀 Starting Simple Dashboard Load Test\n"
                         }
                       ],
-                      "status": "expected"
-                    }
-                  ],
-                  "id": "b28c7033ad3fe2609563-e8e31c22b27da2e4c176",
-                  "file": "features/unified-feed.spec.ts",
-                  "line": 122,
-                  "column": 9
-                },
-                {
-                  "title": "should filter content by hashtags",
-                  "ok": false,
-                  "tags": [],
-                  "tests": [
-                    {
-                      "timeout": 30000,
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-10-21T23:47:49.730Z",
                       "annotations": [],
-                      "expectedStatus": "passed",
-                      "projectId": "chromium-inline",
-                      "projectName": "chromium-inline",
-                      "results": [
+                      "attachments": [
                         {
-                          "workerIndex": 2,
-                          "parallelIndex": 2,
-                          "status": "timedOut",
-                          "duration": 35648,
-                          "error": {
-                            "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
-                            "stack": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
-                          },
-                          "errors": [
-                            {
-                              "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
-                            },
-                            {
-                              "location": {
-                                "file": "/Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/features/unified-feed.spec.ts",
-                                "column": 18,
-                                "line": 146
-                              },
-                              "message": "Error: page.waitForSelector: Target page, context or browser has been closed\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"unified-feed\"]') to be visible\u001b[22m\n\n\n\u001b[0m \u001b[90m 144 |\u001b[39m     test(\u001b[32m'should filter content by hashtags'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m () \u001b[33m=>\u001b[39m {\n \u001b[90m 145 |\u001b[39m       \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(\u001b[32m'/feed'\u001b[39m)\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 146 |\u001b[39m       \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForSelector(\u001b[32m'[data-testid=\"unified-feed\"]'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                  \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 147 |\u001b[39m       \n \u001b[90m 148 |\u001b[39m       \u001b[90m// Wait for feed items to load\u001b[39m\n \u001b[90m 149 |\u001b[39m       \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForSelector(\u001b[32m'[data-testid=\"feed-item\"]'\u001b[39m\u001b[33m,\u001b[39m { timeout\u001b[33m:\u001b[39m \u001b[35m10000\u001b[39m })\u001b[33m;\u001b[39m\u001b[0m\n\u001b[2m    at /Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e/features/unified-feed.spec.ts:146:18\u001b[22m"
-                            }
-                          ],
-                          "stdout": [],
-                          "stderr": [],
-                          "retry": 0,
-                          "startTime": "2025-10-21T12:26:22.395Z",
-                          "annotations": [],
-                          "attachments": [
-                            {
-                              "name": "error-context",
-                              "contentType": "text/markdown",
-                              "path": "/Users/alaughingkitsune/src/Choices/web/test-results/features-unified-feed-Unif-400e5--filter-content-by-hashtags-chromium-inline/error-context.md"
-                            }
-                          ]
-                        }
-                      ],
-                      "status": "unexpected"
-                    }
-                  ],
-                  "id": "b28c7033ad3fe2609563-9cad3b495897e3b0b6b8",
-                  "file": "features/unified-feed.spec.ts",
-                  "line": 144,
-                  "column": 9
-                }
-              ]
-            },
-            {
-              "title": "Feed Interactions",
-              "file": "features/unified-feed.spec.ts",
-              "line": 164,
-              "column": 8,
-              "specs": [
-                {
-                  "title": "should handle like interactions",
-                  "ok": true,
-                  "tags": [],
-                  "tests": [
-                    {
-                      "timeout": 30000,
-                      "annotations": [],
-                      "expectedStatus": "passed",
-                      "projectId": "chromium-inline",
-                      "projectName": "chromium-inline",
-                      "results": [
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "/Users/alaughingkitsune/src/Choices/web/test-results/core-simple-dashboard-load-13839-shboard-page-without-errors-mobile-chrome-inline/test-failed-1.png"
+                        },
                         {
-                          "workerIndex": 0,
-                          "parallelIndex": 0,
-                          "status": "interrupted",
-                          "duration": 36203,
-                          "errors": [],
-                          "stdout": [],
-                          "stderr": [],
-                          "retry": 0,
-                          "startTime": "2025-10-21T12:26:22.487Z",
-                          "annotations": [],
-                          "attachments": [
-                            {
-                              "name": "error-context",
-                              "contentType": "text/markdown",
-                              "path": "/Users/alaughingkitsune/src/Choices/web/test-results/features-unified-feed-Unif-817f0-ld-handle-like-interactions-chromium-inline/error-context.md"
-                            }
-                          ]
-                        }
-                      ],
-                      "status": "skipped"
-                    }
-                  ],
-                  "id": "b28c7033ad3fe2609563-ade3fc75b63e7e8d252f",
-                  "file": "features/unified-feed.spec.ts",
-                  "line": 165,
-                  "column": 9
-                },
-                {
-                  "title": "should handle share interactions",
-                  "ok": true,
-                  "tags": [],
-                  "tests": [
-                    {
-                      "timeout": 30000,
-                      "annotations": [],
-                      "expectedStatus": "passed",
-                      "projectId": "chromium-inline",
-                      "projectName": "chromium-inline",
-                      "results": [
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "/Users/alaughingkitsune/src/Choices/web/test-results/core-simple-dashboard-load-13839-shboard-page-without-errors-mobile-chrome-inline/video.webm"
+                        },
                         {
-                          "workerIndex": 3,
-                          "parallelIndex": 3,
-                          "status": "interrupted",
-                          "duration": 35559,
-                          "errors": [],
-                          "stdout": [],
-                          "stderr": [],
-                          "retry": 0,
-                          "startTime": "2025-10-21T12:26:23.269Z",
-                          "annotations": [],
-                          "attachments": [
-                            {
-                              "name": "error-context",
-                              "contentType": "text/markdown",
-                              "path": "/Users/alaughingkitsune/src/Choices/web/test-results/features-unified-feed-Unif-3bd81-d-handle-share-interactions-chromium-inline/error-context.md"
-                            }
-                          ]
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "/Users/alaughingkitsune/src/Choices/web/test-results/core-simple-dashboard-load-13839-shboard-page-without-errors-mobile-chrome-inline/error-context.md"
                         }
-                      ],
-                      "status": "skipped"
+                      ]
                     }
                   ],
-                  "id": "b28c7033ad3fe2609563-a3732b2a860960a8221a",
-                  "file": "features/unified-feed.spec.ts",
-                  "line": 176,
-                  "column": 9
-                },
-                {
-                  "title": "should handle comment interactions",
-                  "ok": true,
-                  "tags": [],
-                  "tests": [
-                    {
-                      "timeout": 30000,
-                      "annotations": [],
-                      "expectedStatus": "passed",
-                      "projectId": "chromium-inline",
-                      "projectName": "chromium-inline",
-                      "results": [
-                        {
-                          "workerIndex": 5,
-                          "parallelIndex": 5,
-                          "status": "interrupted",
-                          "duration": 34482,
-                          "errors": [],
-                          "stdout": [],
-                          "stderr": [],
-                          "retry": 0,
-                          "startTime": "2025-10-21T12:26:24.439Z",
-                          "annotations": [],
-                          "attachments": [
-                            {
-                              "name": "screenshot",
-                              "contentType": "image/png",
-                              "path": "/Users/alaughingkitsune/src/Choices/web/test-results/features-unified-feed-Unif-b434b-handle-comment-interactions-chromium-inline/test-failed-1.png"
-                            },
-                            {
-                              "name": "error-context",
-                              "contentType": "text/markdown",
-                              "path": "/Users/alaughingkitsune/src/Choices/web/test-results/features-unified-feed-Unif-b434b-handle-comment-interactions-chromium-inline/error-context.md"
-                            }
-                          ]
-                        }
-                      ],
-                      "status": "skipped"
-                    }
-                  ],
-                  "id": "b28c7033ad3fe2609563-7e265b93431413c84e66",
-                  "file": "features/unified-feed.spec.ts",
-                  "line": 187,
-                  "column": 9
+                  "status": "unexpected"
                 }
-              ]
-            },
-            {
-              "title": "Hashtag Interactions",
-              "file": "features/unified-feed.spec.ts",
-              "line": 199,
-              "column": 8,
-              "specs": [
-                {
-                  "title": "should handle hashtag clicks",
-                  "ok": true,
-                  "tags": [],
-                  "tests": [
-                    {
-                      "timeout": 30000,
-                      "annotations": [],
-                      "expectedStatus": "passed",
-                      "projectId": "chromium-inline",
-                      "projectName": "chromium-inline",
-                      "results": [
-                        {
-                          "workerIndex": 6,
-                          "parallelIndex": 1,
-                          "status": "interrupted",
-                          "duration": 27380,
-                          "errors": [],
-                          "stdout": [],
-                          "stderr": [],
-                          "retry": 0,
-                          "startTime": "2025-10-21T12:26:31.102Z",
-                          "annotations": [],
-                          "attachments": []
-                        }
-                      ],
-                      "status": "skipped"
-                    }
-                  ],
-                  "id": "b28c7033ad3fe2609563-5741b6ae0f9504446949",
-                  "file": "features/unified-feed.spec.ts",
-                  "line": 200,
-                  "column": 9
-                },
-                {
-                  "title": "should filter content by hashtag selection",
-                  "ok": true,
-                  "tags": [],
-                  "tests": [
-                    {
-                      "timeout": 30000,
-                      "annotations": [],
-                      "expectedStatus": "passed",
-                      "projectId": "chromium-inline",
-                      "projectName": "chromium-inline",
-                      "results": [
-                        {
-                          "workerIndex": 7,
-                          "parallelIndex": 4,
-                          "status": "interrupted",
-                          "duration": 19206,
-                          "errors": [],
-                          "stdout": [],
-                          "stderr": [],
-                          "retry": 0,
-                          "startTime": "2025-10-21T12:26:39.636Z",
-                          "annotations": [],
-                          "attachments": [
-                            {
-                              "name": "screenshot",
-                              "contentType": "image/png",
-                              "path": "/Users/alaughingkitsune/src/Choices/web/test-results/features-unified-feed-Unif-c8ba8-ontent-by-hashtag-selection-chromium-inline/test-failed-1.png"
-                            }
-                          ]
-                        }
-                      ],
-                      "status": "skipped"
-                    }
-                  ],
-                  "id": "b28c7033ad3fe2609563-c67050fc5e0caf7a0ce9",
-                  "file": "features/unified-feed.spec.ts",
-                  "line": 218,
-                  "column": 9
-                }
-              ]
-            },
-            {
-              "title": "Pull-to-Refresh Functionality",
-              "file": "features/unified-feed.spec.ts",
-              "line": 236,
-              "column": 8,
-              "specs": [
-                {
-                  "title": "should handle pull-to-refresh gesture",
-                  "ok": true,
-                  "tags": [],
-                  "tests": [
-                    {
-                      "timeout": 30000,
-                      "annotations": [],
-                      "expectedStatus": "passed",
-                      "projectId": "chromium-inline",
-                      "projectName": "chromium-inline",
-                      "results": [],
-                      "status": "skipped"
-                    }
-                  ],
-                  "id": "b28c7033ad3fe2609563-f9fa2d7c55b83e2d8821",
-                  "file": "features/unified-feed.spec.ts",
-                  "line": 237,
-                  "column": 9
-                },
-                {
-                  "title": "should trigger refresh when pull threshold is reached",
-                  "ok": true,
-                  "tags": [],
-                  "tests": [
-                    {
-                      "timeout": 30000,
-                      "annotations": [],
-                      "expectedStatus": "passed",
-                      "projectId": "chromium-inline",
-                      "projectName": "chromium-inline",
-                      "results": [],
-                      "status": "skipped"
-                    }
-                  ],
-                  "id": "b28c7033ad3fe2609563-6bc31ef7c3efef5b61dc",
-                  "file": "features/unified-feed.spec.ts",
-                  "line": 260,
-                  "column": 9
-                }
-              ]
-            },
-            {
-              "title": "Infinite Scroll",
-              "file": "features/unified-feed.spec.ts",
-              "line": 290,
-              "column": 8,
-              "specs": [
-                {
-                  "title": "should load more content when scrolling to bottom",
-                  "ok": true,
-                  "tags": [],
-                  "tests": [
-                    {
-                      "timeout": 30000,
-                      "annotations": [],
-                      "expectedStatus": "passed",
-                      "projectId": "chromium-inline",
-                      "projectName": "chromium-inline",
-                      "results": [],
-                      "status": "skipped"
-                    }
-                  ],
-                  "id": "b28c7033ad3fe2609563-b55ee6e53c1f28eb9fc9",
-                  "file": "features/unified-feed.spec.ts",
-                  "line": 291,
-                  "column": 9
-                }
-              ]
-            },
-            {
-              "title": "Accessibility",
-              "file": "features/unified-feed.spec.ts",
-              "line": 316,
-              "column": 8,
-              "specs": [
-                {
-                  "title": "should have proper ARIA labels and roles",
-                  "ok": true,
-                  "tags": [],
-                  "tests": [
-                    {
-                      "timeout": 30000,
-                      "annotations": [],
-                      "expectedStatus": "passed",
-                      "projectId": "chromium-inline",
-                      "projectName": "chromium-inline",
-                      "results": [],
-                      "status": "skipped"
-                    }
-                  ],
-                  "id": "b28c7033ad3fe2609563-d193b7cedf20ac28b233",
-                  "file": "features/unified-feed.spec.ts",
-                  "line": 317,
-                  "column": 9
-                },
-                {
-                  "title": "should support keyboard navigation",
-                  "ok": true,
-                  "tags": [],
-                  "tests": [
-                    {
-                      "timeout": 30000,
-                      "annotations": [],
-                      "expectedStatus": "passed",
-                      "projectId": "chromium-inline",
-                      "projectName": "chromium-inline",
-                      "results": [],
-                      "status": "skipped"
-                    }
-                  ],
-                  "id": "b28c7033ad3fe2609563-69e37e22b6e7c86bbed0",
-                  "file": "features/unified-feed.spec.ts",
-                  "line": 334,
-                  "column": 9
-                },
-                {
-                  "title": "should announce changes to screen readers",
-                  "ok": true,
-                  "tags": [],
-                  "tests": [
-                    {
-                      "timeout": 30000,
-                      "annotations": [],
-                      "expectedStatus": "passed",
-                      "projectId": "chromium-inline",
-                      "projectName": "chromium-inline",
-                      "results": [],
-                      "status": "skipped"
-                    }
-                  ],
-                  "id": "b28c7033ad3fe2609563-e7f3ce50a5dc4aec42a7",
-                  "file": "features/unified-feed.spec.ts",
-                  "line": 348,
-                  "column": 9
-                }
-              ]
-            },
-            {
-              "title": "Performance",
-              "file": "features/unified-feed.spec.ts",
-              "line": 364,
-              "column": 8,
-              "specs": [
-                {
-                  "title": "should load within acceptable time",
-                  "ok": true,
-                  "tags": [],
-                  "tests": [
-                    {
-                      "timeout": 30000,
-                      "annotations": [],
-                      "expectedStatus": "passed",
-                      "projectId": "chromium-inline",
-                      "projectName": "chromium-inline",
-                      "results": [],
-                      "status": "skipped"
-                    }
-                  ],
-                  "id": "b28c7033ad3fe2609563-925b241a858310d55521",
-                  "file": "features/unified-feed.spec.ts",
-                  "line": 365,
-                  "column": 9
-                },
-                {
-                  "title": "should handle large datasets efficiently",
-                  "ok": true,
-                  "tags": [],
-                  "tests": [
-                    {
-                      "timeout": 30000,
-                      "annotations": [],
-                      "expectedStatus": "passed",
-                      "projectId": "chromium-inline",
-                      "projectName": "chromium-inline",
-                      "results": [],
-                      "status": "skipped"
-                    }
-                  ],
-                  "id": "b28c7033ad3fe2609563-cc61e7b81c7bf9623803",
-                  "file": "features/unified-feed.spec.ts",
-                  "line": 379,
-                  "column": 9
-                }
-              ]
-            },
-            {
-              "title": "Error Handling",
-              "file": "features/unified-feed.spec.ts",
-              "line": 397,
-              "column": 8,
-              "specs": [
-                {
-                  "title": "should handle network errors gracefully",
-                  "ok": true,
-                  "tags": [],
-                  "tests": [
-                    {
-                      "timeout": 30000,
-                      "annotations": [],
-                      "expectedStatus": "passed",
-                      "projectId": "chromium-inline",
-                      "projectName": "chromium-inline",
-                      "results": [],
-                      "status": "skipped"
-                    }
-                  ],
-                  "id": "b28c7033ad3fe2609563-7f7746bbaca32d8e3ec8",
-                  "file": "features/unified-feed.spec.ts",
-                  "line": 398,
-                  "column": 9
-                },
-                {
-                  "title": "should allow retry after error",
-                  "ok": true,
-                  "tags": [],
-                  "tests": [
-                    {
-                      "timeout": 30000,
-                      "annotations": [],
-                      "expectedStatus": "passed",
-                      "projectId": "chromium-inline",
-                      "projectName": "chromium-inline",
-                      "results": [],
-                      "status": "skipped"
-                    }
-                  ],
-                  "id": "b28c7033ad3fe2609563-316c4ce69409838b6f7f",
-                  "file": "features/unified-feed.spec.ts",
-                  "line": 413,
-                  "column": 9
-                }
-              ]
-            },
-            {
-              "title": "Mobile Responsiveness",
-              "file": "features/unified-feed.spec.ts",
-              "line": 442,
-              "column": 8,
-              "specs": [
-                {
-                  "title": "should work correctly on mobile viewport",
-                  "ok": true,
-                  "tags": [],
-                  "tests": [
-                    {
-                      "timeout": 30000,
-                      "annotations": [],
-                      "expectedStatus": "passed",
-                      "projectId": "chromium-inline",
-                      "projectName": "chromium-inline",
-                      "results": [],
-                      "status": "skipped"
-                    }
-                  ],
-                  "id": "b28c7033ad3fe2609563-08431d04b7ec203a7b88",
-                  "file": "features/unified-feed.spec.ts",
-                  "line": 443,
-                  "column": 9
-                },
-                {
-                  "title": "should handle touch gestures on mobile",
-                  "ok": true,
-                  "tags": [],
-                  "tests": [
-                    {
-                      "timeout": 30000,
-                      "annotations": [],
-                      "expectedStatus": "passed",
-                      "projectId": "chromium-inline",
-                      "projectName": "chromium-inline",
-                      "results": [],
-                      "status": "skipped"
-                    }
-                  ],
-                  "id": "b28c7033ad3fe2609563-f03714c8c0e4eece8a34",
-                  "file": "features/unified-feed.spec.ts",
-                  "line": 453,
-                  "column": 9
-                }
-              ]
-            },
-            {
-              "title": "PWA Features",
-              "file": "features/unified-feed.spec.ts",
-              "line": 476,
-              "column": 8,
-              "specs": [
-                {
-                  "title": "should show offline status when network is unavailable",
-                  "ok": true,
-                  "tags": [],
-                  "tests": [
-                    {
-                      "timeout": 30000,
-                      "annotations": [],
-                      "expectedStatus": "passed",
-                      "projectId": "chromium-inline",
-                      "projectName": "chromium-inline",
-                      "results": [],
-                      "status": "skipped"
-                    }
-                  ],
-                  "id": "b28c7033ad3fe2609563-95881b63dc250ced80ac",
-                  "file": "features/unified-feed.spec.ts",
-                  "line": 477,
-                  "column": 9
-                },
-                {
-                  "title": "should show online status when network is restored",
-                  "ok": true,
-                  "tags": [],
-                  "tests": [
-                    {
-                      "timeout": 30000,
-                      "annotations": [],
-                      "expectedStatus": "passed",
-                      "projectId": "chromium-inline",
-                      "projectName": "chromium-inline",
-                      "results": [],
-                      "status": "skipped"
-                    }
-                  ],
-                  "id": "b28c7033ad3fe2609563-40a4ecfa08f2e9450046",
-                  "file": "features/unified-feed.spec.ts",
-                  "line": 488,
-                  "column": 9
-                }
-              ]
+              ],
+              "id": "e3ae7dea433af06d2075-7688f8791330b128c73c",
+              "file": "core/simple-dashboard-load-test.spec.ts",
+              "line": 4,
+              "column": 7
             }
           ]
         }
       ]
     }
   ],
-  "errors": [
-    {
-      "message": "\u001b[31mTesting stopped early after 3 maximum allowed failures.\u001b[39m"
-    }
-  ],
+  "errors": [],
   "stats": {
-    "startTime": "2025-10-21T12:25:49.453Z",
-    "duration": 70271.195,
-    "expected": 4,
-    "skipped": 19,
-    "unexpected": 3,
+    "startTime": "2025-10-21T23:47:22.938Z",
+    "duration": 82333.31700000001,
+    "expected": 2,
+    "skipped": 0,
+    "unexpected": 2,
     "flaky": 0
   }
 }

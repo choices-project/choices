@@ -112,6 +112,7 @@ export async function seedTestPollsRestApi(): Promise<string[]> {
     // Insert test polls one by one
     for (let i = 0; i < TEST_POLLS.length; i++) {
       const poll = TEST_POLLS[i];
+      if (!poll) continue;
       console.log(`\n📝 Inserting poll ${i + 1}/${TEST_POLLS.length}: ${poll.title}`);
       
       try {

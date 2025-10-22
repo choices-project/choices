@@ -108,7 +108,7 @@ test.describe('WebAuthn Functionality', () => {
     // Mock WebAuthn API for testing
     await page.addInitScript(() => {
       // Mock WebAuthn APIs
-      window.navigator.credentials = {
+      (window.navigator as any).credentials = {
         create: async () => {
           return {
             id: 'mock-credential-id',
@@ -159,7 +159,7 @@ test.describe('WebAuthn Functionality', () => {
   test('should handle WebAuthn authentication flow', async ({ page }) => {
     // Mock WebAuthn API for testing
     await page.addInitScript(() => {
-      window.navigator.credentials = {
+      (window.navigator as any).credentials = {
         get: async () => {
           return {
             id: 'mock-credential-id',
@@ -199,7 +199,7 @@ test.describe('WebAuthn Functionality', () => {
   test('should handle WebAuthn errors gracefully', async ({ page }) => {
     // Mock WebAuthn API to throw errors
     await page.addInitScript(() => {
-      window.navigator.credentials = {
+      (window.navigator as any).credentials = {
         create: async () => {
           throw new Error('WebAuthn registration failed');
         },

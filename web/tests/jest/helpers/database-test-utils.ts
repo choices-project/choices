@@ -117,15 +117,15 @@ export const cleanupTestDatabase = async (supabase: any) => {
 
   try {
     // Clean up test data in reverse order of dependencies
-    if (testDataIds.votes.length > 0) {
+    if (testDataIds.votes && testDataIds.votes.length > 0) {
       await supabase.from('votes').delete().in('id', testDataIds.votes);
     }
     
-    if (testDataIds.polls.length > 0) {
+    if (testDataIds.polls && testDataIds.polls.length > 0) {
       await supabase.from('polls').delete().in('id', testDataIds.polls);
     }
     
-    if (testDataIds.profiles.length > 0) {
+    if (testDataIds.profiles && testDataIds.profiles.length > 0) {
       await supabase.from('profiles').delete().in('id', testDataIds.profiles);
     }
     

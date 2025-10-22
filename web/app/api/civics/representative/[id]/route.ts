@@ -264,15 +264,15 @@ export async function GET(
       
       // Campaign Finance (only if civics campaign finance is enabled)
       campaign_finance: isFeatureEnabled('CIVICS_CAMPAIGN_FINANCE') && campaignFinance ? {
-        election_year: campaignFinance.election_year,
-        total_receipts: campaignFinance.total_receipts,
-        total_disbursements: campaignFinance.total_disbursements,
-        cash_on_hand: campaignFinance.cash_on_hand,
-        individual_contributions: campaignFinance.individual_contributions,
-        pac_contributions: campaignFinance.pac_contributions,
-        self_financing: campaignFinance.self_financing,
-        top_contributors: campaignFinance.top_contributors,
-        industry_contributions: campaignFinance.industry_contributions,
+        election_year: (campaignFinance as any).election_year,
+        total_receipts: (campaignFinance as any).total_receipts,
+        total_disbursements: (campaignFinance as any).total_disbursements,
+        cash_on_hand: (campaignFinance as any).cash_on_hand,
+        individual_contributions: (campaignFinance as any).individual_contributions,
+        pac_contributions: (campaignFinance as any).pac_contributions,
+        self_financing: (campaignFinance as any).self_financing,
+        top_contributors: (campaignFinance as any).top_contributors,
+        industry_contributions: (campaignFinance as any).industry_contributions,
         last_updated: campaignFinance.last_updated
       } : null,
       

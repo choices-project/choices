@@ -179,8 +179,8 @@ export default function EnhancedSocialFeed({
         }
         
         // Track in local analytics if available
-        if (typeof window !== 'undefined' && window.analytics) {
-          window.analytics.track('Social Media Clicked', {
+        if (typeof window !== 'undefined' && (window as any).analytics) {
+          (window as any).analytics.track('Social Media Clicked', {
             platform: data?.platform ?? 'unknown',
             handle: data?.handle ?? 'unknown',
             url: data?.url ?? 'unknown',

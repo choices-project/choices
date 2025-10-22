@@ -81,7 +81,7 @@ const fetchGeneratedPolls = async (): Promise<GeneratedPoll[]> => {
 
 const fetchSystemMetrics = async (): Promise<SystemMetrics> => {
   try {
-    const response = await fetch('/api/admin/system-metrics');
+    const response = await fetch('/api/admin/health?type=metrics');
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }

@@ -798,6 +798,7 @@ export async function runComprehensiveAccessibilityTests(page: Page): Promise<Ac
   };
 }
 
+
 /**
  * Generate accessibility report
  */

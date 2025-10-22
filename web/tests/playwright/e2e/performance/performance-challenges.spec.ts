@@ -80,7 +80,7 @@ test.describe('Performance Challenges', () => {
         
         // Challenge: Check for memory leaks by monitoring performance
         const memory = await page.evaluate(() => {
-          return performance.memory?.usedJSHeapSize || 0;
+          return (performance as any).memory?.usedJSHeapSize || 0;
         });
         
         console.log(`Memory usage at ${pageUrl}: ${memory} bytes`);

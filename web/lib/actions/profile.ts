@@ -46,14 +46,9 @@ export interface ProfileUpdateData {
   is_admin?: boolean;
   is_active?: boolean;
   
-  // Location and privacy fields
-  geo_lat?: number;
-  geo_lon?: number;
-  geo_coarse_hash?: string;
-  geo_precision?: string;
-  geo_trust_gate?: string;
-  geo_consent_version?: number;
-  geo_source?: string;
+  // Location and privacy fields (privacy-safe)
+  // Note: Dangerous geo_lat/geo_lon fields removed for privacy protection
+  // Use PrivacyFirstLocationService for location data
 }
 
 export interface ProfileActionResult {

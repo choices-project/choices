@@ -107,7 +107,7 @@ export class PerformanceMonitor {
             const firstEntry = entries[0];
             clearTimeout(timeout);
             if (firstEntry && 'processingStart' in firstEntry) {
-              resolve(firstEntry.processingStart - firstEntry.startTime);
+              resolve((firstEntry as any).processingStart - firstEntry.startTime);
             } else {
               resolve(0);
             }
@@ -122,8 +122,8 @@ export class PerformanceMonitor {
           let clsValue = 0;
           new PerformanceObserver((list) => {
             for (const entry of list.getEntries()) {
-              if (!entry.hadRecentInput) {
-                clsValue += entry.value;
+              if (!(entry as any).hadRecentInput) {
+                clsValue += (entry as any).value;
               }
             }
             resolve(clsValue);
@@ -168,14 +168,14 @@ export class PerformanceMonitor {
       // Get DOM Content Loaded time
       const domContentLoaded = await page.evaluate(() => {
         const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
-        return navigation.domContentLoadedEventEnd - navigation.navigationStart;
+        return navigation.domContentLoadedEventEnd - (navigation as any).navigationStart;
       });
       metrics.domContentLoaded = domContentLoaded;
 
       // Get Load Complete time
       const loadComplete = await page.evaluate(() => {
         const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
-        return navigation.loadEventEnd - navigation.navigationStart;
+        return navigation.loadEventEnd - (navigation as any).navigationStart;
       });
       metrics.loadComplete = loadComplete;
 
@@ -196,9 +196,9 @@ export class PerformanceMonitor {
       const memoryInfo = await page.evaluate(() => {
         if ('memory' in performance) {
           return {
-            usedJSHeapSize: performance.memory.usedJSHeapSize,
-            totalJSHeapSize: performance.memory.totalJSHeapSize,
-            jsHeapSizeLimit: performance.memory.jsHeapSizeLimit,
+            usedJSHeapSize: (performance as any).memory.usedJSHeapSize,
+            totalJSHeapSize: (performance as any).memory.totalJSHeapSize,
+            jsHeapSizeLimit: (performance as any).memory.jsHeapSizeLimit,
           };
         }
         return null;

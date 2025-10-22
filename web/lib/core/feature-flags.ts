@@ -343,7 +343,7 @@ class FeatureFlagManagerImpl implements FeatureFlagManager {
     
     const categories: Record<string, number> = {};
     Object.keys(FEATURE_FLAG_CATEGORIES).forEach(category => {
-      categories[category] = this.getFlagsByCategorycategory.length;
+      categories[category] = this.getFlagsByCategory(category).length;
     });
 
     return {

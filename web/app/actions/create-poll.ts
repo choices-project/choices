@@ -56,18 +56,14 @@ export const createPoll = createSecureServerAction(
     const sanitizedOptions = validatedData.options.map(option => sanitizeInput(option))
 
     // Create poll
-    const pollId = uuidv4()
-    const { error: pollError } = await supabase
+    const { data: pollData, error: pollError } = await supabase
       .from('polls')
       .insert({
-        id: pollId,
         title: sanitizedTitle,
         description: sanitizedDescription,
         options: sanitizedOptions,
         voting_method: validatedData.type,
         created_by: user.userId,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
         end_time: validatedData.endDate ?? null,
         status: 'active',
         privacy_level: validatedData.visibility,
@@ -89,10 +85,15 @@ export const createPoll = createSecureServerAction(
         is_verified: false,
         last_modified_by: null,
         modification_reason: null
-      })
+      } as any)
 
     if (pollError) {
       throw new Error('Failed to create poll')
+    }
+
+    const pollId = (pollData as any)?.[0]?.id
+    if (!pollId) {
+      throw new Error('Failed to get poll ID')
     }
 
     // Poll options are stored as JSON in the polls.options field

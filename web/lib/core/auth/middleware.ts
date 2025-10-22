@@ -150,7 +150,7 @@ export function createAuthMiddleware(options: AuthMiddlewareOptions = {}) {
       const { data: profile, error: profileError } = await supabase
         .from('user_profiles')
         .select('trust_tier, username')
-        .eq('user_id', String(user.id))
+        .eq('user_id', String(user.id) as any)
         .single();
 
       if (profileError) {

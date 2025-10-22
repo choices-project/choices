@@ -85,7 +85,6 @@ export const TEST_POLLS: TestPoll[] = [
     created_by: "00000000-0000-0000-0000-000000000001", // UUID for test user
     end_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days from now
     settings: {
-      allow_anonymous: true,
       show_results_before_close: true,
       allow_multiple_votes: false
     },
@@ -117,7 +116,6 @@ export const TEST_POLLS: TestPoll[] = [
     created_by: "00000000-0000-0000-0000-000000000001",
     end_date: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(), // 14 days from now
     settings: {
-      allow_anonymous: false,
       show_results_before_close: false,
       allow_multiple_votes: true,
       max_selections: 3
@@ -149,7 +147,6 @@ export const TEST_POLLS: TestPoll[] = [
     created_by: "00000000-0000-0000-0000-000000000001",
     end_date: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(), // 3 days from now
     settings: {
-      allow_anonymous: true,
       show_results_before_close: true,
       allow_multiple_votes: false
     },
@@ -159,9 +156,6 @@ export const TEST_POLLS: TestPoll[] = [
       result_display: "ranked"
     },
     privacy_level: "public",
-    is_public: true,
-    allow_anonymous: true,
-    max_votes_per_user: 1,
     category: "scheduling",
     tags: ["meetings", "team"],
     primary_hashtag: "scheduling",
@@ -183,7 +177,6 @@ export const TEST_POLLS: TestPoll[] = [
     created_by: "00000000-0000-0000-0000-000000000001",
     end_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days from now
     settings: {
-      allow_anonymous: false,
       show_results_before_close: true,
       allow_multiple_votes: true
     },
@@ -193,9 +186,6 @@ export const TEST_POLLS: TestPoll[] = [
       result_display: "approval_percentage"
     },
     privacy_level: "public",
-    is_public: true,
-    allow_anonymous: false,
-    max_votes_per_user: 5,
     category: "civic",
     tags: ["funding", "community"],
     primary_hashtag: "funding",
@@ -210,7 +200,6 @@ export const TEST_POLLS: TestPoll[] = [
     status: "draft",
     created_by: "00000000-0000-0000-0000-000000000001",
     settings: {
-      allow_anonymous: true,
       show_results_before_close: false,
       allow_multiple_votes: false
     },
@@ -220,9 +209,6 @@ export const TEST_POLLS: TestPoll[] = [
       result_display: "percentage"
     },
     privacy_level: "private",
-    is_public: false,
-    allow_anonymous: true,
-    max_votes_per_user: 1,
     category: "product",
     tags: ["naming", "draft"],
     primary_hashtag: "naming",
@@ -238,7 +224,6 @@ export const TEST_POLLS: TestPoll[] = [
     created_by: "00000000-0000-0000-0000-000000000001",
     end_date: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(), // 1 day ago
     settings: {
-      allow_anonymous: true,
       show_results_before_close: true,
       allow_multiple_votes: false
     },
@@ -248,9 +233,6 @@ export const TEST_POLLS: TestPoll[] = [
       result_display: "percentage"
     },
     privacy_level: "public",
-    is_public: true,
-    allow_anonymous: true,
-    max_votes_per_user: 1,
     category: "local",
     tags: ["coffee", "business"],
     primary_hashtag: "coffee",

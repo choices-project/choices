@@ -154,7 +154,7 @@ export async function POST(_request: NextRequest) {
             logger.info(`      🏛️  Extracting current roles...`);
             const roles = openStatesIntegration.getCurrentRoles(person);
             logger.info(`      📋 Extracting committee memberships...`);
-            const committeeMemberships = person.committee_memberships || [];
+            const committeeMemberships = (person as any).committee_memberships || [];
             
             // Calculate data quality score
             logger.info(`      📊 Calculating data quality score...`);

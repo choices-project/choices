@@ -151,9 +151,9 @@ export class PerformanceMonitor {
     // Get memory usage
     if ('memory' in performance) {
       this.metrics.memoryUsage = {
-        usedJSHeapSize: performance.memory.usedJSHeapSize,
-        totalJSHeapSize: performance.memory.totalJSHeapSize,
-        jsHeapSizeLimit: performance.memory.jsHeapSizeLimit,
+        usedJSHeapSize: (performance.memory as any).usedJSHeapSize,
+        totalJSHeapSize: (performance.memory as any).totalJSHeapSize,
+        jsHeapSizeLimit: (performance.memory as any).jsHeapSizeLimit,
       };
     }
 

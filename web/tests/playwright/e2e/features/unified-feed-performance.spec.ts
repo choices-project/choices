@@ -36,19 +36,21 @@ test.describe('UnifiedFeed Performance Tests', () => {
       new PerformanceObserver((list) => {
         const entries = list.getEntries();
         const lastEntry = entries[entries.length - 1];
-        vitals.lcp = lastEntry.startTime;
-        window.vitals = vitals;
+        if (lastEntry) {
+          vitals.lcp = lastEntry.startTime;
+        }
+        (window as any).vitals = vitals;
       }).observe({ entryTypes: ['largest-contentful-paint'] });
       
       // First Input Delay
       new PerformanceObserver((list) => {
         const entries = list.getEntries();
         entries.forEach((entry) => {
-          if (entry.processingStart && entry.startTime) {
-            vitals.fid = entry.processingStart - entry.startTime;
+          if ((entry as any).processingStart && entry.startTime) {
+            vitals.fid = (entry as any).processingStart - entry.startTime;
           }
         });
-        window.vitals = vitals;
+        (window as any).vitals = vitals;
       }).observe({ entryTypes: ['first-input'] });
       
       // Cumulative Layout Shift
@@ -56,12 +58,12 @@ test.describe('UnifiedFeed Performance Tests', () => {
       new PerformanceObserver((list) => {
         const entries = list.getEntries();
         entries.forEach((entry) => {
-          if (!entry.hadRecentInput) {
-            clsValue += entry.value;
+          if (!(entry as any).hadRecentInput) {
+            clsValue += (entry as any).value;
           }
         });
         vitals.cls = clsValue;
-        window.vitals = vitals;
+        (window as any).vitals = vitals;
       }).observe({ entryTypes: ['layout-shift'] });
       
       // First Contentful Paint
@@ -72,7 +74,7 @@ test.describe('UnifiedFeed Performance Tests', () => {
             vitals.fcp = entry.startTime;
           }
         });
-        window.vitals = vitals;
+        (window as any).vitals = vitals;
       }).observe({ entryTypes: ['paint'] });
       
       // Time to First Byte
@@ -80,10 +82,10 @@ test.describe('UnifiedFeed Performance Tests', () => {
         const entries = list.getEntries();
         entries.forEach((entry) => {
           if (entry.name === 'navigation') {
-            vitals.ttfb = entry.responseStart - entry.requestStart;
+            vitals.ttfb = (entry as any).responseStart - (entry as any).requestStart;
           }
         });
-        window.vitals = vitals;
+        (window as any).vitals = vitals;
       }).observe({ entryTypes: ['navigation'] });
     });
   });
@@ -94,10 +96,10 @@ test.describe('UnifiedFeed Performance Tests', () => {
     const cssCoverage = await page.coverage.stopCSSCoverage();
     
     // Log coverage metrics
-    const jsUsedBytes = jsCoverage.reduce((sum, entry) => sum + entry.text.length, 0);
-    const jsTotalBytes = jsCoverage.reduce((sum, entry) => sum + entry.text.length, 0);
-    const cssUsedBytes = cssCoverage.reduce((sum, entry) => sum + entry.text.length, 0);
-    const cssTotalBytes = cssCoverage.reduce((sum, entry) => sum + entry.text.length, 0);
+    const jsUsedBytes = jsCoverage.reduce((sum, entry) => sum + (entry as any).text.length, 0);
+    const jsTotalBytes = jsCoverage.reduce((sum, entry) => sum + (entry as any).text.length, 0);
+    const cssUsedBytes = cssCoverage.reduce((sum, entry) => sum + (entry as any).text.length, 0);
+    const cssTotalBytes = cssCoverage.reduce((sum, entry) => sum + (entry as any).text.length, 0);
     
     console.log(`📊 Coverage Metrics:`);
     console.log(`  JS Coverage: ${((jsUsedBytes / jsTotalBytes) * 100).toFixed(2)}%`);
@@ -122,7 +124,7 @@ test.describe('UnifiedFeed Performance Tests', () => {
       expect(loadTime).toBeLessThan(3000); // 3 seconds max
       
       // Check Core Web Vitals
-      const vitals = await page.evaluate(() => window.vitals);
+      const vitals = await page.evaluate(() => (window as any).vitals);
       
       if (vitals) {
         console.log('📊 Core Web Vitals:');
@@ -237,10 +239,10 @@ test.describe('UnifiedFeed Performance Tests', () => {
       
       // Get initial memory usage
       const initialMemory = await page.evaluate(() => {
-        return performance.memory ? {
-          usedJSHeapSize: performance.memory.usedJSHeapSize,
-          totalJSHeapSize: performance.memory.totalJSHeapSize,
-          jsHeapSizeLimit: performance.memory.jsHeapSizeLimit
+        return (performance as any).memory ? {
+          usedJSHeapSize: (performance as any).memory.usedJSHeapSize,
+          totalJSHeapSize: (performance as any).memory.totalJSHeapSize,
+          jsHeapSizeLimit: (performance as any).memory.jsHeapSizeLimit
         } : null;
       });
       
@@ -264,10 +266,10 @@ test.describe('UnifiedFeed Performance Tests', () => {
         
         // Get final memory usage
         const finalMemory = await page.evaluate(() => {
-          return performance.memory ? {
-            usedJSHeapSize: performance.memory.usedJSHeapSize,
-            totalJSHeapSize: performance.memory.totalJSHeapSize,
-            jsHeapSizeLimit: performance.memory.jsHeapSizeLimit
+          return (performance as any).memory ? {
+            usedJSHeapSize: (performance as any).memory.usedJSHeapSize,
+            totalJSHeapSize: (performance as any).memory.totalJSHeapSize,
+            jsHeapSizeLimit: (performance as any).memory.jsHeapSizeLimit
           } : null;
         });
         

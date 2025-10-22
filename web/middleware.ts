@@ -1,5 +1,4 @@
-// Import SSR polyfills first
-import '@/lib/ssr-polyfills'
+// SSR polyfills removed - Next.js 15 + Node.js 18+ handle this natively
 
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'

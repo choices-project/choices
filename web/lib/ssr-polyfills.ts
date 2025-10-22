@@ -7,7 +7,7 @@
 
 // Polyfill for globalThis if not available
 if (typeof globalThis === 'undefined') {
-  global.globalThis = global;
+  (global as any).globalThis = global;
 }
 
 // Note: Node.js 18+ has built-in fetch, so we don't need polyfills

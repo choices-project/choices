@@ -579,8 +579,8 @@ export class VoteValidator {
       const { data } = await supabaseClient
         .from('votes')
         .select('id')
-        .eq('poll_id', pollId)
-        .eq('user_id', userId)
+        .eq('poll_id', pollId as any)
+        .eq('user_id', userId as any)
         .single();
 
       return !!data;
@@ -600,10 +600,10 @@ export class VoteValidator {
       const { data } = await supabaseClient
         .from('user_profiles')
         .select('trust_tier')
-        .eq('user_id', userId)
+        .eq('user_id', userId as any)
         .single();
 
-      return data?.trust_tier || 'T0';
+      return (data as any)?.trust_tier || 'T0';
     } catch {
       return 'T0';
     }

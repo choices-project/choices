@@ -92,7 +92,7 @@ export default function SystemSettingsPage() {
         setLoading(true);
         
         // Fetch system status from API
-        const response = await fetch('/api/admin/system-status', {
+        const response = await fetch('/api/admin/health?type=status', {
           headers: {
             'Authorization': 'Bearer admin-access', // This should be replaced with real auth
             'Content-Type': 'application/json'

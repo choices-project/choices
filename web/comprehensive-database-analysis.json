@@ -1,0 +1,1419 @@
+{
+  "summary": {
+    "totalTables": 54,
+    "totalQueries": 121,
+    "mostUsedTable": "user_hashtags",
+    "operations": {
+      "insert": 40,
+      "select": 60,
+      "update": 21
+    }
+  },
+  "usedTables": [
+    "admin_activity_log",
+    "analytics_contributions",
+    "analytics_demographics",
+    "analytics_events",
+    "analytics_page_views",
+    "analytics_sessions",
+    "analytics_user_engagement",
+    "audit_logs",
+    "campaign_finance",
+    "data_quality_checks",
+    "data_quality_metrics",
+    "data_quality_summary",
+    "demographic_analytics",
+    "fec_candidates",
+    "fec_committees",
+    "fec_contributions",
+    "hashtag_analytics",
+    "hashtag_co_occurrence",
+    "hashtag_content",
+    "hashtag_engagement",
+    "hashtag_flags",
+    "hashtag_trending_history",
+    "hashtag_trends",
+    "hashtag_usage",
+    "hashtag_user_preferences",
+    "hashtags",
+    "location_consent_audit",
+    "poll_analytics",
+    "poll_contexts",
+    "poll_generation_logs",
+    "polls",
+    "privacy_audit_logs",
+    "privacy_consent_records",
+    "private_user_data",
+    "representative_activity_enhanced",
+    "representative_campaign_finance",
+    "representative_committees",
+    "representative_contacts_optimal",
+    "representative_leadership",
+    "representative_offices_optimal",
+    "representative_photos_optimal",
+    "representative_roles_optimal",
+    "representative_social_media_optimal",
+    "representatives_core",
+    "security_audit_log",
+    "system_health",
+    "trust_tier_analytics",
+    "user_address_lookups",
+    "user_consent",
+    "user_hashtags",
+    "user_notification_preferences",
+    "user_profiles",
+    "webauthn_challenges",
+    "webauthn_credentials"
+  ],
+  "tableUsage": [
+    {
+      "table": "user_hashtags",
+      "count": 5,
+      "operations": [
+        "insert",
+        "select",
+        "update"
+      ],
+      "contexts": [
+        "User Registration",
+        "Poll Creation"
+      ]
+    },
+    {
+      "table": "hashtag_user_preferences",
+      "count": 5,
+      "operations": [
+        "insert",
+        "select",
+        "update"
+      ],
+      "contexts": [
+        "User Registration",
+        "Poll Creation"
+      ]
+    },
+    {
+      "table": "poll_analytics",
+      "count": 5,
+      "operations": [
+        "insert",
+        "select",
+        "update"
+      ],
+      "contexts": [
+        "Poll Creation",
+        "Analytics Tracking",
+        "Analytics Dashboard"
+      ]
+    },
+    {
+      "table": "hashtag_analytics",
+      "count": 5,
+      "operations": [
+        "insert",
+        "select",
+        "update"
+      ],
+      "contexts": [
+        "Poll Creation",
+        "Analytics Tracking",
+        "Analytics Dashboard"
+      ]
+    },
+    {
+      "table": "analytics_user_engagement",
+      "count": 4,
+      "operations": [
+        "insert",
+        "select"
+      ],
+      "contexts": [
+        "User Registration",
+        "Analytics Tracking",
+        "Analytics Dashboard"
+      ]
+    },
+    {
+      "table": "privacy_audit_logs",
+      "count": 4,
+      "operations": [
+        "insert",
+        "select",
+        "update"
+      ],
+      "contexts": [
+        "User Registration",
+        "Admin Dashboard",
+        "Admin Actions"
+      ]
+    },
+    {
+      "table": "polls",
+      "count": 3,
+      "operations": [
+        "insert",
+        "select",
+        "update"
+      ],
+      "contexts": [
+        "Poll Creation"
+      ]
+    },
+    {
+      "table": "poll_contexts",
+      "count": 3,
+      "operations": [
+        "insert",
+        "select",
+        "update"
+      ],
+      "contexts": [
+        "Poll Creation"
+      ]
+    },
+    {
+      "table": "poll_generation_logs",
+      "count": 3,
+      "operations": [
+        "insert",
+        "select",
+        "update"
+      ],
+      "contexts": [
+        "Poll Creation"
+      ]
+    },
+    {
+      "table": "hashtags",
+      "count": 3,
+      "operations": [
+        "insert",
+        "select",
+        "update"
+      ],
+      "contexts": [
+        "Poll Creation"
+      ]
+    },
+    {
+      "table": "hashtag_usage",
+      "count": 3,
+      "operations": [
+        "insert",
+        "select",
+        "update"
+      ],
+      "contexts": [
+        "Poll Creation"
+      ]
+    },
+    {
+      "table": "hashtag_engagement",
+      "count": 3,
+      "operations": [
+        "insert",
+        "select",
+        "update"
+      ],
+      "contexts": [
+        "Poll Creation"
+      ]
+    },
+    {
+      "table": "hashtag_content",
+      "count": 3,
+      "operations": [
+        "insert",
+        "select",
+        "update"
+      ],
+      "contexts": [
+        "Poll Creation"
+      ]
+    },
+    {
+      "table": "hashtag_co_occurrence",
+      "count": 3,
+      "operations": [
+        "insert",
+        "select",
+        "update"
+      ],
+      "contexts": [
+        "Poll Creation"
+      ]
+    },
+    {
+      "table": "hashtag_trending_history",
+      "count": 3,
+      "operations": [
+        "insert",
+        "select",
+        "update"
+      ],
+      "contexts": [
+        "Poll Creation"
+      ]
+    },
+    {
+      "table": "hashtag_trends",
+      "count": 3,
+      "operations": [
+        "insert",
+        "select",
+        "update"
+      ],
+      "contexts": [
+        "Poll Creation"
+      ]
+    },
+    {
+      "table": "hashtag_flags",
+      "count": 3,
+      "operations": [
+        "insert",
+        "select",
+        "update"
+      ],
+      "contexts": [
+        "Poll Creation"
+      ]
+    },
+    {
+      "table": "user_profiles",
+      "count": 2,
+      "operations": [
+        "insert",
+        "select"
+      ],
+      "contexts": [
+        "User Registration"
+      ]
+    },
+    {
+      "table": "webauthn_credentials",
+      "count": 2,
+      "operations": [
+        "insert",
+        "select"
+      ],
+      "contexts": [
+        "User Registration"
+      ]
+    },
+    {
+      "table": "webauthn_challenges",
+      "count": 2,
+      "operations": [
+        "insert",
+        "select"
+      ],
+      "contexts": [
+        "User Registration"
+      ]
+    },
+    {
+      "table": "privacy_consent_records",
+      "count": 2,
+      "operations": [
+        "insert",
+        "select"
+      ],
+      "contexts": [
+        "User Registration"
+      ]
+    },
+    {
+      "table": "user_consent",
+      "count": 2,
+      "operations": [
+        "insert",
+        "select"
+      ],
+      "contexts": [
+        "User Registration"
+      ]
+    },
+    {
+      "table": "private_user_data",
+      "count": 2,
+      "operations": [
+        "insert",
+        "select"
+      ],
+      "contexts": [
+        "User Registration"
+      ]
+    },
+    {
+      "table": "user_notification_preferences",
+      "count": 2,
+      "operations": [
+        "insert",
+        "select"
+      ],
+      "contexts": [
+        "User Registration"
+      ]
+    },
+    {
+      "table": "user_address_lookups",
+      "count": 2,
+      "operations": [
+        "insert",
+        "select"
+      ],
+      "contexts": [
+        "User Registration"
+      ]
+    },
+    {
+      "table": "analytics_events",
+      "count": 2,
+      "operations": [
+        "insert",
+        "select"
+      ],
+      "contexts": [
+        "Analytics Tracking",
+        "Analytics Dashboard"
+      ]
+    },
+    {
+      "table": "trust_tier_analytics",
+      "count": 2,
+      "operations": [
+        "insert",
+        "select"
+      ],
+      "contexts": [
+        "Analytics Tracking",
+        "Analytics Dashboard"
+      ]
+    },
+    {
+      "table": "analytics_contributions",
+      "count": 2,
+      "operations": [
+        "insert",
+        "select"
+      ],
+      "contexts": [
+        "Analytics Tracking",
+        "Analytics Dashboard"
+      ]
+    },
+    {
+      "table": "analytics_demographics",
+      "count": 2,
+      "operations": [
+        "insert",
+        "select"
+      ],
+      "contexts": [
+        "Analytics Tracking",
+        "Analytics Dashboard"
+      ]
+    },
+    {
+      "table": "analytics_page_views",
+      "count": 2,
+      "operations": [
+        "insert",
+        "select"
+      ],
+      "contexts": [
+        "Analytics Tracking",
+        "Analytics Dashboard"
+      ]
+    },
+    {
+      "table": "analytics_sessions",
+      "count": 2,
+      "operations": [
+        "insert",
+        "select"
+      ],
+      "contexts": [
+        "Analytics Tracking",
+        "Analytics Dashboard"
+      ]
+    },
+    {
+      "table": "demographic_analytics",
+      "count": 2,
+      "operations": [
+        "insert",
+        "select"
+      ],
+      "contexts": [
+        "Analytics Tracking",
+        "Analytics Dashboard"
+      ]
+    },
+    {
+      "table": "data_quality_checks",
+      "count": 2,
+      "operations": [
+        "insert",
+        "select"
+      ],
+      "contexts": [
+        "Analytics Tracking",
+        "Analytics Dashboard"
+      ]
+    },
+    {
+      "table": "data_quality_metrics",
+      "count": 2,
+      "operations": [
+        "insert",
+        "select"
+      ],
+      "contexts": [
+        "Analytics Tracking",
+        "Analytics Dashboard"
+      ]
+    },
+    {
+      "table": "data_quality_summary",
+      "count": 2,
+      "operations": [
+        "insert",
+        "select"
+      ],
+      "contexts": [
+        "Analytics Tracking",
+        "Analytics Dashboard"
+      ]
+    },
+    {
+      "table": "location_consent_audit",
+      "count": 2,
+      "operations": [
+        "select",
+        "update"
+      ],
+      "contexts": [
+        "Admin Dashboard",
+        "Admin Actions"
+      ]
+    },
+    {
+      "table": "admin_activity_log",
+      "count": 2,
+      "operations": [
+        "select",
+        "update"
+      ],
+      "contexts": [
+        "Admin Dashboard",
+        "Admin Actions"
+      ]
+    },
+    {
+      "table": "audit_logs",
+      "count": 2,
+      "operations": [
+        "select",
+        "update"
+      ],
+      "contexts": [
+        "Admin Dashboard",
+        "Admin Actions"
+      ]
+    },
+    {
+      "table": "system_health",
+      "count": 2,
+      "operations": [
+        "select",
+        "update"
+      ],
+      "contexts": [
+        "Admin Dashboard",
+        "Admin Actions"
+      ]
+    },
+    {
+      "table": "security_audit_log",
+      "count": 2,
+      "operations": [
+        "select",
+        "update"
+      ],
+      "contexts": [
+        "Admin Dashboard",
+        "Admin Actions"
+      ]
+    },
+    {
+      "table": "representatives_core",
+      "count": 1,
+      "operations": [
+        "select"
+      ],
+      "contexts": [
+        "Civics Lookup"
+      ]
+    },
+    {
+      "table": "representative_contacts_optimal",
+      "count": 1,
+      "operations": [
+        "select"
+      ],
+      "contexts": [
+        "Civics Lookup"
+      ]
+    },
+    {
+      "table": "representative_offices_optimal",
+      "count": 1,
+      "operations": [
+        "select"
+      ],
+      "contexts": [
+        "Civics Lookup"
+      ]
+    },
+    {
+      "table": "representative_photos_optimal",
+      "count": 1,
+      "operations": [
+        "select"
+      ],
+      "contexts": [
+        "Civics Lookup"
+      ]
+    },
+    {
+      "table": "representative_social_media_optimal",
+      "count": 1,
+      "operations": [
+        "select"
+      ],
+      "contexts": [
+        "Civics Lookup"
+      ]
+    },
+    {
+      "table": "representative_activity_enhanced",
+      "count": 1,
+      "operations": [
+        "select"
+      ],
+      "contexts": [
+        "Civics Lookup"
+      ]
+    },
+    {
+      "table": "representative_campaign_finance",
+      "count": 1,
+      "operations": [
+        "select"
+      ],
+      "contexts": [
+        "Civics Lookup"
+      ]
+    },
+    {
+      "table": "representative_committees",
+      "count": 1,
+      "operations": [
+        "select"
+      ],
+      "contexts": [
+        "Civics Lookup"
+      ]
+    },
+    {
+      "table": "representative_leadership",
+      "count": 1,
+      "operations": [
+        "select"
+      ],
+      "contexts": [
+        "Civics Lookup"
+      ]
+    },
+    {
+      "table": "representative_roles_optimal",
+      "count": 1,
+      "operations": [
+        "select"
+      ],
+      "contexts": [
+        "Civics Lookup"
+      ]
+    },
+    {
+      "table": "campaign_finance",
+      "count": 1,
+      "operations": [
+        "select"
+      ],
+      "contexts": [
+        "Civics Lookup"
+      ]
+    },
+    {
+      "table": "fec_candidates",
+      "count": 1,
+      "operations": [
+        "select"
+      ],
+      "contexts": [
+        "Civics Lookup"
+      ]
+    },
+    {
+      "table": "fec_committees",
+      "count": 1,
+      "operations": [
+        "select"
+      ],
+      "contexts": [
+        "Civics Lookup"
+      ]
+    },
+    {
+      "table": "fec_contributions",
+      "count": 1,
+      "operations": [
+        "select"
+      ],
+      "contexts": [
+        "Civics Lookup"
+      ]
+    }
+  ],
+  "queryLog": [
+    {
+      "table": "user_profiles",
+      "operation": "insert",
+      "timestamp": "2025-10-22T21:22:06.566Z",
+      "context": "User Registration"
+    },
+    {
+      "table": "user_profiles",
+      "operation": "select",
+      "timestamp": "2025-10-22T21:22:06.567Z",
+      "context": "User Registration"
+    },
+    {
+      "table": "webauthn_credentials",
+      "operation": "insert",
+      "timestamp": "2025-10-22T21:22:06.567Z",
+      "context": "User Registration"
+    },
+    {
+      "table": "webauthn_credentials",
+      "operation": "select",
+      "timestamp": "2025-10-22T21:22:06.567Z",
+      "context": "User Registration"
+    },
+    {
+      "table": "webauthn_challenges",
+      "operation": "insert",
+      "timestamp": "2025-10-22T21:22:06.567Z",
+      "context": "User Registration"
+    },
+    {
+      "table": "webauthn_challenges",
+      "operation": "select",
+      "timestamp": "2025-10-22T21:22:06.567Z",
+      "context": "User Registration"
+    },
+    {
+      "table": "privacy_consent_records",
+      "operation": "insert",
+      "timestamp": "2025-10-22T21:22:06.567Z",
+      "context": "User Registration"
+    },
+    {
+      "table": "privacy_consent_records",
+      "operation": "select",
+      "timestamp": "2025-10-22T21:22:06.568Z",
+      "context": "User Registration"
+    },
+    {
+      "table": "user_consent",
+      "operation": "insert",
+      "timestamp": "2025-10-22T21:22:06.568Z",
+      "context": "User Registration"
+    },
+    {
+      "table": "user_consent",
+      "operation": "select",
+      "timestamp": "2025-10-22T21:22:06.568Z",
+      "context": "User Registration"
+    },
+    {
+      "table": "private_user_data",
+      "operation": "insert",
+      "timestamp": "2025-10-22T21:22:06.568Z",
+      "context": "User Registration"
+    },
+    {
+      "table": "private_user_data",
+      "operation": "select",
+      "timestamp": "2025-10-22T21:22:06.568Z",
+      "context": "User Registration"
+    },
+    {
+      "table": "user_notification_preferences",
+      "operation": "insert",
+      "timestamp": "2025-10-22T21:22:06.568Z",
+      "context": "User Registration"
+    },
+    {
+      "table": "user_notification_preferences",
+      "operation": "select",
+      "timestamp": "2025-10-22T21:22:06.568Z",
+      "context": "User Registration"
+    },
+    {
+      "table": "user_hashtags",
+      "operation": "insert",
+      "timestamp": "2025-10-22T21:22:06.568Z",
+      "context": "User Registration"
+    },
+    {
+      "table": "user_hashtags",
+      "operation": "select",
+      "timestamp": "2025-10-22T21:22:06.568Z",
+      "context": "User Registration"
+    },
+    {
+      "table": "hashtag_user_preferences",
+      "operation": "insert",
+      "timestamp": "2025-10-22T21:22:06.568Z",
+      "context": "User Registration"
+    },
+    {
+      "table": "hashtag_user_preferences",
+      "operation": "select",
+      "timestamp": "2025-10-22T21:22:06.568Z",
+      "context": "User Registration"
+    },
+    {
+      "table": "user_address_lookups",
+      "operation": "insert",
+      "timestamp": "2025-10-22T21:22:06.568Z",
+      "context": "User Registration"
+    },
+    {
+      "table": "user_address_lookups",
+      "operation": "select",
+      "timestamp": "2025-10-22T21:22:06.568Z",
+      "context": "User Registration"
+    },
+    {
+      "table": "analytics_user_engagement",
+      "operation": "insert",
+      "timestamp": "2025-10-22T21:22:06.568Z",
+      "context": "User Registration"
+    },
+    {
+      "table": "analytics_user_engagement",
+      "operation": "select",
+      "timestamp": "2025-10-22T21:22:06.568Z",
+      "context": "User Registration"
+    },
+    {
+      "table": "privacy_audit_logs",
+      "operation": "insert",
+      "timestamp": "2025-10-22T21:22:06.568Z",
+      "context": "User Registration"
+    },
+    {
+      "table": "privacy_audit_logs",
+      "operation": "select",
+      "timestamp": "2025-10-22T21:22:06.568Z",
+      "context": "User Registration"
+    },
+    {
+      "table": "polls",
+      "operation": "insert",
+      "timestamp": "2025-10-22T21:22:06.569Z",
+      "context": "Poll Creation"
+    },
+    {
+      "table": "polls",
+      "operation": "select",
+      "timestamp": "2025-10-22T21:22:06.569Z",
+      "context": "Poll Creation"
+    },
+    {
+      "table": "polls",
+      "operation": "update",
+      "timestamp": "2025-10-22T21:22:06.569Z",
+      "context": "Poll Creation"
+    },
+    {
+      "table": "poll_analytics",
+      "operation": "insert",
+      "timestamp": "2025-10-22T21:22:06.569Z",
+      "context": "Poll Creation"
+    },
+    {
+      "table": "poll_analytics",
+      "operation": "select",
+      "timestamp": "2025-10-22T21:22:06.569Z",
+      "context": "Poll Creation"
+    },
+    {
+      "table": "poll_analytics",
+      "operation": "update",
+      "timestamp": "2025-10-22T21:22:06.569Z",
+      "context": "Poll Creation"
+    },
+    {
+      "table": "poll_contexts",
+      "operation": "insert",
+      "timestamp": "2025-10-22T21:22:06.569Z",
+      "context": "Poll Creation"
+    },
+    {
+      "table": "poll_contexts",
+      "operation": "select",
+      "timestamp": "2025-10-22T21:22:06.569Z",
+      "context": "Poll Creation"
+    },
+    {
+      "table": "poll_contexts",
+      "operation": "update",
+      "timestamp": "2025-10-22T21:22:06.569Z",
+      "context": "Poll Creation"
+    },
+    {
+      "table": "poll_generation_logs",
+      "operation": "insert",
+      "timestamp": "2025-10-22T21:22:06.569Z",
+      "context": "Poll Creation"
+    },
+    {
+      "table": "poll_generation_logs",
+      "operation": "select",
+      "timestamp": "2025-10-22T21:22:06.569Z",
+      "context": "Poll Creation"
+    },
+    {
+      "table": "poll_generation_logs",
+      "operation": "update",
+      "timestamp": "2025-10-22T21:22:06.569Z",
+      "context": "Poll Creation"
+    },
+    {
+      "table": "hashtags",
+      "operation": "insert",
+      "timestamp": "2025-10-22T21:22:06.569Z",
+      "context": "Poll Creation"
+    },
+    {
+      "table": "hashtags",
+      "operation": "select",
+      "timestamp": "2025-10-22T21:22:06.569Z",
+      "context": "Poll Creation"
+    },
+    {
+      "table": "hashtags",
+      "operation": "update",
+      "timestamp": "2025-10-22T21:22:06.569Z",
+      "context": "Poll Creation"
+    },
+    {
+      "table": "hashtag_usage",
+      "operation": "insert",
+      "timestamp": "2025-10-22T21:22:06.569Z",
+      "context": "Poll Creation"
+    },
+    {
+      "table": "hashtag_usage",
+      "operation": "select",
+      "timestamp": "2025-10-22T21:22:06.569Z",
+      "context": "Poll Creation"
+    },
+    {
+      "table": "hashtag_usage",
+      "operation": "update",
+      "timestamp": "2025-10-22T21:22:06.569Z",
+      "context": "Poll Creation"
+    },
+    {
+      "table": "hashtag_engagement",
+      "operation": "insert",
+      "timestamp": "2025-10-22T21:22:06.569Z",
+      "context": "Poll Creation"
+    },
+    {
+      "table": "hashtag_engagement",
+      "operation": "select",
+      "timestamp": "2025-10-22T21:22:06.569Z",
+      "context": "Poll Creation"
+    },
+    {
+      "table": "hashtag_engagement",
+      "operation": "update",
+      "timestamp": "2025-10-22T21:22:06.569Z",
+      "context": "Poll Creation"
+    },
+    {
+      "table": "hashtag_content",
+      "operation": "insert",
+      "timestamp": "2025-10-22T21:22:06.569Z",
+      "context": "Poll Creation"
+    },
+    {
+      "table": "hashtag_content",
+      "operation": "select",
+      "timestamp": "2025-10-22T21:22:06.569Z",
+      "context": "Poll Creation"
+    },
+    {
+      "table": "hashtag_content",
+      "operation": "update",
+      "timestamp": "2025-10-22T21:22:06.569Z",
+      "context": "Poll Creation"
+    },
+    {
+      "table": "hashtag_co_occurrence",
+      "operation": "insert",
+      "timestamp": "2025-10-22T21:22:06.569Z",
+      "context": "Poll Creation"
+    },
+    {
+      "table": "hashtag_co_occurrence",
+      "operation": "select",
+      "timestamp": "2025-10-22T21:22:06.569Z",
+      "context": "Poll Creation"
+    },
+    {
+      "table": "hashtag_co_occurrence",
+      "operation": "update",
+      "timestamp": "2025-10-22T21:22:06.570Z",
+      "context": "Poll Creation"
+    },
+    {
+      "table": "hashtag_trending_history",
+      "operation": "insert",
+      "timestamp": "2025-10-22T21:22:06.570Z",
+      "context": "Poll Creation"
+    },
+    {
+      "table": "hashtag_trending_history",
+      "operation": "select",
+      "timestamp": "2025-10-22T21:22:06.570Z",
+      "context": "Poll Creation"
+    },
+    {
+      "table": "hashtag_trending_history",
+      "operation": "update",
+      "timestamp": "2025-10-22T21:22:06.570Z",
+      "context": "Poll Creation"
+    },
+    {
+      "table": "hashtag_trends",
+      "operation": "insert",
+      "timestamp": "2025-10-22T21:22:06.570Z",
+      "context": "Poll Creation"
+    },
+    {
+      "table": "hashtag_trends",
+      "operation": "select",
+      "timestamp": "2025-10-22T21:22:06.570Z",
+      "context": "Poll Creation"
+    },
+    {
+      "table": "hashtag_trends",
+      "operation": "update",
+      "timestamp": "2025-10-22T21:22:06.570Z",
+      "context": "Poll Creation"
+    },
+    {
+      "table": "hashtag_analytics",
+      "operation": "insert",
+      "timestamp": "2025-10-22T21:22:06.570Z",
+      "context": "Poll Creation"
+    },
+    {
+      "table": "hashtag_analytics",
+      "operation": "select",
+      "timestamp": "2025-10-22T21:22:06.570Z",
+      "context": "Poll Creation"
+    },
+    {
+      "table": "hashtag_analytics",
+      "operation": "update",
+      "timestamp": "2025-10-22T21:22:06.570Z",
+      "context": "Poll Creation"
+    },
+    {
+      "table": "hashtag_flags",
+      "operation": "insert",
+      "timestamp": "2025-10-22T21:22:06.570Z",
+      "context": "Poll Creation"
+    },
+    {
+      "table": "hashtag_flags",
+      "operation": "select",
+      "timestamp": "2025-10-22T21:22:06.570Z",
+      "context": "Poll Creation"
+    },
+    {
+      "table": "hashtag_flags",
+      "operation": "update",
+      "timestamp": "2025-10-22T21:22:06.570Z",
+      "context": "Poll Creation"
+    },
+    {
+      "table": "user_hashtags",
+      "operation": "insert",
+      "timestamp": "2025-10-22T21:22:06.570Z",
+      "context": "Poll Creation"
+    },
+    {
+      "table": "user_hashtags",
+      "operation": "select",
+      "timestamp": "2025-10-22T21:22:06.570Z",
+      "context": "Poll Creation"
+    },
+    {
+      "table": "user_hashtags",
+      "operation": "update",
+      "timestamp": "2025-10-22T21:22:06.570Z",
+      "context": "Poll Creation"
+    },
+    {
+      "table": "hashtag_user_preferences",
+      "operation": "insert",
+      "timestamp": "2025-10-22T21:22:06.570Z",
+      "context": "Poll Creation"
+    },
+    {
+      "table": "hashtag_user_preferences",
+      "operation": "select",
+      "timestamp": "2025-10-22T21:22:06.570Z",
+      "context": "Poll Creation"
+    },
+    {
+      "table": "hashtag_user_preferences",
+      "operation": "update",
+      "timestamp": "2025-10-22T21:22:06.570Z",
+      "context": "Poll Creation"
+    },
+    {
+      "table": "representatives_core",
+      "operation": "select",
+      "timestamp": "2025-10-22T21:22:06.570Z",
+      "context": "Civics Lookup"
+    },
+    {
+      "table": "representative_contacts_optimal",
+      "operation": "select",
+      "timestamp": "2025-10-22T21:22:06.571Z",
+      "context": "Civics Lookup"
+    },
+    {
+      "table": "representative_offices_optimal",
+      "operation": "select",
+      "timestamp": "2025-10-22T21:22:06.571Z",
+      "context": "Civics Lookup"
+    },
+    {
+      "table": "representative_photos_optimal",
+      "operation": "select",
+      "timestamp": "2025-10-22T21:22:06.571Z",
+      "context": "Civics Lookup"
+    },
+    {
+      "table": "representative_social_media_optimal",
+      "operation": "select",
+      "timestamp": "2025-10-22T21:22:06.571Z",
+      "context": "Civics Lookup"
+    },
+    {
+      "table": "representative_activity_enhanced",
+      "operation": "select",
+      "timestamp": "2025-10-22T21:22:06.571Z",
+      "context": "Civics Lookup"
+    },
+    {
+      "table": "representative_campaign_finance",
+      "operation": "select",
+      "timestamp": "2025-10-22T21:22:06.571Z",
+      "context": "Civics Lookup"
+    },
+    {
+      "table": "representative_committees",
+      "operation": "select",
+      "timestamp": "2025-10-22T21:22:06.571Z",
+      "context": "Civics Lookup"
+    },
+    {
+      "table": "representative_leadership",
+      "operation": "select",
+      "timestamp": "2025-10-22T21:22:06.571Z",
+      "context": "Civics Lookup"
+    },
+    {
+      "table": "representative_roles_optimal",
+      "operation": "select",
+      "timestamp": "2025-10-22T21:22:06.571Z",
+      "context": "Civics Lookup"
+    },
+    {
+      "table": "campaign_finance",
+      "operation": "select",
+      "timestamp": "2025-10-22T21:22:06.571Z",
+      "context": "Civics Lookup"
+    },
+    {
+      "table": "fec_candidates",
+      "operation": "select",
+      "timestamp": "2025-10-22T21:22:06.571Z",
+      "context": "Civics Lookup"
+    },
+    {
+      "table": "fec_committees",
+      "operation": "select",
+      "timestamp": "2025-10-22T21:22:06.571Z",
+      "context": "Civics Lookup"
+    },
+    {
+      "table": "fec_contributions",
+      "operation": "select",
+      "timestamp": "2025-10-22T21:22:06.571Z",
+      "context": "Civics Lookup"
+    },
+    {
+      "table": "poll_analytics",
+      "operation": "insert",
+      "timestamp": "2025-10-22T21:22:06.572Z",
+      "context": "Analytics Tracking"
+    },
+    {
+      "table": "poll_analytics",
+      "operation": "select",
+      "timestamp": "2025-10-22T21:22:06.572Z",
+      "context": "Analytics Dashboard"
+    },
+    {
+      "table": "hashtag_analytics",
+      "operation": "insert",
+      "timestamp": "2025-10-22T21:22:06.572Z",
+      "context": "Analytics Tracking"
+    },
+    {
+      "table": "hashtag_analytics",
+      "operation": "select",
+      "timestamp": "2025-10-22T21:22:06.572Z",
+      "context": "Analytics Dashboard"
+    },
+    {
+      "table": "analytics_events",
+      "operation": "insert",
+      "timestamp": "2025-10-22T21:22:06.572Z",
+      "context": "Analytics Tracking"
+    },
+    {
+      "table": "analytics_events",
+      "operation": "select",
+      "timestamp": "2025-10-22T21:22:06.572Z",
+      "context": "Analytics Dashboard"
+    },
+    {
+      "table": "trust_tier_analytics",
+      "operation": "insert",
+      "timestamp": "2025-10-22T21:22:06.572Z",
+      "context": "Analytics Tracking"
+    },
+    {
+      "table": "trust_tier_analytics",
+      "operation": "select",
+      "timestamp": "2025-10-22T21:22:06.572Z",
+      "context": "Analytics Dashboard"
+    },
+    {
+      "table": "analytics_contributions",
+      "operation": "insert",
+      "timestamp": "2025-10-22T21:22:06.572Z",
+      "context": "Analytics Tracking"
+    },
+    {
+      "table": "analytics_contributions",
+      "operation": "select",
+      "timestamp": "2025-10-22T21:22:06.572Z",
+      "context": "Analytics Dashboard"
+    },
+    {
+      "table": "analytics_demographics",
+      "operation": "insert",
+      "timestamp": "2025-10-22T21:22:06.572Z",
+      "context": "Analytics Tracking"
+    },
+    {
+      "table": "analytics_demographics",
+      "operation": "select",
+      "timestamp": "2025-10-22T21:22:06.572Z",
+      "context": "Analytics Dashboard"
+    },
+    {
+      "table": "analytics_user_engagement",
+      "operation": "insert",
+      "timestamp": "2025-10-22T21:22:06.572Z",
+      "context": "Analytics Tracking"
+    },
+    {
+      "table": "analytics_user_engagement",
+      "operation": "select",
+      "timestamp": "2025-10-22T21:22:06.572Z",
+      "context": "Analytics Dashboard"
+    },
+    {
+      "table": "analytics_page_views",
+      "operation": "insert",
+      "timestamp": "2025-10-22T21:22:06.572Z",
+      "context": "Analytics Tracking"
+    },
+    {
+      "table": "analytics_page_views",
+      "operation": "select",
+      "timestamp": "2025-10-22T21:22:06.572Z",
+      "context": "Analytics Dashboard"
+    },
+    {
+      "table": "analytics_sessions",
+      "operation": "insert",
+      "timestamp": "2025-10-22T21:22:06.572Z",
+      "context": "Analytics Tracking"
+    },
+    {
+      "table": "analytics_sessions",
+      "operation": "select",
+      "timestamp": "2025-10-22T21:22:06.572Z",
+      "context": "Analytics Dashboard"
+    },
+    {
+      "table": "demographic_analytics",
+      "operation": "insert",
+      "timestamp": "2025-10-22T21:22:06.572Z",
+      "context": "Analytics Tracking"
+    },
+    {
+      "table": "demographic_analytics",
+      "operation": "select",
+      "timestamp": "2025-10-22T21:22:06.573Z",
+      "context": "Analytics Dashboard"
+    },
+    {
+      "table": "data_quality_checks",
+      "operation": "insert",
+      "timestamp": "2025-10-22T21:22:06.573Z",
+      "context": "Analytics Tracking"
+    },
+    {
+      "table": "data_quality_checks",
+      "operation": "select",
+      "timestamp": "2025-10-22T21:22:06.573Z",
+      "context": "Analytics Dashboard"
+    },
+    {
+      "table": "data_quality_metrics",
+      "operation": "insert",
+      "timestamp": "2025-10-22T21:22:06.573Z",
+      "context": "Analytics Tracking"
+    },
+    {
+      "table": "data_quality_metrics",
+      "operation": "select",
+      "timestamp": "2025-10-22T21:22:06.573Z",
+      "context": "Analytics Dashboard"
+    },
+    {
+      "table": "data_quality_summary",
+      "operation": "insert",
+      "timestamp": "2025-10-22T21:22:06.573Z",
+      "context": "Analytics Tracking"
+    },
+    {
+      "table": "data_quality_summary",
+      "operation": "select",
+      "timestamp": "2025-10-22T21:22:06.573Z",
+      "context": "Analytics Dashboard"
+    },
+    {
+      "table": "location_consent_audit",
+      "operation": "select",
+      "timestamp": "2025-10-22T21:22:06.574Z",
+      "context": "Admin Dashboard"
+    },
+    {
+      "table": "location_consent_audit",
+      "operation": "update",
+      "timestamp": "2025-10-22T21:22:06.574Z",
+      "context": "Admin Actions"
+    },
+    {
+      "table": "admin_activity_log",
+      "operation": "select",
+      "timestamp": "2025-10-22T21:22:06.574Z",
+      "context": "Admin Dashboard"
+    },
+    {
+      "table": "admin_activity_log",
+      "operation": "update",
+      "timestamp": "2025-10-22T21:22:06.574Z",
+      "context": "Admin Actions"
+    },
+    {
+      "table": "audit_logs",
+      "operation": "select",
+      "timestamp": "2025-10-22T21:22:06.574Z",
+      "context": "Admin Dashboard"
+    },
+    {
+      "table": "audit_logs",
+      "operation": "update",
+      "timestamp": "2025-10-22T21:22:06.574Z",
+      "context": "Admin Actions"
+    },
+    {
+      "table": "system_health",
+      "operation": "select",
+      "timestamp": "2025-10-22T21:22:06.574Z",
+      "context": "Admin Dashboard"
+    },
+    {
+      "table": "system_health",
+      "operation": "update",
+      "timestamp": "2025-10-22T21:22:06.574Z",
+      "context": "Admin Actions"
+    },
+    {
+      "table": "security_audit_log",
+      "operation": "select",
+      "timestamp": "2025-10-22T21:22:06.574Z",
+      "context": "Admin Dashboard"
+    },
+    {
+      "table": "security_audit_log",
+      "operation": "update",
+      "timestamp": "2025-10-22T21:22:06.574Z",
+      "context": "Admin Actions"
+    },
+    {
+      "table": "privacy_audit_logs",
+      "operation": "select",
+      "timestamp": "2025-10-22T21:22:06.575Z",
+      "context": "Admin Dashboard"
+    },
+    {
+      "table": "privacy_audit_logs",
+      "operation": "update",
+      "timestamp": "2025-10-22T21:22:06.575Z",
+      "context": "Admin Actions"
+    }
+  ]
+}

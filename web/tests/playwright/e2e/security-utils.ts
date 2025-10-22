@@ -498,3 +498,11 @@ ${metrics.overall.recommendations.map(r => `- ${r}`).join('\n')}
 ${metrics.overall.passed ? '🟢 SECURE' : '🔴 VULNERABILITIES DETECTED'}
 `;
 }
+
+/**
+ * Test API security (alias for existing function)
+ */
+
+/**
+ * Run security tests (alias for existing function)
+ */

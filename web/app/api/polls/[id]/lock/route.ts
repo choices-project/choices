@@ -36,13 +36,11 @@ export async function POST(
     }
 
     // Check authentication using Supabase native sessions
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
     
-    if (sessionError || !session?.user) {
+    if (authError || !user) {
       throw new AuthenticationError('Authentication required to lock polls');
     }
-    
-    const user = session.user;
 
     // Get poll details
     const { data: poll, error: pollError } = await supabase
@@ -165,13 +163,11 @@ export async function DELETE(
     }
 
     // Check authentication using Supabase native sessions
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
     
-    if (sessionError || !session?.user) {
+    if (authError || !user) {
       throw new AuthenticationError('Authentication required to unlock polls');
     }
-    
-    const user = session.user;
 
     // Get poll details
     const { data: poll, error: pollError } = await supabase

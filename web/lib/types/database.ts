@@ -44,14 +44,6 @@ export interface CoreDatabase {
           primary_hashtags: string[] | null
           primary_concerns: string[] | null
           participation_style: string | null
-          geo_lat: number | null
-          geo_lon: number | null
-          geo_precision: string | null
-          geo_source: string | null
-          geo_trust_gate: string | null
-          geo_coarse_hash: string | null
-          geo_consent_version: number | null
-          geo_updated_at: string | null
           hashtag_preferences: Json | null
           onboarding_data: Json | null
           last_modified_by: string | null
@@ -81,14 +73,6 @@ export interface CoreDatabase {
           primary_hashtags?: string[] | null
           primary_concerns?: string[] | null
           participation_style?: string | null
-          geo_lat?: number | null
-          geo_lon?: number | null
-          geo_precision?: string | null
-          geo_source?: string | null
-          geo_trust_gate?: string | null
-          geo_coarse_hash?: string | null
-          geo_consent_version?: number | null
-          geo_updated_at?: string | null
           hashtag_preferences?: Json | null
           onboarding_data?: Json | null
           last_modified_by?: string | null
@@ -118,14 +102,6 @@ export interface CoreDatabase {
           primary_hashtags?: string[] | null
           primary_concerns?: string[] | null
           participation_style?: string | null
-          geo_lat?: number | null
-          geo_lon?: number | null
-          geo_precision?: string | null
-          geo_source?: string | null
-          geo_trust_gate?: string | null
-          geo_coarse_hash?: string | null
-          geo_consent_version?: number | null
-          geo_updated_at?: string | null
           hashtag_preferences?: Json | null
           onboarding_data?: Json | null
           last_modified_by?: string | null

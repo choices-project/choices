@@ -225,7 +225,7 @@ export class VoteProcessor implements IVoteProcessor {
       const { count } = await supabaseClient
         .from('votes')
         .select('*', { count: 'exact', head: true })
-        .eq('poll_id', pollId);
+        .eq('poll_id', pollId as any);
 
       // Update poll with new count
       await supabaseClient
@@ -233,8 +233,8 @@ export class VoteProcessor implements IVoteProcessor {
         .update({ 
           total_votes: count || 0,
           updated_at: new Date().toISOString()
-        })
-        .eq('id', pollId);
+        } as any)
+        .eq('id', pollId as any);
 
     } catch (error) {
       devLog('Error updating poll vote count:', { error: error instanceof Error ? error.message : String(error) });

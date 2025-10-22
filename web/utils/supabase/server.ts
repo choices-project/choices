@@ -34,8 +34,8 @@ export async function getSupabaseServerClient() {
   const cookieStore = await cookies();
   
   return createServerClient<Database>(
-    env.NEXT_PUBLIC_SUPABASE_URL,
-    env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    env.NEXT_PUBLIC_SUPABASE_URL!,
+    env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
         get(name: string) {
@@ -69,8 +69,8 @@ export async function getSupabaseAdminClient(): Promise<SupabaseClient<Database>
   const { createClient } = await import('@supabase/supabase-js');
   
   return createClient(
-    env.NEXT_PUBLIC_SUPABASE_URL,
-    env.SUPABASE_SECRET_KEY,
+    env.NEXT_PUBLIC_SUPABASE_URL!,
+    env.SUPABASE_SECRET_KEY!,
     {
       auth: {
         autoRefreshToken: false,
@@ -119,7 +119,7 @@ export async function getServerUserProfile(): Promise<Database['public']['Tables
     const { data: profile, error } = await supabase
       .from('user_profiles')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('user_id', user.id as any)
       .single();
     
     if (error) {

@@ -81,19 +81,17 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Supabase not configured' }, { status: 500 });
     }
 
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-    if (sessionError || !session?.user) {
-      logger.warn('User not authenticated or session error', sessionError);
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      logger.warn('User not authenticated or auth error', authError);
       return NextResponse.json({ error: 'User not authenticated' }, { status: 401 });
     }
-
-    const user = session.user;
 
     // Fetch profile
     const { data: profile, error: profileError } = await supabase
       .from('user_profiles')
       .select('*')
-      .eq('id', user.id)
+      .eq('user_id', user.id)
       .single();
 
     if (profileError && profileError.code !== 'PGRST116') { // PGRST116 means no rows found
@@ -155,13 +153,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Supabase not configured' }, { status: 500 });
     }
 
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-    if (sessionError || !session?.user) {
-      logger.warn('User not authenticated or session error', sessionError);
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      logger.warn('User not authenticated or auth error', authError);
       return NextResponse.json({ error: 'User not authenticated' }, { status: 401 });
     }
-
-    const user = session.user;
     const body = await request.json();
 
     let response = NextResponse.json({ message: 'No specific action taken' }, { status: 200 });
@@ -313,13 +309,11 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Supabase not configured' }, { status: 500 });
     }
 
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-    if (sessionError || !session?.user) {
-      logger.warn('User not authenticated or session error', sessionError);
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      logger.warn('User not authenticated or auth error', authError);
       return NextResponse.json({ error: 'User not authenticated' }, { status: 401 });
     }
-
-    const user = session.user;
     const body = await request.json();
 
     const parsedProfile = profileSchema.safeParse(body);
@@ -363,13 +357,11 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Supabase not configured' }, { status: 500 });
     }
 
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-    if (sessionError || !session?.user) {
-      logger.warn('User not authenticated or session error', sessionError);
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      logger.warn('User not authenticated or auth error', authError);
       return NextResponse.json({ error: 'User not authenticated' }, { status: 401 });
     }
-
-    const user = session.user;
 
     // Delete all related data
     const deletePromises = [
@@ -408,13 +400,11 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: 'Supabase not configured' }, { status: 500 });
     }
 
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-    if (sessionError || !session?.user) {
-      logger.warn('User not authenticated or session error', sessionError);
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      logger.warn('User not authenticated or auth error', authError);
       return NextResponse.json({ error: 'User not authenticated' }, { status: 401 });
     }
-
-    const user = session.user;
     const body = await request.json();
 
     // Validate partial profile data

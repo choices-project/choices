@@ -28,6 +28,43 @@ export const T = {
     pollList: 'admin-poll-list',
     promoteUser: (userId: string) => `admin-promote-user-${userId}`,
     banUser: (userId: string) => `admin-ban-user-${userId}`,
+    
+    // Admin Dashboard
+    dashboard: 'admin-dashboard',
+    dashboardTitle: 'admin-dashboard-title',
+    systemHealthBadge: 'admin-system-health-badge',
+    refreshButton: 'admin-refresh-button',
+    
+    // Admin Dashboard Tabs
+    overviewTab: 'admin-overview-tab',
+    analyticsTab: 'admin-analytics-tab',
+    messagesTab: 'admin-messages-tab',
+    systemTab: 'admin-system-tab',
+    
+    // Admin Dashboard Cards
+    totalUsersCard: 'admin-total-users-card',
+    totalPollsCard: 'admin-total-polls-card',
+    totalVotesCard: 'admin-total-votes-card',
+    systemHealthCard: 'admin-system-health-card',
+    
+    // Admin Quick Actions
+    createSiteMessageAction: 'admin-create-site-message-action',
+    manageUsersAction: 'admin-manage-users-action',
+    reviewFeedbackAction: 'admin-review-feedback-action',
+    systemStatusAction: 'admin-system-status-action',
+    
+    // Admin Analytics
+    userEngagementSection: 'admin-user-engagement-section',
+    systemPerformanceSection: 'admin-system-performance-section',
+    
+    // Admin Site Messages
+    siteMessagesTitle: 'admin-site-messages-title',
+    createMessageButton: 'admin-create-message-button',
+    messageList: 'admin-message-list',
+    
+    // Admin System
+    databasePerformanceSection: 'admin-database-performance-section',
+    serverResourcesSection: 'admin-server-resources-section',
   },
   
   // Login/Register
@@ -216,6 +253,54 @@ export const T = {
     userInfo: 'user-info',
     userName: 'user-name',
     userEmail: 'user-email',
+    
+    // Personal Dashboard Tabs
+    overviewTab: 'dashboard-overview-tab',
+    feedTab: 'dashboard-feed-tab',
+    analyticsTab: 'dashboard-analytics-tab',
+    
+    // Personal Dashboard Sections
+    personalAnalytics: 'personal-analytics',
+    electedOfficials: 'elected-officials',
+    quickActions: 'quick-actions',
+    recentActivity: 'recent-activity',
+    engagementScore: 'engagement-score',
+    
+    // Dashboard Settings
+    dashboardSettings: 'dashboard-settings',
+    settingsTitle: 'dashboard-settings-title',
+    settingsContent: 'dashboard-settings-content',
+    
+    // Settings Toggles
+    showQuickActionsToggle: 'show-quick-actions-toggle',
+    showElectedOfficialsToggle: 'show-elected-officials-toggle',
+    showRecentActivityToggle: 'show-recent-activity-toggle',
+    showEngagementScoreToggle: 'show-engagement-score-toggle',
+    
+    // Personal Analytics Cards
+    totalVotes: 'total-votes',
+    pollsCreated: 'polls-created',
+    activePolls: 'active-polls',
+    votesOnUserPolls: 'votes-on-user-polls',
+    participationScore: 'participation-score',
+    
+    // Quick Actions
+    createPollAction: 'create-poll-action',
+    updateProfileAction: 'update-profile-action',
+    setLocationAction: 'set-location-action',
+    exportDataAction: 'export-data-action',
+    
+    // Elected Officials
+    officialCard: (id: string) => `official-card-${id}`,
+    officialName: (id: string) => `official-name-${id}`,
+    officialTitle: (id: string) => `official-title-${id}`,
+    officialEmail: (id: string) => `official-email-${id}`,
+    officialPhone: (id: string) => `official-phone-${id}`,
+    
+    // UnifiedFeed Integration
+    unifiedFeed: 'unified-feed',
+    feedTitle: 'feed-title',
+    feedContent: 'feed-content',
     metricsSection: 'metrics-section',
     metricsTitle: 'metrics-title',
     metricsGrid: 'metrics-grid',

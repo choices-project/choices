@@ -131,13 +131,10 @@ async function getTrendingPolls(limit: number) {
         created_at,
         end_date,
         total_votes,
-        options (
-          id,
-          text,
-          votes
-        )
+        status,
+        options
       `)
-      .eq('is_active', true)
+      .eq('status' as any, 'active' as any)
       .gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
       .order('total_votes', { ascending: false })
       .limit(limit);
@@ -147,22 +144,33 @@ async function getTrendingPolls(limit: number) {
       return NextResponse.json({ polls: [] }, { status: 500 });
     }
     
+    if (!polls) {
+      return NextResponse.json({ polls: [] }, { status: 500 });
+    }
+    
     // Transform data for frontend
-    const transformedPolls = polls.map(poll => ({
-      id: poll.id,
-      title: poll.title,
-      description: poll.description,
-      category: poll.category || 'General',
-      totalVotes: poll.total_votes || 0,
-      timeRemaining: getTimeRemaining(poll.end_date),
-      isActive: true,
-      options: Array.isArray(poll.options) ? (poll.options as any[]).map((option: any) => ({
-        id: option.id,
-        text: option.text,
-        votes: option.votes || 0,
-        percentage: (poll.total_votes || 0) > 0 ? Math.round((option.votes || 0) / (poll.total_votes || 0) * 100) : 0
-      })) : []
-    })) || [];
+    const transformedPolls = polls.map(poll => {
+      // Type guard to ensure poll has required properties
+      if (!poll || typeof poll !== 'object') {
+        return null;
+      }
+      
+      return {
+        id: poll.id || '',
+        title: poll.title || '',
+        description: poll.description || '',
+        category: poll.category || 'General',
+        totalVotes: poll.total_votes || 0,
+        timeRemaining: getTimeRemaining(poll.end_date),
+        isActive: poll.status === 'active',
+        options: Array.isArray(poll.options) ? (poll.options as any[]).map((option: any, index: number) => ({
+          id: option.id || `option-${index}`,
+          text: option.text || option.title || `Option ${index + 1}`,
+          votes: option.votes || 0,
+          percentage: ((poll as any).total_votes || 0) > 0 ? Math.round((option.votes || 0) / ((poll as any).total_votes || 0) * 100) : 0
+        })) : []
+      };
+    }).filter(poll => poll !== null);
     
     return NextResponse.json({
       success: true,
@@ -247,7 +255,7 @@ async function getTrendingTopics(limit: number) {
       const { data: pollsData, error: pollsError } = await supabaseClient
         .from('polls')
         .select('id, title, total_votes, participation, options, status')
-        .eq('status', 'active')
+        .eq('status' as any, 'active' as any)
         .limit(10);
 
       if (pollsError) {
@@ -256,8 +264,9 @@ async function getTrendingTopics(limit: number) {
       } else {
         polls = (pollsData || []).map((poll: any) => ({
           ...poll,
-          participation_rate: poll.participation || 0
-        })) as PollData[];
+          participation_rate: poll.participation || 0,
+          total_votes: poll.total_votes || 0
+        })) as any[];
       }
     } catch (pollsError) {
       devLog('Error fetching polls:', { error: pollsError });
@@ -283,8 +292,8 @@ async function getTrendingTopics(limit: number) {
         title: poll.title,
         description: topic.description,
         category: topic.category,
-        totalVotes: poll.total_votes || 0,
-        participationRate: poll.participation_rate || 0,
+        totalVotes: (poll as any).total_votes || 0,
+        participationRate: (poll as any).participation_rate || 0,
         trendingScore: topic.trending_score,
         velocity: topic.velocity,
         momentum: topic.momentum,
@@ -296,7 +305,7 @@ async function getTrendingTopics(limit: number) {
           id: option.id,
           text: option.text,
           votes: option.votes,
-          percentage: poll.total_votes > 0 ? Math.round((option.votes / poll.total_votes) * 100) : 0
+          percentage: (poll as any).total_votes > 0 ? Math.round((option.votes / (poll as any).total_votes) * 100) : 0
         })),
         metadata: topic.metadata
       };

@@ -104,7 +104,21 @@ export class RedisClient {
    */
   async connect(): Promise<void> {
     try {
-      // Dynamic import to avoid build-time dependency
+      // Check if we're using Upstash REST API
+      if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) {
+        // Use Upstash REST API
+        const { Redis } = await import('@upstash/redis')
+        
+        this.client = Redis.fromEnv()
+        this.isConnected = true
+        
+        logger.info('Upstash Redis client connected via REST API', { 
+          url: process.env.UPSTASH_REDIS_REST_URL 
+        })
+        return
+      }
+      
+      // Fallback to standard Redis client
       const Redis = await import('redis')
       
       this.client = Redis.createClient({

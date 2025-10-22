@@ -69,7 +69,7 @@ export function validateProfileData(data: ProfileUpdateData): ProfileValidationR
   // Participation style validation
   if (data.participationstyle || data.participation_style) {
     const style = data.participationstyle || data.participation_style;
-    if (style && !PROFILE_CONSTANTS.PARTICIPATION_STYLES.includes(style as 'observer' | 'contributor' | 'leader')) {
+    if (style && !PROFILE_CONSTANTS.PARTICIPATION_STYLES.includes(style as 'observer' | 'participant' | 'leader' | 'organizer')) {
       errors.push(`Participation style must be one of: ${PROFILE_CONSTANTS.PARTICIPATION_STYLES.join(', ')}`);
     }
   }

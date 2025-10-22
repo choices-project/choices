@@ -48,7 +48,7 @@ export class GoogleCivicErrorHandler {
     }
 
     // Handle timeout errors
-    if (error.name === 'AbortError') {
+    if ((error as any).name === 'AbortError') {
       return new GoogleCivicApiError(
         'Request timeout: Google Civic API did not respond in time',
         408,
@@ -57,7 +57,7 @@ export class GoogleCivicErrorHandler {
     }
 
     // Handle HTTP response errors
-    if (error.status || error.statusCode) {
+    if ((error as any).status || (error as any).statusCode) {
       return this.handleHttpError(error as { status?: number; statusCode?: number; body?: unknown; data?: unknown }, context);
     }
 
@@ -167,7 +167,7 @@ export class GoogleCivicErrorHandler {
 
       default:
         return new GoogleCivicApiError(
-          `HTTP error ${status}: ${errorData.message || 'Unknown error'}`,
+          `HTTP error ${status}: ${(errorData as any).message || 'Unknown error'}`,
           status || 500,
           { 
             details: errorData,

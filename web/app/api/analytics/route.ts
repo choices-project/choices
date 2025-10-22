@@ -23,7 +23,7 @@ import { AnalyticsService } from '@/features/analytics/lib/analytics-service';
 import { withAuth, createRateLimitMiddleware, combineMiddleware } from '@/lib/core/auth/middleware';
 import { getQueryOptimizer, withPerformanceMonitoring } from '@/lib/database/optimizer';
 import { logger } from '@/lib/utils/logger';
-import { getSupabaseAdminClient } from '@/utils/supabase/server';
+import { getSupabaseAdminClient, getSupabaseServerClient } from '@/utils/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
@@ -36,7 +36,7 @@ const rateLimitMiddleware = createRateLimitMiddleware({
 // Combined middleware: rate limiting + admin auth
 const middleware = combineMiddleware(rateLimitMiddleware);
 
-export const GET = withAuth(async (request: NextRequest) => {
+export const GET = async (request: NextRequest) => {
   try {
     const { searchParams } = new URL(request.url);
     const type = searchParams.get('type') || 'general';
@@ -102,9 +102,20 @@ export const GET = withAuth(async (request: NextRequest) => {
       }
     }
 
-    // Analytics summary (no auth required)
+    // Analytics summary (requires user auth)
     if (type === 'summary') {
       try {
+        // Check for user authentication
+        const supabase = await getSupabaseServerClient();
+        const { data: { user }, error: authError } = await supabase.auth.getUser();
+        
+        if (authError || !user) {
+          return NextResponse.json(
+            { error: 'Authentication required for analytics summary' },
+            { status: 401 }
+          );
+        }
+
         const analyticsService = AnalyticsService.getInstance();
         const summary = await analyticsService.getAnalyticsSummary();
 
@@ -112,7 +123,8 @@ export const GET = withAuth(async (request: NextRequest) => {
           success: true,
           data: summary,
           generatedAt: new Date().toISOString(),
-          type: 'summary'
+          type: 'summary',
+          user_id: user.id
         });
 
       } catch (error) {
@@ -134,6 +146,28 @@ export const GET = withAuth(async (request: NextRequest) => {
       }
 
       try {
+        // Check for admin authentication
+        const supabase = await getSupabaseServerClient();
+        const { data: { user }, error: authError } = await supabase.auth.getUser();
+        
+        if (authError || !user) {
+          return NextResponse.json(
+            { error: 'Authentication required for poll analytics' },
+            { status: 401 }
+          );
+        }
+
+        // Check if user is admin
+        const { data: isAdmin } = await supabase
+          .rpc('is_admin', { input_user_id: user.id });
+
+        if (!isAdmin) {
+          return NextResponse.json(
+            { error: 'Admin access required for poll analytics' },
+            { status: 403 }
+          );
+        }
+
         const analyticsService = AnalyticsService.getInstance();
         const pollAnalytics = await analyticsService.getPollAnalytics(id);
 
@@ -142,7 +176,11 @@ export const GET = withAuth(async (request: NextRequest) => {
           data: pollAnalytics,
           generatedAt: new Date().toISOString(),
           type: 'poll',
-          pollId: id
+          pollId: id,
+          admin_user: {
+            id: user.id,
+            email: user.email
+          }
         });
 
       } catch (error) {
@@ -164,6 +202,28 @@ export const GET = withAuth(async (request: NextRequest) => {
       }
 
       try {
+        // Check for admin authentication
+        const supabase = await getSupabaseServerClient();
+        const { data: { user }, error: authError } = await supabase.auth.getUser();
+        
+        if (authError || !user) {
+          return NextResponse.json(
+            { error: 'Authentication required for user analytics' },
+            { status: 401 }
+          );
+        }
+
+        // Check if user is admin
+        const { data: isAdmin } = await supabase
+          .rpc('is_admin', { input_user_id: user.id });
+
+        if (!isAdmin) {
+          return NextResponse.json(
+            { error: 'Admin access required for user analytics' },
+            { status: 403 }
+          );
+        }
+
         const analyticsService = AnalyticsService.getInstance();
         const userAnalytics = await analyticsService.getUserAnalytics(id);
 
@@ -172,7 +232,11 @@ export const GET = withAuth(async (request: NextRequest) => {
           data: userAnalytics,
           generatedAt: new Date().toISOString(),
           type: 'user',
-          userId: id
+          userId: id,
+          admin_user: {
+            id: user.id,
+            email: user.email
+          }
         });
 
       } catch (error) {
@@ -186,31 +250,57 @@ export const GET = withAuth(async (request: NextRequest) => {
 
     // General analytics (requires admin auth)
     if (type === 'general') {
-    // Apply rate limiting
-      const rateLimitResult = await middleware(request);
-    if (rateLimitResult) {
-        return rateLimitResult;
-    }
-
       try {
-    // Use optimized analytics query with performance monitoring
+        // Check for admin authentication
+        const supabase = await getSupabaseServerClient();
+        const { data: { user }, error: authError } = await supabase.auth.getUser();
+        
+        if (authError || !user) {
+          return NextResponse.json(
+            { error: 'Authentication required for general analytics' },
+            { status: 401 }
+          );
+        }
+
+        // Check if user is admin
+        const { data: isAdmin } = await supabase
+          .rpc('is_admin', { input_user_id: user.id });
+
+        if (!isAdmin) {
+          return NextResponse.json(
+            { error: 'Admin access required for general analytics' },
+            { status: 403 }
+          );
+        }
+
+        // Apply rate limiting
+        const rateLimitResult = await middleware(request);
+        if (rateLimitResult) {
+          return rateLimitResult;
+        }
+
+        // Use optimized analytics query with performance monitoring
         const queryOptimizer = await getQueryOptimizer();
-    const getAnalyticsOptimized = withPerformanceMonitoring(
-      () => queryOptimizer.getAnalytics(period),
-      'analytics_query'
+        const getAnalyticsOptimized = withPerformanceMonitoring(
+          () => queryOptimizer.getAnalytics(period),
+          'analytics_query'
         );
 
         const analyticsData = await getAnalyticsOptimized();
 
-    return NextResponse.json({
-      ...analyticsData,
-      generatedAt: new Date().toISOString(),
-      performance: {
-        queryOptimized: true,
-        cacheEnabled: true
+        return NextResponse.json({
+          ...analyticsData,
+          generatedAt: new Date().toISOString(),
+          performance: {
+            queryOptimized: true,
+            cacheEnabled: true
           },
           type: 'general',
-          period
+          period,
+          admin_user: {
+            id: user.id,
+            email: user.email
+          }
         });
 
       } catch (error) {
@@ -239,7 +329,7 @@ export const GET = withAuth(async (request: NextRequest) => {
       { status: 500 }
     );
   }
-}, { requireAdmin: true });
+};
 
 // Handle unsupported methods
 export function POST() {

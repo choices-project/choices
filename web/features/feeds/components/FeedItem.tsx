@@ -344,10 +344,10 @@ const FeedItem = memo(({
         )}
         
         {/* Hashtags */}
-        {item.tags && item.tags.length > 0 && (
+        {(item as any).tags && (item as any).tags.length > 0 && (
           <div className="px-4 py-2">
             <div className="flex flex-wrap gap-2">
-              {item.tags.map((tag: string, index: number) => (
+              {(item as any).tags.map((tag: string, index: number) => (
                 <button
                   key={index}
                   onClick={() => handleHashtagClick(tag)}

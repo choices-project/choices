@@ -101,7 +101,7 @@ export class RealComponentTester {
     const renderTime = endTime - startTime;
 
     // Store performance metrics
-    result.__realComponentMetrics = {
+    (result as any).__realComponentMetrics = {
       renderTime,
       startTime,
       endTime

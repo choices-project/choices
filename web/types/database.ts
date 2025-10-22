@@ -5513,14 +5513,6 @@ export type Database = {
           display_name: string | null
           email: string
           followed_hashtags: string[] | null
-          geo_coarse_hash: string | null
-          geo_consent_version: number | null
-          geo_lat: number | null
-          geo_lon: number | null
-          geo_precision: string | null
-          geo_source: string | null
-          geo_trust_gate: string | null
-          geo_updated_at: string | null
           hashtag_filters: string[] | null
           hashtag_preferences: Json | null
           id: string
@@ -5558,14 +5550,6 @@ export type Database = {
           display_name?: string | null
           email: string
           followed_hashtags?: string[] | null
-          geo_coarse_hash?: string | null
-          geo_consent_version?: number | null
-          geo_lat?: number | null
-          geo_lon?: number | null
-          geo_precision?: string | null
-          geo_source?: string | null
-          geo_trust_gate?: string | null
-          geo_updated_at?: string | null
           hashtag_filters?: string[] | null
           hashtag_preferences?: Json | null
           id?: string
@@ -5603,14 +5587,6 @@ export type Database = {
           display_name?: string | null
           email?: string
           followed_hashtags?: string[] | null
-          geo_coarse_hash?: string | null
-          geo_consent_version?: number | null
-          geo_lat?: number | null
-          geo_lon?: number | null
-          geo_precision?: string | null
-          geo_source?: string | null
-          geo_trust_gate?: string | null
-          geo_updated_at?: string | null
           hashtag_filters?: string[] | null
           hashtag_preferences?: Json | null
           id?: string

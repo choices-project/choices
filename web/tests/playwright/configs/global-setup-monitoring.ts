@@ -80,8 +80,8 @@ async function globalSetup(config: FullConfig) {
             let cls = 0;
             new PerformanceObserver((entryList) => {
               for (const entry of entryList.getEntries()) {
-                if (!entry.hadRecentInput) {
-                  cls += entry.value;
+                if (!(entry as any).hadRecentInput) {
+                  cls += (entry as any).value;
                 }
               }
             }).observe({ type: 'layout-shift', buffered: true });

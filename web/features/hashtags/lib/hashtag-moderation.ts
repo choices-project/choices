@@ -19,7 +19,8 @@ import type {
   HashtagModeration, 
   HashtagFlag, 
   HashtagApiResponse,
-  Hashtag
+  Hashtag,
+  HashtagCategory
 } from '../types';
 
 // ============================================================================

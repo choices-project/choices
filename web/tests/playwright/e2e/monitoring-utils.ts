@@ -85,7 +85,7 @@ export interface MonitoringReport {
 export async function collectPerformanceMetrics(page: Page, testName: string): Promise<MonitoringMetrics['performance']> {
   const performanceMetrics = await page.evaluate(() => {
     const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
-    const memory = performance.memory;
+    const memory = (performance as any).memory;
     
     return {
       loadTime: navigation.loadEventEnd - navigation.loadEventStart,
@@ -418,6 +418,18 @@ export async function storeMonitoringData(metrics: MonitoringMetrics, alerts: Mo
     console.log(`⚠️ Error storing monitoring data: ${error}`);
   }
 }
+
+/**
+ * Collect monitoring metrics (alias for existing function)
+ */
+
+/**
+ * Generate monitoring alerts (alias for existing function)
+ */
+
+/**
+ * Send monitoring alerts (alias for existing function)
+ */
 
 
 

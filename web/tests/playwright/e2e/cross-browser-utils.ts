@@ -405,6 +405,14 @@ ${metrics.overall.passed ? '🟢 COMPATIBLE' : '🔴 COMPATIBILITY ISSUES DETECT
 `;
 }
 
+/**
+ * Test responsive design (alias for existing function)
+ */
+
+/**
+ * Generate cross-browser report (alias for existing function)
+ */
+
 
 
 

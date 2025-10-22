@@ -13,8 +13,8 @@
     "@types/jest": "30.0.0",
     "@types/node": "22.10.2",
     "husky": "9.1.7",
-    "supabase": "2.51.0",
-    "typescript": "5.9.2"
+    "supabase": "2.53.6",
+    "typescript": "5.9.3"
   },
   "scripts": {
     "prepare": "husky install",
@@ -22,10 +22,10 @@
     "ci:verify": "npm audit --audit-level=moderate"
   },
   "dependencies": {
-    "@supabase/supabase-js": "2.75.0",
-    "dotenv": "17.2.3",
+    "@supabase/supabase-js": "2.57.2",
+    "dotenv": "17.2.1",
     "js-yaml": "4.1.0",
     "pg": "8.16.3",
-    "zod": "4.1.8"
+    "zod": "4.1.3"
   }
 }

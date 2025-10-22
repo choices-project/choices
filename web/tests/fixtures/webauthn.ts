@@ -42,8 +42,8 @@ export const test = base.extend<Fixtures>({
       // Non-Chromium: Provide a light stub so component tests don't explode
       await page.addInitScript(() => {
         // Minimal shim – good enough for rendering & basic interaction tests
-        globalThis.PublicKeyCredential ??= class PublicKeyCredential {};
-        navigator.credentials ??= {};
+        globalThis.PublicKeyCredential ??= class PublicKeyCredential {} as any;
+        (navigator as any).credentials ??= {} as any;
         navigator.credentials.create = async () => ({
           id: 'dummy',
           type: 'public-key',

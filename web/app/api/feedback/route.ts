@@ -1,7 +1,7 @@
 import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server';
 
-import { devLog } from '@/lib/utils/logger';
+import { devLog, logger } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 import type { Database } from '@/types/database';
 
@@ -92,7 +92,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate feedback type
-    if (!['bug', 'feature', 'general', 'performance', 'accessibility', 'security'].includes(type)) {
+    if (!['bug', 'feature', 'general', 'performance', 'accessibility', 'security', 'csp-violation'].includes(type)) {
       return NextResponse.json(
         { error: 'Invalid feedback type' },
         { status: 400 }
@@ -143,6 +143,65 @@ export async function POST(request: NextRequest) {
           { status: 429 }
         )
       }
+    }
+
+    // Special handling for CSP violations
+    if (type === 'csp-violation') {
+      // CSP violations are always anonymous and high priority
+      const cspData = {
+        user_id: null, // Always anonymous
+        type: 'csp-violation',
+        title: 'CSP Violation Report',
+        description: `CSP Violation: ${description}`,
+        sentiment: 'negative',
+        screenshot: null,
+        user_journey: {},
+        status: 'open',
+        priority: 'urgent',
+        tags: ['security', 'csp', 'violation'],
+        ai_analysis: {},
+        metadata: {
+          cspReport: body['csp-report'] || {},
+          userAgent: request.headers.get('user-agent') || 'unknown',
+          ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0] || 'unknown',
+          timestamp: new Date().toISOString(),
+          security: {
+            ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0] || 'unknown',
+            userAgent: request.headers.get('user-agent') || 'unknown',
+            timestamp: new Date().toISOString()
+          }
+        }
+      };
+      
+      devLog('Processing CSP violation report:', cspData);
+      
+      const { data: cspResult, error: cspError } = await supabaseClient
+        .from('feedback')
+        .insert(cspData)
+        .select()
+        .single();
+        
+      if (cspError) {
+        logger.error('Error storing CSP violation:', cspError);
+        return NextResponse.json(
+          { error: 'Failed to store CSP violation report' },
+          { status: 500 }
+        );
+      }
+      
+      logger.warn('CSP Violation Report', {
+        'csp-report': body['csp-report'],
+        feedbackId: cspResult.id,
+        timestamp: new Date().toISOString(),
+        userAgent: request.headers.get('user-agent'),
+        ip: request.headers.get('x-forwarded-for')?.split(',')[0] || 'unknown'
+      });
+      
+      return NextResponse.json({
+        success: true,
+        message: 'CSP violation report received',
+        feedback_id: cspResult.id
+      });
     }
 
     // Prepare enhanced feedback data

@@ -185,7 +185,7 @@ class PerformanceMetricsCollector {
       url: typeof window !== 'undefined' ? window.location.href : '',
       userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : '',
       connection: typeof navigator !== 'undefined' && 'connection' in navigator 
-        ? navigator.connection?.effectiveType : undefined,
+        ? (navigator.connection as any)?.effectiveType : undefined,
     };
 
     this.metrics.push(metric);
