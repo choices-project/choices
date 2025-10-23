@@ -18,7 +18,7 @@ interface TranslatedTextProps {
   params?: Record<string, string | number>;
   fallback?: string;
   className?: string;
-  as?: keyof React.JSX.IntrinsicElements;
+  as?: React.ElementType;
   children?: React.ReactNode;
 }
 
@@ -27,7 +27,7 @@ export default function TranslatedText({
   params,
   fallback,
   className = '',
-  as: Component = 'span' as React.ElementType,
+  as: Component = 'span',
   children,
   ...props
 }: TranslatedTextProps) {
@@ -62,7 +62,7 @@ export function TranslatedHeading({
   
   const translatedText = t(translationKey, params);
   const displayText = translatedText === translationKey ? (fallback || translationKey) : translatedText;
-  const HeadingTag = `h${level}` as keyof React.JSX.IntrinsicElements;
+  const HeadingTag = `h${level}` as React.ElementType;
 
   return (
     <HeadingTag className={className} {...props}>

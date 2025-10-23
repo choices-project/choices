@@ -682,7 +682,7 @@ export default function EnhancedCandidateCard({
           representative={{
             id: parseInt(representative.id || '0'),
             name: representative.name,
-            office: representative.office || representative.title || 'Representative',
+            office: representative.office || 'Representative',
             party: representative.party,
             photo: primaryPhoto?.url
           }}

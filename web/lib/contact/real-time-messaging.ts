@@ -8,7 +8,7 @@
  * Status: ✅ IMPLEMENTATION READY
  */
 
-import { createBrowserClient } from '@supabase/ssr';
+import { OptimizedSupabaseClient } from '@/lib/supabase/client';
 import { type RealtimeChannel } from '@supabase/supabase-js';
 import { logger } from '@/lib/utils/logger';
 
@@ -79,7 +79,7 @@ export class ContactMessagingService {
   private channels: Map<string, RealtimeChannel> = new Map();
 
   constructor() {
-    this.supabase = createBrowserClient();
+    this.supabase = OptimizedSupabaseClient.getBrowserClient();
   }
 
   // ============================================================================

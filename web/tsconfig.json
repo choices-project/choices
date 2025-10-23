@@ -3,7 +3,7 @@
   "compilerOptions": {
     // Web-specific overrides
     "noEmit": true,
-    "jsx": "react-jsx",
+    "jsx": "preserve",
     // Next.js plugin for App Router support
     "plugins": [
       {

@@ -75,11 +75,7 @@ export function useContactMessages(representativeId: string) {
     setError(null);
 
     try {
-      const response = await fetch(`/api/contact/messages?representative_id=${representativeId}`, {
-        headers: {
-          'Authorization': `Bearer ${user.access_token}`,
-        },
-      });
+      const response = await fetch(`/api/contact/messages?representative_id=${representativeId}`);
 
       if (!response.ok) {
         throw new Error(`Failed to fetch messages: ${response.statusText}`);
@@ -157,9 +153,6 @@ export function useContactThreads() {
 
     try {
       const response = await fetch('/api/contact/threads', {
-        headers: {
-          'Authorization': `Bearer ${user.access_token}`,
-        },
       });
 
       if (!response.ok) {
