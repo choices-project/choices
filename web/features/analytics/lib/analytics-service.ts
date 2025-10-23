@@ -15,7 +15,7 @@ import type { Database } from '@/types/database'
 
 type TrustTierAnalyticsRow = Database['public']['Tables']['trust_tier_analytics']['Row']
 type UserProfileRow = Database['public']['Tables']['user_profiles']['Row']
-type TrustTierAnalyticsFactors = {
+interface TrustTierAnalyticsFactors {
   confidence_level?: number;
   data_quality_score?: number;
   age_group?: string;

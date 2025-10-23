@@ -8,7 +8,7 @@ import { useFormStatus } from 'react-dom'
 
 import { loginAction } from '@/app/actions/login'
 import { PasskeyButton } from '@/features/auth/components/PasskeyButton'
-import { T } from '@/lib/testing/testIds'
+import { T } from '@/tests/registry/testIds'
 import { logger } from '@/lib/utils/logger'
 
 // Login button component using useFormStatus

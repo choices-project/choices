@@ -13,7 +13,7 @@ import { createClient } from '@supabase/supabase-js';
 // REST API helper function that mimics successful curl approach
 async function restApiRequest(endpoint: string, method = 'GET', body?: any) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseKey = process.env.SUPABASE_SECRET_KEY;
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   
   if (!supabaseUrl || !supabaseKey) {
     throw new Error('Supabase credentials not found. Please check your environment variables.');

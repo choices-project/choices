@@ -24,71 +24,38 @@ interface SiteMessage {
   expires_at?: string
 }
 
+interface SiteMessage {
+  id: string
+  title: string
+  message: string
+  type: 'info' | 'warning' | 'success' | 'error' | 'feedback'
+  priority: 'low' | 'medium' | 'high' | 'critical'
+  created_at: string
+  updated_at: string
+  expires_at?: string
+}
+
 interface SiteMessagesProps {
   className?: string
   maxMessages?: number
   showDismiss?: boolean
-  autoRefresh?: boolean
-  refreshInterval?: number
+  messages?: SiteMessage[] // Messages should be passed as props from server-side rendering
 }
 
 export default function SiteMessages({
   className = '',
   maxMessages = 3,
   showDismiss = true,
-  autoRefresh = false, // Disable auto-refresh by default to reduce memory usage
-  refreshInterval = 60000 // 60 seconds (increased from 30)
+  messages: propMessages = [] // Messages passed from server-side rendering
 }: SiteMessagesProps) {
-  const [messages, setMessages] = useState<SiteMessage[]>([])
-  const [loading, setLoading] = useState(true)
+  const [messages, setMessages] = useState<SiteMessage[]>(propMessages)
   const [dismissedMessages, setDismissedMessages] = useState<Set<string>>(new Set())
   const [expandedMessages, setExpandedMessages] = useState<Set<string>>(new Set())
-  const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    fetchMessages()
-    
-    // Event-driven refresh: listen for new message events
-    const handleNewMessage = () => {
-      fetchMessages()
-    }
-    
-    // Listen for custom events when new messages are posted
-    window.addEventListener('newSiteMessage', handleNewMessage)
-    
-    if (autoRefresh) {
-      const interval = setInterval(fetchMessages, refreshInterval)
-      return () => {
-        clearInterval(interval)
-        window.removeEventListener('newSiteMessage', handleNewMessage)
-      }
-    }
-    
-    return () => {
-      window.removeEventListener('newSiteMessage', handleNewMessage)
-    }
-  }, [autoRefresh, refreshInterval])
+  // Initialize messages from props (server-side rendering) - no useEffect needed
+  // Messages are already set in useState initial value
 
-  const fetchMessages = async () => {
-    try {
-      setLoading(true)
-      setError(null)
-      
-      const response = await fetch('/api/site-messages')
-      
-      if (response.ok) {
-        const data = await response.json()
-        setMessages(data.messages || [])
-      } else {
-        setError('Failed to load messages')
-      }
-    } catch (err) {
-      setError('Failed to load messages')
-      logger.error('Error fetching site messages:', err instanceof Error ? err : new Error(String(err)))
-    } finally {
-      setLoading(false)
-    }
-  }
+  // No longer needed - messages are passed as props from server-side rendering
 
   const handleDismiss = (messageId: string) => {
     setDismissedMessages(prev => new Set([...prev, messageId]))
@@ -152,13 +119,7 @@ export default function SiteMessages({
     })
     .slice(0, maxMessages)
 
-  if (loading && messages.length === 0) {
-    return null
-  }
-
-  if (error && messages.length === 0) {
-    return null
-  }
+  // No loading state needed - messages are passed as props
 
   if (activeMessages.length === 0) {
     return null

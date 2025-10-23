@@ -2,7 +2,7 @@
 
 import { Users, Ban, UserPlus } from 'lucide-react'
 
-import { T } from '@/lib/testing/testIds'
+import { T } from '@/tests/registry/testIds'
 
 export default function AdminUsersPage() {
   return (

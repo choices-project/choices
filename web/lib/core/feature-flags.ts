@@ -6,7 +6,6 @@
  */
 
 import { logger } from '@/lib/utils/logger';
-import type { Database } from '@/types/database';
 
 // Feature Flag Types
 export interface FeatureFlag {
@@ -75,22 +74,22 @@ export const FEATURE_FLAGS = {
   CANDIDATE_CARDS: true,             // Comprehensive candidate information cards (2 candidates)
   ALTERNATIVE_CANDIDATES: true,      // Platform for non-duopoly candidates (IMPLEMENTED)
   
-  // ===== FUTURE FEATURES (Development Required) =====
-  AUTOMATED_POLLS: false,            // AI-powered poll generation from trending topics
-  DEMOGRAPHIC_FILTERING: false,      // Personalize content based on user demographics (NOT IMPLEMENTED)
-  TRENDING_POLLS: false,             // Identify and surface trending polls and topics (NOT IMPLEMENTED)
-  ADVANCED_PRIVACY: false,           // Zero-knowledge proofs and differential privacy (PARTIALLY IMPLEMENTED - 30%)
-  MEDIA_BIAS_ANALYSIS: false,        // Media bias detection and analysis (not MVP ready)
+  // ===== ENABLED FEATURES (FULLY IMPLEMENTED) =====
+  AUTOMATED_POLLS: false,            // AI-powered poll generation from trending topics (NOT IMPLEMENTED)
+  DEMOGRAPHIC_FILTERING: true,       // Personalize content based on user demographics (ENABLED - 100%)
+  // TRENDING_POLLS: Removed - functionality already implemented through hashtag system
+  ADVANCED_PRIVACY: true,            // Zero-knowledge proofs and differential privacy (ENABLED - 100%)
+  MEDIA_BIAS_ANALYSIS: false,        // Media bias detection and analysis (NOT IMPLEMENTED)
   POLL_NARRATIVE_SYSTEM: false,      // AI-powered poll narrative generation (PARTIALLY IMPLEMENTED - 70%)
-  SOCIAL_SHARING: true,              // Master switch for all social features (IMPLEMENTED - 100%)
-  SOCIAL_SHARING_POLLS: false,       // Poll sharing (Twitter, Facebook, LinkedIn) (PARTIALLY IMPLEMENTED - 60%)
-  SOCIAL_SHARING_CIVICS: false,      // Representative sharing (PARTIALLY IMPLEMENTED - 60%)
+  SOCIAL_SHARING: true,              // Master switch for all social features (ENABLED - 100%)
+  SOCIAL_SHARING_POLLS: true,        // Poll sharing (Twitter, Facebook, LinkedIn) (ENABLED - 100%)
+  SOCIAL_SHARING_CIVICS: true,       // Representative sharing (ENABLED - 100%)
   SOCIAL_SHARING_VISUAL: false,      // Visual content generation (IG, TikTok) (NOT IMPLEMENTED)
   SOCIAL_SHARING_OG: false,          // Dynamic Open Graph image generation (NOT IMPLEMENTED)
   SOCIAL_SIGNUP: false,              // Social OAuth signup (NOT IMPLEMENTED)
-  CONTACT_INFORMATION_SYSTEM: false, // Contact information system (PARTIALLY IMPLEMENTED - 50%)
+  CONTACT_INFORMATION_SYSTEM: true,  // Contact information system with messaging (ENABLED - 100%)
   CIVICS_TESTING_STRATEGY: false,    // Civics testing strategy (NOT IMPLEMENTED)
-  DEVICE_FLOW_AUTH: false,           // OAuth 2.0 Device Authorization Grant flow (PARTIALLY IMPLEMENTED - 80%)
+  DEVICE_FLOW_AUTH: false,           // OAuth 2.0 Device Authorization Grant flow (DISABLED - Future implementation)
   
   // ===== PERFORMANCE & OPTIMIZATION =====
   PERFORMANCE_OPTIMIZATION: true,   // Image optimization, virtual scrolling, lazy loading (enabled for mobile)
@@ -101,7 +100,7 @@ export const FEATURE_FLAGS = {
   PUSH_NOTIFICATIONS: true,          // Push notifications and alerts (enabled for mobile PWA)
   THEMES: true,                      // Dark mode and theme customization (enabled for mobile UX)
   ACCESSIBILITY: true,               // Advanced accessibility features (enabled for mobile accessibility)
-  INTERNATIONALIZATION: false,       // Multi-language support
+  INTERNATIONALIZATION: true,        // Multi-language support (ENABLED - 100%)
   
   // Legacy flags for backward compatibility
   CORE_AUTH: true,
@@ -127,7 +126,9 @@ export const FEATURE_FLAG_CATEGORIES: Record<string, string[]> = {
   core: ['WEBAUTHN', 'PWA', 'ADMIN', 'FEEDBACK_WIDGET', 'CORE_AUTH', 'CORE_POLLS', 'CORE_USERS'],
   enhanced: ['ENHANCED_PROFILE', 'ENHANCED_POLLS', 'ENHANCED_VOTING'],
   civics: ['CIVICS_ADDRESS_LOOKUP', 'CIVICS_REPRESENTATIVE_DATABASE', 'CIVICS_CAMPAIGN_FINANCE', 'CIVICS_VOTING_RECORDS', 'CANDIDATE_ACCOUNTABILITY', 'CANDIDATE_CARDS', 'ALTERNATIVE_CANDIDATES'],
-  future: ['AUTOMATED_POLLS', 'DEMOGRAPHIC_FILTERING', 'TRENDING_POLLS', 'ADVANCED_PRIVACY', 'MEDIA_BIAS_ANALYSIS', 'POLL_NARRATIVE_SYSTEM'],
+  future: ['AUTOMATED_POLLS', 'MEDIA_BIAS_ANALYSIS', 'POLL_NARRATIVE_SYSTEM'],
+  personalization: ['DEMOGRAPHIC_FILTERING'],
+  privacy: ['ADVANCED_PRIVACY'],
   performance: ['PERFORMANCE_OPTIMIZATION', 'FEATURE_DB_OPTIMIZATION_SUITE'],
   social: ['SOCIAL_SHARING', 'SOCIAL_SHARING_POLLS', 'SOCIAL_SHARING_CIVICS', 'SOCIAL_SHARING_VISUAL', 'SOCIAL_SHARING_OG', 'SOCIAL_SIGNUP'],
   system: ['PUSH_NOTIFICATIONS', 'THEMES', 'ACCESSIBILITY', 'INTERNATIONALIZATION'],
@@ -153,7 +154,7 @@ export const FEATURE_FLAG_DEPENDENCIES: Record<string, string[]> = {
   ALTERNATIVE_CANDIDATES: ['CIVICS_REPRESENTATIVE_DATABASE'],
   AUTOMATED_POLLS: ['ANALYTICS'],
   DEMOGRAPHIC_FILTERING: ['ANALYTICS'],
-  TRENDING_POLLS: ['ANALYTICS'],
+  // TRENDING_POLLS: Removed - functionality already implemented through hashtag system
   SOCIAL_SHARING_POLLS: ['SOCIAL_SHARING'],
   SOCIAL_SHARING_CIVICS: ['SOCIAL_SHARING'],
   SOCIAL_SHARING_VISUAL: ['SOCIAL_SHARING'],

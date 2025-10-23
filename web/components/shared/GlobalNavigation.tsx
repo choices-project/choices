@@ -17,12 +17,15 @@ import { useState } from 'react'
 
 import { Button } from '@/components/ui/button'
 import { useUser, useUserActions } from '@/lib/stores'
+import { useI18n } from '@/hooks/useI18n'
+import LanguageSelector from '@/components/shared/LanguageSelector'
 
 export default function GlobalNavigation() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const pathname = usePathname()
   const user = useUser();
   const { signOut } = useUserActions();
+  const { t } = useI18n();
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen)
@@ -46,9 +49,9 @@ export default function GlobalNavigation() {
   }
 
   const navigationItems = [
-    { href: '/feed', label: 'Feed', icon: Home },
-    { href: '/polls', label: 'Polls', icon: Vote },
-    { href: '/dashboard', label: 'Dashboard', icon: BarChart3 },
+    { href: '/feed', label: t('navigation.home'), icon: Home },
+    { href: '/polls', label: t('navigation.polls'), icon: Vote },
+    { href: '/dashboard', label: t('navigation.dashboard'), icon: BarChart3 },
   ]
 
   return (
@@ -87,6 +90,11 @@ export default function GlobalNavigation() {
 
           {/* Desktop Auth Section */}
           <div className="hidden md:flex md:items-center md:space-x-4">
+            {/* Language Selector */}
+            <div data-testid="language-selector">
+              <LanguageSelector />
+            </div>
+            
             {user ? (
               <div className="flex items-center space-x-4">
                 <Link
@@ -98,7 +106,7 @@ export default function GlobalNavigation() {
                   }`}
                 >
                   <User className="h-4 w-4" />
-                  <span>Profile</span>
+                  <span>{t('navigation.profile')}</span>
                 </Link>
                 <Link
                   href="/account/privacy"
@@ -109,7 +117,7 @@ export default function GlobalNavigation() {
                   }`}
                 >
                   <Settings className="h-4 w-4" />
-                  <span>Privacy</span>
+                  <span>{t('navigation.settings')}</span>
                 </Link>
                 <Button
                   variant="outline"
@@ -118,16 +126,16 @@ export default function GlobalNavigation() {
                   className="flex items-center space-x-1"
                 >
                   <LogOut className="h-4 w-4" />
-                  <span>Logout</span>
+                  <span>{t('navigation.logout')}</span>
                 </Button>
               </div>
             ) : (
               <div className="flex items-center space-x-4">
                 <Button asChild variant="outline" size="sm">
-                  <Link href="/login">Sign In</Link>
+                  <Link href="/login">{t('navigation.login')}</Link>
                 </Button>
                 <Button asChild size="sm">
-                  <Link href="/register">Get Started</Link>
+                  <Link href="/register">{t('navigation.register')}</Link>
                 </Button>
               </div>
             )}

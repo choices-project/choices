@@ -404,13 +404,14 @@ const FeedItem = memo(({
               <button
                 onClick={handleShare}
                 disabled={isLoading}
+                data-testid="share-button"
                 className={`flex items-center space-x-2 text-gray-500 hover:text-green-500 transition-colors ${
                   isLoading ? 'opacity-50 cursor-not-allowed' : ''
                 }`}
                 aria-label={`Share ${item.title}`}
               >
                 <ShareIcon className="w-5 h-5" />
-                <span className="text-sm font-medium">
+                <span className="text-sm font-medium" data-testid="share-count">
                   {item.engagementMetrics?.shares ?? 0}
                 </span>
               </button>

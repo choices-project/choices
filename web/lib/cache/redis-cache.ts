@@ -9,7 +9,7 @@
  * Status: ✅ ACTIVE
  */
 
-import { getRedisClient, RedisClient } from './redis-client';
+import { getRedisClient, type RedisClient } from './redis-client';
 
 interface CacheConfig {
   defaultTTL: number; // seconds

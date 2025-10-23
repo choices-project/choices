@@ -17,34 +17,20 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import {
-  Shield,
   Users,
   BarChart3,
   MessageSquare,
   Activity,
-  Settings,
   Zap,
-  TrendingUp,
   AlertTriangle,
   CheckCircle,
   Clock,
   Plus,
   Edit,
   Trash2,
-  Eye,
-  EyeOff,
   RefreshCw,
-  Download,
-  Upload,
-  Bell,
-  Globe,
   Database,
-  Server,
-  Cpu,
-  HardDrive,
-  Wifi,
-  Lock,
-  Unlock
+  Server
 } from 'lucide-react';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';

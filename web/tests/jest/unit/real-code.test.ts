@@ -133,7 +133,7 @@ describe('Real Error Handling', () => {
         if (!data.password) throw new Error('Password is required');
         return { success: true, data };
       } catch (error) {
-        return { success: false, error: error.message };
+        return { success: false, error: (error as Error).message };
       }
     };
 

@@ -418,11 +418,9 @@ export class InterestBasedPollFeed {
 
   // Calculate interest matches for analytics
   private calculateInterestMatches(polls: PollRecommendation[], userTags: string[]): InterestMatch[] {
-    // Trending analytics implementation
-    if (FEATURE_FLAGS.TRENDING_POLLS) {
-      logger.debug('Trending analytics enabled', { userTags });
-      // Trending analytics are calculated through interest match counting
-    }
+    // Trending analytics implementation (always enabled through hashtag system)
+    logger.debug('Trending analytics enabled', { userTags });
+    // Trending analytics are calculated through interest match counting
     
     const interestCounts: { [key: string]: number } = {};
     

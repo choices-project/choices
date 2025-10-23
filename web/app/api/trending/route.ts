@@ -14,7 +14,6 @@
  */
 
 import { type NextRequest, NextResponse } from 'next/server';
-import type { Database } from '@/types/database';
 
 import { trendingHashtagsTracker } from '@/features/feeds/lib/TrendingHashtags';
 import { logger } from '@/lib/utils/logger';
@@ -266,7 +265,7 @@ async function getTrendingTopics(limit: number) {
           ...poll,
           participation_rate: poll.participation || 0,
           total_votes: poll.total_votes || 0
-        })) as any[];
+        }));
       }
     } catch (pollsError) {
       devLog('Error fetching polls:', { error: pollsError });

@@ -1,7 +1,7 @@
 'use client';
 import * as React from 'react';
 
-import { T } from '@/lib/testing/testIds';
+import { T } from '@/tests/registry/testIds';
 
 export function PasskeyControls() {
   const [mode, setMode] = React.useState<'idle'|'register'|'login'|'viewing'|'crossDevice'|'biometric'>('idle');

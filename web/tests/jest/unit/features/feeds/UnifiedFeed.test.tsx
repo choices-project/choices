@@ -42,7 +42,7 @@ const mockStores = {
   userStore: { user: { id: 'test-user' } } as any,
   notificationStore: { addNotification: jest.fn() } as any,
 };
-import { T } from '@/lib/testing/testIds';
+import { T } from '@/tests/registry/testIds';
 import type { FeedItemData } from '@/features/feeds/types';
 
 // Mock the aggregated stores module used by UnifiedFeed

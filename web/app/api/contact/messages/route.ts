@@ -1,0 +1,447 @@
+/**
+ * Contact Messages API Endpoint
+ * 
+ * Handles CRUD operations for contact messages between users and representatives.
+ * Supports real-time messaging, message status updates, and delivery tracking.
+ * 
+ * Created: January 23, 2025
+ * Status: ✅ IMPLEMENTATION READY
+ */
+
+import { type NextRequest, NextResponse } from 'next/server';
+import { getSupabaseServerClient } from '@/utils/supabase/server';
+import { logger } from '@/lib/utils/logger';
+import { rateLimiters } from '@/lib/security/rate-limit';
+
+export const dynamic = 'force-dynamic';
+
+// ============================================================================
+// TYPES
+// ============================================================================
+
+interface CreateMessageRequest {
+  threadId?: string;
+  representativeId: string;
+  subject: string;
+  content: string;
+  priority?: 'low' | 'normal' | 'high' | 'urgent';
+  messageType?: 'text' | 'email' | 'attachment';
+  attachments?: Array<{
+    name: string;
+    size: number;
+    type: string;
+    url?: string;
+  }>;
+}
+
+interface MessageResponse {
+  id: string;
+  threadId: string;
+  senderId: string;
+  recipientId: string;
+  content: string;
+  subject: string;
+  status: string;
+  priority: string;
+  createdAt: string;
+  attachments: any[];
+  metadata: any;
+}
+
+// ============================================================================
+// POST - Create New Message
+// ============================================================================
+
+export async function POST(request: NextRequest) {
+  const startTime = Date.now();
+  
+  try {
+    // Rate limiting: 10 messages per minute per user
+    const rateLimitResult = await rateLimiters.contact.check(request);
+    if (!rateLimitResult.allowed) {
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: 'Too many messages. Please wait before sending another message.',
+          retryAfter: rateLimitResult.retryAfter
+        },
+        { status: 429 }
+      );
+    }
+
+    // Get Supabase client
+    const supabase = await getSupabaseServerClient();
+    if (!supabase) {
+      logger.error('Supabase client not available');
+      return NextResponse.json(
+        { success: false, error: 'Database connection not available' },
+        { status: 500 }
+      );
+    }
+
+    // Authentication
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      logger.warn('Unauthenticated message creation attempt');
+      return NextResponse.json(
+        { success: false, error: 'Authentication required' },
+        { status: 401 }
+      );
+    }
+
+    // Parse request body
+    const body: CreateMessageRequest = await request.json();
+    const {
+      threadId,
+      representativeId,
+      subject,
+      content,
+      priority = 'normal',
+      messageType = 'text',
+      attachments = []
+    } = body;
+
+    // Validate required fields
+    if (!representativeId || !subject || !content) {
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: 'Representative ID, subject, and content are required' 
+        },
+        { status: 400 }
+      );
+    }
+
+    // Validate content length
+    if (content.length > 10000) {
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: 'Message content is too long (max 10,000 characters)' 
+        },
+        { status: 400 }
+      );
+    }
+
+    // Check if representative exists (representativeId is database primary key)
+    const { data: representative, error: repError } = await supabase
+      .from('representatives_core')
+      .select('id, name, office')
+      .eq('id', parseInt(representativeId))
+      .single();
+
+    if (repError || !representative) {
+      logger.warn('Invalid representative ID', { representativeId, error: repError });
+      return NextResponse.json(
+        { success: false, error: 'Representative not found' },
+        { status: 404 }
+      );
+    }
+
+    let finalThreadId = threadId;
+
+    // Create new thread if not provided
+    if (!threadId) {
+      const { data: newThread, error: threadError } = await supabase
+        .from('contact_threads')
+        .insert({
+          user_id: user.id,
+          representative_id: parseInt(representativeId),
+          subject,
+          priority,
+          status: 'active'
+        })
+        .select('id')
+        .single();
+
+      if (threadError || !newThread) {
+        logger.error('Failed to create thread', new Error(threadError?.message || 'Unknown error'), { error: threadError });
+        return NextResponse.json(
+          { success: false, error: 'Failed to create message thread' },
+          { status: 500 }
+        );
+      }
+
+      finalThreadId = newThread.id;
+    } else {
+      // Verify thread belongs to user
+      const { data: existingThread, error: threadError } = await supabase
+        .from('contact_threads')
+        .select('id, user_id, status')
+        .eq('id', threadId)
+        .eq('user_id', user.id)
+        .single();
+
+      if (threadError || !existingThread) {
+        logger.warn('Invalid thread access attempt', { threadId, userId: user.id });
+        return NextResponse.json(
+          { success: false, error: 'Thread not found or access denied' },
+          { status: 404 }
+        );
+      }
+
+      // Check if thread is closed
+      if (existingThread.status === 'closed') {
+        return NextResponse.json(
+          { success: false, error: 'Cannot send message to closed thread' },
+          { status: 400 }
+        );
+      }
+    }
+
+    // Create message
+    const { data: message, error: messageError } = await supabase
+      .from('contact_messages')
+      .insert({
+        thread_id: finalThreadId!,
+        sender_id: user.id,
+          recipient_id: parseInt(representativeId),
+        content,
+        subject,
+        priority,
+        message_type: messageType,
+        attachments,
+        status: 'sent',
+        metadata: {
+          user_agent: request.headers.get('user-agent'),
+          ip_address: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip'),
+          created_via: 'api'
+        }
+      })
+      .select(`
+        id,
+        thread_id,
+        sender_id,
+        recipient_id,
+        content,
+        subject,
+        status,
+        priority,
+        message_type,
+        attachments,
+        created_at,
+        metadata
+      `)
+      .single();
+
+    if (messageError || !message) {
+      logger.error('Failed to create message', new Error(messageError?.message || 'Unknown error'), { error: messageError });
+      return NextResponse.json(
+        { success: false, error: 'Failed to send message' },
+        { status: 500 }
+      );
+    }
+
+    // Log delivery attempt
+    await supabase
+      .from('message_delivery_logs')
+      .insert({
+        message_id: message.id,
+        delivery_method: 'web',
+        delivery_status: 'sent',
+        delivery_attempts: 1,
+        delivered_at: new Date().toISOString()
+      });
+
+    // Send notification to representative (if they have notifications enabled)
+    await sendRepresentativeNotification(supabase, message, representative);
+
+    const responseTime = Date.now() - startTime;
+    logger.info('Message created successfully', {
+      messageId: message.id,
+      threadId: finalThreadId,
+      userId: user.id,
+      representativeId,
+      responseTime
+    });
+
+    return NextResponse.json({
+      success: true,
+      message: {
+        id: message.id,
+        threadId: message.thread_id,
+        senderId: message.sender_id,
+        recipientId: message.recipient_id,
+        content: message.content,
+        subject: message.subject,
+        status: message.status,
+        priority: message.priority,
+        messageType: message.message_type,
+        attachments: message.attachments,
+        createdAt: message.created_at,
+        metadata: message.metadata
+      },
+      threadId: finalThreadId,
+      responseTime
+    });
+
+  } catch (error) {
+    const err = error instanceof Error ? error : new Error(String(error));
+    logger.error('Error creating message:', new Error(err?.message || 'Unknown error'), { error: err });
+    return NextResponse.json(
+      { success: false, error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
+
+// ============================================================================
+// GET - Retrieve User Messages
+// ============================================================================
+
+export async function GET(request: NextRequest) {
+  try {
+    // Get Supabase client
+    const supabase = await getSupabaseServerClient();
+    if (!supabase) {
+      return NextResponse.json(
+        { success: false, error: 'Database connection not available' },
+        { status: 500 }
+      );
+    }
+
+    // Authentication
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      return NextResponse.json(
+        { success: false, error: 'Authentication required' },
+        { status: 401 }
+      );
+    }
+
+    // Parse query parameters
+    const { searchParams } = new URL(request.url);
+    const threadId = searchParams.get('threadId');
+    const status = searchParams.get('status');
+    const priority = searchParams.get('priority');
+    const limit = parseInt(searchParams.get('limit') || '50');
+    const offset = parseInt(searchParams.get('offset') || '0');
+
+    // Build query
+    let query = supabase
+      .from('contact_messages')
+      .select(`
+        id,
+        thread_id,
+        sender_id,
+        recipient_id,
+        content,
+        subject,
+        status,
+        priority,
+        message_type,
+        attachments,
+        created_at,
+        read_at,
+        replied_at,
+        metadata,
+        contact_threads!inner(
+          id,
+          subject,
+          status,
+          priority,
+          representatives_core!inner(
+            id,
+            name,
+            office,
+            party
+          )
+        )
+      `)
+      .or(`sender_id.eq.${user.id},recipient_id.in.(select id from representatives_core where user_id = ${user.id})`)
+      .order('created_at', { ascending: false })
+      .range(offset, offset + limit - 1);
+
+    // Apply filters
+    if (threadId) {
+      query = query.eq('thread_id', threadId);
+    }
+    if (status) {
+      query = query.eq('status', status);
+    }
+    if (priority) {
+      query = query.eq('priority', priority);
+    }
+
+    const { data: messages, error: messagesError } = await query;
+
+    if (messagesError) {
+      logger.error('Failed to fetch messages', new Error(messagesError?.message || 'Unknown error'), { error: messagesError });
+      return NextResponse.json(
+        { success: false, error: 'Failed to fetch messages' },
+        { status: 500 }
+      );
+    }
+
+    // Get total count for pagination
+    const { count: totalCount } = await supabase
+      .from('contact_messages')
+      .select('*', { count: 'exact', head: true })
+      .or(`sender_id.eq.${user.id},recipient_id.in.(select id from representatives_core where user_id = ${user.id})`);
+
+    return NextResponse.json({
+      success: true,
+      messages: messages || [],
+      pagination: {
+        total: totalCount || 0,
+        limit,
+        offset,
+        hasMore: (totalCount || 0) > offset + limit
+      }
+    });
+
+  } catch (error) {
+    const err = error instanceof Error ? error : new Error(String(error));
+    logger.error('Error fetching messages:', new Error(err?.message || 'Unknown error'), { error: err });
+    return NextResponse.json(
+      { success: false, error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
+
+// ============================================================================
+// HELPER FUNCTIONS
+// ============================================================================
+
+async function sendRepresentativeNotification(
+  supabase: any,
+  message: any,
+  representative: any
+) {
+  try {
+    // Check if representative has notifications enabled
+    const { data: notificationPrefs } = await supabase
+      .from('user_notification_preferences')
+      .select('contact_messages')
+      .eq('user_id', representative.user_id)
+      .single();
+
+    if (notificationPrefs?.contact_messages !== false) {
+      // Create notification
+      await supabase
+        .from('admin_notifications')
+        .insert({
+          type: 'new_message',
+          title: 'New Message from Constituent',
+          message: `You have received a new message from a constituent regarding: ${message.subject}`,
+          data: {
+            messageId: message.id,
+            threadId: message.thread_id,
+            senderId: message.sender_id,
+            priority: message.priority
+          },
+          user_id: representative.user_id,
+          status: 'unread'
+        });
+
+      logger.info('Representative notification sent', {
+        representativeId: representative.id,
+        messageId: message.id
+      });
+    }
+  } catch (error) {
+    logger.error('Failed to send representative notification', new Error((error as Error)?.message || 'Unknown error'), { error });
+    // Don't fail the message creation if notification fails
+  }
+}

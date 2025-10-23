@@ -112,7 +112,7 @@ export default function ProfileEdit({
       username: profile.username || '',
       primaryconcerns: profile.primary_concerns || [],
       communityfocus: profile.community_focus || [],
-      participationstyle: (profile.participation_style || 'observer') as 'observer' | 'leader' | 'participant' | 'organizer',
+      participationstyle: (profile.participation_style || 'observer'),
       privacysettings: profile.privacy_settings || {
         profile_visibility: 'public',
         show_email: false,
@@ -218,7 +218,7 @@ export default function ProfileEdit({
       username: profile.username || '',
       primaryconcerns: profile.primary_concerns || [],
       communityfocus: profile.community_focus || [],
-      participationstyle: (profile.participation_style || 'observer') as 'observer' | 'leader' | 'participant' | 'organizer',
+      participationstyle: (profile.participation_style || 'observer'),
       privacysettings: profile.privacy_settings || {
         profile_visibility: 'public',
         show_email: false,

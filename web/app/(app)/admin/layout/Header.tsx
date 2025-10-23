@@ -60,7 +60,7 @@ export const Header: React.FC = () => {
               <div className="p-4">
                 <h3 className="text-sm font-medium text-gray-900 mb-3">Notifications</h3>
                 <div className="space-y-2 max-h-64 overflow-y-auto">
-                  {notifications.slice(0, 5).map((notification: any) => (
+                  {notifications.slice(0, 5).map((notification: { id: string; title: string; message: string; read: boolean; timestamp: string }) => (
                     <div
                       key={notification.id}
                       className={`p-3 rounded-md cursor-pointer transition-colors ${

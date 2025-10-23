@@ -368,4 +368,4 @@ export function usePerformanceMonitor() {
 
 // Import React for the hook
 import React from 'react';
-import type { Database } from '@/types/database';
+

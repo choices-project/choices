@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 
 // Dynamic imports to avoid build-time decorator issues
 // import { beginRegister, beginAuthenticate, isWebAuthnSupported } from '@/features/auth/lib/webauthn/client';
-import { T } from '@/lib/testing/testIds';
+import { T } from '@/tests/registry/testIds';
 import { logger } from '@/lib/utils/logger';
 
 import WebAuthnPrompt from './WebAuthnPrompt';
@@ -27,23 +27,17 @@ export function PasskeyButton({
   onError,
   className = ''
 }: PasskeyButtonProps) {
+  // ALL HOOKS MUST BE CALLED IN THE SAME ORDER EVERY TIME
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
   const [showPrompt, setShowPrompt] = useState(false);
+  const [webAuthnSupported, setWebAuthnSupported] = useState<boolean | null>(null);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  // Don't render during SSR
-  if (!mounted) {
-    return null;
-  }
-
-  // Check if WebAuthn is supported (dynamic import)
-  const [webAuthnSupported, setWebAuthnSupported] = useState<boolean | null>(null);
-  
   useEffect(() => {
     const checkSupport = async () => {
       try {
@@ -56,6 +50,11 @@ export function PasskeyButton({
     };
     checkSupport();
   }, []);
+
+  // Don't render during SSR
+  if (!mounted) {
+    return null;
+  }
 
   // Don't render until we know WebAuthn support status
   if (webAuthnSupported === null) {

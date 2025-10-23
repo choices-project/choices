@@ -16,7 +16,7 @@ describe('Test Admin Client Approach', () => {
     
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SECRET_KEY!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
       {
         auth: {
           autoRefreshToken: false,
@@ -27,7 +27,7 @@ describe('Test Admin Client Approach', () => {
     
     console.log('🔍 Testing database access using admin client approach...');
     console.log('Supabase URL:', process.env.NEXT_PUBLIC_SUPABASE_URL);
-    console.log('Supabase Key (first 10 chars):', process.env.SUPABASE_SECRET_KEY?.substring(0, 10));
+    console.log('Supabase Key (first 10 chars):', process.env.SUPABASE_SERVICE_ROLE_KEY?.substring(0, 10));
     
     // Test 1: Query polls table
     console.log('🔍 Test 1: Query polls table');

@@ -16,7 +16,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { BrowserRouter } from 'react-router-dom';
 import UnifiedFeed from '@/features/feeds/components/UnifiedFeed';
-import { T } from '@/lib/testing/testIds';
+import { T } from '@/tests/registry/testIds';
 
 // Mock Next.js router
 jest.mock('next/navigation', () => ({
@@ -377,7 +377,7 @@ describe('Dashboard Accessibility Tests', () => {
 
       // Test focus management on route changes
       const navigationButtons = screen.getAllByRole('button');
-      if (navigationButtons.length > 0) {
+      if (navigationButtons.length > 0 && navigationButtons[0]) {
         navigationButtons[0].focus();
         expect(document.activeElement).toBe(navigationButtons[0]);
         expect(navigationButtons[0]).toHaveAttribute('data-testid', T.accessibility.button);

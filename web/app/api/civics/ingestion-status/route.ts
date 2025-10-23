@@ -17,7 +17,7 @@ dotenv.config({ path: '.env.local' });
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SECRET_KEY!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
   { auth: { persistSession: false } }
 );
 
@@ -92,7 +92,7 @@ export async function GET(_request: NextRequest) {
       googleCivic: !!process.env.GOOGLE_CIVIC_API_KEY,
       congressGov: !!process.env.CONGRESS_GOV_API_KEY,
       fec: !!process.env.FEC_API_KEY,
-      supabase: !!process.env.SUPABASE_SECRET_KEY
+      supabase: !!process.env.SUPABASE_SERVICE_ROLE_KEY
     };
     
           const missingKeys = Object.entries(apiKeysStatus)

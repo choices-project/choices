@@ -61,6 +61,13 @@ type AppStore = {
     enableCrashReporting: boolean;
   };
   
+  // I18n State
+  i18n: {
+    currentLanguage: string;
+    isLoading: boolean;
+    error: string | null;
+  };
+  
   // Navigation State
   currentRoute: string;
   previousRoute: string;
@@ -111,6 +118,11 @@ type AppStore = {
   // Actions - Settings
   updateSettings: (settings: Partial<AppStore['settings']>) => void;
   resetSettings: () => void;
+  
+  // Actions - I18n
+  setLanguage: (language: string) => void;
+  setI18nLoading: (loading: boolean) => void;
+  setI18nError: (error: string | null) => void;
   
   // Actions - Navigation
   setCurrentRoute: (route: string) => void;
@@ -166,6 +178,11 @@ export const useAppStore = create<AppStore>()(
         features: {},
         featureFlags: [],
         settings: defaultSettings,
+        i18n: {
+          currentLanguage: 'en',
+          isLoading: false,
+          error: null
+        },
         currentRoute: '/',
         previousRoute: '',
         breadcrumbs: [],
@@ -345,6 +362,21 @@ export const useAppStore = create<AppStore>()(
       resetSettings: () => set((state) => {
         state.settings = { ...defaultSettings };
         logger.info('App settings reset to defaults');
+      }),
+      
+      // I18n actions
+      setLanguage: (language) => set((state) => {
+        state.i18n.currentLanguage = language;
+        state.settings.language = language;
+        logger.info('Language changed', { language });
+      }),
+      
+      setI18nLoading: (loading) => set((state) => {
+        state.i18n.isLoading = loading;
+      }),
+      
+      setI18nError: (error) => set((state) => {
+        state.i18n.error = error;
       }),
       
       // Navigation actions

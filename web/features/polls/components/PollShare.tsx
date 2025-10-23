@@ -48,7 +48,7 @@ export default function PollShare({ pollId, poll }: PollShareProps) {
     void initUrl();
   }, [pollId]);
   const pollTitle = poll?.title ?? 'Check out this poll!'
-  const socialSharingEnabled = isFeatureEnabled('SOCIAL_SHARING')
+  const socialSharingEnabled = isFeatureEnabled('SOCIAL_SHARING_POLLS')
 
   const handleCopyLink = async () => {
     try {

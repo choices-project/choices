@@ -9,6 +9,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import { logger } from '@/lib/utils/logger';
 import { IRVCalculator } from '@/lib/vote/irv-calculator';
 import type { UserRanking } from '@/lib/vote/irv-calculator';
 import { goldenTestCases, runGoldenTestCase, runAllGoldenTests } from './golden-cases';

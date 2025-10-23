@@ -6,7 +6,6 @@
  */
 
 import type { GoogleCivicErrorDetails, RetryConfig, ErrorContext } from '@/lib/types/google-civic';
-import type { Database } from '@/types/database';
 import { logger } from '@/lib/utils/logger';
 
 import { GoogleCivicApiError } from './client';

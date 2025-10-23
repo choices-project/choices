@@ -13,7 +13,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import React from 'react';
 import BalancedOnboardingFlow from '@/features/onboarding/components/BalancedOnboardingFlow';
-import { T } from '@/lib/testing/testIds';
+import { T } from '@/tests/registry/testIds';
 
 // Use real functionality - minimal mocking only for test environment setup
 

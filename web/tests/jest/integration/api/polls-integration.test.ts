@@ -81,7 +81,7 @@ describe('Integration Tests - API + Database', () => {
       // Use service role key for database operations
       const { createClient } = await import('@supabase/supabase-js');
       const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
-      const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY;
+      const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
       
       if (!supabaseUrl || !supabaseKey) {
         throw new Error('Supabase service role credentials not found');

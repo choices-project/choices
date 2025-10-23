@@ -13,7 +13,7 @@ describe('Query Existing Data', () => {
   it('should query existing polls data', async () => {
     const { createClient } = await import('@supabase/supabase-js');
     const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY;
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
     
     if (!supabaseUrl || !serviceKey) {
       throw new Error('Supabase credentials not found');

@@ -29,7 +29,7 @@ const mockStores = {
   notificationStore: { addNotification: jest.fn() } as any,
 };
 const hashtagActions = { getTrendingHashtags: jest.fn() };
-import { T } from '@/lib/testing/testIds';
+import { T } from '@/tests/registry/testIds';
 
 // Mock the aggregated stores module used by UnifiedFeed
 jest.mock('@/lib/stores', () => {

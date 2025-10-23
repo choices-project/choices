@@ -10,18 +10,21 @@ import { defineConfig, devices } from '@playwright/test';
  */
 
 export default defineConfig({
-  testDir: './tests/playwright/e2e',
+  testDir: '/Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e',
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
   reporter: [
     ['list'],
-    ['json', { outputFile: 'test-results/performance-results.json' }],
-    ['junit', { outputFile: 'test-results/performance-results.xml' }]
+    ['json', { outputFile: '/Users/alaughingkitsune/src/Choices/web/test-results/performance-results.json' }],
+    ['junit', { outputFile: '/Users/alaughingkitsune/src/Choices/web/test-results/performance-results.xml' }]
   ],
+  
+  // Environment variables for tests
+  
   use: {
-    baseURL: 'http://localhost:3002',
+    baseURL: 'http://localhost:3000',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
@@ -94,7 +97,7 @@ export default defineConfig({
 
   webServer: {
     command: 'npm run dev',
-    url: 'http://localhost:3002',
+    url: 'http://localhost:3000',
     reuseExistingServer: !process.env.CI,
     timeout: 120 * 1000,
   },
@@ -105,6 +108,6 @@ export default defineConfig({
   },
 
   // Global setup for performance testing
-  globalSetup: require.resolve('./tests/playwright/global-setup-performance.ts'),
-  globalTeardown: require.resolve('./tests/playwright/global-teardown-performance.ts'),
+  globalSetup: require.resolve('./global-setup-performance.ts'),
+  globalTeardown: require.resolve('./global-teardown-performance.ts'),
 });

@@ -18,9 +18,6 @@ export { default as PollCard } from './components/PollCard';
 /** Poll results component */
 export { default as PollResults } from './components/PollResults';
 
-/** Optimized poll results component */
-export { default as OptimizedPollResults } from './components/OptimizedPollResults';
-
 /** Private poll results component */
 export { default as PrivatePollResults } from './components/PrivatePollResults';
 
@@ -52,7 +49,7 @@ export {
   getOptimizedPollResults,
   calculatePollStatistics,
   generatePollInsights
-} from './lib/optimized-poll-service';
+} from './lib/poll-service';
 
 // ============================================================================
 // TYPE EXPORTS

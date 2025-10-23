@@ -9,7 +9,6 @@
  */
 
 import { logger } from '../utils/logger';
-import type { Database } from '@/types/database';
 
 import type { StoreMiddleware, StoreConfig, PersistOptions } from './types';
 

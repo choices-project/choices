@@ -71,10 +71,10 @@ describe('Real Business Logic - Poll System', () => {
     });
     
     expect(validPoll.success).toBe(true);
-    expect(validPoll.poll.title).toBe('What should we prioritize?');
-    expect(validPoll.poll.options).toHaveLength(3);
-    expect(validPoll.poll.votingMethod).toBe('single');
-    expect(validPoll.poll.category).toBe('politics');
+    expect(validPoll.poll?.title).toBe('What should we prioritize?');
+    expect(validPoll.poll?.options).toHaveLength(3);
+    expect(validPoll.poll?.votingMethod).toBe('single');
+    expect(validPoll.poll?.category).toBe('politics');
 
     // Test invalid poll - title too short
     const shortTitlePoll = createPoll({
@@ -191,8 +191,8 @@ describe('Real Business Logic - Poll System', () => {
       activePoll
     );
     expect(validVote.success).toBe(true);
-    expect(validVote.vote.pollId).toBe('poll-123');
-    expect(validVote.vote.optionId).toBe('opt-1');
+    expect(validVote.vote?.pollId).toBe('poll-123');
+    expect(validVote.vote?.optionId).toBe('opt-1');
 
     // Test inactive poll
     const inactivePoll = { ...activePoll, status: 'inactive' };
@@ -248,13 +248,13 @@ describe('Real Business Logic - Poll System', () => {
           // Multiple choice voting
           vote.optionIds.forEach((optionId: string) => {
             if (results.hasOwnProperty(optionId)) {
-              results[optionId]++;
+              results[optionId] = (results[optionId] || 0) + 1;
             }
           });
         } else if (vote.optionId) {
           // Single choice voting
           if (results.hasOwnProperty(vote.optionId)) {
-            results[vote.optionId]++;
+            results[vote.optionId] = (results[vote.optionId] || 0) + 1;
           }
         }
       });
@@ -264,14 +264,14 @@ describe('Real Business Logic - Poll System', () => {
       const percentages: Record<string, number> = {};
       
       Object.keys(results).forEach(optionId => {
-        percentages[optionId] = totalVotes > 0 ? (results[optionId] / totalVotes) * 100 : 0;
+        percentages[optionId] = totalVotes > 0 ? ((results[optionId] || 0) / totalVotes) * 100 : 0;
       });
       
       return {
         results,
         percentages,
         totalVotes,
-        winner: Object.keys(results).reduce((a, b) => results[a] > results[b] ? a : b),
+        winner: Object.keys(results).reduce((a, b) => (results[a] || 0) > (results[b] || 0) ? a : b),
       };
     };
 
@@ -349,8 +349,8 @@ describe('Real Business Logic - User System', () => {
     // Test valid authentication
     const validAuth = authenticateUser('test@example.com', 'password123');
     expect(validAuth.success).toBe(true);
-    expect(validAuth.user.email).toBe('test@example.com');
-    expect(validAuth.user.isActive).toBe(true);
+    expect(validAuth.user?.email).toBe('test@example.com');
+    expect(validAuth.user?.isActive).toBe(true);
 
     // Test invalid email format
     const invalidEmail = authenticateUser('invalid-email', 'password123');

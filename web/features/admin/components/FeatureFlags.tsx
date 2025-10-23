@@ -35,16 +35,33 @@ export default function FeatureFlags({ onFlagChange }: FeatureFlagsProps) {
     setFlags(allFlags);
   }, [featureFlags.flags, getAllFeatureFlags]);
 
-  const handleToggleFlag = (flagId: string) => {
+  const handleToggleFlag = async (flagId: string) => {
     setFeatureFlagLoading(true);
     setFeatureFlagError(null);
 
     try {
-      const success = toggleFeatureFlag(flagId);
-      if (success) {
-        onFlagChange?.(flagId, !featureFlags.flags[flagId]);
+      // Update via API endpoint
+      const response = await fetch('/api/feature-flags', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          flagId,
+          enabled: !featureFlags.flags[flagId]
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        // Update local store
+        const success = toggleFeatureFlag(flagId);
+        if (success) {
+          onFlagChange?.(flagId, !featureFlags.flags[flagId]);
+        }
       } else {
-        setFeatureFlagError(`Failed to toggle flag: ${flagId}`);
+        setFeatureFlagError(data.error || `Failed to toggle flag: ${flagId}`);
       }
     } catch (error) {
       setFeatureFlagError(`Error toggling flag: ${error instanceof Error ? error.message : String(error)}`);

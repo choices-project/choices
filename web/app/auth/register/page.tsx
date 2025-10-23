@@ -108,6 +108,7 @@ export default function RegisterPage() {
             {/* Password Registration Option - Secondary */}
             <button
               type="button"
+              data-testid="password-account-button"
               onClick={() => setRegistrationMethod('password')}
               className={`relative p-4 border-2 rounded-lg transition-all duration-200 ${
                 registrationMethod === 'password'
@@ -161,6 +162,10 @@ export default function RegisterPage() {
             <input name="username" data-testid="username" required className="input" />
           </div>
           <div>
+            <label className="block mb-1">Display Name</label>
+            <input name="displayName" data-testid="displayName" required className="input" />
+          </div>
+          <div>
             <label className="block mb-1">Email</label>
             <input name="email" type="email" data-testid="email" required className="input" />
           </div>
@@ -170,10 +175,10 @@ export default function RegisterPage() {
           </div>
           <div>
             <label className="block mb-1">Confirm password</label>
-            <input name="confirmPassword" type="password" data-testid="confirm-password" required className="input" />
+            <input name="confirmPassword" type="password" data-testid="confirmPassword" required className="input" />
           </div>
 
-          <button type="submit" data-testid="register-button" className="btn btn-primary">
+          <button type="submit" data-testid="register-submit" className="btn btn-primary">
             Create account
           </button>
 

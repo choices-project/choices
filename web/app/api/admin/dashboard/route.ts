@@ -14,7 +14,7 @@
  * Status: ✅ ACTIVE
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { type NextRequest, NextResponse } from 'next/server';
 import { getSupabaseServerClient } from '../../../../utils/supabase/server';
 import cache, { CacheKeys, CacheTTL } from '../../../../lib/cache/redis-cache';
 import queryOptimizer from '../../../../lib/database/query-optimizer';
@@ -158,21 +158,21 @@ export async function GET(request: NextRequest) {
         name: user.email?.split('@')[0] || 'Admin'
       },
       overview,
-      analytics: analytics ? analytics : {
-        user_growth: [],
-        poll_activity: [],
-        top_categories: []
+      analytics: {
+        user_growth: (analytics as any)?.user_growth || [],
+        poll_activity: (analytics as any)?.poll_activity || [],
+        top_categories: (analytics as any)?.top_categories || []
       },
-      system_health: systemHealth ? systemHealth : {
-        status: 'unknown',
-        database_latency_ms: 0,
-        uptime_percentage: 0,
-        last_health_check: new Date().toISOString()
+      system_health: {
+        status: (systemHealth as any)?.status || 'unknown',
+        database_latency_ms: (systemHealth as any)?.database_latency_ms || 0,
+        uptime_percentage: (systemHealth as any)?.uptime_percentage || 0,
+        last_health_check: (systemHealth as any)?.last_health_check || new Date().toISOString()
       },
-      recent_activity: recentActivity ? recentActivity : {
-        new_users: [],
-        recent_polls: [],
-        recent_votes: []
+      recent_activity: {
+        new_users: (recentActivity as any)?.new_users || [],
+        recent_polls: (recentActivity as any)?.recent_polls || [],
+        recent_votes: (recentActivity as any)?.recent_votes || []
       },
       generatedAt: new Date().toISOString()
     };
@@ -204,14 +204,13 @@ export async function GET(request: NextRequest) {
  * Load admin overview statistics with optimized queries
  */
 async function loadAdminOverview(supabase: any): Promise<AdminDashboardData['overview']> {
-  // TEMPORARY: Disable caching to debug TypeScript errors
-  // const cacheKey = 'admin:overview';
-  // 
-  // // Check cache first
-  // const cached = await cache.get(cacheKey);
-  // if (cached) {
-  //   return cached;
-  // }
+  const cacheKey = 'admin:overview';
+  
+  // Check cache first
+  const cached = await cache.get(cacheKey);
+  if (cached && typeof cached === 'object' && 'total_users' in cached && 'total_polls' in cached) {
+    return cached as AdminDashboardData['overview'];
+  }
 
   try {
     // Use query optimizer for maximum performance
@@ -263,8 +262,7 @@ async function loadAdminOverview(supabase: any): Promise<AdminDashboardData['ove
       engagement_rate: 0 // Would need calculation
     };
 
-    // TEMPORARY: Disable caching to debug TypeScript errors
-    // await cache.set(cacheKey, result, CacheTTL.ADMIN_DATA);
+    await cache.set(cacheKey, result, CacheTTL.ADMIN_DATA);
     return result;
 
   } catch (error) {
@@ -284,14 +282,13 @@ async function loadAdminOverview(supabase: any): Promise<AdminDashboardData['ove
  * Load admin analytics data
  */
 async function loadAdminAnalytics(supabase: any) {
-  // TEMPORARY: Disable caching to debug TypeScript errors
-  // const cacheKey = 'admin:analytics';
-  // 
-  // // Check cache first
-  // const cached = await cache.get(cacheKey);
-  // if (cached) {
-  //   return cached;
-  // }
+  const cacheKey = 'admin:analytics';
+  
+  // Check cache first
+  const cached = await cache.get(cacheKey);
+  if (cached) {
+    return cached;
+  }
 
   try {
     // Mock analytics data for now - would integrate with real analytics
@@ -323,8 +320,7 @@ async function loadAdminAnalytics(supabase: any) {
       ]
     };
 
-    // TEMPORARY: Disable caching to debug TypeScript errors
-    // await cache.set(cacheKey, result, CacheTTL.ADMIN_DATA);
+    await cache.set(cacheKey, result, CacheTTL.ADMIN_DATA);
     return result;
 
   } catch (error) {
@@ -341,14 +337,13 @@ async function loadAdminAnalytics(supabase: any) {
  * Load system health metrics
  */
 async function loadSystemHealth(supabase: any) {
-  // TEMPORARY: Disable caching to debug TypeScript errors
-  // const cacheKey = 'admin:system_health';
-  // 
-  // // Check cache first
-  // const cached = await cache.get(cacheKey);
-  // if (cached) {
-  //   return cached;
-  // }
+  const cacheKey = 'admin:system_health';
+  
+  // Check cache first
+  const cached = await cache.get(cacheKey);
+  if (cached) {
+    return cached;
+  }
 
   try {
     // Test database connectivity
@@ -382,14 +377,13 @@ async function loadSystemHealth(supabase: any) {
  * Load recent activity data
  */
 async function loadRecentActivity(supabase: any) {
-  // TEMPORARY: Disable caching to debug TypeScript errors
-  // const cacheKey = 'admin:recent_activity';
-  // 
-  // // Check cache first
-  // const cached = await cache.get(cacheKey);
-  // if (cached) {
-  //   return cached;
-  // }
+  const cacheKey = 'admin:recent_activity';
+  
+  // Check cache first
+  const cached = await cache.get(cacheKey);
+  if (cached) {
+    return cached;
+  }
 
   try {
     // Load recent data in parallel
@@ -441,8 +435,7 @@ async function loadRecentActivity(supabase: any) {
       recent_votes: recentVotesResult.data || []
     };
 
-    // TEMPORARY: Disable caching to debug TypeScript errors
-    // await cache.set(cacheKey, result, CacheTTL.ADMIN_DATA);
+    await cache.set(cacheKey, result, CacheTTL.ADMIN_DATA);
     return result;
 
   } catch (error) {

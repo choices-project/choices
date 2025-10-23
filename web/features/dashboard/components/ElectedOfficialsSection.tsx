@@ -27,11 +27,9 @@ import {
   Twitter, 
   Facebook,
   ChevronDown,
-  ChevronUp,
-  CheckCircle,
-  ExternalLink
+  ChevronUp
 } from 'lucide-react';
-import { T } from '@/lib/testing/testIds';
+import { T } from '@/tests/registry/testIds';
 
 interface ElectedOfficial {
   id: string;

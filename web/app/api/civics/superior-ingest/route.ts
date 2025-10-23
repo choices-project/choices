@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
     const { createClient } = await import('@supabase/supabase-js');
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SECRET_KEY!
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
     
     let query = supabase.from('representatives_core').select('*');

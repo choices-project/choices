@@ -3,7 +3,6 @@ import { NextResponse } from 'next/server';
 
 import { devLog, logger } from '@/lib/utils/logger';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
-import type { Database } from '@/types/database';
 
 export const dynamic = 'force-dynamic'
 

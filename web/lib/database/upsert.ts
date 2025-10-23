@@ -6,7 +6,6 @@
  */
 
 import { stripUndefinedDeep } from '@/lib/utils/clean'
-import type { Database } from '@/types/database';
 
 import { getSupabaseBrowserClient } from '../../utils/supabase/client'
 

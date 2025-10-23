@@ -23,7 +23,7 @@ jest.mock('@/lib/utils/logger', () => ({
 // Import V2 test setup
 import { getMS } from '../../setup';
 const mockSetup = getMS();
-const { when, client: mockSupabaseClient, getMetrics } = mockSetup;
+const { client: mockSupabaseClient, getMetrics } = mockSetup;
 
 // Mock the server-only module
 jest.mock('@/utils/supabase/server', () => ({

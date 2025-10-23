@@ -45,7 +45,7 @@ export const useAdminStore = create<AdminStore>()(
           core: ['WEBAUTHN', 'PWA', 'ADMIN', 'FEEDBACK_WIDGET'],
           enhanced: ['ENHANCED_PROFILE', 'ENHANCED_POLLS', 'ENHANCED_VOTING'],
           civics: ['CIVICS_ADDRESS_LOOKUP', 'CIVICS_REPRESENTATIVE_DATABASE', 'CIVICS_CAMPAIGN_FINANCE'],
-          future: ['AUTOMATED_POLLS', 'DEMOGRAPHIC_FILTERING', 'TRENDING_POLLS'],
+          future: ['AUTOMATED_POLLS', 'DEMOGRAPHIC_FILTERING'],
           performance: ['PERFORMANCE_OPTIMIZATION', 'FEATURE_DB_OPTIMIZATION_SUITE']
         },
         isLoading: false,

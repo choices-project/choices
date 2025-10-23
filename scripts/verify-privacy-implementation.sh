@@ -90,10 +90,10 @@ check_environment() {
         print_status "SUCCESS" "NEXT_PUBLIC_SUPABASE_ANON_KEY is set"
     fi
     
-    if [ -z "$SUPABASE_SECRET_KEY" ]; then
-        print_status "WARNING" "SUPABASE_SECRET_KEY not set"
+    if [ -z "$SUPABASE_SERVICE_ROLE_KEY" ]; then
+        print_status "WARNING" "SUPABASE_SERVICE_ROLE_KEY not set"
     else
-        print_status "SUCCESS" "SUPABASE_SECRET_KEY is set"
+        print_status "SUCCESS" "SUPABASE_SERVICE_ROLE_KEY is set"
     fi
 }
 

@@ -9,6 +9,7 @@
  */
 
 import { describe, it, expect } from '@jest/globals';
+import { logger } from '@/lib/utils/logger';
 import * as fs from 'fs';
 import * as glob from 'glob';
 
@@ -41,7 +42,7 @@ describe('Voting Error Prevention', () => {
     });
     
     if (problematicFiles.length > 0) {
-      logger.info('Voting files with missing input validation:', problematicFiles);
+      logger.info('Voting files with missing input validation:', { files: problematicFiles });
     }
     
     expect(problematicFiles).toHaveLength(0);
@@ -75,7 +76,7 @@ describe('Voting Error Prevention', () => {
     });
     
     if (problematicFiles.length > 0) {
-      logger.info('Voting files with missing error handling:', problematicFiles);
+      logger.info('Voting files with missing error handling:', { files: problematicFiles });
     }
     
     expect(problematicFiles).toHaveLength(0);

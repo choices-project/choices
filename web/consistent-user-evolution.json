@@ -1,0 +1,405 @@
+{
+  "timestamp": "2025-10-23T17:39:28.274Z",
+  "report": {
+    "summary": {
+      "totalTables": 21,
+      "totalQueries": 21,
+      "totalDataVerified": 0,
+      "mostUsedTable": "user_profiles",
+      "operations": {
+        "select": 21
+      }
+    },
+    "usedTables": [
+      "user_profiles",
+      "user_roles",
+      "user_hashtags",
+      "user_consent",
+      "user_notification_preferences",
+      "user_activity_log",
+      "user_analytics",
+      "user_engagement_metrics",
+      "polls",
+      "votes",
+      "poll_analytics",
+      "user_poll_engagement",
+      "user_civics_interactions",
+      "representative_contacts",
+      "civics_engagement_metrics",
+      "privacy_consent_records",
+      "privacy_audit_logs",
+      "data_sharing_preferences",
+      "user_sessions",
+      "user_login_history",
+      "user_feature_usage"
+    ],
+    "verifiedTables": [],
+    "tableUsage": [
+      {
+        "table": "user_profiles",
+        "count": 1,
+        "operations": [
+          "select"
+        ],
+        "contexts": [
+          "admin_track_consistent_user"
+        ],
+        "dataVerified": false
+      },
+      {
+        "table": "user_roles",
+        "count": 1,
+        "operations": [
+          "select"
+        ],
+        "contexts": [
+          "admin_track_consistent_user"
+        ],
+        "dataVerified": false
+      },
+      {
+        "table": "user_hashtags",
+        "count": 1,
+        "operations": [
+          "select"
+        ],
+        "contexts": [
+          "admin_track_consistent_user"
+        ],
+        "dataVerified": false
+      },
+      {
+        "table": "user_consent",
+        "count": 1,
+        "operations": [
+          "select"
+        ],
+        "contexts": [
+          "admin_track_consistent_user"
+        ],
+        "dataVerified": false
+      },
+      {
+        "table": "user_notification_preferences",
+        "count": 1,
+        "operations": [
+          "select"
+        ],
+        "contexts": [
+          "admin_track_consistent_user"
+        ],
+        "dataVerified": false
+      },
+      {
+        "table": "user_activity_log",
+        "count": 1,
+        "operations": [
+          "select"
+        ],
+        "contexts": [
+          "admin_track_consistent_user"
+        ],
+        "dataVerified": false
+      },
+      {
+        "table": "user_analytics",
+        "count": 1,
+        "operations": [
+          "select"
+        ],
+        "contexts": [
+          "admin_track_consistent_user"
+        ],
+        "dataVerified": false
+      },
+      {
+        "table": "user_engagement_metrics",
+        "count": 1,
+        "operations": [
+          "select"
+        ],
+        "contexts": [
+          "admin_track_consistent_user"
+        ],
+        "dataVerified": false
+      },
+      {
+        "table": "polls",
+        "count": 1,
+        "operations": [
+          "select"
+        ],
+        "contexts": [
+          "admin_track_user_polls"
+        ],
+        "dataVerified": false
+      },
+      {
+        "table": "votes",
+        "count": 1,
+        "operations": [
+          "select"
+        ],
+        "contexts": [
+          "admin_track_user_votes"
+        ],
+        "dataVerified": false
+      },
+      {
+        "table": "poll_analytics",
+        "count": 1,
+        "operations": [
+          "select"
+        ],
+        "contexts": [
+          "admin_track_user_poll_analytics"
+        ],
+        "dataVerified": false
+      },
+      {
+        "table": "user_poll_engagement",
+        "count": 1,
+        "operations": [
+          "select"
+        ],
+        "contexts": [
+          "admin_track_user_poll_engagement"
+        ],
+        "dataVerified": false
+      },
+      {
+        "table": "user_civics_interactions",
+        "count": 1,
+        "operations": [
+          "select"
+        ],
+        "contexts": [
+          "admin_track_user_civics"
+        ],
+        "dataVerified": false
+      },
+      {
+        "table": "representative_contacts",
+        "count": 1,
+        "operations": [
+          "select"
+        ],
+        "contexts": [
+          "admin_track_user_civics"
+        ],
+        "dataVerified": false
+      },
+      {
+        "table": "civics_engagement_metrics",
+        "count": 1,
+        "operations": [
+          "select"
+        ],
+        "contexts": [
+          "admin_track_user_civics"
+        ],
+        "dataVerified": false
+      },
+      {
+        "table": "privacy_consent_records",
+        "count": 1,
+        "operations": [
+          "select"
+        ],
+        "contexts": [
+          "admin_track_privacy_evolution"
+        ],
+        "dataVerified": false
+      },
+      {
+        "table": "privacy_audit_logs",
+        "count": 1,
+        "operations": [
+          "select"
+        ],
+        "contexts": [
+          "admin_track_privacy_evolution"
+        ],
+        "dataVerified": false
+      },
+      {
+        "table": "data_sharing_preferences",
+        "count": 1,
+        "operations": [
+          "select"
+        ],
+        "contexts": [
+          "admin_track_privacy_evolution"
+        ],
+        "dataVerified": false
+      },
+      {
+        "table": "user_sessions",
+        "count": 1,
+        "operations": [
+          "select"
+        ],
+        "contexts": [
+          "admin_track_user_sessions"
+        ],
+        "dataVerified": false
+      },
+      {
+        "table": "user_login_history",
+        "count": 1,
+        "operations": [
+          "select"
+        ],
+        "contexts": [
+          "admin_track_user_sessions"
+        ],
+        "dataVerified": false
+      },
+      {
+        "table": "user_feature_usage",
+        "count": 1,
+        "operations": [
+          "select"
+        ],
+        "contexts": [
+          "admin_track_user_sessions"
+        ],
+        "dataVerified": false
+      }
+    ],
+    "queryLog": [
+      {
+        "table": "user_profiles",
+        "operation": "select",
+        "timestamp": "2025-10-23T17:39:28.273Z",
+        "context": "admin_track_consistent_user"
+      },
+      {
+        "table": "user_roles",
+        "operation": "select",
+        "timestamp": "2025-10-23T17:39:28.273Z",
+        "context": "admin_track_consistent_user"
+      },
+      {
+        "table": "user_hashtags",
+        "operation": "select",
+        "timestamp": "2025-10-23T17:39:28.273Z",
+        "context": "admin_track_consistent_user"
+      },
+      {
+        "table": "user_consent",
+        "operation": "select",
+        "timestamp": "2025-10-23T17:39:28.273Z",
+        "context": "admin_track_consistent_user"
+      },
+      {
+        "table": "user_notification_preferences",
+        "operation": "select",
+        "timestamp": "2025-10-23T17:39:28.274Z",
+        "context": "admin_track_consistent_user"
+      },
+      {
+        "table": "user_activity_log",
+        "operation": "select",
+        "timestamp": "2025-10-23T17:39:28.274Z",
+        "context": "admin_track_consistent_user"
+      },
+      {
+        "table": "user_analytics",
+        "operation": "select",
+        "timestamp": "2025-10-23T17:39:28.274Z",
+        "context": "admin_track_consistent_user"
+      },
+      {
+        "table": "user_engagement_metrics",
+        "operation": "select",
+        "timestamp": "2025-10-23T17:39:28.274Z",
+        "context": "admin_track_consistent_user"
+      },
+      {
+        "table": "polls",
+        "operation": "select",
+        "timestamp": "2025-10-23T17:39:28.274Z",
+        "context": "admin_track_user_polls"
+      },
+      {
+        "table": "votes",
+        "operation": "select",
+        "timestamp": "2025-10-23T17:39:28.274Z",
+        "context": "admin_track_user_votes"
+      },
+      {
+        "table": "poll_analytics",
+        "operation": "select",
+        "timestamp": "2025-10-23T17:39:28.274Z",
+        "context": "admin_track_user_poll_analytics"
+      },
+      {
+        "table": "user_poll_engagement",
+        "operation": "select",
+        "timestamp": "2025-10-23T17:39:28.274Z",
+        "context": "admin_track_user_poll_engagement"
+      },
+      {
+        "table": "user_civics_interactions",
+        "operation": "select",
+        "timestamp": "2025-10-23T17:39:28.274Z",
+        "context": "admin_track_user_civics"
+      },
+      {
+        "table": "representative_contacts",
+        "operation": "select",
+        "timestamp": "2025-10-23T17:39:28.274Z",
+        "context": "admin_track_user_civics"
+      },
+      {
+        "table": "civics_engagement_metrics",
+        "operation": "select",
+        "timestamp": "2025-10-23T17:39:28.274Z",
+        "context": "admin_track_user_civics"
+      },
+      {
+        "table": "privacy_consent_records",
+        "operation": "select",
+        "timestamp": "2025-10-23T17:39:28.274Z",
+        "context": "admin_track_privacy_evolution"
+      },
+      {
+        "table": "privacy_audit_logs",
+        "operation": "select",
+        "timestamp": "2025-10-23T17:39:28.274Z",
+        "context": "admin_track_privacy_evolution"
+      },
+      {
+        "table": "data_sharing_preferences",
+        "operation": "select",
+        "timestamp": "2025-10-23T17:39:28.274Z",
+        "context": "admin_track_privacy_evolution"
+      },
+      {
+        "table": "user_sessions",
+        "operation": "select",
+        "timestamp": "2025-10-23T17:39:28.274Z",
+        "context": "admin_track_user_sessions"
+      },
+      {
+        "table": "user_login_history",
+        "operation": "select",
+        "timestamp": "2025-10-23T17:39:28.274Z",
+        "context": "admin_track_user_sessions"
+      },
+      {
+        "table": "user_feature_usage",
+        "operation": "select",
+        "timestamp": "2025-10-23T17:39:28.274Z",
+        "context": "admin_track_user_sessions"
+      }
+    ],
+    "dataVerification": []
+  },
+  "summary": {
+    "totalTables": 21,
+    "totalQueries": 21,
+    "mostUsedTable": "user_profiles"
+  }
+}

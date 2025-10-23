@@ -2,7 +2,7 @@ import { defineConfig, devices } from '@playwright/test';
 import path from 'path';
 
 export default defineConfig({
-  testDir: '../e2e',
+  testDir: '/Users/alaughingkitsune/src/Choices/web/tests/playwright/e2e',
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
@@ -21,7 +21,7 @@ export default defineConfig({
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
-    baseURL: 'http://localhost:3002',
+    baseURL: 'http://localhost:3000',
     
     // Performance monitoring
     launchOptions: {
@@ -37,7 +37,7 @@ export default defineConfig({
         // Enhanced performance monitoring
         contextOptions: {
           recordVideo: {
-            dir: 'test-results/videos/',
+            dir: '/Users/alaughingkitsune/src/Choices/web/test-results/videos/',
             size: { width: 1280, height: 720 }
           }
         }
@@ -49,7 +49,7 @@ export default defineConfig({
         ...devices['Desktop Firefox'],
         contextOptions: {
           recordVideo: {
-            dir: 'test-results/videos/',
+            dir: '/Users/alaughingkitsune/src/Choices/web/test-results/videos/',
             size: { width: 1280, height: 720 }
           }
         }
@@ -61,7 +61,7 @@ export default defineConfig({
         ...devices['Desktop Safari'],
         contextOptions: {
           recordVideo: {
-            dir: 'test-results/videos/',
+            dir: '/Users/alaughingkitsune/src/Choices/web/test-results/videos/',
             size: { width: 1280, height: 720 }
           }
         }
@@ -73,7 +73,7 @@ export default defineConfig({
         ...devices['iPhone 12'],
         contextOptions: {
           recordVideo: {
-            dir: 'test-results/videos/',
+            dir: '/Users/alaughingkitsune/src/Choices/web/test-results/videos/',
             size: { width: 390, height: 844 }
           }
         }
@@ -83,7 +83,7 @@ export default defineConfig({
   
   webServer: {
     command: 'npm run dev',
-    url: 'http://localhost:3002',
+    url: 'http://localhost:3000',
     reuseExistingServer: !process.env.CI,
     timeout: 120 * 1000,
   },

@@ -106,7 +106,7 @@ export class PrivacyFirstLocationService {
    * Generate privacy-preserving geohash
    * Precision 5 = ~5km, 6 = ~1km, 7 = ~150m
    */
-  private generatePrivacyGeohash(lat: number, lng: number, precision: number = 5): string {
+  private generatePrivacyGeohash(lat: number, lng: number, precision = 5): string {
     // Use existing geohash implementation from privacy-utils
     const { simpleGeohash } = require('./privacy-utils');
     return simpleGeohash(lat, lng, precision);

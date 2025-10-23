@@ -39,7 +39,7 @@ const calculateSingleChoiceResults = (votes: any[], options: any[]) => {
   // Count votes
   votes.forEach(vote => {
     if (results[vote.option_index]) {
-      results[vote.option_index].votes++;
+      results[vote.option_index]!.votes++;
     }
   });
 
@@ -144,8 +144,8 @@ describe('Unit Tests - Voting Algorithms', () => {
 
       expect(result).toBeDefined();
       expect(result.winner).toBe('option2'); // Option B wins with 3 votes
-      expect(result.results[1].votes).toBe(3);
-      expect(result.results[0].votes).toBe(2);
+      expect(result.results[1]?.votes).toBe(3);
+      expect(result.results[0]?.votes).toBe(2);
     });
 
     it('should handle no votes correctly', () => {
@@ -159,8 +159,8 @@ describe('Unit Tests - Voting Algorithms', () => {
 
       expect(result).toBeDefined();
       expect(result.winner).toBeNull();
-      expect(result.results[0].votes).toBe(0);
-      expect(result.results[1].votes).toBe(0);
+      expect(result.results[0]?.votes).toBe(0);
+      expect(result.results[1]?.votes).toBe(0);
     });
 
     it('should handle ties correctly', () => {
@@ -178,8 +178,8 @@ describe('Unit Tests - Voting Algorithms', () => {
 
       expect(result).toBeDefined();
       expect(result.winner).toBeNull(); // Tie
-      expect(result.results[0].votes).toBe(1);
-      expect(result.results[1].votes).toBe(1);
+      expect(result.results[0]?.votes).toBe(1);
+      expect(result.results[1]?.votes).toBe(1);
     });
   });
 

@@ -8,7 +8,7 @@
 import type { ReactNode } from 'react';
 import React from 'react';
 
-import { useFeatureFlag, useFeatureFlagsBatch, useFeatureFlagWithDependencies, useFeatureFlags } from '@/hooks/useFeatureFlags';
+import { useFeatureFlag, useFeatureFlagsBatch, useFeatureFlagWithDependencies, useFeatureFlags } from '@/features/pwa/hooks/useFeatureFlags';
 
 export interface FeatureWrapperProps {
   /** Feature flag ID to check */
@@ -106,7 +106,7 @@ export function FeatureWrapperBatch({
   className,
   style
 }: FeatureWrapperBatchProps): React.ReactElement | null {
-  const { enabled, anyEnabled: anyEnabledResult, loading } = useFeatureFlagsBatch(features);
+  const { allEnabled, anyEnabled: anyEnabledResult, loading } = useFeatureFlagsBatch(features);
 
   // Show loading state if requested and loading
   if (showLoading && loading) {
@@ -114,7 +114,7 @@ export function FeatureWrapperBatch({
   }
 
   // Check if conditions are met
-  const shouldRender = anyEnabled ? anyEnabledResult : enabled;
+  const shouldRender = anyEnabled ? anyEnabledResult : allEnabled;
 
   // If conditions are met, render children
   if (shouldRender) {
@@ -274,9 +274,9 @@ export function withFeatureFlagsBatch<P extends object>(
  * Utility component for debugging feature flags
  */
 export function FeatureFlagDebugger(): React.ReactElement {
-  const { getAllFlags, systemInfo, loading } = useFeatureFlags();
+  const { getAllFlags, systemInfo, isLoading } = useFeatureFlags();
   
-  if (loading) {
+  if (isLoading) {
     return <div>Loading feature flags...</div>;
   }
 

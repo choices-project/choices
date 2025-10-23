@@ -18,7 +18,7 @@ The following environment variables are required for database access:
 # Supabase Configuration
 NEXT_PUBLIC_SUPABASE_URL=https://muqwrehywjrbaeerjgfb.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=sb_publishable_...
-SUPABASE_SECRET_KEY=sb_secret_...
+SUPABASE_SERVICE_ROLE_KEY=sb_secret_...
 SUPABASE_SERVICE_ROLE_KEY=sb_secret_...
 ```
 
@@ -49,8 +49,8 @@ const supabase = createClient(
 ```typescript
 const response = await fetch(`${SUPABASE_URL}/rest/v1/table_name`, {
   headers: {
-    'apikey': SUPABASE_SECRET_KEY,
-    'Authorization': `Bearer ${SUPABASE_SECRET_KEY}`,
+    'apikey': SUPABASE_SERVICE_ROLE_KEY,
+    'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
     'Content-Type': 'application/json'
   }
 });
@@ -233,7 +233,7 @@ For admin operations, use the service role key:
 // This bypasses RLS
 const adminSupabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SECRET_KEY!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
   {
     auth: {
       autoRefreshToken: false,
@@ -359,7 +359,7 @@ await supabase
 ```typescript
 const adminSupabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SECRET_KEY!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
   {
     auth: {
       autoRefreshToken: false,

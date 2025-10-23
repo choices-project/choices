@@ -2,7 +2,7 @@
 
 import React from 'react';
 
-import { T } from '@/lib/testing/testIds';
+import { T } from '@/tests/registry/testIds';
 
 import { FeatureWrapper } from './WebAuthnPrompt';
 

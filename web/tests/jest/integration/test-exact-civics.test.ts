@@ -15,12 +15,12 @@ describe('Test Exact Civics Approach', () => {
     const { createClient } = await import('@supabase/supabase-js');
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SECRET_KEY!
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
     
     console.log('🔍 Testing database access using exact civics pipeline code...');
     console.log('Supabase URL:', process.env.NEXT_PUBLIC_SUPABASE_URL);
-    console.log('Supabase Key (first 10 chars):', process.env.SUPABASE_SECRET_KEY?.substring(0, 10));
+    console.log('Supabase Key (first 10 chars):', process.env.SUPABASE_SERVICE_ROLE_KEY?.substring(0, 10));
     
     // Test 1: Query representatives_core table (exact same as civics pipeline)
     console.log('🔍 Test 1: Query representatives_core table (exact civics approach)');

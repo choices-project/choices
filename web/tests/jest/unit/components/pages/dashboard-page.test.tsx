@@ -10,9 +10,10 @@
 
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
+import '@testing-library/jest-dom';
 import { BrowserRouter } from 'react-router-dom';
 import UnifiedFeed from '@/features/feeds/components/UnifiedFeed';
-import { T } from '@/lib/testing/testIds';
+import { T } from '@/tests/registry/testIds';
 
 // Mock Next.js router
 jest.mock('next/navigation', () => ({

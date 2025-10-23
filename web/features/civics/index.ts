@@ -32,7 +32,7 @@ export { default as CivicsLure } from './components/CivicsLure'
 export { default as PrivacyStatusBadge } from './components/PrivacyStatusBadge'
 
 /** Enhanced candidate card with rich data and interactions */
-export { default as EnhancedCandidateCard } from './components/EnhancedCandidateCard'
+export { default as CandidateCard } from './components/CandidateCard'
 
 // Feed components moved to @/features/feeds
 

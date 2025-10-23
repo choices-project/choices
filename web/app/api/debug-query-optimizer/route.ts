@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { type NextRequest, NextResponse } from 'next/server';
 import { getSupabaseServerClient } from '../../../utils/supabase/server';
 import queryOptimizer from '../../../lib/database/query-optimizer';
 
@@ -49,3 +49,4 @@ export async function GET(request: NextRequest) {
     );
   }
 }
+

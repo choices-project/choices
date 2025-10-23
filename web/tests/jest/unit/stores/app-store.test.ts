@@ -173,8 +173,8 @@ describe('App Store Functionality', () => {
     expect(navigationState.currentRoute).toBe('/dashboard');
     expect(navigationState.previousRoute).toBe('/');
     expect(navigationState.breadcrumbs).toHaveLength(2);
-    expect(navigationState.breadcrumbs[0].label).toBe('Home');
-    expect(navigationState.breadcrumbs[1].label).toBe('Dashboard');
+    expect(navigationState.breadcrumbs[0]?.label).toBe('Home');
+    expect(navigationState.breadcrumbs[1]?.label).toBe('Dashboard');
   });
 
   it('should test loading states', () => {
@@ -202,7 +202,7 @@ describe('App Store Functionality', () => {
     expect(modalState.activeModal).toBe('settings');
     expect(modalState.modalData.userId).toBe('123');
     expect(modalState.modalStack).toHaveLength(2);
-    expect(modalState.modalStack[0].id).toBe('settings');
-    expect(modalState.modalStack[1].id).toBe('confirm');
+    expect(modalState.modalStack[0]?.id).toBe('settings');
+    expect(modalState.modalStack[1]?.id).toBe('confirm');
   });
 });

@@ -1,5 +1,4 @@
 import { type NextRequest, NextResponse } from 'next/server';
-import { withAuth } from '@/lib/core/auth/middleware';
 import { getSupabaseServerClient } from '@/utils/supabase/server';
 import { logger } from '@/lib/utils/logger';
 
@@ -125,22 +124,22 @@ async function POST(request: NextRequest, context: any) {
     }
 
     const body = await request.json();
-    const { title, content, priority, status, target_audience, start_date, end_date } = body;
+    const { title, message, priority, status, target_audience, start_date, end_date } = body;
 
     // Validate required fields
-    if (!title || !content) {
+    if (!title || !message) {
       return NextResponse.json(
-        { error: 'Title and content are required' },
+        { error: 'Title and message are required' },
         { status: 400 }
       );
     }
 
     // Create site message using correct field names
-    const { data: message, error } = await supabase
+    const { data: siteMessage, error } = await supabase
       .from('site_messages')
       .insert({
         title,
-        message: content, // Use existing 'message' field
+        message, // Use existing 'message' field directly
         priority: priority || 'medium',
         type: 'announcement',
         is_active: true
@@ -158,7 +157,7 @@ async function POST(request: NextRequest, context: any) {
 
     return NextResponse.json({
       success: true,
-      data: message,
+      data: siteMessage,
       message: 'Site message created successfully'
     });
 

@@ -9,6 +9,7 @@
  */
 
 import { describe, it, expect } from '@jest/globals';
+import { logger } from '@/lib/utils/logger';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import * as fs from 'fs';

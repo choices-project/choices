@@ -10,7 +10,6 @@
  */
 
 import { withOptional } from '../../../../lib/utils/objects';
-import type { Database } from '@/types/database';
 import { logger } from '../../../../lib/utils/logger';
 
 import { CurrentElectorateVerifier } from './current-electorate-verifier';

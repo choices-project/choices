@@ -48,3 +48,4 @@ export interface QuickAction {
   href: string;
   description: string;
 }
+

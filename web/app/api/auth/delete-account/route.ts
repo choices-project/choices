@@ -1,5 +1,4 @@
 import type { NextRequest } from 'next/server'
-import type { Database } from '@/types/database';
 import { NextResponse } from 'next/server'
 
 import { devLog } from '@/lib/utils/logger'

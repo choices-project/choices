@@ -14,7 +14,6 @@
  */
 
 import { createClient } from '@supabase/supabase-js';
-import type { Database } from '@/types/database';
 import { type NextRequest, NextResponse } from 'next/server';
 
 import OpenStatesIntegration from '@/features/civics/lib/civics-superior/openstates-integration';

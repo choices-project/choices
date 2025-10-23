@@ -21,13 +21,13 @@ import { isCivicsEnabled } from '@/features/civics/lib/civics/privacy-utils';
 
 // Define health check result types
 type HealthStatus = 'healthy' | 'warning' | 'error' | 'unhealthy' | 'degraded' | 'unknown';
-type HealthResult = {
+interface HealthResult {
   status: HealthStatus;
   error?: string;
   type?: string;
   timestamp?: string;
   details?: any;
-};
+}
 import { createRateLimitMiddleware, combineMiddleware } from '@/lib/core/auth/middleware';
 import { getQueryOptimizer } from '@/lib/database/optimizer';
 import { logger } from '@/lib/utils/logger';

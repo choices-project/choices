@@ -13,7 +13,7 @@
  * Status: ✅ ACTIVE
  */
 
-import { SupabaseClient } from '@supabase/supabase-js';
+import { type SupabaseClient } from '@supabase/supabase-js';
 
 interface QueryPerformance {
   query: string;
@@ -39,7 +39,7 @@ class DatabaseQueryOptimizer {
     supabase: SupabaseClient,
     queryName: string,
     queryFn: () => Promise<{ data: T | null; error: any }>,
-    ttl: number = 300000 // 5 minutes default
+    ttl = 300000 // 5 minutes default
   ): Promise<OptimizedQueryResult<T>> {
     const startTime = Date.now();
     const cacheKey = queryName;

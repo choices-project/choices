@@ -466,6 +466,12 @@ export const rateLimiters = {
     interval: 5 * 60 * 1000, // 5 minutes
     uniqueTokenPerInterval: 30, // 30 biometric attempts per 5 minutes
     maxBurst: 10
+  }),
+  
+  contact: createRateLimiter({
+    interval: 60 * 1000, // 1 minute
+    uniqueTokenPerInterval: 10, // 10 messages per minute
+    maxBurst: 3
   })
 }
 

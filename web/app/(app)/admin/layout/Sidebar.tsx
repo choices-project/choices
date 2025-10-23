@@ -9,6 +9,7 @@ import {
   Activity,
   Users,
   Zap,
+  Flag,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -53,6 +54,11 @@ const navigationItems = [
     href: '/admin/site-messages',
     icon: MessageCircle,
   },
+  {
+    name: 'Feature Flags',
+    href: '/admin/feature-flags',
+    icon: Flag,
+  },
 ];
 
 export const Sidebar: React.FC = () => {
@@ -90,7 +96,7 @@ export const Sidebar: React.FC = () => {
 
         <nav className="mt-6 px-3">
           <ul className="space-y-2">
-            {navigationItems.map((item: any) => {
+            {navigationItems.map((item: { name: string; href: string; icon: React.ComponentType }) => {
               const isActive = pathname === item.href;
               return (
                 <li key={item.name}>
@@ -102,7 +108,7 @@ export const Sidebar: React.FC = () => {
                         : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
                     }`}
                   >
-                    <item.icon className="h-5 w-5 mr-3" />
+                    <item.icon />
                     {!sidebarCollapsed && <span>{item.name}</span>}
                   </Link>
                 </li>

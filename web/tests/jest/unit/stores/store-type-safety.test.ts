@@ -9,6 +9,7 @@
  */
 
 import { describe, it, expect } from '@jest/globals';
+import { logger } from '@/lib/utils/logger';
 import * as fs from 'fs';
 import * as glob from 'glob';
 

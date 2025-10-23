@@ -20,8 +20,8 @@ export default defineConfig({
   // INLINE REPORTING ONLY - NO HTML, NO HANGING
   reporter: [
     ['list'], // Inline list reporter - shows results immediately
-    ['json', { outputFile: 'test-results-inline.json' }], // JSON for parsing
-    ['junit', { outputFile: 'test-results-inline.xml' }] // JUnit for CI
+    ['json', { outputFile: '/Users/alaughingkitsune/src/Choices/web/test-results/playwright/test-results-inline.json' }], // JSON for parsing
+    ['junit', { outputFile: '/Users/alaughingkitsune/src/Choices/web/test-results/playwright/test-results-inline.xml' }] // JUnit for CI
   ],
   
   use: {

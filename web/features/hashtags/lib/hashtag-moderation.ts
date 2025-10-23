@@ -300,7 +300,7 @@ export async function getModerationQueue(
       .from('hashtag_flags')
       .select(`
         *,
-        hashtags:hashtags(*)
+        hashtags!inner(*)
       `)
       .limit(limit);
 
@@ -321,14 +321,14 @@ export async function getModerationQueue(
     const result = data?.map((item: any) => ({
       ...item.hashtags,
       moderation: {
-        hashtag_id: item.hashtag_id,
+        hashtag_id: item.hashtag,
         status: item.status,
-        moderation_reason: item.moderation_reason,
-        moderated_by: item.moderated_by,
-        moderated_at: item.moderated_at,
+        moderation_reason: item.reason,
+        moderated_by: item.reviewed_by,
+        moderated_at: item.updated_at || item.created_at,
         flags: [], // Will be populated separately if needed
-        auto_moderation_score: item.auto_moderation_score || 0,
-        human_review_required: item.human_review_required || false
+        auto_moderation_score: 0.5, // Default score
+        human_review_required: item.status === 'pending'
       }
     })) || [];
 
@@ -372,7 +372,7 @@ export async function triggerAutoModeration(hashtagId: string): Promise<void> {
     const { count: flagCount } = await supabase
       .from('hashtag_flags')
       .select('*', { count: 'exact', head: true })
-      .eq('hashtag_id', hashtagId)
+      .eq('hashtag', hashtagId)
       .eq('status', 'pending');
 
     // Determine if human review is required
@@ -476,17 +476,17 @@ export async function checkForDuplicates(hashtagName: string): Promise<HashtagAp
     // Transform duplicates to handle null values
     const transformedDuplicates = duplicates.map(hashtag => ({
       ...hashtag,
-      description: hashtag.description || undefined,
-      category: (hashtag.category as HashtagCategory) || undefined,
-      created_by: hashtag.created_by || undefined,
-      follower_count: hashtag.follower_count || 0,
-      usage_count: hashtag.usage_count || 0,
-      is_featured: hashtag.is_featured || false,
-      is_trending: hashtag.is_trending || false,
-      is_verified: hashtag.is_verified || false,
-      trend_score: hashtag.trend_score || 0,
-      created_at: hashtag.created_at || new Date().toISOString(),
-      updated_at: hashtag.updated_at || new Date().toISOString(),
+      description: hashtag.description ?? undefined,
+      category: (hashtag.category as HashtagCategory) ?? undefined,
+      created_by: hashtag.created_by ?? undefined,
+      follower_count: hashtag.follower_count ?? 0,
+      usage_count: hashtag.usage_count ?? 0,
+      is_featured: hashtag.is_featured ?? false,
+      is_trending: hashtag.is_trending ?? false,
+      is_verified: hashtag.is_verified ?? false,
+      trend_score: hashtag.trend_score ?? 0,
+      created_at: hashtag.created_at ?? new Date().toISOString(),
+      updated_at: hashtag.updated_at ?? new Date().toISOString(),
       metadata: hashtag.metadata as Record<string, any> || undefined
     }));
 
@@ -577,14 +577,22 @@ export async function getModerationStats(): Promise<HashtagApiResponse<{
       supabase.from('hashtag_flags').select('*', { count: 'exact', head: true })
     ]);
 
-    // Get top flag types
+    // Get top flag types (using reason field since flag_type doesn't exist in DB)
     const { data: flagTypes } = await supabase
       .from('hashtag_flags')
-      .select('flag_type')
+      .select('reason')
       .eq('status', 'pending');
 
     const topFlagTypes = flagTypes?.reduce((acc: any, flag: any) => {
-      const type = flag.flag_type;
+      // Categorize by reason content since flag_type doesn't exist
+      const reason = flag.reason?.toLowerCase() || 'other';
+      let type = 'other';
+      
+      if (reason.includes('spam') || reason.includes('promotional')) type = 'spam';
+      else if (reason.includes('inappropriate') || reason.includes('offensive')) type = 'inappropriate';
+      else if (reason.includes('misleading') || reason.includes('false')) type = 'misleading';
+      else if (reason.includes('duplicate')) type = 'duplicate';
+      
       acc[type] = (acc[type] || 0) + 1;
       return acc;
     }, {} as Record<string, number>) || {};

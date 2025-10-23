@@ -3,7 +3,8 @@
 **Created:** October 10, 2025  
 **Updated:** October 10, 2025  
 **Status:** ✅ Production Ready  
-**Feature Flag:** `SOCIAL_SHARING` (enabled)
+**Feature Flag:** `SOCIAL_SHARING` (enabled)  
+**Poll Sharing:** `SOCIAL_SHARING_POLLS` (enabled) - Integrated with UnifiedFeed
 
 ## 🎯 Overview
 
@@ -194,7 +195,7 @@ const getShareAnalytics = async (pollId?: string, days: number = 7) => {
 ```bash
 # Required for Supabase integration
 NEXT_PUBLIC_SUPABASE_URL=your-supabase-url
-SUPABASE_SECRET_KEY=your-service-role-key
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 
 # Feature flag (set in feature-flags.ts)
 SOCIAL_SHARING=true

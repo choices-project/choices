@@ -16,8 +16,6 @@
 import React, { useState, useEffect, useCallback, lazy, Suspense } from 'react';
 import {
   BarChart3,
-  TrendingUp,
-  Users,
   MapPin,
   Vote,
   Plus,
@@ -27,11 +25,6 @@ import {
   Activity,
   Award,
   Target,
-  Calendar,
-  MessageSquare,
-  Share2,
-  Heart,
-  Bookmark,
   RefreshCw
 } from 'lucide-react';
 
@@ -39,12 +32,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
+import { FeatureWrapper } from '@/components/shared/FeatureWrapper';
 import { logger } from '@/lib/utils/logger';
-import { T } from '@/lib/testing/testIds';
-import PerformanceMonitor from '@/components/performance/PerformanceMonitor';
+import { T } from '@/tests/registry/testIds';
 
 // Lazy load heavy components
 const ElectedOfficialsSection = lazy(() => 
@@ -444,28 +436,28 @@ export default function PersonalDashboard({ userId, className = '' }: PersonalDa
   return (
     <div className={`space-y-6 ${className}`} data-testid={T.dashboard.page}>
       {/* Header */}
-            <div className="flex items-center justify-between" data-testid={T.dashboard.header}>
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900" data-testid={T.dashboard.title}>Your Dashboard</h1>
-                <p className="text-gray-600 mt-1">Your personal civic engagement hub</p>
-              </div>
-              <div className="flex items-center gap-3">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={handleRefresh}
-                  disabled={isRefreshing}
-                  className="flex items-center gap-2"
-                >
-                  <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-                  {isRefreshing ? 'Refreshing...' : 'Refresh'}
-                </Button>
-                <Badge variant="outline" className="flex items-center gap-2" data-testid={T.dashboard.participationScore}>
-                  <Activity className="h-4 w-4" />
-                  {analytics?.participation_score || 0} Engagement Score
-                </Badge>
-              </div>
-            </div>
+      <div className="flex items-center justify-between" data-testid={T.dashboard.header}>
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900" data-testid={T.dashboard.title}>Your Dashboard</h1>
+          <p className="text-gray-600 mt-1">Your personal civic engagement hub</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+            className="flex items-center gap-2"
+          >
+            <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+            {isRefreshing ? 'Refreshing...' : 'Refresh'}
+          </Button>
+          <Badge variant="outline" className="flex items-center gap-2" data-testid={T.dashboard.participationScore}>
+            <Activity className="h-4 w-4" />
+            {analytics?.participation_score || 0} Engagement Score
+          </Badge>
+        </div>
+      </div>
 
       {/* Main Content with Tabs */}
       <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-6">
@@ -478,46 +470,46 @@ export default function PersonalDashboard({ userId, className = '' }: PersonalDa
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Personal Analytics (2/3 width) */}
             <div className="lg:col-span-2 space-y-6">
-          {/* Analytics Overview */}
-          <Card data-testid={T.dashboard.personalAnalytics}>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <BarChart3 className="h-5 w-5" />
-                Personal Analytics
-              </CardTitle>
-              <CardDescription>
-                Your civic engagement metrics and activity
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-blue-600">
-                    {analytics?.total_votes || 0}
+              {/* Analytics Overview */}
+              <Card data-testid={T.dashboard.personalAnalytics}>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <BarChart3 className="h-5 w-5" />
+                    Personal Analytics
+                  </CardTitle>
+                  <CardDescription>
+                    Your civic engagement metrics and activity
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-blue-600">
+                        {analytics?.total_votes || 0}
+                      </div>
+                      <div className="text-sm text-gray-600">Total Votes</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-green-600">
+                        {analytics?.total_polls_created || 0}
+                      </div>
+                      <div className="text-sm text-gray-600">Polls Created</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-purple-600">
+                        {analytics?.active_polls || 0}
+                      </div>
+                      <div className="text-sm text-gray-600">Active Polls</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-orange-600">
+                        {analytics?.total_votes_on_user_polls || 0}
+                      </div>
+                      <div className="text-sm text-gray-600">Poll Votes</div>
+                    </div>
                   </div>
-                  <div className="text-sm text-gray-600">Total Votes</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-green-600">
-                    {analytics?.total_polls_created || 0}
-                  </div>
-                  <div className="text-sm text-gray-600">Polls Created</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-purple-600">
-                    {analytics?.active_polls || 0}
-                  </div>
-                  <div className="text-sm text-gray-600">Active Polls</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-orange-600">
-                    {analytics?.total_votes_on_user_polls || 0}
-                  </div>
-                  <div className="text-sm text-gray-600">Poll Votes</div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+                </CardContent>
+              </Card>
 
           {/* Engagement Score - Only show if user wants it */}
           {showEngagementScore && (
@@ -550,6 +542,34 @@ export default function PersonalDashboard({ userId, className = '' }: PersonalDa
               </CardContent>
             </Card>
           )}
+
+          {/* Trending Polls - Always enabled through hashtag system */}
+          <Card data-testid="trending-polls-section">
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <BarChart3 className="h-5 w-5" />
+                  Trending Polls
+                </CardTitle>
+                <CardDescription>
+                  Popular polls and topics right now
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  <div className="text-sm text-gray-600">
+                    Trending polls feature is now enabled! Check the feed for trending content.
+                  </div>
+                  <Button 
+                    variant="outline" 
+                    className="w-full"
+                    onClick={() => window.location.href = '/feed'}
+                  >
+                    View Trending Feed
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+            </div>
 
           {/* Recent Activity - Only show if user wants it */}
           {showRecentActivity && (
@@ -591,10 +611,10 @@ export default function PersonalDashboard({ userId, className = '' }: PersonalDa
               </CardContent>
             </Card>
           )}
-        </div>
+          </div>
 
-        {/* Quick Actions & Elected Officials (1/3 width) */}
-        <div className="space-y-6">
+          {/* Quick Actions & Elected Officials (1/3 width) */}
+          <div className="space-y-6">
           {/* Quick Actions - Only show if user wants it */}
           {showQuickActions && (
             <Card>
@@ -635,6 +655,35 @@ export default function PersonalDashboard({ userId, className = '' }: PersonalDa
               <ElectedOfficialsSection electedOfficials={electedOfficials} />
             </Suspense>
           )}
+
+          {/* Demographic Filtering - Feature Flag Controlled */}
+          <FeatureWrapper feature="DEMOGRAPHIC_FILTERING">
+            <Card data-testid="personalized-content-section">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <MapPin className="h-5 w-5" />
+                  Personalized Content
+                </CardTitle>
+                <CardDescription>
+                  Content tailored to your location and demographics
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  <div className="text-sm text-gray-600">
+                    Demographic filtering is now enabled! Your content will be personalized based on your location and interests.
+                  </div>
+                  <Button 
+                    variant="outline" 
+                    className="w-full"
+                    onClick={() => window.location.href = '/profile'}
+                  >
+                    Update Your Preferences
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </FeatureWrapper>
 
           {/* Dashboard Settings - Always show for customization */}
           <Card data-testid={T.dashboard.dashboardSettings}>
@@ -720,10 +769,8 @@ export default function PersonalDashboard({ userId, className = '' }: PersonalDa
               </div>
             </CardContent>
           </Card>
-            </div>
-          </div>
+        </div>
         </TabsContent>
-
 
         <TabsContent value="analytics" className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -741,12 +788,12 @@ export default function PersonalDashboard({ userId, className = '' }: PersonalDa
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="text-center" data-testid={T.dashboard.totalVotes}>
-                  <div className="text-2xl font-bold text-blue-600">
-                    {analytics?.total_votes || 0}
-                  </div>
-                  <div className="text-sm text-gray-600">Total Votes</div>
-                </div>
+                    <div className="text-center" data-testid={T.dashboard.totalVotes}>
+                      <div className="text-2xl font-bold text-blue-600">
+                        {analytics?.total_votes || 0}
+                      </div>
+                      <div className="text-sm text-gray-600">Total Votes</div>
+                    </div>
                 <div className="text-center" data-testid={T.dashboard.pollsCreated}>
                   <div className="text-2xl font-bold text-green-600">
                     {analytics?.total_polls_created || 0}

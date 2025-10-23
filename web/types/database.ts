@@ -6,7 +6,7 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[]
 
-export type Database = {
+export interface Database {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
@@ -5920,6 +5920,183 @@ export type Database = {
           zip5?: string
         }
         Relationships: []
+      },
+      contact_messages: {
+        Row: {
+          id: string
+          thread_id: string
+          sender_id: string
+          recipient_id: number
+          message_type: string
+          content: string
+          subject: string | null
+          attachments: Json | null
+          status: string
+          priority: string
+          created_at: string
+          updated_at: string
+          read_at: string | null
+          replied_at: string | null
+          metadata: Json | null
+        }
+        Insert: {
+          id?: string
+          thread_id: string
+          sender_id: string
+          recipient_id: number
+          message_type?: string
+          content: string
+          subject?: string | null
+          attachments?: Json | null
+          status?: string
+          priority?: string
+          created_at?: string
+          updated_at?: string
+          read_at?: string | null
+          replied_at?: string | null
+          metadata?: Json | null
+        }
+        Update: {
+          id?: string
+          thread_id?: string
+          sender_id?: string
+          recipient_id?: number
+          message_type?: string
+          content?: string
+          subject?: string | null
+          attachments?: Json | null
+          status?: string
+          priority?: string
+          created_at?: string
+          updated_at?: string
+          read_at?: string | null
+          replied_at?: string | null
+          metadata?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contact_messages_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "contact_messages_recipient_id_fkey"
+            columns: ["recipient_id"]
+            isOneToOne: false
+            referencedRelation: "representatives_core"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contact_messages_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "contact_threads"
+            referencedColumns: ["id"]
+          }
+        ]
+      },
+      contact_threads: {
+        Row: {
+          id: string
+          user_id: string
+          representative_id: number
+          subject: string
+          status: string
+          priority: string
+          created_at: string
+          updated_at: string
+          last_message_at: string | null
+          message_count: number
+          metadata: Json | null
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          representative_id: number
+          subject: string
+          status?: string
+          priority?: string
+          created_at?: string
+          updated_at?: string
+          last_message_at?: string | null
+          message_count?: number
+          metadata?: Json | null
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          representative_id?: number
+          subject?: string
+          status?: string
+          priority?: string
+          created_at?: string
+          updated_at?: string
+          last_message_at?: string | null
+          message_count?: number
+          metadata?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contact_threads_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "contact_threads_representative_id_fkey"
+            columns: ["representative_id"]
+            isOneToOne: false
+            referencedRelation: "representatives_core"
+            referencedColumns: ["id"]
+          }
+        ]
+      },
+      message_delivery_logs: {
+        Row: {
+          id: string
+          message_id: string
+          delivery_method: string
+          delivery_status: string
+          delivery_attempts: number
+          error_message: string | null
+          delivered_at: string | null
+          created_at: string
+          metadata: Json | null
+        }
+        Insert: {
+          id?: string
+          message_id: string
+          delivery_method: string
+          delivery_status: string
+          delivery_attempts?: number
+          error_message?: string | null
+          delivered_at?: string | null
+          created_at?: string
+          metadata?: Json | null
+        }
+        Update: {
+          id?: string
+          message_id?: string
+          delivery_method?: string
+          delivery_status?: string
+          delivery_attempts?: number
+          error_message?: string | null
+          delivered_at?: string | null
+          created_at?: string
+          metadata?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "message_delivery_logs_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "contact_messages"
+            referencedColumns: ["id"]
+          }
+        ]
       }
     }
     Views: {
@@ -6058,22 +6235,22 @@ export type Database = {
     Functions: {
       analyze_index_usage: {
         Args: Record<PropertyKey, never>
-        Returns: {
+        Returns: Array<{
           index_name: string
           index_size: string
           table_name: string
           usage_count: number
-        }[]
+        }>
       }
       analyze_polls_table: {
         Args: Record<PropertyKey, never>
-        Returns: {
+        Returns: Array<{
           index_size: string
           last_analyzed: string
           row_count: number
           table_name: string
           table_size: string
-        }[]
+        }>
       }
       anonymize_user_data: {
         Args: { target_user_id: string }
@@ -6114,10 +6291,10 @@ export type Database = {
           p_phone_verified?: boolean
           p_voting_history_count?: number
         }
-        Returns: {
+        Returns: Array<{
           trust_score: number
           trust_tier: string
-        }[]
+        }>
       }
       calculate_votesmart_quality_score: {
         Args: { rep_id: string }
@@ -6197,7 +6374,7 @@ export type Database = {
       }
       get_candidate_committees: {
         Args: { candidate_id: string; cycle_year: number }
-        Returns: {
+        Returns: Array<{
           cash_on_hand: number
           committee_name: string
           committee_type: string
@@ -6206,11 +6383,11 @@ export type Database = {
           fec_committee_id: string
           total_disbursements: number
           total_receipts: number
-        }[]
+        }>
       }
       get_data_lineage_trail: {
         Args: { record_id: string; table_name: string }
-        Returns: {
+        Returns: Array<{
           lineage_id: string
           processing_completed_at: string
           processing_started_at: string
@@ -6221,32 +6398,32 @@ export type Database = {
           target_table: string
           transformation_type: string
           transformation_version: string
-        }[]
+        }>
       }
       get_districts_for_state: {
         Args: { district_type?: string; state_code: string }
-        Returns: {
+        Returns: Array<{
           census_cycle: number
           congress_number: number
           district_number: string
           is_current: boolean
           ocd_division_id: string
-        }[]
+        }>
       }
       get_efiling_vs_processed_summary: {
         Args: { cycle_year: number }
-        Returns: {
+        Returns: Array<{
           efiling_percentage: number
           efiling_records: number
           processed_percentage: number
           processed_records: number
           table_name: string
           total_records: number
-        }[]
+        }>
       }
       get_fec_cycle_info: {
         Args: { cycle_year: number }
-        Returns: {
+        Returns: Array<{
           cycle: number
           cycle_name: string
           data_available: boolean
@@ -6256,11 +6433,11 @@ export type Database = {
           is_current: boolean
           is_upcoming: boolean
           start_date: string
-        }[]
+        }>
       }
       get_hashtag_suggestions: {
         Args: { input_text: string; limit_count?: number; user_id?: string }
-        Returns: {
+        Returns: Array<{
           confidence_score: number
           display_name: string
           follower_count: number
@@ -6270,11 +6447,11 @@ export type Database = {
           suggestion_reason: string
           trend_score: number
           usage_count: number
-        }[]
+        }>
       }
       get_local_government_representatives: {
         Args: { state_code: string }
-        Returns: {
+        Returns: Array<{
           data_quality_score: number
           id: string
           jurisdiction: string
@@ -6282,51 +6459,51 @@ export type Database = {
           name: string
           office: string
           role_type: string
-        }[]
+        }>
       }
       get_ocd_from_coords: {
         Args: { latitude: number; longitude: number }
-        Returns: {
+        Returns: Array<{
           confidence: number
           ocd_division_id: string
-        }[]
+        }>
       }
       get_ocd_from_zip: {
         Args: { zip_code: string }
-        Returns: {
+        Returns: Array<{
           confidence: number
           ocd_division_id: string
-        }[]
+        }>
       }
       get_own_profile: {
         Args: Record<PropertyKey, never>
-        Returns: {
+        Returns: Array<{
           created_at: string
           is_active: boolean
           stable_id: string
           verification_tier: string
-        }[]
+        }>
       }
       get_poll_privacy_settings: {
         Args: { poll_id_param: string }
-        Returns: {
+        Returns: Array<{
           allows_anonymous_voting: boolean
           poll_id: string
           privacy_level: string
           provides_audit_receipts: boolean
           requires_authentication: boolean
           uses_blinded_tokens: boolean
-        }[]
+        }>
       }
       get_poll_results: {
         Args: { poll_id_param: string }
-        Returns: {
+        Returns: Array<{
           aggregated_results: Json
           participation_rate: number
           poll_id: string
           title: string
           total_votes: number
-        }[]
+        }>
       }
       get_representative_activity: {
         Args: { rep_id: string }
@@ -6350,7 +6527,7 @@ export type Database = {
       }
       get_representatives_by_jurisdiction: {
         Args: { jurisdiction_path: string }
-        Returns: {
+        Returns: Array<{
           data_quality_score: number
           district: string
           id: string
@@ -6360,29 +6537,29 @@ export type Database = {
           party: string
           role_type: string
           state: string
-        }[]
+        }>
       }
       get_representatives_by_votesmart_completeness: {
         Args: { min_score?: number }
-        Returns: {
+        Returns: Array<{
           data_quality_score: number
           id: string
           name: string
           state: string
           votesmart_id: string
           votesmart_quality_score: number
-        }[]
+        }>
       }
       get_representatives_needing_enrichment_optimal: {
         Args: Record<PropertyKey, never>
-        Returns: {
+        Returns: Array<{
           bioguide_id: string
           data_quality_score: number
           fec_candidate_id: string
           id: string
           name: string
           openstates_person_id: string
-        }[]
+        }>
       }
       get_system_metrics: {
         Args: Record<PropertyKey, never>
@@ -6390,7 +6567,7 @@ export type Database = {
       }
       get_trending_hashtags: {
         Args: { category_filter?: string; limit_count?: number }
-        Returns: {
+        Returns: Array<{
           category: string
           display_name: string
           follower_count: number
@@ -6399,11 +6576,11 @@ export type Database = {
           name: string
           trend_score: number
           usage_count: number
-        }[]
+        }>
       }
       get_user_webauthn_credentials: {
         Args: { user_uuid: string }
-        Returns: {
+        Returns: Array<{
           aaguid: string
           backed_up: boolean
           backup_eligible: boolean
@@ -6415,7 +6592,7 @@ export type Database = {
           id: string
           last_used_at: string
           transports: string[]
-        }[]
+        }>
       }
       increment_hashtag_follower_count: {
         Args: { hashtag_id: string } | { p_hashtag_id: string }
@@ -6464,28 +6641,28 @@ export type Database = {
       }
       monitor_failed_logins: {
         Args: Record<PropertyKey, never>
-        Returns: {
+        Returns: Array<{
           failed_attempts: number
           last_attempt: string
           user_id: string
-        }[]
+        }>
       }
       monitor_rls_performance: {
         Args: Record<PropertyKey, never>
-        Returns: {
+        Returns: Array<{
           has_auth_functions: boolean
           policy_count: number
           table_name: string
-        }[]
+        }>
       }
       monitor_suspicious_activity: {
         Args: Record<PropertyKey, never>
-        Returns: {
+        Returns: Array<{
           activity_count: number
           activity_type: string
           last_activity: string
           user_id: string
-        }[]
+        }>
       }
       normalize_hashtag_name: {
         Args: { input_name: string }
@@ -6493,11 +6670,11 @@ export type Database = {
       }
       rebuild_poll_indexes: {
         Args: Record<PropertyKey, never>
-        Returns: {
+        Returns: Array<{
           index_name: string
           rebuild_time: unknown
           status: string
-        }[]
+        }>
       }
       refresh_poll_analytics_view: {
         Args: Record<PropertyKey, never>
@@ -6570,12 +6747,12 @@ export type Database = {
       }
       update_poll_statistics: {
         Args: { poll_id_param: string }
-        Returns: {
+        Returns: Array<{
           last_updated: string
           participation_rate: number
           poll_id: string
           total_votes: number
-        }[]
+        }>
       }
       user_has_webauthn_credentials: {
         Args: { user_uuid: string }
@@ -6583,13 +6760,13 @@ export type Database = {
       }
       validate_data_quality: {
         Args: { check_version?: string; record_id: string; table_name: string }
-        Returns: {
+        Returns: Array<{
           check_name: string
           check_type: string
           error_message: string
           passed: boolean
           severity: string
-        }[]
+        }>
       }
       validate_hashtag_name: {
         Args: { input_name: string }
@@ -6601,12 +6778,12 @@ export type Database = {
       }
       verify_security_config: {
         Args: Record<PropertyKey, never>
-        Returns: {
+        Returns: Array<{
           policy_count: number
           rls_enabled: boolean
           security_status: string
           table_name: string
-        }[]
+        }>
       }
     }
     Enums: {

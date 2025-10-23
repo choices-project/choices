@@ -15,7 +15,7 @@ import {
 } from 'lucide-react'
 import { useState, useEffect } from 'react'
 
-import { useFeatureFlags } from "@/hooks/useFeatureFlags"
+import { useFeatureFlags } from "@/features/pwa/hooks/useFeatureFlags"
 import { devLog } from '@/lib/utils/logger';
 
 import { usePWAUtils } from '../hooks/usePWAUtils'

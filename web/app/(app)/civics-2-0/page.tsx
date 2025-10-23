@@ -19,12 +19,12 @@ import dynamic from 'next/dynamic';
 import React, { useState, useEffect, useCallback } from 'react';
 
 // Lazy load heavy components to reduce initial bundle size
-const EnhancedCandidateCard = dynamic(() => import('@/features/civics/components/EnhancedCandidateCard'), {
+const EnhancedCandidateCard = dynamic(() => import('@/features/civics/components/CandidateCard'), {
   loading: () => <div className="animate-pulse bg-gray-200 h-32 rounded-lg"></div>,
   ssr: false
 });
 
-const SuperiorMobileFeed = dynamic(() => import('@/features/feeds').then(mod => ({ default: mod.SuperiorMobileFeed })), {
+const UnifiedFeed = dynamic(() => import('@/features/feeds/components/UnifiedFeed'), {
   loading: () => <div className="animate-pulse bg-gray-200 h-64 rounded-lg"></div>,
   ssr: false
 });
@@ -425,7 +425,7 @@ export default function Civics2Page() {
 
         {activeTab === 'feed' && (
           <div data-testid="mobile-feed">
-            <SuperiorMobileFeed userId="test-user" />
+            <UnifiedFeed userId="test-user" />
           </div>
         )}
       </div>

@@ -17,7 +17,7 @@ dotenv.config({ path: '.env.local' });
 export async function requireServiceKey(): Promise<NextResponse | null> {
   try {
     // Check if we have the service key
-    const serviceKey = process.env.SUPABASE_SECRET_KEY;
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
     if (!serviceKey) {
       return NextResponse.json({ error: 'Service key not configured' }, { status: 500 });
     }
@@ -48,7 +48,7 @@ export async function requireServiceKey(): Promise<NextResponse | null> {
 
 export async function isServiceKeyValid(): Promise<boolean> {
   try {
-    const serviceKey = process.env.SUPABASE_SECRET_KEY;
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
     if (!serviceKey) return false;
 
     const supabase = createClient(

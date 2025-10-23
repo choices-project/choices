@@ -216,7 +216,13 @@ export class RedisClient {
         return null
       }
 
-      const entry: CacheEntry<T> = JSON.parse(value)
+      // Handle both JSON strings and objects from Upstash Redis
+      let entry: CacheEntry<T>;
+      if (typeof value === 'string') {
+        entry = JSON.parse(value);
+      } else {
+        entry = value as CacheEntry<T>;
+      }
       
       // Check if entry has expired
       if (entry.expiresAt < Date.now()) {
@@ -227,7 +233,7 @@ export class RedisClient {
 
       // Update hit count
       entry.hitCount++
-      await this.client.setEx(key, Math.ceil((entry.expiresAt - Date.now()) / 1000), JSON.stringify(entry))
+      await this.client.set(key, JSON.stringify(entry), { ex: Math.ceil((entry.expiresAt - Date.now()) / 1000) })
       
       this.stats.hits++
       this.updateHitRate()
@@ -264,7 +270,7 @@ export class RedisClient {
         ...metadata
       }
 
-      await this.client.setEx(key, ttlSeconds, JSON.stringify(entry))
+      await this.client.set(key, JSON.stringify(entry), { ex: ttlSeconds })
       
       // Store tag mappings for invalidation
       if (tags.length > 0) {
@@ -381,7 +387,7 @@ export class RedisClient {
           tags
         }
 
-        pipeline.setEx(key, ttlSeconds, JSON.stringify(entry))
+        pipeline.set(key, JSON.stringify(entry), { ex: ttlSeconds })
         
         // Store tag mappings
         if (tags.length > 0) {

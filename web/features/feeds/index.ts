@@ -56,7 +56,6 @@ export { default as UnifiedFeed } from './components/UnifiedFeed';
 // Legacy Components (DEPRECATED - Use UnifiedFeed instead)
 export { default as SocialFeed } from './components/SocialFeed';
 export { default as EnhancedSocialFeed } from './components/EnhancedSocialFeed';
-export { default as SuperiorMobileFeed } from './components/SuperiorMobileFeed';
 export { default as FeedHashtagIntegration } from './components/FeedHashtagIntegration';
 export { default as FeedItem } from './components/FeedItem';
 export { default as InfiniteScroll } from './components/InfiniteScroll';

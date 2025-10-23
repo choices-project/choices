@@ -46,7 +46,7 @@ describe('IRVCalculator', () => {
       expect(results.winner).toBe('candidate-1')
       expect(results.totalVotes).toBe(4)
       expect(results.rounds).toHaveLength(1)
-      expect(results.rounds[0].votes['candidate-1']).toBe(3)
+      expect(results.rounds[0]?.votes['candidate-1']).toBe(3)
     })
 
     it('should eliminate last place candidate and redistribute votes', () => {

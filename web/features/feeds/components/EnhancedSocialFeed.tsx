@@ -15,7 +15,6 @@
 
 'use client';
 
-import type { Database } from '@/types/database';
 import {
   SparklesIcon,
   ClockIcon

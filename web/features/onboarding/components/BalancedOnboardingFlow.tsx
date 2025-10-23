@@ -18,7 +18,7 @@ import {
   useOnboardingLoading,
   useOnboardingError
 } from '@/lib/stores';
-import { T } from '@/lib/testing/testIds';
+import { T } from '@/tests/registry/testIds';
 import { getSupabaseBrowserClient } from '@/utils/supabase/client';
 
 

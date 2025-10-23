@@ -10,7 +10,8 @@ import {
   AlertTriangle,
   Loader2
 } from 'lucide-react'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -19,9 +20,42 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { useProfile, useProfileLoadingStates, useProfileErrorStates, useExportData } from '@/hooks/use-profile'
 import { useAuth } from '@/hooks/useAuth'
+import { useIsAuthenticated, useUserStore } from '@/lib/stores'
 
 export default function ProfilePage() {
-  const { isLoading: authLoading } = useAuth()
+  const isAuthenticated = useIsAuthenticated();
+  const { isLoading: authLoading } = useUserStore();
+  const router = useRouter();
+
+  // SECURITY: Redirect unauthenticated users to login
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      console.log('🚨 SECURITY: Unauthenticated user attempting to access profile - redirecting to login');
+      router.push('/auth');
+    }
+  }, [isAuthenticated, authLoading, router]);
+
+  // Show loading while checking authentication
+  if (authLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  // SECURITY: Block access if not authenticated
+  if (!isAuthenticated) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-red-600 mb-4">Access Denied</h1>
+          <p className="text-gray-600">You must be logged in to access your profile.</p>
+          <p className="text-sm text-gray-500 mt-2">Redirecting to login...</p>
+        </div>
+      </div>
+    );
+  }
   const { data: profileData, isLoading, error } = useProfile()
   const { isAnyUpdating } = useProfileLoadingStates()
   const { profileError } = useProfileErrorStates()

@@ -79,39 +79,30 @@ export interface HashtagsDatabase {
       hashtag_flags: {
         Row: {
           id: string
-          hashtag_id: string
-          user_id: string | null
-          reason: string | null
-          status: string | null
+          hashtag: string
+          reporter_id: string | null
+          reason: string
+          status: string
           created_at: string | null
           updated_at: string | null
-          reviewed_by: string | null
-          reviewed_at: string | null
-          notes: string | null
         }
         Insert: {
           id?: string
-          hashtag_id: string
-          user_id?: string | null
-          reason?: string | null
-          status?: string | null
+          hashtag: string
+          reporter_id?: string | null
+          reason: string
+          status?: string
           created_at?: string | null
           updated_at?: string | null
-          reviewed_by?: string | null
-          reviewed_at?: string | null
-          notes?: string | null
         }
         Update: {
           id?: string
-          hashtag_id?: string
-          user_id?: string | null
-          reason?: string | null
-          status?: string | null
+          hashtag?: string
+          reporter_id?: string | null
+          reason?: string
+          status?: string
           created_at?: string | null
           updated_at?: string | null
-          reviewed_by?: string | null
-          reviewed_at?: string | null
-          notes?: string | null
         }
       }
       

@@ -12,7 +12,7 @@ import { describe, it, expect } from '@jest/globals';
 describe('Test REST API Approach', () => {
   it('should test database access using REST API', async () => {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const supabaseKey = process.env.SUPABASE_SECRET_KEY;
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
     
     if (!supabaseUrl || !supabaseKey) {
       throw new Error('Supabase credentials not found');

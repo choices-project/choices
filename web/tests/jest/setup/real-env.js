@@ -17,9 +17,9 @@ if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
   throw new Error('Missing NEXT_PUBLIC_SUPABASE_URL environment variable');
 }
 
-if (!process.env.SUPABASE_SECRET_KEY) {
-  console.error('❌ SUPABASE_SECRET_KEY not found in environment');
-  throw new Error('Missing SUPABASE_SECRET_KEY environment variable');
+if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+  console.error('❌ SUPABASE_SERVICE_ROLE_KEY not found in environment');
+  throw new Error('Missing SUPABASE_SERVICE_ROLE_KEY environment variable');
 }
 
 console.log('✅ Real environment variables loaded successfully');

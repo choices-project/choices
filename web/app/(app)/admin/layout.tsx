@@ -4,6 +4,7 @@
  * Main layout for all admin pages with server-side admin authentication guard.
  */
 
+import React from 'react';
 import { getAdminUser } from '@/features/auth/lib/admin-auth';
 
 import { AdminLayout } from './layout/AdminLayout';

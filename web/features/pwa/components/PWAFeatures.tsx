@@ -9,7 +9,7 @@ import {
   usePWAError,
   usePWAActions
 } from '@/lib/stores'
-import { T } from '@/lib/testing/testIds'
+import { T } from '@/tests/registry/testIds'
 import { logger } from '@/lib/utils/logger'
 
 import NotificationPermission from './NotificationPermission'

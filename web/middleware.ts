@@ -165,6 +165,29 @@ export function middleware(request: NextRequest) {
       }
     );
   }
+
+  // SECURITY: Authentication checks for protected routes
+  const protectedRoutes = [
+    '/dashboard',
+    '/profile', 
+    '/polls/create',
+    '/onboarding',
+    '/account',
+    '/admin'
+  ];
+
+  const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route));
+  
+  if (isProtectedRoute) {
+    // Check for Supabase session cookies
+    const accessToken = request.cookies.get('sb-access-token');
+    const refreshToken = request.cookies.get('sb-refresh-token');
+    
+    if (!accessToken || !refreshToken) {
+      console.log(`🚨 SECURITY: Unauthenticated access attempt to protected route: ${pathname}`);
+      return NextResponse.redirect(new URL('/auth', request.url));
+    }
+  }
   
   // Skip middleware for static files and API routes that don't need security headers
   if (

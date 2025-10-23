@@ -69,7 +69,7 @@ export const completeOnboarding = createSecureServerAction(
       updated_at: new Date().toISOString()
     };
     
-    const { error: updateError } = await (supabaseClient as any)
+    const { error: updateError } = await supabaseClient
       .from('user_profiles')
       .update(updateData)
       .eq('user_id', user.userId)

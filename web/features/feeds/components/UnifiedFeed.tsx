@@ -10,14 +10,13 @@
  * - Real-time updates and analytics
  * - Comprehensive hashtag integration
  * 
- * This replaces: SocialFeed, EnhancedSocialFeed, SuperiorMobileFeed, FeedHashtagIntegration
+ * This replaces: SocialFeed, EnhancedSocialFeed, FeedHashtagIntegration
  * 
  * Created: January 19, 2025
  * Status: ✅ ACTIVE
  */
 
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import type { Database } from '@/types/database';
 // Temporarily removed Zustand imports to fix SSR issues
 // import { useAppStore, useAppActions } from '@/lib/stores/appStore';
 // import { useFeedsStore } from '@/lib/stores/feedsStore';
@@ -35,6 +34,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { FeatureWrapper } from '@/components/shared/FeatureWrapper';
 // import { PollCard } from '@/features/polls/components';
 
 
@@ -45,6 +45,7 @@ import type {
   UserPreferences
 } from '../types';
 import FeedItem from './FeedItem';
+import { useSocialSharing } from '@/hooks/useSocialSharing';
 
 interface UnifiedFeedProps {
   userId?: string;
@@ -165,7 +166,7 @@ function UnifiedFeed({
 
   // Touch gesture handling (from FeedItem.tsx) - moved to pull-to-refresh section
 
-  // PWA Features (from SuperiorMobileFeed.tsx)
+  // PWA Features
   const initializeSuperiorPWAFeatures = useCallback(async () => {
     if ('serviceWorker' in navigator) {
       try {
@@ -470,31 +471,58 @@ function UnifiedFeed({
     }
   }, [bookmarkFeed, onBookmark, enableHaptics, trackEngagement, announceToScreenReader, setError]);
 
-  const handleShare = useCallback((itemId: string) => {
+  // Social sharing hook
+  const { shareToPlatform, shareNative, socialSharingEnabled } = useSocialSharing();
+
+  const handleShare = useCallback(async (itemId: string) => {
     console.log('[UnifiedFeed] handleShare called with itemId:', itemId);
     if (enableHaptics && 'vibrate' in navigator) {
       navigator.vibrate(25);
     }
     onShare?.(itemId);
     
-    // Native sharing if available
-    if (navigator.share) {
-      const item = feeds.find((item: any) => item.id === itemId);
-      if (item) {
-        navigator.share({
-          title: item.title,
-          text: (item).description || '',
-          url: typeof window !== 'undefined' ? window.location.href : ''
-        }).catch((error) => {
-          console.warn('Share failed:', error);
-        });
+    const item = feeds.find((item: any) => item.id === itemId);
+    if (!item) {
+      console.warn('Item not found for sharing:', itemId);
+      return;
+    }
+
+    // Determine content type and URL
+    const contentType = item.type === 'poll' ? 'poll' : 'feed';
+    const shareUrl = item.url || `${window.location.origin}/polls/${itemId}`;
+    
+    const sharingOptions = {
+      title: item.title,
+      description: item.description || item.summary || '',
+      url: shareUrl,
+      pollId: item.type === 'poll' ? itemId : undefined,
+      contentType: contentType as 'poll' | 'representative' | 'feed',
+      placement: 'feed'
+    };
+
+    // Try native sharing first, then fall back to platform-specific sharing
+    if (typeof navigator !== 'undefined' && 'share' in navigator) {
+      const result = await shareNative(sharingOptions);
+      if (result.success) {
+        trackEngagement('shared', itemId);
+        announceToScreenReader(`Shared item ${itemId}`);
+        return;
+      }
+    }
+
+    // If native sharing fails or isn't available, show platform options
+    if (socialSharingEnabled) {
+      // For now, default to Twitter sharing
+      // In a full implementation, this would show a modal with platform options
+      const result = await shareToPlatform('twitter', sharingOptions);
+      if (result.success) {
+        trackEngagement('shared', itemId);
+        announceToScreenReader(`Shared item ${itemId} to Twitter`);
       }
     }
     
-    trackEngagement('shared', itemId);
     console.log('[UnifiedFeed] Calling announceToScreenReader with:', `Shared item ${itemId}`);
-    announceToScreenReader(`Shared item ${itemId}`);
-  }, [onShare, enableHaptics, feeds, trackEngagement, announceToScreenReader]);
+  }, [onShare, enableHaptics, feeds, trackEngagement, announceToScreenReader, shareToPlatform, shareNative, socialSharingEnabled]);
 
   const handleComment = useCallback((itemId: string) => {
     if (enableHaptics && 'vibrate' in navigator) {
@@ -1065,61 +1093,35 @@ function UnifiedFeed({
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            {/* Search */}
-            <div className="relative">
-              <label htmlFor="content-search" className="sr-only">
-                Search content
-              </label>
-              <Input
-                id="content-search"
-                placeholder="Search content..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
-                aria-describedby="search-help"
-              />
-              <HashtagIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" aria-hidden="true" />
-              <div id="search-help" className="sr-only">
-                Search through feed content by title or description
+          <FeatureWrapper feature="HASHTAG_FILTERING">
+            <div className="space-y-4">
+              {/* Search */}
+              <div className="relative">
+                <label htmlFor="content-search" className="sr-only">
+                  Search content
+                </label>
+                <Input
+                  id="content-search"
+                  placeholder="Search content..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10"
+                  aria-describedby="search-help"
+                />
+                <HashtagIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" aria-hidden="true" />
+                <div id="search-help" className="sr-only">
+                  Search through feed content by title or description
+                </div>
               </div>
-            </div>
 
-            {/* Selected hashtags */}
-            {selectedHashtags.length > 0 && (
-              <div className="flex flex-wrap gap-2" role="list" aria-label="Selected hashtags">
-                {selectedHashtags.map(hashtag => (
-                  <Badge
-                    key={hashtag}
-                    variant="default"
-                    className="cursor-pointer hover:bg-red-100"
-                    onClick={() => handleHashtagSelect(hashtag)}
-                    role="listitem"
-                    tabIndex={0}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' || e.key === ' ') {
-                        e.preventDefault();
-                        handleHashtagSelect(hashtag);
-                      }
-                    }}
-                    aria-label={`Remove hashtag ${hashtag} from filters`}
-                  >
-                    #{hashtag} ×
-                  </Badge>
-                ))}
-              </div>
-            )}
-
-            {/* Trending hashtags */}
-            {showTrending && trendingHashtags.length > 0 && (
-              <div>
-                <p className="text-sm font-medium text-gray-700 mb-2">Trending:</p>
-                <div className="flex flex-wrap gap-2" role="list" aria-label="Trending hashtags">
-                  {trendingHashtags.slice(0, 10).map((hashtag: string) => (
+              {/* Selected hashtags */}
+              {selectedHashtags.length > 0 && (
+                <div className="flex flex-wrap gap-2" role="list" aria-label="Selected hashtags">
+                  {selectedHashtags.map(hashtag => (
                     <Badge
                       key={hashtag}
-                      variant={selectedHashtags.includes(hashtag) ? "default" : "outline"}
-                      className="cursor-pointer hover:bg-blue-100"
+                      variant="default"
+                      className="cursor-pointer hover:bg-red-100"
                       onClick={() => handleHashtagSelect(hashtag)}
                       role="listitem"
                       tabIndex={0}
@@ -1129,29 +1131,58 @@ function UnifiedFeed({
                           handleHashtagSelect(hashtag);
                         }
                       }}
-                      aria-label={`${selectedHashtags.includes(hashtag) ? 'Remove' : 'Add'} hashtag ${hashtag} ${selectedHashtags.includes(hashtag) ? 'from' : 'to'} filters`}
+                      aria-label={`Remove hashtag ${hashtag} from filters`}
                     >
-                      <ArrowTrendingUpIcon className="h-3 w-3 mr-1" aria-hidden="true" />
-                      #{hashtag}
+                      #{hashtag} ×
                     </Badge>
                   ))}
                 </div>
-              </div>
-            )}
-          </div>
+              )}
+
+              {/* Trending hashtags - Always enabled through hashtag system */}
+              {showTrending && trendingHashtags.length > 0 && (
+                <div>
+                  <p className="text-sm font-medium text-gray-700 mb-2">Trending:</p>
+                  <div className="flex flex-wrap gap-2" role="list" aria-label="Trending hashtags">
+                    {trendingHashtags.slice(0, 10).map((hashtag: string) => (
+                      <Badge
+                        key={hashtag}
+                        variant={selectedHashtags.includes(hashtag) ? "default" : "outline"}
+                        className="cursor-pointer hover:bg-blue-100"
+                        onClick={() => handleHashtagSelect(hashtag)}
+                        role="listitem"
+                        tabIndex={0}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            handleHashtagSelect(hashtag);
+                          }
+                        }}
+                        aria-label={`${selectedHashtags.includes(hashtag) ? 'Remove' : 'Add'} hashtag ${hashtag} ${selectedHashtags.includes(hashtag) ? 'from' : 'to'} filters`}
+                      >
+                        <ArrowTrendingUpIcon className="h-3 w-3 mr-1" aria-hidden="true" />
+                        #{hashtag}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </FeatureWrapper>
         </CardContent>
       </Card>
 
-      {/* Main content tabs */}
+    {/* Main content tabs */}
+    <div className="mt-6">
       <Tabs value={activeTab} onValueChange={setActiveTab} role="tablist" aria-label="Feed content sections">
         <TabsList className="grid w-full grid-cols-3" role="tablist">
-          <TabsTrigger value="feed" role="tab" aria-selected={activeTab === 'feed'} aria-controls="feed-panel">
+          <TabsTrigger value="feed" role="tab" aria-selected={activeTab === 'feed'} aria-controls="feed-panel" data-testid="feed-tab">
             Feed
           </TabsTrigger>
-          <TabsTrigger value="polls" role="tab" aria-selected={activeTab === 'polls'} aria-controls="polls-panel">
+          <TabsTrigger value="polls" role="tab" aria-selected={activeTab === 'polls'} aria-controls="polls-panel" data-testid="polls-tab">
             Polls
           </TabsTrigger>
-          <TabsTrigger value="analytics" role="tab" aria-selected={activeTab === 'analytics'} aria-controls="analytics-panel">
+          <TabsTrigger value="analytics" role="tab" aria-selected={activeTab === 'analytics'} aria-controls="analytics-panel" data-testid="analytics-tab">
             Analytics
           </TabsTrigger>
         </TabsList>
@@ -1199,12 +1230,14 @@ function UnifiedFeed({
           )}
         </TabsContent>
 
-        {/* Hashtag-polls integration */}
+        {/* Hashtag-polls integration - Feature Flag Controlled */}
         <TabsContent value="polls" className="space-y-4" id="polls-panel" role="tabpanel" aria-labelledby="polls-tab">
-          {hashtagPollsFeed ? (
-            <div className="space-y-4">
-              {hashtagPollsFeed.recommended_polls.map((poll: any) => (
-                <Card key={poll.poll_id} className="hover:shadow-md transition-shadow">
+          <FeatureWrapper feature="DEMOGRAPHIC_FILTERING">
+            {hashtagPollsFeed ? (
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Personalized Polls</h3>
+                {hashtagPollsFeed.recommended_polls.map((poll: any) => (
+                <Card key={poll.poll_id} className="hover:shadow-md transition-shadow" data-testid="poll-card">
                   <CardContent className="p-6">
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex-1">
@@ -1271,6 +1304,7 @@ function UnifiedFeed({
               </CardContent>
             </Card>
           )}
+          </FeatureWrapper>
         </TabsContent>
 
         {/* Analytics */}
@@ -1326,8 +1360,9 @@ function UnifiedFeed({
           )}
         </TabsContent>
       </Tabs>
+    </div>
 
-      {/* Scroll to top button */}
+    {/* Scroll to top button */}
       {feeds.length > 5 && (
         <button
           ref={scrollToTopRef}

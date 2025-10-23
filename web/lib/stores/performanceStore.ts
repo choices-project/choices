@@ -9,7 +9,6 @@
  */
 
 import { create } from 'zustand';
-import type { Database } from '@/types/database';
 import { devtools, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 
